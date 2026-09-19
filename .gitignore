@@ -10,6 +10,7 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+.dev.vars
 
 # Logs
 *.log
@@ -34,6 +35,8 @@ build/
 # Vercel / Cloudflare
 .vercel
 .wrangler/
+.open-next/
+cloudflare-env.d.ts
 
 # Supabase local
 supabase/.temp/
