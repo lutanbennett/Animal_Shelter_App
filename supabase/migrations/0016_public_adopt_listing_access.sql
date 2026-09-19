@@ -1,0 +1,17 @@
+-- Backs the public "/adopt" guest-browsing pages (src/app/adopt/), the
+-- Section 6 "Public/Anonymous" RBAC tier described in
+-- docs/requirements/lanna-care-rebuild-requirements.md.
+--
+-- public_resident_profiles (0001_initial_schema.sql) already does the real
+-- security work: it's owned by the migration-running role (BYPASSRLS in
+-- Supabase), so it bypasses residents' RLS entirely rather than being
+-- subject to it, and its own WHERE clause is the only filter that matters
+-- (is_public_visible = true, not deceased) — the underlying `residents`
+-- table itself stays fully locked down to admin/staff/vet/volunteer, so an
+-- anonymous visitor querying `residents` directly still gets nothing.
+--
+-- This migration just makes the grant explicit rather than relying on
+-- whatever default privileges happen to be configured on the project, so
+-- public read access to this one curated view doesn't depend on an
+-- assumption that isn't written down anywhere.
+grant select on public_resident_profiles to anon, authenticated;

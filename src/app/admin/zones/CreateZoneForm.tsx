@@ -1,0 +1,51 @@
+"use client";
+
+import { useActionState } from "react";
+import { useI18n } from "@/lib/i18n/I18nProvider";
+import { createZone } from "./actions";
+
+export function CreateZoneForm() {
+  const [state, formAction, pending] = useActionState(createZone, undefined);
+  const { t } = useI18n();
+
+  return (
+    <form
+      action={formAction}
+      className="flex flex-wrap items-end gap-3 rounded border border-border bg-surface p-4"
+    >
+      <div className="flex flex-col gap-1">
+        <label htmlFor="name" className="text-sm font-medium text-muted">
+          {t.admin.zones.createForm.name}
+        </label>
+        <input
+          id="name"
+          name="name"
+          required
+          className="w-56 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+        />
+      </div>
+      <label className="flex items-center gap-2 pb-2 text-sm text-muted">
+        <input
+          type="checkbox"
+          name="internal"
+          defaultChecked
+          className="h-4 w-4 accent-primary"
+        />
+        {t.admin.zones.createForm.internal}
+      </label>
+      <button
+        type="submit"
+        disabled={pending}
+        className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
+      >
+        {pending ? t.common.creating : t.admin.zones.createForm.addButton}
+      </button>
+      {state && "error" in state && (
+        <p className="w-full text-sm text-danger">{state.error}</p>
+      )}
+      {state && "success" in state && (
+        <p className="w-full text-sm text-success">{state.success}</p>
+      )}
+    </form>
+  );
+}

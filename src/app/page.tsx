@@ -1,69 +1,178 @@
 import Image from "next/image";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import { driveImageUrl } from "@/lib/google/drive-client";
+import { getT } from "@/lib/i18n/get-t";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
-export default function Home() {
+type SiteContent = {
+  hero_drive_file_id: string | null;
+  hero_alt: string;
+  tagline: string;
+  story_heading: string;
+  story_body: string;
+  contact_email: string | null;
+  contact_address: string | null;
+};
+
+type GalleryPhoto = { id: string; drive_file_id: string; alt: string };
+
+export default async function WelcomePage() {
+  const supabase = await createClient();
+  const { t } = await getT();
+
+  const [contentResult, photosResult] = await Promise.all([
+    supabase
+      .from("site_content")
+      .select(
+        "hero_drive_file_id, hero_alt, tagline, story_heading, story_body, contact_email, contact_address",
+      )
+      .eq("id", true)
+      .limit(1)
+      .returns<SiteContent[]>(),
+    supabase
+      .from("site_content_photos")
+      .select("id, drive_file_id, alt")
+      .order("sort_order")
+      .returns<GalleryPhoto[]>(),
+  ]);
+
+  const content = contentResult.data?.[0];
+  const gallery = photosResult.data ?? [];
+  const storyParagraphs = (content?.story_body ?? "")
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+    <main className="flex flex-1 flex-col">
+      <header className="flex items-center justify-between border-b border-border bg-surface px-6 py-4">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white p-1">
             <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+              src="/lca-logo.jpg"
+              alt={t.header.appName}
+              width={36}
+              height={36}
+              className="object-contain"
+              priority
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          </span>
+          <span className="text-base font-semibold text-foreground">
+            {t.header.appName}
+          </span>
         </div>
-      </main>
-    </div>
+        <div className="flex items-center gap-3">
+          <LanguageSwitcher />
+          <Link
+            href="/login"
+            className="rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
+          >
+            {t.home.staffLogin}
+          </Link>
+        </div>
+      </header>
+
+      <section className="relative flex min-h-[26rem] items-end overflow-hidden bg-surface">
+        {content?.hero_drive_file_id && (
+          <Image
+            src={driveImageUrl(content.hero_drive_file_id)}
+            alt={content.hero_alt || t.header.appName}
+            fill
+            priority
+            className="object-cover"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
+        <div className="relative flex flex-col gap-4 px-6 py-10 sm:px-12">
+          <h1 className="max-w-2xl text-3xl font-semibold text-white sm:text-4xl">
+            {t.home.welcomeHeading}
+          </h1>
+          {content?.tagline && (
+            <p className="max-w-xl text-base text-white/90 sm:text-lg">
+              {content.tagline}
+            </p>
+          )}
+          <div className="flex flex-wrap gap-3 pt-2">
+            <Link
+              href="/login"
+              className="rounded bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
+            >
+              {t.home.staffLogin}
+            </Link>
+            <Link
+              href="/adopt"
+              className="rounded border border-white/60 bg-black/20 px-5 py-3 text-sm font-semibold text-white backdrop-blur hover:bg-black/40"
+            >
+              {t.home.browseGuest}
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-12 sm:px-12">
+        <h2 className="text-2xl font-semibold text-foreground">
+          {content?.story_heading || t.home.ourStoryFallback}
+        </h2>
+        {storyParagraphs.length > 0 && (
+          <div className="flex flex-col gap-4 text-base leading-relaxed text-muted sm:text-lg">
+            {storyParagraphs.map((paragraph, index) => (
+              <p key={index}>{paragraph}</p>
+            ))}
+          </div>
+        )}
+
+        {gallery.length > 0 && (
+          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
+            {gallery.map((photo) => (
+              <div
+                key={photo.id}
+                className="relative aspect-square overflow-hidden rounded-lg border border-border bg-surface"
+              >
+                <Image
+                  src={driveImageUrl(photo.drive_file_id)}
+                  alt={photo.alt}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-6 flex flex-col items-start gap-3 rounded-lg border border-border bg-surface p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-foreground">
+              {t.home.readyHeading}
+            </h3>
+            <p className="text-sm text-muted">{t.home.readySubtitle}</p>
+          </div>
+          <Link
+            href="/adopt"
+            className="shrink-0 rounded bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
+          >
+            {t.home.browseAnimals}
+          </Link>
+        </div>
+      </section>
+
+      {(content?.contact_address || content?.contact_email) && (
+        <footer className="border-t border-border px-6 py-6 text-center text-xs text-muted sm:px-12">
+          {t.home.footerOrgName}
+          {content.contact_address ? ` · ${content.contact_address}` : ""}
+          {content.contact_email && (
+            <>
+              {" · "}
+              <a
+                href={`mailto:${content.contact_email}`}
+                className="underline hover:text-foreground"
+              >
+                {content.contact_email}
+              </a>
+            </>
+          )}
+        </footer>
+      )}
+    </main>
   );
 }
