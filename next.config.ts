@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // `next dev` already listens on 0.0.0.0, but it rejects dev assets/HMR
+  // from any Origin other than localhost. Allow the home Wi-Fi subnet so a
+  // phone on the same network can load http://<this-machine-ip>:3000 for
+  // mobile-first testing without waiting on a Cloudflare deploy. `*` matches
+  // exactly one dotted label, so this survives DHCP handing out a new last
+  // octet. Ignored in production builds.
+  allowedDevOrigins: ["192.168.1.*"],
+
   images: {
     // No `/_next/image` optimizer on Cloudflare Workers. The OpenNext
     // adapter's stand-in for that route can only serve images from the
