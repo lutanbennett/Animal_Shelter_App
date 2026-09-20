@@ -20,6 +20,7 @@ export function NavLinks({ isAdmin }: { isAdmin: boolean }) {
     { href: "/residents", label: t.nav.residents },
     { href: "/enclosures", label: t.nav.enclosures },
     { href: "/maintenance", label: t.nav.maintenance },
+    { href: "/projects", label: t.nav.projects },
     ...(isAdmin
       ? [
           {

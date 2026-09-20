@@ -717,6 +717,61 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   see everything and may add photos (`volunteer_rw_attachments`), which
   is the split 0001 already encoded.
 
+- **Project work as a folder tree (2026-09-20):** migrations 0034/0035
+  turn the 0001 `project_folders` placeholder into a file-system-style
+  browser at `/projects`. The user's shape: `/Projects/` at the root, a
+  *fixed* second level of twelve categories (Shelter Projects, Community
+  Projects, Community Outreach, Visitors and Volunteers, Social Media,
+  Puppies, Sterilisations, Donations, Fundraising Campaigns, Events,
+  Rescues, Miscellaneous), then user-defined folders to any depth, every
+  folder able to hold photos and its own info card (Thai title, story in
+  both languages, date, location, cover photo, "show on website").
+
+  **Categories are rows, not a virtual level.** Each is a `project_folders`
+  row with `parent_folder_id null` and `name = top_level_category`, seeded
+  by 0034. That way `/projects/[id]` and the breadcrumb serve every level
+  with one mechanism, and a category caches its Drive folder ID like any
+  other folder. Triggers refuse a new root, refuse renaming/moving/
+  deleting a category, derive every folder's `top_level_category` from
+  its parent (and cascade it down when a folder is moved across
+  categories — 0035, after the rollback harness caught that the cascade
+  trigger was declared on a column a move never sets), and refuse cycles.
+  Sibling names are unique case-insensitively because the name is also
+  the Drive folder name. `name` stays the English title; `name_th` is the
+  Thai one, picked by locale with English fallback (the free-text
+  strategy item in the backlog still applies to the story text).
+
+  **Photos are `attachments` rows** (`owner_type = 'project'`, an owner
+  type since 0001), the same call 0033 made for maintenance: one photo
+  proxy lookup, one uploader, one set of Drive helpers. `caption`,
+  `caption_th` and `sort_order` were added to `attachments` as nullable
+  columns only project photos use (precedent: `phase`). `project_photos`
+  stays unused like `maintenance_photos`. A folder's cover is
+  `cover_attachment_id` (FK, `on delete set null`); the
+  `project_folder_summary` view supplies per-folder subfolder/photo
+  counts and a thumbnail (cover, else newest photo) so the grid is one
+  query.
+
+  **Drive mirrors the tree exactly:** `Projects/<Category>/<folder>/…`.
+  `ensureProjectFolderPath()` walks the ancestry using each row's cached
+  `drive_folder_id` and finds-or-creates by name only for levels never
+  synced (so the pre-existing `Projects/Shelter Projects` that maintenance
+  uses is reused, not duplicated). Rename and move update Drive *after*
+  the row is saved and report a warning rather than failing the save —
+  the database is the source of truth. A folder that has never had a
+  photo has no Drive folder (no Drive calls for a bare folder). Only an
+  empty folder can be deleted from the app, so a folder action never
+  removes a file. In dev the first upload into a fresh three-level path
+  took ~45s (three find-or-creates plus the upload); later uploads into
+  the same folder are one call.
+
+  **Roles:** staff/admin create, rename, move, describe, publish and
+  delete folders (the 0001 `for all` policies); volunteers browse and add
+  photos (`volunteer_rw_attachments`), which is the split 0001 already
+  encoded — no RLS change was needed. Nothing is public yet: `is_public`
+  is stored but the "Our work" page (backlog, Public website) is where a
+  `security_invoker`-free public view gets built, following 0025.
+
 ## Still open (from Section 11 of the requirements doc)
 
 1. Exact per-table RBAC permission matrix beyond the role descriptions —
