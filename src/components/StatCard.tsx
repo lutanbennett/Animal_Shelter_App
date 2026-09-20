@@ -36,7 +36,8 @@ export function StatCard({
   icon: Icon,
   actions = [],
 }: {
-  href: string;
+  /** Where the whole card links to; a card with no href is a plain read-out. */
+  href?: string;
   title: string;
   value: string;
   detail?: string;
@@ -52,26 +53,40 @@ export function StatCard({
 }) {
   // The title link's ::after overlay makes the whole card clickable without
   // nesting <a> inside <a>; the action links are raised above that overlay.
+  const titleClass = `flex min-w-0 items-center gap-2 text-sm font-medium ${
+    Icon ? TONE_VALUE_CLASSES[tone] : "text-muted"
+  } md:text-muted`;
+  const titleContent = (
+    <>
+      {Icon && (
+        <Icon aria-hidden="true" className="h-5 w-5 shrink-0 md:h-4 md:w-4" />
+      )}
+      <span className={Icon ? "hidden truncate md:inline" : "truncate"}>
+        {title}
+      </span>
+    </>
+  );
   return (
     <div
-      className={`relative flex flex-col gap-2 rounded-lg border p-3 transition hover:brightness-110 md:p-4 ${TONE_CLASSES[tone]}`}
+      className={`relative flex flex-col gap-2 rounded-lg border p-3 transition md:p-4 ${
+        href ? "hover:brightness-110" : ""
+      } ${TONE_CLASSES[tone]}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <Link
-          href={href}
-          title={title}
-          aria-label={title}
-          className={`flex min-w-0 items-center gap-2 text-sm font-medium after:absolute after:inset-0 after:content-[''] ${
-            Icon ? TONE_VALUE_CLASSES[tone] : "text-muted"
-          } md:text-muted`}
-        >
-          {Icon && (
-            <Icon aria-hidden="true" className="h-5 w-5 shrink-0 md:h-4 md:w-4" />
-          )}
-          <span className={Icon ? "hidden truncate md:inline" : "truncate"}>
-            {title}
+        {href ? (
+          <Link
+            href={href}
+            title={title}
+            aria-label={title}
+            className={`${titleClass} after:absolute after:inset-0 after:content-['']`}
+          >
+            {titleContent}
+          </Link>
+        ) : (
+          <span title={title} className={titleClass}>
+            {titleContent}
           </span>
-        </Link>
+        )}
         <span
           className={`h-2 w-2 shrink-0 rounded-full ${TONE_DOT_CLASSES[tone]}`}
           aria-hidden
