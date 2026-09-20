@@ -22,17 +22,23 @@ function residentLabel(r: ResidentOption) {
  * production scale) is too long to embed directly in a form. Reusable
  * across any form that needs to attach one or more residents (vet visits,
  * immunizations, procedures, weight logs, ...).
+ *
+ * `single` turns it into a one-resident chooser (radio rows, picking one
+ * replaces the previous choice) for places that want exactly one resident,
+ * such as the home page's featured resident.
  */
 export function ResidentPicker({
   residents,
   selectedIds,
   onChange,
   triggerLabel,
+  single = false,
 }: {
   residents: ResidentOption[];
   selectedIds: string[];
   onChange: (ids: string[]) => void;
   triggerLabel?: string;
+  single?: boolean;
 }) {
   const { t } = useI18n();
   const resolvedTriggerLabel = triggerLabel ?? t.residents.picker.selectResidents;
@@ -64,6 +70,7 @@ export function ResidentPicker({
 
   function toggle(id: string) {
     setPending((prev) => {
+      if (single) return new Set([id]);
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -117,9 +124,11 @@ export function ResidentPicker({
           onClick={openPicker}
           className="rounded border border-border bg-surface px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover"
         >
-          {selectedResidents.length > 0
-            ? t.common.addMore
-            : resolvedTriggerLabel}
+          {selectedResidents.length === 0
+            ? resolvedTriggerLabel
+            : single
+              ? t.common.change
+              : t.common.addMore}
         </button>
       </div>
 
@@ -135,7 +144,9 @@ export function ResidentPicker({
             <div className="flex max-h-[80vh] w-full max-w-lg flex-col gap-4 rounded border border-border bg-surface p-5 shadow-xl">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-foreground">
-                  {t.residents.picker.selectResidents}
+                  {single
+                    ? resolvedTriggerLabel
+                    : t.residents.picker.selectResidents}
                 </h2>
                 <button
                   type="button"
@@ -156,9 +167,11 @@ export function ResidentPicker({
                 className="rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
               />
 
-              <p className="text-xs text-muted">
-                {t.residents.picker.selectedCount(pending.size)}
-              </p>
+              {!single && (
+                <p className="text-xs text-muted">
+                  {t.residents.picker.selectedCount(pending.size)}
+                </p>
+              )}
 
               <div className="flex-1 overflow-y-auto rounded border border-border">
                 {filtered.map((r) => (
@@ -167,7 +180,8 @@ export function ResidentPicker({
                     className="flex cursor-pointer items-center gap-3 border-b border-border px-3 py-2 text-sm last:border-b-0 hover:bg-surface-hover"
                   >
                     <input
-                      type="checkbox"
+                      type={single ? "radio" : "checkbox"}
+                      name={single ? "resident-picker-choice" : undefined}
                       checked={pending.has(r.id)}
                       onChange={() => toggle(r.id)}
                       className="h-4 w-4 accent-primary"
@@ -202,7 +216,9 @@ export function ResidentPicker({
                   onClick={confirm}
                   className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
                 >
-                  {t.residents.picker.done(pending.size)}
+                  {single
+                    ? t.common.done
+                    : t.residents.picker.done(pending.size)}
                 </button>
               </div>
             </div>
