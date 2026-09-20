@@ -81,3 +81,7 @@ export function formatDose(
   if (!Number.isFinite(n)) return null;
   return `${n} ${doseUnitLabel(t, unit)}`.trim();
 }
+
+export function projectCategoryLabel(t: Dictionary, value: string | null | undefined) {
+  return enumLabel(t.enums.projectCategory, value);
+}

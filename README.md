@@ -157,10 +157,15 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
 - `src/lib/supabase/` — Supabase client helpers (browser + server).
 - `src/lib/google/` — Google Drive client helper, including the per-record
   folder helpers (resident photos / blood tests / procedures, and the
-  maintenance job folder that follows a job between status folders).
+  maintenance job folder that follows a job between status folders, and
+  the project folder path that mirrors the project tree).
 - `src/lib/maintenance/` — the enclosure maintenance feature's shared
   pieces: status vocabulary and colours, the job loader, and the
   after-change Drive folder sync used by the server actions.
+- `src/lib/projects/` — the project folder browser's shared pieces: the
+  category list, folder/photo loaders, and the Drive sync that keeps
+  `Projects/<Category>/<folder>/…` matching the tree after renames and
+  moves.
 - `src/lib/archive/` — the deceased resident archive: the summary PDF, the
   offline `index.html` index page written beside it in the resident's Drive
   folder, and the step that moves that folder to `Residents/Deceased/`.
