@@ -215,6 +215,10 @@ Section 11, plus decisions made during setup that aren't in the original doc.
     aren't blocked by the image proxy's allowlist). Confirmed working in
     dev, but don't assume the prod project's default privileges match —
     run 0016's grant explicitly rather than relying on that.
+  - `0025_public_views_exclude_adopted.sql` (and everything in between,
+    0020–0024) — 0025 also revokes anon/authenticated write access on the
+    two public views. Run `node scripts/check-public-views.mjs` against
+    production afterwards; README step 3 has the details.
   - `site_content` ships with an empty hero/gallery (the dev seed data
     doesn't carry over) — go to `/admin/website` after migrating and set
     the real production hero photo, story copy, and gallery before

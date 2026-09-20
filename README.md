@@ -66,7 +66,31 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    npm run preview
    ```
 
-3. **Set production secrets** — every variable in `.env.example` except the
+3. **Apply the database migrations to the production Supabase project**,
+   in order, from `supabase/migrations/` — every file, not just the ones
+   since the last deploy, on a fresh project. There's no CLI link on the
+   dev machine; the working path is to POST each file (wrapped in
+   `begin; … commit;`) to the Supabase Management API
+   (`/v1/projects/<ref>/database/query`) with a personal access token, or
+   paste it into the SQL editor. Then, with `.env.local` pointing at the
+   production `NEXT_PUBLIC_SUPABASE_*` values (which step 4 needs anyway):
+
+   ```bash
+   node scripts/check-public-views.mjs
+   ```
+
+   This confirms the two views behind the public `/adopt` pages are
+   readable by the anonymous role and **not writable** by it. Supabase's
+   default privileges grant `anon` INSERT/UPDATE/DELETE on every new
+   object, and `public_resident_profiles` is auto-updatable, so until
+   `0025_public_views_exclude_adopted.sql` revoked them an anonymous
+   `PATCH` was accepted (see `docs/decisions.md`). A fresh project's
+   defaults may differ from dev's — don't skip the check. Afterwards, load
+   `/` and `/adopt` signed out and confirm animals actually appear, and
+   set the hero photo and story copy at `/admin/website` (`site_content`
+   starts empty).
+
+4. **Set production secrets** — every variable in `.env.example` except the
    `NEXT_PUBLIC_*` ones:
 
    ```bash
@@ -90,9 +114,10 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
 
    `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` are inlined
    by `next build` (not via that snapshot) and must be the production
-   values in `.env.local` or the shell when you run the deploy build.
+   values in `.env.local` or the shell when you run the deploy build
+   (the same values step 3's check script reads).
 
-4. **Deploy**
+5. **Deploy**
 
    ```bash
    npm run deploy
