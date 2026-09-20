@@ -19,7 +19,7 @@ type PublicResident = {
   past_story_notes: string | null;
   profile_photo_drive_file_id: string | null;
   estimated_age_years: number | null;
-  intake_date: string | null;
+  age_estimated_on: string | null;
 };
 
 export default async function PublicResidentPage(
@@ -33,7 +33,7 @@ export default async function PublicResidentPage(
     supabase
       .from("public_resident_profiles")
       .select(
-        "id, name, species, breed, sex, ready_for_adoption, bio, temperament_notes, past_story_notes, profile_photo_drive_file_id, estimated_age_years, intake_date",
+        "id, name, species, breed, sex, ready_for_adoption, bio, temperament_notes, past_story_notes, profile_photo_drive_file_id, estimated_age_years, age_estimated_on",
       )
       .eq("id", id)
       .limit(1)
@@ -72,7 +72,7 @@ export default async function PublicResidentPage(
     },
     resident.estimated_age_years != null && {
       label: t.adopt.details.age,
-      value: formatAge(t, resident.estimated_age_years, resident.intake_date),
+      value: formatAge(t, resident.estimated_age_years, resident.age_estimated_on),
     },
   ].filter(Boolean) as { label: string; value: string }[];
 

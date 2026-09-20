@@ -70,8 +70,9 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   with Lutan once the app is running and volunteers' actual day-to-day
   needs are visible.
 - **Resident photo upload (2026-09-19):** added `residents.animal_code`
-  (sequential `A-0001`, `A-0002`, …, assigned at intake — see
-  `0012_resident_animal_code.sql`) as the short, human-friendly identifier
+  (sequential `R-0001`, `R-0002`, …, assigned at intake — see
+  `0012_resident_animal_code.sql`; prefix changed from `A-` to `R-` for
+  "Resident" in `0022_resident_code_prefix.sql`, 2026-09-20) as the short, human-friendly identifier
   needed because animal names repeat at the shelter and `residents.id`
   (UUID) is unusable in a Drive folder name. Multi-file drag-and-drop/tap
   upload lands in `Residents/<Name> (<ID>)/Photos/<Category>/<YYMM>/`
@@ -92,9 +93,17 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   The original doc listed `date_of_birth (or estimated age)` as if either
   might be known, but in practice the shelter never has a real DOB at
   intake — every age is a staff guess. `estimated_age_years` (anchored to
-  `intake_date`, so displayed age keeps advancing over time rather than
+  `age_estimated_on`, so displayed age keeps advancing over time rather than
   freezing at the value entered on day one — see `formatAge` in
   `src/lib/format.ts`) is the only age input now.
+  - **Anchor moved from `intake_date` to `age_estimated_on` (2026-09-20,
+    `0023_resident_age_estimated_on.sql`):** anchoring to intake broke the
+    moment staff revised the estimate from the edit form — typing "5" two
+    years after intake displayed as ~7. The edit form now shows the age as
+    it reads *today* and, only when that number is changed, stores it with
+    `age_estimated_on = today`. Deliberately a dedicated column rather than
+    the row's last-modified time, so editing the bio doesn't re-anchor the
+    age. Intake still sets it to `intake_date`.
 
 - **Photo image proxy (2026-09-19):** stopped rendering resident photos via
   direct `drive.google.com/thumbnail?id=...` URLs. That endpoint has a
@@ -265,7 +274,7 @@ Section 11, plus decisions made during setup that aren't in the original doc.
    Drive account's `Residents/` tree already contains real
    legacy-migrated animals folder-named `<Name> (<8-char-hex-id>)` — that
    hex ID is the old AppSheet row ID. New residents entered through this
-   app instead get a sequential `animal_code` (`A-0001`, …). When real data
+   app instead get a sequential `animal_code` (`R-0001`, …). When real data
    migration (Section 9 of the requirements doc) actually happens, a
    migrated resident's Drive folder needs to be matched to its existing
    hex-ID-named folder (to avoid creating a duplicate, differently-named

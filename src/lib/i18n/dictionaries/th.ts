@@ -442,10 +442,12 @@ const th: Dictionary = {
         location: "ภายใน / ภายนอก",
         noMatches: "ไม่พบสัตว์ที่ตรงกับตัวกรองนี้",
         selectAriaLabel: (name: string) => `เลือก ${name}`,
+        editAriaLabel: (name: string) => `แก้ไข ${name}`,
       },
     },
     hub: {
       backToResidents: "← กลับไปหน้าสัตว์ในความดูแล",
+      editResident: "แก้ไขข้อมูลสัตว์",
       noPhoto: "ยังไม่มีรูปภาพ",
       speciesUnknown: "ยังไม่มีข้อมูลชนิด/สายพันธุ์",
       readyForAdoption: "พร้อมรับเลี้ยง",
@@ -492,6 +494,39 @@ const th: Dictionary = {
       bloodTestsLast: (date: string) => `ล่าสุด: ${date}`,
       historyEntries: (n: number) => `ประวัติ ${n} รายการ`,
       carer: (name: string) => `ผู้ดูแล: ${name}`,
+    },
+    edit: {
+      pageTitle: (name: string) => `แก้ไข ${name}`,
+      pageSubtitle:
+        "แก้ไขข้อมูลทั่วไป ประวัติ และรายละเอียดการรับเลี้ยง ส่วนที่พักจัดการได้จากส่วนที่พักและสถานะ",
+      couldntLoadPhotos: "โหลดรูปภาพไม่สำเร็จ",
+      sections: {
+        photo: "รูปโปรไฟล์",
+        identity: "ข้อมูลทั่วไป",
+        flags: "การรับเลี้ยง",
+        bio: "ประวัติและความเป็นมา",
+      },
+      fields: {
+        animalCode: "รหัสสัตว์",
+        animalCodeHint: "ระบบกำหนดให้อัตโนมัติเมื่อรับเข้า — แก้ไขไม่ได้",
+        estimatedAgeNow: "อายุโดยประมาณปัจจุบัน (ปี)",
+        estimatedAgeNowHint:
+          "อายุ ณ วันนี้ แก้ไขเฉพาะเมื่อมีการประมาณที่แม่นยำกว่า ระบบจะนับอายุต่อจากวันที่บันทึก",
+      },
+      photo: {
+        hint: "แตะรูปเพื่อตั้งเป็นรูปโปรไฟล์",
+        noPhotos: "ยังไม่มีรูปภาพที่อัปโหลด",
+        uploadLink: "อัปโหลดรูปภาพ",
+        selected: "เลือกแล้ว",
+        selectAriaLabel: (name: string) => `ใช้ ${name} เป็นรูปโปรไฟล์`,
+      },
+      saving: "กำลังบันทึก...",
+      notAuthorized: "เฉพาะเจ้าหน้าที่และผู้ดูแลระบบเท่านั้นที่แก้ไขข้อมูลสัตว์ได้",
+      errors: {
+        nameRequired: "กรุณากรอกชื่อ",
+        ageMustBeNumber: "อายุโดยประมาณต้องเป็นตัวเลข",
+        notFound: "ไม่พบข้อมูลสัตว์ตัวนี้แล้ว",
+      },
     },
     sections: {
       titles: {

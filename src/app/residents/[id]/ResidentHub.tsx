@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Pencil } from "lucide-react";
 import { StatCard, type StatCardTone } from "@/components/StatCard";
 import { HUB_TAB_ICONS, SECTION_ICONS } from "@/components/hub-icons";
 import { formatAge, formatDate } from "@/lib/format";
@@ -19,6 +20,7 @@ export type Resident = {
   breed: string | null;
   sex: string | null;
   estimated_age_years: number | null;
+  age_estimated_on: string | null;
   intake_date: string | null;
   bio: string | null;
   temperament_notes: string | null;
@@ -258,6 +260,14 @@ export function ResidentHub({
               <span className="rounded-full bg-surface-hover px-2 py-0.5 text-xs font-medium text-muted">
                 {resident.animal_code}
               </span>
+              <Link
+                href={`${base}/edit`}
+                title={t.residents.hub.editResident}
+                aria-label={t.residents.hub.editResident}
+                className="rounded p-1 text-muted hover:bg-surface-hover hover:text-foreground"
+              >
+                <Pencil aria-hidden="true" className="h-4 w-4" />
+              </Link>
             </div>
             <p className="text-sm text-muted">
               {[
@@ -269,7 +279,7 @@ export function ResidentHub({
                 .join(" · ") || t.residents.hub.speciesUnknown}
             </p>
             <p className="text-sm text-muted">
-              {formatAge(t, resident.estimated_age_years, resident.intake_date)}
+              {formatAge(t, resident.estimated_age_years, resident.age_estimated_on)}
               {resident.intake_date &&
                 ` · ${t.residents.hub.intake(formatDate(resident.intake_date, locale))}`}
             </p>

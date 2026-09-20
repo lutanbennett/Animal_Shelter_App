@@ -261,7 +261,12 @@ export function IntakeForm({
           <label htmlFor="bio" className="text-sm font-medium text-muted">
             {t.residents.new.fields.bio}
           </label>
-          <textarea id="bio" name="bio" rows={2} className={inputClass} />
+          <textarea
+            id="bio"
+            name="bio"
+            rows={4}
+            className={`${inputClass} field-sizing-content`}
+          />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1">

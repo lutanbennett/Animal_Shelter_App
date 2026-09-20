@@ -434,10 +434,12 @@ const en = {
         location: "Internal / External",
         noMatches: "No residents match these filters.",
         selectAriaLabel: (name: string) => `Select ${name}`,
+        editAriaLabel: (name: string) => `Edit ${name}`,
       },
     },
     hub: {
       backToResidents: "← Back to residents",
+      editResident: "Edit resident details",
       noPhoto: "No photo yet",
       speciesUnknown: "Species/breed not recorded",
       readyForAdoption: "Ready for adoption",
@@ -485,6 +487,39 @@ const en = {
       bloodTestsLast: (date: string) => `Last: ${date}`,
       historyEntries: (n: number) => `${n} history entries`,
       carer: (name: string) => `Carer: ${name}`,
+    },
+    edit: {
+      pageTitle: (name: string) => `Edit ${name}`,
+      pageSubtitle:
+        "Update identity, bio and adoption details. Housing is managed from the Housing & Status section.",
+      couldntLoadPhotos: "Couldn't load photos",
+      sections: {
+        photo: "Profile photo",
+        identity: "Identity",
+        flags: "Adoption",
+        bio: "Bio & background",
+      },
+      fields: {
+        animalCode: "Animal code",
+        animalCodeHint: "Assigned automatically at intake — not editable.",
+        estimatedAgeNow: "Estimated age now (years)",
+        estimatedAgeNowHint:
+          "The age as of today. Change it only when you have a better estimate; the record keeps aging from the date you set it.",
+      },
+      photo: {
+        hint: "Tap a photo to make it the profile photo.",
+        noPhotos: "No photos uploaded yet.",
+        uploadLink: "Upload photos",
+        selected: "Selected",
+        selectAriaLabel: (name: string) => `Use ${name} as profile photo`,
+      },
+      saving: "Saving...",
+      notAuthorized: "Only staff and admins can edit resident details.",
+      errors: {
+        nameRequired: "Name is required.",
+        ageMustBeNumber: "Estimated age must be a number.",
+        notFound: "This resident no longer exists.",
+      },
     },
     sections: {
       titles: {

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { PawPrint } from "lucide-react";
+import { PawPrint, Pencil } from "lucide-react";
 import { ActionLink } from "@/components/ActionLink";
 import { SECTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -131,6 +131,7 @@ export function ResidentsTable({ residents }: { residents: ResidentRow[] }) {
               <th className="hidden px-4 py-2 font-medium md:table-cell">
                 {t.residents.list.table.location}
               </th>
+              <th className="w-10 px-2 py-2" />
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -178,11 +179,23 @@ export function ResidentsTable({ residents }: { residents: ResidentRow[] }) {
                       ? t.admin.zones.table.internal
                       : t.admin.zones.table.external}
                 </td>
+                <td className="w-10 px-2 py-2 text-right">
+                  <Link
+                    href={`/residents/${resident.resident_id}/edit`}
+                    title={t.residents.list.table.editAriaLabel(fullName(resident))}
+                    aria-label={t.residents.list.table.editAriaLabel(
+                      fullName(resident),
+                    )}
+                    className="inline-flex rounded p-1 text-muted hover:bg-surface-hover hover:text-foreground"
+                  >
+                    <Pencil aria-hidden="true" className="h-4 w-4" />
+                  </Link>
+                </td>
               </tr>
             ))}
             {residents.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-muted">
+                <td colSpan={8} className="px-4 py-6 text-center text-muted">
                   {t.residents.list.table.noMatches}
                 </td>
               </tr>

@@ -21,7 +21,7 @@ Each item is a self-contained prompt for a new thread. Tick when done. Ordered b
 
 ## Resident operations
 
-- [ ] **Edit resident details.** Add `/residents/[id]/edit` with a form + server action to update identity/bio fields (name, Thai name, other names, animal code, species, breed, sex, age, notes, adoption/public flags). Housing is not edited here.
+- [x] **Edit resident details.** Add `/residents/[id]/edit` with a form + server action to update identity/bio fields (name, Thai name, other names, animal code, species, breed, sex, age, notes, adoption/public flags). Housing is not edited here.
 - [ ] **Move resident between enclosures.** Add a move page/modal from the hub's housing section that inserts a `ChangeEnclosure` row into `placement_history` (zone → enclosure picker, date, notes). Existing trigger closes the prior placement.
 - [ ] **Send to hospital.** Action from the hub that inserts a `SendToHospital` placement into the Lifecycle/Hospital enclosure, storing `previous_enclosure_id` so the resident can return later.
 - [ ] **Return from hospital.** Action that inserts a `ReturnFromHospital` placement back into the stored `previous_enclosure_id` (with an override picker if that enclosure is gone).

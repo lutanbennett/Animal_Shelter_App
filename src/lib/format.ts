@@ -39,19 +39,29 @@ export function formatDateTime(
 const MS_PER_YEAR = 1000 * 60 * 60 * 24 * 365.25;
 
 // Ages are always a staff estimate (the shelter never has a real DOB), so
-// this anchors estimated_age_years to intake_date and keeps aging it from
-// there — a "~5 years old" recorded at intake reads "~6 years old" a year
-// later, instead of staying frozen at whatever was typed in on day one.
+// estimated_age_years is "age as guessed on age_estimated_on" and keeps
+// aging from that date — a "~5 years old" recorded at intake reads "~6
+// years old" a year later, instead of staying frozen at whatever was typed
+// in on day one. Rounded to the nearest half year.
+export function estimatedAgeNow(
+  estimatedAgeYears: number | null | undefined,
+  estimatedOn?: string | null,
+  now: number = Date.now(),
+): number | null {
+  if (estimatedAgeYears == null) return null;
+
+  const elapsedYears = estimatedOn
+    ? Math.max(0, (now - new Date(estimatedOn).getTime()) / MS_PER_YEAR)
+    : 0;
+  return Math.round((estimatedAgeYears + elapsedYears) * 2) / 2;
+}
+
 export function formatAge(
   t: Dictionary,
   estimatedAgeYears: number | null | undefined,
-  intakeDate?: string | null,
+  estimatedOn?: string | null,
 ) {
-  if (estimatedAgeYears == null) return t.format.ageUnknown;
-
-  const elapsedYears = intakeDate
-    ? Math.max(0, (Date.now() - new Date(intakeDate).getTime()) / MS_PER_YEAR)
-    : 0;
-  const age = Math.round((estimatedAgeYears + elapsedYears) * 2) / 2;
+  const age = estimatedAgeNow(estimatedAgeYears, estimatedOn);
+  if (age == null) return t.format.ageUnknown;
   return t.format.ageEstimated(age);
 }
