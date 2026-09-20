@@ -5,6 +5,7 @@ import { StoryForm, type SiteContentRow } from "./StoryForm";
 import { HeroPhoto } from "./HeroPhoto";
 import { GalleryPhotos, type GalleryPhotoRow } from "./GalleryPhotos";
 import { FeaturedResident, type FeaturedResidentOption } from "./FeaturedResident";
+import { PublishedProjects, type PublishedProjectRow } from "./PublishedProjects";
 
 type SiteContentFullRow = SiteContentRow & {
   hero_drive_file_id: string | null;
@@ -25,8 +26,13 @@ export default async function WebsitePage() {
 
   const supabase = await createClient();
 
-  const [contentResult, photosResult, publicResidentsResult, thaiNamesResult] =
-    await Promise.all([
+  const [
+    contentResult,
+    photosResult,
+    publicResidentsResult,
+    thaiNamesResult,
+    publishedResult,
+  ] = await Promise.all([
       supabase
         .from("site_content")
         .select(
@@ -55,6 +61,19 @@ export default async function WebsitePage() {
         .select("id, thai_name")
         .eq("is_public_visible", true)
         .returns<{ id: string; thai_name: string | null }[]>(),
+      // What /our-work shows right now: the same filter public_projects
+      // applies (0042), read through the staff summary view for the
+      // thumbnail. Most recently edited first, since a story just
+      // published by mistake is the usual reason to be looking.
+      supabase
+        .from("project_folder_summary")
+        .select(
+          "id, name, name_th, top_level_category, project_date, photo_count, thumbnail_drive_file_id",
+        )
+        .eq("is_public", true)
+        .not("parent_folder_id", "is", null)
+        .order("updated_at", { ascending: false })
+        .returns<PublishedProjectRow[]>(),
     ]);
 
   const content = contentResult.data?.[0];
@@ -97,6 +116,7 @@ export default async function WebsitePage() {
           />
           <StoryForm content={content} />
           <GalleryPhotos photos={photosResult.data ?? []} />
+          <PublishedProjects projects={publishedResult.data ?? []} />
         </>
       )}
     </main>

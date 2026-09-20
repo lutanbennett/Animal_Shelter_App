@@ -285,6 +285,18 @@ const en = {
         cleared: "Featured resident cleared.",
         notPublic: "That resident isn't shown on the public adoption pages.",
       },
+      published: {
+        heading: "Our work — published stories",
+        subtitle:
+          "Everything currently on the public Our work page. Stories are published from their folder under Projects (\"Show on website\"); remove one here to take it off the site straight away — the folder and its photos stay as they are.",
+        none: "No project stories are on the website.",
+        view: "View on site",
+        remove: "Remove from website",
+        removeConfirm: (name: string) =>
+          `Remove "${name}" from the public website? It can be shown again from its folder under Projects.`,
+        removed: "Removed from the website.",
+        notFound: "That project folder no longer exists.",
+      },
       errors: {
         noFile: "No file provided.",
         uploadFailed: "Upload failed.",

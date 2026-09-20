@@ -54,6 +54,16 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   does; the "markdown" in the original brief was never implemented on
   the staff side, so the public page doesn't pretend otherwise.
 
+  **Quick removal (user's follow-up):** `/admin/website` lists every
+  published story ("Our work — published stories": thumbnail, title,
+  category, date, photo count, links to the folder and the public page)
+  with a "Remove from website" button, so an admin can pull something
+  without hunting through the project tree. It is one-directional on
+  purpose: publishing stays on the folder (`/projects/[id]`, "Show on
+  website") where the story is written and checked, and the admin action
+  (`unpublishProject`) only clears `is_public` — the folder and photos
+  are untouched and staff can re-tick it.
+
 - **Pet of the week (2026-09-21):** `site_content.featured_resident_id`
   (0041, nullable FK to `residents`, `on delete set null`) names one
   resident to spotlight on `/`. It sits on the `site_content` singleton so

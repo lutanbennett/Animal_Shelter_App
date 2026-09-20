@@ -129,7 +129,8 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    `/admin/website` (`site_content` starts empty). The same page picks
    the optional "Pet of the week" for the home page from the publicly
    listed residents; project stories are published from `/projects/[id]`
-   ("Show on website"). Open Graph previews (Facebook, LINE) take the
+   ("Show on website") and `/admin/website` lists what is live with a
+   quick "Remove from website". Open Graph previews (Facebook, LINE) take the
    page's own host for the image URL, so nothing needs configuring —
    set `NEXT_PUBLIC_SITE_URL` only if the site ever sits behind a proxy
    that rewrites the host.
