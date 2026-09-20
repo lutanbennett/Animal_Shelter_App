@@ -261,7 +261,7 @@ export function MaintenanceBoard({
       ) : (
         <>
           {/* Desktop: Kanban */}
-          <div className="hidden gap-4 md:grid md:grid-cols-4">
+          <div className="hidden gap-4 md:grid md:grid-cols-2 lg:grid-cols-4">
             {MAINTENANCE_STATUSES.map((status) => (
               <Column
                 key={status}
@@ -375,14 +375,14 @@ function Column({
         over ? "bg-primary/10 ring-2 ring-primary/40" : ""
       }`}
     >
-      <header className="flex items-center justify-between gap-2 px-1 pt-1">
+      <header className="flex flex-col gap-0.5 px-1 pt-1">
         <h2 className={`flex items-center gap-2 text-sm font-semibold ${tone.text}`}>
-          <span className={`h-2.5 w-2.5 rounded-full ${tone.dot}`} />
+          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${tone.dot}`} />
           {maintenanceStatusLabel(t, status)}
           <span className="font-normal text-muted">({jobs.length})</span>
         </h2>
         {estimated > 0 && (
-          <span className="text-xs text-muted">
+          <span className="pl-4.5 text-xs text-muted">
             {t.maintenance.estimatedTotal(formatBaht(estimated, locale))}
           </span>
         )}

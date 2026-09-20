@@ -189,7 +189,7 @@ export function EnclosureHub({
                   {t.enclosures.hub.maintenance}
                 </span>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                  className={`shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${
                     openJobs.length > 0
                       ? "bg-primary/15 text-primary"
                       : "bg-surface-hover text-muted"

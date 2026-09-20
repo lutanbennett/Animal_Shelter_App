@@ -664,6 +664,59 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   became the generic `AttachmentUploader` (URL and wording as props) so
   both records share one drop zone.
 
+- **Enclosure maintenance (2026-09-20):** migration 0033 turns the 0001
+  placeholder `maintenance` table into the real thing. Status vocabulary
+  is now `Not Started / In Progress / Blocked / Completed` (user-confirmed;
+  the enum values were renamed in place, closing "still open" item 3). A
+  job has a nullable `enclosure_id` (a zone-wide job — the path, the fence
+  line — sets `zone_id` alone; a trigger derives `zone_id` from the
+  enclosure otherwise, so they can't disagree), `estimated_cost` and
+  `actual_cost` in baht, a `due_date` (what "overdue" means on the board),
+  a sequential `job_code` (`M-0001`, same reasoning as `animal_code`) and
+  a cached `drive_folder_id`. `date_completed` is stamped/cleared by the
+  same trigger as the status changes. Files use the polymorphic
+  `attachments` table (owner type `maintenance`, present since 0001) with
+  a new `phase` column (`before` / `after`) — the user asked for before and
+  after to be told apart by the app rather than by sub-folders, so they
+  sit side by side in the job's folder. `maintenance_photos` (0001) is
+  left unused for the same reason blood tests moved off their own column:
+  one attachments path, one photo proxy lookup.
+
+  **Drive layout (user-specified):** `Projects/Shelter Projects/Enclosure
+  Maintenance/<Zone>/<Enclosure>/<Status>/<M-0001 Title>/<file>`, with
+  `Zone-wide` in place of the enclosure name for zone-wide jobs. The job
+  folder follows the job: `syncMaintenanceJobFolder()` in
+  `src/lib/google/drive.ts` runs on every upload and after every status,
+  title or location change, reads the folder's *current* parents from
+  Drive and moves/renames it if they don't match — so the database stays
+  the source of truth and a move that failed mid-way (Drive 5xx) is
+  repaired by the next change rather than needing a manual fix. A job
+  that has never had a file has no folder at all (no Drive calls for a
+  bare job). Drive folder-name matching is case-insensitive on Google's
+  side, which is why the pre-existing `Shelter projects` folder was
+  reused rather than duplicated. Note the dev Drive also holds a legacy
+  AppSheet tree under the same root (`<Enclosure>/Active|Completed/<date>
+  (<id>)/Work to be Done/`) — those jobs aren't in the database; if they
+  are ever migrated they'd get `M-` codes and be moved into the new layout
+  by the same sync.
+
+  **UI:** `/maintenance` is a four-column Kanban from `lg` (two columns
+  at `md`, native HTML5 drag and drop, no library) and a status-chip list
+  below `md`, since touch can't drag; a tap opens `/maintenance/[id]`,
+  which has thumb-sized status buttons and separate Before / After photo
+  sections with their own uploaders. Colour is split by meaning: the
+  column says status (grey / blue `--info` / yellow `--warning` / green —
+  two new tokens in `globals.css`), a card's left edge says urgency (red
+  overdue, orange due within 3 days). The Completed column shows the last
+  30 days by default. `/maintenance/new` keeps the photos on the same
+  form as the details — picked while filling it in, uploaded on Save with
+  per-file progress and retry, then on to the job — because the user
+  didn't want the medical forms' save-then-upload second step. The
+  enclosure hub's placeholder card now lists that enclosure's open jobs.
+  Roles: staff/admin log, edit and move jobs (RLS from 0001); volunteers
+  see everything and may add photos (`volunteer_rw_attachments`), which
+  is the split 0001 already encoded.
+
 ## Still open (from Section 11 of the requirements doc)
 
 1. Exact per-table RBAC permission matrix beyond the role descriptions —
@@ -672,9 +725,8 @@ Section 11, plus decisions made during setup that aren't in the original doc.
 2. Whether `immunization_history` is distinct from `immunization_records`
    in the live data — needs confirmation against the actual Sheets data
    during migration. Current schema has only `immunization_records`.
-3. Exact current values for `maintenance.status` — schema currently uses
-   `To Do / In Progress / Blocked / Done` per the doc's example; confirm
-   against live data.
+3. ~~Exact current values for `maintenance.status`~~ — resolved
+   2026-09-20: `Not Started / In Progress / Blocked / Completed` (0033).
 4. Whether Supabase Storage should be used for anything (e.g. small UI
    assets) alongside Drive — not used yet; default is to avoid it for
    consistency unless a concrete need comes up.

@@ -155,7 +155,12 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
   business-logic functions (immunization recording, bulk appointments,
   deceased-workflow cascade) described in the requirements doc.
 - `src/lib/supabase/` — Supabase client helpers (browser + server).
-- `src/lib/google/` — Google Drive client helper.
+- `src/lib/google/` — Google Drive client helper, including the per-record
+  folder helpers (resident photos / blood tests / procedures, and the
+  maintenance job folder that follows a job between status folders).
+- `src/lib/maintenance/` — the enclosure maintenance feature's shared
+  pieces: status vocabulary and colours, the job loader, and the
+  after-change Drive folder sync used by the server actions.
 - `src/lib/archive/` — the deceased resident archive: the summary PDF, the
   offline `index.html` index page written beside it in the resident's Drive
   folder, and the step that moves that folder to `Residents/Deceased/`.

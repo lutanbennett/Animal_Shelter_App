@@ -27,7 +27,10 @@ export default async function MaintenancePage(props: PageProps<"/maintenance">) 
   };
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-6">
+    // min-w-0: the phone layout's status chips scroll sideways inside their
+    // row; without it the row's intrinsic width would widen <main> (a flex
+    // item defaults to min-width: auto) and the whole page with it.
+    <main className="flex min-w-0 flex-1 flex-col gap-6 p-6">
       <div>
         <h1 className="text-2xl font-semibold text-foreground">{t.maintenance.pageTitle}</h1>
         <p className="text-sm text-muted">{t.maintenance.pageSubtitle}</p>

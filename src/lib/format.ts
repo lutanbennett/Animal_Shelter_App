@@ -117,6 +117,7 @@ export function formatBaht(amount: number, locale: Locale = "en") {
   return amount.toLocaleString(DATE_LOCALE_TAG[locale], {
     style: "currency",
     currency: "THB",
+    currencyDisplay: "narrowSymbol",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   });
