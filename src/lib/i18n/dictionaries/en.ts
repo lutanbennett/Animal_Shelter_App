@@ -14,6 +14,8 @@ const en = {
     uploading: "Uploading...",
     add: "Add",
     addMore: "+ Add more",
+    change: "Change",
+    done: "Done",
     dash: "—",
     saved: "Saved.",
     failedToSave: "Failed to save.",
@@ -72,6 +74,13 @@ const en = {
         lastWeek === 1 ? "1 in the last week" : `${lastWeek} in the last week`,
       inVetCare: "In vet care",
       inVetCareDetail: "Currently in hospital for treatment",
+    },
+    featured: {
+      heading: "Pet of the week",
+      meetName: (name: string) => `Meet ${name}`,
+      noPhoto: "No photo yet",
+      availableForAdoption: "Available for adoption",
+      readMore: "Read their story",
     },
   },
 
@@ -258,6 +267,17 @@ const en = {
         remove: "Remove",
         removeConfirm: "Remove this photo from the gallery?",
         photoAdded: "Photo added.",
+      },
+      featured: {
+        heading: "Pet of the week",
+        subtitle:
+          "One resident to spotlight on the welcome page, linking to their adoption profile. Only residents shown on the public adoption pages can be chosen; if the featured resident is later hidden or adopted, the card disappears on its own.",
+        selectResident: "Choose a resident",
+        none: "No resident featured.",
+        currentlyFeatured: "Currently featured",
+        updated: "Featured resident updated.",
+        cleared: "Featured resident cleared.",
+        notPublic: "That resident isn't shown on the public adoption pages.",
       },
       errors: {
         noFile: "No file provided.",

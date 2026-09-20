@@ -60,6 +60,54 @@ export async function updateSiteContent(
   return { success: t.common.saved };
 }
 
+/**
+ * Set (or clear, with null) the "Pet of the week" on the home page. The
+ * choice is checked against public_resident_profiles so only an animal the
+ * public adoption pages already show can be featured — the same rule the
+ * home page applies when it renders the card.
+ */
+export async function setFeaturedResident(
+  residentId: string | null,
+): Promise<SiteContentFormState> {
+  await assertAdminRole();
+  const { t } = await getT();
+
+  const supabase = await createClient();
+
+  if (residentId) {
+    const { data: visible, error: lookupError } = await supabase
+      .from("public_resident_profiles")
+      .select("id")
+      .eq("id", residentId)
+      .limit(1)
+      .returns<{ id: string }[]>();
+    if (lookupError) return { error: lookupError.message };
+    if (!visible?.length) return { error: t.admin.website.featured.notPublic };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { error } = await supabase
+    .from("site_content")
+    .update({
+      featured_resident_id: residentId,
+      updated_at: new Date().toISOString(),
+      updated_by: user?.id ?? null,
+    })
+    .eq("id", true);
+
+  if (error) return { error: error.message };
+
+  revalidateWebsitePages();
+  return {
+    success: residentId
+      ? t.admin.website.featured.updated
+      : t.admin.website.featured.cleared,
+  };
+}
+
 async function uploadToWebsiteFolder(file: File) {
   const { t } = await getT();
   if (!ALLOWED_MIME_TYPES.has(file.type)) {

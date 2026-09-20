@@ -6,6 +6,27 @@ Section 11, plus decisions made during setup that aren't in the original doc.
 
 ## Confirmed
 
+- **Pet of the week (2026-09-21):** `site_content.featured_resident_id`
+  (0041, nullable FK to `residents`, `on delete set null`) names one
+  resident to spotlight on `/`. It sits on the `site_content` singleton so
+  the existing public-read / admin-update policies cover it, and the
+  public page **never trusts the id alone**: it looks the resident up in
+  `public_resident_profiles`, so an animal that is later hidden, adopted
+  or dies drops off the home page by the view's own rules (0025) with no
+  clean-up job or cascade. The admin chooser on `/admin/website` reads
+  the same view for its options (plus `thai_name` from `residents`, which
+  the view deliberately omits) and the server action re-checks the choice
+  against it, so the picker can't offer — and the action won't store —
+  an animal the page would then refuse to show. Rather than a second
+  component, `ResidentPicker` gained a `single` prop (radio rows, one
+  choice replaces the last) for this and any later one-resident field.
+  The card (photo, "Meet <name>", species · breed, first paragraph of the
+  bio, "Available for adoption" badge when set) links to `/adopt/[id]`
+  and sits **after the story and gallery, just above "Ready to meet
+  everyone?"** — the user's call over the RSPCA ACT placement near the
+  top: the visitor learns who the shelter is, meets one animal, then is
+  offered the rest.
+
 - **Management role and dashboard (2026-09-21):** a fifth `app_role`,
   `management`, sits between admin and staff. In the database it is
   *exactly* staff — 0039 copies every `staff_*` policy in `pg_policies`

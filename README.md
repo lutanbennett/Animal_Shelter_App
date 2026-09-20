@@ -125,7 +125,8 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    defaults may differ from dev's — don't skip the check. Afterwards, load
    `/` and `/adopt` signed out and confirm animals actually appear, and
    set the hero photo and story copy at `/admin/website` (`site_content`
-   starts empty).
+   starts empty). The same page picks the optional "Pet of the week" for
+   the home page from the publicly listed residents.
 
 4. **Set production secrets** — every variable in `.env.example` except the
    `NEXT_PUBLIC_*` ones:
