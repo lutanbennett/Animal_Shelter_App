@@ -30,9 +30,12 @@ export type BloodTestRow = {
 export function BloodTestList({
   residentId,
   bloodTests,
+  readOnly = false,
 }: {
   residentId: string;
   bloodTests: BloodTestRow[];
+  /** A closed record (deceased resident): files can be opened, not removed. */
+  readOnly?: boolean;
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
@@ -108,15 +111,17 @@ export function BloodTestList({
                         </span>
                       )}
                     </a>
-                    <button
-                      type="button"
-                      disabled={isPending}
-                      onClick={() => removeAttachment(attachment.id)}
-                      aria-label={t.common.remove}
-                      className="absolute right-0.5 top-0.5 hidden rounded-full bg-black/60 px-1.5 text-xs text-white hover:bg-danger group-hover:block disabled:opacity-60"
-                    >
-                      &times;
-                    </button>
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        disabled={isPending}
+                        onClick={() => removeAttachment(attachment.id)}
+                        aria-label={t.common.remove}
+                        className="absolute right-0.5 top-0.5 hidden rounded-full bg-black/60 px-1.5 text-xs text-white hover:bg-danger group-hover:block disabled:opacity-60"
+                      >
+                        &times;
+                      </button>
+                    )}
                   </div>
                 );
               })}

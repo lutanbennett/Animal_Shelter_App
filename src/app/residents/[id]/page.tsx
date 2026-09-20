@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { DECEASED_ROLES } from "@/lib/placements/deceased";
 import {
   ResidentHub,
   type BloodTestRow,
@@ -33,11 +34,12 @@ export default async function ResidentPage(
     proceduresResult,
     bloodTestsResult,
     attachmentsCountResult,
+    roleResult,
   ] = await Promise.all([
     supabase
       .from("residents")
       .select(
-        "id, name, animal_code, thai_name, other_names, species, breed, sex, estimated_age_years, age_estimated_on, intake_date, bio, temperament_notes, past_story_notes, behaviour_notes, profile_photo_drive_file_id, ready_for_adoption, is_public_visible",
+        "id, name, animal_code, thai_name, other_names, species, breed, sex, estimated_age_years, age_estimated_on, intake_date, bio, temperament_notes, past_story_notes, behaviour_notes, profile_photo_drive_file_id, ready_for_adoption, is_public_visible, drive_folder_id, deceased_summary_drive_file_id, deceased_index_drive_file_id, deceased_archived_at",
       )
       .eq("id", id)
       .limit(1)
@@ -68,11 +70,11 @@ export default async function ResidentPage(
       >(),
     supabase
       .from("placement_history")
-      .select("start_date")
+      .select("start_date, cause_of_death")
       .eq("resident_id", id)
       .is("end_date", null)
       .limit(1)
-      .returns<{ start_date: string }[]>(),
+      .returns<{ start_date: string; cause_of_death: string | null }[]>(),
     supabase
       .from("placement_history")
       .select("id", { count: "exact", head: true })
@@ -123,6 +125,9 @@ export default async function ResidentPage(
       .select("id", { count: "exact", head: true })
       .eq("owner_type", "resident")
       .eq("owner_id", id),
+    // Drives which of the record-death / retry-archive controls the hub
+    // offers; the server action checks the role again before writing.
+    supabase.rpc("current_user_role"),
   ]);
 
   // A query error (e.g. a migration not yet applied) must not look like a
@@ -164,6 +169,14 @@ export default async function ResidentPage(
       status={listViewResult.data?.[0] ?? null}
       isDeceased={currentState?.is_deceased ?? false}
       dateOfDeath={currentState?.date_of_death ?? null}
+      causeOfDeath={currentPlacementResult.data?.[0]?.cause_of_death ?? null}
+      archive={{
+        archivedAt: resident.deceased_archived_at,
+        summaryDriveFileId: resident.deceased_summary_drive_file_id,
+        indexDriveFileId: resident.deceased_index_drive_file_id,
+        driveFolderId: resident.drive_folder_id,
+      }}
+      canRecordDeath={DECEASED_ROLES.has(roleResult.data ?? "")}
       currentPlacementSince={currentPlacementResult.data?.[0]?.start_date ?? null}
       carerName={carerResult?.data?.[0]?.name ?? null}
       hospitalPreviousEnclosureName={previousEnclosureResult?.data?.[0]?.name ?? null}

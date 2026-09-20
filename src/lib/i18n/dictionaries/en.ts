@@ -557,6 +557,63 @@ const en = {
         notInHospital: "This resident isn't in hospital.",
       },
     },
+    deceased: {
+      pageTitle: (name: string) => `Record ${name}'s death`,
+      pageSubtitle:
+        "Close this resident's record. Their status becomes Deceased, their file becomes read-only, and their Google Drive folder is archived with a summary PDF and an offline index page.",
+      recordButton: "Record death",
+      recording: "Recording...",
+      recordClosed:
+        "This resident has died — their record is closed and can no longer be changed.",
+      notAuthorized: "Only staff and admins can record a death.",
+      fields: {
+        date: "Date of death",
+        causeOfDeath: "Cause of death",
+        causeOfDeathPlaceholder: "e.g. kidney failure, hit by a car, old age",
+        notesPlaceholder:
+          "e.g. found in the morning, euthanised at the clinic after the vet's advice",
+      },
+      whatHappens: {
+        title: "What recording a death does",
+        items: [
+          "The resident's status becomes Deceased and they leave their enclosure.",
+          "Future vet appointments are cancelled and active prescriptions are ended.",
+          "They're removed from the public adoption pages.",
+          "Their whole record becomes read-only — no edits, photos or new medical records.",
+          "Their Drive folder moves to Residents/Deceased/, and a summary PDF plus an offline index page are written into it.",
+        ],
+      },
+      confirm: {
+        title: (name: string) => `Record ${name} as deceased?`,
+        body: "This can't be undone from the app.",
+        confirmButton: "Yes, record the death",
+      },
+      banner: {
+        title: (date: string) => `This record was closed on ${date}`,
+        titleNoDate: "This record is closed",
+        cause: (cause: string) => `Cause of death: ${cause}`,
+        readOnly:
+          "The resident's file is read-only. Nothing can be edited, uploaded or recorded against it.",
+        summaryPdf: "Summary PDF",
+        offlineIndex: "Offline index page",
+        driveFolder: "Drive folder",
+        archivedAt: (date: string) => `Archived to Residents/Deceased/ on ${date}.`,
+        archiveIncomplete:
+          "The Drive archive didn't finish — the folder move, summary PDF or index page is missing.",
+        retryArchive: "Retry archiving",
+        archiving: "Archiving...",
+      },
+      errors: {
+        enterDate: "Enter the date of death.",
+        dateInFuture: "The date of death can't be in the future.",
+        dateBeforeCurrent:
+          "The date of death must be after the current placement started.",
+        enclosureNotFound:
+          "The Deceased status enclosure is missing from this database.",
+        residentNotFound: "This resident no longer exists.",
+        alreadyDeceased: "This resident is already recorded as deceased.",
+      },
+    },
     move: {
       pageTitle: (name: string) => `Move ${name}`,
       pageSubtitle:
@@ -730,6 +787,7 @@ const en = {
 
   photos: {
     noPhotos: "No photos uploaded yet.",
+    readOnly: "This record is closed — photos can be viewed but not changed.",
     profileBadge: "Profile",
     setAsProfile: "Set as profile photo",
     currentProfile: "Current profile photo",

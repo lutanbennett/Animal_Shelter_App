@@ -31,7 +31,7 @@ export default async function NewBloodTestPage(
 
   const supabase = await createClient();
 
-  const [residentResult, vetAppointmentsResult] = await Promise.all([
+  const [residentResult, vetAppointmentsResult, stateResult] = await Promise.all([
     supabase
       .from("residents")
       .select("id, name, thai_name")
@@ -44,6 +44,12 @@ export default async function NewBloodTestPage(
       .eq("resident_id", residentId)
       .order("appointment_date", { ascending: false })
       .returns<VetAppointmentOption[]>(),
+    supabase
+      .from("resident_current_state")
+      .select("is_deceased")
+      .eq("resident_id", residentId)
+      .limit(1)
+      .returns<{ is_deceased: boolean }[]>(),
   ]);
 
   const resident = residentResult.data?.[0];
@@ -61,6 +67,26 @@ export default async function NewBloodTestPage(
   const displayName = resident.thai_name
     ? `${resident.name} (${resident.thai_name})`
     : resident.name;
+
+  // Unlike the immunization and vet-visit forms, this page is reached with a
+  // resident id rather than a picker, so the "no records for the dead" rule
+  // (migration 0025, which would reject the insert anyway) is checked here.
+  if (stateResult.data?.[0]?.is_deceased) {
+    return (
+      <main className="flex flex-1 flex-col gap-4 p-6">
+        <h1 className="text-2xl font-semibold text-foreground">
+          {t.bloodTests.pageTitle}
+        </h1>
+        <p className="text-sm text-muted">{t.residents.deceased.recordClosed}</p>
+        <Link
+          href={`/residents/${residentId}`}
+          className="text-sm font-medium text-primary hover:underline"
+        >
+          {t.residents.sections.backTo(displayName)}
+        </Link>
+      </main>
+    );
+  }
 
   const vetAppointments = vetAppointmentsResult.data ?? [];
 

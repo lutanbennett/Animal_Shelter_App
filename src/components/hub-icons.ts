@@ -4,6 +4,7 @@ import {
   Camera,
   Droplet,
   Fence,
+  HeartCrack,
   HeartPulse,
   House,
   Info,
@@ -53,6 +54,7 @@ export const PLACEMENT_ICONS = {
   move: ArrowRightLeft,
   hospital: Ambulance,
   hospitalReturn: Undo2,
+  deceased: HeartCrack,
 } satisfies Record<string, LucideIcon>;
 
 /** Icons for the enclosure browser (`/enclosures`) and enclosure hub. */

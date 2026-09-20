@@ -59,22 +59,36 @@ export default async function ResidentSectionPage(
 
   const supabase = await createClient();
 
-  const residentResult = await supabase
-    .from("residents")
-    .select("id, name, thai_name, profile_photo_drive_file_id")
-    .eq("id", id)
-    .limit(1)
-    .returns<
-      {
-        id: string;
-        name: string;
-        thai_name: string | null;
-        profile_photo_drive_file_id: string | null;
-      }[]
-    >();
+  const [residentResult, residentStateResult] = await Promise.all([
+    supabase
+      .from("residents")
+      .select("id, name, thai_name, profile_photo_drive_file_id")
+      .eq("id", id)
+      .limit(1)
+      .returns<
+        {
+          id: string;
+          name: string;
+          thai_name: string | null;
+          profile_photo_drive_file_id: string | null;
+        }[]
+      >(),
+    supabase
+      .from("resident_current_state")
+      .select("current_status, is_deceased")
+      .eq("resident_id", id)
+      .limit(1)
+      .returns<{ current_status: string | null; is_deceased: boolean }[]>(),
+  ]);
 
   const resident = residentResult.data?.[0];
   if (!resident) notFound();
+
+  // A deceased resident's record is read-only — in the database too
+  // (migration 0025), so every "add a record" control below is dropped
+  // rather than left to fail against a trigger.
+  const residentState = residentStateResult.data?.[0];
+  const isDeceased = residentState?.is_deceased ?? false;
 
   const displayName = resident.thai_name
     ? `${resident.name} (${resident.thai_name})`
@@ -87,35 +101,26 @@ export default async function ResidentSectionPage(
       // placement_history has two FKs to enclosures (enclosure_id and
       // previous_enclosure_id), so each embed has to name its FK or
       // PostgREST rejects the whole query as ambiguous.
-      const [{ data, error }, stateResult] = await Promise.all([
-        supabase
-          .from("placement_history")
-          .select(
-            "id, placement_type, start_date, end_date, notes, enclosure:enclosures!enclosure_id(name), previous_enclosure:enclosures!previous_enclosure_id(name)",
-          )
-          .eq("resident_id", id)
-          .order("start_date", { ascending: false })
-          .returns<
-            {
-              id: string;
-              placement_type: string;
-              start_date: string;
-              end_date: string | null;
-              notes: string | null;
-              enclosure: { name: string } | null;
-              previous_enclosure: { name: string } | null;
-            }[]
-          >(),
-        supabase
-          .from("resident_current_state")
-          .select("current_status, is_deceased")
-          .eq("resident_id", id)
-          .limit(1)
-          .returns<{ current_status: string | null; is_deceased: boolean }[]>(),
-      ]);
-      const state = stateResult.data?.[0];
-      const isDeceased = state?.is_deceased ?? false;
-      const isHospitalised = state?.current_status === "Hospitalised";
+      const { data, error } = await supabase
+        .from("placement_history")
+        .select(
+          "id, placement_type, start_date, end_date, notes, cause_of_death, enclosure:enclosures!enclosure_id(name), previous_enclosure:enclosures!previous_enclosure_id(name)",
+        )
+        .eq("resident_id", id)
+        .order("start_date", { ascending: false })
+        .returns<
+          {
+            id: string;
+            placement_type: string;
+            start_date: string;
+            end_date: string | null;
+            notes: string | null;
+            cause_of_death: string | null;
+            enclosure: { name: string } | null;
+            previous_enclosure: { name: string } | null;
+          }[]
+        >();
+      const isHospitalised = residentState?.current_status === "Hospitalised";
       body = (
         <div className="flex flex-col gap-4">
           {/* Send to hospital and return from hospital are opposites; while
@@ -172,6 +177,11 @@ export default async function ResidentSectionPage(
                       : row.enclosure.name}
                   </span>
                 )}
+                {row.cause_of_death && (
+                  <span className="text-xs text-muted">
+                    {t.residents.deceased.banner.cause(row.cause_of_death)}
+                  </span>
+                )}
                 {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
               </div>
             )}
@@ -190,11 +200,12 @@ export default async function ResidentSectionPage(
         .returns<PhotoRow[]>();
       body = (
         <div className="flex flex-col gap-6">
-          <PhotoUploader residentId={id} />
+          {!isDeceased && <PhotoUploader residentId={id} />}
           <PhotoGallery
             residentId={id}
             photos={photos ?? []}
             profilePhotoDriveFileId={resident.profile_photo_drive_file_id}
+            readOnly={isDeceased}
           />
         </div>
       );
@@ -229,15 +240,17 @@ export default async function ResidentSectionPage(
       const today = new Date().toISOString().slice(0, 10);
       body = (
         <div className="flex flex-col gap-4">
-          <div className="flex justify-end">
-            <ActionLink
-              href={`/immunizations/new?residentId=${id}`}
-              label={t.residents.sections.logImmunization}
-              icon={SECTION_ICONS.immunizations}
-              variant="primary"
-              iconOnlyOnMobile={false}
-            />
-          </div>
+          {!isDeceased && (
+            <div className="flex justify-end">
+              <ActionLink
+                href={`/immunizations/new?residentId=${id}`}
+                label={t.residents.sections.logImmunization}
+                icon={SECTION_ICONS.immunizations}
+                variant="primary"
+                iconOnlyOnMobile={false}
+              />
+            </div>
+          )}
           {missing && missing.length > 0 && (
             <div className="rounded-lg border border-danger/40 bg-danger/10 p-4 text-sm text-danger">
               {t.residents.sections.missingMandatory(
@@ -297,45 +310,39 @@ export default async function ResidentSectionPage(
       break;
     }
     case "vet-appointments": {
-      const [{ data }, stateResult] = await Promise.all([
-        supabase
-          .from("vet_appointments")
-          .select("id, appointment_date, status, reason, notes, vets(name)")
-          .eq("resident_id", id)
-          .order("appointment_date", { ascending: false })
-          .returns<
-            {
-              id: string;
-              appointment_date: string;
-              status: string;
-              reason: string | null;
-              notes: string | null;
-              vets: { name: string } | null;
-            }[]
-          >(),
-        supabase
-          .from("resident_current_state")
-          .select("current_status")
-          .eq("resident_id", id)
-          .limit(1)
-          .returns<{ current_status: string | null }[]>(),
-      ]);
+      const { data } = await supabase
+        .from("vet_appointments")
+        .select("id, appointment_date, status, reason, notes, vets(name)")
+        .eq("resident_id", id)
+        .order("appointment_date", { ascending: false })
+        .returns<
+          {
+            id: string;
+            appointment_date: string;
+            status: string;
+            reason: string | null;
+            notes: string | null;
+            vets: { name: string } | null;
+          }[]
+        >();
       // A visit can end with the animal admitted; offer that on each record
       // unless they're already in hospital (or gone).
-      const currentStatus = stateResult.data?.[0]?.current_status ?? null;
+      const currentStatus = residentState?.current_status ?? null;
       const canSendToHospital =
         currentStatus !== "Hospitalised" && currentStatus !== "Deceased";
       body = (
         <div className="flex flex-col gap-4">
-          <div className="flex justify-end">
-            <ActionLink
-              href={`/vet-visits/new?residentId=${id}`}
-              label={t.residents.sections.bookVetVisit}
-              icon={SECTION_ICONS["vet-appointments"]}
-              variant="primary"
-              iconOnlyOnMobile={false}
-            />
-          </div>
+          {!isDeceased && (
+            <div className="flex justify-end">
+              <ActionLink
+                href={`/vet-visits/new?residentId=${id}`}
+                label={t.residents.sections.bookVetVisit}
+                icon={SECTION_ICONS["vet-appointments"]}
+                variant="primary"
+                iconOnlyOnMobile={false}
+              />
+            </div>
+          )}
           <RecordList
             rows={data ?? []}
             empty={t.residents.sections.empty.vetAppointments}
@@ -357,12 +364,14 @@ export default async function ResidentSectionPage(
                     {appointmentStatusLabel(t, row.status)}
                   </span>
                   <div className="flex flex-wrap justify-end gap-x-3 gap-y-1">
-                    <Link
-                      href={`/blood-tests/new?residentId=${id}&vetAppointmentId=${row.id}`}
-                      className="text-xs font-medium text-primary hover:underline"
-                    >
-                      {t.residents.sections.logBloodTest}
-                    </Link>
+                    {!isDeceased && (
+                      <Link
+                        href={`/blood-tests/new?residentId=${id}&vetAppointmentId=${row.id}`}
+                        className="text-xs font-medium text-primary hover:underline"
+                      >
+                        {t.residents.sections.logBloodTest}
+                      </Link>
+                    )}
                     {canSendToHospital && (
                       <Link
                         href={`/residents/${id}/hospital?vetAppointmentId=${row.id}`}
@@ -514,16 +523,22 @@ export default async function ResidentSectionPage(
 
       body = (
         <div className="flex flex-col gap-4">
-          <div className="flex justify-end">
-            <ActionLink
-              href={`/blood-tests/new?residentId=${id}`}
-              label={t.residents.sections.logBloodTest}
-              icon={SECTION_ICONS["blood-tests"]}
-              variant="primary"
-              iconOnlyOnMobile={false}
-            />
-          </div>
-          <BloodTestList residentId={id} bloodTests={bloodTests} />
+          {!isDeceased && (
+            <div className="flex justify-end">
+              <ActionLink
+                href={`/blood-tests/new?residentId=${id}`}
+                label={t.residents.sections.logBloodTest}
+                icon={SECTION_ICONS["blood-tests"]}
+                variant="primary"
+                iconOnlyOnMobile={false}
+              />
+            </div>
+          )}
+          <BloodTestList
+            residentId={id}
+            bloodTests={bloodTests}
+            readOnly={isDeceased}
+          />
         </div>
       );
       break;

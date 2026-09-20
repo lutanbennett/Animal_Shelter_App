@@ -83,6 +83,22 @@ export async function POST(
   }
 
   const residentRow = bloodTestRow.residents;
+
+  // record_attachment() would be rejected by the deceased lock (migration
+  // 0025) — but only after the file had already been uploaded, leaving it
+  // orphaned in Drive. Stop before touching Drive at all.
+  const { data: state } = await supabase
+    .from("resident_current_state")
+    .select("is_deceased")
+    .eq("resident_id", residentRow.id)
+    .limit(1)
+    .returns<{ is_deceased: boolean }[]>();
+  if (state?.[0]?.is_deceased) {
+    return NextResponse.json(
+      { error: "This resident has died — their record is closed." },
+      { status: 409 },
+    );
+  }
   const drive = getDriveClient();
   const yyyymmdd = dateToYyyymmdd(bloodTestRow.date);
   const { residentFolderId, uploadFolderId, isNewResidentFolder } =

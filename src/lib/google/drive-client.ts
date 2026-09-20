@@ -17,6 +17,21 @@ export function driveImageUrl(fileId: string): string {
 }
 
 /**
+ * Link straight to a file in Google Drive's own viewer. Used for the
+ * deceased archive's summary PDF and offline index page, which staff open
+ * in Drive rather than through the app — unlike photos, these aren't
+ * rendered in-page, so there's no throttle to route around.
+ */
+export function driveFileUrl(fileId: string): string {
+  return `https://drive.google.com/file/d/${encodeURIComponent(fileId)}/view`;
+}
+
+/** Link to a folder in Drive — the archived resident folder. */
+export function driveFolderUrl(folderId: string): string {
+  return `https://drive.google.com/drive/folders/${encodeURIComponent(folderId)}`;
+}
+
+/**
  * The folders a resident photo can be filed under — mirrors the legacy
  * Drive convention (Residents/<Name> (<ID>)/Photos/<Category>/<YYMM>/...).
  * Single source of truth, shared by the upload form and the upload route's

@@ -67,18 +67,39 @@ export async function POST(
   }
 
   const supabase = await createClient();
-  const { data: resident, error: residentError } = await supabase
-    .from("residents")
-    .select("id, name, animal_code, drive_folder_id")
-    .eq("id", id)
-    .limit(1)
-    .returns<
-      { id: string; name: string; animal_code: string; drive_folder_id: string | null }[]
-    >();
+  const [
+    { data: resident, error: residentError },
+    { data: state },
+  ] = await Promise.all([
+    supabase
+      .from("residents")
+      .select("id, name, animal_code, drive_folder_id")
+      .eq("id", id)
+      .limit(1)
+      .returns<
+        { id: string; name: string; animal_code: string; drive_folder_id: string | null }[]
+      >(),
+    supabase
+      .from("resident_current_state")
+      .select("is_deceased")
+      .eq("resident_id", id)
+      .limit(1)
+      .returns<{ is_deceased: boolean }[]>(),
+  ]);
 
   const residentRow = resident?.[0];
   if (residentError || !residentRow) {
     return NextResponse.json({ error: "Resident not found." }, { status: 404 });
+  }
+
+  // record_attachment() would be rejected by the deceased lock (migration
+  // 0025) — but only after the file had already been uploaded, leaving it
+  // orphaned in Drive. Stop before touching Drive at all.
+  if (state?.[0]?.is_deceased) {
+    return NextResponse.json(
+      { error: "This resident has died — their record is closed." },
+      { status: 409 },
+    );
   }
 
   const drive = getDriveClient();
