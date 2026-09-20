@@ -186,5 +186,5 @@ export function projectFolderPathLabel(
  * itself is staff/admin work.
  */
 export function canWriteProjects(role: string | null | undefined): boolean {
-  return role === "admin" || role === "staff";
+  return role === "admin" || role === "management" || role === "staff";
 }

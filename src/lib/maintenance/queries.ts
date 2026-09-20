@@ -108,5 +108,5 @@ export async function loadMaintenanceJob(
  * `volunteer_rw_attachments` policy allows and the upload route honours.
  */
 export function canWriteMaintenance(role: string | null | undefined): boolean {
-  return role === "admin" || role === "staff";
+  return role === "admin" || role === "management" || role === "staff";
 }

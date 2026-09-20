@@ -34,7 +34,7 @@ export async function updateResident(
   // RLS would silently match zero rows for a volunteer/vet rather than
   // error, so check the role up front and give a real message.
   const { data: role } = await supabase.rpc("current_user_role");
-  if (role !== "admin" && role !== "staff") {
+  if (role !== "admin" && role !== "management" && role !== "staff") {
     return { error: t.residents.edit.notAuthorized };
   }
 

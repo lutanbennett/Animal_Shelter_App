@@ -32,7 +32,7 @@ export type ReturnFromHospitalResult = { error: string } | { ok: true };
  * Volunteers may only record ChangeEnclosure and vets can't write
  * placements at all (docs/decisions.md, "Volunteer tier").
  */
-export const HOSPITAL_ROLES = new Set(["admin", "staff"]);
+export const HOSPITAL_ROLES = new Set(["admin", "management", "staff"]);
 
 /**
  * Records a SendToHospital placement into the Lifecycle/Hospital

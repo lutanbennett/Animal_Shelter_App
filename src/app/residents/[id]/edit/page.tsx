@@ -73,7 +73,8 @@ export default async function EditResidentPage(
     ? `${resident.name} (${resident.thai_name})`
     : resident.name;
   const role = roleResult.data;
-  const canEdit = role === "admin" || role === "staff";
+  const canEdit =
+    role === "admin" || role === "management" || role === "staff";
   const status = statusResult.data?.[0];
   const currentStatus = stateResult.data?.[0]?.current_status ?? null;
   const housing: HousingState = {

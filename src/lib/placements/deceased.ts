@@ -13,7 +13,7 @@ export const DECEASED_ENCLOSURE = "Deceased";
  * database locks the resident's whole record afterwards), which is the
  * other reason not to widen this to volunteers.
  */
-export const DECEASED_ROLES = new Set(["admin", "staff"]);
+export const DECEASED_ROLES = new Set(["admin", "management", "staff"]);
 
 export type RecordDeathInput = {
   residentId: string;

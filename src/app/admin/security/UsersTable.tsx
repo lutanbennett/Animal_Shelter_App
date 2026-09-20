@@ -14,7 +14,7 @@ export type SecurityUser = {
   lastSignInAt: string | null;
 };
 
-const ROLES = ["admin", "staff", "vet", "volunteer"];
+const ROLES = ["admin", "management", "staff", "vet", "volunteer"];
 
 function UserRow({
   user,

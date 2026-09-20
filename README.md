@@ -17,6 +17,20 @@ Decisions and open questions: [`docs/decisions.md`](docs/decisions.md).
 Everything is chosen to run on free tiers — see `docs/decisions.md` for the
 reasoning and the trade-offs that come with that.
 
+## Roles
+
+Five `app_role` values, enforced by row-level security
+(`supabase/migrations/0001_initial_schema.sql`, mirrored for management in
+`0039`) and assigned at `/admin/security`:
+
+| Role | Access |
+|---|---|
+| **admin** | Everything, including the Admin section (security, website, zones, enclosures, vets, immunization types) and the Management section. |
+| **management** | Staff's operational access plus the Management section: the reporting dashboard (`/management/dashboard`) and contact management. |
+| **staff** | Read/write on residents, placements, weights, photos, maintenance, projects and contacts; read on medical records. |
+| **vet** | Read/write on vet visits, procedures, blood tests, prescriptions and immunizations; read on residents. |
+| **volunteer** | Read everything; write photos and enclosure moves only. |
+
 ## Getting started
 
 1. **Install dependencies**

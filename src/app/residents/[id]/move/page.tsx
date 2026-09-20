@@ -7,7 +7,7 @@ import { SECTION_ICONS } from "@/components/hub-icons";
 import { MoveResidentForm } from "./MoveResidentForm";
 
 /** Roles whose placement_history insert policy admits ChangeEnclosure. */
-const MOVE_ROLES = new Set(["admin", "staff", "volunteer"]);
+const MOVE_ROLES = new Set(["admin", "management", "staff", "volunteer"]);
 
 export default async function MoveResidentPage(
   props: PageProps<"/residents/[id]/move">,

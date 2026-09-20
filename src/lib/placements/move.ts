@@ -15,7 +15,7 @@ export type MoveResidentInput = {
 export type MoveResidentResult = { error: string } | { ok: true };
 
 /** Roles whose placement_history insert policy admits ChangeEnclosure. */
-const MOVE_ROLES = new Set(["admin", "staff", "volunteer"]);
+const MOVE_ROLES = new Set(["admin", "management", "staff", "volunteer"]);
 
 /**
  * Records a ChangeEnclosure placement for the resident. The
