@@ -45,3 +45,39 @@ export function placementTypeLabel(
 ) {
   return enumLabel(t.enums.placementType, value);
 }
+
+export function doseUnitLabel(t: Dictionary, value: string | null | undefined) {
+  return enumLabel(t.enums.doseUnit, value);
+}
+
+/** The medication.dose_unit vocabulary, in the order the form offers it. */
+export const DOSE_UNITS = [
+  "tablet",
+  "capsule",
+  "ml",
+  "mg",
+  "g",
+  "mcg",
+  "IU",
+  "drop",
+  "sachet",
+  "application",
+  "dose",
+] as const;
+
+export type DoseUnit = (typeof DOSE_UNITS)[number];
+
+/**
+ * "2 tablet(s)", "500 ml" — a prescription's dose in its medication's unit.
+ * Null when the row predates the dose column (0027).
+ */
+export function formatDose(
+  t: Dictionary,
+  quantity: number | string | null | undefined,
+  unit: string | null | undefined,
+): string | null {
+  if (quantity == null || quantity === "") return null;
+  const n = Number(quantity);
+  if (!Number.isFinite(n)) return null;
+  return `${n} ${doseUnitLabel(t, unit)}`.trim();
+}

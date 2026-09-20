@@ -140,6 +140,7 @@ export type DriveFile = {
   name?: string;
   mimeType?: string;
   createdTime?: string;
+  parents?: string[];
 };
 
 export type DriveDownload = {
@@ -233,6 +234,51 @@ export class DriveClient {
     return (await res.json()) as DriveFile;
   }
 
+  /**
+   * Media-only `files.update` — replaces a file's bytes, keeping its ID (and
+   * so every link and stored reference to it). Used to regenerate the
+   * deceased archive's summary PDF / index page in place rather than
+   * littering the folder with dated copies.
+   */
+  async updateFileContent(params: {
+    fileId: string;
+    mimeType: string;
+    content: Blob | ArrayBuffer | Uint8Array;
+  }): Promise<DriveFile> {
+    const res = await this.request(
+      `${DRIVE_UPLOAD_API}/files/${encodeURIComponent(params.fileId)}?uploadType=media&fields=id`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": params.mimeType },
+        body: params.content as BodyInit,
+      },
+    );
+    return (await res.json()) as DriveFile;
+  }
+
+  /**
+   * Metadata `files.update` with addParents/removeParents — Drive's "move".
+   * The file keeps its ID, which is why storing Drive IDs rather than paths
+   * survives the deceased-archive move (requirements doc, Section 5.2).
+   */
+  async moveFile(params: {
+    fileId: string;
+    addParents: string;
+    removeParents?: string;
+  }): Promise<DriveFile> {
+    const search = new URLSearchParams({
+      addParents: params.addParents,
+      fields: "id, parents",
+    });
+    if (params.removeParents) search.set("removeParents", params.removeParents);
+
+    const res = await this.request(
+      `${DRIVE_API}/files/${encodeURIComponent(params.fileId)}?${search}`,
+      { method: "PATCH" },
+    );
+    return (await res.json()) as DriveFile;
+  }
+
   /** `files.get` for metadata. */
   async getFile(fileId: string, fields: string): Promise<DriveFile> {
     const res = await this.request(
@@ -306,6 +352,25 @@ export async function findOrCreateFolder(
   return created.id;
 }
 
+/** Top-level folder under GOOGLE_DRIVE_ROOT_FOLDER_ID holding every resident. */
+const RESIDENTS_FOLDER = "Residents";
+
+/**
+ * Where a resident's folder is moved once they die — `Residents/Deceased/`,
+ * the legacy convention the old Apps Script polling trigger
+ * (`archiveDeceasedResidentFolders`) maintained (requirements doc, Section
+ * 5.1). Staff navigate this in Drive by hand, so the name is fixed.
+ */
+const DECEASED_ARCHIVE_FOLDER = "Deceased";
+
+/**
+ * "<Name> (<ID>)" — the per-resident folder name staff already know.
+ * Slashes can't appear in a Drive path segment, so they become hyphens.
+ */
+function residentFolderName(resident: { name: string; animal_code: string }): string {
+  return `${resident.name.trim().replace(/\//g, "-")} (${resident.animal_code})`;
+}
+
 /**
  * Resolves the Drive folder ID for a resident's "<Name> (<ID>)" folder,
  * reusing the cached resident.drive_folder_id when present instead of
@@ -326,9 +391,12 @@ async function ensureResidentFolder(
     return { residentFolderId: resident.drive_folder_id, isNewResidentFolder: false };
   }
 
-  const residentsRootId = await findOrCreateFolder(drive, rootId, "Residents");
-  const folderName = `${resident.name.trim().replace(/\//g, "-")} (${resident.animal_code})`;
-  const residentFolderId = await findOrCreateFolder(drive, residentsRootId, folderName);
+  const residentsRootId = await findOrCreateFolder(drive, rootId, RESIDENTS_FOLDER);
+  const residentFolderId = await findOrCreateFolder(
+    drive,
+    residentsRootId,
+    residentFolderName(resident),
+  );
   return { residentFolderId, isNewResidentFolder: true };
 }
 
@@ -407,6 +475,143 @@ export async function uploadImageToFolder(
   }
 
   return created.id;
+}
+
+// ---------------------------------------------------------------------------
+// Deceased archive
+// ---------------------------------------------------------------------------
+
+/**
+ * Moves a resident's folder from `Residents/` to `Residents/Deceased/`,
+ * creating either folder (and the resident's own, for an animal that never
+ * had a file uploaded) if it doesn't exist yet.
+ *
+ * A Drive move re-parents the folder rather than copying it, so the folder —
+ * and every file inside it — keeps its ID. Nothing stored in the database
+ * needs rewriting, and every photo already on a resident page keeps
+ * resolving through the image proxy after the move. That's precisely why
+ * the requirements doc (Section 5.2) says to store Drive IDs, not paths.
+ *
+ * Safe to re-run: a folder already sitting in the archive is left alone, so
+ * a retry after a half-finished archive (Drive 5xx between the move and the
+ * uploads) doesn't move anything twice.
+ */
+export async function moveResidentFolderToDeceasedArchive(
+  drive: DriveClient,
+  resident: { name: string; animal_code: string; drive_folder_id: string | null },
+): Promise<{ residentFolderId: string; archiveFolderId: string; alreadyArchived: boolean }> {
+  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  if (!rootId) {
+    throw new Error("GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured.");
+  }
+
+  const residentsRootId = await findOrCreateFolder(drive, rootId, RESIDENTS_FOLDER);
+  const archiveFolderId = await findOrCreateFolder(
+    drive,
+    residentsRootId,
+    DECEASED_ARCHIVE_FOLDER,
+  );
+
+  // Look in the archive before the live tree: after a partial run the folder
+  // can already be archived while the database never got told, and
+  // ensureResidentFolder() would happily create a second, empty folder under
+  // Residents/ in that case.
+  const residentFolderId =
+    resident.drive_folder_id ??
+    (await findFolderByName(drive, archiveFolderId, residentFolderName(resident))) ??
+    (await ensureResidentFolder(drive, resident)).residentFolderId;
+
+  const folder = await drive.getFile(residentFolderId, "id, parents");
+  const parents = folder.parents ?? [];
+  if (parents.includes(archiveFolderId)) {
+    return { residentFolderId, archiveFolderId, alreadyArchived: true };
+  }
+
+  await drive.moveFile({
+    fileId: residentFolderId,
+    addParents: archiveFolderId,
+    removeParents: parents.join(","),
+  });
+
+  return { residentFolderId, archiveFolderId, alreadyArchived: false };
+}
+
+/** Folder ID by exact name under a parent, or null. Never creates. */
+async function findFolderByName(
+  drive: DriveClient,
+  parentId: string,
+  name: string,
+): Promise<string | null> {
+  const escapedName = name.replace(/'/g, "\\'");
+  const files = await drive.listFiles({
+    q: `'${parentId}' in parents and name = '${escapedName}' and mimeType = '${FOLDER_MIME_TYPE}' and trashed = false`,
+    fields: "files(id, name, createdTime)",
+    orderBy: "createdTime",
+  });
+  return files[0]?.id ?? null;
+}
+
+/**
+ * Writes a generated file (the deceased summary PDF, the offline index
+ * page) into a folder, replacing the previous version in place where there
+ * is one so regenerating an archive doesn't leave stale duplicates beside
+ * it. Matches on the recorded file ID first, then on the file name — the
+ * latter covers an archive whose first attempt uploaded the file but failed
+ * before the ID was recorded.
+ */
+export async function upsertGeneratedFile(
+  drive: DriveClient,
+  folderId: string,
+  file: {
+    name: string;
+    mimeType: string;
+    content: Blob | ArrayBuffer | Uint8Array;
+    existingFileId?: string | null;
+  },
+): Promise<string> {
+  const existingId =
+    file.existingFileId ?? (await findFileByName(drive, folderId, file.name));
+
+  if (existingId) {
+    try {
+      await drive.updateFileContent({
+        fileId: existingId,
+        mimeType: file.mimeType,
+        content: file.content,
+      });
+      return existingId;
+    } catch (error) {
+      // A recorded ID can point at a file someone deleted in Drive by hand.
+      // Fall through to a fresh upload rather than failing the archive.
+      if (!(error instanceof DriveApiError) || error.status !== 404) throw error;
+    }
+  }
+
+  const created = await drive.uploadFile({
+    name: file.name,
+    mimeType: file.mimeType,
+    parentId: folderId,
+    content: file.content,
+  });
+  if (!created.id) {
+    throw new Error(`Failed to upload "${file.name}" to Drive.`);
+  }
+  return created.id;
+}
+
+/** Non-folder file ID by exact name under a parent, or null. */
+async function findFileByName(
+  drive: DriveClient,
+  parentId: string,
+  name: string,
+): Promise<string | null> {
+  const escapedName = name.replace(/'/g, "\\'");
+  const files = await drive.listFiles({
+    q: `'${parentId}' in parents and name = '${escapedName}' and mimeType != '${FOLDER_MIME_TYPE}' and trashed = false`,
+    fields: "files(id, name, createdTime)",
+    orderBy: "createdTime",
+  });
+  return files[0]?.id ?? null;
 }
 
 export { driveImageUrl } from "./drive-client";

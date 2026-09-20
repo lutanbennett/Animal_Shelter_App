@@ -115,7 +115,14 @@ export default async function EditResidentPage(
         </p>
       )}
 
-      {canEdit ? (
+      {/* A deceased resident's record is read-only, enforced by the
+          database (migration 0026) — don't offer a form whose every save
+          would be rejected. */}
+      {housing.isDeceased ? (
+        <p className="rounded-lg border border-border bg-surface p-4 text-sm text-muted">
+          {t.residents.deceased.recordClosed}
+        </p>
+      ) : canEdit ? (
         <EditResidentForm
           resident={resident}
           photos={photosResult.data ?? []}

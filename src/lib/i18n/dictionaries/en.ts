@@ -367,6 +367,62 @@ const en = {
     },
   },
 
+  prescriptions: {
+    pageTitle: "Add Prescription",
+    pageSubtitle:
+      "Record a medication for this resident: what, how much, how often and for how long. Ongoing prescriptions count toward the shelter's daily medication requirement until they end.",
+    noResidentSelected:
+      "Open this from a resident's Prescriptions tab or a vet appointment so the prescription is recorded against the right animal.",
+    residentNotFound: "Resident not found.",
+    couldntLoadMedications: "Couldn't load medications",
+    couldntLoadFrequencies: "Couldn't load frequencies",
+    couldntLoadVetAppointments: "Couldn't load vet appointments",
+    forResident: (name: string) => `For ${name}`,
+    medication: "Medication",
+    selectMedication: "Select a medication",
+    addNewMedication: "+ Add new medication…",
+    newMedicationName: "New medication name",
+    newMedicationPlaceholder: "e.g. Amoxicillin 250mg tablet",
+    newMedicationUnit: "Measured in",
+    newMedicationUnitHint:
+      "One unit of this medication — tablets for a pill, ml for a liquid or IV fluid, drops for eye drops. The same product in two forms is two medications.",
+    chooseExistingMedication: "Choose an existing medication instead",
+    dose: "Dose",
+    doseHint: (unit: string) => `Per dose, in ${unit}`,
+    frequency: "Frequency",
+    selectFrequency: "Select a frequency",
+    addNewFrequency: "+ Add new frequency…",
+    newFrequencyLabel: "New frequency",
+    newFrequencyPlaceholder: "e.g. Every 6 hours",
+    newFrequencyDosesPerDay: "Doses per day",
+    newFrequencyDosesPerDayHint:
+      'Optional — twice daily is 2, every 8 hours is 3, every other day is 0.5. Leave blank for "as needed".',
+    chooseExistingFrequency: "Choose an existing frequency instead",
+    startDate: "Start date",
+    endDate: "End date",
+    endDateHint: "Leave blank if ongoing.",
+    linkedVisit: "Linked vet visit",
+    noLinkedVisit: "No linked visit",
+    notes: "Notes",
+    notesPlaceholder: "e.g. give with food, route, anything the carer should know",
+    saving: "Saving...",
+    saveButton: "Save prescription",
+    errors: {
+      missingResident: "Missing resident.",
+      selectMedication: "Select a medication or add a new one.",
+      newMedicationName: "Enter a name for the new medication.",
+      newMedicationUnit: "Choose what the new medication is measured in.",
+      newFrequencyLabel: "Enter a label for the new frequency.",
+      dosesPerDayPositive: "Doses per day must be a number greater than zero.",
+      dosePositive: "Dose must be a number greater than zero.",
+      enterStartDate: "Enter a start date.",
+      invalidStartDate: "Invalid start date.",
+      invalidEndDate: "Invalid end date.",
+      endBeforeStart: "End date can't be before the start date.",
+      saveFailed: "Failed to save the prescription.",
+    },
+  },
+
   residents: {
     new: {
       pageTitle: "Resident Intake",
@@ -484,6 +540,7 @@ const en = {
       prescriptions: "Prescriptions",
       prescriptionsActive: (n: number) => `${n} active`,
       noActivePrescriptions: "No active prescriptions",
+      addPrescription: "Add prescription",
       weight: "Weight",
       weightNoData: "No data",
       weightNotRecorded: "Not yet recorded",
@@ -574,6 +631,63 @@ const en = {
         residentNotFound: "This resident no longer exists.",
         deceased: "A deceased resident can't be returned from hospital.",
         notInHospital: "This resident isn't in hospital.",
+      },
+    },
+    deceased: {
+      pageTitle: (name: string) => `Record ${name}'s death`,
+      pageSubtitle:
+        "Close this resident's record. Their status becomes Deceased, their file becomes read-only, and their Google Drive folder is archived with a summary PDF and an offline index page.",
+      recordButton: "Record death",
+      recording: "Recording...",
+      recordClosed:
+        "This resident has died — their record is closed and can no longer be changed.",
+      notAuthorized: "Only staff and admins can record a death.",
+      fields: {
+        date: "Date of death",
+        causeOfDeath: "Cause of death",
+        causeOfDeathPlaceholder: "e.g. kidney failure, hit by a car, old age",
+        notesPlaceholder:
+          "e.g. found in the morning, euthanised at the clinic after the vet's advice",
+      },
+      whatHappens: {
+        title: "What recording a death does",
+        items: [
+          "The resident's status becomes Deceased and they leave their enclosure.",
+          "Future vet appointments are cancelled and active prescriptions are ended.",
+          "They're removed from the public adoption pages.",
+          "Their whole record becomes read-only — no edits, photos or new medical records.",
+          "Their Drive folder moves to Residents/Deceased/, and a summary PDF plus an offline index page are written into it.",
+        ],
+      },
+      confirm: {
+        title: (name: string) => `Record ${name} as deceased?`,
+        body: "This can't be undone from the app.",
+        confirmButton: "Yes, record the death",
+      },
+      banner: {
+        title: (date: string) => `This record was closed on ${date}`,
+        titleNoDate: "This record is closed",
+        cause: (cause: string) => `Cause of death: ${cause}`,
+        readOnly:
+          "The resident's file is read-only. Nothing can be edited, uploaded or recorded against it.",
+        summaryPdf: "Summary PDF",
+        offlineIndex: "Offline index page",
+        driveFolder: "Drive folder",
+        archivedAt: (date: string) => `Archived to Residents/Deceased/ on ${date}.`,
+        archiveIncomplete:
+          "The Drive archive didn't finish — the folder move, summary PDF or index page is missing.",
+        retryArchive: "Retry archiving",
+        archiving: "Archiving...",
+      },
+      errors: {
+        enterDate: "Enter the date of death.",
+        dateInFuture: "The date of death can't be in the future.",
+        dateBeforeCurrent:
+          "The date of death must be after the current placement started.",
+        enclosureNotFound:
+          "The Deceased status enclosure is missing from this database.",
+        residentNotFound: "This resident no longer exists.",
+        alreadyDeceased: "This resident is already recorded as deceased.",
       },
     },
     move: {
@@ -798,6 +912,12 @@ const en = {
       unknownVaccine: "Unknown vaccine",
       vetVisitFallback: "Vet visit",
       unknownMedication: "Unknown medication",
+      addPrescription: "Add prescription",
+      currentPrescriptions: "Current",
+      expiredPrescriptions: "Expired",
+      noCurrentPrescriptions: "No current prescriptions.",
+      startsOn: (date: string) => `Starts ${date}`,
+      linkedVisit: (date: string) => `Vet visit ${date}`,
     },
     picker: {
       selectResidents: "Select residents",
@@ -855,6 +975,7 @@ const en = {
 
   photos: {
     noPhotos: "No photos uploaded yet.",
+    readOnly: "This record is closed — photos can be viewed but not changed.",
     profileBadge: "Profile",
     setAsProfile: "Set as profile photo",
     currentProfile: "Current profile photo",
@@ -933,6 +1054,20 @@ const en = {
     appointmentStatus: { scheduled: "scheduled", completed: "completed" },
     zoneLocation: { internal: "Internal", external: "External" },
     mandatory: { mandatory: "Mandatory", optional: "Optional" },
+    /** medication.dose_unit — what one unit of a medication is. */
+    doseUnit: {
+      tablet: "tablet(s)",
+      capsule: "capsule(s)",
+      ml: "ml",
+      mg: "mg",
+      g: "g",
+      mcg: "mcg",
+      IU: "IU",
+      drop: "drop(s)",
+      sachet: "sachet(s)",
+      application: "application(s)",
+      dose: "dose(s)",
+    },
   },
 };
 

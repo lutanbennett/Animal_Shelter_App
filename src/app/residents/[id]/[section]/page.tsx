@@ -5,6 +5,7 @@ import { formatDate } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
 import {
   appointmentStatusLabel,
+  formatDose,
   placementTypeLabel,
 } from "@/lib/i18n/enum-labels";
 import { PhotoUploader } from "@/components/PhotoUploader";
@@ -63,22 +64,36 @@ export default async function ResidentSectionPage(
 
   const supabase = await createClient();
 
-  const residentResult = await supabase
-    .from("residents")
-    .select("id, name, thai_name, profile_photo_drive_file_id")
-    .eq("id", id)
-    .limit(1)
-    .returns<
-      {
-        id: string;
-        name: string;
-        thai_name: string | null;
-        profile_photo_drive_file_id: string | null;
-      }[]
-    >();
+  const [residentResult, residentStateResult] = await Promise.all([
+    supabase
+      .from("residents")
+      .select("id, name, thai_name, profile_photo_drive_file_id")
+      .eq("id", id)
+      .limit(1)
+      .returns<
+        {
+          id: string;
+          name: string;
+          thai_name: string | null;
+          profile_photo_drive_file_id: string | null;
+        }[]
+      >(),
+    supabase
+      .from("resident_current_state")
+      .select("current_status, is_deceased")
+      .eq("resident_id", id)
+      .limit(1)
+      .returns<{ current_status: string | null; is_deceased: boolean }[]>(),
+  ]);
 
   const resident = residentResult.data?.[0];
   if (!resident) notFound();
+
+  // A deceased resident's record is read-only — in the database too
+  // (migration 0026), so every "add a record" control below is dropped
+  // rather than left to fail against a trigger.
+  const residentState = residentStateResult.data?.[0];
+  const isDeceased = residentState?.is_deceased ?? false;
 
   const displayName = resident.thai_name
     ? `${resident.name} (${resident.thai_name})`
@@ -91,38 +106,32 @@ export default async function ResidentSectionPage(
       // placement_history has two FKs to enclosures (enclosure_id and
       // previous_enclosure_id), so each embed has to name its FK or
       // PostgREST rejects the whole query as ambiguous.
-      const [{ data, error }, stateResult] = await Promise.all([
-        supabase
-          .from("placement_history")
-          .select(
-            "id, placement_type, start_date, end_date, notes, enclosure:enclosures!enclosure_id(name), previous_enclosure:enclosures!previous_enclosure_id(name), carer:contacts(name)",
-          )
-          .eq("resident_id", id)
-          .order("start_date", { ascending: false })
-          .returns<
-            {
-              id: string;
-              placement_type: string;
-              start_date: string;
-              end_date: string | null;
-              notes: string | null;
-              enclosure: { name: string } | null;
-              previous_enclosure: { name: string } | null;
-              carer: { name: string } | null;
-            }[]
-          >(),
-        supabase
-          .from("resident_current_state")
-          .select("current_status, is_deceased")
-          .eq("resident_id", id)
-          .limit(1)
-          .returns<{ current_status: string | null; is_deceased: boolean }[]>(),
-      ]);
-      const state = stateResult.data?.[0];
+      const { data, error } = await supabase
+        .from("placement_history")
+        .select(
+          "id, placement_type, start_date, end_date, notes, cause_of_death, enclosure:enclosures!enclosure_id(name), previous_enclosure:enclosures!previous_enclosure_id(name), carer:contacts(name)",
+        )
+        .eq("resident_id", id)
+        .order("start_date", { ascending: false })
+        .returns<
+          {
+            id: string;
+            placement_type: string;
+            start_date: string;
+            end_date: string | null;
+            notes: string | null;
+            cause_of_death: string | null;
+            enclosure: { name: string } | null;
+            previous_enclosure: { name: string } | null;
+            carer: { name: string } | null;
+          }[]
+        >();
       // Which placement actions apply depends on the lifecycle status — see
       // availablePlacementActions() for the table. The last one is primary.
+      // A deceased resident has none, which is also how the read-only rule
+      // shows up here.
       const actions = availablePlacementActions(
-        state?.is_deceased ? "Deceased" : state?.current_status,
+        isDeceased ? "Deceased" : residentState?.current_status,
       );
       body = (
         <div className="flex flex-col gap-4">
@@ -170,6 +179,11 @@ export default async function ResidentSectionPage(
                       .join(" · ")}
                   </span>
                 )}
+                {row.cause_of_death && (
+                  <span className="text-xs text-muted">
+                    {t.residents.deceased.banner.cause(row.cause_of_death)}
+                  </span>
+                )}
                 {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
               </div>
             )}
@@ -188,11 +202,12 @@ export default async function ResidentSectionPage(
         .returns<PhotoRow[]>();
       body = (
         <div className="flex flex-col gap-6">
-          <PhotoUploader residentId={id} />
+          {!isDeceased && <PhotoUploader residentId={id} />}
           <PhotoGallery
             residentId={id}
             photos={photos ?? []}
             profilePhotoDriveFileId={resident.profile_photo_drive_file_id}
+            readOnly={isDeceased}
           />
         </div>
       );
@@ -227,15 +242,17 @@ export default async function ResidentSectionPage(
       const today = new Date().toISOString().slice(0, 10);
       body = (
         <div className="flex flex-col gap-4">
-          <div className="flex justify-end">
-            <ActionLink
-              href={`/immunizations/new?residentId=${id}`}
-              label={t.residents.sections.logImmunization}
-              icon={SECTION_ICONS.immunizations}
-              variant="primary"
-              iconOnlyOnMobile={false}
-            />
-          </div>
+          {!isDeceased && (
+            <div className="flex justify-end">
+              <ActionLink
+                href={`/immunizations/new?residentId=${id}`}
+                label={t.residents.sections.logImmunization}
+                icon={SECTION_ICONS.immunizations}
+                variant="primary"
+                iconOnlyOnMobile={false}
+              />
+            </div>
+          )}
           {missing && missing.length > 0 && (
             <div className="rounded-lg border border-danger/40 bg-danger/10 p-4 text-sm text-danger">
               {t.residents.sections.missingMandatory(
@@ -295,45 +312,39 @@ export default async function ResidentSectionPage(
       break;
     }
     case "vet-appointments": {
-      const [{ data }, stateResult] = await Promise.all([
-        supabase
-          .from("vet_appointments")
-          .select("id, appointment_date, status, reason, notes, vets(name)")
-          .eq("resident_id", id)
-          .order("appointment_date", { ascending: false })
-          .returns<
-            {
-              id: string;
-              appointment_date: string;
-              status: string;
-              reason: string | null;
-              notes: string | null;
-              vets: { name: string } | null;
-            }[]
-          >(),
-        supabase
-          .from("resident_current_state")
-          .select("current_status")
-          .eq("resident_id", id)
-          .limit(1)
-          .returns<{ current_status: string | null }[]>(),
-      ]);
+      const { data } = await supabase
+        .from("vet_appointments")
+        .select("id, appointment_date, status, reason, notes, vets(name)")
+        .eq("resident_id", id)
+        .order("appointment_date", { ascending: false })
+        .returns<
+          {
+            id: string;
+            appointment_date: string;
+            status: string;
+            reason: string | null;
+            notes: string | null;
+            vets: { name: string } | null;
+          }[]
+        >();
       // A visit can end with the animal admitted; offer that on each record
       // unless they're already in hospital, adopted out, or gone.
       const canSendToHospital = availablePlacementActions(
-        stateResult.data?.[0]?.current_status,
+        isDeceased ? "Deceased" : residentState?.current_status,
       ).includes("hospital");
       body = (
         <div className="flex flex-col gap-4">
-          <div className="flex justify-end">
-            <ActionLink
-              href={`/vet-visits/new?residentId=${id}`}
-              label={t.residents.sections.bookVetVisit}
-              icon={SECTION_ICONS["vet-appointments"]}
-              variant="primary"
-              iconOnlyOnMobile={false}
-            />
-          </div>
+          {!isDeceased && (
+            <div className="flex justify-end">
+              <ActionLink
+                href={`/vet-visits/new?residentId=${id}`}
+                label={t.residents.sections.bookVetVisit}
+                icon={SECTION_ICONS["vet-appointments"]}
+                variant="primary"
+                iconOnlyOnMobile={false}
+              />
+            </div>
+          )}
           <RecordList
             rows={data ?? []}
             empty={t.residents.sections.empty.vetAppointments}
@@ -355,12 +366,22 @@ export default async function ResidentSectionPage(
                     {appointmentStatusLabel(t, row.status)}
                   </span>
                   <div className="flex flex-wrap justify-end gap-x-3 gap-y-1">
-                    <Link
-                      href={`/blood-tests/new?residentId=${id}&vetAppointmentId=${row.id}`}
-                      className="text-xs font-medium text-primary hover:underline"
-                    >
-                      {t.residents.sections.logBloodTest}
-                    </Link>
+                    {!isDeceased && (
+                      <>
+                        <Link
+                          href={`/blood-tests/new?residentId=${id}&vetAppointmentId=${row.id}`}
+                          className="text-xs font-medium text-primary hover:underline"
+                        >
+                          {t.residents.sections.logBloodTest}
+                        </Link>
+                        <Link
+                          href={`/prescriptions/new?residentId=${id}&vetAppointmentId=${row.id}`}
+                          className="text-xs font-medium text-primary hover:underline"
+                        >
+                          {t.residents.sections.addPrescription}
+                        </Link>
+                      </>
+                    )}
                     {canSendToHospital && (
                       <Link
                         href={`/residents/${id}/hospital?vetAppointmentId=${row.id}`}
@@ -379,9 +400,11 @@ export default async function ResidentSectionPage(
       break;
     }
     case "prescriptions": {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("prescriptions")
-        .select("id, start_date, end_date, notes, medication(name), frequency(label)")
+        .select(
+          "id, start_date, end_date, dose_quantity, notes, medication(name, dose_unit), frequency(label), vet_appointments(appointment_date)",
+        )
         .eq("resident_id", id)
         .order("start_date", { ascending: false })
         .returns<
@@ -389,34 +412,104 @@ export default async function ResidentSectionPage(
             id: string;
             start_date: string;
             end_date: string | null;
+            dose_quantity: number | null;
             notes: string | null;
-            medication: { name: string } | null;
+            medication: { name: string; dose_unit: string } | null;
             frequency: { label: string } | null;
+            vet_appointments: { appointment_date: string } | null;
           }[]
         >();
-      body = (
-        <RecordList
-          rows={data ?? []}
-          empty={t.residents.sections.empty.prescriptions}
-          render={(row) => (
-            <div className="flex items-center justify-between">
+      // Current = still running today (including one dated to start later);
+      // expired = its end date has passed. A death ends every open
+      // prescription on the date of death (0027), so a deceased resident's
+      // list is all expired.
+      const today = new Date().toISOString().slice(0, 10);
+      const rows = data ?? [];
+      const current = rows.filter((row) => !row.end_date || row.end_date >= today);
+      const expired = rows.filter((row) => row.end_date && row.end_date < today);
+      const renderPrescription = (row: (typeof rows)[number]) => {
+        const dose = formatDose(t, row.dose_quantity, row.medication?.dose_unit);
+        return (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-start justify-between gap-3">
               <div className="flex flex-col">
                 <span className="font-medium">
                   {row.medication?.name ?? t.residents.sections.unknownMedication}
                 </span>
-                {row.frequency?.label && (
-                  <span className="text-xs text-muted">{row.frequency.label}</span>
+                {(dose || row.frequency?.label) && (
+                  <span className="text-xs text-muted">
+                    {[dose, row.frequency?.label].filter(Boolean).join(" · ")}
+                  </span>
                 )}
               </div>
-              <span className="text-xs text-muted">
-                {formatDate(row.start_date, locale)} –{" "}
-                {row.end_date
-                  ? formatDate(row.end_date, locale)
-                  : t.residents.sections.ongoing}
-              </span>
+              <div className="flex flex-col items-end gap-0.5 text-right">
+                <span className="text-xs text-muted">
+                  {formatDate(row.start_date, locale)} –{" "}
+                  {row.end_date
+                    ? formatDate(row.end_date, locale)
+                    : t.residents.sections.ongoing}
+                </span>
+                {row.start_date > today && (
+                  <span className="text-xs text-primary">
+                    {t.residents.sections.startsOn(formatDate(row.start_date, locale))}
+                  </span>
+                )}
+                {row.vet_appointments && (
+                  <span className="text-xs text-muted">
+                    {t.residents.sections.linkedVisit(
+                      formatDate(row.vet_appointments.appointment_date, locale),
+                    )}
+                  </span>
+                )}
+              </div>
+            </div>
+            {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
+          </div>
+        );
+      };
+      body = (
+        <div className="flex flex-col gap-4">
+          {!isDeceased && (
+            <div className="flex justify-end">
+              <ActionLink
+                href={`/prescriptions/new?residentId=${id}`}
+                label={t.residents.sections.addPrescription}
+                icon={SECTION_ICONS.prescriptions}
+                variant="primary"
+                iconOnlyOnMobile={false}
+              />
             </div>
           )}
-        />
+          {error && <p className="text-sm text-danger">{error.message}</p>}
+          {rows.length === 0 ? (
+            <Placeholder>{t.residents.sections.empty.prescriptions}</Placeholder>
+          ) : (
+            <>
+              <section className="flex flex-col gap-2">
+                <h2 className="text-sm font-medium text-muted">
+                  {t.residents.sections.currentPrescriptions} ({current.length})
+                </h2>
+                <RecordList
+                  rows={current}
+                  empty={t.residents.sections.noCurrentPrescriptions}
+                  render={renderPrescription}
+                />
+              </section>
+              {expired.length > 0 && (
+                <section className="flex flex-col gap-2">
+                  <h2 className="text-sm font-medium text-muted">
+                    {t.residents.sections.expiredPrescriptions} ({expired.length})
+                  </h2>
+                  <RecordList
+                    rows={expired}
+                    empty=""
+                    render={renderPrescription}
+                  />
+                </section>
+              )}
+            </>
+          )}
+        </div>
       );
       break;
     }
@@ -512,16 +605,22 @@ export default async function ResidentSectionPage(
 
       body = (
         <div className="flex flex-col gap-4">
-          <div className="flex justify-end">
-            <ActionLink
-              href={`/blood-tests/new?residentId=${id}`}
-              label={t.residents.sections.logBloodTest}
-              icon={SECTION_ICONS["blood-tests"]}
-              variant="primary"
-              iconOnlyOnMobile={false}
-            />
-          </div>
-          <BloodTestList residentId={id} bloodTests={bloodTests} />
+          {!isDeceased && (
+            <div className="flex justify-end">
+              <ActionLink
+                href={`/blood-tests/new?residentId=${id}`}
+                label={t.residents.sections.logBloodTest}
+                icon={SECTION_ICONS["blood-tests"]}
+                variant="primary"
+                iconOnlyOnMobile={false}
+              />
+            </div>
+          )}
+          <BloodTestList
+            residentId={id}
+            bloodTests={bloodTests}
+            readOnly={isDeceased}
+          />
         </div>
       );
       break;

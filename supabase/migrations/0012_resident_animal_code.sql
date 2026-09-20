@@ -21,7 +21,15 @@ set animal_code = 'A-' || lpad(numbered.rn::text, 4, '0')
 from numbered
 where numbered.id = r.id;
 
-select setval('residents_animal_number_seq', (select count(*) from residents), true);
+-- `is_called = false` when there are no residents yet: setval() rejects 0 as
+-- a "last used" value, so on a fresh database (no rows to backfill) the
+-- sequence is instead set to "1, not yet used" and the first intake gets
+-- A-0001.
+select setval(
+  'residents_animal_number_seq',
+  greatest((select count(*) from residents), 1),
+  (select count(*) > 0 from residents)
+);
 
 alter table residents
   alter column animal_code set default ('A-' || lpad(nextval('residents_animal_number_seq')::text, 4, '0')),

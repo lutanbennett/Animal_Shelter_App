@@ -4,6 +4,7 @@ import {
   Camera,
   Droplet,
   Fence,
+  HeartCrack,
   HeartHandshake,
   HeartPulse,
   House,
@@ -59,6 +60,10 @@ export const PLACEMENT_ICONS = {
   hospitalReturn: Undo2,
   rehome: HeartHandshake,
   returnToShelter: RotateCcw,
+  // Not a PlacementActionKey: recording a death is reached from the hub's
+  // resident details card, not the Housing card's action row, so it never
+  // appears in availablePlacementActions().
+  deceased: HeartCrack,
 } satisfies Record<string, LucideIcon>;
 
 /** Icons for the enclosure browser (`/enclosures`) and enclosure hub. */

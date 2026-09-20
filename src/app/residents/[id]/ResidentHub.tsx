@@ -4,6 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { Pencil } from "lucide-react";
 import {
+  DeceasedBanner,
+  type DeceasedArchive,
+} from "./deceased/DeceasedBanner";
+import {
   StatCard,
   type StatCardAction,
   type StatCardTone,
@@ -37,6 +41,10 @@ export type Resident = {
   profile_photo_drive_file_id: string | null;
   ready_for_adoption: boolean;
   is_public_visible: boolean;
+  drive_folder_id: string | null;
+  deceased_summary_drive_file_id: string | null;
+  deceased_index_drive_file_id: string | null;
+  deceased_archived_at: string | null;
 };
 
 export type ResidentStatus = {
@@ -105,6 +113,9 @@ export function ResidentHub({
   status,
   isDeceased,
   dateOfDeath,
+  causeOfDeath,
+  archive,
+  canRecordDeath,
   currentPlacementSince,
   carerName,
   hospitalPreviousEnclosureName,
@@ -123,6 +134,11 @@ export function ResidentHub({
   status: ResidentStatus | null;
   isDeceased: boolean;
   dateOfDeath: string | null;
+  causeOfDeath: string | null;
+  /** Where the Drive archive got to; only read when isDeceased. */
+  archive: DeceasedArchive;
+  /** Admin/staff, the roles that may record a death (and retry an archive). */
+  canRecordDeath: boolean;
   currentPlacementSince: string | null;
   carerName: string | null;
   /** Where the resident was before going into hospital, while they're there. */
@@ -188,6 +204,12 @@ export function ResidentHub({
     label: t.residents.hub.placementActions[key],
     icon: PLACEMENT_ICONS[key],
   }));
+
+  // Nothing can be added to a dead animal's medical record — the database
+  // rejects it (migration 0026), so the buttons that would try are dropped
+  // rather than left to fail.
+  const medicalActions = (actions: StatCardAction[]) =>
+    isDeceased ? [] : actions;
 
   // Immunizations — we can only tell "recorded" vs "missing mandatory type"
   // today; due-date/interval tracking isn't in the data model yet (see
@@ -300,14 +322,29 @@ export function ResidentHub({
               <span className="rounded-full bg-surface-hover px-2 py-0.5 text-xs font-medium text-muted">
                 {resident.animal_code}
               </span>
-              <Link
-                href={`${base}/edit`}
-                title={t.residents.hub.editResident}
-                aria-label={t.residents.hub.editResident}
-                className="rounded p-1 text-muted hover:bg-surface-hover hover:text-foreground"
-              >
-                <Pencil aria-hidden="true" className="h-4 w-4" />
-              </Link>
+              {/* A dead resident's record is read-only, in the database as
+                  well as here (migration 0026), so neither edit nor
+                  record-death is offered once they're gone. */}
+              {!isDeceased && (
+                <Link
+                  href={`${base}/edit`}
+                  title={t.residents.hub.editResident}
+                  aria-label={t.residents.hub.editResident}
+                  className="rounded p-1 text-muted hover:bg-surface-hover hover:text-foreground"
+                >
+                  <Pencil aria-hidden="true" className="h-4 w-4" />
+                </Link>
+              )}
+              {!isDeceased && canRecordDeath && (
+                <Link
+                  href={`${base}/deceased`}
+                  title={t.residents.deceased.recordButton}
+                  aria-label={t.residents.deceased.recordButton}
+                  className="rounded p-1 text-muted hover:bg-danger/10 hover:text-danger"
+                >
+                  <PLACEMENT_ICONS.deceased aria-hidden="true" className="h-4 w-4" />
+                </Link>
+              )}
             </div>
             <p className="text-sm text-muted">
               {[
@@ -348,6 +385,16 @@ export function ResidentHub({
           )}
         </div>
       </div>
+
+      {isDeceased && (
+        <DeceasedBanner
+          residentId={resident.id}
+          dateOfDeath={dateOfDeath}
+          causeOfDeath={causeOfDeath}
+          archive={archive}
+          canRetryArchive={canRecordDeath}
+        />
+      )}
 
       <div className="flex gap-1 rounded-lg border border-border bg-surface p-1 md:hidden">
         <button
@@ -440,12 +487,12 @@ export function ResidentHub({
               detail={immunizationDetail}
               tone={immunizationTone}
               href={`${base}/immunizations`}
-              actions={[
+              actions={medicalActions([
                 {
                   href: `/immunizations/new?residentId=${resident.id}`,
                   label: t.residents.sections.logImmunization,
                 },
-              ]}
+              ])}
             />
             <StatCard
               title={t.residents.hub.vetAppointments}
@@ -454,12 +501,12 @@ export function ResidentHub({
               detail={vetDetail}
               tone={vetTone}
               href={`${base}/vet-appointments`}
-              actions={[
+              actions={medicalActions([
                 {
                   href: `/vet-visits/new?residentId=${resident.id}`,
                   label: t.residents.sections.bookVetVisit,
                 },
-              ]}
+              ])}
             />
             <StatCard
               title={t.residents.hub.prescriptions}
@@ -468,6 +515,12 @@ export function ResidentHub({
               detail={prescriptionDetail}
               tone={prescriptionTone}
               href={`${base}/prescriptions`}
+              actions={medicalActions([
+                {
+                  href: `/prescriptions/new?residentId=${resident.id}`,
+                  label: t.residents.hub.addPrescription,
+                },
+              ])}
             />
             <StatCard
               title={t.residents.hub.weight}

@@ -18,10 +18,18 @@ export function PhotoGallery({
   residentId,
   photos,
   profilePhotoDriveFileId,
+  readOnly = false,
 }: {
   residentId: string;
   photos: PhotoRow[];
   profilePhotoDriveFileId: string | null;
+  /**
+   * Viewing a closed record (a deceased resident): photos still open full
+   * size, but nothing can be removed or promoted to profile photo. The
+   * database rejects both writes anyway (migration 0026) — this keeps the
+   * buttons from being offered in the first place.
+   */
+  readOnly?: boolean;
 }) {
   const { t } = useI18n();
   const [openPhoto, setOpenPhoto] = useState<PhotoRow | null>(null);
@@ -145,50 +153,57 @@ export function PhotoGallery({
 
               {error && <p className="text-sm text-danger">{error}</p>}
 
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  {confirmingDelete ? (
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-foreground">
-                        {t.photos.removeConfirmPrompt}
-                      </span>
+              {readOnly ? (
+                <p className="text-sm text-muted">{t.photos.readOnly}</p>
+              ) : (
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    {confirmingDelete ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-foreground">
+                          {t.photos.removeConfirmPrompt}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={isPending}
+                          onClick={handleDelete}
+                          className="rounded bg-danger px-3 py-1.5 text-sm font-medium text-danger-foreground hover:brightness-110 disabled:opacity-60"
+                        >
+                          {t.photos.confirmRemove}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmingDelete(false)}
+                          className="rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover"
+                        >
+                          {t.common.cancel}
+                        </button>
+                      </div>
+                    ) : (
                       <button
                         type="button"
-                        disabled={isPending}
-                        onClick={handleDelete}
-                        className="rounded bg-danger px-3 py-1.5 text-sm font-medium text-danger-foreground hover:brightness-110 disabled:opacity-60"
+                        onClick={() => setConfirmingDelete(true)}
+                        className="rounded border border-border px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger/10"
                       >
-                        {t.photos.confirmRemove}
+                        {t.photos.removePhoto}
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setConfirmingDelete(false)}
-                        className="rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover"
-                      >
-                        {t.common.cancel}
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setConfirmingDelete(true)}
-                      className="rounded border border-border px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger/10"
-                    >
-                      {t.photos.removePhoto}
-                    </button>
-                  )}
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    disabled={
+                      isPending ||
+                      openPhoto.drive_file_id === profilePhotoDriveFileId
+                    }
+                    onClick={handleSetProfile}
+                    className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-60"
+                  >
+                    {openPhoto.drive_file_id === profilePhotoDriveFileId
+                      ? t.photos.currentProfile
+                      : t.photos.setAsProfile}
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  disabled={isPending || openPhoto.drive_file_id === profilePhotoDriveFileId}
-                  onClick={handleSetProfile}
-                  className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-60"
-                >
-                  {openPhoto.drive_file_id === profilePhotoDriveFileId
-                    ? t.photos.currentProfile
-                    : t.photos.setAsProfile}
-                </button>
-              </div>
+              )}
             </div>
           </div>,
           document.body,

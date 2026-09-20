@@ -421,6 +421,145 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   `anon` needs the same revoke**, and this is worth re-checking on the
   production project at go-live alongside the 0016 grant.
 
+- **Deceased workflow (2026-09-20):** recorded from the resident hub's
+  details card (a small icon beside the edit pencil, admin/staff only) →
+  `/residents/[id]/deceased`, which takes date of death, cause of death and
+  notes, spells out what will happen, and asks for confirmation in a dialog
+  before submitting. The insert is an ordinary `Deceased` placement into the
+  Lifecycle/Deceased pseudo-enclosure via `src/lib/placements/deceased.ts`,
+  exactly like the other placement actions; everything else follows from it.
+
+  **The record becomes read-only, in the database (`0026_deceased_workflow.sql`).**
+  Triggers on `residents`, `placement_history`, `vet_appointments`,
+  `prescriptions`, `immunization_records`, `weight`, `procedures`,
+  `blood_tests` and `attachments` reject every insert/update/delete for a
+  resident whose active placement is the Deceased pseudo-enclosure. The user
+  will define later which fields may still be edited after death, so the
+  starting point is "none" — and being a database rule rather than hidden
+  buttons, it holds for a stray deep link, a future feature, or a direct SQL
+  session. The workflow's own follow-up writes (the 7.2 cascade, the archive
+  bookkeeping) announce themselves with a transaction-local
+  `app.deceased_lock_bypass` setting rather than being exempted by role, so
+  the exemption can't leak into an ordinary staff write. The UI hides every
+  write control anyway (edit form, photo uploader and photo actions, log
+  immunization / book vet visit / log blood test, move and hospital) so
+  nobody meets a trigger error in normal use. Recording a death is
+  deliberately not undoable from the app — flagged below as an open
+  question.
+
+  **Two fixes this turned up.** `resident_current_state.current_status`
+  never actually returned `'Deceased'`: its first CASE branch tested the
+  *zone* name, but the Deceased pseudo-enclosure lives in the Lifecycle
+  zone, so the dead read as ordinary `'Resident'` — which would have let a
+  deceased animal through the `current_status.neq.Deceased` filters on the
+  immunization and vet-visit pickers, and (found when this branch was merged
+  with the foster/adopt work) meant 0025's rewritten public views were not
+  in fact hiding deceased residents from `/adopt`, since they filter on
+  `current_status not in ('Deceased', 'Adopted')`. 0025 read correctly and
+  behaved wrongly; this is the fix that makes it do what it says. And `handle_deceased_placement()`
+  (0002) ran `security invoker`, but staff have only SELECT policies on
+  `vet_appointments` and `prescriptions`, so for the role most likely to
+  record a death, "cancel future appointments" and "end active
+  prescriptions" silently matched no rows; it's `security definer` now, for
+  the same reason `close_prior_placement()` became definer in 0024.
+
+  **Where it can be recorded from.** The record-death icon shows for any
+  status except Deceased itself, including Fostered and Adopted — an
+  adopter or foster carer reporting a death is a real case, and making
+  someone record a Return to Shelter first would put a fictional placement
+  in the history. That deliberately sits outside
+  `availablePlacementActions()` (which ends the shelter's chain at Adopted)
+  because the entry point is the hub's details card, not the Housing card's
+  action row. Worth confirming with the shelter.
+
+  **Drive archive.** After the placement commits, the app moves
+  `Residents/<Name> (<ID>)/` to `Residents/Deceased/<Name> (<ID>)/` (the
+  convention the old `archiveDeceasedResidentFolders` Apps Script polled
+  for, now done synchronously at the moment of the write — requirements doc
+  Section 5.1), then writes two files into that folder: the deceased summary
+  PDF (Section 7.6) and `index.html`, an offline index page. A Drive move
+  re-parents the folder, so every Drive file ID already stored stays valid.
+  The two halves are deliberately separate units of work: the database
+  transition is the source of truth and commits regardless, and if Drive
+  fails the hub shows the archive as incomplete with a retry. Every step is
+  re-runnable — the move no-ops once the folder is in the archive, and both
+  generated files are replaced in place rather than duplicated.
+
+  **`index.html` is the cold-storage play.** The plan is to move deceased
+  residents' folders off Drive onto local storage so Drive stays free for
+  current residents, so the folder has to be readable on its own: opening
+  that file gives the whole animal back (details, medical history, photo
+  gallery, file index) with inline CSS and *relative* paths
+  (`Photos/<Category>/<YYMM>/<file>`, `Blood Tests/<YYYYMMDD>/<file>`) into
+  the folder's own subfolders. No network, no app, no fonts to fetch; Drive
+  links sit alongside as a convenience while the folder is still on Drive.
+  Photo tiles whose file isn't present fall back to a caption card rather
+  than a broken image.
+
+  **Archive artefacts are English-only** (their labels, not the data): a
+  permanent record shouldn't read differently depending on the app language
+  of whoever recorded the death. Resident data is reproduced verbatim,
+  Thai included. The PDF embeds Noto Sans Thai (regular + bold, ~45KB each)
+  as base64 data URIs in `src/lib/archive/fonts/` — @react-pdf's built-in
+  Helvetica has no Thai glyphs and silently emits unreadable glyph IDs, and
+  on the Workers runtime there's no filesystem to read a .ttf from and no
+  reason to make the archive depend on a font CDN staying up. SIL Open Font
+  License 1.1.
+
+- **Prescriptions (2026-09-20):** one form, `/prescriptions/new`, reached
+  from three places — the hub's prescriptions card, the Prescriptions tab,
+  and an "Add prescription" link on each row of the Vet Appointments tab
+  (which preselects the visit and defaults the start date to it, as the
+  blood-test form does). The tab splits records into **Current** (no end
+  date, or one today or later — a course dated to start later sits here
+  with a "Starts …" note) and **Expired** (end date has passed). Deceased
+  residents get no add controls and the form page refuses them up front;
+  the 0026 lock would reject the insert anyway.
+
+  **The AppSheet shape had no dose, and its implicit unit was "tablets".**
+  `0027_prescriptions.sql` fixes that in the data model rather than in
+  notes: a `dose_unit` per **medication** (tablet, capsule, ml, mg, g, mcg,
+  IU, drop, sachet, application, dose) and a `dose_quantity` per
+  prescription in that unit. The unit lives on the medication, not the
+  prescription, on purpose — "Amoxicillin 250mg tablet" and "Amoxicillin
+  suspension" are two medication rows, so every prescription of a given
+  medication is in the same unit and totals per medication add up. IV
+  fluids are simply a medication measured in ml. The vocabulary is a check
+  constraint plus i18n enum labels (`t.enums.doseUnit`), like the other
+  fixed lists; a reference table would have needed its own admin page and
+  Thai labels for no gain at this size.
+
+  **Forecasting.** `frequency` gained `doses_per_day` (twice daily = 2,
+  every 8 hours = 3, every other day = 0.5, null = "as needed") and eight
+  starter rows, and `medication_daily_requirement` sums
+  `dose_quantity × doses_per_day` per medication across prescriptions that
+  are current today for residents who are neither deceased nor adopted —
+  the same exclusion `immunization_compliance` applies. Recording a death
+  therefore drops that resident out of the forecast immediately, and the
+  7.2 cascade ending their open prescriptions is belt-and-braces on top.
+  The view exists ahead of a page for it (backlog) so the numbers are
+  right from the first prescription entered.
+
+  **Cascade adjustment.** The new `end_date >= start_date` check would have
+  made 0026's cascade fail for a prescription dated to start *after* the
+  death (recorded today, starting tomorrow), rolling the death back.
+  `handle_deceased_placement()` now ends such a row on its own start date
+  (`greatest(date_of_death, start_date)`) — it never becomes current, and
+  the forecast excludes the resident regardless. Verified against real rows
+  in a rolled-back transaction before applying.
+
+  **Who can write.** Staff had SELECT-only on `prescriptions` and no policy
+  at all on `medication`/`frequency` — so the hub's `medication(name)`
+  embed had been coming back null for staff and volunteers. 0027 grants
+  staff and volunteers read on both reference tables, staff insert/update
+  on prescriptions, and staff + vet insert on medication/frequency so
+  either can add a new one inline from the form. Nobody below admin can
+  edit or delete a medication, since changing its unit would silently
+  redefine every prescription using it. A `vet_appointment_id` FK (no
+  cascade, per the 7.2 lesson) links a prescription to the visit it was
+  written at.
+
+
 ## Still open (from Section 11 of the requirements doc)
 
 1. Exact per-table RBAC permission matrix beyond the role descriptions —
@@ -455,3 +594,11 @@ Section 11, plus decisions made during setup that aren't in the original doc.
    folders by resident name at migration time and recording whatever ID
    that folder already uses. Not resolved here; flagging so it isn't lost
    before that step is scoped.
+8. **No way to undo a recorded death (2026-09-20):** the deceased workflow
+   locks the resident's whole record at the database level and its cascade
+   (cancelled appointments, ended prescriptions) isn't reversible
+   record-by-record, so a mis-click can only be corrected in SQL today. The
+   record-death page says so and asks for confirmation. Worth deciding
+   whether admins should get a proper "this was recorded in error" path —
+   and, separately, which fields the user wants to stay editable after
+   death (the locked-by-default choice above is waiting on that answer).

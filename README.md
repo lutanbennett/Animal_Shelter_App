@@ -133,4 +133,7 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
   deceased-workflow cascade) described in the requirements doc.
 - `src/lib/supabase/` — Supabase client helpers (browser + server).
 - `src/lib/google/` — Google Drive client helper.
+- `src/lib/archive/` — the deceased resident archive: the summary PDF, the
+  offline `index.html` index page written beside it in the resident's Drive
+  folder, and the step that moves that folder to `Residents/Deceased/`.
 - `docs/` — requirements and decisions log.

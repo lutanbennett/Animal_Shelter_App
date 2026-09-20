@@ -38,6 +38,18 @@ export async function updateResident(
     return { error: t.residents.edit.notAuthorized };
   }
 
+  // The database rejects every write to a deceased resident (migration
+  // 0025); say so in words rather than letting a trigger's message out.
+  const { data: state } = await supabase
+    .from("resident_current_state")
+    .select("is_deceased")
+    .eq("resident_id", residentId)
+    .limit(1)
+    .returns<{ is_deceased: boolean }[]>();
+  if (state?.[0]?.is_deceased) {
+    return { error: t.residents.deceased.recordClosed };
+  }
+
   const name = str(formData, "name");
   if (!name) return { error: t.residents.edit.errors.nameRequired };
 

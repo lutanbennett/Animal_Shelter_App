@@ -371,6 +371,62 @@ const th: Dictionary = {
     },
   },
 
+  prescriptions: {
+    pageTitle: "เพิ่มใบสั่งยา",
+    pageSubtitle:
+      "บันทึกยาสำหรับสัตว์ตัวนี้: ยาอะไร ปริมาณเท่าไร บ่อยแค่ไหน และนานเท่าใด ใบสั่งยาที่ยังใช้อยู่จะถูกนับรวมในความต้องการยาต่อวันของศูนย์จนกว่าจะสิ้นสุด",
+    noResidentSelected:
+      "เปิดหน้านี้จากแท็บใบสั่งยาของสัตว์ หรือจากการนัดหมายสัตวแพทย์ เพื่อให้บันทึกใบสั่งยากับสัตว์ตัวที่ถูกต้อง",
+    residentNotFound: "ไม่พบสัตว์",
+    couldntLoadMedications: "โหลดรายการยาไม่สำเร็จ",
+    couldntLoadFrequencies: "โหลดความถี่ไม่สำเร็จ",
+    couldntLoadVetAppointments: "โหลดการนัดหมายสัตวแพทย์ไม่สำเร็จ",
+    forResident: (name: string) => `สำหรับ ${name}`,
+    medication: "ยา",
+    selectMedication: "เลือกยา",
+    addNewMedication: "+ เพิ่มยาใหม่…",
+    newMedicationName: "ชื่อยาใหม่",
+    newMedicationPlaceholder: "เช่น Amoxicillin 250mg ชนิดเม็ด",
+    newMedicationUnit: "หน่วยวัด",
+    newMedicationUnitHint:
+      "หนึ่งหน่วยของยานี้ — เม็ดสำหรับยาเม็ด, มล. สำหรับยาน้ำหรือน้ำเกลือ, หยดสำหรับยาหยอดตา ยาตัวเดียวกันคนละรูปแบบให้บันทึกเป็นยาคนละรายการ",
+    chooseExistingMedication: "เลือกยาที่มีอยู่แทน",
+    dose: "ขนาดยา",
+    doseHint: (unit: string) => `ต่อครั้ง หน่วยเป็น ${unit}`,
+    frequency: "ความถี่",
+    selectFrequency: "เลือกความถี่",
+    addNewFrequency: "+ เพิ่มความถี่ใหม่…",
+    newFrequencyLabel: "ความถี่ใหม่",
+    newFrequencyPlaceholder: "เช่น ทุก 6 ชั่วโมง",
+    newFrequencyDosesPerDay: "จำนวนครั้งต่อวัน",
+    newFrequencyDosesPerDayHint:
+      "ไม่บังคับ — วันละสองครั้งคือ 2, ทุก 8 ชั่วโมงคือ 3, วันเว้นวันคือ 0.5 เว้นว่างไว้สำหรับ \"เมื่อจำเป็น\"",
+    chooseExistingFrequency: "เลือกความถี่ที่มีอยู่แทน",
+    startDate: "วันที่เริ่ม",
+    endDate: "วันที่สิ้นสุด",
+    endDateHint: "เว้นว่างไว้หากยังใช้ต่อเนื่อง",
+    linkedVisit: "การนัดหมายสัตวแพทย์ที่เกี่ยวข้อง",
+    noLinkedVisit: "ไม่มีการนัดหมายที่เกี่ยวข้อง",
+    notes: "หมายเหตุ",
+    notesPlaceholder: "เช่น ให้พร้อมอาหาร วิธีให้ยา หรือสิ่งที่ผู้ดูแลควรทราบ",
+    saving: "กำลังบันทึก...",
+    saveButton: "บันทึกใบสั่งยา",
+    errors: {
+      missingResident: "ไม่พบข้อมูลสัตว์",
+      selectMedication: "เลือกยาหรือเพิ่มยาใหม่",
+      newMedicationName: "กรอกชื่อยาใหม่",
+      newMedicationUnit: "เลือกหน่วยวัดของยาใหม่",
+      newFrequencyLabel: "กรอกชื่อความถี่ใหม่",
+      dosesPerDayPositive: "จำนวนครั้งต่อวันต้องเป็นตัวเลขที่มากกว่าศูนย์",
+      dosePositive: "ขนาดยาต้องเป็นตัวเลขที่มากกว่าศูนย์",
+      enterStartDate: "กรอกวันที่เริ่ม",
+      invalidStartDate: "วันที่เริ่มไม่ถูกต้อง",
+      invalidEndDate: "วันที่สิ้นสุดไม่ถูกต้อง",
+      endBeforeStart: "วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่ม",
+      saveFailed: "บันทึกใบสั่งยาไม่สำเร็จ",
+    },
+  },
+
   residents: {
     new: {
       pageTitle: "รับสัตว์เข้าใหม่",
@@ -491,6 +547,7 @@ const th: Dictionary = {
       prescriptions: "ใบสั่งยา",
       prescriptionsActive: (n: number) => `ใช้งานอยู่ ${n} รายการ`,
       noActivePrescriptions: "ไม่มีใบสั่งยาที่ใช้งานอยู่",
+      addPrescription: "เพิ่มใบสั่งยา",
       weight: "น้ำหนัก",
       weightNoData: "ไม่มีข้อมูล",
       weightNotRecorded: "ยังไม่มีการบันทึก",
@@ -579,6 +636,63 @@ const th: Dictionary = {
         residentNotFound: "ไม่พบข้อมูลสัตว์ตัวนี้แล้ว",
         deceased: "ไม่สามารถรับสัตว์ที่เสียชีวิตแล้วกลับจากโรงพยาบาลได้",
         notInHospital: "สัตว์ตัวนี้ไม่ได้อยู่โรงพยาบาล",
+      },
+    },
+    deceased: {
+      pageTitle: (name: string) => `บันทึกการเสียชีวิตของ ${name}`,
+      pageSubtitle:
+        "ปิดประวัติของสัตว์ตัวนี้ สถานะจะเปลี่ยนเป็นเสียชีวิต ประวัติจะกลายเป็นอ่านอย่างเดียว และโฟลเดอร์ใน Google Drive จะถูกเก็บถาวรพร้อมไฟล์สรุป PDF และหน้าดัชนีแบบออฟไลน์",
+      recordButton: "บันทึกการเสียชีวิต",
+      recording: "กำลังบันทึก...",
+      recordClosed:
+        "สัตว์ตัวนี้เสียชีวิตแล้ว — ประวัติถูกปิดและไม่สามารถแก้ไขได้อีก",
+      notAuthorized: "เฉพาะเจ้าหน้าที่และผู้ดูแลระบบเท่านั้นที่บันทึกการเสียชีวิตได้",
+      fields: {
+        date: "วันที่เสียชีวิต",
+        causeOfDeath: "สาเหตุการเสียชีวิต",
+        causeOfDeathPlaceholder: "เช่น ไตวาย ถูกรถชน ชราภาพ",
+        notesPlaceholder:
+          "เช่น พบในตอนเช้า หรือ การุณยฆาตที่คลินิกตามคำแนะนำของสัตวแพทย์",
+      },
+      whatHappens: {
+        title: "สิ่งที่จะเกิดขึ้นเมื่อบันทึกการเสียชีวิต",
+        items: [
+          "สถานะจะเปลี่ยนเป็นเสียชีวิต และออกจากกรงปัจจุบัน",
+          "นัดหมายสัตวแพทย์ในอนาคตจะถูกยกเลิก และใบสั่งยาที่ใช้อยู่จะสิ้นสุดลง",
+          "สัตว์จะถูกนำออกจากหน้ารับเลี้ยงสาธารณะ",
+          "ประวัติทั้งหมดจะกลายเป็นอ่านอย่างเดียว — แก้ไข เพิ่มรูปภาพ หรือเพิ่มประวัติการรักษาไม่ได้",
+          "โฟลเดอร์ใน Drive จะย้ายไปที่ Residents/Deceased/ พร้อมสร้างไฟล์สรุป PDF และหน้าดัชนีแบบออฟไลน์ไว้ในโฟลเดอร์",
+        ],
+      },
+      confirm: {
+        title: (name: string) => `บันทึกว่า ${name} เสียชีวิตแล้วหรือไม่?`,
+        body: "การดำเนินการนี้ไม่สามารถย้อนกลับได้จากในแอป",
+        confirmButton: "ใช่ บันทึกการเสียชีวิต",
+      },
+      banner: {
+        title: (date: string) => `ประวัตินี้ถูกปิดเมื่อ ${date}`,
+        titleNoDate: "ประวัตินี้ถูกปิดแล้ว",
+        cause: (cause: string) => `สาเหตุการเสียชีวิต: ${cause}`,
+        readOnly:
+          "ประวัติของสัตว์ตัวนี้เป็นแบบอ่านอย่างเดียว ไม่สามารถแก้ไข อัปโหลด หรือบันทึกข้อมูลเพิ่มได้",
+        summaryPdf: "ไฟล์สรุป PDF",
+        offlineIndex: "หน้าดัชนีแบบออฟไลน์",
+        driveFolder: "โฟลเดอร์ใน Drive",
+        archivedAt: (date: string) =>
+          `เก็บถาวรไปยัง Residents/Deceased/ เมื่อ ${date}`,
+        archiveIncomplete:
+          "การเก็บถาวรใน Drive ยังไม่เสร็จสมบูรณ์ — การย้ายโฟลเดอร์ ไฟล์สรุป PDF หรือหน้าดัชนียังขาดอยู่",
+        retryArchive: "ลองเก็บถาวรอีกครั้ง",
+        archiving: "กำลังเก็บถาวร...",
+      },
+      errors: {
+        enterDate: "กรุณาระบุวันที่เสียชีวิต",
+        dateInFuture: "วันที่เสียชีวิตต้องไม่เป็นวันในอนาคต",
+        dateBeforeCurrent:
+          "วันที่เสียชีวิตต้องอยู่หลังวันที่เริ่มการจัดวางปัจจุบัน",
+        enclosureNotFound: "ไม่พบกรงสถานะ “เสียชีวิต” ในฐานข้อมูลนี้",
+        residentNotFound: "ไม่พบสัตว์ตัวนี้แล้ว",
+        alreadyDeceased: "สัตว์ตัวนี้ถูกบันทึกว่าเสียชีวิตแล้ว",
       },
     },
     move: {
@@ -802,6 +916,12 @@ const th: Dictionary = {
       unknownVaccine: "ไม่ทราบชนิดวัคซีน",
       vetVisitFallback: "การเข้าพบสัตวแพทย์",
       unknownMedication: "ไม่ทราบชนิดยา",
+      addPrescription: "เพิ่มใบสั่งยา",
+      currentPrescriptions: "ปัจจุบัน",
+      expiredPrescriptions: "หมดอายุแล้ว",
+      noCurrentPrescriptions: "ไม่มีใบสั่งยาปัจจุบัน",
+      startsOn: (date: string) => `เริ่ม ${date}`,
+      linkedVisit: (date: string) => `นัดสัตวแพทย์ ${date}`,
     },
     picker: {
       selectResidents: "เลือกสัตว์",
@@ -859,6 +979,7 @@ const th: Dictionary = {
 
   photos: {
     noPhotos: "ยังไม่มีการอัปโหลดรูปภาพ",
+    readOnly: "ประวัตินี้ถูกปิดแล้ว — ดูรูปภาพได้แต่แก้ไขไม่ได้",
     profileBadge: "รูปโปรไฟล์",
     setAsProfile: "ตั้งเป็นรูปโปรไฟล์",
     currentProfile: "รูปโปรไฟล์ปัจจุบัน",
@@ -936,6 +1057,19 @@ const th: Dictionary = {
     appointmentStatus: { scheduled: "นัดหมายแล้ว", completed: "เสร็จสิ้นแล้ว" },
     zoneLocation: { internal: "ภายใน", external: "ภายนอก" },
     mandatory: { mandatory: "จำเป็น", optional: "ไม่บังคับ" },
+    doseUnit: {
+      tablet: "เม็ด",
+      capsule: "แคปซูล",
+      ml: "มล.",
+      mg: "มก.",
+      g: "ก.",
+      mcg: "มคก.",
+      IU: "IU",
+      drop: "หยด",
+      sachet: "ซอง",
+      application: "ครั้งที่ทา",
+      dose: "โดส",
+    },
   },
 };
 
