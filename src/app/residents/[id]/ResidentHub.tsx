@@ -373,6 +373,10 @@ export function ResidentHub({
               detail={immunizationDetail}
               tone={immunizationTone}
               href={`${base}/immunizations`}
+              action={{
+                href: `/immunizations/new?residentId=${resident.id}`,
+                label: t.residents.sections.logImmunization,
+              }}
             />
             <StatCard
               title={t.residents.hub.vetAppointments}
@@ -380,6 +384,10 @@ export function ResidentHub({
               detail={vetDetail}
               tone={vetTone}
               href={`${base}/vet-appointments`}
+              action={{
+                href: `/vet-visits/new?residentId=${resident.id}`,
+                label: t.residents.sections.bookVetVisit,
+              }}
             />
             <StatCard
               title={t.residents.hub.prescriptions}

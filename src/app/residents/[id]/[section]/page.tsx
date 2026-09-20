@@ -246,36 +246,46 @@ export default async function ResidentSectionPage(
           }[]
         >();
       body = (
-        <RecordList
-          rows={data ?? []}
-          empty={t.residents.sections.empty.vetAppointments}
-          render={(row) => (
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex flex-col">
-                <span className="font-medium">
-                  {row.reason ?? t.residents.sections.vetVisitFallback}
-                </span>
-                {row.vets?.name && (
-                  <span className="text-xs text-muted">{row.vets.name}</span>
-                )}
+        <div className="flex flex-col gap-4">
+          <div className="flex justify-end">
+            <Link
+              href={`/vet-visits/new?residentId=${id}`}
+              className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
+            >
+              {t.residents.sections.bookVetVisit}
+            </Link>
+          </div>
+          <RecordList
+            rows={data ?? []}
+            empty={t.residents.sections.empty.vetAppointments}
+            render={(row) => (
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col">
+                  <span className="font-medium">
+                    {row.reason ?? t.residents.sections.vetVisitFallback}
+                  </span>
+                  {row.vets?.name && (
+                    <span className="text-xs text-muted">{row.vets.name}</span>
+                  )}
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  <span className="text-xs text-muted">
+                    {formatDate(row.appointment_date, locale)}
+                  </span>
+                  <span className="text-xs capitalize text-muted">
+                    {appointmentStatusLabel(t, row.status)}
+                  </span>
+                  <Link
+                    href={`/blood-tests/new?residentId=${id}&vetAppointmentId=${row.id}`}
+                    className="text-xs font-medium text-primary hover:underline"
+                  >
+                    {t.residents.sections.logBloodTest}
+                  </Link>
+                </div>
               </div>
-              <div className="flex flex-col items-end gap-1">
-                <span className="text-xs text-muted">
-                  {formatDate(row.appointment_date, locale)}
-                </span>
-                <span className="text-xs capitalize text-muted">
-                  {appointmentStatusLabel(t, row.status)}
-                </span>
-                <Link
-                  href={`/blood-tests/new?residentId=${id}&vetAppointmentId=${row.id}`}
-                  className="text-xs font-medium text-primary hover:underline"
-                >
-                  {t.residents.sections.logBloodTest}
-                </Link>
-              </div>
-            </div>
-          )}
-        />
+            )}
+          />
+        </div>
       );
       break;
     }

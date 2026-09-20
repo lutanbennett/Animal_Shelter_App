@@ -514,6 +514,7 @@ const th: Dictionary = {
       ongoing: "กำลังดำเนินการ",
       logImmunization: "+ บันทึกการฉีดวัคซีน",
       logBloodTest: "+ บันทึกผลตรวจเลือด",
+      bookVetVisit: "+ นัดหมายสัตวแพทย์",
       missingMandatory: (list: string) => `ขาดวัคซีนบังคับ: ${list}`,
       nextDueDates: "วันครบกำหนดถัดไป",
       overdue: "(เลยกำหนด)",

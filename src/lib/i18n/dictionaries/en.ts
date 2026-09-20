@@ -507,6 +507,7 @@ const en = {
       ongoing: "ongoing",
       logImmunization: "+ Log immunization",
       logBloodTest: "+ Log blood test",
+      bookVetVisit: "+ Book vet visit",
       missingMandatory: (list: string) => `Missing mandatory: ${list}`,
       nextDueDates: "Next due dates",
       overdue: "(overdue)",

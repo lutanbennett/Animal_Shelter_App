@@ -29,20 +29,29 @@ export function StatCard({
   value,
   detail,
   tone = "neutral",
+  action,
 }: {
   href: string;
   title: string;
   value: string;
   detail?: string;
   tone?: StatCardTone;
+  /** Optional secondary link (e.g. "+ Book vet visit") shown at the foot of the card. */
+  action?: { href: string; label: string };
 }) {
+  // The title link's ::after overlay makes the whole card clickable without
+  // nesting <a> inside <a>; the action link is raised above that overlay.
   return (
-    <Link
-      href={href}
-      className={`flex flex-col gap-2 rounded-lg border p-4 transition hover:brightness-110 ${TONE_CLASSES[tone]}`}
+    <div
+      className={`relative flex flex-col gap-2 rounded-lg border p-4 transition hover:brightness-110 ${TONE_CLASSES[tone]}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-medium text-muted">{title}</span>
+        <Link
+          href={href}
+          className="text-sm font-medium text-muted after:absolute after:inset-0 after:content-['']"
+        >
+          {title}
+        </Link>
         <span
           className={`h-2 w-2 shrink-0 rounded-full ${TONE_DOT_CLASSES[tone]}`}
           aria-hidden
@@ -52,6 +61,14 @@ export function StatCard({
         {value}
       </span>
       {detail && <span className="text-xs text-muted">{detail}</span>}
-    </Link>
+      {action && (
+        <Link
+          href={action.href}
+          className="relative z-10 mt-auto self-start text-xs font-medium text-primary hover:underline"
+        >
+          {action.label}
+        </Link>
+      )}
+    </div>
   );
 }
