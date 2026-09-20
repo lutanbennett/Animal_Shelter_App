@@ -1,4 +1,5 @@
 import {
+  ArrowRightLeft,
   Camera,
   Droplet,
   Fence,
@@ -45,4 +46,5 @@ export const ENCLOSURE_ICONS = {
   zone: MapPin,
   residents: Users,
   maintenance: Wrench,
+  move: ArrowRightLeft,
 } satisfies Record<string, LucideIcon>;

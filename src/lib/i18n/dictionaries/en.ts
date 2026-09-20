@@ -487,17 +487,68 @@ const en = {
       bloodTestsLast: (date: string) => `Last: ${date}`,
       historyEntries: (n: number) => `${n} history entries`,
       carer: (name: string) => `Carer: ${name}`,
+      moveEnclosure: "Move enclosure",
+    },
+    move: {
+      pageTitle: (name: string) => `Move ${name}`,
+      pageSubtitle:
+        "Record a move to another enclosure. The current placement is closed and a new one starts on the move date.",
+      currentLocation: "Current location",
+      moveTo: "Move to",
+      selectZone: "Select zone",
+      selectZoneFirst: "Select a zone first",
+      selectEnclosure: "Select enclosure",
+      currentSuffix: "(current)",
+      fields: {
+        moveDate: "Move date",
+        notesPlaceholder: "e.g. moved to be with littermates, kennel being repaired",
+      },
+      moving: "Moving...",
+      moveButton: "Move resident",
+      notAuthorized: "Only staff, volunteers and admins can move residents.",
+      warning: {
+        title: {
+          near: "This enclosure is nearly full",
+          full: "This enclosure will be full",
+          over: "This enclosure is over capacity",
+        },
+        body: (enclosure: string, now: string, after: string) =>
+          `${enclosure} currently holds ${now}. After this move it will hold ${after}.`,
+        question: "Move the resident there anyway?",
+        confirm: "Move anyway",
+      },
+      errors: {
+        selectEnclosure: "Select an enclosure to move to.",
+        enterDate: "Enter the move date.",
+        dateInFuture: "The move date can't be in the future.",
+        dateBeforeCurrent:
+          "The move date must be after the current placement started.",
+        enclosureNotFound: "That enclosure no longer exists.",
+        systemEnclosure:
+          "Lifecycle statuses (hospital, foster, adoption…) are recorded with their own actions, not as a move.",
+        residentNotFound: "This resident no longer exists.",
+        deceased: "A deceased resident can't be moved.",
+        alreadyThere: "The resident is already in that enclosure.",
+      },
     },
     edit: {
       pageTitle: (name: string) => `Edit ${name}`,
       pageSubtitle:
-        "Update identity, bio and adoption details. Housing is managed from the Housing & Status section.",
+        "Update identity, bio, adoption details and where the animal is housed.",
       couldntLoadPhotos: "Couldn't load photos",
       sections: {
         photo: "Profile photo",
         identity: "Identity",
         flags: "Adoption",
+        housing: "Housing",
         bio: "Bio & background",
+      },
+      housing: {
+        current: (location: string) => `Currently in ${location}`,
+        currentUnassigned: "Not in a physical enclosure right now",
+        hint: "Pick a different enclosure to record a move when you save.",
+        movingTo: (enclosure: string) => `Will move to ${enclosure} on save.`,
+        keep: "Keep current enclosure",
       },
       fields: {
         estimatedAgeNow: "Estimated age now (years)",

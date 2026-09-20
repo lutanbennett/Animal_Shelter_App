@@ -1,12 +1,30 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { updateResident } from "./actions";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { PhotoRow } from "@/components/PhotoGallery";
+import type { EnclosureOption, ZoneOption } from "@/lib/enclosures/options";
+import {
+  EnclosurePicker,
+  capacityWarningLevel,
+} from "@/components/EnclosurePicker";
+import { CapacityWarningDialog } from "@/components/CapacityWarningDialog";
+
+export type HousingState = {
+  /** Current enclosure (physical or Lifecycle pseudo-enclosure), if any. */
+  enclosureId: string | null;
+  enclosureName: string | null;
+  zoneName: string | null;
+  isDeceased: boolean;
+};
+
+function todayIso() {
+  return new Date().toISOString().slice(0, 10);
+}
 
 export type EditableResident = {
   id: string;
@@ -36,10 +54,16 @@ const textareaClass = `${inputClass} field-sizing-content`;
 export function EditResidentForm({
   resident,
   photos,
+  housing,
+  zones,
+  enclosures,
   ageNow,
 }: {
   resident: EditableResident;
   photos: PhotoRow[];
+  housing: HousingState;
+  zones: ZoneOption[];
+  enclosures: EnclosureOption[];
   /** Current computed age (server-side, so it matches what the hub shows). */
   ageNow: number | null;
 }) {
@@ -52,11 +76,47 @@ export function EditResidentForm({
     resident.profile_photo_drive_file_id ?? "",
   );
 
+  // Pre-select the current enclosure so saving without touching this
+  // section records no move. A Lifecycle pseudo-enclosure isn't in the
+  // picker, so it starts blank — blank means "leave housing alone".
+  const currentPhysicalId = enclosures.some((e) => e.id === housing.enclosureId)
+    ? housing.enclosureId!
+    : "";
+  const [enclosureId, setEnclosureId] = useState(currentPhysicalId);
+  const [warningFor, setWarningFor] = useState<EnclosureOption | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  // Set once the capacity warning has been accepted so the re-submit goes through.
+  const confirmedRef = useRef(false);
+
+  const moveTarget =
+    enclosureId && enclosureId !== housing.enclosureId
+      ? (enclosures.find((e) => e.id === enclosureId) ?? null)
+      : null;
+  const currentLocation = [housing.enclosureName, housing.zoneName]
+    .filter(Boolean)
+    .join(" · ");
+
   // Field labels are shared with the intake form so the two stay worded alike.
   const f = t.residents.new.fields;
+  const h = t.residents.edit.housing;
 
   return (
-    <form action={formAction} className="flex max-w-4xl flex-col gap-8">
+    <>
+    <form
+      ref={formRef}
+      action={formAction}
+      onSubmit={(e) => {
+        if (confirmedRef.current) {
+          confirmedRef.current = false;
+          return;
+        }
+        if (moveTarget && capacityWarningLevel(moveTarget)) {
+          e.preventDefault();
+          setWarningFor(moveTarget);
+        }
+      }}
+      className="flex max-w-4xl flex-col gap-8"
+    >
       <fieldset className="flex flex-col gap-3">
         <legend className="text-base font-semibold text-foreground">
           {t.residents.edit.sections.photo}
@@ -217,6 +277,80 @@ export function EditResidentForm({
         </div>
       </fieldset>
 
+      <fieldset className="flex flex-col gap-4">
+        <legend className="text-base font-semibold text-foreground">
+          {t.residents.edit.sections.housing}
+        </legend>
+        <p className="text-sm text-foreground">
+          {currentLocation ? h.current(currentLocation) : h.currentUnassigned}
+        </p>
+        {housing.isDeceased ? (
+          <p className="text-sm text-muted">{t.residents.move.errors.deceased}</p>
+        ) : (
+          <>
+            <p className="text-sm text-muted">{h.hint}</p>
+            <EnclosurePicker
+              zones={zones}
+              enclosures={enclosures}
+              value={enclosureId}
+              onChange={(id) => {
+                setEnclosureId(id);
+                confirmedRef.current = false;
+              }}
+              currentEnclosureId={housing.enclosureId}
+              idPrefix="edit"
+            />
+            {moveTarget ? (
+              <div className="flex flex-col gap-4 rounded-lg border border-primary/40 bg-primary/10 p-4">
+                <p className="text-sm font-medium text-primary">
+                  {h.movingTo(moveTarget.name)}
+                </p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="flex flex-col gap-1">
+                    <label
+                      htmlFor="moveDate"
+                      className="text-sm font-medium text-muted"
+                    >
+                      {t.residents.move.fields.moveDate}{" "}
+                      <span className="text-danger">*</span>
+                    </label>
+                    <input
+                      id="moveDate"
+                      name="moveDate"
+                      type="date"
+                      required
+                      max={todayIso()}
+                      defaultValue={todayIso()}
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label
+                    htmlFor="moveNotes"
+                    className="text-sm font-medium text-muted"
+                  >
+                    {t.common.notes}
+                  </label>
+                  <textarea
+                    id="moveNotes"
+                    name="moveNotes"
+                    rows={2}
+                    placeholder={t.residents.move.fields.notesPlaceholder}
+                    className={textareaClass}
+                  />
+                </div>
+              </div>
+            ) : (
+              !enclosureId &&
+              currentPhysicalId && (
+                <p className="text-xs text-muted">{h.keep}</p>
+              )
+            )}
+          </>
+        )}
+      </fieldset>
+
       <fieldset className="flex flex-col gap-3">
         <legend className="text-base font-semibold text-foreground">
           {t.residents.edit.sections.flags}
@@ -315,5 +449,17 @@ export function EditResidentForm({
         </Link>
       </div>
     </form>
+
+    <CapacityWarningDialog
+      enclosure={warningFor}
+      pending={pending}
+      onCancel={() => setWarningFor(null)}
+      onConfirm={() => {
+        setWarningFor(null);
+        confirmedRef.current = true;
+        formRef.current?.requestSubmit();
+      }}
+    />
+    </>
   );
 }

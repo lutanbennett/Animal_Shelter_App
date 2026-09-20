@@ -8,7 +8,11 @@ import { PhotoUploader } from "@/components/PhotoUploader";
 import { PhotoGallery, type PhotoRow } from "@/components/PhotoGallery";
 import { BloodTestList, type BloodTestRow } from "@/components/BloodTestList";
 import { ActionLink } from "@/components/ActionLink";
-import { SECTION_ICONS, type HubSection } from "@/components/hub-icons";
+import {
+  ENCLOSURE_ICONS,
+  SECTION_ICONS,
+  type HubSection,
+} from "@/components/hub-icons";
 
 function Placeholder({ children }: { children: React.ReactNode }) {
   return (
@@ -77,43 +81,78 @@ export default async function ResidentSectionPage(
 
   switch (section) {
     case "housing": {
-      const { data } = await supabase
-        .from("placement_history")
-        .select("id, placement_type, start_date, end_date, notes, enclosures(name)")
-        .eq("resident_id", id)
-        .order("start_date", { ascending: false })
-        .returns<
-          {
-            id: string;
-            placement_type: string;
-            start_date: string;
-            end_date: string | null;
-            notes: string | null;
-            enclosures: { name: string } | null;
-          }[]
-        >();
+      // placement_history has two FKs to enclosures (enclosure_id and
+      // previous_enclosure_id), so each embed has to name its FK or
+      // PostgREST rejects the whole query as ambiguous.
+      const [{ data, error }, stateResult] = await Promise.all([
+        supabase
+          .from("placement_history")
+          .select(
+            "id, placement_type, start_date, end_date, notes, enclosure:enclosures!enclosure_id(name), previous_enclosure:enclosures!previous_enclosure_id(name)",
+          )
+          .eq("resident_id", id)
+          .order("start_date", { ascending: false })
+          .returns<
+            {
+              id: string;
+              placement_type: string;
+              start_date: string;
+              end_date: string | null;
+              notes: string | null;
+              enclosure: { name: string } | null;
+              previous_enclosure: { name: string } | null;
+            }[]
+          >(),
+        supabase
+          .from("resident_current_state")
+          .select("is_deceased")
+          .eq("resident_id", id)
+          .limit(1)
+          .returns<{ is_deceased: boolean }[]>(),
+      ]);
+      const isDeceased = stateResult.data?.[0]?.is_deceased ?? false;
       body = (
-        <RecordList
-          rows={data ?? []}
-          empty={t.residents.sections.empty.housing}
-          render={(row) => (
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center justify-between">
-                <span className="font-medium">{row.placement_type}</span>
-                <span className="text-xs text-muted">
-                  {formatDate(row.start_date, locale)} –{" "}
-                  {row.end_date
-                    ? formatDate(row.end_date, locale)
-                    : t.residents.sections.present}
-                </span>
-              </div>
-              {row.enclosures?.name && (
-                <span className="text-xs text-muted">{row.enclosures.name}</span>
-              )}
-              {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
+        <div className="flex flex-col gap-4">
+          {!isDeceased && (
+            <div className="flex justify-end">
+              <ActionLink
+                href={`/residents/${id}/move`}
+                label={t.residents.hub.moveEnclosure}
+                icon={ENCLOSURE_ICONS.move}
+                variant="primary"
+                iconOnlyOnMobile={false}
+              />
             </div>
           )}
-        />
+          {error && (
+            <p className="text-sm text-danger">{error.message}</p>
+          )}
+          <RecordList
+            rows={data ?? []}
+            empty={t.residents.sections.empty.housing}
+            render={(row) => (
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">{row.placement_type}</span>
+                  <span className="text-xs text-muted">
+                    {formatDate(row.start_date, locale)} –{" "}
+                    {row.end_date
+                      ? formatDate(row.end_date, locale)
+                      : t.residents.sections.present}
+                  </span>
+                </div>
+                {row.enclosure?.name && (
+                  <span className="text-xs text-muted">
+                    {row.previous_enclosure?.name
+                      ? `${row.previous_enclosure.name} → ${row.enclosure.name}`
+                      : row.enclosure.name}
+                  </span>
+                )}
+                {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
+              </div>
+            )}
+          />
+        </div>
       );
       break;
     }

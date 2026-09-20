@@ -494,17 +494,67 @@ const th: Dictionary = {
       bloodTestsLast: (date: string) => `ล่าสุด: ${date}`,
       historyEntries: (n: number) => `ประวัติ ${n} รายการ`,
       carer: (name: string) => `ผู้ดูแล: ${name}`,
+      moveEnclosure: "ย้ายกรง",
+    },
+    move: {
+      pageTitle: (name: string) => `ย้าย ${name}`,
+      pageSubtitle:
+        "บันทึกการย้ายไปกรงอื่น ระบบจะปิดการจัดที่พักปัจจุบันและเริ่มรายการใหม่ตั้งแต่วันที่ย้าย",
+      currentLocation: "ที่อยู่ปัจจุบัน",
+      moveTo: "ย้ายไปที่",
+      selectZone: "เลือกโซน",
+      selectZoneFirst: "กรุณาเลือกโซนก่อน",
+      selectEnclosure: "เลือกกรง",
+      currentSuffix: "(ปัจจุบัน)",
+      fields: {
+        moveDate: "วันที่ย้าย",
+        notesPlaceholder: "เช่น ย้ายไปอยู่กับพี่น้อง, กรงเดิมกำลังซ่อม",
+      },
+      moving: "กำลังย้าย...",
+      moveButton: "ย้ายสัตว์",
+      notAuthorized: "เฉพาะเจ้าหน้าที่ อาสาสมัคร และผู้ดูแลระบบเท่านั้นที่ย้ายสัตว์ได้",
+      warning: {
+        title: {
+          near: "กรงนี้ใกล้เต็มแล้ว",
+          full: "กรงนี้จะเต็ม",
+          over: "กรงนี้เกินความจุแล้ว",
+        },
+        body: (enclosure: string, now: string, after: string) =>
+          `${enclosure} ตอนนี้มีสัตว์ ${now} หลังย้ายจะเป็น ${after}`,
+        question: "ต้องการย้ายสัตว์ไปที่นั่นต่อหรือไม่?",
+        confirm: "ย้ายต่อไป",
+      },
+      errors: {
+        selectEnclosure: "กรุณาเลือกกรงที่ต้องการย้ายไป",
+        enterDate: "กรุณาระบุวันที่ย้าย",
+        dateInFuture: "วันที่ย้ายต้องไม่เป็นวันในอนาคต",
+        dateBeforeCurrent: "วันที่ย้ายต้องอยู่หลังวันที่เริ่มการจัดที่พักปัจจุบัน",
+        enclosureNotFound: "ไม่พบกรงนั้นแล้ว",
+        systemEnclosure:
+          "สถานะวงจรชีวิต (โรงพยาบาล, บ้านอุปถัมภ์, รับเลี้ยง…) ต้องบันทึกผ่านรายการเฉพาะ ไม่ใช่การย้ายกรง",
+        residentNotFound: "ไม่พบข้อมูลสัตว์ตัวนี้แล้ว",
+        deceased: "ไม่สามารถย้ายสัตว์ที่เสียชีวิตแล้วได้",
+        alreadyThere: "สัตว์ตัวนี้อยู่ในกรงนั้นอยู่แล้ว",
+      },
     },
     edit: {
       pageTitle: (name: string) => `แก้ไข ${name}`,
       pageSubtitle:
-        "แก้ไขข้อมูลทั่วไป ประวัติ และรายละเอียดการรับเลี้ยง ส่วนที่พักจัดการได้จากส่วนที่พักและสถานะ",
+        "แก้ไขข้อมูลทั่วไป ประวัติ รายละเอียดการรับเลี้ยง และที่พักของสัตว์",
       couldntLoadPhotos: "โหลดรูปภาพไม่สำเร็จ",
       sections: {
         photo: "รูปโปรไฟล์",
         identity: "ข้อมูลทั่วไป",
         flags: "การรับเลี้ยง",
+        housing: "ที่พัก",
         bio: "ประวัติและความเป็นมา",
+      },
+      housing: {
+        current: (location: string) => `ปัจจุบันอยู่ที่ ${location}`,
+        currentUnassigned: "ขณะนี้ไม่ได้อยู่ในกรงจริง",
+        hint: "เลือกกรงอื่นเพื่อบันทึกการย้ายเมื่อกดบันทึก",
+        movingTo: (enclosure: string) => `จะย้ายไปที่ ${enclosure} เมื่อบันทึก`,
+        keep: "คงกรงเดิมไว้",
       },
       fields: {
         estimatedAgeNow: "อายุโดยประมาณปัจจุบัน (ปี)",

@@ -45,8 +45,9 @@ export function StatCard({
    */
   icon?: LucideIcon;
   /** Optional secondary link (e.g. "Book vet visit") shown at the foot of the card. */
-  action?: { href: string; label: string };
+  action?: { href: string; label: string; icon?: LucideIcon };
 }) {
+  const ActionIcon = action?.icon ?? Plus;
   // The title link's ::after overlay makes the whole card clickable without
   // nesting <a> inside <a>; the action link is raised above that overlay.
   return (
@@ -89,7 +90,7 @@ export function StatCard({
           aria-label={action.label}
           className="relative z-10 mt-auto inline-flex items-center gap-1 self-start rounded-full border border-primary/40 p-1.5 text-xs font-medium text-primary hover:bg-primary/10 md:rounded md:border-0 md:p-0 md:hover:bg-transparent md:hover:underline"
         >
-          <Plus aria-hidden="true" className="h-4 w-4 shrink-0 md:h-3.5 md:w-3.5" />
+          <ActionIcon aria-hidden="true" className="h-4 w-4 shrink-0 md:h-3.5 md:w-3.5" />
           <span className="hidden md:inline">{action.label}</span>
         </Link>
       )}

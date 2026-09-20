@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Pencil } from "lucide-react";
 import { StatCard, type StatCardTone } from "@/components/StatCard";
-import { HUB_TAB_ICONS, SECTION_ICONS } from "@/components/hub-icons";
+import { ENCLOSURE_ICONS, HUB_TAB_ICONS, SECTION_ICONS } from "@/components/hub-icons";
 import { formatAge, formatDate } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -343,6 +343,15 @@ export function ResidentHub({
               detail={housingDetail}
               tone={housingTone}
               href={`${base}/housing`}
+              action={
+                isDeceased
+                  ? undefined
+                  : {
+                      href: `${base}/move`,
+                      label: t.residents.hub.moveEnclosure,
+                      icon: ENCLOSURE_ICONS.move,
+                    }
+              }
             />
             <StatCard
               title={t.residents.hub.photos}

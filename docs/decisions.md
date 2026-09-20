@@ -249,6 +249,37 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   building it needs an `enclosure_id` on the `maintenance` table (it only
   has `zone_id` today) — tracked in the backlog.
 
+- **Move resident between enclosures (2026-09-20):** two entry points, one
+  rule set. `/residents/[id]/move` (from the hub's Housing card and the
+  housing section) is the quick path; the edit form's Housing section does
+  the same thing on save when a different enclosure is picked. Both go
+  through `moveResidentToEnclosure()` in `src/lib/placements/move.ts`, which
+  inserts a single `ChangeEnclosure` row (with `previous_enclosure_id`) and
+  lets the existing `close_prior_placement` trigger end the prior placement.
+  The picker is zone → enclosure (dependent dropdowns — there will be 100+
+  enclosures) and only lists physical zones: Lifecycle pseudo-enclosures are
+  entered via their own placement types (hospital, foster, adopt, deceased),
+  never by "moving" there, and the server rejects them too. Moving into an
+  enclosure that would be nearly full / full / over capacity (thresholds
+  from `occupancy.ts`, counting the incoming resident) shows a warning
+  dialog but is allowed on confirm — staff know which animals can share.
+  Dates: a date-only input is stamped `now()` for today and midday UTC for
+  back-dated moves, so it always sorts after a midnight-stamped intake on
+  the same day; the server also rejects a move dated before the current
+  placement started (the `end_after_start` check would, less helpfully).
+  Deceased residents can't be moved. **0024** fixes two things in the
+  `close_prior_placement` trigger that the first real non-Intake insert
+  exposed: (a) it was `AFTER INSERT`, but the one-active-placement partial
+  unique index is checked as the row is written, so *every* move failed
+  with a duplicate-key error before the trigger could close the prior row —
+  it is now `BEFORE INSERT`; (b) it ran as the caller, so volunteers (who
+  may insert `ChangeEnclosure` but have no UPDATE policy on
+  `placement_history`) would have had the prior placement silently *not*
+  closed — it is now `security definer` with `search_path` pinned. Also
+  fixed in passing: the housing history section embedded `enclosures(name)`
+  without naming the FK, which PostgREST rejects as ambiguous (there are two
+  FKs to `enclosures`), so the list always read "No placement history".
+
 ## Still open (from Section 11 of the requirements doc)
 
 1. Exact per-table RBAC permission matrix beyond the role descriptions —

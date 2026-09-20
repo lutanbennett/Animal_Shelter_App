@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { estimatedAgeNow } from "@/lib/format";
+import { moveResidentToEnclosure } from "@/lib/placements/move";
 
 export type EditResidentState = { error: string } | undefined;
 
@@ -17,8 +18,10 @@ function str(formData: FormData, key: string): string | null {
 
 /**
  * Updates a resident's identity/bio fields and (optionally) profile photo.
- * Housing is deliberately not touched here — that lives in placement_history
- * and has its own actions. Bound to the resident id from the edit page.
+ * If the form's housing section picked a different enclosure, a
+ * ChangeEnclosure placement is recorded afterwards through the same helper
+ * the hub's move page uses — residents.* never stores housing itself.
+ * Bound to the resident id from the edit page.
  */
 export async function updateResident(
   residentId: string,
@@ -45,20 +48,30 @@ export async function updateResident(
     return { error: t.residents.edit.errors.ageMustBeNumber };
   }
 
-  const { data: currentRows } = await supabase
-    .from("residents")
-    .select("estimated_age_years, age_estimated_on, profile_photo_drive_file_id")
-    .eq("id", residentId)
-    .limit(1)
-    .returns<
-      {
-        estimated_age_years: number | null;
-        age_estimated_on: string | null;
-        profile_photo_drive_file_id: string | null;
-      }[]
-    >();
+  const [{ data: currentRows }, { data: placementRows }] = await Promise.all([
+    supabase
+      .from("residents")
+      .select("estimated_age_years, age_estimated_on, profile_photo_drive_file_id")
+      .eq("id", residentId)
+      .limit(1)
+      .returns<
+        {
+          estimated_age_years: number | null;
+          age_estimated_on: string | null;
+          profile_photo_drive_file_id: string | null;
+        }[]
+      >(),
+    supabase
+      .from("placement_history")
+      .select("enclosure_id")
+      .eq("resident_id", residentId)
+      .is("end_date", null)
+      .limit(1)
+      .returns<{ enclosure_id: string | null }[]>(),
+  ]);
   const current = currentRows?.[0];
   if (!current) return { error: t.residents.edit.errors.notFound };
+  const currentEnclosureId = placementRows?.[0]?.enclosure_id ?? null;
 
   // The form shows the age as it reads *today*. Only if that number was
   // changed do we store a new estimate anchored to today; otherwise the
@@ -115,6 +128,24 @@ export async function updateResident(
       { p_resident_id: residentId, p_drive_file_id: profilePhotoDriveFileId },
     );
     if (photoError) return { error: photoError.message };
+  }
+
+  // A blank enclosure means "leave housing alone" (the picker starts blank
+  // when the resident is in a Lifecycle pseudo-enclosure); the current
+  // enclosure re-submitted unchanged is the same thing. Runs after the
+  // resident update, so an error here leaves those fields saved and only
+  // the move to retry.
+  const enclosureId = str(formData, "enclosureId");
+  if (enclosureId && enclosureId !== currentEnclosureId) {
+    const moved = await moveResidentToEnclosure(supabase, t, {
+      residentId,
+      enclosureId,
+      moveDate: str(formData, "moveDate") ?? "",
+      notes: str(formData, "moveNotes"),
+    });
+    if ("error" in moved) return moved;
+    revalidatePath(`/residents/${residentId}/housing`);
+    revalidatePath("/enclosures", "layout");
   }
 
   revalidatePath("/residents");

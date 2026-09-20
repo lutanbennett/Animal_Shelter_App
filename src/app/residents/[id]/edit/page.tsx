@@ -3,8 +3,13 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { estimatedAgeNow } from "@/lib/format";
+import { loadEnclosureOptions } from "@/lib/enclosures/options";
 import type { PhotoRow } from "@/components/PhotoGallery";
-import { EditResidentForm, type EditableResident } from "./EditResidentForm";
+import {
+  EditResidentForm,
+  type EditableResident,
+  type HousingState,
+} from "./EditResidentForm";
 
 export default async function EditResidentPage(
   props: PageProps<"/residents/[id]/edit">,
@@ -13,7 +18,14 @@ export default async function EditResidentPage(
   const { t } = await getT();
   const supabase = await createClient();
 
-  const [residentResult, photosResult, roleResult] = await Promise.all([
+  const [
+    residentResult,
+    photosResult,
+    roleResult,
+    statusResult,
+    stateResult,
+    options,
+  ] = await Promise.all([
     supabase
       .from("residents")
       .select(
@@ -30,6 +42,25 @@ export default async function EditResidentPage(
       .order("uploaded_at", { ascending: true })
       .returns<PhotoRow[]>(),
     supabase.rpc("current_user_role"),
+    supabase
+      .from("resident_list_view")
+      .select("enclosure_id, enclosure_name, zone_name")
+      .eq("resident_id", id)
+      .limit(1)
+      .returns<
+        {
+          enclosure_id: string | null;
+          enclosure_name: string | null;
+          zone_name: string | null;
+        }[]
+      >(),
+    supabase
+      .from("resident_current_state")
+      .select("is_deceased")
+      .eq("resident_id", id)
+      .limit(1)
+      .returns<{ is_deceased: boolean }[]>(),
+    loadEnclosureOptions(supabase),
   ]);
 
   // A query error (e.g. a migration not yet applied) must not look like a
@@ -43,6 +74,13 @@ export default async function EditResidentPage(
     : resident.name;
   const role = roleResult.data;
   const canEdit = role === "admin" || role === "staff";
+  const status = statusResult.data?.[0];
+  const housing: HousingState = {
+    enclosureId: status?.enclosure_id ?? null,
+    enclosureName: status?.enclosure_name ?? null,
+    zoneName: status?.zone_name ?? null,
+    isDeceased: stateResult.data?.[0]?.is_deceased ?? false,
+  };
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
@@ -68,10 +106,19 @@ export default async function EditResidentPage(
         </p>
       )}
 
+      {options.error && (
+        <p className="text-sm text-danger">
+          {t.residents.new.couldntLoadEnclosures}: {options.error}
+        </p>
+      )}
+
       {canEdit ? (
         <EditResidentForm
           resident={resident}
           photos={photosResult.data ?? []}
+          housing={housing}
+          zones={options.zones}
+          enclosures={options.enclosures}
           ageNow={estimatedAgeNow(
             resident.estimated_age_years,
             resident.age_estimated_on,
