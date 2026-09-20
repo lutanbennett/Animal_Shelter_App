@@ -223,6 +223,23 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   gotten zero rows. Added `vet_rw_attachments` matching the existing
   staff/volunteer "for all" shape.
 
+- **Enclosure browser (2026-09-20):** `/enclosures` and `/enclosures/[id]`
+  are the phone-friendly zone → enclosure → residents path; the desktop-only
+  zone/enclosure filters on `/residents` stay as they are. Occupancy is
+  computed in the page from `resident_list_view` (one `enclosure_id` per
+  resident, counted in the request) rather than a new occupancy view — no
+  migration needed, and the headcount is small enough that this is cheap.
+  If it ever isn't, swap in a `security_invoker` view with a `group by`.
+  Capacity thresholds live in `src/lib/enclosures/occupancy.ts`: over
+  (count > capacity), full (equal), nearly full (≥ 80%), otherwise space
+  available; `capacity` null/0 shows the count only. The Lifecycle
+  pseudo-zone (Hospital / Fostered / Adopted / Deceased / Unassigned) is
+  included — "who's in hospital" is a real question — but sorted last,
+  labelled as a status rather than a physical enclosure, and gets no
+  Maintenance card. Maintenance is a disabled placeholder on the hub only;
+  building it needs an `enclosure_id` on the `maintenance` table (it only
+  has `zone_id` today) — tracked in the backlog.
+
 ## Still open (from Section 11 of the requirements doc)
 
 1. Exact per-table RBAC permission matrix beyond the role descriptions —

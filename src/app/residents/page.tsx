@@ -67,8 +67,8 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
             className="w-full rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40 md:w-64"
           />
         </div>
-        {/* Zone / enclosure filters are desktop-only; phones will get dedicated
-            enclosure views instead. */}
+        {/* Zone / enclosure filters are desktop-only; phones browse by
+            zone → enclosure → residents at /enclosures instead. */}
         <div className="hidden flex-col gap-1 md:flex">
           <label htmlFor="zone" className="text-sm font-medium text-muted">
             {t.residents.list.zone}

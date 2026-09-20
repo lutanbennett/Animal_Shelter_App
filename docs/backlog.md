@@ -16,7 +16,7 @@ Each item is a self-contained prompt for a new thread. Tick when done. Ordered b
 
 - [x] **Collapsible mobile navigation.** Replace the fixed `w-48` sidebar in `src/app/NavLinks.tsx` / `layout.tsx` with a hamburger-toggled drawer below the `md` breakpoint so phones don't show only the nav bar.
 - [x] **Icon-based mobile hub and residents list.** Hub stat cards, tabs and action buttons use lucide icons (`src/components/hub-icons.ts`, `ActionLink.tsx`); the phone residents list shows only ID + name with no checkboxes or zone/enclosure filters.
-- [ ] **Browse residents by enclosure.** New mobile-friendly views to navigate zone → enclosure → residents (replacing the desktop-only zone/enclosure filters and extra columns that are hidden on phones in `src/app/residents/`).
+- [x] **Browse residents by enclosure.** New mobile-friendly views to navigate zone → enclosure → residents (replacing the desktop-only zone/enclosure filters and extra columns that are hidden on phones in `src/app/residents/`). Lives at `/enclosures` (zone chips, name search, sort by zone/name/fullest; capacity indicator per card) and `/enclosures/[id]` (occupancy bar, notes, resident thumbnails, disabled Maintenance placeholder).
 - [ ] **Mobile responsiveness sweep.** Go through every screen (residents list, resident hub, forms, admin pages, login) at phone width and fix layout, table overflow, and spacing so it feels professional in portrait.
 
 ## Resident operations
@@ -35,6 +35,10 @@ Each item is a self-contained prompt for a new thread. Tick when done. Ordered b
 - [ ] **Procedures.** Form + hub section to log and list procedures (type, date, vet appointment link, notes) against the existing `procedures` table.
 - [ ] **Blood test types.** New `blood_test_types` table + admin CRUD page, `blood_test_type_id` on `blood_tests`, and a type dropdown on the blood test form defaulting to CBC. Seed: CBC (Complete Blood Count), Blood Chemistry Panel, Thyroid Panel, Heartworm Test, Tick Borne Disease Panel, Cortisol Test, Urinary Analysis.
 - [ ] **Dietary requirements.** Add a dietary requirements field/section to residents (free text or structured), editable from the hub and visible on the resident info tab.
+
+## Facility
+
+- [ ] **Enclosure maintenance.** Let staff log repairs / work needed on an enclosure (title, description, status, estimated cost, photos) for budgeting and tracking, replacing the disabled "Maintenance — coming soon" card on `/enclosures/[id]`. The existing `maintenance` table only references `zone_id`; add an `enclosure_id` column (nullable, so zone-wide jobs still work) and a cost field. Volunteers can read maintenance but not create it (see RLS in 0001).
 
 ## Admin
 

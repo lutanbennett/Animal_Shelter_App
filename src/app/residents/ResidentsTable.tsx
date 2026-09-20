@@ -109,7 +109,7 @@ export function ResidentsTable({ residents }: { residents: ResidentRow[] }) {
       {/* Phones show only ID and name. The multi-select checkboxes and the
           enclosure/zone/status/location columns are desktop-only: on a phone
           several residents are picked from the forms themselves, and the
-          enclosure-centric views will cover the rest. */}
+          enclosure browser at /enclosures covers the rest. */}
       <div className="overflow-x-auto rounded border border-border">
         <table className="w-full text-left text-sm">
           <thead className="bg-surface text-muted">

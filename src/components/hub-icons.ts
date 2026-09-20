@@ -1,14 +1,18 @@
 import {
   Camera,
   Droplet,
+  Fence,
   HeartPulse,
   House,
   Info,
+  MapPin,
   Pill,
   Scissors,
   Stethoscope,
   Syringe,
+  Users,
   Weight,
+  Wrench,
   type LucideIcon,
 } from "lucide-react";
 
@@ -33,4 +37,12 @@ export type HubSection = keyof typeof SECTION_ICONS;
 export const HUB_TAB_ICONS = {
   info: Info,
   medical: HeartPulse,
+} satisfies Record<string, LucideIcon>;
+
+/** Icons for the enclosure browser (`/enclosures`) and enclosure hub. */
+export const ENCLOSURE_ICONS = {
+  enclosure: Fence,
+  zone: MapPin,
+  residents: Users,
+  maintenance: Wrench,
 } satisfies Record<string, LucideIcon>;
