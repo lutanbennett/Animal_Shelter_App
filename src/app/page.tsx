@@ -17,11 +17,19 @@ type SiteContent = {
 
 type GalleryPhoto = { id: string; drive_file_id: string; alt: string };
 
+/** Counts only — public_shelter_stats (0039) is granted to anon. */
+type ShelterStats = {
+  in_care: number;
+  in_hospital: number;
+  adopted_last_7_days: number;
+  adopted_this_year: number;
+};
+
 export default async function WelcomePage() {
   const supabase = await createClient();
   const { t } = await getT();
 
-  const [contentResult, photosResult] = await Promise.all([
+  const [contentResult, photosResult, statsResult] = await Promise.all([
     supabase
       .from("site_content")
       .select(
@@ -35,10 +43,36 @@ export default async function WelcomePage() {
       .select("id, drive_file_id, alt")
       .order("sort_order")
       .returns<GalleryPhoto[]>(),
+    supabase
+      .from("public_shelter_stats")
+      .select("in_care, in_hospital, adopted_last_7_days, adopted_this_year")
+      .limit(1)
+      .returns<ShelterStats[]>(),
   ]);
 
   const content = contentResult.data?.[0];
   const gallery = photosResult.data ?? [];
+  // The strip is a nice-to-have: a failed query drops it rather than the page.
+  const stats = statsResult.data?.[0] ?? null;
+  const statTiles = stats
+    ? [
+        {
+          value: stats.in_care,
+          label: t.home.stats.inCare,
+          detail: t.home.stats.inCareDetail,
+        },
+        {
+          value: stats.adopted_this_year,
+          label: t.home.stats.adoptedThisYear,
+          detail: t.home.stats.adoptedThisYearDetail(stats.adopted_last_7_days),
+        },
+        {
+          value: stats.in_hospital,
+          label: t.home.stats.inVetCare,
+          detail: t.home.stats.inVetCareDetail,
+        },
+      ]
+    : [];
   const storyParagraphs = (content?.story_body ?? "")
     .split(/\n\s*\n/)
     .map((p) => p.trim())
@@ -109,6 +143,30 @@ export default async function WelcomePage() {
           </div>
         </div>
       </section>
+
+      {statTiles.length > 0 && (
+        <section
+          aria-label={t.home.stats.heading}
+          className="border-b border-border bg-surface"
+        >
+          <div className="mx-auto grid w-full max-w-5xl grid-cols-1 divide-y divide-border px-6 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-12">
+            {statTiles.map((tile) => (
+              <div
+                key={tile.label}
+                className="flex flex-col gap-1 py-5 sm:px-6 sm:first:pl-0 sm:last:pr-0"
+              >
+                <span className="text-3xl font-semibold tabular-nums text-primary">
+                  {tile.value}
+                </span>
+                <span className="text-sm font-medium text-foreground">
+                  {tile.label}
+                </span>
+                <span className="text-xs text-muted">{tile.detail}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-12 sm:px-12">
         <h2 className="text-2xl font-semibold text-foreground">
