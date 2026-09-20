@@ -18,6 +18,16 @@ const eslintConfig = defineConfig([
     ".wrangler/**",
     "cloudflare-env.d.ts",
   ]),
+  {
+    rules: {
+      // Photos are rendered as plain <img> on purpose: next.config.ts sets
+      // images.unoptimized (no /_next/image optimizer on Cloudflare
+      // Workers, and the Drive photo proxy can't go through it anyway), so
+      // <Image> would emit the same <img> and the rule's advice is moot.
+      // See the "Photo image proxy" entry in docs/decisions.md.
+      "@next/next/no-img-element": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;
