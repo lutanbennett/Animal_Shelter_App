@@ -82,6 +82,10 @@ export function formatDose(
   return `${n} ${doseUnitLabel(t, unit)}`.trim();
 }
 
+export function contactTypeLabel(t: Dictionary, value: string | null | undefined) {
+  return enumLabel(t.enums.contactType, value);
+}
+
 export function projectCategoryLabel(t: Dictionary, value: string | null | undefined) {
   return enumLabel(t.enums.projectCategory, value);
 }

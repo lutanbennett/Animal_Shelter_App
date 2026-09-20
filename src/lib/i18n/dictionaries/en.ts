@@ -45,6 +45,7 @@ const en = {
     zones: "Zones",
     immunizationTypes: "Immunization Types",
     vets: "Vets",
+    contacts: "Contacts",
     menu: "Menu",
     openMenu: "Open menu",
     closeMenu: "Close menu",
@@ -239,6 +240,53 @@ const en = {
           `This vet has ${n} logged visit${n === 1 ? "" : "s"} and can't be deleted — the visits are part of the residents' medical records.`,
       },
     },
+    contacts: {
+      title: "Contacts",
+      subtitle:
+        "The people the shelter works with: foster and adoptive carers, volunteers, suppliers and donors. Set them up here; only contacts of type Carer can be given a resident, and that's done from the resident's hub.",
+      viewList: "Open the contact list →",
+      couldntLoad: "Couldn't load contacts",
+      couldntLoadUsage: "Couldn't load placement counts",
+      createForm: {
+        name: "Name",
+        namePlaceholder: "e.g. Khun Nid",
+        type: "Type",
+        phone: "Phone",
+        phonePlaceholder: "e.g. 081 234 5678",
+        email: "Email",
+        emailPlaceholder: "name@example.com",
+        lineId: "LINE ID",
+        lineIdPlaceholder: "e.g. nid_cm",
+        address: "Address",
+        addressPlaceholder: "Address or a pasted Google Maps link",
+        addressHint: "Opens in a maps app from the contact list.",
+        addButton: "Add contact",
+      },
+      table: {
+        name: "Name",
+        type: "Type",
+        phone: "Phone",
+        email: "Email",
+        lineId: "LINE ID",
+        address: "Address",
+        residents: "Residents",
+        placementCount: (n: number) => `${n} placement${n === 1 ? "" : "s"}`,
+        inCare: (n: number) => `${n} in care`,
+        noContacts: "No contacts yet.",
+      },
+      deleteConfirm: (name: string) => `Delete contact "${name}"? This can't be undone.`,
+      createdContact: (name: string) => `Created contact "${name}".`,
+      errors: {
+        nameRequired: "Name is required.",
+        invalidType: "Choose a contact type.",
+        hasPlacements: (n: number) =>
+          `This contact has ${n} placement${n === 1 ? "" : "s"} recorded and can't be deleted — the placements are part of the residents' history.`,
+        hasMaintenance: (n: number) =>
+          `This contact is assigned to ${n} maintenance job${n === 1 ? "" : "s"} and can't be deleted.`,
+        typeLockedByPlacements: (n: number) =>
+          `This contact has ${n} placement${n === 1 ? "" : "s"} as a carer, so their type must stay Carer.`,
+      },
+    },
     website: {
       title: "Website",
       subtitleBeforeCode: "Edit the public welcome page at",
@@ -430,6 +478,53 @@ const en = {
     },
   },
 
+  contacts: {
+    pageTitle: "Contacts",
+    pageSubtitle:
+      "Carers, volunteers, suppliers and donors — tap to call, chat on LINE, email or open in maps.",
+    couldntLoadContacts: "Couldn't load contacts",
+    couldntLoadPlacements: "Couldn't load placements",
+    manageInAdmin: "Edit contacts in admin",
+    searchPlaceholder: "Search name, phone, email, LINE ID…",
+    searchLabel: "Search contacts",
+    filterLabel: "Filter by type",
+    allTypes: "All",
+    actions: {
+      call: "Call",
+      line: "LINE",
+      email: "Email",
+      map: "Map",
+    },
+    list: {
+      inCare: (n: number) => `${n} in care`,
+      noContacts: "No contacts yet — an admin can add them under Admin → Contacts.",
+      noMatches: "No contacts match.",
+      count: (shown: number, total: number) =>
+        shown === total ? `${total} contact${total === 1 ? "" : "s"}` : `${shown} of ${total}`,
+    },
+    hub: {
+      backToContacts: "← Back to contacts",
+      details: "Details",
+      phone: "Phone",
+      email: "Email",
+      lineId: "LINE ID",
+      address: "Address",
+      noDetails: "No contact details recorded — an admin can add them under Admin → Contacts.",
+      residentsInCare: "Residents in care",
+      residentsInCareDetail:
+        "Fostered or adopted residents living with this carer right now.",
+      noResidentsInCare: "No residents are with this carer at the moment.",
+      notACarer:
+        "Only contacts of type Carer can foster or adopt residents. An admin can change the type under Admin → Contacts.",
+      since: (date: string) => `since ${date}`,
+      pastPlacements: "Past placements",
+      noPastPlacements: "No earlier placements with this carer.",
+      placementRange: (from: string, to: string) => `${from} – ${to}`,
+      unknownResident: "Unknown resident",
+      assignFromResident:
+        "To place a resident with this carer, open the resident's hub and use Foster / adopt.",
+    },
+  },
   bloodTests: {
     pageTitle: "Log Blood Test",
     pageSubtitle:
@@ -954,6 +1049,8 @@ const en = {
       selectCarer: "Select a carer",
       currentCarerSuffix: "(current carer)",
       noCarers: "No carers in contacts yet — add the first one below.",
+      carersOnlyHint:
+        "Only contacts of type Carer are listed — volunteers and suppliers can't be given a resident. Manage contacts under Admin → Contacts.",
       addNewCarer: "Add a new carer",
       chooseExisting: "Choose an existing carer instead",
       newCarer: {
@@ -1475,6 +1572,14 @@ const en = {
       ReturnToShelter: "Returned to shelter",
     },
     species: { Dog: "Dog", Cat: "Cat" },
+    /** contacts.type — Vendor is shown as Supplier, which is what the shelter calls them. */
+    contactType: {
+      Carer: "Carer",
+      Volunteer: "Volunteer",
+      Vendor: "Supplier",
+      Donor: "Donor",
+      Other: "Other",
+    },
     sex: { Male: "Male", Female: "Female" },
     appointmentStatus: {
       scheduled: "scheduled",

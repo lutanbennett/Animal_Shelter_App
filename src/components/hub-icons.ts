@@ -1,6 +1,7 @@
 import {
   Ambulance,
   ArrowRightLeft,
+  BookUser,
   Building2,
   CalendarClock,
   Camera,
@@ -11,9 +12,13 @@ import {
   HeartPulse,
   House,
   Info,
+  Mail,
   MapPin,
+  MessageCircle,
+  Navigation,
   PawPrint,
   Phone,
+  PhoneCall,
   Pill,
   RotateCcw,
   Scissors,
@@ -78,6 +83,22 @@ export const ENCLOSURE_ICONS = {
   residents: Users,
   maintenance: Wrench,
   move: PLACEMENT_ICONS.move,
+} satisfies Record<string, LucideIcon>;
+
+/**
+ * Icons for the contact list (`/contacts`) and contact hub. The four action
+ * icons are the tap targets on a phone — call, LINE chat, email, open in
+ * maps — so they're distinct at a glance rather than themed.
+ */
+export const CONTACT_ICONS = {
+  contact: BookUser,
+  call: PhoneCall,
+  line: MessageCircle,
+  email: Mail,
+  map: Navigation,
+  address: MapPin,
+  residents: PawPrint,
+  inCare: HeartHandshake,
 } satisfies Record<string, LucideIcon>;
 
 /** Icons for the vet list (`/vets`) and vet hub. */

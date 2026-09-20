@@ -22,6 +22,7 @@ export function NavLinks({ isAdmin }: { isAdmin: boolean }) {
     { href: "/maintenance", label: t.nav.maintenance },
     { href: "/projects", label: t.nav.projects },
     { href: "/vets", label: t.nav.vets },
+    { href: "/contacts", label: t.nav.contacts },
     ...(isAdmin
       ? [
           {
@@ -33,6 +34,7 @@ export function NavLinks({ isAdmin }: { isAdmin: boolean }) {
               { href: "/admin/enclosures", label: t.nav.enclosures },
               { href: "/admin/zones", label: t.nav.zones },
               { href: "/admin/vets", label: t.nav.vets },
+              { href: "/admin/contacts", label: t.nav.contacts },
               {
                 href: "/admin/immunization-types",
                 label: t.nav.immunizationTypes,
