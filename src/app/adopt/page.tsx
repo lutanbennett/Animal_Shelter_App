@@ -31,7 +31,7 @@ export default async function AdoptPage() {
 
   return (
     <main className="flex flex-1 flex-col">
-      <PublicHeader />
+      <PublicHeader current="adopt" />
 
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10 sm:px-12">
         <div className="flex flex-col gap-2">

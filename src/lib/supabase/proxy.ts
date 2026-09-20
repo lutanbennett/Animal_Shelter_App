@@ -13,9 +13,10 @@ const PUBLIC_PATHS = ["/", "/login", "/auth/callback"];
  * every <img> request to /login. /adopt itself is the public,
  * read-only "browse as guest" listing (Section 6 "Public/Anonymous" RBAC
  * tier) — scoped server-side to public_resident_profiles, never the
- * staff query path.
+ * staff query path. /our-work is the same tier for project stories
+ * (public_projects / public_project_photos, 0042).
  */
-const PUBLIC_PATH_PREFIXES = ["/api/photos/", "/adopt"];
+const PUBLIC_PATH_PREFIXES = ["/api/photos/", "/adopt", "/our-work"];
 
 /**
  * Refreshes the Supabase auth cookie on every request (required so server

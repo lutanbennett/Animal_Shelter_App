@@ -4,7 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { getT } from "@/lib/i18n/get-t";
 import { speciesLabel } from "@/lib/i18n/enum-labels";
+import { loadPublicProjects } from "@/lib/projects/public";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { ProjectCard } from "./our-work/ProjectCard";
 
 type SiteContent = {
   hero_drive_file_id: string | null;
@@ -40,9 +42,9 @@ type ShelterStats = {
 
 export default async function WelcomePage() {
   const supabase = await createClient();
-  const { t } = await getT();
+  const { t, locale } = await getT();
 
-  const [contentResult, photosResult, statsResult] = await Promise.all([
+  const [contentResult, photosResult, statsResult, recentWork] = await Promise.all([
     supabase
       .from("site_content")
       .select(
@@ -61,6 +63,8 @@ export default async function WelcomePage() {
       .select("in_care, in_hospital, adopted_last_7_days, adopted_this_year")
       .limit(1)
       .returns<ShelterStats[]>(),
+    // "What we do": the three newest published project stories (0042).
+    loadPublicProjects(supabase, 3),
   ]);
 
   const content = contentResult.data?.[0];
@@ -130,7 +134,21 @@ export default async function WelcomePage() {
             {t.header.appName}
           </span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
+          <nav className="hidden items-center gap-4 sm:flex">
+            <Link
+              href="/adopt"
+              className="text-sm font-medium text-muted hover:text-foreground"
+            >
+              {t.adopt.adoptNav}
+            </Link>
+            <Link
+              href="/our-work"
+              className="text-sm font-medium text-muted hover:text-foreground"
+            >
+              {t.adopt.ourWorkNav}
+            </Link>
+          </nav>
           <LanguageSwitcher />
           <Link
             href="/login"
@@ -290,6 +308,44 @@ export default async function WelcomePage() {
             </Link>
           </div>
         )}
+        {recentWork.projects.length > 0 && (
+          <div
+            role="region"
+            aria-labelledby="what-we-do-heading"
+            className="mt-6 flex flex-col gap-4"
+          >
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex flex-col gap-1">
+                <h3
+                  id="what-we-do-heading"
+                  className="text-sm font-semibold uppercase tracking-wide text-primary"
+                >
+                  {t.home.whatWeDo.heading}
+                </h3>
+                <p className="max-w-xl text-sm text-muted">
+                  {t.home.whatWeDo.subtitle}
+                </p>
+              </div>
+              <Link
+                href="/our-work"
+                className="shrink-0 text-sm font-semibold text-primary hover:underline"
+              >
+                {t.home.whatWeDo.seeAll} &rarr;
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+              {recentWork.projects.map((project) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  locale={locale}
+                  t={t}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="mt-6 flex flex-col items-start gap-3 rounded-lg border border-border bg-surface p-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-lg font-semibold text-foreground">

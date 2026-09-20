@@ -83,6 +83,12 @@ const th: Dictionary = {
       availableForAdoption: "พร้อมรับเลี้ยง",
       readMore: "อ่านเรื่องราว",
     },
+    whatWeDo: {
+      heading: "สิ่งที่เราทำ",
+      subtitle:
+        "โครงการทำหมัน การช่วยเหลือสัตว์ กิจกรรมเข้าถึงชุมชน และโครงการที่ทำให้ศูนย์พักพิงดำเนินต่อไปได้",
+      seeAll: "ดูผลงานทั้งหมดของเรา",
+    },
   },
 
   login: {
@@ -1621,6 +1627,8 @@ const th: Dictionary = {
 
   adopt: {
     home: "หน้าแรก",
+    adoptNav: "รับเลี้ยง",
+    ourWorkNav: "ผลงานของเรา",
     staffLogin: "เข้าสู่ระบบสำหรับเจ้าหน้าที่และอาสาสมัคร",
     pageTitle: "พบกับสัตว์ของเรา",
     pageSubtitle:
@@ -1638,6 +1646,24 @@ const th: Dictionary = {
     emailCta: "เพื่อสอบถามเรื่องการรับเลี้ยงหรืออุปถัมภ์",
     details: { species: "ชนิดสัตว์", breed: "สายพันธุ์", sex: "เพศ", age: "อายุ" },
     showPhoto: (index: number, total: number) => `แสดงรูปที่ ${index} จาก ${total}`,
+  },
+
+  ourWork: {
+    pageTitle: "ผลงานของเรา",
+    pageSubtitle:
+      "เรื่องราวจากภาคสนาม — โครงการทำหมัน การช่วยเหลือสัตว์ กิจกรรมเข้าถึงชุมชน และโครงการที่ทำให้ศูนย์พักพิงดำเนินต่อไปได้",
+    couldntLoad: "โหลดเรื่องราวไม่สำเร็จ",
+    noneListed: "ยังไม่มีเรื่องราวที่เผยแพร่ — โปรดกลับมาตรวจสอบใหม่ภายหลัง",
+    noneInCategory: "ยังไม่มีเรื่องราวในหมวดนี้",
+    filterLabel: "กรองตามหมวดหมู่",
+    allCategories: "ทั้งหมด",
+    backToAll: "← กลับไปดูผลงานทั้งหมด",
+    noPhoto: "ยังไม่มีรูปภาพ",
+    photoCount: (n: number) => `${n} รูป`,
+    gallery: "รูปภาพ",
+    showPhoto: (index: number, total: number) => `แสดงรูปที่ ${index} จาก ${total}`,
+    moreStories: "ผลงานอื่น ๆ ของเรา",
+    shareFallback: "เรื่องราวจาก Lanna Care for Animals",
   },
 
   format: {

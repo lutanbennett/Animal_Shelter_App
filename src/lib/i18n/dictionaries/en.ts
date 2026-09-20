@@ -82,6 +82,12 @@ const en = {
       availableForAdoption: "Available for adoption",
       readMore: "Read their story",
     },
+    whatWeDo: {
+      heading: "What we do",
+      subtitle:
+        "Sterilisation drives, rescues, community outreach and the projects that keep the shelter running.",
+      seeAll: "See all our work",
+    },
   },
 
   login: {
@@ -1626,6 +1632,8 @@ const en = {
 
   adopt: {
     home: "Home",
+    adoptNav: "Adopt",
+    ourWorkNav: "Our work",
     staffLogin: "Staff & Volunteer Login",
     pageTitle: "Meet Our Animals",
     pageSubtitle:
@@ -1643,6 +1651,25 @@ const en = {
     emailCta: "to ask about adoption or fostering.",
     details: { species: "Species", breed: "Breed", sex: "Sex", age: "Age" },
     showPhoto: (index: number, total: number) => `Show photo ${index} of ${total}`,
+  },
+
+  ourWork: {
+    pageTitle: "Our work",
+    pageSubtitle:
+      "Stories from the field — sterilisation drives, rescues, community outreach and the projects that keep the shelter running.",
+    couldntLoad: "Couldn’t load our stories",
+    noneListed: "No stories have been published yet — check back soon.",
+    noneInCategory: "No stories in this category yet.",
+    filterLabel: "Filter by category",
+    allCategories: "All",
+    backToAll: "← Back to all our work",
+    noPhoto: "No photo yet",
+    photoCount: (n: number) => (n === 1 ? "1 photo" : `${n} photos`),
+    gallery: "Photos",
+    showPhoto: (index: number, total: number) => `Show photo ${index} of ${total}`,
+    moreStories: "More of our work",
+    /** Open Graph description when a story has no summary. */
+    shareFallback: "A story from Lanna Care for Animals.",
   },
 
   format: {
