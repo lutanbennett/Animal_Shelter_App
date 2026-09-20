@@ -3,8 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Pencil } from "lucide-react";
-import { StatCard, type StatCardTone } from "@/components/StatCard";
-import { ENCLOSURE_ICONS, HUB_TAB_ICONS, SECTION_ICONS } from "@/components/hub-icons";
+import {
+  StatCard,
+  type StatCardAction,
+  type StatCardTone,
+} from "@/components/StatCard";
+import { HUB_TAB_ICONS, PLACEMENT_ICONS, SECTION_ICONS } from "@/components/hub-icons";
 import { formatAge, formatDate } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -99,6 +103,7 @@ export function ResidentHub({
   dateOfDeath,
   currentPlacementSince,
   carerName,
+  hospitalPreviousEnclosureName,
   placementHistoryCount,
   immunizationRecords,
   missingMandatoryImmunizations,
@@ -116,6 +121,8 @@ export function ResidentHub({
   dateOfDeath: string | null;
   currentPlacementSince: string | null;
   carerName: string | null;
+  /** Where the resident was before going into hospital, while they're there. */
+  hospitalPreviousEnclosureName: string | null;
   placementHistoryCount: number;
   immunizationRecords: ImmunizationRecordRow[];
   missingMandatoryImmunizations: MissingImmunizationRow[];
@@ -137,17 +144,47 @@ export function ResidentHub({
 
   const base = `/residents/${resident.id}`;
 
-  // Housing & status
+  // Housing & status. A hospitalised resident is off-site in medical care,
+  // so the card says that (and where they'll come back to) instead of
+  // naming the Hospital pseudo-enclosure as if it were a kennel.
   const currentStatus = status?.current_status ?? "Unknown";
+  const isHospitalised = currentStatus === "Hospitalised";
   const housingTone = STATUS_TONE[currentStatus] ?? "neutral";
-  const housingDetail =
-    [
-      status?.enclosure_name,
-      status?.zone_name,
-      carerName && t.residents.hub.carer(carerName),
-    ]
-      .filter(Boolean)
-      .join(" · ") || t.residents.hub.historyEntries(placementHistoryCount);
+  const housingDetail = isHospitalised
+    ? [
+        t.residents.hub.inHospitalDetail,
+        hospitalPreviousEnclosureName &&
+          t.residents.hub.hospitalReturnsTo(hospitalPreviousEnclosureName),
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : [
+        status?.enclosure_name,
+        status?.zone_name,
+        carerName && t.residents.hub.carer(carerName),
+      ]
+        .filter(Boolean)
+        .join(" · ") || t.residents.hub.historyEntries(placementHistoryCount);
+  // "Send to hospital" only makes sense while they're on site; the way back
+  // is a ReturnFromHospital placement (not built yet — see the backlog).
+  const housingActions: StatCardAction[] = isDeceased
+    ? []
+    : [
+        {
+          href: `${base}/move`,
+          label: t.residents.hub.moveEnclosure,
+          icon: PLACEMENT_ICONS.move,
+        },
+        ...(isHospitalised
+          ? []
+          : [
+              {
+                href: `${base}/hospital`,
+                label: t.residents.hub.sendToHospital,
+                icon: PLACEMENT_ICONS.hospital,
+              },
+            ]),
+      ];
 
   // Immunizations — we can only tell "recorded" vs "missing mandatory type"
   // today; due-date/interval tracking isn't in the data model yet (see
@@ -338,20 +375,16 @@ export function ResidentHub({
           <div className="grid grid-cols-2 gap-3">
             <StatCard
               title={t.residents.hub.housingStatus}
-              icon={SECTION_ICONS.housing}
-              value={statusLabel(t, currentStatus)}
+              icon={isHospitalised ? PLACEMENT_ICONS.hospital : SECTION_ICONS.housing}
+              value={
+                isHospitalised
+                  ? t.residents.hub.inHospital
+                  : statusLabel(t, currentStatus)
+              }
               detail={housingDetail}
               tone={housingTone}
               href={`${base}/housing`}
-              action={
-                isDeceased
-                  ? undefined
-                  : {
-                      href: `${base}/move`,
-                      label: t.residents.hub.moveEnclosure,
-                      icon: ENCLOSURE_ICONS.move,
-                    }
-              }
+              actions={housingActions}
             />
             <StatCard
               title={t.residents.hub.photos}
@@ -398,10 +431,12 @@ export function ResidentHub({
               detail={immunizationDetail}
               tone={immunizationTone}
               href={`${base}/immunizations`}
-              action={{
-                href: `/immunizations/new?residentId=${resident.id}`,
-                label: t.residents.sections.logImmunization,
-              }}
+              actions={[
+                {
+                  href: `/immunizations/new?residentId=${resident.id}`,
+                  label: t.residents.sections.logImmunization,
+                },
+              ]}
             />
             <StatCard
               title={t.residents.hub.vetAppointments}
@@ -410,10 +445,12 @@ export function ResidentHub({
               detail={vetDetail}
               tone={vetTone}
               href={`${base}/vet-appointments`}
-              action={{
-                href: `/vet-visits/new?residentId=${resident.id}`,
-                label: t.residents.sections.bookVetVisit,
-              }}
+              actions={[
+                {
+                  href: `/vet-visits/new?residentId=${resident.id}`,
+                  label: t.residents.sections.bookVetVisit,
+                },
+              ]}
             />
             <StatCard
               title={t.residents.hub.prescriptions}

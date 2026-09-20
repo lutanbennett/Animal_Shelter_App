@@ -3,13 +3,16 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
-import { appointmentStatusLabel } from "@/lib/i18n/enum-labels";
+import {
+  appointmentStatusLabel,
+  placementTypeLabel,
+} from "@/lib/i18n/enum-labels";
 import { PhotoUploader } from "@/components/PhotoUploader";
 import { PhotoGallery, type PhotoRow } from "@/components/PhotoGallery";
 import { BloodTestList, type BloodTestRow } from "@/components/BloodTestList";
 import { ActionLink } from "@/components/ActionLink";
 import {
-  ENCLOSURE_ICONS,
+  PLACEMENT_ICONS,
   SECTION_ICONS,
   type HubSection,
 } from "@/components/hub-icons";
@@ -105,22 +108,30 @@ export default async function ResidentSectionPage(
           >(),
         supabase
           .from("resident_current_state")
-          .select("is_deceased")
+          .select("current_status, is_deceased")
           .eq("resident_id", id)
           .limit(1)
-          .returns<{ is_deceased: boolean }[]>(),
+          .returns<{ current_status: string | null; is_deceased: boolean }[]>(),
       ]);
-      const isDeceased = stateResult.data?.[0]?.is_deceased ?? false;
+      const state = stateResult.data?.[0];
+      const isDeceased = state?.is_deceased ?? false;
+      const isHospitalised = state?.current_status === "Hospitalised";
       body = (
         <div className="flex flex-col gap-4">
           {!isDeceased && (
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+              {!isHospitalised && (
+                <ActionLink
+                  href={`/residents/${id}/hospital`}
+                  label={t.residents.hub.sendToHospital}
+                  icon={PLACEMENT_ICONS.hospital}
+                />
+              )}
               <ActionLink
                 href={`/residents/${id}/move`}
                 label={t.residents.hub.moveEnclosure}
-                icon={ENCLOSURE_ICONS.move}
+                icon={PLACEMENT_ICONS.move}
                 variant="primary"
-                iconOnlyOnMobile={false}
               />
             </div>
           )}
@@ -133,7 +144,9 @@ export default async function ResidentSectionPage(
             render={(row) => (
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium">{row.placement_type}</span>
+                  <span className="font-medium">
+                    {placementTypeLabel(t, row.placement_type)}
+                  </span>
                   <span className="text-xs text-muted">
                     {formatDate(row.start_date, locale)} –{" "}
                     {row.end_date
@@ -273,21 +286,34 @@ export default async function ResidentSectionPage(
       break;
     }
     case "vet-appointments": {
-      const { data } = await supabase
-        .from("vet_appointments")
-        .select("id, appointment_date, status, reason, notes, vets(name)")
-        .eq("resident_id", id)
-        .order("appointment_date", { ascending: false })
-        .returns<
-          {
-            id: string;
-            appointment_date: string;
-            status: string;
-            reason: string | null;
-            notes: string | null;
-            vets: { name: string } | null;
-          }[]
-        >();
+      const [{ data }, stateResult] = await Promise.all([
+        supabase
+          .from("vet_appointments")
+          .select("id, appointment_date, status, reason, notes, vets(name)")
+          .eq("resident_id", id)
+          .order("appointment_date", { ascending: false })
+          .returns<
+            {
+              id: string;
+              appointment_date: string;
+              status: string;
+              reason: string | null;
+              notes: string | null;
+              vets: { name: string } | null;
+            }[]
+          >(),
+        supabase
+          .from("resident_current_state")
+          .select("current_status")
+          .eq("resident_id", id)
+          .limit(1)
+          .returns<{ current_status: string | null }[]>(),
+      ]);
+      // A visit can end with the animal admitted; offer that on each record
+      // unless they're already in hospital (or gone).
+      const currentStatus = stateResult.data?.[0]?.current_status ?? null;
+      const canSendToHospital =
+        currentStatus !== "Hospitalised" && currentStatus !== "Deceased";
       body = (
         <div className="flex flex-col gap-4">
           <div className="flex justify-end">
@@ -319,12 +345,22 @@ export default async function ResidentSectionPage(
                   <span className="text-xs capitalize text-muted">
                     {appointmentStatusLabel(t, row.status)}
                   </span>
-                  <Link
-                    href={`/blood-tests/new?residentId=${id}&vetAppointmentId=${row.id}`}
-                    className="text-xs font-medium text-primary hover:underline"
-                  >
-                    {t.residents.sections.logBloodTest}
-                  </Link>
+                  <div className="flex flex-wrap justify-end gap-x-3 gap-y-1">
+                    <Link
+                      href={`/blood-tests/new?residentId=${id}&vetAppointmentId=${row.id}`}
+                      className="text-xs font-medium text-primary hover:underline"
+                    >
+                      {t.residents.sections.logBloodTest}
+                    </Link>
+                    {canSendToHospital && (
+                      <Link
+                        href={`/residents/${id}/hospital?vetAppointmentId=${row.id}`}
+                        className="text-xs font-medium text-primary hover:underline"
+                      >
+                        {t.residents.hub.sendToHospital}
+                      </Link>
+                    )}
+                  </div>
                 </div>
               </div>
             )}

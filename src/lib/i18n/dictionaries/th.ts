@@ -495,6 +495,37 @@ const th: Dictionary = {
       historyEntries: (n: number) => `ประวัติ ${n} รายการ`,
       carer: (name: string) => `ผู้ดูแล: ${name}`,
       moveEnclosure: "ย้ายกรง",
+      sendToHospital: "ส่งโรงพยาบาล",
+      inHospital: "อยู่โรงพยาบาล",
+      inHospitalDetail: "อยู่นอกสถานที่เพื่อรับการรักษา",
+      hospitalReturnsTo: (enclosure: string) => `จะกลับไปที่ ${enclosure}`,
+    },
+    hospital: {
+      pageTitle: (name: string) => `ส่ง ${name} ไปโรงพยาบาล`,
+      pageSubtitle:
+        "บันทึกว่าสัตว์ไปโรงพยาบาล ระบบจะปิดการจัดที่พักปัจจุบันและระบุว่าอยู่นอกสถานที่เพื่อรับการรักษาตั้งแต่วันที่ระบุ",
+      returnHint:
+        "ระบบจะจำกรงนี้ไว้ เพื่อให้ส่งสัตว์กลับมาที่เดิมได้เมื่อออกจากโรงพยาบาล",
+      visitNote: (date: string, reason: string | null, vet: string | null) =>
+        [`นัดสัตวแพทย์ ${date}`, reason, vet].filter(Boolean).join(" · "),
+      fields: {
+        date: "วันที่เข้ารับการรักษา",
+        notes: "เหตุผล / หมายเหตุ",
+        notesPlaceholder: "เช่น ผ่าตัดหลังถูกรถชน, ให้น้ำเกลือรักษาพาร์โว",
+      },
+      sending: "กำลังบันทึก...",
+      sendButton: "ส่งโรงพยาบาล",
+      notAuthorized: "เฉพาะเจ้าหน้าที่และผู้ดูแลระบบเท่านั้นที่ส่งสัตว์ไปโรงพยาบาลได้",
+      errors: {
+        enterDate: "กรุณาระบุวันที่เข้ารับการรักษา",
+        dateInFuture: "วันที่เข้ารับการรักษาต้องไม่เป็นวันในอนาคต",
+        dateBeforeCurrent:
+          "วันที่เข้ารับการรักษาต้องอยู่หลังวันที่เริ่มการจัดที่พักปัจจุบัน",
+        hospitalNotFound: "ไม่พบสถานะโรงพยาบาลในฐานข้อมูลนี้",
+        residentNotFound: "ไม่พบข้อมูลสัตว์ตัวนี้แล้ว",
+        deceased: "ไม่สามารถส่งสัตว์ที่เสียชีวิตแล้วไปโรงพยาบาลได้",
+        alreadyInHospital: "สัตว์ตัวนี้อยู่โรงพยาบาลอยู่แล้ว",
+      },
     },
     move: {
       pageTitle: (name: string) => `ย้าย ${name}`,
@@ -726,6 +757,16 @@ const th: Dictionary = {
       Outreach: "ดูแลนอกสถานที่",
       Resident: "อยู่ในความดูแล",
       Unknown: "ไม่ทราบ",
+    },
+    placementType: {
+      Intake: "รับเข้า",
+      ChangeEnclosure: "ย้ายกรง",
+      SendToHospital: "ส่งโรงพยาบาล",
+      ReturnFromHospital: "กลับจากโรงพยาบาล",
+      Foster: "อุปถัมภ์ชั่วคราว",
+      Adopt: "รับเลี้ยง",
+      Deceased: "เสียชีวิต",
+      ReturnToShelter: "กลับมาที่ศูนย์",
     },
     species: { Dog: "สุนัข", Cat: "แมว" },
     sex: { Male: "เพศผู้", Female: "เพศเมีย" },

@@ -488,6 +488,38 @@ const en = {
       historyEntries: (n: number) => `${n} history entries`,
       carer: (name: string) => `Carer: ${name}`,
       moveEnclosure: "Move enclosure",
+      sendToHospital: "Send to hospital",
+      inHospital: "In hospital",
+      inHospitalDetail: "Off-site in medical care",
+      hospitalReturnsTo: (enclosure: string) => `Returns to ${enclosure}`,
+    },
+    hospital: {
+      pageTitle: (name: string) => `Send ${name} to hospital`,
+      pageSubtitle:
+        "Record that the resident has gone to hospital. Their current placement is closed and they're marked as off-site in medical care from the date given.",
+      returnHint:
+        "This enclosure is remembered so the resident can be returned to it when they come back.",
+      visitNote: (date: string, reason: string | null, vet: string | null) =>
+        [`Vet visit ${date}`, reason, vet].filter(Boolean).join(" · "),
+      fields: {
+        date: "Date admitted",
+        notes: "Reason / notes",
+        notesPlaceholder: "e.g. surgery after being hit by a car, IV fluids for parvo",
+      },
+      sending: "Sending...",
+      sendButton: "Send to hospital",
+      notAuthorized: "Only staff and admins can send residents to hospital.",
+      errors: {
+        enterDate: "Enter the date admitted.",
+        dateInFuture: "The date admitted can't be in the future.",
+        dateBeforeCurrent:
+          "The date admitted must be after the current placement started.",
+        hospitalNotFound:
+          "The Hospital status enclosure is missing from this database.",
+        residentNotFound: "This resident no longer exists.",
+        deceased: "A deceased resident can't be sent to hospital.",
+        alreadyInHospital: "This resident is already in hospital.",
+      },
     },
     move: {
       pageTitle: (name: string) => `Move ${name}`,
@@ -721,6 +753,16 @@ const en = {
       Outreach: "Outreach",
       Resident: "Resident",
       Unknown: "Unknown",
+    },
+    placementType: {
+      Intake: "Intake",
+      ChangeEnclosure: "Moved enclosure",
+      SendToHospital: "Sent to hospital",
+      ReturnFromHospital: "Returned from hospital",
+      Foster: "Fostered",
+      Adopt: "Adopted",
+      Deceased: "Deceased",
+      ReturnToShelter: "Returned to shelter",
     },
     species: { Dog: "Dog", Cat: "Cat" },
     sex: { Male: "Male", Female: "Female" },

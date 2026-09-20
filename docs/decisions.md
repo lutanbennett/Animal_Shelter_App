@@ -280,6 +280,34 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   without naming the FK, which PostgREST rejects as ambiguous (there are two
   FKs to `enclosures`), so the list always read "No placement history".
 
+- **Send to hospital (2026-09-20):** three entry points, one page.
+  `/residents/[id]/hospital` is linked from the hub's Housing card, the
+  housing section, and each vet visit record (which passes
+  `?vetAppointmentId=` so the visit's date pre-fills "Date admitted" and
+  the visit's date/reason/vet pre-fills the notes — `placement_history` has
+  no FK to `vet_appointments`, and adding one for a note-worthy link wasn't
+  worth a migration). `sendResidentToHospital()` in
+  `src/lib/placements/hospital.ts` inserts a single `SendToHospital` row
+  into the Lifecycle/Hospital pseudo-enclosure (looked up by name — there's
+  no id constant) with `previous_enclosure_id` = whatever the resident's
+  current enclosure is, physical or not, so "Return from hospital" can put
+  them back; the same `close_prior_placement` trigger closes the prior row.
+  No migration: the enum value, pseudo-enclosure and admin/staff insert
+  policies already existed. Role boundary kept as decided above — only
+  admin and staff; volunteers (ChangeEnclosure only) and vets (no placement
+  writes) see the page's not-authorised message. Worth revisiting if the
+  vet role turns out to be used by people who actually admit animals.
+  Rejected: already-hospitalised, deceased, future dates, dates before the
+  current placement started (same date stamping as moves, via the shared
+  `src/lib/placements/dates.ts`). While a resident is hospitalised the
+  Housing card switches to an ambulance icon, reads "In hospital · Off-site
+  in medical care · Returns to {enclosure}", and hides "Send to hospital";
+  "Move enclosure" stays because until "Return from hospital" is built it's
+  the only way back. Placement history rows now show a translated label
+  per `placement_type` (`enums.placementType`) instead of the raw enum.
+  `StatCard` takes `actions: []` instead of a single `action` so the Housing
+  card can offer both Move and Send to hospital.
+
 ## Still open (from Section 11 of the requirements doc)
 
 1. Exact per-table RBAC permission matrix beyond the role descriptions —

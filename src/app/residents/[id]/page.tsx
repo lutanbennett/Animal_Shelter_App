@@ -52,11 +52,19 @@ export default async function ResidentPage(
       .returns<ResidentStatus[]>(),
     supabase
       .from("resident_current_state")
-      .select("current_carer_id, is_deceased, date_of_death")
+      .select(
+        "current_status, current_carer_id, active_hospital_previous_enclosure, is_deceased, date_of_death",
+      )
       .eq("resident_id", id)
       .limit(1)
       .returns<
-        { current_carer_id: string | null; is_deceased: boolean; date_of_death: string | null }[]
+        {
+          current_status: string | null;
+          current_carer_id: string | null;
+          active_hospital_previous_enclosure: string | null;
+          is_deceased: boolean;
+          date_of_death: string | null;
+        }[]
       >(),
     supabase
       .from("placement_history")
@@ -123,24 +131,42 @@ export default async function ResidentPage(
   const resident = residentResult.data?.[0];
   if (!resident) notFound();
 
-  const carerId = currentStateResult.data?.[0]?.current_carer_id ?? null;
-  const carerResult = carerId
-    ? await supabase
-        .from("contacts")
-        .select("name")
-        .eq("id", carerId)
-        .limit(1)
-        .returns<{ name: string }[]>()
-    : null;
+  const currentState = currentStateResult.data?.[0];
+  const carerId = currentState?.current_carer_id ?? null;
+  // previous_enclosure_id is set on every ChangeEnclosure too; only read it
+  // as "where they'll return to" while the resident is actually in hospital.
+  const previousEnclosureId =
+    currentState?.current_status === "Hospitalised"
+      ? currentState.active_hospital_previous_enclosure
+      : null;
+  const [carerResult, previousEnclosureResult] = await Promise.all([
+    carerId
+      ? supabase
+          .from("contacts")
+          .select("name")
+          .eq("id", carerId)
+          .limit(1)
+          .returns<{ name: string }[]>()
+      : null,
+    previousEnclosureId
+      ? supabase
+          .from("enclosures")
+          .select("name")
+          .eq("id", previousEnclosureId)
+          .limit(1)
+          .returns<{ name: string }[]>()
+      : null,
+  ]);
 
   return (
     <ResidentHub
       resident={resident}
       status={listViewResult.data?.[0] ?? null}
-      isDeceased={currentStateResult.data?.[0]?.is_deceased ?? false}
-      dateOfDeath={currentStateResult.data?.[0]?.date_of_death ?? null}
+      isDeceased={currentState?.is_deceased ?? false}
+      dateOfDeath={currentState?.date_of_death ?? null}
       currentPlacementSince={currentPlacementResult.data?.[0]?.start_date ?? null}
       carerName={carerResult?.data?.[0]?.name ?? null}
+      hospitalPreviousEnclosureName={previousEnclosureResult?.data?.[0]?.name ?? null}
       placementHistoryCount={placementCountResult.count ?? 0}
       immunizationRecords={immunizationRecordsResult.data ?? []}
       missingMandatoryImmunizations={missingMandatoryResult.data ?? []}

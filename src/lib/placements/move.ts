@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { SYSTEM_ZONE } from "@/lib/enclosures/options";
+import { isFutureDate, isIsoDate, placementStartDate } from "./dates";
 
 export type MoveResidentInput = {
   residentId: string;
@@ -15,16 +16,6 @@ export type MoveResidentResult = { error: string } | { ok: true };
 
 /** Roles whose placement_history insert policy admits ChangeEnclosure. */
 const MOVE_ROLES = new Set(["admin", "staff", "volunteer"]);
-
-// A date-only input has no time of day. Tie a same-day move to the current
-// instant so it sorts after anything recorded earlier today (an intake this
-// morning, an earlier move); for back-dated moves use midday so the row
-// still lands on that calendar day in any timezone the shelter is likely to
-// read it from, and after a midnight-stamped intake on the same date.
-function moveStartDate(moveDate: string, now: Date) {
-  const today = now.toISOString().slice(0, 10);
-  return moveDate >= today ? now.toISOString() : `${moveDate}T12:00:00.000Z`;
-}
 
 /**
  * Records a ChangeEnclosure placement for the resident. The
@@ -50,18 +41,9 @@ export async function moveResidentToEnclosure(
   }
 
   if (!input.enclosureId) return { error: errors.selectEnclosure };
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.moveDate)) {
-    return { error: errors.enterDate };
-  }
+  if (!isIsoDate(input.moveDate)) return { error: errors.enterDate };
   const now = new Date();
-  // Allow up to a day ahead of UTC "today" so a date picked in Bangkok
-  // shortly after local midnight isn't rejected as being in the future.
-  if (
-    new Date(`${input.moveDate}T00:00:00Z`).getTime() - now.getTime() >
-    24 * 60 * 60 * 1000
-  ) {
-    return { error: errors.dateInFuture };
-  }
+  if (isFutureDate(input.moveDate, now)) return { error: errors.dateInFuture };
 
   const [targetResult, currentResult, stateResult] = await Promise.all([
     supabase
@@ -100,7 +82,7 @@ export async function moveResidentToEnclosure(
   const current = currentResult.data?.[0];
   if (current?.enclosure_id === target.id) return { error: errors.alreadyThere };
 
-  const startDate = moveStartDate(input.moveDate, now);
+  const startDate = placementStartDate(input.moveDate, now);
   // end_after_start on the prior row would reject this anyway, but with a
   // constraint name rather than something a person can act on.
   if (current && new Date(startDate) <= new Date(current.start_date)) {

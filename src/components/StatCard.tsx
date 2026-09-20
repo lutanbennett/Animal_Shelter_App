@@ -3,6 +3,9 @@ import { Plus, type LucideIcon } from "lucide-react";
 
 export type StatCardTone = "success" | "warning" | "danger" | "neutral";
 
+/** Secondary link (e.g. "Book vet visit") shown at the foot of a card. */
+export type StatCardAction = { href: string; label: string; icon?: LucideIcon };
+
 const TONE_CLASSES: Record<StatCardTone, string> = {
   success: "border-success/40 bg-success/10",
   warning: "border-primary/40 bg-primary/10",
@@ -31,7 +34,7 @@ export function StatCard({
   detail,
   tone = "neutral",
   icon: Icon,
-  action,
+  actions = [],
 }: {
   href: string;
   title: string;
@@ -44,12 +47,11 @@ export function StatCard({
    * the title on wider screens.
    */
   icon?: LucideIcon;
-  /** Optional secondary link (e.g. "Book vet visit") shown at the foot of the card. */
-  action?: { href: string; label: string; icon?: LucideIcon };
+  /** Optional secondary links shown in a row at the foot of the card. */
+  actions?: StatCardAction[];
 }) {
-  const ActionIcon = action?.icon ?? Plus;
   // The title link's ::after overlay makes the whole card clickable without
-  // nesting <a> inside <a>; the action link is raised above that overlay.
+  // nesting <a> inside <a>; the action links are raised above that overlay.
   return (
     <div
       className={`relative flex flex-col gap-2 rounded-lg border p-3 transition hover:brightness-110 md:p-4 ${TONE_CLASSES[tone]}`}
@@ -83,16 +85,27 @@ export function StatCard({
       {detail && (
         <span className="line-clamp-2 text-xs text-muted">{detail}</span>
       )}
-      {action && (
-        <Link
-          href={action.href}
-          title={action.label}
-          aria-label={action.label}
-          className="relative z-10 mt-auto inline-flex items-center gap-1 self-start rounded-full border border-primary/40 p-1.5 text-xs font-medium text-primary hover:bg-primary/10 md:rounded md:border-0 md:p-0 md:hover:bg-transparent md:hover:underline"
-        >
-          <ActionIcon aria-hidden="true" className="h-4 w-4 shrink-0 md:h-3.5 md:w-3.5" />
-          <span className="hidden md:inline">{action.label}</span>
-        </Link>
+      {actions.length > 0 && (
+        <div className="mt-auto flex flex-wrap gap-2 md:gap-x-4">
+          {actions.map((action) => {
+            const ActionIcon = action.icon ?? Plus;
+            return (
+              <Link
+                key={action.href}
+                href={action.href}
+                title={action.label}
+                aria-label={action.label}
+                className="relative z-10 inline-flex items-center gap-1 rounded-full border border-primary/40 p-1.5 text-xs font-medium text-primary hover:bg-primary/10 md:rounded md:border-0 md:p-0 md:hover:bg-transparent md:hover:underline"
+              >
+                <ActionIcon
+                  aria-hidden="true"
+                  className="h-4 w-4 shrink-0 md:h-3.5 md:w-3.5"
+                />
+                <span className="hidden md:inline">{action.label}</span>
+              </Link>
+            );
+          })}
+        </div>
       )}
     </div>
   );

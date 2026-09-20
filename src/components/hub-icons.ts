@@ -1,4 +1,5 @@
 import {
+  Ambulance,
   ArrowRightLeft,
   Camera,
   Droplet,
@@ -40,11 +41,22 @@ export const HUB_TAB_ICONS = {
   medical: HeartPulse,
 } satisfies Record<string, LucideIcon>;
 
+/**
+ * Icons for the placement actions (move, send to hospital, …) wherever they
+ * appear: hub cards, section pages and the action pages' own headings. The
+ * hospital icon also stands in for the Housing card while a resident is in
+ * hospital, since they're off-site rather than in an enclosure.
+ */
+export const PLACEMENT_ICONS = {
+  move: ArrowRightLeft,
+  hospital: Ambulance,
+} satisfies Record<string, LucideIcon>;
+
 /** Icons for the enclosure browser (`/enclosures`) and enclosure hub. */
 export const ENCLOSURE_ICONS = {
   enclosure: Fence,
   zone: MapPin,
   residents: Users,
   maintenance: Wrench,
-  move: ArrowRightLeft,
+  move: PLACEMENT_ICONS.move,
 } satisfies Record<string, LucideIcon>;

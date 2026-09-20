@@ -38,3 +38,10 @@ export function roleLabel(t: Dictionary, value: string | null | undefined) {
   if (!value) return "";
   return enumLabel(t.admin.security.roles, value);
 }
+
+export function placementTypeLabel(
+  t: Dictionary,
+  value: string | null | undefined,
+) {
+  return enumLabel(t.enums.placementType, value);
+}
