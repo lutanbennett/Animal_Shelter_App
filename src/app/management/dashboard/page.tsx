@@ -146,9 +146,9 @@ export default async function ManagementDashboardPage(
   ];
   const loadError = results.find((r) => r.error)?.error ?? null;
 
-  // "Initial" vs "follow-up" needs to know whether each animal seen this
+  // "Initial" vs "follow-up" needs to know whether each resident seen this
   // month had ever been seen before, so the earlier visits of just those
-  // animals are fetched once the month's are known.
+  // residents are fetched once the month's are known.
   const monthVisits = monthVisitsResult.data ?? [];
   const seenIds = [...new Set(monthVisits.map((v) => v.resident_id))];
   const priorVisitsResult =

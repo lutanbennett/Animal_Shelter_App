@@ -30,7 +30,7 @@ export function availablePlacementActions(
     case "Deceased":
       return [];
     case "Hospitalised":
-      // Foster/adopt is offered here so a fostered animal treated by the
+      // Foster/adopt is offered here so a fostered resident treated by the
       // shelter can go straight back to its carer (or a new one) rather
       // than through a kennel first.
       return ["rehome", "hospitalReturn"];

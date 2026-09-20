@@ -73,11 +73,11 @@ export async function POST(
   ] = await Promise.all([
     supabase
       .from("residents")
-      .select("id, name, animal_code, drive_folder_id")
+      .select("id, name, resident_code, drive_folder_id")
       .eq("id", id)
       .limit(1)
       .returns<
-        { id: string; name: string; animal_code: string; drive_folder_id: string | null }[]
+        { id: string; name: string; resident_code: string; drive_folder_id: string | null }[]
       >(),
     supabase
       .from("resident_current_state")

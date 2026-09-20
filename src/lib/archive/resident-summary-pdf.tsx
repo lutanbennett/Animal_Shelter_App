@@ -15,13 +15,13 @@ import type { ResidentArchiveRecord } from "./resident-record";
 
 /**
  * The Deceased Resident Summary PDF (requirements doc, Section 7.6) —
- * everything the shelter holds on one animal, in one printable document
+ * everything the shelter holds on one resident, in one printable document
  * that outlives the database. Written into the resident's own Drive folder
  * once that folder has been moved to Residents/Deceased/.
  *
  * Deliberately English-only in its labels, with the resident's own data
  * (which is often Thai) reproduced verbatim: the archive is a fixed
- * artefact, and it would be odd for the permanent record of an animal to
+ * artefact, and it would be odd for the permanent record of a resident to
  * read differently depending on which language the person recording the
  * death happened to have the app set to. The embedded font covers both
  * scripts, so Thai notes and names render properly either way.
@@ -225,7 +225,7 @@ function ResidentSummaryDocument({
 
   return (
     <Document
-      title={`${resident.name} (${resident.animalCode}) — resident summary`}
+      title={`${resident.name} (${resident.residentCode}) — resident summary`}
       author="Lanna Care for Animals"
       subject="Deceased resident summary"
     >
@@ -242,7 +242,7 @@ function ResidentSummaryDocument({
             <Text style={styles.name}>{displayName}</Text>
             <Text style={styles.subtitle}>
               {join([
-                resident.animalCode,
+                resident.residentCode,
                 resident.species,
                 resident.breed,
                 resident.sex,
@@ -257,7 +257,7 @@ function ResidentSummaryDocument({
         </View>
 
         {/* Conditional section, per the original template: the one block
-            that only a deceased animal's summary carries. */}
+            that only a deceased resident's summary carries. */}
         {death && (
           <View style={styles.deathBox}>
             <Text style={styles.sectionTitle}>Death</Text>
@@ -272,7 +272,7 @@ function ResidentSummaryDocument({
         <Section title="Identity">
           <View style={styles.fieldGrid}>
             <Field label="Name" value={resident.name} />
-            <Field label="Animal ID" value={resident.animalCode} />
+            <Field label="Resident ID" value={resident.residentCode} />
             <Field label="Thai name" value={resident.thaiName} />
             <Field label="Other names" value={resident.otherNames} />
             <Field label="Species" value={resident.species} />
@@ -440,7 +440,7 @@ function ResidentSummaryDocument({
 
         <View style={styles.footer} fixed>
           <Text>
-            {`Lanna Care for Animals · ${resident.name} (${resident.animalCode}) · generated ${day(record.generatedAt)}`}
+            {`Lanna Care for Animals · ${resident.name} (${resident.residentCode}) · generated ${day(record.generatedAt)}`}
           </Text>
           <Text
             render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`}
@@ -464,6 +464,6 @@ export async function renderResidentSummaryPdf(
 
 /** `Chai (R-0042) — resident summary.pdf`, the file name staff will see. */
 export function summaryPdfFileName(record: ResidentArchiveRecord): string {
-  const { name, animalCode } = record.resident;
-  return `${name.trim().replace(/\//g, "-")} (${animalCode}) — resident summary.pdf`;
+  const { name, residentCode } = record.resident;
+  return `${name.trim().replace(/\//g, "-")} (${residentCode}) — resident summary.pdf`;
 }

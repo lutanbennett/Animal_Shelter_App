@@ -33,11 +33,11 @@ export default async function SendToHospitalPage(
     await Promise.all([
       supabase
         .from("residents")
-        .select("id, name, thai_name, animal_code")
+        .select("id, name, thai_name, resident_code")
         .eq("id", id)
         .limit(1)
         .returns<
-          { id: string; name: string; thai_name: string | null; animal_code: string }[]
+          { id: string; name: string; thai_name: string | null; resident_code: string }[]
         >(),
       supabase
         .from("resident_list_view")
@@ -121,7 +121,7 @@ export default async function SendToHospitalPage(
           <Icon aria-hidden="true" className="h-6 w-6 shrink-0 text-muted" />
           {t.residents.hospital.pageTitle(displayName)}{" "}
           <span className="text-lg font-normal text-muted">
-            ({resident.animal_code})
+            ({resident.resident_code})
           </span>
         </h1>
         <p className="text-sm text-muted">{t.residents.hospital.pageSubtitle}</p>

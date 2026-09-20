@@ -61,7 +61,7 @@ export async function POST(
   // volunteers may write "attachments/photos, any owner type").
   const { data: bloodTest, error: bloodTestError } = await supabase
     .from("blood_tests")
-    .select("id, date, residents(id, name, animal_code, drive_folder_id)")
+    .select("id, date, residents(id, name, resident_code, drive_folder_id)")
     .eq("id", bloodTestId)
     .limit(1)
     .returns<
@@ -71,7 +71,7 @@ export async function POST(
         residents: {
           id: string;
           name: string;
-          animal_code: string;
+          resident_code: string;
           drive_folder_id: string | null;
         } | null;
       }[]

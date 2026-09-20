@@ -93,7 +93,7 @@ export async function updateSiteContent(
 
 /**
  * Set (or clear, with null) the "Pet of the week" on the home page. The
- * choice is checked against public_resident_profiles so only an animal the
+ * choice is checked against public_resident_profiles so only a resident the
  * public adoption pages already show can be featured — the same rule the
  * home page applies when it renders the card.
  */

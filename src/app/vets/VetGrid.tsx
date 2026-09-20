@@ -12,8 +12,8 @@ export type VetSummary = {
   contact_info: string | null;
   /** Visits that happened (not cancelled, not in the future). */
   visitCount: number;
-  /** Distinct animals across those visits. */
-  animalCount: number;
+  /** Distinct residents across those visits. */
+  residentCount: number;
   upcomingCount: number;
   overdueCount: number;
   lastVisit: string | null;
@@ -76,8 +76,8 @@ function VetCard({ vet }: { vet: VetSummary }) {
           <dd className="text-lg font-semibold text-foreground">{vet.visitCount}</dd>
         </div>
         <div className="rounded bg-background/60 px-2 py-1.5">
-          <dt className="text-[11px] text-muted">{t.vets.list.animals}</dt>
-          <dd className="text-lg font-semibold text-foreground">{vet.animalCount}</dd>
+          <dt className="text-[11px] text-muted">{t.vets.list.residents}</dt>
+          <dd className="text-lg font-semibold text-foreground">{vet.residentCount}</dd>
         </div>
         <div className="rounded bg-background/60 px-2 py-1.5">
           <dt className="text-[11px] text-muted">{t.vets.list.lastVisit}</dt>

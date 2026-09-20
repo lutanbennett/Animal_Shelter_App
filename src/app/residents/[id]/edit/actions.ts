@@ -87,7 +87,7 @@ export async function updateResident(
 
   // The form shows the age as it reads *today*. Only if that number was
   // changed do we store a new estimate anchored to today; otherwise the
-  // stored estimate and its date are left alone so the animal doesn't get
+  // stored estimate and its date are left alone so the resident doesn't get
   // younger every time someone fixes a typo elsewhere on the form.
   const ageNow = estimatedAgeNow(current.estimated_age_years, current.age_estimated_on);
   const ageChanged = estimatedAgeYears !== ageNow;
@@ -105,7 +105,7 @@ export async function updateResident(
 
   const { data: updated, error } = await supabase
     .from("residents")
-    // animal_code is system-assigned at intake and deliberately not here.
+    // resident_code is system-assigned at intake and deliberately not here.
     .update({
       name,
       thai_name: str(formData, "thaiName"),

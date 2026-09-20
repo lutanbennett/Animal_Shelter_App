@@ -6,6 +6,21 @@ Section 11, plus decisions made during setup that aren't in the original doc.
 
 ## Confirmed
 
+- **"Resident", never "animal" (2026-09-21):** the customer is particular
+  about the word. Every English string, PDF/HTML archive label ("Resident
+  ID"), i18n key, identifier and comment that still said *animal* now
+  says *resident*; migration 0045 renames `residents.animal_code` to
+  `resident_code` (with its unique constraint and sequence), leaving the
+  `R-0001` values and Drive folder names as they were. Earlier entries in
+  this file keep the column's old name as a matter of history. Left alone
+  on purpose: the organisation's name, *Lanna Care for Animals*, and its
+  email addresses; the "Chiang Mai Animal Hospital" clinic placeholder;
+  the `lanna-animal-care` package/Worker name (renaming the Worker would
+  create a second deployment); and the Thai dictionary, which already
+  renders resident as สัตว์ throughout because Thai has no natural word
+  for a shelter "resident" — a Thai speaker should decide whether that
+  should change.
+
 - **Frequencies are schedules, forecast from the start date (2026-09-21):**
   0027 stored a frequency as `doses_per_day` so a forecast could multiply
   by it, and seeded Weekly as 0.143 and Every other day as 0.5. The user

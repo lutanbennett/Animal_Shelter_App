@@ -21,7 +21,7 @@ export default async function ContactPage(props: PageProps<"/contacts/[id]">) {
     supabase
       .from("placement_history")
       .select(
-        "id, placement_type, start_date, end_date, residents(id, name, thai_name, animal_code, species, profile_photo_drive_file_id)",
+        "id, placement_type, start_date, end_date, residents(id, name, thai_name, resident_code, species, profile_photo_drive_file_id)",
       )
       .eq("carer_id", id)
       .order("start_date", { ascending: false })

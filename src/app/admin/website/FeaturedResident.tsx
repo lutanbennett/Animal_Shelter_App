@@ -17,7 +17,7 @@ export type FeaturedResidentOption = ResidentOption & {
 
 /**
  * "Pet of the week" chooser. `residents` is the public-visible list only
- * (see page.tsx), so the picker can't offer an animal the home page would
+ * (see page.tsx), so the picker can't offer a resident the home page would
  * then refuse to show. A previously featured resident that has since
  * dropped off the public list won't be in `residents` and simply shows as
  * unset here — matching what the public page does.

@@ -70,7 +70,7 @@ const KIND_PLACEMENT_TYPE: Record<RehomeKind, "Foster" | "Adopt"> = {
  * the shelter first) and Deceased. A fostered resident can be adopted or
  * moved to a different carer through the same call; sending them to the
  * carer they're already with is rejected as a no-op. Hospitalised
- * residents are allowed so a fostered animal treated by the shelter can go
+ * residents are allowed so a fostered resident treated by the shelter can go
  * straight back to its carer.
  *
  * A carer can be created inline (newCarer) when the right person isn't in

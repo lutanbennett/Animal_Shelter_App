@@ -29,7 +29,7 @@ export type EnclosureResident = {
   id: string;
   name: string;
   thai_name: string | null;
-  animal_code: string;
+  resident_code: string;
   profile_photo_drive_file_id: string | null;
 };
 
@@ -59,7 +59,7 @@ function ResidentThumbnail({ resident }: { resident: EnclosureResident }) {
         <span className="truncate text-sm font-medium text-foreground">
           {displayName}
         </span>
-        <span className="text-xs text-muted">{resident.animal_code}</span>
+        <span className="text-xs text-muted">{resident.resident_code}</span>
       </div>
     </Link>
   );

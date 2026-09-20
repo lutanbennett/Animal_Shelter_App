@@ -11,7 +11,7 @@ import { capacityWarningLevel } from "./EnclosurePicker";
  * "This enclosure is full — move anyway?" Shown before a move into an
  * enclosure that is at, over, or nearing capacity. It only warns; the move
  * is still allowed on confirm, because the person on the ground knows
- * whether the animals can share.
+ * whether the residents can share.
  */
 export function CapacityWarningDialog({
   enclosure,

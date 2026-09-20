@@ -124,7 +124,7 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    `0025_public_views_exclude_adopted.sql` revoked them an anonymous
    `PATCH` was accepted (see `docs/decisions.md`). A fresh project's
    defaults may differ from dev's — don't skip the check. Afterwards, load
-   `/`, `/adopt` and `/our-work` signed out and confirm animals and
+   `/`, `/adopt` and `/our-work` signed out and confirm residents and
    stories actually appear, and set the hero photo and story copy at
    `/admin/website` (`site_content` starts empty). The same page picks
    the optional "Pet of the week" for the home page from the publicly
@@ -182,7 +182,7 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
   maintenance job folder that follows a job between status folders, and
   the project folder path that mirrors the project tree).
 - `src/lib/vets/` — the vet hub's statistics: period filtering, monthly
-  buckets and per-animal roll-ups over a vet's appointment rows, shared
+  buckets and per-resident roll-ups over a vet's appointment rows, shared
   by the `/vets` list and `/vets/[id]`.
 - `src/lib/contacts/` — the contacts vocabulary (`contact_type`), the
   one-tap link builders (`tel:`, LINE, Messenger, WhatsApp, `mailto:`, maps) used by the

@@ -71,7 +71,7 @@ export default async function WelcomePage() {
   const gallery = photosResult.data ?? [];
 
   // Looked up through the public view rather than trusting the stored id:
-  // an animal that has since been hidden, adopted or has died isn't in the
+  // a resident that has since been hidden, adopted or has died isn't in the
   // view, so the card simply disappears. Sequential because it depends on
   // the site_content row (anon can't join residents directly).
   let featured: FeaturedResident | null = null;
@@ -357,7 +357,7 @@ export default async function WelcomePage() {
             href="/adopt"
             className="shrink-0 rounded bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
           >
-            {t.home.browseAnimals}
+            {t.home.browseResidents}
           </Link>
         </div>
       </section>

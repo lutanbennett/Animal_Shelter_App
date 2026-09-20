@@ -12,7 +12,7 @@ import { statusLabel } from "@/lib/i18n/enum-labels";
 export type ResidentRow = {
   resident_id: string;
   name: string;
-  animal_code: string;
+  resident_code: string;
   thai_name: string | null;
   other_names: string | null;
   current_status: string | null;
@@ -152,7 +152,7 @@ export function ResidentsTable({ residents }: { residents: ResidentRow[] }) {
                     )}
                   />
                 </td>
-                <td className="px-4 py-2 text-muted">{resident.animal_code}</td>
+                <td className="px-4 py-2 text-muted">{resident.resident_code}</td>
                 <td className="px-4 py-2 text-foreground">
                   <Link
                     href={`/residents/${resident.resident_id}`}

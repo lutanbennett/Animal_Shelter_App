@@ -61,7 +61,7 @@ export async function archiveDeceasedResident(
   const residentResult = await supabase
     .from("residents")
     .select(
-      "id, name, animal_code, drive_folder_id, profile_photo_drive_file_id, deceased_summary_drive_file_id, deceased_index_drive_file_id",
+      "id, name, resident_code, drive_folder_id, profile_photo_drive_file_id, deceased_summary_drive_file_id, deceased_index_drive_file_id",
     )
     .eq("id", residentId)
     .limit(1)
@@ -69,7 +69,7 @@ export async function archiveDeceasedResident(
       {
         id: string;
         name: string;
-        animal_code: string;
+        resident_code: string;
         drive_folder_id: string | null;
         profile_photo_drive_file_id: string | null;
         deceased_summary_drive_file_id: string | null;
@@ -88,7 +88,7 @@ export async function archiveDeceasedResident(
     const { residentFolderId, alreadyArchived } =
       await moveResidentFolderToDeceasedArchive(drive, resident);
 
-    // A photo in the PDF makes it a record of the animal rather than a form.
+    // A photo in the PDF makes it a record of the resident rather than a form.
     // Never worth failing the archive over, so any problem fetching it is
     // swallowed and the summary renders without it.
     let profilePhotoDataUri: string | null = null;

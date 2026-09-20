@@ -54,7 +54,7 @@ export default async function VetsPage() {
     return {
       ...vet,
       visitCount: happened.length,
-      animalCount: new Set(happened.map((v) => v.resident_id)).size,
+      residentCount: new Set(happened.map((v) => v.resident_id)).size,
       upcomingCount: schedule.upcoming.length,
       overdueCount: schedule.overdue.length,
       lastVisit: lastVisit(visits, now)?.appointment_date ?? null,

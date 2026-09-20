@@ -28,7 +28,7 @@ export type Vet = {
 };
 
 export type VetHubVisit = VetVisit & {
-  residents: { name: string; thai_name: string | null; animal_code: string } | null;
+  residents: { name: string; thai_name: string | null; resident_code: string } | null;
 };
 
 /** A medical record linked to one of this vet's visits. */
@@ -100,7 +100,7 @@ export function VetHub({
     return r.thai_name ? `${r.name} (${r.thai_name})` : r.name;
   };
 
-  const animalNames = byResident
+  const residentNames = byResident
     .slice(0, 3)
     .map((r) => residentName(r.resident_id))
     .join(", ");
@@ -172,7 +172,7 @@ export function VetHub({
           )}
         </div>
 
-        {/* Period selector: which months the counts, the animal list and the
+        {/* Period selector: which months the counts, the resident list and the
             visit list cover. Upcoming/overdue always look at the whole
             schedule, since the future isn't part of any past window. */}
         <div className="flex flex-col gap-1 md:items-end">
@@ -215,10 +215,10 @@ export function VetHub({
           tone="neutral"
         />
         <StatCard
-          title={t.vets.hub.animalsSeen}
-          icon={VET_ICONS.animals}
+          title={t.vets.hub.residentsSeen}
+          icon={VET_ICONS.residents}
           value={`${byResident.length}`}
-          detail={animalNames || t.vets.hub.noAnimals}
+          detail={residentNames || t.vets.hub.noResidents}
           tone="neutral"
         />
         <StatCard
@@ -272,9 +272,9 @@ export function VetHub({
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
-            <VET_ICONS.animals aria-hidden="true" className="h-5 w-5 text-muted" />
+            <VET_ICONS.residents aria-hidden="true" className="h-5 w-5 text-muted" />
             <h2 className="text-lg font-semibold text-foreground">
-              {t.vets.hub.animalsHeading}
+              {t.vets.hub.residentsHeading}
             </h2>
             <span className="text-sm text-muted">({byResident.length})</span>
           </div>
@@ -283,7 +283,7 @@ export function VetHub({
               <table className="w-full text-left text-sm">
                 <thead className="bg-surface text-muted">
                   <tr>
-                    <th className="px-3 py-2 font-medium">{t.vets.hub.table.animal}</th>
+                    <th className="px-3 py-2 font-medium">{t.vets.hub.table.resident}</th>
                     <th className="px-3 py-2 text-right font-medium">{t.vets.hub.table.visits}</th>
                     <th className="px-3 py-2 font-medium">{t.vets.hub.table.lastVisit}</th>
                     <th className="hidden px-3 py-2 font-medium md:table-cell">
@@ -293,7 +293,7 @@ export function VetHub({
                 </thead>
                 <tbody className="divide-y divide-border">
                   {byResident.map((row) => {
-                    const code = residentsById.get(row.resident_id)?.animal_code;
+                    const code = residentsById.get(row.resident_id)?.resident_code;
                     return (
                       <tr key={row.resident_id} className="hover:bg-surface-hover">
                         <td className="px-3 py-2">
@@ -328,7 +328,7 @@ export function VetHub({
             </div>
           ) : (
             <p className="rounded border border-border px-4 py-6 text-center text-sm text-muted">
-              {t.vets.hub.noAnimalsInPeriod}
+              {t.vets.hub.noResidentsInPeriod}
             </p>
           )}
         </section>

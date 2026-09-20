@@ -33,7 +33,7 @@ function todayIso() {
 export type EditableResident = {
   id: string;
   name: string;
-  animal_code: string;
+  resident_code: string;
   thai_name: string | null;
   other_names: string | null;
   species: string | null;
