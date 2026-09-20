@@ -762,3 +762,104 @@ async function findFileByName(
 }
 
 export { driveImageUrl } from "./drive-client";
+
+// ---------------------------------------------------------------------------
+// Project folders
+// ---------------------------------------------------------------------------
+
+/**
+ * Where project files live:
+ *
+ *   Projects/<Category>/<user folder>/<user folder…>/<file>
+ *
+ * The Drive tree mirrors the project_folders tree exactly — the user's
+ * requirement is that staff can browse Drive and the app and see the same
+ * folders. A category's folder ("Projects/Shelter Projects") is found by
+ * name, never recreated, because maintenance already keeps its jobs under
+ * Projects/Shelter Projects/Enclosure Maintenance/ (syncMaintenanceJobFolder).
+ */
+const PROJECTS_FOLDER = "Projects";
+
+/** The Drive segment for a project folder — its name, made Drive-safe. */
+export function projectFolderSegment(name: string): string {
+  return driveSegment(name);
+}
+
+/**
+ * A project folder with the chain of ancestors above it, root first
+ * (category … parent). Each carries its cached Drive ID so a resolved
+ * ancestor costs no Drive calls.
+ */
+export type ProjectFolderChain = {
+  id: string;
+  name: string;
+  drive_folder_id: string | null;
+}[];
+
+/**
+ * Ensures the Drive folder for the *last* entry in `chain` exists at
+ * Projects/<each ancestor>/…, creating any missing level on the way down.
+ * Returns the Drive IDs of every level that had none cached, so the caller
+ * can write them back to the rows (each is a one-time lookup otherwise).
+ *
+ * A cached ID is trusted without a Drive round-trip — a Drive move or
+ * rename keeps a folder's ID. A folder deleted by hand shows up as a 404
+ * on the next upload; the caller (src/lib/projects/drive-sync.ts) clears
+ * the cached ID and calls this again so the level is re-found by name.
+ */
+export async function ensureProjectFolderPath(
+  drive: DriveClient,
+  chain: ProjectFolderChain,
+): Promise<{ folderId: string; resolvedIds: Map<string, string> }> {
+  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  if (!rootId) {
+    throw new Error("GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured.");
+  }
+
+  const resolvedIds = new Map<string, string>();
+  let parentId = await findOrCreateFolder(drive, rootId, PROJECTS_FOLDER);
+
+  for (const level of chain) {
+    if (level.drive_folder_id) {
+      parentId = level.drive_folder_id;
+      continue;
+    }
+    parentId = await findOrCreateFolder(drive, parentId, projectFolderSegment(level.name));
+    resolvedIds.set(level.id, parentId);
+  }
+
+  return { folderId: parentId, resolvedIds };
+}
+
+/**
+ * Renames a project folder's Drive folder to match its row. A folder that
+ * has never been synced (no cached ID) needs nothing — it will be created
+ * under its current name on the first upload.
+ */
+export async function renameProjectDriveFolder(
+  drive: DriveClient,
+  driveFolderId: string,
+  name: string,
+): Promise<void> {
+  await drive.renameFile(driveFolderId, projectFolderSegment(name));
+}
+
+/**
+ * Moves a project folder's Drive folder under its new parent's Drive
+ * folder. The folder keeps its ID, so nothing recorded against it (the
+ * files inside, the cached ID on its own row) changes.
+ */
+export async function moveProjectDriveFolder(
+  drive: DriveClient,
+  driveFolderId: string,
+  newParentDriveFolderId: string,
+): Promise<void> {
+  const existing = await drive.getFile(driveFolderId, "id, parents");
+  const parents = existing.parents ?? [];
+  if (parents.includes(newParentDriveFolderId)) return;
+  await drive.moveFile({
+    fileId: driveFolderId,
+    addParents: newParentDriveFolderId,
+    removeParents: parents.join(","),
+  });
+}
