@@ -165,26 +165,32 @@ export function ResidentHub({
       ]
         .filter(Boolean)
         .join(" · ") || t.residents.hub.historyEntries(placementHistoryCount);
-  // "Send to hospital" only makes sense while they're on site; the way back
-  // is a ReturnFromHospital placement (not built yet — see the backlog).
+  // Send to hospital and return from hospital are opposites: while they're
+  // on site the card offers Move + Send to hospital; while they're in
+  // hospital the only way back is Return from hospital (a move out of the
+  // Hospital pseudo-enclosure would misrecord the stay).
   const housingActions: StatCardAction[] = isDeceased
     ? []
-    : [
-        {
-          href: `${base}/move`,
-          label: t.residents.hub.moveEnclosure,
-          icon: PLACEMENT_ICONS.move,
-        },
-        ...(isHospitalised
-          ? []
-          : [
-              {
-                href: `${base}/hospital`,
-                label: t.residents.hub.sendToHospital,
-                icon: PLACEMENT_ICONS.hospital,
-              },
-            ]),
-      ];
+    : isHospitalised
+      ? [
+          {
+            href: `${base}/hospital/return`,
+            label: t.residents.hub.returnFromHospital,
+            icon: PLACEMENT_ICONS.hospitalReturn,
+          },
+        ]
+      : [
+          {
+            href: `${base}/move`,
+            label: t.residents.hub.moveEnclosure,
+            icon: PLACEMENT_ICONS.move,
+          },
+          {
+            href: `${base}/hospital`,
+            label: t.residents.hub.sendToHospital,
+            icon: PLACEMENT_ICONS.hospital,
+          },
+        ];
 
   // Immunizations — we can only tell "recorded" vs "missing mandatory type"
   // today; due-date/interval tracking isn't in the data model yet (see

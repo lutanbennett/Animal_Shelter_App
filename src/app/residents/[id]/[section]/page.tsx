@@ -118,21 +118,32 @@ export default async function ResidentSectionPage(
       const isHospitalised = state?.current_status === "Hospitalised";
       body = (
         <div className="flex flex-col gap-4">
+          {/* Send to hospital and return from hospital are opposites; while
+              in hospital, return is the only way back into an enclosure. */}
           {!isDeceased && (
             <div className="flex justify-end gap-2">
-              {!isHospitalised && (
+              {isHospitalised ? (
                 <ActionLink
-                  href={`/residents/${id}/hospital`}
-                  label={t.residents.hub.sendToHospital}
-                  icon={PLACEMENT_ICONS.hospital}
+                  href={`/residents/${id}/hospital/return`}
+                  label={t.residents.hub.returnFromHospital}
+                  icon={PLACEMENT_ICONS.hospitalReturn}
+                  variant="primary"
                 />
+              ) : (
+                <>
+                  <ActionLink
+                    href={`/residents/${id}/hospital`}
+                    label={t.residents.hub.sendToHospital}
+                    icon={PLACEMENT_ICONS.hospital}
+                  />
+                  <ActionLink
+                    href={`/residents/${id}/move`}
+                    label={t.residents.hub.moveEnclosure}
+                    icon={PLACEMENT_ICONS.move}
+                    variant="primary"
+                  />
+                </>
               )}
-              <ActionLink
-                href={`/residents/${id}/move`}
-                label={t.residents.hub.moveEnclosure}
-                icon={PLACEMENT_ICONS.move}
-                variant="primary"
-              />
             </div>
           )}
           {error && (

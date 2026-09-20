@@ -489,6 +489,7 @@ const en = {
       carer: (name: string) => `Carer: ${name}`,
       moveEnclosure: "Move enclosure",
       sendToHospital: "Send to hospital",
+      returnFromHospital: "Return from hospital",
       inHospital: "In hospital",
       inHospitalDetail: "Off-site in medical care",
       hospitalReturnsTo: (enclosure: string) => `Returns to ${enclosure}`,
@@ -519,6 +520,41 @@ const en = {
         residentNotFound: "This resident no longer exists.",
         deceased: "A deceased resident can't be sent to hospital.",
         alreadyInHospital: "This resident is already in hospital.",
+      },
+    },
+    hospitalReturn: {
+      pageTitle: (name: string) => `Return ${name} from hospital`,
+      pageSubtitle:
+        "Record that the resident is back from hospital. Their hospital stay is closed and a new placement starts in the chosen enclosure from the date given.",
+      inHospitalSince: (date: string) => `In hospital since ${date}`,
+      returnTo: "Return to",
+      defaultHint: (enclosure: string) =>
+        `${enclosure} is where they were before hospital. Choose a different enclosure if they need to go into isolation first.`,
+      previousUnavailable:
+        "The enclosure they came from is no longer available, so choose where they should go.",
+      noPrevious:
+        "No previous enclosure was recorded, so choose where they should go.",
+      fields: {
+        date: "Date returned",
+        notes: "Notes",
+        notesPlaceholder:
+          "e.g. discharged after surgery, isolate for 2 weeks and re-check stitches",
+      },
+      returning: "Returning...",
+      returnButton: "Return from hospital",
+      notAuthorized: "Only staff and admins can return residents from hospital.",
+      errors: {
+        selectEnclosure: "Select the enclosure to return to.",
+        enterDate: "Enter the date returned.",
+        dateInFuture: "The date returned can't be in the future.",
+        dateBeforeAdmitted:
+          "The date returned must be after the date they were admitted.",
+        enclosureNotFound: "That enclosure no longer exists.",
+        systemEnclosure:
+          "Residents return from hospital into a physical enclosure, not a lifecycle status.",
+        residentNotFound: "This resident no longer exists.",
+        deceased: "A deceased resident can't be returned from hospital.",
+        notInHospital: "This resident isn't in hospital.",
       },
     },
     move: {
@@ -560,6 +596,8 @@ const en = {
           "Lifecycle statuses (hospital, foster, adoption…) are recorded with their own actions, not as a move.",
         residentNotFound: "This resident no longer exists.",
         deceased: "A deceased resident can't be moved.",
+        inHospital:
+          "This resident is in hospital — use \"Return from hospital\" to bring them back into an enclosure.",
         alreadyThere: "The resident is already in that enclosure.",
       },
     },
@@ -581,6 +619,7 @@ const en = {
         hint: "Pick a different enclosure to record a move when you save.",
         movingTo: (enclosure: string) => `Will move to ${enclosure} on save.`,
         keep: "Keep current enclosure",
+        inHospital: "Return from hospital",
       },
       fields: {
         estimatedAgeNow: "Estimated age now (years)",

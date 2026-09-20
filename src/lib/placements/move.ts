@@ -25,7 +25,8 @@ const MOVE_ROLES = new Set(["admin", "staff", "volunteer"]);
  * Shared by the hub's move page and the edit form, which both check the
  * same rules: the target must be a physical (non-Lifecycle) enclosure the
  * resident isn't already in, the date can't be in the future or before the
- * current placement started, and deceased residents can't be moved.
+ * current placement started, and deceased or hospitalised residents can't
+ * be moved (the way back from hospital is a ReturnFromHospital placement).
  */
 export async function moveResidentToEnclosure(
   supabase: SupabaseClient,
@@ -61,10 +62,10 @@ export async function moveResidentToEnclosure(
       .returns<{ enclosure_id: string | null; start_date: string }[]>(),
     supabase
       .from("resident_current_state")
-      .select("is_deceased")
+      .select("current_status, is_deceased")
       .eq("resident_id", input.residentId)
       .limit(1)
-      .returns<{ is_deceased: boolean }[]>(),
+      .returns<{ current_status: string | null; is_deceased: boolean }[]>(),
   ]);
 
   if (targetResult.error) return { error: targetResult.error.message };
@@ -78,6 +79,7 @@ export async function moveResidentToEnclosure(
   const state = stateResult.data?.[0];
   if (!state) return { error: errors.residentNotFound };
   if (state.is_deceased) return { error: errors.deceased };
+  if (state.current_status === "Hospitalised") return { error: errors.inHospital };
 
   const current = currentResult.data?.[0];
   if (current?.enclosure_id === target.id) return { error: errors.alreadyThere };

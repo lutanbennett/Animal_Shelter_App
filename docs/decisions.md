@@ -301,12 +301,35 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   current placement started (same date stamping as moves, via the shared
   `src/lib/placements/dates.ts`). While a resident is hospitalised the
   Housing card switches to an ambulance icon, reads "In hospital · Off-site
-  in medical care · Returns to {enclosure}", and hides "Send to hospital";
-  "Move enclosure" stays because until "Return from hospital" is built it's
-  the only way back. Placement history rows now show a translated label
-  per `placement_type` (`enums.placementType`) instead of the raw enum.
-  `StatCard` takes `actions: []` instead of a single `action` so the Housing
-  card can offer both Move and Send to hospital.
+  in medical care · Returns to {enclosure}", and hides "Send to hospital".
+  Placement history rows now show a translated label per `placement_type`
+  (`enums.placementType`) instead of the raw enum. `StatCard` takes
+  `actions: []` instead of a single `action` so the Housing card can offer
+  both Move and Send to hospital.
+
+- **Return from hospital (2026-09-20):** the reverse of send, at
+  `/residents/[id]/hospital/return`, linked from the Housing card and the
+  housing section only while the resident is hospitalised — the two
+  actions are opposites and exactly one of them is ever shown.
+  `returnResidentFromHospital()` (same file as send) inserts a single
+  `ReturnFromHospital` row; `previous_enclosure_id` on that row is the
+  Hospital pseudo-enclosure so the history reads "Hospital → Kennel 3"
+  like a move. The zone → enclosure picker (shared `EnclosurePicker`, with
+  the same capacity warning as moves) defaults to the stored
+  `active_hospital_previous_enclosure`, but any physical enclosure is
+  accepted: a resident back from surgery may need an isolation enclosure
+  for a few weeks before rejoining the general population. When the stored
+  enclosure can't be offered (deleted, or a Lifecycle status such as
+  Fostered — returning to foster would need a Foster placement with a
+  carer, not built yet) the picker starts empty with a note saying why.
+  Rejected: not hospitalised, deceased, future dates, dates before the
+  admission, Lifecycle targets. Same admin/staff role boundary as send.
+  With a proper way back, "Move enclosure" is now hidden while in hospital
+  and `moveResidentToEnclosure()` rejects hospitalised residents, so the
+  edit form's Housing section can't record a `ChangeEnclosure` out of the
+  Hospital pseudo-enclosure (it shows the return link instead). Vet visit
+  records still only offer "Send to hospital": a discharge isn't tied to a
+  visit the way an admission can be.
 
 ## Still open (from Section 11 of the requirements doc)
 

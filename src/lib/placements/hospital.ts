@@ -16,6 +16,17 @@ export type SendToHospitalInput = {
 
 export type SendToHospitalResult = { error: string } | { ok: true };
 
+export type ReturnFromHospitalInput = {
+  residentId: string;
+  /** Where they're going back to — the previous enclosure by default. */
+  enclosureId: string;
+  /** YYYY-MM-DD from a date input. */
+  date: string;
+  notes: string | null;
+};
+
+export type ReturnFromHospitalResult = { error: string } | { ok: true };
+
 /**
  * Roles whose placement_history insert policy admits SendToHospital.
  * Volunteers may only record ChangeEnclosure and vets can't write
@@ -106,6 +117,101 @@ export async function sendResidentToHospital(
     start_date: startDate,
     zone_id: hospital.zone_id,
     enclosure_id: hospital.id,
+    previous_enclosure_id: current?.enclosure_id ?? null,
+    notes: input.notes,
+    created_by: user?.id ?? null,
+  });
+  if (error) return { error: error.message };
+
+  return { ok: true };
+}
+
+/**
+ * Records a ReturnFromHospital placement into a physical enclosure. The
+ * form defaults to the enclosure stored as previous_enclosure_id on the
+ * SendToHospital row, but any physical enclosure is accepted — a resident
+ * back from hospital may need an isolation enclosure for a while before
+ * rejoining the general population, or the old enclosure may be gone.
+ * previous_enclosure_id on the new row is the Hospital pseudo-enclosure,
+ * so the housing history reads "Hospital → Kennel 3" like a move does.
+ *
+ * Shared by the hub's return-from-hospital page, reached from the Housing
+ * card and the housing section while the resident is in hospital.
+ */
+export async function returnResidentFromHospital(
+  supabase: SupabaseClient,
+  t: Dictionary,
+  input: ReturnFromHospitalInput,
+): Promise<ReturnFromHospitalResult> {
+  const errors = t.residents.hospitalReturn.errors;
+
+  // RLS would reject the insert for a vet or volunteer with a raw policy
+  // error — say why.
+  const { data: role } = await supabase.rpc("current_user_role");
+  if (typeof role !== "string" || !HOSPITAL_ROLES.has(role)) {
+    return { error: t.residents.hospitalReturn.notAuthorized };
+  }
+
+  if (!input.enclosureId) return { error: errors.selectEnclosure };
+  if (!isIsoDate(input.date)) return { error: errors.enterDate };
+  const now = new Date();
+  if (isFutureDate(input.date, now)) return { error: errors.dateInFuture };
+
+  const [targetResult, currentResult, stateResult] = await Promise.all([
+    supabase
+      .from("enclosures")
+      .select("id, zone_id, zones!inner(name)")
+      .eq("id", input.enclosureId)
+      .limit(1)
+      .returns<{ id: string; zone_id: string; zones: { name: string } }[]>(),
+    supabase
+      .from("placement_history")
+      .select("enclosure_id, start_date")
+      .eq("resident_id", input.residentId)
+      .is("end_date", null)
+      .limit(1)
+      .returns<{ enclosure_id: string | null; start_date: string }[]>(),
+    supabase
+      .from("resident_current_state")
+      .select("current_status, is_deceased")
+      .eq("resident_id", input.residentId)
+      .limit(1)
+      .returns<{ current_status: string | null; is_deceased: boolean }[]>(),
+  ]);
+
+  if (targetResult.error) return { error: targetResult.error.message };
+  if (currentResult.error) return { error: currentResult.error.message };
+  if (stateResult.error) return { error: stateResult.error.message };
+
+  const target = targetResult.data?.[0];
+  if (!target) return { error: errors.enclosureNotFound };
+  if (target.zones.name === SYSTEM_ZONE) return { error: errors.systemEnclosure };
+
+  const state = stateResult.data?.[0];
+  if (!state) return { error: errors.residentNotFound };
+  if (state.is_deceased) return { error: errors.deceased };
+  if (state.current_status !== "Hospitalised") {
+    return { error: errors.notInHospital };
+  }
+
+  const current = currentResult.data?.[0];
+  const startDate = placementStartDate(input.date, now);
+  // end_after_start on the prior row would reject this anyway, but with a
+  // constraint name rather than something a person can act on.
+  if (current && new Date(startDate) <= new Date(current.start_date)) {
+    return { error: errors.dateBeforeAdmitted };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { error } = await supabase.from("placement_history").insert({
+    resident_id: input.residentId,
+    placement_type: "ReturnFromHospital",
+    start_date: startDate,
+    zone_id: target.zone_id,
+    enclosure_id: target.id,
     previous_enclosure_id: current?.enclosure_id ?? null,
     notes: input.notes,
     created_by: user?.id ?? null,

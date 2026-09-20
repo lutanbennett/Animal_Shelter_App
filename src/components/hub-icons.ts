@@ -12,6 +12,7 @@ import {
   Scissors,
   Stethoscope,
   Syringe,
+  Undo2,
   Users,
   Weight,
   Wrench,
@@ -42,14 +43,16 @@ export const HUB_TAB_ICONS = {
 } satisfies Record<string, LucideIcon>;
 
 /**
- * Icons for the placement actions (move, send to hospital, …) wherever they
- * appear: hub cards, section pages and the action pages' own headings. The
- * hospital icon also stands in for the Housing card while a resident is in
- * hospital, since they're off-site rather than in an enclosure.
+ * Icons for the placement actions (move, send to / return from hospital, …)
+ * wherever they appear: hub cards, section pages and the action pages' own
+ * headings. The hospital icon also stands in for the Housing card while a
+ * resident is in hospital, since they're off-site rather than in an
+ * enclosure.
  */
 export const PLACEMENT_ICONS = {
   move: ArrowRightLeft,
   hospital: Ambulance,
+  hospitalReturn: Undo2,
 } satisfies Record<string, LucideIcon>;
 
 /** Icons for the enclosure browser (`/enclosures`) and enclosure hub. */

@@ -20,6 +20,8 @@ export type HousingState = {
   enclosureName: string | null;
   zoneName: string | null;
   isDeceased: boolean;
+  /** In the Hospital pseudo-enclosure — moves are recorded as a return instead. */
+  isHospitalised: boolean;
 };
 
 function todayIso() {
@@ -286,6 +288,16 @@ export function EditResidentForm({
         </p>
         {housing.isDeceased ? (
           <p className="text-sm text-muted">{t.residents.move.errors.deceased}</p>
+        ) : housing.isHospitalised ? (
+          <p className="text-sm text-muted">
+            {t.residents.move.errors.inHospital}{" "}
+            <Link
+              href={`/residents/${resident.id}/hospital/return`}
+              className="font-medium text-primary hover:underline"
+            >
+              {h.inHospital}
+            </Link>
+          </p>
         ) : (
           <>
             <p className="text-sm text-muted">{h.hint}</p>

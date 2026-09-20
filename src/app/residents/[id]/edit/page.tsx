@@ -56,10 +56,10 @@ export default async function EditResidentPage(
       >(),
     supabase
       .from("resident_current_state")
-      .select("is_deceased")
+      .select("current_status, is_deceased")
       .eq("resident_id", id)
       .limit(1)
-      .returns<{ is_deceased: boolean }[]>(),
+      .returns<{ current_status: string | null; is_deceased: boolean }[]>(),
     loadEnclosureOptions(supabase),
   ]);
 
@@ -80,6 +80,7 @@ export default async function EditResidentPage(
     enclosureName: status?.enclosure_name ?? null,
     zoneName: status?.zone_name ?? null,
     isDeceased: stateResult.data?.[0]?.is_deceased ?? false,
+    isHospitalised: stateResult.data?.[0]?.current_status === "Hospitalised",
   };
 
   return (
