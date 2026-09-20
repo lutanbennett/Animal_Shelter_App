@@ -248,6 +248,9 @@ export function renderResidentIndexHtml(
   const bloodTestFiles = record.bloodTests.flatMap((test) =>
     test.files.map((file) => ({ test, file })),
   );
+  const procedureFiles = record.procedures.flatMap((procedure) =>
+    procedure.files.map((file) => ({ procedure, file })),
+  );
 
   const toc = [
     ["details", "Details"],
@@ -411,11 +414,14 @@ export function renderResidentIndexHtml(
       "procedures",
       "Procedures",
       table(
-        ["Date", "Procedure", "Notes"],
+        ["Date", "Procedure", "Notes", "Files"],
         record.procedures.map((procedure) => [
           esc(day(procedure.date)),
-          esc(procedure.procedureType),
+          escOrDash(procedure.procedureType),
           escOrDash(procedure.notes),
+          procedure.files.length > 0
+            ? procedure.files.map((file) => fileLink(file)).join("<br>")
+            : "—",
         ]),
         "No procedures recorded.",
       ),
@@ -483,6 +489,11 @@ export function renderResidentIndexHtml(
             fileLink(file),
             "Blood Tests",
             esc(day(test.date)),
+          ]),
+          ...procedureFiles.map(({ procedure, file }) => [
+            fileLink(file),
+            "Procedures",
+            esc(day(procedure.date)),
           ]),
         ],
         "No files on file.",

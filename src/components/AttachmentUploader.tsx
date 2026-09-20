@@ -29,13 +29,13 @@ const CONCURRENCY = 1;
 
 function uploadFile(
   t: Dictionary,
-  bloodTestId: string,
+  uploadUrl: string,
   file: File,
   onProgress: (percent: number) => void,
 ): Promise<{ error?: string; attachment?: UploadedAttachment }> {
   return new Promise((resolve) => {
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", `/api/blood-tests/${bloodTestId}/attachments`);
+    xhr.open("POST", uploadUrl);
 
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
@@ -74,11 +74,24 @@ function uploadFile(
   });
 }
 
-export function BloodTestAttachmentUploader({
-  bloodTestId,
+/**
+ * Drop zone + queue for attaching images and PDFs to a medical record (a
+ * blood test's lab scan, a procedure's X-ray). The record's own upload
+ * route — `/api/blood-tests/[id]/attachments`, `/api/procedures/[id]/…` —
+ * decides where the file lands in Drive and which owner it's recorded
+ * against; this component only knows the URL. The drop-zone wording is
+ * passed in because each record type reads differently.
+ */
+export function AttachmentUploader({
+  uploadUrl,
+  dropHere,
+  hint,
   onUploaded,
 }: {
-  bloodTestId: string;
+  /** POST target that accepts a multipart `file` and returns the attachment. */
+  uploadUrl: string;
+  dropHere: string;
+  hint: string;
   onUploaded?: (attachment: UploadedAttachment) => void;
 }) {
   const { t } = useI18n();
@@ -101,7 +114,7 @@ export function BloodTestAttachmentUploader({
           const item = items[index];
           index += 1;
           updateItem(item.key, { status: "uploading" });
-          const result = await uploadFile(t, bloodTestId, item.file, (progress) =>
+          const result = await uploadFile(t, uploadUrl, item.file, (progress) =>
             updateItem(item.key, { progress }),
           );
           if (result.error) {
@@ -117,7 +130,7 @@ export function BloodTestAttachmentUploader({
         Array.from({ length: Math.min(CONCURRENCY, items.length) }, worker),
       );
     },
-    [bloodTestId, onUploaded, t, updateItem],
+    [uploadUrl, onUploaded, t, updateItem],
   );
 
   const addFiles = useCallback(
@@ -168,10 +181,8 @@ export function BloodTestAttachmentUploader({
             : "border-border bg-surface hover:bg-surface-hover"
         }`}
       >
-        <span className="text-sm font-medium text-foreground">
-          {t.bloodTests.uploader.dropHere}
-        </span>
-        <span className="text-xs text-muted">{t.bloodTests.uploader.hint}</span>
+        <span className="text-sm font-medium text-foreground">{dropHere}</span>
+        <span className="text-xs text-muted">{hint}</span>
         <input
           ref={inputRef}
           type="file"

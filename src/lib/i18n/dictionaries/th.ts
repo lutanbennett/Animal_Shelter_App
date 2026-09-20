@@ -412,6 +412,56 @@ const th: Dictionary = {
     },
   },
 
+  procedures: {
+    pageTitle: "บันทึกหัตถการ",
+    pageSubtitle:
+      "บันทึกหัตถการของสัตว์ตัวนี้ — เอกซเรย์ อัลตราซาวด์ ขูดหินปูน ทำหมัน — และแนบภาพหรือเอกสารที่ได้รับมา",
+    noResidentSelected:
+      "เปิดหน้านี้จากแท็บหัตถการของสัตว์ หรือจากการนัดหมายสัตวแพทย์ เพื่อให้บันทึกหัตถการกับสัตว์ตัวที่ถูกต้อง",
+    residentNotFound: "ไม่พบข้อมูลสัตว์",
+    couldntLoadTypes: "โหลดประเภทหัตถการไม่สำเร็จ",
+    couldntLoadVetAppointments: "โหลดข้อมูลนัดหมายสัตวแพทย์ไม่สำเร็จ",
+    forResident: (name: string) => `สำหรับ ${name}`,
+    type: "หัตถการ",
+    selectType: "เลือกหัตถการ",
+    addNewType: "+ เพิ่มประเภทหัตถการใหม่…",
+    newTypePlaceholder: "เช่น ถอนฟัน",
+    chooseExistingType: "เลือกหัตถการที่มีอยู่แทน",
+    unknownType: "ไม่ทราบประเภทหัตถการ",
+    date: "วันที่",
+    linkedVisit: "เชื่อมโยงกับการนัดหมายสัตวแพทย์",
+    noLinkedVisit: "ไม่เชื่อมโยงกับการนัดหมาย — ทำที่ศูนย์",
+    linkedVisitHint:
+      "หัตถการส่วนใหญ่ทำเมื่อพบสัตวแพทย์ การเชื่อมโยงจะเก็บบันทึกไว้กับการนัดหมายนั้น เว้นว่างไว้สำหรับสิ่งที่ทำที่ศูนย์ เช่น ตัดเล็บ",
+    notes: "หมายเหตุ",
+    notesPlaceholder:
+      "ไม่บังคับ — สิ่งที่พบ สิ่งที่ทำ การติดตามผลที่ต้องทำ ผู้ทำหัตถการ",
+    saving: "กำลังบันทึก...",
+    saveButton: "บันทึกหัตถการ",
+    savedHeading: (type: string, residentName: string, date: string) =>
+      `บันทึก${type}ของ ${residentName} แล้ว (${date})`,
+    attachHint:
+      "ตอนนี้ให้แนบภาพเอกซเรย์ สแกน หรือเอกสาร — แนบได้มากกว่าหนึ่งไฟล์ และเพิ่มภายหลังได้จากแท็บหัตถการ",
+    done: "เสร็จสิ้น",
+    linkedVisitLabel: (date: string, reason: string) => `การนัดหมายสัตวแพทย์: ${date} — ${reason}`,
+    doneAtShelter: "ทำที่ศูนย์",
+    fileFallback: "ไฟล์",
+    noFiles: "ไม่มีไฟล์แนบ",
+    attachFiles: "แนบไฟล์",
+    uploader: {
+      dropHere: "ลากภาพเอกซเรย์ สแกน หรือ PDF มาวางที่นี่หรือแตะเพื่ออัปโหลด",
+      hint: "รูปภาพและ PDF ขนาดไม่เกิน 15MB ต่อไฟล์ เลือกได้หลายไฟล์พร้อมกัน",
+    },
+    errors: {
+      missingResident: "ไม่พบข้อมูลสัตว์",
+      enterDate: "กรุณากรอกวันที่ทำหัตถการ",
+      invalidDate: "วันที่ไม่ถูกต้อง",
+      dateInFuture: "วันที่ทำหัตถการต้องไม่เป็นวันในอนาคต",
+      selectType: "กรุณาเลือกหัตถการหรือเพิ่มประเภทใหม่",
+      saveFailed: "บันทึกหัตถการไม่สำเร็จ",
+    },
+  },
+
   prescriptions: {
     pageTitle: "เพิ่มใบสั่งยา",
     pageSubtitle:
@@ -967,6 +1017,7 @@ const th: Dictionary = {
       startsOn: (date: string) => `เริ่ม ${date}`,
       linkedVisit: (date: string) => `นัดสัตวแพทย์ ${date}`,
       logWeight: "บันทึกน้ำหนัก",
+      logProcedure: "บันทึกหัตถการ",
     },
     picker: {
       selectResidents: "เลือกสัตว์",

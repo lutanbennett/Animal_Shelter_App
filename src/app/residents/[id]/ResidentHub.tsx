@@ -86,7 +86,11 @@ export type PrescriptionRow = {
 };
 
 export type WeightRow = { id: string; date: string; weight_kg: number };
-export type ProcedureRow = { id: string; procedure_type: string; date: string };
+export type ProcedureRow = {
+  id: string;
+  date: string;
+  procedure_types: { name: string } | null;
+};
 export type BloodTestRow = { id: string; date: string };
 
 const STATUS_TONE: Record<string, StatCardTone> = {
@@ -548,13 +552,19 @@ export function ResidentHub({
               detail={
                 latestProcedure
                   ? t.residents.hub.proceduresLast(
-                      latestProcedure.procedure_type,
+                      latestProcedure.procedure_types?.name ?? t.procedures.unknownType,
                       formatDate(latestProcedure.date, locale),
                     )
                   : t.residents.hub.proceduresNone
               }
               tone="neutral"
               href={`${base}/procedures`}
+              actions={medicalActions([
+                {
+                  href: `/procedures/new?residentId=${resident.id}`,
+                  label: t.residents.sections.logProcedure,
+                },
+              ])}
             />
             <StatCard
               title={t.residents.hub.bloodTests}

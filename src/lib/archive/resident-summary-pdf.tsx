@@ -367,12 +367,15 @@ function ResidentSummaryDocument({
 
         <Section title="Procedures">
           <Table
-            columns={["Date", "Procedure", "Notes"]}
-            widths={["15%", "35%", "50%"]}
+            columns={["Date", "Procedure", "Notes", "Files"]}
+            widths={["15%", "25%", "40%", "20%"]}
             rows={record.procedures.map((procedure) => [
               day(procedure.date),
-              procedure.procedureType,
+              procedure.procedureType ?? "—",
               procedure.notes ?? "—",
+              procedure.files.length > 0
+                ? procedure.files.map((file) => file.fileName ?? file.driveFileId).join(", ")
+                : "—",
             ])}
             empty="No procedures recorded."
           />
@@ -420,6 +423,13 @@ function ResidentSummaryDocument({
                 test.files.map((file) => [
                   day(test.date),
                   "Blood Tests",
+                  file.relativePath ?? file.fileName ?? file.driveFileId,
+                ]),
+              ),
+              ...record.procedures.flatMap((procedure) =>
+                procedure.files.map((file) => [
+                  day(procedure.date),
+                  "Procedures",
                   file.relativePath ?? file.fileName ?? file.driveFileId,
                 ]),
               ),

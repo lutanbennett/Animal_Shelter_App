@@ -624,6 +624,46 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   inputs stay Gregorian (so a Thai form shows 2569 in text beside 2026 in
   the picker — accepted). The Drive archive documents stay English/Gregorian.
 
+- **Procedures (2026-09-20):** one form, `/procedures/new`, reached the
+  same three ways as weight minus intake: the hub's Procedures card and
+  tab, and a "Log procedure" link on each vet appointment row (preselects
+  the visit, defaults the date to it). Three choices worth recording:
+
+  **The type is a lookup table, not free text.** 0001 had
+  `procedures.procedure_type text`; 0031 replaces it with
+  `procedure_types` + `procedure_type_id`, seeded with the common ones
+  (X-ray, ultrasound, teeth cleaning, spay/neuter, microchipping, wound
+  treatment, nail clipping, ear cleaning, grooming, surgery) and
+  extendable inline from the form by staff and vets — the same shape as
+  medications on the prescription form, and what the blood-test-types
+  backlog item asks for. A re-typed name is matched case-insensitively to
+  an existing type before a new row is created. Renaming or merging types
+  is SQL until an admin page exists (backlog).
+
+  **Staff can log procedures.** 0001 made procedures vet/admin-write
+  because they're nearly always a vet's work, but nail clipping, ear
+  cleaning and grooming happen at the shelter, so 0031 gives staff
+  insert/update (as 0027 did for prescriptions). "Done at the shelter" vs
+  "at a vet visit" is simply whether `vet_appointment_id` is set — no
+  extra flag; the form's unlinked option reads "No linked visit — done at
+  the shelter".
+
+  **Files hang off the procedure.** 'procedure' joins
+  `attachment_owner_type` (0031) and `attachment_resident_id()` learns to
+  resolve it (0032 — split out because an enum value can't be used in the
+  transaction that added it, so the deceased lock covers procedure files
+  too). Uploads go through `/api/procedures/[id]/attachments` into
+  `Residents/<Name> (<ID>)/Procedures/<Type> <YYYYMMDD>/` — the legacy
+  convention from Section 5.1, one folder per procedure so an X-ray's
+  images and its discharge sheet stay together. The folder name is kept in
+  `attachments.sub_folder` so the deceased archive's relative paths
+  survive a type rename. Because an X-ray often arrives after the record
+  does, the Procedures tab lets you attach files to an existing row, not
+  just right after saving — the blood-test tab still only offers upload at
+  creation, which is a gap to close the same way. `BloodTestAttachmentUploader`
+  became the generic `AttachmentUploader` (URL and wording as props) so
+  both records share one drop zone.
+
 ## Still open (from Section 11 of the requirements doc)
 
 1. Exact per-table RBAC permission matrix beyond the role descriptions —
