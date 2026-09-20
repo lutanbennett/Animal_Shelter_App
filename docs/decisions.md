@@ -6,10 +6,24 @@ Section 11, plus decisions made during setup that aren't in the original doc.
 
 ## Confirmed
 
-- **Hosting:** Cloudflare Pages (free tier), not Vercel. Chosen to avoid
-  Vercel Hobby's non-commercial-use restriction. Next.js on Cloudflare Pages
-  needs the `@cloudflare/next-on-pages` (or OpenNext Cloudflare) adapter —
-  not yet wired up, flagged for the deployment setup step.
+- **Hosting:** Cloudflare Workers (free tier), not Vercel. Chosen to avoid
+  Vercel Hobby's non-commercial-use restriction. Deployed via the
+  `@opennextjs/cloudflare` adapter (`wrangler.jsonc`, `open-next.config.ts`,
+  `npm run deploy`) rather than `@cloudflare/next-on-pages`, since OpenNext
+  runs the Node.js-runtime routes this app uses.
+- **Google Drive without `googleapis` (2026-09-20):** the first Cloudflare
+  deploy attempt (2026-09-19) failed because the `googleapis` SDK's HTTP
+  layer (gaxios over Node `http`/`zlib`) doesn't work on the Workers
+  runtime even with `nodejs_compat` — the OAuth refresh-token exchange came
+  back corrupted, so every Drive call failed and that day's demo went to
+  Vercel instead. `src/lib/google/drive.ts` now talks to the Drive v3 REST
+  API directly with `fetch` (a ~150-line client covering the five endpoints
+  the app uses: list, create folder, multipart upload, get/download,
+  delete), with a module-level access-token cache. `googleapis` is kept
+  only as a devDependency for the one-off local setup scripts in
+  `scripts/`. Side benefit: the photo proxy now needs one Drive request
+  per file instead of two, since `fetch` exposes the `Content-Type` header
+  on the `alt=media` response that gaxios hid.
 - **Google Drive auth model:** the shelter's storage
   (`lannacareforanimals@gmail.com`) is a personal Gmail account, not Google
   Workspace, so domain-wide delegation (as the original doc assumed) is not
@@ -108,13 +122,11 @@ Section 11, plus decisions made during setup that aren't in the original doc.
     revoking those permissions retroactively is a separate cleanup task.
   - The Cache API layer needs a Workers-compatible runtime to actually
     activate — it's feature-detected and simply no-ops under plain
-    `next dev`/Node hosting. Whether it works as expected depends on which
-    Cloudflare Pages adapter eventually gets wired up (still an open TODO,
-    see the Hosting entry above) — `@opennextjs/cloudflare` is likely the
-    better fit than `@cloudflare/next-on-pages` here specifically because
-    it supports the Node.js runtime (this route uses `googleapis`, which
-    isn't edge-runtime-safe) while still exposing `caches.default`. Needs
-    verifying once that adapter work happens.
+    `next dev`/Node hosting. Under the `@opennextjs/cloudflare` deploy
+    (see the Hosting entry above) `caches.default` is available, so it
+    should be live in production — worth confirming on the first
+    Cloudflare deploy by checking that repeat requests for a photo don't
+    reach the handler.
 
 - **Public welcome page + guest browsing (2026-09-19):** `/` is now the
   public marketing/welcome page (hero photo, shelter story, links to

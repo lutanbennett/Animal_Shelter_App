@@ -35,7 +35,7 @@ export async function deleteBloodTestAttachment(
   }
 
   try {
-    await getDriveClient().files.delete({ fileId: attachmentRow.drive_file_id });
+    await getDriveClient().deleteFile(attachmentRow.drive_file_id);
   } catch {
     // The DB record is already gone; an orphaned Drive file is a minor
     // cleanup issue, not worth failing the user-facing action over (same

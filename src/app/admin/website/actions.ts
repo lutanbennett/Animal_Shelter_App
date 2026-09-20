@@ -76,17 +76,16 @@ async function uploadToWebsiteFolder(file: File) {
 
   const drive = getDriveClient();
   const folderId = await findOrCreateFolder(drive, rootId, "Website");
-  const buffer = Buffer.from(await file.arrayBuffer());
   return uploadImageToFolder(drive, folderId, {
     name: file.name,
     mimeType: file.type,
-    buffer,
+    content: file,
   });
 }
 
 async function deleteFromDrive(fileId: string) {
   try {
-    await getDriveClient().files.delete({ fileId });
+    await getDriveClient().deleteFile(fileId);
   } catch {
     // Best-effort — an orphaned Drive file is a minor cleanup issue, not
     // worth failing the user-facing action over (same call this project

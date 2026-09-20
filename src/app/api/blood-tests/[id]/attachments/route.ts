@@ -95,11 +95,10 @@ export async function POST(
       .eq("id", residentRow.id);
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer());
   const driveFileId = await uploadImageToFolder(drive, uploadFolderId, {
     name: file.name,
     mimeType: file.type,
-    buffer,
+    content: file,
   });
 
   const { data: recordResult, error: recordError } = await supabase.rpc(

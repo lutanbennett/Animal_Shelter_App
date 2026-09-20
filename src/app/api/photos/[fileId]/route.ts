@@ -62,25 +62,16 @@ export async function GET(
   }
 
   let contentType: string;
-  let body: Buffer;
+  let body: ArrayBuffer;
   try {
-    const drive = getDriveClient();
-    // gaxios doesn't surface response headers on the alt=media call (its
-    // `headers` come back empty for arraybuffer responses), so the file's
-    // mimeType has to come from a separate metadata request run alongside it.
-    const [metaRes, mediaRes] = await Promise.all([
-      drive.files.get({ fileId, fields: "mimeType" }),
-      drive.files.get({ fileId, alt: "media" }, { responseType: "arraybuffer" }),
-    ]);
-    contentType = metaRes.data.mimeType || "application/octet-stream";
-    body = Buffer.from(mediaRes.data as ArrayBuffer);
+    ({ contentType, body } = await getDriveClient().downloadFile(fileId));
   } catch {
     // Drive itself may be unavailable (including, ironically, a throttled
     // file) — surface a clean error rather than caching a failure.
     return NextResponse.json({ error: "Could not load photo from Drive." }, { status: 502 });
   }
 
-  const response = new NextResponse(new Uint8Array(body), {
+  const response = new NextResponse(body, {
     status: 200,
     headers: {
       "Content-Type": contentType,
