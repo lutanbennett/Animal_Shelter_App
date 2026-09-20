@@ -10,7 +10,7 @@ Each item is a self-contained prompt for a new thread. Tick when done. Ordered b
 
 - [x] **Fix mobile row click on residents list.** In `src/app/residents/ResidentsTable.tsx` the name link's `after:absolute after:inset-0` overlay relies on `relative` on the `<tr>`, which mobile WebKit ignores, so tapping anywhere opens the last row. Anchor it to the cell or make the row properly clickable.
 - [x] **Add "Book vet visit" button to the resident hub.** Put it on the vet-appointments section (and stat card) linking to `/vet-visits/new?residentId=<id>`, mirroring how immunizations already do it.
-- [ ] **Show age on the public resident page.** Add `estimated_age_years` and `intake_date` to the `public_resident_profiles` view (new migration) and render an Age row on `/adopt/[id]` using the existing `formatAge()` helper.
+- [x] **Show age on the public resident page.** Add `estimated_age_years` and `intake_date` to the `public_resident_profiles` view (new migration) and render an Age row on `/adopt/[id]` using the existing `formatAge()` helper.
 
 ## Mobile
 

@@ -578,7 +578,7 @@ const th: Dictionary = {
     theirStory: "เรื่องราวของพวกเขา",
     interestedEmail: (name: string) => `สนใจ ${name} ใช่ไหม? ส่งอีเมลถึง`,
     emailCta: "เพื่อสอบถามเรื่องการรับเลี้ยงหรืออุปถัมภ์",
-    details: { species: "ชนิดสัตว์", breed: "สายพันธุ์", sex: "เพศ" },
+    details: { species: "ชนิดสัตว์", breed: "สายพันธุ์", sex: "เพศ", age: "อายุ" },
     showPhoto: (index: number, total: number) => `แสดงรูปที่ ${index} จาก ${total}`,
   },
 

@@ -571,7 +571,7 @@ const en = {
     theirStory: "Their story",
     interestedEmail: (name: string) => `Interested in ${name}? Email`,
     emailCta: "to ask about adoption or fostering.",
-    details: { species: "Species", breed: "Breed", sex: "Sex" },
+    details: { species: "Species", breed: "Breed", sex: "Sex", age: "Age" },
     showPhoto: (index: number, total: number) => `Show photo ${index} of ${total}`,
   },
 
