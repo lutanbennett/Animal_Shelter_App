@@ -560,6 +560,27 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   written at.
 
 
+- **Repo workflow and migration tracking (2026-09-20):** the deceased
+  workflow was built in one session, pushed, never PR'd, and the next
+  session (prescriptions) had to branch from it because it needed
+  migration 0026 — so PR #1 carried both. Three fixes so it doesn't
+  recur, all chosen for a single developer working locally:
+
+  - `CLAUDE.md` now states the rules every session follows: start from an
+    up-to-date `main`, refuse to branch while a `claude/*` branch is
+    unmerged, one branch per feature, and a session ends with its PR
+    merged and the branch deleted. A `README` section carries the human
+    version.
+  - `.githooks/post-commit` pushes after every commit (enabled per clone
+    via `core.hooksPath`), so GitHub can't drift from the checkout.
+  - `scripts/apply-migrations.mjs` replaces hand-POSTing SQL to the
+    Management API. It keeps a `schema_migrations` table in the target
+    database, applies only pending files (each in its own transaction with
+    its bookkeeping row), and has `--status`, `--dry-run` and a one-off
+    `--baseline` used to record 0001–0027 on the dev project, which had
+    been migrated by hand. The database, not a memory note, now says what
+    has been applied — and the same script does production on go-live.
+
 ## Still open (from Section 11 of the requirements doc)
 
 1. Exact per-table RBAC permission matrix beyond the role descriptions —

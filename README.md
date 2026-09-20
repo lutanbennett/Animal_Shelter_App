@@ -34,8 +34,17 @@ reasoning and the trade-offs that come with that.
 
 3. **Apply the database schema**
 
-   Run the SQL files in `supabase/migrations/` (in order) against your
-   Supabase project, either via the Supabase SQL editor or the Supabase CLI.
+   ```bash
+   node scripts/apply-migrations.mjs
+   ```
+
+   Applies every file in `supabase/migrations/` that the project hasn't
+   seen yet, in order, and records each one in a `schema_migrations`
+   table there. `--status` shows what's applied and pending; `--dry-run`
+   runs pending files inside a rolled-back transaction. Needs
+   `SUPABASE_ACCESS_TOKEN` (a personal access token from the Supabase
+   dashboard) in `.env.local`; the target project comes from
+   `NEXT_PUBLIC_SUPABASE_URL`.
 
 4. **Run the dev server**
 
@@ -75,14 +84,19 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    npm run preview
    ```
 
-3. **Apply the database migrations to the production Supabase project**,
-   in order, from `supabase/migrations/` — every file, not just the ones
-   since the last deploy, on a fresh project. There's no CLI link on the
-   dev machine; the working path is to POST each file (wrapped in
-   `begin; … commit;`) to the Supabase Management API
-   (`/v1/projects/<ref>/database/query`) with a personal access token, or
-   paste it into the SQL editor. Then, with `.env.local` pointing at the
-   production `NEXT_PUBLIC_SUPABASE_*` values (which step 4 needs anyway):
+3. **Apply the database migrations to the production Supabase project.**
+   With `.env.local` pointing at the production `NEXT_PUBLIC_SUPABASE_*`
+   values (which step 4 needs anyway) and a `SUPABASE_ACCESS_TOKEN` that
+   can see that project:
+
+   ```bash
+   node scripts/apply-migrations.mjs
+   ```
+
+   On a fresh project that applies every file from `0001` up; on a
+   project that's been migrated before, only what's pending — the script
+   checks the target's `schema_migrations` table and prints the project
+   ref before it runs anything. Then:
 
    ```bash
    node scripts/check-public-views.mjs
@@ -145,4 +159,18 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
 - `src/lib/archive/` — the deceased resident archive: the summary PDF, the
   offline `index.html` index page written beside it in the resident's Drive
   folder, and the step that moves that folder to `Residents/Deceased/`.
-- `docs/` — requirements and decisions log.
+- `scripts/` — one-off tooling: `apply-migrations.mjs` (migration runner),
+  `check-public-views.mjs` (go-live check), the Google OAuth setup helpers,
+  and the deploy-time env stripper.
+- `docs/` — requirements, decisions log and backlog.
+- `CLAUDE.md` — the working rules for this repo (branching, migrations,
+  finishing a feature). Written for Claude Code sessions, but they're the
+  rules for anyone committing here.
+
+## Day-to-day workflow
+
+The short version of `CLAUDE.md`: start on an up-to-date `main`, one
+branch per feature, every commit auto-pushes (`.githooks/post-commit`), and
+a feature is finished when its PR is merged and the branch deleted. New
+migrations are applied with `node scripts/apply-migrations.mjs` from the
+branch that's about to be merged, never from one that isn't.
