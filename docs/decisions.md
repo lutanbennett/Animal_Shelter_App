@@ -6,6 +6,48 @@ Section 11, plus decisions made during setup that aren't in the original doc.
 
 ## Confirmed
 
+- **Medication management (2026-09-21):** `/management/medications`
+  is the CRUD page for the `medication` and `frequency` reference tables
+  that the prescription form picks from — the backlog's "Admin page for
+  medications and frequencies", built under Management on the user's
+  call (a manager owns the medicine list; admin is system configuration).
+  Same shape as `/management/vets`: an add form, an inline-edit table,
+  delete blocked while anything references the row. Two things are
+  specific to medications:
+
+  **Changing a unit is a confirmed action.** The unit lives on the
+  medication and every prescription's `dose_quantity` is in that unit
+  (0027), so switching "tablet" to "ml" silently redefines every dose ever
+  written. The row asks for confirmation, naming how many prescriptions
+  are affected, and only when the unit actually changes on a medication
+  that has any. Renaming never asks.
+
+  **Duplicates are merged, not deleted.** "Amoxicillin" added inline by
+  one person and "amoxicillin 250" by another are the same product, but
+  neither can be deleted once prescribed — the prescription is part of
+  the resident's medical record (`prescriptions.medication_id`, no
+  cascade). `merge_medication(from, into)` / `merge_frequency(from, into)`
+  (0043) move every prescription across and drop the duplicate in one
+  transaction, SECURITY INVOKER so RLS decides who may: it takes UPDATE on
+  prescriptions *and* DELETE on the reference table, which admin and
+  management have and staff/vet don't (their call fails at the delete and
+  rolls back). Medications only merge within the same `dose_unit`, for
+  the same reason the unit change is confirmed; the picker only offers
+  same-unit rows and the function refuses anything else. Frequencies merge
+  freely — the moved prescriptions take the kept row's `doses_per_day`,
+  and the confirm says so. Verified against real rows in a rolled-back
+  transaction before applying.
+
+  **What management can do.** 0039's mirror gave management staff's
+  read + insert on both tables; 0043 swaps the insert twin for a
+  read/write `for all` policy, the same count-preserving trick as 0040,
+  so the 0039 drift check still holds. The page also surfaces
+  `medication_daily_requirement` (0027) per row — residents on it today
+  and the quantity per day — which is the first half of the "Medication
+  requirement page" backlog item; a days-of-stock projection is still
+  open. No new prescription behaviour: the form's inline "add new" path is
+  unchanged.
+
 - **"Our work" — project stories on the public site (2026-09-21):**
   migration 0042 adds `public_projects` and `public_project_photos`,
   the project counterpart of the resident pair (0016/0017/0025): plain
