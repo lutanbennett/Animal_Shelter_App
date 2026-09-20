@@ -60,11 +60,11 @@ function ResidentThumb({
 export function ContactHub({
   contact,
   placements,
-  isAdmin,
+  canManage,
 }: {
   contact: Contact;
   placements: CarerPlacement[];
-  isAdmin: boolean;
+  canManage: boolean;
 }) {
   const { t, locale } = useI18n();
   const h = t.contacts.hub;
@@ -101,9 +101,9 @@ export function ContactHub({
               {contactTypeLabel(t, contact.type)}
             </span>
           </div>
-          {isAdmin && (
+          {canManage && (
             <Link
-              href="/admin/contacts"
+              href="/management/contacts"
               className="text-xs font-medium text-primary hover:underline"
             >
               {t.contacts.manageInAdmin}

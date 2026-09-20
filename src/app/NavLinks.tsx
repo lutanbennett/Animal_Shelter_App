@@ -11,7 +11,14 @@ type NavItem = {
   children?: { href: string; label: string }[];
 };
 
-export function NavLinks({ isAdmin }: { isAdmin: boolean }) {
+export function NavLinks({
+  isAdmin,
+  canManage,
+}: {
+  isAdmin: boolean;
+  /** Admin or management: shows the Management section. */
+  canManage: boolean;
+}) {
   const pathname = usePathname();
   const { t } = useI18n();
   const { open, setOpen } = useMobileNav();
@@ -23,6 +30,21 @@ export function NavLinks({ isAdmin }: { isAdmin: boolean }) {
     { href: "/projects", label: t.nav.projects },
     { href: "/vets", label: t.nav.vets },
     { href: "/contacts", label: t.nav.contacts },
+    // Operational management (reports, contacts) lives under Management;
+    // Admin keeps the system-level configuration (security, website,
+    // zones, enclosures, vets, immunization types).
+    ...(canManage
+      ? [
+          {
+            href: "/management",
+            label: t.nav.management,
+            children: [
+              { href: "/management/dashboard", label: t.nav.dashboard },
+              { href: "/management/contacts", label: t.nav.contacts },
+            ],
+          },
+        ]
+      : []),
     ...(isAdmin
       ? [
           {
@@ -34,7 +56,6 @@ export function NavLinks({ isAdmin }: { isAdmin: boolean }) {
               { href: "/admin/enclosures", label: t.nav.enclosures },
               { href: "/admin/zones", label: t.nav.zones },
               { href: "/admin/vets", label: t.nav.vets },
-              { href: "/admin/contacts", label: t.nav.contacts },
               {
                 href: "/admin/immunization-types",
                 label: t.nav.immunizationTypes,

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { canManage } from "@/lib/auth/require-management";
 import { NavLinks } from "./NavLinks";
 
 export async function NavPane() {
@@ -11,5 +12,5 @@ export async function NavPane() {
 
   const { data: role } = await supabase.rpc("current_user_role");
 
-  return <NavLinks isAdmin={role === "admin"} />;
+  return <NavLinks isAdmin={role === "admin"} canManage={canManage(role)} />;
 }

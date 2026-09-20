@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { canManage } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { CONTACT_COLUMNS, type Contact } from "@/lib/contacts/contacts";
@@ -48,9 +49,9 @@ export default async function ContactsPage() {
           </h1>
           <p className="text-sm text-muted">{t.contacts.pageSubtitle}</p>
         </div>
-        {roleResult.data === "admin" && (
+        {canManage(roleResult.data) && (
           <Link
-            href="/admin/contacts"
+            href="/management/contacts"
             className="shrink-0 text-sm font-medium text-primary hover:underline"
           >
             {t.contacts.manageInAdmin}
