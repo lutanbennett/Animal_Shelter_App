@@ -1152,3 +1152,23 @@ Section 11, plus decisions made during setup that aren't in the original doc.
    whether admins should get a proper "this was recorded in error" path —
    and, separately, which fields the user wants to stay editable after
    death (the locked-by-default choice above is waiting on that answer).
+
+- **One form for a record and its files (2026-09-21):** `BloodTestForm` and
+  `ProcedureForm` used to save first and only then swap in an
+  `AttachmentUploader`; staff wanted the files picked with the details.
+  The pattern `MaintenanceForm` already had — pick files on the form, save
+  the record, post the queued files to its attachment route one at a time
+  with progress, move on when they're all up, retry or skip a failed one —
+  is now `useDeferredUploads()` in `src/components/DeferredUploads.tsx`,
+  with `FileDropZone`, `PendingFileList` and `UploadProgressPanel` around
+  it, and all three forms use it. Two consequences worth knowing: the
+  forms drive the server action from an `onSubmit` handler inside a
+  transition (not a `<form action>`) so the upload round follows the save
+  in one place, and the record is committed before the first upload
+  starts, so a failed file never loses the record — the panel keeps the
+  user on the page to retry, with a link on to the tab if they'd rather
+  skip it. With no files picked the form goes straight to the tab; the
+  old "saved, now attach" interstitial is gone. Later additions go in
+  from the tab's per-row "Attach files" toggle, which the Blood Tests tab
+  now has like the Procedures tab. Uploads stay sequential — the routes'
+  Drive folder check-then-create isn't safe for two first uploads at once.

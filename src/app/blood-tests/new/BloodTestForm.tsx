@@ -1,12 +1,15 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import Link from "next/link";
+import { useState, useTransition, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { createBloodTest } from "./actions";
 import {
-  AttachmentUploader,
-  type UploadedAttachment,
-} from "@/components/AttachmentUploader";
+  FileDropZone,
+  PendingFileList,
+  UploadProgressPanel,
+  useDeferredUploads,
+  type PendingFile,
+} from "@/components/DeferredUploads";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate } from "@/lib/format";
 
@@ -16,10 +19,19 @@ export type VetAppointmentOption = {
   reason: string | null;
 };
 
+const inputClass =
+  "rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
+
 function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/**
+ * One form for the test's details and its files. The lab scan is picked
+ * here and uploaded on Save (useDeferredUploads), after which the page
+ * goes to the Blood Tests tab; a report that turns up later is attached
+ * from the tab's row instead.
+ */
 export function BloodTestForm({
   residentId,
   residentDisplayName,
@@ -31,8 +43,11 @@ export function BloodTestForm({
   vetAppointments: VetAppointmentOption[];
   preselectedVetAppointmentId: string | null;
 }) {
-  const [state, formAction, pending] = useActionState(createBloodTest, undefined);
   const { t, locale } = useI18n();
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState<{ bloodTestId: string; date: string } | null>(null);
   const [dateTouched, setDateTouched] = useState(false);
   const [date, setDate] = useState(() => {
     if (preselectedVetAppointmentId) {
@@ -41,7 +56,8 @@ export function BloodTestForm({
     }
     return todayIsoDate();
   });
-  const [attachments, setAttachments] = useState<UploadedAttachment[]>([]);
+  const uploads = useDeferredUploads();
+  const tabHref = `/residents/${residentId}/blood-tests`;
 
   function handleVetAppointmentChange(id: string) {
     if (dateTouched || !id) return;
@@ -49,49 +65,47 @@ export function BloodTestForm({
     if (match) setDate(match.appointment_date.slice(0, 10));
   }
 
-  if (state && "success" in state) {
+  async function uploadPending(bloodTestId: string, items?: PendingFile[]) {
+    const { failed } = await uploads.upload(
+      `/api/blood-tests/${bloodTestId}/attachments`,
+      items,
+    );
+    if (!failed) router.push(tabHref);
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    setError(null);
+    startTransition(async () => {
+      const result = await createBloodTest(undefined, formData);
+      if (!result || "error" in result) {
+        setError(result?.error ?? t.bloodTests.errors.saveFailed);
+        return;
+      }
+      setSaved({ bloodTestId: result.bloodTestId, date: result.date });
+      if (uploads.queued.length === 0) {
+        router.push(tabHref);
+        return;
+      }
+      await uploadPending(result.bloodTestId);
+    });
+  }
+
+  if (saved && uploads.files.length > 0) {
     return (
-      <div className="flex max-w-2xl flex-col gap-6">
-        <div className="flex flex-col gap-1 rounded-lg border border-success/40 bg-success/10 p-4">
-          <p className="text-sm font-medium text-success">
-            {t.bloodTests.savedHeading(residentDisplayName, formatDate(state.date, locale))}
-          </p>
-          <p className="text-xs text-muted">{t.bloodTests.attachHint}</p>
-        </div>
-
-        <AttachmentUploader
-          uploadUrl={`/api/blood-tests/${state.bloodTestId}/attachments`}
-          dropHere={t.bloodTests.uploader.dropHere}
-          hint={t.bloodTests.uploader.hint}
-          onUploaded={(attachment) =>
-            setAttachments((prev) => [...prev, attachment])
-          }
-        />
-
-        {attachments.length > 0 && (
-          <ul className="flex flex-col gap-1 text-sm text-foreground">
-            {attachments.map((a) => (
-              <li key={a.attachmentId} className="truncate">
-                {a.fileName}
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <div>
-          <Link
-            href={`/residents/${residentId}/blood-tests`}
-            className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
-          >
-            {t.bloodTests.done}
-          </Link>
-        </div>
-      </div>
+      <UploadProgressPanel
+        saved={t.bloodTests.savedHeading(residentDisplayName, formatDate(saved.date, locale))}
+        uploads={uploads}
+        onRetry={(item) => void uploadPending(saved.bloodTestId, [item])}
+        continueHref={tabHref}
+        continueLabel={t.bloodTests.done}
+      />
     );
   }
 
   return (
-    <form action={formAction} className="flex max-w-2xl flex-col gap-6">
+    <form onSubmit={handleSubmit} className="flex max-w-2xl flex-col gap-6">
       <input type="hidden" name="residentId" value={residentId} />
 
       <p className="text-sm text-muted">{t.bloodTests.forResident(residentDisplayName)}</p>
@@ -112,7 +126,7 @@ export function BloodTestForm({
               setDateTouched(true);
               setDate(e.target.value);
             }}
-            className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+            className={inputClass}
           />
         </div>
 
@@ -125,7 +139,7 @@ export function BloodTestForm({
             name="vetAppointmentId"
             defaultValue={preselectedVetAppointmentId ?? ""}
             onChange={(e) => handleVetAppointmentChange(e.target.value)}
-            className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+            className={inputClass}
           >
             <option value="">{t.bloodTests.noLinkedVisit}</option>
             {vetAppointments.map((a) => (
@@ -147,12 +161,23 @@ export function BloodTestForm({
           name="results"
           rows={4}
           placeholder={t.bloodTests.resultsPlaceholder}
-          className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+          className={inputClass}
         />
         <p className="text-xs text-muted">{t.bloodTests.resultsHint}</p>
       </div>
 
-      {state?.error && <p className="text-sm text-danger">{state.error}</p>}
+      <div className="flex flex-col gap-2">
+        <span className="text-sm font-medium text-muted">{t.bloodTests.files}</span>
+        <p className="text-xs text-muted">{t.bloodTests.attachHint}</p>
+        <FileDropZone
+          label={t.bloodTests.uploader.dropHere}
+          hint={t.bloodTests.uploader.hint}
+          onFiles={uploads.addFiles}
+        />
+        <PendingFileList files={uploads.files} onRemove={uploads.removeFile} onRetry={null} />
+      </div>
+
+      {error && <p className="text-sm text-danger">{error}</p>}
 
       <div>
         <button

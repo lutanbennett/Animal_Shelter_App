@@ -29,8 +29,8 @@ const CONCURRENCY = 1;
 
 /**
  * One multipart POST with upload progress (XHR, since fetch can't report
- * it). Exported so a form that collects files before its record exists —
- * the maintenance form — can push them through the same route afterwards.
+ * it). Exported for useDeferredUploads (DeferredUploads.tsx), which pushes
+ * files a form collected before its record existed through the same route.
  */
 export function uploadAttachmentFile(
   t: Dictionary,

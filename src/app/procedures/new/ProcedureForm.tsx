@@ -1,12 +1,15 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import Link from "next/link";
+import { useState, useTransition, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { createProcedure } from "./actions";
 import {
-  AttachmentUploader,
-  type UploadedAttachment,
-} from "@/components/AttachmentUploader";
+  FileDropZone,
+  PendingFileList,
+  UploadProgressPanel,
+  useDeferredUploads,
+  type PendingFile,
+} from "@/components/DeferredUploads";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate } from "@/lib/format";
 
@@ -24,6 +27,12 @@ function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/**
+ * One form for the procedure's details and its files. X-rays and scans
+ * are picked here and uploaded on Save (useDeferredUploads), after which
+ * the page goes to the Procedures tab; files that arrive later are
+ * attached from the tab's row instead.
+ */
 export function ProcedureForm({
   residentId,
   residentDisplayName,
@@ -37,8 +46,15 @@ export function ProcedureForm({
   vetAppointments: VetAppointmentOption[];
   preselectedVetAppointmentId: string | null;
 }) {
-  const [state, formAction, pending] = useActionState(createProcedure, undefined);
   const { t, locale } = useI18n();
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState<{
+    procedureId: string;
+    typeName: string;
+    date: string;
+  } | null>(null);
 
   // The type switches between "pick one" and "add a new one" the way the
   // prescription form's medication field does; whichever input is mounted
@@ -56,7 +72,8 @@ export function ProcedureForm({
     }
     return todayIsoDate();
   });
-  const [attachments, setAttachments] = useState<UploadedAttachment[]>([]);
+  const uploads = useDeferredUploads();
+  const tabHref = `/residents/${residentId}/procedures`;
 
   function handleVetAppointmentChange(id: string) {
     if (dateTouched || !id) return;
@@ -64,53 +81,55 @@ export function ProcedureForm({
     if (match) setDate(match.appointment_date.slice(0, 10));
   }
 
-  if (state && "success" in state) {
+  async function uploadPending(procedureId: string, items?: PendingFile[]) {
+    const { failed } = await uploads.upload(
+      `/api/procedures/${procedureId}/attachments`,
+      items,
+    );
+    if (!failed) router.push(tabHref);
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    setError(null);
+    startTransition(async () => {
+      const result = await createProcedure(undefined, formData);
+      if (!result || "error" in result) {
+        setError(result?.error ?? t.procedures.errors.saveFailed);
+        return;
+      }
+      setSaved({
+        procedureId: result.procedureId,
+        typeName: result.typeName,
+        date: result.date,
+      });
+      if (uploads.queued.length === 0) {
+        router.push(tabHref);
+        return;
+      }
+      await uploadPending(result.procedureId);
+    });
+  }
+
+  if (saved && uploads.files.length > 0) {
     return (
-      <div className="flex max-w-2xl flex-col gap-6">
-        <div className="flex flex-col gap-1 rounded-lg border border-success/40 bg-success/10 p-4">
-          <p className="text-sm font-medium text-success">
-            {t.procedures.savedHeading(
-              state.typeName,
-              residentDisplayName,
-              formatDate(state.date, locale),
-            )}
-          </p>
-          <p className="text-xs text-muted">{t.procedures.attachHint}</p>
-        </div>
-
-        <AttachmentUploader
-          uploadUrl={`/api/procedures/${state.procedureId}/attachments`}
-          dropHere={t.procedures.uploader.dropHere}
-          hint={t.procedures.uploader.hint}
-          onUploaded={(attachment) =>
-            setAttachments((prev) => [...prev, attachment])
-          }
-        />
-
-        {attachments.length > 0 && (
-          <ul className="flex flex-col gap-1 text-sm text-foreground">
-            {attachments.map((a) => (
-              <li key={a.attachmentId} className="truncate">
-                {a.fileName}
-              </li>
-            ))}
-          </ul>
+      <UploadProgressPanel
+        saved={t.procedures.savedHeading(
+          saved.typeName,
+          residentDisplayName,
+          formatDate(saved.date, locale),
         )}
-
-        <div>
-          <Link
-            href={`/residents/${residentId}/procedures`}
-            className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
-          >
-            {t.procedures.done}
-          </Link>
-        </div>
-      </div>
+        uploads={uploads}
+        onRetry={(item) => void uploadPending(saved.procedureId, [item])}
+        continueHref={tabHref}
+        continueLabel={t.procedures.done}
+      />
     );
   }
 
   return (
-    <form action={formAction} className="flex max-w-2xl flex-col gap-6">
+    <form onSubmit={handleSubmit} className="flex max-w-2xl flex-col gap-6">
       <input type="hidden" name="residentId" value={residentId} />
 
       <p className="text-sm text-muted">{t.procedures.forResident(residentDisplayName)}</p>
@@ -221,7 +240,18 @@ export function ProcedureForm({
         />
       </div>
 
-      {state?.error && <p className="text-sm text-danger">{state.error}</p>}
+      <div className="flex flex-col gap-2">
+        <span className="text-sm font-medium text-muted">{t.procedures.files}</span>
+        <p className="text-xs text-muted">{t.procedures.attachHint}</p>
+        <FileDropZone
+          label={t.procedures.uploader.dropHere}
+          hint={t.procedures.uploader.hint}
+          onFiles={uploads.addFiles}
+        />
+        <PendingFileList files={uploads.files} onRemove={uploads.removeFile} onRetry={null} />
+      </div>
+
+      {error && <p className="text-sm text-danger">{error}</p>}
 
       <div>
         <button

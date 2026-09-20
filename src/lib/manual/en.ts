@@ -399,7 +399,7 @@ const manual: Manual = {
           steps: [
             "Pick the procedure type — X-ray, ultrasound, spay/neuter, dental… — or add a new type.",
             "Enter the date, link the vet visit if there was one (leave unlinked for things done on site, like nail clipping), and add notes.",
-            "Tap Save procedure, then attach any X-rays, scans or paperwork. You can add more files later from the Procedures page.",
+            "Drop in any X-rays, scans or paperwork, then tap Save procedure — the files upload as part of the save. Files that arrive later go in from the row's Attach files link on the Procedures page.",
           ],
           screenshot: {
             src: "/manual/procedure-new.png",
@@ -414,7 +414,7 @@ const manual: Manual = {
           steps: [
             "Enter the date of the test and, if it was done at a vet visit, link the visit.",
             "Type the results or the vet's summary in the notes (optional — you can just attach the scan).",
-            "Tap Save blood test, then drop in the lab scan or PDF. Several files can be attached to one test.",
+            "Drop in the lab scan or PDF (several files can go on one test), then tap Save blood test — the files upload as part of the save. A report that arrives later goes in from the row's Attach files link on the Blood Tests page.",
           ],
           screenshot: {
             src: "/manual/blood-test-new.png",
