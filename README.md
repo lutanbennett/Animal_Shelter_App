@@ -163,7 +163,7 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
   buckets and per-animal roll-ups over a vet's appointment rows, shared
   by the `/vets` list and `/vets/[id]`.
 - `src/lib/contacts/` — the contacts vocabulary (`contact_type`), the
-  one-tap link builders (`tel:`, LINE, `mailto:`, maps) used by the
+  one-tap link builders (`tel:`, LINE, Messenger, WhatsApp, `mailto:`, maps) used by the
   `/contacts` list and hub, and the Carer-only loader behind the resident
   hub's foster / adopt picker.
 - `src/lib/maintenance/` — the enclosure maintenance feature's shared

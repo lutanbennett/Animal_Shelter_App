@@ -85,6 +85,30 @@ export function CreateContactForm() {
         />
       </div>
       <div className="flex flex-col gap-1">
+        <label htmlFor="messengerId" className="text-sm font-medium text-muted">
+          {f.messenger}
+        </label>
+        <input
+          id="messengerId"
+          name="messengerId"
+          placeholder={f.messengerPlaceholder}
+          className={`${inputClass} w-40`}
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="whatsapp" className="text-sm font-medium text-muted">
+          {f.whatsapp}
+        </label>
+        <input
+          id="whatsapp"
+          name="whatsapp"
+          type="tel"
+          placeholder={f.whatsappPlaceholder}
+          className={`${inputClass} w-44`}
+        />
+        <span className="text-xs text-muted">{f.whatsappHint}</span>
+      </div>
+      <div className="flex flex-col gap-1">
         <label htmlFor="address" className="text-sm font-medium text-muted">
           {f.address}
         </label>

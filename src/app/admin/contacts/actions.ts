@@ -21,6 +21,8 @@ export type ContactFields = {
   phone: string | null;
   email: string | null;
   lineId: string | null;
+  messengerId: string | null;
+  whatsapp: string | null;
   address: string | null;
 };
 
@@ -54,6 +56,8 @@ export async function createContact(
     phone: optional(formData.get("phone")),
     email: optional(formData.get("email")),
     line_id: optional(formData.get("lineId")),
+    messenger_id: optional(formData.get("messengerId")),
+    whatsapp: optional(formData.get("whatsapp")),
     address: optional(formData.get("address")),
   });
 
@@ -107,6 +111,8 @@ export async function updateContact(id: string, fields: ContactFields) {
       phone: optional(fields.phone),
       email: optional(fields.email),
       line_id: optional(fields.lineId),
+      messenger_id: optional(fields.messengerId),
+      whatsapp: optional(fields.whatsapp),
       address: optional(fields.address),
     })
     .eq("id", id);

@@ -28,10 +28,13 @@ export type Contact = {
   phone: string | null;
   email: string | null;
   line_id: string | null;
+  messenger_id: string | null;
+  whatsapp: string | null;
   address: string | null;
 };
 
-export const CONTACT_COLUMNS = "id, name, type, phone, email, line_id, address";
+export const CONTACT_COLUMNS =
+  "id, name, type, phone, email, line_id, messenger_id, whatsapp, address";
 
 /**
  * `tel:` link for a stored phone number. Staff type numbers the way they
@@ -60,6 +63,42 @@ export function lineHref(lineId: string | null | undefined): string | null {
   if (!trimmed) return null;
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
   return `https://line.me/ti/p/~${encodeURIComponent(trimmed.replace(/^@/, ""))}`;
+}
+
+/**
+ * Opens a Facebook Messenger chat. `messenger_id` is the Facebook
+ * username — what follows `facebook.com/` or `m.me/` on the person's
+ * profile — and `m.me/<username>` hands off to the Messenger app on a
+ * phone. A pasted profile or m.me link is used as-is.
+ */
+export function messengerHref(messengerId: string | null | undefined): string | null {
+  if (!messengerId) return null;
+  const trimmed = messengerId.trim();
+  if (!trimmed) return null;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://m.me/${encodeURIComponent(trimmed.replace(/^@/, ""))}`;
+}
+
+/**
+ * Opens a WhatsApp chat. `wa.me` wants the number in international form
+ * with no "+", spaces or leading zeros. A number written with a country
+ * code ("+66 81 234 5678") is used as given; one written the local Thai
+ * way ("081 234 5678") is assumed to be Thai and gets 66 in place of the
+ * trunk 0 — the shelter is in Chiang Mai and that's how staff write
+ * numbers. Anything else goes through as its digits.
+ */
+export function whatsappHref(number: string | null | undefined): string | null {
+  if (!number) return null;
+  const trimmed = number.trim();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  const digits = trimmed.replace(/[^\d]/g, "");
+  if (!digits) return null;
+  const international = trimmed.startsWith("+")
+    ? digits
+    : digits.startsWith("0")
+      ? `66${digits.slice(1)}`
+      : digits;
+  return `https://wa.me/${international}`;
 }
 
 export function mailtoHref(email: string | null | undefined): string | null {

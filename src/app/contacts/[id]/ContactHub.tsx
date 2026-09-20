@@ -76,6 +76,8 @@ export function ContactHub({
   const details = [
     { key: "phone", label: h.phone, value: contact.phone, icon: CONTACT_ICONS.call },
     { key: "line", label: h.lineId, value: contact.line_id, icon: CONTACT_ICONS.line },
+    { key: "messenger", label: h.messenger, value: contact.messenger_id, icon: CONTACT_ICONS.messenger },
+    { key: "whatsapp", label: h.whatsapp, value: contact.whatsapp, icon: CONTACT_ICONS.whatsapp },
     { key: "email", label: h.email, value: contact.email, icon: CONTACT_ICONS.email },
     { key: "address", label: h.address, value: contact.address, icon: CONTACT_ICONS.address },
   ].filter((d) => d.value);

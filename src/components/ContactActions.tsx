@@ -6,15 +6,20 @@ import {
   lineHref,
   mailtoHref,
   mapHref,
+  messengerHref,
   telHref,
+  whatsappHref,
   type Contact,
 } from "@/lib/contacts/contacts";
 
-type ContactDetails = Pick<Contact, "phone" | "email" | "line_id" | "address">;
+type ContactDetails = Pick<
+  Contact,
+  "phone" | "email" | "line_id" | "messenger_id" | "whatsapp" | "address"
+>;
 
 /**
- * The one-tap actions for a contact — call, LINE chat, email, open in
- * maps — as a row of buttons. Each is a plain link with the scheme the
+ * The one-tap actions for a contact — call, chat on LINE / Messenger /
+ * WhatsApp, email, open in maps — as a row of buttons. Each is a plain link with the scheme the
  * phone hands off to its app (`tel:`, `mailto:`, the LINE and Maps URLs),
  * so nothing here needs JavaScript to work; only the actions the contact
  * has details for are rendered. `size="lg"` is the hub's full-width grid
@@ -34,6 +39,8 @@ export function ContactActions({
   const actions = [
     { key: "call", href: telHref(contact.phone), label: a.call, value: contact.phone, icon: CONTACT_ICONS.call, external: false },
     { key: "line", href: lineHref(contact.line_id), label: a.line, value: contact.line_id, icon: CONTACT_ICONS.line, external: true },
+    { key: "messenger", href: messengerHref(contact.messenger_id), label: a.messenger, value: contact.messenger_id, icon: CONTACT_ICONS.messenger, external: true },
+    { key: "whatsapp", href: whatsappHref(contact.whatsapp), label: a.whatsapp, value: contact.whatsapp, icon: CONTACT_ICONS.whatsapp, external: true },
     { key: "email", href: mailtoHref(contact.email), label: a.email, value: contact.email, icon: CONTACT_ICONS.email, external: false },
     { key: "map", href: mapHref(contact.address), label: a.map, value: contact.address, icon: CONTACT_ICONS.map, external: true },
   ].filter((action): action is typeof action & { href: string } => action.href !== null);
@@ -42,7 +49,7 @@ export function ContactActions({
 
   if (size === "lg") {
     return (
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         {actions.map((action) => (
           <a
             key={action.key}
@@ -63,7 +70,7 @@ export function ContactActions({
   }
 
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap justify-end gap-2">
       {actions.map((action) => (
         <a
           key={action.key}

@@ -15,6 +15,8 @@ import {
   Mail,
   MapPin,
   MessageCircle,
+  MessageCircleMore,
+  MessageSquare,
   Navigation,
   PawPrint,
   Phone,
@@ -86,14 +88,17 @@ export const ENCLOSURE_ICONS = {
 } satisfies Record<string, LucideIcon>;
 
 /**
- * Icons for the contact list (`/contacts`) and contact hub. The four action
- * icons are the tap targets on a phone — call, LINE chat, email, open in
- * maps — so they're distinct at a glance rather than themed.
+ * Icons for the contact list (`/contacts`) and contact hub. The action
+ * icons are the tap targets on a phone — call, LINE / Messenger / WhatsApp
+ * chat, email, open in maps. Lucide has no brand marks, so the three chat
+ * apps get three different speech-bubble shapes and rely on their labels.
  */
 export const CONTACT_ICONS = {
   contact: BookUser,
   call: PhoneCall,
   line: MessageCircle,
+  messenger: MessageSquare,
+  whatsapp: MessageCircleMore,
   email: Mail,
   map: Navigation,
   address: MapPin,

@@ -32,6 +32,8 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
   const [phone, setPhone] = useState(contact.phone ?? "");
   const [email, setEmail] = useState(contact.email ?? "");
   const [lineId, setLineId] = useState(contact.line_id ?? "");
+  const [messengerId, setMessengerId] = useState(contact.messenger_id ?? "");
+  const [whatsapp, setWhatsapp] = useState(contact.whatsapp ?? "");
   const [address, setAddress] = useState(contact.address ?? "");
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState<
@@ -49,12 +51,20 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
         ? c.errors.hasMaintenance(contact.maintenance_count)
         : null;
 
+  const messaging = [
+    { label: c.createForm.lineId, value: contact.line_id },
+    { label: c.createForm.messenger, value: contact.messenger_id },
+    { label: c.createForm.whatsapp, value: contact.whatsapp },
+  ].filter((m) => m.value);
+
   function reset() {
     setName(contact.name);
     setType(contact.type);
     setPhone(contact.phone ?? "");
     setEmail(contact.email ?? "");
     setLineId(contact.line_id ?? "");
+    setMessengerId(contact.messenger_id ?? "");
+    setWhatsapp(contact.whatsapp ?? "");
     setAddress(contact.address ?? "");
   }
 
@@ -62,7 +72,16 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
     setMessage(null);
     startTransition(async () => {
       try {
-        await updateContact(contact.id, { name, type, phone, email, lineId, address });
+        await updateContact(contact.id, {
+          name,
+          type,
+          phone,
+          email,
+          lineId,
+          messengerId,
+          whatsapp,
+          address,
+        });
         setEditing(false);
         setMessage({ type: "success", text: t.common.saved });
       } catch (err) {
@@ -169,14 +188,41 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
         </td>
         <td className="px-4 py-2">
           {editing ? (
-            <input
-              value={lineId}
-              onChange={(e) => setLineId(e.target.value)}
-              placeholder={c.createForm.lineIdPlaceholder}
-              className={`${inputClass} min-w-28`}
-            />
+            <div className="flex min-w-40 flex-col gap-1">
+              <input
+                value={lineId}
+                onChange={(e) => setLineId(e.target.value)}
+                placeholder={c.createForm.lineId}
+                aria-label={c.createForm.lineId}
+                className={inputClass}
+              />
+              <input
+                value={messengerId}
+                onChange={(e) => setMessengerId(e.target.value)}
+                placeholder={c.createForm.messenger}
+                aria-label={c.createForm.messenger}
+                className={inputClass}
+              />
+              <input
+                type="tel"
+                value={whatsapp}
+                onChange={(e) => setWhatsapp(e.target.value)}
+                placeholder={c.createForm.whatsapp}
+                aria-label={c.createForm.whatsapp}
+                className={inputClass}
+              />
+            </div>
           ) : (
-            <span className="text-muted">{contact.line_id ?? t.common.dash}</span>
+            <dl className="flex flex-col gap-0.5 text-xs text-muted">
+              {messaging.length > 0
+                ? messaging.map((m) => (
+                    <div key={m.label} className="flex gap-1 whitespace-nowrap">
+                      <dt>{m.label}:</dt>
+                      <dd className="text-foreground">{m.value}</dd>
+                    </div>
+                  ))
+                : t.common.dash}
+            </dl>
           )}
         </td>
         <td className="px-4 py-2">
@@ -285,7 +331,7 @@ export function ContactsTable({ contacts }: { contacts: ContactRow[] }) {
             <th className="px-4 py-2 font-medium">{h.type}</th>
             <th className="px-4 py-2 font-medium">{h.phone}</th>
             <th className="px-4 py-2 font-medium">{h.email}</th>
-            <th className="px-4 py-2 font-medium">{h.lineId}</th>
+            <th className="px-4 py-2 font-medium">{h.messaging}</th>
             <th className="px-4 py-2 font-medium">{h.address}</th>
             <th className="px-4 py-2 font-medium">{h.residents}</th>
             <th className="px-4 py-2 font-medium" />

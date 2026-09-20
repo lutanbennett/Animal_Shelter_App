@@ -13,14 +13,20 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   `contacts` and `placement_history`). The two halves are deliberately
   different in feel: admin is a desktop table for setting people up, the
   list is a phone tool — search box and type chips pinned at the top,
-  cards with a row of one-tap actions (call, LINE, email, open in maps)
-  that are plain links with the schemes the phone hands off to its apps
-  (`tel:`, `mailto:`, `https://line.me/ti/p/~<id>` as assumed in Section
-  11 item 5, `google.com/maps/search/?api=1&query=…`), so they work with
-  no JavaScript and on desktop just open the web equivalents. Maps needed
-  somewhere to point at, so 0036 adds a free-text `address` column; a
-  pasted maps link is used as-is, anything else goes in as a search
-  query. The hub lists the residents currently with a carer (open
+  cards with a row of one-tap actions (call, LINE, Messenger, WhatsApp,
+  email, open in maps) that are plain links with the schemes the phone
+  hands off to its apps (`tel:`, `mailto:`, `https://line.me/ti/p/~<id>`
+  as assumed in Section 11 item 5, `https://m.me/<username>`,
+  `https://wa.me/<number>`, `google.com/maps/search/?api=1&query=…`), so
+  they work with no JavaScript and on desktop just open the web
+  equivalents. Maps needed somewhere to point at, so 0036 adds a
+  free-text `address` column; 0037 adds `messenger_id` (the Facebook
+  username) and `whatsapp` (the number the account is on, kept apart
+  from `phone` since it's often a different one). A pasted link in any
+  of these is used as-is. WhatsApp wants an international number with no
+  "+": a number written the local way with a leading 0 is assumed to be
+  Thai and gets 66 in its place — the shelter is in Chiang Mai and that's
+  how staff write numbers; anything with a country code is used as given. The hub lists the residents currently with a carer (open
   `placement_history` rows with that `carer_id`) and their earlier
   placements, linking into the resident hub — it does not assign anyone.
   Placing a resident stays on the resident hub's Foster / adopt page, and

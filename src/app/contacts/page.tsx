@@ -37,7 +37,10 @@ export default async function ContactsPage() {
   }));
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+    // min-w-0: the type-chip strip scrolls sideways on a phone, and without
+    // it that strip's natural width would push this flex item wider than
+    // the viewport instead of scrolling inside it.
+    <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 md:p-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">

@@ -25,7 +25,15 @@ type TypeFilter = ContactType | "all";
 function matches(contact: Contact, query: string) {
   if (!query) return true;
   const q = query.toLowerCase();
-  return [contact.name, contact.phone, contact.email, contact.line_id, contact.address]
+  return [
+    contact.name,
+    contact.phone,
+    contact.email,
+    contact.line_id,
+    contact.messenger_id,
+    contact.whatsapp,
+    contact.address,
+  ]
     .filter((v): v is string => Boolean(v))
     .some((v) => v.toLowerCase().includes(q));
 }
@@ -110,8 +118,8 @@ export function ContactList({ contacts }: { contacts: ContactSummary[] }) {
       {/* Search and type chips stay put while the list scrolls under them —
           on a phone that's the difference between a contact list and a
           scroll hunt. */}
-      <div className="sticky top-0 z-20 -mx-4 flex flex-col gap-2 bg-background px-4 py-2 md:static md:mx-0 md:px-0 md:py-0">
-        <label className="relative block">
+      <div className="sticky top-0 z-20 -mx-4 flex flex-col gap-2 bg-background py-2 md:static md:mx-0 md:py-0">
+        <label className="relative mx-4 block md:mx-0">
           <span className="sr-only">{t.contacts.searchLabel}</span>
           <Search
             aria-hidden="true"
@@ -129,7 +137,7 @@ export function ContactList({ contacts }: { contacts: ContactSummary[] }) {
         <div
           role="radiogroup"
           aria-label={t.contacts.filterLabel}
-          className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0"
+          className="flex gap-1.5 overflow-x-auto px-4 pb-1 md:flex-wrap md:px-0"
         >
           {filters.map((filter) => {
             const count = countByType.get(filter) ?? 0;
