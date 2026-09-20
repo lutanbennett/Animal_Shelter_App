@@ -441,6 +441,34 @@ export async function ensureResidentBloodTestFolder(
 }
 
 /**
+ * "<Type> <YYYYMMDD>" — the per-procedure folder name under Procedures/
+ * (requirements doc, Section 5.1). Slashes can't appear in a Drive path
+ * segment, so a type like "Spay / neuter" becomes "Spay - neuter".
+ */
+export function procedureFolderName(typeName: string, yyyymmdd: string): string {
+  return `${typeName.trim().replace(/\//g, "-")} ${yyyymmdd}`;
+}
+
+/**
+ * Ensures Residents/<Name> (<ID>)/Procedures/<Type> <YYYYMMDD>/ exists for
+ * a resident — one folder per procedure, so an X-ray's images and the
+ * discharge notes from the same day sit together, and two procedures on
+ * the same date don't mix.
+ */
+export async function ensureResidentProcedureFolder(
+  drive: DriveClient,
+  resident: { name: string; animal_code: string; drive_folder_id: string | null },
+  folderName: string,
+): Promise<{ residentFolderId: string; uploadFolderId: string; isNewResidentFolder: boolean }> {
+  const { residentFolderId, isNewResidentFolder } = await ensureResidentFolder(drive, resident);
+
+  const proceduresFolderId = await findOrCreateFolder(drive, residentFolderId, "Procedures");
+  const uploadFolderId = await findOrCreateFolder(drive, proceduresFolderId, folderName);
+
+  return { residentFolderId, uploadFolderId, isNewResidentFolder };
+}
+
+/**
  * Uploads a file into a folder. Deliberately does NOT grant "anyone with
  * the link" access the way earlier versions of this function did — photos
  * are now only ever served through this app's own image proxy

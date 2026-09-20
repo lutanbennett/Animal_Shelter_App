@@ -76,9 +76,10 @@ export type ArchiveWeight = {
 
 export type ArchiveProcedure = {
   id: string;
-  procedureType: string;
+  procedureType: string | null;
   date: string;
   notes: string | null;
+  files: ArchiveFile[];
 };
 
 export type ArchiveBloodTest = {
@@ -139,6 +140,20 @@ function photoRelativePath(
 ): string | null {
   if (!category || !dateTaken || !fileName) return null;
   return `Photos/${category}/${dateToYymm(dateTaken)}/${fileName}`;
+}
+
+/**
+ * Residents/<Name> (<ID>)/Procedures/<Type> <YYYYMMDD>/<file>. The folder
+ * segment is the attachment's own sub_folder, recorded at upload time by
+ * the procedure attachment route, so a later rename of the type doesn't
+ * point the archive at a folder that was never created.
+ */
+function procedureRelativePath(
+  subFolder: string | null,
+  fileName: string | null,
+): string | null {
+  if (!subFolder || !fileName) return null;
+  return `Procedures/${subFolder}/${fileName}`;
 }
 
 /** Residents/<Name> (<ID>)/Blood Tests/<YYYYMMDD>/<file>. */
@@ -229,12 +244,29 @@ type WeightRow = {
 
 type ProcedureRow = {
   id: string;
-  procedure_type: string;
   date: string;
   notes: string | null;
+  procedure_types: { name: string } | null;
 };
 
 type BloodTestRow = { id: string; date: string; results: string | null };
+
+async function loadOwnedFiles(
+  supabase: SupabaseClient,
+  ownerType: "blood_test" | "procedure",
+  ownerIds: string[],
+): Promise<AttachmentRow[]> {
+  if (ownerIds.length === 0) return [];
+  const { data, error } = await supabase
+    .from("attachments")
+    .select("id, owner_type, owner_id, drive_file_id, file_name, sub_folder, date_taken")
+    .eq("owner_type", ownerType)
+    .in("owner_id", ownerIds)
+    .order("uploaded_at", { ascending: true })
+    .returns<AttachmentRow[]>();
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
 
 /**
  * Reads the whole file for one resident. Runs as the signed-in user, so
@@ -307,7 +339,7 @@ export async function loadResidentArchiveRecord(
       .returns<WeightRow[]>(),
     supabase
       .from("procedures")
-      .select("id, procedure_type, date, notes")
+      .select("id, date, notes, procedure_types(name)")
       .eq("resident_id", residentId)
       .order("date", { ascending: false })
       .returns<ProcedureRow[]>(),
@@ -345,26 +377,20 @@ export async function loadResidentArchiveRecord(
 
   const placementRows = placementsResult.data ?? [];
   const bloodTestRows = bloodTestsResult.data ?? [];
+  const procedureRows = proceduresResult.data ?? [];
 
-  // Blood test scans hang off the test, not the resident, so they're a
-  // second attachments query keyed by test id.
-  const bloodTestIds = bloodTestRows.map((row) => row.id);
-  const bloodTestFilesResult =
-    bloodTestIds.length > 0
-      ? await supabase
-          .from("attachments")
-          .select(
-            "id, owner_type, owner_id, drive_file_id, file_name, sub_folder, date_taken",
-          )
-          .eq("owner_type", "blood_test")
-          .in("owner_id", bloodTestIds)
-          .order("uploaded_at", { ascending: true })
-          .returns<AttachmentRow[]>()
-      : { data: [] as AttachmentRow[], error: null };
-  if (bloodTestFilesResult.error) {
-    throw new Error(bloodTestFilesResult.error.message);
-  }
-  const bloodTestFiles = bloodTestFilesResult.data ?? [];
+  // Blood test scans and procedure files hang off their record, not the
+  // resident, so each is a second attachments query keyed by record id.
+  const bloodTestFiles = await loadOwnedFiles(
+    supabase,
+    "blood_test",
+    bloodTestRows.map((row) => row.id),
+  );
+  const procedureFiles = await loadOwnedFiles(
+    supabase,
+    "procedure",
+    procedureRows.map((row) => row.id),
+  );
 
   // The death itself is the open Deceased placement (the append-only model
   // in Section 4.1 — there is no date_of_death column to read).
@@ -446,11 +472,21 @@ export async function loadResidentArchiveRecord(
       weightKg: row.weight_kg,
       notes: row.notes,
     })),
-    procedures: (proceduresResult.data ?? []).map((row) => ({
+    procedures: procedureRows.map((row) => ({
       id: row.id,
-      procedureType: row.procedure_type,
+      procedureType: row.procedure_types?.name ?? null,
       date: row.date,
       notes: row.notes,
+      files: procedureFiles
+        .filter((file) => file.owner_id === row.id)
+        .map((file) => ({
+          driveFileId: file.drive_file_id,
+          fileName: file.file_name,
+          relativePath: procedureRelativePath(file.sub_folder, file.file_name),
+          category: null,
+          dateTaken: file.date_taken,
+          isProfilePhoto: false,
+        })),
     })),
     bloodTests: bloodTestRows.map((row) => ({
       id: row.id,

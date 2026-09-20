@@ -12,6 +12,7 @@ import {
 import { PhotoUploader } from "@/components/PhotoUploader";
 import { PhotoGallery, type PhotoRow } from "@/components/PhotoGallery";
 import { BloodTestList, type BloodTestRow } from "@/components/BloodTestList";
+import { ProcedureList, type ProcedureRow } from "@/components/ProcedureList";
 import { WeightChart } from "@/components/WeightChart";
 import { ActionLink } from "@/components/ActionLink";
 import {
@@ -388,6 +389,12 @@ export default async function ResidentSectionPage(
                         >
                           {t.residents.sections.logWeight}
                         </Link>
+                        <Link
+                          href={`/procedures/new?residentId=${id}&vetAppointmentId=${row.id}`}
+                          className="text-xs font-medium text-primary hover:underline"
+                        >
+                          {t.residents.sections.logProcedure}
+                        </Link>
                       </>
                     )}
                     {canSendToHospital && (
@@ -631,30 +638,71 @@ export default async function ResidentSectionPage(
       break;
     }
     case "procedures": {
-      const { data } = await supabase
+      const { data: procedureRows, error } = await supabase
         .from("procedures")
-        .select("id, procedure_type, date, notes")
+        .select(
+          "id, date, notes, procedure_types(name), vet_appointments(appointment_date, reason)",
+        )
         .eq("resident_id", id)
         .order("date", { ascending: false })
+        .order("created_at", { ascending: false })
         .returns<
-          { id: string; procedure_type: string; date: string; notes: string | null }[]
+          {
+            id: string;
+            date: string;
+            notes: string | null;
+            procedure_types: { name: string } | null;
+            vet_appointments: { appointment_date: string; reason: string | null } | null;
+          }[]
         >();
+
+      // X-rays and scans hang off the procedure, not the resident — same
+      // second attachments query as blood tests.
+      const procedureIds = (procedureRows ?? []).map((row) => row.id);
+      const { data: procedureFiles } =
+        procedureIds.length > 0
+          ? await supabase
+              .from("attachments")
+              .select("id, owner_id, drive_file_id, file_name")
+              .eq("owner_type", "procedure")
+              .in("owner_id", procedureIds)
+              .order("uploaded_at", { ascending: true })
+              .returns<
+                { id: string; owner_id: string; drive_file_id: string; file_name: string | null }[]
+              >()
+          : { data: [] };
+
+      const procedures: ProcedureRow[] = (procedureRows ?? []).map((row) => ({
+        id: row.id,
+        date: row.date,
+        notes: row.notes,
+        procedure_types: row.procedure_types,
+        vet_appointments: row.vet_appointments,
+        attachments: (procedureFiles ?? [])
+          .filter((a) => a.owner_id === row.id)
+          .map((a) => ({ id: a.id, drive_file_id: a.drive_file_id, file_name: a.file_name })),
+      }));
+
       body = (
-        <RecordList
-          rows={data ?? []}
-          empty={t.residents.sections.empty.procedures}
-          render={(row) => (
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center justify-between">
-                <span className="font-medium">{row.procedure_type}</span>
-                <span className="text-xs text-muted">
-                  {formatDate(row.date, locale)}
-                </span>
-              </div>
-              {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
+        <div className="flex flex-col gap-4">
+          {!isDeceased && (
+            <div className="flex justify-end">
+              <ActionLink
+                href={`/procedures/new?residentId=${id}`}
+                label={t.residents.sections.logProcedure}
+                icon={SECTION_ICONS.procedures}
+                variant="primary"
+                iconOnlyOnMobile={false}
+              />
             </div>
           )}
-        />
+          {error && <p className="text-sm text-danger">{error.message}</p>}
+          <ProcedureList
+            residentId={id}
+            procedures={procedures}
+            readOnly={isDeceased}
+          />
+        </div>
       );
       break;
     }

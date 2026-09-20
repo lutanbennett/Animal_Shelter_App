@@ -408,6 +408,56 @@ const en = {
     },
   },
 
+  procedures: {
+    pageTitle: "Log Procedure",
+    pageSubtitle:
+      "Record a procedure for this resident — an X-ray, ultrasound, teeth cleaning, spay/neuter — and attach the images or paperwork that came with it.",
+    noResidentSelected:
+      "Open this from a resident's Procedures tab or a vet appointment so the procedure is logged against the right animal.",
+    residentNotFound: "Resident not found.",
+    couldntLoadTypes: "Couldn't load procedure types",
+    couldntLoadVetAppointments: "Couldn't load vet appointments",
+    forResident: (name: string) => `For ${name}`,
+    type: "Procedure",
+    selectType: "Select a procedure",
+    addNewType: "+ Add new procedure type…",
+    newTypePlaceholder: "e.g. Dental extraction",
+    chooseExistingType: "Choose an existing procedure instead",
+    unknownType: "Unknown procedure",
+    date: "Date",
+    linkedVisit: "Linked vet visit",
+    noLinkedVisit: "No linked visit — done at the shelter",
+    linkedVisitHint:
+      "Most procedures happen at a vet visit; linking keeps the record with that visit. Leave unlinked for things done on site, like nail clipping.",
+    notes: "Notes",
+    notesPlaceholder:
+      "Optional — findings, what was done, follow-up needed, who performed it.",
+    saving: "Saving...",
+    saveButton: "Save procedure",
+    savedHeading: (type: string, residentName: string, date: string) =>
+      `${type} saved for ${residentName} (${date}).`,
+    attachHint:
+      "Now attach any X-rays, scans or paperwork — you can add more than one file, and add more later from the Procedures tab.",
+    done: "Done",
+    linkedVisitLabel: (date: string, reason: string) => `Vet visit: ${date} — ${reason}`,
+    doneAtShelter: "Done at the shelter",
+    fileFallback: "File",
+    noFiles: "No files attached.",
+    attachFiles: "Attach files",
+    uploader: {
+      dropHere: "Drop X-rays, scans or PDFs here or tap to upload",
+      hint: "Images and PDFs, up to 15MB each. You can select several at once.",
+    },
+    errors: {
+      missingResident: "Missing resident.",
+      enterDate: "Enter the date of the procedure.",
+      invalidDate: "Invalid date.",
+      dateInFuture: "Procedure date can't be in the future.",
+      selectType: "Select a procedure or add a new one.",
+      saveFailed: "Failed to save the procedure.",
+    },
+  },
+
   prescriptions: {
     pageTitle: "Add Prescription",
     pageSubtitle:
@@ -963,6 +1013,7 @@ const en = {
       startsOn: (date: string) => `Starts ${date}`,
       linkedVisit: (date: string) => `Vet visit ${date}`,
       logWeight: "Log weight",
+      logProcedure: "Log procedure",
     },
     picker: {
       selectResidents: "Select residents",

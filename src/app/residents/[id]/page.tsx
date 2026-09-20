@@ -110,7 +110,7 @@ export default async function ResidentPage(
       .returns<WeightRow[]>(),
     supabase
       .from("procedures")
-      .select("id, procedure_type, date")
+      .select("id, date, procedure_types(name)")
       .eq("resident_id", id)
       .order("date", { ascending: false })
       .returns<ProcedureRow[]>(),
