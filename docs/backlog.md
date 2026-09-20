@@ -49,7 +49,8 @@ Each item is a self-contained prompt for a new thread. Tick when done. Ordered b
 
 ## Facility
 
-- [ ] **Enclosure maintenance.** Let staff log repairs / work needed on an enclosure (title, description, status, estimated cost, photos) for budgeting and tracking, replacing the disabled "Maintenance — coming soon" card on `/enclosures/[id]`. The existing `maintenance` table only references `zone_id`; add an `enclosure_id` column (nullable, so zone-wide jobs still work) and a cost field. Volunteers can read maintenance but not create it (see RLS in 0001).
+- [x] **Enclosure maintenance.** Done 2026-09-20 (see `docs/decisions.md`): `0033_enclosure_maintenance.sql` adds `enclosure_id` (nullable — zone-wide jobs), estimated/actual cost, due date, `job_code` (M-0001), a cached Drive folder id and a before/after `phase` on `attachments`, and renames the statuses to Not Started / In Progress / Blocked / Completed. `/maintenance` is a drag-and-drop Kanban (desktop) / status list (phone), `/maintenance/[id]` has status buttons and Before / After photo sections, `/maintenance/new` uploads photos on the same form as the details. Files live in `Projects/Shelter Projects/Enclosure Maintenance/<Zone>/<Enclosure>/<Status>/<M-0001 Title>/` and the folder moves with the status.
+- [ ] **Maintenance follow-ups.** (a) Deleting a job — none today, a mistaken job can only be edited; needs to remove its attachments and Drive folder. (b) Assigning a job to a contact — `maintenance.assigned_to` exists but isn't on the form; pairs with the Contacts management item. (c) Migrating the legacy AppSheet maintenance folders already in the shelter Drive (`Enclosure Maintenance/<Enclosure>/Active|Completed/<date> (<id>)/Work to be Done/`) into rows + the new layout.
 
 ## Admin
 

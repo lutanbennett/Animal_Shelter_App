@@ -265,6 +265,8 @@ export class DriveClient {
     fileId: string;
     addParents: string;
     removeParents?: string;
+    /** Rename in the same request — a maintenance job's folder tracks its title. */
+    name?: string;
   }): Promise<DriveFile> {
     const search = new URLSearchParams({
       addParents: params.addParents,
@@ -274,7 +276,26 @@ export class DriveClient {
 
     const res = await this.request(
       `${DRIVE_API}/files/${encodeURIComponent(params.fileId)}?${search}`,
-      { method: "PATCH" },
+      params.name
+        ? {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json; charset=UTF-8" },
+            body: JSON.stringify({ name: params.name }),
+          }
+        : { method: "PATCH" },
+    );
+    return (await res.json()) as DriveFile;
+  }
+
+  /** Metadata `files.update` changing only the name. */
+  async renameFile(fileId: string, name: string): Promise<DriveFile> {
+    const res = await this.request(
+      `${DRIVE_API}/files/${encodeURIComponent(fileId)}?fields=id`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json; charset=UTF-8" },
+        body: JSON.stringify({ name }),
+      },
     );
     return (await res.json()) as DriveFile;
   }
@@ -503,6 +524,104 @@ export async function uploadImageToFolder(
   }
 
   return created.id;
+}
+
+// ---------------------------------------------------------------------------
+// Enclosure maintenance
+// ---------------------------------------------------------------------------
+
+/**
+ * Where maintenance files live:
+ *
+ *   Projects/Shelter Projects/Enclosure Maintenance/<Zone>/<Enclosure>/<Status>/<M-0001 Title>/<file>
+ *
+ * The layout was set by the user so that staff can browse jobs in Drive by
+ * where they are and what state they're in. A zone-wide job (no enclosure)
+ * sits under a fixed "Zone-wide" segment in place of the enclosure name so
+ * every job folder is the same depth.
+ */
+const MAINTENANCE_PATH = ["Projects", "Shelter Projects", "Enclosure Maintenance"];
+const ZONE_WIDE_FOLDER = "Zone-wide";
+
+/** A Drive path segment: slashes aren't allowed, and trailing space isn't kept. */
+function driveSegment(name: string): string {
+  return name.trim().replace(/\//g, "-") || "—";
+}
+
+/** "M-0001 Fix gate latch" — the job's own folder. */
+export function maintenanceJobFolderName(job: { job_code: string; title: string }): string {
+  return driveSegment(`${job.job_code} ${job.title}`);
+}
+
+export type MaintenanceFolderJob = {
+  job_code: string;
+  title: string;
+  status: string;
+  zone_name: string;
+  enclosure_name: string | null;
+  drive_folder_id: string | null;
+};
+
+/**
+ * Makes sure the job's folder exists and sits under the right
+ * .../<Zone>/<Enclosure>/<Status>/ for the job as it is *now*, moving (and
+ * renaming) it if it doesn't. Called on every upload and every status
+ * change, so a move that failed mid-way — Drive 5xx after the database was
+ * updated — is put right by whichever comes next: the folder's current
+ * parents are read from Drive rather than assumed from the old status.
+ *
+ * Returns `isNew` when a folder was created, so the caller can cache its ID
+ * on the row the way residents.drive_folder_id is.
+ */
+export async function syncMaintenanceJobFolder(
+  drive: DriveClient,
+  job: MaintenanceFolderJob,
+): Promise<{ folderId: string; isNew: boolean }> {
+  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  if (!rootId) {
+    throw new Error("GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured.");
+  }
+
+  let parentId = rootId;
+  for (const segment of [
+    ...MAINTENANCE_PATH,
+    driveSegment(job.zone_name),
+    job.enclosure_name ? driveSegment(job.enclosure_name) : ZONE_WIDE_FOLDER,
+    job.status,
+  ]) {
+    parentId = await findOrCreateFolder(drive, parentId, segment);
+  }
+  const statusFolderId = parentId;
+  const name = maintenanceJobFolderName(job);
+
+  if (job.drive_folder_id) {
+    let existing: DriveFile | null = null;
+    try {
+      existing = await drive.getFile(job.drive_folder_id, "id, name, parents");
+    } catch (error) {
+      // Deleted by hand in Drive: fall through and create a fresh one.
+      if (!(error instanceof DriveApiError) || error.status !== 404) throw error;
+    }
+
+    if (existing) {
+      const parents = existing.parents ?? [];
+      const inPlace = parents.includes(statusFolderId);
+      if (inPlace) {
+        if (existing.name !== name) await drive.renameFile(existing.id, name);
+      } else {
+        await drive.moveFile({
+          fileId: existing.id,
+          addParents: statusFolderId,
+          removeParents: parents.join(","),
+          name: existing.name === name ? undefined : name,
+        });
+      }
+      return { folderId: existing.id, isNew: false };
+    }
+  }
+
+  const folderId = await findOrCreateFolder(drive, statusFolderId, name);
+  return { folderId, isNew: true };
 }
 
 // ---------------------------------------------------------------------------
