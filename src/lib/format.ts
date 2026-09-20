@@ -65,3 +65,37 @@ export function formatAge(
   if (age == null) return t.format.ageUnknown;
   return t.format.ageEstimated(age);
 }
+
+// Weights are stored as unbounded numeric; PostgREST hands them back as JS
+// numbers, so 12.50 arrives as 12.5. Shown to two decimals at most (the
+// scales the shelter uses read to 10 g) with the locale's separators.
+export function formatWeightKg(kg: number, locale: Locale = "en") {
+  return `${kg.toLocaleString(DATE_LOCALE_TAG[locale], {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })} kg`;
+}
+
+// A signed change between two readings, for the trend indicators: "+0.4 kg"
+// / "−0.4 kg" / "±0 kg". Uses a real minus sign so it doesn't read as a dash.
+export function formatWeightDelta(deltaKg: number, locale: Locale = "en") {
+  const rounded = Math.round(deltaKg * 100) / 100;
+  if (rounded === 0) return `±0 kg`;
+  const sign = rounded > 0 ? "+" : "−";
+  return `${sign}${formatWeightKg(Math.abs(rounded), locale)}`;
+}
+
+// Axis-tick dates: "3 Sep" inside a year, "Sep 2026" once the range is long
+// enough for the month alone to be ambiguous.
+export function formatAxisDate(
+  value: string | number | Date,
+  locale: Locale = "en",
+  withYear = false,
+) {
+  return new Date(value).toLocaleDateString(
+    DATE_LOCALE_TAG[locale],
+    withYear
+      ? { month: "short", year: "numeric" }
+      : { day: "numeric", month: "short" },
+  );
+}

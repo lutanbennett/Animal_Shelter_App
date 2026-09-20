@@ -371,6 +371,47 @@ const th: Dictionary = {
     },
   },
 
+  weight: {
+    pageTitle: "บันทึกน้ำหนัก",
+    pageSubtitle:
+      "บันทึกน้ำหนักของสัตว์ตัวนี้ ทุกค่าที่บันทึกจะสร้างแนวโน้มในแท็บน้ำหนัก จึงควรชั่งน้ำหนักตอนรับเข้า ทุกครั้งที่พบสัตวแพทย์ และเมื่อสภาพร่างกายเปลี่ยนไป",
+    noResidentSelected:
+      "เปิดหน้านี้จากแท็บน้ำหนักของสัตว์ หรือจากการนัดหมายสัตวแพทย์ เพื่อให้บันทึกน้ำหนักกับสัตว์ตัวที่ถูกต้อง",
+    residentNotFound: "ไม่พบข้อมูลสัตว์",
+    couldntLoadVetAppointments: "โหลดข้อมูลนัดหมายสัตวแพทย์ไม่สำเร็จ",
+    forResident: (name: string) => `สำหรับ ${name}`,
+    previousReading: (weight: string, date: string) =>
+      `ค่าล่าสุด: ${weight} เมื่อ ${date}`,
+    weightKg: "น้ำหนัก",
+    dateWeighed: "วันที่ชั่ง",
+    linkedVisit: "เชื่อมโยงกับการนัดหมายสัตวแพทย์",
+    noLinkedVisit: "ไม่เชื่อมโยงกับการนัดหมาย — ชั่งที่ศูนย์",
+    linkedVisitHint:
+      "การชั่งน้ำหนักเป็นขั้นตอนมาตรฐานเมื่อพบสัตวแพทย์ การเชื่อมโยงจะเก็บค่านี้ไว้กับบันทึกการนัดหมายนั้น",
+    notes: "หมายเหตุ",
+    notesPlaceholder: "ไม่บังคับ — เช่น ก่อนหรือหลังให้อาหาร เครื่องชั่งที่ใช้ สภาพร่างกาย",
+    saving: "กำลังบันทึก...",
+    saveButton: "บันทึกน้ำหนัก",
+    stats: {
+      latest: "ล่าสุด",
+      sincePrevious: "เทียบกับครั้งก่อน",
+      sinceFirst: "เทียบกับครั้งแรก",
+      percentSince: (percent: string, date: string) => `${percent}% ตั้งแต่ ${date}`,
+    },
+    chart: {
+      ariaLabel: (n: number) => `แนวโน้มน้ำหนักจาก ${n} ครั้งที่บันทึก`,
+      sincePrevious: (delta: string) => `${delta} จากครั้งก่อน`,
+    },
+    errors: {
+      missingResident: "ไม่พบข้อมูลสัตว์",
+      enterDate: "กรุณากรอกวันที่ชั่ง",
+      invalidDate: "วันที่ไม่ถูกต้อง",
+      dateInFuture: "วันที่ชั่งต้องไม่เป็นวันในอนาคต",
+      enterWeight: "กรุณากรอกน้ำหนัก",
+      weightPositive: "น้ำหนักต้องมากกว่า 0 กก.",
+    },
+  },
+
   prescriptions: {
     pageTitle: "เพิ่มใบสั่งยา",
     pageSubtitle:
@@ -451,6 +492,8 @@ const th: Dictionary = {
         sexUnknown: "ไม่ทราบ",
         estimatedAge: "อายุโดยประมาณ (ปี)",
         estimatedAgeHint: "ประมาณการโดยเจ้าหน้าที่ ณ วันรับเข้า",
+        weightKg: "น้ำหนักตอนรับเข้า (กก.)",
+        weightKgHint: "ไม่บังคับ — บันทึกเป็นค่าน้ำหนักครั้งแรก",
         intakeDate: "วันที่รับเข้า",
         origin: "แหล่งที่มา",
         newOriginPlaceholder: "เช่น วัดใกล้เคียง",
@@ -477,6 +520,7 @@ const th: Dictionary = {
         nameRequired: "กรุณากรอกชื่อ",
         intakeDateRequired: "กรุณากรอกวันที่รับเข้า",
         ageMustBeNumber: "อายุโดยประมาณต้องเป็นตัวเลข",
+        weightPositive: "น้ำหนักต้องมากกว่า 0 กก.",
       },
     },
     list: {
@@ -922,6 +966,7 @@ const th: Dictionary = {
       noCurrentPrescriptions: "ไม่มีใบสั่งยาปัจจุบัน",
       startsOn: (date: string) => `เริ่ม ${date}`,
       linkedVisit: (date: string) => `นัดสัตวแพทย์ ${date}`,
+      logWeight: "บันทึกน้ำหนัก",
     },
     picker: {
       selectResidents: "เลือกสัตว์",

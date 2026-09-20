@@ -367,6 +367,47 @@ const en = {
     },
   },
 
+  weight: {
+    pageTitle: "Log Weight",
+    pageSubtitle:
+      "Record a weight reading for this resident. Every reading builds the trend on the Weight tab, so weigh at intake, at each vet visit and whenever condition changes.",
+    noResidentSelected:
+      "Open this from a resident's Weight tab or a vet appointment so the reading is logged against the right animal.",
+    residentNotFound: "Resident not found.",
+    couldntLoadVetAppointments: "Couldn't load vet appointments",
+    forResident: (name: string) => `For ${name}`,
+    previousReading: (weight: string, date: string) =>
+      `Last reading: ${weight} on ${date}`,
+    weightKg: "Weight",
+    dateWeighed: "Date weighed",
+    linkedVisit: "Linked vet visit",
+    noLinkedVisit: "No linked visit — weighed at the shelter",
+    linkedVisitHint:
+      "Weighing is standard at a vet visit; linking it keeps the reading with that visit's record.",
+    notes: "Notes",
+    notesPlaceholder: "Optional — e.g. before or after feeding, scales used, body condition.",
+    saving: "Saving...",
+    saveButton: "Save weight",
+    stats: {
+      latest: "Latest",
+      sincePrevious: "Since previous",
+      sinceFirst: "Since first reading",
+      percentSince: (percent: string, date: string) => `${percent}% since ${date}`,
+    },
+    chart: {
+      ariaLabel: (n: number) => `Weight trend over ${n} readings`,
+      sincePrevious: (delta: string) => `${delta} since previous`,
+    },
+    errors: {
+      missingResident: "Missing resident.",
+      enterDate: "Enter the date weighed.",
+      invalidDate: "Invalid date.",
+      dateInFuture: "Date weighed can't be in the future.",
+      enterWeight: "Enter the weight.",
+      weightPositive: "Weight must be more than 0 kg.",
+    },
+  },
+
   prescriptions: {
     pageTitle: "Add Prescription",
     pageSubtitle:
@@ -443,6 +484,8 @@ const en = {
         sexUnknown: "Unknown",
         estimatedAge: "Estimated age (years)",
         estimatedAgeHint: "Staff estimate at intake",
+        weightKg: "Weight at intake (kg)",
+        weightKgHint: "Optional — logs the first weight reading",
         intakeDate: "Intake date",
         origin: "Origin",
         newOriginPlaceholder: "e.g. Temple down the road",
@@ -469,6 +512,7 @@ const en = {
         nameRequired: "Name is required.",
         intakeDateRequired: "Intake date is required.",
         ageMustBeNumber: "Estimated age must be a number.",
+        weightPositive: "Weight must be more than 0 kg.",
       },
     },
     list: {
@@ -918,6 +962,7 @@ const en = {
       noCurrentPrescriptions: "No current prescriptions.",
       startsOn: (date: string) => `Starts ${date}`,
       linkedVisit: (date: string) => `Vet visit ${date}`,
+      logWeight: "Log weight",
     },
     picker: {
       selectResidents: "Select residents",

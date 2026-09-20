@@ -35,6 +35,14 @@ export async function recordIntake(
     return { error: t.residents.new.errors.ageMustBeNumber };
   }
 
+  // Optional intake weight; record_intake writes it as the first weight
+  // row, dated the intake date, in the same transaction (migration 0029).
+  const weightKgRaw = str(formData, "weightKg");
+  const weightKg = weightKgRaw !== null ? Number(weightKgRaw) : null;
+  if (weightKg !== null && (!Number.isFinite(weightKg) || weightKg <= 0)) {
+    return { error: t.residents.new.errors.weightPositive };
+  }
+
   const readyForAdoption = formData.get("readyForAdoption") === "on";
 
   const supabase = await createClient();
@@ -59,6 +67,7 @@ export async function recordIntake(
     p_notes: str(formData, "notes"),
     p_group_origin_id: str(formData, "originId"),
     p_new_origin_name: str(formData, "newOriginName"),
+    p_weight_kg: weightKg,
   });
 
   if (error) {

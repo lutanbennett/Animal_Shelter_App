@@ -113,6 +113,21 @@ export function IntakeForm({
               className={inputClass}
             />
           </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="weightKg" className="text-sm font-medium text-muted">
+              {t.residents.new.fields.weightKg}
+            </label>
+            <input
+              id="weightKg"
+              name="weightKg"
+              type="number"
+              inputMode="decimal"
+              min="0.01"
+              step="0.01"
+              placeholder={t.residents.new.fields.weightKgHint}
+              className={inputClass}
+            />
+          </div>
         </div>
       </fieldset>
 
