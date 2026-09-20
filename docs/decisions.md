@@ -6,6 +6,92 @@ Section 11, plus decisions made during setup that aren't in the original doc.
 
 ## Confirmed
 
+- **Frequencies are schedules, forecast from the start date (2026-09-21):**
+  0027 stored a frequency as `doses_per_day` so a forecast could multiply
+  by it, and seeded Weekly as 0.143 and Every other day as 0.5. The user
+  hit the flaw straight away: a weekly or monthly tablet is a whole dose
+  on a particular day, not a seventh of a tablet every day, and the
+  average never says which day. Migration 0044 makes a frequency one of
+  three kinds — **times a day** (`doses_per_day`, now an integer),
+  **every N days/weeks/months** (`interval_count` + `interval_unit`), or
+  **as needed** (all null) — with a check that exactly one is set. The
+  seeded fractions are converted by value (0.5 → every 2 days, 0.143 →
+  every week, and so on, nearest whole days otherwise) before the column
+  type changes, and Every 2 weeks / Monthly are seeded. Month intervals
+  are calendar months from the start date, clamped at short months the
+  way Postgres date arithmetic does (Jan 31 → Feb 28 → Mar 31, since each
+  date is start + k months, not the previous date + 1 month).
+
+  **Forecast.** `prescription_doses_between(prescription, from, to)`
+  counts the whole doses a prescription has in a window, from its own
+  `start_date`: doses_per_day × days of overlap for the per-day kind, the
+  dates start + k × interval that fall in the window for the interval
+  kind, 0 for as needed. `medication_forecast(from, to)` totals that per
+  medication (doses, quantity in the unit, residents) across every
+  prescription overlapping the window for a living, non-adopted resident.
+  It replaces the `medication_daily_requirement` view, which had to go
+  anyway (it read the column being retyped). Both are plain SQL functions
+  with the caller's RLS. Asserted in a rolled-back transaction: weekly
+  from 21 Sep gives 5 doses in 30 days and 0 in a gap week; monthly from
+  31 Jan gives Jan 31 / Feb 28 / Mar 31 / Apr 30; a twice-daily course
+  ending after 3 days gives 6; "as needed" adds a prescription but no
+  doses.
+
+  **In the app.** The three kinds are one shared client component
+  (`FrequencyScheduleFields`) and one parser (`parseSchedule` in
+  `src/lib/prescriptions/frequency.ts`), used by the prescription form's
+  inline "add new frequency" and by the management page's add form and
+  inline edit — the same rules and messages everywhere. Pickers describe
+  each option ("Weekly — Every week") and are sorted most-frequent first
+  by an average that is only ever used for ordering. The Medications
+  table shows *Next 7 days* and *Next 30 days* per medication instead of
+  a per-day figure. The section is titled "Frequency options" with an
+  intro saying it is the pick-list, because the user reasonably asked
+  what a label and doses-per-day were doing on a management page when
+  dose and frequency belong to each prescription — the amount does, and
+  is set per prescription; this list is only the "how often" vocabulary.
+
+- **Medication management (2026-09-21):** `/management/medications`
+  is the CRUD page for the `medication` and `frequency` reference tables
+  that the prescription form picks from — the backlog's "Admin page for
+  medications and frequencies", built under Management on the user's
+  call (a manager owns the medicine list; admin is system configuration).
+  Same shape as `/management/vets`: an add form, an inline-edit table,
+  delete blocked while anything references the row. Two things are
+  specific to medications:
+
+  **Changing a unit is a confirmed action.** The unit lives on the
+  medication and every prescription's `dose_quantity` is in that unit
+  (0027), so switching "tablet" to "ml" silently redefines every dose ever
+  written. The row asks for confirmation, naming how many prescriptions
+  are affected, and only when the unit actually changes on a medication
+  that has any. Renaming never asks.
+
+  **Duplicates are merged, not deleted.** "Amoxicillin" added inline by
+  one person and "amoxicillin 250" by another are the same product, but
+  neither can be deleted once prescribed — the prescription is part of
+  the resident's medical record (`prescriptions.medication_id`, no
+  cascade). `merge_medication(from, into)` / `merge_frequency(from, into)`
+  (0043) move every prescription across and drop the duplicate in one
+  transaction, SECURITY INVOKER so RLS decides who may: it takes UPDATE on
+  prescriptions *and* DELETE on the reference table, which admin and
+  management have and staff/vet don't (their call fails at the delete and
+  rolls back). Medications only merge within the same `dose_unit`, for
+  the same reason the unit change is confirmed; the picker only offers
+  same-unit rows and the function refuses anything else. Frequencies merge
+  freely — the moved prescriptions take the kept row's `doses_per_day`,
+  and the confirm says so. Verified against real rows in a rolled-back
+  transaction before applying.
+
+  **What management can do.** 0039's mirror gave management staff's
+  read + insert on both tables; 0043 swaps the insert twin for a
+  read/write `for all` policy, the same count-preserving trick as 0040,
+  so the 0039 drift check still holds. The page also surfaces a
+  requirement per medication (first as today's per-day figure from the
+  0027 view, replaced the same day by the 7 / 30-day forecast — see the
+  entry above), which covers most of the "Medication requirement page"
+  backlog item; a days-of-stock projection is still open.
+
 - **"Our work" — project stories on the public site (2026-09-21):**
   migration 0042 adds `public_projects` and `public_project_photos`,
   the project counterpart of the resident pair (0016/0017/0025): plain

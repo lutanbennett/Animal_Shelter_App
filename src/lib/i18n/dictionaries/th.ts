@@ -51,6 +51,7 @@ const th: Dictionary = {
     zones: "โซน",
     immunizationTypes: "ประเภทวัคซีน",
     vets: "สัตวแพทย์",
+    medications: "ยา",
     contacts: "ผู้ติดต่อ",
     menu: "เมนู",
     openMenu: "เปิดเมนู",
@@ -308,6 +309,33 @@ const th: Dictionary = {
     },
   },
 
+  frequency: {
+    kind: "รูปแบบการให้ยา",
+    kinds: {
+      perDay: "จำนวนครั้งต่อวัน",
+      interval: "ทุก…",
+      asNeeded: "เมื่อจำเป็น",
+    },
+    dosesPerDay: "ครั้งต่อวัน",
+    timesADay: "ครั้ง/วัน",
+    everyWord: "ทุก",
+    intervalCount: "ช่วงห่าง",
+    intervalUnit: "วัน สัปดาห์ หรือเดือน",
+    unitPlural: { day: "วัน", week: "สัปดาห์", month: "เดือน" },
+    perDay: (n: number) => (n === 1 ? "วันละครั้ง" : `วันละ ${n} ครั้ง`),
+    every: (n: number, unit: "day" | "week" | "month") => {
+      const names = { day: "วัน", week: "สัปดาห์", month: "เดือน" };
+      return n === 1 ? `ทุก${names[unit]}` : `ทุก ${n} ${names[unit]}`;
+    },
+    asNeeded: "เมื่อจำเป็น",
+    errors: {
+      kindInvalid: "กรุณาเลือกว่าให้ยาบ่อยแค่ไหน",
+      dosesPerDayWhole: "จำนวนครั้งต่อวันต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป",
+      intervalCountWhole: "ช่วงห่างต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป",
+      intervalUnitInvalid: "กรุณาเลือกวัน สัปดาห์ หรือเดือน",
+    },
+  },
+
   management: {
     errors: {
       managementAccessRequired: "ต้องมีสิทธิ์ระดับผู้บริหาร",
@@ -404,6 +432,87 @@ const th: Dictionary = {
         nameRequired: "กรุณากรอกชื่อ",
         hasVisits: (n: number) =>
           `สัตวแพทย์นี้มีบันทึกการเข้าพบ ${n} ครั้ง จึงลบไม่ได้ — การเข้าพบเป็นส่วนหนึ่งของประวัติการรักษาของสัตว์`,
+      },
+    },
+    medications: {
+      title: "ยา",
+      subtitle:
+        "รายการยาที่เจ้าหน้าที่และสัตวแพทย์เลือกตอนเขียนใบสั่งยา ปริมาณ ความถี่ และระยะเวลาจะกำหนดในใบสั่งยาของสัตว์แต่ละตัว หน้านี้คือรายการผลิตภัณฑ์ เปลี่ยนชื่อ แก้หน่วย หรือรวมรายการซ้ำเข้ากับรายการที่ต้องการเก็บไว้ได้ — ใบสั่งยาจะย้ายตามไปด้วย ยาที่เคยถูกสั่งแล้วลบไม่ได้ เพราะใบสั่งยาเป็นส่วนหนึ่งของประวัติการรักษาของสัตว์",
+      couldntLoad: "โหลดข้อมูลยาไม่สำเร็จ",
+      couldntLoadFrequencies: "โหลดข้อมูลความถี่ไม่สำเร็จ",
+      couldntLoadUsage: "โหลดจำนวนใบสั่งยาไม่สำเร็จ",
+      couldntLoadForecast: "โหลดการคาดการณ์ไม่สำเร็จ",
+      frequenciesHeading: "ตัวเลือกความถี่",
+      frequenciesIntro:
+        "ตัวเลือก \"บ่อยแค่ไหน\" ที่แบบฟอร์มใบสั่งยาให้เลือก — วันละ 2 ครั้ง, ทุกสัปดาห์, ทุกเดือน… ชื่อคือสิ่งที่เจ้าหน้าที่เห็น ส่วนตารางเวลาคือสิ่งที่การคาดการณ์ใช้นับ: วันละกี่ครั้ง หรือหนึ่งโดสทุกกี่วัน/สัปดาห์/เดือน เริ่มจากวันเริ่มใบสั่งยา \"เมื่อจำเป็น\" คาดการณ์ไม่ได้",
+      createForm: {
+        name: "ชื่อ",
+        namePlaceholder: "เช่น Amoxicillin 250mg เม็ด",
+        unit: "หน่วย",
+        unitHint: "หน่วยวัดของยาหนึ่งโดส ยาเม็ดกับยาน้ำ = ยาสองรายการ",
+        addButton: "เพิ่มยา",
+      },
+      frequencyForm: {
+        label: "ชื่อ",
+        labelPlaceholder: "เช่น ทุก 8 ชั่วโมง",
+        schedule: "ตารางเวลา",
+        scheduleHint: "จำนวนเต็มเท่านั้น — ยาเม็ดรายสัปดาห์คือหนึ่งโดสทุก 1 สัปดาห์ ไม่ใช่เศษส่วนต่อวัน",
+        addButton: "เพิ่มความถี่",
+      },
+      table: {
+        name: "ชื่อ",
+        unit: "หน่วย",
+        forecastHeading: (days: number) => `${days} วันข้างหน้า`,
+        forecastQuantity: (quantity: number, unit: string) => `${quantity} ${unit}`,
+        forecastDetail: (doses: number, residents: number) =>
+          `${doses} โดส · สัตว์ ${residents} ตัว`,
+        noneDue: "ไม่มีกำหนด",
+        forecastNote:
+          "นับจากวันนี้ สำหรับสัตว์ที่ยังมีชีวิตและอยู่กับศูนย์พักพิง: โดสของแต่ละใบสั่งยาในวันที่ถึงกำหนด — ยารายสัปดาห์นับจากวันเริ่ม ยาวันละ 2 ครั้งนับทุกวัน ใบสั่งยา \"เมื่อจำเป็น\" ไม่ถูกนับ",
+        prescriptions: "ใบสั่งยา",
+        prescriptionCount: (n: number) => `ใบสั่งยา ${n} ใบ`,
+        noMedications: "ยังไม่มียา",
+      },
+      frequencyTable: {
+        label: "ชื่อ",
+        schedule: "ตารางเวลา",
+        noFrequencies: "ยังไม่มีความถี่",
+      },
+      merge: {
+        open: "รวม…",
+        into: "รวมเข้ากับ",
+        pickTarget: "รวมเข้ากับ…",
+        button: "รวม",
+        noTargets: "ไม่มียาอื่นที่ใช้หน่วยนี้",
+        hint:
+          "ใบสั่งยาทุกใบของยานี้จะย้ายไปยังยาที่เลือก และรายการนี้จะถูกลบ แสดงเฉพาะยาที่ใช้หน่วยเดียวกัน เพื่อให้ปริมาณยายังคงความหมายเดิม",
+        frequencyHint:
+          "ใบสั่งยาทุกใบที่ใช้ความถี่นี้จะย้ายไปยังความถี่ที่เลือก และรายการนี้จะถูกลบ ใบสั่งยาที่ย้ายจะใช้ตารางเวลาของความถี่ที่เก็บไว้",
+      },
+      deleteConfirm: (name: string) => `ลบยา "${name}"? การกระทำนี้ไม่สามารถย้อนกลับได้`,
+      deleteFrequencyConfirm: (label: string) =>
+        `ลบความถี่ "${label}"? การกระทำนี้ไม่สามารถย้อนกลับได้`,
+      unitChangeConfirm: (name: string, n: number, from: string, to: string) =>
+        `"${name}" มีใบสั่งยา ${n} ใบที่บันทึกปริมาณเป็น ${from} การเปลี่ยนหน่วยเป็น ${to} จะเปลี่ยนความหมายของปริมาณยาทุกใบ — ตัวเลขยังคงเดิม ดำเนินการต่อ?`,
+      mergeConfirm: (from: string, into: string, n: number) =>
+        `รวม "${from}" เข้ากับ "${into}"? ใบสั่งยา ${n} ใบจะย้ายไปยัง "${into}" และ "${from}" จะถูกลบ การกระทำนี้ไม่สามารถย้อนกลับได้`,
+      mergeFrequencyConfirm: (from: string, into: string, n: number, target: string) =>
+        `รวม "${from}" เข้ากับ "${into}" (${target})? ใบสั่งยา ${n} ใบจะย้ายไป และ "${from}" จะถูกลบ การกระทำนี้ไม่สามารถย้อนกลับได้`,
+      createdMedication: (name: string) => `เพิ่มยา "${name}" แล้ว`,
+      createdFrequency: (label: string) => `เพิ่มความถี่ "${label}" แล้ว`,
+      errors: {
+        nameRequired: "กรุณากรอกชื่อ",
+        unitInvalid: "กรุณาเลือกหน่วย",
+        labelRequired: "กรุณากรอกชื่อ",
+        hasPrescriptions: (n: number) =>
+          `ยานี้อยู่ในใบสั่งยา ${n} ใบ จึงลบไม่ได้ — ใบสั่งยาเป็นส่วนหนึ่งของประวัติการรักษาของสัตว์ ให้รวมเข้ากับยาอื่นแทน`,
+        frequencyHasPrescriptions: (n: number) =>
+          `ความถี่นี้อยู่ในใบสั่งยา ${n} ใบ จึงลบไม่ได้ ให้รวมเข้ากับความถี่อื่นแทน`,
+        notFound: "ไม่พบยา",
+        mergeSelf: "กรุณาเลือกยาอื่นเพื่อรวม",
+        mergeUnitMismatch:
+          "ยาทั้งสองต้องใช้หน่วยเดียวกัน — ปริมาณยาที่ย้ายไปยังคงตัวเลขเดิม จึงต้องคงความหมายเดิมด้วย",
+        mergeFailed: "รวมไม่สำเร็จ",
       },
     },
     contacts: {
@@ -812,9 +921,9 @@ const th: Dictionary = {
     addNewFrequency: "+ เพิ่มความถี่ใหม่…",
     newFrequencyLabel: "ความถี่ใหม่",
     newFrequencyPlaceholder: "เช่น ทุก 6 ชั่วโมง",
-    newFrequencyDosesPerDay: "จำนวนครั้งต่อวัน",
-    newFrequencyDosesPerDayHint:
-      "ไม่บังคับ — วันละสองครั้งคือ 2, ทุก 8 ชั่วโมงคือ 3, วันเว้นวันคือ 0.5 เว้นว่างไว้สำหรับ \"เมื่อจำเป็น\"",
+    newFrequencySchedule: "ตารางเวลา",
+    newFrequencyScheduleHint:
+      "วันละกี่ครั้ง หรือหนึ่งโดสทุกกี่วัน / สัปดาห์ / เดือน นับจากวันเริ่ม จำนวนเต็มเท่านั้น",
     chooseExistingFrequency: "เลือกความถี่ที่มีอยู่แทน",
     startDate: "วันที่เริ่ม",
     endDate: "วันที่สิ้นสุด",
@@ -831,7 +940,6 @@ const th: Dictionary = {
       newMedicationName: "กรอกชื่อยาใหม่",
       newMedicationUnit: "เลือกหน่วยวัดของยาใหม่",
       newFrequencyLabel: "กรอกชื่อความถี่ใหม่",
-      dosesPerDayPositive: "จำนวนครั้งต่อวันต้องเป็นตัวเลขที่มากกว่าศูนย์",
       dosePositive: "ขนาดยาต้องเป็นตัวเลขที่มากกว่าศูนย์",
       enterStartDate: "กรอกวันที่เริ่ม",
       invalidStartDate: "วันที่เริ่มไม่ถูกต้อง",
