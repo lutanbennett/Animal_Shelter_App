@@ -12,7 +12,7 @@ const inputClass =
 export function CreateContactForm() {
   const [state, formAction, pending] = useActionState(createContact, undefined);
   const { t } = useI18n();
-  const f = t.admin.contacts.createForm;
+  const f = t.management.contacts.createForm;
 
   return (
     <form

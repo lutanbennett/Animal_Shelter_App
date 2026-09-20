@@ -16,7 +16,7 @@ const inputClass =
  *
  * Only contacts of type Carer are offered (loadCarerOptions) — volunteers,
  * suppliers and donors share the table but can't be given a resident.
- * Inline creation stays alongside /admin/contacts so that staff standing
+ * Inline creation stays alongside /management/contacts so that staff standing
  * with a new foster carer can record the placement without an admin.
  */
 export function CarerPicker({

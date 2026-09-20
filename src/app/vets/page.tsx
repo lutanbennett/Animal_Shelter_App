@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { canManage } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import {
@@ -69,9 +70,9 @@ export default async function VetsPage() {
           </h1>
           <p className="text-sm text-muted">{t.vets.pageSubtitle}</p>
         </div>
-        {roleResult.data === "admin" && (
+        {canManage(roleResult.data) && (
           <Link
-            href="/admin/vets"
+            href="/management/vets"
             className="shrink-0 text-sm font-medium text-primary hover:underline"
           >
             {t.vets.manageInAdmin}

@@ -26,7 +26,7 @@ const inputClass =
 
 function ContactRowItem({ contact }: { contact: ContactRow }) {
   const { t } = useI18n();
-  const c = t.admin.contacts;
+  const c = t.management.contacts;
   const [name, setName] = useState(contact.name);
   const [type, setType] = useState<ContactType>(contact.type);
   const [phone, setPhone] = useState(contact.phone ?? "");
@@ -320,7 +320,7 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
 
 export function ContactsTable({ contacts }: { contacts: ContactRow[] }) {
   const { t } = useI18n();
-  const h = t.admin.contacts.table;
+  const h = t.management.contacts.table;
 
   return (
     <div className="overflow-x-auto rounded border border-border">

@@ -11,7 +11,13 @@ import { getT } from "@/lib/i18n/get-t";
 export async function assertPhotoWriteAccess() {
   const supabase = await createClient();
   const { data: role } = await supabase.rpc("current_user_role");
-  if (role !== "admin" && role !== "staff" && role !== "vet" && role !== "volunteer") {
+  if (
+    role !== "admin" &&
+    role !== "management" &&
+    role !== "staff" &&
+    role !== "vet" &&
+    role !== "volunteer"
+  ) {
     const { t } = await getT();
     throw new Error(t.photos.errors.notAuthorized);
   }

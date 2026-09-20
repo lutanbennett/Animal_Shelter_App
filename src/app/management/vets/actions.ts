@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { assertAdminRole } from "@/lib/auth/require-admin";
+import { assertManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 
@@ -22,7 +22,7 @@ function optional(value: FormDataEntryValue | string | null | undefined) {
 }
 
 function revalidateVetPages(id?: string) {
-  revalidatePath("/admin/vets");
+  revalidatePath("/management/vets");
   revalidatePath("/vets");
   if (id) revalidatePath(`/vets/${id}`);
 }
@@ -31,11 +31,11 @@ export async function createVet(
   _state: VetFormState,
   formData: FormData,
 ): Promise<VetFormState> {
-  await assertAdminRole();
+  await assertManagementRole();
   const { t } = await getT();
 
   const name = optional(formData.get("name"));
-  if (!name) return { error: t.admin.vets.errors.nameRequired };
+  if (!name) return { error: t.management.vets.errors.nameRequired };
 
   const supabase = await createClient();
   const { error } = await supabase.from("vets").insert({
@@ -47,15 +47,15 @@ export async function createVet(
   if (error) return { error: error.message };
 
   revalidateVetPages();
-  return { success: t.admin.vets.createdVet(name) };
+  return { success: t.management.vets.createdVet(name) };
 }
 
 export async function updateVet(id: string, fields: VetFields) {
-  await assertAdminRole();
+  await assertManagementRole();
   const { t } = await getT();
 
   const name = optional(fields.name);
-  if (!name) throw new Error(t.admin.vets.errors.nameRequired);
+  if (!name) throw new Error(t.management.vets.errors.nameRequired);
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -72,7 +72,7 @@ export async function updateVet(id: string, fields: VetFields) {
 }
 
 export async function deleteVet(id: string) {
-  await assertAdminRole();
+  await assertManagementRole();
   const { t } = await getT();
 
   const supabase = await createClient();
@@ -86,7 +86,7 @@ export async function deleteVet(id: string) {
     .eq("vet_id", id);
   if (countError) throw new Error(countError.message);
   if (count && count > 0) {
-    throw new Error(t.admin.vets.errors.hasVisits(count));
+    throw new Error(t.management.vets.errors.hasVisits(count));
   }
 
   const { error } = await supabase.from("vets").delete().eq("id", id);

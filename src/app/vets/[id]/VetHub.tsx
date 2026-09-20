@@ -46,13 +46,13 @@ export function VetHub({
   vet,
   visits,
   linked,
-  isAdmin,
+  canManage,
   now,
 }: {
   vet: Vet;
   visits: VetHubVisit[];
   linked: LinkedRecords;
-  isAdmin: boolean;
+  canManage: boolean;
   /** Server-computed timestamp (ISO string) — avoids calling Date.now() during render. */
   now: string;
 }) {
@@ -162,9 +162,9 @@ export function VetHub({
           ) : (
             <p className="text-sm text-muted">{t.vets.hub.noContact}</p>
           )}
-          {isAdmin && (
+          {canManage && (
             <Link
-              href="/admin/vets"
+              href="/management/vets"
               className="text-xs font-medium text-primary hover:underline"
             >
               {t.vets.manageInAdmin}

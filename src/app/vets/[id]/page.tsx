@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { canManage } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import {
   VetHub,
@@ -65,7 +66,7 @@ export default async function VetPage(props: PageProps<"/vets/[id]">) {
         bloodTests: bloodTestsResult.data ?? [],
         prescriptions: prescriptionsResult.data ?? [],
       }}
-      isAdmin={roleResult.data === "admin"}
+      canManage={canManage(roleResult.data)}
       now={new Date().toISOString()}
     />
   );

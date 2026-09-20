@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { canManage } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { CONTACT_COLUMNS, type Contact } from "@/lib/contacts/contacts";
 import { ContactHub, type CarerPlacement } from "./ContactHub";
@@ -38,7 +39,7 @@ export default async function ContactPage(props: PageProps<"/contacts/[id]">) {
     <ContactHub
       contact={contact}
       placements={placementsResult.data ?? []}
-      isAdmin={roleResult.data === "admin"}
+      canManage={canManage(roleResult.data)}
     />
   );
 }

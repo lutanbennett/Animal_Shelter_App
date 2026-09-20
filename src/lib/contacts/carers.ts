@@ -16,7 +16,7 @@ export type CarerOption = {
  * sorted by name. Only Carer contacts are offered because
  * placement_history_check_carer_type rejects any other type (0001) — a
  * volunteer or supplier in the same table is never a candidate. Changing
- * someone's type to Carer is done on /admin/contacts.
+ * someone's type to Carer is done on /management/contacts.
  */
 export async function loadCarerOptions(supabase: SupabaseClient) {
   const { data, error } = await supabase

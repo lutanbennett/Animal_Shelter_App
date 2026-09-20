@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { assertAdminRole } from "@/lib/auth/require-admin";
+import { assertManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import {
@@ -32,7 +32,7 @@ function optional(value: FormDataEntryValue | string | null | undefined) {
 }
 
 function revalidateContactPages(id?: string) {
-  revalidatePath("/admin/contacts");
+  revalidatePath("/management/contacts");
   revalidatePath("/contacts");
   if (id) revalidatePath(`/contacts/${id}`);
 }
@@ -41,13 +41,13 @@ export async function createContact(
   _state: ContactFormState,
   formData: FormData,
 ): Promise<ContactFormState> {
-  await assertAdminRole();
+  await assertManagementRole();
   const { t } = await getT();
 
   const name = optional(formData.get("name"));
-  if (!name) return { error: t.admin.contacts.errors.nameRequired };
+  if (!name) return { error: t.management.contacts.errors.nameRequired };
   const type = formData.get("type");
-  if (!isContactType(type)) return { error: t.admin.contacts.errors.invalidType };
+  if (!isContactType(type)) return { error: t.management.contacts.errors.invalidType };
 
   const supabase = await createClient();
   const { error } = await supabase.from("contacts").insert({
@@ -64,7 +64,7 @@ export async function createContact(
   if (error) return { error: error.message };
 
   revalidateContactPages();
-  return { success: t.admin.contacts.createdContact(name) };
+  return { success: t.management.contacts.createdContact(name) };
 }
 
 /** placement_history rows naming this contact as carer, any status. */
@@ -81,13 +81,13 @@ async function countPlacements(
 }
 
 export async function updateContact(id: string, fields: ContactFields) {
-  await assertAdminRole();
+  await assertManagementRole();
   const { t } = await getT();
 
   const name = optional(fields.name);
-  if (!name) throw new Error(t.admin.contacts.errors.nameRequired);
+  if (!name) throw new Error(t.management.contacts.errors.nameRequired);
   if (!isContactType(fields.type)) {
-    throw new Error(t.admin.contacts.errors.invalidType);
+    throw new Error(t.management.contacts.errors.invalidType);
   }
 
   const supabase = await createClient();
@@ -99,7 +99,7 @@ export async function updateContact(id: string, fields: ContactFields) {
   if (fields.type !== CARER_CONTACT_TYPE) {
     const placements = await countPlacements(supabase, id);
     if (placements > 0) {
-      throw new Error(t.admin.contacts.errors.typeLockedByPlacements(placements));
+      throw new Error(t.management.contacts.errors.typeLockedByPlacements(placements));
     }
   }
 
@@ -122,7 +122,7 @@ export async function updateContact(id: string, fields: ContactFields) {
 }
 
 export async function deleteContact(id: string) {
-  await assertAdminRole();
+  await assertManagementRole();
   const { t } = await getT();
 
   const supabase = await createClient();
@@ -132,7 +132,7 @@ export async function deleteContact(id: string) {
   // the way rather than surfacing the foreign-key error.
   const placements = await countPlacements(supabase, id);
   if (placements > 0) {
-    throw new Error(t.admin.contacts.errors.hasPlacements(placements));
+    throw new Error(t.management.contacts.errors.hasPlacements(placements));
   }
   const { count: jobs, error: jobsError } = await supabase
     .from("maintenance")
@@ -140,7 +140,7 @@ export async function deleteContact(id: string) {
     .eq("assigned_to", id);
   if (jobsError) throw new Error(jobsError.message);
   if (jobs && jobs > 0) {
-    throw new Error(t.admin.contacts.errors.hasMaintenance(jobs));
+    throw new Error(t.management.contacts.errors.hasMaintenance(jobs));
   }
 
   const { error } = await supabase.from("contacts").delete().eq("id", id);

@@ -11,6 +11,7 @@ export function CreateUserForm() {
   const ROLES = [
     { value: "staff", label: t.admin.security.roles.staff },
     { value: "admin", label: t.admin.security.roles.admin },
+    { value: "management", label: t.admin.security.roles.management },
     { value: "vet", label: t.admin.security.roles.vet },
     { value: "volunteer", label: t.admin.security.roles.volunteer },
   ];

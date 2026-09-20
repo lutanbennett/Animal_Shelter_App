@@ -8,7 +8,7 @@ import { getT } from "@/lib/i18n/get-t";
 
 export type SecurityFormState = { error: string } | { success: string } | undefined;
 
-const VALID_ROLES = ["admin", "staff", "vet", "volunteer"] as const;
+const VALID_ROLES = ["admin", "management", "staff", "vet", "volunteer"] as const;
 
 export async function createUser(
   _state: SecurityFormState,

@@ -48,7 +48,7 @@ export type ReturnToShelterResult = { error: string } | { ok: true };
  * ReturnToShelter — the same boundary as hospital placements
  * (docs/decisions.md, "Volunteer tier").
  */
-export const REHOME_ROLES = new Set(["admin", "staff"]);
+export const REHOME_ROLES = new Set(["admin", "management", "staff"]);
 
 const KIND_ENCLOSURE: Record<RehomeKind, string> = {
   foster: FOSTERED_ENCLOSURE,

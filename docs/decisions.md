@@ -6,6 +6,71 @@ Section 11, plus decisions made during setup that aren't in the original doc.
 
 ## Confirmed
 
+- **Management role and dashboard (2026-09-21):** a fifth `app_role`,
+  `management`, sits between admin and staff. In the database it is
+  *exactly* staff — 0039 copies every `staff_*` policy in `pg_policies`
+  as a `management_*` twin (with a count check so the two can't drift)
+  and re-creates the four security-definer functions that keep their own
+  role list (`record_attachment`, `set_resident_profile_photo`,
+  `delete_resident_photo`, `record_deceased_archive`) with management
+  added. The enum value is its own file (0038) because Postgres won't use
+  a new enum value in the transaction that added it, and
+  `apply-migrations.mjs` runs each file as one transaction — so 0039
+  can't be dry-run until 0038 is committed. What management gets beyond
+  staff lives in the app: `requireManagementUser()` /
+  `assertManagementRole()` / `canManage()` in
+  `src/lib/auth/require-management.ts` gate the **Management** nav
+  section (admin is a superset and sees it too), which holds
+  `/management/dashboard`, `/management/contacts` and `/management/vets`
+  — contact and vet management moved out of Admin (the old URLs
+  redirect). The split the user asked for: Admin is system configuration
+  (security, website, zones, enclosures, immunization types); Management
+  is operational management. Vets is the one place management has *more*
+  than staff: staff only read `vets`, so 0040 swaps the mirrored read-only
+  twin for a read/write policy (same policy count, so 0039's check still
+  holds). Every app-side staff check (`DECEASED_ROLES`,
+  `HOSPITAL_ROLES`, `REHOME_ROLES`, `MOVE_ROLES`, `canWriteMaintenance`,
+  `canWriteProjects`, resident edit, photo write access) now includes
+  management. A management RLS probe (fake `auth.users` row + JWT claims
+  inside `begin … rollback`) confirmed reads on residents / placements /
+  visits, CRUD on contacts, and no access to `user_roles`,
+  `site_content` writes or blood-test inserts.
+
+  **The dashboard** (`src/app/management/dashboard`, numbers in
+  `src/lib/management/report.ts` as pure functions, same shape as
+  `src/lib/vets/stats.ts`) reproduces the shelter's hand-made monthly
+  report so it can replace it, one card per line with the names as links:
+  intakes, adopted, fostered (split into *new this month* and *continuing
+  from before* — the report's "Mangkut – continued"), died, sent to
+  hospital, returned to shelter, blood work, vet visits, procedures by
+  type; a resident appearing twice shows as "Name (2)". Two of the
+  report's distinctions don't exist in the data and are **derived**:
+  *initial vs follow-up vet visit* is whether the visit is the resident's
+  earliest non-cancelled visit on record (an extra query fetches the
+  earlier visits of just the animals seen that month), and *blood work
+  "MW" vs "vet visit"* is whether the test is linked to a
+  `vet_appointment_id` — labelled "in-house" / "at vet visit" pending
+  confirmation of what MW means (backlog). Above the month is a "right
+  now" strip (in care = Resident + Hospitalised + Fostered, with a species
+  breakdown; in shelter / hospital / fostered / outreach; ready for
+  adoption with how many are public; scheduled vet visits in the next 7
+  days with overdue ones flagged; open maintenance with blocked flagged)
+  and below it a 12-month intakes / adoptions / deaths chart ending on the
+  selected month. The month is a `?month=YYYY-MM` search param with
+  prev / next links, so it's server-rendered and shareable. Every query
+  is bounded (the trend window, the month, open fosters, scheduled visits)
+  to stay under PostgREST's 1000-row cap; month boundaries for timestamp
+  columns are the server's local time (a follow-up, see backlog). Date
+  columns (`blood_tests.date`, `procedures.date`) are compared as text
+  so no time zone can shift them.
+
+  **Public stats:** the same migration adds `public_shelter_stats` — a
+  counts-only view granted to `anon` the way `public_resident_profiles`
+  is (0016/0025, writes revoked) — and `/` shows a three-tile strip
+  under the hero (animals in care, adopted this year with the last-7-days
+  figure, in vet care), closing the "Shelter impact stats" backlog item.
+  A failed query drops the strip rather than the page.
+
 - **Contacts management and the contact list (2026-09-20):**
   `/admin/contacts` is the admin CRUD page for the `contacts` table, the
   same shape as `/admin/vets`; `/contacts` and `/contacts/[id]` are the
