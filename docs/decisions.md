@@ -1082,6 +1082,34 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   encoded — no RLS change was needed. Nothing is public yet: `is_public`
   is stored but the "Our work" page (backlog, Public website) is where a
   `security_invoker`-free public view gets built, following 0025.
+- **In-app user manual (2026-09-21):** `/manual`, reachable from the
+  sidebar by every signed-in role (the proxy already gates it). The
+  user's brief was a first English draft "to get a feel for it", with
+  screenshots, knowing it will change as the app does — so the choices
+  optimise for cheap regeneration rather than polish.
+
+  **Content is data, not JSX.** `src/lib/manual/en.ts` is a typed tree
+  (sections → topics → steps / screenshot / callouts / roles) and
+  `src/app/manual/page.tsx` only lays it out. Editing the manual means
+  editing prose in one file, and a Thai edition later is a second file
+  of the same shape picked by locale — it is *not* in the i18n
+  dictionary, because paragraphs of prose would swamp the UI strings and
+  the Thai pass should wait until the screens settle. Only the nav label
+  (`nav.manual`) is translated today.
+
+  **Screenshots are generated, not hand-made.** `scripts/manual-screenshots.mjs`
+  drives the machine's installed Edge/Chrome through `playwright-core`
+  (no browser download) against the running dev server: it opens a
+  visible window on `/login`, waits for a person to sign in as an admin,
+  discovers a plain-status resident, an enclosure, vet, contact and
+  project folder from the lists, then captures every screen the manual
+  references into `public/manual/` (desktop 1280×800 at 1.5×, full-page
+  for forms; one phone capture with the drawer open; the public pages
+  from a signed-out context). The script never handles credentials, so
+  it needs no test-account plumbing and works against production later.
+  File names are the contract between the script and `en.ts`. The images
+  are committed so a fresh clone renders the manual; re-run the script
+  after a screen changes rather than retouching a PNG.
 
 ## Still open (from Section 11 of the requirements doc)
 

@@ -30,6 +30,7 @@ export function NavLinks({
     { href: "/projects", label: t.nav.projects },
     { href: "/vets", label: t.nav.vets },
     { href: "/contacts", label: t.nav.contacts },
+    { href: "/manual", label: t.nav.manual },
     // Operational management (reports, contacts) lives under Management;
     // Admin keeps the system-level configuration (security, website,
     // zones, enclosures, immunization types).

@@ -53,6 +53,7 @@ const th: Dictionary = {
     vets: "สัตวแพทย์",
     medications: "ยา",
     contacts: "ผู้ติดต่อ",
+    manual: "คู่มือการใช้งาน",
     menu: "เมนู",
     openMenu: "เปิดเมนู",
     closeMenu: "ปิดเมนู",

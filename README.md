@@ -200,9 +200,16 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
 - `src/lib/archive/` — the deceased resident archive: the summary PDF, the
   offline `index.html` index page written beside it in the resident's Drive
   folder, and the step that moves that folder to `Residents/Deceased/`.
+- `src/lib/manual/` — the in-app user manual's content (`en.ts`, English
+  only so far), rendered by `src/app/manual/page.tsx` at `/manual` for
+  every signed-in role. Its screenshots live in `public/manual/` and are
+  regenerated, not edited: `node scripts/manual-screenshots.mjs` opens the
+  machine's Edge/Chrome on the running dev server, waits for you to sign
+  in as an admin, and captures every screen the manual references.
 - `scripts/` — one-off tooling: `apply-migrations.mjs` (migration runner),
-  `check-public-views.mjs` (go-live check), the Google OAuth setup helpers,
-  and the deploy-time env stripper.
+  `check-public-views.mjs` (go-live check), `manual-screenshots.mjs`
+  (user-manual screenshots), the Google OAuth setup helpers, and the
+  deploy-time env stripper.
 - `docs/` — requirements, decisions log and backlog.
 - `CLAUDE.md` — the working rules for this repo (branching, migrations,
   finishing a feature). Written for Claude Code sessions, but they're the

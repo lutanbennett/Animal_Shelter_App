@@ -51,6 +51,7 @@ const en = {
     vets: "Vets",
     medications: "Medications",
     contacts: "Contacts",
+    manual: "User manual",
     menu: "Menu",
     openMenu: "Open menu",
     closeMenu: "Close menu",
