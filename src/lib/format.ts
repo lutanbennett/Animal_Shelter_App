@@ -122,3 +122,16 @@ export function formatBaht(amount: number, locale: Locale = "en") {
     maximumFractionDigits: 0,
   });
 }
+
+// Month-column labels for the visits-per-month chart: "Sep", with the year
+// added where a run of months crosses into a new one ("Jan 2027").
+export function formatMonth(
+  value: string | number | Date,
+  locale: Locale = "en",
+  withYear = false,
+) {
+  return new Date(value).toLocaleDateString(
+    DATE_LOCALE_TAG[locale],
+    withYear ? { month: "short", year: "numeric" } : { month: "short" },
+  );
+}
