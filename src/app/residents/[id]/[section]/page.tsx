@@ -7,6 +7,8 @@ import { appointmentStatusLabel } from "@/lib/i18n/enum-labels";
 import { PhotoUploader } from "@/components/PhotoUploader";
 import { PhotoGallery, type PhotoRow } from "@/components/PhotoGallery";
 import { BloodTestList, type BloodTestRow } from "@/components/BloodTestList";
+import { ActionLink } from "@/components/ActionLink";
+import { SECTION_ICONS, type HubSection } from "@/components/hub-icons";
 
 function Placeholder({ children }: { children: React.ReactNode }) {
   return (
@@ -46,6 +48,7 @@ export default async function ResidentSectionPage(
     t.residents.sections.titles as Record<string, string | undefined>
   )[section];
   if (!title) notFound();
+  const SectionIcon = SECTION_ICONS[section as HubSection];
 
   const supabase = await createClient();
 
@@ -164,12 +167,13 @@ export default async function ResidentSectionPage(
       body = (
         <div className="flex flex-col gap-4">
           <div className="flex justify-end">
-            <Link
+            <ActionLink
               href={`/immunizations/new?residentId=${id}`}
-              className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
-            >
-              {t.residents.sections.logImmunization}
-            </Link>
+              label={t.residents.sections.logImmunization}
+              icon={SECTION_ICONS.immunizations}
+              variant="primary"
+              iconOnlyOnMobile={false}
+            />
           </div>
           {missing && missing.length > 0 && (
             <div className="rounded-lg border border-danger/40 bg-danger/10 p-4 text-sm text-danger">
@@ -248,12 +252,13 @@ export default async function ResidentSectionPage(
       body = (
         <div className="flex flex-col gap-4">
           <div className="flex justify-end">
-            <Link
+            <ActionLink
               href={`/vet-visits/new?residentId=${id}`}
-              className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
-            >
-              {t.residents.sections.bookVetVisit}
-            </Link>
+              label={t.residents.sections.bookVetVisit}
+              icon={SECTION_ICONS["vet-appointments"]}
+              variant="primary"
+              iconOnlyOnMobile={false}
+            />
           </div>
           <RecordList
             rows={data ?? []}
@@ -424,12 +429,13 @@ export default async function ResidentSectionPage(
       body = (
         <div className="flex flex-col gap-4">
           <div className="flex justify-end">
-            <Link
+            <ActionLink
               href={`/blood-tests/new?residentId=${id}`}
-              className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
-            >
-              {t.residents.sections.logBloodTest}
-            </Link>
+              label={t.residents.sections.logBloodTest}
+              icon={SECTION_ICONS["blood-tests"]}
+              variant="primary"
+              iconOnlyOnMobile={false}
+            />
           </div>
           <BloodTestList residentId={id} bloodTests={bloodTests} />
         </div>
@@ -446,7 +452,12 @@ export default async function ResidentSectionPage(
       >
         {t.residents.sections.backTo(displayName)}
       </Link>
-      <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
+      <h1 className="flex items-center gap-3 text-2xl font-semibold text-foreground">
+        {SectionIcon && (
+          <SectionIcon aria-hidden="true" className="h-6 w-6 shrink-0 text-muted" />
+        )}
+        {title}
+      </h1>
       {body}
     </main>
   );

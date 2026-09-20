@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PawPrint } from "lucide-react";
+import { ActionLink } from "@/components/ActionLink";
+import { SECTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { statusLabel } from "@/lib/i18n/enum-labels";
 
@@ -68,56 +71,64 @@ export function ResidentsTable({ residents }: { residents: ResidentRow[] }) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-muted">
+        <p
+          className={`text-sm text-muted ${selected.size > 0 ? "" : "hidden md:block"}`}
+        >
           {selected.size > 0
             ? t.residents.list.selectedCount(selected.size)
             : t.residents.list.selectPrompt}
         </p>
-        <div className="flex gap-2">
-          <Link
+        <div className="ml-auto flex gap-2">
+          <ActionLink
             href={immunizationHref}
-            className="rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
-          >
-            {selected.size > 0
-              ? t.residents.list.logImmunizationsCount(selected.size)
-              : t.residents.list.logImmunizations}
-          </Link>
-          <Link
+            label={
+              selected.size > 0
+                ? t.residents.list.logImmunizationsCount(selected.size)
+                : t.residents.list.logImmunizations
+            }
+            icon={SECTION_ICONS.immunizations}
+          />
+          <ActionLink
             href={bookingHref}
-            className="rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
-          >
-            {selected.size > 0
-              ? t.residents.list.bookVetVisitCount(selected.size)
-              : t.residents.list.bookVetVisit}
-          </Link>
-          <Link
+            label={
+              selected.size > 0
+                ? t.residents.list.bookVetVisitCount(selected.size)
+                : t.residents.list.bookVetVisit
+            }
+            icon={SECTION_ICONS["vet-appointments"]}
+          />
+          <ActionLink
             href="/residents/new"
-            className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
-          >
-            {t.residents.list.newResident}
-          </Link>
+            label={t.residents.list.newResident}
+            icon={PawPrint}
+            variant="primary"
+          />
         </div>
       </div>
 
+      {/* Phones show only ID and name. The multi-select checkboxes and the
+          enclosure/zone/status/location columns are desktop-only: on a phone
+          several residents are picked from the forms themselves, and the
+          enclosure-centric views will cover the rest. */}
       <div className="overflow-x-auto rounded border border-border">
         <table className="w-full text-left text-sm">
           <thead className="bg-surface text-muted">
             <tr>
-              <th className="w-10 px-4 py-2" />
+              <th className="hidden w-10 px-4 py-2 md:table-cell" />
               <th className="px-4 py-2 font-medium">{t.residents.list.table.id}</th>
               <th className="px-4 py-2 font-medium">
                 {t.residents.list.table.resident}
               </th>
-              <th className="px-4 py-2 font-medium">
+              <th className="hidden px-4 py-2 font-medium md:table-cell">
                 {t.residents.list.table.enclosure}
               </th>
-              <th className="px-4 py-2 font-medium">
+              <th className="hidden px-4 py-2 font-medium md:table-cell">
                 {t.residents.list.table.zone}
               </th>
-              <th className="px-4 py-2 font-medium">
+              <th className="hidden px-4 py-2 font-medium md:table-cell">
                 {t.residents.list.table.status}
               </th>
-              <th className="px-4 py-2 font-medium">
+              <th className="hidden px-4 py-2 font-medium md:table-cell">
                 {t.residents.list.table.location}
               </th>
             </tr>
@@ -129,7 +140,7 @@ export function ResidentsTable({ residents }: { residents: ResidentRow[] }) {
                 onClick={(event) => openResident(event, resident.resident_id)}
                 className="cursor-pointer hover:bg-surface-hover"
               >
-                <td className="px-4 py-2">
+                <td className="hidden px-4 py-2 md:table-cell">
                   <input
                     type="checkbox"
                     checked={selected.has(resident.resident_id)}
@@ -149,18 +160,18 @@ export function ResidentsTable({ residents }: { residents: ResidentRow[] }) {
                     {fullName(resident)}
                   </Link>
                 </td>
-                <td className="px-4 py-2 text-muted">
+                <td className="hidden px-4 py-2 text-muted md:table-cell">
                   {resident.enclosure_name ?? t.common.dash}
                 </td>
-                <td className="px-4 py-2 text-muted">
+                <td className="hidden px-4 py-2 text-muted md:table-cell">
                   {resident.zone_name ?? t.common.dash}
                 </td>
-                <td className="px-4 py-2 text-muted">
+                <td className="hidden px-4 py-2 text-muted md:table-cell">
                   {resident.current_status
                     ? statusLabel(t, resident.current_status)
                     : t.common.dash}
                 </td>
-                <td className="px-4 py-2 text-muted">
+                <td className="hidden px-4 py-2 text-muted md:table-cell">
                   {resident.zone_internal === null
                     ? t.common.dash
                     : resident.zone_internal

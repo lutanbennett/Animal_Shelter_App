@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { StatCard, type StatCardTone } from "@/components/StatCard";
+import { HUB_TAB_ICONS, SECTION_ICONS } from "@/components/hub-icons";
 import { formatAge, formatDate } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -82,7 +83,7 @@ const STATUS_BADGE_CLASSES: Record<StatCardTone, string> = {
 };
 
 function tabButtonClass(active: boolean) {
-  return `flex-1 rounded px-3 py-2 text-sm font-medium transition ${
+  return `flex flex-1 items-center justify-center gap-2 rounded px-3 py-2 text-sm font-medium transition ${
     active
       ? "bg-primary text-primary-foreground"
       : "text-muted hover:text-foreground"
@@ -304,6 +305,7 @@ export function ResidentHub({
           onClick={() => setTab("info")}
           className={tabButtonClass(tab === "info")}
         >
+          <HUB_TAB_ICONS.info aria-hidden="true" className="h-4 w-4" />
           {t.residents.hub.overview}
         </button>
         <button
@@ -311,6 +313,7 @@ export function ResidentHub({
           onClick={() => setTab("medical")}
           className={tabButtonClass(tab === "medical")}
         >
+          <HUB_TAB_ICONS.medical aria-hidden="true" className="h-4 w-4" />
           {t.residents.hub.medical}
         </button>
       </div>
@@ -325,6 +328,7 @@ export function ResidentHub({
           <div className="grid grid-cols-2 gap-3">
             <StatCard
               title={t.residents.hub.housingStatus}
+              icon={SECTION_ICONS.housing}
               value={statusLabel(t, currentStatus)}
               detail={housingDetail}
               tone={housingTone}
@@ -332,6 +336,7 @@ export function ResidentHub({
             />
             <StatCard
               title={t.residents.hub.photos}
+              icon={SECTION_ICONS.photos}
               value={`${photoCount}`}
               detail={t.residents.hub.photosDetail}
               tone="neutral"
@@ -369,6 +374,7 @@ export function ResidentHub({
           <div className="grid grid-cols-2 gap-3">
             <StatCard
               title={t.residents.hub.immunizations}
+              icon={SECTION_ICONS.immunizations}
               value={immunizationValue}
               detail={immunizationDetail}
               tone={immunizationTone}
@@ -380,6 +386,7 @@ export function ResidentHub({
             />
             <StatCard
               title={t.residents.hub.vetAppointments}
+              icon={SECTION_ICONS["vet-appointments"]}
               value={vetValue}
               detail={vetDetail}
               tone={vetTone}
@@ -391,6 +398,7 @@ export function ResidentHub({
             />
             <StatCard
               title={t.residents.hub.prescriptions}
+              icon={SECTION_ICONS.prescriptions}
               value={t.residents.hub.prescriptionsActive(activePrescriptions.length)}
               detail={prescriptionDetail}
               tone={prescriptionTone}
@@ -398,6 +406,7 @@ export function ResidentHub({
             />
             <StatCard
               title={t.residents.hub.weight}
+              icon={SECTION_ICONS.weight}
               value={weightValue}
               detail={weightDetail}
               tone="neutral"
@@ -405,6 +414,7 @@ export function ResidentHub({
             />
             <StatCard
               title={t.residents.hub.procedures}
+              icon={SECTION_ICONS.procedures}
               value={`${procedures.length}`}
               detail={
                 latestProcedure
@@ -419,6 +429,7 @@ export function ResidentHub({
             />
             <StatCard
               title={t.residents.hub.bloodTests}
+              icon={SECTION_ICONS["blood-tests"]}
               value={`${bloodTests.length}`}
               detail={
                 latestBloodTest

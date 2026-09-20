@@ -15,6 +15,8 @@ Each item is a self-contained prompt for a new thread. Tick when done. Ordered b
 ## Mobile
 
 - [x] **Collapsible mobile navigation.** Replace the fixed `w-48` sidebar in `src/app/NavLinks.tsx` / `layout.tsx` with a hamburger-toggled drawer below the `md` breakpoint so phones don't show only the nav bar.
+- [x] **Icon-based mobile hub and residents list.** Hub stat cards, tabs and action buttons use lucide icons (`src/components/hub-icons.ts`, `ActionLink.tsx`); the phone residents list shows only ID + name with no checkboxes or zone/enclosure filters.
+- [ ] **Browse residents by enclosure.** New mobile-friendly views to navigate zone → enclosure → residents (replacing the desktop-only zone/enclosure filters and extra columns that are hidden on phones in `src/app/residents/`).
 - [ ] **Mobile responsiveness sweep.** Go through every screen (residents list, resident hub, forms, admin pages, login) at phone width and fix layout, table overflow, and spacing so it feels professional in portrait.
 
 ## Resident operations

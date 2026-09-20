@@ -55,7 +55,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
       </h1>
 
       <form className="flex flex-wrap items-end gap-3" method="get">
-        <div className="flex flex-col gap-1">
+        <div className="flex min-w-0 flex-1 flex-col gap-1 md:flex-none">
           <label htmlFor="q" className="text-sm font-medium text-muted">
             {t.residents.list.search}
           </label>
@@ -64,10 +64,12 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
             name="q"
             defaultValue={q}
             placeholder={t.residents.list.searchPlaceholder}
-            className="w-64 rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40 md:w-64"
           />
         </div>
-        <div className="flex flex-col gap-1">
+        {/* Zone / enclosure filters are desktop-only; phones will get dedicated
+            enclosure views instead. */}
+        <div className="hidden flex-col gap-1 md:flex">
           <label htmlFor="zone" className="text-sm font-medium text-muted">
             {t.residents.list.zone}
           </label>
@@ -85,7 +87,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
             ))}
           </select>
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="hidden flex-col gap-1 md:flex">
           <label
             htmlFor="enclosure"
             className="text-sm font-medium text-muted"
