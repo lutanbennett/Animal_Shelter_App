@@ -6,6 +6,37 @@ Section 11, plus decisions made during setup that aren't in the original doc.
 
 ## Confirmed
 
+- **Contacts management and the contact list (2026-09-20):**
+  `/admin/contacts` is the admin CRUD page for the `contacts` table, the
+  same shape as `/admin/vets`; `/contacts` and `/contacts/[id]` are the
+  read side, open to every signed-in role (all four already had SELECT on
+  `contacts` and `placement_history`). The two halves are deliberately
+  different in feel: admin is a desktop table for setting people up, the
+  list is a phone tool — search box and type chips pinned at the top,
+  cards with a row of one-tap actions (call, LINE, email, open in maps)
+  that are plain links with the schemes the phone hands off to its apps
+  (`tel:`, `mailto:`, `https://line.me/ti/p/~<id>` as assumed in Section
+  11 item 5, `google.com/maps/search/?api=1&query=…`), so they work with
+  no JavaScript and on desktop just open the web equivalents. Maps needed
+  somewhere to point at, so 0036 adds a free-text `address` column; a
+  pasted maps link is used as-is, anything else goes in as a search
+  query. The hub lists the residents currently with a carer (open
+  `placement_history` rows with that `carer_id`) and their earlier
+  placements, linking into the resident hub — it does not assign anyone.
+  Placing a resident stays on the resident hub's Foster / adopt page, and
+  the carer picker there now says why only Carer-type contacts appear
+  (the table also holds volunteers, suppliers and donors, and
+  `placement_history_check_carer_type` rejects any of them). Two guards
+  mirror that trigger from the admin side: a contact with placements
+  can't be deleted (no cascade on `carer_id`, and the rows are the
+  residents' history) and can't have its type changed away from Carer,
+  since the trigger only fires when a placement is written and would
+  otherwise leave history pointing at a non-carer; a contact assigned to
+  a maintenance job can't be deleted either. `Vendor` is labelled
+  "Supplier" in the UI — the stored value is unchanged. The inline
+  "add a new carer" on the rehome form stays, so staff can record a
+  placement with a brand-new carer without an admin.
+
 - **Vets management and the vet hub (2026-09-20):** `/admin/vets` is the
   admin CRUD page for the `vets` table, same shape as the other admin
   lookups. Deleting a vet is refused (server-side, and the button is

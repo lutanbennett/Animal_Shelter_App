@@ -162,6 +162,10 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
 - `src/lib/vets/` — the vet hub's statistics: period filtering, monthly
   buckets and per-animal roll-ups over a vet's appointment rows, shared
   by the `/vets` list and `/vets/[id]`.
+- `src/lib/contacts/` — the contacts vocabulary (`contact_type`), the
+  one-tap link builders (`tel:`, LINE, `mailto:`, maps) used by the
+  `/contacts` list and hub, and the Carer-only loader behind the resident
+  hub's foster / adopt picker.
 - `src/lib/maintenance/` — the enclosure maintenance feature's shared
   pieces: status vocabulary and colours, the job loader, and the
   after-change Drive folder sync used by the server actions.
