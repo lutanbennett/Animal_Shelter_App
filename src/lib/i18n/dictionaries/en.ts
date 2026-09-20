@@ -30,6 +30,7 @@ const en = {
 
   header: {
     appName: "Lanna Care for Animals",
+    shortName: "LCA",
     signOut: "Sign out",
   },
 
@@ -41,6 +42,9 @@ const en = {
     enclosures: "Enclosures",
     zones: "Zones",
     immunizationTypes: "Immunization Types",
+    menu: "Menu",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
   },
 
   home: {

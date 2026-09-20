@@ -32,6 +32,7 @@ const th: Dictionary = {
 
   header: {
     appName: "Lanna Care for Animals",
+    shortName: "LCA",
     signOut: "ออกจากระบบ",
   },
 
@@ -43,6 +44,9 @@ const th: Dictionary = {
     enclosures: "กรง",
     zones: "โซน",
     immunizationTypes: "ประเภทวัคซีน",
+    menu: "เมนู",
+    openMenu: "เปิดเมนู",
+    closeMenu: "ปิดเมนู",
   },
 
   home: {

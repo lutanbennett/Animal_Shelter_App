@@ -14,7 +14,7 @@ Each item is a self-contained prompt for a new thread. Tick when done. Ordered b
 
 ## Mobile
 
-- [ ] **Collapsible mobile navigation.** Replace the fixed `w-48` sidebar in `src/app/NavLinks.tsx` / `layout.tsx` with a hamburger-toggled drawer below the `md` breakpoint so phones don't show only the nav bar.
+- [x] **Collapsible mobile navigation.** Replace the fixed `w-48` sidebar in `src/app/NavLinks.tsx` / `layout.tsx` with a hamburger-toggled drawer below the `md` breakpoint so phones don't show only the nav bar.
 - [ ] **Mobile responsiveness sweep.** Go through every screen (residents list, resident hub, forms, admin pages, login) at phone width and fix layout, table overflow, and spacing so it feels professional in portrait.
 
 ## Resident operations
