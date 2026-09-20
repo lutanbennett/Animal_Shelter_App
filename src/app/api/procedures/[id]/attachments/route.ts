@@ -69,7 +69,7 @@ export async function POST(
   const { data: procedure, error: procedureError } = await supabase
     .from("procedures")
     .select(
-      "id, date, procedure_types(name), residents(id, name, animal_code, drive_folder_id)",
+      "id, date, procedure_types(name), residents(id, name, resident_code, drive_folder_id)",
     )
     .eq("id", procedureId)
     .limit(1)
@@ -81,7 +81,7 @@ export async function POST(
         residents: {
           id: string;
           name: string;
-          animal_code: string;
+          resident_code: string;
           drive_folder_id: string | null;
         } | null;
       }[]

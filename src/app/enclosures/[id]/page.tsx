@@ -48,7 +48,7 @@ export default async function EnclosurePage(
     residentIds.length > 0
       ? await supabase
           .from("residents")
-          .select("id, name, thai_name, animal_code, profile_photo_drive_file_id")
+          .select("id, name, thai_name, resident_code, profile_photo_drive_file_id")
           .in("id", residentIds)
           .order("name")
           .returns<EnclosureResident[]>()

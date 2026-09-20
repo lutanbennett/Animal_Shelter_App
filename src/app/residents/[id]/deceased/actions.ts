@@ -23,7 +23,7 @@ function revalidateResident(residentId: string) {
   revalidatePath(`/residents/${residentId}`, "layout");
   // Occupancy on the enclosure browser and both enclosure hubs changes too.
   revalidatePath("/enclosures", "layout");
-  // The animal drops off the public adoption pages.
+  // The resident drops off the public adoption pages.
   revalidatePath("/adopt", "layout");
   revalidatePath("/");
 }

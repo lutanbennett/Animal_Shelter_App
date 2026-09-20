@@ -29,7 +29,7 @@ export default async function EditResidentPage(
     supabase
       .from("residents")
       .select(
-        "id, name, animal_code, thai_name, other_names, species, breed, sex, estimated_age_years, age_estimated_on, bio, temperament_notes, past_story_notes, behaviour_notes, profile_photo_drive_file_id, ready_for_adoption, is_public_visible",
+        "id, name, resident_code, thai_name, other_names, species, breed, sex, estimated_age_years, age_estimated_on, bio, temperament_notes, past_story_notes, behaviour_notes, profile_photo_drive_file_id, ready_for_adoption, is_public_visible",
       )
       .eq("id", id)
       .limit(1)
@@ -98,7 +98,7 @@ export default async function EditResidentPage(
         <h1 className="text-2xl font-semibold text-foreground">
           {t.residents.edit.pageTitle(displayName)}{" "}
           <span className="text-lg font-normal text-muted">
-            ({resident.animal_code})
+            ({resident.resident_code})
           </span>
         </h1>
         <p className="text-sm text-muted">{t.residents.edit.pageSubtitle}</p>

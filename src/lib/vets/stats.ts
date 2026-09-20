@@ -2,7 +2,7 @@
  * Vet visit statistics, shared by the `/vets` list and the vet hub. Pure
  * functions over the appointment rows: the shelter books a few hundred
  * visits a year at most, so every row for a vet is loaded once and the
- * period filter, monthly buckets and per-animal roll-ups are all computed
+ * period filter, monthly buckets and per-resident roll-ups are all computed
  * from that one list rather than re-queried per period.
  */
 
@@ -93,7 +93,7 @@ export type ResidentVisitSummary = {
   reasons: string[];
 };
 
-/** One row per animal the vet saw, most recently seen first. */
+/** One row per resident the vet saw, most recently seen first. */
 export function visitsByResident(visits: VetVisit[]): ResidentVisitSummary[] {
   const byResident = new Map<string, ResidentVisitSummary>();
   const newestFirst = [...visits].sort((a, b) =>

@@ -388,8 +388,8 @@ const DECEASED_ARCHIVE_FOLDER = "Deceased";
  * "<Name> (<ID>)" — the per-resident folder name staff already know.
  * Slashes can't appear in a Drive path segment, so they become hyphens.
  */
-function residentFolderName(resident: { name: string; animal_code: string }): string {
-  return `${resident.name.trim().replace(/\//g, "-")} (${resident.animal_code})`;
+function residentFolderName(resident: { name: string; resident_code: string }): string {
+  return `${resident.name.trim().replace(/\//g, "-")} (${resident.resident_code})`;
 }
 
 /**
@@ -401,7 +401,7 @@ function residentFolderName(resident: { name: string; animal_code: string }): st
  */
 async function ensureResidentFolder(
   drive: DriveClient,
-  resident: { name: string; animal_code: string; drive_folder_id: string | null },
+  resident: { name: string; resident_code: string; drive_folder_id: string | null },
 ): Promise<{ residentFolderId: string; isNewResidentFolder: boolean }> {
   const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
   if (!rootId) {
@@ -428,7 +428,7 @@ async function ensureResidentFolder(
  */
 export async function ensureResidentPhotosFolder(
   drive: DriveClient,
-  resident: { name: string; animal_code: string; drive_folder_id: string | null },
+  resident: { name: string; resident_code: string; drive_folder_id: string | null },
   category: string,
   yymm: string,
 ): Promise<{ residentFolderId: string; uploadFolderId: string; isNewResidentFolder: boolean }> {
@@ -450,7 +450,7 @@ export async function ensureResidentPhotosFolder(
  */
 export async function ensureResidentBloodTestFolder(
   drive: DriveClient,
-  resident: { name: string; animal_code: string; drive_folder_id: string | null },
+  resident: { name: string; resident_code: string; drive_folder_id: string | null },
   yyyymmdd: string,
 ): Promise<{ residentFolderId: string; uploadFolderId: string; isNewResidentFolder: boolean }> {
   const { residentFolderId, isNewResidentFolder } = await ensureResidentFolder(drive, resident);
@@ -478,7 +478,7 @@ export function procedureFolderName(typeName: string, yyyymmdd: string): string 
  */
 export async function ensureResidentProcedureFolder(
   drive: DriveClient,
-  resident: { name: string; animal_code: string; drive_folder_id: string | null },
+  resident: { name: string; resident_code: string; drive_folder_id: string | null },
   folderName: string,
 ): Promise<{ residentFolderId: string; uploadFolderId: string; isNewResidentFolder: boolean }> {
   const { residentFolderId, isNewResidentFolder } = await ensureResidentFolder(drive, resident);
@@ -630,7 +630,7 @@ export async function syncMaintenanceJobFolder(
 
 /**
  * Moves a resident's folder from `Residents/` to `Residents/Deceased/`,
- * creating either folder (and the resident's own, for an animal that never
+ * creating either folder (and the resident's own, for a resident that never
  * had a file uploaded) if it doesn't exist yet.
  *
  * A Drive move re-parents the folder rather than copying it, so the folder —
@@ -645,7 +645,7 @@ export async function syncMaintenanceJobFolder(
  */
 export async function moveResidentFolderToDeceasedArchive(
   drive: DriveClient,
-  resident: { name: string; animal_code: string; drive_folder_id: string | null },
+  resident: { name: string; resident_code: string; drive_folder_id: string | null },
 ): Promise<{ residentFolderId: string; archiveFolderId: string; alreadyArchived: boolean }> {
   const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
   if (!rootId) {

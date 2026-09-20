@@ -66,7 +66,7 @@ const th: Dictionary = {
     readyHeading: "พร้อมพบกับทุกตัวหรือยัง?",
     readySubtitle:
       "ดูสัตว์ในความดูแลและสัตว์ที่พร้อมรับเลี้ยงของเรา — ไม่ต้องมีบัญชีผู้ใช้",
-    browseAnimals: "ดูสัตว์ของเรา",
+    browseResidents: "ดูสัตว์ของเรา",
     footerOrgName: "มูลนิธิ Lanna Care for Animals",
     stats: {
       heading: "ภาพรวมศูนย์พักพิง",
@@ -658,7 +658,7 @@ const th: Dictionary = {
     manageInAdmin: "แก้ไขข้อมูลสัตวแพทย์ในหน้าการจัดการ",
     list: {
       visits: "การเข้าพบ",
-      animals: "สัตว์",
+      residents: "สัตว์",
       lastVisit: "ครั้งล่าสุด",
       upcoming: (n: number) => `กำลังจะถึง ${n} รายการ`,
       overdue: (n: number) => `เลยกำหนด ${n} รายการ`,
@@ -679,8 +679,8 @@ const th: Dictionary = {
       visitsDetail: (period: string) => `การเข้าพบที่เกิดขึ้น · ${period}`,
       visitsDetailCancelled: (period: string, cancelled: number) =>
         `${period} · ยกเลิก ${cancelled} รายการ ไม่นับรวม`,
-      animalsSeen: "สัตว์ที่เข้าพบ",
-      noAnimals: "ไม่มีการเข้าพบในช่วงนี้",
+      residentsSeen: "สัตว์ที่เข้าพบ",
+      noResidents: "ไม่มีการเข้าพบในช่วงนี้",
       schedule: "นัดหมาย",
       upcoming: (n: number) => `กำลังจะถึง ${n} รายการ`,
       overdue: (n: number) => `เลยกำหนด ${n} รายการ`,
@@ -700,10 +700,10 @@ const th: Dictionary = {
         ariaLabel: (months: number) =>
           `จำนวนการเข้าพบสัตวแพทย์ต่อเดือนในช่วง ${months} เดือนล่าสุด`,
       },
-      animalsHeading: "สัตว์ที่เข้าพบ",
-      noAnimalsInPeriod: "ไม่มีสัตว์เข้าพบสัตวแพทย์นี้ในช่วงนี้",
+      residentsHeading: "สัตว์ที่เข้าพบ",
+      noResidentsInPeriod: "ไม่มีสัตว์เข้าพบสัตวแพทย์นี้ในช่วงนี้",
       table: {
-        animal: "สัตว์",
+        resident: "สัตว์",
         visits: "ครั้ง",
         lastVisit: "ครั้งล่าสุด",
         reasons: "เหตุผล",

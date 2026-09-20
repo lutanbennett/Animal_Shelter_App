@@ -58,17 +58,17 @@ const en = {
 
   home: {
     staffLogin: "Staff & Volunteer Login",
-    browseGuest: "Browse Our Animals as a Guest",
+    browseGuest: "Browse Our Residents as a Guest",
     welcomeHeading: "Welcome to Lanna Care for Animals",
     ourStoryFallback: "Our story",
     readyHeading: "Ready to meet everyone?",
     readySubtitle:
-      "Browse our current residents and adoptable animals — no account needed.",
-    browseAnimals: "Browse Our Animals",
+      "Browse our current and adoptable residents — no account needed.",
+    browseResidents: "Browse Our Residents",
     footerOrgName: "Lanna Care for Animals Foundation",
     stats: {
       heading: "The shelter at a glance",
-      inCare: "Animals in our care",
+      inCare: "Residents in our care",
       inCareDetail: "At the shelter, in hospital or with foster carers right now",
       adoptedThisYear: "Adopted this year",
       adoptedThisYearDetail: (lastWeek: number) =>
@@ -437,7 +437,7 @@ const en = {
     medications: {
       title: "Medications",
       subtitle:
-        "The list of medications staff and vets pick from when writing a prescription. The dose, how often and for how long are set on each prescription for that animal; this page is the product list. Rename one, fix its unit, or merge a duplicate into the one to keep — its prescriptions move with it. A medication that has ever been prescribed can't be deleted: the prescription is part of the resident's medical record.",
+        "The list of medications staff and vets pick from when writing a prescription. The dose, how often and for how long are set on each prescription for that resident; this page is the product list. Rename one, fix its unit, or merge a duplicate into the one to keep — its prescriptions move with it. A medication that has ever been prescribed can't be deleted: the prescription is part of the resident's medical record.",
       couldntLoad: "Couldn't load medications",
       couldntLoadFrequencies: "Couldn't load frequencies",
       couldntLoadUsage: "Couldn't load prescription counts",
@@ -624,7 +624,7 @@ const en = {
   vetVisits: {
     pageTitle: "Book Vet Visit",
     pageSubtitle:
-      "Log a vet appointment — upcoming, or retrospective for a visit (including an emergency) that already happened. Select multiple residents to book one visit for several animals at once.",
+      "Log a vet appointment — upcoming, or retrospective for a visit (including an emergency) that already happened. Select multiple residents to book one visit for several at once.",
     couldntLoadResidents: "Couldn't load residents",
     couldntLoadVets: "Couldn't load vets",
     residentsLabel: "Residents",
@@ -660,7 +660,7 @@ const en = {
     manageInAdmin: "Edit vet details in Management",
     list: {
       visits: "Visits",
-      animals: "Animals",
+      residents: "Residents",
       lastVisit: "Last visit",
       upcoming: (n: number) => `${n} upcoming`,
       overdue: (n: number) => `${n} overdue`,
@@ -681,8 +681,8 @@ const en = {
       visitsDetail: (period: string) => `Completed visits · ${period.toLowerCase()}`,
       visitsDetailCancelled: (period: string, cancelled: number) =>
         `${period} · ${cancelled} cancelled not counted`,
-      animalsSeen: "Animals seen",
-      noAnimals: "No visits in this period",
+      residentsSeen: "Residents seen",
+      noResidents: "No visits in this period",
       schedule: "Scheduled",
       upcoming: (n: number) => `${n} upcoming`,
       overdue: (n: number) => `${n} overdue`,
@@ -701,10 +701,10 @@ const en = {
         visits: (n: number) => `${n} visit${n === 1 ? "" : "s"}`,
         ariaLabel: (months: number) => `Vet visits per month over the last ${months} months`,
       },
-      animalsHeading: "Animals seen",
-      noAnimalsInPeriod: "No animals were seen by this vet in this period.",
+      residentsHeading: "Residents seen",
+      noResidentsInPeriod: "No residents were seen by this vet in this period.",
       table: {
-        animal: "Animal",
+        resident: "Resident",
         visits: "Visits",
         lastVisit: "Last visit",
         reasons: "Reasons",
@@ -772,7 +772,7 @@ const en = {
     pageSubtitle:
       "Record a blood test for this resident and attach the lab scan or PDF — one or more files per test.",
     noResidentSelected:
-      "Open this from a resident's Blood Tests tab or a vet appointment so the test is logged against the right animal.",
+      "Open this from a resident's Blood Tests tab or a vet appointment so the test is logged against the right resident.",
     residentNotFound: "Resident not found.",
     couldntLoadVetAppointments: "Couldn't load vet appointments",
     forResident: (name: string) => `For ${name}`,
@@ -810,7 +810,7 @@ const en = {
     pageSubtitle:
       "Record a weight reading for this resident. Every reading builds the trend on the Weight tab, so weigh at intake, at each vet visit and whenever condition changes.",
     noResidentSelected:
-      "Open this from a resident's Weight tab or a vet appointment so the reading is logged against the right animal.",
+      "Open this from a resident's Weight tab or a vet appointment so the reading is logged against the right resident.",
     residentNotFound: "Resident not found.",
     couldntLoadVetAppointments: "Couldn't load vet appointments",
     forResident: (name: string) => `For ${name}`,
@@ -851,7 +851,7 @@ const en = {
     pageSubtitle:
       "Record a procedure for this resident — an X-ray, ultrasound, teeth cleaning, spay/neuter — and attach the images or paperwork that came with it.",
     noResidentSelected:
-      "Open this from a resident's Procedures tab or a vet appointment so the procedure is logged against the right animal.",
+      "Open this from a resident's Procedures tab or a vet appointment so the procedure is logged against the right resident.",
     residentNotFound: "Resident not found.",
     couldntLoadTypes: "Couldn't load procedure types",
     couldntLoadVetAppointments: "Couldn't load vet appointments",
@@ -901,7 +901,7 @@ const en = {
     pageSubtitle:
       "Record a medication for this resident: what, how much, how often and for how long. Ongoing prescriptions count toward the shelter's daily medication requirement until they end.",
     noResidentSelected:
-      "Open this from a resident's Prescriptions tab or a vet appointment so the prescription is recorded against the right animal.",
+      "Open this from a resident's Prescriptions tab or a vet appointment so the prescription is recorded against the right resident.",
     residentNotFound: "Resident not found.",
     couldntLoadMedications: "Couldn't load medications",
     couldntLoadFrequencies: "Couldn't load frequencies",
@@ -955,7 +955,7 @@ const en = {
     new: {
       pageTitle: "Resident Intake",
       pageSubtitle:
-        "Register a new animal arriving at the shelter. This creates the resident record and its opening placement record in one step.",
+        "Register a new resident arriving at the shelter. This creates the resident record and its opening placement record in one step.",
       couldntLoadZones: "Couldn't load zones",
       couldntLoadEnclosures: "Couldn't load enclosures",
       couldntLoadOrigins: "Couldn't load origins",
@@ -987,7 +987,7 @@ const en = {
         intakeNotesPlaceholder:
           "e.g. found as a stray near..., surrendered by owner, rescued with litter of 4",
         readyForAdoption:
-          "Ready for adoption (also publishes them on the public adoptable-animals page)",
+          "Ready for adoption (also publishes them on the public adoptable-residents page)",
         bio: "Bio",
         temperament: "Temperament",
         pastStory: "Past story",
@@ -1014,7 +1014,7 @@ const en = {
       clear: "Clear",
       couldntLoad: "Couldn't load residents",
       selectedCount: (n: number) => `${n} selected`,
-      selectPrompt: "Select residents to act on several animals at once.",
+      selectPrompt: "Select residents to act on several at once.",
       logImmunizations: "Log immunizations",
       logImmunizationsCount: (n: number) => `Log immunizations (${n})`,
       bookVetVisit: "Book vet visit",
@@ -1375,7 +1375,7 @@ const en = {
     edit: {
       pageTitle: (name: string) => `Edit ${name}`,
       pageSubtitle:
-        "Update identity, bio, adoption details and where the animal is housed.",
+        "Update identity, bio, adoption details and where the resident is housed.",
       couldntLoadPhotos: "Couldn't load photos",
       sections: {
         photo: "Profile photo",
@@ -1756,15 +1756,15 @@ const en = {
     adoptNav: "Adopt",
     ourWorkNav: "Our work",
     staffLogin: "Staff & Volunteer Login",
-    pageTitle: "Meet Our Animals",
+    pageTitle: "Meet Our Residents",
     pageSubtitle:
-      "You're browsing as a guest — this is a read-only, public view of the animals we've made visible for adoption and outreach. Staff and volunteers see much more after signing in.",
-    couldntLoad: "Couldn't load animals",
-    noneListed: "No animals are listed publicly right now — check back soon.",
+      "You're browsing as a guest — this is a read-only, public view of the residents we've made visible for adoption and outreach. Staff and volunteers see much more after signing in.",
+    couldntLoad: "Couldn't load residents",
+    noneListed: "No residents are listed publicly right now — check back soon.",
     noPhoto: "No photo yet",
     availableForAdoption: "Available for Adoption",
     detailsComingSoon: "Details coming soon",
-    backToAll: "← Back to all animals",
+    backToAll: "← Back to all residents",
     about: (name: string) => `About ${name}`,
     temperament: "Temperament",
     theirStory: "Their story",

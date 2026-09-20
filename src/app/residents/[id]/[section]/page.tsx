@@ -330,7 +330,7 @@ export default async function ResidentSectionPage(
             vets: { name: string } | null;
           }[]
         >();
-      // A visit can end with the animal admitted; offer that on each record
+      // A visit can end with the resident admitted; offer that on each record
       // unless they're already in hospital, adopted out, or gone.
       const canSendToHospital = availablePlacementActions(
         isDeceased ? "Deceased" : residentState?.current_status,

@@ -24,7 +24,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   let residentsQuery = supabase
     .from("resident_list_view")
     .select(
-      "resident_id, name, animal_code, thai_name, other_names, current_status, enclosure_id, enclosure_name, zone_id, zone_name, zone_internal",
+      "resident_id, name, resident_code, thai_name, other_names, current_status, enclosure_id, enclosure_name, zone_id, zone_name, zone_internal",
     )
     .order("name");
 

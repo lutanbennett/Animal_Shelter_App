@@ -112,7 +112,7 @@ export const VET_ICONS = {
   clinic: Building2,
   contact: Phone,
   visits: Stethoscope,
-  animals: PawPrint,
+  residents: PawPrint,
   upcoming: CalendarClock,
   procedures: SECTION_ICONS.procedures,
   bloodTests: SECTION_ICONS["blood-tests"],

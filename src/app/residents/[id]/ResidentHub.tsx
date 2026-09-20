@@ -30,7 +30,7 @@ import { statusLabel, speciesLabel, sexLabel } from "@/lib/i18n/enum-labels";
 export type Resident = {
   id: string;
   name: string;
-  animal_code: string;
+  resident_code: string;
   thai_name: string | null;
   other_names: string | null;
   species: string | null;
@@ -214,7 +214,7 @@ export function ResidentHub({
     icon: PLACEMENT_ICONS[key],
   }));
 
-  // Nothing can be added to a dead animal's medical record — the database
+  // Nothing can be added to a dead resident's medical record — the database
   // rejects it (migration 0026), so the buttons that would try are dropped
   // rather than left to fail.
   const medicalActions = (actions: StatCardAction[]) =>
@@ -329,7 +329,7 @@ export function ResidentHub({
                 {displayName}
               </h1>
               <span className="rounded-full bg-surface-hover px-2 py-0.5 text-xs font-medium text-muted">
-                {resident.animal_code}
+                {resident.resident_code}
               </span>
               {/* A dead resident's record is read-only, in the database as
                   well as here (migration 0026), so neither edit nor

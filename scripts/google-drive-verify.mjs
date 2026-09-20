@@ -52,7 +52,7 @@ const testFile = await drive.files.create({
   },
   media: {
     mimeType: "text/plain",
-    body: "Google Drive auth test from Animal Shelter App setup.",
+    body: "Google Drive auth test from the Lanna Care for Animals app setup.",
   },
   fields: "id, name, webViewLink",
 });

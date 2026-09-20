@@ -95,7 +95,7 @@ export type ResidentArchiveRecord = {
     name: string;
     thaiName: string | null;
     otherNames: string | null;
-    animalCode: string;
+    residentCode: string;
     species: string | null;
     breed: string | null;
     sex: string | null;
@@ -180,7 +180,7 @@ type ResidentRow = {
   name: string;
   thai_name: string | null;
   other_names: string | null;
-  animal_code: string;
+  resident_code: string;
   species: string | null;
   breed: string | null;
   sex: string | null;
@@ -296,7 +296,7 @@ export async function loadResidentArchiveRecord(
     supabase
       .from("residents")
       .select(
-        "id, name, thai_name, other_names, animal_code, species, breed, sex, estimated_age_years, age_estimated_on, intake_date, bio, temperament_notes, past_story_notes, behaviour_notes, profile_photo_drive_file_id, group_origins(name, date)",
+        "id, name, thai_name, other_names, resident_code, species, breed, sex, estimated_age_years, age_estimated_on, intake_date, bio, temperament_notes, past_story_notes, behaviour_notes, profile_photo_drive_file_id, group_origins(name, date)",
       )
       .eq("id", residentId)
       .limit(1)
@@ -406,7 +406,7 @@ export async function loadResidentArchiveRecord(
       name: residentRow.name,
       thaiName: residentRow.thai_name,
       otherNames: residentRow.other_names,
-      animalCode: residentRow.animal_code,
+      residentCode: residentRow.resident_code,
       species: residentRow.species,
       breed: residentRow.breed,
       sex: residentRow.sex,

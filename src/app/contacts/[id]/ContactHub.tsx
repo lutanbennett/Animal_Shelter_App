@@ -23,7 +23,7 @@ export type CarerPlacement = {
     id: string;
     name: string;
     thai_name: string | null;
-    animal_code: string;
+    resident_code: string;
     species: string | null;
     profile_photo_drive_file_id: string | null;
   } | null;
@@ -157,7 +157,7 @@ export function ContactHub({
                         <div className="flex min-w-0 flex-1 flex-col">
                           <span className="truncate font-medium text-foreground">{name}</span>
                           <span className="truncate text-xs text-muted">
-                            {[p.residents?.animal_code, speciesLabel(t, p.residents?.species)]
+                            {[p.residents?.resident_code, speciesLabel(t, p.residents?.species)]
                               .filter(Boolean)
                               .join(" · ")}
                           </span>
@@ -201,7 +201,7 @@ export function ContactHub({
                           <span className="truncate font-medium text-foreground">{name}</span>
                           <span className="truncate text-xs text-muted">
                             {placementTypeLabel(t, p.placement_type)}
-                            {p.residents?.animal_code && ` · ${p.residents.animal_code}`}
+                            {p.residents?.resident_code && ` · ${p.residents.resident_code}`}
                           </span>
                         </div>
                         <span className="shrink-0 whitespace-nowrap text-xs text-muted">

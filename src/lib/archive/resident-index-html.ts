@@ -10,7 +10,7 @@ import type {
  * This is the archival strategy's endgame: once a resident's folder is
  * pulled off Google Drive onto the shelter's local disk (to keep Drive
  * storage free for current residents), the folder still has to be usable on
- * its own. Opening this file gives the whole animal back — their details,
+ * its own. Opening this file gives the whole resident back — their details,
  * their medical history, and every photo and scan in the folder, rendered
  * as a page rather than a directory listing.
  *
@@ -237,7 +237,7 @@ export function renderResidentIndexHtml(
   const displayName = resident.thaiName
     ? `${resident.name} (${resident.thaiName})`
     : resident.name;
-  const title = `${resident.name} (${resident.animalCode})`;
+  const title = `${resident.name} (${resident.residentCode})`;
 
   const profilePhoto = record.photos.find((photo) => photo.isProfilePhoto);
   const heroImage =
@@ -276,7 +276,7 @@ export function renderResidentIndexHtml(
         <h1>${esc(displayName)}</h1>
         <p class="sub">${esc(
           join([
-            resident.animalCode,
+            resident.residentCode,
             resident.species,
             resident.breed,
             resident.sex,
@@ -313,7 +313,7 @@ export function renderResidentIndexHtml(
       "Details",
       `<dl class="fields">
         ${fieldRow("Name", resident.name)}
-        ${fieldRow("Animal ID", resident.animalCode)}
+        ${fieldRow("Resident ID", resident.residentCode)}
         ${fieldRow("Thai name", resident.thaiName)}
         ${fieldRow("Other names", resident.otherNames)}
         ${fieldRow("Species", resident.species)}
