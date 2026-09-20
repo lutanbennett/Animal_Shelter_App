@@ -309,6 +309,33 @@ const th: Dictionary = {
     },
   },
 
+  frequency: {
+    kind: "รูปแบบการให้ยา",
+    kinds: {
+      perDay: "จำนวนครั้งต่อวัน",
+      interval: "ทุก…",
+      asNeeded: "เมื่อจำเป็น",
+    },
+    dosesPerDay: "ครั้งต่อวัน",
+    timesADay: "ครั้ง/วัน",
+    everyWord: "ทุก",
+    intervalCount: "ช่วงห่าง",
+    intervalUnit: "วัน สัปดาห์ หรือเดือน",
+    unitPlural: { day: "วัน", week: "สัปดาห์", month: "เดือน" },
+    perDay: (n: number) => (n === 1 ? "วันละครั้ง" : `วันละ ${n} ครั้ง`),
+    every: (n: number, unit: "day" | "week" | "month") => {
+      const names = { day: "วัน", week: "สัปดาห์", month: "เดือน" };
+      return n === 1 ? `ทุก${names[unit]}` : `ทุก ${n} ${names[unit]}`;
+    },
+    asNeeded: "เมื่อจำเป็น",
+    errors: {
+      kindInvalid: "กรุณาเลือกว่าให้ยาบ่อยแค่ไหน",
+      dosesPerDayWhole: "จำนวนครั้งต่อวันต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป",
+      intervalCountWhole: "ช่วงห่างต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป",
+      intervalUnitInvalid: "กรุณาเลือกวัน สัปดาห์ หรือเดือน",
+    },
+  },
+
   management: {
     errors: {
       managementAccessRequired: "ต้องมีสิทธิ์ระดับผู้บริหาร",
@@ -410,14 +437,14 @@ const th: Dictionary = {
     medications: {
       title: "ยา",
       subtitle:
-        "รายการยาและความถี่ในการให้ยาที่เจ้าหน้าที่และสัตวแพทย์เลือกตอนเขียนใบสั่งยา เปลี่ยนชื่อ แก้หน่วยหรือจำนวนครั้งต่อวัน หรือรวมรายการซ้ำเข้ากับรายการที่ต้องการเก็บไว้ได้ — ใบสั่งยาจะย้ายตามไปด้วย ยาที่เคยถูกสั่งแล้วลบไม่ได้ เพราะใบสั่งยาเป็นส่วนหนึ่งของประวัติการรักษาของสัตว์",
+        "รายการยาที่เจ้าหน้าที่และสัตวแพทย์เลือกตอนเขียนใบสั่งยา ปริมาณ ความถี่ และระยะเวลาจะกำหนดในใบสั่งยาของสัตว์แต่ละตัว หน้านี้คือรายการผลิตภัณฑ์ เปลี่ยนชื่อ แก้หน่วย หรือรวมรายการซ้ำเข้ากับรายการที่ต้องการเก็บไว้ได้ — ใบสั่งยาจะย้ายตามไปด้วย ยาที่เคยถูกสั่งแล้วลบไม่ได้ เพราะใบสั่งยาเป็นส่วนหนึ่งของประวัติการรักษาของสัตว์",
       couldntLoad: "โหลดข้อมูลยาไม่สำเร็จ",
       couldntLoadFrequencies: "โหลดข้อมูลความถี่ไม่สำเร็จ",
       couldntLoadUsage: "โหลดจำนวนใบสั่งยาไม่สำเร็จ",
-      couldntLoadRequirement: "โหลดปริมาณการใช้วันนี้ไม่สำเร็จ",
-      frequenciesHeading: "ความถี่",
+      couldntLoadForecast: "โหลดการคาดการณ์ไม่สำเร็จ",
+      frequenciesHeading: "ตัวเลือกความถี่",
       frequenciesIntro:
-        "ให้ยาบ่อยแค่ไหน จำนวนครั้งต่อวันคือตัวคูณของปริมาณที่ต้องใช้ต่อวัน (วันละ 2 ครั้ง = 2, วันเว้นวัน = 0.5) เว้นว่างไว้สำหรับความถี่ที่คิดต่อวันไม่ได้ เช่น \"เมื่อจำเป็น\"",
+        "ตัวเลือก \"บ่อยแค่ไหน\" ที่แบบฟอร์มใบสั่งยาให้เลือก — วันละ 2 ครั้ง, ทุกสัปดาห์, ทุกเดือน… ชื่อคือสิ่งที่เจ้าหน้าที่เห็น ส่วนตารางเวลาคือสิ่งที่การคาดการณ์ใช้นับ: วันละกี่ครั้ง หรือหนึ่งโดสทุกกี่วัน/สัปดาห์/เดือน เริ่มจากวันเริ่มใบสั่งยา \"เมื่อจำเป็น\" คาดการณ์ไม่ได้",
       createForm: {
         name: "ชื่อ",
         namePlaceholder: "เช่น Amoxicillin 250mg เม็ด",
@@ -428,27 +455,27 @@ const th: Dictionary = {
       frequencyForm: {
         label: "ชื่อ",
         labelPlaceholder: "เช่น ทุก 8 ชั่วโมง",
-        dosesPerDay: "ครั้งต่อวัน",
-        dosesPerDayPlaceholder: "เช่น 3",
-        dosesPerDayHint: "ว่าง = คาดการณ์ต่อวันไม่ได้ (เมื่อจำเป็น)",
+        schedule: "ตารางเวลา",
+        scheduleHint: "จำนวนเต็มเท่านั้น — ยาเม็ดรายสัปดาห์คือหนึ่งโดสทุก 1 สัปดาห์ ไม่ใช่เศษส่วนต่อวัน",
         addButton: "เพิ่มความถี่",
       },
       table: {
         name: "ชื่อ",
         unit: "หน่วย",
-        currentUseHeading: "ใช้อยู่วันนี้",
-        currentUse: (residents: number, perDay: number, unit: string) =>
-          `สัตว์ ${residents} ตัว · ${perDay} ${unit}/วัน`,
-        noneCurrent: "ไม่มีใบสั่งยาที่ใช้อยู่",
+        forecastHeading: (days: number) => `${days} วันข้างหน้า`,
+        forecastQuantity: (quantity: number, unit: string) => `${quantity} ${unit}`,
+        forecastDetail: (doses: number, residents: number) =>
+          `${doses} โดส · สัตว์ ${residents} ตัว`,
+        noneDue: "ไม่มีกำหนด",
+        forecastNote:
+          "นับจากวันนี้ สำหรับสัตว์ที่ยังมีชีวิตและอยู่กับศูนย์พักพิง: โดสของแต่ละใบสั่งยาในวันที่ถึงกำหนด — ยารายสัปดาห์นับจากวันเริ่ม ยาวันละ 2 ครั้งนับทุกวัน ใบสั่งยา \"เมื่อจำเป็น\" ไม่ถูกนับ",
         prescriptions: "ใบสั่งยา",
         prescriptionCount: (n: number) => `ใบสั่งยา ${n} ใบ`,
         noMedications: "ยังไม่มียา",
       },
       frequencyTable: {
         label: "ชื่อ",
-        dosesPerDay: "ครั้งต่อวัน",
-        perDay: (n: number) => `${n} ครั้ง/วัน`,
-        asNeeded: "เมื่อจำเป็น",
+        schedule: "ตารางเวลา",
         noFrequencies: "ยังไม่มีความถี่",
       },
       merge: {
@@ -460,7 +487,7 @@ const th: Dictionary = {
         hint:
           "ใบสั่งยาทุกใบของยานี้จะย้ายไปยังยาที่เลือก และรายการนี้จะถูกลบ แสดงเฉพาะยาที่ใช้หน่วยเดียวกัน เพื่อให้ปริมาณยายังคงความหมายเดิม",
         frequencyHint:
-          "ใบสั่งยาทุกใบที่ใช้ความถี่นี้จะย้ายไปยังความถี่ที่เลือก และรายการนี้จะถูกลบ ใบสั่งยาที่ย้ายจะใช้จำนวนครั้งต่อวันของความถี่ที่เก็บไว้",
+          "ใบสั่งยาทุกใบที่ใช้ความถี่นี้จะย้ายไปยังความถี่ที่เลือก และรายการนี้จะถูกลบ ใบสั่งยาที่ย้ายจะใช้ตารางเวลาของความถี่ที่เก็บไว้",
       },
       deleteConfirm: (name: string) => `ลบยา "${name}"? การกระทำนี้ไม่สามารถย้อนกลับได้`,
       deleteFrequencyConfirm: (label: string) =>
@@ -477,7 +504,6 @@ const th: Dictionary = {
         nameRequired: "กรุณากรอกชื่อ",
         unitInvalid: "กรุณาเลือกหน่วย",
         labelRequired: "กรุณากรอกชื่อ",
-        dosesPerDayPositive: "จำนวนครั้งต่อวันต้องเป็นตัวเลขบวก หรือเว้นว่าง",
         hasPrescriptions: (n: number) =>
           `ยานี้อยู่ในใบสั่งยา ${n} ใบ จึงลบไม่ได้ — ใบสั่งยาเป็นส่วนหนึ่งของประวัติการรักษาของสัตว์ ให้รวมเข้ากับยาอื่นแทน`,
         frequencyHasPrescriptions: (n: number) =>
@@ -895,9 +921,9 @@ const th: Dictionary = {
     addNewFrequency: "+ เพิ่มความถี่ใหม่…",
     newFrequencyLabel: "ความถี่ใหม่",
     newFrequencyPlaceholder: "เช่น ทุก 6 ชั่วโมง",
-    newFrequencyDosesPerDay: "จำนวนครั้งต่อวัน",
-    newFrequencyDosesPerDayHint:
-      "ไม่บังคับ — วันละสองครั้งคือ 2, ทุก 8 ชั่วโมงคือ 3, วันเว้นวันคือ 0.5 เว้นว่างไว้สำหรับ \"เมื่อจำเป็น\"",
+    newFrequencySchedule: "ตารางเวลา",
+    newFrequencyScheduleHint:
+      "วันละกี่ครั้ง หรือหนึ่งโดสทุกกี่วัน / สัปดาห์ / เดือน นับจากวันเริ่ม จำนวนเต็มเท่านั้น",
     chooseExistingFrequency: "เลือกความถี่ที่มีอยู่แทน",
     startDate: "วันที่เริ่ม",
     endDate: "วันที่สิ้นสุด",
@@ -914,7 +940,6 @@ const th: Dictionary = {
       newMedicationName: "กรอกชื่อยาใหม่",
       newMedicationUnit: "เลือกหน่วยวัดของยาใหม่",
       newFrequencyLabel: "กรอกชื่อความถี่ใหม่",
-      dosesPerDayPositive: "จำนวนครั้งต่อวันต้องเป็นตัวเลขที่มากกว่าศูนย์",
       dosePositive: "ขนาดยาต้องเป็นตัวเลขที่มากกว่าศูนย์",
       enterStartDate: "กรอกวันที่เริ่ม",
       invalidStartDate: "วันที่เริ่มไม่ถูกต้อง",

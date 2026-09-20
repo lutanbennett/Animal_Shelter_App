@@ -2,13 +2,16 @@
 
 import { Fragment, useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import {
+  FrequencyScheduleFields,
+  scheduleToFields,
+} from "@/components/FrequencyScheduleFields";
+import { describeSchedule, type FrequencySchedule } from "@/lib/prescriptions/frequency";
 import { deleteFrequency, mergeFrequency, updateFrequency } from "./actions";
 
-export type FrequencyRow = {
+export type FrequencyRow = FrequencySchedule & {
   id: string;
   label: string;
-  /** Null = can't be expressed per day ("as needed"), so it isn't forecast. */
-  doses_per_day: number | null;
   /** Every prescription that uses it — any at all blocks delete. */
   prescription_count: number;
 };
@@ -18,10 +21,6 @@ const inputClass =
 
 const smallButton =
   "rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50";
-
-function toInput(value: number | null) {
-  return value == null ? "" : String(value);
-}
 
 function FrequencyRowItem({
   frequency,
@@ -33,7 +32,7 @@ function FrequencyRowItem({
   const { t } = useI18n();
   const m = t.management.medications;
   const [label, setLabel] = useState(frequency.label);
-  const [dosesPerDay, setDosesPerDay] = useState(toInput(frequency.doses_per_day));
+  const [schedule, setSchedule] = useState(() => scheduleToFields(frequency));
   const [mode, setMode] = useState<"view" | "edit" | "merge">("view");
   const [mergeInto, setMergeInto] = useState("");
   const [message, setMessage] = useState<
@@ -43,7 +42,7 @@ function FrequencyRowItem({
 
   function reset() {
     setLabel(frequency.label);
-    setDosesPerDay(toInput(frequency.doses_per_day));
+    setSchedule(scheduleToFields(frequency));
     setMergeInto("");
     setMode("view");
   }
@@ -56,16 +55,14 @@ function FrequencyRowItem({
   }
 
   function describe(row: FrequencyRow) {
-    return row.doses_per_day == null
-      ? m.frequencyTable.asNeeded
-      : m.frequencyTable.perDay(row.doses_per_day);
+    return describeSchedule(t, row);
   }
 
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
       try {
-        await updateFrequency(frequency.id, { label, dosesPerDay });
+        await updateFrequency(frequency.id, { label, schedule });
         setMode("view");
         setMessage({ type: "success", text: t.common.saved });
       } catch (err) {
@@ -129,15 +126,11 @@ function FrequencyRowItem({
         </td>
         <td className="px-4 py-2">
           {editing ? (
-            <input
-              type="number"
-              min="0.001"
-              step="any"
-              inputMode="decimal"
-              value={dosesPerDay}
-              onChange={(e) => setDosesPerDay(e.target.value)}
-              placeholder={m.frequencyTable.asNeeded}
-              className={`${inputClass} min-w-28`}
+            <FrequencyScheduleFields
+              value={schedule}
+              onChange={setSchedule}
+              compact
+              idPrefix={`frequency-${frequency.id}`}
             />
           ) : (
             <span className="text-muted">{describe(frequency)}</span>
@@ -269,7 +262,7 @@ export function FrequenciesTable({ frequencies }: { frequencies: FrequencyRow[] 
         <thead className="bg-surface text-muted">
           <tr>
             <th className="px-4 py-2 font-medium">{m.frequencyTable.label}</th>
-            <th className="px-4 py-2 font-medium">{m.frequencyTable.dosesPerDay}</th>
+            <th className="px-4 py-2 font-medium">{m.frequencyTable.schedule}</th>
             <th className="px-4 py-2 font-medium">{m.table.prescriptions}</th>
             <th className="px-4 py-2 font-medium" />
           </tr>

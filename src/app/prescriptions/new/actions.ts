@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { DOSE_UNITS, type DoseUnit } from "@/lib/i18n/enum-labels";
+import { parseSchedule, type FrequencySchedule } from "@/lib/prescriptions/frequency";
 
 export type PrescriptionFormState = { error: string } | undefined;
 
@@ -65,18 +66,21 @@ export async function createPrescription(
     return { error: t.prescriptions.errors.newMedicationUnit };
   }
 
-  // Frequency: optional; an existing id, or a new label (+ doses per day).
+  // Frequency: optional; an existing id, or a new label + schedule (0044:
+  // times a day, every N days/weeks/months, or as needed).
   let frequencyId = str(formData, "frequencyId");
   const newFrequencyLabel = str(formData, "newFrequencyLabel");
-  const dosesPerDayRaw = str(formData, "newFrequencyDosesPerDay");
-  let dosesPerDay: number | null = null;
+  let newSchedule: FrequencySchedule | null = null;
   if (frequencyId === "__new__") frequencyId = null;
-  if (!frequencyId && dosesPerDayRaw) {
-    if (!newFrequencyLabel) return { error: t.prescriptions.errors.newFrequencyLabel };
-    dosesPerDay = Number(dosesPerDayRaw);
-    if (!Number.isFinite(dosesPerDay) || dosesPerDay <= 0) {
-      return { error: t.prescriptions.errors.dosesPerDayPositive };
-    }
+  if (!frequencyId && newFrequencyLabel) {
+    const parsed = parseSchedule({
+      kind: str(formData, "newFrequencyKind"),
+      dosesPerDay: str(formData, "newFrequencyDosesPerDay"),
+      intervalCount: str(formData, "newFrequencyIntervalCount"),
+      intervalUnit: str(formData, "newFrequencyIntervalUnit"),
+    });
+    if ("error" in parsed) return { error: t.frequency.errors[parsed.error] };
+    newSchedule = parsed.schedule;
   }
 
   const supabase = await createClient();
@@ -96,7 +100,7 @@ export async function createPrescription(
   if (!frequencyId && newFrequencyLabel) {
     const { data, error } = await supabase
       .from("frequency")
-      .insert({ label: newFrequencyLabel, doses_per_day: dosesPerDay })
+      .insert({ label: newFrequencyLabel, ...newSchedule })
       .select("id")
       .limit(1)
       .returns<{ id: string }[]>();

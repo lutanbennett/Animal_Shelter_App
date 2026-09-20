@@ -67,8 +67,7 @@ export default async function NewPrescriptionPage(
       .returns<MedicationOption[]>(),
     supabase
       .from("frequency")
-      .select("id, label, doses_per_day")
-      .order("doses_per_day", { ascending: false, nullsFirst: false })
+      .select("id, label, doses_per_day, interval_count, interval_unit")
       .order("label")
       .returns<FrequencyOption[]>(),
     supabase

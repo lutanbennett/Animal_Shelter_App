@@ -21,7 +21,7 @@ reasoning and the trade-offs that come with that.
 
 Five `app_role` values, enforced by row-level security
 (`supabase/migrations/0001_initial_schema.sql`, mirrored for management in
-`0039`, vets in `0040`, medications in `0043`) and assigned at `/admin/security`:
+`0039`, vets in `0040`, medications in `0043`/`0044`) and assigned at `/admin/security`:
 
 | Role | Access |
 |---|---|

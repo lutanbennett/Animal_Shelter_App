@@ -308,6 +308,34 @@ const en = {
     },
   },
 
+  /** How often a prescription is given — the frequency schedule (0044). */
+  frequency: {
+    kind: "Kind of schedule",
+    kinds: {
+      perDay: "Times a day",
+      interval: "Every…",
+      asNeeded: "As needed",
+    },
+    dosesPerDay: "Times a day",
+    timesADay: "× a day",
+    everyWord: "every",
+    intervalCount: "Interval",
+    intervalUnit: "Days, weeks or months",
+    unitPlural: { day: "day(s)", week: "week(s)", month: "month(s)" },
+    perDay: (n: number) => (n === 1 ? "Once a day" : `${n} × a day`),
+    every: (n: number, unit: "day" | "week" | "month") => {
+      const names = { day: "day", week: "week", month: "month" };
+      return n === 1 ? `Every ${names[unit]}` : `Every ${n} ${names[unit]}s`;
+    },
+    asNeeded: "As needed",
+    errors: {
+      kindInvalid: "Choose how often the medication is given.",
+      dosesPerDayWhole: "Times a day must be a whole number, 1 or more.",
+      intervalCountWhole: "The interval must be a whole number, 1 or more.",
+      intervalUnitInvalid: "Choose days, weeks or months.",
+    },
+  },
+
   management: {
     errors: {
       managementAccessRequired: "Management access is required.",
@@ -409,14 +437,14 @@ const en = {
     medications: {
       title: "Medications",
       subtitle:
-        "The medications and dosing frequencies staff and vets pick from when writing a prescription. Rename one, fix its unit or doses per day, or merge a duplicate into the one to keep — its prescriptions move with it. A medication that has ever been prescribed can't be deleted: the prescription is part of the resident's medical record.",
+        "The list of medications staff and vets pick from when writing a prescription. The dose, how often and for how long are set on each prescription for that animal; this page is the product list. Rename one, fix its unit, or merge a duplicate into the one to keep — its prescriptions move with it. A medication that has ever been prescribed can't be deleted: the prescription is part of the resident's medical record.",
       couldntLoad: "Couldn't load medications",
       couldntLoadFrequencies: "Couldn't load frequencies",
       couldntLoadUsage: "Couldn't load prescription counts",
-      couldntLoadRequirement: "Couldn't load today's usage",
-      frequenciesHeading: "Frequencies",
+      couldntLoadForecast: "Couldn't load the forecast",
+      frequenciesHeading: "Frequency options",
       frequenciesIntro:
-        "How often a dose is given. Doses per day is what the daily requirement multiplies by (twice daily = 2, every other day = 0.5); leave it blank for something that can't be expressed per day, like \"as needed\".",
+        "The \"how often\" choices the prescription form offers — Twice daily, Weekly, Monthly… The label is what staff see; the schedule is what the forecast counts: so many times a day, or one dose every so many days, weeks or months starting on the prescription's start date. \"As needed\" can't be forecast.",
       createForm: {
         name: "Name",
         namePlaceholder: "e.g. Amoxicillin 250mg tablet",
@@ -427,27 +455,27 @@ const en = {
       frequencyForm: {
         label: "Label",
         labelPlaceholder: "e.g. Every 8 hours",
-        dosesPerDay: "Doses per day",
-        dosesPerDayPlaceholder: "e.g. 3",
-        dosesPerDayHint: "Blank = can't be forecast per day (as needed)",
+        schedule: "Schedule",
+        scheduleHint: "Whole numbers only — a weekly tablet is one dose every 1 week, not a fraction a day.",
         addButton: "Add frequency",
       },
       table: {
         name: "Name",
         unit: "Unit",
-        currentUseHeading: "In use today",
-        currentUse: (residents: number, perDay: number, unit: string) =>
-          `${residents} resident${residents === 1 ? "" : "s"} · ${perDay} ${unit}/day`,
-        noneCurrent: "No current prescriptions",
+        forecastHeading: (days: number) => `Next ${days} days`,
+        forecastQuantity: (quantity: number, unit: string) => `${quantity} ${unit}`,
+        forecastDetail: (doses: number, residents: number) =>
+          `${doses} dose${doses === 1 ? "" : "s"} · ${residents} resident${residents === 1 ? "" : "s"}`,
+        noneDue: "None due",
+        forecastNote:
+          "Counted from today, for living residents still with the shelter: each prescription's doses on the days they fall — a weekly tablet from its start date, a twice-daily one every day. \"As needed\" prescriptions aren't counted.",
         prescriptions: "Prescriptions",
         prescriptionCount: (n: number) => `${n} prescription${n === 1 ? "" : "s"}`,
         noMedications: "No medications yet.",
       },
       frequencyTable: {
         label: "Label",
-        dosesPerDay: "Doses per day",
-        perDay: (n: number) => `${n} / day`,
-        asNeeded: "As needed",
+        schedule: "Schedule",
         noFrequencies: "No frequencies yet.",
       },
       merge: {
@@ -459,7 +487,7 @@ const en = {
         hint:
           "Every prescription of this medication moves to the one you pick and this row is removed. Only medications measured in the same unit are offered, so the doses keep their meaning.",
         frequencyHint:
-          "Every prescription using this frequency moves to the one you pick and this row is removed. Moved prescriptions take the kept frequency's doses per day.",
+          "Every prescription using this frequency moves to the one you pick and this row is removed. Moved prescriptions take the kept frequency's schedule.",
       },
       deleteConfirm: (name: string) => `Delete medication "${name}"? This can't be undone.`,
       deleteFrequencyConfirm: (label: string) =>
@@ -476,7 +504,6 @@ const en = {
         nameRequired: "Name is required.",
         unitInvalid: "Choose a unit.",
         labelRequired: "Label is required.",
-        dosesPerDayPositive: "Doses per day must be a positive number, or blank.",
         hasPrescriptions: (n: number) =>
           `This medication is on ${n} prescription${n === 1 ? "" : "s"} and can't be deleted — prescriptions are part of the residents' medical records. Merge it into another medication instead.`,
         frequencyHasPrescriptions: (n: number) =>
@@ -896,9 +923,9 @@ const en = {
     addNewFrequency: "+ Add new frequency…",
     newFrequencyLabel: "New frequency",
     newFrequencyPlaceholder: "e.g. Every 6 hours",
-    newFrequencyDosesPerDay: "Doses per day",
-    newFrequencyDosesPerDayHint:
-      'Optional — twice daily is 2, every 8 hours is 3, every other day is 0.5. Leave blank for "as needed".',
+    newFrequencySchedule: "Schedule",
+    newFrequencyScheduleHint:
+      "So many times a day, or one dose every so many days / weeks / months from the start date. Whole numbers only.",
     chooseExistingFrequency: "Choose an existing frequency instead",
     startDate: "Start date",
     endDate: "End date",
@@ -915,7 +942,6 @@ const en = {
       newMedicationName: "Enter a name for the new medication.",
       newMedicationUnit: "Choose what the new medication is measured in.",
       newFrequencyLabel: "Enter a label for the new frequency.",
-      dosesPerDayPositive: "Doses per day must be a number greater than zero.",
       dosePositive: "Dose must be a number greater than zero.",
       enterStartDate: "Enter a start date.",
       invalidStartDate: "Invalid start date.",

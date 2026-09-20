@@ -5,6 +5,11 @@ import { assertManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { DOSE_UNITS, type DoseUnit } from "@/lib/i18n/enum-labels";
+import {
+  parseSchedule,
+  type ScheduleError,
+  type ScheduleFields,
+} from "@/lib/prescriptions/frequency";
 
 export type MedicationFormState =
   | { error: string }
@@ -18,8 +23,7 @@ export type MedicationFields = {
 
 export type FrequencyFields = {
   label: string;
-  /** Empty string clears it (= "as needed", can't be forecast per day). */
-  dosesPerDay: string;
+  schedule: ScheduleFields;
 };
 
 function optional(value: FormDataEntryValue | string | null | undefined) {
@@ -31,16 +35,18 @@ function isDoseUnit(value: string | null): value is DoseUnit {
   return value != null && DOSE_UNITS.includes(value as DoseUnit);
 }
 
-/**
- * Doses per day is optional; when given it must be a positive number
- * (0027's check). Returns undefined on a validation failure so the caller
- * can pick the message.
- */
-function parseDosesPerDay(raw: string | null): number | null | undefined {
-  if (raw == null) return null;
-  const n = Number(raw);
-  if (!Number.isFinite(n) || n <= 0) return undefined;
-  return n;
+function scheduleFromForm(formData: FormData): ScheduleFields {
+  return {
+    kind: optional(formData.get("kind")),
+    dosesPerDay: optional(formData.get("dosesPerDay")),
+    intervalCount: optional(formData.get("intervalCount")),
+    intervalUnit: optional(formData.get("intervalUnit")),
+  };
+}
+
+async function scheduleErrorMessage(code: ScheduleError) {
+  const { t } = await getT();
+  return t.frequency.errors[code];
 }
 
 function revalidateMedicationPages() {
@@ -151,15 +157,13 @@ export async function createFrequency(
 
   const label = optional(formData.get("label"));
   if (!label) return { error: t.management.medications.errors.labelRequired };
-  const dosesPerDay = parseDosesPerDay(optional(formData.get("dosesPerDay")));
-  if (dosesPerDay === undefined) {
-    return { error: t.management.medications.errors.dosesPerDayPositive };
-  }
+  const parsed = parseSchedule(scheduleFromForm(formData));
+  if ("error" in parsed) return { error: await scheduleErrorMessage(parsed.error) };
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("frequency")
-    .insert({ label, doses_per_day: dosesPerDay });
+    .insert({ label, ...parsed.schedule });
 
   if (error) return { error: error.message };
 
@@ -173,15 +177,13 @@ export async function updateFrequency(id: string, fields: FrequencyFields) {
 
   const label = optional(fields.label);
   if (!label) throw new Error(t.management.medications.errors.labelRequired);
-  const dosesPerDay = parseDosesPerDay(optional(fields.dosesPerDay));
-  if (dosesPerDay === undefined) {
-    throw new Error(t.management.medications.errors.dosesPerDayPositive);
-  }
+  const parsed = parseSchedule(fields.schedule);
+  if ("error" in parsed) throw new Error(await scheduleErrorMessage(parsed.error));
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("frequency")
-    .update({ label, doses_per_day: dosesPerDay })
+    .update({ label, ...parsed.schedule })
     .eq("id", id);
 
   if (error) throw new Error(error.message);

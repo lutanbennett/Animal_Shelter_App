@@ -5,12 +5,20 @@ import { createPrescription } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate } from "@/lib/format";
 import { DOSE_UNITS, doseUnitLabel } from "@/lib/i18n/enum-labels";
+import {
+  compareSchedules,
+  describeSchedule,
+  type FrequencySchedule,
+} from "@/lib/prescriptions/frequency";
+import {
+  EMPTY_SCHEDULE_FIELDS,
+  FrequencyScheduleFields,
+} from "@/components/FrequencyScheduleFields";
 
 export type MedicationOption = { id: string; name: string; dose_unit: string };
-export type FrequencyOption = {
+export type FrequencyOption = FrequencySchedule & {
   id: string;
   label: string;
-  doses_per_day: number | null;
 };
 export type VetAppointmentOption = {
   id: string;
@@ -52,6 +60,7 @@ export function PrescriptionForm({
   );
   const [newMedicationUnit, setNewMedicationUnit] = useState<string>("tablet");
   const [isAddingFrequency, setIsAddingFrequency] = useState(false);
+  const [newSchedule, setNewSchedule] = useState(EMPTY_SCHEDULE_FIELDS);
 
   // The dose is entered in whichever unit the chosen medication uses.
   const selectedMedication = medications.find((m) => m.id === medicationId);
@@ -216,23 +225,16 @@ export function PrescriptionForm({
                   ×
                 </button>
               </div>
-              <label
-                htmlFor="newFrequencyDosesPerDay"
-                className="text-sm font-medium text-muted"
-              >
-                {t.prescriptions.newFrequencyDosesPerDay}
-              </label>
-              <input
-                id="newFrequencyDosesPerDay"
-                name="newFrequencyDosesPerDay"
-                type="number"
-                inputMode="decimal"
-                min="0"
-                step="any"
-                className={inputClass}
+              <span className="text-sm font-medium text-muted">
+                {t.prescriptions.newFrequencySchedule}
+              </span>
+              <FrequencyScheduleFields
+                value={newSchedule}
+                onChange={setNewSchedule}
+                namePrefix="newFrequency"
               />
               <p className="text-xs text-muted">
-                {t.prescriptions.newFrequencyDosesPerDayHint}
+                {t.prescriptions.newFrequencyScheduleHint}
               </p>
             </div>
           ) : (
@@ -246,11 +248,13 @@ export function PrescriptionForm({
               className={inputClass}
             >
               <option value="">{t.prescriptions.selectFrequency}</option>
-              {frequencies.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.label}
-                </option>
-              ))}
+              {[...frequencies]
+                .sort((a, b) => compareSchedules(a, b) || a.label.localeCompare(b.label))
+                .map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.label} — {describeSchedule(t, f)}
+                  </option>
+                ))}
               <option value="__new__">{t.prescriptions.addNewFrequency}</option>
             </select>
           )}

@@ -11,10 +11,12 @@ export type MedicationRow = {
   dose_unit: string;
   /** Every prescription ever written for it — any at all blocks delete. */
   prescription_count: number;
-  /** Living, non-adopted residents on a current prescription (0027 view). */
-  current_residents: number;
-  /** Today's consumption in dose_unit per day; null when nothing is current. */
-  daily_quantity: number | null;
+  /**
+   * One entry per forecast window (same order as the table's forecastDays):
+   * living, non-adopted residents with a dose due, whole doses due, and the
+   * quantity in dose_unit (0044 medication_forecast).
+   */
+  forecast: { residents: number; doses: number; quantity: number }[];
 };
 
 const inputClass =
@@ -150,15 +152,23 @@ function MedicationRowItem({
             </span>
           )}
         </td>
-        <td className="px-4 py-2 text-muted">
-          {medication.daily_quantity != null
-            ? m.table.currentUse(
-                medication.current_residents,
-                medication.daily_quantity,
-                doseUnitLabel(t, medication.dose_unit),
-              )
-            : m.table.noneCurrent}
-        </td>
+        {medication.forecast.map((window, i) => (
+          <td key={i} className="px-4 py-2 text-muted">
+            {window.doses > 0 ? (
+              <>
+                <span className="font-medium text-foreground">
+                  {m.table.forecastQuantity(window.quantity, doseUnitLabel(t, medication.dose_unit))}
+                </span>
+                <br />
+                <span className="text-xs">
+                  {m.table.forecastDetail(window.doses, window.residents)}
+                </span>
+              </>
+            ) : (
+              m.table.noneDue
+            )}
+          </td>
+        ))}
         <td className="px-4 py-2 text-muted">
           {m.table.prescriptionCount(medication.prescription_count)}
         </td>
@@ -257,7 +267,7 @@ function MedicationRowItem({
       </tr>
       {mode === "merge" && (
         <tr>
-          <td colSpan={5} className="px-4 pb-2 text-xs text-muted">
+          <td colSpan={4 + medication.forecast.length} className="px-4 pb-2 text-xs text-muted">
             {m.merge.hint}
           </td>
         </tr>
@@ -265,7 +275,7 @@ function MedicationRowItem({
       {message && (
         <tr>
           <td
-            colSpan={5}
+            colSpan={4 + medication.forecast.length}
             className={`px-4 pb-2 text-xs ${
               message.type === "error" ? "text-danger" : "text-success"
             }`}
@@ -278,7 +288,14 @@ function MedicationRowItem({
   );
 }
 
-export function MedicationsTable({ medications }: { medications: MedicationRow[] }) {
+export function MedicationsTable({
+  medications,
+  forecastDays,
+}: {
+  medications: MedicationRow[];
+  /** Window lengths in days, one per forecast column. */
+  forecastDays: number[];
+}) {
   const { t } = useI18n();
   const m = t.management.medications;
 
@@ -289,7 +306,11 @@ export function MedicationsTable({ medications }: { medications: MedicationRow[]
           <tr>
             <th className="px-4 py-2 font-medium">{m.table.name}</th>
             <th className="px-4 py-2 font-medium">{m.table.unit}</th>
-            <th className="px-4 py-2 font-medium">{m.table.currentUseHeading}</th>
+            {forecastDays.map((days) => (
+              <th key={days} className="px-4 py-2 font-medium">
+                {m.table.forecastHeading(days)}
+              </th>
+            ))}
             <th className="px-4 py-2 font-medium">{m.table.prescriptions}</th>
             <th className="px-4 py-2 font-medium" />
           </tr>
@@ -307,7 +328,10 @@ export function MedicationsTable({ medications }: { medications: MedicationRow[]
           ))}
           {medications.length === 0 && (
             <tr>
-              <td colSpan={5} className="px-4 py-6 text-center text-muted">
+              <td
+                colSpan={4 + forecastDays.length}
+                className="px-4 py-6 text-center text-muted"
+              >
                 {m.table.noMedications}
               </td>
             </tr>
