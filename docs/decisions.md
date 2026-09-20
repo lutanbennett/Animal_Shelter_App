@@ -6,6 +6,35 @@ Section 11, plus decisions made during setup that aren't in the original doc.
 
 ## Confirmed
 
+- **Vets management and the vet hub (2026-09-20):** `/admin/vets` is the
+  admin CRUD page for the `vets` table, same shape as the other admin
+  lookups. Deleting a vet is refused (server-side, and the button is
+  disabled with the reason as its tooltip) while any `vet_appointments`
+  row points at it: the FK has no cascade on purpose, since the visits
+  are the residents' medical history, and a raw foreign-key error would
+  have said nothing useful. `/vets` and `/vets/[id]` are the read-only
+  side, open to every signed-in role because every role already had
+  SELECT on `vets` and `vet_appointments` — a volunteer at the clinic
+  needs the phone number as much as staff do. The hub deliberately adds
+  nothing: booking, procedures and so on stay on the resident, which is
+  where the record belongs; the hub only links back there. Statistics
+  are computed in `src/lib/vets/stats.ts` from one load of the vet's
+  appointment rows, with the 3 / 6 / 12 month / all-time selector
+  filtering client-side — no stats view or RPC, since a few hundred rows
+  a year is nothing to ship to the browser and it keeps the list page
+  and the hub reading identical numbers. "Visits" in a period means
+  non-cancelled visits dated inside it and not in the future; scheduled
+  future and overdue visits get their own card over the whole schedule.
+  Procedures, blood tests and prescriptions are counted through their
+  `vet_appointment_id` with a PostgREST inner join filtered on the vet
+  (`vet_appointments!inner(vet_id)`), one request per table. The
+  visits-per-month chart is hand-rolled SVG like `WeightChart`, a single
+  series in the app's primary colour with a per-bar tooltip; the visit
+  list under it is the same data as a table. `StatCard`'s `href` became
+  optional for the hub's plain read-out tiles. `cancelled` was added to
+  the appointment-status labels — the enum always had it, the dictionary
+  didn't.
+
 - **Sign in with Google (2026-09-20):** the login page now offers
   "Continue with Google" alongside email/password, via Supabase Auth's
   Google provider (PKCE). `signInWithGoogle()` in `src/app/login/actions.ts`

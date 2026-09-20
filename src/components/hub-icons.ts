@@ -1,6 +1,8 @@
 import {
   Ambulance,
   ArrowRightLeft,
+  Building2,
+  CalendarClock,
   Camera,
   Droplet,
   Fence,
@@ -10,6 +12,8 @@ import {
   House,
   Info,
   MapPin,
+  PawPrint,
+  Phone,
   Pill,
   RotateCcw,
   Scissors,
@@ -17,6 +21,7 @@ import {
   Syringe,
   Undo2,
   Users,
+  UserRound,
   Weight,
   Wrench,
   type LucideIcon,
@@ -73,4 +78,17 @@ export const ENCLOSURE_ICONS = {
   residents: Users,
   maintenance: Wrench,
   move: PLACEMENT_ICONS.move,
+} satisfies Record<string, LucideIcon>;
+
+/** Icons for the vet list (`/vets`) and vet hub. */
+export const VET_ICONS = {
+  vet: UserRound,
+  clinic: Building2,
+  contact: Phone,
+  visits: Stethoscope,
+  animals: PawPrint,
+  upcoming: CalendarClock,
+  procedures: SECTION_ICONS.procedures,
+  bloodTests: SECTION_ICONS["blood-tests"],
+  prescriptions: SECTION_ICONS.prescriptions,
 } satisfies Record<string, LucideIcon>;
