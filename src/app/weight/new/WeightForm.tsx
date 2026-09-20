@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { createWeight } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { formatDate } from "@/lib/format";
+import { formatDate, weightUnit } from "@/lib/format";
 
 export type VetAppointmentOption = {
   id: string;
@@ -84,7 +84,7 @@ export function WeightForm({
               aria-hidden="true"
               className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted"
             >
-              kg
+              {weightUnit(locale)}
             </span>
           </div>
         </div>

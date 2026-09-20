@@ -1,16 +1,18 @@
 import type { Dictionary } from "./i18n/dictionaries/en";
 import type { Locale } from "./i18n/locales";
 
-// Each locale maps to a fixed BCP-47 tag with an explicit Gregorian calendar
-// (`-u-ca-gregory`) — Thai's default calendar is Buddhist Era (year + 543),
-// which would silently shift every date shown and could confuse medical
-// record-keeping. The locale is otherwise pinned (not left to the runtime
-// default) so the date string is identical on the server and in the
-// browser — a locale that tracks the runtime's default causes a hydration
-// mismatch when server and client environments differ.
+// Each locale maps to a fixed BCP-47 tag with an explicit calendar. Thai
+// dates are shown in the Buddhist Era (year + 543, `-u-ca-buddhist`), which
+// is how Thai staff read and write dates day to day — decided 2026-09-20,
+// reversing an earlier Gregorian pin (see docs/decisions.md). Only display
+// is affected: dates are stored and submitted as ISO Gregorian, and the
+// browser's native date inputs stay Gregorian. The tag is pinned rather
+// than left to the runtime default so the string is identical on the
+// server and in the browser — a locale that tracks the runtime's default
+// causes a hydration mismatch when server and client environments differ.
 const DATE_LOCALE_TAG: Record<Locale, string> = {
   en: "en-GB",
-  th: "th-TH-u-ca-gregory",
+  th: "th-TH-u-ca-buddhist",
 };
 
 export function formatDate(value: string | null | undefined, locale: Locale = "en") {
@@ -66,6 +68,15 @@ export function formatAge(
   return t.format.ageEstimated(age);
 }
 
+// The kilogram abbreviation per locale — Thai writes it กก., and it appears
+// beside numbers in too many places (tiles, chart, list, form suffix) to
+// carry through the dictionary each time.
+const KG_UNIT: Record<Locale, string> = { en: "kg", th: "กก." };
+
+export function weightUnit(locale: Locale = "en") {
+  return KG_UNIT[locale];
+}
+
 // Weights are stored as unbounded numeric; PostgREST hands them back as JS
 // numbers, so 12.50 arrives as 12.5. Shown to two decimals at most (the
 // scales the shelter uses read to 10 g) with the locale's separators.
@@ -73,14 +84,14 @@ export function formatWeightKg(kg: number, locale: Locale = "en") {
   return `${kg.toLocaleString(DATE_LOCALE_TAG[locale], {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
-  })} kg`;
+  })} ${KG_UNIT[locale]}`;
 }
 
 // A signed change between two readings, for the trend indicators: "+0.4 kg"
 // / "−0.4 kg" / "±0 kg". Uses a real minus sign so it doesn't read as a dash.
 export function formatWeightDelta(deltaKg: number, locale: Locale = "en") {
   const rounded = Math.round(deltaKg * 100) / 100;
-  if (rounded === 0) return `±0 kg`;
+  if (rounded === 0) return `±0 ${KG_UNIT[locale]}`;
   const sign = rounded > 0 ? "+" : "−";
   return `${sign}${formatWeightKg(Math.abs(rounded), locale)}`;
 }

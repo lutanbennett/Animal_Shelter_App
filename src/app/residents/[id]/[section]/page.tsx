@@ -560,7 +560,7 @@ export default async function ResidentSectionPage(
             </span>
             <span className="text-xs text-muted">
               {t.weight.stats.percentSince(
-                `${percent > 0 ? "+" : ""}${percent.toFixed(1)}`,
+                `${percent > 0 ? "+" : percent < 0 ? "−" : ""}${Math.abs(percent).toFixed(1)}`,
                 formatDate(from.date, locale),
               )}
             </span>
