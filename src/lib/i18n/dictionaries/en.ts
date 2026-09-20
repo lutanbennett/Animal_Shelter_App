@@ -225,39 +225,6 @@ const en = {
         invalidInterval: "Invalid interval.",
       },
     },
-    vets: {
-      title: "Vets",
-      subtitle:
-        "The vets and clinics the shelter books visits with. Name is what staff pick when booking; clinic and contact details show on the vet hub.",
-      viewHub: "View visit statistics →",
-      couldntLoad: "Couldn't load vets",
-      couldntLoadVisits: "Couldn't load visit counts",
-      createForm: {
-        name: "Name",
-        namePlaceholder: "e.g. Dr Somchai",
-        clinic: "Clinic",
-        clinicPlaceholder: "e.g. Chiang Mai Animal Hospital",
-        contact: "Contact info",
-        contactPlaceholder: "Phone, LINE, address…",
-        contactHint: "Free text — phone, LINE ID, email, address",
-        addButton: "Add vet",
-      },
-      table: {
-        name: "Name",
-        clinic: "Clinic",
-        contact: "Contact info",
-        visits: "Visits",
-        visitCount: (n: number) => `${n} visit${n === 1 ? "" : "s"}`,
-        noVets: "No vets yet.",
-      },
-      deleteConfirm: (name: string) => `Delete vet "${name}"? This can't be undone.`,
-      createdVet: (name: string) => `Created vet "${name}".`,
-      errors: {
-        nameRequired: "Name is required.",
-        hasVisits: (n: number) =>
-          `This vet has ${n} logged visit${n === 1 ? "" : "s"} and can't be deleted — the visits are part of the residents' medical records.`,
-      },
-    },
     website: {
       title: "Website",
       subtitleBeforeCode: "Edit the public welcome page at",
@@ -365,6 +332,39 @@ const en = {
         deaths: "Deaths",
         ariaLabel: (months: number) =>
           `Intakes, adoptions and deaths per month for the last ${months} months`,
+      },
+    },
+    vets: {
+      title: "Vets",
+      subtitle:
+        "The vets and clinics the shelter books visits with. Name is what staff pick when booking; clinic and contact details show on the vet hub.",
+      viewHub: "View visit statistics →",
+      couldntLoad: "Couldn't load vets",
+      couldntLoadVisits: "Couldn't load visit counts",
+      createForm: {
+        name: "Name",
+        namePlaceholder: "e.g. Dr Somchai",
+        clinic: "Clinic",
+        clinicPlaceholder: "e.g. Chiang Mai Animal Hospital",
+        contact: "Contact info",
+        contactPlaceholder: "Phone, LINE, address…",
+        contactHint: "Free text — phone, LINE ID, email, address",
+        addButton: "Add vet",
+      },
+      table: {
+        name: "Name",
+        clinic: "Clinic",
+        contact: "Contact info",
+        visits: "Visits",
+        visitCount: (n: number) => `${n} visit${n === 1 ? "" : "s"}`,
+        noVets: "No vets yet.",
+      },
+      deleteConfirm: (name: string) => `Delete vet "${name}"? This can't be undone.`,
+      createdVet: (name: string) => `Created vet "${name}".`,
+      errors: {
+        nameRequired: "Name is required.",
+        hasVisits: (n: number) =>
+          `This vet has ${n} logged visit${n === 1 ? "" : "s"} and can't be deleted — the visits are part of the residents' medical records.`,
       },
     },
     contacts: {
@@ -509,7 +509,7 @@ const en = {
       "The vets and clinics the shelter works with, and how much of the caseload each one sees.",
     couldntLoadVets: "Couldn't load vets",
     couldntLoadVisits: "Couldn't load vet visits",
-    manageInAdmin: "Edit vet details in admin",
+    manageInAdmin: "Edit vet details in Management",
     list: {
       visits: "Visits",
       animals: "Animals",

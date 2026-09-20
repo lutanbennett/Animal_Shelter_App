@@ -32,7 +32,7 @@ export function NavLinks({
     { href: "/contacts", label: t.nav.contacts },
     // Operational management (reports, contacts) lives under Management;
     // Admin keeps the system-level configuration (security, website,
-    // zones, enclosures, vets, immunization types).
+    // zones, enclosures, immunization types).
     ...(canManage
       ? [
           {
@@ -41,6 +41,7 @@ export function NavLinks({
             children: [
               { href: "/management/dashboard", label: t.nav.dashboard },
               { href: "/management/contacts", label: t.nav.contacts },
+              { href: "/management/vets", label: t.nav.vets },
             ],
           },
         ]
@@ -55,7 +56,6 @@ export function NavLinks({
               { href: "/admin/security", label: t.nav.security },
               { href: "/admin/enclosures", label: t.nav.enclosures },
               { href: "/admin/zones", label: t.nav.zones },
-              { href: "/admin/vets", label: t.nav.vets },
               {
                 href: "/admin/immunization-types",
                 label: t.nav.immunizationTypes,

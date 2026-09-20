@@ -21,11 +21,14 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   `assertManagementRole()` / `canManage()` in
   `src/lib/auth/require-management.ts` gate the **Management** nav
   section (admin is a superset and sees it too), which holds
-  `/management/dashboard` and `/management/contacts` — contact
-  management moved out of Admin (`/admin/contacts` redirects). The split
-  the user asked for: Admin is system configuration (security, website,
-  zones, enclosures, vets, immunization types); Management is operational
-  management. Every app-side staff check (`DECEASED_ROLES`,
+  `/management/dashboard`, `/management/contacts` and `/management/vets`
+  — contact and vet management moved out of Admin (the old URLs
+  redirect). The split the user asked for: Admin is system configuration
+  (security, website, zones, enclosures, immunization types); Management
+  is operational management. Vets is the one place management has *more*
+  than staff: staff only read `vets`, so 0040 swaps the mirrored read-only
+  twin for a read/write policy (same policy count, so 0039's check still
+  holds). Every app-side staff check (`DECEASED_ROLES`,
   `HOSPITAL_ROLES`, `REHOME_ROLES`, `MOVE_ROLES`, `canWriteMaintenance`,
   `canWriteProjects`, resident edit, photo write access) now includes
   management. A management RLS probe (fake `auth.users` row + JWT claims

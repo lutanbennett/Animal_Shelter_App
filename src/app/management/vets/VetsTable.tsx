@@ -51,7 +51,7 @@ function VetRowItem({ vet }: { vet: VetRow }) {
   }
 
   function handleDelete() {
-    if (!window.confirm(t.admin.vets.deleteConfirm(vet.name))) return;
+    if (!window.confirm(t.management.vets.deleteConfirm(vet.name))) return;
     setMessage(null);
     startTransition(async () => {
       try {
@@ -89,7 +89,7 @@ function VetRowItem({ vet }: { vet: VetRow }) {
             <input
               value={clinicName}
               onChange={(e) => setClinicName(e.target.value)}
-              placeholder={t.admin.vets.createForm.clinicPlaceholder}
+              placeholder={t.management.vets.createForm.clinicPlaceholder}
               className={`${inputClass} min-w-40`}
             />
           ) : (
@@ -101,7 +101,7 @@ function VetRowItem({ vet }: { vet: VetRow }) {
             <textarea
               value={contactInfo}
               onChange={(e) => setContactInfo(e.target.value)}
-              placeholder={t.admin.vets.createForm.contactPlaceholder}
+              placeholder={t.management.vets.createForm.contactPlaceholder}
               rows={2}
               className={`${inputClass} min-w-56`}
             />
@@ -113,7 +113,7 @@ function VetRowItem({ vet }: { vet: VetRow }) {
         </td>
         <td className="px-4 py-2 text-muted">
           <Link href={`/vets/${vet.id}`} className="hover:underline">
-            {t.admin.vets.table.visitCount(vet.visit_count)}
+            {t.management.vets.table.visitCount(vet.visit_count)}
           </Link>
         </td>
         <td className="px-4 py-2">
@@ -154,7 +154,7 @@ function VetRowItem({ vet }: { vet: VetRow }) {
               disabled={isPending || vet.visit_count > 0}
               title={
                 vet.visit_count > 0
-                  ? t.admin.vets.errors.hasVisits(vet.visit_count)
+                  ? t.management.vets.errors.hasVisits(vet.visit_count)
                   : undefined
               }
               onClick={handleDelete}
@@ -189,10 +189,10 @@ export function VetsTable({ vets }: { vets: VetRow[] }) {
       <table className="w-full text-left text-sm">
         <thead className="bg-surface text-muted">
           <tr>
-            <th className="px-4 py-2 font-medium">{t.admin.vets.table.name}</th>
-            <th className="px-4 py-2 font-medium">{t.admin.vets.table.clinic}</th>
-            <th className="px-4 py-2 font-medium">{t.admin.vets.table.contact}</th>
-            <th className="px-4 py-2 font-medium">{t.admin.vets.table.visits}</th>
+            <th className="px-4 py-2 font-medium">{t.management.vets.table.name}</th>
+            <th className="px-4 py-2 font-medium">{t.management.vets.table.clinic}</th>
+            <th className="px-4 py-2 font-medium">{t.management.vets.table.contact}</th>
+            <th className="px-4 py-2 font-medium">{t.management.vets.table.visits}</th>
             <th className="px-4 py-2 font-medium" />
           </tr>
         </thead>
@@ -203,7 +203,7 @@ export function VetsTable({ vets }: { vets: VetRow[] }) {
           {vets.length === 0 && (
             <tr>
               <td colSpan={5} className="px-4 py-6 text-center text-muted">
-                {t.admin.vets.table.noVets}
+                {t.management.vets.table.noVets}
               </td>
             </tr>
           )}

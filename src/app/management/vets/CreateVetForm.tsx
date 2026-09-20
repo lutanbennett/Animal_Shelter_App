@@ -15,39 +15,39 @@ export function CreateVetForm() {
     >
       <div className="flex flex-col gap-1">
         <label htmlFor="name" className="text-sm font-medium text-muted">
-          {t.admin.vets.createForm.name}
+          {t.management.vets.createForm.name}
         </label>
         <input
           id="name"
           name="name"
           required
-          placeholder={t.admin.vets.createForm.namePlaceholder}
+          placeholder={t.management.vets.createForm.namePlaceholder}
           className="w-48 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
         />
       </div>
       <div className="flex flex-col gap-1">
         <label htmlFor="clinicName" className="text-sm font-medium text-muted">
-          {t.admin.vets.createForm.clinic}
+          {t.management.vets.createForm.clinic}
         </label>
         <input
           id="clinicName"
           name="clinicName"
-          placeholder={t.admin.vets.createForm.clinicPlaceholder}
+          placeholder={t.management.vets.createForm.clinicPlaceholder}
           className="w-56 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
         />
       </div>
       <div className="flex flex-col gap-1">
         <label htmlFor="contactInfo" className="text-sm font-medium text-muted">
-          {t.admin.vets.createForm.contact}
+          {t.management.vets.createForm.contact}
         </label>
         <input
           id="contactInfo"
           name="contactInfo"
-          placeholder={t.admin.vets.createForm.contactPlaceholder}
+          placeholder={t.management.vets.createForm.contactPlaceholder}
           className="w-64 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
         />
         <span className="text-xs text-muted">
-          {t.admin.vets.createForm.contactHint}
+          {t.management.vets.createForm.contactHint}
         </span>
       </div>
       <button
@@ -55,7 +55,7 @@ export function CreateVetForm() {
         disabled={pending}
         className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
       >
-        {pending ? t.common.creating : t.admin.vets.createForm.addButton}
+        {pending ? t.common.creating : t.management.vets.createForm.addButton}
       </button>
       {state && "error" in state && (
         <p className="w-full text-sm text-danger">{state.error}</p>
