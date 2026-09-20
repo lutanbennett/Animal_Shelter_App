@@ -32,6 +32,9 @@ export default async function EditResidentPage(
     supabase.rpc("current_user_role"),
   ]);
 
+  // A query error (e.g. a migration not yet applied) must not look like a
+  // missing resident — surface it instead of a 404.
+  if (residentResult.error) throw new Error(residentResult.error.message);
   const resident = residentResult.data?.[0];
   if (!resident) notFound();
 
