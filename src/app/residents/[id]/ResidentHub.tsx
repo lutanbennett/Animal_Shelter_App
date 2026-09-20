@@ -17,7 +17,12 @@ import {
   PLACEMENT_ACTION_PATHS,
   availablePlacementActions,
 } from "@/lib/placements/available";
-import { formatAge, formatDate } from "@/lib/format";
+import {
+  formatAge,
+  formatDate,
+  formatWeightDelta,
+  formatWeightKg,
+} from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { statusLabel, speciesLabel, sexLabel } from "@/lib/i18n/enum-labels";
@@ -274,12 +279,12 @@ export function ResidentHub({
       ? latestWeight.weight_kg - previousWeight.weight_kg
       : null;
   const weightValue = latestWeight
-    ? `${latestWeight.weight_kg} kg`
+    ? formatWeightKg(latestWeight.weight_kg, locale)
     : t.residents.hub.weightNoData;
   const weightDetail = latestWeight
     ? `${formatDate(latestWeight.date, locale)}${
         weightTrend != null
-          ? ` · ${weightTrend > 0 ? "▲" : weightTrend < 0 ? "▼" : "—"} ${Math.abs(weightTrend).toFixed(1)} kg`
+          ? ` · ${weightTrend > 0 ? "▲" : weightTrend < 0 ? "▼" : "—"} ${formatWeightDelta(weightTrend, locale)}`
           : ""
       }`
     : t.residents.hub.weightNotRecorded;
@@ -529,6 +534,12 @@ export function ResidentHub({
               detail={weightDetail}
               tone="neutral"
               href={`${base}/weight`}
+              actions={medicalActions([
+                {
+                  href: `/weight/new?residentId=${resident.id}`,
+                  label: t.residents.sections.logWeight,
+                },
+              ])}
             />
             <StatCard
               title={t.residents.hub.procedures}

@@ -581,6 +581,49 @@ Section 11, plus decisions made during setup that aren't in the original doc.
     been migrated by hand. The database, not a memory note, now says what
     has been applied — and the same script does production on go-live.
 
+- **Weight (2026-09-20):** one form, `/weight/new`, reached from three
+  places because that's where weighing actually happens: the hub's Weight
+  card and the Weight tab (a routine shelter weigh-in), a "Log weight" link
+  on each vet appointment row (every visit starts on the scales — the link
+  preselects the visit and defaults the date to it, like blood tests and
+  prescriptions), and a weight field on the intake form, which
+  `record_intake` writes as the first reading in the same transaction as
+  the resident (0029). `weight.vet_appointment_id` (0028) is an FK with no
+  cascade, per the Section 7.2 lesson, and `weight_kg > 0` is now checked
+  so a mistyped zero can't sit on the chart as a collapse.
+
+  The Weight tab leads with three figures — latest, change since the
+  previous reading, change since the first — in kg and %, then a line
+  chart (`src/components/WeightChart.tsx`, hand-rolled SVG rather than a
+  charting dependency: one series, ~250 lines). Two deliberate choices
+  there: the x axis is real time, so a six-month gap between readings looks
+  like six months rather than one step; and the deltas are neutral in
+  colour, since whether "up" is good depends on the animal (a thin intake
+  gaining is good, an old dog gaining may not be) and the app has no body
+  condition score to judge by. The list under the chart is the table view
+  of the same rows, so the chart is never the only way to read a value.
+  Below two readings the chart isn't rendered — one point isn't a trend.
+  Volunteers still have read-only access to `weight` (0001), so the Log
+  weight button fails for them; whether volunteers and foster carers should
+  weigh is left with the foster-portal item in the backlog.
+
+  **Found along the way:** the dev database had never received migration
+  0006 (the vet-visit booking function and staff policies) even though it
+  was baselined as applied, so every booking from `/vet-visits/new` failed
+  with "could not find the function schedule_bulk_appointments". 0030
+  re-applies 0006 in re-runnable form; it's a no-op on a database where
+  0006 did run.
+
+- **Thai dates in the Buddhist Era (2026-09-20):** `formatDate` and its
+  siblings had pinned Thai to the Gregorian calendar
+  (`th-TH-u-ca-gregory`) on the theory that a +543 year shift could confuse
+  medical records. The user's call is the opposite: Thai staff read and
+  write BE dates day to day, so Gregorian years in Thai text are the thing
+  that reads wrong. Now `th-TH-u-ca-buddhist`: display only, since dates
+  are stored and posted as ISO Gregorian and the browser's native date
+  inputs stay Gregorian (so a Thai form shows 2569 in text beside 2026 in
+  the picker — accepted). The Drive archive documents stay English/Gregorian.
+
 ## Still open (from Section 11 of the requirements doc)
 
 1. Exact per-table RBAC permission matrix beyond the role descriptions —
