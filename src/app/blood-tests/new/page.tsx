@@ -70,7 +70,7 @@ export default async function NewBloodTestPage(
 
   // Unlike the immunization and vet-visit forms, this page is reached with a
   // resident id rather than a picker, so the "no records for the dead" rule
-  // (migration 0025, which would reject the insert anyway) is checked here.
+  // (migration 0026, which would reject the insert anyway) is checked here.
   if (stateResult.data?.[0]?.is_deceased) {
     return (
       <main className="flex flex-1 flex-col gap-4 p-6">

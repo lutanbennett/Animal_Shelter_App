@@ -6,6 +6,37 @@ Section 11, plus decisions made during setup that aren't in the original doc.
 
 ## Confirmed
 
+- **Sign in with Google (2026-09-20):** the login page now offers
+  "Continue with Google" alongside email/password, via Supabase Auth's
+  Google provider (PKCE). `signInWithGoogle()` in `src/app/login/actions.ts`
+  starts the flow (a server action, so the code-verifier cookie is written
+  by the same server client that later exchanges it) and
+  `src/app/auth/callback/route.ts` swaps the returned code for a session.
+  Roles stay admin-provisioned: the callback checks `current_user_role()`
+  and, if the Google account has no `user_roles` row, signs them straight
+  back out to `/login?error=no_role` rather than letting a role-less
+  session reach `/residents` where every RLS policy would reject it. The
+  `auth.users` row is deliberately left in place so the admin sees the
+  account on `/admin/security` and can assign a role; the person then
+  just tries again. Google accounts whose email matches an existing
+  admin-created login are linked to that user by Supabase automatically
+  (both emails count as verified), so existing staff keep their role and
+  can use either method. `/auth/callback` is a public path in
+  `src/lib/supabase/proxy.ts`. The login page also gained a "Back to home
+  page" link — previously there was no way back to the public site.
+  One-time setup (not in code): Google Cloud console → create an OAuth
+  2.0 *Web application* client (the existing Drive client can live in the
+  same project) with authorised redirect URI
+  `https://<project-ref>.supabase.co/auth/v1/callback`; Supabase →
+  Authentication → Providers → Google: enable and paste that client
+  ID/secret; Supabase → Authentication → URL Configuration: add
+  `http://localhost:3000/auth/callback` and the production
+  `https://<domain>/auth/callback` to Redirect URLs (Supabase falls back
+  to the Site URL for any `redirectTo` not on that list). Optionally turn
+  off "Allow new users to sign up" there to stop unknown Google accounts
+  creating `auth.users` rows at all — then they get the generic
+  `error=google` message instead of `no_role`, and admins must create the
+  login first with the person's Gmail address.
 - **Hosting:** Cloudflare Workers (free tier), not Vercel. Chosen to avoid
   Vercel Hobby's non-commercial-use restriction. Deployed via the
   `@opennextjs/cloudflare` adapter (`wrangler.jsonc`, `open-next.config.ts`,
@@ -184,6 +215,10 @@ Section 11, plus decisions made during setup that aren't in the original doc.
     aren't blocked by the image proxy's allowlist). Confirmed working in
     dev, but don't assume the prod project's default privileges match —
     run 0016's grant explicitly rather than relying on that.
+  - `0025_public_views_exclude_adopted.sql` (and everything in between,
+    0020–0024) — 0025 also revokes anon/authenticated write access on the
+    two public views. Run `node scripts/check-public-views.mjs` against
+    production afterwards; README step 3 has the details.
   - `site_content` ships with an empty hero/gallery (the dev seed data
     doesn't carry over) — go to `/admin/website` after migrating and set
     the real production hero photo, story copy, and gallery before
@@ -331,6 +366,61 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   records still only offer "Send to hospital": a discharge isn't tied to a
   visit the way an admission can be.
 
+- **Foster and adopt (2026-09-20):** one page for both,
+  `/residents/[id]/rehome`, with a Foster / Adopt toggle (`?type=` picks
+  the default; a fostered resident defaults to Adopt because the usual case
+  is the carer adopting). `rehomeResident()` in
+  `src/lib/placements/rehome.ts` inserts a single `Foster` or `Adopt` row
+  into the Lifecycle/Fostered or /Adopted pseudo-enclosure with `carer_id`
+  set, so `resident_current_state.current_status` / `current_carer_id`
+  come out right with no view changes; `previous_enclosure_id` is the
+  enclosure they left so a return can offer it back. No migration: enum
+  values, pseudo-enclosures, `carer_id` + its Carer-type trigger and the
+  admin/staff insert policies all existed since 0001. Transitions: Foster
+  is allowed from Resident/Outreach, Hospitalised (a fostered animal the
+  shelter treated can go straight back to its carer — the form pre-selects
+  the carer from the placement before the hospital stay) and Fostered
+  (change of carer; same carer rejected). Adopt is allowed from the same
+  states. Nothing is allowed from Adopted except **Return to shelter**
+  (`/residents/[id]/rehome/return`, `returnResidentToShelter()` — a
+  `ReturnToShelter` row into a physical enclosure, picker defaulting to
+  the enclosure they left from, same capacity warning as moves), which also
+  serves fostered residents. Adoption ends the shelter's medical
+  responsibility, so "Send to hospital" is refused for adopted residents
+  but still offered while fostered. "Move enclosure" is now refused (and
+  hidden, including on the edit form) while fostered or adopted, since a
+  `ChangeEnclosure` out of a Lifecycle enclosure would misrecord the
+  return. The per-status list of offered actions is a single table,
+  `availablePlacementActions()` in `src/lib/placements/available.ts`, read
+  by the hub card, the housing section and the vet-visit links, so the
+  four surfaces can't drift. **Carer picker:** the dev database had no
+  contacts at all, and Contacts management isn't built, so the picker
+  offers existing Carer contacts *or* an inline "add a new carer" form
+  (name required; phone / email / LINE ID optional) that inserts a Carer
+  contact right before the placement — two statements, not one
+  transaction, on the grounds that a stray carer contact is harmless. Same
+  admin/staff role boundary as hospital placements. The foster-carer
+  portal role is tracked in the backlog.
+
+- **Adopted residents leave the public pages; fostered ones stay
+  (2026-09-20):** `0025_public_views_exclude_adopted.sql` changes
+  `public_resident_profiles` and `public_resident_photos` from "not
+  deceased" to `current_status not in ('Deceased', 'Adopted')`. Lutan's
+  call: an adopted animal is no longer available so it must not be listed;
+  a fostered one still is (foster-to-adopt is the common path), so it stays.
+  A public "recently adopted" page is a possible later feature and is noted
+  on the public-pages backlog item — it would read `Adopt` rows from
+  `placement_history`, not these views. Found and fixed in the same
+  migration: Supabase's default privileges grant INSERT/UPDATE/DELETE on
+  every new `public` object to `anon` and `authenticated`, and
+  `public_resident_profiles` is simple enough to be auto-updatable, so
+  with the view owned by the RLS-bypassing migration role an anonymous
+  `PATCH /rest/v1/public_resident_profiles` was accepted (verified: HTTP
+  200 on a no-op filter before, `permission denied` after). Everything but
+  SELECT is now revoked on both views. **Any future view granted to
+  `anon` needs the same revoke**, and this is worth re-checking on the
+  production project at go-live alongside the 0016 grant.
+
 - **Deceased workflow (2026-09-20):** recorded from the resident hub's
   details card (a small icon beside the edit pencil, admin/staff only) →
   `/residents/[id]/deceased`, which takes date of death, cause of death and
@@ -339,7 +429,7 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   Lifecycle/Deceased pseudo-enclosure via `src/lib/placements/deceased.ts`,
   exactly like the other placement actions; everything else follows from it.
 
-  **The record becomes read-only, in the database (`0025_deceased_workflow.sql`).**
+  **The record becomes read-only, in the database (`0026_deceased_workflow.sql`).**
   Triggers on `residents`, `placement_history`, `vet_appointments`,
   `prescriptions`, `immunization_records`, `weight`, `procedures`,
   `blood_tests` and `attachments` reject every insert/update/delete for a
@@ -362,12 +452,25 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   *zone* name, but the Deceased pseudo-enclosure lives in the Lifecycle
   zone, so the dead read as ordinary `'Resident'` — which would have let a
   deceased animal through the `current_status.neq.Deceased` filters on the
-  immunization and vet-visit pickers. And `handle_deceased_placement()`
+  immunization and vet-visit pickers, and (found when this branch was merged
+  with the foster/adopt work) meant 0025's rewritten public views were not
+  in fact hiding deceased residents from `/adopt`, since they filter on
+  `current_status not in ('Deceased', 'Adopted')`. 0025 read correctly and
+  behaved wrongly; this is the fix that makes it do what it says. And `handle_deceased_placement()`
   (0002) ran `security invoker`, but staff have only SELECT policies on
   `vet_appointments` and `prescriptions`, so for the role most likely to
   record a death, "cancel future appointments" and "end active
   prescriptions" silently matched no rows; it's `security definer` now, for
   the same reason `close_prior_placement()` became definer in 0024.
+
+  **Where it can be recorded from.** The record-death icon shows for any
+  status except Deceased itself, including Fostered and Adopted — an
+  adopter or foster carer reporting a death is a real case, and making
+  someone record a Return to Shelter first would put a fictional placement
+  in the history. That deliberately sits outside
+  `availablePlacementActions()` (which ends the shelter's chain at Adopted)
+  because the entry point is the hub's details card, not the Housing card's
+  action row. Worth confirming with the shelter.
 
   **Drive archive.** After the placement commits, the app moves
   `Residents/<Name> (<ID>)/` to `Residents/Deceased/<Name> (<ID>)/` (the
@@ -402,6 +505,7 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   on the Workers runtime there's no filesystem to read a .ttf from and no
   reason to make the archive depend on a font CDN staying up. SIL Open Font
   License 1.1.
+
 
 ## Still open (from Section 11 of the requirements doc)
 

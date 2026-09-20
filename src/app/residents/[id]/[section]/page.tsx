@@ -16,6 +16,10 @@ import {
   SECTION_ICONS,
   type HubSection,
 } from "@/components/hub-icons";
+import {
+  PLACEMENT_ACTION_PATHS,
+  availablePlacementActions,
+} from "@/lib/placements/available";
 
 function Placeholder({ children }: { children: React.ReactNode }) {
   return (
@@ -85,7 +89,7 @@ export default async function ResidentSectionPage(
   if (!resident) notFound();
 
   // A deceased resident's record is read-only — in the database too
-  // (migration 0025), so every "add a record" control below is dropped
+  // (migration 0026), so every "add a record" control below is dropped
   // rather than left to fail against a trigger.
   const residentState = residentStateResult.data?.[0];
   const isDeceased = residentState?.is_deceased ?? false;
@@ -104,7 +108,7 @@ export default async function ResidentSectionPage(
       const { data, error } = await supabase
         .from("placement_history")
         .select(
-          "id, placement_type, start_date, end_date, notes, cause_of_death, enclosure:enclosures!enclosure_id(name), previous_enclosure:enclosures!previous_enclosure_id(name)",
+          "id, placement_type, start_date, end_date, notes, cause_of_death, enclosure:enclosures!enclosure_id(name), previous_enclosure:enclosures!previous_enclosure_id(name), carer:contacts(name)",
         )
         .eq("resident_id", id)
         .order("start_date", { ascending: false })
@@ -118,37 +122,29 @@ export default async function ResidentSectionPage(
             cause_of_death: string | null;
             enclosure: { name: string } | null;
             previous_enclosure: { name: string } | null;
+            carer: { name: string } | null;
           }[]
         >();
-      const isHospitalised = residentState?.current_status === "Hospitalised";
+      // Which placement actions apply depends on the lifecycle status — see
+      // availablePlacementActions() for the table. The last one is primary.
+      // A deceased resident has none, which is also how the read-only rule
+      // shows up here.
+      const actions = availablePlacementActions(
+        isDeceased ? "Deceased" : residentState?.current_status,
+      );
       body = (
         <div className="flex flex-col gap-4">
-          {/* Send to hospital and return from hospital are opposites; while
-              in hospital, return is the only way back into an enclosure. */}
-          {!isDeceased && (
+          {actions.length > 0 && (
             <div className="flex justify-end gap-2">
-              {isHospitalised ? (
+              {actions.map((key, index) => (
                 <ActionLink
-                  href={`/residents/${id}/hospital/return`}
-                  label={t.residents.hub.returnFromHospital}
-                  icon={PLACEMENT_ICONS.hospitalReturn}
-                  variant="primary"
+                  key={key}
+                  href={`/residents/${id}${PLACEMENT_ACTION_PATHS[key]}`}
+                  label={t.residents.hub.placementActions[key]}
+                  icon={PLACEMENT_ICONS[key]}
+                  variant={index === actions.length - 1 ? "primary" : "secondary"}
                 />
-              ) : (
-                <>
-                  <ActionLink
-                    href={`/residents/${id}/hospital`}
-                    label={t.residents.hub.sendToHospital}
-                    icon={PLACEMENT_ICONS.hospital}
-                  />
-                  <ActionLink
-                    href={`/residents/${id}/move`}
-                    label={t.residents.hub.moveEnclosure}
-                    icon={PLACEMENT_ICONS.move}
-                    variant="primary"
-                  />
-                </>
-              )}
+              ))}
             </div>
           )}
           {error && (
@@ -172,9 +168,14 @@ export default async function ResidentSectionPage(
                 </div>
                 {row.enclosure?.name && (
                   <span className="text-xs text-muted">
-                    {row.previous_enclosure?.name
-                      ? `${row.previous_enclosure.name} → ${row.enclosure.name}`
-                      : row.enclosure.name}
+                    {[
+                      row.previous_enclosure?.name
+                        ? `${row.previous_enclosure.name} → ${row.enclosure.name}`
+                        : row.enclosure.name,
+                      row.carer?.name && t.residents.hub.carer(row.carer.name),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </span>
                 )}
                 {row.cause_of_death && (
@@ -326,10 +327,10 @@ export default async function ResidentSectionPage(
           }[]
         >();
       // A visit can end with the animal admitted; offer that on each record
-      // unless they're already in hospital (or gone).
-      const currentStatus = residentState?.current_status ?? null;
-      const canSendToHospital =
-        currentStatus !== "Hospitalised" && currentStatus !== "Deceased";
+      // unless they're already in hospital, adopted out, or gone.
+      const canSendToHospital = availablePlacementActions(
+        isDeceased ? "Deceased" : residentState?.current_status,
+      ).includes("hospital");
       body = (
         <div className="flex flex-col gap-4">
           {!isDeceased && (
@@ -377,7 +378,7 @@ export default async function ResidentSectionPage(
                         href={`/residents/${id}/hospital?vetAppointmentId=${row.id}`}
                         className="text-xs font-medium text-primary hover:underline"
                       >
-                        {t.residents.hub.sendToHospital}
+                        {t.residents.hub.placementActions.hospital}
                       </Link>
                     )}
                   </div>

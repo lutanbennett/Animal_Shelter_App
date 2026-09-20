@@ -40,10 +40,10 @@ export default async function MoveResidentPage(
         >(),
       supabase
         .from("resident_current_state")
-        .select("is_deceased")
+        .select("current_status, is_deceased")
         .eq("resident_id", id)
         .limit(1)
-        .returns<{ is_deceased: boolean }[]>(),
+        .returns<{ current_status: string | null; is_deceased: boolean }[]>(),
       supabase
         .from("placement_history")
         .select("start_date")
@@ -65,8 +65,19 @@ export default async function MoveResidentPage(
     ? `${resident.name} (${resident.thai_name})`
     : resident.name;
   const status = statusResult.data?.[0];
-  const isDeceased = stateResult.data?.[0]?.is_deceased ?? false;
+  const state = stateResult.data?.[0];
   const canMove = MOVE_ROLES.has(roleResult.data ?? "");
+  // The hub only links here for residents in (or unassigned to) a physical
+  // enclosure, but the URL is guessable — mirror moveResidentToEnclosure().
+  const blocked = !canMove
+    ? t.residents.move.notAuthorized
+    : state?.is_deceased
+      ? t.residents.move.errors.deceased
+      : state?.current_status === "Hospitalised"
+        ? t.residents.move.errors.inHospital
+        : state?.current_status === "Fostered" || state?.current_status === "Adopted"
+          ? t.residents.move.errors.withCarer
+          : null;
   const Icon = SECTION_ICONS.housing;
 
   return (
@@ -94,13 +105,9 @@ export default async function MoveResidentPage(
         </p>
       )}
 
-      {!canMove ? (
+      {blocked ? (
         <p className="rounded-lg border border-border bg-surface p-4 text-sm text-muted">
-          {t.residents.move.notAuthorized}
-        </p>
-      ) : isDeceased ? (
-        <p className="rounded-lg border border-border bg-surface p-4 text-sm text-muted">
-          {t.residents.move.errors.deceased}
+          {blocked}
         </p>
       ) : (
         <MoveResidentForm

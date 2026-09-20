@@ -77,11 +77,15 @@ alter table residents add column deceased_archived_at timestamptz;
 --
 -- Everything reading current_status was wrong for the dead: the status
 -- badge on the hub and the residents list (both via resident_list_view),
--- and the `current_status.neq.Deceased` filters on the immunization and
+-- the `current_status.neq.Deceased` filters on the immunization and
 -- vet-visit resident pickers, which would have offered a dead animal for a
--- vaccination. Fixed to test the same enclosure the `is_deceased` column
--- does. CREATE OR REPLACE keeps resident_list_view (which selects from
--- this view) working.
+-- vaccination, and — most visibly — the public views as rewritten in 0025,
+-- which hide `current_status not in ('Deceased', 'Adopted')`: the Adopted
+-- half worked, the Deceased half silently did nothing, so a deceased
+-- resident stayed listed on /adopt. Fixed to test the same enclosure the
+-- `is_deceased` column does; 0025's views then behave as written, with no
+-- change needed to them. CREATE OR REPLACE keeps resident_list_view (which
+-- selects from this view) working.
 -- =========================================================================
 
 create or replace view resident_current_state as

@@ -22,6 +22,8 @@ export type HousingState = {
   isDeceased: boolean;
   /** In the Hospital pseudo-enclosure — moves are recorded as a return instead. */
   isHospitalised: boolean;
+  /** Fostered or adopted — the way back into an enclosure is a return to shelter. */
+  isWithCarer: boolean;
 };
 
 function todayIso() {
@@ -296,6 +298,16 @@ export function EditResidentForm({
               className="font-medium text-primary hover:underline"
             >
               {h.inHospital}
+            </Link>
+          </p>
+        ) : housing.isWithCarer ? (
+          <p className="text-sm text-muted">
+            {t.residents.move.errors.withCarer}{" "}
+            <Link
+              href={`/residents/${resident.id}/rehome/return`}
+              className="font-medium text-primary hover:underline"
+            >
+              {h.withCarer}
             </Link>
           </p>
         ) : (

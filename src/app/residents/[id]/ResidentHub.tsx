@@ -13,6 +13,10 @@ import {
   type StatCardTone,
 } from "@/components/StatCard";
 import { HUB_TAB_ICONS, PLACEMENT_ICONS, SECTION_ICONS } from "@/components/hub-icons";
+import {
+  PLACEMENT_ACTION_PATHS,
+  availablePlacementActions,
+} from "@/lib/placements/available";
 import { formatAge, formatDate } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -161,10 +165,12 @@ export function ResidentHub({
   const base = `/residents/${resident.id}`;
 
   // Housing & status. A hospitalised resident is off-site in medical care,
-  // so the card says that (and where they'll come back to) instead of
-  // naming the Hospital pseudo-enclosure as if it were a kennel.
+  // and a fostered or adopted one is living with a carer, so the card says
+  // that (and where they'll come back to, or who they're with) instead of
+  // naming the Lifecycle pseudo-enclosure as if it were a kennel.
   const currentStatus = status?.current_status ?? "Unknown";
   const isHospitalised = currentStatus === "Hospitalised";
+  const isWithCarer = currentStatus === "Fostered" || currentStatus === "Adopted";
   const housingTone = STATUS_TONE[currentStatus] ?? "neutral";
   const housingDetail = isHospitalised
     ? [
@@ -174,42 +180,33 @@ export function ResidentHub({
       ]
         .filter(Boolean)
         .join(" · ")
-    : [
-        status?.enclosure_name,
-        status?.zone_name,
-        carerName && t.residents.hub.carer(carerName),
-      ]
-        .filter(Boolean)
-        .join(" · ") || t.residents.hub.historyEntries(placementHistoryCount);
-  // Send to hospital and return from hospital are opposites: while they're
-  // on site the card offers Move + Send to hospital; while they're in
-  // hospital the only way back is Return from hospital (a move out of the
-  // Hospital pseudo-enclosure would misrecord the stay).
-  const housingActions: StatCardAction[] = isDeceased
-    ? []
-    : isHospitalised
-      ? [
-          {
-            href: `${base}/hospital/return`,
-            label: t.residents.hub.returnFromHospital,
-            icon: PLACEMENT_ICONS.hospitalReturn,
-          },
-        ]
-      : [
-          {
-            href: `${base}/move`,
-            label: t.residents.hub.moveEnclosure,
-            icon: PLACEMENT_ICONS.move,
-          },
-          {
-            href: `${base}/hospital`,
-            label: t.residents.hub.sendToHospital,
-            icon: PLACEMENT_ICONS.hospital,
-          },
-        ];
+    : currentStatus === "Fostered"
+      ? carerName
+        ? t.residents.hub.fosteredWith(carerName)
+        : t.residents.hub.fosteredNoCarer
+      : currentStatus === "Adopted"
+        ? carerName
+          ? t.residents.hub.adoptedBy(carerName)
+          : t.residents.hub.adoptedNoCarer
+        : [
+            status?.enclosure_name,
+            status?.zone_name,
+            carerName && t.residents.hub.carer(carerName),
+          ]
+            .filter(Boolean)
+            .join(" · ") || t.residents.hub.historyEntries(placementHistoryCount);
+  // Which placement actions apply depends on the lifecycle status — see
+  // availablePlacementActions() for the table.
+  const housingActions: StatCardAction[] = availablePlacementActions(
+    isDeceased ? "Deceased" : currentStatus,
+  ).map((key) => ({
+    href: `${base}${PLACEMENT_ACTION_PATHS[key]}`,
+    label: t.residents.hub.placementActions[key],
+    icon: PLACEMENT_ICONS[key],
+  }));
 
   // Nothing can be added to a dead animal's medical record — the database
-  // rejects it (migration 0025), so the buttons that would try are dropped
+  // rejects it (migration 0026), so the buttons that would try are dropped
   // rather than left to fail.
   const medicalActions = (actions: StatCardAction[]) =>
     isDeceased ? [] : actions;
@@ -326,7 +323,7 @@ export function ResidentHub({
                 {resident.animal_code}
               </span>
               {/* A dead resident's record is read-only, in the database as
-                  well as here (migration 0025), so neither edit nor
+                  well as here (migration 0026), so neither edit nor
                   record-death is offered once they're gone. */}
               {!isDeceased && (
                 <Link
@@ -428,7 +425,13 @@ export function ResidentHub({
           <div className="grid grid-cols-2 gap-3">
             <StatCard
               title={t.residents.hub.housingStatus}
-              icon={isHospitalised ? PLACEMENT_ICONS.hospital : SECTION_ICONS.housing}
+              icon={
+                isHospitalised
+                  ? PLACEMENT_ICONS.hospital
+                  : isWithCarer
+                    ? PLACEMENT_ICONS.rehome
+                    : SECTION_ICONS.housing
+              }
               value={
                 isHospitalised
                   ? t.residents.hub.inHospital

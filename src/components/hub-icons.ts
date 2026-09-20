@@ -5,11 +5,13 @@ import {
   Droplet,
   Fence,
   HeartCrack,
+  HeartHandshake,
   HeartPulse,
   House,
   Info,
   MapPin,
   Pill,
+  RotateCcw,
   Scissors,
   Stethoscope,
   Syringe,
@@ -44,16 +46,23 @@ export const HUB_TAB_ICONS = {
 } satisfies Record<string, LucideIcon>;
 
 /**
- * Icons for the placement actions (move, send to / return from hospital, …)
- * wherever they appear: hub cards, section pages and the action pages' own
- * headings. The hospital icon also stands in for the Housing card while a
- * resident is in hospital, since they're off-site rather than in an
+ * Icons for the placement actions (move, send to / return from hospital,
+ * foster / adopt, return to shelter) wherever they appear: hub cards,
+ * section pages and the action pages' own headings. Keyed by
+ * PlacementActionKey (src/lib/placements/available.ts). The hospital and
+ * rehome icons also stand in for the Housing card while a resident is in
+ * hospital or with a carer, since they're off-site rather than in an
  * enclosure.
  */
 export const PLACEMENT_ICONS = {
   move: ArrowRightLeft,
   hospital: Ambulance,
   hospitalReturn: Undo2,
+  rehome: HeartHandshake,
+  returnToShelter: RotateCcw,
+  // Not a PlacementActionKey: recording a death is reached from the hub's
+  // resident details card, not the Housing card's action row, so it never
+  // appears in availablePlacementActions().
   deceased: HeartCrack,
 } satisfies Record<string, LucideIcon>;
 

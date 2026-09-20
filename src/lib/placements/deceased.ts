@@ -29,7 +29,7 @@ export type RecordDeathResult = { error: string } | { ok: true };
  * Records a Deceased placement into the Lifecycle/Deceased pseudo-enclosure.
  *
  * Everything that follows in the database is a consequence of this one
- * insert, handled by triggers in the same transaction (0002 / 0025): future
+ * insert, handled by triggers in the same transaction (0002 / 0026): future
  * vet appointments are cancelled, active prescriptions are ended,
  * ready_for_adoption is cleared, and from then on every write to this
  * resident's record is rejected. The Drive side of the workflow (moving the

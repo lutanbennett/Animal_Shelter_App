@@ -26,7 +26,7 @@ export function PhotoGallery({
   /**
    * Viewing a closed record (a deceased resident): photos still open full
    * size, but nothing can be removed or promoted to profile photo. The
-   * database rejects both writes anyway (migration 0025) — this keeps the
+   * database rejects both writes anyway (migration 0026) — this keeps the
    * buttons from being offered in the first place.
    */
   readOnly?: boolean;
