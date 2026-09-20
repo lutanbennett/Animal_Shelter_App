@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { statusLabel } from "@/lib/i18n/enum-labels";
@@ -27,6 +28,7 @@ function fullName(resident: Pick<ResidentRow, "name" | "thai_name">) {
 
 export function ResidentsTable({ residents }: { residents: ResidentRow[] }) {
   const { t } = useI18n();
+  const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   function toggle(id: string) {
@@ -39,6 +41,19 @@ export function ResidentsTable({ residents }: { residents: ResidentRow[] }) {
       }
       return next;
     });
+  }
+
+  // Whole-row click opens the resident. Clicks that land on the checkbox or
+  // the name link itself are left alone so their own behaviour (toggle,
+  // middle-click / cmd-click to open in a new tab) still works.
+  function openResident(
+    event: React.MouseEvent<HTMLTableRowElement>,
+    residentId: string,
+  ) {
+    const target = event.target as HTMLElement;
+    if (target.closest("a, input, button, label")) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    router.push(`/residents/${residentId}`);
   }
 
   const bookingHref =
@@ -111,9 +126,10 @@ export function ResidentsTable({ residents }: { residents: ResidentRow[] }) {
             {residents.map((resident) => (
               <tr
                 key={resident.resident_id}
-                className="relative hover:bg-surface-hover"
+                onClick={(event) => openResident(event, resident.resident_id)}
+                className="cursor-pointer hover:bg-surface-hover"
               >
-                <td className="relative z-10 px-4 py-2">
+                <td className="px-4 py-2">
                   <input
                     type="checkbox"
                     checked={selected.has(resident.resident_id)}
@@ -128,7 +144,7 @@ export function ResidentsTable({ residents }: { residents: ResidentRow[] }) {
                 <td className="px-4 py-2 text-foreground">
                   <Link
                     href={`/residents/${resident.resident_id}`}
-                    className="after:absolute after:inset-0 after:content-[''] hover:text-primary hover:underline"
+                    className="hover:text-primary hover:underline"
                   >
                     {fullName(resident)}
                   </Link>
