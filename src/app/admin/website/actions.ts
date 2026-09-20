@@ -26,6 +26,37 @@ function revalidateWebsitePages() {
   revalidatePath("/");
 }
 
+/**
+ * Take a project story off /our-work from the Website admin page. The
+ * reverse of the "Show on website" tick on /projects/[id], kept here as a
+ * separate admin-only action so an admin can pull something quickly
+ * without finding the folder in the tree; the folder itself is untouched
+ * and staff can re-publish it from there.
+ */
+export async function unpublishProject(
+  folderId: string,
+): Promise<SiteContentFormState> {
+  await assertAdminRole();
+  const { t } = await getT();
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("project_folders")
+    .update({ is_public: false })
+    .eq("id", folderId)
+    .select("id")
+    .returns<{ id: string }[]>();
+
+  if (error) return { error: error.message };
+  if (!data?.length) return { error: t.admin.website.published.notFound };
+
+  revalidateWebsitePages();
+  revalidatePath("/our-work");
+  revalidatePath(`/our-work/${folderId}`);
+  revalidatePath(`/projects/${folderId}`);
+  return { success: t.admin.website.published.removed };
+}
+
 export async function updateSiteContent(
   _state: SiteContentFormState,
   formData: FormData,

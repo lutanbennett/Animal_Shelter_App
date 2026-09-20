@@ -6,6 +6,64 @@ Section 11, plus decisions made during setup that aren't in the original doc.
 
 ## Confirmed
 
+- **"Our work" — project stories on the public site (2026-09-21):**
+  migration 0042 adds `public_projects` and `public_project_photos`,
+  the project counterpart of the resident pair (0016/0017/0025): plain
+  views owned by the migration role (so they bypass the staff-only RLS
+  on `project_folders` / `attachments` by design), granted SELECT only
+  to `anon` / `authenticated` with every other privilege revoked, and
+  `scripts/check-public-views.mjs` now checks all four. Filtered on
+  `is_public` **and** `parent_folder_id is not null` — a category row can
+  never be a story. The column list is the safety boundary: title (the
+  folder `name`, since that is the English title staff chose and the
+  Drive folder is named after it) and `name_th`, summary in both
+  languages, date, location, category, a `cover_drive_file_id` (the
+  chosen cover, else the first photo by sort order — the same fallback
+  `project_folder_summary` uses) and a photo count; no `created_by`,
+  `uploaded_by`, Drive folder ids or attachment ids beyond the gallery's
+  own. `sort_date` (`coalesce(project_date, created_at::date)`) is the
+  one "newest first" key so an undated story still sorts sensibly.
+  Photos already flow through the proxy: project photos live on
+  `attachments` (0034), which `is_known_drive_file` covers.
+
+  **Pages:** `/our-work[?category=…]` lists every published story as a
+  card (cover, category badge, date, title, opening line) with category
+  chips driven by the URL — shareable links, still server-rendered, the
+  shape the `/adopt` filters item asks for. Chips appear only for
+  categories that have a story, so nothing on the page leads to an
+  empty list; a shared link to an empty category says so rather than
+  showing every story. `/our-work/[id]` is the story: category (linking
+  to the filter), title, date and location, a gallery that opens on the
+  cover with per-photo captions, the summary as paragraphs, and three
+  other recent stories. Text is picked by locale with English fallback
+  (`localized()` in `src/lib/projects/public.ts`): a story is never
+  hidden from Thai readers for lacking a translation, it just reads in
+  English. `generateMetadata` emits Open Graph / Twitter tags with the
+  cover as `og:image`; the image URL must be absolute for Facebook's and
+  LINE's scrapers, and there is no configured site URL, so
+  `getSiteOrigin()` (`src/lib/site-origin.ts`) reads the request's
+  host / forwarded headers (`NEXT_PUBLIC_SITE_URL` overrides) and passes
+  it as `metadataBase`. `/our-work` joins `/adopt` in the proxy's public
+  prefixes. `PublicHeader` gained Adopt / Our work links (with
+  `aria-current` on the section the visitor is in) and now wraps on
+  phones; the home page shows the three newest stories as a **"What we
+  do" block directly under Pet of the week**, above "Ready to meet
+  everyone?" — the user's call, keeping the top of the page for the hero,
+  the numbers and the shelter's own story. Summaries are rendered as
+  plain paragraphs split on blank lines, as the `/projects` info card
+  does; the "markdown" in the original brief was never implemented on
+  the staff side, so the public page doesn't pretend otherwise.
+
+  **Quick removal (user's follow-up):** `/admin/website` lists every
+  published story ("Our work — published stories": thumbnail, title,
+  category, date, photo count, links to the folder and the public page)
+  with a "Remove from website" button, so an admin can pull something
+  without hunting through the project tree. It is one-directional on
+  purpose: publishing stays on the folder (`/projects/[id]`, "Show on
+  website") where the story is written and checked, and the admin action
+  (`unpublishProject`) only clears `is_public` — the folder and photos
+  are untouched and staff can re-tick it.
+
 - **Pet of the week (2026-09-21):** `site_content.featured_resident_id`
   (0041, nullable FK to `residents`, `on delete set null`) names one
   resident to spotlight on `/`. It sits on the `site_content` singleton so

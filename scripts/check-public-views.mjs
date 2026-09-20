@@ -48,7 +48,12 @@ function report(ok, label, detail) {
   if (!ok) failed = true;
 }
 
-for (const view of ["public_resident_profiles", "public_resident_photos"]) {
+for (const view of [
+  "public_resident_profiles",
+  "public_resident_photos",
+  "public_projects",
+  "public_project_photos",
+]) {
   const read = await fetch(`${url}/rest/v1/${view}?select=id&limit=1`, { headers });
   report(read.ok, `${view}: anon can SELECT`, `HTTP ${read.status}`);
 

@@ -82,6 +82,12 @@ const en = {
       availableForAdoption: "Available for adoption",
       readMore: "Read their story",
     },
+    whatWeDo: {
+      heading: "What we do",
+      subtitle:
+        "Sterilisation drives, rescues, community outreach and the projects that keep the shelter running.",
+      seeAll: "See all our work",
+    },
   },
 
   login: {
@@ -278,6 +284,18 @@ const en = {
         updated: "Featured resident updated.",
         cleared: "Featured resident cleared.",
         notPublic: "That resident isn't shown on the public adoption pages.",
+      },
+      published: {
+        heading: "Our work — published stories",
+        subtitle:
+          "Everything currently on the public Our work page. Stories are published from their folder under Projects (\"Show on website\"); remove one here to take it off the site straight away — the folder and its photos stay as they are.",
+        none: "No project stories are on the website.",
+        view: "View on site",
+        remove: "Remove from website",
+        removeConfirm: (name: string) =>
+          `Remove "${name}" from the public website? It can be shown again from its folder under Projects.`,
+        removed: "Removed from the website.",
+        notFound: "That project folder no longer exists.",
       },
       errors: {
         noFile: "No file provided.",
@@ -1626,6 +1644,8 @@ const en = {
 
   adopt: {
     home: "Home",
+    adoptNav: "Adopt",
+    ourWorkNav: "Our work",
     staffLogin: "Staff & Volunteer Login",
     pageTitle: "Meet Our Animals",
     pageSubtitle:
@@ -1643,6 +1663,25 @@ const en = {
     emailCta: "to ask about adoption or fostering.",
     details: { species: "Species", breed: "Breed", sex: "Sex", age: "Age" },
     showPhoto: (index: number, total: number) => `Show photo ${index} of ${total}`,
+  },
+
+  ourWork: {
+    pageTitle: "Our work",
+    pageSubtitle:
+      "Stories from the field — sterilisation drives, rescues, community outreach and the projects that keep the shelter running.",
+    couldntLoad: "Couldn’t load our stories",
+    noneListed: "No stories have been published yet — check back soon.",
+    noneInCategory: "No stories in this category yet.",
+    filterLabel: "Filter by category",
+    allCategories: "All",
+    backToAll: "← Back to all our work",
+    noPhoto: "No photo yet",
+    photoCount: (n: number) => (n === 1 ? "1 photo" : `${n} photos`),
+    gallery: "Photos",
+    showPhoto: (index: number, total: number) => `Show photo ${index} of ${total}`,
+    moreStories: "More of our work",
+    /** Open Graph description when a story has no summary. */
+    shareFallback: "A story from Lanna Care for Animals.",
   },
 
   format: {

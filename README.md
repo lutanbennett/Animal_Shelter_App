@@ -116,17 +116,24 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    node scripts/check-public-views.mjs
    ```
 
-   This confirms the two views behind the public `/adopt` pages are
-   readable by the anonymous role and **not writable** by it. Supabase's
+   This confirms the four views behind the public `/adopt` and
+   `/our-work` pages are readable by the anonymous role and **not
+   writable** by it. Supabase's
    default privileges grant `anon` INSERT/UPDATE/DELETE on every new
    object, and `public_resident_profiles` is auto-updatable, so until
    `0025_public_views_exclude_adopted.sql` revoked them an anonymous
    `PATCH` was accepted (see `docs/decisions.md`). A fresh project's
    defaults may differ from dev's — don't skip the check. Afterwards, load
-   `/` and `/adopt` signed out and confirm animals actually appear, and
-   set the hero photo and story copy at `/admin/website` (`site_content`
-   starts empty). The same page picks the optional "Pet of the week" for
-   the home page from the publicly listed residents.
+   `/`, `/adopt` and `/our-work` signed out and confirm animals and
+   stories actually appear, and set the hero photo and story copy at
+   `/admin/website` (`site_content` starts empty). The same page picks
+   the optional "Pet of the week" for the home page from the publicly
+   listed residents; project stories are published from `/projects/[id]`
+   ("Show on website") and `/admin/website` lists what is live with a
+   quick "Remove from website". Open Graph previews (Facebook, LINE) take the
+   page's own host for the image URL, so nothing needs configuring —
+   set `NEXT_PUBLIC_SITE_URL` only if the site ever sits behind a proxy
+   that rewrites the host.
 
 4. **Set production secrets** — every variable in `.env.example` except the
    `NEXT_PUBLIC_*` ones:
@@ -187,7 +194,9 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
 - `src/lib/projects/` — the project folder browser's shared pieces: the
   category list, folder/photo loaders, and the Drive sync that keeps
   `Projects/<Category>/<folder>/…` matching the tree after renames and
-  moves.
+  moves; `public.ts` is the read-only slice behind the public `/our-work`
+  pages (the `public_projects` views and the locale/English-fallback
+  helpers).
 - `src/lib/archive/` — the deceased resident archive: the summary PDF, the
   offline `index.html` index page written beside it in the resident's Drive
   folder, and the step that moves that folder to `Residents/Deceased/`.
