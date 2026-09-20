@@ -75,12 +75,14 @@ export default async function EditResidentPage(
   const role = roleResult.data;
   const canEdit = role === "admin" || role === "staff";
   const status = statusResult.data?.[0];
+  const currentStatus = stateResult.data?.[0]?.current_status ?? null;
   const housing: HousingState = {
     enclosureId: status?.enclosure_id ?? null,
     enclosureName: status?.enclosure_name ?? null,
     zoneName: status?.zone_name ?? null,
     isDeceased: stateResult.data?.[0]?.is_deceased ?? false,
-    isHospitalised: stateResult.data?.[0]?.current_status === "Hospitalised",
+    isHospitalised: currentStatus === "Hospitalised",
+    isWithCarer: currentStatus === "Fostered" || currentStatus === "Adopted",
   };
 
   return (

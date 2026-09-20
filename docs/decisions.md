@@ -395,10 +395,27 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   (name required; phone / email / LINE ID optional) that inserts a Carer
   contact right before the placement — two statements, not one
   transaction, on the grounds that a stray carer contact is harmless. Same
-  admin/staff role boundary as hospital placements. Not done here, tracked
-  in the backlog: adopted animals still appear on the public `/adopt`
-  pages until `is_public_visible` is unticked (the public view only
-  excludes deceased), and the foster-carer portal role.
+  admin/staff role boundary as hospital placements. The foster-carer
+  portal role is tracked in the backlog.
+
+- **Adopted residents leave the public pages; fostered ones stay
+  (2026-09-20):** `0025_public_views_exclude_adopted.sql` changes
+  `public_resident_profiles` and `public_resident_photos` from "not
+  deceased" to `current_status not in ('Deceased', 'Adopted')`. Lutan's
+  call: an adopted animal is no longer available so it must not be listed;
+  a fostered one still is (foster-to-adopt is the common path), so it stays.
+  A public "recently adopted" page is a possible later feature and is noted
+  on the public-pages backlog item — it would read `Adopt` rows from
+  `placement_history`, not these views. Found and fixed in the same
+  migration: Supabase's default privileges grant INSERT/UPDATE/DELETE on
+  every new `public` object to `anon` and `authenticated`, and
+  `public_resident_profiles` is simple enough to be auto-updatable, so
+  with the view owned by the RLS-bypassing migration role an anonymous
+  `PATCH /rest/v1/public_resident_profiles` was accepted (verified: HTTP
+  200 on a no-op filter before, `permission denied` after). Everything but
+  SELECT is now revoked on both views. **Any future view granted to
+  `anon` needs the same revoke**, and this is worth re-checking on the
+  production project at go-live alongside the 0016 grant.
 
 ## Still open (from Section 11 of the requirements doc)
 

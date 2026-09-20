@@ -4,11 +4,13 @@ import {
   Camera,
   Droplet,
   Fence,
+  HeartHandshake,
   HeartPulse,
   House,
   Info,
   MapPin,
   Pill,
+  RotateCcw,
   Scissors,
   Stethoscope,
   Syringe,
@@ -43,16 +45,20 @@ export const HUB_TAB_ICONS = {
 } satisfies Record<string, LucideIcon>;
 
 /**
- * Icons for the placement actions (move, send to / return from hospital, …)
- * wherever they appear: hub cards, section pages and the action pages' own
- * headings. The hospital icon also stands in for the Housing card while a
- * resident is in hospital, since they're off-site rather than in an
+ * Icons for the placement actions (move, send to / return from hospital,
+ * foster / adopt, return to shelter) wherever they appear: hub cards,
+ * section pages and the action pages' own headings. Keyed by
+ * PlacementActionKey (src/lib/placements/available.ts). The hospital and
+ * rehome icons also stand in for the Housing card while a resident is in
+ * hospital or with a carer, since they're off-site rather than in an
  * enclosure.
  */
 export const PLACEMENT_ICONS = {
   move: ArrowRightLeft,
   hospital: Ambulance,
   hospitalReturn: Undo2,
+  rehome: HeartHandshake,
+  returnToShelter: RotateCcw,
 } satisfies Record<string, LucideIcon>;
 
 /** Icons for the enclosure browser (`/enclosures`) and enclosure hub. */

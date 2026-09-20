@@ -104,7 +104,9 @@ export default async function SendToHospitalPage(
         ? t.residents.hospital.errors.deceased
         : currentStatus === "Hospitalised"
           ? t.residents.hospital.errors.alreadyInHospital
-          : null;
+          : currentStatus === "Adopted"
+            ? t.residents.hospital.errors.adopted
+            : null;
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">

@@ -495,12 +495,21 @@ const en = {
       bloodTestsLast: (date: string) => `Last: ${date}`,
       historyEntries: (n: number) => `${n} history entries`,
       carer: (name: string) => `Carer: ${name}`,
-      moveEnclosure: "Move enclosure",
-      sendToHospital: "Send to hospital",
-      returnFromHospital: "Return from hospital",
+      /** Keyed by PlacementActionKey (src/lib/placements/available.ts). */
+      placementActions: {
+        move: "Move enclosure",
+        hospital: "Send to hospital",
+        hospitalReturn: "Return from hospital",
+        rehome: "Foster / adopt",
+        returnToShelter: "Return to shelter",
+      },
       inHospital: "In hospital",
       inHospitalDetail: "Off-site in medical care",
       hospitalReturnsTo: (enclosure: string) => `Returns to ${enclosure}`,
+      fosteredWith: (carer: string) => `With foster carer ${carer}`,
+      fosteredNoCarer: "With a foster carer",
+      adoptedBy: (carer: string) => `Adopted by ${carer}`,
+      adoptedNoCarer: "Adopted",
     },
     hospital: {
       pageTitle: (name: string) => `Send ${name} to hospital`,
@@ -528,6 +537,8 @@ const en = {
         residentNotFound: "This resident no longer exists.",
         deceased: "A deceased resident can't be sent to hospital.",
         alreadyInHospital: "This resident is already in hospital.",
+        adopted:
+          "This resident has been adopted, so the shelter no longer records their medical care. Return them to the shelter first if they're back in your care.",
       },
     },
     hospitalReturn: {
@@ -606,7 +617,112 @@ const en = {
         deceased: "A deceased resident can't be moved.",
         inHospital:
           "This resident is in hospital — use \"Return from hospital\" to bring them back into an enclosure.",
+        withCarer:
+          "This resident is with a carer — use \"Return to shelter\" to bring them back into an enclosure.",
         alreadyThere: "The resident is already in that enclosure.",
+      },
+    },
+    rehome: {
+      pageTitle: (name: string) => `Foster or adopt ${name}`,
+      pageSubtitle:
+        "Record that the resident has gone to live with a carer. Their current placement is closed and they're marked as fostered or adopted from the date given.",
+      kind: "What's happening?",
+      kinds: {
+        foster: "Foster",
+        adopt: "Adopt",
+      },
+      kindHints: {
+        foster:
+          "The shelter stays responsible for medical care. They can be adopted, moved to another carer, or returned to the shelter later.",
+        adopt:
+          "The resident leaves the shelter's care for good. If it doesn't work out they can be returned to the shelter.",
+      },
+      changeCarerHint:
+        "They're already with a foster carer — choose a different carer to move them, or switch to Adopt if that carer is adopting them.",
+      fromHospitalHint: (carer: string) =>
+        `They were with ${carer} before going to hospital, so that carer is pre-selected.`,
+      carer: "Carer",
+      selectCarer: "Select a carer",
+      currentCarerSuffix: "(current carer)",
+      noCarers: "No carers in contacts yet — add the first one below.",
+      addNewCarer: "Add a new carer",
+      chooseExisting: "Choose an existing carer instead",
+      newCarer: {
+        name: "Name",
+        phone: "Phone",
+        email: "Email",
+        lineId: "LINE ID",
+        hint: "Saved to contacts as a carer so they can be picked again next time.",
+      },
+      fields: {
+        dateFoster: "Date fostered",
+        dateAdopt: "Adoption date",
+        notes: "Notes",
+        notesPlaceholderFoster:
+          "e.g. short-term foster while recovering from surgery, carer has a fenced garden",
+        notesPlaceholderAdopt:
+          "e.g. adopted by the family that fostered him, home visit done",
+      },
+      saving: "Saving...",
+      buttons: {
+        foster: "Record foster",
+        adopt: "Record adoption",
+      },
+      notAuthorized: "Only staff and admins can foster out or adopt out residents.",
+      errors: {
+        selectKind: "Choose whether this is a foster or an adoption.",
+        selectCarer: "Select the carer, or add a new one.",
+        newCarerName: "Enter the new carer's name.",
+        enterDate: "Enter the date.",
+        dateInFuture: "The date can't be in the future.",
+        dateBeforeCurrent: "The date must be after the current placement started.",
+        enclosureNotFound: (name: string) =>
+          `The ${name} status enclosure is missing from this database.`,
+        residentNotFound: "This resident no longer exists.",
+        deceased: "A deceased resident can't be fostered or adopted.",
+        alreadyAdopted: "This resident has already been adopted.",
+        adoptedNoFoster:
+          "This resident has been adopted. Return them to the shelter first if they're coming back into foster care.",
+        carerNotFound: "That carer no longer exists in contacts.",
+        carerNotCarer: "That contact isn't recorded as a carer.",
+        sameCarer: "The resident is already with that carer.",
+      },
+    },
+    shelterReturn: {
+      pageTitle: (name: string) => `Return ${name} to the shelter`,
+      pageSubtitle:
+        "Record that the resident is back at the shelter from their carer. The foster or adoption is closed and a new placement starts in the chosen enclosure from the date given.",
+      fosteredSince: (carer: string, date: string) =>
+        `With foster carer ${carer} since ${date}`,
+      adoptedSince: (carer: string, date: string) =>
+        `Adopted by ${carer} on ${date}`,
+      awaySince: (date: string) => `Away since ${date}`,
+      returnTo: "Return to",
+      defaultHint: (enclosure: string) =>
+        `${enclosure} is where they were before leaving. Choose a different enclosure if they need to go somewhere else first.`,
+      previousUnavailable:
+        "The enclosure they left from is no longer available, so choose where they should go.",
+      noPrevious: "No previous enclosure was recorded, so choose where they should go.",
+      fields: {
+        date: "Date returned",
+        notes: "Notes",
+        notesPlaceholder:
+          "e.g. carer moving abroad, didn't settle with the resident cat",
+      },
+      returning: "Returning...",
+      returnButton: "Return to shelter",
+      notAuthorized: "Only staff and admins can return residents to the shelter.",
+      errors: {
+        selectEnclosure: "Select the enclosure to return to.",
+        enterDate: "Enter the date returned.",
+        dateInFuture: "The date returned can't be in the future.",
+        dateBeforeLeft: "The date returned must be after the date they left.",
+        enclosureNotFound: "That enclosure no longer exists.",
+        systemEnclosure:
+          "Residents return to the shelter into a physical enclosure, not a lifecycle status.",
+        residentNotFound: "This resident no longer exists.",
+        deceased: "A deceased resident can't be returned to the shelter.",
+        notWithCarer: "This resident isn't with a carer.",
       },
     },
     edit: {
@@ -628,6 +744,7 @@ const en = {
         movingTo: (enclosure: string) => `Will move to ${enclosure} on save.`,
         keep: "Keep current enclosure",
         inHospital: "Return from hospital",
+        withCarer: "Return to shelter",
       },
       fields: {
         estimatedAgeNow: "Estimated age now (years)",

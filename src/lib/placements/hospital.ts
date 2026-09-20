@@ -98,6 +98,9 @@ export async function sendResidentToHospital(
   if (state.current_status === "Hospitalised") {
     return { error: errors.alreadyInHospital };
   }
+  // Fostered animals are still the shelter's medical responsibility;
+  // adopted ones aren't.
+  if (state.current_status === "Adopted") return { error: errors.adopted };
 
   const current = currentResult.data?.[0];
   const startDate = placementStartDate(input.date, now);
