@@ -54,7 +54,10 @@ export default async function EditResidentPage(
       </Link>
       <div>
         <h1 className="text-2xl font-semibold text-foreground">
-          {t.residents.edit.pageTitle(displayName)}
+          {t.residents.edit.pageTitle(displayName)}{" "}
+          <span className="text-lg font-normal text-muted">
+            ({resident.animal_code})
+          </span>
         </h1>
         <p className="text-sm text-muted">{t.residents.edit.pageSubtitle}</p>
       </div>

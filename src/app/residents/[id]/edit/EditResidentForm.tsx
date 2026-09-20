@@ -129,17 +129,6 @@ export function EditResidentForm({
             />
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-muted">
-              {t.residents.edit.fields.animalCode}
-            </span>
-            <span className="rounded border border-border bg-surface-hover px-3 py-2 text-sm text-muted">
-              {resident.animal_code}
-            </span>
-            <span className="text-xs text-muted">
-              {t.residents.edit.fields.animalCodeHint}
-            </span>
-          </div>
-          <div className="flex flex-col gap-1">
             <label htmlFor="thaiName" className="text-sm font-medium text-muted">
               {f.thaiName}
             </label>

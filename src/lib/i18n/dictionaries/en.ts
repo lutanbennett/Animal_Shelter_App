@@ -500,8 +500,6 @@ const en = {
         bio: "Bio & background",
       },
       fields: {
-        animalCode: "Animal code",
-        animalCodeHint: "Assigned automatically at intake — not editable.",
         estimatedAgeNow: "Estimated age now (years)",
         estimatedAgeNowHint:
           "The age as of today. Change it only when you have a better estimate; the record keeps aging from the date you set it.",
