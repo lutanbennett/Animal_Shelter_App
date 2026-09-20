@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { CARER_CONTACT_TYPE } from "./contacts";
 
-/** contacts.type value for people who foster or adopt residents. */
-export const CARER_CONTACT_TYPE = "Carer";
+export { CARER_CONTACT_TYPE };
 
 export type CarerOption = {
   id: string;
@@ -14,7 +14,9 @@ export type CarerOption = {
 /**
  * Contacts of type Carer for the foster / adopt form's carer picker,
  * sorted by name. Only Carer contacts are offered because
- * placement_history_check_carer_type rejects any other type (0001).
+ * placement_history_check_carer_type rejects any other type (0001) — a
+ * volunteer or supplier in the same table is never a candidate. Changing
+ * someone's type to Carer is done on /admin/contacts.
  */
 export async function loadCarerOptions(supabase: SupabaseClient) {
   const { data, error } = await supabase

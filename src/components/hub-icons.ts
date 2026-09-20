@@ -1,6 +1,7 @@
 import {
   Ambulance,
   ArrowRightLeft,
+  BookUser,
   Building2,
   CalendarClock,
   Camera,
@@ -11,9 +12,15 @@ import {
   HeartPulse,
   House,
   Info,
+  Mail,
   MapPin,
+  MessageCircle,
+  MessageCircleMore,
+  MessageSquare,
+  Navigation,
   PawPrint,
   Phone,
+  PhoneCall,
   Pill,
   RotateCcw,
   Scissors,
@@ -78,6 +85,25 @@ export const ENCLOSURE_ICONS = {
   residents: Users,
   maintenance: Wrench,
   move: PLACEMENT_ICONS.move,
+} satisfies Record<string, LucideIcon>;
+
+/**
+ * Icons for the contact list (`/contacts`) and contact hub. The action
+ * icons are the tap targets on a phone — call, LINE / Messenger / WhatsApp
+ * chat, email, open in maps. Lucide has no brand marks, so the three chat
+ * apps get three different speech-bubble shapes and rely on their labels.
+ */
+export const CONTACT_ICONS = {
+  contact: BookUser,
+  call: PhoneCall,
+  line: MessageCircle,
+  messenger: MessageSquare,
+  whatsapp: MessageCircleMore,
+  email: Mail,
+  map: Navigation,
+  address: MapPin,
+  residents: PawPrint,
+  inCare: HeartHandshake,
 } satisfies Record<string, LucideIcon>;
 
 /** Icons for the vet list (`/vets`) and vet hub. */

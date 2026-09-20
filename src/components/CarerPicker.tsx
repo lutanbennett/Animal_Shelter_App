@@ -14,9 +14,10 @@ const inputClass =
  * `carerMode` field says which one the server should read, so a stale
  * select value can't sneak through alongside a new carer.
  *
- * Inline creation stands in for a Contacts admin page (backlog). It's here
- * because a shelter that hasn't entered any carers yet would otherwise be
- * unable to record its first foster.
+ * Only contacts of type Carer are offered (loadCarerOptions) — volunteers,
+ * suppliers and donors share the table but can't be given a resident.
+ * Inline creation stays alongside /admin/contacts so that staff standing
+ * with a new foster carer can record the placement without an admin.
  */
 export function CarerPicker({
   carers,
@@ -71,6 +72,7 @@ export function CarerPicker({
               ))}
             </select>
           </div>
+          <p className="text-xs text-muted">{r.carersOnlyHint}</p>
           <button
             type="button"
             onClick={() => setMode("new")}

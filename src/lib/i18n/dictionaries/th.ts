@@ -47,6 +47,7 @@ const th: Dictionary = {
     zones: "โซน",
     immunizationTypes: "ประเภทวัคซีน",
     vets: "สัตวแพทย์",
+    contacts: "ผู้ติดต่อ",
     menu: "เมนู",
     openMenu: "เปิดเมนู",
     closeMenu: "ปิดเมนู",
@@ -248,6 +249,59 @@ const th: Dictionary = {
           `สัตวแพทย์นี้มีบันทึกการเข้าพบ ${n} ครั้ง จึงลบไม่ได้ — การเข้าพบเป็นส่วนหนึ่งของประวัติการรักษาของสัตว์`,
       },
     },
+    contacts: {
+      title: "ผู้ติดต่อ",
+      subtitle:
+        "บุคคลที่ศูนย์พักพิงทำงานด้วย: ผู้อุปถัมภ์และผู้รับเลี้ยง อาสาสมัคร ซัพพลายเออร์ และผู้บริจาค ตั้งค่าได้ที่นี่ เฉพาะผู้ติดต่อประเภทผู้ดูแลเท่านั้นที่รับสัตว์ไปดูแลได้ และทำจากหน้าศูนย์รวมของสัตว์ตัวนั้น",
+      viewList: "เปิดรายชื่อผู้ติดต่อ →",
+      couldntLoad: "โหลดข้อมูลผู้ติดต่อไม่สำเร็จ",
+      couldntLoadUsage: "โหลดจำนวนการจัดวางไม่สำเร็จ",
+      createForm: {
+        name: "ชื่อ",
+        namePlaceholder: "เช่น คุณนิด",
+        type: "ประเภท",
+        phone: "โทรศัพท์",
+        phonePlaceholder: "เช่น 081 234 5678",
+        email: "อีเมล",
+        emailPlaceholder: "name@example.com",
+        lineId: "LINE ID",
+        lineIdPlaceholder: "เช่น nid_cm",
+        messenger: "Messenger",
+        messengerPlaceholder: "ชื่อผู้ใช้ Facebook",
+        whatsapp: "WhatsApp",
+        whatsappPlaceholder: "เช่น +66 81 234 5678",
+        whatsappHint: "เบอร์ที่ใช้กับบัญชี WhatsApp เบอร์ที่ขึ้นต้นด้วย 0 จะถือว่าเป็นเบอร์ไทย",
+        address: "ที่อยู่",
+        addressPlaceholder: "ที่อยู่ หรือลิงก์ Google Maps",
+        addressHint: "เปิดในแอปแผนที่ได้จากรายชื่อผู้ติดต่อ",
+        addButton: "เพิ่มผู้ติดต่อ",
+      },
+      table: {
+        name: "ชื่อ",
+        type: "ประเภท",
+        phone: "โทรศัพท์",
+        email: "อีเมล",
+        messaging: "ช่องทางแชท",
+        address: "ที่อยู่",
+        residents: "สัตว์",
+        placementCount: (n: number) => `การจัดวาง ${n} รายการ`,
+        inCare: (n: number) => `ดูแลอยู่ ${n} ตัว`,
+        noContacts: "ยังไม่มีผู้ติดต่อ",
+      },
+      deleteConfirm: (name: string) =>
+        `ลบผู้ติดต่อ "${name}"? การกระทำนี้ไม่สามารถย้อนกลับได้`,
+      createdContact: (name: string) => `เพิ่มผู้ติดต่อ "${name}" แล้ว`,
+      errors: {
+        nameRequired: "กรุณากรอกชื่อ",
+        invalidType: "กรุณาเลือกประเภทผู้ติดต่อ",
+        hasPlacements: (n: number) =>
+          `ผู้ติดต่อนี้มีบันทึกการจัดวาง ${n} รายการ จึงลบไม่ได้ — การจัดวางเป็นส่วนหนึ่งของประวัติของสัตว์`,
+        hasMaintenance: (n: number) =>
+          `ผู้ติดต่อนี้ได้รับมอบหมายงานซ่อมบำรุง ${n} งาน จึงลบไม่ได้`,
+        typeLockedByPlacements: (n: number) =>
+          `ผู้ติดต่อนี้มีการจัดวางในฐานะผู้ดูแล ${n} รายการ ประเภทจึงต้องคงเป็นผู้ดูแล`,
+      },
+    },
     website: {
       title: "เว็บไซต์",
       subtitleBeforeCode: "แก้ไขหน้าเว็บสาธารณะที่",
@@ -436,6 +490,56 @@ const th: Dictionary = {
     },
   },
 
+  contacts: {
+    pageTitle: "ผู้ติดต่อ",
+    pageSubtitle:
+      "ผู้ดูแล อาสาสมัคร ซัพพลายเออร์ และผู้บริจาค — แตะเพื่อโทร แชททาง LINE, Messenger หรือ WhatsApp ส่งอีเมล หรือเปิดแผนที่",
+    couldntLoadContacts: "โหลดข้อมูลผู้ติดต่อไม่สำเร็จ",
+    couldntLoadPlacements: "โหลดข้อมูลการจัดวางไม่สำเร็จ",
+    manageInAdmin: "แก้ไขผู้ติดต่อในหน้าผู้ดูแลระบบ",
+    searchPlaceholder: "ค้นหาชื่อ โทรศัพท์ อีเมล ไอดีแชท…",
+    searchLabel: "ค้นหาผู้ติดต่อ",
+    filterLabel: "กรองตามประเภท",
+    allTypes: "ทั้งหมด",
+    actions: {
+      call: "โทร",
+      line: "LINE",
+      messenger: "Messenger",
+      whatsapp: "WhatsApp",
+      email: "อีเมล",
+      map: "แผนที่",
+    },
+    list: {
+      inCare: (n: number) => `ดูแลอยู่ ${n} ตัว`,
+      noContacts: "ยังไม่มีผู้ติดต่อ — ผู้ดูแลระบบเพิ่มได้ที่ ผู้ดูแลระบบ → ผู้ติดต่อ",
+      noMatches: "ไม่พบผู้ติดต่อที่ตรงกัน",
+      count: (shown: number, total: number) =>
+        shown === total ? `ผู้ติดต่อ ${total} ราย` : `${shown} จาก ${total} ราย`,
+    },
+    hub: {
+      backToContacts: "← กลับไปหน้าผู้ติดต่อ",
+      details: "รายละเอียด",
+      phone: "โทรศัพท์",
+      email: "อีเมล",
+      lineId: "LINE ID",
+      messenger: "Messenger",
+      whatsapp: "WhatsApp",
+      address: "ที่อยู่",
+      noDetails: "ยังไม่มีข้อมูลติดต่อ — ผู้ดูแลระบบเพิ่มได้ที่ ผู้ดูแลระบบ → ผู้ติดต่อ",
+      residentsInCare: "สัตว์ในความดูแล",
+      residentsInCareDetail: "สัตว์ที่อุปถัมภ์ชั่วคราวหรือรับเลี้ยงซึ่งอยู่กับผู้ดูแลนี้ในขณะนี้",
+      noResidentsInCare: "ขณะนี้ไม่มีสัตว์อยู่กับผู้ดูแลนี้",
+      notACarer:
+        "เฉพาะผู้ติดต่อประเภทผู้ดูแลเท่านั้นที่อุปถัมภ์หรือรับเลี้ยงสัตว์ได้ ผู้ดูแลระบบเปลี่ยนประเภทได้ที่ ผู้ดูแลระบบ → ผู้ติดต่อ",
+      since: (date: string) => `ตั้งแต่ ${date}`,
+      pastPlacements: "การจัดวางที่ผ่านมา",
+      noPastPlacements: "ไม่มีการจัดวางก่อนหน้ากับผู้ดูแลนี้",
+      placementRange: (from: string, to: string) => `${from} – ${to}`,
+      unknownResident: "ไม่ทราบชื่อสัตว์",
+      assignFromResident:
+        "หากต้องการให้สัตว์ไปอยู่กับผู้ดูแลนี้ ให้เปิดหน้าศูนย์รวมของสัตว์ตัวนั้นแล้วใช้ อุปถัมภ์ / รับเลี้ยง",
+    },
+  },
   bloodTests: {
     pageTitle: "บันทึกผลตรวจเลือด",
     pageSubtitle:
@@ -960,6 +1064,8 @@ const th: Dictionary = {
       selectCarer: "เลือกผู้ดูแล",
       currentCarerSuffix: "(ผู้ดูแลปัจจุบัน)",
       noCarers: "ยังไม่มีผู้ดูแลในรายชื่อผู้ติดต่อ เพิ่มรายแรกด้านล่าง",
+      carersOnlyHint:
+        "แสดงเฉพาะผู้ติดต่อประเภทผู้ดูแลเท่านั้น — อาสาสมัครและซัพพลายเออร์รับสัตว์ไปดูแลไม่ได้ จัดการผู้ติดต่อได้ที่ ผู้ดูแลระบบ → ผู้ติดต่อ",
       addNewCarer: "เพิ่มผู้ดูแลใหม่",
       chooseExisting: "เลือกจากผู้ดูแลที่มีอยู่แทน",
       newCarer: {
@@ -1476,6 +1582,13 @@ const th: Dictionary = {
       ReturnToShelter: "กลับมาที่ศูนย์",
     },
     species: { Dog: "สุนัข", Cat: "แมว" },
+    contactType: {
+      Carer: "ผู้ดูแล",
+      Volunteer: "อาสาสมัคร",
+      Vendor: "ซัพพลายเออร์",
+      Donor: "ผู้บริจาค",
+      Other: "อื่นๆ",
+    },
     sex: { Male: "เพศผู้", Female: "เพศเมีย" },
     appointmentStatus: {
       scheduled: "นัดหมายแล้ว",
