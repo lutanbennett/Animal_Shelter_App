@@ -1,0 +1,11 @@
+#!/bin/sh
+# Keep GitHub aligned with the local checkout: push the current branch after
+# every commit (creating the remote branch on first push). Enabled per clone
+# with `git config core.hooksPath .githooks` — see README "Getting started".
+#
+# post-commit can't fail the commit, so an offline push just prints a
+# reminder. Amended or rebased commits need a manual `git push --force-with-lease`.
+branch=$(git symbolic-ref --short HEAD 2>/dev/null) || exit 0
+if ! git push -q -u origin "$branch"; then
+  echo "post-commit: push of '$branch' failed — run 'git push -u origin $branch' when back online" >&2
+fi

@@ -45,6 +45,15 @@ reasoning and the trade-offs that come with that.
 
    Open [http://localhost:3000](http://localhost:3000).
 
+5. **Enable the git hooks** (once per clone)
+
+   ```bash
+   git config core.hooksPath .githooks
+   ```
+
+   `.githooks/post-commit` pushes the current branch to GitHub after every
+   commit, so the remote always matches the local checkout.
+
 ## Deploying to Cloudflare
 
 The app deploys to Cloudflare Workers through the `@opennextjs/cloudflare`
