@@ -159,6 +159,9 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
   folder helpers (resident photos / blood tests / procedures, and the
   maintenance job folder that follows a job between status folders, and
   the project folder path that mirrors the project tree).
+- `src/lib/vets/` — the vet hub's statistics: period filtering, monthly
+  buckets and per-animal roll-ups over a vet's appointment rows, shared
+  by the `/vets` list and `/vets/[id]`.
 - `src/lib/maintenance/` — the enclosure maintenance feature's shared
   pieces: status vocabulary and colours, the job loader, and the
   after-change Drive folder sync used by the server actions.
