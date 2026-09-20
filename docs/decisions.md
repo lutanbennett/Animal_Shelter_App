@@ -24,6 +24,19 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   `scripts/`. Side benefit: the photo proxy now needs one Drive request
   per file instead of two, since `fetch` exposes the `Content-Type` header
   on the `alt=media` response that gaxios hid.
+- **No `.env.local` in the Worker bundle (2026-09-20):** `@opennextjs/cloudflare`
+  snapshots every variable from `.env*` files into
+  `.open-next/cloudflare/next-env.mjs` and the Worker uses them as a
+  `process.env[key] ??=` fallback for anything not set as a Cloudflare
+  secret. Handy for `npm run preview`, but on a deploy it would upload the
+  dev Google/Supabase credentials plus `SUPABASE_ACCESS_TOKEN` and
+  `DEV_TEST_USER_PASSWORD`, which the app never reads. `npm run deploy` now
+  runs `scripts/strip-baked-env.mjs` between build and deploy to empty
+  that file. Verified on workerd that the stripped bundle 502s the photo
+  proxy with no secrets and works once they're supplied via `.dev.vars`
+  (the local equivalent of `wrangler secret put`). `NEXT_PUBLIC_*` values
+  are unaffected — `next build` inlines them separately. Consequence:
+  every runtime secret must be set on Cloudflare before the first deploy.
 - **Google Drive auth model:** the shelter's storage
   (`lannacareforanimals@gmail.com`) is a personal Gmail account, not Google
   Workspace, so domain-wide delegation (as the original doc assumed) is not

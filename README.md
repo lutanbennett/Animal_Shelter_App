@@ -76,21 +76,30 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    Repeat for `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`,
    `GOOGLE_OAUTH_REFRESH_TOKEN` and `GOOGLE_DRIVE_ROOT_FOLDER_ID`.
 
-   Note that the adapter also bakes whatever is in `.env.local` into the
-   Worker bundle at build time as a *fallback* for any variable not set as
-   a Cloudflare secret. That's what makes `npm run preview` zero-config,
-   but it also means a deploy from a machine with dev credentials in
-   `.env.local` will quietly use them in production for any secret you
-   forgot to set — so set all five. `NEXT_PUBLIC_SUPABASE_URL` /
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY` are inlined at build time and must be
-   the production values in `.env.local` (or the shell) when you run the
-   deploy build.
+   **All five are mandatory.** The OpenNext adapter copies *everything* in
+   `.env.local` into the Worker bundle at build time as a fallback for any
+   variable not set on Cloudflare — that's what makes `npm run preview`
+   zero-config, but it would also ship dev credentials (and unrelated
+   things like `SUPABASE_ACCESS_TOKEN`) to production. `npm run deploy`
+   therefore runs `scripts/strip-baked-env.mjs` between build and deploy
+   to empty that snapshot, so a secret you forgot to set fails loudly at
+   runtime instead of silently using the dev value. To preview the
+   stripped build locally the way production will run, put the same five
+   values in a gitignored `.dev.vars` file (wrangler's local stand-in for
+   Cloudflare secrets).
+
+   `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` are inlined
+   by `next build` (not via that snapshot) and must be the production
+   values in `.env.local` or the shell when you run the deploy build.
 
 4. **Deploy**
 
    ```bash
    npm run deploy
    ```
+
+   Check the `strip-baked-env` line in the output lists the variables it
+   removed before wrangler uploads.
 
 ## Project structure
 
