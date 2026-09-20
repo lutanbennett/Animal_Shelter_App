@@ -18,6 +18,10 @@
   --danger-foreground: #ffffff;
   --success: #30d158;
   --success-foreground: #04170a;
+
+  /* Board colours for the maintenance Kanban: in-progress and blocked. */
+  --info: #0a84ff;
+  --warning: #ffd60a;
 }
 
 @theme inline {
@@ -36,6 +40,8 @@
   --color-danger-foreground: var(--danger-foreground);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
+  --color-info: var(--info);
+  --color-warning: var(--warning);
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

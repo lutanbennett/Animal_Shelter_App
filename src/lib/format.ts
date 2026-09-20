@@ -110,3 +110,14 @@ export function formatAxisDate(
       : { day: "numeric", month: "short" },
   );
 }
+
+// Costs are Thai baht — the shelter's only currency — shown whole (quotes
+// and invoices are in whole baht) with the locale's grouping separator.
+export function formatBaht(amount: number, locale: Locale = "en") {
+  return amount.toLocaleString(DATE_LOCALE_TAG[locale], {
+    style: "currency",
+    currency: "THB",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+}

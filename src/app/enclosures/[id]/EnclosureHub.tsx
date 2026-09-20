@@ -4,6 +4,14 @@ import Link from "next/link";
 import { ENCLOSURE_ICONS } from "@/components/hub-icons";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { formatDate } from "@/lib/format";
+import type { MaintenanceJob } from "@/lib/maintenance/queries";
+import {
+  DUE_TONE,
+  STATUS_TONE,
+  dueState,
+  maintenanceStatusLabel,
+} from "@/lib/maintenance/status";
 import { OccupancyIndicator } from "../OccupancyIndicator";
 
 export type Enclosure = {
@@ -61,12 +69,18 @@ export function EnclosureHub({
   enclosure,
   residents,
   isAdmin,
+  canWriteMaintenance,
+  maintenanceJobs,
 }: {
   enclosure: Enclosure;
   residents: EnclosureResident[];
   isAdmin: boolean;
+  /** Staff/admin may log jobs; volunteers only see them. */
+  canWriteMaintenance: boolean;
+  maintenanceJobs: MaintenanceJob[];
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const openJobs = maintenanceJobs.filter((job) => job.status !== "Completed");
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
@@ -160,31 +174,83 @@ export function EnclosureHub({
             )}
           </div>
 
-          {/* Maintenance stub: the planned feature lets staff log repairs /
-              work needed on an enclosure for budgeting and tracking. Nothing
-              is wired up yet — the `maintenance` table only has a zone_id
-              today, so an enclosure_id column will be needed when this is
-              built. Keep the card so the hub layout doesn't shift later. */}
+          {/* Maintenance: the open jobs for this enclosure, newest due first
+              (loadMaintenanceJobs orders by due date), with the rest on the
+              board filtered to this enclosure. Lifecycle pseudo-enclosures
+              (Hospital, Fostered, …) aren't physical, so they get no card. */}
           {!enclosure.isSystem && (
-            <div
-              aria-disabled="true"
-              className="flex flex-col gap-2 rounded-lg border border-dashed border-border bg-surface/50 p-4 opacity-70"
-            >
+            <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4">
               <div className="flex items-center justify-between gap-2">
-                <span className="flex items-center gap-2 text-sm font-medium text-muted">
+                <span className="flex items-center gap-2 text-sm font-medium text-foreground">
                   <ENCLOSURE_ICONS.maintenance
                     aria-hidden="true"
-                    className="h-5 w-5 shrink-0 md:h-4 md:w-4"
+                    className="h-5 w-5 shrink-0 text-muted md:h-4 md:w-4"
                   />
                   {t.enclosures.hub.maintenance}
                 </span>
-                <span className="rounded-full bg-surface-hover px-2 py-0.5 text-xs font-medium text-muted">
-                  {t.enclosures.hub.maintenanceComingSoon}
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                    openJobs.length > 0
+                      ? "bg-primary/15 text-primary"
+                      : "bg-surface-hover text-muted"
+                  }`}
+                >
+                  {openJobs.length > 0
+                    ? t.enclosures.hub.maintenanceOpen(openJobs.length)
+                    : t.enclosures.hub.maintenanceNone}
                 </span>
               </div>
-              <span className="text-xs text-muted">
-                {t.enclosures.hub.maintenanceDetail}
-              </span>
+
+              {openJobs.length > 0 ? (
+                <ul className="flex flex-col gap-1.5">
+                  {openJobs.slice(0, 4).map((job) => {
+                    const due = dueState(job.due_date, job.status);
+                    return (
+                      <li key={job.id}>
+                        <Link
+                          href={`/maintenance/${job.id}`}
+                          className={`flex flex-col gap-0.5 rounded border border-l-4 border-border px-2 py-1.5 text-sm hover:bg-surface-hover ${DUE_TONE[due].card}`}
+                        >
+                          <span className="truncate font-medium text-foreground">{job.title}</span>
+                          <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
+                            <span className={`flex items-center gap-1 ${STATUS_TONE[job.status].text}`}>
+                              <span className={`h-2 w-2 rounded-full ${STATUS_TONE[job.status].dot}`} />
+                              {maintenanceStatusLabel(t, job.status)}
+                            </span>
+                            {job.due_date && (
+                              <span className={due !== "none" ? `rounded px-1 font-medium ${DUE_TONE[due].badge}` : ""}>
+                                {formatDate(job.due_date, locale)}
+                              </span>
+                            )}
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <span className="text-xs text-muted">
+                  {t.enclosures.hub.maintenanceDetail}
+                </span>
+              )}
+
+              <div className="flex flex-wrap items-center gap-3 text-xs font-medium">
+                {canWriteMaintenance && (
+                  <Link
+                    href={`/maintenance/new?enclosureId=${enclosure.id}`}
+                    className="rounded bg-primary px-3 py-1.5 text-primary-foreground hover:bg-primary-hover"
+                  >
+                    {t.enclosures.hub.maintenanceLog}
+                  </Link>
+                )}
+                <Link
+                  href={`/maintenance?enclosure=${enclosure.id}`}
+                  className="text-primary hover:underline"
+                >
+                  {t.enclosures.hub.maintenanceViewAll}
+                  {maintenanceJobs.length > 0 && ` (${maintenanceJobs.length})`}
+                </Link>
+              </div>
             </div>
           )}
         </aside>

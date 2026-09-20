@@ -27,7 +27,12 @@ export type UploadedAttachment = {
 // see "not found" before either finishes creating it.
 const CONCURRENCY = 1;
 
-function uploadFile(
+/**
+ * One multipart POST with upload progress (XHR, since fetch can't report
+ * it). Exported so a form that collects files before its record exists —
+ * the maintenance form — can push them through the same route afterwards.
+ */
+export function uploadAttachmentFile(
   t: Dictionary,
   uploadUrl: string,
   file: File,
@@ -114,7 +119,7 @@ export function AttachmentUploader({
           const item = items[index];
           index += 1;
           updateItem(item.key, { status: "uploading" });
-          const result = await uploadFile(t, uploadUrl, item.file, (progress) =>
+          const result = await uploadAttachmentFile(t, uploadUrl, item.file, (progress) =>
             updateItem(item.key, { progress }),
           );
           if (result.error) {

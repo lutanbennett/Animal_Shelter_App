@@ -19,6 +19,7 @@ export function NavLinks({ isAdmin }: { isAdmin: boolean }) {
   const items: NavItem[] = [
     { href: "/residents", label: t.nav.residents },
     { href: "/enclosures", label: t.nav.enclosures },
+    { href: "/maintenance", label: t.nav.maintenance },
     ...(isAdmin
       ? [
           {
