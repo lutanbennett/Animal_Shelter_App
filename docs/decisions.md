@@ -6,6 +6,37 @@ Section 11, plus decisions made during setup that aren't in the original doc.
 
 ## Confirmed
 
+- **Sign in with Google (2026-09-20):** the login page now offers
+  "Continue with Google" alongside email/password, via Supabase Auth's
+  Google provider (PKCE). `signInWithGoogle()` in `src/app/login/actions.ts`
+  starts the flow (a server action, so the code-verifier cookie is written
+  by the same server client that later exchanges it) and
+  `src/app/auth/callback/route.ts` swaps the returned code for a session.
+  Roles stay admin-provisioned: the callback checks `current_user_role()`
+  and, if the Google account has no `user_roles` row, signs them straight
+  back out to `/login?error=no_role` rather than letting a role-less
+  session reach `/residents` where every RLS policy would reject it. The
+  `auth.users` row is deliberately left in place so the admin sees the
+  account on `/admin/security` and can assign a role; the person then
+  just tries again. Google accounts whose email matches an existing
+  admin-created login are linked to that user by Supabase automatically
+  (both emails count as verified), so existing staff keep their role and
+  can use either method. `/auth/callback` is a public path in
+  `src/lib/supabase/proxy.ts`. The login page also gained a "Back to home
+  page" link — previously there was no way back to the public site.
+  One-time setup (not in code): Google Cloud console → create an OAuth
+  2.0 *Web application* client (the existing Drive client can live in the
+  same project) with authorised redirect URI
+  `https://<project-ref>.supabase.co/auth/v1/callback`; Supabase →
+  Authentication → Providers → Google: enable and paste that client
+  ID/secret; Supabase → Authentication → URL Configuration: add
+  `http://localhost:3000/auth/callback` and the production
+  `https://<domain>/auth/callback` to Redirect URLs (Supabase falls back
+  to the Site URL for any `redirectTo` not on that list). Optionally turn
+  off "Allow new users to sign up" there to stop unknown Google accounts
+  creating `auth.users` rows at all — then they get the generic
+  `error=google` message instead of `no_role`, and admins must create the
+  login first with the person's Gmail address.
 - **Hosting:** Cloudflare Workers (free tier), not Vercel. Chosen to avoid
   Vercel Hobby's non-commercial-use restriction. Deployed via the
   `@opennextjs/cloudflare` adapter (`wrangler.jsonc`, `open-next.config.ts`,
@@ -330,6 +361,44 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   Hospital pseudo-enclosure (it shows the return link instead). Vet visit
   records still only offer "Send to hospital": a discharge isn't tied to a
   visit the way an admission can be.
+
+- **Foster and adopt (2026-09-20):** one page for both,
+  `/residents/[id]/rehome`, with a Foster / Adopt toggle (`?type=` picks
+  the default; a fostered resident defaults to Adopt because the usual case
+  is the carer adopting). `rehomeResident()` in
+  `src/lib/placements/rehome.ts` inserts a single `Foster` or `Adopt` row
+  into the Lifecycle/Fostered or /Adopted pseudo-enclosure with `carer_id`
+  set, so `resident_current_state.current_status` / `current_carer_id`
+  come out right with no view changes; `previous_enclosure_id` is the
+  enclosure they left so a return can offer it back. No migration: enum
+  values, pseudo-enclosures, `carer_id` + its Carer-type trigger and the
+  admin/staff insert policies all existed since 0001. Transitions: Foster
+  is allowed from Resident/Outreach, Hospitalised (a fostered animal the
+  shelter treated can go straight back to its carer — the form pre-selects
+  the carer from the placement before the hospital stay) and Fostered
+  (change of carer; same carer rejected). Adopt is allowed from the same
+  states. Nothing is allowed from Adopted except **Return to shelter**
+  (`/residents/[id]/rehome/return`, `returnResidentToShelter()` — a
+  `ReturnToShelter` row into a physical enclosure, picker defaulting to
+  the enclosure they left from, same capacity warning as moves), which also
+  serves fostered residents. Adoption ends the shelter's medical
+  responsibility, so "Send to hospital" is refused for adopted residents
+  but still offered while fostered. "Move enclosure" is now refused (and
+  hidden, including on the edit form) while fostered or adopted, since a
+  `ChangeEnclosure` out of a Lifecycle enclosure would misrecord the
+  return. The per-status list of offered actions is a single table,
+  `availablePlacementActions()` in `src/lib/placements/available.ts`, read
+  by the hub card, the housing section and the vet-visit links, so the
+  four surfaces can't drift. **Carer picker:** the dev database had no
+  contacts at all, and Contacts management isn't built, so the picker
+  offers existing Carer contacts *or* an inline "add a new carer" form
+  (name required; phone / email / LINE ID optional) that inserts a Carer
+  contact right before the placement — two statements, not one
+  transaction, on the grounds that a stray carer contact is harmless. Same
+  admin/staff role boundary as hospital placements. Not done here, tracked
+  in the backlog: adopted animals still appear on the public `/adopt`
+  pages until `is_public_visible` is unticked (the public view only
+  excludes deceased), and the foster-carer portal role.
 
 ## Still open (from Section 11 of the requirements doc)
 

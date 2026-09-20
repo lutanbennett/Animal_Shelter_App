@@ -65,6 +65,14 @@ const en = {
     password: "Password",
     signingIn: "Signing in...",
     signIn: "Sign in",
+    or: "or",
+    continueWithGoogle: "Continue with Google",
+    backToHome: "Back to home page",
+    errors: {
+      noRole:
+        "This Google account hasn’t been given access yet. Ask an administrator to assign you a role, then try again.",
+      google: "Google sign-in didn’t complete. Please try again.",
+    },
   },
 
   admin: {
