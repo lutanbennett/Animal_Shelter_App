@@ -5,6 +5,7 @@ import { formatDate } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
 import {
   appointmentStatusLabel,
+  formatDose,
   placementTypeLabel,
 } from "@/lib/i18n/enum-labels";
 import { PhotoUploader } from "@/components/PhotoUploader";
@@ -366,12 +367,20 @@ export default async function ResidentSectionPage(
                   </span>
                   <div className="flex flex-wrap justify-end gap-x-3 gap-y-1">
                     {!isDeceased && (
-                      <Link
-                        href={`/blood-tests/new?residentId=${id}&vetAppointmentId=${row.id}`}
-                        className="text-xs font-medium text-primary hover:underline"
-                      >
-                        {t.residents.sections.logBloodTest}
-                      </Link>
+                      <>
+                        <Link
+                          href={`/blood-tests/new?residentId=${id}&vetAppointmentId=${row.id}`}
+                          className="text-xs font-medium text-primary hover:underline"
+                        >
+                          {t.residents.sections.logBloodTest}
+                        </Link>
+                        <Link
+                          href={`/prescriptions/new?residentId=${id}&vetAppointmentId=${row.id}`}
+                          className="text-xs font-medium text-primary hover:underline"
+                        >
+                          {t.residents.sections.addPrescription}
+                        </Link>
+                      </>
                     )}
                     {canSendToHospital && (
                       <Link
@@ -391,9 +400,11 @@ export default async function ResidentSectionPage(
       break;
     }
     case "prescriptions": {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("prescriptions")
-        .select("id, start_date, end_date, notes, medication(name), frequency(label)")
+        .select(
+          "id, start_date, end_date, dose_quantity, notes, medication(name, dose_unit), frequency(label), vet_appointments(appointment_date)",
+        )
         .eq("resident_id", id)
         .order("start_date", { ascending: false })
         .returns<
@@ -401,34 +412,104 @@ export default async function ResidentSectionPage(
             id: string;
             start_date: string;
             end_date: string | null;
+            dose_quantity: number | null;
             notes: string | null;
-            medication: { name: string } | null;
+            medication: { name: string; dose_unit: string } | null;
             frequency: { label: string } | null;
+            vet_appointments: { appointment_date: string } | null;
           }[]
         >();
-      body = (
-        <RecordList
-          rows={data ?? []}
-          empty={t.residents.sections.empty.prescriptions}
-          render={(row) => (
-            <div className="flex items-center justify-between">
+      // Current = still running today (including one dated to start later);
+      // expired = its end date has passed. A death ends every open
+      // prescription on the date of death (0027), so a deceased resident's
+      // list is all expired.
+      const today = new Date().toISOString().slice(0, 10);
+      const rows = data ?? [];
+      const current = rows.filter((row) => !row.end_date || row.end_date >= today);
+      const expired = rows.filter((row) => row.end_date && row.end_date < today);
+      const renderPrescription = (row: (typeof rows)[number]) => {
+        const dose = formatDose(t, row.dose_quantity, row.medication?.dose_unit);
+        return (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-start justify-between gap-3">
               <div className="flex flex-col">
                 <span className="font-medium">
                   {row.medication?.name ?? t.residents.sections.unknownMedication}
                 </span>
-                {row.frequency?.label && (
-                  <span className="text-xs text-muted">{row.frequency.label}</span>
+                {(dose || row.frequency?.label) && (
+                  <span className="text-xs text-muted">
+                    {[dose, row.frequency?.label].filter(Boolean).join(" · ")}
+                  </span>
                 )}
               </div>
-              <span className="text-xs text-muted">
-                {formatDate(row.start_date, locale)} –{" "}
-                {row.end_date
-                  ? formatDate(row.end_date, locale)
-                  : t.residents.sections.ongoing}
-              </span>
+              <div className="flex flex-col items-end gap-0.5 text-right">
+                <span className="text-xs text-muted">
+                  {formatDate(row.start_date, locale)} –{" "}
+                  {row.end_date
+                    ? formatDate(row.end_date, locale)
+                    : t.residents.sections.ongoing}
+                </span>
+                {row.start_date > today && (
+                  <span className="text-xs text-primary">
+                    {t.residents.sections.startsOn(formatDate(row.start_date, locale))}
+                  </span>
+                )}
+                {row.vet_appointments && (
+                  <span className="text-xs text-muted">
+                    {t.residents.sections.linkedVisit(
+                      formatDate(row.vet_appointments.appointment_date, locale),
+                    )}
+                  </span>
+                )}
+              </div>
+            </div>
+            {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
+          </div>
+        );
+      };
+      body = (
+        <div className="flex flex-col gap-4">
+          {!isDeceased && (
+            <div className="flex justify-end">
+              <ActionLink
+                href={`/prescriptions/new?residentId=${id}`}
+                label={t.residents.sections.addPrescription}
+                icon={SECTION_ICONS.prescriptions}
+                variant="primary"
+                iconOnlyOnMobile={false}
+              />
             </div>
           )}
-        />
+          {error && <p className="text-sm text-danger">{error.message}</p>}
+          {rows.length === 0 ? (
+            <Placeholder>{t.residents.sections.empty.prescriptions}</Placeholder>
+          ) : (
+            <>
+              <section className="flex flex-col gap-2">
+                <h2 className="text-sm font-medium text-muted">
+                  {t.residents.sections.currentPrescriptions} ({current.length})
+                </h2>
+                <RecordList
+                  rows={current}
+                  empty={t.residents.sections.noCurrentPrescriptions}
+                  render={renderPrescription}
+                />
+              </section>
+              {expired.length > 0 && (
+                <section className="flex flex-col gap-2">
+                  <h2 className="text-sm font-medium text-muted">
+                    {t.residents.sections.expiredPrescriptions} ({expired.length})
+                  </h2>
+                  <RecordList
+                    rows={expired}
+                    empty=""
+                    render={renderPrescription}
+                  />
+                </section>
+              )}
+            </>
+          )}
+        </div>
       );
       break;
     }

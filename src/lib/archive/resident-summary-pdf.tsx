@@ -351,12 +351,13 @@ function ResidentSummaryDocument({
 
         <Section title="Prescriptions">
           <Table
-            columns={["From", "To", "Medication", "Frequency", "Notes"]}
-            widths={["13%", "13%", "26%", "18%", "30%"]}
+            columns={["From", "To", "Medication", "Dose", "Frequency", "Notes"]}
+            widths={["12%", "12%", "24%", "12%", "16%", "24%"]}
             rows={record.prescriptions.map((prescription) => [
               day(prescription.startDate),
               prescription.endDate ? day(prescription.endDate) : "ongoing",
               prescription.medicationName ?? "—",
+              prescription.dose ?? "—",
               prescription.frequencyLabel ?? "—",
               prescription.notes ?? "—",
             ])}

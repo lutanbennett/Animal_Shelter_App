@@ -59,6 +59,8 @@ export type ArchiveAppointment = {
 export type ArchivePrescription = {
   id: string;
   medicationName: string | null;
+  /** "2 tablet", "500 ml" — quantity in the medication's own unit; null on rows without a dose. */
+  dose: string | null;
   frequencyLabel: string | null;
   startDate: string;
   endDate: string | null;
@@ -212,8 +214,9 @@ type PrescriptionRow = {
   id: string;
   start_date: string;
   end_date: string | null;
+  dose_quantity: number | null;
   notes: string | null;
-  medication: { name: string } | null;
+  medication: { name: string; dose_unit: string } | null;
   frequency: { label: string } | null;
 };
 
@@ -292,7 +295,7 @@ export async function loadResidentArchiveRecord(
       .returns<AppointmentRow[]>(),
     supabase
       .from("prescriptions")
-      .select("id, start_date, end_date, notes, medication(name), frequency(label)")
+      .select("id, start_date, end_date, dose_quantity, notes, medication(name, dose_unit), frequency(label)")
       .eq("resident_id", residentId)
       .order("start_date", { ascending: false })
       .returns<PrescriptionRow[]>(),
@@ -428,6 +431,10 @@ export async function loadResidentArchiveRecord(
     prescriptions: (prescriptionsResult.data ?? []).map((row) => ({
       id: row.id,
       medicationName: row.medication?.name ?? null,
+      dose:
+        row.dose_quantity != null
+          ? `${Number(row.dose_quantity)} ${row.medication?.dose_unit ?? ""}`.trim()
+          : null,
       frequencyLabel: row.frequency?.label ?? null,
       startDate: row.start_date,
       endDate: row.end_date,

@@ -506,6 +506,59 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   reason to make the archive depend on a font CDN staying up. SIL Open Font
   License 1.1.
 
+- **Prescriptions (2026-09-20):** one form, `/prescriptions/new`, reached
+  from three places — the hub's prescriptions card, the Prescriptions tab,
+  and an "Add prescription" link on each row of the Vet Appointments tab
+  (which preselects the visit and defaults the start date to it, as the
+  blood-test form does). The tab splits records into **Current** (no end
+  date, or one today or later — a course dated to start later sits here
+  with a "Starts …" note) and **Expired** (end date has passed). Deceased
+  residents get no add controls and the form page refuses them up front;
+  the 0026 lock would reject the insert anyway.
+
+  **The AppSheet shape had no dose, and its implicit unit was "tablets".**
+  `0027_prescriptions.sql` fixes that in the data model rather than in
+  notes: a `dose_unit` per **medication** (tablet, capsule, ml, mg, g, mcg,
+  IU, drop, sachet, application, dose) and a `dose_quantity` per
+  prescription in that unit. The unit lives on the medication, not the
+  prescription, on purpose — "Amoxicillin 250mg tablet" and "Amoxicillin
+  suspension" are two medication rows, so every prescription of a given
+  medication is in the same unit and totals per medication add up. IV
+  fluids are simply a medication measured in ml. The vocabulary is a check
+  constraint plus i18n enum labels (`t.enums.doseUnit`), like the other
+  fixed lists; a reference table would have needed its own admin page and
+  Thai labels for no gain at this size.
+
+  **Forecasting.** `frequency` gained `doses_per_day` (twice daily = 2,
+  every 8 hours = 3, every other day = 0.5, null = "as needed") and eight
+  starter rows, and `medication_daily_requirement` sums
+  `dose_quantity × doses_per_day` per medication across prescriptions that
+  are current today for residents who are neither deceased nor adopted —
+  the same exclusion `immunization_compliance` applies. Recording a death
+  therefore drops that resident out of the forecast immediately, and the
+  7.2 cascade ending their open prescriptions is belt-and-braces on top.
+  The view exists ahead of a page for it (backlog) so the numbers are
+  right from the first prescription entered.
+
+  **Cascade adjustment.** The new `end_date >= start_date` check would have
+  made 0026's cascade fail for a prescription dated to start *after* the
+  death (recorded today, starting tomorrow), rolling the death back.
+  `handle_deceased_placement()` now ends such a row on its own start date
+  (`greatest(date_of_death, start_date)`) — it never becomes current, and
+  the forecast excludes the resident regardless. Verified against real rows
+  in a rolled-back transaction before applying.
+
+  **Who can write.** Staff had SELECT-only on `prescriptions` and no policy
+  at all on `medication`/`frequency` — so the hub's `medication(name)`
+  embed had been coming back null for staff and volunteers. 0027 grants
+  staff and volunteers read on both reference tables, staff insert/update
+  on prescriptions, and staff + vet insert on medication/frequency so
+  either can add a new one inline from the form. Nobody below admin can
+  edit or delete a medication, since changing its unit would silently
+  redefine every prescription using it. A `vet_appointment_id` FK (no
+  cascade, per the 7.2 lesson) links a prescription to the visit it was
+  written at.
+
 
 ## Still open (from Section 11 of the requirements doc)
 

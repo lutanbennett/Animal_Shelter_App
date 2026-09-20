@@ -394,11 +394,12 @@ export function renderResidentIndexHtml(
       "prescriptions",
       "Prescriptions",
       table(
-        ["From", "To", "Medication", "Frequency", "Notes"],
+        ["From", "To", "Medication", "Dose", "Frequency", "Notes"],
         record.prescriptions.map((prescription) => [
           esc(day(prescription.startDate)),
           prescription.endDate ? esc(day(prescription.endDate)) : "ongoing",
           escOrDash(prescription.medicationName),
+          escOrDash(prescription.dose),
           escOrDash(prescription.frequencyLabel),
           escOrDash(prescription.notes),
         ]),

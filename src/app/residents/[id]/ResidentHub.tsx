@@ -515,6 +515,12 @@ export function ResidentHub({
               detail={prescriptionDetail}
               tone={prescriptionTone}
               href={`${base}/prescriptions`}
+              actions={medicalActions([
+                {
+                  href: `/prescriptions/new?residentId=${resident.id}`,
+                  label: t.residents.hub.addPrescription,
+                },
+              ])}
             />
             <StatCard
               title={t.residents.hub.weight}
