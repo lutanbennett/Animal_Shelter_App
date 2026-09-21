@@ -26,7 +26,7 @@ import {
 } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { statusLabel, speciesLabel, sexLabel } from "@/lib/i18n/enum-labels";
+import { statusLabel, speciesLabel, sexLabel, sizeLabel } from "@/lib/i18n/enum-labels";
 
 export type Resident = {
   id: string;
@@ -37,6 +37,7 @@ export type Resident = {
   species: string | null;
   breed: string | null;
   sex: string | null;
+  size: string | null;
   estimated_age_years: number | null;
   age_estimated_on: string | null;
   intake_date: string | null;
@@ -84,6 +85,13 @@ export type PrescriptionRow = {
   start_date: string;
   end_date: string | null;
   medication: { name: string } | null;
+};
+
+export type DietRow = {
+  id: string;
+  start_date: string;
+  end_date: string | null;
+  diet_types: { name: string } | null;
 };
 
 export type WeightRow = { id: string; date: string; weight_kg: number };
@@ -135,6 +143,7 @@ export function ResidentHub({
   missingMandatoryImmunizations,
   vetAppointments,
   prescriptions,
+  diets,
   weightEntries,
   procedures,
   bloodTests,
@@ -165,6 +174,7 @@ export function ResidentHub({
   missingMandatoryImmunizations: MissingImmunizationRow[];
   vetAppointments: VetAppointmentRow[];
   prescriptions: PrescriptionRow[];
+  diets: DietRow[];
   weightEntries: WeightRow[];
   procedures: ProcedureRow[];
   bloodTests: BloodTestRow[];
@@ -283,6 +293,14 @@ export function ResidentHub({
     ? activePrescriptions.map((p) => p.medication?.name).filter(Boolean).join(", ")
     : t.residents.hub.noActivePrescriptions;
 
+  // Diet — a closed record has no current diet whatever the dates say.
+  const currentDiets = isDeceased
+    ? []
+    : diets.filter((d) => !d.end_date || d.end_date >= today);
+  const dietDetail = currentDiets[0]?.diet_types?.name
+    ? currentDiets.map((d) => d.diet_types?.name).filter(Boolean).join(", ")
+    : t.residents.hub.noCurrentDiets;
+
   // Weight
   const latestWeight = weightEntries[0];
   const previousWeight = weightEntries[1];
@@ -368,10 +386,14 @@ export function ResidentHub({
                 speciesLabel(t, resident.species),
                 resident.breed,
                 sexLabel(t, resident.sex),
+                sizeLabel(t, resident.size),
               ]
                 .filter(Boolean)
                 .join(" · ") || t.residents.hub.speciesUnknown}
             </p>
+            {!resident.size && !isDeceased && (
+              <p className="text-xs text-warning">{t.residents.hub.sizeNotSet}</p>
+            )}
             <p className="text-sm text-muted">
               {formatAge(t, resident.estimated_age_years, resident.age_estimated_on)}
               {resident.intake_date &&
@@ -471,6 +493,20 @@ export function ResidentHub({
               detail={t.residents.hub.photosDetail}
               tone="neutral"
               href={`${base}/photos`}
+            />
+            <StatCard
+              title={t.residents.hub.diet}
+              icon={SECTION_ICONS.diet}
+              value={t.residents.hub.dietsActive(currentDiets.length)}
+              detail={dietDetail}
+              tone={currentDiets.length > 0 ? "success" : "neutral"}
+              href={`${base}/diet`}
+              actions={medicalActions([
+                {
+                  href: `/diets/new?residentId=${resident.id}`,
+                  label: t.residents.hub.addDiet,
+                },
+              ])}
             />
           </div>
 

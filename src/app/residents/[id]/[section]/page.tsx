@@ -6,14 +6,19 @@ import { formatDate, formatWeightDelta, formatWeightKg } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
 import {
   appointmentStatusLabel,
+  dietUnitLabel,
   formatDose,
   placementTypeLabel,
+  sizeLabel,
 } from "@/lib/i18n/enum-labels";
 import { PhotoUploader } from "@/components/PhotoUploader";
 import { PhotoGallery, type PhotoRow } from "@/components/PhotoGallery";
 import { BloodTestList, type BloodTestRow } from "@/components/BloodTestList";
 import { ProcedureList, type ProcedureRow } from "@/components/ProcedureList";
-import { PrescriptionRowActions } from "@/components/PrescriptionRowActions";
+import { RecordRowActions } from "@/components/RecordRowActions";
+import { endPrescriptionToday } from "@/app/prescriptions/actions";
+import { endDietToday } from "@/app/diets/actions";
+import { defaultDailyQuantity, formatQuantity } from "@/lib/diets/options";
 import { WeightChart } from "@/components/WeightChart";
 import { ActionLink } from "@/components/ActionLink";
 import {
@@ -71,7 +76,7 @@ export default async function ResidentSectionPage(
   const [residentResult, residentStateResult] = await Promise.all([
     supabase
       .from("residents")
-      .select("id, name, thai_name, profile_photo_drive_file_id")
+      .select("id, name, thai_name, size, profile_photo_drive_file_id")
       .eq("id", id)
       .limit(1)
       .returns<
@@ -79,6 +84,7 @@ export default async function ResidentSectionPage(
           id: string;
           name: string;
           thai_name: string | null;
+          size: string | null;
           profile_photo_drive_file_id: string | null;
         }[]
       >(),
@@ -483,10 +489,17 @@ export default async function ResidentSectionPage(
             </div>
             {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
             {!isDeceased && (
-              <PrescriptionRowActions
-                residentId={id}
-                prescriptionId={row.id}
-                canEndToday={isCurrent && row.start_date <= today}
+              <RecordRowActions
+                editHref={`/prescriptions/${row.id}/edit`}
+                endToday={
+                  isCurrent && row.start_date <= today
+                    ? endPrescriptionToday.bind(null, id, row.id)
+                    : null
+                }
+                labels={{
+                  endToday: t.prescriptions.endToday,
+                  ending: t.prescriptions.ending,
+                }}
               />
             )}
           </div>
@@ -530,6 +543,139 @@ export default async function ResidentSectionPage(
                     empty=""
                     render={(row) => renderPrescription(row, false)}
                   />
+                </section>
+              )}
+            </>
+          )}
+        </div>
+      );
+      break;
+    }
+    case "diet": {
+      const { data, error } = await supabase
+        .from("resident_diets")
+        .select(
+          "id, start_date, end_date, meals_per_day, daily_quantity, notes, diet_types(name, unit, daily_qty_small, daily_qty_medium, daily_qty_large)",
+        )
+        .eq("resident_id", id)
+        .order("start_date", { ascending: false })
+        .returns<
+          {
+            id: string;
+            start_date: string;
+            end_date: string | null;
+            meals_per_day: number;
+            daily_quantity: number | null;
+            notes: string | null;
+            diet_types: {
+              name: string;
+              unit: string;
+              daily_qty_small: number;
+              daily_qty_medium: number;
+              daily_qty_large: number;
+            } | null;
+          }[]
+        >();
+      // Current = still running today (including one dated to start later);
+      // past = its end date has passed. A closed record (deceased) has no
+      // current diets whatever the dates say.
+      const today = new Date().toISOString().slice(0, 10);
+      const rows = data ?? [];
+      const current = isDeceased
+        ? []
+        : rows.filter((row) => !row.end_date || row.end_date >= today);
+      const past = rows.filter((row) => !current.includes(row));
+      const renderDiet = (row: (typeof rows)[number], isCurrent: boolean) => {
+        const type = row.diet_types;
+        const unit = type ? dietUnitLabel(t, type.unit) : "";
+        const quantity = type
+          ? row.daily_quantity != null
+            ? t.residents.sections.dailyQuantity(formatQuantity(row.daily_quantity), unit)
+            : t.residents.sections.dailyQuantityDefault(
+                formatQuantity(defaultDailyQuantity(type, resident.size)),
+                unit,
+                sizeLabel(t, resident.size ?? "Medium"),
+              )
+          : null;
+        return (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-col">
+                <span className="font-medium">
+                  {type?.name ?? t.residents.sections.unknownDietType}
+                </span>
+                <span className="text-xs text-muted">
+                  {[t.residents.sections.mealsPerDay(row.meals_per_day), quantity]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
+              </div>
+              <div className="flex flex-col items-end gap-0.5 text-right">
+                <span className="text-xs text-muted">
+                  {formatDate(row.start_date, locale)} –{" "}
+                  {row.end_date
+                    ? formatDate(row.end_date, locale)
+                    : t.residents.sections.ongoing}
+                </span>
+                {row.start_date > today && (
+                  <span className="text-xs text-primary">
+                    {t.residents.sections.startsOn(formatDate(row.start_date, locale))}
+                  </span>
+                )}
+              </div>
+            </div>
+            {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
+            {!isDeceased && (
+              <RecordRowActions
+                editHref={`/diets/${row.id}/edit`}
+                endToday={
+                  isCurrent && row.start_date <= today
+                    ? endDietToday.bind(null, id, row.id)
+                    : null
+                }
+                labels={{ endToday: t.diets.endToday, ending: t.diets.ending }}
+              />
+            )}
+          </div>
+        );
+      };
+      body = (
+        <div className="flex flex-col gap-4">
+          {!isDeceased && (
+            <div className="flex justify-end">
+              <ActionLink
+                href={`/diets/new?residentId=${id}`}
+                label={t.residents.sections.addDiet}
+                icon={SECTION_ICONS.diet}
+                variant="primary"
+                iconOnlyOnMobile={false}
+              />
+            </div>
+          )}
+          {error && <p className="text-sm text-danger">{error.message}</p>}
+          {!resident.size && !isDeceased && (
+            <p className="text-sm text-warning">{t.residents.hub.sizeNotSet}</p>
+          )}
+          {rows.length === 0 ? (
+            <Placeholder>{t.residents.sections.empty.diet}</Placeholder>
+          ) : (
+            <>
+              <section className="flex flex-col gap-2">
+                <h2 className="text-sm font-medium text-muted">
+                  {t.residents.sections.currentDiets} ({current.length})
+                </h2>
+                <RecordList
+                  rows={current}
+                  empty={t.residents.sections.noCurrentDiets}
+                  render={(row) => renderDiet(row, true)}
+                />
+              </section>
+              {past.length > 0 && (
+                <section className="flex flex-col gap-2">
+                  <h2 className="text-sm font-medium text-muted">
+                    {t.residents.sections.pastDiets} ({past.length})
+                  </h2>
+                  <RecordList rows={past} empty="" render={(row) => renderDiet(row, false)} />
                 </section>
               )}
             </>

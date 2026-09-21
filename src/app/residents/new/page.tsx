@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import {
   IntakeForm,
+  type DietTypeOption,
   type EnclosureOption,
   type OriginOption,
   type ZoneOption,
@@ -11,7 +12,7 @@ export default async function NewResidentPage() {
   const supabase = await createClient();
   const { t } = await getT();
 
-  const [zonesResult, enclosuresResult, originsResult] = await Promise.all([
+  const [zonesResult, enclosuresResult, originsResult, dietTypesResult] = await Promise.all([
     supabase
       .from("zones")
       .select("id, name")
@@ -29,6 +30,11 @@ export default async function NewResidentPage() {
       .select("id, name")
       .order("date", { ascending: false })
       .returns<OriginOption[]>(),
+    supabase
+      .from("diet_types")
+      .select("id, name")
+      .order("name")
+      .returns<DietTypeOption[]>(),
   ]);
 
   const zones = zonesResult.data ?? [];
@@ -62,7 +68,12 @@ export default async function NewResidentPage() {
         </p>
       )}
 
-      <IntakeForm zones={zones} enclosures={enclosures} origins={origins} />
+      <IntakeForm
+        zones={zones}
+        enclosures={enclosures}
+        origins={origins}
+        dietTypes={dietTypesResult.data ?? []}
+      />
     </main>
   );
 }

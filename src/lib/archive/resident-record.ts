@@ -1,4 +1,5 @@
 import "server-only";
+import { defaultDailyQuantity, formatQuantity } from "@/lib/diets/options";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { dateToYymm, dateToYyyymmdd } from "@/lib/google/drive-client";
 
@@ -53,6 +54,17 @@ export type ArchiveAppointment = {
   status: string;
   vetName: string | null;
   reason: string | null;
+  notes: string | null;
+};
+
+export type ArchiveDiet = {
+  id: string;
+  dietTypeName: string | null;
+  mealsPerDay: number;
+  /** "150 g a day" — the row's own figure, else the type's default for the resident's size. */
+  dailyQuantity: string | null;
+  startDate: string;
+  endDate: string | null;
   notes: string | null;
 };
 
@@ -121,6 +133,7 @@ export type ResidentArchiveRecord = {
   immunizations: ArchiveImmunization[];
   appointments: ArchiveAppointment[];
   prescriptions: ArchivePrescription[];
+  diets: ArchiveDiet[];
   weights: ArchiveWeight[];
   procedures: ArchiveProcedure[];
   bloodTests: ArchiveBloodTest[];
@@ -183,6 +196,7 @@ type ResidentRow = {
   other_names: string | null;
   resident_code: string;
   species: string | null;
+  size: string | null;
   breed: string | null;
   sex: string | null;
   estimated_age_years: number | null;
@@ -224,6 +238,22 @@ type AppointmentRow = {
   reason: string | null;
   notes: string | null;
   vets: { name: string } | null;
+};
+
+type DietRow = {
+  id: string;
+  start_date: string;
+  end_date: string | null;
+  meals_per_day: number;
+  daily_quantity: number | null;
+  notes: string | null;
+  diet_types: {
+    name: string;
+    unit: string;
+    daily_qty_small: number;
+    daily_qty_medium: number;
+    daily_qty_large: number;
+  } | null;
 };
 
 type PrescriptionRow = {
@@ -294,6 +324,7 @@ export async function loadResidentArchiveRecord(
     immunizationsResult,
     appointmentsResult,
     prescriptionsResult,
+    dietsResult,
     weightsResult,
     proceduresResult,
     bloodTestsResult,
@@ -302,7 +333,7 @@ export async function loadResidentArchiveRecord(
     supabase
       .from("residents")
       .select(
-        "id, name, thai_name, other_names, resident_code, species, breed, sex, estimated_age_years, age_estimated_on, intake_date, bio, temperament_notes, past_story_notes, behaviour_notes, profile_photo_drive_file_id, group_origins(name, date)",
+        "id, name, thai_name, other_names, resident_code, species, size, breed, sex, estimated_age_years, age_estimated_on, intake_date, bio, temperament_notes, past_story_notes, behaviour_notes, profile_photo_drive_file_id, group_origins(name, date)",
       )
       .eq("id", residentId)
       .limit(1)
@@ -338,6 +369,14 @@ export async function loadResidentArchiveRecord(
       .order("start_date", { ascending: false })
       .returns<PrescriptionRow[]>(),
     supabase
+      .from("resident_diets")
+      .select(
+        "id, start_date, end_date, meals_per_day, daily_quantity, notes, diet_types(name, unit, daily_qty_small, daily_qty_medium, daily_qty_large)",
+      )
+      .eq("resident_id", residentId)
+      .order("start_date", { ascending: false })
+      .returns<DietRow[]>(),
+    supabase
       .from("weight")
       .select("id, date, weight_kg, notes")
       .eq("resident_id", residentId)
@@ -370,6 +409,7 @@ export async function loadResidentArchiveRecord(
     immunizationsResult,
     appointmentsResult,
     prescriptionsResult,
+    dietsResult,
     weightsResult,
     proceduresResult,
     bloodTestsResult,
@@ -472,6 +512,21 @@ export async function loadResidentArchiveRecord(
       endDate: row.end_date,
       notes: row.notes,
     })),
+    diets: (dietsResult.data ?? []).map((row) => {
+      const type = row.diet_types;
+      const quantity =
+        row.daily_quantity ?? (type ? defaultDailyQuantity(type, residentRow.size) : null);
+      return {
+        id: row.id,
+        dietTypeName: type?.name ?? null,
+        mealsPerDay: row.meals_per_day,
+        dailyQuantity:
+          quantity != null ? `${formatQuantity(quantity)} ${type?.unit ?? ""} a day`.trim() : null,
+        startDate: row.start_date,
+        endDate: row.end_date,
+        notes: row.notes,
+      };
+    }),
     weights: (weightsResult.data ?? []).map((row) => ({
       id: row.id,
       date: row.date,

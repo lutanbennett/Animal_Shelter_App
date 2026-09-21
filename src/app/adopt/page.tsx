@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { getT } from "@/lib/i18n/get-t";
-import { speciesLabel } from "@/lib/i18n/enum-labels";
+import { sizeLabel, speciesLabel } from "@/lib/i18n/enum-labels";
 import { PublicHeader } from "./PublicHeader";
 
 type PublicResident = {
@@ -12,6 +12,7 @@ type PublicResident = {
   species: string | null;
   breed: string | null;
   sex: string | null;
+  size: string | null;
   ready_for_adoption: boolean;
   bio: string | null;
   profile_photo_drive_file_id: string | null;
@@ -24,7 +25,7 @@ export default async function AdoptPage() {
   const { data: residents, error } = await supabase
     .from("public_resident_profiles")
     .select(
-      "id, name, species, breed, sex, ready_for_adoption, bio, profile_photo_drive_file_id",
+      "id, name, species, breed, sex, size, ready_for_adoption, bio, profile_photo_drive_file_id",
     )
     .order("name")
     .returns<PublicResident[]>();
@@ -84,7 +85,7 @@ export default async function AdoptPage() {
                   {resident.name}
                 </h2>
                 <p className="text-sm text-muted">
-                  {[speciesLabel(t, resident.species), resident.breed]
+                  {[speciesLabel(t, resident.species), resident.breed, sizeLabel(t, resident.size)]
                     .filter(Boolean)
                     .join(" · ") || t.adopt.detailsComingSoon}
                 </p>

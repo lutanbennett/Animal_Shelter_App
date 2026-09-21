@@ -44,6 +44,7 @@ export function NavLinks({
               { href: "/management/contacts", label: t.nav.contacts },
               { href: "/management/vets", label: t.nav.vets },
               { href: "/management/medications", label: t.nav.medications },
+              { href: "/management/diets", label: t.nav.diets },
             ],
           },
         ]

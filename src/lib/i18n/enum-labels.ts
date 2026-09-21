@@ -27,6 +27,22 @@ export function sexLabel(t: Dictionary, value: string | null | undefined) {
   return enumLabel(t.enums.sex, value);
 }
 
+/** residents.size — the three feeding bands (0051). */
+export const RESIDENT_SIZES = ["Small", "Medium", "Large"] as const;
+export type ResidentSize = (typeof RESIDENT_SIZES)[number];
+
+export function sizeLabel(t: Dictionary, value: string | null | undefined) {
+  return enumLabel(t.enums.size, value);
+}
+
+/** diet_types.unit — what a diet is bought and served in (0051). */
+export const DIET_UNITS = ["g", "ml", "can", "sachet", "cup", "portion"] as const;
+export type DietUnit = (typeof DIET_UNITS)[number];
+
+export function dietUnitLabel(t: Dictionary, value: string | null | undefined) {
+  return enumLabel(t.enums.dietUnit, value);
+}
+
 export function appointmentStatusLabel(
   t: Dictionary,
   value: string | null | undefined,

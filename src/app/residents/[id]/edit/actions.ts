@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { RESIDENT_SIZES, type ResidentSize } from "@/lib/i18n/enum-labels";
 import { estimatedAgeNow } from "@/lib/format";
 import { moveResidentToEnclosure } from "@/lib/placements/move";
 
@@ -103,6 +104,13 @@ export async function updateResident(
   // intake — there's no separate "public but not adoptable" state today.
   const readyForAdoption = formData.get("readyForAdoption") === "on";
 
+  // Required on every save (0051), so a resident intaken before the size
+  // field existed picks one up the first time their details are edited.
+  const size = str(formData, "size");
+  if (!size || !RESIDENT_SIZES.includes(size as ResidentSize)) {
+    return { error: t.residents.new.errors.sizeRequired };
+  }
+
   const { data: updated, error } = await supabase
     .from("residents")
     // resident_code is system-assigned at intake and deliberately not here.
@@ -113,6 +121,7 @@ export async function updateResident(
       species: str(formData, "species"),
       breed: str(formData, "breed"),
       sex: str(formData, "sex"),
+      size,
       ...ageFields,
       bio: str(formData, "bio"),
       temperament_notes: str(formData, "temperamentNotes"),

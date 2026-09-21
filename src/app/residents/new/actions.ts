@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { RESIDENT_SIZES, type ResidentSize } from "@/lib/i18n/enum-labels";
 
 export type IntakeState = { error: string } | undefined;
 
@@ -37,6 +38,13 @@ export async function recordIntake(
 
   // Optional intake weight; record_intake writes it as the first weight
   // row, dated the intake date, in the same transaction (migration 0029).
+  // Size is mandatory (0051): it sets the default meal size for the
+  // resident's diet, and weight may not be recorded at intake.
+  const size = str(formData, "size");
+  if (!size || !RESIDENT_SIZES.includes(size as ResidentSize)) {
+    return { error: t.residents.new.errors.sizeRequired };
+  }
+
   const weightKgRaw = str(formData, "weightKg");
   const weightKg = weightKgRaw !== null ? Number(weightKgRaw) : null;
   if (weightKg !== null && (!Number.isFinite(weightKg) || weightKg <= 0)) {
@@ -68,6 +76,8 @@ export async function recordIntake(
     p_group_origin_id: str(formData, "originId"),
     p_new_origin_name: str(formData, "newOriginName"),
     p_weight_kg: weightKg,
+    p_size: size,
+    p_diet_type_id: str(formData, "dietTypeId"),
   });
 
   if (error) {

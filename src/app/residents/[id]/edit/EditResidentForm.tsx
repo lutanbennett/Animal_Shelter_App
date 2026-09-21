@@ -6,6 +6,7 @@ import { Check } from "lucide-react";
 import { updateResident } from "./actions";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { RESIDENT_SIZES, sizeLabel } from "@/lib/i18n/enum-labels";
 import type { PhotoRow } from "@/components/PhotoGallery";
 import type { EnclosureOption, ZoneOption } from "@/lib/enclosures/options";
 import {
@@ -39,6 +40,7 @@ export type EditableResident = {
   species: string | null;
   breed: string | null;
   sex: string | null;
+  size: string | null;
   estimated_age_years: number | null;
   age_estimated_on: string | null;
   bio: string | null;
@@ -254,6 +256,26 @@ export function EditResidentForm({
               <option value="Male">{t.enums.sex.Male}</option>
               <option value="Female">{t.enums.sex.Female}</option>
             </select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="size" className="text-sm font-medium text-muted">
+              {t.residents.new.fields.size} <span className="text-danger">*</span>
+            </label>
+            <select
+              id="size"
+              name="size"
+              required
+              defaultValue={resident.size ?? ""}
+              className={inputClass}
+            >
+              <option value="">{t.residents.new.fields.selectSize}</option>
+              {RESIDENT_SIZES.map((size) => (
+                <option key={size} value={size}>
+                  {sizeLabel(t, size)}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-muted">{t.residents.new.fields.sizeHint}</p>
           </div>
           <div className="flex flex-col gap-1">
             <label

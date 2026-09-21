@@ -6,6 +6,32 @@ Section 11, plus decisions made during setup that aren't in the original doc.
 
 ## Confirmed
 
+- **Diet is a dated record with a size-driven portion, not a notes field
+  (2026-09-21):** the backlog asked for a dietary requirements field; the
+  shelter wants history, a current view, and food ordering and budget
+  forecasts out of it, so it is modelled on prescriptions (0051):
+  `diet_types` is the product list (unit, baht per unit, daily quantity
+  for a small / medium / large animal) and `resident_diets` the dated
+  rows. Choices worth knowing: (a) meal size hangs off a new
+  `residents.size` band rather than weight, because weight may not be
+  recorded at intake and a band is what the kitchen actually works to;
+  the column is nullable so existing residents aren't invented a size,
+  but both the intake and edit forms require one, so a pre-0051 resident
+  picks one up the first time their details are saved, and the hub and
+  Diet tab nag until then; forecasts treat unset as Medium. (b) The
+  per-size quantity lives on the diet type with an optional per-resident
+  override, so a price or portion change on the type flows through to
+  every resident and the forecast without touching their rows. (c) No
+  inline "add a diet type" from the resident form, unlike medications —
+  a type needs quantities and a cost, which is management's call. (d)
+  Fostered residents are excluded from the food forecast alongside
+  deceased and adopted: carers feed at home. (e) The death cascade does
+  not end diets (prescriptions are ended because they feed a medical
+  forecast that must stop; diets are excluded from theirs by status), so
+  the tab and hub read "current" from the resident's state rather than
+  the dates, and undoing a death needs nothing restored. (f) Size shows
+  on the public adoption pages, as the user asked, beside age and sex.
+
 - **Existing blood tests are classified as CBC, not "unknown" (2026-09-21):**
   0050 makes `blood_tests.blood_test_type_id` NOT NULL and backfills every
   row already in the table to CBC (Complete Blood Count). A nullable
