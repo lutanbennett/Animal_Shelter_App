@@ -11,7 +11,7 @@ export default async function ContactsAdminPage() {
   const { t } = await getT();
 
   const supabase = await createClient();
-  const [contactsResult, placementsResult, jobsResult] = await Promise.all([
+  const [contactsResult, placementsResult] = await Promise.all([
     supabase
       .from("contacts")
       .select(CONTACT_COLUMNS)
@@ -25,11 +25,6 @@ export default async function ContactsAdminPage() {
       .select("carer_id, end_date")
       .not("carer_id", "is", null)
       .returns<{ carer_id: string; end_date: string | null }[]>(),
-    supabase
-      .from("maintenance")
-      .select("assigned_to")
-      .not("assigned_to", "is", null)
-      .returns<{ assigned_to: string }[]>(),
   ]);
 
   const placements = new Map<string, { total: number; active: number }>();
@@ -39,15 +34,10 @@ export default async function ContactsAdminPage() {
     if (!row.end_date) entry.active += 1;
     placements.set(row.carer_id, entry);
   }
-  const jobs = new Map<string, number>();
-  for (const row of jobsResult.data ?? []) {
-    jobs.set(row.assigned_to, (jobs.get(row.assigned_to) ?? 0) + 1);
-  }
   const contacts: ContactRow[] = (contactsResult.data ?? []).map((contact) => ({
     ...contact,
     placement_count: placements.get(contact.id)?.total ?? 0,
     in_care_count: placements.get(contact.id)?.active ?? 0,
-    maintenance_count: jobs.get(contact.id) ?? 0,
   }));
 
   return (
@@ -69,10 +59,9 @@ export default async function ContactsAdminPage() {
           {t.management.contacts.couldntLoad}: {contactsResult.error.message}
         </p>
       )}
-      {(placementsResult.error || jobsResult.error) && (
+      {placementsResult.error && (
         <p className="text-sm text-danger">
-          {t.management.contacts.couldntLoadUsage}:{" "}
-          {placementsResult.error?.message ?? jobsResult.error?.message}
+          {t.management.contacts.couldntLoadUsage}: {placementsResult.error.message}
         </p>
       )}
 

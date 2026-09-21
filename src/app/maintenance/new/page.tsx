@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { loadEnclosureOptions } from "@/lib/enclosures/options";
-import { loadContactOptions } from "@/lib/contacts/options";
+import { loadAssignableUsers } from "@/lib/auth/app-users";
 import { canWriteMaintenance } from "@/lib/maintenance/queries";
 import { MaintenanceForm } from "../MaintenanceForm";
 
@@ -17,10 +17,10 @@ export default async function NewMaintenancePage(props: PageProps<"/maintenance/
   const { t } = await getT();
   const supabase = await createClient();
 
-  const [{ data: role }, options, contacts] = await Promise.all([
+  const [{ data: role }, options, assignees] = await Promise.all([
     supabase.rpc("current_user_role"),
     loadEnclosureOptions(supabase),
-    loadContactOptions(supabase),
+    loadAssignableUsers(supabase),
   ]);
 
   if (!canWriteMaintenance(role)) {
@@ -70,7 +70,7 @@ export default async function NewMaintenancePage(props: PageProps<"/maintenance/
         preselectedEnclosureId={enclosure?.id ?? null}
         preselectedZoneId={zoneId}
         cancelHref={enclosure ? `/enclosures/${enclosure.id}` : "/maintenance"}
-        contacts={contacts.contacts}
+        assignees={assignees.users}
       />
     </main>
   );

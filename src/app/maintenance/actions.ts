@@ -49,7 +49,7 @@ type ParsedFields = {
   due_date: string | null;
   estimated_cost: number | null;
   actual_cost: number | null;
-  assigned_to: string | null;
+  assigned_user_id: string | null;
 };
 
 async function parseFields(
@@ -91,8 +91,8 @@ async function parseFields(
       due_date,
       estimated_cost,
       actual_cost,
-      // Any contact, not just carers; the FK is the only check needed.
-      assigned_to: str(formData, "assignedTo"),
+      // A login (0055); the FK to auth.users is the only check needed.
+      assigned_user_id: str(formData, "assignedUserId"),
     },
   };
 }
@@ -124,7 +124,7 @@ export async function createMaintenanceJob(
       due_date: fields.due_date,
       estimated_cost: fields.estimated_cost,
       actual_cost: fields.actual_cost,
-      assigned_to: fields.assigned_to,
+      assigned_user_id: fields.assigned_user_id,
     })
     .select("id")
     .limit(1)
@@ -176,7 +176,7 @@ export async function updateMaintenanceJob(
       due_date: fields.due_date,
       estimated_cost: fields.estimated_cost,
       actual_cost: fields.actual_cost,
-      assigned_to: fields.assigned_to,
+      assigned_user_id: fields.assigned_user_id,
     })
     .eq("id", jobId)
     .select("id")
