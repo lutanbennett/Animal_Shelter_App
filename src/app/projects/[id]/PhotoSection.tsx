@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { Star } from "lucide-react";
 import { AttachmentUploader } from "@/components/AttachmentUploader";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { TranslationPanel } from "@/components/TranslationPanel";
+import { localizedFromRow } from "@/lib/translations/localize";
+import type { TranslationRow } from "@/lib/translations/types";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { ProjectFolder, ProjectPhoto } from "@/lib/projects/queries";
@@ -28,10 +31,16 @@ export function PhotoSection({
   folder,
   photos,
   canWrite,
+  canManageTranslations,
+  translations,
 }: {
   folder: ProjectFolder;
   photos: ProjectPhoto[];
   canWrite: boolean;
+  /** Admin/management: may write and approve the other-language captions. */
+  canManageTranslations: boolean;
+  /** The photos' caption rows in `translations` (0056). */
+  translations: TranslationRow[];
 }) {
   const { t, locale } = useI18n();
   const p = t.projects.photos;
@@ -87,7 +96,8 @@ export function PhotoSection({
             const url = driveImageUrl(photo.drive_file_id);
             const image = isLikelyImage(photo.file_name);
             const isCover = folder.cover_attachment_id === photo.id;
-            const caption = (locale === "th" && photo.caption_th) || photo.caption;
+            const captionTranslation = translations.find((row) => row.row_id === photo.id) ?? null;
+            const caption = localizedFromRow(locale, photo.caption, captionTranslation) || null;
             return (
               <figure
                 key={photo.id}
@@ -151,13 +161,6 @@ export function PhotoSection({
                         maxLength={300}
                         className={inputClass}
                       />
-                      <input
-                        name="captionTh"
-                        defaultValue={photo.caption_th ?? ""}
-                        placeholder={p.captionTh}
-                        maxLength={300}
-                        className={inputClass}
-                      />
                       <div className="flex justify-end gap-1">
                         <button
                           type="button"
@@ -213,6 +216,14 @@ export function PhotoSection({
                             </button>
                           )}
                         </span>
+                      )}
+                      {captionTranslation && canManageTranslations && (
+                        <TranslationPanel
+                          key={captionTranslation.id + captionTranslation.updated_at}
+                          row={captionTranslation}
+                          canManage
+                          recordPath={`/projects/${folder.id}`}
+                        />
                       )}
                     </>
                   )}

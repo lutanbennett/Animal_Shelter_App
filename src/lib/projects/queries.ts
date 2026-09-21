@@ -31,7 +31,6 @@ export type ProjectFolder = {
   name: string;
   name_th: string | null;
   summary: string | null;
-  summary_th: string | null;
   project_date: string | null;
   location: string | null;
   is_public: boolean;
@@ -49,7 +48,6 @@ export type ProjectPhoto = {
   drive_file_id: string;
   file_name: string | null;
   caption: string | null;
-  caption_th: string | null;
   sort_order: number | null;
   date_taken: string | null;
   uploaded_at: string;
@@ -59,7 +57,7 @@ export type ProjectPhoto = {
 export type ProjectFolderPath = Pick<ProjectFolder, "id" | "name" | "name_th">[];
 
 const SUMMARY_COLUMNS =
-  "id, parent_folder_id, top_level_category, name, name_th, summary, summary_th, project_date, location, is_public, cover_attachment_id, drive_folder_id, created_at, updated_at, child_count, photo_count, thumbnail_drive_file_id";
+  "id, parent_folder_id, top_level_category, name, name_th, summary, project_date, location, is_public, cover_attachment_id, drive_folder_id, created_at, updated_at, child_count, photo_count, thumbnail_drive_file_id";
 
 /** The category rows, in the shelter's order. */
 export async function loadProjectCategories(
@@ -111,7 +109,7 @@ export async function loadProjectPhotos(
 ): Promise<{ photos: ProjectPhoto[]; error: string | null }> {
   const { data, error } = await supabase
     .from("attachments")
-    .select("id, drive_file_id, file_name, caption, caption_th, sort_order, date_taken, uploaded_at")
+    .select("id, drive_file_id, file_name, caption, sort_order, date_taken, uploaded_at")
     .eq("owner_type", "project")
     .eq("owner_id", folderId)
     .order("sort_order", { ascending: true, nullsFirst: false })

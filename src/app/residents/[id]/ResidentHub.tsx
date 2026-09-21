@@ -27,6 +27,8 @@ import {
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { statusLabel, speciesLabel, sexLabel, sizeLabel } from "@/lib/i18n/enum-labels";
+import { TranslationPanel } from "@/components/TranslationPanel";
+import type { TranslationRow } from "@/lib/translations/types";
 
 export type Resident = {
   id: string;
@@ -135,6 +137,8 @@ export function ResidentHub({
   archive,
   canRecordDeath,
   canUndoDeath,
+  canManageTranslations,
+  translations,
   currentPlacementSince,
   carerName,
   hospitalPreviousEnclosureName,
@@ -165,6 +169,10 @@ export function ResidentHub({
   canRecordDeath: boolean;
   /** Admin only: may withdraw a death recorded in error (and retry its Drive restore). */
   canUndoDeath: boolean;
+  /** Admin/management: may write and approve the other-language text. */
+  canManageTranslations: boolean;
+  /** The resident's rows in `translations` (bio, temperament, past story). */
+  translations: TranslationRow[];
   currentPlacementSince: string | null;
   carerName: string | null;
   /** Where the resident was before going into hospital, while they're there. */
@@ -323,11 +331,15 @@ export function ResidentHub({
   const latestProcedure = procedures[0];
   const latestBloodTest = bloodTests[0];
 
+  // The first three are public (on /adopt) and carry a translation row;
+  // behaviour notes are staff-only and don't.
+  const translationFor = (column: string) =>
+    translations.find((row) => row.column_name === column) ?? null;
   const bioFields = [
-    { label: t.residents.hub.bioLabels.bio, value: resident.bio },
-    { label: t.residents.hub.bioLabels.temperament, value: resident.temperament_notes },
-    { label: t.residents.hub.bioLabels.pastStory, value: resident.past_story_notes },
-    { label: t.residents.hub.bioLabels.behaviour, value: resident.behaviour_notes },
+    { label: t.residents.hub.bioLabels.bio, value: resident.bio, translation: translationFor("bio") },
+    { label: t.residents.hub.bioLabels.temperament, value: resident.temperament_notes, translation: translationFor("temperament_notes") },
+    { label: t.residents.hub.bioLabels.pastStory, value: resident.past_story_notes, translation: translationFor("past_story_notes") },
+    { label: t.residents.hub.bioLabels.behaviour, value: resident.behaviour_notes, translation: null },
   ].filter((f) => f.value);
 
   return (
@@ -520,7 +532,16 @@ export function ResidentHub({
                     <dt className="text-xs font-medium text-muted">
                       {f.label}
                     </dt>
-                    <dd className="text-sm text-foreground">{f.value}</dd>
+                    <dd className="whitespace-pre-line text-sm text-foreground">{f.value}</dd>
+                    {f.translation && (
+                      <dd className="mt-1">
+                        <TranslationPanel
+                          key={f.translation.id + f.translation.updated_at}
+                          row={f.translation}
+                          canManage={canManageTranslations}
+                        />
+                      </dd>
+                    )}
                   </div>
                 ))}
               </dl>

@@ -1350,3 +1350,86 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   from the tab's per-row "Attach files" toggle, which the Blood Tests tab
   now has like the Procedures tab. Uploads stay sequential — the routes'
   Drive folder check-then-create isn't safe for two first uploads at once.
+
+- **Free text across languages: a translations table, managers write the
+  other language by hand, machine drafts later (2026-09-21):** the UI is
+  bilingual but staff-typed prose showed in whatever language it was
+  typed. The three options in the backlog item were weighed with the
+  user; the chosen shape is a *draft → review → publish* pipeline whose
+  draft is written by a human today and by a model later, so the plumbing
+  is built once. Migration `0056_translations.sql`:
+
+  **Which fields.** `translatable_fields` lists (table, column, tier).
+  Only the *public* tier is in it: `residents.bio` /
+  `temperament_notes` / `past_story_notes` (on `/adopt`),
+  `project_folders.summary` and `attachments.caption` (on `/our-work`) —
+  the text a reader who didn't write it sees. Internal notes (weight,
+  vet visit, prescription, intake, cause of death, behaviour) are
+  deliberately not listed: nobody will translate those by hand and a
+  queue full of "gave 2ml amoxicillin" would be ignored within a week,
+  which would leave a Thai vet nurse seeing *less* than today. They join
+  as the `internal` tier when the machine phase lands (backlog), shown to
+  staff as a labelled machine translation under the original with no
+  review step. Promoting a field is a row in the config table, not a
+  migration; the queueing trigger reads the config at run time.
+
+  **One side table, not paired `_th` columns.** `translations` holds one
+  row per translatable field per record: `text` in the other language,
+  `status` (`pending` / `draft` / `approved` / `stale`), and
+  `reviewed_source_text`, a snapshot of the original the translation was
+  written against. That snapshot is the reason for the table: a paired
+  column can't say whether the English changed after the Thai was
+  written, so the "go through and update" job would mean re-reading
+  every bio. The trigger compares the source against the snapshot and
+  flips an approved row to `stale`, and the queue shows old and new
+  original side by side so the manager fixes the Thai rather than
+  starting over. The queue is therefore a query, not a hunt. Existing
+  `summary_th` / `caption_th` (0034) were copied in as approved rows and
+  the columns dropped, so translated prose has one home. Short labels
+  are different — `residents.thai_name` and `project_folders.name_th`
+  are a second value (a Thai name, a folder name that is also the Drive
+  folder name), not a translation — and stay as columns; `localized()`
+  in `src/lib/projects/public.ts` still serves those.
+
+  **No language dropdown.** `detect_language()` reads the script of the
+  text: Thai has its own Unicode block, so one script with a three-to-one
+  majority of letters decides, otherwise the script the text *starts* in
+  does (a Thai sentence carrying an English drug name has more Latin
+  letters than Thai; it starts in Thai). A bio retyped in the other
+  language flips the row's direction and clears the old text. Empty or
+  purely numeric text counts as English.
+
+  **Who writes it.** The two bilingual managers. `approveTranslation`
+  writes the text and approves it in one step (the text is theirs, so
+  there is nothing further to review); RLS gives management/admin write,
+  every signed-in role read; the trigger is security definer so a staff
+  member saving a bio gets a pending row without write access. The
+  `draft` status exists for a non-manager's or a model's text and is not
+  produced by anything yet. `/management/translations` is the queue —
+  stale first, then oldest — with every row's editor open; the same
+  `TranslationPanel` sits under the bio on the resident hub and under a
+  project story / photo caption for managers, so translating right after
+  writing and working through the queue are the same action on the same
+  row. Staff and volunteers don't see the panel unless there is a
+  translation in their language to show.
+
+  **Who sees what.** Public views expose the approved rows as a
+  `translations` jsonb (`{column: {lang, text}}`, `approved_translations()`)
+  and `localizedField()` picks by locale with the original as fallback —
+  a record is never hidden for lacking a translation (0042's rule, now
+  for every field). A draft or stale translation never reaches the
+  public. Signed-in pages load rows and show the original as typed; a
+  project story / caption still swaps in the approved translation for a
+  Thai reader as it did before. `translation_queue` (an ordinary view,
+  signed-in roles only) adds the record's label and path so the queue
+  page is one query.
+
+  **Not done, by choice.** No machine translation (backlog: Workers AI
+  on the same Cloudflare account — the app already deploys there via
+  OpenNext, so a cron Worker with the `AI` binding fills `text` with
+  `status = 'draft'` and the manager's job changes from "write" to
+  "check" — or a local Ollama box if one appears; both zero cost, open
+  models). No badge count in the nav (`NavLinks` is a client component
+  with no data; the queue page is the job list). `site_content` Thai
+  columns (backlog) could go through the same table by giving the
+  trigger a `site_content` entry — noted on that item.

@@ -127,7 +127,6 @@ export async function updateProjectFolderInfo(
     .from("project_folders")
     .update({
       summary: str(formData, "summary"),
-      summary_th: str(formData, "summaryTh"),
       project_date: projectDate,
       location: str(formData, "location"),
       is_public: formData.get("isPublic") === "on",
@@ -283,7 +282,7 @@ export async function updateProjectPhotoCaption(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("attachments")
-    .update({ caption: str(formData, "caption"), caption_th: str(formData, "captionTh") })
+    .update({ caption: str(formData, "caption") })
     .eq("id", attachmentId)
     .eq("owner_type", "project")
     .eq("owner_id", folderId)
