@@ -6,6 +6,25 @@ Section 11, plus decisions made during setup that aren't in the original doc.
 
 ## Confirmed
 
+- **The must-change-password flag lives in app_metadata and is enforced
+  by the request proxy (2026-09-21):** the backlog suggested
+  `user_metadata.must_change_password`, but user_metadata is writable by
+  the user through `auth.updateUser()`, so a flag there could be cleared
+  without ever setting a password (verified against the dev project: a
+  signed-in user's `updateUser({ data })` cannot touch app_metadata).
+  app_metadata is service-role only, so the flag is set by the admin
+  actions that mint a temporary password and cleared by
+  `/account/password` through the admin client, only after the user's
+  own `updateUser({ password })` has succeeded. Enforcement sits in
+  `updateSession()` beside the sign-in gate: a flagged user whose access
+  token's `amr` claim includes `password` is redirected to the change
+  page from every non-public path; a Google session (`amr` = oauth) is
+  left alone, since no password was used and there is nothing to
+  replace. The token is decoded, not re-verified, for that one claim —
+  getUser() has already validated the session on the same request. The
+  temporary password itself is never stored or shown twice; "lost it" is
+  answered by issuing another.
+
 - **After death, the bio and photos stay open; nothing else does
   (2026-09-21):** the backlog left 0026's lock allowing nothing until the
   list existed. The list is the four bio columns (bio, temperament, past

@@ -57,6 +57,7 @@ const th: Dictionary = {
     diets: "อาหาร",
     contacts: "ผู้ติดต่อ",
     manual: "คู่มือการใช้งาน",
+    changePassword: "เปลี่ยนรหัสผ่าน",
     menu: "เมนู",
     openMenu: "เปิดเมนู",
     closeMenu: "ปิดเมนู",
@@ -96,6 +97,26 @@ const th: Dictionary = {
     },
   },
 
+  account: {
+    password: {
+      title: "เปลี่ยนรหัสผ่าน",
+      subtitle: "ตั้งรหัสผ่านใหม่สำหรับบัญชีของคุณ ไม่มีผลต่อการเข้าสู่ระบบด้วย Google",
+      forcedTitle: "ตั้งรหัสผ่านของคุณ",
+      forcedSubtitle:
+        "คุณเข้าสู่ระบบด้วยรหัสผ่านชั่วคราว กรุณาตั้งรหัสผ่านของตนเองเพื่อดำเนินการต่อ — ไม่สามารถใช้งานส่วนอื่นได้จนกว่าจะตั้งเสร็จ",
+      newPassword: "รหัสผ่านใหม่",
+      confirmPassword: "ยืนยันรหัสผ่านใหม่",
+      hint: (min: number) => `อย่างน้อย ${min} ตัวอักษร`,
+      submit: "ตั้งรหัสผ่าน",
+      changed: "เปลี่ยนรหัสผ่านแล้ว",
+      errors: {
+        tooShort: (min: number) => `รหัสผ่านต้องมีอย่างน้อย ${min} ตัวอักษร`,
+        mismatch: "รหัสผ่านทั้งสองช่องไม่ตรงกัน",
+        samePassword: "กรุณาเลือกรหัสผ่านที่ไม่เคยใช้มาก่อน",
+      },
+    },
+  },
+
   login: {
     heading: "Lanna Care for Animals",
     email: "อีเมล",
@@ -125,6 +146,14 @@ const th: Dictionary = {
         passwordPlaceholder: "อย่างน้อย 8 ตัวอักษร",
         role: "สิทธิ์การใช้งาน",
         createButton: "สร้างผู้ใช้",
+        tempPasswordNote:
+          "ระบบจะสร้างรหัสผ่านชั่วคราวและแสดงเพียงครั้งเดียว — ส่งต่อให้ผู้ใช้ เมื่อเข้าสู่ระบบด้วยรหัสนี้ครั้งแรกจะต้องตั้งรหัสผ่านของตนเอง ผู้ที่ใช้เฉพาะการเข้าสู่ระบบด้วย Google ไม่ต้องใช้รหัสนี้",
+      },
+      tempPassword: {
+        heading: (email: string) => `รหัสผ่านชั่วคราวสำหรับ ${email}`,
+        copy: "คัดลอก",
+        copied: "คัดลอกแล้ว",
+        shownOnce: "แสดงเพียงครั้งเดียว — ไม่มีการเก็บไว้ให้ดูภายหลัง หากสูญหาย ให้ออกรหัสใหม่จากตาราง",
       },
       roles: {
         staff: "เจ้าหน้าที่",
@@ -143,6 +172,10 @@ const th: Dictionary = {
         noRole: "ไม่มีสิทธิ์",
         newPasswordPlaceholder: "รหัสผ่านใหม่",
         reset: "ตั้งรหัสใหม่",
+        issueTemporaryPassword: "ออกรหัสผ่านชั่วคราว",
+        issueConfirm: (email: string) =>
+          `ออกรหัสผ่านชั่วคราวใหม่สำหรับ ${email}? รหัสผ่านปัจจุบันจะใช้ไม่ได้ และผู้ใช้จะต้องตั้งรหัสใหม่เมื่อเข้าสู่ระบบครั้งถัดไป`,
+        temporaryPassword: "รหัสผ่านชั่วคราว",
         noUsers: "ยังไม่มีผู้ใช้",
         roleUpdated: "อัปเดตสิทธิ์แล้ว",
         passwordUpdated: "อัปเดตรหัสผ่านแล้ว",
@@ -160,6 +193,7 @@ const th: Dictionary = {
         invalidRole: "สิทธิ์ไม่ถูกต้อง",
         cantChangeOwnRole: "คุณไม่สามารถเปลี่ยนสิทธิ์ของตัวเองได้",
         cantDeleteOwnAccount: "คุณไม่สามารถลบบัญชีของตัวเองได้",
+        cantResetOwnPassword: "เปลี่ยนรหัสผ่านของคุณเองได้จากหน้าเปลี่ยนรหัสผ่าน",
         adminAccessRequired: "ต้องมีสิทธิ์ผู้ดูแลระบบ",
       },
       createdUser: (email: string, role: string) =>

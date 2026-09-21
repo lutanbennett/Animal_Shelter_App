@@ -1,5 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import {
+  PASSWORD_CHANGE_PATH,
+  mustChangePassword,
+  signedInWithPassword,
+} from "@/lib/auth/password-change";
 
 const PUBLIC_PATHS = ["/", "/login", "/auth/callback"];
 
@@ -65,6 +70,28 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/residents";
     return NextResponse.redirect(url);
+  }
+
+  // An account on a temporary password (src/lib/auth/password-change.ts)
+  // goes nowhere but the change-password page until it has its own — when
+  // it signed in with that password. A Google sign-in used no password and
+  // carries on. Public paths and the photo proxy are left alone so the
+  // page itself, and images on it, still load.
+  if (
+    user &&
+    !isPublicPath &&
+    request.nextUrl.pathname !== PASSWORD_CHANGE_PATH &&
+    mustChangePassword(user)
+  ) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (signedInWithPassword(session?.access_token)) {
+      const url = request.nextUrl.clone();
+      url.pathname = PASSWORD_CHANGE_PATH;
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
   }
 
   return response;
