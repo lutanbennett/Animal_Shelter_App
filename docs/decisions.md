@@ -1531,3 +1531,16 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   page) and every public page ends in the shared `PublicFooter`
   (address, hours, email, phone, LINE), which reads `site_content`
   itself. **Lost & found** stays in the backlog as before.
+
+  **Staff reach the public site without signing out (2026-09-21):** the
+  proxy used to bounce a signed-in user from `/` to `/residents`, and the
+  other public pages rendered inside the app chrome — sidebar plus a
+  second header. Now `/` is the public home page for everyone (only
+  `/login` still redirects), the root layout wraps `AppHeader` and
+  `NavPane` in a client `PublicPathGate` that returns null on the public
+  pages (`isPublicPage` in `src/lib/public-paths.ts`, the same module
+  the proxy's auth gate reads, so the two lists can't drift), the public
+  header shows "Open the app" (→ `/residents`) instead of "Login" when
+  there is a session, and the sidebar has a "Public website" link. A
+  route group with its own layout would be the textbook answer; the gate
+  is a dozen lines and avoids moving every app route.

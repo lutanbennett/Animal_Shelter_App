@@ -58,6 +58,7 @@ const en = {
     translations: "Translations",
     contacts: "Contacts",
     manual: "User manual",
+    publicSite: "Public website",
     changePassword: "Change password",
     menu: "Menu",
     openMenu: "Open menu",
@@ -2250,6 +2251,7 @@ const en = {
     volunteerNav: "Volunteer",
     donateNav: "Donate",
     staffLogin: "Login",
+    openApp: "Open the app",
     pageTitle: "Meet Our Residents",
     pageSubtitle:
       "You're browsing as a guest — this is a read-only, public view of the residents we've made visible for adoption and outreach. Staff and volunteers see much more after signing in.",

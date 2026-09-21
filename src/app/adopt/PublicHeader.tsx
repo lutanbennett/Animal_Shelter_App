@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getT } from "@/lib/i18n/get-t";
+import { createClient } from "@/lib/supabase/server";
 import { LanguageSwitcher } from "../LanguageSwitcher";
 
 export type PublicSection =
@@ -18,7 +19,10 @@ export type PublicSection =
  * shelter site asks for (RSPCA ACT does the same).
  */
 export async function PublicHeader({ current }: { current?: PublicSection }) {
-  const { t } = await getT();
+  const [{ t }, supabase] = await Promise.all([getT(), createClient()]);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const sections = [
     { key: "adopt", href: "/adopt", label: t.adopt.adoptNav },
     { key: "our-work", href: "/our-work", label: t.adopt.ourWorkNav },
@@ -75,10 +79,10 @@ export async function PublicHeader({ current }: { current?: PublicSection }) {
         </nav>
         <LanguageSwitcher />
         <Link
-          href="/login"
+          href={user ? "/residents" : "/login"}
           className="whitespace-nowrap rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
         >
-          {t.adopt.staffLogin}
+          {user ? t.adopt.openApp : t.adopt.staffLogin}
         </Link>
       </div>
     </header>
