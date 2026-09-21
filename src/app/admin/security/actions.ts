@@ -62,6 +62,23 @@ export async function createUser(
   return { success: t.admin.security.createdUser(email, role), temporaryPassword, email };
 }
 
+/**
+ * Grants a role to an account that has none — the "approve" on the access
+ * request queue. Same write as changing a role; kept separate so the
+ * queue reads as what it is. The person signs in again and gets through.
+ */
+export async function approveAccessRequest(userId: string, role: string) {
+  await assertAdminRole();
+  const { t } = await getT();
+  if (!VALID_ROLES.includes(role as (typeof VALID_ROLES)[number])) {
+    throw new Error(t.admin.security.errors.invalidRole);
+  }
+  const admin = createAdminClient();
+  const { error } = await admin.from("user_roles").upsert({ user_id: userId, role });
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/security");
+}
+
 export async function updateUserRole(userId: string, role: string) {
   await assertAdminRole();
   const { t } = await getT();
