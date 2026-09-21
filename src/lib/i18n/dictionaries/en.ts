@@ -95,6 +95,30 @@ const en = {
         "Sterilisation drives, rescues, community outreach and the projects that keep the shelter running.",
       seeAll: "See all our work",
     },
+    howToHelp: {
+      heading: "How you can help",
+      subtitle: "Foster, volunteer or donate — every one of them changes an animal's life.",
+      readMore: "Find out more",
+    },
+    /** Open Graph description when no tagline is set. */
+    shareFallback: "A non-profit rescue shelter for dogs and cats in Mae Wang, Chiang Mai.",
+  },
+
+  /** The footer on every public page. */
+  publicFooter: {
+    visitingHours: "Visiting hours",
+    contact: "Contact",
+    help: "How to help",
+  },
+
+  /** /foster, /volunteer, /donate and the how-to-adopt section (0059). */
+  sitePages: {
+    comingSoon: "This page is being written — check back soon.",
+    getInTouch: "Get in touch",
+    getInTouchHint: "Email us or message us on LINE and we'll get back to you.",
+    emailUs: "Email us",
+    lineUs: (id: string) => `LINE ${id}`,
+    alsoSee: "See also:",
   },
 
   account: {
@@ -389,9 +413,8 @@ const en = {
     },
     website: {
       title: "Website",
-      subtitleBeforeCode: "Edit the public welcome page at",
-      subtitleAfterCode:
-        "— photos, story, and contact details. Changes go live immediately.",
+      subtitle:
+        "Everything on the public website that isn't a resident or a project story: photos, the wording of each page in both languages, and how to reach the shelter. Changes go live immediately.",
       couldntLoad: "Couldn't load website content",
       hero: {
         heading: "Hero photo",
@@ -402,14 +425,48 @@ const en = {
         updated: "Hero photo updated.",
         removeConfirm: "Remove the hero photo?",
       },
-      story: {
+      settings: {
+        heading: "Labels and contact details",
+        subtitle:
+          "Short text with an English and a Thai version side by side — visitors see the one for their language, or the English if the Thai is blank. Contact details show in the footer of every public page and in the \"Where to meet\" block on each resident's profile.",
         tagline: "Tagline",
         taglineHint: "Shown under the headline on the hero photo.",
-        storyHeading: "Story section heading",
-        story: "Story",
-        storyHint: "Separate paragraphs with a blank line.",
+        heroAlt: "Hero photo description",
+        heroAltHint: "Read out by screen readers and shown if the photo doesn't load.",
+        visitingHours: "Visiting hours",
+        visitingHoursHint: "One line per day or range, e.g. \"Every day 9:00–16:00\". Leave blank to hide.",
         contactEmail: "Contact email",
+        contactPhone: "Phone",
+        contactLine: "LINE",
+        contactLineHint: "A LINE id (with or without the @) or a full add-friend link.",
         contactAddress: "Address",
+        contactMapUrl: "Map link",
+        contactMapUrlHint: "A Google Maps link; the address in the footer opens it.",
+      },
+      pages: {
+        heading: "Pages",
+        subtitle:
+          "The wording of each public page as you write it. The other language's version is written or approved beneath each field — the same translation panel a manager sees on Management → Translations.",
+        title: "Heading",
+        body: "Text",
+        bodyHint:
+          "Separate paragraphs with a blank line. Start a line with \"## \" for a sub-heading and \"- \" for a bullet point.",
+        titleRequired: "The page needs a heading.",
+        unknownPage: "That page doesn't exist.",
+        slugs: {
+          "our-story": "Our story (home page)",
+          "how-to-adopt": "How adoption works",
+          foster: "Foster",
+          volunteer: "Volunteer",
+          donate: "Donate",
+        } as Record<string, string>,
+        where: {
+          "our-story": "The story section on the welcome page, under the photo strip.",
+          "how-to-adopt": "The section at the foot of the adoption listing, linked from every resident's profile.",
+          foster: "The Foster page, linked from the header and the \"How you can help\" strip.",
+          volunteer: "The Volunteer page, linked from the header and the \"How you can help\" strip.",
+          donate: "The Donate page, linked from the Donate button on every public page.",
+        } as Record<string, string>,
       },
       gallery: {
         heading: "Photo gallery",
@@ -2141,6 +2198,8 @@ const en = {
       "attachments.caption": "Photo caption",
       "maintenance.title": "Job title",
       "maintenance.description": "Job description",
+      "site_pages.title": "Page heading",
+      "site_pages.body": "Page text",
     } as Record<string, string>,
     original: (lang: string) => `Original (${lang})`,
     translationInto: (lang: string) => `Translation (${lang})`,
@@ -2166,6 +2225,9 @@ const en = {
     home: "Home",
     adoptNav: "Adopt",
     ourWorkNav: "Our work",
+    fosterNav: "Foster",
+    volunteerNav: "Volunteer",
+    donateNav: "Donate",
     staffLogin: "Staff & Volunteer Login",
     pageTitle: "Meet Our Residents",
     pageSubtitle:

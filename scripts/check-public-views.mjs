@@ -53,6 +53,7 @@ for (const view of [
   "public_resident_photos",
   "public_projects",
   "public_project_photos",
+  "public_site_pages",
 ]) {
   const read = await fetch(`${url}/rest/v1/${view}?select=id&limit=1`, { headers });
   report(read.ok, `${view}: anon can SELECT`, `HTTP ${read.status}`);

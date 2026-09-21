@@ -3,20 +3,27 @@ import Link from "next/link";
 import { getT } from "@/lib/i18n/get-t";
 import { LanguageSwitcher } from "../LanguageSwitcher";
 
+export type PublicSection =
+  | "home"
+  | "adopt"
+  | "our-work"
+  | "foster"
+  | "volunteer"
+  | "donate";
+
 /**
- * Header for the signed-out public pages (/adopt, /our-work). `current`
- * marks the section the visitor is in so its link reads as a heading
- * rather than a way out; the home page has its own header.
+ * Header for the signed-out public pages. `current` marks the section the
+ * visitor is in so its link reads as a heading rather than a way out.
+ * Donate is a button rather than a link — the one thing every page of a
+ * shelter site asks for (RSPCA ACT does the same).
  */
-export async function PublicHeader({
-  current,
-}: {
-  current?: "adopt" | "our-work";
-}) {
+export async function PublicHeader({ current }: { current?: PublicSection }) {
   const { t } = await getT();
   const sections = [
     { key: "adopt", href: "/adopt", label: t.adopt.adoptNav },
     { key: "our-work", href: "/our-work", label: t.adopt.ourWorkNav },
+    { key: "foster", href: "/foster", label: t.adopt.fosterNav },
+    { key: "volunteer", href: "/volunteer", label: t.adopt.volunteerNav },
   ] as const;
 
   return (
@@ -29,6 +36,7 @@ export async function PublicHeader({
             width={36}
             height={36}
             className="object-contain"
+            priority={current === "home"}
           />
         </span>
         <span className="text-base font-semibold text-foreground">
@@ -36,13 +44,15 @@ export async function PublicHeader({
         </span>
       </Link>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <nav className="flex items-center gap-4">
-          <Link
-            href="/"
-            className="hidden whitespace-nowrap text-sm font-medium text-muted hover:text-foreground sm:inline"
-          >
-            {t.adopt.home}
-          </Link>
+        <nav className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          {current !== "home" && (
+            <Link
+              href="/"
+              className="hidden whitespace-nowrap text-sm font-medium text-muted hover:text-foreground sm:inline"
+            >
+              {t.adopt.home}
+            </Link>
+          )}
           {sections.map((section) => (
             <Link
               key={section.key}
@@ -55,6 +65,13 @@ export async function PublicHeader({
               {section.label}
             </Link>
           ))}
+          <Link
+            href="/donate"
+            aria-current={current === "donate" ? "page" : undefined}
+            className="whitespace-nowrap rounded bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
+          >
+            {t.adopt.donateNav}
+          </Link>
         </nav>
         <LanguageSwitcher />
         <Link

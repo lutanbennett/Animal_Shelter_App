@@ -19,9 +19,17 @@ const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/auth/callback"];
  * read-only "browse as guest" listing (Section 6 "Public/Anonymous" RBAC
  * tier) — scoped server-side to public_resident_profiles, never the
  * staff query path. /our-work is the same tier for project stories
- * (public_projects / public_project_photos, 0042).
+ * (public_projects / public_project_photos, 0042), and /foster,
+ * /volunteer and /donate read only site_pages / site_content (0059).
  */
-const PUBLIC_PATH_PREFIXES = ["/api/photos/", "/adopt", "/our-work"];
+const PUBLIC_PATH_PREFIXES = [
+  "/api/photos/",
+  "/adopt",
+  "/our-work",
+  "/foster",
+  "/volunteer",
+  "/donate",
+];
 
 /**
  * Refreshes the Supabase auth cookie on every request (required so server
