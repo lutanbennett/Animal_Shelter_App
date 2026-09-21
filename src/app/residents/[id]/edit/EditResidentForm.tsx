@@ -7,6 +7,7 @@ import { updateResident } from "./actions";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { RESIDENT_SIZES, sizeLabel } from "@/lib/i18n/enum-labels";
+import { BLOOD_TEST_INTERVALS } from "@/lib/residents/blood-test-interval";
 import type { PhotoRow } from "@/components/PhotoGallery";
 import type { EnclosureOption, ZoneOption } from "@/lib/enclosures/options";
 import {
@@ -47,6 +48,7 @@ export type EditableResident = {
   size: string | null;
   estimated_age_years: number | null;
   age_estimated_on: string | null;
+  blood_test_interval_months: number;
   bio: string | null;
   temperament_notes: string | null;
   past_story_notes: string | null;
@@ -307,6 +309,24 @@ export function EditResidentForm({
               <span className="text-xs text-muted">
                 {t.residents.edit.fields.estimatedAgeNowHint}
               </span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="bloodTestIntervalMonths" className="text-sm font-medium text-muted">
+                {t.residents.new.fields.bloodTestInterval}
+              </label>
+              <select
+                id="bloodTestIntervalMonths"
+                name="bloodTestIntervalMonths"
+                defaultValue={resident.blood_test_interval_months}
+                className={inputClass}
+              >
+                {BLOOD_TEST_INTERVALS.map((months) => (
+                  <option key={months} value={months}>
+                    {t.residents.new.fields.bloodTestEveryMonths(months)}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted">{t.residents.new.fields.bloodTestIntervalHint}</p>
             </div>
           </div>
         </fieldset>

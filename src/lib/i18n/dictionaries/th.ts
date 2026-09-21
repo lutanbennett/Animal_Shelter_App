@@ -1348,6 +1348,10 @@ const th: Dictionary = {
         startingDietHint: "ไม่บังคับ — บันทึกอาหารรายการแรกนับจากวันที่รับเข้า ปรับจำนวนมื้อและปริมาณได้ที่หน้าอาหาร",
         estimatedAge: "อายุโดยประมาณ (ปี)",
         estimatedAgeHint: "ประมาณการโดยเจ้าหน้าที่ ณ วันรับเข้า",
+        bloodTestInterval: "ตรวจเลือดประจำ",
+        bloodTestIntervalHint: "ปีละครั้งสำหรับสัตว์สุขภาพดี บ่อยขึ้นเมื่อแก่หรือป่วย เปลี่ยนภายหลังได้",
+        bloodTestEveryMonths: (months: number) =>
+          months === 1 ? "ทุกเดือน" : `ทุก ${months} เดือน`,
         weightKg: "น้ำหนักตอนรับเข้า (กก.)",
         weightKgHint: "ไม่บังคับ — บันทึกเป็นค่าน้ำหนักครั้งแรก",
         intakeDate: "วันที่รับเข้า",
@@ -1378,6 +1382,7 @@ const th: Dictionary = {
         sizeRequired: "กรุณาเลือกขนาดตัวของสัตว์",
         ageMustBeNumber: "อายุโดยประมาณต้องเป็นตัวเลข",
         weightPositive: "น้ำหนักต้องมากกว่า 0 กก.",
+        bloodTestIntervalInvalid: "ช่วงตรวจเลือดต้องเป็นจำนวนเดือนเต็ม",
       },
     },
     list: {
@@ -1465,6 +1470,8 @@ const th: Dictionary = {
       bloodTests: "ผลตรวจเลือด",
       bloodTestsNone: "ยังไม่มีการบันทึก",
       bloodTestsLast: (date: string) => `ล่าสุด: ${date}`,
+      bloodTestsEvery: (months: number) =>
+        months === 1 ? "กำหนดทุกเดือน" : `กำหนดทุก ${months} เดือน`,
       historyEntries: (n: number) => `ประวัติ ${n} รายการ`,
       carer: (name: string) => `ผู้ดูแล: ${name}`,
       /** Keyed by PlacementActionKey (src/lib/placements/available.ts). */
