@@ -27,19 +27,24 @@ export type MaintenanceJob = {
   date_created: string;
   date_completed: string | null;
   updated_at: string;
+  /** The contact the job is assigned to (any type), if anyone. */
+  assigned_to: string | null;
+  assignee_name: string | null;
+  drive_folder_id: string | null;
   attachments: MaintenanceAttachment[];
 };
 
 type JobRow = Omit<
   MaintenanceJob,
-  "zone_name" | "enclosure_name" | "attachments"
+  "zone_name" | "enclosure_name" | "assignee_name" | "attachments"
 > & {
   zones: { name: string } | null;
   enclosures: { name: string } | null;
+  contacts: { name: string } | null;
 };
 
 const JOB_COLUMNS =
-  "id, job_code, title, description, status, zone_id, enclosure_id, estimated_cost, actual_cost, due_date, date_created, date_completed, updated_at, zones(name), enclosures(name)";
+  "id, job_code, title, description, status, zone_id, enclosure_id, estimated_cost, actual_cost, due_date, date_created, date_completed, updated_at, assigned_to, drive_folder_id, zones(name), enclosures(name), contacts(name)";
 
 /**
  * Maintenance jobs with their files. `attachments` has no foreign key to
@@ -49,12 +54,13 @@ const JOB_COLUMNS =
  */
 export async function loadMaintenanceJobs(
   supabase: SupabaseClient,
-  filter: { enclosureId?: string; zoneId?: string; id?: string } = {},
+  filter: { enclosureId?: string; zoneId?: string; id?: string; assignedTo?: string } = {},
 ): Promise<{ jobs: MaintenanceJob[]; error: string | null }> {
   let query = supabase.from("maintenance").select(JOB_COLUMNS);
   if (filter.id) query = query.eq("id", filter.id);
   if (filter.enclosureId) query = query.eq("enclosure_id", filter.enclosureId);
   if (filter.zoneId) query = query.eq("zone_id", filter.zoneId);
+  if (filter.assignedTo) query = query.eq("assigned_to", filter.assignedTo);
 
   const { data, error } = await query
     .order("due_date", { ascending: true, nullsFirst: false })
@@ -84,10 +90,11 @@ export async function loadMaintenanceJobs(
   }
 
   return {
-    jobs: rows.map(({ zones, enclosures, ...row }) => ({
+    jobs: rows.map(({ zones, enclosures, contacts, ...row }) => ({
       ...row,
       zone_name: zones?.name ?? "—",
       enclosure_name: enclosures?.name ?? null,
+      assignee_name: contacts?.name ?? null,
       attachments: byJob.get(row.id) ?? [],
     })),
     error: filesError?.message ?? null,
