@@ -8,7 +8,7 @@
 # The task runs `node scripts/backup.mjs --env production` every Sunday at
 # 03:00, appending to backup.log (gitignored) in the repo. If the machine
 # was off or asleep at the time it runs as soon as it is next awake and on
-# a network. It runs only while the user is logged on — a task that runs
+# a network. It runs only while the user is logged on - a task that runs
 # without a session needs the Windows password stored with it, which is
 # not worth it for a laptop that is used most days. Check on it with:
 #
@@ -16,6 +16,9 @@
 #
 # LastTaskResult 0 means the last run succeeded; anything else, read
 # backup.log.
+#
+# ASCII only: Windows PowerShell 5.1 reads a BOM-less file as ANSI, and a
+# stray em dash inside a string is a parse error.
 param([switch]$Remove)
 
 $ErrorActionPreference = "Stop"
@@ -30,7 +33,7 @@ if ($Remove) {
 
 $node = (Get-Command node.exe).Source
 if (-not (Test-Path (Join-Path $repo ".env.deploy.production"))) {
-    throw ".env.deploy.production is missing in $repo — the task would fail every week."
+    throw ".env.deploy.production is missing in $repo - the task would fail every week."
 }
 
 # cmd.exe does the redirect; node itself has no --log flag.
