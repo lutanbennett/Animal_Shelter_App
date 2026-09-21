@@ -25,6 +25,10 @@ const inputClass =
  * manager's queue and this page are the same editor, as on a resident.
  * Saving re-queues the translations through the trigger; the panels
  * remount on the refreshed rows.
+ *
+ * The panel carries its own <form>, and forms can't nest, so the page
+ * form element holds only the save button and the inputs point at it
+ * with `form=` — the panels then sit between the fields as siblings.
  */
 export function SitePageForm({
   page,
@@ -45,11 +49,11 @@ export function SitePageForm({
   const { t } = useI18n();
   const p = t.admin.website.pages;
   const label = p.slugs[page.slug];
+  const formId = `page-${page.slug}-form`;
 
   return (
-    <form
+    <section
       id={`page-${page.slug}`}
-      action={formAction}
       className="flex scroll-mt-4 flex-col gap-4 rounded border border-border bg-surface p-4"
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -74,6 +78,7 @@ export function SitePageForm({
         <input
           id={`${page.slug}-title`}
           name="title"
+          form={formId}
           required
           defaultValue={page.title}
           className={`${inputClass} sm:w-96`}
@@ -96,6 +101,7 @@ export function SitePageForm({
         <textarea
           id={`${page.slug}-body`}
           name="body"
+          form={formId}
           rows={Math.min(24, Math.max(8, page.body.split("\n").length + 2))}
           defaultValue={page.body}
           className={inputClass}
@@ -110,7 +116,7 @@ export function SitePageForm({
         )}
       </div>
 
-      <div className="flex items-center gap-3">
+      <form id={formId} action={formAction} className="flex items-center gap-3">
         <button
           type="submit"
           disabled={pending}
@@ -124,7 +130,7 @@ export function SitePageForm({
         {state && "success" in state && (
           <p className="text-sm text-success">{state.success}</p>
         )}
-      </div>
-    </form>
+      </form>
+    </section>
   );
 }
