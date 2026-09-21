@@ -505,12 +505,15 @@ const en = {
         contact: "Contact info",
         contactPlaceholder: "Phone, LINE, address…",
         contactHint: "Free text — phone, LINE ID, email, address",
+        notes: "Notes",
+        notesPlaceholder: "Specialities, opening hours, emergency line…",
         addButton: "Add vet",
       },
       table: {
         name: "Name",
         clinic: "Clinic",
         contact: "Contact info",
+        notes: "Notes",
         visits: "Visits",
         visitCount: (n: number) => `${n} visit${n === 1 ? "" : "s"}`,
         noVets: "No vets yet.",
@@ -776,8 +779,15 @@ const en = {
     status: "Status",
     statusScheduled: "Scheduled (upcoming)",
     statusCompleted: "Completed (already happened)",
+    statusCancelled: "Cancelled",
     notes: "Notes",
     notesPlaceholder: "Any additional detail for this visit",
+    editPageTitle: "Edit Vet Visit",
+    editPageSubtitle:
+      "Mark the visit completed or cancelled, fix the date or vet, and record what it cost once the invoice is in.",
+    forResident: (name: string) => `For ${name}`,
+    cost: "Cost (฿)",
+    costHint: "From the invoice — leave blank until you have it. The vet hub totals these.",
     booking: "Booking...",
     bookButton: (count: number) =>
       count > 1 ? `Book visit for ${count} residents` : "Book vet visit",
@@ -786,6 +796,10 @@ const en = {
       selectVet: "Select a vet.",
       enterDateTime: "Enter an appointment date and time.",
       invalidDate: "Invalid appointment date.",
+      invalidStatus: "Choose a valid status.",
+      invalidCost: "Cost must be a number of baht, zero or more.",
+      notFound: "Vet visit not found.",
+      notAuthorized: "You don't have permission to change vet visits.",
     },
   },
 
@@ -821,6 +835,12 @@ const en = {
         `${period} · ${cancelled} cancelled not counted`,
       residentsSeen: "Residents seen",
       noResidents: "No visits in this period",
+      spend: "Spend",
+      spendDetail: (period: string, withCost: number, total: number) =>
+        withCost === total
+          ? `${period} · every visit costed`
+          : `${period} · ${withCost} of ${total} visit${total === 1 ? "" : "s"} costed`,
+      noSpend: "No costs recorded yet — add them from each visit's Edit link",
       schedule: "Scheduled",
       upcoming: (n: number) => `${n} upcoming`,
       overdue: (n: number) => `${n} overdue`,

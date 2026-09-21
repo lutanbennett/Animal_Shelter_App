@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { StatCard, type StatCardTone } from "@/components/StatCard";
 import { VET_ICONS } from "@/components/hub-icons";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { formatBaht, formatDate, formatDateTime } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { appointmentStatusLabel } from "@/lib/i18n/enum-labels";
 import {
@@ -15,6 +15,7 @@ import {
   visitsByMonth,
   visitsByResident,
   visitsInPeriod,
+  spendSummary,
   type VetVisit,
   type VisitPeriod,
 } from "@/lib/vets/stats";
@@ -25,6 +26,7 @@ export type Vet = {
   name: string;
   clinic_name: string | null;
   contact_info: string | null;
+  notes: string | null;
 };
 
 export type VetHubVisit = VetVisit & {
@@ -76,6 +78,7 @@ export function VetHub({
   }, [visits, period, nowDate]);
   const schedule = useMemo(() => scheduleSummary(visits, nowDate), [visits, nowDate]);
   const byResident = useMemo(() => visitsByResident(inPeriod), [inPeriod]);
+  const spend = useMemo(() => spendSummary(inPeriod), [inPeriod]);
   const chartMonths = period ?? 12;
   const buckets = useMemo(
     () => visitsByMonth(visits, chartMonths, nowDate),
@@ -162,6 +165,9 @@ export function VetHub({
           ) : (
             <p className="text-sm text-muted">{t.vets.hub.noContact}</p>
           )}
+          {vet.notes && (
+            <p className="whitespace-pre-line text-sm text-muted">{vet.notes}</p>
+          )}
           {canManage && (
             <Link
               href="/management/vets"
@@ -227,6 +233,17 @@ export function VetHub({
           value={scheduleValue}
           detail={scheduleDetail}
           tone={scheduleTone}
+        />
+        <StatCard
+          title={t.vets.hub.spend}
+          icon={VET_ICONS.visits}
+          value={spend.withCost > 0 ? formatBaht(spend.total, locale) : "—"}
+          detail={
+            spend.withCost > 0
+              ? t.vets.hub.spendDetail(periodLabel, spend.withCost, inPeriod.length)
+              : t.vets.hub.noSpend
+          }
+          tone="neutral"
         />
         <StatCard
           title={t.vets.hub.procedures}
@@ -371,6 +388,7 @@ export function VetHub({
                         }`}
                       >
                         {appointmentStatusLabel(t, visit.status)}
+                        {visit.cost != null && ` · ${formatBaht(Number(visit.cost), locale)}`}
                       </span>
                     </div>
                   </Link>

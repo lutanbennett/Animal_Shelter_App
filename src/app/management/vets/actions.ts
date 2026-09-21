@@ -14,6 +14,7 @@ export type VetFields = {
   name: string;
   clinicName: string | null;
   contactInfo: string | null;
+  notes: string | null;
 };
 
 function optional(value: FormDataEntryValue | string | null | undefined) {
@@ -42,6 +43,7 @@ export async function createVet(
     name,
     clinic_name: optional(formData.get("clinicName")),
     contact_info: optional(formData.get("contactInfo")),
+    notes: optional(formData.get("notes")),
   });
 
   if (error) return { error: error.message };
@@ -64,6 +66,7 @@ export async function updateVet(id: string, fields: VetFields) {
       name,
       clinic_name: optional(fields.clinicName),
       contact_info: optional(fields.contactInfo),
+      notes: optional(fields.notes),
     })
     .eq("id", id);
 

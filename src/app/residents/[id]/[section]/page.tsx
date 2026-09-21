@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Minus, TrendingDown, TrendingUp } from "lucide-react";
-import { formatDate, formatWeightDelta, formatWeightKg } from "@/lib/format";
+import { formatBaht, formatDate, formatWeightDelta, formatWeightKg } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
 import {
   appointmentStatusLabel,
@@ -325,7 +325,7 @@ export default async function ResidentSectionPage(
     case "vet-appointments": {
       const { data } = await supabase
         .from("vet_appointments")
-        .select("id, appointment_date, status, reason, notes, vets(name)")
+        .select("id, appointment_date, status, reason, notes, cost, vets(name)")
         .eq("resident_id", id)
         .order("appointment_date", { ascending: false })
         .returns<
@@ -335,6 +335,7 @@ export default async function ResidentSectionPage(
             status: string;
             reason: string | null;
             notes: string | null;
+            cost: number | null;
             vets: { name: string } | null;
           }[]
         >();
@@ -375,10 +376,17 @@ export default async function ResidentSectionPage(
                   </span>
                   <span className="text-xs capitalize text-muted">
                     {appointmentStatusLabel(t, row.status)}
+                    {row.cost != null && ` · ${formatBaht(Number(row.cost), locale)}`}
                   </span>
                   <div className="flex flex-wrap justify-end gap-x-3 gap-y-1">
                     {!isDeceased && (
                       <>
+                        <Link
+                          href={`/vet-visits/${row.id}/edit`}
+                          className="text-xs font-medium text-primary hover:underline"
+                        >
+                          {t.common.edit}
+                        </Link>
                         <Link
                           href={`/blood-tests/new?residentId=${id}&vetAppointmentId=${row.id}`}
                           className="text-xs font-medium text-primary hover:underline"

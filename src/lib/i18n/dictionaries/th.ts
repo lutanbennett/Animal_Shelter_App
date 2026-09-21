@@ -504,12 +504,15 @@ const th: Dictionary = {
         contact: "ข้อมูลติดต่อ",
         contactPlaceholder: "โทรศัพท์, LINE, ที่อยู่…",
         contactHint: "ข้อความอิสระ — โทรศัพท์, LINE ID, อีเมล, ที่อยู่",
+        notes: "หมายเหตุ",
+        notesPlaceholder: "ความเชี่ยวชาญ เวลาทำการ สายด่วนฉุกเฉิน…",
         addButton: "เพิ่มสัตวแพทย์",
       },
       table: {
         name: "ชื่อ",
         clinic: "คลินิก",
         contact: "ข้อมูลติดต่อ",
+        notes: "หมายเหตุ",
         visits: "การเข้าพบ",
         visitCount: (n: number) => `เข้าพบ ${n} ครั้ง`,
         noVets: "ยังไม่มีสัตวแพทย์",
@@ -773,8 +776,15 @@ const th: Dictionary = {
     status: "สถานะ",
     statusScheduled: "นัดหมายแล้ว (กำลังจะถึง)",
     statusCompleted: "เสร็จสิ้นแล้ว (เกิดขึ้นแล้ว)",
+    statusCancelled: "ยกเลิก",
     notes: "หมายเหตุ",
     notesPlaceholder: "รายละเอียดเพิ่มเติมสำหรับการนัดนี้",
+    editPageTitle: "แก้ไขการนัดสัตวแพทย์",
+    editPageSubtitle:
+      "ทำเครื่องหมายว่าเสร็จสิ้นหรือยกเลิก แก้ไขวันที่หรือสัตวแพทย์ และบันทึกค่าใช้จ่ายเมื่อได้รับใบแจ้งหนี้",
+    forResident: (name: string) => `สำหรับ ${name}`,
+    cost: "ค่าใช้จ่าย (฿)",
+    costHint: "ตามใบแจ้งหนี้ — เว้นว่างไว้จนกว่าจะทราบ หน้าสัตวแพทย์จะรวมยอดให้",
     booking: "กำลังบันทึก...",
     bookButton: (count: number) =>
       count > 1 ? `จองนัดสำหรับสัตว์ ${count} ตัว` : "จองนัดสัตวแพทย์",
@@ -783,6 +793,10 @@ const th: Dictionary = {
       selectVet: "กรุณาเลือกสัตวแพทย์",
       enterDateTime: "กรุณากรอกวันที่และเวลานัดหมาย",
       invalidDate: "วันที่นัดหมายไม่ถูกต้อง",
+      invalidStatus: "กรุณาเลือกสถานะที่ถูกต้อง",
+      invalidCost: "ค่าใช้จ่ายต้องเป็นจำนวนเงินบาท ศูนย์หรือมากกว่า",
+      notFound: "ไม่พบการนัดสัตวแพทย์",
+      notAuthorized: "คุณไม่มีสิทธิ์แก้ไขการนัดสัตวแพทย์",
     },
   },
 
@@ -818,6 +832,12 @@ const th: Dictionary = {
         `${period} · ยกเลิก ${cancelled} รายการ ไม่นับรวม`,
       residentsSeen: "สัตว์ที่เข้าพบ",
       noResidents: "ไม่มีการเข้าพบในช่วงนี้",
+      spend: "ค่าใช้จ่าย",
+      spendDetail: (period: string, withCost: number, total: number) =>
+        withCost === total
+          ? `${period} · บันทึกค่าใช้จ่ายครบทุกครั้ง`
+          : `${period} · บันทึกค่าใช้จ่ายแล้ว ${withCost} จาก ${total} ครั้ง`,
+      noSpend: "ยังไม่มีการบันทึกค่าใช้จ่าย — เพิ่มได้จากลิงก์แก้ไขของแต่ละการนัด",
       schedule: "นัดหมาย",
       upcoming: (n: number) => `กำลังจะถึง ${n} รายการ`,
       overdue: (n: number) => `เลยกำหนด ${n} รายการ`,

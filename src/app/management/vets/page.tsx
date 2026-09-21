@@ -13,7 +13,7 @@ export default async function VetsAdminPage() {
   const [vetsResult, visitsResult] = await Promise.all([
     supabase
       .from("vets")
-      .select("id, name, clinic_name, contact_info")
+      .select("id, name, clinic_name, contact_info, notes")
       .order("name")
       .returns<Omit<VetRow, "visit_count">[]>(),
     // One row per visit is cheap at shelter scale and avoids a view just

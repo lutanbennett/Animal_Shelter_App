@@ -50,6 +50,17 @@ export function CreateVetForm() {
           {t.management.vets.createForm.contactHint}
         </span>
       </div>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="notes" className="text-sm font-medium text-muted">
+          {t.management.vets.createForm.notes}
+        </label>
+        <input
+          id="notes"
+          name="notes"
+          placeholder={t.management.vets.createForm.notesPlaceholder}
+          className="w-64 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+        />
+      </div>
       <button
         type="submit"
         disabled={pending}
