@@ -683,6 +683,53 @@ export async function moveResidentFolderToDeceasedArchive(
   return { residentFolderId, archiveFolderId, alreadyArchived: false };
 }
 
+/**
+ * The reverse of moveResidentFolderToDeceasedArchive(), for a death
+ * recorded in error: Residents/Deceased/<Name> (<ID>)/ goes back under
+ * Residents/. Same ID-first, then name-in-the-archive lookup, and the same
+ * no-op when the folder is already where it should be — a retry after a
+ * failed run must be safe. Returns null when there is no folder to move
+ * (nothing was ever uploaded for this resident and the archive never got
+ * as far as creating one).
+ */
+export async function moveResidentFolderOutOfDeceasedArchive(
+  drive: DriveClient,
+  resident: { name: string; resident_code: string; drive_folder_id: string | null },
+): Promise<{ residentFolderId: string; wasArchived: boolean } | null> {
+  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  if (!rootId) {
+    throw new Error("GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured.");
+  }
+
+  const residentsRootId = await findOrCreateFolder(drive, rootId, RESIDENTS_FOLDER);
+  const archiveFolderId = await findFolderByName(
+    drive,
+    residentsRootId,
+    DECEASED_ARCHIVE_FOLDER,
+  );
+
+  const residentFolderId =
+    resident.drive_folder_id ??
+    (archiveFolderId
+      ? await findFolderByName(drive, archiveFolderId, residentFolderName(resident))
+      : null);
+  if (!residentFolderId) return null;
+
+  const folder = await drive.getFile(residentFolderId, "id, parents");
+  const parents = folder.parents ?? [];
+  if (!archiveFolderId || !parents.includes(archiveFolderId)) {
+    return { residentFolderId, wasArchived: false };
+  }
+
+  await drive.moveFile({
+    fileId: residentFolderId,
+    addParents: residentsRootId,
+    removeParents: parents.join(","),
+  });
+
+  return { residentFolderId, wasArchived: true };
+}
+
 /** Folder ID by exact name under a parent, or null. Never creates. */
 async function findFolderByName(
   drive: DriveClient,

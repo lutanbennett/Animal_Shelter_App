@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { DECEASED_ROLES } from "@/lib/placements/deceased";
+import { DECEASED_ROLES, UNDO_DECEASED_ROLES } from "@/lib/placements/deceased";
 import {
   ResidentHub,
   type BloodTestRow,
@@ -177,6 +177,7 @@ export default async function ResidentPage(
         driveFolderId: resident.drive_folder_id,
       }}
       canRecordDeath={DECEASED_ROLES.has(roleResult.data ?? "")}
+      canUndoDeath={UNDO_DECEASED_ROLES.has(roleResult.data ?? "")}
       currentPlacementSince={currentPlacementResult.data?.[0]?.start_date ?? null}
       carerName={carerResult?.data?.[0]?.name ?? null}
       hospitalPreviousEnclosureName={previousEnclosureResult?.data?.[0]?.name ?? null}

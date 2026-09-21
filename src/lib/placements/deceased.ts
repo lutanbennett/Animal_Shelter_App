@@ -9,9 +9,9 @@ export const DECEASED_ENCLOSURE = "Deceased";
 
 /**
  * Recording a death is admin/staff work — the same roles that may send a
- * resident to hospital. It's also irreversible from inside the app (the
- * database locks the resident's whole record afterwards), which is the
- * other reason not to widen this to volunteers.
+ * resident to hospital. It also locks the resident's whole record, and only
+ * an admin can withdraw it (UNDO_DECEASED_ROLES), which is the other reason
+ * not to widen this to volunteers.
  */
 export const DECEASED_ROLES = new Set(["admin", "management", "staff"]);
 
@@ -112,6 +112,58 @@ export async function recordResidentDeath(
     notes: input.notes,
     cause_of_death: input.causeOfDeath,
     created_by: user?.id ?? null,
+  });
+  if (error) return { error: error.message };
+
+  return { ok: true };
+}
+
+/**
+ * Withdrawing a recorded death is admin-only, deliberately narrower than
+ * recording one: the staff member who made the mistake asks an admin,
+ * which is the friction wanted around a correction of this size.
+ */
+export const UNDO_DECEASED_ROLES = new Set(["admin"]);
+
+export type UndoDeathInput = {
+  residentId: string;
+  /** Why the death was recorded in error — kept as the reversal's notes. */
+  reason: string | null;
+};
+
+export type UndoDeathResult = { error: string } | { ok: true };
+
+/**
+ * Withdraws the open Deceased placement by appending a DeceasedInError
+ * placement back into whatever the death closed (their enclosure, or
+ * their carer), via undo_deceased_placement() in 0049. The database side
+ * puts back exactly what the death's cascade did — the appointments it
+ * cancelled, the prescriptions it ended (with the end dates they had),
+ * ready_for_adoption — and the lock lifts because the resident is no
+ * longer in the Deceased pseudo-enclosure. The Drive side (folder back
+ * under Residents/, generated files removed) runs after this commits: see
+ * restoreDeceasedResident().
+ */
+export async function undoResidentDeath(
+  supabase: SupabaseClient,
+  t: Dictionary,
+  input: UndoDeathInput,
+): Promise<UndoDeathResult> {
+  const u = t.residents.deceased.undo;
+
+  // The function checks the role again; this just turns a policy error
+  // into a sentence.
+  const { data: role } = await supabase.rpc("current_user_role");
+  if (typeof role !== "string" || !UNDO_DECEASED_ROLES.has(role)) {
+    return { error: u.notAuthorized };
+  }
+
+  const reason = input.reason?.trim() ?? "";
+  if (reason.length === 0) return { error: u.errors.enterReason };
+
+  const { error } = await supabase.rpc("undo_deceased_placement", {
+    p_resident_id: input.residentId,
+    p_reason: reason,
   });
   if (error) return { error: error.message };
 

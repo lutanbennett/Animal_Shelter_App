@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Pencil } from "lucide-react";
 import {
   DeceasedBanner,
+  DeceasedRestoreNotice,
   type DeceasedArchive,
 } from "./deceased/DeceasedBanner";
 import {
@@ -125,6 +126,7 @@ export function ResidentHub({
   causeOfDeath,
   archive,
   canRecordDeath,
+  canUndoDeath,
   currentPlacementSince,
   carerName,
   hospitalPreviousEnclosureName,
@@ -144,10 +146,16 @@ export function ResidentHub({
   isDeceased: boolean;
   dateOfDeath: string | null;
   causeOfDeath: string | null;
-  /** Where the Drive archive got to; only read when isDeceased. */
+  /**
+   * Where the Drive archive got to. Read when isDeceased, and for a living
+   * resident too: columns still set after a withdrawn death mean the Drive
+   * restore didn't finish.
+   */
   archive: DeceasedArchive;
   /** Admin/staff, the roles that may record a death (and retry an archive). */
   canRecordDeath: boolean;
+  /** Admin only: may withdraw a death recorded in error (and retry its Drive restore). */
+  canUndoDeath: boolean;
   currentPlacementSince: string | null;
   carerName: string | null;
   /** Where the resident was before going into hospital, while they're there. */
@@ -402,8 +410,13 @@ export function ResidentHub({
           causeOfDeath={causeOfDeath}
           archive={archive}
           canRetryArchive={canRecordDeath}
+          canUndo={canUndoDeath}
         />
       )}
+      {!isDeceased &&
+        (archive.archivedAt || archive.summaryDriveFileId || archive.indexDriveFileId) && (
+          <DeceasedRestoreNotice residentId={resident.id} canRetry={canUndoDeath} />
+        )}
 
       <div className="flex gap-1 rounded-lg border border-border bg-surface p-1 md:hidden">
         <button
