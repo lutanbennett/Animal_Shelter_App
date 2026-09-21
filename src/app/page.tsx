@@ -138,6 +138,11 @@ export default async function WelcomePage() {
           detail: t.home.stats.inCareDetail,
         },
         {
+          value: stats.in_foster,
+          label: t.home.stats.inFoster,
+          detail: t.home.stats.inFosterDetail,
+        },
+        {
           value: stats.adopted_this_year,
           label: t.home.stats.adoptedThisYear,
           detail: t.home.stats.adoptedThisYearDetail(stats.adopted_last_7_days),
@@ -146,11 +151,6 @@ export default async function WelcomePage() {
           value: stats.in_treatment,
           label: t.home.stats.inVetCare,
           detail: t.home.stats.inVetCareDetail,
-        },
-        {
-          value: stats.in_foster,
-          label: t.home.stats.inFoster,
-          detail: t.home.stats.inFosterDetail,
         },
       ]
     : [];
