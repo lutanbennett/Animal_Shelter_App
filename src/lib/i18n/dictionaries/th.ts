@@ -786,11 +786,14 @@ const th: Dictionary = {
     saveButton: "บันทึกผลตรวจเลือด",
     savedHeading: (residentName: string, date: string) =>
       `บันทึกผลตรวจเลือดของ ${residentName} แล้ว (${date})`,
-    attachHint: "ตอนนี้ให้แนบไฟล์สแกนหรือ PDF ผลตรวจ — สามารถเพิ่มได้มากกว่าหนึ่งไฟล์",
+    files: "ไฟล์",
+    attachHint:
+      "เลือกไฟล์สแกนหรือ PDF ผลตรวจที่นี่ ระบบจะอัปโหลดเมื่อบันทึก และเพิ่มภายหลังได้จากแท็บผลตรวจเลือด",
     done: "เสร็จสิ้น",
     linkedVisitLabel: (date: string, reason: string) => `การนัดหมายสัตวแพทย์: ${date} — ${reason}`,
     fileFallback: "ไฟล์",
     noFiles: "ยังไม่มีไฟล์แนบ",
+    attachFiles: "แนบไฟล์",
     uploader: {
       dropHere: "ลากรูปภาพหรือ PDF มาวางที่นี่หรือแตะเพื่ออัปโหลด",
       hint: "สามารถเลือกได้หลายไฟล์พร้อมกัน",
@@ -873,8 +876,9 @@ const th: Dictionary = {
     saveButton: "บันทึกหัตถการ",
     savedHeading: (type: string, residentName: string, date: string) =>
       `บันทึก${type}ของ ${residentName} แล้ว (${date})`,
+    files: "ไฟล์",
     attachHint:
-      "ตอนนี้ให้แนบภาพเอกซเรย์ สแกน หรือเอกสาร — แนบได้มากกว่าหนึ่งไฟล์ และเพิ่มภายหลังได้จากแท็บหัตถการ",
+      "เลือกภาพเอกซเรย์ สแกน หรือเอกสารที่นี่ ระบบจะอัปโหลดเมื่อบันทึก และเพิ่มภายหลังได้จากแท็บหัตถการ",
     done: "เสร็จสิ้น",
     linkedVisitLabel: (date: string, reason: string) => `การนัดหมายสัตวแพทย์: ${date} — ${reason}`,
     doneAtShelter: "ทำที่ศูนย์",
@@ -1568,7 +1572,6 @@ const th: Dictionary = {
       photosHint: "รูปของปัญหาตามสภาพปัจจุบัน เลือกรูปที่นี่ แล้วระบบจะอัปโหลดเมื่อบันทึก",
       dropHere: "วางรูปหรือ PDF ที่นี่ หรือแตะเพื่อเพิ่ม",
       dropHint: "รูปภาพและ PDF ไม่เกิน 15MB ต่อไฟล์ เลือกได้หลายไฟล์พร้อมกัน",
-      removeFile: "เอาออก",
       saveButton: "บันทึกงาน",
       saving: "กำลังบันทึก…",
       uploading: (done: number, total: number) => `กำลังอัปโหลดรูป… ${done} จาก ${total}`,
@@ -1715,6 +1718,12 @@ const th: Dictionary = {
       notEmpty: "โฟลเดอร์นี้ยังมีโฟลเดอร์ย่อยหรือรูปอยู่ — กรุณาลบออกก่อน",
       photoNotFound: "ไม่พบรูปนี้ในโฟลเดอร์",
     },
+  },
+
+  uploads: {
+    removeFile: "เอาออก",
+    uploading: (done: number, total: number) => `กำลังอัปโหลดไฟล์… ${done} จาก ${total}`,
+    uploadsFailed: "บางไฟล์อัปโหลดไม่สำเร็จ ลองใหม่ หรือไปต่อโดยไม่มีไฟล์เหล่านั้น",
   },
 
   photos: {

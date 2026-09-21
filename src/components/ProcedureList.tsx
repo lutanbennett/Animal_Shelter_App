@@ -31,9 +31,9 @@ export type ProcedureRow = {
 };
 
 /**
- * The Procedures tab list. Unlike a blood test, a procedure's files often
- * arrive after the record does (the clinic sends the X-ray later), so each
- * row can open an uploader in place rather than only right after saving.
+ * The Procedures tab list. Files are normally picked on the form, but a
+ * procedure's often arrive after the record does (the clinic sends the
+ * X-ray later), so each row can open an uploader in place.
  */
 export function ProcedureList({
   residentId,

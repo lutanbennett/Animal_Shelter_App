@@ -788,11 +788,14 @@ const en = {
     saveButton: "Save blood test",
     savedHeading: (residentName: string, date: string) =>
       `Blood test saved for ${residentName} (${date}).`,
-    attachHint: "Now attach the lab scan or PDF — you can add more than one file.",
+    files: "Files",
+    attachHint:
+      "Pick the lab scan or PDF here; it uploads when you save. You can add more later from the Blood Tests tab.",
     done: "Done",
     linkedVisitLabel: (date: string, reason: string) => `Vet visit: ${date} — ${reason}`,
     fileFallback: "File",
     noFiles: "No files attached yet.",
+    attachFiles: "Attach files",
     uploader: {
       dropHere: "Drop images or PDFs here or tap to upload",
       hint: "You can select multiple files at once.",
@@ -875,8 +878,9 @@ const en = {
     saveButton: "Save procedure",
     savedHeading: (type: string, residentName: string, date: string) =>
       `${type} saved for ${residentName} (${date}).`,
+    files: "Files",
     attachHint:
-      "Now attach any X-rays, scans or paperwork — you can add more than one file, and add more later from the Procedures tab.",
+      "Pick any X-rays, scans or paperwork here; they upload when you save. You can add more later from the Procedures tab.",
     done: "Done",
     linkedVisitLabel: (date: string, reason: string) => `Vet visit: ${date} — ${reason}`,
     doneAtShelter: "Done at the shelter",
@@ -1572,7 +1576,6 @@ const en = {
         "Photos of the problem as it is now. Pick them here; they upload when you save.",
       dropHere: "Drop photos or PDFs here or tap to add",
       dropHint: "Images and PDFs, up to 15MB each. You can select several at once.",
-      removeFile: "Remove",
       saveButton: "Save job",
       saving: "Saving…",
       uploading: (done: number, total: number) => `Uploading photos… ${done} of ${total}`,
@@ -1721,6 +1724,13 @@ const en = {
       notEmpty: "This folder still has subfolders or photos — empty it first.",
       photoNotFound: "That photo isn't in this folder.",
     },
+  },
+
+  /** Files picked on a form and uploaded once the record is saved. */
+  uploads: {
+    removeFile: "Remove",
+    uploading: (done: number, total: number) => `Uploading files… ${done} of ${total}`,
+    uploadsFailed: "Some files didn't upload. Retry them, or continue without them.",
   },
 
   photos: {
