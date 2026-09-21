@@ -135,6 +135,12 @@ export function ContactHub({
         ) : (
           <p className="text-sm text-muted">{h.noDetails}</p>
         )}
+        {contact.notes && (
+          <div className="flex flex-col gap-1 border-t border-border pt-3">
+            <span className="text-xs text-muted">{h.notes}</span>
+            <p className="whitespace-pre-line text-sm text-foreground">{contact.notes}</p>
+          </div>
+        )}
       </div>
 
       {/* Residents only make sense for carers. A contact of another type

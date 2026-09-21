@@ -692,7 +692,7 @@ const manual: Manual = {
           roles: ["admin", "management"],
           path: "Management → Contacts",
           steps: [
-            "Add a contact with their type (Carer, Volunteer, Supplier, Donor, Other), phone, email, LINE ID, Messenger, WhatsApp and address.",
+            "Add a contact with their type (Carer, Volunteer, Supplier, Donor, Other), phone, email, LINE ID, Messenger, WhatsApp, address and notes — what a supplier sells, when a volunteer is free, a carer's home set-up. Notes show on the contact's page and are searched from the contact list.",
             "Edit details in the table. A contact who has fostered or adopted must stay a Carer, and one with placements or maintenance jobs can't be deleted.",
           ],
           screenshot: {

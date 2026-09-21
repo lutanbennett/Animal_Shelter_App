@@ -681,6 +681,8 @@ const en = {
         address: "Address",
         addressPlaceholder: "Address or a pasted Google Maps link",
         addressHint: "Opens in a maps app from the contact list.",
+        notes: "Notes",
+        notesPlaceholder: "What they supply, availability, home set-up…",
         addButton: "Add contact",
       },
       table: {
@@ -690,6 +692,7 @@ const en = {
         email: "Email",
         messaging: "Messaging",
         address: "Address",
+        notes: "Notes",
         residents: "Residents",
         placementCount: (n: number) => `${n} placement${n === 1 ? "" : "s"}`,
         inCare: (n: number) => `${n} in care`,
@@ -909,6 +912,7 @@ const en = {
       messenger: "Messenger",
       whatsapp: "WhatsApp",
       address: "Address",
+      notes: "Notes",
       noDetails: "No contact details recorded — an admin can add them under Admin → Contacts.",
       residentsInCare: "Residents in care",
       residentsInCareDetail:

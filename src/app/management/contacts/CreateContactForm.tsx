@@ -120,6 +120,17 @@ export function CreateContactForm() {
         />
         <span className="text-xs text-muted">{f.addressHint}</span>
       </div>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="notes" className="text-sm font-medium text-muted">
+          {f.notes}
+        </label>
+        <input
+          id="notes"
+          name="notes"
+          placeholder={f.notesPlaceholder}
+          className={`${inputClass} w-72`}
+        />
+      </div>
       <button
         type="submit"
         disabled={pending}

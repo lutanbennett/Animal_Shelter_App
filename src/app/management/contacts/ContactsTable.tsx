@@ -35,6 +35,7 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
   const [messengerId, setMessengerId] = useState(contact.messenger_id ?? "");
   const [whatsapp, setWhatsapp] = useState(contact.whatsapp ?? "");
   const [address, setAddress] = useState(contact.address ?? "");
+  const [notes, setNotes] = useState(contact.notes ?? "");
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState<
     { type: "error" | "success"; text: string } | null
@@ -66,6 +67,7 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
     setMessengerId(contact.messenger_id ?? "");
     setWhatsapp(contact.whatsapp ?? "");
     setAddress(contact.address ?? "");
+    setNotes(contact.notes ?? "");
   }
 
   function handleSave() {
@@ -81,6 +83,7 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
           messengerId,
           whatsapp,
           address,
+          notes,
         });
         setEditing(false);
         setMessage({ type: "success", text: t.common.saved });
@@ -240,6 +243,21 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
             </span>
           )}
         </td>
+        <td className="px-4 py-2">
+          {editing ? (
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder={c.createForm.notesPlaceholder}
+              rows={2}
+              className={`${inputClass} min-w-48`}
+            />
+          ) : (
+            <span className="line-clamp-2 max-w-xs whitespace-pre-line text-muted">
+              {contact.notes ?? t.common.dash}
+            </span>
+          )}
+        </td>
         <td className="px-4 py-2 text-muted">
           {contact.type === CARER_CONTACT_TYPE || contact.placement_count > 0 ? (
             <Link
@@ -305,7 +323,7 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
       {message && (
         <tr>
           <td
-            colSpan={8}
+            colSpan={9}
             className={`px-4 pb-2 text-xs ${
               message.type === "error" ? "text-danger" : "text-success"
             }`}
@@ -333,6 +351,7 @@ export function ContactsTable({ contacts }: { contacts: ContactRow[] }) {
             <th className="px-4 py-2 font-medium">{h.email}</th>
             <th className="px-4 py-2 font-medium">{h.messaging}</th>
             <th className="px-4 py-2 font-medium">{h.address}</th>
+            <th className="px-4 py-2 font-medium">{h.notes}</th>
             <th className="px-4 py-2 font-medium">{h.residents}</th>
             <th className="px-4 py-2 font-medium" />
           </tr>
@@ -343,7 +362,7 @@ export function ContactsTable({ contacts }: { contacts: ContactRow[] }) {
           ))}
           {contacts.length === 0 && (
             <tr>
-              <td colSpan={8} className="px-4 py-6 text-center text-muted">
+              <td colSpan={9} className="px-4 py-6 text-center text-muted">
                 {h.noContacts}
               </td>
             </tr>

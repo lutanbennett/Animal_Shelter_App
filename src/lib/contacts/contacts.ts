@@ -31,10 +31,11 @@ export type Contact = {
   messenger_id: string | null;
   whatsapp: string | null;
   address: string | null;
+  notes: string | null;
 };
 
 export const CONTACT_COLUMNS =
-  "id, name, type, phone, email, line_id, messenger_id, whatsapp, address";
+  "id, name, type, phone, email, line_id, messenger_id, whatsapp, address, notes";
 
 /**
  * `tel:` link for a stored phone number. Staff type numbers the way they
