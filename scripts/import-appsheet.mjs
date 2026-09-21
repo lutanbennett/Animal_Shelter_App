@@ -594,6 +594,8 @@ if (!residentsFolder || !projectsFolder) {
 // "<Name> (R-nnnn)" from an earlier run — under Residents/ or, once they
 // have died, Residents/Deceased/.
 const folderSuffix = (name) => name.match(/\(([^()]+)\)\s*$/)?.[1] ?? null;
+// Mirrors residentFolderName() in src/lib/google/drive.ts.
+const folderNameFor = (r) => `${r.name.replace(/\//g, "-")} (${r.code})`;
 for (const r of residents) {
   const candidates = [];
   for (const parent of [residentsFolder, deceasedFolder].filter(Boolean)) {
@@ -605,12 +607,14 @@ for (const r of residents) {
   }
   if (candidates.length > 1) {
     // A resident renamed in AppSheet can have "Dang (id)" and "Dang 1 (id)";
-    // a dev scratch folder can carry an R-code. The one their attachment
-    // paths point into wins, then a legacy-id match, then the current name.
+    // a dev scratch folder can carry an R-code. A folder an earlier run
+    // already renamed to "<current name> (R-nnnn)" wins, then the one their
+    // attachment paths point into, then a legacy-id match, then the name.
+    const done = candidates.filter((c) => c.name === folderNameFor(r));
     const referenced = candidates.filter((c) => attachmentRows.some((a) => a.RID === r.appsheetId && a.File.startsWith(`Residents/${c.name}/`)));
     const byId = candidates.filter((c) => folderSuffix(c.name) === r.appsheetId);
     const named = candidates.filter((c) => c.name.startsWith(`${r.name} (`));
-    r.driveFolder = referenced[0] ?? byId[0] ?? named[0] ?? candidates[0];
+    r.driveFolder = done[0] ?? referenced[0] ?? byId[0] ?? named[0] ?? candidates[0];
     note("drive", `${r.name}: ${candidates.length} folders carry their id (${candidates.map((c) => `${c.parent}/${c.name}`).join(", ")}) → using ${r.driveFolder.name}`);
   } else {
     r.driveFolder = candidates[0] ?? null;
@@ -881,8 +885,6 @@ if (dryRun) {
 // Drive folder renames — only once the rows that point at them are committed
 // ---------------------------------------------------------------------------
 
-// Mirrors residentFolderName() in src/lib/google/drive.ts.
-const folderNameFor = (r) => `${r.name.replace(/\//g, "-")} (${r.code})`;
 let renamed = 0;
 for (const r of residents) {
   if (!r.driveFolder) continue;
