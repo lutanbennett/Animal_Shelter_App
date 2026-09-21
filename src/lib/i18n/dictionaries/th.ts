@@ -68,13 +68,13 @@ const th: Dictionary = {
 
   home: {
     staffLogin: "เข้าสู่ระบบสำหรับเจ้าหน้าที่และอาสาสมัคร",
-    browseGuest: "ดูสัตว์ของเราในฐานะผู้เยี่ยมชม",
+    browseGuest: "ดูสัตว์ที่พร้อมรับเลี้ยง",
     welcomeHeading: "ยินดีต้อนรับสู่ Lanna Care for Animals",
     ourStoryFallback: "เรื่องราวของเรา",
     readyHeading: "พร้อมพบกับทุกตัวหรือยัง?",
     readySubtitle:
       "ดูสัตว์ในความดูแลและสัตว์ที่พร้อมรับเลี้ยงของเรา — ไม่ต้องมีบัญชีผู้ใช้",
-    browseResidents: "ดูสัตว์ของเรา",
+    browseResidents: "ดูสัตว์ที่พร้อมรับเลี้ยง",
     footerOrgName: "มูลนิธิ Lanna Care for Animals",
     stats: {
       heading: "ภาพรวมศูนย์พักพิง",

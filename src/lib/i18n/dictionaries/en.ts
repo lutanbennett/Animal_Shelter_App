@@ -66,13 +66,13 @@ const en = {
 
   home: {
     staffLogin: "Staff & Volunteer Login",
-    browseGuest: "Browse Our Residents as a Guest",
+    browseGuest: "Browse Our Available Residents",
     welcomeHeading: "Welcome to Lanna Care for Animals",
     ourStoryFallback: "Our story",
     readyHeading: "Ready to meet everyone?",
     readySubtitle:
       "Browse our current and adoptable residents — no account needed.",
-    browseResidents: "Browse Our Residents",
+    browseResidents: "Browse Our Available Residents",
     footerOrgName: "Lanna Care for Animals Foundation",
     stats: {
       heading: "The shelter at a glance",
