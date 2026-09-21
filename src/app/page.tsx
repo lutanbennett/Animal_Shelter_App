@@ -35,6 +35,7 @@ type GalleryPhoto = { id: string; drive_file_id: string; alt: string };
 /** Counts only — public_shelter_stats (0039, 0062) is granted to anon. */
 type ShelterStats = {
   in_care: number;
+  in_foster: number;
   in_treatment: number;
   adopted_last_7_days: number;
   adopted_this_year: number;
@@ -94,7 +95,7 @@ export default async function WelcomePage() {
       .returns<GalleryPhoto[]>(),
     supabase
       .from("public_shelter_stats")
-      .select("in_care, in_treatment, adopted_last_7_days, adopted_this_year")
+      .select("in_care, in_foster, in_treatment, adopted_last_7_days, adopted_this_year")
       .limit(1)
       .returns<ShelterStats[]>(),
     // "What we do": the three newest published project stories (0042).
@@ -145,6 +146,11 @@ export default async function WelcomePage() {
           value: stats.in_treatment,
           label: t.home.stats.inVetCare,
           detail: t.home.stats.inVetCareDetail,
+        },
+        {
+          value: stats.in_foster,
+          label: t.home.stats.inFoster,
+          detail: t.home.stats.inFosterDetail,
         },
       ]
     : [];
@@ -211,11 +217,11 @@ export default async function WelcomePage() {
           aria-label={t.home.stats.heading}
           className="border-b border-border bg-surface"
         >
-          <div className="mx-auto grid w-full max-w-5xl grid-cols-1 divide-y divide-border px-6 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-12">
+          <div className="mx-auto grid w-full max-w-5xl grid-cols-1 divide-y divide-border px-6 sm:grid-cols-2 sm:px-12 lg:grid-cols-4 lg:divide-x lg:divide-y-0">
             {statTiles.map((tile) => (
               <div
                 key={tile.label}
-                className="flex flex-col gap-1 py-5 sm:px-6 sm:first:pl-0 sm:last:pr-0"
+                className="flex flex-col gap-1 py-5 lg:px-6 lg:first:pl-0 lg:last:pr-0"
               >
                 <span className="text-3xl font-semibold tabular-nums text-primary">
                   {tile.value}

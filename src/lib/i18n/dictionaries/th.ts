@@ -84,6 +84,8 @@ const th: Dictionary = {
       adoptedThisYearDetail: (lastWeek: number) => `${lastWeek} ตัวในสัปดาห์ที่ผ่านมา`,
       inVetCare: "อยู่ในการรักษาของสัตวแพทย์",
       inVetCareDetail: "กำลังได้รับยาหรืออยู่ในโรงพยาบาลขณะนี้",
+      inFoster: "อยู่ในบ้านอุปถัมภ์",
+      inFosterDetail: "อาศัยอยู่กับครอบครัวอุปถัมภ์ระหว่างรอบ้านถาวร",
     },
     featured: {
       heading: "สัตว์ประจำสัปดาห์",

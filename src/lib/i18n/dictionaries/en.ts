@@ -83,6 +83,8 @@ const en = {
         lastWeek === 1 ? "1 in the last week" : `${lastWeek} in the last week`,
       inVetCare: "In vet care",
       inVetCareDetail: "On medication or in hospital right now",
+      inFoster: "In foster care",
+      inFosterDetail: "Living with a foster family while they wait",
     },
     featured: {
       heading: "Pet of the week",
