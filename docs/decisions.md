@@ -1650,3 +1650,25 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   `@lannacare.org` would need a Gmail "send mail as" with an SMTP relay.
   Set up via the API with the wrangler login (`email_routing:write`),
   which also created the MX, SPF and DKIM records.
+
+- **Production backups are a weekly `pg_dump` to Drive from Lutan's laptop
+  (2026-09-21):** `scripts/backup.mjs` + a Task Scheduler job, because
+  the free tier has no backups and there is no budget for Pro. Choices
+  inside it: the dump goes over Supabase's *session* pooler (port 5432)
+  rather than the direct `db.<ref>.supabase.co` host the backlog named,
+  because the direct host is IPv6-only and the laptop's network is not —
+  the pooler host and user come from the Management API so only the
+  database password is new configuration. Only the `public` and `auth`
+  schemas are dumped: `public` is every record the app owns, `auth` is
+  the accounts; `storage` is unused (files live in Drive), and the
+  Supabase-internal schemas (`extensions`, `realtime`, `vault`, …) belong
+  to the platform and partly refuse `pg_dump` from the `postgres` role.
+  Old dumps are trashed, not deleted, so a bad prune is recoverable for
+  30 days. It requires PostgreSQL 17's command-line tools on the machine
+  (pg_dump refuses to be older than the server) — installed without the
+  server component, and the script looks under `C:\Program Files\
+  PostgreSQL\` itself so nothing touches `PATH`. The scheduled task runs
+  only while Lutan is logged on: "run whether logged on or not" would
+  store the Windows password with the task, and a laptop in daily use
+  doesn't need it. The known gap is that a restore has never been
+  rehearsed — on the backlog, blocked on having a scratch project.
