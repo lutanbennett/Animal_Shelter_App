@@ -87,6 +87,39 @@ A person who leaves is **archived** from `/admin/security` rather than deleted (
    `.githooks/post-commit` pushes the current branch to GitHub after every
    commit, so the remote always matches the local checkout.
 
+## Environments
+
+| | Dev | Test | Production |
+|---|---|---|---|
+| Where | `next dev` on your machine | `test.lannacare.org` | `lannacare.org`, `www.lannacare.org` |
+| Worker | — | `lanna-animal-care-test` | `lanna-animal-care` |
+| Database | dev Supabase project (`qxkmhwybjggxvsfxsxbd`) | **the same dev project** | production project (`dbkodyyxxhtygxcxmfcu`) |
+| Google Drive | dev account | dev account | dev account, until the shelter's own account exists |
+| Values from | `.env.local` | `.env.local` | `.env.deploy.production` over `.env.local` |
+
+Two databases, both on Supabase's free tier (the org allows two). Test
+deliberately shares the dev database: one developer, throwaway data, and
+what Test is for is exercising a real Workers build of `main` on phones
+before it goes to production. Production holds the shelter's real records.
+Both are free-tier projects, which means **no automatic backups** — see
+"Backups" below. Free projects also pause after seven days with no
+requests at all, which the public pages make impossible while the site is
+up.
+
+`scripts/lib/env.mjs` is the one place that knows which values belong to
+which environment; `scripts/deploy.mjs`, `scripts/apply-migrations.mjs`,
+`scripts/check-public-views.mjs` and `scripts/bootstrap-admin.mjs` all take
+`--env test|production` (default `test`) and print the environment and
+Supabase project ref before doing anything.
+
+`.env.deploy.production` (gitignored) holds the production
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and
+`SUPABASE_SERVICE_ROLE_KEY`; anything it doesn't set — currently the whole
+Google Drive set — falls through to `.env.local`. Next.js and OpenNext never
+read that file on their own, which is what keeps a production build from
+happening by accident: only `scripts/deploy.mjs` puts its values in the
+shell.
+
 ## Deploying to Cloudflare
 
 The app deploys to Cloudflare Workers through the `@opennextjs/cloudflare`
@@ -105,117 +138,122 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    PowerShell refuses with "running scripts is disabled", use `npx.cmd`
    instead of `npx` (the `.cmd` shim skips the execution policy).
 
-   `npm run preview` / `npm run deploy` build through
-   `scripts/win-junction-symlinks.cjs`, which on Windows turns the
-   directory symlinks OpenNext creates for Next's hoisted ESM packages
-   into junctions — real symlinks need Developer Mode or an elevated
-   shell, and the build dies with `EPERM … symlink` without it. It is a
-   no-op elsewhere.
+   Every build goes through `scripts/win-junction-symlinks.cjs`, which on
+   Windows turns the directory symlinks OpenNext creates for Next's hoisted
+   ESM packages into junctions — real symlinks need Developer Mode or an
+   elevated shell, and the build dies with `EPERM … symlink` without it.
+   It is a no-op elsewhere.
 
-2. **Preview locally on the Workers runtime** (recommended before a first
-   deploy — this is what `next dev` can't simulate). It reads `.env.local`
-   directly, no extra setup:
+2. **Preview locally on the Workers runtime** — what `next dev` can't
+   simulate. It reads `.env.local` directly, no extra setup:
 
    ```bash
    npm run preview
    ```
 
-3. **Apply the database migrations to the production Supabase project.**
-   With `.env.local` pointing at the production `NEXT_PUBLIC_SUPABASE_*`
-   values (which step 4 needs anyway) and a `SUPABASE_ACCESS_TOKEN` that
-   can see that project:
+3. **Deploy to Test**
 
    ```bash
-   node scripts/apply-migrations.mjs
+   npm run deploy:test
    ```
 
-   On a fresh project that applies every file from `0001` up; on a
-   project that's been migrated before, only what's pending — the script
-   checks the target's `schema_migrations` table and prints the project
-   ref before it runs anything. Then:
+   Builds with the dev Supabase values, empties the env-file snapshot
+   OpenNext bakes into the bundle (`scripts/strip-baked-env.mjs` — check its
+   `removed N env var(s)` line appears), and uploads the
+   `lanna-animal-care-test` Worker. Add `--secrets` after
+   `node scripts/deploy.mjs --env test` to (re)upload the five runtime
+   secrets from `.env.local` first — needed once per Worker and whenever a
+   value changes; `npx wrangler secret list --env test` shows what is set.
+
+4. **Deploy to Production**
 
    ```bash
-   node scripts/check-public-views.mjs
+   npm run deploy:prod
    ```
 
-   This confirms the views behind the public `/adopt`, `/our-work`
-   and Foster / Volunteer / Donate pages are readable by the anonymous
-   role and **not writable** by it. Supabase's
-   default privileges grant `anon` INSERT/UPDATE/DELETE on every new
-   object, and `public_resident_profiles` is auto-updatable, so until
-   `0025_public_views_exclude_adopted.sql` revoked them an anonymous
-   `PATCH` was accepted (see `docs/decisions.md`). A fresh project's
-   defaults may differ from dev's — don't skip the check. Afterwards, load
-   `/`, `/adopt` and `/our-work` signed out and confirm residents and
-   stories actually appear, then set the hero photo, contact details
-   (email, phone, LINE, map link, visiting hours) and the wording of the
-   story, how-to-adopt, Foster, Volunteer and Donate pages at
-   `/admin/website` — the pages ship with placeholder copy (bank details
-   on Donate are literally "(bank name)") that must be replaced before
-   the site is announced. The same page picks
-   the optional "Pet of the week" for the home page from the publicly
-   listed residents; project stories are published from `/projects/[id]`
-   ("Show on website") and `/admin/website` lists what is live with a
-   quick "Remove from website". Open Graph previews (Facebook, LINE) take the
-   page's own host for the image URL, so nothing needs configuring —
-   set `NEXT_PUBLIC_SITE_URL` only if the site ever sits behind a proxy
-   that rewrites the host.
+   Same steps with `.env.deploy.production`, and a guard: it refuses unless
+   the checkout is `main`, clean, and identical to `origin/main`, so what is
+   live is always a commit GitHub has. Merge first, then deploy.
 
-4. **Set production secrets** — every variable in `.env.example` except the
-   `NEXT_PUBLIC_*` ones:
+   **Why the strip step matters.** The OpenNext adapter copies *everything*
+   in `.env.local` into the Worker bundle as a fallback for any variable not
+   set on Cloudflare — convenient for `npm run preview`, but it would ship
+   dev credentials (and unrelated things like `SUPABASE_ACCESS_TOKEN`) to
+   production. With the snapshot emptied, a secret you forgot to set fails
+   loudly at runtime instead of silently using the dev value. To preview
+   the stripped build locally the way production runs, put the five values
+   in a gitignored `.dev.vars` file (wrangler's local stand-in for secrets).
+
+   The hostnames are Workers custom domains (`routes` in `wrangler.jsonc`)
+   on the zone registered in the same Cloudflare account, so Cloudflare
+   manages DNS and certificates; the `*.workers.dev` URLs are disabled.
+   Every origin an environment answers on must be in *its* Supabase
+   project's Redirect URLs (step 6) as `https://<host>/auth/callback`,
+   since sign-in and password reset redirect through the requesting origin.
+
+5. **Database migrations.** Dev/Test first, production once the branch is
+   merged (CLAUDE.md has the rules):
 
    ```bash
-   npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+   node scripts/apply-migrations.mjs --env production --dry-run
    ```
-
-   Repeat for `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`,
-   `GOOGLE_OAUTH_REFRESH_TOKEN` and `GOOGLE_DRIVE_ROOT_FOLDER_ID`.
-
-   **All five are mandatory.** The OpenNext adapter copies *everything* in
-   `.env.local` into the Worker bundle at build time as a fallback for any
-   variable not set on Cloudflare — that's what makes `npm run preview`
-   zero-config, but it would also ship dev credentials (and unrelated
-   things like `SUPABASE_ACCESS_TOKEN`) to production. `npm run deploy`
-   therefore runs `scripts/strip-baked-env.mjs` between build and deploy
-   to empty that snapshot, so a secret you forgot to set fails loudly at
-   runtime instead of silently using the dev value. To preview the
-   stripped build locally the way production will run, put the same five
-   values in a gitignored `.dev.vars` file (wrangler's local stand-in for
-   Cloudflare secrets).
-
-   `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` are inlined
-   by `next build` (not via that snapshot) and must be the production
-   values in `.env.local` or the shell when you run the deploy build
-   (the same values step 3's check script reads).
-
-5. **Auth email and redirect URLs.** In the production Supabase project:
-   Authentication → URL Configuration → add
-   `https://<domain>/auth/callback` to Redirect URLs (Google sign-in and
-   password-reset links both return through it), and set Site URL to the
-   production origin. Authentication → SMTP Settings → configure a real
-   provider (Resend, Postmark, SES…) — Supabase's built-in mailer is for
-   development only and is rate-limited to a handful of messages an hour,
-   so **Forgot password?** on the login page only works in production
-   once this is done. The reset email template (Authentication → Email
-   Templates → Reset Password) can carry the shelter's name and logo.
-
-6. **Deploy**
 
    ```bash
-   npm run deploy
+   node scripts/apply-migrations.mjs --env production
    ```
 
-   Check the `strip-baked-env` line in the output lists the variables it
-   removed before wrangler uploads.
+   On a fresh project that applies every file from `0001` up (2026-09-21:
+   all 63 ran clean on the new production project); otherwise only what is
+   pending. Then confirm the public views are readable and **not writable**
+   by the anonymous role — Supabase's default privileges grant `anon`
+   INSERT/UPDATE/DELETE on every new object, which
+   `0025_public_views_exclude_adopted.sql` revokes:
 
-   The Worker is served at `lannacare.org` and `www.lannacare.org` — the
-   `routes` in `wrangler.jsonc` are Workers custom domains on the zone
-   registered in the same Cloudflare account, so Cloudflare manages the
-   DNS records and certificate. Because routes are set, the
-   `*.workers.dev` URL is disabled. Every origin the site answers on must
-   be in the Supabase project's Redirect URLs (step 5) as
-   `https://<host>/auth/callback`, since sign-in and password reset
-   redirect through the requesting origin.
+   ```bash
+   node scripts/check-public-views.mjs --env production
+   ```
+
+   Afterwards, load `/`, `/adopt` and `/our-work` signed out and confirm
+   residents and stories actually appear, then set the hero photo, contact
+   details (email, phone, LINE, map link, visiting hours) and the wording
+   of the story, how-to-adopt, Foster, Volunteer and Donate pages at
+   `/admin/website` — the pages ship with placeholder copy (bank details on
+   Donate are literally "(bank name)") that must be replaced before the
+   site is announced. The same page picks the optional "Pet of the week"
+   from the publicly listed residents; project stories are published from
+   `/projects/[id]` ("Show on website"). Open Graph previews take the page's
+   own host for the image URL, so nothing needs configuring — set
+   `NEXT_PUBLIC_SITE_URL` only if the site ever sits behind a proxy that
+   rewrites the host.
+
+6. **Auth on a new Supabase project.** Logins are admin-provisioned, so a
+   fresh database has nobody who can sign in; seed the first admin, then
+   sign in with Google using that address (it links automatically) and
+   create everyone else at `/admin/security`:
+
+   ```bash
+   node scripts/bootstrap-admin.mjs --env production someone@gmail.com
+   ```
+
+   In the project's Authentication settings (all done for production on
+   2026-09-21 via the Management API): URL Configuration → Site URL is the
+   production origin and Redirect URLs has `https://<host>/auth/callback`
+   for every hostname; Providers → Google uses the same OAuth web client as
+   dev, which means the client in Google Cloud Console must list the new
+   project's `https://<ref>.supabase.co/auth/v1/callback` as an authorised
+   redirect URI. SMTP Settings → configure a real provider (Resend,
+   Postmark, SES…) — Supabase's built-in mailer is for development only and
+   is rate-limited to a handful of messages an hour, so **Forgot password?**
+   only works in production once this is done. The reset email template
+   can carry the shelter's name and logo.
+
+## Backups
+
+Free-tier Supabase projects have no automatic backups or point-in-time
+recovery. Production's safety net is a scheduled `pg_dump` of the database
+into the shelter's Google Drive — not yet set up; see `docs/backlog.md`
+("Deployment"). Until it is, anything destructive on production is
+unrecoverable.
 
 ## Project structure
 

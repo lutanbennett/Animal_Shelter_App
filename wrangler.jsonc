@@ -1,13 +1,15 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
+  // Two deployable environments, each its own Worker with its own secrets and
+  // hostnames (README, "Deploying to Cloudflare"). Always deploy with
+  // `scripts/deploy.mjs --env test|production`; the top level alone is only
+  // what `npm run preview` runs locally, and has no routes so a bare
+  // `wrangler deploy` can't reach anything real.
   "name": "lanna-animal-care",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-09-19",
   "compatibility_flags": ["nodejs_compat"],
-  "routes": [
-    { "pattern": "lannacare.org", "custom_domain": true },
-    { "pattern": "www.lannacare.org", "custom_domain": true }
-  ],
+  "workers_dev": false,
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
@@ -17,5 +19,24 @@
   },
   "observability": {
     "enabled": true
+  },
+  "env": {
+    // Staff testing and pre-production checks: the dev database and the dev
+    // Google Drive, on the Workers runtime, built from main.
+    "test": {
+      "name": "lanna-animal-care-test",
+      "routes": [{ "pattern": "test.lannacare.org", "custom_domain": true }],
+      "vars": { "NODE_ENV": "production" }
+    },
+    // The live site: the production database. Drive stays on the dev Google
+    // account until the shelter's own account is available (docs/decisions.md).
+    "production": {
+      "name": "lanna-animal-care",
+      "routes": [
+        { "pattern": "lannacare.org", "custom_domain": true },
+        { "pattern": "www.lannacare.org", "custom_domain": true }
+      ],
+      "vars": { "NODE_ENV": "production" }
+    }
   }
 }
