@@ -96,6 +96,14 @@ A person who leaves is **archived** from `/admin/security` rather than deleted (
 | Database | dev Supabase project (`qxkmhwybjggxvsfxsxbd`) | **the same dev project** | production project (`dbkodyyxxhtygxcxmfcu`) |
 | Google Drive | dev account | dev account | dev account, until the shelter's own account exists |
 | Values from | `.env.local` | `.env.local` | `.env.deploy.production` over `.env.local` |
+| Looks | teal, **Dev** badge in the header | teal, **Dev** badge | orange |
+
+Dev and Test are recoloured (teal instead of orange, greenish surfaces, a
+**Dev** badge beside the logo once signed in) so a tab on the dev database
+is never mistaken for the live site. `src/lib/app-env.ts` decides from
+the Supabase project ref the build was made with — not from `NODE_ENV`,
+which is `production` on Test too — and the layout sets
+`<html data-env>`, which `globals.css` keys the colour tokens on.
 
 Two databases, both on Supabase's free tier (the org allows two). Test
 deliberately shares the dev database: one developer, throwaway data, and

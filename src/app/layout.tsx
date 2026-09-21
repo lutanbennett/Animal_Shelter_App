@@ -5,6 +5,7 @@ import { NavPane } from "./NavPane";
 import { MobileNavProvider } from "./MobileNavContext";
 import { PublicPathGate } from "./PublicPathGate";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { getAppEnv } from "@/lib/app-env";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
 import "./globals.css";
 
@@ -37,6 +38,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang={locale}
+      data-env={getAppEnv()}
       className={`${geistSans.variable} ${geistMono.variable} ${notoSansThai.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">

@@ -36,6 +36,8 @@ const en = {
     appName: "Lanna Care for Animals",
     shortName: "LCA",
     signOut: "Sign out",
+    devBadge: "Dev",
+    devBadgeTitle: "Dev database — this is not the live site",
   },
 
   nav: {

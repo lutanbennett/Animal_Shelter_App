@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { getAppEnv } from "@/lib/app-env";
 import { SignOutButton } from "./login/SignOutButton";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { MobileNavToggle } from "./MobileNavToggle";
@@ -31,6 +32,14 @@ export async function AppHeader() {
         <span className="text-sm font-semibold text-foreground">
           {t.header.shortName}
         </span>
+        {getAppEnv() === "dev" && (
+          <span
+            className="rounded bg-primary px-1.5 py-0.5 text-xs font-bold uppercase tracking-wide text-primary-foreground"
+            title={t.header.devBadgeTitle}
+          >
+            {t.header.devBadge}
+          </span>
+        )}
       </div>
       <div className="flex items-center gap-4">
         <LanguageSwitcher />
