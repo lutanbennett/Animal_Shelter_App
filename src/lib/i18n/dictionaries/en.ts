@@ -148,6 +148,22 @@ const en = {
         tempPasswordNote:
           "A temporary password is generated and shown once — pass it on. They'll be asked to choose their own the first time they sign in with it. Someone who will only ever use Google sign-in can ignore it.",
       },
+      requests: {
+        heading: "Access requests",
+        subtitle:
+          "People who signed in with Google but haven't been given a role yet — they were told to ask an admin. Approve with a role and they can sign in again; Deny removes the account.",
+        none: "No one is waiting for access.",
+        viaGoogle: "Signed in with Google",
+        viaEmail: "Email login",
+        firstSeen: (date: string) => `first seen ${date}`,
+        lastAttempt: (date: string) => `last tried ${date}`,
+        chooseRole: "Choose a role…",
+        approve: "Approve",
+        approving: "Approving...",
+        deny: "Deny",
+        denyConfirm: (email: string) =>
+          `Deny ${email}? Their account is removed; they can sign in with Google again to ask afresh.`,
+      },
       tempPassword: {
         heading: (email: string) => `Temporary password for ${email}`,
         copy: "Copy",
