@@ -1596,3 +1596,22 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   shapes the locales produced — "20 Sep 2026", "20 Sep 2026, 14:05",
   "20 ก.ย. 2569 14:05", axis ticks "20 Sep" / "Sep 2026". Numbers (baht,
   kg) still go through `toLocaleString`, where the ICUs agree.
+
+- **The real domain points at the dev deployment until go-live (2026-09-21):**
+  `lannacare.org` was registered at Cloudflare, so attaching it to the
+  Worker is two `custom_domain` routes in `wrangler.jsonc` and Cloudflare
+  owns the DNS and certificate. The user chose to attach it to the first,
+  dev-backed deploy rather than wait, knowing the public pages show dev
+  residents and stories until the production Supabase project and the
+  re-minted Google credentials replace them; the secrets and the
+  `NEXT_PUBLIC_SUPABASE_*` build values are the only things that change
+  at cut-over. Setting routes disables the `*.workers.dev` URL, which is
+  fine — one origin fewer to keep in Supabase's redirect allow-list.
+
+- **Windows builds go through a junction preload, not Developer Mode
+  (2026-09-21):** OpenNext recreates Next's standalone junctions with a
+  typeless `symlinkSync`, which on Windows needs a privilege ordinary
+  accounts lack. Rather than require Developer Mode on every dev machine
+  (or patch `node_modules`), `scripts/win-junction-symlinks.cjs` is
+  preloaded with `node -r` and swaps directory symlinks for junctions,
+  which behave identically for the bundler; it is inert off Windows.

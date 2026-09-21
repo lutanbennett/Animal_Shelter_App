@@ -100,6 +100,18 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    npx wrangler login
    ```
 
+   Run it from a terminal you can leave open while you click **Allow** in
+   the browser it opens — it gives up after about five minutes. If
+   PowerShell refuses with "running scripts is disabled", use `npx.cmd`
+   instead of `npx` (the `.cmd` shim skips the execution policy).
+
+   `npm run preview` / `npm run deploy` build through
+   `scripts/win-junction-symlinks.cjs`, which on Windows turns the
+   directory symlinks OpenNext creates for Next's hoisted ESM packages
+   into junctions — real symlinks need Developer Mode or an elevated
+   shell, and the build dies with `EPERM … symlink` without it. It is a
+   no-op elsewhere.
+
 2. **Preview locally on the Workers runtime** (recommended before a first
    deploy — this is what `next dev` can't simulate). It reads `.env.local`
    directly, no extra setup:
@@ -195,6 +207,15 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
 
    Check the `strip-baked-env` line in the output lists the variables it
    removed before wrangler uploads.
+
+   The Worker is served at `lannacare.org` and `www.lannacare.org` — the
+   `routes` in `wrangler.jsonc` are Workers custom domains on the zone
+   registered in the same Cloudflare account, so Cloudflare manages the
+   DNS records and certificate. Because routes are set, the
+   `*.workers.dev` URL is disabled. Every origin the site answers on must
+   be in the Supabase project's Redirect URLs (step 5) as
+   `https://<host>/auth/callback`, since sign-in and password reset
+   redirect through the requesting origin.
 
 ## Project structure
 
