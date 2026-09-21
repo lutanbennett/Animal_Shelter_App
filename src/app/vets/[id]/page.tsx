@@ -21,14 +21,14 @@ export default async function VetPage(props: PageProps<"/vets/[id]">) {
     await Promise.all([
       supabase
         .from("vets")
-        .select("id, name, clinic_name, contact_info")
+        .select("id, name, clinic_name, contact_info, notes")
         .eq("id", id)
         .limit(1)
         .returns<Vet[]>(),
       supabase
         .from("vet_appointments")
         .select(
-          "id, resident_id, appointment_date, status, reason, residents(name, thai_name, resident_code)",
+          "id, resident_id, appointment_date, status, reason, cost, residents(name, thai_name, resident_code)",
         )
         .eq("vet_id", id)
         .order("appointment_date", { ascending: false })

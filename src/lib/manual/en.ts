@@ -364,6 +364,7 @@ const manual: Manual = {
             "Give the reason, set the status — Scheduled (upcoming) or Completed (already happened) — and add notes.",
             "Tap Book vet visit.",
             "On the resident's Vet Appointments page each visit has quick links to log a blood test, prescription, weight or procedure against that visit, and to send the resident to hospital.",
+            "After the visit, tap Edit on its row to mark it Completed (or Cancelled), fix the date or vet, and enter the cost from the invoice. The vet's hub totals those costs for the period shown.",
           ],
           screenshot: {
             src: "/manual/vet-visit-new.png",
@@ -631,7 +632,7 @@ const manual: Manual = {
           path: "Vets",
           steps: [
             "Open Vets to see every vet and clinic with their visit count, residents seen, last visit and what's upcoming or overdue.",
-            "Tap a vet for their hub: contact details, visits per month, the residents they've seen, and the procedures, blood tests and prescriptions logged against their visits. Change the period (3, 6, 12 months or all time) at the top.",
+            "Tap a vet for their hub: contact details and notes, visits per month, the residents they've seen, spend on visits with a recorded cost, and the procedures, blood tests and prescriptions logged against their visits. Change the period (3, 6, 12 months or all time) at the top.",
           ],
           screenshot: {
             src: "/manual/vet-hub.png",
@@ -705,7 +706,7 @@ const manual: Manual = {
           roles: ["admin", "management"],
           path: "Management → Vets",
           steps: [
-            "Add a vet with the name staff will pick when booking, the clinic and free-text contact details.",
+            "Add a vet with the name staff will pick when booking, the clinic, free-text contact details, and notes — specialities, opening hours, an emergency line — which show on their hub.",
             "A vet with logged visits can't be deleted — the visits are part of the residents' medical records.",
           ],
           screenshot: {

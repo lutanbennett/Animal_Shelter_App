@@ -10,6 +10,7 @@ export type VetRow = {
   name: string;
   clinic_name: string | null;
   contact_info: string | null;
+  notes: string | null;
   /** Logged visits, all statuses — a vet with any can't be deleted. */
   visit_count: number;
 };
@@ -22,6 +23,7 @@ function VetRowItem({ vet }: { vet: VetRow }) {
   const [name, setName] = useState(vet.name);
   const [clinicName, setClinicName] = useState(vet.clinic_name ?? "");
   const [contactInfo, setContactInfo] = useState(vet.contact_info ?? "");
+  const [notes, setNotes] = useState(vet.notes ?? "");
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState<
     { type: "error" | "success"; text: string } | null
@@ -32,13 +34,14 @@ function VetRowItem({ vet }: { vet: VetRow }) {
     setName(vet.name);
     setClinicName(vet.clinic_name ?? "");
     setContactInfo(vet.contact_info ?? "");
+    setNotes(vet.notes ?? "");
   }
 
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
       try {
-        await updateVet(vet.id, { name, clinicName, contactInfo });
+        await updateVet(vet.id, { name, clinicName, contactInfo, notes });
         setEditing(false);
         setMessage({ type: "success", text: t.common.saved });
       } catch (err) {
@@ -111,6 +114,19 @@ function VetRowItem({ vet }: { vet: VetRow }) {
             </span>
           )}
         </td>
+        <td className="px-4 py-2">
+          {editing ? (
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder={t.management.vets.createForm.notesPlaceholder}
+              rows={2}
+              className={`${inputClass} min-w-56`}
+            />
+          ) : (
+            <span className="whitespace-pre-line text-muted">{vet.notes ?? t.common.dash}</span>
+          )}
+        </td>
         <td className="px-4 py-2 text-muted">
           <Link href={`/vets/${vet.id}`} className="hover:underline">
             {t.management.vets.table.visitCount(vet.visit_count)}
@@ -168,7 +184,7 @@ function VetRowItem({ vet }: { vet: VetRow }) {
       {message && (
         <tr>
           <td
-            colSpan={5}
+            colSpan={6}
             className={`px-4 pb-2 text-xs ${
               message.type === "error" ? "text-danger" : "text-success"
             }`}
@@ -192,6 +208,7 @@ export function VetsTable({ vets }: { vets: VetRow[] }) {
             <th className="px-4 py-2 font-medium">{t.management.vets.table.name}</th>
             <th className="px-4 py-2 font-medium">{t.management.vets.table.clinic}</th>
             <th className="px-4 py-2 font-medium">{t.management.vets.table.contact}</th>
+            <th className="px-4 py-2 font-medium">{t.management.vets.table.notes}</th>
             <th className="px-4 py-2 font-medium">{t.management.vets.table.visits}</th>
             <th className="px-4 py-2 font-medium" />
           </tr>
@@ -202,7 +219,7 @@ export function VetsTable({ vets }: { vets: VetRow[] }) {
           ))}
           {vets.length === 0 && (
             <tr>
-              <td colSpan={5} className="px-4 py-6 text-center text-muted">
+              <td colSpan={6} className="px-4 py-6 text-center text-muted">
                 {t.management.vets.table.noVets}
               </td>
             </tr>

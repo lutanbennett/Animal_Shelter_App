@@ -14,7 +14,21 @@ export type VetVisit = {
   appointment_date: string;
   status: VisitStatus;
   reason: string | null;
+  /** Baht from the invoice (0053); null until recorded. */
+  cost: number | null;
 };
+
+/** Total recorded cost of the given visits, and how many carried one. */
+export function spendSummary(visits: VetVisit[]): { total: number; withCost: number } {
+  let total = 0;
+  let withCost = 0;
+  for (const v of visits) {
+    if (v.cost == null) continue;
+    total += Number(v.cost);
+    withCost += 1;
+  }
+  return { total, withCost };
+}
 
 /** How far back the hub looks; `null` is all time. */
 export const VISIT_PERIODS = [3, 6, 12, null] as const;
