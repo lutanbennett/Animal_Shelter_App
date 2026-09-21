@@ -65,7 +65,6 @@ const en = {
   },
 
   home: {
-    staffLogin: "Staff & Volunteer Login",
     browseGuest: "Browse Our Available Residents",
     welcomeHeading: "Welcome to Lanna Care for Animals",
     ourStoryFallback: "Our story",
@@ -2250,7 +2249,7 @@ const en = {
     fosterNav: "Foster",
     volunteerNav: "Volunteer",
     donateNav: "Donate",
-    staffLogin: "Staff & Volunteer Login",
+    staffLogin: "Login",
     pageTitle: "Meet Our Residents",
     pageSubtitle:
       "You're browsing as a guest — this is a read-only, public view of the residents we've made visible for adoption and outreach. Staff and volunteers see much more after signing in.",
