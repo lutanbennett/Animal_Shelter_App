@@ -431,9 +431,10 @@ export function renderResidentIndexHtml(
       "blood-tests",
       "Blood tests",
       table(
-        ["Date", "Results", "Files"],
+        ["Date", "Type", "Results", "Files"],
         record.bloodTests.map((test) => [
           esc(day(test.date)),
+          escOrDash(test.type),
           escOrDash(test.results),
           test.files.length > 0
             ? test.files.map((file) => fileLink(file)).join("<br>")

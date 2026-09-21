@@ -431,6 +431,7 @@ const manual: Manual = {
           roles: ["admin", "management", "staff", "vet"],
           path: "Resident hub → Blood Tests → Log blood test",
           steps: [
+            "Pick the test type — CBC is preselected as the routine panel; the list (chemistry, thyroid, heartworm, tick-borne, cortisol, urinalysis) is kept under Admin → Blood Test Types.",
             "Enter the date of the test and, if it was done at a vet visit, link the visit.",
             "Type the results or the vet's summary in the notes (optional — you can just attach the scan).",
             "Drop in the lab scan or PDF (several files can go on one test), then tap Save blood test — the files upload as part of the save. A report that arrives later goes in from the row's Attach files link on the Blood Tests page.",
@@ -794,6 +795,20 @@ const manual: Manual = {
           screenshot: {
             src: "/manual/admin-procedure-types.png",
             alt: "The procedure types admin page",
+          },
+        },
+        {
+          id: "blood-test-types",
+          title: "Blood test types",
+          roles: ["admin"],
+          path: "Admin → Blood Test Types",
+          steps: [
+            "The panels the blood test form offers — CBC, Blood Chemistry Panel, Thyroid Panel, Heartworm Test, Tick Borne Disease Panel, Cortisol Test, Urinary Analysis. Add one here when the vet starts running a new panel; the form defaults to CBC.",
+            "Rename a type in place, or Merge… a duplicate into the one to keep — its blood tests move across. A type with logged blood tests can't be deleted; merge it instead.",
+          ],
+          screenshot: {
+            src: "/manual/admin-blood-test-types.png",
+            alt: "The blood test types admin page",
           },
         },
       ],

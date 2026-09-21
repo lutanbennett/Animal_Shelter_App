@@ -25,6 +25,7 @@ export type BloodTestRow = {
   id: string;
   date: string;
   results: string | null;
+  blood_test_types: { name: string } | null;
   vet_appointments: { appointment_date: string; reason: string | null } | null;
   attachments: BloodTestAttachmentRow[];
 };
@@ -76,8 +77,9 @@ export function BloodTestList({
             <div className="flex items-start justify-between gap-3">
               <div className="flex flex-col">
                 <span className="font-medium text-foreground">
-                  {formatDate(test.date, locale)}
+                  {test.blood_test_types?.name ?? t.bloodTests.unknownType}
                 </span>
+                <span className="text-xs text-muted">{formatDate(test.date, locale)}</span>
                 {test.vet_appointments && (
                   <span className="text-xs text-muted">
                     {t.bloodTests.linkedVisitLabel(

@@ -719,7 +719,9 @@ export default async function ResidentSectionPage(
     case "blood-tests": {
       const { data: tests } = await supabase
         .from("blood_tests")
-        .select("id, date, results, vet_appointments(appointment_date, reason)")
+        .select(
+          "id, date, results, blood_test_types(name), vet_appointments(appointment_date, reason)",
+        )
         .eq("resident_id", id)
         .order("date", { ascending: false })
         .returns<
@@ -727,6 +729,7 @@ export default async function ResidentSectionPage(
             id: string;
             date: string;
             results: string | null;
+            blood_test_types: { name: string } | null;
             vet_appointments: { appointment_date: string; reason: string | null } | null;
           }[]
         >();
@@ -749,6 +752,7 @@ export default async function ResidentSectionPage(
         id: row.id,
         date: row.date,
         results: row.results,
+        blood_test_types: row.blood_test_types,
         vet_appointments: row.vet_appointments,
         attachments: (attachmentRows ?? [])
           .filter((a) => a.owner_id === row.id)

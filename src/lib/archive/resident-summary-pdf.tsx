@@ -383,10 +383,11 @@ function ResidentSummaryDocument({
 
         <Section title="Blood tests">
           <Table
-            columns={["Date", "Results", "Files"]}
-            widths={["15%", "60%", "25%"]}
+            columns={["Date", "Type", "Results", "Files"]}
+            widths={["15%", "20%", "45%", "20%"]}
             rows={record.bloodTests.map((test) => [
               day(test.date),
+              test.type ?? "—",
               test.results ?? "—",
               test.files.length > 0
                 ? test.files.map((file) => file.fileName ?? file.driveFileId).join(", ")

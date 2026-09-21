@@ -66,6 +66,10 @@ export function NavLinks({
                 href: "/admin/procedure-types",
                 label: t.nav.procedureTypes,
               },
+              {
+                href: "/admin/blood-test-types",
+                label: t.nav.bloodTestTypes,
+              },
             ],
           },
         ]

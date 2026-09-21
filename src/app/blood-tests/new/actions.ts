@@ -15,11 +15,15 @@ export async function createBloodTest(
   const { t } = await getT();
   const residentId = formData.get("residentId");
   const vetAppointmentId = formData.get("vetAppointmentId");
+  const bloodTestTypeId = formData.get("bloodTestTypeId");
   const date = formData.get("date");
   const results = formData.get("results");
 
   if (typeof residentId !== "string" || !residentId) {
     return { error: t.bloodTests.errors.missingResident };
+  }
+  if (typeof bloodTestTypeId !== "string" || !bloodTestTypeId) {
+    return { error: t.bloodTests.errors.selectType };
   }
   if (typeof date !== "string" || !date) {
     return { error: t.bloodTests.errors.enterDate };
@@ -38,6 +42,7 @@ export async function createBloodTest(
     .from("blood_tests")
     .insert({
       resident_id: residentId,
+      blood_test_type_id: bloodTestTypeId,
       vet_appointment_id:
         typeof vetAppointmentId === "string" && vetAppointmentId
           ? vetAppointmentId
