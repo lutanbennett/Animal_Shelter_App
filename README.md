@@ -70,6 +70,14 @@ A person who leaves is **archived** from `/admin/security` rather than deleted (
 
    Open [http://localhost:3000](http://localhost:3000).
 
+   **From a phone on the same Wi-Fi:** `next dev` listens on every
+   interface, so `http://<laptop-ip>:3000` works too (`ipconfig` →
+   IPv4 Address). `next.config.ts` already allows dev assets for
+   `192.168.1.*`; for **Google sign-in** to come back to the phone the
+   dev Supabase project's Redirect URLs (Authentication → URL
+   Configuration) must also list `http://192.168.1.*:3000/auth/callback`,
+   or Supabase bounces the sign-in to its Site URL (localhost).
+
 5. **Enable the git hooks** (once per clone)
 
    ```bash

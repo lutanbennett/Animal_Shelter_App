@@ -1,6 +1,6 @@
 "use server";
 
-import { headers } from "next/headers";
+import { getSiteOrigin } from "@/lib/site-origin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 
@@ -34,10 +34,7 @@ export async function requestPasswordReset(
   return { sent: true };
 }
 
-/** Public origin of the current request, honouring the proxy headers Cloudflare sets. */
+/** Where the recovery link returns to — see requestOrigin() in ../actions.ts. */
 async function requestOrigin() {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  return `${proto}://${host}`;
+  return (await getSiteOrigin())?.origin ?? "http://localhost:3000";
 }

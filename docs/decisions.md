@@ -500,9 +500,14 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   `https://<project-ref>.supabase.co/auth/v1/callback`; Supabase →
   Authentication → Providers → Google: enable and paste that client
   ID/secret; Supabase → Authentication → URL Configuration: add
-  `http://localhost:3000/auth/callback` and the production
+  `http://localhost:3000/auth/callback`, the LAN wildcard
+  `http://192.168.1.*:3000/auth/callback` (a phone on the home Wi-Fi
+  testing `next dev` by the laptop's address — the same subnet
+  `allowedDevOrigins` in `next.config.ts` opens) and the production
   `https://<domain>/auth/callback` to Redirect URLs (Supabase falls back
-  to the Site URL for any `redirectTo` not on that list). Optionally turn
+  to the Site URL for any `redirectTo` not on that list — which is what
+  happened, 2026-09-21, when the sign-in actions guessed `https` for a
+  non-localhost host; they now share `getSiteOrigin()`). Optionally turn
   off "Allow new users to sign up" there to stop unknown Google accounts
   creating `auth.users` rows at all — then they get the generic
   `error=google` message instead of `no_role`, and admins must create the
