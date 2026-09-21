@@ -6,6 +6,22 @@ Section 11, plus decisions made during setup that aren't in the original doc.
 
 ## Confirmed
 
+- **Existing blood tests are classified as CBC, not "unknown" (2026-09-21):**
+  0050 makes `blood_tests.blood_test_type_id` NOT NULL and backfills every
+  row already in the table to CBC (Complete Blood Count). A nullable
+  column or an "Unknown" seed row would have been more honest, but every
+  test logged so far was the routine panel by the shelter's own account,
+  CBC is the form's default going forward, and a permanent "Unknown" type
+  would be one more thing for an admin to merge away later. A row that was
+  in fact something else keeps its results text saying so and can be
+  reclassified once blood tests get an edit page. The backfill runs under
+  the deceased-lock bypass (0026), since a closed record's tests are
+  locked against updates and the classification isn't a change to the
+  record. The type list has no inline add from the form, unlike procedure
+  types: the panels a vet runs are few and stable, and the admin page
+  exists from day one, so there is nothing for duplicates to collect from
+  — the merge helper is there for parity should one ever appear.
+
 - **Prescriptions are edited in place, not superseded (2026-09-21):** a
   wrong dose or a course a vet cuts short is corrected on the same row
   (`/prescriptions/[id]/edit`, and **End today** on the tab) rather than

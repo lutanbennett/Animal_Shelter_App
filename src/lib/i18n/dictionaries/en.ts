@@ -49,6 +49,7 @@ const en = {
     zones: "Zones",
     immunizationTypes: "Immunization Types",
     procedureTypes: "Procedure Types",
+    bloodTestTypes: "Blood Test Types",
     vets: "Vets",
     medications: "Medications",
     contacts: "Contacts",
@@ -278,6 +279,44 @@ const en = {
         hasProcedures: (n: number) =>
           `This type is on ${n} procedure${n === 1 ? "" : "s"} and can't be deleted — procedures are part of the residents' medical records. Merge it into another type instead.`,
         mergeSelf: "Choose a different procedure type to merge into.",
+        mergeFailed: "Merge failed.",
+      },
+    },
+    bloodTestTypes: {
+      title: "Blood Test Types",
+      subtitle:
+        "The panels a blood test can be — CBC, chemistry, thyroid, heartworm… The blood test form picks from this list and defaults to CBC. Rename a type in place, or merge a duplicate into the one to keep — its blood tests move with it. A type that has ever been logged can't be deleted: the blood test is part of the resident's medical record.",
+      couldntLoad: "Couldn't load blood test types",
+      couldntLoadUsage: "Couldn't load blood test counts",
+      createForm: {
+        name: "Name",
+        namePlaceholder: "e.g. Coagulation Panel",
+        addButton: "Add blood test type",
+      },
+      table: {
+        name: "Name",
+        bloodTests: "Blood tests",
+        bloodTestCount: (n: number) => `${n} blood test${n === 1 ? "" : "s"}`,
+        noTypes: "No blood test types yet.",
+      },
+      merge: {
+        open: "Merge…",
+        into: "Merge into",
+        pickTarget: "Merge into…",
+        button: "Merge",
+        hint:
+          "Every blood test of this type moves to the one you pick and this row is removed. Files are unaffected — they are filed by test date, not type.",
+      },
+      deleteConfirm: (name: string) =>
+        `Delete blood test type "${name}"? This can't be undone.`,
+      mergeConfirm: (from: string, into: string, n: number) =>
+        `Merge "${from}" into "${into}"? ${n} blood test${n === 1 ? "" : "s"} will move to "${into}" and "${from}" will be removed. This can't be undone.`,
+      createdType: (name: string) => `Created blood test type "${name}".`,
+      errors: {
+        nameRequired: "Name is required.",
+        hasBloodTests: (n: number) =>
+          `This type is on ${n} blood test${n === 1 ? "" : "s"} and can't be deleted — blood tests are part of the residents' medical records. Merge it into another type instead.`,
+        mergeSelf: "Choose a different blood test type to merge into.",
         mergeFailed: "Merge failed.",
       },
     },
@@ -817,6 +856,9 @@ const en = {
     couldntLoadVetAppointments: "Couldn't load vet appointments",
     forResident: (name: string) => `For ${name}`,
     dateOfTest: "Date of test",
+    testType: "Test type",
+    couldntLoadTypes: "Couldn't load blood test types",
+    unknownType: "Unknown test type",
     linkedVisit: "Linked vet visit",
     noLinkedVisit: "No linked visit",
     results: "Results / notes",
@@ -844,6 +886,7 @@ const en = {
       enterDate: "Enter the date of the test.",
       invalidDate: "Invalid test date.",
       dateInFuture: "Test date can't be in the future.",
+      selectType: "Select the test type.",
       saveFailed: "Failed to save the blood test.",
     },
   },

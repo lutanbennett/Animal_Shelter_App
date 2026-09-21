@@ -13,6 +13,7 @@ import {
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate } from "@/lib/format";
 
+export type BloodTestTypeOption = { id: string; name: string };
 export type VetAppointmentOption = {
   id: string;
   appointment_date: string;
@@ -27,6 +28,19 @@ function todayIsoDate(): string {
 }
 
 /**
+ * The routine panel, preselected so the common case is one tap. Matched by
+ * name prefix so an admin renaming the seeded row (0050) to plain "CBC"
+ * keeps the default; falls back to the first type if none matches.
+ */
+function defaultTypeId(types: BloodTestTypeOption[]): string {
+  return (
+    types.find((type) => /^CBC\b/i.test(type.name))?.id ??
+    types[0]?.id ??
+    ""
+  );
+}
+
+/**
  * One form for the test's details and its files. The lab scan is picked
  * here and uploaded on Save (useDeferredUploads), after which the page
  * goes to the Blood Tests tab; a report that turns up later is attached
@@ -35,11 +49,13 @@ function todayIsoDate(): string {
 export function BloodTestForm({
   residentId,
   residentDisplayName,
+  bloodTestTypes,
   vetAppointments,
   preselectedVetAppointmentId,
 }: {
   residentId: string;
   residentDisplayName: string;
+  bloodTestTypes: BloodTestTypeOption[];
   vetAppointments: VetAppointmentOption[];
   preselectedVetAppointmentId: string | null;
 }) {
@@ -109,6 +125,25 @@ export function BloodTestForm({
       <input type="hidden" name="residentId" value={residentId} />
 
       <p className="text-sm text-muted">{t.bloodTests.forResident(residentDisplayName)}</p>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="bloodTestTypeId" className="text-sm font-medium text-muted">
+          {t.bloodTests.testType} <span className="text-danger">*</span>
+        </label>
+        <select
+          id="bloodTestTypeId"
+          name="bloodTestTypeId"
+          required
+          defaultValue={defaultTypeId(bloodTestTypes)}
+          className={inputClass}
+        >
+          {bloodTestTypes.map((type) => (
+            <option key={type.id} value={type.id}>
+              {type.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1">

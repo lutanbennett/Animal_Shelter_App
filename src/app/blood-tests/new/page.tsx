@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { BloodTestForm, type VetAppointmentOption } from "./BloodTestForm";
+import {
+  BloodTestForm,
+  type BloodTestTypeOption,
+  type VetAppointmentOption,
+} from "./BloodTestForm";
 
 export default async function NewBloodTestPage(
   props: PageProps<"/blood-tests/new">,
@@ -31,7 +35,7 @@ export default async function NewBloodTestPage(
 
   const supabase = await createClient();
 
-  const [residentResult, vetAppointmentsResult, stateResult] = await Promise.all([
+  const [residentResult, vetAppointmentsResult, stateResult, typesResult] = await Promise.all([
     supabase
       .from("residents")
       .select("id, name, thai_name")
@@ -50,6 +54,11 @@ export default async function NewBloodTestPage(
       .eq("resident_id", residentId)
       .limit(1)
       .returns<{ is_deceased: boolean }[]>(),
+    supabase
+      .from("blood_test_types")
+      .select("id, name")
+      .order("name")
+      .returns<BloodTestTypeOption[]>(),
   ]);
 
   const resident = residentResult.data?.[0];
@@ -110,10 +119,16 @@ export default async function NewBloodTestPage(
           {t.bloodTests.couldntLoadVetAppointments}: {vetAppointmentsResult.error.message}
         </p>
       )}
+      {typesResult.error && (
+        <p className="text-sm text-danger">
+          {t.bloodTests.couldntLoadTypes}: {typesResult.error.message}
+        </p>
+      )}
 
       <BloodTestForm
         residentId={residentId}
         residentDisplayName={displayName}
+        bloodTestTypes={typesResult.data ?? []}
         vetAppointments={vetAppointments}
         preselectedVetAppointmentId={
           typeof vetAppointmentId === "string" && vetAppointmentId

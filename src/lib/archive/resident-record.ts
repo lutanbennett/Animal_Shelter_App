@@ -85,6 +85,7 @@ export type ArchiveProcedure = {
 export type ArchiveBloodTest = {
   id: string;
   date: string;
+  type: string | null;
   results: string | null;
   files: ArchiveFile[];
 };
@@ -249,7 +250,12 @@ type ProcedureRow = {
   procedure_types: { name: string } | null;
 };
 
-type BloodTestRow = { id: string; date: string; results: string | null };
+type BloodTestRow = {
+  id: string;
+  date: string;
+  results: string | null;
+  blood_test_types: { name: string } | null;
+};
 
 async function loadOwnedFiles(
   supabase: SupabaseClient,
@@ -345,7 +351,7 @@ export async function loadResidentArchiveRecord(
       .returns<ProcedureRow[]>(),
     supabase
       .from("blood_tests")
-      .select("id, date, results")
+      .select("id, date, results, blood_test_types(name)")
       .eq("resident_id", residentId)
       .order("date", { ascending: false })
       .returns<BloodTestRow[]>(),
@@ -491,6 +497,7 @@ export async function loadResidentArchiveRecord(
     bloodTests: bloodTestRows.map((row) => ({
       id: row.id,
       date: row.date,
+      type: row.blood_test_types?.name ?? null,
       results: row.results,
       files: bloodTestFiles
         .filter((file) => file.owner_id === row.id)
