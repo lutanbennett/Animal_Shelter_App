@@ -62,6 +62,7 @@ Each item is a self-contained prompt for a new thread. Ordered by suggested prio
 
 ## Public website
 
+- [ ] **"Contact us about an animal" form (later).** Raised 2026-09-21 while reviewing the public site: a public form for reporting a stray, an injured animal or a welfare concern (what / where / photo / how to reach you) that lands somewhere staff see it — a `public_enquiries` table with an admin or management list, or simply an email to the shelter's contact address via the existing Gmail plumbing. Overlaps with the Lost & found item below; probably one form with a "what is this about" choice. Not started.
 - [ ] **Lost & found report form (future).** RSPCA ACT has a public "report a lost pet" form. Out of scope until the core app is wired up, but a natural later public feature: a public form (species, description, photo, location, contact) writing to a `lost_pet_reports` table that staff review from an admin list, with a link to the intake flow if the resident arrives at the shelter.
 
 ## Completed
