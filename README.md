@@ -162,7 +162,18 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    values in `.env.local` or the shell when you run the deploy build
    (the same values step 3's check script reads).
 
-5. **Deploy**
+5. **Auth email and redirect URLs.** In the production Supabase project:
+   Authentication → URL Configuration → add
+   `https://<domain>/auth/callback` to Redirect URLs (Google sign-in and
+   password-reset links both return through it), and set Site URL to the
+   production origin. Authentication → SMTP Settings → configure a real
+   provider (Resend, Postmark, SES…) — Supabase's built-in mailer is for
+   development only and is rate-limited to a handful of messages an hour,
+   so **Forgot password?** on the login page only works in production
+   once this is done. The reset email template (Authentication → Email
+   Templates → Reset Password) can carry the shelter's name and logo.
+
+6. **Deploy**
 
    ```bash
    npm run deploy

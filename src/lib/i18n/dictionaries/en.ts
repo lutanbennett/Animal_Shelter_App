@@ -103,6 +103,8 @@ const en = {
       forcedTitle: "Choose your password",
       forcedSubtitle:
         "You signed in with a temporary password. Set your own to continue — nothing else is available until you do.",
+      resetTitle: "Choose a new password",
+      resetSubtitle: "You followed a reset link. Set a new password and you'll be signed in.",
       newPassword: "New password",
       confirmPassword: "Confirm new password",
       hint: (min: number) => `At least ${min} characters.`,
@@ -124,7 +126,17 @@ const en = {
     signIn: "Sign in",
     or: "or",
     continueWithGoogle: "Continue with Google",
+    forgotPassword: "Forgot password?",
     backToHome: "Back to home page",
+    forgot: {
+      title: "Reset your password",
+      subtitle: "Enter the email you sign in with and we'll send a link to choose a new password.",
+      submit: "Send reset link",
+      sending: "Sending...",
+      sent: "If that email has an account, a reset link is on its way. It's valid for an hour — check your spam folder if it doesn't arrive.",
+      backToLogin: "Back to sign in",
+      errors: { emailRequired: "Enter your email address." },
+    },
     errors: {
       noRole:
         "This Google account hasn’t been given access yet. Ask an administrator to assign you a role, then try again.",

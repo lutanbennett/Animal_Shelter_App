@@ -43,15 +43,16 @@ export async function changeOwnPassword(
     return { error: error.message };
   }
 
-  const wasForced = mustChangePassword(user);
-  if (wasForced) {
+  if (mustChangePassword(user)) {
     const admin = createAdminClient();
     const { error: flagError } = await admin.auth.admin.updateUserById(user.id, {
       app_metadata: { ...user.app_metadata, [MUST_CHANGE_PASSWORD]: false },
     });
     if (flagError) return { error: flagError.message };
-    redirect("/residents");
   }
 
+  // Forced change and recovery both go on into the app; a change by choice
+  // stays on the page with a confirmation.
+  if (formData.get("continue") === "1") redirect("/residents");
   return { success: true };
 }

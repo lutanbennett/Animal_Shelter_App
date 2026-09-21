@@ -6,7 +6,7 @@ import {
   signedInWithPassword,
 } from "@/lib/auth/password-change";
 
-const PUBLIC_PATHS = ["/", "/login", "/auth/callback"];
+const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/auth/callback"];
 
 /**
  * Path prefixes that stay reachable without a session, on top of

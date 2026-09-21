@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -51,6 +52,9 @@ export function LoginForm({ error }: { error?: string }) {
         >
           {pending ? t.login.signingIn : t.login.signIn}
         </button>
+        <Link href="/login/forgot" className="text-center text-sm text-muted hover:text-foreground">
+          {t.login.forgotPassword}
+        </Link>
       </form>
 
       <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-muted">

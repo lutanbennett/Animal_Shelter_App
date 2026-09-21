@@ -9,6 +9,10 @@ import { createClient } from "@/lib/supabase/server";
  * session that every RLS policy rejects. Signing them out leaves the
  * auth.users row in place, so an admin can grant them a role from
  * /admin/security and they can simply try again.
+ *
+ * Password recovery links (requestPasswordReset) come back through here
+ * too, with ?next=/account/password?reset=1 — only a same-origin path is
+ * honoured, so the parameter can't send anyone off-site.
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
@@ -30,5 +34,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/login?error=no_role`);
   }
 
+  const next = searchParams.get("next");
+  if (next && next.startsWith("/") && !next.startsWith("//")) {
+    return NextResponse.redirect(`${origin}${next}`);
+  }
   return NextResponse.redirect(`${origin}/residents`);
 }
