@@ -980,8 +980,14 @@ const en = {
     notesPlaceholder: "e.g. give with food, route, anything the carer should know",
     saving: "Saving...",
     saveButton: "Save prescription",
+    editPageTitle: "Edit Prescription",
+    editPageSubtitle:
+      "Fix a dose or note, move the dates, or set an end date to stop the course early. Clearing the end date makes it ongoing again.",
+    endToday: "End today",
+    ending: "Ending...",
     errors: {
       missingResident: "Missing resident.",
+      missingPrescription: "Missing prescription.",
       selectMedication: "Select a medication or add a new one.",
       newMedicationName: "Enter a name for the new medication.",
       newMedicationUnit: "Choose what the new medication is measured in.",

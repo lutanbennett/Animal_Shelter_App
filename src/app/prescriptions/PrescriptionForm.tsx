@@ -1,29 +1,34 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
-import { createPrescription } from "./actions";
+import { createPrescription, updatePrescription } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate } from "@/lib/format";
 import { DOSE_UNITS, doseUnitLabel } from "@/lib/i18n/enum-labels";
-import {
-  compareSchedules,
-  describeSchedule,
-  type FrequencySchedule,
-} from "@/lib/prescriptions/frequency";
+import { compareSchedules, describeSchedule } from "@/lib/prescriptions/frequency";
 import {
   EMPTY_SCHEDULE_FIELDS,
   FrequencyScheduleFields,
 } from "@/components/FrequencyScheduleFields";
+import type {
+  FrequencyOption,
+  MedicationOption,
+  VetAppointmentOption,
+} from "@/lib/prescriptions/options";
 
-export type MedicationOption = { id: string; name: string; dose_unit: string };
-export type FrequencyOption = FrequencySchedule & {
+export type { FrequencyOption, MedicationOption, VetAppointmentOption };
+
+/** The columns the edit page loads to prefill the form. */
+export type PrescriptionInitial = {
   id: string;
-  label: string;
-};
-export type VetAppointmentOption = {
-  id: string;
-  appointment_date: string;
-  reason: string | null;
+  medication_id: string | null;
+  frequency_id: string | null;
+  vet_appointment_id: string | null;
+  dose_quantity: number | null;
+  start_date: string;
+  end_date: string | null;
+  notes: string | null;
 };
 
 const inputClass =
@@ -33,28 +38,42 @@ function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/**
+ * One form for adding and editing. Edit mode prefills every field from
+ * `initial` and submits `updatePrescription` instead; the inline "add a new
+ * medication / frequency" affordances stay available either way.
+ */
 export function PrescriptionForm({
+  mode = "create",
   residentId,
   residentDisplayName,
   medications,
   frequencies,
   vetAppointments,
-  preselectedVetAppointmentId,
+  preselectedVetAppointmentId = null,
+  initial = null,
+  cancelHref,
 }: {
+  mode?: "create" | "edit";
   residentId: string;
   residentDisplayName: string;
   medications: MedicationOption[];
   frequencies: FrequencyOption[];
   vetAppointments: VetAppointmentOption[];
-  preselectedVetAppointmentId: string | null;
+  preselectedVetAppointmentId?: string | null;
+  initial?: PrescriptionInitial | null;
+  cancelHref: string;
 }) {
-  const [state, formAction, pending] = useActionState(createPrescription, undefined);
+  const [state, formAction, pending] = useActionState(
+    mode === "create" ? createPrescription : updatePrescription,
+    undefined,
+  );
   const { t, locale } = useI18n();
 
   // Medication / frequency each switch between "pick one" and "add a new
   // one" the way the intake form's origin field does; whichever set of
   // inputs is mounted is what gets submitted.
-  const [medicationId, setMedicationId] = useState("");
+  const [medicationId, setMedicationId] = useState(initial?.medication_id ?? "");
   const [isAddingMedication, setIsAddingMedication] = useState(
     medications.length === 0,
   );
@@ -72,16 +91,17 @@ export function PrescriptionForm({
   // unless the user says otherwise.
   const [startTouched, setStartTouched] = useState(false);
   const [startDate, setStartDate] = useState(() => {
+    if (initial) return initial.start_date;
     if (preselectedVetAppointmentId) {
       const match = vetAppointments.find((a) => a.id === preselectedVetAppointmentId);
       if (match) return match.appointment_date.slice(0, 10);
     }
     return todayIsoDate();
   });
-  const [endDate, setEndDate] = useState("");
+  const [endDate, setEndDate] = useState(initial?.end_date ?? "");
 
   function handleVetAppointmentChange(id: string) {
-    if (startTouched || !id) return;
+    if (startTouched || mode === "edit" || !id) return;
     const match = vetAppointments.find((a) => a.id === id);
     if (match) setStartDate(match.appointment_date.slice(0, 10));
   }
@@ -89,6 +109,9 @@ export function PrescriptionForm({
   return (
     <form action={formAction} className="flex max-w-2xl flex-col gap-6">
       <input type="hidden" name="residentId" value={residentId} />
+      {mode === "edit" && initial && (
+        <input type="hidden" name="prescriptionId" value={initial.id} />
+      )}
 
       <p className="text-sm text-muted">
         {t.prescriptions.forResident(residentDisplayName)}
@@ -186,6 +209,7 @@ export function PrescriptionForm({
               min="0"
               step="any"
               placeholder="1"
+              defaultValue={initial?.dose_quantity ?? ""}
               className={`${inputClass} w-full`}
             />
             {doseUnit && (
@@ -241,7 +265,7 @@ export function PrescriptionForm({
             <select
               id="frequencyId"
               name="frequencyId"
-              defaultValue=""
+              defaultValue={initial?.frequency_id ?? ""}
               onChange={(e) => {
                 if (e.target.value === "__new__") setIsAddingFrequency(true);
               }}
@@ -304,7 +328,7 @@ export function PrescriptionForm({
         <select
           id="vetAppointmentId"
           name="vetAppointmentId"
-          defaultValue={preselectedVetAppointmentId ?? ""}
+          defaultValue={initial?.vet_appointment_id ?? preselectedVetAppointmentId ?? ""}
           onChange={(e) => handleVetAppointmentChange(e.target.value)}
           className={inputClass}
         >
@@ -327,20 +351,28 @@ export function PrescriptionForm({
           name="notes"
           rows={3}
           placeholder={t.prescriptions.notesPlaceholder}
+          defaultValue={initial?.notes ?? ""}
           className={inputClass}
         />
       </div>
 
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
 
-      <div>
+      <div className="flex items-center gap-4">
         <button
           type="submit"
           disabled={pending}
           className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
         >
-          {pending ? t.prescriptions.saving : t.prescriptions.saveButton}
+          {pending
+            ? t.prescriptions.saving
+            : mode === "create"
+              ? t.prescriptions.saveButton
+              : t.common.saveChanges}
         </button>
+        <Link href={cancelHref} className="text-sm text-muted hover:text-foreground">
+          {t.common.cancel}
+        </Link>
       </div>
     </form>
   );

@@ -387,6 +387,7 @@ const manual: Manual = {
             "Set the start date, and an end date if it's a course; leave the end blank if ongoing.",
             "Optionally link the vet visit that prescribed it and add notes such as \"give with food\".",
             "Tap Save prescription. The resident's Prescriptions page separates Current from Expired.",
+            "To change one later, tap Edit on its row — same form, prefilled. To stop a course early, tap End today on a current row; it sets the end date to today and the medication drops out of the forecast from tomorrow.",
           ],
           screenshot: {
             src: "/manual/prescription-new.png",

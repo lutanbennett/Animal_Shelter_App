@@ -978,8 +978,14 @@ const th: Dictionary = {
     notesPlaceholder: "เช่น ให้พร้อมอาหาร วิธีให้ยา หรือสิ่งที่ผู้ดูแลควรทราบ",
     saving: "กำลังบันทึก...",
     saveButton: "บันทึกใบสั่งยา",
+    editPageTitle: "แก้ไขใบสั่งยา",
+    editPageSubtitle:
+      "แก้ไขขนาดยาหรือหมายเหตุ เลื่อนวันที่ หรือกำหนดวันที่สิ้นสุดเพื่อหยุดยาก่อนกำหนด หากลบวันที่สิ้นสุดออก ใบสั่งยาจะกลับมาใช้ต่อเนื่อง",
+    endToday: "สิ้นสุดวันนี้",
+    ending: "กำลังสิ้นสุด...",
     errors: {
       missingResident: "ไม่พบข้อมูลสัตว์",
+      missingPrescription: "ไม่พบใบสั่งยา",
       selectMedication: "เลือกยาหรือเพิ่มยาใหม่",
       newMedicationName: "กรอกชื่อยาใหม่",
       newMedicationUnit: "เลือกหน่วยวัดของยาใหม่",
