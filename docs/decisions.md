@@ -6,6 +6,18 @@ Section 11, plus decisions made during setup that aren't in the original doc.
 
 ## Confirmed
 
+- **Maintenance jobs are assigned to a login, not a contact (2026-09-21):**
+  the first cut wired `maintenance.assigned_to` (a contacts FK from 0001)
+  to a picker of every contact. The user's correction: whoever actions a
+  job is staff, a volunteer or management — people with logins — never a
+  carer or a supplier, who are what the contacts table is for. 0055
+  replaces the column with `assigned_user_id` → auth.users (on delete
+  set null, so removing an account unassigns rather than blocks) and
+  adds the `app_users` view (auth.users ⋈ user_roles, gated on the
+  caller holding a role) so the picker and the names on the board work
+  without the service role. Vets are excluded from the picker. Contacts
+  therefore no longer carry a jobs count or a delete blocker for jobs.
+
 - **The must-change-password flag lives in app_metadata and is enforced
   by the request proxy (2026-09-21):** the backlog suggested
   `user_metadata.must_change_password`, but user_metadata is writable by

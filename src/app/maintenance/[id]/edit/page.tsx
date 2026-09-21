@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { loadEnclosureOptions } from "@/lib/enclosures/options";
-import { loadContactOptions } from "@/lib/contacts/options";
+import { loadAssignableUsers } from "@/lib/auth/app-users";
 import { canWriteMaintenance, loadMaintenanceJob } from "@/lib/maintenance/queries";
 import { MaintenanceForm } from "../../MaintenanceForm";
 
@@ -14,11 +14,11 @@ export default async function EditMaintenancePage(
   const { t } = await getT();
   const supabase = await createClient();
 
-  const [{ data: role }, job, options, contacts] = await Promise.all([
+  const [{ data: role }, job, options, assignees] = await Promise.all([
     supabase.rpc("current_user_role"),
     loadMaintenanceJob(supabase, id),
     loadEnclosureOptions(supabase),
-    loadContactOptions(supabase),
+    loadAssignableUsers(supabase),
   ]);
   if (!job) notFound();
 
@@ -61,7 +61,7 @@ export default async function EditMaintenancePage(
         enclosures={options.enclosures}
         initial={job}
         cancelHref={`/maintenance/${job.id}`}
-        contacts={contacts.contacts}
+        assignees={assignees.users}
       />
     </main>
   );

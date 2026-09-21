@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { appUserLabel, loadAppUsersById } from "@/lib/auth/app-users";
 import type { MaintenanceStatus } from "./status";
 
 export type MaintenancePhase = "before" | "after";
@@ -27,8 +28,8 @@ export type MaintenanceJob = {
   date_created: string;
   date_completed: string | null;
   updated_at: string;
-  /** The contact the job is assigned to (any type), if anyone. */
-  assigned_to: string | null;
+  /** The login responsible for the job (0055), if anyone. */
+  assigned_user_id: string | null;
   assignee_name: string | null;
   drive_folder_id: string | null;
   attachments: MaintenanceAttachment[];
@@ -40,27 +41,28 @@ type JobRow = Omit<
 > & {
   zones: { name: string } | null;
   enclosures: { name: string } | null;
-  contacts: { name: string } | null;
 };
 
 const JOB_COLUMNS =
-  "id, job_code, title, description, status, zone_id, enclosure_id, estimated_cost, actual_cost, due_date, date_created, date_completed, updated_at, assigned_to, drive_folder_id, zones(name), enclosures(name), contacts(name)";
+  "id, job_code, title, description, status, zone_id, enclosure_id, estimated_cost, actual_cost, due_date, date_created, date_completed, updated_at, assigned_user_id, drive_folder_id, zones(name), enclosures(name)";
 
 /**
  * Maintenance jobs with their files. `attachments` has no foreign key to
  * `maintenance` (it's polymorphic on owner_type/owner_id), so PostgREST
  * can't embed it and the files come in a second query keyed by job id —
- * the same two-step the enclosure hub does for resident photos.
+ * the same two-step the enclosure hub does for resident photos. The
+ * assignee's name comes the same way: the FK points at auth.users, which
+ * PostgREST can't embed, so `app_users` (0055) is read for the ids seen.
  */
 export async function loadMaintenanceJobs(
   supabase: SupabaseClient,
-  filter: { enclosureId?: string; zoneId?: string; id?: string; assignedTo?: string } = {},
+  filter: { enclosureId?: string; zoneId?: string; id?: string; assignedUserId?: string } = {},
 ): Promise<{ jobs: MaintenanceJob[]; error: string | null }> {
   let query = supabase.from("maintenance").select(JOB_COLUMNS);
   if (filter.id) query = query.eq("id", filter.id);
   if (filter.enclosureId) query = query.eq("enclosure_id", filter.enclosureId);
   if (filter.zoneId) query = query.eq("zone_id", filter.zoneId);
-  if (filter.assignedTo) query = query.eq("assigned_to", filter.assignedTo);
+  if (filter.assignedUserId) query = query.eq("assigned_user_id", filter.assignedUserId);
 
   const { data, error } = await query
     .order("due_date", { ascending: true, nullsFirst: false })
@@ -89,12 +91,19 @@ export async function loadMaintenanceJobs(
     byJob.set(file.owner_id, list);
   }
 
+  const assignees = await loadAppUsersById(
+    supabase,
+    rows.map((r) => r.assigned_user_id).filter((id): id is string => !!id),
+  );
+
   return {
-    jobs: rows.map(({ zones, enclosures, contacts, ...row }) => ({
+    jobs: rows.map(({ zones, enclosures, ...row }) => ({
       ...row,
       zone_name: zones?.name ?? "—",
       enclosure_name: enclosures?.name ?? null,
-      assignee_name: contacts?.name ?? null,
+      assignee_name: row.assigned_user_id
+        ? appUserLabel(assignees.get(row.assigned_user_id))
+        : null,
       attachments: byJob.get(row.id) ?? [],
     })),
     error: filesError?.message ?? null,

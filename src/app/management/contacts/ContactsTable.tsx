@@ -18,7 +18,6 @@ export type ContactRow = Contact & {
   /** Of those, still open: residents living with this carer now. */
   in_care_count: number;
   /** Maintenance jobs assigned to them — blocks delete. */
-  maintenance_count: number;
 };
 
 const inputClass =
@@ -46,11 +45,7 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
   // instead of failing on save.
   const typeLocked = contact.placement_count > 0;
   const deleteBlocker =
-    contact.placement_count > 0
-      ? c.errors.hasPlacements(contact.placement_count)
-      : contact.maintenance_count > 0
-        ? c.errors.hasMaintenance(contact.maintenance_count)
-        : null;
+    contact.placement_count > 0 ? c.errors.hasPlacements(contact.placement_count) : null;
 
   const messaging = [
     { label: c.createForm.lineId, value: contact.line_id },

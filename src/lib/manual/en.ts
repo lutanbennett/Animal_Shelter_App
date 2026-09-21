@@ -543,7 +543,7 @@ const manual: Manual = {
           steps: [
             "Give the job a title, e.g. \"Gate latch broken\", and describe what needs doing.",
             "Choose where: pick the zone and enclosure, or tick Zone-wide for something like a fence line or drainage.",
-            "Set the status, a due date and an estimated cost in baht if known, and who it's assigned to — any contact from Management → Contacts, whether a volunteer, a supplier or a carer.",
+            "Set the status, a due date and an estimated cost in baht if known, and who it's assigned to — anyone with a login who does the work (staff, volunteers, management).",
             "Add photos of the problem as it is now. They upload when you save.",
             "Tap Save job.",
           ],
@@ -560,7 +560,7 @@ const manual: Manual = {
           steps: [
             "Filter the board by zone or enclosure. Completed jobs from the last 30 days are shown; tick Show all completed jobs for older ones.",
             "Drag a job card to another column to change its status. Cards are coloured when a job is overdue, due soon, or blocked.",
-            "Tap a card to open the job: edit its details, record the actual cost, and add Before and After photos. The person it's assigned to is shown under the title and links to their contact page, which lists every job they hold.",
+            "Tap a card to open the job: edit its details, record the actual cost, and add Before and After photos. The person it's assigned to is shown under the title and on the card.",
             "A job logged by mistake can be deleted from its page (Delete job, bottom right). Its photos and Drive folder go with it and it can't be undone — for a job that was real but is finished, mark it Completed instead.",
           ],
           screenshot: {
@@ -693,7 +693,7 @@ const manual: Manual = {
           path: "Management → Contacts",
           steps: [
             "Add a contact with their type (Carer, Volunteer, Supplier, Donor, Other), phone, email, LINE ID, Messenger, WhatsApp, address and notes — what a supplier sells, when a volunteer is free, a carer's home set-up. Notes show on the contact's page and are searched from the contact list.",
-            "Edit details in the table. A contact who has fostered or adopted must stay a Carer, and one with placements or maintenance jobs can't be deleted.",
+            "Edit details in the table. A contact who has fostered or adopted must stay a Carer, and one with placements can't be deleted.",
           ],
           screenshot: {
             src: "/manual/management-contacts.png",

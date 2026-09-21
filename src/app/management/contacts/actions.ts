@@ -130,20 +130,11 @@ export async function deleteContact(id: string) {
 
   const supabase = await createClient();
 
-  // Neither placement_history.carer_id nor maintenance.assigned_to
-  // cascades, and both are history worth keeping — say which one is in
-  // the way rather than surfacing the foreign-key error.
+  // placement_history.carer_id doesn't cascade, and it's history worth
+  // keeping — say so rather than surfacing the foreign-key error.
   const placements = await countPlacements(supabase, id);
   if (placements > 0) {
     throw new Error(t.management.contacts.errors.hasPlacements(placements));
-  }
-  const { count: jobs, error: jobsError } = await supabase
-    .from("maintenance")
-    .select("id", { count: "exact", head: true })
-    .eq("assigned_to", id);
-  if (jobsError) throw new Error(jobsError.message);
-  if (jobs && jobs > 0) {
-    throw new Error(t.management.contacts.errors.hasMaintenance(jobs));
   }
 
   const { error } = await supabase.from("contacts").delete().eq("id", id);

@@ -755,8 +755,6 @@ const en = {
         invalidType: "Choose a contact type.",
         hasPlacements: (n: number) =>
           `This contact has ${n} placement${n === 1 ? "" : "s"} recorded and can't be deleted — the placements are part of the residents' history.`,
-        hasMaintenance: (n: number) =>
-          `This contact is assigned to ${n} maintenance job${n === 1 ? "" : "s"} and can't be deleted.`,
         typeLockedByPlacements: (n: number) =>
           `This contact has ${n} placement${n === 1 ? "" : "s"} as a carer, so their type must stay Carer.`,
       },
@@ -972,7 +970,6 @@ const en = {
         "Only contacts of type Carer can foster or adopt residents. An admin can change the type under Admin → Contacts.",
       since: (date: string) => `since ${date}`,
       pastPlacements: "Past placements",
-      maintenanceJobs: "Maintenance jobs",
       noPastPlacements: "No earlier placements with this carer.",
       placementRange: (from: string, to: string) => `${from} – ${to}`,
       unknownResident: "Unknown resident",
@@ -1900,7 +1897,7 @@ const en = {
     },
     form: {
       unassigned: "Nobody yet",
-      assignedHint: "Any contact — a volunteer, a supplier, a carer. Add people under Management → Contacts.",
+      assignedHint: "Anyone with a login who does the work — staff, volunteers, management. Accounts are made under Admin → Security.",
       titlePlaceholder: "e.g. Gate latch broken",
       descriptionPlaceholder: "What needs doing, what's been tried, who to contact…",
       zoneWideToggle: "Zone-wide job (no single enclosure)",
