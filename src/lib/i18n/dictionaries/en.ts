@@ -1353,6 +1353,10 @@ const en = {
         startingDietHint: "Optional — records their first diet from the intake date. Meals and quantity can be adjusted on the Diet page.",
         estimatedAge: "Estimated age (years)",
         estimatedAgeHint: "Staff estimate at intake",
+        bloodTestInterval: "Routine blood test",
+        bloodTestIntervalHint: "Yearly for a healthy resident; more often when old or ill. Can be changed later.",
+        bloodTestEveryMonths: (months: number) =>
+          months === 1 ? "Every month" : `Every ${months} months`,
         weightKg: "Weight at intake (kg)",
         weightKgHint: "Optional — logs the first weight reading",
         intakeDate: "Intake date",
@@ -1383,6 +1387,7 @@ const en = {
         sizeRequired: "Select the resident's size.",
         ageMustBeNumber: "Estimated age must be a number.",
         weightPositive: "Weight must be more than 0 kg.",
+        bloodTestIntervalInvalid: "Blood test interval must be a whole number of months.",
       },
     },
     list: {
@@ -1471,6 +1476,8 @@ const en = {
       bloodTests: "Blood Tests",
       bloodTestsNone: "None recorded",
       bloodTestsLast: (date: string) => `Last: ${date}`,
+      bloodTestsEvery: (months: number) =>
+        months === 1 ? "due monthly" : `due every ${months} months`,
       historyEntries: (n: number) => `${n} history entries`,
       carer: (name: string) => `Carer: ${name}`,
       /** Keyed by PlacementActionKey (src/lib/placements/available.ts). */

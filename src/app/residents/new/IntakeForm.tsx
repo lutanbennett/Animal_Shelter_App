@@ -6,6 +6,10 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
 import { RESIDENT_SIZES, sizeLabel } from "@/lib/i18n/enum-labels";
 import { AdoptionProfileFields } from "@/components/AdoptionProfileFields";
+import {
+  BLOOD_TEST_INTERVALS,
+  DEFAULT_BLOOD_TEST_INTERVAL,
+} from "@/lib/residents/blood-test-interval";
 
 export type ZoneOption = { id: string; name: string; name_th: string | null };
 export type DietTypeOption = { id: string; name: string };
@@ -147,6 +151,24 @@ export function IntakeForm({
               placeholder={t.residents.new.fields.weightKgHint}
               className={inputClass}
             />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="bloodTestIntervalMonths" className="text-sm font-medium text-muted">
+              {t.residents.new.fields.bloodTestInterval}
+            </label>
+            <select
+              id="bloodTestIntervalMonths"
+              name="bloodTestIntervalMonths"
+              defaultValue={DEFAULT_BLOOD_TEST_INTERVAL}
+              className={inputClass}
+            >
+              {BLOOD_TEST_INTERVALS.map((months) => (
+                <option key={months} value={months}>
+                  {t.residents.new.fields.bloodTestEveryMonths(months)}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-muted">{t.residents.new.fields.bloodTestIntervalHint}</p>
           </div>
           <div className="flex flex-col gap-1">
             <label htmlFor="dietTypeId" className="text-sm font-medium text-muted">

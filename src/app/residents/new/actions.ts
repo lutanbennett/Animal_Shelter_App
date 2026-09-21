@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { RESIDENT_SIZES, type ResidentSize } from "@/lib/i18n/enum-labels";
 import { readAdoptionProfile } from "@/lib/residents/adoption-profile";
+import { parseBloodTestInterval } from "@/lib/residents/blood-test-interval";
 
 export type IntakeState = { error: string } | undefined;
 
@@ -61,6 +62,13 @@ export async function recordIntake(
 
   const readyForAdoption = formData.get("readyForAdoption") === "on";
 
+  const bloodTestIntervalMonths = parseBloodTestInterval(
+    str(formData, "bloodTestIntervalMonths"),
+  );
+  if (bloodTestIntervalMonths === null) {
+    return { error: t.residents.new.errors.bloodTestIntervalInvalid };
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("record_intake", {
     p_name: name,
@@ -86,6 +94,7 @@ export async function recordIntake(
     p_weight_kg: weightKg,
     p_size: size,
     p_diet_type_id: str(formData, "dietTypeId"),
+    p_blood_test_interval_months: bloodTestIntervalMonths,
     ...prefixed(readAdoptionProfile(formData)),
   });
 

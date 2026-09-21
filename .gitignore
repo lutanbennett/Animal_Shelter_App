@@ -40,3 +40,6 @@ cloudflare-env.d.ts
 
 # Supabase local
 supabase/.temp/
+
+# Snapshots of the legacy AppSheet sheet (real records) — scripts/appsheet-export.mjs
+appsheet-export/

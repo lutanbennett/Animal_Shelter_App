@@ -51,6 +51,7 @@ export type Resident = {
   size: string | null;
   estimated_age_years: number | null;
   age_estimated_on: string | null;
+  blood_test_interval_months: number;
   intake_date: string | null;
   bio: string | null;
   temperament_notes: string | null;
@@ -685,13 +686,13 @@ export function ResidentHub({
               title={t.residents.hub.bloodTests}
               icon={SECTION_ICONS["blood-tests"]}
               value={`${bloodTests.length}`}
-              detail={
+              detail={`${
                 latestBloodTest
                   ? t.residents.hub.bloodTestsLast(
                       formatDate(latestBloodTest.date, locale),
                     )
                   : t.residents.hub.bloodTestsNone
-              }
+              } · ${t.residents.hub.bloodTestsEvery(resident.blood_test_interval_months)}`}
               tone="neutral"
               href={`${base}/blood-tests`}
             />

@@ -1275,15 +1275,47 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   File names are the contract between the script and `en.ts`. The images
   are committed so a fresh clone renders the manual; re-run the script
   after a screen changes rather than retouching a PNG.
+- **The AppSheet data comes across by script, in one transaction, and the
+  Drive tree stays where it is (2026-09-22):** the legacy sheet's folder
+  turned out to be the app's own `GOOGLE_DRIVE_ROOT_FOLDER_ID`, so
+  photos and scans are linked by resolving AppSheet's relative paths to
+  Drive file ids rather than copied. `scripts/appsheet-export.mjs`
+  snapshots the sheet (Sheets' gviz CSV endpoint takes the existing
+  Drive token, so no new scope) and `scripts/import-appsheet.mjs`
+  cleans, checks and loads it as a single begin…commit through the
+  Management API with assertions that abort it; `--report` first,
+  `--dry-run` second. The full mapping is in `docs/data-migration.md`.
+  Decisions the data forced, confirmed with the user: cats are whatever
+  has `Breed = "Cat"` or "(Cat)" in the name (the sheet had no species);
+  legacy Drive folders are renamed to the app's `Name (R-nnnn)` after
+  the commit (the app finds them by id, but staff browsing Drive should
+  see one convention); the eleven residents deleted from AppSheet but
+  still referenced by placements, attachments and medical rows are test
+  data and are dropped; and "Blood Test Priority" (Yearly / Quarterly /
+  Monthly) is real — it became `residents.blood_test_interval_months`
+  (0064, default 12, set at intake and on the edit page) because ill and
+  old residents are tested more often. Rehearsed against the dev
+  database the same day: 76 residents, 130 placements, 205 attachments,
+  every assertion green, 38 folders renamed. Two Panda photos referenced
+  by the sheet no longer exist in Drive and are simply dropped. Residents
+  in AppSheet's "Unassigned" read as **Outreach** in the app's status —
+  that is the app's existing rule for the Lifecycle Unassigned
+  pseudo-enclosure, not a migration artefact.
+- **`Immunization History` was the per-dose table (2026-09-22):** the
+  tab called `Immunization Records` was the bulk fan-out parent (one row
+  per recording action, with a FanOutStatus), and `Immunization History`
+  its one-row-per-dose children — the shape the app's
+  `immunization_records` already has. Only the children migrate; the
+  18 live rows had no B69 duplicates. Closes open question 2 below.
 
 ## Still open (from Section 11 of the requirements doc)
 
 1. Exact per-table RBAC permission matrix beyond the role descriptions —
    the RLS policies in `supabase/migrations/0001_initial_schema.sql` are a
    working first pass, not signed off.
-2. Whether `immunization_history` is distinct from `immunization_records`
-   in the live data — needs confirmation against the actual Sheets data
-   during migration. Current schema has only `immunization_records`.
+2. ~~Whether `immunization_history` is distinct from `immunization_records`
+   in the live data~~ — resolved 2026-09-22: the History tab is the
+   per-dose table and maps straight onto `immunization_records`.
 3. ~~Exact current values for `maintenance.status`~~ — resolved
    2026-09-20: `Not Started / In Progress / Blocked / Completed` (0033).
 4. Whether Supabase Storage should be used for anything (e.g. small UI

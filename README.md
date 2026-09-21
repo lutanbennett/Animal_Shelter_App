@@ -376,9 +376,11 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
   in as an admin, and captures every screen the manual references.
 - `scripts/` — one-off tooling: `apply-migrations.mjs` (migration runner),
   `check-public-views.mjs` (go-live check), `manual-screenshots.mjs`
-  (user-manual screenshots), the Google OAuth setup helpers, and the
-  deploy-time env stripper.
-- `docs/` — requirements, decisions log and backlog.
+  (user-manual screenshots), `appsheet-export.mjs` + `import-appsheet.mjs`
+  (the legacy data migration — see `docs/data-migration.md`), the Google
+  OAuth setup helpers, and the deploy-time env stripper.
+- `docs/` — requirements, decisions log, backlog and the data-migration
+  mapping/runbook.
 - `CLAUDE.md` — the working rules for this repo (branching, migrations,
   finishing a feature). Written for Claude Code sessions, but they're the
   rules for anyone committing here.
