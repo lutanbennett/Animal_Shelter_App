@@ -791,7 +791,8 @@ const manual: Manual = {
           path: "Admin → Website",
           steps: [
             "Hero photo: the big photo at the top of the welcome page.",
-            "Tagline, story heading, story text, contact email and address. Separate story paragraphs with a blank line.",
+            "Labels and contact details: the tagline, hero photo description and visiting hours in English and Thai side by side, plus the email, phone, LINE id, address and map link shown in the footer of every public page and on each resident's profile.",
+            "Pages: the wording of Our story, How adoption works, Foster, Volunteer and Donate. Separate paragraphs with a blank line; start a line with ## for a sub-heading or - for a bullet. The other language's version is written or approved in the translation panel under each field.",
             "Photo gallery: the strip of photos in the Our story section, in order.",
             "Pet of the week: one resident to spotlight, chosen from those on the public adoption page.",
             "Our work — published stories: everything on the public Our work page, with Remove from website. Stories are published from their folder under Projects.",
@@ -875,9 +876,10 @@ const manual: Manual = {
           id: "public-pages",
           title: "The public pages",
           steps: [
-            "Home: the hero photo, the shelter's story and gallery, live counts of residents in care and adoptions, and the Pet of the week.",
-            "Adopt: every resident with Ready for adoption ticked, except those adopted or deceased. Each has a profile with their photos, bio and an email link.",
+            "Home: the hero photo, live counts (in care, adopted this year, in vet care, in foster care), the shelter's story and gallery, the Pet of the week, recent stories and the ways to help.",
+            "Adopt: every resident with Ready for adoption ticked, except those adopted or deceased, with species / size / ready filters. Each profile shows their photos, bio, the For adopters answers (good with dogs, cats, children; energy level; desexed; vaccinated from the immunization history), where and when to meet them, a share button and similar residents. Recent adoptions show as Happy endings, and How adoption works sits at the foot of the listing.",
             "Our work: project folders marked Show on website, by category, with their story and photos.",
+            "Foster, Volunteer and Donate: the pages written under Admin → Website, each with the shelter's email and LINE.",
           ],
           screenshot: {
             src: "/manual/public-adopt.png",

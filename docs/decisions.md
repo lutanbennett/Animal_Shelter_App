@@ -1482,3 +1482,52 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   search matches the Thai name too. Volume is a few new enclosures a year,
   so there is no queue or staleness tracking for these — the admin types
   both names at once.
+
+- **Public site pages live in `site_pages`, not more `site_content`
+  columns (2026-09-21):** the public-website backlog was taken as one
+  piece of work with RSPCA ACT as the reference. The first item — the
+  home page in Thai — ran into the translations design: `translations`
+  keys on a uuid `row_id`, and `site_content` is a boolean singleton, so
+  its prose can't queue without special-casing the trigger. Rather than
+  that, long-form public copy moved to a `site_pages` table (0059): a
+  fixed set of slugs (`our-story`, `how-to-adopt`, `foster`,
+  `volunteer`, `donate`), each a title and a body with a real id, so
+  the two columns join `translatable_fields` and the manager's queue
+  exactly as a bio does, and `/admin/website` edits every page through
+  one form with a `TranslationPanel` under each field. The story was
+  migrated across from `site_content` and its two columns dropped. Short
+  labels stayed on `site_content` as paired `_th` columns (the
+  `name_th` rule — `pairedText()` in `src/lib/site/content.ts`):
+  tagline, hero alt, visiting hours. The slug set is the app's, not the
+  admin's: each page has its own route or section and its own place in
+  the header, so "add a page" is a code change by design.
+
+  The body format is three rules, not markdown (`src/lib/site/body.ts`):
+  blank line between paragraphs, `## ` for a sub-heading, `- ` for a
+  bullet. Enough for RSPCA-style "what we need from you / what we
+  supply" lists, nothing to escape, and the hint under the textarea
+  teaches it. Pages seed with placeholder copy shaped like RSPCA ACT's
+  equivalents so the shelter edits rather than composes; the Donate
+  page's bank details are visibly placeholders.
+
+  Other calls made in the same pass: **desexed** is a tri-state on the
+  resident rather than derived from a 'Spay / neuter' procedure
+  (procedure types are admin-renamable and most surgery predates the
+  app); **vaccinated** *is* derived, from `immunization_records` on
+  `public_resident_profiles`, because the vaccination history is
+  already the record; **no microchip field** — it isn't done here; the
+  three "good with" fields are Yes / No / Unknown where Unknown is an
+  answer and null is silence. **Recently adopted** residents can't link
+  to `/adopt/[id]` (0025 hides them), so `public_recent_adoptions`
+  (0061) exposes name, photo, species and month only, for open Adopt
+  placements of the last 90 days, and keeps `is_public_visible` as the
+  consent flag. **How adoption works** is a section at the foot of
+  `/adopt` rather than its own route, since it is short and every
+  profile links to it. The home page's **"In vet care"** tile now counts
+  residents with an active prescription or in hospital, each once
+  (0062, `in_treatment`) — the hospital-only count was usually zero —
+  and a fourth tile shows foster care. The home page dropped its private
+  header for the shared `PublicHeader` (Donate as a button on every
+  page) and every public page ends in the shared `PublicFooter`
+  (address, hours, email, phone, LINE), which reads `site_content`
+  itself. **Lost & found** stays in the backlog as before.

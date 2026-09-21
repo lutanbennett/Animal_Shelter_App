@@ -6,6 +6,7 @@ import { projectCategoryLabel } from "@/lib/i18n/enum-labels";
 import { PROJECT_CATEGORIES } from "@/lib/projects/queries";
 import { loadPublicProjects, parseCategoryParam } from "@/lib/projects/public";
 import { PublicHeader } from "../adopt/PublicHeader";
+import { PublicFooter } from "../adopt/PublicFooter";
 import { ProjectCard } from "./ProjectCard";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -98,6 +99,8 @@ export default async function OurWorkPage(props: PageProps<"/our-work">) {
           ))}
         </div>
       </div>
+
+      <PublicFooter />
     </main>
   );
 }

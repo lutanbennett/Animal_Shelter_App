@@ -18,6 +18,7 @@ import {
 } from "@/lib/projects/public";
 import { localizedField } from "@/lib/translations/localize";
 import { PublicHeader } from "../../adopt/PublicHeader";
+import { PublicFooter } from "../../adopt/PublicFooter";
 import { ProjectCard } from "../ProjectCard";
 import { StoryGallery, type StoryPhoto } from "./StoryGallery";
 
@@ -170,6 +171,8 @@ export default async function PublicProjectPage(
           </div>
         </section>
       )}
+
+      <PublicFooter />
     </main>
   );
 }

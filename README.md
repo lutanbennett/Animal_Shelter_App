@@ -116,17 +116,21 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    node scripts/check-public-views.mjs
    ```
 
-   This confirms the four views behind the public `/adopt` and
-   `/our-work` pages are readable by the anonymous role and **not
-   writable** by it. Supabase's
+   This confirms the views behind the public `/adopt`, `/our-work`
+   and Foster / Volunteer / Donate pages are readable by the anonymous
+   role and **not writable** by it. Supabase's
    default privileges grant `anon` INSERT/UPDATE/DELETE on every new
    object, and `public_resident_profiles` is auto-updatable, so until
    `0025_public_views_exclude_adopted.sql` revoked them an anonymous
    `PATCH` was accepted (see `docs/decisions.md`). A fresh project's
    defaults may differ from dev's — don't skip the check. Afterwards, load
    `/`, `/adopt` and `/our-work` signed out and confirm residents and
-   stories actually appear, and set the hero photo and story copy at
-   `/admin/website` (`site_content` starts empty). The same page picks
+   stories actually appear, then set the hero photo, contact details
+   (email, phone, LINE, map link, visiting hours) and the wording of the
+   story, how-to-adopt, Foster, Volunteer and Donate pages at
+   `/admin/website` — the pages ship with placeholder copy (bank details
+   on Donate are literally "(bank name)") that must be replaced before
+   the site is announced. The same page picks
    the optional "Pet of the week" for the home page from the publicly
    listed residents; project stories are published from `/projects/[id]`
    ("Show on website") and `/admin/website` lists what is live with a
@@ -208,6 +212,13 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
   moves; `public.ts` is the read-only slice behind the public `/our-work`
   pages (the `public_projects` views and the locale/English-fallback
   helpers).
+- `src/lib/site/` — the public site's editable content: the
+  `site_content` singleton (contact details, paired Thai labels), the
+  `site_pages` rows behind the story and the Foster / Volunteer / Donate /
+  how-to-adopt pages, and the three-rule body format they are written in.
+- `src/lib/residents/` — the public slice of a resident
+  (`public_resident_profiles`, similar residents) and the adoption
+  recommendation fields the intake and edit forms share.
 - `src/lib/translations/` — free text across languages (0056): the row
   types, the loader for a record's `translations` rows, the manager
   queue query, and `localizedField()` / `localizedFromRow()` that pick
