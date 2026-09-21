@@ -1,7 +1,7 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { getSiteOrigin } from "@/lib/site-origin";
 import { createClient } from "@/lib/supabase/server";
 
 export type LoginState = { error: string } | undefined;
@@ -46,11 +46,14 @@ export async function signInWithGoogle() {
   redirect(data.url);
 }
 
-/** Public origin of the current request, honouring the proxy headers Cloudflare sets. */
+/**
+ * Where Supabase sends the browser back to. The shared getSiteOrigin()
+ * reads the real host (localhost, the laptop's LAN address from a phone,
+ * or the Cloudflare domain) and only assumes https outside development —
+ * a local copy here used to guess https for any non-localhost host, which
+ * sent phones to https://192.168.x.x:3000/auth/callback, not on Supabase's
+ * redirect allow-list, so they were bounced to the Site URL (localhost).
+ */
 async function requestOrigin() {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto =
-    h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  return `${proto}://${host}`;
+  return (await getSiteOrigin())?.origin ?? "http://localhost:3000";
 }
