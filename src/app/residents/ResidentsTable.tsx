@@ -8,6 +8,7 @@ import { ActionLink } from "@/components/ActionLink";
 import { SECTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
+import { SYSTEM_ZONE } from "@/lib/enclosures/options";
 import { statusLabel } from "@/lib/i18n/enum-labels";
 
 export type ResidentRow = {
@@ -167,8 +168,14 @@ export function ResidentsTable({ residents }: { residents: ResidentRow[] }) {
                 <td className="hidden px-4 py-2 text-muted md:table-cell">
                   {placeName(locale, resident.enclosure_name, resident.enclosure_name_th) || t.common.dash}
                 </td>
+                {/* A resident in hospital or with a carer sits in the
+                    Lifecycle pseudo-zone; that's the Status column's job,
+                    so Zone and Location stay blank rather than say
+                    "Lifecycle · On-site". */}
                 <td className="hidden px-4 py-2 text-muted md:table-cell">
-                  {placeName(locale, resident.zone_name, resident.zone_name_th) || t.common.dash}
+                  {resident.zone_name === SYSTEM_ZONE
+                    ? t.common.dash
+                    : placeName(locale, resident.zone_name, resident.zone_name_th) || t.common.dash}
                 </td>
                 <td className="hidden px-4 py-2 text-muted md:table-cell">
                   {resident.current_status
@@ -176,7 +183,7 @@ export function ResidentsTable({ residents }: { residents: ResidentRow[] }) {
                     : t.common.dash}
                 </td>
                 <td className="hidden px-4 py-2 text-muted md:table-cell">
-                  {resident.zone_internal === null
+                  {resident.zone_internal === null || resident.zone_name === SYSTEM_ZONE
                     ? t.common.dash
                     : resident.zone_internal
                       ? t.admin.zones.table.internal

@@ -240,6 +240,13 @@ const en = {
         failedToUpdateRole: "Failed to update role.",
         failedToResetPassword: "Failed to reset password.",
         failedToDeleteUser: "Failed to delete user.",
+        archived: "archived",
+        archive: "Archive",
+        restore: "Restore",
+        archiveConfirm: (email: string) =>
+          `Archive ${email}? They can no longer sign in and won't be offered for new maintenance jobs; their name stays on past ones. Restore undoes this.`,
+        failedToArchiveUser: "Failed to archive user.",
+        failedToRestoreUser: "Failed to restore user.",
       },
       errors: {
         emailRequired: "Email is required.",
@@ -248,6 +255,7 @@ const en = {
         invalidRole: "Invalid role.",
         cantChangeOwnRole: "You can't change your own role.",
         cantDeleteOwnAccount: "You can't delete your own account.",
+        cantArchiveOwnAccount: "You can't archive your own account.",
         cantResetOwnPassword: "Change your own password from the Change password page instead.",
         adminAccessRequired: "Admin access required.",
       },
@@ -952,6 +960,7 @@ const en = {
       noContact: "No contact details recorded.",
       showing: "Showing",
       periods: {
+        1: "1 month",
         3: "3 months",
         6: "6 months",
         12: "12 months",
@@ -962,6 +971,10 @@ const en = {
       visitsDetailCancelled: (period: string, cancelled: number) =>
         `${period} · ${cancelled} cancelled not counted`,
       residentsSeen: "Residents seen",
+      residentsSeenDetail: (repeatVisits: number) =>
+        repeatVisits === 0
+          ? "Different residents · each seen once"
+          : `Different residents · ${repeatVisits} repeat visit${repeatVisits === 1 ? "" : "s"}`,
       noResidents: "No visits in this period",
       spend: "Spend",
       spendDetail: (period: string, withCost: number, total: number) =>
@@ -982,7 +995,7 @@ const en = {
       linkedDetail: "Logged against this vet's visits",
       chart: {
         heading: "Visits per month",
-        subheading: (months: number) => `Last ${months} months`,
+        subheading: (months: number) => (months === 1 ? "This month" : `Last ${months} months`),
         empty: "No visits in this period.",
         visits: (n: number) => `${n} visit${n === 1 ? "" : "s"}`,
         ariaLabel: (months: number) => `Vet visits per month over the last ${months} months`,
@@ -1912,6 +1925,10 @@ const en = {
     clear: "Clear",
     noMatches: "No enclosures match these filters.",
     enclosuresCount: (n: number) => `${n} enclosure${n === 1 ? "" : "s"}`,
+    openJobs: (n: number) => `${n} open`,
+    openJobsTitle: (n: number) =>
+      n === 0 ? "No open maintenance jobs" : `${n} open maintenance job${n === 1 ? "" : "s"}`,
+    zoneWideJobs: (n: number) => `${n} zone-wide job${n === 1 ? "" : "s"}`,
     residentsCount: (n: number) => `${n} resident${n === 1 ? "" : "s"}`,
     occupancy: (count: number, capacity: number) => `${count} / ${capacity}`,
     noCapacity: "No capacity set",
@@ -1963,6 +1980,9 @@ const en = {
       enclosure: "Enclosure",
       allEnclosures: "All enclosures",
       allOpen: "All open",
+      assignee: "Assigned to",
+      myJobs: "Me",
+      everyonesJobs: "Everyone",
       showAllCompleted: "Show all completed jobs",
       recentCompletedHint: (days: number) =>
         `Completed jobs from the last ${days} days are shown.`,
@@ -1970,6 +1990,7 @@ const en = {
     },
     empty: "No maintenance jobs have been logged yet.",
     emptyFiltered: "No jobs match these filters.",
+    emptyMine: "Nothing is assigned to you right now.",
     emptyColumn: "Nothing here",
     jobsCount: (n: number) => `${n} job${n === 1 ? "" : "s"}`,
     estimatedTotal: (amount: string) => `Est. ${amount}`,
@@ -1992,7 +2013,10 @@ const en = {
     },
     form: {
       unassigned: "Nobody yet",
-      assignedHint: "Anyone with a login who does the work — staff, volunteers, management. Accounts are made under Admin → Security.",
+      teamCount: (n: number) => (n === 1 ? "1 person" : `${n} people`),
+      noAssignees: "No one to assign to yet — accounts are made under Admin → Security.",
+      archivedMember: "(no longer here — untick to reassign)",
+      assignedHint: "Tick everyone doing the work — staff, volunteers, management; a fence can take three people. Accounts are made under Admin → Security.",
       titlePlaceholder: "e.g. Gate latch broken",
       descriptionPlaceholder: "What needs doing, what's been tried, who to contact…",
       zoneWideToggle: "Zone-wide job (no single enclosure)",
@@ -2038,7 +2062,8 @@ const en = {
       notSet: "Not set",
       noDescription: "No description.",
       fileFallback: "File",
-      assignedTo: (name: string) => `Assigned to ${name}`,
+      assignedTo: (names: string) => `Assigned to ${names}`,
+      archivedName: (name: string) => `${name} (no longer here)`,
       unassigned: "Not assigned",
       deleteJob: "Delete job",
       deleting: "Deleting...",

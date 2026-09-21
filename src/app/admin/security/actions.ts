@@ -1,12 +1,22 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { refresh, revalidatePath } from "next/cache";
 import { assertAdminRole } from "@/lib/auth/require-admin";
 import { MUST_CHANGE_PASSWORD } from "@/lib/auth/password-change";
 import { generateTemporaryPassword } from "@/lib/auth/temp-password";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+
+/**
+ * A server action called from a button doesn't refresh the client router
+ * on its own (a <form action> does); refresh() re-renders the page the
+ * admin is on so the row shows the change at once.
+ */
+function revalidateSecurity() {
+  revalidatePath("/admin/security");
+  refresh();
+}
 
 export type SecurityFormState =
   | { error: string }
@@ -76,7 +86,7 @@ export async function approveAccessRequest(userId: string, role: string) {
   const admin = createAdminClient();
   const { error } = await admin.from("user_roles").upsert({ user_id: userId, role });
   if (error) throw new Error(error.message);
-  revalidatePath("/admin/security");
+  revalidateSecurity();
 }
 
 export async function updateUserRole(userId: string, role: string) {
@@ -99,7 +109,7 @@ export async function updateUserRole(userId: string, role: string) {
   const { error } = await admin.from("user_roles").upsert({ user_id: userId, role });
 
   if (error) throw new Error(error.message);
-  revalidatePath("/admin/security");
+  revalidateSecurity();
 }
 
 /**
@@ -131,8 +141,46 @@ export async function issueTemporaryPassword(userId: string): Promise<string> {
   });
   if (error) throw new Error(error.message);
 
-  revalidatePath("/admin/security");
+  revalidateSecurity();
   return temporaryPassword;
+}
+
+/**
+ * Marks a login as having left (0063): they keep their row, their role
+ * and their name on past maintenance jobs, but current_user_role()
+ * returns null for them so nothing lets them in, and the assignee picker
+ * stops offering them. Reversible with restoreUser().
+ */
+export async function archiveUser(userId: string) {
+  await assertAdminRole();
+  const { t } = await getT();
+
+  const supabase = await createClient();
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser();
+  if (currentUser?.id === userId) {
+    throw new Error(t.admin.security.errors.cantArchiveOwnAccount);
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("user_roles")
+    .update({ archived_at: new Date().toISOString() })
+    .eq("user_id", userId);
+  if (error) throw new Error(error.message);
+  revalidateSecurity();
+}
+
+export async function restoreUser(userId: string) {
+  await assertAdminRole();
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("user_roles")
+    .update({ archived_at: null })
+    .eq("user_id", userId);
+  if (error) throw new Error(error.message);
+  revalidateSecurity();
 }
 
 export async function deleteUser(userId: string) {
@@ -152,5 +200,5 @@ export async function deleteUser(userId: string) {
   const { error } = await admin.auth.admin.deleteUser(userId);
 
   if (error) throw new Error(error.message);
-  revalidatePath("/admin/security");
+  revalidateSecurity();
 }

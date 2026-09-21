@@ -12,6 +12,13 @@ export type MaintenanceAttachment = {
   uploaded_at: string;
 };
 
+/** One member of a job's team; `archived` when they have since left (0063). */
+export type MaintenanceAssignee = {
+  user_id: string;
+  name: string;
+  archived: boolean;
+};
+
 export type MaintenanceJob = {
   id: string;
   job_code: string;
@@ -31,41 +38,40 @@ export type MaintenanceJob = {
   date_created: string;
   date_completed: string | null;
   updated_at: string;
-  /** The login responsible for the job (0055), if anyone. */
-  assigned_user_id: string | null;
-  assignee_name: string | null;
+  /** The logins responsible for the job (0063) — a team, or nobody. */
+  assignees: MaintenanceAssignee[];
   drive_folder_id: string | null;
   attachments: MaintenanceAttachment[];
 };
 
 type JobRow = Omit<
   MaintenanceJob,
-  "zone_name" | "zone_name_th" | "enclosure_name" | "enclosure_name_th" | "assignee_name" | "attachments"
+  "zone_name" | "zone_name_th" | "enclosure_name" | "enclosure_name_th" | "assignees" | "attachments"
 > & {
   zones: { name: string; name_th: string | null } | null;
   enclosures: { name: string; name_th: string | null } | null;
+  maintenance_assignees: { user_id: string }[];
 };
 
 const JOB_COLUMNS =
-  "id, job_code, title, description, status, zone_id, enclosure_id, estimated_cost, actual_cost, due_date, date_created, date_completed, updated_at, assigned_user_id, drive_folder_id, zones(name, name_th), enclosures(name, name_th)";
+  "id, job_code, title, description, status, zone_id, enclosure_id, estimated_cost, actual_cost, due_date, date_created, date_completed, updated_at, drive_folder_id, zones(name, name_th), enclosures(name, name_th), maintenance_assignees(user_id)";
 
 /**
  * Maintenance jobs with their files. `attachments` has no foreign key to
  * `maintenance` (it's polymorphic on owner_type/owner_id), so PostgREST
  * can't embed it and the files come in a second query keyed by job id —
- * the same two-step the enclosure hub does for resident photos. The
- * assignee's name comes the same way: the FK points at auth.users, which
- * PostgREST can't embed, so `app_users` (0055) is read for the ids seen.
+ * the same two-step the enclosure hub does for resident photos. The team
+ * (0063) embeds as ids only — the FK points at auth.users, which PostgREST
+ * can't embed — so `app_users` (0055) is read once for the names.
  */
 export async function loadMaintenanceJobs(
   supabase: SupabaseClient,
-  filter: { enclosureId?: string; zoneId?: string; id?: string; assignedUserId?: string } = {},
+  filter: { enclosureId?: string; zoneId?: string; id?: string } = {},
 ): Promise<{ jobs: MaintenanceJob[]; error: string | null }> {
   let query = supabase.from("maintenance").select(JOB_COLUMNS);
   if (filter.id) query = query.eq("id", filter.id);
   if (filter.enclosureId) query = query.eq("enclosure_id", filter.enclosureId);
   if (filter.zoneId) query = query.eq("zone_id", filter.zoneId);
-  if (filter.assignedUserId) query = query.eq("assigned_user_id", filter.assignedUserId);
 
   const { data, error } = await query
     .order("due_date", { ascending: true, nullsFirst: false })
@@ -94,21 +100,25 @@ export async function loadMaintenanceJobs(
     byJob.set(file.owner_id, list);
   }
 
-  const assignees = await loadAppUsersById(
+  const users = await loadAppUsersById(
     supabase,
-    rows.map((r) => r.assigned_user_id).filter((id): id is string => !!id),
+    rows.flatMap((r) => r.maintenance_assignees.map((a) => a.user_id)),
   );
 
   return {
-    jobs: rows.map(({ zones, enclosures, ...row }) => ({
+    jobs: rows.map(({ zones, enclosures, maintenance_assignees, ...row }) => ({
       ...row,
       zone_name: zones?.name ?? "—",
       zone_name_th: zones?.name_th ?? null,
       enclosure_name: enclosures?.name ?? null,
       enclosure_name_th: enclosures?.name_th ?? null,
-      assignee_name: row.assigned_user_id
-        ? appUserLabel(assignees.get(row.assigned_user_id))
-        : null,
+      // Sorted by name so a team reads the same on every card.
+      assignees: maintenance_assignees
+        .map(({ user_id }) => {
+          const user = users.get(user_id);
+          return { user_id, name: appUserLabel(user), archived: !!user?.archived_at };
+        })
+        .sort((a, b) => a.name.localeCompare(b.name)),
       attachments: byJob.get(row.id) ?? [],
     })),
     error: filesError?.message ?? null,

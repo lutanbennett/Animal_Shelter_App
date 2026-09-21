@@ -22,6 +22,14 @@ type EnclosureRow = {
 /** The Lifecycle pseudo-zone holds status buckets, not physical enclosures. */
 const SYSTEM_ZONE = "Lifecycle";
 
+/**
+ * The Lifecycle buckets worth a card: where a resident is when they're not
+ * in a kennel but might come back. Adopted and Deceased are history, not
+ * housing, and stay off the browser (the residents list still filters on
+ * them). Shown in this order, at the top, without a zone heading.
+ */
+const PINNED_STATUSES = ["Hospital", "Unassigned", "Fostered"];
+
 // Rank so "Over capacity" sorts ahead of "Full", then by how full, then by
 // raw count — enclosures without a capacity go last.
 const LEVEL_RANK = { over: 0, full: 1, near: 2, ok: 3, unknown: 4 } as const;
@@ -49,7 +57,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   // Resident counts come from resident_list_view rather than a dedicated
   // occupancy view so no migration is needed; the shelter's headcount is
   // small enough that pulling one row per resident is cheap.
-  const [zonesResult, enclosuresResult, residentsResult] = await Promise.all([
+  const [zonesResult, enclosuresResult, residentsResult, jobsResult] = await Promise.all([
     supabase.from("zones").select("id, name, name_th, internal").order("name"),
     supabase
       .from("enclosures")
@@ -61,11 +69,28 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       .select("enclosure_id")
       .not("enclosure_id", "is", null)
       .returns<{ enclosure_id: string }[]>(),
+    // Open maintenance per enclosure, and per zone for zone-wide jobs
+    // (enclosure_id null). A vet can't read maintenance (0001) and simply
+    // gets zeros — no error, RLS filters.
+    supabase
+      .from("maintenance")
+      .select("enclosure_id, zone_id")
+      .neq("status", "Completed")
+      .returns<{ enclosure_id: string | null; zone_id: string }[]>(),
   ]);
 
   const counts = new Map<string, number>();
   for (const row of residentsResult.data ?? []) {
     counts.set(row.enclosure_id, (counts.get(row.enclosure_id) ?? 0) + 1);
+  }
+  const openJobs = new Map<string, number>();
+  const zoneWideJobs = new Map<string, number>();
+  for (const job of jobsResult.data ?? []) {
+    if (job.enclosure_id) {
+      openJobs.set(job.enclosure_id, (openJobs.get(job.enclosure_id) ?? 0) + 1);
+    } else {
+      zoneWideJobs.set(job.zone_id, (zoneWideJobs.get(job.zone_id) ?? 0) + 1);
+    }
   }
 
   const term = q.toLowerCase();
@@ -80,8 +105,11 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       zone_name: row.zones?.name ?? t.common.dash,
       zone_name_th: row.zones?.name_th ?? null,
       zone_internal: row.zones?.internal ?? true,
+      is_system: row.zones?.name === SYSTEM_ZONE,
       resident_count: counts.get(row.id) ?? 0,
+      open_jobs: openJobs.get(row.id) ?? 0,
     }))
+    .filter((e) => !e.is_system || PINNED_STATUSES.includes(e.name))
     .filter((e) => !zoneId || e.zone_id === zoneId)
     .filter(
       (e) =>
@@ -97,22 +125,30 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
     return aSys - bSys || a.name.localeCompare(b.name);
   });
 
+  // The status buckets go above the zones, in their fixed order, whatever
+  // the sort; the physical enclosures are grouped or sorted below them.
+  const pinned = PINNED_STATUSES.flatMap((name) =>
+    enclosures.filter((e) => e.is_system && e.name === name),
+  );
+  const physical = enclosures.filter((e) => !e.is_system);
+
   const groups: ZoneGroup[] = zones
+    .filter((zone) => zone.name !== SYSTEM_ZONE)
     .map((zone) => ({
       id: zone.id,
       name: zone.name,
       name_th: zone.name_th,
       internal: zone.internal,
-      isSystem: zone.name === SYSTEM_ZONE,
-      enclosures: enclosures.filter((e) => e.zone_id === zone.id),
+      enclosures: physical.filter((e) => e.zone_id === zone.id),
+      zone_wide_jobs: zoneWideJobs.get(zone.id) ?? 0,
     }))
     .filter((zone) => zone.enclosures.length > 0);
 
   const flat =
     sort === "name"
-      ? [...enclosures].sort((a, b) => a.name.localeCompare(b.name))
+      ? [...physical].sort((a, b) => a.name.localeCompare(b.name))
       : sort === "occupancy"
-        ? [...enclosures].sort(compareOccupancy)
+        ? [...physical].sort(compareOccupancy)
         : undefined;
 
   return (
@@ -137,7 +173,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
         </p>
       )}
 
-      <EnclosureGrid groups={groups} flat={flat} />
+      <EnclosureGrid pinned={pinned} groups={groups} flat={flat} />
     </main>
   );
 }

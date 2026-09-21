@@ -47,7 +47,7 @@ export function MaintenanceForm({
   assignees,
 }: {
   mode: "create" | "edit";
-  /** Logins that action jobs, for "Assigned to" (0055). */
+  /** Logins that action jobs, for "Assigned to" (0055, a team since 0063). */
   assignees: AppUser[];
   zones: ZoneOption[];
   enclosures: EnclosureOption[];
@@ -83,6 +83,32 @@ export function MaintenanceForm({
   );
   const [enclosureId, setEnclosureId] = useState(initialEnclosureId);
   const enclosuresInZone = enclosures.filter((e) => e.zoneId === zoneId);
+
+  // The team (0063). Someone on the job who has since been archived isn't
+  // in the picker any more, but stays ticked here so they can be taken
+  // off — otherwise the job would silently keep them.
+  const initialTeam = initial?.assignees ?? [];
+  const [teamIds, setTeamIds] = useState<Set<string>>(
+    () => new Set(initialTeam.map((a) => a.user_id)),
+  );
+  const teamOptions = [
+    ...assignees.map((user) => ({
+      id: user.id,
+      label: `${appUserLabel(user)} — ${roleLabel(t, user.role)}`,
+      archived: false,
+    })),
+    ...initialTeam
+      .filter((a) => !assignees.some((user) => user.id === a.user_id))
+      .map((a) => ({ id: a.user_id, label: a.name, archived: true })),
+  ];
+  function toggleTeamMember(id: string, on: boolean) {
+    setTeamIds((prev) => {
+      const next = new Set(prev);
+      if (on) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }
 
   // Photos picked before the job exists (create mode only).
   const uploads = useDeferredUploads();
@@ -275,25 +301,41 @@ export function MaintenanceForm({
         </div>
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="assignedUserId" className="text-sm font-medium text-muted">
+      <fieldset className="flex flex-col gap-1">
+        <legend className="text-sm font-medium text-muted">
           {f.assignedTo}
-        </label>
-        <select
-          id="assignedUserId"
-          name="assignedUserId"
-          defaultValue={initial?.assigned_user_id ?? ""}
-          className={inputClass}
-        >
-          <option value="">{fm.unassigned}</option>
-          {assignees.map((user) => (
-            <option key={user.id} value={user.id}>
-              {appUserLabel(user)} — {roleLabel(t, user.role)}
-            </option>
-          ))}
-        </select>
+          <span className="ml-2 font-normal">
+            {teamIds.size === 0 ? fm.unassigned : fm.teamCount(teamIds.size)}
+          </span>
+        </legend>
+        {teamOptions.length === 0 ? (
+          <p className="text-sm text-muted">{fm.noAssignees}</p>
+        ) : (
+          <ul className="grid max-h-56 gap-1 overflow-y-auto rounded border border-border bg-surface p-2 sm:grid-cols-2">
+            {teamOptions.map((option) => (
+              <li key={option.id}>
+                <label className="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-sm text-foreground hover:bg-surface-hover">
+                  <input
+                    type="checkbox"
+                    name="assigneeIds"
+                    value={option.id}
+                    checked={teamIds.has(option.id)}
+                    onChange={(e) => toggleTeamMember(option.id, e.target.checked)}
+                    className="h-4 w-4 accent-primary"
+                  />
+                  <span className={option.archived ? "text-muted line-through" : ""}>
+                    {option.label}
+                  </span>
+                  {option.archived && (
+                    <span className="text-xs text-muted">{fm.archivedMember}</span>
+                  )}
+                </label>
+              </li>
+            ))}
+          </ul>
+        )}
         <p className="text-xs text-muted">{fm.assignedHint}</p>
-      </div>
+      </fieldset>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1">

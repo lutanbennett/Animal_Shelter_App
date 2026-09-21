@@ -31,7 +31,7 @@ export function spendSummary(visits: VetVisit[]): { total: number; withCost: num
 }
 
 /** How far back the hub looks; `null` is all time. */
-export const VISIT_PERIODS = [3, 6, 12, null] as const;
+export const VISIT_PERIODS = [1, 3, 6, 12, null] as const;
 export type VisitPeriod = (typeof VISIT_PERIODS)[number];
 
 export const DEFAULT_VISIT_PERIOD: VisitPeriod = 6;

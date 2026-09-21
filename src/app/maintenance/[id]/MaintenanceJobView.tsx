@@ -165,10 +165,14 @@ export function MaintenanceJobView({
             <CalendarClock aria-hidden="true" className="h-4 w-4" />
             {job.due_date ? d.due(formatDate(job.due_date, locale)) : d.noDueDate}
           </span>
-          {job.assigned_user_id ? (
+          {job.assignees.length > 0 ? (
             <span className="flex items-center gap-1">
               <UserRound aria-hidden="true" className="h-4 w-4" />
-              {d.assignedTo(job.assignee_name ?? "—")}
+              {d.assignedTo(
+                job.assignees
+                  .map((a) => (a.archived ? d.archivedName(a.name) : a.name))
+                  .join(", "),
+              )}
             </span>
           ) : (
             <span className="flex items-center gap-1">

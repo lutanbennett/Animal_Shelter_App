@@ -31,6 +31,8 @@ Five `app_role` values, enforced by row-level security
 | **vet** | Read/write on vet visits, procedures, blood tests, prescriptions and immunizations; read on residents. |
 | **volunteer** | Read everything; write photos and enclosure moves only. |
 
+A person who leaves is **archived** from `/admin/security` rather than deleted (`user_roles.archived_at`, 0063): `current_user_role()` returns null for them, so every policy and page treats them as having no access, while their name stays on the maintenance jobs they did. Restore reverses it.
+
 ## Getting started
 
 1. **Install dependencies**

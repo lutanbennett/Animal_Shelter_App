@@ -103,10 +103,10 @@ export function VetHub({
     return r.thai_name ? `${r.name} (${r.thai_name})` : r.name;
   };
 
-  const residentNames = byResident
-    .slice(0, 3)
-    .map((r) => residentName(r.resident_id))
-    .join(", ");
+  // The two counts differ only when a resident went more than once; say
+  // so on the card, since "6 visits / 6 residents" otherwise reads as the
+  // same number twice.
+  const repeatVisits = inPeriod.length - byResident.length;
 
   const scheduleTone: StatCardTone =
     schedule.overdue.length > 0
@@ -224,7 +224,11 @@ export function VetHub({
           title={t.vets.hub.residentsSeen}
           icon={VET_ICONS.residents}
           value={`${byResident.length}`}
-          detail={residentNames || t.vets.hub.noResidents}
+          detail={
+            byResident.length === 0
+              ? t.vets.hub.noResidents
+              : t.vets.hub.residentsSeenDetail(repeatVisits)
+          }
           tone="neutral"
         />
         <StatCard
