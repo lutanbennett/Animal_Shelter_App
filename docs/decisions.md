@@ -1166,9 +1166,10 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   side, which is why the pre-existing `Shelter projects` folder was
   reused rather than duplicated. Note the dev Drive also holds a legacy
   AppSheet tree under the same root (`<Enclosure>/Active|Completed/<date>
-  (<id>)/Work to be Done/`) — those jobs aren't in the database; if they
-  are ever migrated they'd get `M-` codes and be moved into the new layout
-  by the same sync.
+  (<id>)/Work to be Done/`) — those jobs aren't in the database. Confirmed
+  2026-09-21 that the tree only holds test folders, so no migration is
+  needed; were real ones ever to appear they'd get `M-` codes and be
+  moved into the new layout by the same sync.
 
   **UI:** `/maintenance` is a four-column Kanban from `lg` (two columns
   at `md`, native HTML5 drag and drop, no library) and a status-chip list
