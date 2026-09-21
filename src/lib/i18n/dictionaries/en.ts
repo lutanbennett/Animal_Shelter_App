@@ -2117,7 +2117,7 @@ const en = {
   translations: {
     title: "Translations",
     subtitle:
-      "Public-facing text in the other language. Anything staff write or change lands here until a manager has written or checked its translation; approved text is what visitors reading that language see — until then they see the original.",
+      "Text the reader didn't write, in the other language: what the public sees of a resident or project, and the maintenance jobs staff are asked to do. Anything staff write or change lands here until a manager has written or checked its translation; approved text is what visitors reading that language see — until then they see the original.",
     queueEmpty: "Nothing waiting — every public-facing text has an approved translation.",
     openCount: (n: number) => (n === 1 ? "1 waiting" : `${n} waiting`),
     showApproved: "Show approved too",
@@ -2136,6 +2136,8 @@ const en = {
       "residents.past_story_notes": "Past story",
       "project_folders.summary": "Project story",
       "attachments.caption": "Photo caption",
+      "maintenance.title": "Job title",
+      "maintenance.description": "Job description",
     } as Record<string, string>,
     original: (lang: string) => `Original (${lang})`,
     translationInto: (lang: string) => `Translation (${lang})`,

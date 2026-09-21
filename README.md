@@ -216,7 +216,8 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
   used by `/management/translations` and under the fields themselves;
   the server actions are in `src/app/management/translations/actions.ts`.
   Which fields are translatable is the `translatable_fields` table, not
-  code.
+  code (today: resident bio / temperament / past story, project story,
+  photo caption, maintenance job title / description).
 - `src/lib/archive/` — the deceased resident archive: the summary PDF, the
   offline `index.html` index page written beside it in the resident's Drive
   folder, the step that moves that folder to `Residents/Deceased/`, and

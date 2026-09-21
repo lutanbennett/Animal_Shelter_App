@@ -47,12 +47,15 @@ type Filters = {
  */
 export function MaintenanceBoard({
   jobs,
+  titles,
   zones,
   enclosures,
   canWrite,
   initialFilters,
 }: {
   jobs: MaintenanceJob[];
+  /** Approved title translations by job id (0057); a card shows the reader's language. */
+  titles: Record<string, { lang: "en" | "th"; text: string }>;
   zones: ZoneOption[];
   enclosures: EnclosureOption[];
   canWrite: boolean;
@@ -267,6 +270,7 @@ export function MaintenanceBoard({
                 key={status}
                 status={status}
                 jobs={byStatus.get(status) ?? []}
+                titles={titles}
                 canDrop={canWrite && !isPending}
                 onDrop={(jobId) => moveJob(jobId, status)}
                 locale={locale}
@@ -298,7 +302,7 @@ export function MaintenanceBoard({
                 : visible.filter((job) => job.status !== "Completed")
               ).map((job) => (
                 <li key={job.id}>
-                  <JobCard job={job} locale={locale} showStatus={!mobileStatus} />
+                  <JobCard job={job} title={titles[job.id]} locale={locale} showStatus={!mobileStatus} />
                 </li>
               ))}
             </ul>
@@ -340,12 +344,14 @@ function Chip({
 function Column({
   status,
   jobs,
+  titles,
   canDrop,
   onDrop,
   locale,
 }: {
   status: MaintenanceStatus;
   jobs: MaintenanceJob[];
+  titles: Record<string, { lang: "en" | "th"; text: string }>;
   canDrop: boolean;
   onDrop: (jobId: string) => void;
   locale: "en" | "th";
@@ -393,7 +399,7 @@ function Column({
         </p>
       ) : (
         jobs.map((job) => (
-          <JobCard key={job.id} job={job} locale={locale} draggable={canDrop} />
+          <JobCard key={job.id} job={job} title={titles[job.id]} locale={locale} draggable={canDrop} />
         ))
       )}
     </section>
@@ -402,11 +408,13 @@ function Column({
 
 function JobCard({
   job,
+  title,
   locale,
   draggable = false,
   showStatus = false,
 }: {
   job: MaintenanceJob;
+  title?: { lang: "en" | "th"; text: string };
   locale: "en" | "th";
   draggable?: boolean;
   /** Phone list with every open status mixed: say which this one is. */
@@ -429,7 +437,9 @@ function JobCard({
       }`}
     >
       <div className="flex items-start justify-between gap-2">
-        <span className="font-medium leading-snug text-foreground">{job.title}</span>
+        <span className="font-medium leading-snug text-foreground">
+          {title && title.lang === locale ? title.text : job.title}
+        </span>
         <span className="shrink-0 font-mono text-[10px] text-muted">{job.job_code}</span>
       </div>
       <span className="flex items-center gap-1 truncate text-xs text-muted">

@@ -32,7 +32,8 @@ export type TranslationRow = {
 
 /** `translation_queue`: a row plus what the manager needs to place it. */
 export type TranslationQueueRow = TranslationRow & {
-  tier: "public" | "internal";
+  /** The review path (0057): a manager approves 'reviewed'; 'machine' is shown labelled, unreviewed. */
+  tier: "reviewed" | "machine";
   record_label: string | null;
   record_path: string | null;
 };

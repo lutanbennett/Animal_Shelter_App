@@ -753,10 +753,10 @@ const manual: Manual = {
           roles: ["admin", "management"],
           path: "Management → Translations",
           steps: [
-            "The app's own labels are in both languages already; this page is for the text staff type that the public reads — a resident's bio, temperament and past story on the adoption pages, and a project's story and photo captions under Our work. Whichever language it was written in, the other language needs a version, and that is written by hand here.",
+            "The app's own labels are in both languages already; this page is for text one person types and another reads in the other language: a resident's bio, temperament and past story on the adoption pages, a project's story and photo captions under Our work, and the title and description of every maintenance job. Whichever language it was written in, the other language needs a version, and that is written by hand here.",
             "Every such text lands on this page when it is first written and again whenever it changes: Needs translation for a new one, Out of date when the original has been edited since it was translated — with the old and new original shown side by side so you fix the translation rather than start over. Work down the list, type the translation and tap Save & approve.",
             "Only an approved translation is shown to visitors reading that language; until then they see the original. Show approved too lists the ones already live if you need to correct one, and Remove translation takes one down.",
-            "The same box appears under the text on the resident's page and on the project folder, so you can translate right after writing without coming here. Nobody has to translate internal notes (weights, vet visits, prescriptions): those stay as typed.",
+            "The same box appears under the text on the resident's page, on the project folder and on the maintenance job, so you can translate right after writing without coming here. On the board and the job page, staff reading Thai see the approved Thai title and description in place of the English. Nobody has to translate internal notes (weights, vet visits, prescriptions): those stay as typed.",
           ],
         },
       ],

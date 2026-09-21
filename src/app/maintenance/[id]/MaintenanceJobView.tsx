@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import { CalendarClock, Pencil, UserRound } from "lucide-react";
 import { ENCLOSURE_ICONS } from "@/components/hub-icons";
 import { AttachmentUploader } from "@/components/AttachmentUploader";
+import { TranslationPanel } from "@/components/TranslationPanel";
+import { localizedFromRow } from "@/lib/translations/localize";
+import type { TranslationRow } from "@/lib/translations/types";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatBaht, formatDate } from "@/lib/format";
@@ -37,12 +40,24 @@ function isLikelyImage(fileName: string | null) {
 export function MaintenanceJobView({
   job,
   canWrite,
+  canManageTranslations,
+  translations,
 }: {
   job: MaintenanceJob;
   /** Staff/admin: change status and details, remove files. */
   canWrite: boolean;
+  /** Admin/management: may write and approve the other-language text. */
+  canManageTranslations: boolean;
+  /** The job's title and description rows in `translations` (0057). */
+  translations: TranslationRow[];
 }) {
   const { t, locale } = useI18n();
+  // The reader's language when a manager has approved it, else as written.
+  const titleTranslation = translations.find((row) => row.column_name === "title") ?? null;
+  const descriptionTranslation =
+    translations.find((row) => row.column_name === "description") ?? null;
+  const title = localizedFromRow(locale, job.title, titleTranslation) || job.title;
+  const description = localizedFromRow(locale, job.description, descriptionTranslation) || null;
   const d = t.maintenance.detail;
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -118,7 +133,14 @@ export function MaintenanceJobView({
             </span>
           )}
         </div>
-        <h1 className="text-2xl font-semibold text-foreground">{job.title}</h1>
+        <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
+        {titleTranslation && canManageTranslations && (
+          <TranslationPanel
+            key={titleTranslation.id + titleTranslation.updated_at}
+            row={titleTranslation}
+            canManage
+          />
+        )}
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
           <span className="flex items-center gap-1">
             <ENCLOSURE_ICONS.zone aria-hidden="true" className="h-4 w-4" />
@@ -242,10 +264,17 @@ export function MaintenanceJobView({
                 </Link>
               )}
             </div>
-            {job.description ? (
-              <p className="whitespace-pre-line text-sm text-foreground">{job.description}</p>
+            {description ? (
+              <p className="whitespace-pre-line text-sm text-foreground">{description}</p>
             ) : (
               <p className="text-sm text-muted">{d.noDescription}</p>
+            )}
+            {descriptionTranslation && canManageTranslations && (
+              <TranslationPanel
+                key={descriptionTranslation.id + descriptionTranslation.updated_at}
+                row={descriptionTranslation}
+                canManage
+              />
             )}
           </div>
 

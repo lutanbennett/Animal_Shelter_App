@@ -1424,6 +1424,30 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   signed-in roles only) adds the record's label and path so the queue
   page is one query.
 
+  **Maintenance jobs too (0057, same day).** The user's first question on
+  seeing it: does this cover tasks? A job's title and description are
+  instructions to the (mostly Thai-speaking) staff, written mostly in
+  English by management, so of all the internal text they are the ones
+  that must read in the reader's language. `maintenance.title` and
+  `.description` joined `translatable_fields` with the queueing
+  triggers attached; the board shows an approved title translation in
+  the reader's language and the job page does the same for both fields,
+  with the panel for managers. That broke the 'public' / 'internal'
+  tier naming (an internal field, manager-reviewed), so the tier now
+  names the review path: `reviewed` (a manager writes or approves) or
+  `machine` (a model fills it, shown labelled, unreviewed — reserved).
+  The title is also the Drive folder name (0033), which keeps the English.
+
+  **Zone and enclosure names are a separate job.** The user asked for
+  those next. They are labels, not prose — unique keys, Drive folder
+  path components, the `Lifecycle` / `Hospital` / `Fostered` pseudo-rows
+  are matched *by name* — and they are rendered in 58 places across 35
+  files (pickers, the resident list view, hub cards, the board, the
+  enclosure browser). That is the `name_th` paired-column pattern
+  (`project_folders.name_th`, `residents.thai_name`) plus a display
+  helper applied everywhere, not a config row here, and it is its own
+  backlog item rather than a bolt-on to this one.
+
   **Not done, by choice.** No machine translation (backlog: Workers AI
   on the same Cloudflare account — the app already deploys there via
   OpenNext, so a cron Worker with the `AI` binding fills `text` with

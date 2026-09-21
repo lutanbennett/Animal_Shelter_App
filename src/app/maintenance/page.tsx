@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { loadEnclosureOptions } from "@/lib/enclosures/options";
 import { canWriteMaintenance, loadMaintenanceJobs } from "@/lib/maintenance/queries";
+import { loadTranslations } from "@/lib/translations/queries";
 import { MaintenanceBoard } from "./MaintenanceBoard";
 
 /**
@@ -20,6 +21,20 @@ export default async function MaintenancePage(props: PageProps<"/maintenance">) 
     loadMaintenanceJobs(supabase),
     loadEnclosureOptions(supabase),
   ]);
+
+  // Approved title translations, so a Thai reader's board reads in Thai
+  // (0057). Only the title is on a card; the description is on the job.
+  const titleTranslations = await loadTranslations(
+    supabase,
+    "maintenance",
+    jobs.map((job) => job.id),
+  );
+  const titles: Record<string, { lang: "en" | "th"; text: string }> = {};
+  for (const row of titleTranslations.values()) {
+    if (row.column_name === "title" && row.status === "approved" && row.text) {
+      titles[row.row_id] = { lang: row.target_lang, text: row.text };
+    }
+  }
 
   const param = (key: string) => {
     const value = searchParams[key];
@@ -44,6 +59,7 @@ export default async function MaintenancePage(props: PageProps<"/maintenance">) 
 
       <MaintenanceBoard
         jobs={jobs}
+        titles={titles}
         zones={options.zones}
         enclosures={options.enclosures}
         canWrite={canWriteMaintenance(role)}

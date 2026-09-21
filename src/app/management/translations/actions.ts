@@ -20,8 +20,11 @@ function revalidateFor(row: TranslationRow, recordPathHint?: string | null) {
       ? `/residents/${row.row_id}`
       : row.table_name === "project_folders"
         ? `/projects/${row.row_id}`
-        : null;
+        : row.table_name === "maintenance"
+          ? `/maintenance/${row.row_id}`
+          : null;
   if (own) revalidatePath(own);
+  if (row.table_name === "maintenance") revalidatePath("/maintenance");
   if (recordPathHint && recordPathHint !== own) revalidatePath(recordPathHint);
   revalidatePath("/");
   revalidatePath("/adopt");
