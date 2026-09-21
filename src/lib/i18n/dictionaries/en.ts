@@ -420,6 +420,15 @@ const en = {
     errors: {
       managementAccessRequired: "Management access is required.",
     },
+    forecastWindow: {
+      from: "From",
+      to: "To",
+      show: "Show window",
+      clear: "Clear",
+      hint: "Add a column for any period up to a year — e.g. next month's order, or a fundraising appeal's quarter.",
+      invalid: "Enter a From and To date, To on or after From, no more than a year apart.",
+      heading: (from: string, to: string) => `${from} – ${to}`,
+    },
     dashboard: {
       title: "Management dashboard",
       subtitle:

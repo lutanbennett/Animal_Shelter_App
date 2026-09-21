@@ -12,7 +12,7 @@ export type MedicationRow = {
   /** Every prescription ever written for it — any at all blocks delete. */
   prescription_count: number;
   /**
-   * One entry per forecast window (same order as the table's forecastDays):
+   * One entry per forecast window (same order as the table's forecastHeadings):
    * living, non-adopted residents with a dose due, whole doses due, and the
    * quantity in dose_unit (0044 medication_forecast).
    */
@@ -290,11 +290,11 @@ function MedicationRowItem({
 
 export function MedicationsTable({
   medications,
-  forecastDays,
+  forecastHeadings,
 }: {
   medications: MedicationRow[];
-  /** Window lengths in days, one per forecast column. */
-  forecastDays: number[];
+  /** One column heading per forecast window, in the order the rows' forecast arrays use. */
+  forecastHeadings: string[];
 }) {
   const { t } = useI18n();
   const m = t.management.medications;
@@ -306,9 +306,9 @@ export function MedicationsTable({
           <tr>
             <th className="px-4 py-2 font-medium">{m.table.name}</th>
             <th className="px-4 py-2 font-medium">{m.table.unit}</th>
-            {forecastDays.map((days) => (
-              <th key={days} className="px-4 py-2 font-medium">
-                {m.table.forecastHeading(days)}
+            {forecastHeadings.map((heading) => (
+              <th key={heading} className="px-4 py-2 font-medium">
+                {heading}
               </th>
             ))}
             <th className="px-4 py-2 font-medium">{m.table.prescriptions}</th>
@@ -329,7 +329,7 @@ export function MedicationsTable({
           {medications.length === 0 && (
             <tr>
               <td
-                colSpan={4 + forecastDays.length}
+                colSpan={4 + forecastHeadings.length}
                 className="px-4 py-6 text-center text-muted"
               >
                 {m.table.noMedications}

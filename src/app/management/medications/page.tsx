@@ -6,6 +6,9 @@ import { CreateMedicationForm } from "./CreateMedicationForm";
 import { MedicationsTable, type MedicationRow } from "./MedicationsTable";
 import { CreateFrequencyForm } from "./CreateFrequencyForm";
 import { FrequenciesTable, type FrequencyRow } from "./FrequenciesTable";
+import { ForecastWindowPicker } from "@/components/ForecastWindowPicker";
+import { formatDate } from "@/lib/format";
+import { forecastWindows, parseCustomWindow } from "@/lib/management/forecast-window";
 
 type ForecastRow = {
   medication_id: string;
@@ -15,21 +18,17 @@ type ForecastRow = {
   quantity: number | string | null;
 };
 
-/** The forecast windows the table shows, in days from today inclusive. */
-const FORECAST_DAYS = [7, 30] as const;
-
-function isoDatePlus(days: number) {
-  const d = new Date();
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
-export default async function MedicationsAdminPage() {
+export default async function MedicationsAdminPage(props: PageProps<"/management/medications">) {
   await requireManagementUser();
-  const { t } = await getT();
+  const { t, locale } = await getT();
+  const searchParams = await props.searchParams;
+
+  // The fixed 7 / 30-day columns, plus a custom From/To window from the
+  // picker when the query string carries one.
+  const custom = parseCustomWindow(searchParams);
+  const windows = forecastWindows(custom && "window" in custom ? custom.window : null);
 
   const supabase = await createClient();
-  const today = isoDatePlus(0);
   const [medicationsResult, frequenciesResult, prescriptionsResult, ...forecastResults] =
     await Promise.all([
       supabase
@@ -49,10 +48,10 @@ export default async function MedicationsAdminPage() {
         .returns<{ medication_id: string; frequency_id: string | null }[]>(),
       // Whole doses due in each window, from each prescription's own start
       // date (0044) — a weekly tablet is counted on the days it falls.
-      ...FORECAST_DAYS.map(async (days) => {
+      ...windows.map(async (window) => {
         const { data, error } = await supabase.rpc("medication_forecast", {
-          p_from: today,
-          p_to: isoDatePlus(days - 1),
+          p_from: window.from,
+          p_to: window.to,
         });
         return { data: (data ?? null) as ForecastRow[] | null, error };
       }),
@@ -99,6 +98,14 @@ export default async function MedicationsAdminPage() {
 
   const m = t.management.medications;
   const forecastError = forecastResults.find((r) => r.error)?.error;
+  const forecastHeadings = windows.map((window) =>
+    window.days != null
+      ? m.table.forecastHeading(window.days)
+      : t.management.forecastWindow.heading(
+          formatDate(window.from, locale),
+          formatDate(window.to, locale),
+        ),
+  );
 
   return (
     <main className="flex flex-1 flex-col gap-8 p-6">
@@ -125,7 +132,12 @@ export default async function MedicationsAdminPage() {
 
       <section className="flex flex-col gap-4">
         <CreateMedicationForm />
-        <MedicationsTable medications={medications} forecastDays={[...FORECAST_DAYS]} />
+        <ForecastWindowPicker
+          from={custom && "window" in custom ? custom.window.from : ""}
+          to={custom && "window" in custom ? custom.window.to : ""}
+          invalid={custom != null && "invalid" in custom}
+        />
+        <MedicationsTable medications={medications} forecastHeadings={forecastHeadings} />
         <p className="text-xs text-muted">{m.table.forecastNote}</p>
       </section>
 
