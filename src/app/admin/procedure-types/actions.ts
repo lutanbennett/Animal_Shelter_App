@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { refresh, revalidatePath } from "next/cache";
 import { assertAdminRole } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -16,6 +16,10 @@ function revalidateProcedureTypePages() {
   // read this table too.
   revalidatePath("/procedures/new");
   revalidatePath("/residents", "layout");
+  // revalidatePath alone leaves the client router showing the row it had
+  // when the action was called from a button (a <form action> refreshes
+  // on its own); refresh() re-renders the page the caller is on.
+  refresh();
 }
 
 async function countProcedures(id: string) {
