@@ -6,18 +6,24 @@ import { loadTranslations } from "@/lib/translations/queries";
 import { MaintenanceBoard } from "./MaintenanceBoard";
 
 /**
- * /maintenance[?zone=…&enclosure=…&completed=all] — every job, as a
- * Kanban board on a desktop and a status-filtered list on a phone. All
- * jobs are loaded and filtered in the browser: the shelter's open job
- * count is dozens, not thousands, and it keeps the filters instant.
+ * /maintenance[?zone=…&enclosure=…&completed=all&assignee=me|all] — every
+ * job, as a Kanban board on a desktop and a status-filtered list on a
+ * phone. All jobs are loaded and filtered in the browser: the shelter's
+ * open job count is dozens, not thousands, and it keeps the filters
+ * instant.
+ *
+ * Staff and volunteers open on their own jobs ("what do I need to work
+ * on"), management and admin on everyone's; a link that names a zone or
+ * enclosure shows everything there. `assignee=` overrides either way.
  */
 export default async function MaintenancePage(props: PageProps<"/maintenance">) {
   const searchParams = await props.searchParams;
   const { t } = await getT();
   const supabase = await createClient();
 
-  const [{ data: role }, { jobs, error }, options] = await Promise.all([
+  const [{ data: role }, { data: auth }, { jobs, error }, options] = await Promise.all([
     supabase.rpc("current_user_role"),
+    supabase.auth.getUser(),
     loadMaintenanceJobs(supabase),
     loadEnclosureOptions(supabase),
   ]);
@@ -40,6 +46,13 @@ export default async function MaintenancePage(props: PageProps<"/maintenance">) 
     const value = searchParams[key];
     return typeof value === "string" && value ? value : null;
   };
+  const assignee = param("assignee");
+  const mine =
+    assignee === "me" ||
+    (assignee !== "all" &&
+      !param("zone") &&
+      !param("enclosure") &&
+      (role === "staff" || role === "volunteer"));
 
   return (
     // min-w-0: the phone layout's status chips scroll sideways inside their
@@ -63,10 +76,12 @@ export default async function MaintenancePage(props: PageProps<"/maintenance">) 
         zones={options.zones}
         enclosures={options.enclosures}
         canWrite={canWriteMaintenance(role)}
+        currentUserId={auth.user?.id ?? null}
         initialFilters={{
           zoneId: param("zone"),
           enclosureId: param("enclosure"),
           allCompleted: param("completed") === "all",
+          mine,
         }}
       />
     </main>

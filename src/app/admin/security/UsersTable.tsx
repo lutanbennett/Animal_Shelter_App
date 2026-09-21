@@ -1,7 +1,13 @@
 "use client";
 
 import { Fragment, useState, useTransition } from "react";
-import { deleteUser, issueTemporaryPassword, updateUserRole } from "./actions";
+import {
+  archiveUser,
+  deleteUser,
+  issueTemporaryPassword,
+  restoreUser,
+  updateUserRole,
+} from "./actions";
 import { TemporaryPasswordNotice } from "@/components/TemporaryPasswordNotice";
 import { formatDateTime as formatDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -11,6 +17,8 @@ export type SecurityUser = {
   id: string;
   email: string;
   role: string | null;
+  /** Set when they've left (0063): no access, kept for past work. */
+  archivedAt: string | null;
   createdAt: string;
   lastSignInAt: string | null;
   /** On a temporary password — must choose their own at the next password sign-in. */
@@ -33,6 +41,7 @@ function UserRow({
     { type: "error" | "success"; text: string } | null
   >(null);
   const [isPending, startTransition] = useTransition();
+  const archived = !!user.archivedAt;
 
   function handleRoleChange(nextRole: string) {
     const previous = role;
@@ -75,6 +84,37 @@ function UserRow({
     });
   }
 
+  function handleArchive() {
+    if (!window.confirm(t.admin.security.table.archiveConfirm(user.email))) return;
+    setMessage(null);
+    startTransition(async () => {
+      try {
+        await archiveUser(user.id);
+      } catch (err) {
+        setMessage({
+          type: "error",
+          text:
+            err instanceof Error ? err.message : t.admin.security.table.failedToArchiveUser,
+        });
+      }
+    });
+  }
+
+  function handleRestore() {
+    setMessage(null);
+    startTransition(async () => {
+      try {
+        await restoreUser(user.id);
+      } catch (err) {
+        setMessage({
+          type: "error",
+          text:
+            err instanceof Error ? err.message : t.admin.security.table.failedToRestoreUser,
+        });
+      }
+    });
+  }
+
   function handleDelete() {
     if (!window.confirm(t.admin.security.table.deleteConfirm(user.email))) return;
     setMessage(null);
@@ -95,9 +135,17 @@ function UserRow({
 
   return (
     <Fragment>
-      <tr className="align-top hover:bg-surface-hover">
-        <td className="px-4 py-2 text-foreground">
+      <tr className={`align-top hover:bg-surface-hover ${archived ? "text-muted" : ""}`}>
+        <td className={`px-4 py-2 ${archived ? "text-muted" : "text-foreground"}`}>
           {user.email}
+          {archived && (
+            <span
+              className="ml-2 rounded-full bg-surface-hover px-2 py-0.5 text-xs text-muted"
+              title={formatDate(user.archivedAt, locale)}
+            >
+              {t.admin.security.table.archived}
+            </span>
+          )}
           {isSelf && (
             <span className="ml-2 text-xs text-muted">
               {t.admin.security.table.you}
@@ -118,7 +166,7 @@ function UserRow({
         <td className="px-4 py-2">
           <select
             value={role}
-            disabled={isPending || isSelf}
+            disabled={isPending || isSelf || archived}
             onChange={(e) => handleRoleChange(e.target.value)}
             className="rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary disabled:opacity-50"
           >
@@ -133,7 +181,7 @@ function UserRow({
           </select>
         </td>
         <td className="px-4 py-2">
-          {!isSelf && (
+          {!isSelf && !archived && (
             <button
               type="button"
               disabled={isPending}
@@ -146,14 +194,35 @@ function UserRow({
         </td>
         <td className="px-4 py-2">
           {!isSelf && (
-            <button
-              type="button"
-              disabled={isPending}
-              onClick={handleDelete}
-              className="rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
-            >
-              {t.common.delete}
-            </button>
+            <div className="flex flex-wrap gap-2">
+              {archived ? (
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={handleRestore}
+                  className="rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
+                >
+                  {t.admin.security.table.restore}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={handleArchive}
+                  className="rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
+                >
+                  {t.admin.security.table.archive}
+                </button>
+              )}
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={handleDelete}
+                className="rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
+              >
+                {t.common.delete}
+              </button>
+            </div>
           )}
         </td>
       </tr>

@@ -31,6 +31,8 @@ type Filters = {
   zoneId: string | null;
   enclosureId: string | null;
   allCompleted: boolean;
+  /** Only jobs the signed-in person is on the team of. */
+  mine: boolean;
 };
 
 /**
@@ -52,9 +54,12 @@ export function MaintenanceBoard({
   zones,
   enclosures,
   canWrite,
+  currentUserId,
   initialFilters,
 }: {
   jobs: MaintenanceJob[];
+  /** For the "my jobs" filter: who is looking. */
+  currentUserId: string | null;
   /** Approved title translations by job id (0057); a card shows the reader's language. */
   titles: Record<string, { lang: "en" | "th"; text: string }>;
   zones: ZoneOption[];
@@ -97,6 +102,7 @@ export function MaintenanceBoard({
     if (filters.zoneId) params.set("zone", filters.zoneId);
     if (filters.enclosureId) params.set("enclosure", filters.enclosureId);
     if (filters.allCompleted) params.set("completed", "all");
+    params.set("assignee", filters.mine ? "me" : "all");
     const search = params.toString();
     window.history.replaceState(null, "", search ? `?${search}` : window.location.pathname);
   }, [filters]);
@@ -115,6 +121,7 @@ export function MaintenanceBoard({
   const visible = useMemo(
     () =>
       rows.filter((job) => {
+        if (filters.mine && !job.assignees.some((a) => a.user_id === currentUserId)) return false;
         if (filters.zoneId && job.zone_id !== filters.zoneId) return false;
         if (filters.enclosureId && job.enclosure_id !== filters.enclosureId) return false;
         if (
@@ -126,7 +133,7 @@ export function MaintenanceBoard({
         }
         return true;
       }),
-    [rows, filters, recentCutoff],
+    [rows, filters, recentCutoff, currentUserId],
   );
 
   const byStatus = useMemo(() => {
@@ -207,6 +214,31 @@ export function MaintenanceBoard({
             ))}
           </select>
         </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-muted">{m.filters.assignee}</span>
+          <div
+            role="radiogroup"
+            aria-label={m.filters.assignee}
+            className="flex gap-1 rounded border border-border bg-background p-0.5"
+          >
+            {([true, false] as const).map((mine) => (
+              <button
+                key={String(mine)}
+                type="button"
+                role="radio"
+                aria-checked={filters.mine === mine}
+                onClick={() => setFilters((f) => ({ ...f, mine }))}
+                className={`rounded px-3 py-1.5 text-sm font-medium transition ${
+                  filters.mine === mine
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                {mine ? m.filters.myJobs : m.filters.everyonesJobs}
+              </button>
+            ))}
+          </div>
+        </div>
         <label className="flex items-center gap-2 py-2 text-sm text-foreground">
           <input
             type="checkbox"
@@ -218,7 +250,9 @@ export function MaintenanceBoard({
         {filtered && (
           <button
             type="button"
-            onClick={() => setFilters({ zoneId: null, enclosureId: null, allCompleted: false })}
+            onClick={() =>
+              setFilters((f) => ({ ...f, zoneId: null, enclosureId: null, allCompleted: false }))
+            }
             className="py-2 text-left text-sm text-muted hover:text-foreground"
           >
             {m.filters.clear}
@@ -259,9 +293,18 @@ export function MaintenanceBoard({
           {m.empty}
         </p>
       ) : visible.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted">
-          {m.emptyFiltered}
-        </p>
+        <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted">
+          <p>{filters.mine ? m.emptyMine : m.emptyFiltered}</p>
+          {filters.mine && (
+            <button
+              type="button"
+              onClick={() => setFilters((f) => ({ ...f, mine: false }))}
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              {m.filters.everyonesJobs}
+            </button>
+          )}
+        </div>
       ) : (
         <>
           {/* Desktop: Kanban */}
@@ -312,6 +355,13 @@ export function MaintenanceBoard({
       )}
     </div>
   );
+}
+
+/** "Ann, Bo" on a card, or "Ann +2" once a team gets long; the title has everyone. */
+function teamLabel(assignees: MaintenanceJob["assignees"]): string {
+  const names = assignees.map((a) => a.name);
+  if (names.length <= 2) return names.join(", ");
+  return `${names[0]} +${names.length - 1}`;
 }
 
 function Chip({
@@ -469,10 +519,13 @@ function JobCard({
           </span>
         )}
         {job.estimated_cost != null && <span>{formatBaht(job.estimated_cost, locale)}</span>}
-        {job.assignee_name && (
-          <span className="flex items-center gap-1">
+        {job.assignees.length > 0 && (
+          <span
+            className="flex items-center gap-1"
+            title={job.assignees.map((a) => a.name).join(", ")}
+          >
             <UserRound aria-hidden="true" className="h-3 w-3" />
-            {job.assignee_name}
+            {teamLabel(job.assignees)}
           </span>
         )}
         {photos > 0 && (

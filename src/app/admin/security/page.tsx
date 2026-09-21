@@ -14,11 +14,14 @@ export default async function SecurityPage() {
 
   const [authUsersResult, rolesResult] = await Promise.all([
     admin.auth.admin.listUsers({ perPage: 200 }),
-    admin.from("user_roles").select("user_id, role"),
+    admin.from("user_roles").select("user_id, role, archived_at"),
   ]);
 
   const roleByUserId = new Map(
-    (rolesResult.data ?? []).map((r) => [r.user_id, r.role as string]),
+    (rolesResult.data ?? []).map((r) => [
+      r.user_id,
+      { role: r.role as string, archivedAt: (r.archived_at as string | null) ?? null },
+    ]),
   );
 
   const authUsers = authUsersResult.data?.users ?? [];
@@ -45,12 +48,17 @@ export default async function SecurityPage() {
     .map((u) => ({
       id: u.id,
       email: u.email ?? "(no email)",
-      role: roleByUserId.get(u.id) ?? null,
+      role: roleByUserId.get(u.id)?.role ?? null,
+      archivedAt: roleByUserId.get(u.id)?.archivedAt ?? null,
       createdAt: u.created_at,
       lastSignInAt: u.last_sign_in_at ?? null,
       mustChangePassword: mustChangePassword(u),
     }))
-    .sort((a, b) => a.email.localeCompare(b.email));
+    // People who have left (0063) sit under the current team.
+    .sort(
+      (a, b) =>
+        Number(!!a.archivedAt) - Number(!!b.archivedAt) || a.email.localeCompare(b.email),
+    );
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">

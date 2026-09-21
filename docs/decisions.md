@@ -1544,3 +1544,38 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   there is a session, and the sidebar has a "Public website" link. A
   route group with its own layout would be the textbook answer; the gate
   is a dozen lines and avoids moving every app route.
+
+- **Maintenance teams and archived logins (2026-09-21):** two calls from
+  the first staff walk-through. **A job's assignee is a set, not a
+  column** — `maintenance_assignees` (0063) replaces
+  `maintenance.assigned_user_id` because "fixing a fence might take
+  three people"; the form ticks people, the actions diff the set rather
+  than wipe-and-rewrite, and a card reads "Ann, Bo" or "Ann +2" with the
+  full team in the tooltip. Staff and volunteers open the board on their
+  own jobs (management and admin on everyone's), because the board's job
+  for them is "what do I work on next" — but a link that names a zone or
+  enclosure shows everything there, since that link means "what's wrong
+  with this kennel". **People who leave are archived, not deleted** —
+  `user_roles.archived_at`. Deleting the auth user would clear their
+  name from every job they did (the FK is `on delete set null` / cascade)
+  and lose who-did-what; archiving keeps the row and the history while
+  `current_user_role()` returns null for them, which is the one check
+  every RLS policy, page guard and the Google sign-in callback already
+  make, so an archived person is shut out everywhere without a second
+  flag to test. The assignee picker filters on it; a job they were on
+  shows "(no longer here)" and keeps them ticked in the edit form so they
+  can be taken off. Delete stays for accounts made by mistake.
+
+- **The enclosure browser shows housing, not history (2026-09-21):** the
+  Lifecycle pseudo-zone used to render as a fourth group with all five
+  buckets. Hospital, Unassigned and Fostered are places a resident can be
+  while still the shelter's responsibility, so they stay — pinned at the
+  top as plain cards, no zone heading, in that order. Adopted and
+  Deceased are outcomes, not housing, and are off the browser (the
+  residents list still filters on them). The card corner that said the
+  zone name now says the open maintenance count: the zone is already the
+  section heading, and "what needs fixing here" is what staff want at a
+  glance; zone-wide jobs go next to the zone heading as a link to the
+  filtered board. Same reasoning for the residents list: a resident in
+  hospital showed "Lifecycle · Internal" in the Zone and Location
+  columns, which is the Status column's job, so both are blank there.

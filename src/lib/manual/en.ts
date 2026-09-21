@@ -545,7 +545,7 @@ const manual: Manual = {
           steps: [
             "Give the job a title, e.g. \"Gate latch broken\", and describe what needs doing.",
             "Choose where: pick the zone and enclosure, or tick Zone-wide for something like a fence line or drainage.",
-            "Set the status, a due date and an estimated cost in baht if known, and who it's assigned to — anyone with a login who does the work (staff, volunteers, management).",
+            "Set the status, a due date and an estimated cost in baht if known, and tick everyone it's assigned to — anyone with a login who does the work (staff, volunteers, management). A big job can go to a team.",
             "Add photos of the problem as it is now. They upload when you save.",
             "Tap Save job.",
           ],
@@ -560,9 +560,9 @@ const manual: Manual = {
           roles: ["admin", "management", "staff"],
           path: "Maintenance",
           steps: [
-            "Filter the board by zone or enclosure. Completed jobs from the last 30 days are shown; tick Show all completed jobs for older ones.",
+            "Staff and volunteers open on the jobs assigned to them; switch Assigned to from Me to Everyone to see the whole board (management and admin start there). Filter by zone or enclosure. Completed jobs from the last 30 days are shown; tick Show all completed jobs for older ones.",
             "Drag a job card to another column to change its status. Cards are coloured when a job is overdue, due soon, or blocked.",
-            "Tap a card to open the job: edit its details, record the actual cost, and add Before and After photos. The person it's assigned to is shown under the title and on the card.",
+            "Tap a card to open the job: edit its details, record the actual cost, and add Before and After photos. Who it's assigned to is shown under the title and on the card.",
             "A job logged by mistake can be deleted from its page (Delete job, bottom right). Its photos and Drive folder go with it and it can't be undone — for a job that was real but is finished, mark it Completed instead.",
           ],
           screenshot: {
@@ -777,7 +777,8 @@ const manual: Manual = {
           steps: [
             "Create a user with an email and a role. A temporary password is generated and shown once — copy it and pass it on (LINE is fine; it only works until they've signed in). The first time they sign in with it they must choose their own password before anything else opens. Someone who will only use Google sign-in can ignore the temporary password.",
             "Someone signing in with Google for the first time is turned away with \"hasn't been given access yet\" and appears under Access requests at the top of the page. Choose a role and tap Approve, then ask them to try again — or Deny to remove the account. If their Google email matches a login you created, the two are linked automatically.",
-            "Change a role from the dropdown in the table, or delete an account. Issue temporary password does what it says — their old password stops working and they choose a new one at their next sign-in. You can't change your own role, reset your own password here or delete yourself; change your own password from Change password in the menu.",
+            "Change a role from the dropdown in the table. Issue temporary password does what it says — their old password stops working and they choose a new one at their next sign-in. You can't change your own role, reset your own password here or delete yourself; change your own password from Change password in the menu.",
+            "When someone leaves, Archive them rather than delete: they can no longer sign in, they disappear from the maintenance Assigned to list, and their name stays on the jobs they did. Archived accounts sit at the bottom of the table with Restore beside them. Delete is for accounts made by mistake — it removes them from past jobs too.",
           ],
           screenshot: {
             src: "/manual/admin-security.png",

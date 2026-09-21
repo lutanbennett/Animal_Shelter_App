@@ -40,6 +40,45 @@ function revalidateJob(jobId: string, enclosureId: string | null) {
   if (enclosureId) revalidatePath(`/enclosures/${enclosureId}`);
 }
 
+/**
+ * Makes the job's team exactly `userIds` (0063): the rows that aren't in
+ * the list go, the ones missing are added. Two statements rather than a
+ * wipe-and-rewrite so an unchanged member keeps their created_at.
+ */
+async function setAssignees(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  jobId: string,
+  userIds: string[],
+): Promise<string | null> {
+  const { data: current, error: readError } = await supabase
+    .from("maintenance_assignees")
+    .select("user_id")
+    .eq("maintenance_id", jobId)
+    .returns<{ user_id: string }[]>();
+  if (readError) return readError.message;
+
+  const have = new Set((current ?? []).map((r) => r.user_id));
+  const want = new Set(userIds);
+  const remove = [...have].filter((id) => !want.has(id));
+  const add = [...want].filter((id) => !have.has(id));
+
+  if (remove.length > 0) {
+    const { error } = await supabase
+      .from("maintenance_assignees")
+      .delete()
+      .eq("maintenance_id", jobId)
+      .in("user_id", remove);
+    if (error) return error.message;
+  }
+  if (add.length > 0) {
+    const { error } = await supabase
+      .from("maintenance_assignees")
+      .insert(add.map((user_id) => ({ maintenance_id: jobId, user_id })));
+    if (error) return error.message;
+  }
+  return null;
+}
+
 type ParsedFields = {
   title: string;
   description: string | null;
@@ -49,7 +88,8 @@ type ParsedFields = {
   due_date: string | null;
   estimated_cost: number | null;
   actual_cost: number | null;
-  assigned_user_id: string | null;
+  /** The team (0063): distinct login ids, possibly none. */
+  assignee_ids: string[];
 };
 
 async function parseFields(
@@ -91,8 +131,14 @@ async function parseFields(
       due_date,
       estimated_cost,
       actual_cost,
-      // A login (0055); the FK to auth.users is the only check needed.
-      assigned_user_id: str(formData, "assignedUserId"),
+      // Logins (0063); the FK to auth.users is the only check needed.
+      assignee_ids: [
+        ...new Set(
+          formData
+            .getAll("assigneeIds")
+            .filter((v): v is string => typeof v === "string" && v.trim().length > 0),
+        ),
+      ],
     },
   };
 }
@@ -124,7 +170,6 @@ export async function createMaintenanceJob(
       due_date: fields.due_date,
       estimated_cost: fields.estimated_cost,
       actual_cost: fields.actual_cost,
-      assigned_user_id: fields.assigned_user_id,
     })
     .select("id")
     .limit(1)
@@ -136,6 +181,9 @@ export async function createMaintenanceJob(
     const { t } = await getT();
     return { error: t.maintenance.errors.saveFailed };
   }
+
+  const teamError = await setAssignees(supabase, row.id, fields.assignee_ids);
+  if (teamError) return { error: teamError };
 
   revalidateJob(row.id, fields.enclosure_id);
   return { success: true, jobId: row.id, driveWarning: null };
@@ -176,7 +224,6 @@ export async function updateMaintenanceJob(
       due_date: fields.due_date,
       estimated_cost: fields.estimated_cost,
       actual_cost: fields.actual_cost,
-      assigned_user_id: fields.assigned_user_id,
     })
     .eq("id", jobId)
     .select("id")
@@ -186,6 +233,9 @@ export async function updateMaintenanceJob(
   // RLS filters rather than rejects, so a volunteer (or a stale id) shows
   // up as "nothing updated".
   if (!data || data.length === 0) return { error: t.maintenance.errors.notAuthorized };
+
+  const teamError = await setAssignees(supabase, jobId, fields.assignee_ids);
+  if (teamError) return { error: teamError };
 
   const driveWarning = await syncJobFolderAfterChange(supabase, jobId);
 

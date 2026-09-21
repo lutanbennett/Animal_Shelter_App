@@ -55,7 +55,9 @@ function FolderCard({ folder }: { folder: ProjectFolder }) {
       href={`/projects/${folder.id}`}
       className="group flex flex-col overflow-hidden rounded-lg border border-border bg-surface transition hover:bg-surface-hover"
     >
-      <div className="relative aspect-[4/3] w-full bg-surface-hover">
+      {/* A short 16:9 strip rather than a 4:3 tile: the thumbnail is a
+          cue, not the content, and six folders should fit a desktop row. */}
+      <div className="relative aspect-video w-full bg-surface-hover">
         {thumb ? (
           <img
             src={driveImageUrl(thumb)}
@@ -65,28 +67,28 @@ function FolderCard({ folder }: { folder: ProjectFolder }) {
           />
         ) : (
           <span className="flex h-full w-full items-center justify-center text-muted">
-            <Folder aria-hidden="true" className="h-12 w-12 opacity-50" />
+            <Folder aria-hidden="true" className="h-8 w-8 opacity-50" />
           </span>
         )}
         {folder.is_public && (
-          <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-success/90 px-2 py-0.5 text-xs font-medium text-white">
+          <span className="absolute left-1.5 top-1.5 flex items-center gap-1 rounded-full bg-success/90 px-1.5 py-0.5 text-[10px] font-medium text-white">
             <Globe aria-hidden="true" className="h-3 w-3" />
             {f.publicBadge}
           </span>
         )}
       </div>
-      <div className="flex flex-col gap-1 p-3">
-        <span className="truncate font-medium text-foreground" title={folder.name}>
+      <div className="flex flex-col gap-0.5 p-2">
+        <span className="truncate text-sm font-medium text-foreground" title={folder.name}>
           {folderDisplayName(folder, locale, t)}
         </span>
-        <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted">
-          <span className="flex items-center gap-1">
-            <Folder aria-hidden="true" className="h-3.5 w-3.5" />
-            {f.subfolders(folder.child_count)}
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted">
+          <span className="flex items-center gap-1" title={f.subfolders(folder.child_count)}>
+            <Folder aria-hidden="true" className="h-3 w-3" />
+            {folder.child_count}
           </span>
-          <span className="flex items-center gap-1">
-            <ImageIcon aria-hidden="true" className="h-3.5 w-3.5" />
-            {f.photos(folder.photo_count)}
+          <span className="flex items-center gap-1" title={f.photos(folder.photo_count)}>
+            <ImageIcon aria-hidden="true" className="h-3 w-3" />
+            {folder.photo_count}
           </span>
           {!isCategory && folder.project_date && (
             <span>{formatDate(folder.project_date, locale)}</span>
@@ -114,9 +116,9 @@ export function NewFolderCard({ parentId }: { parentId: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex min-h-40 flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-surface p-4 text-sm font-medium text-muted transition hover:border-primary hover:text-primary"
+        className="flex min-h-28 flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-border bg-surface p-3 text-sm font-medium text-muted transition hover:border-primary hover:text-primary"
       >
-        <FolderPlus aria-hidden="true" className="h-8 w-8" />
+        <FolderPlus aria-hidden="true" className="h-6 w-6" />
         {f.newFolder}
       </button>
     );
@@ -244,7 +246,7 @@ export function FolderGrid({
           {empty}
         </p>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {sorted.map((folder) => (
             <FolderCard key={folder.id} folder={folder} />
           ))}

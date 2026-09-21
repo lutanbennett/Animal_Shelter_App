@@ -239,6 +239,13 @@ const th: Dictionary = {
         failedToUpdateRole: "อัปเดตสิทธิ์ไม่สำเร็จ",
         failedToResetPassword: "ตั้งรหัสผ่านใหม่ไม่สำเร็จ",
         failedToDeleteUser: "ลบผู้ใช้ไม่สำเร็จ",
+        archived: "เก็บถาวร",
+        archive: "เก็บถาวร",
+        restore: "กู้คืน",
+        archiveConfirm: (email: string) =>
+          `เก็บถาวร ${email}? ผู้ใช้จะเข้าสู่ระบบไม่ได้และจะไม่ปรากฏในรายชื่อผู้รับผิดชอบงานซ่อมบำรุงใหม่ แต่ชื่อยังคงอยู่ในงานเดิม กู้คืนได้ภายหลัง`,
+        failedToArchiveUser: "เก็บถาวรผู้ใช้ไม่สำเร็จ",
+        failedToRestoreUser: "กู้คืนผู้ใช้ไม่สำเร็จ",
       },
       errors: {
         emailRequired: "กรุณากรอกอีเมล",
@@ -247,6 +254,7 @@ const th: Dictionary = {
         invalidRole: "สิทธิ์ไม่ถูกต้อง",
         cantChangeOwnRole: "คุณไม่สามารถเปลี่ยนสิทธิ์ของตัวเองได้",
         cantDeleteOwnAccount: "คุณไม่สามารถลบบัญชีของตัวเองได้",
+        cantArchiveOwnAccount: "คุณไม่สามารถเก็บถาวรบัญชีของตัวเองได้",
         cantResetOwnPassword: "เปลี่ยนรหัสผ่านของคุณเองได้จากหน้าเปลี่ยนรหัสผ่าน",
         adminAccessRequired: "ต้องมีสิทธิ์ผู้ดูแลระบบ",
       },
@@ -947,6 +955,7 @@ const th: Dictionary = {
       noContact: "ยังไม่มีข้อมูลติดต่อ",
       showing: "แสดงช่วง",
       periods: {
+        1: "1 เดือน",
         3: "3 เดือน",
         6: "6 เดือน",
         12: "12 เดือน",
@@ -957,6 +966,10 @@ const th: Dictionary = {
       visitsDetailCancelled: (period: string, cancelled: number) =>
         `${period} · ยกเลิก ${cancelled} รายการ ไม่นับรวม`,
       residentsSeen: "สัตว์ที่เข้าพบ",
+      residentsSeenDetail: (repeatVisits: number) =>
+        repeatVisits === 0
+          ? "นับสัตว์แต่ละตัวครั้งเดียว · เข้าพบตัวละครั้ง"
+          : `นับสัตว์แต่ละตัวครั้งเดียว · เข้าพบซ้ำ ${repeatVisits} ครั้ง`,
       noResidents: "ไม่มีการเข้าพบในช่วงนี้",
       spend: "ค่าใช้จ่าย",
       spendDetail: (period: string, withCost: number, total: number) =>
@@ -977,7 +990,7 @@ const th: Dictionary = {
       linkedDetail: "บันทึกไว้กับการเข้าพบสัตวแพทย์นี้",
       chart: {
         heading: "การเข้าพบต่อเดือน",
-        subheading: (months: number) => `${months} เดือนล่าสุด`,
+        subheading: (months: number) => (months === 1 ? "เดือนนี้" : `${months} เดือนล่าสุด`),
         empty: "ไม่มีการเข้าพบในช่วงนี้",
         visits: (n: number) => `เข้าพบ ${n} ครั้ง`,
         ariaLabel: (months: number) =>
@@ -1902,6 +1915,9 @@ const th: Dictionary = {
     clear: "ล้าง",
     noMatches: "ไม่พบกรงที่ตรงกับตัวกรองนี้",
     enclosuresCount: (n: number) => `${n} กรง`,
+    openJobs: (n: number) => `ค้าง ${n}`,
+    openJobsTitle: (n: number) => (n === 0 ? "ไม่มีงานซ่อมบำรุงค้าง" : `งานซ่อมบำรุงค้าง ${n} งาน`),
+    zoneWideJobs: (n: number) => `งานทั้งโซน ${n} งาน`,
     residentsCount: (n: number) => `สัตว์ ${n} ตัว`,
     occupancy: (count: number, capacity: number) => `${count} / ${capacity}`,
     noCapacity: "ยังไม่ได้กำหนดความจุ",
@@ -1953,12 +1969,16 @@ const th: Dictionary = {
       enclosure: "กรง",
       allEnclosures: "ทุกกรง",
       allOpen: "งานค้างทั้งหมด",
+      assignee: "ผู้รับผิดชอบ",
+      myJobs: "ของฉัน",
+      everyonesJobs: "ทุกคน",
       showAllCompleted: "แสดงงานที่เสร็จแล้วทั้งหมด",
       recentCompletedHint: (days: number) => `แสดงงานที่เสร็จใน ${days} วันล่าสุด`,
       clear: "ล้าง",
     },
     empty: "ยังไม่มีการบันทึกงานซ่อมบำรุง",
     emptyFiltered: "ไม่พบงานที่ตรงกับตัวกรองนี้",
+    emptyMine: "ขณะนี้ยังไม่มีงานที่มอบหมายให้คุณ",
     emptyColumn: "ไม่มีงาน",
     jobsCount: (n: number) => `${n} งาน`,
     estimatedTotal: (amount: string) => `ประมาณ ${amount}`,
@@ -1981,7 +2001,10 @@ const th: Dictionary = {
     },
     form: {
       unassigned: "ยังไม่มีผู้รับผิดชอบ",
-      assignedHint: "ผู้ที่มีบัญชีเข้าใช้งานและเป็นผู้ลงมือทำ — เจ้าหน้าที่ อาสาสมัคร ผู้บริหาร สร้างบัญชีได้ที่ ผู้ดูแลระบบ → ความปลอดภัย",
+      teamCount: (n: number) => `${n} คน`,
+      noAssignees: "ยังไม่มีผู้ให้มอบหมาย — สร้างบัญชีได้ที่ ผู้ดูแลระบบ → ความปลอดภัย",
+      archivedMember: "(ไม่ได้อยู่ที่นี่แล้ว — เอาเครื่องหมายออกเพื่อมอบหมายใหม่)",
+      assignedHint: "เลือกทุกคนที่ลงมือทำ — เจ้าหน้าที่ อาสาสมัคร ผู้บริหาร งานซ่อมรั้วอาจต้องใช้สามคน สร้างบัญชีได้ที่ ผู้ดูแลระบบ → ความปลอดภัย",
       titlePlaceholder: "เช่น กลอนประตูพัง",
       descriptionPlaceholder: "ต้องทำอะไร ลองทำอะไรไปแล้ว ติดต่อใคร…",
       zoneWideToggle: "งานทั้งโซน (ไม่เจาะจงกรง)",
@@ -2026,7 +2049,8 @@ const th: Dictionary = {
       notSet: "ยังไม่ระบุ",
       noDescription: "ไม่มีรายละเอียด",
       fileFallback: "ไฟล์",
-      assignedTo: (name: string) => `มอบหมายให้ ${name}`,
+      assignedTo: (names: string) => `มอบหมายให้ ${names}`,
+      archivedName: (name: string) => `${name} (ไม่ได้อยู่ที่นี่แล้ว)`,
       unassigned: "ยังไม่ได้มอบหมาย",
       deleteJob: "ลบงาน",
       deleting: "กำลังลบ...",
