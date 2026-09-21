@@ -82,7 +82,7 @@ const en = {
       adoptedThisYearDetail: (lastWeek: number) =>
         lastWeek === 1 ? "1 in the last week" : `${lastWeek} in the last week`,
       inVetCare: "In vet care",
-      inVetCareDetail: "Currently in hospital for treatment",
+      inVetCareDetail: "On medication or in hospital right now",
     },
     featured: {
       heading: "Pet of the week",

@@ -32,10 +32,10 @@ type FeaturedResident = {
 
 type GalleryPhoto = { id: string; drive_file_id: string; alt: string };
 
-/** Counts only — public_shelter_stats (0039) is granted to anon. */
+/** Counts only — public_shelter_stats (0039, 0062) is granted to anon. */
 type ShelterStats = {
   in_care: number;
-  in_hospital: number;
+  in_treatment: number;
   adopted_last_7_days: number;
   adopted_this_year: number;
 };
@@ -94,7 +94,7 @@ export default async function WelcomePage() {
       .returns<GalleryPhoto[]>(),
     supabase
       .from("public_shelter_stats")
-      .select("in_care, in_hospital, adopted_last_7_days, adopted_this_year")
+      .select("in_care, in_treatment, adopted_last_7_days, adopted_this_year")
       .limit(1)
       .returns<ShelterStats[]>(),
     // "What we do": the three newest published project stories (0042).
@@ -142,7 +142,7 @@ export default async function WelcomePage() {
           detail: t.home.stats.adoptedThisYearDetail(stats.adopted_last_7_days),
         },
         {
-          value: stats.in_hospital,
+          value: stats.in_treatment,
           label: t.home.stats.inVetCare,
           detail: t.home.stats.inVetCareDetail,
         },
