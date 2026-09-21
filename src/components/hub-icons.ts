@@ -30,6 +30,7 @@ import {
   Undo2,
   Users,
   UserRound,
+  Utensils,
   Weight,
   Wrench,
   type LucideIcon,
@@ -48,6 +49,7 @@ export const SECTION_ICONS = {
   weight: Weight,
   procedures: Scissors,
   "blood-tests": Droplet,
+  diet: Utensils,
 } satisfies Record<string, LucideIcon>;
 
 export type HubSection = keyof typeof SECTION_ICONS;

@@ -259,6 +259,7 @@ export function renderResidentIndexHtml(
     ["immunizations", "Immunizations"],
     ["appointments", "Vet appointments"],
     ["prescriptions", "Prescriptions"],
+    ["diet", "Diet"],
     ["procedures", "Procedures"],
     ["blood-tests", "Blood tests"],
     ["weight", "Weight"],
@@ -407,6 +408,23 @@ export function renderResidentIndexHtml(
           escOrDash(prescription.notes),
         ]),
         "No prescriptions recorded.",
+      ),
+    )}
+
+    ${section(
+      "diet",
+      "Diet",
+      table(
+        ["From", "To", "Diet", "Meals", "Daily quantity", "Notes"],
+        record.diets.map((diet) => [
+          esc(day(diet.startDate)),
+          diet.endDate ? esc(day(diet.endDate)) : "ongoing",
+          escOrDash(diet.dietTypeName),
+          esc(String(diet.mealsPerDay)),
+          escOrDash(diet.dailyQuantity),
+          escOrDash(diet.notes),
+        ]),
+        "No dietary requirements recorded.",
       ),
     )}
 

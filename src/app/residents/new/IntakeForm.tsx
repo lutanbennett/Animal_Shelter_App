@@ -3,8 +3,10 @@
 import { useActionState, useState } from "react";
 import { recordIntake } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { RESIDENT_SIZES, sizeLabel } from "@/lib/i18n/enum-labels";
 
 export type ZoneOption = { id: string; name: string };
+export type DietTypeOption = { id: string; name: string };
 export type EnclosureOption = { id: string; name: string; zoneId: string };
 export type OriginOption = { id: string; name: string };
 
@@ -19,10 +21,12 @@ export function IntakeForm({
   zones,
   enclosures,
   origins,
+  dietTypes,
 }: {
   zones: ZoneOption[];
   enclosures: EnclosureOption[];
   origins: OriginOption[];
+  dietTypes: DietTypeOption[];
 }) {
   const [state, formAction, pending] = useActionState(recordIntake, undefined);
   const { t } = useI18n();
@@ -97,6 +101,20 @@ export function IntakeForm({
             </select>
           </div>
           <div className="flex flex-col gap-1">
+            <label htmlFor="size" className="text-sm font-medium text-muted">
+              {t.residents.new.fields.size} <span className="text-danger">*</span>
+            </label>
+            <select id="size" name="size" required defaultValue="" className={inputClass}>
+              <option value="">{t.residents.new.fields.selectSize}</option>
+              {RESIDENT_SIZES.map((size) => (
+                <option key={size} value={size}>
+                  {sizeLabel(t, size)}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-muted">{t.residents.new.fields.sizeHint}</p>
+          </div>
+          <div className="flex flex-col gap-1">
             <label
               htmlFor="estimatedAgeYears"
               className="text-sm font-medium text-muted"
@@ -127,6 +145,20 @@ export function IntakeForm({
               placeholder={t.residents.new.fields.weightKgHint}
               className={inputClass}
             />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="dietTypeId" className="text-sm font-medium text-muted">
+              {t.residents.new.fields.startingDiet}
+            </label>
+            <select id="dietTypeId" name="dietTypeId" defaultValue="" className={inputClass}>
+              <option value="">{t.residents.new.fields.noStartingDiet}</option>
+              {dietTypes.map((type) => (
+                <option key={type.id} value={type.id}>
+                  {type.name}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-muted">{t.residents.new.fields.startingDietHint}</p>
           </div>
         </div>
       </fieldset>

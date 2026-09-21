@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { speciesLabel, sexLabel } from "@/lib/i18n/enum-labels";
+import { speciesLabel, sexLabel, sizeLabel } from "@/lib/i18n/enum-labels";
 import { formatAge } from "@/lib/format";
 import { PublicHeader } from "../PublicHeader";
 import { PhotoGallery } from "./PhotoGallery";
@@ -13,6 +13,7 @@ type PublicResident = {
   species: string | null;
   breed: string | null;
   sex: string | null;
+  size: string | null;
   ready_for_adoption: boolean;
   bio: string | null;
   temperament_notes: string | null;
@@ -33,7 +34,7 @@ export default async function PublicResidentPage(
     supabase
       .from("public_resident_profiles")
       .select(
-        "id, name, species, breed, sex, ready_for_adoption, bio, temperament_notes, past_story_notes, profile_photo_drive_file_id, estimated_age_years, age_estimated_on",
+        "id, name, species, breed, sex, size, ready_for_adoption, bio, temperament_notes, past_story_notes, profile_photo_drive_file_id, estimated_age_years, age_estimated_on",
       )
       .eq("id", id)
       .limit(1)
@@ -69,6 +70,10 @@ export default async function PublicResidentPage(
     resident.sex && {
       label: t.adopt.details.sex,
       value: sexLabel(t, resident.sex),
+    },
+    resident.size && {
+      label: t.adopt.details.size,
+      value: sizeLabel(t, resident.size),
     },
     resident.estimated_age_years != null && {
       label: t.adopt.details.age,

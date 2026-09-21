@@ -146,9 +146,9 @@ const manual: Manual = {
             "Intake creates the resident record and their first placement in one step.",
           steps: [
             "On the Residents list tap New resident (intake).",
-            "Identity: name (required), Thai name, other names, species, breed, sex and an estimated age in years.",
+            "Identity: name (required), Thai name, other names, species, breed, sex, size (required — small, medium or large, which sets their default meal size) and an estimated age in years.",
             "Arrival & placement: the intake date (required), where they came from (pick an existing origin or add a new one), and the zone and enclosure they're going into. Leave the enclosure blank and they're recorded as Unassigned until you move them.",
-            "Optionally enter a weight at intake — it becomes their first weight reading.",
+            "Optionally enter a weight at intake — it becomes their first weight reading — and pick a starting diet from the list management keeps under Management → Diets; it's recorded from the intake date and can be adjusted on the hub's Diet page.",
             "Bio & background: bio, temperament, past story and behaviour notes. These can be filled in later from Edit.",
             "Tick Ready for adoption only if they should appear on the public adoption page straight away.",
             "Tap Register resident. You're taken to their new hub.",
@@ -156,7 +156,7 @@ const manual: Manual = {
           screenshot: {
             src: "/manual/resident-intake.png",
             alt: "The resident intake form",
-            caption: "The intake form. Only name and intake date are required — everything else can be added later.",
+            caption: "The intake form. Only name, intake date and size are required — everything else can be added later.",
           },
         },
         {
@@ -392,6 +392,23 @@ const manual: Manual = {
           screenshot: {
             src: "/manual/prescription-new.png",
             alt: "The add prescription form",
+          },
+        },
+        {
+          id: "diet",
+          title: "Recording a resident's diet",
+          roles: ["admin", "management", "staff", "vet"],
+          path: "Resident hub → Diet → Add diet",
+          steps: [
+            "Pick the diet from the list (dry kibble, wet food, a prescription diet…). Management keeps this list, with its costs and portion sizes, under Management → Diets.",
+            "Enter the meals a day. Leave Daily quantity blank to use the diet's default for the resident's size — the hint under the field shows what that is — or enter a figure to override it for this resident.",
+            "Set the start date, and an end date if it's for a fixed period; leave the end blank if ongoing. Add notes such as allergies or \"soak before serving\". A resident can have several diets running at once.",
+            "Tap Save diet. The resident's Diet page separates Current from Past, and the hub's Diet card shows what they're on now.",
+            "To change one later, tap Edit on its row. To stop one, tap End today on a current row — it drops out of the food forecast from tomorrow.",
+          ],
+          screenshot: {
+            src: "/manual/diet-new.png",
+            alt: "The add diet form",
           },
         },
         {
@@ -709,6 +726,21 @@ const manual: Manual = {
           screenshot: {
             src: "/manual/management-medications.png",
             alt: "The medications management page with the forecast column",
+          },
+        },
+        {
+          id: "manage-diets",
+          title: "Managing diets and the food forecast",
+          roles: ["admin", "management"],
+          path: "Management → Diets",
+          steps: [
+            "The diets table is the food list the diet form offers. Add one with its unit (g, ml, can, sachet…), the cost per unit in baht, and the daily quantity for a small, medium and large animal.",
+            "Edit any of those in place — a price rise or a corrected portion flows straight through to the forecast. A diet on any resident's record can't be deleted.",
+            "Next N days shows how much of each diet the residents living at the shelter will eat and what it costs, with a total across all diets. Fostered, adopted and deceased residents aren't counted; a resident with no size set counts as Medium.",
+          ],
+          screenshot: {
+            src: "/manual/management-diets.png",
+            alt: "The diets management page with the forecast and cost columns",
           },
         },
       ],

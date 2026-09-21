@@ -72,6 +72,7 @@ const SIGNED_IN = [
   { name: "management-contacts", path: "/management/contacts" },
   { name: "management-vets", path: "/management/vets" },
   { name: "management-medications", path: "/management/medications", full: true },
+  { name: "management-diets", path: "/management/diets", full: true },
   { name: "admin-security", path: "/admin/security" },
   { name: "admin-website", path: "/admin/website", full: true },
   { name: "admin-zones", path: "/admin/zones" },

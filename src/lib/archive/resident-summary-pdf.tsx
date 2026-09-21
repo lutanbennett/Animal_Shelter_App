@@ -365,6 +365,22 @@ function ResidentSummaryDocument({
           />
         </Section>
 
+        <Section title="Diet">
+          <Table
+            columns={["From", "To", "Diet", "Meals", "Daily quantity", "Notes"]}
+            widths={["12%", "12%", "24%", "10%", "18%", "24%"]}
+            rows={record.diets.map((diet) => [
+              day(diet.startDate),
+              diet.endDate ? day(diet.endDate) : "ongoing",
+              diet.dietTypeName ?? "—",
+              String(diet.mealsPerDay),
+              diet.dailyQuantity ?? "—",
+              diet.notes ?? "—",
+            ])}
+            empty="No dietary requirements recorded."
+          />
+        </Section>
+
         <Section title="Procedures">
           <Table
             columns={["Date", "Procedure", "Notes", "Files"]}
