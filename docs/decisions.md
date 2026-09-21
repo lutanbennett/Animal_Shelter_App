@@ -6,6 +6,21 @@ Section 11, plus decisions made during setup that aren't in the original doc.
 
 ## Confirmed
 
+- **Prescriptions are edited in place, not superseded (2026-09-21):** a
+  wrong dose or a course a vet cuts short is corrected on the same row
+  (`/prescriptions/[id]/edit`, and **End today** on the tab) rather than
+  ended and re-entered — there is no audit requirement on prescriptions
+  and a duplicate row would double the medication forecast for the
+  overlap. Consequences: `updatePrescription` writes every column the
+  form carries, so clearing the end date on an expired row makes it
+  current again (the edit page says so); End today only appears on a
+  current row whose `start_date` is today or earlier, since 0027's
+  end-after-start check would refuse it on a future-dated course; and
+  the inline "add a new medication / frequency" affordances work in edit
+  mode too, since they are the same form. Neither path touches a
+  deceased resident's record — the edit page shows the record-closed
+  notice and the tab hides the row actions, mirroring 0026's lock.
+
 - **A death recorded in error is withdrawn, not deleted (2026-09-21):**
   the backlog asked whether admins get a proper "recorded in error" path
   and what it should restore. They do, and it is an event: migration 0048

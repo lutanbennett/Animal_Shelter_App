@@ -13,6 +13,7 @@ import { PhotoUploader } from "@/components/PhotoUploader";
 import { PhotoGallery, type PhotoRow } from "@/components/PhotoGallery";
 import { BloodTestList, type BloodTestRow } from "@/components/BloodTestList";
 import { ProcedureList, type ProcedureRow } from "@/components/ProcedureList";
+import { PrescriptionRowActions } from "@/components/PrescriptionRowActions";
 import { WeightChart } from "@/components/WeightChart";
 import { ActionLink } from "@/components/ActionLink";
 import {
@@ -442,7 +443,9 @@ export default async function ResidentSectionPage(
       const rows = data ?? [];
       const current = rows.filter((row) => !row.end_date || row.end_date >= today);
       const expired = rows.filter((row) => row.end_date && row.end_date < today);
-      const renderPrescription = (row: (typeof rows)[number]) => {
+      // Every row can be edited while the record is open; "End today" only
+      // makes sense on a current row whose course has started.
+      const renderPrescription = (row: (typeof rows)[number], isCurrent: boolean) => {
         const dose = formatDose(t, row.dose_quantity, row.medication?.dose_unit);
         return (
           <div className="flex flex-col gap-1">
@@ -479,6 +482,13 @@ export default async function ResidentSectionPage(
               </div>
             </div>
             {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
+            {!isDeceased && (
+              <PrescriptionRowActions
+                residentId={id}
+                prescriptionId={row.id}
+                canEndToday={isCurrent && row.start_date <= today}
+              />
+            )}
           </div>
         );
       };
@@ -507,7 +517,7 @@ export default async function ResidentSectionPage(
                 <RecordList
                   rows={current}
                   empty={t.residents.sections.noCurrentPrescriptions}
-                  render={renderPrescription}
+                  render={(row) => renderPrescription(row, true)}
                 />
               </section>
               {expired.length > 0 && (
@@ -518,7 +528,7 @@ export default async function ResidentSectionPage(
                   <RecordList
                     rows={expired}
                     empty=""
-                    render={renderPrescription}
+                    render={(row) => renderPrescription(row, false)}
                   />
                 </section>
               )}
