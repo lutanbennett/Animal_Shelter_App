@@ -20,9 +20,10 @@
 //
 // It needs two things the migration runner does not:
 //   - pg_dump 17 or newer (the projects run Postgres 17; pg_dump refuses
-//     older) — PostgreSQL's command-line tools, found via PG_DUMP, PATH, or
-//     C:\Program Files\PostgreSQL\<version>\bin. README "Backups" has the
-//     one-line install.
+//     older) — PostgreSQL's command-line tools, found via PG_DUMP, PATH,
+//     C:\Program Files\PostgreSQL\<version>\bin or
+//     %LOCALAPPDATA%\Programs\PostgreSQL\<version>\bin. README "Backups"
+//     says how to get them.
 //   - SUPABASE_DB_PASSWORD, the project's database password (Supabase
 //     dashboard → Project Settings → Database; resettable there). Lives in
 //     .env.deploy.production for production, .env.local for dev. The pooler
@@ -151,13 +152,18 @@ function cleanupTemp() {
   if (!localDir && existsSync(dumpPath)) unlinkSync(dumpPath);
 }
 
-/** pg_dump from PG_DUMP, then PATH, then the standard Windows install dirs, newest first. */
+/**
+ * pg_dump from PG_DUMP, then PATH, then the Windows install dirs — the EDB
+ * installer's under Program Files and the per-user unzip location README
+ * "Backups" describes — newest version first.
+ */
 function findPgDump() {
   const candidates = [];
   if (process.env.PG_DUMP) candidates.push(process.env.PG_DUMP);
   candidates.push("pg_dump");
-  const pgRoot = "C:\\Program Files\\PostgreSQL";
-  if (existsSync(pgRoot)) {
+  const roots = ["C:\\Program Files\\PostgreSQL"];
+  if (process.env.LOCALAPPDATA) roots.push(join(process.env.LOCALAPPDATA, "Programs", "PostgreSQL"));
+  for (const pgRoot of roots.filter(existsSync)) {
     for (const v of readdirSync(pgRoot).sort((a, b) => Number(b) - Number(a))) {
       candidates.push(join(pgRoot, v, "bin", "pg_dump.exe"));
     }

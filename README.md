@@ -270,14 +270,14 @@ step fails.
 One-time setup on the machine that runs it:
 
 1. **PostgreSQL 17 command-line tools** — the projects run Postgres 17 and
-   `pg_dump` must not be older than the server. No local server is needed,
-   so install only the tools:
-
-   ```bash
-   winget install --id PostgreSQL.PostgreSQL.17 --override "--mode unattended --unattendedmodeui none --disable-components server,pgAdmin,stackbuilder"
-   ```
-
-   The script finds `pg_dump.exe` under `C:\Program Files\PostgreSQL\`
+   `pg_dump` must not be older than the server. No local server is needed.
+   The dev machine has the "binaries" zip from
+   <https://www.enterprisedb.com/download-postgresql-binaries> (the
+   `winget` installer kept failing with a 403 from EDB's CDN) unpacked so
+   that `pg_dump.exe` sits at
+   `%LOCALAPPDATA%\Programs\PostgreSQL\17\bin\pg_dump.exe` — only the
+   zip's `bin` and `lib` folders are needed. The script looks there and
+   under `C:\Program Files\PostgreSQL\` (where the installer would put it)
    itself; nothing needs adding to `PATH` (set `PG_DUMP` to point it
    elsewhere).
 2. **The database password** — `SUPABASE_DB_PASSWORD` in
