@@ -1634,6 +1634,19 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   happens is `scripts/deploy.mjs --env production`, which also refuses to
   run from anything but a clean, pushed `main`.
 
+- **Dev and Test wear their own colours (2026-09-21):** with two databases
+  reachable from near-identical tabs, the live site and the disposable one
+  had to look different at a glance, so anything on the dev database is
+  teal with a green-cast background and a **Dev** badge in the header,
+  while production keeps the orange. The signal is the Supabase project
+  ref inlined at build time (`src/lib/app-env.ts`), not `NODE_ENV`
+  (`production` on Test as well) and not a new env var (one more value to
+  get wrong per environment) — the database is the thing worth not
+  confusing, and the URL already says which one it is. Only the CSS tokens
+  change, so every component follows without knowing; an unrecognised ref
+  renders as production so a misconfigured public site never comes up in
+  the dev scheme.
+
 - **Production keeps the dev Google Drive account for now (2026-09-21):**
   the shelter's own Google account is not yet in Lutan's hands, but the
   real AppSheet data needs migrating into production now, and the photos

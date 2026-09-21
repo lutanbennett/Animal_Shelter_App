@@ -24,6 +24,21 @@
   --warning: #ffd60a;
 }
 
+/* Dev and Test (the dev database) wear teal instead of the production
+   orange, on surfaces with a faint green cast, so the two are never
+   confused in adjacent tabs. src/lib/app-env.ts decides; the layout sets
+   the attribute. Only the tokens change, so every component follows. */
+:root[data-env="dev"] {
+  --background: #0e1615;
+  --surface: #172221;
+  --surface-hover: #1f2d2c;
+  --border: #2c3d3b;
+
+  --primary: #2dd4bf;
+  --primary-hover: #5eead4;
+  --primary-foreground: #032523;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-surface: var(--surface);
