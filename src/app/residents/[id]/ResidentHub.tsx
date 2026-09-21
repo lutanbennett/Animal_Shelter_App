@@ -28,6 +28,7 @@ import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { statusLabel, speciesLabel, sexLabel, sizeLabel } from "@/lib/i18n/enum-labels";
 import { TranslationPanel } from "@/components/TranslationPanel";
+import { placeName } from "@/lib/enclosures/names";
 import type { TranslationRow } from "@/lib/translations/types";
 
 export type Resident = {
@@ -60,8 +61,10 @@ export type ResidentStatus = {
   current_status: string | null;
   enclosure_id: string | null;
   enclosure_name: string | null;
+  enclosure_name_th: string | null;
   zone_id: string | null;
   zone_name: string | null;
+  zone_name_th: string | null;
   zone_internal: boolean | null;
 };
 
@@ -224,8 +227,8 @@ export function ResidentHub({
           ? t.residents.hub.adoptedBy(carerName)
           : t.residents.hub.adoptedNoCarer
         : [
-            status?.enclosure_name,
-            status?.zone_name,
+            placeName(locale, status?.enclosure_name, status?.enclosure_name_th),
+            placeName(locale, status?.zone_name, status?.zone_name_th),
             carerName && t.residents.hub.carer(carerName),
           ]
             .filter(Boolean)

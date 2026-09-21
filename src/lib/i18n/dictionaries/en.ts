@@ -230,9 +230,10 @@ const en = {
       subtitle:
         "Physical areas (and the Lifecycle pseudo-zone) that enclosures belong to.",
       couldntLoad: "Couldn't load zones",
-      createForm: { name: "Name", internal: "Internal", addButton: "Add zone" },
+      createForm: { name: "Name", nameTh: "Thai name", internal: "Internal", addButton: "Add zone" },
       table: {
         name: "Name",
+        nameTh: "Thai name",
         location: "Location",
         noZones: "No zones yet.",
         systemNote: "Used by resident status logic — not editable here.",
@@ -251,6 +252,7 @@ const en = {
       couldntLoadZones: "Couldn't load zones",
       createForm: {
         name: "Name",
+        nameTh: "Thai name",
         zone: "Zone",
         selectZone: "Select a zone",
         capacity: "Capacity",
@@ -259,6 +261,7 @@ const en = {
       },
       table: {
         name: "Name",
+        nameTh: "Thai name",
         zone: "Zone",
         capacity: "Capacity",
         notes: "Notes",

@@ -24,6 +24,17 @@ export function CreateZoneForm() {
           className="w-56 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
         />
       </div>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="nameTh" className="text-sm font-medium text-muted">
+          {t.admin.zones.createForm.nameTh}
+        </label>
+        <input
+          id="nameTh"
+          name="nameTh"
+          lang="th"
+          className="w-56 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+        />
+      </div>
       <label className="flex items-center gap-2 pb-2 text-sm text-muted">
         <input
           type="checkbox"

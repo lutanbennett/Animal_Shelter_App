@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { placeName } from "@/lib/enclosures/names";
 import {
   OCCUPANCY_TONE,
   occupancyLevel,
@@ -60,7 +61,7 @@ export function EnclosurePicker({
   required?: boolean;
   idPrefix?: string;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const m = t.residents.move;
   const [zoneId, setZoneId] = useState(
     () => enclosures.find((e) => e.id === value)?.zoneId ?? "",
@@ -91,7 +92,7 @@ export function EnclosurePicker({
           <option value="">{m.selectZone}</option>
           {zones.map((z) => (
             <option key={z.id} value={z.id}>
-              {z.name}
+              {placeName(locale, z.name, z.name_th)}
             </option>
           ))}
         </select>
@@ -117,7 +118,7 @@ export function EnclosurePicker({
             const isCurrent = e.id === currentEnclosureId;
             return (
               <option key={e.id} value={e.id} disabled={isCurrent && !allowCurrent}>
-                {e.name}
+                {placeName(locale, e.name, e.name_th)}
                 {isCurrent ? ` ${m.currentSuffix}` : ""}
                 {e.capacity != null && e.capacity > 0
                   ? ` — ${t.enclosures.occupancy(e.residentCount, e.capacity)}`

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Minus, TrendingDown, TrendingUp } from "lucide-react";
 import { formatBaht, formatDate, formatWeightDelta, formatWeightKg } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
+import { placeName } from "@/lib/enclosures/names";
 import {
   appointmentStatusLabel,
   dietUnitLabel,
@@ -119,7 +120,7 @@ export default async function ResidentSectionPage(
       const { data, error } = await supabase
         .from("placement_history")
         .select(
-          "id, placement_type, start_date, end_date, notes, cause_of_death, enclosure:enclosures!enclosure_id(name), previous_enclosure:enclosures!previous_enclosure_id(name), carer:contacts(name)",
+          "id, placement_type, start_date, end_date, notes, cause_of_death, enclosure:enclosures!enclosure_id(name, name_th), previous_enclosure:enclosures!previous_enclosure_id(name, name_th), carer:contacts(name)",
         )
         .eq("resident_id", id)
         .order("start_date", { ascending: false })
@@ -131,8 +132,8 @@ export default async function ResidentSectionPage(
             end_date: string | null;
             notes: string | null;
             cause_of_death: string | null;
-            enclosure: { name: string } | null;
-            previous_enclosure: { name: string } | null;
+            enclosure: { name: string; name_th: string | null } | null;
+            previous_enclosure: { name: string; name_th: string | null } | null;
             carer: { name: string } | null;
           }[]
         >();
@@ -181,8 +182,8 @@ export default async function ResidentSectionPage(
                   <span className="text-xs text-muted">
                     {[
                       row.previous_enclosure?.name
-                        ? `${row.previous_enclosure.name} → ${row.enclosure.name}`
-                        : row.enclosure.name,
+                        ? `${placeName(locale, row.previous_enclosure.name, row.previous_enclosure.name_th)} → ${placeName(locale, row.enclosure.name, row.enclosure.name_th)}`
+                        : placeName(locale, row.enclosure.name, row.enclosure.name_th),
                       row.carer?.name && t.residents.hub.carer(row.carer.name),
                     ]
                       .filter(Boolean)

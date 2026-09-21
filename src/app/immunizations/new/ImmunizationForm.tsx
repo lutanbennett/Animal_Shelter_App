@@ -4,6 +4,7 @@ import { useActionState, useMemo, useState } from "react";
 import { ResidentPicker } from "@/components/ResidentPicker";
 import { formatDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { placeName } from "@/lib/enclosures/names";
 import { recordImmunizations } from "./actions";
 
 export type ResidentOption = {
@@ -22,8 +23,8 @@ export type ImmunizationTypeOption = {
   interval_months: number | null;
 };
 
-export type ZoneOption = { id: string; name: string };
-export type EnclosureOption = { id: string; name: string; zone_id: string };
+export type ZoneOption = { id: string; name: string; name_th: string | null };
+export type EnclosureOption = { id: string; name: string; name_th: string | null; zone_id: string };
 
 function todayIsoDate() {
   return new Date().toISOString().slice(0, 10);
@@ -153,7 +154,7 @@ export function ImmunizationForm({
                 <option value="">{t.immunizations.selectZone}</option>
                 {zones.map((z) => (
                   <option key={z.id} value={z.id}>
-                    {z.name}
+                    {placeName(locale, z.name, z.name_th)}
                   </option>
                 ))}
               </select>
@@ -179,7 +180,7 @@ export function ImmunizationForm({
                 <option value="">{t.immunizations.selectEnclosure}</option>
                 {enclosures.map((e) => (
                   <option key={e.id} value={e.id}>
-                    {e.name}
+                    {placeName(locale, e.name, e.name_th)}
                   </option>
                 ))}
               </select>

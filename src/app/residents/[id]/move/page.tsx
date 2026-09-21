@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { placeName } from "@/lib/enclosures/names";
 import { loadEnclosureOptions } from "@/lib/enclosures/options";
 import { SECTION_ICONS } from "@/components/hub-icons";
 import { MoveResidentForm } from "./MoveResidentForm";
@@ -13,7 +14,7 @@ export default async function MoveResidentPage(
   props: PageProps<"/residents/[id]/move">,
 ) {
   const { id } = await props.params;
-  const { t } = await getT();
+  const { t, locale } = await getT();
   const supabase = await createClient();
 
   const [residentResult, statusResult, stateResult, placementResult, roleResult, options] =
@@ -28,14 +29,17 @@ export default async function MoveResidentPage(
         >(),
       supabase
         .from("resident_list_view")
-        .select("enclosure_id, enclosure_name, zone_name")
+        .select("enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th")
         .eq("resident_id", id)
         .limit(1)
         .returns<
           {
             enclosure_id: string | null;
             enclosure_name: string | null;
+
+            enclosure_name_th: string | null;
             zone_name: string | null;
+            zone_name_th: string | null;
           }[]
         >(),
       supabase
@@ -114,8 +118,8 @@ export default async function MoveResidentPage(
           residentId={id}
           current={{
             enclosureId: status?.enclosure_id ?? null,
-            enclosureName: status?.enclosure_name ?? null,
-            zoneName: status?.zone_name ?? null,
+            enclosureName: placeName(locale, status?.enclosure_name, status?.enclosure_name_th) || null,
+            zoneName: placeName(locale, status?.zone_name, status?.zone_name_th) || null,
             since: placementResult.data?.[0]?.start_date ?? null,
           }}
           zones={options.zones}

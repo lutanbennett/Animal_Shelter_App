@@ -3,11 +3,12 @@
 import { useActionState, useState } from "react";
 import { recordIntake } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { placeName } from "@/lib/enclosures/names";
 import { RESIDENT_SIZES, sizeLabel } from "@/lib/i18n/enum-labels";
 
-export type ZoneOption = { id: string; name: string };
+export type ZoneOption = { id: string; name: string; name_th: string | null };
 export type DietTypeOption = { id: string; name: string };
-export type EnclosureOption = { id: string; name: string; zoneId: string };
+export type EnclosureOption = { id: string; name: string; name_th: string | null; zoneId: string };
 export type OriginOption = { id: string; name: string };
 
 const inputClass =
@@ -29,7 +30,7 @@ export function IntakeForm({
   dietTypes: DietTypeOption[];
 }) {
   const [state, formAction, pending] = useActionState(recordIntake, undefined);
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [selectedZoneId, setSelectedZoneId] = useState("");
   const [selectedEnclosureId, setSelectedEnclosureId] = useState("");
   const [isAddingOrigin, setIsAddingOrigin] = useState(false);
@@ -248,7 +249,7 @@ export function IntakeForm({
               <option value="">{t.residents.new.fields.noZoneDefault}</option>
               {zones.map((z) => (
                 <option key={z.id} value={z.id}>
-                  {z.name}
+                  {placeName(locale, z.name, z.name_th)}
                 </option>
               ))}
             </select>
@@ -272,7 +273,7 @@ export function IntakeForm({
               </option>
               {enclosuresInZone.map((e) => (
                 <option key={e.id} value={e.id}>
-                  {e.name}
+                  {placeName(locale, e.name, e.name_th)}
                 </option>
               ))}
             </select>

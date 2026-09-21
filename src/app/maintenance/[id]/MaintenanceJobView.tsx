@@ -11,6 +11,7 @@ import { localizedFromRow } from "@/lib/translations/localize";
 import type { TranslationRow } from "@/lib/translations/types";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { placeName } from "@/lib/enclosures/names";
 import { formatBaht, formatDate } from "@/lib/format";
 import type {
   MaintenanceAttachment,
@@ -144,7 +145,7 @@ export function MaintenanceJobView({
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
           <span className="flex items-center gap-1">
             <ENCLOSURE_ICONS.zone aria-hidden="true" className="h-4 w-4" />
-            {job.zone_name}
+            {placeName(locale, job.zone_name, job.zone_name_th)}
           </span>
           {job.enclosure_id ? (
             <Link
@@ -152,7 +153,7 @@ export function MaintenanceJobView({
               className="flex items-center gap-1 hover:text-foreground hover:underline"
             >
               <ENCLOSURE_ICONS.enclosure aria-hidden="true" className="h-4 w-4" />
-              {job.enclosure_name}
+              {placeName(locale, job.enclosure_name, job.enclosure_name_th)}
             </Link>
           ) : (
             <span className="flex items-center gap-1">

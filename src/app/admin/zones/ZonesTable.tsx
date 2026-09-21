@@ -4,13 +4,14 @@ import { Fragment, useState, useTransition } from "react";
 import { deleteZone, updateZone } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
-export type ZoneRow = { id: string; name: string; internal: boolean };
+export type ZoneRow = { id: string; name: string; name_th: string | null; internal: boolean };
 
 function ZoneRowItem({ zone }: { zone: ZoneRow }) {
   const { t } = useI18n();
   const isSystem = zone.name === "Lifecycle";
 
   const [name, setName] = useState(zone.name);
+  const [nameTh, setNameTh] = useState(zone.name_th ?? "");
   const [internal, setInternal] = useState(zone.internal);
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState<
@@ -22,7 +23,7 @@ function ZoneRowItem({ zone }: { zone: ZoneRow }) {
     setMessage(null);
     startTransition(async () => {
       try {
-        await updateZone(zone.id, name, internal);
+        await updateZone(zone.id, name, nameTh || null, internal);
         setEditing(false);
         setMessage({ type: "success", text: t.common.saved });
       } catch (err) {
@@ -70,6 +71,18 @@ function ZoneRowItem({ zone }: { zone: ZoneRow }) {
         </td>
         <td className="px-4 py-2">
           {editing ? (
+            <input
+              value={nameTh}
+              lang="th"
+              onChange={(e) => setNameTh(e.target.value)}
+              className="w-48 rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary"
+            />
+          ) : (
+            <span className="text-foreground">{zone.name_th ?? t.common.dash}</span>
+          )}
+        </td>
+        <td className="px-4 py-2">
+          {editing ? (
             <label className="flex items-center gap-2 text-sm text-muted">
               <input
                 type="checkbox"
@@ -110,6 +123,7 @@ function ZoneRowItem({ zone }: { zone: ZoneRow }) {
                     onClick={() => {
                       setEditing(false);
                       setName(zone.name);
+                      setNameTh(zone.name_th ?? "");
                       setInternal(zone.internal);
                     }}
                     className="rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover"
@@ -141,7 +155,7 @@ function ZoneRowItem({ zone }: { zone: ZoneRow }) {
       {message && (
         <tr>
           <td
-            colSpan={3}
+            colSpan={4}
             className={`px-4 pb-2 text-xs ${
               message.type === "error" ? "text-danger" : "text-success"
             }`}
@@ -163,6 +177,7 @@ export function ZonesTable({ zones }: { zones: ZoneRow[] }) {
         <thead className="bg-surface text-muted">
           <tr>
             <th className="px-4 py-2 font-medium">{t.admin.zones.table.name}</th>
+            <th className="px-4 py-2 font-medium">{t.admin.zones.table.nameTh}</th>
             <th className="px-4 py-2 font-medium">
               {t.admin.zones.table.location}
             </th>
@@ -175,7 +190,7 @@ export function ZonesTable({ zones }: { zones: ZoneRow[] }) {
           ))}
           {zones.length === 0 && (
             <tr>
-              <td colSpan={3} className="px-4 py-6 text-center text-muted">
+              <td colSpan={4} className="px-4 py-6 text-center text-muted">
                 {t.admin.zones.table.noZones}
               </td>
             </tr>

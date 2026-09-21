@@ -12,10 +12,11 @@ import {
 type EnclosureRow = {
   id: string;
   name: string;
+  name_th: string | null;
   capacity: number | null;
   notes: string | null;
   zone_id: string;
-  zones: { name: string; internal: boolean } | null;
+  zones: { name: string; name_th: string | null; internal: boolean } | null;
 };
 
 /** The Lifecycle pseudo-zone holds status buckets, not physical enclosures. */
@@ -49,10 +50,10 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   // occupancy view so no migration is needed; the shelter's headcount is
   // small enough that pulling one row per resident is cheap.
   const [zonesResult, enclosuresResult, residentsResult] = await Promise.all([
-    supabase.from("zones").select("id, name, internal").order("name"),
+    supabase.from("zones").select("id, name, name_th, internal").order("name"),
     supabase
       .from("enclosures")
-      .select("id, name, capacity, notes, zone_id, zones(name, internal)")
+      .select("id, name, name_th, capacity, notes, zone_id, zones(name, name_th, internal)")
       .order("name")
       .returns<EnclosureRow[]>(),
     supabase
@@ -72,15 +73,22 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
     .map((row) => ({
       id: row.id,
       name: row.name,
+      name_th: row.name_th,
       capacity: row.capacity,
       notes: row.notes,
       zone_id: row.zone_id,
       zone_name: row.zones?.name ?? t.common.dash,
+      zone_name_th: row.zones?.name_th ?? null,
       zone_internal: row.zones?.internal ?? true,
       resident_count: counts.get(row.id) ?? 0,
     }))
     .filter((e) => !zoneId || e.zone_id === zoneId)
-    .filter((e) => !term || e.name.toLowerCase().includes(term));
+    .filter(
+      (e) =>
+        !term ||
+        e.name.toLowerCase().includes(term) ||
+        (e.name_th ?? "").toLowerCase().includes(term),
+    );
 
   // Physical zones first (alphabetical), the Lifecycle pseudo-zone last.
   const zones = [...(zonesResult.data ?? [])].sort((a, b) => {
@@ -93,6 +101,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
     .map((zone) => ({
       id: zone.id,
       name: zone.name,
+      name_th: zone.name_th,
       internal: zone.internal,
       isSystem: zone.name === SYSTEM_ZONE,
       enclosures: enclosures.filter((e) => e.zone_id === zone.id),

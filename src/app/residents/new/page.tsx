@@ -15,16 +15,16 @@ export default async function NewResidentPage() {
   const [zonesResult, enclosuresResult, originsResult, dietTypesResult] = await Promise.all([
     supabase
       .from("zones")
-      .select("id, name")
+      .select("id, name, name_th")
       .neq("name", "Lifecycle")
       .order("name")
       .returns<ZoneOption[]>(),
     supabase
       .from("enclosures")
-      .select("id, name, zone_id, zones!inner(name)")
+      .select("id, name, name_th, zone_id, zones!inner(name)")
       .neq("zones.name", "Lifecycle")
       .order("name")
-      .returns<{ id: string; name: string; zone_id: string }[]>(),
+      .returns<{ id: string; name: string; name_th: string | null; zone_id: string }[]>(),
     supabase
       .from("group_origins")
       .select("id, name")
@@ -39,7 +39,7 @@ export default async function NewResidentPage() {
 
   const zones = zonesResult.data ?? [];
   const enclosures: EnclosureOption[] = (enclosuresResult.data ?? []).map(
-    (e) => ({ id: e.id, name: e.name, zoneId: e.zone_id }),
+    (e) => ({ id: e.id, name: e.name, name_th: e.name_th, zoneId: e.zone_id }),
   );
   const origins = originsResult.data ?? [];
 

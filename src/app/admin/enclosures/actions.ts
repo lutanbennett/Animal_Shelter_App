@@ -15,6 +15,7 @@ export async function createEnclosure(
   const { t } = await getT();
 
   const name = (formData.get("name") as string | null)?.trim();
+  const nameTh = (formData.get("nameTh") as string | null)?.trim() || null;
   const zoneId = formData.get("zoneId") as string | null;
   const capacityRaw = formData.get("capacity") as string | null;
   const notes = (formData.get("notes") as string | null)?.trim() || null;
@@ -33,7 +34,7 @@ export async function createEnclosure(
   const supabase = await createClient();
   const { error } = await supabase
     .from("enclosures")
-    .insert({ name, zone_id: zoneId, capacity, notes });
+    .insert({ name, name_th: nameTh, zone_id: zoneId, capacity, notes });
 
   if (error) return { error: error.message };
 
@@ -45,6 +46,7 @@ export async function updateEnclosure(
   id: string,
   fields: {
     name: string;
+    nameTh: string | null;
     zoneId: string;
     capacity: number | null;
     notes: string | null;
@@ -60,6 +62,7 @@ export async function updateEnclosure(
     .from("enclosures")
     .update({
       name: fields.name.trim(),
+      name_th: fields.nameTh?.trim() || null,
       zone_id: fields.zoneId,
       capacity: fields.capacity,
       notes: fields.notes?.trim() || null,

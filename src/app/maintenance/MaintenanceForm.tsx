@@ -12,6 +12,7 @@ import {
   type PendingFile,
 } from "@/components/DeferredUploads";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { placeName } from "@/lib/enclosures/names";
 import type { EnclosureOption, ZoneOption } from "@/lib/enclosures/options";
 import { appUserLabel, type AppUser } from "@/lib/auth/app-users";
 import { roleLabel } from "@/lib/i18n/enum-labels";
@@ -55,7 +56,7 @@ export function MaintenanceForm({
   preselectedZoneId?: string | null;
   cancelHref: string;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const f = t.maintenance.fields;
   const fm = t.maintenance.form;
   const router = useRouter();
@@ -196,7 +197,7 @@ export function MaintenanceForm({
               <option value="">{fm.selectZone}</option>
               {zones.map((zone) => (
                 <option key={zone.id} value={zone.id}>
-                  {zone.name}
+                  {placeName(locale, zone.name, zone.name_th)}
                 </option>
               ))}
             </select>
@@ -219,7 +220,7 @@ export function MaintenanceForm({
               </option>
               {enclosuresInZone.map((enclosure) => (
                 <option key={enclosure.id} value={enclosure.id}>
-                  {enclosure.name}
+                  {placeName(locale, enclosure.name, enclosure.name_th)}
                 </option>
               ))}
             </select>

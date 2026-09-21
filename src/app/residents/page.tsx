@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { placeName } from "@/lib/enclosures/names";
 import { ResidentsTable, type ResidentRow } from "./ResidentsTable";
 
 export default async function ResidentsPage(props: PageProps<"/residents">) {
   const searchParams = await props.searchParams;
-  const { t } = await getT();
+  const { t, locale } = await getT();
   const q = typeof searchParams.q === "string" ? searchParams.q.trim() : "";
   const zoneId = typeof searchParams.zone === "string" ? searchParams.zone : "";
   const enclosureId =
@@ -14,17 +15,17 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   const supabase = await createClient();
 
   const [zonesResult, enclosuresResult] = await Promise.all([
-    supabase.from("zones").select("id, name").order("name"),
+    supabase.from("zones").select("id, name, name_th").order("name"),
     supabase
       .from("enclosures")
-      .select("id, name, zone_id")
+      .select("id, name, name_th, zone_id")
       .order("name"),
   ]);
 
   let residentsQuery = supabase
     .from("resident_list_view")
     .select(
-      "resident_id, name, resident_code, thai_name, other_names, current_status, enclosure_id, enclosure_name, zone_id, zone_name, zone_internal",
+      "resident_id, name, resident_code, thai_name, other_names, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_id, zone_name, zone_name_th, zone_internal",
     )
     .order("name");
 
@@ -82,7 +83,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
             <option value="">{t.residents.list.allZones}</option>
             {zones.map((zone) => (
               <option key={zone.id} value={zone.id}>
-                {zone.name}
+                {placeName(locale, zone.name, zone.name_th)}
               </option>
             ))}
           </select>
@@ -103,7 +104,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
             <option value="">{t.residents.list.allEnclosures}</option>
             {enclosures.map((enclosure) => (
               <option key={enclosure.id} value={enclosure.id}>
-                {enclosure.name}
+                {placeName(locale, enclosure.name, enclosure.name_th)}
               </option>
             ))}
           </select>

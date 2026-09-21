@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { placeName } from "@/lib/enclosures/names";
 import { UNDO_DECEASED_ROLES } from "@/lib/placements/deceased";
 import { PLACEMENT_ICONS } from "@/components/hub-icons";
 import { UndoDeathForm } from "./UndoDeathForm";
@@ -11,7 +12,7 @@ type PlacementRow = {
   placement_type: string;
   start_date: string;
   cause_of_death: string | null;
-  enclosure: { name: string; zones: { name: string } | null } | null;
+  enclosure: { name: string; name_th: string | null; zones: { name: string; name_th: string | null } | null } | null;
   carer: { name: string } | null;
 };
 
@@ -24,7 +25,7 @@ export default async function UndoDeathPage(
   props: PageProps<"/residents/[id]/deceased/undo">,
 ) {
   const { id } = await props.params;
-  const { t } = await getT();
+  const { t, locale } = await getT();
   const supabase = await createClient();
 
   const [residentResult, deathResult, roleResult] = await Promise.all([
@@ -39,7 +40,7 @@ export default async function UndoDeathPage(
     supabase
       .from("placement_history")
       .select(
-        "id, placement_type, start_date, cause_of_death, enclosure:enclosures!enclosure_id(name, zones(name)), carer:contacts(name)",
+        "id, placement_type, start_date, cause_of_death, enclosure:enclosures!enclosure_id(name, name_th, zones(name, name_th)), carer:contacts(name)",
       )
       .eq("resident_id", id)
       .eq("placement_type", "Deceased")
@@ -63,7 +64,7 @@ export default async function UndoDeathPage(
     ? await supabase
         .from("placement_history")
         .select(
-          "id, placement_type, start_date, cause_of_death, enclosure:enclosures!enclosure_id(name, zones(name)), carer:contacts(name)",
+          "id, placement_type, start_date, cause_of_death, enclosure:enclosures!enclosure_id(name, name_th, zones(name, name_th)), carer:contacts(name)",
         )
         .eq("resident_id", id)
         .lt("start_date", death.start_date)
@@ -117,8 +118,8 @@ export default async function UndoDeathPage(
           displayName={displayName}
           death={{ date: death.start_date, causeOfDeath: death.cause_of_death }}
           returnTo={{
-            enclosureName: prior.enclosure?.name ?? null,
-            zoneName: prior.enclosure?.zones?.name ?? null,
+            enclosureName: placeName(locale, prior.enclosure?.name, prior.enclosure?.name_th) || null,
+            zoneName: placeName(locale, prior.enclosure?.zones?.name, prior.enclosure?.zones?.name_th) || null,
             carerName: prior.carer?.name ?? null,
           }}
         />

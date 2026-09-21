@@ -232,9 +232,10 @@ const th: Dictionary = {
       title: "โซน",
       subtitle: "พื้นที่ทางกายภาพ (รวมถึงโซนเสมือน Lifecycle) ที่กรงต่าง ๆ สังกัดอยู่",
       couldntLoad: "โหลดข้อมูลโซนไม่สำเร็จ",
-      createForm: { name: "ชื่อ", internal: "ภายใน", addButton: "เพิ่มโซน" },
+      createForm: { name: "ชื่อ", nameTh: "ชื่อภาษาไทย", internal: "ภายใน", addButton: "เพิ่มโซน" },
       table: {
         name: "ชื่อ",
+        nameTh: "ชื่อภาษาไทย",
         location: "ตำแหน่ง",
         noZones: "ยังไม่มีโซน",
         systemNote: "ใช้งานโดยระบบสถานะสัตว์ — ไม่สามารถแก้ไขได้ที่นี่",
@@ -253,6 +254,7 @@ const th: Dictionary = {
       couldntLoadZones: "โหลดข้อมูลโซนไม่สำเร็จ",
       createForm: {
         name: "ชื่อ",
+        nameTh: "ชื่อภาษาไทย",
         zone: "โซน",
         selectZone: "เลือกโซน",
         capacity: "ความจุ",
@@ -261,6 +263,7 @@ const th: Dictionary = {
       },
       table: {
         name: "ชื่อ",
+        nameTh: "ชื่อภาษาไทย",
         zone: "โซน",
         capacity: "ความจุ",
         notes: "หมายเหตุ",

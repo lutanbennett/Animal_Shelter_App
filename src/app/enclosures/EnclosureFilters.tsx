@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useRef } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { placeName } from "@/lib/enclosures/names";
 import { ENCLOSURE_SORTS, type EnclosureSort } from "@/lib/enclosures/sort";
 
-type ZoneOption = { id: string; name: string };
+type ZoneOption = { id: string; name: string; name_th: string | null };
 
 function buildHref(params: { zone?: string; q?: string; sort?: EnclosureSort }) {
   const search = new URLSearchParams();
@@ -32,7 +33,7 @@ export function EnclosureFilters({
   q: string;
   sort: EnclosureSort;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const formRef = useRef<HTMLFormElement>(null);
   const hasFilters = Boolean(zoneId || q || sort !== "zone");
 
@@ -64,7 +65,7 @@ export function EnclosureFilters({
             href={buildHref({ zone: zone.id, q, sort })}
             className={chipClass(zoneId === zone.id)}
           >
-            {zone.name}
+            {placeName(locale, zone.name, zone.name_th)}
           </Link>
         ))}
       </div>
