@@ -62,6 +62,8 @@ const manual: Manual = {
             "Open the app's address in your browser and tap Staff & Volunteer Login (or go straight to /login).",
             "Enter your email and password and tap Sign in — or tap Continue with Google if your account was set up with Google.",
             "You land on the Residents list. Sign out any time with the Sign out button at the top right.",
+            "Forgotten your password? Tap Forgot password? under the Sign in button, enter your email, and follow the link in the message to choose a new one — it's valid for an hour. If you were given a temporary password and it's lost, ask an admin to issue another instead.",
+            "To change your password at any time, pick Change password from the menu.",
           ],
           screenshot: {
             src: "/manual/login.png",
