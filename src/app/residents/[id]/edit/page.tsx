@@ -101,7 +101,9 @@ export default async function EditResidentPage(
             ({resident.resident_code})
           </span>
         </h1>
-        <p className="text-sm text-muted">{t.residents.edit.pageSubtitle}</p>
+        <p className="text-sm text-muted">
+          {housing.isDeceased ? t.residents.deceased.editLimited : t.residents.edit.pageSubtitle}
+        </p>
       </div>
 
       {photosResult.error && (
@@ -116,14 +118,10 @@ export default async function EditResidentPage(
         </p>
       )}
 
-      {/* A deceased resident's record is read-only, enforced by the
-          database (migration 0026) — don't offer a form whose every save
-          would be rejected. */}
-      {housing.isDeceased ? (
-        <p className="rounded-lg border border-border bg-surface p-4 text-sm text-muted">
-          {t.residents.deceased.recordClosed}
-        </p>
-      ) : canEdit ? (
+      {/* A deceased resident's record is closed except for the bio and
+          photos (migrations 0026, 0052); the form renders only those
+          sections, and the action writes only those columns. */}
+      {canEdit ? (
         <EditResidentForm
           resident={resident}
           photos={photosResult.data ?? []}

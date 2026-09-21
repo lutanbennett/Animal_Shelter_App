@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getDriveClient } from "@/lib/google/drive";
+import { refreshDeceasedArchiveIfNeeded } from "@/lib/archive/refresh-deceased-archive";
 
 export type PhotoActionState = { error: string } | undefined;
 
@@ -25,6 +26,8 @@ export async function setProfilePhoto(
     return { error: error.message };
   }
 
+  // The summary PDF carries the profile photo (0052 keeps photos open).
+  await refreshDeceasedArchiveIfNeeded(supabase, residentId);
   revalidateResident(residentId);
 }
 
@@ -51,5 +54,6 @@ export async function deletePhoto(
     }
   }
 
+  await refreshDeceasedArchiveIfNeeded(supabase, residentId);
   revalidateResident(residentId);
 }

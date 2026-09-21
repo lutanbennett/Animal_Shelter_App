@@ -273,7 +273,7 @@ const manual: Manual = {
             "Tap the broken-heart icon beside the pencil on the hub.",
             "Enter the date of death, the cause and any notes. The page lists exactly what will happen.",
             "Tap Record death and confirm.",
-            "The resident's status becomes Deceased; future vet visits are cancelled, prescriptions ended, and they leave the public pages. The whole record becomes read-only. Their Drive folder moves to Residents/Deceased/ with a summary PDF and an offline index page — the hub shows links to these, and a Retry button if Drive was unavailable.",
+            "The resident's status becomes Deceased; future vet visits are cancelled, prescriptions ended, and they leave the public pages. The record closes — only their bio and photos can still be changed, and the archive files below are refreshed when they are. Their Drive folder moves to Residents/Deceased/ with a summary PDF and an offline index page — the hub shows links to these, and a Retry button if Drive was unavailable.",
           ],
           screenshot: {
             src: "/manual/resident-deceased.png",

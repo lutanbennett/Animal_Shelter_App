@@ -357,10 +357,9 @@ export function ResidentHub({
               <span className="rounded-full bg-surface-hover px-2 py-0.5 text-xs font-medium text-muted">
                 {resident.resident_code}
               </span>
-              {/* A dead resident's record is read-only, in the database as
-                  well as here (migration 0026), so neither edit nor
-                  record-death is offered once they're gone. */}
-              {!isDeceased && (
+              {/* After death the edit page offers only the bio and photos
+                  (0052); record-death is never offered twice. */}
+              {(
                 <Link
                   href={`${base}/edit`}
                   title={t.residents.hub.editResident}

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { assertPhotoWriteAccess } from "@/lib/auth/require-role";
+import { refreshDeceasedArchiveIfNeeded } from "@/lib/archive/refresh-deceased-archive";
 import {
   ensureResidentPhotosFolder,
   getDriveClient,
@@ -92,15 +93,10 @@ export async function POST(
     return NextResponse.json({ error: "Resident not found." }, { status: 404 });
   }
 
-  // record_attachment() would be rejected by the deceased lock (migration
-  // 0025) — but only after the file had already been uploaded, leaving it
-  // orphaned in Drive. Stop before touching Drive at all.
-  if (state?.[0]?.is_deceased) {
-    return NextResponse.json(
-      { error: "This resident has died — their record is closed." },
-      { status: 409 },
-    );
-  }
+  // Photos stay open after death (0052): the upload lands in the archived
+  // folder (drive_folder_id follows the move) and the archive's index and
+  // summary are regenerated below so they list it.
+  const isDeceased = state?.[0]?.is_deceased ?? false;
 
   const drive = getDriveClient();
   const yymm = dateToYymm(dateTaken);
@@ -139,6 +135,10 @@ export async function POST(
   const row = (
     recordResult as { attachment: { id: string }; is_profile: boolean }[]
   )[0];
+
+  // Uploads are sequential (DeferredUploads), so this runs once per file;
+  // acceptable for the handful of photos added after a death.
+  if (isDeceased) await refreshDeceasedArchiveIfNeeded(supabase, id);
 
   return NextResponse.json({
     attachmentId: row.attachment.id,

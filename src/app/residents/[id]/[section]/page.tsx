@@ -212,12 +212,13 @@ export default async function ResidentSectionPage(
         .returns<PhotoRow[]>();
       body = (
         <div className="flex flex-col gap-6">
-          {!isDeceased && <PhotoUploader residentId={id} />}
+          {/* Photos stay open after death (0052); the archive is refreshed
+              by the upload route and the photo actions. */}
+          <PhotoUploader residentId={id} />
           <PhotoGallery
             residentId={id}
             photos={photos ?? []}
             profilePhotoDriveFileId={resident.profile_photo_drive_file_id}
-            readOnly={isDeceased}
           />
         </div>
       );

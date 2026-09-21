@@ -177,240 +177,246 @@ export function EditResidentForm({
         )}
       </fieldset>
 
-      <fieldset className="flex flex-col gap-4">
-        <legend className="text-base font-semibold text-foreground">
-          {t.residents.edit.sections.identity}
-        </legend>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-1">
-            <label htmlFor="name" className="text-sm font-medium text-muted">
-              {f.name} <span className="text-danger">*</span>
-            </label>
-            <input
-              id="name"
-              name="name"
-              required
-              defaultValue={resident.name}
-              className={inputClass}
-            />
+      {/* Identity, housing and adoption are closed after death (0026,
+          0052); only the photo and bio sections remain. */}
+      {!housing.isDeceased && (
+        <>
+        <fieldset className="flex flex-col gap-4">
+          <legend className="text-base font-semibold text-foreground">
+            {t.residents.edit.sections.identity}
+          </legend>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="name" className="text-sm font-medium text-muted">
+                {f.name} <span className="text-danger">*</span>
+              </label>
+              <input
+                id="name"
+                name="name"
+                required
+                defaultValue={resident.name}
+                className={inputClass}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="thaiName" className="text-sm font-medium text-muted">
+                {f.thaiName}
+              </label>
+              <input
+                id="thaiName"
+                name="thaiName"
+                defaultValue={resident.thai_name ?? ""}
+                className={inputClass}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="otherNames" className="text-sm font-medium text-muted">
+                {f.otherNames}
+              </label>
+              <input
+                id="otherNames"
+                name="otherNames"
+                defaultValue={resident.other_names ?? ""}
+                className={inputClass}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="species" className="text-sm font-medium text-muted">
+                {f.species}
+              </label>
+              <select
+                id="species"
+                name="species"
+                defaultValue={resident.species ?? ""}
+                className={inputClass}
+              >
+                <option value="">{f.selectSpecies}</option>
+                <option value="Dog">{t.enums.species.Dog}</option>
+                <option value="Cat">{t.enums.species.Cat}</option>
+              </select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="breed" className="text-sm font-medium text-muted">
+                {f.breed}
+              </label>
+              <input
+                id="breed"
+                name="breed"
+                defaultValue={resident.breed ?? ""}
+                className={inputClass}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="sex" className="text-sm font-medium text-muted">
+                {f.sex}
+              </label>
+              <select
+                id="sex"
+                name="sex"
+                defaultValue={resident.sex ?? ""}
+                className={inputClass}
+              >
+                <option value="">{f.sexUnknown}</option>
+                <option value="Male">{t.enums.sex.Male}</option>
+                <option value="Female">{t.enums.sex.Female}</option>
+              </select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="size" className="text-sm font-medium text-muted">
+                {t.residents.new.fields.size} <span className="text-danger">*</span>
+              </label>
+              <select
+                id="size"
+                name="size"
+                required
+                defaultValue={resident.size ?? ""}
+                className={inputClass}
+              >
+                <option value="">{t.residents.new.fields.selectSize}</option>
+                {RESIDENT_SIZES.map((size) => (
+                  <option key={size} value={size}>
+                    {sizeLabel(t, size)}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted">{t.residents.new.fields.sizeHint}</p>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor="estimatedAgeYears"
+                className="text-sm font-medium text-muted"
+              >
+                {t.residents.edit.fields.estimatedAgeNow}
+              </label>
+              {/* Pre-filled with the age as it reads today, not the number
+                  typed at intake — so "about 5" typed here shows as ~5. */}
+              <input
+                id="estimatedAgeYears"
+                name="estimatedAgeYears"
+                type="number"
+                min={0}
+                step="0.5"
+                defaultValue={ageNow ?? ""}
+                placeholder={f.estimatedAgeHint}
+                className={inputClass}
+              />
+              <span className="text-xs text-muted">
+                {t.residents.edit.fields.estimatedAgeNowHint}
+              </span>
+            </div>
           </div>
-          <div className="flex flex-col gap-1">
-            <label htmlFor="thaiName" className="text-sm font-medium text-muted">
-              {f.thaiName}
-            </label>
-            <input
-              id="thaiName"
-              name="thaiName"
-              defaultValue={resident.thai_name ?? ""}
-              className={inputClass}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label htmlFor="otherNames" className="text-sm font-medium text-muted">
-              {f.otherNames}
-            </label>
-            <input
-              id="otherNames"
-              name="otherNames"
-              defaultValue={resident.other_names ?? ""}
-              className={inputClass}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label htmlFor="species" className="text-sm font-medium text-muted">
-              {f.species}
-            </label>
-            <select
-              id="species"
-              name="species"
-              defaultValue={resident.species ?? ""}
-              className={inputClass}
-            >
-              <option value="">{f.selectSpecies}</option>
-              <option value="Dog">{t.enums.species.Dog}</option>
-              <option value="Cat">{t.enums.species.Cat}</option>
-            </select>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label htmlFor="breed" className="text-sm font-medium text-muted">
-              {f.breed}
-            </label>
-            <input
-              id="breed"
-              name="breed"
-              defaultValue={resident.breed ?? ""}
-              className={inputClass}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label htmlFor="sex" className="text-sm font-medium text-muted">
-              {f.sex}
-            </label>
-            <select
-              id="sex"
-              name="sex"
-              defaultValue={resident.sex ?? ""}
-              className={inputClass}
-            >
-              <option value="">{f.sexUnknown}</option>
-              <option value="Male">{t.enums.sex.Male}</option>
-              <option value="Female">{t.enums.sex.Female}</option>
-            </select>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label htmlFor="size" className="text-sm font-medium text-muted">
-              {t.residents.new.fields.size} <span className="text-danger">*</span>
-            </label>
-            <select
-              id="size"
-              name="size"
-              required
-              defaultValue={resident.size ?? ""}
-              className={inputClass}
-            >
-              <option value="">{t.residents.new.fields.selectSize}</option>
-              {RESIDENT_SIZES.map((size) => (
-                <option key={size} value={size}>
-                  {sizeLabel(t, size)}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-muted">{t.residents.new.fields.sizeHint}</p>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor="estimatedAgeYears"
-              className="text-sm font-medium text-muted"
-            >
-              {t.residents.edit.fields.estimatedAgeNow}
-            </label>
-            {/* Pre-filled with the age as it reads today, not the number
-                typed at intake — so "about 5" typed here shows as ~5. */}
-            <input
-              id="estimatedAgeYears"
-              name="estimatedAgeYears"
-              type="number"
-              min={0}
-              step="0.5"
-              defaultValue={ageNow ?? ""}
-              placeholder={f.estimatedAgeHint}
-              className={inputClass}
-            />
-            <span className="text-xs text-muted">
-              {t.residents.edit.fields.estimatedAgeNowHint}
-            </span>
-          </div>
-        </div>
-      </fieldset>
+        </fieldset>
 
-      <fieldset className="flex flex-col gap-4">
-        <legend className="text-base font-semibold text-foreground">
-          {t.residents.edit.sections.housing}
-        </legend>
-        <p className="text-sm text-foreground">
-          {currentLocation ? h.current(currentLocation) : h.currentUnassigned}
-        </p>
-        {housing.isDeceased ? (
-          <p className="text-sm text-muted">{t.residents.move.errors.deceased}</p>
-        ) : housing.isHospitalised ? (
-          <p className="text-sm text-muted">
-            {t.residents.move.errors.inHospital}{" "}
-            <Link
-              href={`/residents/${resident.id}/hospital/return`}
-              className="font-medium text-primary hover:underline"
-            >
-              {h.inHospital}
-            </Link>
+        <fieldset className="flex flex-col gap-4">
+          <legend className="text-base font-semibold text-foreground">
+            {t.residents.edit.sections.housing}
+          </legend>
+          <p className="text-sm text-foreground">
+            {currentLocation ? h.current(currentLocation) : h.currentUnassigned}
           </p>
-        ) : housing.isWithCarer ? (
-          <p className="text-sm text-muted">
-            {t.residents.move.errors.withCarer}{" "}
-            <Link
-              href={`/residents/${resident.id}/rehome/return`}
-              className="font-medium text-primary hover:underline"
-            >
-              {h.withCarer}
-            </Link>
-          </p>
-        ) : (
-          <>
-            <p className="text-sm text-muted">{h.hint}</p>
-            <EnclosurePicker
-              zones={zones}
-              enclosures={enclosures}
-              value={enclosureId}
-              onChange={(id) => {
-                setEnclosureId(id);
-                confirmedRef.current = false;
-              }}
-              currentEnclosureId={housing.enclosureId}
-              idPrefix="edit"
-            />
-            {moveTarget ? (
-              <div className="flex flex-col gap-4 rounded-lg border border-primary/40 bg-primary/10 p-4">
-                <p className="text-sm font-medium text-primary">
-                  {h.movingTo(moveTarget.name)}
-                </p>
-                <div className="grid gap-4 sm:grid-cols-2">
+          {housing.isDeceased ? (
+            <p className="text-sm text-muted">{t.residents.move.errors.deceased}</p>
+          ) : housing.isHospitalised ? (
+            <p className="text-sm text-muted">
+              {t.residents.move.errors.inHospital}{" "}
+              <Link
+                href={`/residents/${resident.id}/hospital/return`}
+                className="font-medium text-primary hover:underline"
+              >
+                {h.inHospital}
+              </Link>
+            </p>
+          ) : housing.isWithCarer ? (
+            <p className="text-sm text-muted">
+              {t.residents.move.errors.withCarer}{" "}
+              <Link
+                href={`/residents/${resident.id}/rehome/return`}
+                className="font-medium text-primary hover:underline"
+              >
+                {h.withCarer}
+              </Link>
+            </p>
+          ) : (
+            <>
+              <p className="text-sm text-muted">{h.hint}</p>
+              <EnclosurePicker
+                zones={zones}
+                enclosures={enclosures}
+                value={enclosureId}
+                onChange={(id) => {
+                  setEnclosureId(id);
+                  confirmedRef.current = false;
+                }}
+                currentEnclosureId={housing.enclosureId}
+                idPrefix="edit"
+              />
+              {moveTarget ? (
+                <div className="flex flex-col gap-4 rounded-lg border border-primary/40 bg-primary/10 p-4">
+                  <p className="text-sm font-medium text-primary">
+                    {h.movingTo(moveTarget.name)}
+                  </p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="flex flex-col gap-1">
+                      <label
+                        htmlFor="moveDate"
+                        className="text-sm font-medium text-muted"
+                      >
+                        {t.residents.move.fields.moveDate}{" "}
+                        <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        id="moveDate"
+                        name="moveDate"
+                        type="date"
+                        required
+                        max={todayIso()}
+                        defaultValue={todayIso()}
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
                   <div className="flex flex-col gap-1">
                     <label
-                      htmlFor="moveDate"
+                      htmlFor="moveNotes"
                       className="text-sm font-medium text-muted"
                     >
-                      {t.residents.move.fields.moveDate}{" "}
-                      <span className="text-danger">*</span>
+                      {t.common.notes}
                     </label>
-                    <input
-                      id="moveDate"
-                      name="moveDate"
-                      type="date"
-                      required
-                      max={todayIso()}
-                      defaultValue={todayIso()}
-                      className={inputClass}
+                    <textarea
+                      id="moveNotes"
+                      name="moveNotes"
+                      rows={2}
+                      placeholder={t.residents.move.fields.notesPlaceholder}
+                      className={textareaClass}
                     />
                   </div>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label
-                    htmlFor="moveNotes"
-                    className="text-sm font-medium text-muted"
-                  >
-                    {t.common.notes}
-                  </label>
-                  <textarea
-                    id="moveNotes"
-                    name="moveNotes"
-                    rows={2}
-                    placeholder={t.residents.move.fields.notesPlaceholder}
-                    className={textareaClass}
-                  />
-                </div>
-              </div>
-            ) : (
-              !enclosureId &&
-              currentPhysicalId && (
-                <p className="text-xs text-muted">{h.keep}</p>
-              )
-            )}
-          </>
-        )}
-      </fieldset>
+              ) : (
+                !enclosureId &&
+                currentPhysicalId && (
+                  <p className="text-xs text-muted">{h.keep}</p>
+                )
+              )}
+            </>
+          )}
+        </fieldset>
 
-      <fieldset className="flex flex-col gap-3">
-        <legend className="text-base font-semibold text-foreground">
-          {t.residents.edit.sections.flags}
-        </legend>
-        <label className="flex items-center gap-2 text-sm text-foreground">
-          <input
-            type="checkbox"
-            name="readyForAdoption"
-            defaultChecked={resident.ready_for_adoption}
-            className="h-4 w-4 accent-primary"
-          />
-          {f.readyForAdoption}
-        </label>
-      </fieldset>
+        <fieldset className="flex flex-col gap-3">
+          <legend className="text-base font-semibold text-foreground">
+            {t.residents.edit.sections.flags}
+          </legend>
+          <label className="flex items-center gap-2 text-sm text-foreground">
+            <input
+              type="checkbox"
+              name="readyForAdoption"
+              defaultChecked={resident.ready_for_adoption}
+              className="h-4 w-4 accent-primary"
+            />
+            {f.readyForAdoption}
+          </label>
+        </fieldset>
+        </>
+      )}
 
       <fieldset className="flex flex-col gap-4">
         <legend className="text-base font-semibold text-foreground">

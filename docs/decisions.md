@@ -6,6 +6,25 @@ Section 11, plus decisions made during setup that aren't in the original doc.
 
 ## Confirmed
 
+- **After death, the bio and photos stay open; nothing else does
+  (2026-09-21):** the backlog left 0026's lock allowing nothing until the
+  list existed. The list is the four bio columns (bio, temperament, past
+  story, behaviour notes) and the photos — the parts of the record that
+  describe who the animal was and that people want to add to after a
+  death — plus the profile-photo pointer that goes with them. Identity,
+  dates, placements, medical rows and the files on blood tests and
+  procedures stay locked. 0052 implements it inside the existing trigger
+  functions rather than as a role exemption: a `residents` UPDATE passes
+  only if the row with the open columns stripped is unchanged (so a save
+  that also touches the name is refused, not partially applied), and
+  `attachments` rows of owner type `'resident'` pass outright. The
+  archive's summary PDF and offline index both show the bio and photos,
+  so `refreshDeceasedArchiveIfNeeded()` regenerates them after each such
+  edit — best effort, since the edit is already saved and a Drive hiccup
+  shouldn't fail it; `archiveDeceasedResident()` was already idempotent.
+  Uploads after death land in the archived folder because
+  `drive_folder_id` follows the move.
+
 - **Diet is a dated record with a size-driven portion, not a notes field
   (2026-09-21):** the backlog asked for a dietary requirements field; the
   shelter wants history, a current view, and food ordering and budget
