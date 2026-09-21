@@ -32,8 +32,7 @@ next-env.d.ts
 dist/
 build/
 
-# Vercel / Cloudflare
-.vercel
+# Cloudflare
 .wrangler/
 .open-next/
 cloudflare-env.d.ts
