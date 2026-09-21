@@ -33,6 +33,7 @@ function matches(contact: Contact, query: string) {
     contact.messenger_id,
     contact.whatsapp,
     contact.address,
+    contact.notes,
   ]
     .filter((v): v is string => Boolean(v))
     .some((v) => v.toLowerCase().includes(q));

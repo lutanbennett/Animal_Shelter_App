@@ -24,6 +24,7 @@ export type ContactFields = {
   messengerId: string | null;
   whatsapp: string | null;
   address: string | null;
+  notes: string | null;
 };
 
 function optional(value: FormDataEntryValue | string | null | undefined) {
@@ -59,6 +60,7 @@ export async function createContact(
     messenger_id: optional(formData.get("messengerId")),
     whatsapp: optional(formData.get("whatsapp")),
     address: optional(formData.get("address")),
+    notes: optional(formData.get("notes")),
   });
 
   if (error) return { error: error.message };
@@ -114,6 +116,7 @@ export async function updateContact(id: string, fields: ContactFields) {
       messenger_id: optional(fields.messengerId),
       whatsapp: optional(fields.whatsapp),
       address: optional(fields.address),
+      notes: optional(fields.notes),
     })
     .eq("id", id);
 
