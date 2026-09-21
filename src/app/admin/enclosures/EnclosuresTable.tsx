@@ -9,6 +9,7 @@ type ZoneOption = { id: string; name: string };
 export type EnclosureRow = {
   id: string;
   name: string;
+  name_th: string | null;
   capacity: number | null;
   notes: string | null;
   zone_id: string;
@@ -26,6 +27,7 @@ function EnclosureRowItem({
   const isSystem = enclosure.zones?.name === "Lifecycle";
 
   const [name, setName] = useState(enclosure.name);
+  const [nameTh, setNameTh] = useState(enclosure.name_th ?? "");
   const [zoneId, setZoneId] = useState(enclosure.zone_id);
   const [capacity, setCapacity] = useState(
     enclosure.capacity?.toString() ?? "",
@@ -54,6 +56,7 @@ function EnclosureRowItem({
       try {
         await updateEnclosure(enclosure.id, {
           name,
+          nameTh: nameTh || null,
           zoneId,
           capacity: parsedCapacity,
           notes: notes || null,
@@ -101,6 +104,18 @@ function EnclosureRowItem({
                 <span className="ml-2 text-xs text-muted">{t.common.system}</span>
               )}
             </span>
+          )}
+        </td>
+        <td className="px-4 py-2">
+          {editing ? (
+            <input
+              value={nameTh}
+              lang="th"
+              onChange={(e) => setNameTh(e.target.value)}
+              className="w-40 rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary"
+            />
+          ) : (
+            <span className="text-foreground">{enclosure.name_th ?? t.common.dash}</span>
           )}
         </td>
         <td className="px-4 py-2">
@@ -171,6 +186,7 @@ function EnclosureRowItem({
                     onClick={() => {
                       setEditing(false);
                       setName(enclosure.name);
+                      setNameTh(enclosure.name_th ?? "");
                       setZoneId(enclosure.zone_id);
                       setCapacity(enclosure.capacity?.toString() ?? "");
                       setNotes(enclosure.notes ?? "");
@@ -204,7 +220,7 @@ function EnclosureRowItem({
       {message && (
         <tr>
           <td
-            colSpan={5}
+            colSpan={6}
             className={`px-4 pb-2 text-xs ${
               message.type === "error" ? "text-danger" : "text-success"
             }`}
@@ -235,6 +251,9 @@ export function EnclosuresTable({
               {t.admin.enclosures.table.name}
             </th>
             <th className="px-4 py-2 font-medium">
+              {t.admin.enclosures.table.nameTh}
+            </th>
+            <th className="px-4 py-2 font-medium">
               {t.admin.enclosures.table.zone}
             </th>
             <th className="px-4 py-2 font-medium">
@@ -256,7 +275,7 @@ export function EnclosuresTable({
           ))}
           {enclosures.length === 0 && (
             <tr>
-              <td colSpan={5} className="px-4 py-6 text-center text-muted">
+              <td colSpan={6} className="px-4 py-6 text-center text-muted">
                 {t.admin.enclosures.table.noEnclosures}
               </td>
             </tr>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { placeName } from "@/lib/enclosures/names";
 import { estimatedAgeNow } from "@/lib/format";
 import { loadEnclosureOptions } from "@/lib/enclosures/options";
 import type { PhotoRow } from "@/components/PhotoGallery";
@@ -15,7 +16,7 @@ export default async function EditResidentPage(
   props: PageProps<"/residents/[id]/edit">,
 ) {
   const { id } = await props.params;
-  const { t } = await getT();
+  const { t, locale } = await getT();
   const supabase = await createClient();
 
   const [
@@ -44,14 +45,17 @@ export default async function EditResidentPage(
     supabase.rpc("current_user_role"),
     supabase
       .from("resident_list_view")
-      .select("enclosure_id, enclosure_name, zone_name")
+      .select("enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th")
       .eq("resident_id", id)
       .limit(1)
       .returns<
         {
           enclosure_id: string | null;
           enclosure_name: string | null;
+
+          enclosure_name_th: string | null;
           zone_name: string | null;
+          zone_name_th: string | null;
         }[]
       >(),
     supabase
@@ -79,8 +83,8 @@ export default async function EditResidentPage(
   const currentStatus = stateResult.data?.[0]?.current_status ?? null;
   const housing: HousingState = {
     enclosureId: status?.enclosure_id ?? null,
-    enclosureName: status?.enclosure_name ?? null,
-    zoneName: status?.zone_name ?? null,
+    enclosureName: placeName(locale, status?.enclosure_name, status?.enclosure_name_th) || null,
+    zoneName: placeName(locale, status?.zone_name, status?.zone_name_th) || null,
     isDeceased: stateResult.data?.[0]?.is_deceased ?? false,
     isHospitalised: currentStatus === "Hospitalised",
     isWithCarer: currentStatus === "Fostered" || currentStatus === "Adopted",

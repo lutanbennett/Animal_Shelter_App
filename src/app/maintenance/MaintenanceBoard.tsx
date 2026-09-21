@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { CalendarClock, Camera, Plus, UserRound } from "lucide-react";
 import { ENCLOSURE_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { placeName } from "@/lib/enclosures/names";
 import { formatBaht, formatDate } from "@/lib/format";
 import type { EnclosureOption, ZoneOption } from "@/lib/enclosures/options";
 import type { MaintenanceJob } from "@/lib/maintenance/queries";
@@ -180,7 +181,7 @@ export function MaintenanceBoard({
             <option value="">{m.filters.allZones}</option>
             {zones.map((zone) => (
               <option key={zone.id} value={zone.id}>
-                {zone.name}
+                {placeName(locale, zone.name, zone.name_th)}
               </option>
             ))}
           </select>
@@ -201,7 +202,7 @@ export function MaintenanceBoard({
             <option value="">{m.filters.allEnclosures}</option>
             {enclosuresInZone.map((enclosure) => (
               <option key={enclosure.id} value={enclosure.id}>
-                {enclosure.name}
+                {placeName(locale, enclosure.name, enclosure.name_th)}
               </option>
             ))}
           </select>
@@ -444,9 +445,11 @@ function JobCard({
       </div>
       <span className="flex items-center gap-1 truncate text-xs text-muted">
         <ENCLOSURE_ICONS.zone aria-hidden="true" className="h-3 w-3 shrink-0" />
-        {job.zone_name}
+        {placeName(locale, job.zone_name, job.zone_name_th)}
         {" › "}
-        {job.enclosure_name ?? t.maintenance.zoneWide}
+        {job.enclosure_name
+          ? placeName(locale, job.enclosure_name, job.enclosure_name_th)
+          : t.maintenance.zoneWide}
       </span>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
         {showStatus && (

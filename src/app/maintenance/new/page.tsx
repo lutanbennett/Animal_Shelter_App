@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { placeName } from "@/lib/enclosures/names";
 import { loadEnclosureOptions } from "@/lib/enclosures/options";
 import { loadAssignableUsers } from "@/lib/auth/app-users";
 import { canWriteMaintenance } from "@/lib/maintenance/queries";
@@ -14,7 +15,7 @@ import { MaintenanceForm } from "../MaintenanceForm";
  */
 export default async function NewMaintenancePage(props: PageProps<"/maintenance/new">) {
   const searchParams = await props.searchParams;
-  const { t } = await getT();
+  const { t, locale } = await getT();
   const supabase = await createClient();
 
   const [{ data: role }, options, assignees] = await Promise.all([
@@ -49,7 +50,7 @@ export default async function NewMaintenancePage(props: PageProps<"/maintenance/
         className="text-sm text-muted hover:text-foreground"
       >
         {enclosure
-          ? t.maintenance.backToEnclosure(enclosure.name)
+          ? t.maintenance.backToEnclosure(placeName(locale, enclosure.name, enclosure.name_th))
           : t.maintenance.backToBoard}
       </Link>
       <div>

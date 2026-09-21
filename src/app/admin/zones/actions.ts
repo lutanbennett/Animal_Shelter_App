@@ -15,12 +15,13 @@ export async function createZone(
   const { t } = await getT();
 
   const name = (formData.get("name") as string | null)?.trim();
+  const nameTh = (formData.get("nameTh") as string | null)?.trim() || null;
   const internal = formData.get("internal") === "on";
 
   if (!name) return { error: t.admin.zones.errors.nameRequired };
 
   const supabase = await createClient();
-  const { error } = await supabase.from("zones").insert({ name, internal });
+  const { error } = await supabase.from("zones").insert({ name, name_th: nameTh, internal });
 
   if (error) return { error: error.message };
 
@@ -28,7 +29,12 @@ export async function createZone(
   return { success: t.admin.zones.createdZone(name) };
 }
 
-export async function updateZone(id: string, name: string, internal: boolean) {
+export async function updateZone(
+  id: string,
+  name: string,
+  nameTh: string | null,
+  internal: boolean,
+) {
   await assertAdminRole();
   const { t } = await getT();
   if (!name.trim()) throw new Error(t.admin.zones.errors.nameRequired);
@@ -36,7 +42,7 @@ export async function updateZone(id: string, name: string, internal: boolean) {
   const supabase = await createClient();
   const { error } = await supabase
     .from("zones")
-    .update({ name: name.trim(), internal })
+    .update({ name: name.trim(), name_th: nameTh?.trim() || null, internal })
     .eq("id", id);
 
   if (error) throw new Error(error.message);

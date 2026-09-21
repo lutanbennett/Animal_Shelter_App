@@ -7,6 +7,7 @@ import { PawPrint, Pencil } from "lucide-react";
 import { ActionLink } from "@/components/ActionLink";
 import { SECTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { placeName } from "@/lib/enclosures/names";
 import { statusLabel } from "@/lib/i18n/enum-labels";
 
 export type ResidentRow = {
@@ -18,8 +19,10 @@ export type ResidentRow = {
   current_status: string | null;
   enclosure_id: string | null;
   enclosure_name: string | null;
+  enclosure_name_th: string | null;
   zone_id: string | null;
   zone_name: string | null;
+  zone_name_th: string | null;
   zone_internal: boolean | null;
 };
 
@@ -30,7 +33,7 @@ function fullName(resident: Pick<ResidentRow, "name" | "thai_name">) {
 }
 
 export function ResidentsTable({ residents }: { residents: ResidentRow[] }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
@@ -162,10 +165,10 @@ export function ResidentsTable({ residents }: { residents: ResidentRow[] }) {
                   </Link>
                 </td>
                 <td className="hidden px-4 py-2 text-muted md:table-cell">
-                  {resident.enclosure_name ?? t.common.dash}
+                  {placeName(locale, resident.enclosure_name, resident.enclosure_name_th) || t.common.dash}
                 </td>
                 <td className="hidden px-4 py-2 text-muted md:table-cell">
-                  {resident.zone_name ?? t.common.dash}
+                  {placeName(locale, resident.zone_name, resident.zone_name_th) || t.common.dash}
                 </td>
                 <td className="hidden px-4 py-2 text-muted md:table-cell">
                   {resident.current_status

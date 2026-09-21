@@ -519,7 +519,7 @@ const manual: Manual = {
           steps: [
             "The occupancy bar and notes are at the top; tap a resident to jump to their hub.",
             "The Maintenance card shows open jobs on this enclosure, with Log maintenance to add one already pointed at this enclosure.",
-            "Admins can change the name, capacity and notes under Admin → Enclosures.",
+            "Admins can change the name, Thai name, capacity and notes under Admin → Enclosures.",
           ],
           screenshot: {
             src: "/manual/enclosure-hub.png",
@@ -808,9 +808,10 @@ const manual: Manual = {
           roles: ["admin"],
           path: "Admin → Zones, Admin → Enclosures",
           steps: [
-            "Zones are the physical areas of the shelter (marked Internal) plus off-site ones (External). Add a zone with a name.",
+            "Zones are the physical areas of the shelter (marked Internal) plus off-site ones (External). Add a zone with a name and, optionally, a Thai name.",
             "Enclosures belong to a zone and have a capacity and notes. The capacity drives the occupancy colours and the nearly-full warning when moving a resident.",
-            "The Lifecycle zone and its pseudo-enclosures (Hospital, Fostered, Adopted, Deceased, Unassigned) are used by the app's status logic and can't be edited.",
+            "The Thai name is what staff reading the app in Thai see everywhere a zone or enclosure is shown — the residents list, the hub, the enclosure browser, the maintenance board and every picker. Leave it blank and the English name is used. The English name stays the one Google Drive folders and the app's own logic go by, so renaming in Thai never moves anything.",
+            "The Lifecycle zone and its pseudo-enclosures (Hospital, Fostered, Adopted, Deceased, Unassigned) are used by the app's status logic and can't be edited; their Thai names are built in.",
           ],
           screenshot: {
             src: "/manual/admin-enclosures.png",

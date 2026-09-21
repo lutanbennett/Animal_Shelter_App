@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ENCLOSURE_ICONS } from "@/components/hub-icons";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { placeName } from "@/lib/enclosures/names";
 import { formatDate } from "@/lib/format";
 import type { MaintenanceJob } from "@/lib/maintenance/queries";
 import {
@@ -17,10 +18,12 @@ import { OccupancyIndicator } from "../OccupancyIndicator";
 export type Enclosure = {
   id: string;
   name: string;
+  name_th: string | null;
   capacity: number | null;
   notes: string | null;
   zone_id: string;
   zone_name: string;
+  zone_name_th: string | null;
   zone_internal: boolean;
   isSystem: boolean;
 };
@@ -99,7 +102,7 @@ export function EnclosureHub({
               className="h-6 w-6 shrink-0 text-muted"
             />
             <h1 className="text-2xl font-semibold text-foreground">
-              {enclosure.name}
+              {placeName(locale, enclosure.name, enclosure.name_th)}
             </h1>
             {enclosure.isSystem && (
               <span className="rounded-full bg-surface-hover px-2 py-0.5 text-xs font-medium text-muted">
@@ -109,7 +112,7 @@ export function EnclosureHub({
           </div>
           <p className="flex items-center gap-1 text-sm text-muted">
             <ENCLOSURE_ICONS.zone aria-hidden="true" className="h-4 w-4" />
-            {enclosure.zone_name}
+            {placeName(locale, enclosure.zone_name, enclosure.zone_name_th)}
             {" · "}
             {enclosure.isSystem
               ? t.enclosures.hub.system

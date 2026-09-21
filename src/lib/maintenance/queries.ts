@@ -20,8 +20,11 @@ export type MaintenanceJob = {
   status: MaintenanceStatus;
   zone_id: string;
   zone_name: string;
+  /** Display only — Drive folders use zone_name (0058). */
+  zone_name_th: string | null;
   enclosure_id: string | null;
   enclosure_name: string | null;
+  enclosure_name_th: string | null;
   estimated_cost: number | null;
   actual_cost: number | null;
   due_date: string | null;
@@ -37,14 +40,14 @@ export type MaintenanceJob = {
 
 type JobRow = Omit<
   MaintenanceJob,
-  "zone_name" | "enclosure_name" | "assignee_name" | "attachments"
+  "zone_name" | "zone_name_th" | "enclosure_name" | "enclosure_name_th" | "assignee_name" | "attachments"
 > & {
-  zones: { name: string } | null;
-  enclosures: { name: string } | null;
+  zones: { name: string; name_th: string | null } | null;
+  enclosures: { name: string; name_th: string | null } | null;
 };
 
 const JOB_COLUMNS =
-  "id, job_code, title, description, status, zone_id, enclosure_id, estimated_cost, actual_cost, due_date, date_created, date_completed, updated_at, assigned_user_id, drive_folder_id, zones(name), enclosures(name)";
+  "id, job_code, title, description, status, zone_id, enclosure_id, estimated_cost, actual_cost, due_date, date_created, date_completed, updated_at, assigned_user_id, drive_folder_id, zones(name, name_th), enclosures(name, name_th)";
 
 /**
  * Maintenance jobs with their files. `attachments` has no foreign key to
@@ -100,7 +103,9 @@ export async function loadMaintenanceJobs(
     jobs: rows.map(({ zones, enclosures, ...row }) => ({
       ...row,
       zone_name: zones?.name ?? "—",
+      zone_name_th: zones?.name_th ?? null,
       enclosure_name: enclosures?.name ?? null,
+      enclosure_name_th: enclosures?.name_th ?? null,
       assignee_name: row.assigned_user_id
         ? appUserLabel(assignees.get(row.assigned_user_id))
         : null,

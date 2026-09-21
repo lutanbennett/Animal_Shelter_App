@@ -3,11 +3,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 /** The Lifecycle pseudo-zone holds status buckets, not physical enclosures. */
 export const SYSTEM_ZONE = "Lifecycle";
 
-export type ZoneOption = { id: string; name: string };
+/** `name` is the English key; `name_th` is display only (placeName()). */
+export type ZoneOption = { id: string; name: string; name_th: string | null };
 
 export type EnclosureOption = {
   id: string;
   name: string;
+  name_th: string | null;
   zoneId: string;
   capacity: number | null;
   /** Residents currently placed here, per resident_list_view. */
@@ -30,15 +32,15 @@ export async function loadEnclosureOptions(supabase: SupabaseClient) {
   const [zonesResult, enclosuresResult, residentsResult] = await Promise.all([
     supabase
       .from("zones")
-      .select("id, name")
+      .select("id, name, name_th")
       .neq("name", SYSTEM_ZONE)
       .returns<ZoneOption[]>(),
     supabase
       .from("enclosures")
-      .select("id, name, zone_id, capacity, zones!inner(name)")
+      .select("id, name, name_th, zone_id, capacity, zones!inner(name)")
       .neq("zones.name", SYSTEM_ZONE)
       .returns<
-        { id: string; name: string; zone_id: string; capacity: number | null }[]
+        { id: string; name: string; name_th: string | null; zone_id: string; capacity: number | null }[]
       >(),
     supabase
       .from("resident_list_view")
@@ -57,6 +59,7 @@ export async function loadEnclosureOptions(supabase: SupabaseClient) {
     .map((e) => ({
       id: e.id,
       name: e.name,
+      name_th: e.name_th,
       zoneId: e.zone_id,
       capacity: e.capacity,
       residentCount: counts.get(e.id) ?? 0,

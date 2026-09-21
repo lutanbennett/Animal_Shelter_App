@@ -13,7 +13,7 @@ export default async function EnclosuresPage() {
   const [enclosuresResult, zonesResult] = await Promise.all([
     supabase
       .from("enclosures")
-      .select("id, name, capacity, notes, zone_id, zones(name)")
+      .select("id, name, name_th, capacity, notes, zone_id, zones(name)")
       .order("name")
       .returns<EnclosureRow[]>(),
     supabase.from("zones").select("id, name").order("name"),

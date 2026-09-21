@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { TriangleAlert } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { placeName } from "@/lib/enclosures/names";
 import type { EnclosureOption } from "@/lib/enclosures/options";
 import { capacityWarningLevel } from "./EnclosurePicker";
 
@@ -25,7 +26,7 @@ export function CapacityWarningDialog({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const w = t.residents.move.warning;
 
   useEffect(() => {
@@ -75,7 +76,7 @@ export function CapacityWarningDialog({
             </h2>
             <p id="capacity-warning-body" className="text-sm text-muted">
               {w.body(
-                enclosure.name,
+                placeName(locale, enclosure.name, enclosure.name_th),
                 t.enclosures.occupancy(enclosure.residentCount, capacity),
                 t.enclosures.occupancy(enclosure.residentCount + 1, capacity),
               )}

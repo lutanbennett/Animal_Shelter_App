@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { placeName } from "@/lib/enclosures/names";
 import { loadCarerOptions } from "@/lib/contacts/carers";
 import {
   FOSTERED_ENCLOSURE,
@@ -14,7 +15,7 @@ import { RehomeForm } from "./RehomeForm";
 export default async function RehomePage(props: PageProps<"/residents/[id]/rehome">) {
   const { id } = await props.params;
   const searchParams = await props.searchParams;
-  const { t } = await getT();
+  const { t, locale } = await getT();
   const supabase = await createClient();
 
   const [
@@ -36,14 +37,17 @@ export default async function RehomePage(props: PageProps<"/residents/[id]/rehom
       >(),
     supabase
       .from("resident_list_view")
-      .select("current_status, enclosure_name, zone_name")
+      .select("current_status, enclosure_name, enclosure_name_th, zone_name, zone_name_th")
       .eq("resident_id", id)
       .limit(1)
       .returns<
         {
           current_status: string | null;
           enclosure_name: string | null;
+
+          enclosure_name_th: string | null;
           zone_name: string | null;
+          zone_name_th: string | null;
         }[]
       >(),
     supabase
@@ -154,8 +158,8 @@ export default async function RehomePage(props: PageProps<"/residents/[id]/rehom
           residentId={id}
           current={{
             status: currentStatus,
-            enclosureName: status?.enclosure_name ?? null,
-            zoneName: status?.zone_name ?? null,
+            enclosureName: placeName(locale, status?.enclosure_name, status?.enclosure_name_th) || null,
+            zoneName: placeName(locale, status?.zone_name, status?.zone_name_th) || null,
             carerName: carerName(currentCarerId),
             since: placementResult.data?.[0]?.start_date ?? null,
           }}

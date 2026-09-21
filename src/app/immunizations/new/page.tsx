@@ -42,10 +42,10 @@ export default async function NewImmunizationPage(
         .from("immunization_types")
         .select("id, name, is_mandatory, interval_months")
         .order("name"),
-      supabase.from("zones").select("id, name").order("name"),
+      supabase.from("zones").select("id, name, name_th").order("name"),
       supabase
         .from("enclosures")
-        .select("id, name, zone_id")
+        .select("id, name, name_th, zone_id")
         .order("name"),
     ]);
 

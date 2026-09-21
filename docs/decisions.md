@@ -1457,3 +1457,28 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   with no data; the queue page is the job list). `site_content` Thai
   columns (backlog) could go through the same table by giving the
   trigger a `site_content` entry — noted on that item.
+
+- **Thai names for zones and enclosures are a paired column, not a
+  translation (2026-09-21):** asked for the moment the translations
+  feature (above) landed — the staff who read the maintenance board and
+  the resident hub in Thai still saw zone and enclosure names in English.
+  These are labels: unique keys, Drive folder path components
+  (`Enclosure Maintenance/<Zone>/<Enclosure>/`), and the Lifecycle
+  pseudo-rows are matched *by name* in `resident_current_state` and the
+  placement functions. So 0058 follows `residents.thai_name` and
+  `project_folders.name_th`: a nullable `name_th` on both tables,
+  display only, edited in place on Admin → Zones / Enclosures and taken on
+  create. `placeName(locale, name, name_th)` (`src/lib/enclosures/names.ts`)
+  does the pick with the English as fallback and is the one function every
+  render site calls; server pages that hand a form a plain `enclosureName`
+  string localize it there, client components with `locale` in scope
+  localize themselves. `resident_list_view` carries the two Thai columns on
+  the end; the maintenance and enclosure loaders read them through their
+  embedded selects; `MaintenanceJob` keeps `zone_name` English because
+  `drive.ts` builds the folder path from it. The Lifecycle zone and its
+  pseudo-enclosures can't be edited on the admin pages, so their Thai names
+  are seeded by the migration (matching the status labels) and only where
+  blank, so an admin's later SQL edit would stick. The enclosure browser's
+  search matches the Thai name too. Volume is a few new enclosures a year,
+  so there is no queue or staleness tracking for these — the admin types
+  both names at once.
