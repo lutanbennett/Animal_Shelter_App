@@ -101,8 +101,8 @@ Two databases, both on Supabase's free tier (the org allows two). Test
 deliberately shares the dev database: one developer, throwaway data, and
 what Test is for is exercising a real Workers build of `main` on phones
 before it goes to production. Production holds the shelter's real records.
-Both are free-tier projects, which means **no automatic backups** — see
-"Backups" below. Free projects also pause after seven days with no
+Both are free-tier projects, which means **no automatic backups** beyond
+the weekly `scripts/backup.mjs` dump — see "Backups" below. Free projects also pause after seven days with no
 requests at all, which the public pages make impossible while the site is
 up.
 
@@ -114,8 +114,9 @@ Supabase project ref before doing anything.
 
 `.env.deploy.production` (gitignored) holds the production
 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and
-`SUPABASE_SERVICE_ROLE_KEY`; anything it doesn't set — currently the whole
-Google Drive set — falls through to `.env.local`. Next.js and OpenNext never
+`SUPABASE_SERVICE_ROLE_KEY` (and `SUPABASE_DB_PASSWORD` for backups);
+anything it doesn't set — currently the whole Google Drive set — falls
+through to `.env.local`. Next.js and OpenNext never
 read that file on their own, which is what keeps a production build from
 happening by accident: only `scripts/deploy.mjs` puts its values in the
 shell.
@@ -250,10 +251,67 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
 ## Backups
 
 Free-tier Supabase projects have no automatic backups or point-in-time
-recovery. Production's safety net is a scheduled `pg_dump` of the database
-into the shelter's Google Drive — not yet set up; see `docs/backlog.md`
-("Deployment"). Until it is, anything destructive on production is
-unrecoverable.
+recovery, so production's safety net is `scripts/backup.mjs`: a `pg_dump`
+(custom format) of the `public` and `auth` schemas — every record plus the
+accounts that can sign in — uploaded to a `Backups/` folder under the Drive
+root as `lannacare-<env>-<timestamp>.dump`, keeping the newest twelve per
+environment (older ones go to the Drive trash, which empties itself after
+30 days).
+
+```bash
+node scripts/backup.mjs --env production
+```
+
+`--keep N` changes the retention; `--local <dir>` writes the dump there
+instead of uploading (for a restore rehearsal). It prints the environment
+and project ref first, like every other script, and exits non-zero if any
+step fails.
+
+One-time setup on the machine that runs it:
+
+1. **PostgreSQL 17 command-line tools** — the projects run Postgres 17 and
+   `pg_dump` must not be older than the server. No local server is needed,
+   so install only the tools:
+
+   ```bash
+   winget install --id PostgreSQL.PostgreSQL.17 --override "--mode unattended --unattendedmodeui none --disable-components server,pgAdmin,stackbuilder"
+   ```
+
+   The script finds `pg_dump.exe` under `C:\Program Files\PostgreSQL\`
+   itself; nothing needs adding to `PATH` (set `PG_DUMP` to point it
+   elsewhere).
+2. **The database password** — `SUPABASE_DB_PASSWORD` in
+   `.env.deploy.production` (and in `.env.local` for the dev project). It
+   is the password chosen when the Supabase project was created; Project
+   Settings → Database resets it if it was never written down. The dump
+   goes over Supabase's session pooler on port 5432 (the direct
+   `db.<ref>.supabase.co` host is IPv6-only), whose host and user the
+   script reads from the Management API with `SUPABASE_ACCESS_TOKEN`.
+3. **The weekly schedule** — `scripts/backup-schedule.ps1` registers a
+   Task Scheduler job, "Lanna Care production backup", for Sundays at
+   03:00 (run as soon as the machine is next awake if it missed the time),
+   appending to `backup.log` in the repo:
+
+   ```bash
+   powershell -ExecutionPolicy Bypass -File scripts\backup-schedule.ps1
+   ```
+
+   `Get-ScheduledTaskInfo -TaskName "Lanna Care production backup"` shows
+   the last run and its result (0 is success); `-Remove` unregisters it.
+   The task runs only while Lutan is logged on, so a laptop that stays
+   shut for a fortnight simply has no backup that fortnight.
+
+**Restoring** into a Supabase project (a scratch one, or production after a
+disaster) — untested until the backlog's restore rehearsal is done:
+
+```bash
+pg_restore --dbname="postgresql://postgres.<ref>:<password>@aws-0-ap-south-1.pooler.supabase.com:5432/postgres" --schema=public --clean --if-exists --no-owner --no-privileges lannacare-production-<timestamp>.dump
+```
+
+then the same with `--schema=auth --data-only` for the accounts (the `auth`
+tables already exist in every project, so only their rows are restored),
+then `node scripts/apply-migrations.mjs --status --env …` to confirm the
+`schema_migrations` table came across.
 
 ## Project structure
 
