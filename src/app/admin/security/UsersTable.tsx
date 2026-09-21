@@ -1,7 +1,8 @@
 "use client";
 
 import { Fragment, useState, useTransition } from "react";
-import { deleteUser, resetUserPassword, updateUserRole } from "./actions";
+import { deleteUser, issueTemporaryPassword, updateUserRole } from "./actions";
+import { TemporaryPasswordNotice } from "@/components/TemporaryPasswordNotice";
 import { formatDateTime as formatDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { roleLabel } from "@/lib/i18n/enum-labels";
@@ -12,6 +13,8 @@ export type SecurityUser = {
   role: string | null;
   createdAt: string;
   lastSignInAt: string | null;
+  /** On a temporary password — must choose their own at the next password sign-in. */
+  mustChangePassword: boolean;
 };
 
 const ROLES = ["admin", "management", "staff", "vet", "volunteer"];
@@ -25,7 +28,7 @@ function UserRow({
 }) {
   const { t, locale } = useI18n();
   const [role, setRole] = useState(user.role ?? "");
-  const [newPassword, setNewPassword] = useState("");
+  const [issuedPassword, setIssuedPassword] = useState<string | null>(null);
   const [message, setMessage] = useState<
     { type: "error" | "success"; text: string } | null
   >(null);
@@ -52,20 +55,14 @@ function UserRow({
     });
   }
 
-  function handleResetPassword() {
-    if (newPassword.length < 8) {
-      setMessage({
-        type: "error",
-        text: t.admin.security.table.passwordTooShort,
-      });
-      return;
-    }
+  function handleIssuePassword() {
+    if (!window.confirm(t.admin.security.table.issueConfirm(user.email))) return;
     setMessage(null);
+    setIssuedPassword(null);
     startTransition(async () => {
       try {
-        await resetUserPassword(user.id, newPassword);
-        setNewPassword("");
-        setMessage({ type: "success", text: t.admin.security.table.passwordUpdated });
+        const password = await issueTemporaryPassword(user.id);
+        setIssuedPassword(password);
       } catch (err) {
         setMessage({
           type: "error",
@@ -106,6 +103,11 @@ function UserRow({
               {t.admin.security.table.you}
             </span>
           )}
+          {user.mustChangePassword && (
+            <span className="ml-2 rounded-full bg-warning/15 px-2 py-0.5 text-xs text-foreground">
+              {t.admin.security.table.temporaryPassword}
+            </span>
+          )}
         </td>
         <td className="px-4 py-2 text-muted">
           {formatDate(user.createdAt, locale)}
@@ -131,23 +133,16 @@ function UserRow({
           </select>
         </td>
         <td className="px-4 py-2">
-          <div className="flex items-center gap-2">
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder={t.admin.security.table.newPasswordPlaceholder}
-              className="w-36 rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary"
-            />
+          {!isSelf && (
             <button
               type="button"
               disabled={isPending}
-              onClick={handleResetPassword}
+              onClick={handleIssuePassword}
               className="rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
             >
-              {t.admin.security.table.reset}
+              {t.admin.security.table.issueTemporaryPassword}
             </button>
-          </div>
+          )}
         </td>
         <td className="px-4 py-2">
           {!isSelf && (
@@ -162,6 +157,13 @@ function UserRow({
           )}
         </td>
       </tr>
+      {issuedPassword && (
+        <tr>
+          <td colSpan={6} className="px-4 pb-3">
+            <TemporaryPasswordNotice email={user.email} password={issuedPassword} />
+          </td>
+        </tr>
+      )}
       {message && (
         <tr>
           <td

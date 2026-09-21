@@ -1,6 +1,7 @@
 import { requireAdminUser } from "@/lib/auth/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getT } from "@/lib/i18n/get-t";
+import { mustChangePassword } from "@/lib/auth/password-change";
 import { CreateUserForm } from "./CreateUserForm";
 import { UsersTable, type SecurityUser } from "./UsersTable";
 
@@ -26,6 +27,7 @@ export default async function SecurityPage() {
       role: roleByUserId.get(u.id) ?? null,
       createdAt: u.created_at,
       lastSignInAt: u.last_sign_in_at ?? null,
+      mustChangePassword: mustChangePassword(u),
     }))
     .sort((a, b) => a.email.localeCompare(b.email));
 

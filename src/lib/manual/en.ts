@@ -761,9 +761,9 @@ const manual: Manual = {
           roles: ["admin"],
           path: "Admin → Security",
           steps: [
-            "Create a user with an email, a password (at least 8 characters) and a role. Give them the details to sign in.",
+            "Create a user with an email and a role. A temporary password is generated and shown once — copy it and pass it on (LINE is fine; it only works until they've signed in). The first time they sign in with it they must choose their own password before anything else opens. Someone who will only use Google sign-in can ignore the temporary password.",
             "Someone signing in with Google for the first time is turned away with \"hasn't been given access yet\", but their account appears in the table with No role — pick a role for them and ask them to try again. If their Google email matches a login you created, the two are linked automatically.",
-            "Change a role from the dropdown in the table, reset a password, or delete an account. You can't change or delete your own.",
+            "Change a role from the dropdown in the table, or delete an account. Issue temporary password does what it says — their old password stops working and they choose a new one at their next sign-in. You can't change your own role, reset your own password here or delete yourself; change your own password from Change password in the menu.",
           ],
           screenshot: {
             src: "/manual/admin-security.png",

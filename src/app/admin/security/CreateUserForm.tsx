@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { createUser } from "./actions";
+import { TemporaryPasswordNotice } from "@/components/TemporaryPasswordNotice";
 
 export function CreateUserForm() {
   const [state, formAction, pending] = useActionState(createUser, undefined);
@@ -35,21 +36,6 @@ export function CreateUserForm() {
         />
       </div>
       <div className="flex flex-col gap-1">
-        <label htmlFor="password" className="text-sm font-medium text-muted">
-          {t.admin.security.createForm.password}
-        </label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          required
-          minLength={8}
-          autoComplete="new-password"
-          placeholder={t.admin.security.createForm.passwordPlaceholder}
-          className="w-56 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
-        />
-      </div>
-      <div className="flex flex-col gap-1">
         <label htmlFor="role" className="text-sm font-medium text-muted">
           {t.admin.security.createForm.role}
         </label>
@@ -76,8 +62,12 @@ export function CreateUserForm() {
       {state && "error" in state && (
         <p className="w-full text-sm text-danger">{state.error}</p>
       )}
+      <p className="w-full text-xs text-muted">{t.admin.security.createForm.tempPasswordNote}</p>
       {state && "success" in state && (
-        <p className="w-full text-sm text-success">{state.success}</p>
+        <>
+          <p className="w-full text-sm text-success">{state.success}</p>
+          <TemporaryPasswordNotice email={state.email} password={state.temporaryPassword} />
+        </>
       )}
     </form>
   );

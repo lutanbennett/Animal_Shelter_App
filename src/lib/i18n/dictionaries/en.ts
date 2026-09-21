@@ -55,6 +55,7 @@ const en = {
     diets: "Diets",
     contacts: "Contacts",
     manual: "User manual",
+    changePassword: "Change password",
     menu: "Menu",
     openMenu: "Open menu",
     closeMenu: "Close menu",
@@ -95,6 +96,26 @@ const en = {
     },
   },
 
+  account: {
+    password: {
+      title: "Change password",
+      subtitle: "Choose a new password for your login. Google sign-in is unaffected.",
+      forcedTitle: "Choose your password",
+      forcedSubtitle:
+        "You signed in with a temporary password. Set your own to continue — nothing else is available until you do.",
+      newPassword: "New password",
+      confirmPassword: "Confirm new password",
+      hint: (min: number) => `At least ${min} characters.`,
+      submit: "Set password",
+      changed: "Password changed.",
+      errors: {
+        tooShort: (min: number) => `Password must be at least ${min} characters.`,
+        mismatch: "The two passwords don't match.",
+        samePassword: "Choose a password you haven't used before.",
+      },
+    },
+  },
+
   login: {
     heading: "Lanna Care for Animals",
     email: "Email",
@@ -124,6 +145,14 @@ const en = {
         passwordPlaceholder: "At least 8 characters",
         role: "Role",
         createButton: "Create user",
+        tempPasswordNote:
+          "A temporary password is generated and shown once — pass it on. They'll be asked to choose their own the first time they sign in with it. Someone who will only ever use Google sign-in can ignore it.",
+      },
+      tempPassword: {
+        heading: (email: string) => `Temporary password for ${email}`,
+        copy: "Copy",
+        copied: "Copied",
+        shownOnce: "Shown once only — it isn't stored anywhere you can read it back. If it's lost, issue a new one from the table.",
       },
       roles: {
         staff: "Staff",
@@ -137,11 +166,15 @@ const en = {
         created: "Created",
         lastSignIn: "Last sign-in",
         role: "Role",
-        resetPassword: "Reset password",
+        resetPassword: "Password",
         you: "(you)",
         noRole: "No role",
         newPasswordPlaceholder: "New password",
         reset: "Reset",
+        issueTemporaryPassword: "Issue temporary password",
+        issueConfirm: (email: string) =>
+          `Issue a new temporary password for ${email}? Their current password stops working and they'll choose a new one at their next sign-in.`,
+        temporaryPassword: "temporary password",
         noUsers: "No users yet.",
         roleUpdated: "Role updated.",
         passwordUpdated: "Password updated.",
@@ -158,6 +191,7 @@ const en = {
         invalidRole: "Invalid role.",
         cantChangeOwnRole: "You can't change your own role.",
         cantDeleteOwnAccount: "You can't delete your own account.",
+        cantResetOwnPassword: "Change your own password from the Change password page instead.",
         adminAccessRequired: "Admin access required.",
       },
       createdUser: (email: string, role: string) => `Created ${email} as ${role}.`,
