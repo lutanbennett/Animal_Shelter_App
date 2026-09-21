@@ -1,16 +1,15 @@
 import { requireAdminUser } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { StoryForm, type SiteContentRow } from "./StoryForm";
+import { loadSiteContent } from "@/lib/site/content";
+import { SITE_PAGE_SLUGS, type SitePageSlug } from "@/lib/site/pages";
+import { loadTranslations, translationKey } from "@/lib/translations/queries";
+import { SiteSettingsForm } from "./SiteSettingsForm";
+import { SitePageForm, type SitePageRow } from "./SitePageForm";
 import { HeroPhoto } from "./HeroPhoto";
 import { GalleryPhotos, type GalleryPhotoRow } from "./GalleryPhotos";
 import { FeaturedResident, type FeaturedResidentOption } from "./FeaturedResident";
 import { PublishedProjects, type PublishedProjectRow } from "./PublishedProjects";
-
-type SiteContentFullRow = SiteContentRow & {
-  hero_drive_file_id: string | null;
-  featured_resident_id: string | null;
-};
 
 type PublicResidentRow = {
   id: string;
@@ -20,6 +19,15 @@ type PublicResidentRow = {
   profile_photo_drive_file_id: string | null;
 };
 
+/** Where each page shows on the site, for the "View on site" link. */
+const PUBLIC_PATHS: Record<SitePageSlug, string> = {
+  "our-story": "/",
+  "how-to-adopt": "/adopt#how-to-adopt",
+  foster: "/foster",
+  volunteer: "/volunteer",
+  donate: "/donate",
+};
+
 export default async function WebsitePage() {
   await requireAdminUser();
   const { t } = await getT();
@@ -27,20 +35,18 @@ export default async function WebsitePage() {
   const supabase = await createClient();
 
   const [
-    contentResult,
+    content,
+    pagesResult,
     photosResult,
     publicResidentsResult,
     thaiNamesResult,
     publishedResult,
   ] = await Promise.all([
+      loadSiteContent(supabase),
       supabase
-        .from("site_content")
-        .select(
-          "hero_drive_file_id, featured_resident_id, tagline, story_heading, story_body, contact_email, contact_address",
-        )
-        .eq("id", true)
-        .limit(1)
-        .returns<SiteContentFullRow[]>(),
+        .from("site_pages")
+        .select("id, slug, title, body")
+        .returns<SitePageRow[]>(),
       supabase
         .from("site_content_photos")
         .select("id, drive_file_id")
@@ -76,7 +82,18 @@ export default async function WebsitePage() {
         .returns<PublishedProjectRow[]>(),
     ]);
 
-  const content = contentResult.data?.[0];
+  // In the app's order, not the table's; a page missing from the table
+  // (it shouldn't be — 0059 seeds all five) is simply skipped.
+  const pageRows = pagesResult.data ?? [];
+  const pages = SITE_PAGE_SLUGS.map((slug) => pageRows.find((p) => p.slug === slug)).filter(
+    (p): p is SitePageRow => Boolean(p),
+  );
+  const translations = await loadTranslations(
+    supabase,
+    "site_pages",
+    pages.map((p) => p.id),
+  );
+
   const thaiNames = new Map(
     (thaiNamesResult.data ?? []).map((r) => [r.id, r.thai_name]),
   );
@@ -94,17 +111,11 @@ export default async function WebsitePage() {
         <h1 className="text-2xl font-semibold text-foreground">
           {t.admin.website.title}
         </h1>
-        <p className="text-sm text-muted">
-          {t.admin.website.subtitleBeforeCode}{" "}
-          <code className="rounded bg-surface px-1 py-0.5">/</code>{" "}
-          {t.admin.website.subtitleAfterCode}
-        </p>
+        <p className="text-sm text-muted">{t.admin.website.subtitle}</p>
       </div>
 
-      {contentResult.error && (
-        <p className="text-sm text-danger">
-          {t.admin.website.couldntLoad}: {contentResult.error.message}
-        </p>
+      {!content && (
+        <p className="text-sm text-danger">{t.admin.website.couldntLoad}</p>
       )}
 
       {content && (
@@ -114,7 +125,30 @@ export default async function WebsitePage() {
             featuredResidentId={content.featured_resident_id}
             residents={publicResidents}
           />
-          <StoryForm content={content} />
+          <SiteSettingsForm content={content} />
+
+          <section className="flex flex-col gap-4">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">
+                {t.admin.website.pages.heading}
+              </h2>
+              <p className="text-sm text-muted">{t.admin.website.pages.subtitle}</p>
+            </div>
+            {pages.map((page) => (
+              <SitePageForm
+                key={page.id}
+                page={page}
+                translations={{
+                  title: translations.get(translationKey(page.id, "title")),
+                  body: translations.get(translationKey(page.id, "body")),
+                }}
+                // Admin is a superset of management, so always.
+                canManageTranslations
+                publicPath={PUBLIC_PATHS[page.slug]}
+              />
+            ))}
+          </section>
+
           <GalleryPhotos photos={photosResult.data ?? []} />
           <PublishedProjects projects={publishedResult.data ?? []} />
         </>

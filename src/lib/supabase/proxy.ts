@@ -5,23 +5,7 @@ import {
   mustChangePassword,
   signedInWithPassword,
 } from "@/lib/auth/password-change";
-
-const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/auth/callback"];
-
-/**
- * Path prefixes that stay reachable without a session, on top of
- * PUBLIC_PATHS. /api/photos/ is the image proxy (src/app/api/photos/[fileId]
- * /route.ts) — it must not be auth-gated, since (a) that's no more open than
- * today's direct Drive "anyone with the link" URLs it replaces, which this
- * proxy sits in front of, and (b) the public adoption listing under /adopt
- * renders photos for signed-out visitors and would otherwise 307-redirect
- * every <img> request to /login. /adopt itself is the public,
- * read-only "browse as guest" listing (Section 6 "Public/Anonymous" RBAC
- * tier) — scoped server-side to public_resident_profiles, never the
- * staff query path. /our-work is the same tier for project stories
- * (public_projects / public_project_photos, 0042).
- */
-const PUBLIC_PATH_PREFIXES = ["/api/photos/", "/adopt", "/our-work"];
+import { isPublicPath as isPublicPathname } from "@/lib/public-paths";
 
 /**
  * Refreshes the Supabase auth cookie on every request (required so server
@@ -56,9 +40,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isPublicPath =
-    PUBLIC_PATHS.includes(request.nextUrl.pathname) ||
-    PUBLIC_PATH_PREFIXES.some((prefix) => request.nextUrl.pathname.startsWith(prefix));
+  const isPublicPath = isPublicPathname(request.nextUrl.pathname);
 
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone();
@@ -66,7 +48,9 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/")) {
+  // "/" is the public home page for everyone — a signed-in staff member
+  // sees it as a visitor does, with "Open the app" in its header.
+  if (user && request.nextUrl.pathname === "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/residents";
     return NextResponse.redirect(url);

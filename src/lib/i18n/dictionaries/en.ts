@@ -1,5 +1,7 @@
 const en = {
   common: {
+    yes: "Yes",
+    no: "No",
     save: "Save",
     saveChanges: "Save changes",
     saving: "Saving...",
@@ -56,6 +58,7 @@ const en = {
     translations: "Translations",
     contacts: "Contacts",
     manual: "User manual",
+    publicSite: "Public website",
     changePassword: "Change password",
     menu: "Menu",
     openMenu: "Open menu",
@@ -63,14 +66,13 @@ const en = {
   },
 
   home: {
-    staffLogin: "Staff & Volunteer Login",
-    browseGuest: "Browse Our Residents as a Guest",
+    browseGuest: "Browse Our Available Residents",
     welcomeHeading: "Welcome to Lanna Care for Animals",
     ourStoryFallback: "Our story",
     readyHeading: "Ready to meet everyone?",
     readySubtitle:
       "Browse our current and adoptable residents — no account needed.",
-    browseResidents: "Browse Our Residents",
+    browseResidents: "Browse Our Available Residents",
     footerOrgName: "Lanna Care for Animals Foundation",
     stats: {
       heading: "The shelter at a glance",
@@ -80,7 +82,9 @@ const en = {
       adoptedThisYearDetail: (lastWeek: number) =>
         lastWeek === 1 ? "1 in the last week" : `${lastWeek} in the last week`,
       inVetCare: "In vet care",
-      inVetCareDetail: "Currently in hospital for treatment",
+      inVetCareDetail: "On medication or in hospital right now",
+      inFoster: "In foster care",
+      inFosterDetail: "Living with a foster family while they wait",
     },
     featured: {
       heading: "Pet of the week",
@@ -95,6 +99,30 @@ const en = {
         "Sterilisation drives, rescues, community outreach and the projects that keep the shelter running.",
       seeAll: "See all our work",
     },
+    howToHelp: {
+      heading: "How you can help",
+      subtitle: "Foster, volunteer or donate — every one of them changes an animal's life.",
+      readMore: "Find out more",
+    },
+    /** Open Graph description when no tagline is set. */
+    shareFallback: "A non-profit rescue shelter for dogs and cats in Mae Wang, Chiang Mai.",
+  },
+
+  /** The footer on every public page. */
+  publicFooter: {
+    visitingHours: "Visiting hours",
+    contact: "Contact",
+    help: "How to help",
+  },
+
+  /** /foster, /volunteer, /donate and the how-to-adopt section (0059). */
+  sitePages: {
+    comingSoon: "This page is being written — check back soon.",
+    getInTouch: "Get in touch",
+    getInTouchHint: "Email us or message us on LINE and we'll get back to you.",
+    emailUs: "Email us",
+    lineUs: (id: string) => `LINE ${id}`,
+    alsoSee: "See also:",
   },
 
   account: {
@@ -389,9 +417,8 @@ const en = {
     },
     website: {
       title: "Website",
-      subtitleBeforeCode: "Edit the public welcome page at",
-      subtitleAfterCode:
-        "— photos, story, and contact details. Changes go live immediately.",
+      subtitle:
+        "Everything on the public website that isn't a resident or a project story: photos, the wording of each page in both languages, and how to reach the shelter. Changes go live immediately.",
       couldntLoad: "Couldn't load website content",
       hero: {
         heading: "Hero photo",
@@ -402,14 +429,48 @@ const en = {
         updated: "Hero photo updated.",
         removeConfirm: "Remove the hero photo?",
       },
-      story: {
+      settings: {
+        heading: "Labels and contact details",
+        subtitle:
+          "Short text with an English and a Thai version side by side — visitors see the one for their language, or the English if the Thai is blank. Contact details show in the footer of every public page and in the \"Where to meet\" block on each resident's profile.",
         tagline: "Tagline",
         taglineHint: "Shown under the headline on the hero photo.",
-        storyHeading: "Story section heading",
-        story: "Story",
-        storyHint: "Separate paragraphs with a blank line.",
+        heroAlt: "Hero photo description",
+        heroAltHint: "Read out by screen readers and shown if the photo doesn't load.",
+        visitingHours: "Visiting hours",
+        visitingHoursHint: "One line per day or range, e.g. \"Every day 9:00–16:00\". Leave blank to hide.",
         contactEmail: "Contact email",
+        contactPhone: "Phone",
+        contactLine: "LINE",
+        contactLineHint: "A LINE id (with or without the @) or a full add-friend link.",
         contactAddress: "Address",
+        contactMapUrl: "Map link",
+        contactMapUrlHint: "A Google Maps link; the address in the footer opens it.",
+      },
+      pages: {
+        heading: "Pages",
+        subtitle:
+          "The wording of each public page as you write it. The other language's version is written or approved beneath each field — the same translation panel a manager sees on Management → Translations.",
+        title: "Heading",
+        body: "Text",
+        bodyHint:
+          "Separate paragraphs with a blank line. Start a line with \"## \" for a sub-heading and \"- \" for a bullet point.",
+        titleRequired: "The page needs a heading.",
+        unknownPage: "That page doesn't exist.",
+        slugs: {
+          "our-story": "Our story (home page)",
+          "how-to-adopt": "How adoption works",
+          foster: "Foster",
+          volunteer: "Volunteer",
+          donate: "Donate",
+        } as Record<string, string>,
+        where: {
+          "our-story": "The story section on the welcome page, under the photo strip.",
+          "how-to-adopt": "The section at the foot of the adoption listing, linked from every resident's profile.",
+          foster: "The Foster page, linked from the header and the \"How you can help\" strip.",
+          volunteer: "The Volunteer page, linked from the header and the \"How you can help\" strip.",
+          donate: "The Donate page, linked from the Donate button on every public page.",
+        } as Record<string, string>,
       },
       gallery: {
         heading: "Photo gallery",
@@ -1243,7 +1304,14 @@ const en = {
       couldntLoadZones: "Couldn't load zones",
       couldntLoadEnclosures: "Couldn't load enclosures",
       couldntLoadOrigins: "Couldn't load origins",
-      sections: { identity: "Identity", arrival: "Arrival & placement", bio: "Bio & background" },
+      sections: {
+        identity: "Identity",
+        arrival: "Arrival & placement",
+        bio: "Bio & background",
+        adoption: "For adopters",
+      },
+      adoptionHint:
+        "What a family needs to know before they visit. Shown on the public profile as \"Is {name} right for you?\" — leave anything unknown blank.",
       fields: {
         name: "Name",
         thaiName: "Thai name",
@@ -1252,6 +1320,15 @@ const en = {
         selectSpecies: "Select species",
         breed: "Breed",
         sex: "Sex",
+        colour: "Colour",
+        colourHint: "e.g. Black and tan",
+        desexed: "Desexed (spayed / neutered)",
+        desexedUnknown: "Not known",
+        goodWithDogs: "Good with dogs",
+        goodWithCats: "Good with cats",
+        goodWithChildren: "Good with children",
+        energyLevel: "Energy level",
+        notSet: "Not set",
         sexUnknown: "Unknown",
         size: "Size",
         selectSize: "Select size",
@@ -1346,6 +1423,8 @@ const en = {
       bioBehaviour: "Bio & Behaviour",
       noBioNotes:
         "No bio, temperament, past-story, or behaviour notes recorded yet.",
+      adoptionProfile: "For adopters",
+      noAdoptionProfile: "Nothing recorded yet — colour, desexed, good with dogs / cats / children and energy level are set on the edit form.",
       bioLabels: {
         bio: "Bio",
         temperament: "Temperament",
@@ -2141,6 +2220,8 @@ const en = {
       "attachments.caption": "Photo caption",
       "maintenance.title": "Job title",
       "maintenance.description": "Job description",
+      "site_pages.title": "Page heading",
+      "site_pages.body": "Page text",
     } as Record<string, string>,
     original: (lang: string) => `Original (${lang})`,
     translationInto: (lang: string) => `Translation (${lang})`,
@@ -2166,7 +2247,11 @@ const en = {
     home: "Home",
     adoptNav: "Adopt",
     ourWorkNav: "Our work",
-    staffLogin: "Staff & Volunteer Login",
+    fosterNav: "Foster",
+    volunteerNav: "Volunteer",
+    donateNav: "Donate",
+    staffLogin: "Login",
+    openApp: "Open the app",
     pageTitle: "Meet Our Residents",
     pageSubtitle:
       "You're browsing as a guest — this is a read-only, public view of the residents we've made visible for adoption and outreach. Staff and volunteers see much more after signing in.",
@@ -2179,10 +2264,71 @@ const en = {
     about: (name: string) => `About ${name}`,
     temperament: "Temperament",
     theirStory: "Their story",
-    interestedEmail: (name: string) => `Interested in ${name}? Email`,
-    emailCta: "to ask about adoption or fostering.",
-    details: { species: "Species", breed: "Breed", sex: "Sex", size: "Size", age: "Age" },
+    details: {
+      species: "Species",
+      breed: "Breed",
+      sex: "Sex",
+      size: "Size",
+      age: "Age",
+      colour: "Colour",
+    },
     showPhoto: (index: number, total: number) => `Show photo ${index} of ${total}`,
+    metaDescription:
+      "Dogs and cats looking for a home at Lanna Care for Animals, Mae Wang, Chiang Mai.",
+    /** Open Graph description when a resident has no bio. */
+    shareFallback: (name: string) => `Meet ${name}, looking for a home at Lanna Care for Animals.`,
+    shareText: (name: string) => `Meet ${name} at Lanna Care for Animals`,
+    similar: (name: string) => `More residents like ${name}`,
+    filters: {
+      label: "Filter residents",
+      allSpecies: "All",
+      anySize: "Any size",
+      readyOnly: "Ready for adoption",
+      noneMatch: "No residents match those filters.",
+      clear: "Show everyone",
+      showing: (shown: number, total: number) => `Showing ${shown} of ${total} residents`,
+    },
+    /** Facts a visitor asks about, shown as ticks when true (0060). */
+    health: {
+      heading: "Health",
+      desexed: "Desexed",
+      vaccinated: "Vaccinated",
+    },
+    /** "Is {name} right for you?" — the adoption recommendation block (0060). */
+    recommendation: {
+      heading: (name: string) => `Is ${name} right for you?`,
+      goodWithDogs: "Good with dogs",
+      goodWithCats: "Good with cats",
+      goodWithChildren: "Good with children",
+      energyLevel: "Energy level",
+      note: "Our best assessment from how they've been with us — every animal is an individual, so come and meet them.",
+    },
+    /** "Where to meet {name}" — modelled on RSPCA ACT's profile footer. */
+    meet: {
+      heading: (name: string) => `Where to meet ${name}`,
+      intro: (name: string) =>
+        `The best way to know if ${name} is the one is to visit. Drop in during visiting hours, or get in touch first and we'll have them ready to meet you.`,
+      where: "Find us",
+      when: "Visiting hours",
+      email: "Email",
+      emailSubject: (name: string) => `Enquiry about ${name}`,
+      message: "Message or call",
+      honestNote:
+        "Please note: residents are adopted by the first suitable family they meet, and we can't hold an animal over the phone or by message — so someone you've seen here may already have found a home by the time you visit. We'll always help you find another friend.",
+      processLink: "How adoption works →",
+    },
+    happyEndings: {
+      heading: "Happy endings",
+      subtitle: "Residents who found their forever homes recently.",
+      adopted: (month: string) => `Adopted ${month}`,
+    },
+  },
+
+  share: {
+    share: "Share",
+    copyLink: "Copy link",
+    copied: "Link copied",
+    copyPrompt: "Copy this link:",
   },
 
   ourWork: {
@@ -2256,6 +2402,8 @@ const en = {
     },
     sex: { Male: "Male", Female: "Female" },
     size: { Small: "Small", Medium: "Medium", Large: "Large" },
+    compatibility: { Yes: "Yes", No: "No", Unknown: "Not yet known" },
+    energyLevel: { Low: "Low", Medium: "Medium", High: "High" },
     dietUnit: {
       g: "g",
       ml: "ml",

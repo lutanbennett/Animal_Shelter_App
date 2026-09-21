@@ -14,6 +14,10 @@ import {
   capacityWarningLevel,
 } from "@/components/EnclosurePicker";
 import { CapacityWarningDialog } from "@/components/CapacityWarningDialog";
+import {
+  AdoptionProfileFields,
+  type AdoptionProfile,
+} from "@/components/AdoptionProfileFields";
 
 export type HousingState = {
   /** Current enclosure (physical or Lifecycle pseudo-enclosure), if any. */
@@ -50,7 +54,7 @@ export type EditableResident = {
   profile_photo_drive_file_id: string | null;
   ready_for_adoption: boolean;
   is_public_visible: boolean;
-};
+} & AdoptionProfile;
 
 const inputClass =
   "rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
@@ -405,6 +409,8 @@ export function EditResidentForm({
           <legend className="text-base font-semibold text-foreground">
             {t.residents.edit.sections.flags}
           </legend>
+          <p className="text-sm text-muted">{t.residents.new.adoptionHint}</p>
+          <AdoptionProfileFields value={resident} idPrefix="edit-" />
           <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               type="checkbox"

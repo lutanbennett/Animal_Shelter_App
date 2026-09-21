@@ -25,6 +25,13 @@ function revalidateFor(row: TranslationRow, recordPathHint?: string | null) {
           : null;
   if (own) revalidatePath(own);
   if (row.table_name === "maintenance") revalidatePath("/maintenance");
+  if (row.table_name === "site_pages") {
+    // A page's text shows on its own route and, for the story and the
+    // how-to-adopt section, on / and /adopt; the admin editor shows its status.
+    for (const path of ["/admin/website", "/foster", "/volunteer", "/donate"]) {
+      revalidatePath(path);
+    }
+  }
   if (recordPathHint && recordPathHint !== own) revalidatePath(recordPathHint);
   revalidatePath("/");
   revalidatePath("/adopt");

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { assertAdminRole } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { isSitePageSlug, type SitePageSlug } from "@/lib/site/pages";
 import {
   findOrCreateFolder,
   getDriveClient,
@@ -21,9 +22,16 @@ const ALLOWED_MIME_TYPES = new Set([
   "image/heif",
 ]);
 
+/** Every public page reads site_content (the footer), so all of them. */
 function revalidateWebsitePages() {
   revalidatePath("/admin/website");
   revalidatePath("/");
+  revalidatePath("/adopt");
+  revalidatePath("/adopt/[id]", "page");
+  revalidatePath("/our-work");
+  revalidatePath("/foster");
+  revalidatePath("/volunteer");
+  revalidatePath("/donate");
 }
 
 /**
@@ -68,17 +76,23 @@ export async function updateSiteContent(
     data: { user },
   } = await supabase.auth.getUser();
 
+  const text = (name: string) => (formData.get(name) as string | null)?.trim() ?? "";
+  const optional = (name: string) => text(name) || null;
+
   const { error } = await supabase
     .from("site_content")
     .update({
-      tagline: (formData.get("tagline") as string | null)?.trim() ?? "",
-      story_heading:
-        (formData.get("story_heading") as string | null)?.trim() || "Our story",
-      story_body: (formData.get("story_body") as string | null)?.trim() ?? "",
-      contact_email:
-        (formData.get("contact_email") as string | null)?.trim() || null,
-      contact_address:
-        (formData.get("contact_address") as string | null)?.trim() || null,
+      tagline: text("tagline"),
+      tagline_th: optional("tagline_th"),
+      hero_alt: text("hero_alt"),
+      hero_alt_th: optional("hero_alt_th"),
+      visiting_hours: optional("visiting_hours"),
+      visiting_hours_th: optional("visiting_hours_th"),
+      contact_email: optional("contact_email"),
+      contact_address: optional("contact_address"),
+      contact_phone: optional("contact_phone"),
+      contact_line: optional("contact_line"),
+      contact_map_url: optional("contact_map_url"),
       updated_at: new Date().toISOString(),
       updated_by: user?.id ?? null,
     })
@@ -88,6 +102,45 @@ export async function updateSiteContent(
 
   revalidateWebsitePages();
   const { t } = await getT();
+  return { success: t.common.saved };
+}
+
+/**
+ * One of the site's long-form pages (0059). The slug set is fixed by the
+ * app; only the words change. The queueing trigger re-queues the page's
+ * translations when the title or body changes.
+ */
+export async function updateSitePage(
+  slug: SitePageSlug,
+  _state: SiteContentFormState,
+  formData: FormData,
+): Promise<SiteContentFormState> {
+  await assertAdminRole();
+  const { t } = await getT();
+  if (!isSitePageSlug(slug)) return { error: t.admin.website.pages.unknownPage };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const title = (formData.get("title") as string | null)?.trim() ?? "";
+  if (!title) return { error: t.admin.website.pages.titleRequired };
+
+  const { error } = await supabase
+    .from("site_pages")
+    .update({
+      title,
+      body: (formData.get("body") as string | null)?.trim() ?? "",
+      updated_at: new Date().toISOString(),
+      updated_by: user?.id ?? null,
+    })
+    .eq("slug", slug);
+
+  if (error) return { error: error.message };
+
+  revalidateWebsitePages();
+  revalidatePath("/management/translations");
   return { success: t.common.saved };
 }
 

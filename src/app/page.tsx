@@ -1,25 +1,22 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { HandHeart, Heart, Home } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { getT } from "@/lib/i18n/get-t";
+import { getSiteOrigin } from "@/lib/site-origin";
 import { localizedField } from "@/lib/translations/localize";
 import type { PublicTranslations } from "@/lib/translations/types";
 import { speciesLabel } from "@/lib/i18n/enum-labels";
 import { loadPublicProjects } from "@/lib/projects/public";
-import { LanguageSwitcher } from "./LanguageSwitcher";
+import { loadSiteContent, pairedText } from "@/lib/site/content";
+import { loadSitePages, sitePageText } from "@/lib/site/pages";
+import { bodyLead } from "@/lib/site/body";
+import { SiteBody } from "@/components/SiteBody";
+import { PublicHeader } from "./adopt/PublicHeader";
+import { PublicFooter } from "./adopt/PublicFooter";
 import { ProjectCard } from "./our-work/ProjectCard";
-
-type SiteContent = {
-  hero_drive_file_id: string | null;
-  hero_alt: string;
-  tagline: string;
-  story_heading: string;
-  story_body: string;
-  contact_email: string | null;
-  contact_address: string | null;
-  featured_resident_id: string | null;
-};
 
 /** The "Pet of the week" card — read through public_resident_profiles. */
 type FeaturedResident = {
@@ -35,27 +32,62 @@ type FeaturedResident = {
 
 type GalleryPhoto = { id: string; drive_file_id: string; alt: string };
 
-/** Counts only — public_shelter_stats (0039) is granted to anon. */
+/** Counts only — public_shelter_stats (0039, 0062) is granted to anon. */
 type ShelterStats = {
   in_care: number;
-  in_hospital: number;
+  in_foster: number;
+  in_treatment: number;
   adopted_last_7_days: number;
   adopted_this_year: number;
 };
+
+/**
+ * Open Graph for the home page: the tagline as the description and the
+ * hero photo as the image, so a link to the site previews as the site.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const [supabase, { t, locale }, origin] = await Promise.all([
+    createClient(),
+    getT(),
+    getSiteOrigin(),
+  ]);
+  const content = await loadSiteContent(supabase);
+  const description =
+    pairedText(locale, content?.tagline, content?.tagline_th) || t.home.shareFallback;
+  const image = content?.hero_drive_file_id
+    ? driveImageUrl(content.hero_drive_file_id)
+    : undefined;
+  const title = t.header.appName;
+
+  return {
+    title,
+    description,
+    ...(origin ? { metadataBase: origin } : {}),
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      url: "/",
+      siteName: title,
+      locale: locale === "th" ? "th_TH" : "en_GB",
+      ...(image ? { images: [{ url: image, alt: title }] } : {}),
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title,
+      description,
+      ...(image ? { images: [image] } : {}),
+    },
+  };
+}
 
 export default async function WelcomePage() {
   const supabase = await createClient();
   const { t, locale } = await getT();
 
-  const [contentResult, photosResult, statsResult, recentWork] = await Promise.all([
-    supabase
-      .from("site_content")
-      .select(
-        "hero_drive_file_id, hero_alt, tagline, story_heading, story_body, contact_email, contact_address, featured_resident_id",
-      )
-      .eq("id", true)
-      .limit(1)
-      .returns<SiteContent[]>(),
+  const [content, pages, photosResult, statsResult, recentWork] = await Promise.all([
+    loadSiteContent(supabase),
+    loadSitePages(supabase),
     supabase
       .from("site_content_photos")
       .select("id, drive_file_id, alt")
@@ -63,15 +95,18 @@ export default async function WelcomePage() {
       .returns<GalleryPhoto[]>(),
     supabase
       .from("public_shelter_stats")
-      .select("in_care, in_hospital, adopted_last_7_days, adopted_this_year")
+      .select("in_care, in_foster, in_treatment, adopted_last_7_days, adopted_this_year")
       .limit(1)
       .returns<ShelterStats[]>(),
     // "What we do": the three newest published project stories (0042).
     loadPublicProjects(supabase, 3),
   ]);
 
-  const content = contentResult.data?.[0];
   const gallery = photosResult.data ?? [];
+  const tagline = pairedText(locale, content?.tagline, content?.tagline_th);
+  const heroAlt = pairedText(locale, content?.hero_alt, content?.hero_alt_th);
+  const story = pages.get("our-story");
+  const storyText = story ? sitePageText(story, locale) : null;
 
   // Looked up through the public view rather than trusting the stored id:
   // a resident that has since been hidden, adopted or has died isn't in the
@@ -103,70 +138,50 @@ export default async function WelcomePage() {
           detail: t.home.stats.inCareDetail,
         },
         {
+          value: stats.in_foster,
+          label: t.home.stats.inFoster,
+          detail: t.home.stats.inFosterDetail,
+        },
+        {
           value: stats.adopted_this_year,
           label: t.home.stats.adoptedThisYear,
           detail: t.home.stats.adoptedThisYearDetail(stats.adopted_last_7_days),
         },
         {
-          value: stats.in_hospital,
+          value: stats.in_treatment,
           label: t.home.stats.inVetCare,
           detail: t.home.stats.inVetCareDetail,
         },
       ]
     : [];
-  const storyParagraphs = (content?.story_body ?? "")
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter(Boolean);
+
+  // "How you can help": one card per way in, each leading with the first
+  // paragraph of its page so the copy is the admin's, not the app's.
+  const helpCards = (
+    [
+      { slug: "foster", href: "/foster", Icon: Home, label: t.adopt.fosterNav },
+      { slug: "volunteer", href: "/volunteer", Icon: HandHeart, label: t.adopt.volunteerNav },
+      { slug: "donate", href: "/donate", Icon: Heart, label: t.adopt.donateNav },
+    ] as const
+  ).map((card) => {
+    const page = pages.get(card.slug);
+    const text = page ? sitePageText(page, locale) : null;
+    return {
+      ...card,
+      title: text?.title || card.label,
+      lead: bodyLead(text?.body, 160),
+    };
+  });
 
   return (
     <main className="flex flex-1 flex-col">
-      <header className="flex items-center justify-between border-b border-border bg-surface px-6 py-4">
-        <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white p-1">
-            <Image
-              src="/lca-logo.jpg"
-              alt={t.header.appName}
-              width={36}
-              height={36}
-              className="object-contain"
-              priority
-            />
-          </span>
-          <span className="text-base font-semibold text-foreground">
-            {t.header.appName}
-          </span>
-        </div>
-        <div className="flex items-center gap-4">
-          <nav className="hidden items-center gap-4 sm:flex">
-            <Link
-              href="/adopt"
-              className="text-sm font-medium text-muted hover:text-foreground"
-            >
-              {t.adopt.adoptNav}
-            </Link>
-            <Link
-              href="/our-work"
-              className="text-sm font-medium text-muted hover:text-foreground"
-            >
-              {t.adopt.ourWorkNav}
-            </Link>
-          </nav>
-          <LanguageSwitcher />
-          <Link
-            href="/login"
-            className="rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
-          >
-            {t.home.staffLogin}
-          </Link>
-        </div>
-      </header>
+      <PublicHeader current="home" />
 
       <section className="relative flex min-h-[26rem] items-end overflow-hidden bg-surface">
         {content?.hero_drive_file_id && (
           <Image
             src={driveImageUrl(content.hero_drive_file_id)}
-            alt={content.hero_alt || t.header.appName}
+            alt={heroAlt || t.header.appName}
             fill
             priority
             className="object-cover"
@@ -177,23 +192,21 @@ export default async function WelcomePage() {
           <h1 className="max-w-2xl text-3xl font-semibold text-white sm:text-4xl">
             {t.home.welcomeHeading}
           </h1>
-          {content?.tagline && (
-            <p className="max-w-xl text-base text-white/90 sm:text-lg">
-              {content.tagline}
-            </p>
+          {tagline && (
+            <p className="max-w-xl text-base text-white/90 sm:text-lg">{tagline}</p>
           )}
           <div className="flex flex-wrap gap-3 pt-2">
             <Link
-              href="/login"
+              href="/adopt"
               className="rounded bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
             >
-              {t.home.staffLogin}
+              {t.home.browseGuest}
             </Link>
             <Link
-              href="/adopt"
+              href="/donate"
               className="rounded border border-white/60 bg-black/20 px-5 py-3 text-sm font-semibold text-white backdrop-blur hover:bg-black/40"
             >
-              {t.home.browseGuest}
+              {t.adopt.donateNav}
             </Link>
           </div>
         </div>
@@ -204,11 +217,11 @@ export default async function WelcomePage() {
           aria-label={t.home.stats.heading}
           className="border-b border-border bg-surface"
         >
-          <div className="mx-auto grid w-full max-w-5xl grid-cols-1 divide-y divide-border px-6 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-12">
+          <div className="mx-auto grid w-full max-w-5xl grid-cols-1 divide-y divide-border px-6 sm:grid-cols-2 sm:px-12 lg:grid-cols-4 lg:divide-x lg:divide-y-0">
             {statTiles.map((tile) => (
               <div
                 key={tile.label}
-                className="flex flex-col gap-1 py-5 sm:px-6 sm:first:pl-0 sm:last:pr-0"
+                className="flex flex-col gap-1 py-5 lg:px-6 lg:first:pl-0 lg:last:pr-0"
               >
                 <span className="text-3xl font-semibold tabular-nums text-primary">
                   {tile.value}
@@ -225,15 +238,9 @@ export default async function WelcomePage() {
 
       <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-12 sm:px-12">
         <h2 className="text-2xl font-semibold text-foreground">
-          {content?.story_heading || t.home.ourStoryFallback}
+          {storyText?.title || t.home.ourStoryFallback}
         </h2>
-        {storyParagraphs.length > 0 && (
-          <div className="flex flex-col gap-4 text-base leading-relaxed text-muted sm:text-lg">
-            {storyParagraphs.map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
-            ))}
-          </div>
-        )}
+        <SiteBody body={storyText?.body} size="lg" />
 
         {gallery.length > 0 && (
           <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
@@ -311,6 +318,7 @@ export default async function WelcomePage() {
             </Link>
           </div>
         )}
+
         {recentWork.projects.length > 0 && (
           <div
             role="region"
@@ -349,6 +357,42 @@ export default async function WelcomePage() {
           </div>
         )}
 
+        <div
+          role="region"
+          aria-labelledby="how-to-help-heading"
+          className="mt-6 flex flex-col gap-4"
+        >
+          <div className="flex flex-col gap-1">
+            <h3
+              id="how-to-help-heading"
+              className="text-sm font-semibold uppercase tracking-wide text-primary"
+            >
+              {t.home.howToHelp.heading}
+            </h3>
+            <p className="max-w-xl text-sm text-muted">{t.home.howToHelp.subtitle}</p>
+          </div>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+            {helpCards.map(({ slug, href, Icon, title, lead }) => (
+              <Link
+                key={slug}
+                href={href}
+                className="group flex flex-col gap-3 rounded-lg border border-border bg-surface p-6 hover:border-primary"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <Icon className="h-5 w-5" aria-hidden />
+                </span>
+                <span className="text-lg font-semibold text-foreground group-hover:text-primary">
+                  {title}
+                </span>
+                {lead && <p className="text-sm leading-relaxed text-muted">{lead}</p>}
+                <span className="mt-auto pt-1 text-sm font-semibold text-primary">
+                  {t.home.howToHelp.readMore} &rarr;
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+
         <div className="mt-6 flex flex-col items-start gap-3 rounded-lg border border-border bg-surface p-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-lg font-semibold text-foreground">
@@ -365,23 +409,7 @@ export default async function WelcomePage() {
         </div>
       </section>
 
-      {(content?.contact_address || content?.contact_email) && (
-        <footer className="border-t border-border px-6 py-6 text-center text-xs text-muted sm:px-12">
-          {t.home.footerOrgName}
-          {content.contact_address ? ` · ${content.contact_address}` : ""}
-          {content.contact_email && (
-            <>
-              {" · "}
-              <a
-                href={`mailto:${content.contact_email}`}
-                className="underline hover:text-foreground"
-              >
-                {content.contact_email}
-              </a>
-            </>
-          )}
-        </footer>
-      )}
+      <PublicFooter content={content} />
     </main>
   );
 }

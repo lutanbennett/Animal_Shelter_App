@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Noto_Sans_Thai } from "next/font/google";
 import { AppHeader } from "./AppHeader";
 import { NavPane } from "./NavPane";
 import { MobileNavProvider } from "./MobileNavContext";
+import { PublicPathGate } from "./PublicPathGate";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
 import "./globals.css";
@@ -41,9 +42,13 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <I18nProvider locale={locale}>
           <MobileNavProvider>
-            <AppHeader />
+            <PublicPathGate>
+              <AppHeader />
+            </PublicPathGate>
             <div className="flex flex-1">
-              <NavPane />
+              <PublicPathGate>
+                <NavPane />
+              </PublicPathGate>
               {children}
             </div>
           </MobileNavProvider>

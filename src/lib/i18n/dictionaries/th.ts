@@ -2,6 +2,8 @@ import type { Dictionary } from "./en";
 
 const th: Dictionary = {
   common: {
+    yes: "ใช่",
+    no: "ไม่",
     save: "บันทึก",
     saveChanges: "บันทึกการเปลี่ยนแปลง",
     saving: "กำลังบันทึก...",
@@ -58,6 +60,7 @@ const th: Dictionary = {
     translations: "คำแปล",
     contacts: "ผู้ติดต่อ",
     manual: "คู่มือการใช้งาน",
+    publicSite: "เว็บไซต์สาธารณะ",
     changePassword: "เปลี่ยนรหัสผ่าน",
     menu: "เมนู",
     openMenu: "เปิดเมนู",
@@ -65,14 +68,13 @@ const th: Dictionary = {
   },
 
   home: {
-    staffLogin: "เข้าสู่ระบบสำหรับเจ้าหน้าที่และอาสาสมัคร",
-    browseGuest: "ดูสัตว์ของเราในฐานะผู้เยี่ยมชม",
+    browseGuest: "ดูสัตว์ที่พร้อมรับเลี้ยง",
     welcomeHeading: "ยินดีต้อนรับสู่ Lanna Care for Animals",
     ourStoryFallback: "เรื่องราวของเรา",
     readyHeading: "พร้อมพบกับทุกตัวหรือยัง?",
     readySubtitle:
       "ดูสัตว์ในความดูแลและสัตว์ที่พร้อมรับเลี้ยงของเรา — ไม่ต้องมีบัญชีผู้ใช้",
-    browseResidents: "ดูสัตว์ของเรา",
+    browseResidents: "ดูสัตว์ที่พร้อมรับเลี้ยง",
     footerOrgName: "มูลนิธิ Lanna Care for Animals",
     stats: {
       heading: "ภาพรวมศูนย์พักพิง",
@@ -81,7 +83,9 @@ const th: Dictionary = {
       adoptedThisYear: "ได้บ้านใหม่ในปีนี้",
       adoptedThisYearDetail: (lastWeek: number) => `${lastWeek} ตัวในสัปดาห์ที่ผ่านมา`,
       inVetCare: "อยู่ในการรักษาของสัตวแพทย์",
-      inVetCareDetail: "กำลังรักษาตัวอยู่ในโรงพยาบาล",
+      inVetCareDetail: "กำลังได้รับยาหรืออยู่ในโรงพยาบาลขณะนี้",
+      inFoster: "อยู่ในบ้านอุปถัมภ์",
+      inFosterDetail: "อาศัยอยู่กับครอบครัวอุปถัมภ์ระหว่างรอบ้านถาวร",
     },
     featured: {
       heading: "สัตว์ประจำสัปดาห์",
@@ -96,6 +100,27 @@ const th: Dictionary = {
         "โครงการทำหมัน การช่วยเหลือสัตว์ กิจกรรมเข้าถึงชุมชน และโครงการที่ทำให้ศูนย์พักพิงดำเนินต่อไปได้",
       seeAll: "ดูผลงานทั้งหมดของเรา",
     },
+    howToHelp: {
+      heading: "คุณช่วยได้อย่างไร",
+      subtitle: "อุปถัมภ์ชั่วคราว เป็นอาสาสมัคร หรือบริจาค — ทุกทางล้วนเปลี่ยนชีวิตสัตว์ได้",
+      readMore: "ดูรายละเอียด",
+    },
+    shareFallback: "ศูนย์พักพิงช่วยเหลือสุนัขและแมวที่ไม่แสวงหากำไร ในอำเภอแม่วาง จังหวัดเชียงใหม่",
+  },
+
+  publicFooter: {
+    visitingHours: "เวลาเปิดให้เยี่ยมชม",
+    contact: "ติดต่อ",
+    help: "ช่วยเหลือเรา",
+  },
+
+  sitePages: {
+    comingSoon: "หน้านี้กำลังจัดทำ — โปรดกลับมาใหม่ภายหลัง",
+    getInTouch: "ติดต่อเรา",
+    getInTouchHint: "ส่งอีเมลหรือทักไลน์ถึงเรา แล้วเราจะติดต่อกลับ",
+    emailUs: "ส่งอีเมลถึงเรา",
+    lineUs: (id: string) => `LINE ${id}`,
+    alsoSee: "ดูเพิ่มเติม:",
   },
 
   account: {
@@ -391,8 +416,8 @@ const th: Dictionary = {
     },
     website: {
       title: "เว็บไซต์",
-      subtitleBeforeCode: "แก้ไขหน้าเว็บสาธารณะที่",
-      subtitleAfterCode: "— รูปภาพ เรื่องราว และข้อมูลติดต่อ การเปลี่ยนแปลงจะมีผลทันที",
+      subtitle:
+        "ทุกอย่างบนเว็บไซต์สาธารณะที่ไม่ใช่ข้อมูลสัตว์หรือเรื่องราวโครงการ: รูปภาพ ข้อความของแต่ละหน้าทั้งสองภาษา และช่องทางติดต่อศูนย์พักพิง การเปลี่ยนแปลงจะมีผลทันที",
       couldntLoad: "โหลดข้อมูลเว็บไซต์ไม่สำเร็จ",
       hero: {
         heading: "รูปหน้าปก",
@@ -403,14 +428,48 @@ const th: Dictionary = {
         updated: "อัปเดตรูปหน้าปกแล้ว",
         removeConfirm: "ต้องการลบรูปหน้าปกหรือไม่?",
       },
-      story: {
+      settings: {
+        heading: "ข้อความสั้นและข้อมูลติดต่อ",
+        subtitle:
+          "ข้อความสั้นที่มีทั้งภาษาอังกฤษและภาษาไทยคู่กัน — ผู้เยี่ยมชมจะเห็นภาษาของตน หรือภาษาอังกฤษหากช่องภาษาไทยว่าง ข้อมูลติดต่อแสดงในส่วนท้ายของทุกหน้าสาธารณะและในกล่อง \"มาพบกันได้ที่ไหน\" ในโปรไฟล์ของสัตว์แต่ละตัว",
         tagline: "แท็กไลน์",
         taglineHint: "แสดงใต้หัวข้อบนรูปหน้าปก",
-        storyHeading: "หัวข้อส่วนเรื่องราว",
-        story: "เรื่องราว",
-        storyHint: "แบ่งย่อหน้าด้วยบรรทัดว่าง",
+        heroAlt: "คำอธิบายรูปหน้าปก",
+        heroAltHint: "โปรแกรมอ่านหน้าจออ่านข้อความนี้ และแสดงแทนรูปหากโหลดรูปไม่ได้",
+        visitingHours: "เวลาเปิดให้เยี่ยมชม",
+        visitingHoursHint: "บรรทัดละหนึ่งวันหรือช่วงวัน เช่น \"ทุกวัน 9:00–16:00\" เว้นว่างเพื่อซ่อน",
         contactEmail: "อีเมลติดต่อ",
+        contactPhone: "โทรศัพท์",
+        contactLine: "LINE",
+        contactLineHint: "ไอดี LINE (ใส่หรือไม่ใส่ @ ก็ได้) หรือลิงก์เพิ่มเพื่อนแบบเต็ม",
         contactAddress: "ที่อยู่",
+        contactMapUrl: "ลิงก์แผนที่",
+        contactMapUrlHint: "ลิงก์ Google Maps — ที่อยู่ในส่วนท้ายจะเปิดลิงก์นี้",
+      },
+      pages: {
+        heading: "หน้าเว็บ",
+        subtitle:
+          "ข้อความของแต่ละหน้าสาธารณะตามที่คุณเขียน ฉบับอีกภาษาหนึ่งเขียนหรืออนุมัติได้ใต้แต่ละช่อง — แผงคำแปลเดียวกับที่ผู้จัดการเห็นในหน้า การจัดการ → คำแปล",
+        title: "หัวข้อ",
+        body: "ข้อความ",
+        bodyHint:
+          "แบ่งย่อหน้าด้วยบรรทัดว่าง ขึ้นต้นบรรทัดด้วย \"## \" สำหรับหัวข้อย่อย และ \"- \" สำหรับรายการแบบจุด",
+        titleRequired: "หน้านี้ต้องมีหัวข้อ",
+        unknownPage: "ไม่มีหน้านี้",
+        slugs: {
+          "our-story": "เรื่องราวของเรา (หน้าแรก)",
+          "how-to-adopt": "ขั้นตอนการรับเลี้ยง",
+          foster: "อุปถัมภ์ชั่วคราว",
+          volunteer: "อาสาสมัคร",
+          donate: "บริจาค",
+        } as Record<string, string>,
+        where: {
+          "our-story": "ส่วนเรื่องราวบนหน้าต้อนรับ ใต้แถบรูปภาพ",
+          "how-to-adopt": "ส่วนท้ายของหน้ารายชื่อสัตว์รับเลี้ยง มีลิงก์จากโปรไฟล์ของสัตว์ทุกตัว",
+          foster: "หน้าอุปถัมภ์ชั่วคราว มีลิงก์จากส่วนหัวและแถบ \"คุณช่วยได้อย่างไร\"",
+          volunteer: "หน้าอาสาสมัคร มีลิงก์จากส่วนหัวและแถบ \"คุณช่วยได้อย่างไร\"",
+          donate: "หน้าบริจาค มีลิงก์จากปุ่มบริจาคบนทุกหน้าสาธารณะ",
+        } as Record<string, string>,
       },
       gallery: {
         heading: "แกลเลอรีรูปภาพ",
@@ -1244,7 +1303,10 @@ const th: Dictionary = {
         identity: "ข้อมูลทั่วไป",
         arrival: "การเข้ามาและที่พัก",
         bio: "ประวัติและความเป็นมา",
+        adoption: "สำหรับผู้รับเลี้ยง",
       },
+      adoptionHint:
+        "สิ่งที่ครอบครัวควรรู้ก่อนมาเยี่ยม แสดงบนโปรไฟล์สาธารณะในหัวข้อ \"{name} เหมาะกับคุณไหม?\" — หากไม่ทราบให้เว้นว่าง",
       fields: {
         name: "ชื่อ",
         thaiName: "ชื่อไทย",
@@ -1253,6 +1315,15 @@ const th: Dictionary = {
         selectSpecies: "เลือกชนิดสัตว์",
         breed: "สายพันธุ์",
         sex: "เพศ",
+        colour: "สี",
+        colourHint: "เช่น ดำน้ำตาล",
+        desexed: "ทำหมันแล้ว",
+        desexedUnknown: "ไม่ทราบ",
+        goodWithDogs: "เข้ากับสุนัขได้",
+        goodWithCats: "เข้ากับแมวได้",
+        goodWithChildren: "เข้ากับเด็กได้",
+        energyLevel: "ระดับพลังงาน",
+        notSet: "ยังไม่ระบุ",
         sexUnknown: "ไม่ทราบ",
         size: "ขนาดตัว",
         selectSize: "เลือกขนาดตัว",
@@ -1346,6 +1417,8 @@ const th: Dictionary = {
       photosDetail: "แกลเลอรี Google Drive",
       bioBehaviour: "ประวัติและพฤติกรรม",
       noBioNotes: "ยังไม่มีการบันทึกประวัติ อุปนิสัย เรื่องราวในอดีต หรือพฤติกรรม",
+      adoptionProfile: "สำหรับผู้รับเลี้ยง",
+      noAdoptionProfile: "ยังไม่มีการบันทึก — สี การทำหมัน การเข้ากับสุนัข / แมว / เด็ก และระดับพลังงาน ตั้งค่าได้ในหน้าแก้ไข",
       bioLabels: {
         bio: "ประวัติ",
         temperament: "อุปนิสัย",
@@ -2132,6 +2205,8 @@ const th: Dictionary = {
       "attachments.caption": "คำบรรยายภาพ",
       "maintenance.title": "ชื่องาน",
       "maintenance.description": "รายละเอียดงาน",
+      "site_pages.title": "หัวข้อหน้าเว็บ",
+      "site_pages.body": "ข้อความหน้าเว็บ",
     } as Record<string, string>,
     original: (lang: string) => `ต้นฉบับ (${lang})`,
     translationInto: (lang: string) => `คำแปล (${lang})`,
@@ -2157,7 +2232,11 @@ const th: Dictionary = {
     home: "หน้าแรก",
     adoptNav: "รับเลี้ยง",
     ourWorkNav: "ผลงานของเรา",
-    staffLogin: "เข้าสู่ระบบสำหรับเจ้าหน้าที่และอาสาสมัคร",
+    fosterNav: "อุปถัมภ์ชั่วคราว",
+    volunteerNav: "อาสาสมัคร",
+    donateNav: "บริจาค",
+    staffLogin: "เข้าสู่ระบบ",
+    openApp: "เปิดแอป",
     pageTitle: "พบกับสัตว์ของเรา",
     pageSubtitle:
       "คุณกำลังเข้าชมในฐานะผู้เยี่ยมชม — นี่คือมุมมองสาธารณะแบบอ่านอย่างเดียวของสัตว์ที่เราเปิดให้เห็นสำหรับการรับเลี้ยงและการประชาสัมพันธ์ เจ้าหน้าที่และอาสาสมัครจะเห็นข้อมูลมากกว่านี้หลังเข้าสู่ระบบ",
@@ -2170,10 +2249,67 @@ const th: Dictionary = {
     about: (name: string) => `เกี่ยวกับ ${name}`,
     temperament: "อุปนิสัย",
     theirStory: "เรื่องราวของพวกเขา",
-    interestedEmail: (name: string) => `สนใจ ${name} ใช่ไหม? ส่งอีเมลถึง`,
-    emailCta: "เพื่อสอบถามเรื่องการรับเลี้ยงหรืออุปถัมภ์",
-    details: { species: "ชนิดสัตว์", breed: "สายพันธุ์", sex: "เพศ", size: "ขนาดตัว", age: "อายุ" },
+    details: {
+      species: "ชนิดสัตว์",
+      breed: "สายพันธุ์",
+      sex: "เพศ",
+      size: "ขนาดตัว",
+      age: "อายุ",
+      colour: "สี",
+    },
     showPhoto: (index: number, total: number) => `แสดงรูปที่ ${index} จาก ${total}`,
+    metaDescription:
+      "สุนัขและแมวที่กำลังหาบ้านที่ Lanna Care for Animals อำเภอแม่วาง จังหวัดเชียงใหม่",
+    shareFallback: (name: string) => `พบกับ ${name} ที่กำลังหาบ้านที่ Lanna Care for Animals`,
+    shareText: (name: string) => `พบกับ ${name} ที่ Lanna Care for Animals`,
+    similar: (name: string) => `สัตว์ตัวอื่นที่คล้ายกับ ${name}`,
+    filters: {
+      label: "กรองรายชื่อสัตว์",
+      allSpecies: "ทั้งหมด",
+      anySize: "ทุกขนาด",
+      readyOnly: "พร้อมรับเลี้ยง",
+      noneMatch: "ไม่มีสัตว์ที่ตรงกับตัวกรองนี้",
+      clear: "แสดงทั้งหมด",
+      showing: (shown: number, total: number) => `แสดง ${shown} จาก ${total} ตัว`,
+    },
+    health: {
+      heading: "สุขภาพ",
+      desexed: "ทำหมันแล้ว",
+      vaccinated: "ฉีดวัคซีนแล้ว",
+    },
+    recommendation: {
+      heading: (name: string) => `${name} เหมาะกับคุณไหม?`,
+      goodWithDogs: "เข้ากับสุนัขได้",
+      goodWithCats: "เข้ากับแมวได้",
+      goodWithChildren: "เข้ากับเด็กได้",
+      energyLevel: "ระดับพลังงาน",
+      note: "เป็นการประเมินจากพฤติกรรมขณะอยู่กับเรา — สัตว์แต่ละตัวไม่เหมือนกัน มาพบกันด้วยตัวเองดีที่สุด",
+    },
+    meet: {
+      heading: (name: string) => `มาพบ ${name} ได้ที่ไหน`,
+      intro: (name: string) =>
+        `วิธีที่ดีที่สุดที่จะรู้ว่า ${name} ใช่หรือไม่คือมาเยี่ยม แวะมาในเวลาเปิดให้เยี่ยมชม หรือติดต่อเราก่อนแล้วเราจะเตรียมให้พบกัน`,
+      where: "ที่ตั้ง",
+      when: "เวลาเปิดให้เยี่ยมชม",
+      email: "อีเมล",
+      emailSubject: (name: string) => `สอบถามเกี่ยวกับ ${name}`,
+      message: "ส่งข้อความหรือโทร",
+      honestNote:
+        "โปรดทราบ: สัตว์จะได้รับการรับเลี้ยงโดยครอบครัวที่เหมาะสมรายแรกที่มาพบ และเราไม่สามารถจองสัตว์ทางโทรศัพท์หรือข้อความได้ — สัตว์ที่คุณเห็นที่นี่อาจได้บ้านแล้วเมื่อคุณมาถึง เรายินดีช่วยคุณหาเพื่อนตัวใหม่เสมอ",
+      processLink: "ขั้นตอนการรับเลี้ยง →",
+    },
+    happyEndings: {
+      heading: "เรื่องราวดี ๆ",
+      subtitle: "สัตว์ที่เพิ่งได้บ้านตลอดไปเมื่อไม่นานมานี้",
+      adopted: (month: string) => `รับเลี้ยงเมื่อ ${month}`,
+    },
+  },
+
+  share: {
+    share: "แชร์",
+    copyLink: "คัดลอกลิงก์",
+    copied: "คัดลอกลิงก์แล้ว",
+    copyPrompt: "คัดลอกลิงก์นี้:",
   },
 
   ourWork: {
@@ -2244,6 +2380,8 @@ const th: Dictionary = {
     },
     sex: { Male: "เพศผู้", Female: "เพศเมีย" },
     size: { Small: "เล็ก", Medium: "กลาง", Large: "ใหญ่" },
+    compatibility: { Yes: "ได้", No: "ไม่ได้", Unknown: "ยังไม่ทราบ" },
+    energyLevel: { Low: "ต่ำ", Medium: "ปานกลาง", High: "สูง" },
     dietUnit: {
       g: "กรัม",
       ml: "มล.",
