@@ -13,6 +13,8 @@ import {
 } from "@/components/DeferredUploads";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { EnclosureOption, ZoneOption } from "@/lib/enclosures/options";
+import type { ContactOption } from "@/lib/contacts/options";
+import { contactTypeLabel } from "@/lib/i18n/enum-labels";
 import type { MaintenanceJob } from "@/lib/maintenance/queries";
 import {
   MAINTENANCE_STATUSES,
@@ -41,8 +43,11 @@ export function MaintenanceForm({
   preselectedEnclosureId = null,
   preselectedZoneId = null,
   cancelHref,
+  contacts,
 }: {
   mode: "create" | "edit";
+  /** Every contact, for "Assigned to" — any type may be given a job. */
+  contacts: ContactOption[];
   zones: ZoneOption[];
   enclosures: EnclosureOption[];
   initial?: MaintenanceJob | null;
@@ -267,6 +272,26 @@ export function MaintenanceForm({
             className={inputClass}
           />
         </div>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="assignedTo" className="text-sm font-medium text-muted">
+          {f.assignedTo}
+        </label>
+        <select
+          id="assignedTo"
+          name="assignedTo"
+          defaultValue={initial?.assigned_to ?? ""}
+          className={inputClass}
+        >
+          <option value="">{fm.unassigned}</option>
+          {contacts.map((contact) => (
+            <option key={contact.id} value={contact.id}>
+              {contact.name} — {contactTypeLabel(t, contact.type)}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-muted">{fm.assignedHint}</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

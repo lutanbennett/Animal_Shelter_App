@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { canManage } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { CONTACT_COLUMNS, type Contact } from "@/lib/contacts/contacts";
+import { loadMaintenanceJobs } from "@/lib/maintenance/queries";
 import { ContactHub, type CarerPlacement } from "./ContactHub";
 
 export default async function ContactPage(props: PageProps<"/contacts/[id]">) {
@@ -11,7 +12,7 @@ export default async function ContactPage(props: PageProps<"/contacts/[id]">) {
   // Every placement that named this contact as carer, newest first. The
   // open ones (end_date null) are the residents living with them now; the
   // rest is their history. One query covers both.
-  const [contactResult, placementsResult, roleResult] = await Promise.all([
+  const [contactResult, placementsResult, roleResult, jobsResult] = await Promise.all([
     supabase
       .from("contacts")
       .select(CONTACT_COLUMNS)
@@ -27,6 +28,8 @@ export default async function ContactPage(props: PageProps<"/contacts/[id]">) {
       .order("start_date", { ascending: false })
       .returns<CarerPlacement[]>(),
     supabase.rpc("current_user_role"),
+    // Maintenance jobs assigned to them (any contact type can be given one).
+    loadMaintenanceJobs(supabase, { assignedTo: id }),
   ]);
 
   // A query error must not look like a missing contact — surface it, not a 404.
@@ -39,6 +42,7 @@ export default async function ContactPage(props: PageProps<"/contacts/[id]">) {
     <ContactHub
       contact={contact}
       placements={placementsResult.data ?? []}
+      jobs={jobsResult.jobs}
       canManage={canManage(roleResult.data)}
     />
   );

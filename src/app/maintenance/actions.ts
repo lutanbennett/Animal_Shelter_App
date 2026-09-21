@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getDriveClient } from "@/lib/google/drive";
 import { getT } from "@/lib/i18n/get-t";
@@ -48,6 +49,7 @@ type ParsedFields = {
   due_date: string | null;
   estimated_cost: number | null;
   actual_cost: number | null;
+  assigned_to: string | null;
 };
 
 async function parseFields(
@@ -89,6 +91,8 @@ async function parseFields(
       due_date,
       estimated_cost,
       actual_cost,
+      // Any contact, not just carers; the FK is the only check needed.
+      assigned_to: str(formData, "assignedTo"),
     },
   };
 }
@@ -120,6 +124,7 @@ export async function createMaintenanceJob(
       due_date: fields.due_date,
       estimated_cost: fields.estimated_cost,
       actual_cost: fields.actual_cost,
+      assigned_to: fields.assigned_to,
     })
     .select("id")
     .limit(1)
@@ -171,6 +176,7 @@ export async function updateMaintenanceJob(
       due_date: fields.due_date,
       estimated_cost: fields.estimated_cost,
       actual_cost: fields.actual_cost,
+      assigned_to: fields.assigned_to,
     })
     .eq("id", jobId)
     .select("id")
@@ -218,6 +224,67 @@ export async function setMaintenanceStatus(
   const driveWarning = await syncJobFolderAfterChange(supabase, jobId);
   revalidateJob(jobId, row.enclosure_id);
   return { driveWarning };
+}
+
+/**
+ * Removes a job for good: its file rows, the row itself, and then its
+ * Drive folder (which takes the files with it) or, for a job that never
+ * got a folder, nothing in Drive at all. The database goes first and is
+ * the source of truth; a Drive failure after that leaves an orphaned
+ * folder, which is a cleanup nuisance rather than a wrong record, so it
+ * isn't allowed to fail the action. Redirects to the board on success.
+ * RLS (0001) is what stops a volunteer: their delete matches no row.
+ */
+export async function deleteMaintenanceJob(jobId: string): Promise<{ error: string }> {
+  const { t } = await getT();
+  const supabase = await createClient();
+
+  const { data: rows } = await supabase
+    .from("maintenance")
+    .select("id, enclosure_id, drive_folder_id")
+    .eq("id", jobId)
+    .limit(1)
+    .returns<{ id: string; enclosure_id: string | null; drive_folder_id: string | null }[]>();
+  const job = rows?.[0];
+  if (!job) return { error: t.maintenance.errors.notFound };
+
+  const { data: files } = await supabase
+    .from("attachments")
+    .select("drive_file_id")
+    .eq("owner_type", "maintenance")
+    .eq("owner_id", jobId)
+    .returns<{ drive_file_id: string }[]>();
+
+  const { error: filesError } = await supabase
+    .from("attachments")
+    .delete()
+    .eq("owner_type", "maintenance")
+    .eq("owner_id", jobId);
+  if (filesError) return { error: filesError.message };
+
+  const { data: deleted, error } = await supabase
+    .from("maintenance")
+    .delete()
+    .eq("id", jobId)
+    .select("id")
+    .returns<{ id: string }[]>();
+  if (error) return { error: error.message };
+  if (!deleted || deleted.length === 0) return { error: t.maintenance.errors.notAuthorized };
+
+  try {
+    const drive = getDriveClient();
+    if (job.drive_folder_id) {
+      // Deleting the folder removes everything under it in one call.
+      await drive.deleteFile(job.drive_folder_id);
+    } else {
+      for (const file of files ?? []) await drive.deleteFile(file.drive_file_id);
+    }
+  } catch {
+    // See above: the record is gone; the folder can be tidied by hand.
+  }
+
+  revalidateJob(jobId, job.enclosure_id);
+  redirect("/maintenance");
 }
 
 export async function deleteMaintenanceAttachment(

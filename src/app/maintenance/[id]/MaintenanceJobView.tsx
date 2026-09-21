@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CalendarClock, Pencil } from "lucide-react";
+import { CalendarClock, Pencil, UserRound } from "lucide-react";
 import { ENCLOSURE_ICONS } from "@/components/hub-icons";
 import { AttachmentUploader } from "@/components/AttachmentUploader";
 import { driveImageUrl } from "@/lib/google/drive-client";
@@ -22,7 +22,11 @@ import {
   maintenanceStatusLabel,
   type MaintenanceStatus,
 } from "@/lib/maintenance/status";
-import { deleteMaintenanceAttachment, setMaintenanceStatus } from "../actions";
+import {
+  deleteMaintenanceAttachment,
+  deleteMaintenanceJob,
+  setMaintenanceStatus,
+} from "../actions";
 
 const IMAGE_EXTENSIONS = /\.(jpe?g|png|webp|heic|heif|gif)$/i;
 
@@ -48,6 +52,19 @@ export function MaintenanceJobView({
   // button lights up straight away rather than after the Drive move.
   const [optimisticStatus, setOptimisticStatus] = useState<MaintenanceStatus | null>(null);
   const status = optimisticStatus ?? job.status;
+
+  const [deleting, setDeleting] = useState(false);
+  function removeJob() {
+    if (!window.confirm(d.deleteConfirm(job.title))) return;
+    setError(null);
+    setDeleting(true);
+    startTransition(async () => {
+      // Redirects to the board on success; only an error comes back.
+      const result = await deleteMaintenanceJob(job.id);
+      setDeleting(false);
+      if (result?.error) setError(result.error);
+    });
+  }
 
   function changeStatus(next: MaintenanceStatus) {
     if (next === status) return;
@@ -125,6 +142,20 @@ export function MaintenanceJobView({
             <CalendarClock aria-hidden="true" className="h-4 w-4" />
             {job.due_date ? d.due(formatDate(job.due_date, locale)) : d.noDueDate}
           </span>
+          {job.assigned_to ? (
+            <Link
+              href={`/contacts/${job.assigned_to}`}
+              className="flex items-center gap-1 hover:text-foreground hover:underline"
+            >
+              <UserRound aria-hidden="true" className="h-4 w-4" />
+              {d.assignedTo(job.assignee_name ?? "—")}
+            </Link>
+          ) : (
+            <span className="flex items-center gap-1">
+              <UserRound aria-hidden="true" className="h-4 w-4" />
+              {d.unassigned}
+            </span>
+          )}
         </p>
         <p className="text-xs text-muted">
           {d.logged(formatDate(job.date_created, locale))}
@@ -235,6 +266,20 @@ export function MaintenanceJobView({
               </dd>
             </div>
           </dl>
+
+          {canWrite && (
+            <div className="flex flex-col gap-1">
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={removeJob}
+                className="rounded border border-danger/40 px-3 py-2 text-sm font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
+              >
+                {isPending && deleting ? d.deleting : d.deleteJob}
+              </button>
+              <p className="text-xs text-muted">{d.deleteHint}</p>
+            </div>
+          )}
         </aside>
       </div>
     </main>

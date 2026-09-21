@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { Wrench } from "lucide-react";
 import { ContactActions } from "@/components/ContactActions";
 import { CONTACT_ICONS } from "@/components/hub-icons";
 import { formatDate } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import type { MaintenanceJob } from "@/lib/maintenance/queries";
+import { maintenanceStatusLabel } from "@/lib/maintenance/status";
 import {
   contactTypeLabel,
   placementTypeLabel,
@@ -60,10 +63,13 @@ function ResidentThumb({
 export function ContactHub({
   contact,
   placements,
+  jobs,
   canManage,
 }: {
   contact: Contact;
   placements: CarerPlacement[];
+  /** Maintenance jobs assigned to this contact, open ones first. */
+  jobs: MaintenanceJob[];
   canManage: boolean;
 }) {
   const { t, locale } = useI18n();
@@ -222,6 +228,38 @@ export function ContactHub({
             )}
           </section>
         </div>
+      )}
+
+      {jobs.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <Wrench aria-hidden="true" className="h-5 w-5 text-muted" />
+            <h2 className="text-lg font-semibold text-foreground">{h.maintenanceJobs}</h2>
+            <span className="text-sm text-muted">({jobs.length})</span>
+          </div>
+          <ul className="flex flex-col gap-2">
+            {jobs.map((job) => (
+              <li key={job.id}>
+                <Link
+                  href={`/maintenance/${job.id}`}
+                  className="flex items-center justify-between gap-3 rounded border border-border bg-surface px-3 py-2 text-sm hover:bg-surface-hover"
+                >
+                  <div className="flex min-w-0 flex-col">
+                    <span className="truncate font-medium text-foreground">{job.title}</span>
+                    <span className="truncate text-xs text-muted">
+                      {job.job_code} · {job.zone_name}
+                      {job.enclosure_name ? ` › ${job.enclosure_name}` : ""}
+                    </span>
+                  </div>
+                  <span className="shrink-0 whitespace-nowrap text-xs text-muted">
+                    {maintenanceStatusLabel(t, job.status)}
+                    {job.due_date && ` · ${formatDate(job.due_date, locale)}`}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </main>
   );

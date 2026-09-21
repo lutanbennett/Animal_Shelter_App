@@ -27,7 +27,7 @@ Each item is a self-contained prompt for a new thread. Ordered by suggested prio
 
 ## Facility
 
-- [ ] **Maintenance follow-ups.** (a) Deleting a job — none today, a mistaken job can only be edited; needs to remove its attachments and Drive folder. (b) Assigning a job to a contact — `maintenance.assigned_to` exists but isn't on the form; contacts now exist at `/contacts`, so the form can offer a picker (all types, not just carers). (c) Migrating the legacy AppSheet maintenance folders already in the shelter Drive (`Enclosure Maintenance/<Enclosure>/Active|Completed/<date> (<id>)/Work to be Done/`) into rows + the new layout.
+- [ ] **Migrate the legacy AppSheet maintenance folders.** Folders already in the shelter Drive (`Enclosure Maintenance/<Enclosure>/Active|Completed/<date> (<id>)/Work to be Done/`) need reading into `maintenance` rows and their files moved into the new layout. Needs the user at a screen: look at the folders together, agree the mapping (enclosure names, what counts as Completed, the date), run it once with a dry run first. Was (c) of the Maintenance follow-ups item; (a) and (b) closed 2026-09-21.
 
 ## Admin
 
@@ -107,6 +107,7 @@ Done items, kept under the same headings as the open work above so follow-ups ca
 
 ### Facility
 
+- [x] **Maintenance follow-ups (a) delete a job, (b) assign to a contact.** Done 2026-09-21. (a) **Delete job** on the job page (staff and above; confirm first): removes the attachment rows and the job, then the Drive folder — which takes the files with it — or, for a job that never had a folder, each file. Database first, Drive best effort, redirects to the board. (b) **Assigned to** on the log/edit form offers every contact (any type, `loadContactOptions`), writes `maintenance.assigned_to`; the assignee shows on the job page (linking to their contact page), on board cards, and the contact hub lists the jobs they hold. No migration — the column and RLS were already there. Original brief: (a) Deleting a job — none today, a mistaken job can only be edited; needs to remove its attachments and Drive folder. (b) Assigning a job to a contact — `maintenance.assigned_to` exists but isn't on the form; contacts now exist at `/contacts`, so the form can offer a picker (all types, not just carers).
 - [x] **Enclosure maintenance.** Done 2026-09-20 (see `docs/decisions.md`): `0033_enclosure_maintenance.sql` adds `enclosure_id` (nullable — zone-wide jobs), estimated/actual cost, due date, `job_code` (M-0001), a cached Drive folder id and a before/after `phase` on `attachments`, and renames the statuses to Not Started / In Progress / Blocked / Completed. `/maintenance` is a drag-and-drop Kanban (desktop) / status list (phone), `/maintenance/[id]` has status buttons and Before / After photo sections, `/maintenance/new` uploads photos on the same form as the details. Files live in `Projects/Shelter Projects/Enclosure Maintenance/<Zone>/<Enclosure>/<Status>/<M-0001 Title>/` and the folder moves with the status.
 
 ### Admin

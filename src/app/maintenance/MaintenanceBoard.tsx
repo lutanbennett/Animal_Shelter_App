@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useOptimistic, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CalendarClock, Camera, Plus } from "lucide-react";
+import { CalendarClock, Camera, Plus, UserRound } from "lucide-react";
 import { ENCLOSURE_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatBaht, formatDate } from "@/lib/format";
@@ -456,6 +456,12 @@ function JobCard({
           </span>
         )}
         {job.estimated_cost != null && <span>{formatBaht(job.estimated_cost, locale)}</span>}
+        {job.assignee_name && (
+          <span className="flex items-center gap-1">
+            <UserRound aria-hidden="true" className="h-3 w-3" />
+            {job.assignee_name}
+          </span>
+        )}
         {photos > 0 && (
           <span className="flex items-center gap-1">
             <Camera aria-hidden="true" className="h-3 w-3" />
