@@ -1371,6 +1371,8 @@ const en = {
       recording: "Recording...",
       recordClosed:
         "This resident has died — their record is closed and can no longer be changed.",
+      editLimited:
+        "This resident has died. Their bio and photos can still be updated — everything else in the record is closed. The archive in Drive is refreshed after each change.",
       notAuthorized: "Only staff and admins can record a death.",
       fields: {
         date: "Date of death",

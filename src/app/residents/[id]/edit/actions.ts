@@ -7,6 +7,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { RESIDENT_SIZES, type ResidentSize } from "@/lib/i18n/enum-labels";
 import { estimatedAgeNow } from "@/lib/format";
 import { moveResidentToEnclosure } from "@/lib/placements/move";
+import { refreshDeceasedArchiveIfNeeded } from "@/lib/archive/refresh-deceased-archive";
 
 export type EditResidentState = { error: string } | undefined;
 
@@ -39,8 +40,9 @@ export async function updateResident(
     return { error: t.residents.edit.notAuthorized };
   }
 
-  // The database rejects every write to a deceased resident (migration
-  // 0025); say so in words rather than letting a trigger's message out.
+  // A deceased resident's record is closed except for the bio and photos
+  // (0026, 0052): the form only shows those sections, and this writes only
+  // those columns — anything else would trip the lock.
   const { data: state } = await supabase
     .from("resident_current_state")
     .select("is_deceased")
@@ -48,7 +50,7 @@ export async function updateResident(
     .limit(1)
     .returns<{ is_deceased: boolean }[]>();
   if (state?.[0]?.is_deceased) {
-    return { error: t.residents.deceased.recordClosed };
+    return updateDeceasedResident(supabase, t, residentId, formData);
   }
 
   const name = str(formData, "name");
@@ -175,5 +177,57 @@ export async function updateResident(
   // Name/visibility changes show up on the public adoption pages too.
   revalidatePath("/adopt");
   revalidatePath(`/adopt/${residentId}`);
+  redirect(`/residents/${residentId}`);
+}
+
+/**
+ * The after-death edit: bio group and profile photo only, then the Drive
+ * archive (summary PDF + offline index, both of which show these) is
+ * regenerated so it doesn't drift from the record.
+ */
+async function updateDeceasedResident(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  t: Awaited<ReturnType<typeof getT>>["t"],
+  residentId: string,
+  formData: FormData,
+): Promise<EditResidentState> {
+  const { data: currentRows } = await supabase
+    .from("residents")
+    .select("profile_photo_drive_file_id")
+    .eq("id", residentId)
+    .limit(1)
+    .returns<{ profile_photo_drive_file_id: string | null }[]>();
+  const current = currentRows?.[0];
+  if (!current) return { error: t.residents.edit.errors.notFound };
+
+  const { data: updated, error } = await supabase
+    .from("residents")
+    .update({
+      bio: str(formData, "bio"),
+      temperament_notes: str(formData, "temperamentNotes"),
+      past_story_notes: str(formData, "pastStoryNotes"),
+      behaviour_notes: str(formData, "behaviourNotes"),
+    })
+    .eq("id", residentId)
+    .select("id")
+    .returns<{ id: string }[]>();
+  if (error) return { error: error.message };
+  if (!updated?.[0]) return { error: t.residents.edit.errors.notFound };
+
+  const profilePhotoDriveFileId = str(formData, "profilePhotoDriveFileId");
+  if (profilePhotoDriveFileId && profilePhotoDriveFileId !== current.profile_photo_drive_file_id) {
+    const { error: photoError } = await supabase.rpc("set_resident_profile_photo", {
+      p_resident_id: residentId,
+      p_drive_file_id: profilePhotoDriveFileId,
+    });
+    if (photoError) return { error: photoError.message };
+  }
+
+  // Best effort — the edit is saved; a Drive hiccup leaves the old files
+  // until the next change or the hub's Retry.
+  await refreshDeceasedArchiveIfNeeded(supabase, residentId);
+
+  revalidatePath(`/residents/${residentId}`);
+  revalidatePath(`/residents/${residentId}/photos`);
   redirect(`/residents/${residentId}`);
 }
