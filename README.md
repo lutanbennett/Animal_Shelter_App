@@ -25,7 +25,7 @@ Five `app_role` values, enforced by row-level security
 
 | Role | Access |
 |---|---|
-| **admin** | Everything, including the Admin section (security, website, zones, enclosures, immunization types) and the Management section. |
+| **admin** | Everything, including the Admin section (security, website, zones, enclosures, immunization and procedure types) and the Management section. |
 | **management** | Staff's operational access plus the Management section: the reporting dashboard (`/management/dashboard`), contact, vet and medication management. |
 | **staff** | Read/write on residents, placements, weights, photos, maintenance, projects and contacts; read on medical records. |
 | **vet** | Read/write on vet visits, procedures, blood tests, prescriptions and immunizations; read on residents. |

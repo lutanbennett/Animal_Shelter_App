@@ -48,6 +48,7 @@ const en = {
     projects: "Projects",
     zones: "Zones",
     immunizationTypes: "Immunization Types",
+    procedureTypes: "Procedure Types",
     vets: "Vets",
     medications: "Medications",
     contacts: "Contacts",
@@ -240,6 +241,44 @@ const en = {
         nameRequired: "Name is required.",
         intervalPositive: "Repeat interval must be a positive number of months.",
         invalidInterval: "Invalid interval.",
+      },
+    },
+    procedureTypes: {
+      title: "Procedure Types",
+      subtitle:
+        "The kinds of procedure staff and vets pick from when logging one — X-ray, ultrasound, teeth cleaning, nail clipping… New ones can be added inline from the procedure form, so duplicates and misspellings collect here. Rename a type in place, or merge a duplicate into the one to keep — its procedures move with it. A type that has ever been logged can't be deleted: the procedure is part of the resident's medical record.",
+      couldntLoad: "Couldn't load procedure types",
+      couldntLoadUsage: "Couldn't load procedure counts",
+      createForm: {
+        name: "Name",
+        namePlaceholder: "e.g. Dental extraction",
+        addButton: "Add procedure type",
+      },
+      table: {
+        name: "Name",
+        procedures: "Procedures",
+        procedureCount: (n: number) => `${n} procedure${n === 1 ? "" : "s"}`,
+        noTypes: "No procedure types yet.",
+      },
+      merge: {
+        open: "Merge…",
+        into: "Merge into",
+        pickTarget: "Merge into…",
+        button: "Merge",
+        hint:
+          "Every procedure of this type moves to the one you pick and this row is removed. Files already uploaded stay in their existing Drive folders; files added later go under the kept name.",
+      },
+      deleteConfirm: (name: string) =>
+        `Delete procedure type "${name}"? This can't be undone.`,
+      mergeConfirm: (from: string, into: string, n: number) =>
+        `Merge "${from}" into "${into}"? ${n} procedure${n === 1 ? "" : "s"} will move to "${into}" and "${from}" will be removed. This can't be undone.`,
+      createdType: (name: string) => `Created procedure type "${name}".`,
+      errors: {
+        nameRequired: "Name is required.",
+        hasProcedures: (n: number) =>
+          `This type is on ${n} procedure${n === 1 ? "" : "s"} and can't be deleted — procedures are part of the residents' medical records. Merge it into another type instead.`,
+        mergeSelf: "Choose a different procedure type to merge into.",
+        mergeFailed: "Merge failed.",
       },
     },
     website: {
