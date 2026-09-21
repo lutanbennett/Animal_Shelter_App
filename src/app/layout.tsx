@@ -45,7 +45,13 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <PublicPathGate>
               <AppHeader />
             </PublicPathGate>
-            <div className="flex flex-1">
+            {/* Each page's <main> is a flex item here, and a flex item's
+                minimum width defaults to its content's — so a wide table
+                (residents, on a phone) widened the whole document instead
+                of scrolling inside its overflow-x-auto wrapper. min-w-0 on
+                the main lets it shrink to the viewport; a few pages carry
+                their own copy from before this was here. */}
+            <div className="flex flex-1 [&>main]:min-w-0">
               <PublicPathGate>
                 <NavPane />
               </PublicPathGate>
