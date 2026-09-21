@@ -1,5 +1,7 @@
 const en = {
   common: {
+    yes: "Yes",
+    no: "No",
     save: "Save",
     saveChanges: "Save changes",
     saving: "Saving...",
@@ -1300,7 +1302,14 @@ const en = {
       couldntLoadZones: "Couldn't load zones",
       couldntLoadEnclosures: "Couldn't load enclosures",
       couldntLoadOrigins: "Couldn't load origins",
-      sections: { identity: "Identity", arrival: "Arrival & placement", bio: "Bio & background" },
+      sections: {
+        identity: "Identity",
+        arrival: "Arrival & placement",
+        bio: "Bio & background",
+        adoption: "For adopters",
+      },
+      adoptionHint:
+        "What a family needs to know before they visit. Shown on the public profile as \"Is {name} right for you?\" — leave anything unknown blank.",
       fields: {
         name: "Name",
         thaiName: "Thai name",
@@ -1309,6 +1318,15 @@ const en = {
         selectSpecies: "Select species",
         breed: "Breed",
         sex: "Sex",
+        colour: "Colour",
+        colourHint: "e.g. Black and tan",
+        desexed: "Desexed (spayed / neutered)",
+        desexedUnknown: "Not known",
+        goodWithDogs: "Good with dogs",
+        goodWithCats: "Good with cats",
+        goodWithChildren: "Good with children",
+        energyLevel: "Energy level",
+        notSet: "Not set",
         sexUnknown: "Unknown",
         size: "Size",
         selectSize: "Select size",
@@ -1403,6 +1421,8 @@ const en = {
       bioBehaviour: "Bio & Behaviour",
       noBioNotes:
         "No bio, temperament, past-story, or behaviour notes recorded yet.",
+      adoptionProfile: "For adopters",
+      noAdoptionProfile: "Nothing recorded yet — colour, desexed, good with dogs / cats / children and energy level are set on the edit form.",
       bioLabels: {
         bio: "Bio",
         temperament: "Temperament",
@@ -2241,10 +2261,71 @@ const en = {
     about: (name: string) => `About ${name}`,
     temperament: "Temperament",
     theirStory: "Their story",
-    interestedEmail: (name: string) => `Interested in ${name}? Email`,
-    emailCta: "to ask about adoption or fostering.",
-    details: { species: "Species", breed: "Breed", sex: "Sex", size: "Size", age: "Age" },
+    details: {
+      species: "Species",
+      breed: "Breed",
+      sex: "Sex",
+      size: "Size",
+      age: "Age",
+      colour: "Colour",
+    },
     showPhoto: (index: number, total: number) => `Show photo ${index} of ${total}`,
+    metaDescription:
+      "Dogs and cats looking for a home at Lanna Care for Animals, Mae Wang, Chiang Mai.",
+    /** Open Graph description when a resident has no bio. */
+    shareFallback: (name: string) => `Meet ${name}, looking for a home at Lanna Care for Animals.`,
+    shareText: (name: string) => `Meet ${name} at Lanna Care for Animals`,
+    similar: (name: string) => `More residents like ${name}`,
+    filters: {
+      label: "Filter residents",
+      allSpecies: "All",
+      anySize: "Any size",
+      readyOnly: "Ready for adoption",
+      noneMatch: "No residents match those filters.",
+      clear: "Show everyone",
+      showing: (shown: number, total: number) => `Showing ${shown} of ${total} residents`,
+    },
+    /** Facts a visitor asks about, shown as ticks when true (0060). */
+    health: {
+      heading: "Health",
+      desexed: "Desexed",
+      vaccinated: "Vaccinated",
+    },
+    /** "Is {name} right for you?" — the adoption recommendation block (0060). */
+    recommendation: {
+      heading: (name: string) => `Is ${name} right for you?`,
+      goodWithDogs: "Good with dogs",
+      goodWithCats: "Good with cats",
+      goodWithChildren: "Good with children",
+      energyLevel: "Energy level",
+      note: "Our best assessment from how they've been with us — every animal is an individual, so come and meet them.",
+    },
+    /** "Where to meet {name}" — modelled on RSPCA ACT's profile footer. */
+    meet: {
+      heading: (name: string) => `Where to meet ${name}`,
+      intro: (name: string) =>
+        `The best way to know if ${name} is the one is to visit. Drop in during visiting hours, or get in touch first and we'll have them ready to meet you.`,
+      where: "Find us",
+      when: "Visiting hours",
+      email: "Email",
+      emailSubject: (name: string) => `Enquiry about ${name}`,
+      message: "Message or call",
+      honestNote:
+        "Please note: residents are adopted by the first suitable family they meet, and we can't hold an animal over the phone or by message — so someone you've seen here may already have found a home by the time you visit. We'll always help you find another friend.",
+      processLink: "How adoption works →",
+    },
+    happyEndings: {
+      heading: "Happy endings",
+      subtitle: "Residents who found their forever homes recently.",
+      adopted: (month: string) => `Adopted ${month}`,
+    },
+  },
+
+  share: {
+    share: "Share",
+    copyLink: "Copy link",
+    copied: "Link copied",
+    copyPrompt: "Copy this link:",
   },
 
   ourWork: {
@@ -2318,6 +2399,8 @@ const en = {
     },
     sex: { Male: "Male", Female: "Female" },
     size: { Small: "Small", Medium: "Medium", Large: "Large" },
+    compatibility: { Yes: "Yes", No: "No", Unknown: "Not yet known" },
+    energyLevel: { Low: "Low", Medium: "Medium", High: "High" },
     dietUnit: {
       g: "g",
       ml: "ml",

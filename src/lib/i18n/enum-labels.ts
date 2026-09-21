@@ -35,6 +35,22 @@ export function sizeLabel(t: Dictionary, value: string | null | undefined) {
   return enumLabel(t.enums.size, value);
 }
 
+/** residents.good_with_* — a tri-state; null (not set) shows nothing (0060). */
+export const COMPATIBILITY_VALUES = ["Yes", "No", "Unknown"] as const;
+export type Compatibility = (typeof COMPATIBILITY_VALUES)[number];
+
+export function compatibilityLabel(t: Dictionary, value: string | null | undefined) {
+  return enumLabel(t.enums.compatibility, value);
+}
+
+/** residents.energy_level (0060). */
+export const ENERGY_LEVELS = ["Low", "Medium", "High"] as const;
+export type EnergyLevel = (typeof ENERGY_LEVELS)[number];
+
+export function energyLevelLabel(t: Dictionary, value: string | null | undefined) {
+  return enumLabel(t.enums.energyLevel, value);
+}
+
 /** diet_types.unit — what a diet is bought and served in (0051). */
 export const DIET_UNITS = ["g", "ml", "can", "sachet", "cup", "portion"] as const;
 export type DietUnit = (typeof DIET_UNITS)[number];

@@ -5,6 +5,7 @@ import { recordIntake } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
 import { RESIDENT_SIZES, sizeLabel } from "@/lib/i18n/enum-labels";
+import { AdoptionProfileFields } from "@/components/AdoptionProfileFields";
 
 export type ZoneOption = { id: string; name: string; name_th: string | null };
 export type DietTypeOption = { id: string; name: string };
@@ -162,6 +163,14 @@ export function IntakeForm({
             <p className="text-xs text-muted">{t.residents.new.fields.startingDietHint}</p>
           </div>
         </div>
+      </fieldset>
+
+      <fieldset className="flex flex-col gap-4">
+        <legend className="text-base font-semibold text-foreground">
+          {t.residents.new.sections.adoption}
+        </legend>
+        <p className="text-sm text-muted">{t.residents.new.adoptionHint}</p>
+        <AdoptionProfileFields />
       </fieldset>
 
       <fieldset className="flex flex-col gap-4">

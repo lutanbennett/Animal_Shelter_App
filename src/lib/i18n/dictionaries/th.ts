@@ -2,6 +2,8 @@ import type { Dictionary } from "./en";
 
 const th: Dictionary = {
   common: {
+    yes: "ใช่",
+    no: "ไม่",
     save: "บันทึก",
     saveChanges: "บันทึกการเปลี่ยนแปลง",
     saving: "กำลังบันทึก...",
@@ -1299,7 +1301,10 @@ const th: Dictionary = {
         identity: "ข้อมูลทั่วไป",
         arrival: "การเข้ามาและที่พัก",
         bio: "ประวัติและความเป็นมา",
+        adoption: "สำหรับผู้รับเลี้ยง",
       },
+      adoptionHint:
+        "สิ่งที่ครอบครัวควรรู้ก่อนมาเยี่ยม แสดงบนโปรไฟล์สาธารณะในหัวข้อ \"{name} เหมาะกับคุณไหม?\" — หากไม่ทราบให้เว้นว่าง",
       fields: {
         name: "ชื่อ",
         thaiName: "ชื่อไทย",
@@ -1308,6 +1313,15 @@ const th: Dictionary = {
         selectSpecies: "เลือกชนิดสัตว์",
         breed: "สายพันธุ์",
         sex: "เพศ",
+        colour: "สี",
+        colourHint: "เช่น ดำน้ำตาล",
+        desexed: "ทำหมันแล้ว",
+        desexedUnknown: "ไม่ทราบ",
+        goodWithDogs: "เข้ากับสุนัขได้",
+        goodWithCats: "เข้ากับแมวได้",
+        goodWithChildren: "เข้ากับเด็กได้",
+        energyLevel: "ระดับพลังงาน",
+        notSet: "ยังไม่ระบุ",
         sexUnknown: "ไม่ทราบ",
         size: "ขนาดตัว",
         selectSize: "เลือกขนาดตัว",
@@ -1401,6 +1415,8 @@ const th: Dictionary = {
       photosDetail: "แกลเลอรี Google Drive",
       bioBehaviour: "ประวัติและพฤติกรรม",
       noBioNotes: "ยังไม่มีการบันทึกประวัติ อุปนิสัย เรื่องราวในอดีต หรือพฤติกรรม",
+      adoptionProfile: "สำหรับผู้รับเลี้ยง",
+      noAdoptionProfile: "ยังไม่มีการบันทึก — สี การทำหมัน การเข้ากับสุนัข / แมว / เด็ก และระดับพลังงาน ตั้งค่าได้ในหน้าแก้ไข",
       bioLabels: {
         bio: "ประวัติ",
         temperament: "อุปนิสัย",
@@ -2230,10 +2246,67 @@ const th: Dictionary = {
     about: (name: string) => `เกี่ยวกับ ${name}`,
     temperament: "อุปนิสัย",
     theirStory: "เรื่องราวของพวกเขา",
-    interestedEmail: (name: string) => `สนใจ ${name} ใช่ไหม? ส่งอีเมลถึง`,
-    emailCta: "เพื่อสอบถามเรื่องการรับเลี้ยงหรืออุปถัมภ์",
-    details: { species: "ชนิดสัตว์", breed: "สายพันธุ์", sex: "เพศ", size: "ขนาดตัว", age: "อายุ" },
+    details: {
+      species: "ชนิดสัตว์",
+      breed: "สายพันธุ์",
+      sex: "เพศ",
+      size: "ขนาดตัว",
+      age: "อายุ",
+      colour: "สี",
+    },
     showPhoto: (index: number, total: number) => `แสดงรูปที่ ${index} จาก ${total}`,
+    metaDescription:
+      "สุนัขและแมวที่กำลังหาบ้านที่ Lanna Care for Animals อำเภอแม่วาง จังหวัดเชียงใหม่",
+    shareFallback: (name: string) => `พบกับ ${name} ที่กำลังหาบ้านที่ Lanna Care for Animals`,
+    shareText: (name: string) => `พบกับ ${name} ที่ Lanna Care for Animals`,
+    similar: (name: string) => `สัตว์ตัวอื่นที่คล้ายกับ ${name}`,
+    filters: {
+      label: "กรองรายชื่อสัตว์",
+      allSpecies: "ทั้งหมด",
+      anySize: "ทุกขนาด",
+      readyOnly: "พร้อมรับเลี้ยง",
+      noneMatch: "ไม่มีสัตว์ที่ตรงกับตัวกรองนี้",
+      clear: "แสดงทั้งหมด",
+      showing: (shown: number, total: number) => `แสดง ${shown} จาก ${total} ตัว`,
+    },
+    health: {
+      heading: "สุขภาพ",
+      desexed: "ทำหมันแล้ว",
+      vaccinated: "ฉีดวัคซีนแล้ว",
+    },
+    recommendation: {
+      heading: (name: string) => `${name} เหมาะกับคุณไหม?`,
+      goodWithDogs: "เข้ากับสุนัขได้",
+      goodWithCats: "เข้ากับแมวได้",
+      goodWithChildren: "เข้ากับเด็กได้",
+      energyLevel: "ระดับพลังงาน",
+      note: "เป็นการประเมินจากพฤติกรรมขณะอยู่กับเรา — สัตว์แต่ละตัวไม่เหมือนกัน มาพบกันด้วยตัวเองดีที่สุด",
+    },
+    meet: {
+      heading: (name: string) => `มาพบ ${name} ได้ที่ไหน`,
+      intro: (name: string) =>
+        `วิธีที่ดีที่สุดที่จะรู้ว่า ${name} ใช่หรือไม่คือมาเยี่ยม แวะมาในเวลาเปิดให้เยี่ยมชม หรือติดต่อเราก่อนแล้วเราจะเตรียมให้พบกัน`,
+      where: "ที่ตั้ง",
+      when: "เวลาเปิดให้เยี่ยมชม",
+      email: "อีเมล",
+      emailSubject: (name: string) => `สอบถามเกี่ยวกับ ${name}`,
+      message: "ส่งข้อความหรือโทร",
+      honestNote:
+        "โปรดทราบ: สัตว์จะได้รับการรับเลี้ยงโดยครอบครัวที่เหมาะสมรายแรกที่มาพบ และเราไม่สามารถจองสัตว์ทางโทรศัพท์หรือข้อความได้ — สัตว์ที่คุณเห็นที่นี่อาจได้บ้านแล้วเมื่อคุณมาถึง เรายินดีช่วยคุณหาเพื่อนตัวใหม่เสมอ",
+      processLink: "ขั้นตอนการรับเลี้ยง →",
+    },
+    happyEndings: {
+      heading: "เรื่องราวดี ๆ",
+      subtitle: "สัตว์ที่เพิ่งได้บ้านตลอดไปเมื่อไม่นานมานี้",
+      adopted: (month: string) => `รับเลี้ยงเมื่อ ${month}`,
+    },
+  },
+
+  share: {
+    share: "แชร์",
+    copyLink: "คัดลอกลิงก์",
+    copied: "คัดลอกลิงก์แล้ว",
+    copyPrompt: "คัดลอกลิงก์นี้:",
   },
 
   ourWork: {
@@ -2304,6 +2377,8 @@ const th: Dictionary = {
     },
     sex: { Male: "เพศผู้", Female: "เพศเมีย" },
     size: { Small: "เล็ก", Medium: "กลาง", Large: "ใหญ่" },
+    compatibility: { Yes: "ได้", No: "ไม่ได้", Unknown: "ยังไม่ทราบ" },
+    energyLevel: { Low: "ต่ำ", Medium: "ปานกลาง", High: "สูง" },
     dietUnit: {
       g: "กรัม",
       ml: "มล.",

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { RESIDENT_SIZES, type ResidentSize } from "@/lib/i18n/enum-labels";
+import { readAdoptionProfile } from "@/lib/residents/adoption-profile";
 import { estimatedAgeNow } from "@/lib/format";
 import { moveResidentToEnclosure } from "@/lib/placements/move";
 import { refreshDeceasedArchiveIfNeeded } from "@/lib/archive/refresh-deceased-archive";
@@ -131,6 +132,7 @@ export async function updateResident(
       behaviour_notes: str(formData, "behaviourNotes"),
       ready_for_adoption: readyForAdoption,
       is_public_visible: readyForAdoption,
+      ...readAdoptionProfile(formData),
     })
     .eq("id", residentId)
     .select("id")

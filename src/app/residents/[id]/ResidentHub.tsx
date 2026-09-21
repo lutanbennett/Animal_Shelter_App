@@ -26,7 +26,15 @@ import {
 } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { statusLabel, speciesLabel, sexLabel, sizeLabel } from "@/lib/i18n/enum-labels";
+import {
+  statusLabel,
+  speciesLabel,
+  sexLabel,
+  sizeLabel,
+  compatibilityLabel,
+  energyLevelLabel,
+} from "@/lib/i18n/enum-labels";
+import type { AdoptionProfile } from "@/components/AdoptionProfileFields";
 import { TranslationPanel } from "@/components/TranslationPanel";
 import { placeName } from "@/lib/enclosures/names";
 import type { TranslationRow } from "@/lib/translations/types";
@@ -55,7 +63,7 @@ export type Resident = {
   deceased_summary_drive_file_id: string | null;
   deceased_index_drive_file_id: string | null;
   deceased_archived_at: string | null;
-};
+} & AdoptionProfile;
 
 export type ResidentStatus = {
   current_status: string | null;
@@ -345,6 +353,21 @@ export function ResidentHub({
     { label: t.residents.hub.bioLabels.behaviour, value: resident.behaviour_notes, translation: null },
   ].filter((f) => f.value);
 
+  // The adoption recommendation (0060), set fields only — what /adopt/[id]
+  // shows as "Is {name} right for you?".
+  const fl = t.residents.new.fields;
+  const adoptionFields = [
+    { label: fl.colour, value: resident.colour },
+    {
+      label: fl.desexed,
+      value: resident.is_desexed == null ? null : resident.is_desexed ? t.common.yes : t.common.no,
+    },
+    { label: fl.goodWithDogs, value: compatibilityLabel(t, resident.good_with_dogs) },
+    { label: fl.goodWithCats, value: compatibilityLabel(t, resident.good_with_cats) },
+    { label: fl.goodWithChildren, value: compatibilityLabel(t, resident.good_with_children) },
+    { label: fl.energyLevel, value: energyLevelLabel(t, resident.energy_level) },
+  ].filter((f): f is { label: string; value: string } => Boolean(f.value));
+
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
       <Link href="/residents" className="text-sm text-muted hover:text-foreground">
@@ -552,6 +575,26 @@ export function ResidentHub({
               <p className="text-sm text-muted">{t.residents.hub.noBioNotes}</p>
             )}
           </div>
+
+          {!isDeceased && (
+            <div className="rounded-lg border border-border bg-surface p-4">
+              <h3 className="mb-2 text-sm font-medium text-muted">
+                {t.residents.hub.adoptionProfile}
+              </h3>
+              {adoptionFields.length > 0 ? (
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
+                  {adoptionFields.map((f) => (
+                    <div key={f.label}>
+                      <dt className="text-xs font-medium text-muted">{f.label}</dt>
+                      <dd className="text-sm text-foreground">{f.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : (
+                <p className="text-sm text-muted">{t.residents.hub.noAdoptionProfile}</p>
+              )}
+            </div>
+          )}
         </section>
 
         <section

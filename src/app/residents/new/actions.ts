@@ -4,8 +4,16 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { RESIDENT_SIZES, type ResidentSize } from "@/lib/i18n/enum-labels";
+import { readAdoptionProfile } from "@/lib/residents/adoption-profile";
 
 export type IntakeState = { error: string } | undefined;
+
+/** `{ colour }` → `{ p_colour }`: record_intake's parameter names (0060). */
+function prefixed<T extends Record<string, unknown>>(fields: T) {
+  return Object.fromEntries(
+    Object.entries(fields).map(([key, value]) => [`p_${key}`, value]),
+  );
+}
 
 function str(formData: FormData, key: string): string | null {
   const value = formData.get(key);
@@ -78,6 +86,7 @@ export async function recordIntake(
     p_weight_kg: weightKg,
     p_size: size,
     p_diet_type_id: str(formData, "dietTypeId"),
+    ...prefixed(readAdoptionProfile(formData)),
   });
 
   if (error) {
