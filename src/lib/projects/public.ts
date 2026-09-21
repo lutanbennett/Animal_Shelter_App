@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Locale } from "@/lib/i18n/locales";
+import { localizedField } from "@/lib/translations/localize";
+import type { PublicTranslations } from "@/lib/translations/types";
 import { PROJECT_CATEGORIES, type ProjectCategory } from "./queries";
 
 /**
@@ -15,12 +17,13 @@ export type PublicProject = {
   title: string;
   title_th: string | null;
   summary: string | null;
-  summary_th: string | null;
   project_date: string | null;
   location: string | null;
   sort_date: string;
   cover_drive_file_id: string | null;
   photo_count: number;
+  /** Approved other-language text, keyed by column (0056). */
+  translations: PublicTranslations;
 };
 
 /** One row of public_project_photos. */
@@ -28,11 +31,11 @@ export type PublicProjectPhoto = {
   id: string;
   drive_file_id: string;
   caption: string | null;
-  caption_th: string | null;
+  translations: PublicTranslations;
 };
 
 const PROJECT_COLUMNS =
-  "id, category, title, title_th, summary, summary_th, project_date, location, sort_date, cover_drive_file_id, photo_count";
+  "id, category, title, title_th, summary, project_date, location, sort_date, cover_drive_file_id, photo_count, translations";
 
 /**
  * Every published story, newest first. The shelter publishes a handful a
@@ -74,7 +77,7 @@ export async function loadPublicProjectPhotos(
 ): Promise<PublicProjectPhoto[]> {
   const { data } = await supabase
     .from("public_project_photos")
-    .select("id, drive_file_id, caption, caption_th")
+    .select("id, drive_file_id, caption, translations")
     .eq("project_id", projectId)
     .order("sort_order", { ascending: true, nullsFirst: false })
     .order("uploaded_at", { ascending: true })
@@ -85,7 +88,9 @@ export async function loadPublicProjectPhotos(
 /**
  * The Thai text when the visitor reads Thai and staff have written it,
  * otherwise the English — a story is never hidden for lacking a
- * translation. Empty strings count as missing.
+ * translation. Empty strings count as missing. This is the paired-column
+ * form, for the title (`name_th`, a label); prose goes through
+ * localizedField() and the `translations` jsonb (0056).
  */
 export function localized(
   locale: Locale,
@@ -99,7 +104,7 @@ export function localized(
 export function publicProjectText(project: PublicProject, locale: Locale) {
   return {
     title: localized(locale, project.title, project.title_th),
-    summary: localized(locale, project.summary, project.summary_th),
+    summary: localizedField(locale, project.summary, project.translations, "summary"),
   };
 }
 

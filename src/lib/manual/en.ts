@@ -37,7 +37,7 @@ const manual: Manual = {
     admin:
       "Everything, including the Admin section (users, website, zones, enclosures, immunization and procedure types) and the Management section.",
     management:
-      "Everything staff can do, plus the Management section: the reporting dashboard and the contact, vet and medication lists.",
+      "Everything staff can do, plus the Management section: the reporting dashboard, the contact, vet, medication and diet lists, and the translations of public text.",
     staff:
       "Day-to-day resident work: intake, moves, hospital, foster and adoption, photos, maintenance, projects. Can read medical records.",
     vet: "Vet visits, procedures, blood tests, prescriptions and immunizations. Can read resident details.",
@@ -82,7 +82,7 @@ const manual: Manual = {
           title: "Switching language",
           steps: [
             "Use the EN / ไทย switch in the header (or on the sign-in page).",
-            "The choice is remembered on that device. Free-text notes stay in whatever language they were typed in.",
+            "The choice is remembered on that device. Free-text notes stay in whatever language they were typed in; the ones the public reads (a resident's bio, a project's story) get a translation written by a manager — see Management → Translating public text.",
           ],
         },
         {
@@ -746,6 +746,18 @@ const manual: Manual = {
             src: "/manual/management-diets.png",
             alt: "The diets management page with the forecast and cost columns",
           },
+        },
+        {
+          id: "translations",
+          title: "Translating public text",
+          roles: ["admin", "management"],
+          path: "Management → Translations",
+          steps: [
+            "The app's own labels are in both languages already; this page is for text one person types and another reads in the other language: a resident's bio, temperament and past story on the adoption pages, a project's story and photo captions under Our work, and the title and description of every maintenance job. Whichever language it was written in, the other language needs a version, and that is written by hand here.",
+            "Every such text lands on this page when it is first written and again whenever it changes: Needs translation for a new one, Out of date when the original has been edited since it was translated — with the old and new original shown side by side so you fix the translation rather than start over. Work down the list, type the translation and tap Save & approve.",
+            "Only an approved translation is shown to visitors reading that language; until then they see the original. Show approved too lists the ones already live if you need to correct one, and Remove translation takes one down.",
+            "The same box appears under the text on the resident's page, on the project folder and on the maintenance job, so you can translate right after writing without coming here. On the board and the job page, staff reading Thai see the approved Thai title and description in place of the English. Nobody has to translate internal notes (weights, vet visits, prescriptions): those stay as typed.",
+          ],
         },
       ],
     },

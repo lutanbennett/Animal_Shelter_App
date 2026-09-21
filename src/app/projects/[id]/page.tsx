@@ -9,6 +9,8 @@ import {
   loadProjectFolderPath,
   loadProjectPhotos,
 } from "@/lib/projects/queries";
+import { loadTranslations } from "@/lib/translations/queries";
+import { canManage } from "@/lib/auth/require-management";
 import { FolderView } from "./FolderView";
 
 /**
@@ -33,6 +35,13 @@ export default async function ProjectFolderPage(props: PageProps<"/projects/[id]
     loadAllProjectFolders(supabase),
   ]);
 
+  // The other-language story and captions (0056): the folder's own row
+  // and one per photo, loaded together and split by table in the view.
+  const [folderTranslations, photoTranslations] = await Promise.all([
+    loadTranslations(supabase, "project_folders", [id]),
+    loadTranslations(supabase, "attachments", photos.photos.map((p) => p.id)),
+  ]);
+
   const error = children.error ?? photos.error;
 
   return (
@@ -49,6 +58,8 @@ export default async function ProjectFolderPage(props: PageProps<"/projects/[id]
         photos={photos.photos}
         allFolders={all}
         canWrite={canWriteProjects(role)}
+        canManageTranslations={canManage(role)}
+        translations={[...folderTranslations.values(), ...photoTranslations.values()]}
       />
     </main>
   );

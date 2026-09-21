@@ -3,6 +3,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { getT } from "@/lib/i18n/get-t";
+import { localizedField } from "@/lib/translations/localize";
+import type { PublicTranslations } from "@/lib/translations/types";
 import { speciesLabel } from "@/lib/i18n/enum-labels";
 import { loadPublicProjects } from "@/lib/projects/public";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -28,6 +30,7 @@ type FeaturedResident = {
   ready_for_adoption: boolean;
   bio: string | null;
   profile_photo_drive_file_id: string | null;
+  translations: PublicTranslations;
 };
 
 type GalleryPhoto = { id: string; drive_file_id: string; alt: string };
@@ -79,14 +82,14 @@ export default async function WelcomePage() {
     const { data } = await supabase
       .from("public_resident_profiles")
       .select(
-        "id, name, species, breed, ready_for_adoption, bio, profile_photo_drive_file_id",
+        "id, name, species, breed, ready_for_adoption, bio, profile_photo_drive_file_id, translations",
       )
       .eq("id", content.featured_resident_id)
       .limit(1)
       .returns<FeaturedResident[]>();
     featured = data?.[0] ?? null;
   }
-  const featuredIntro = (featured?.bio ?? "")
+  const featuredIntro = localizedField(locale, featured?.bio, featured?.translations, "bio")
     .split(/\n\s*\n/)
     .map((p) => p.trim())
     .find(Boolean);

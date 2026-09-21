@@ -26,7 +26,7 @@ Five `app_role` values, enforced by row-level security
 | Role | Access |
 |---|---|
 | **admin** | Everything, including the Admin section (security, website, zones, enclosures, immunization and procedure types) and the Management section. |
-| **management** | Staff's operational access plus the Management section: the reporting dashboard (`/management/dashboard`), contact, vet and medication management. |
+| **management** | Staff's operational access plus the Management section: the reporting dashboard (`/management/dashboard`), contact, vet, medication and diet management, and the translations of public text (`/management/translations`). |
 | **staff** | Read/write on residents, placements, weights, photos, maintenance, projects and contacts; read on medical records. |
 | **vet** | Read/write on vet visits, procedures, blood tests, prescriptions and immunizations; read on residents. |
 | **volunteer** | Read everything; write photos and enclosure moves only. |
@@ -208,6 +208,16 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
   moves; `public.ts` is the read-only slice behind the public `/our-work`
   pages (the `public_projects` views and the locale/English-fallback
   helpers).
+- `src/lib/translations/` — free text across languages (0056): the row
+  types, the loader for a record's `translations` rows, the manager
+  queue query, and `localizedField()` / `localizedFromRow()` that pick
+  the approved other-language text by locale with the original as the
+  fallback. `src/components/TranslationPanel.tsx` is the one editor,
+  used by `/management/translations` and under the fields themselves;
+  the server actions are in `src/app/management/translations/actions.ts`.
+  Which fields are translatable is the `translatable_fields` table, not
+  code (today: resident bio / temperament / past story, project story,
+  photo caption, maintenance job title / description).
 - `src/lib/archive/` — the deceased resident archive: the summary PDF, the
   offline `index.html` index page written beside it in the resident's Drive
   folder, the step that moves that folder to `Residents/Deceased/`, and

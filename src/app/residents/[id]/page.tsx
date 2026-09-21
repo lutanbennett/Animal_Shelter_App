@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DECEASED_ROLES, UNDO_DECEASED_ROLES } from "@/lib/placements/deceased";
+import { canManage } from "@/lib/auth/require-management";
+import { loadTranslations } from "@/lib/translations/queries";
 import {
   ResidentHub,
   type BloodTestRow,
@@ -152,7 +154,7 @@ export default async function ResidentPage(
     currentState?.current_status === "Hospitalised"
       ? currentState.active_hospital_previous_enclosure
       : null;
-  const [carerResult, previousEnclosureResult] = await Promise.all([
+  const [carerResult, previousEnclosureResult, translations] = await Promise.all([
     carerId
       ? supabase
           .from("contacts")
@@ -169,6 +171,8 @@ export default async function ResidentPage(
           .limit(1)
           .returns<{ name: string }[]>()
       : null,
+    // The other-language versions of the public profile fields (0056).
+    loadTranslations(supabase, "residents", [id]),
   ]);
 
   return (
@@ -186,6 +190,8 @@ export default async function ResidentPage(
       }}
       canRecordDeath={DECEASED_ROLES.has(roleResult.data ?? "")}
       canUndoDeath={UNDO_DECEASED_ROLES.has(roleResult.data ?? "")}
+      canManageTranslations={canManage(roleResult.data)}
+      translations={Array.from(translations.values())}
       currentPlacementSince={currentPlacementResult.data?.[0]?.start_date ?? null}
       carerName={carerResult?.data?.[0]?.name ?? null}
       hospitalPreviousEnclosureName={previousEnclosureResult?.data?.[0]?.name ?? null}

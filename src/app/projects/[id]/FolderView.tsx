@@ -15,6 +15,9 @@ import {
   Trash2,
 } from "lucide-react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { TranslationPanel } from "@/components/TranslationPanel";
+import { localizedFromRow } from "@/lib/translations/localize";
+import type { TranslationRow } from "@/lib/translations/types";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { projectCategoryLabel } from "@/lib/i18n/enum-labels";
 import { formatDate } from "@/lib/format";
@@ -61,6 +64,8 @@ export function FolderView({
   photos,
   allFolders,
   canWrite,
+  canManageTranslations,
+  translations,
 }: {
   folder: ProjectFolder;
   path: ProjectFolderPath;
@@ -68,6 +73,10 @@ export function FolderView({
   photos: ProjectPhoto[];
   allFolders: ProjectFolder[];
   canWrite: boolean;
+  /** Admin/management: may write and approve the other-language text. */
+  canManageTranslations: boolean;
+  /** The folder's story row and the photos' caption rows (0056). */
+  translations: TranslationRow[];
 }) {
   const { t, locale } = useI18n();
   const f = t.projects.folders;
@@ -83,7 +92,11 @@ export function FolderView({
   const isCategory = !folder.parent_folder_id;
   const parent = path.length >= 2 ? path[path.length - 2] : null;
   const displayName = folderDisplayName(folder, locale, t);
-  const summary = (locale === "th" && folder.summary_th) || folder.summary;
+  // The story in the reader's language when an approved translation
+  // exists in it, else as written; the panel below it carries the rest.
+  const summaryTranslation =
+    translations.find((row) => row.table_name === "project_folders" && row.row_id === folder.id) ?? null;
+  const summary = localizedFromRow(locale, folder.summary, summaryTranslation) || null;
   const isEmpty = folder.child_count === 0 && folder.photo_count === 0;
 
   function run(action: () => Promise<{ error?: string; driveWarning?: string | null; folderId?: string }>, after?: (folderId?: string) => void) {
@@ -209,7 +222,13 @@ export function FolderView({
             empty={isCategory ? f.emptyCategory : f.empty}
           />
           {!isCategory && (
-            <PhotoSection folder={folder} photos={photos} canWrite={canWrite} />
+            <PhotoSection
+              folder={folder}
+              photos={photos}
+              canWrite={canWrite}
+              canManageTranslations={canManageTranslations}
+              translations={translations.filter((row) => row.table_name === "attachments")}
+            />
           )}
         </div>
 
@@ -241,10 +260,6 @@ export function FolderView({
                     <span className="font-normal">{info.summaryHint}</span>
                   </label>
                   <label className="flex flex-col gap-1 text-xs font-medium text-muted">
-                    {info.summaryTh}
-                    <textarea name="summaryTh" defaultValue={folder.summary_th ?? ""} rows={5} className={inputClass} />
-                  </label>
-                  <label className="flex flex-col gap-1 text-xs font-medium text-muted">
                     {info.date}
                     <input type="date" name="projectDate" defaultValue={folder.project_date ?? ""} className={inputClass} />
                   </label>
@@ -274,6 +289,13 @@ export function FolderView({
                     <p className="whitespace-pre-line text-sm text-foreground">{summary}</p>
                   ) : (
                     <p className="text-sm text-muted">{info.noSummary}</p>
+                  )}
+                  {summaryTranslation && canManageTranslations && (
+                    <TranslationPanel
+                      key={summaryTranslation.id + summaryTranslation.updated_at}
+                      row={summaryTranslation}
+                      canManage
+                    />
                   )}
                   {canWrite && (
                     <label className="flex items-center gap-2 border-t border-border pt-3 text-sm text-foreground">

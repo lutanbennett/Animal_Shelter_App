@@ -12,11 +12,11 @@ import {
   loadPublicProject,
   loadPublicProjectPhotos,
   loadPublicProjects,
-  localized,
   publicProjectText,
   summaryLead,
   summaryParagraphs,
 } from "@/lib/projects/public";
+import { localizedField } from "@/lib/translations/localize";
 import { PublicHeader } from "../../adopt/PublicHeader";
 import { ProjectCard } from "../ProjectCard";
 import { StoryGallery, type StoryPhoto } from "./StoryGallery";
@@ -89,7 +89,7 @@ export default async function PublicProjectPage(
   const ordered: StoryPhoto[] = photos.map((photo) => ({
     id: photo.id,
     drive_file_id: photo.drive_file_id,
-    caption: localized(locale, photo.caption, photo.caption_th),
+    caption: localizedField(locale, photo.caption, photo.translations, "caption"),
   }));
   // The cover leads the gallery so the page opens on the shot staff chose;
   // the rest keep their arranged order.
