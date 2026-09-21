@@ -10,6 +10,7 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+.env.deploy.*
 .dev.vars
 
 # Logs

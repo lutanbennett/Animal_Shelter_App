@@ -11,26 +11,14 @@
 //   node scripts/check-public-views.mjs
 //
 // Reads NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY from the
-// environment, falling back to .env.local — the same values the deploy
-// build inlines, so point .env.local at production first (README, step 3).
-// Exits non-zero if a view is unreadable or writable.
+// environment or the env files for the chosen environment (scripts/lib/env.mjs;
+// `--env production` for the live database). Exits non-zero if a view is
+// unreadable or writable.
 
-import { existsSync, readFileSync } from "node:fs";
+import { loadEnv, parseEnvArg } from "./lib/env.mjs";
 
-function loadEnv() {
-  const env = { ...process.env };
-  if (existsSync(".env.local")) {
-    for (const line of readFileSync(".env.local", "utf8").split(/\r?\n/)) {
-      if (!line.includes("=") || line.startsWith("#")) continue;
-      const i = line.indexOf("=");
-      const key = line.slice(0, i).trim();
-      if (!(key in env)) env[key] = line.slice(i + 1).trim().replace(/^"|"$/g, "");
-    }
-  }
-  return env;
-}
-
-const env = loadEnv();
+const { name: envName } = parseEnvArg(process.argv.slice(2));
+const env = loadEnv(envName);
 const url = env.NEXT_PUBLIC_SUPABASE_URL;
 const key = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 if (!url || !key) {

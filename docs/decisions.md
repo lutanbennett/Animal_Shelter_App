@@ -1615,3 +1615,38 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   (or patch `node_modules`), `scripts/win-junction-symlinks.cjs` is
   preloaded with `node -r` and swaps directory symlinks for junctions,
   which behave identically for the bundler; it is inert off Windows.
+
+- **Three environments on two free databases (2026-09-21):** Dev (`next
+  dev`), Test (`test.lannacare.org`) and Production (`lannacare.org`) are
+  three Workers-or-local runtimes over two Supabase projects — Test shares
+  the dev database. There is no budget beyond the domain (the shelter runs
+  on donations), so Supabase Pro was ruled out: both projects sit on the
+  free tier, which allows exactly two, and that settled the "does Test get
+  its own database" question too. The free tier's seven-day inactivity
+  pause is a non-issue while the public pages are up (any anonymous page
+  view counts as activity); its lack of backups is the real gap, covered
+  by a scheduled `pg_dump` to Drive on the backlog rather than a paid
+  plan. Production was created in `ap-south-1` like dev (Singapore was
+  the intent, ~30 ms closer to Chiang Mai; not worth recreating for).
+  Production's values live in a gitignored `.env.deploy.production`
+  layered over `.env.local` by `scripts/lib/env.mjs` — a file name
+  neither Next.js nor OpenNext loads, so the only way a production build
+  happens is `scripts/deploy.mjs --env production`, which also refuses to
+  run from anything but a clean, pushed `main`.
+
+- **Production keeps the dev Google Drive account for now (2026-09-21):**
+  the shelter's own Google account is not yet in Lutan's hands, but the
+  real AppSheet data needs migrating into production now, and the photos
+  it references already live on the dev account's Drive. So every
+  environment uses the dev Drive until the account arrives, and the
+  cut-over plan is an ownership transfer of the folder tree (Drive
+  preserves file IDs, which is what the database stores) followed by a
+  new refresh token — not a copy. Recorded so nobody "cleans up" the dev
+  Drive thinking production doesn't depend on it.
+
+- **Email for lannacare.org is Cloudflare Email Routing (2026-09-21):**
+  a catch-all forwards every address to Lutan's Gmail. Receive-only; the
+  shelter has no mailbox of its own yet, and sending *as*
+  `@lannacare.org` would need a Gmail "send mail as" with an SMTP relay.
+  Set up via the API with the wrangler login (`email_routing:write`),
+  which also created the MX, SPF and DKIM records.

@@ -1,8 +1,9 @@
-// Apply supabase/migrations/*.sql to the Supabase project in .env.local,
+// Apply supabase/migrations/*.sql to one environment's Supabase project,
 // recording each file in a `schema_migrations` table so the database itself
 // knows what has been applied — no memory notes, no "did I run 0026?".
 //
-//   node scripts/apply-migrations.mjs            # apply every unapplied file
+//   node scripts/apply-migrations.mjs            # apply every unapplied file (dev/test)
+//   node scripts/apply-migrations.mjs --env production
 //   node scripts/apply-migrations.mjs --status   # list applied / pending, change nothing
 //   node scripts/apply-migrations.mjs --dry-run  # run pending files inside begin…rollback
 //   node scripts/apply-migrations.mjs --baseline 0027_prescriptions.sql
@@ -17,39 +18,27 @@
 //
 // There's no psql or Supabase CLI link on the dev machine; the SQL goes to
 // the Management API's query endpoint with the personal access token in
-// SUPABASE_ACCESS_TOKEN. The project is taken from NEXT_PUBLIC_SUPABASE_URL,
-// so pointing .env.local at production migrates production (README,
-// "Deploying to Cloudflare", step 3). The target is printed before anything
-// runs.
+// SUPABASE_ACCESS_TOKEN (which must be able to see every project it targets).
+// The project comes from NEXT_PUBLIC_SUPABASE_URL of the chosen environment
+// (scripts/lib/env.mjs: .env.local for test, .env.deploy.production layered
+// on top for production). The target is printed before anything runs.
 
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
 
 const MIGRATIONS_DIR = "supabase/migrations";
 
-function loadEnv() {
-  const env = { ...process.env };
-  if (existsSync(".env.local")) {
-    for (const line of readFileSync(".env.local", "utf8").split(/\r?\n/)) {
-      if (!line.includes("=") || line.startsWith("#")) continue;
-      const i = line.indexOf("=");
-      const key = line.slice(0, i).trim();
-      if (!(key in env)) env[key] = line.slice(i + 1).trim().replace(/^"|"$/g, "");
-    }
-  }
-  return env;
-}
-
-const env = loadEnv();
+const { name: envName, rest: args } = parseEnvArg(process.argv.slice(2));
+const env = loadEnv(envName);
 const url = env.NEXT_PUBLIC_SUPABASE_URL;
 const token = env.SUPABASE_ACCESS_TOKEN;
 if (!url || !token) {
   console.error("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_ACCESS_TOKEN are required.");
   process.exit(2);
 }
-const projectRef = new URL(url).hostname.split(".")[0];
+const projectRef = refOf(env);
 
-const args = process.argv.slice(2);
 const statusOnly = args.includes("--status");
 const dryRun = args.includes("--dry-run");
 const baselineIndex = args.indexOf("--baseline");
@@ -93,7 +82,7 @@ const files = readdirSync(MIGRATIONS_DIR)
   .filter((name) => /^\d{4}_.+\.sql$/.test(name))
   .sort();
 
-console.log(`Project: ${projectRef} (${url})`);
+console.log(`Environment: ${envName} — project ${projectRef} (${url})`);
 
 await query(`
   create table if not exists schema_migrations (
