@@ -1584,3 +1584,15 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   filtered board. Same reasoning for the residents list: a resident in
   hospital showed "Lifecycle · Internal" in the Zone and Location
   columns, which is the Status column's job, so both are blank there.
+
+- **Dates are formatted from a fixed month table, not ICU (2026-09-21):**
+  `formatDate()` and friends in `src/lib/format.ts` pinned `en-GB` /
+  `th-TH-u-ca-buddhist` so server and browser would agree, but the
+  abbreviated month still comes from each runtime's ICU data: Node and
+  Chrome (CLDR 38+) write "20 Sept 2026", iOS Safari "20 Sep 2026", and
+  every client component showing a date threw a hydration error on the
+  phone. The functions now assemble the string themselves from a
+  twelve-entry table per language (Buddhist year for Thai), keeping the
+  shapes the locales produced — "20 Sep 2026", "20 Sep 2026, 14:05",
+  "20 ก.ย. 2569 14:05", axis ticks "20 Sep" / "Sep 2026". Numbers (baht,
+  kg) still go through `toLocaleString`, where the ICUs agree.

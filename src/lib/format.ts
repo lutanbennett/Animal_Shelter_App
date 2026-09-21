@@ -1,41 +1,54 @@
 import type { Dictionary } from "./i18n/dictionaries/en";
 import type { Locale } from "./i18n/locales";
 
-// Each locale maps to a fixed BCP-47 tag with an explicit calendar. Thai
-// dates are shown in the Buddhist Era (year + 543, `-u-ca-buddhist`), which
-// is how Thai staff read and write dates day to day — decided 2026-09-20,
-// reversing an earlier Gregorian pin (see docs/decisions.md). Only display
-// is affected: dates are stored and submitted as ISO Gregorian, and the
-// browser's native date inputs stay Gregorian. The tag is pinned rather
-// than left to the runtime default so the string is identical on the
-// server and in the browser — a locale that tracks the runtime's default
-// causes a hydration mismatch when server and client environments differ.
-const DATE_LOCALE_TAG: Record<Locale, string> = {
+// Each locale maps to a fixed BCP-47 tag, used for the *number* formats
+// below (grouping separators, the baht symbol), which every ICU agrees on.
+const NUMBER_LOCALE_TAG: Record<Locale, string> = {
   en: "en-GB",
-  th: "th-TH-u-ca-buddhist",
+  th: "th-TH",
 };
 
-export function formatDate(value: string | null | undefined, locale: Locale = "en") {
-  if (!value) return "—";
-  return new Date(value).toLocaleDateString(DATE_LOCALE_TAG[locale], {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+// Dates are assembled by hand rather than through toLocaleDateString():
+// even with the locale pinned, the abbreviated month comes from the
+// runtime's ICU data, and Node/Chrome (CLDR 38+) write "20 Sept 2026" for
+// en-GB where iOS Safari writes "20 Sep 2026" — a hydration mismatch on
+// every client component that shows a date, first seen on a phone on
+// 2026-09-21. A fixed table gives the same string everywhere. Thai dates
+// are in the Buddhist Era (year + 543), which is how Thai staff read and
+// write dates day to day (decided 2026-09-20; see docs/decisions.md);
+// only display is affected — dates are stored and submitted as ISO
+// Gregorian, and the browser's native date inputs stay Gregorian.
+const SHORT_MONTHS: Record<Locale, readonly string[]> = {
+  en: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+  th: ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."],
+};
+
+/** The pieces of a date in the runtime's time zone — the same zone toLocaleDateString() used. */
+function dateParts(value: string | number | Date, locale: Locale) {
+  const d = new Date(value);
+  return {
+    day: d.getDate(),
+    month: SHORT_MONTHS[locale][d.getMonth()],
+    year: locale === "th" ? d.getFullYear() + 543 : d.getFullYear(),
+    time: `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`,
+  };
 }
 
+/** "20 Sep 2026" / "20 ก.ย. 2569". */
+export function formatDate(value: string | null | undefined, locale: Locale = "en") {
+  if (!value) return "—";
+  const { day, month, year } = dateParts(value, locale);
+  return `${day} ${month} ${year}`;
+}
+
+/** "20 Sep 2026, 14:05" / "20 ก.ย. 2569 14:05" — the shapes en-GB and th-TH produced. */
 export function formatDateTime(
   value: string | null | undefined,
   locale: Locale = "en",
 ) {
   if (!value) return "—";
-  return new Date(value).toLocaleString(DATE_LOCALE_TAG[locale], {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  const { day, month, year, time } = dateParts(value, locale);
+  return locale === "th" ? `${day} ${month} ${year} ${time}` : `${day} ${month} ${year}, ${time}`;
 }
 
 const MS_PER_YEAR = 1000 * 60 * 60 * 24 * 365.25;
@@ -81,7 +94,7 @@ export function weightUnit(locale: Locale = "en") {
 // numbers, so 12.50 arrives as 12.5. Shown to two decimals at most (the
 // scales the shelter uses read to 10 g) with the locale's separators.
 export function formatWeightKg(kg: number, locale: Locale = "en") {
-  return `${kg.toLocaleString(DATE_LOCALE_TAG[locale], {
+  return `${kg.toLocaleString(NUMBER_LOCALE_TAG[locale], {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   })} ${KG_UNIT[locale]}`;
@@ -103,18 +116,14 @@ export function formatAxisDate(
   locale: Locale = "en",
   withYear = false,
 ) {
-  return new Date(value).toLocaleDateString(
-    DATE_LOCALE_TAG[locale],
-    withYear
-      ? { month: "short", year: "numeric" }
-      : { day: "numeric", month: "short" },
-  );
+  const { day, month, year } = dateParts(value, locale);
+  return withYear ? `${month} ${year}` : `${day} ${month}`;
 }
 
 // Costs are Thai baht — the shelter's only currency — shown whole (quotes
 // and invoices are in whole baht) with the locale's grouping separator.
 export function formatBaht(amount: number, locale: Locale = "en") {
-  return amount.toLocaleString(DATE_LOCALE_TAG[locale], {
+  return amount.toLocaleString(NUMBER_LOCALE_TAG[locale], {
     style: "currency",
     currency: "THB",
     currencyDisplay: "narrowSymbol",
@@ -130,8 +139,6 @@ export function formatMonth(
   locale: Locale = "en",
   withYear = false,
 ) {
-  return new Date(value).toLocaleDateString(
-    DATE_LOCALE_TAG[locale],
-    withYear ? { month: "short", year: "numeric" } : { month: "short" },
-  );
+  const { month, year } = dateParts(value, locale);
+  return withYear ? `${month} ${year}` : month;
 }
