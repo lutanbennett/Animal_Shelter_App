@@ -77,6 +77,7 @@ const SIGNED_IN = [
   { name: "admin-zones", path: "/admin/zones" },
   { name: "admin-enclosures", path: "/admin/enclosures" },
   { name: "admin-immunization-types", path: "/admin/immunization-types" },
+  { name: "admin-procedure-types", path: "/admin/procedure-types" },
 ];
 
 const SIGNED_OUT = [

@@ -1153,6 +1153,24 @@ Section 11, plus decisions made during setup that aren't in the original doc.
    and, separately, which fields the user wants to stay editable after
    death (the locked-by-default choice above is waiting on that answer).
 
+- **Procedure types get their own Admin page, not a shared one (2026-09-21):**
+  the backlog suggested combining the procedure-types admin with the
+  medications/frequencies one. Medications had already gone under
+  Management (a manager's forecast, not configuration), and the frequency
+  list has its own open item to move to Admin with an RLS question still
+  to settle, so folding them together would have stacked three lists on
+  one page and blocked this one on that decision. `/admin/procedure-types`
+  follows the one-page-per-lookup pattern the Admin section already has
+  (zones, enclosures, immunization types); when frequencies move they get
+  `/admin/frequencies` beside it. Merge is a database function
+  (`merge_procedure_type`, 0047) like 0043's, so the move-and-delete can't
+  half-complete; delete is refused in the action while any procedure
+  references the type (the FK has no cascade — the procedure is medical
+  record). Renaming or merging doesn't touch Drive: a procedure's folder
+  name (`Procedures/<Type> <YYYYMMDD>/`) is read at upload time, so files
+  already uploaded stay where they are and later ones go under the new
+  name; the merge hint on the page says so.
+
 - **One form for a record and its files (2026-09-21):** `BloodTestForm` and
   `ProcedureForm` used to save first and only then swap in an
   `AttachmentUploader`; staff wanted the files picked with the details.

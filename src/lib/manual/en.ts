@@ -35,7 +35,7 @@ const manual: Manual = {
   },
   roleSummary: {
     admin:
-      "Everything, including the Admin section (users, website, zones, enclosures, immunization types) and the Management section.",
+      "Everything, including the Admin section (users, website, zones, enclosures, immunization and procedure types) and the Management section.",
     management:
       "Everything staff can do, plus the Management section: the reporting dashboard and the contact, vet and medication lists.",
     staff:
@@ -761,6 +761,20 @@ const manual: Manual = {
           screenshot: {
             src: "/manual/admin-immunization-types.png",
             alt: "The immunization types admin page",
+          },
+        },
+        {
+          id: "procedure-types",
+          title: "Procedure types",
+          roles: ["admin"],
+          path: "Admin → Procedure Types",
+          steps: [
+            "The list the procedure form offers — X-ray, ultrasound, teeth cleaning, nail clipping. Staff and vets can add a type inline when logging a procedure, so this is where duplicates and misspellings get tidied up.",
+            "Rename a type in place, or Merge… a duplicate into the one to keep — its procedures move across. A type with logged procedures can't be deleted; merge it instead.",
+          ],
+          screenshot: {
+            src: "/manual/admin-procedure-types.png",
+            alt: "The procedure types admin page",
           },
         },
       ],
