@@ -6,6 +6,58 @@ Section 11, plus decisions made during setup that aren't in the original doc.
 
 ## Confirmed
 
+- **A death recorded in error is withdrawn, not deleted (2026-09-21):**
+  the backlog asked whether admins get a proper "recorded in error" path
+  and what it should restore. They do, and it is an event: migration 0048
+  adds `DeceasedInError` to `placement_type`, and 0049's
+  `undo_deceased_placement(resident, reason)` appends one back into the
+  placement the death closed (the same enclosure, zone and carer; for a
+  resident who was in hospital, the kennel they were due back to is kept
+  as `previous_enclosure_id` so return-from-hospital still works). The
+  Deceased row is ended by that insert the way any placement ends the
+  one before it, and both stay in the housing history with the admin's
+  reason. Deleting the Deceased row and reopening the prior one was the
+  alternative: cleaner timeline, but `placement_history` is the
+  append-only log everything else is derived from (0001, requirements
+  Section 4.1), and "a death was recorded and then withdrawn" is a fact
+  about the resident worth keeping. The reversal is dated when it is
+  made, not backdated, so the history shows the resident as recorded
+  deceased between the two dates. That also means a death that *did*
+  happen but was recorded with the wrong date can't be fixed this way
+  (a re-recorded death has to start after the reversal) — that belongs
+  with the "which fields stay editable after death" item, not here.
+
+  **What it restores.** The cascade could not be reversed row by row
+  because it left no trace of which rows it touched: an appointment
+  cancelled by hand the week before is indistinguishable from one the
+  death cancelled, and a prescription's original end date was overwritten.
+  So the cascade (now a BEFORE INSERT trigger, which also spares it the
+  lock bypass) first records what it is about to do in
+  `placement_history.deceased_cascade` on the Deceased row — appointment
+  ids, prescription ids with their end dates, `ready_for_adoption` — and
+  the undo puts back exactly that and nothing else. Deaths recorded before
+  0049 have no snapshot; withdrawing one restores the placement only. The
+  lock needs no separate release: it tests the open placement, which is
+  no longer the Deceased one.
+
+  **Roles.** Admin only, deliberately narrower than recording a death
+  (admin / management / staff): the person who made the mistake asks an
+  admin, which is the right amount of friction for reopening a closed
+  record. The management dashboard counts a Deceased placement only while
+  it is still open, so a withdrawn death drops out of the month and the
+  trend.
+
+  **Drive.** Mirror image of the archive, with the same stance on failure:
+  the database transition commits first, then the folder moves back under
+  `Residents/` and the generated summary PDF and offline index are deleted
+  (a "deceased summary" of a living resident is worse than none; both are
+  regenerated if a death is ever recorded again). If Drive fails the
+  archive columns stay set and the hub shows a retry. Known gap: if the
+  original archive never got as far as recording anything (Drive down
+  mid-run), a later withdrawal has nothing to flag, and a folder moved
+  but not recorded would sit under `Residents/Deceased/` until someone
+  looks — judged not worth a column for a double failure.
+
 - **"Resident", never "animal" (2026-09-21):** the customer is particular
   about the word. Every English string, PDF/HTML archive label ("Resident
   ID"), i18n key, identifier and comment that still said *animal* now

@@ -9,6 +9,7 @@ import {
   Fence,
   HeartCrack,
   HeartHandshake,
+  HeartPlus,
   HeartPulse,
   House,
   Info,
@@ -76,6 +77,8 @@ export const PLACEMENT_ICONS = {
   // resident details card, not the Housing card's action row, so it never
   // appears in availablePlacementActions().
   deceased: HeartCrack,
+  // Withdrawing a death recorded in error — reached from the deceased banner.
+  deceasedInError: HeartPlus,
 } satisfies Record<string, LucideIcon>;
 
 /** Icons for the enclosure browser (`/enclosures`) and enclosure hub. */

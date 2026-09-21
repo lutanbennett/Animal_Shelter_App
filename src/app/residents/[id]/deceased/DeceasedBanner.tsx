@@ -1,8 +1,10 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { FileText, FolderOpen, Globe, HeartCrack } from "lucide-react";
-import { retryDeceasedArchive } from "./actions";
+import { retryDeceasedArchive, retryDeceasedRestore } from "./actions";
+import { PLACEMENT_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate } from "@/lib/format";
 import { driveFileUrl, driveFolderUrl } from "@/lib/google/drive-client";
@@ -22,7 +24,8 @@ const linkClass =
  * that the record is now read-only, and where the archive lives. When the
  * Drive half of the workflow didn't finish (Drive was down when the death
  * was recorded), it also carries the retry — the database side is never
- * blocked on Drive, so this is how the two are reconciled.
+ * blocked on Drive, so this is how the two are reconciled. For an admin it
+ * is also the way to a death recorded in error being withdrawn.
  */
 export function DeceasedBanner({
   residentId,
@@ -30,12 +33,15 @@ export function DeceasedBanner({
   causeOfDeath,
   archive,
   canRetryArchive,
+  canUndo,
 }: {
   residentId: string;
   dateOfDeath: string | null;
   causeOfDeath: string | null;
   archive: DeceasedArchive;
   canRetryArchive: boolean;
+  /** Admin only — the roles in UNDO_DECEASED_ROLES. */
+  canUndo: boolean;
 }) {
   const { t, locale } = useI18n();
   const d = t.residents.deceased;
@@ -122,6 +128,61 @@ export function DeceasedBanner({
           )}
         </form>
       )}
+
+      {canUndo && (
+        <div className="flex flex-wrap items-center gap-3 border-t border-border pt-3">
+          <p className="text-xs text-muted">{d.undo.bannerHint}</p>
+          <Link
+            href={`/residents/${residentId}/deceased/undo`}
+            className={linkClass}
+          >
+            <PLACEMENT_ICONS.deceasedInError aria-hidden="true" className="h-4 w-4" />
+            {d.undo.bannerLink}
+          </Link>
+        </div>
+      )}
     </section>
+  );
+}
+
+/**
+ * Shown on the hub of a *living* resident whose deceased-archive columns
+ * are still set: a death was withdrawn but the Drive half (folder back
+ * under Residents/, generated files removed) failed. Same shape as the
+ * banner's archive retry, in the other direction.
+ */
+export function DeceasedRestoreNotice({
+  residentId,
+  canRetry,
+}: {
+  residentId: string;
+  canRetry: boolean;
+}) {
+  const { t } = useI18n();
+  const u = t.residents.deceased.undo;
+  const [state, formAction, pending] = useActionState(
+    retryDeceasedRestore.bind(null, residentId),
+    undefined,
+  );
+
+  return (
+    <form
+      action={formAction}
+      className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-surface-hover p-4"
+    >
+      <p className="text-xs text-danger">{u.restoreIncomplete}</p>
+      {canRetry && (
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded border border-primary/40 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 disabled:opacity-50"
+        >
+          {pending ? u.restoring : u.retryRestore}
+        </button>
+      )}
+      {state && "error" in state && (
+        <span className="text-xs text-danger">{state.error}</span>
+      )}
+    </form>
   );
 }

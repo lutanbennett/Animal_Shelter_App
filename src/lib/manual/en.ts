@@ -282,7 +282,25 @@ const manual: Manual = {
           callouts: [
             {
               kind: "warning",
-              text: "This can't be undone from the app. Double-check you have the right resident before confirming.",
+              text: "Double-check you have the right resident before confirming. Only an admin can withdraw a recorded death afterwards, and the mistake stays in the resident's history.",
+            },
+          ],
+        },
+        {
+          id: "undo-deceased",
+          title: "Withdrawing a death recorded in error",
+          roles: ["admin"],
+          path: "Resident hub → deceased banner → Withdraw this death",
+          steps: [
+            "On the hub of the resident recorded as deceased, tap Withdraw this death at the bottom of the banner.",
+            "Check where they'll go back to — the enclosure or carer they were with when the death was recorded — and say why it was recorded in error. The reason is required.",
+            "Tap Withdraw death and confirm.",
+            "The resident is back where they were, the vet visits the death cancelled are scheduled again, the prescriptions it ended get their old end dates back, and their record can be edited again. The Drive folder moves back under Residents/ and the generated summary PDF and index page are deleted — a Retry appears on the hub if Drive was unavailable.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "This is for a death that didn't happen — the wrong resident, or a slip. Both the death and the withdrawal stay in the Housing & Placement History, dated when they were made. If the death did happen but a detail is wrong, this isn't the tool.",
             },
           ],
         },

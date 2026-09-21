@@ -1236,7 +1236,7 @@ const en = {
       },
       confirm: {
         title: (name: string) => `Record ${name} as deceased?`,
-        body: "This can't be undone from the app.",
+        body: "Only an admin can withdraw this afterwards.",
         confirmButton: "Yes, record the death",
       },
       banner: {
@@ -1253,6 +1253,49 @@ const en = {
           "The Drive archive didn't finish — the folder move, summary PDF or index page is missing.",
         retryArchive: "Retry archiving",
         archiving: "Archiving...",
+      },
+      undo: {
+        pageTitle: (name: string) => `Withdraw ${name}'s recorded death`,
+        pageSubtitle:
+          "For a death recorded in error — the wrong resident, or one that didn't happen. The record reopens where it was, with what the death cancelled put back. If the death did happen but a detail is wrong, this is not the tool: the reversal stays in the history.",
+        notAuthorized: "Only an admin can withdraw a recorded death.",
+        bannerHint: "Recorded in error?",
+        bannerLink: "Withdraw this death",
+        recordedAs: "Recorded as",
+        returnsTo: "They'll go back to",
+        fields: {
+          reason: "Why was this recorded in error?",
+          reasonPlaceholder: "e.g. recorded against the wrong resident — it was Biscuit, not Bisto",
+          reasonHint: "Kept with the reversal in the housing history.",
+        },
+        whatHappens: {
+          title: "What withdrawing a death does",
+          items: [
+            "The resident goes back to the enclosure (or carer) they were with when the death was recorded — as of now, not backdated.",
+            "The vet appointments the death cancelled are scheduled again, and the prescriptions it ended get their previous end dates back.",
+            "Ready for adoption is restored if it was set, and they return to the public adoption pages if they were listed.",
+            "Their record can be edited again.",
+            "Their Drive folder moves back under Residents/, and the generated summary PDF and index page are deleted.",
+            "Both the death and this reversal stay in the housing history, with your reason.",
+          ],
+        },
+        confirm: {
+          title: (name: string) => `Withdraw ${name}'s recorded death?`,
+          body: "This reopens a closed record. The reversal is kept in their history.",
+          confirmButton: "Yes, withdraw the death",
+        },
+        undoButton: "Withdraw death",
+        undoing: "Withdrawing...",
+        restoreIncomplete:
+          "A recorded death was withdrawn, but their Drive folder is still in Residents/Deceased/ or the generated summary and index page are still there.",
+        retryRestore: "Retry restoring the Drive folder",
+        restoring: "Restoring...",
+        errors: {
+          enterReason: "Say why the death was recorded in error.",
+          notDeceased: "This resident isn't recorded as deceased.",
+          noPriorPlacement:
+            "There is no earlier placement to return this resident to.",
+        },
       },
       errors: {
         enterDate: "Enter the date of death.",
@@ -1882,6 +1925,7 @@ const en = {
       Adopt: "Adopted",
       Deceased: "Deceased",
       ReturnToShelter: "Returned to shelter",
+      DeceasedInError: "Death recorded in error — withdrawn",
     },
     species: { Dog: "Dog", Cat: "Cat" },
     /** contacts.type — Vendor is shown as Supplier, which is what the shelter calls them. */

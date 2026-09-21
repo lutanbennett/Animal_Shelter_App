@@ -178,6 +178,9 @@ export function monthReport(
   const { residents, placements } = data;
   const started = (type: string) =>
     placements.filter((p) => p.placement_type === type && inWindow(p.start_date, window));
+  // A Deceased placement is only ever ended by a DeceasedInError one (0049),
+  // so a closed Deceased row is a death that was withdrawn — not a death.
+  const died = started("Deceased").filter((p) => p.end_date == null);
 
   // A foster that began before the 1st and hadn't ended by then. A resident
   // moved between carers during the month shows once, under "new".
@@ -224,7 +227,7 @@ export function monthReport(
     adopted: toEntries(started("Adopt"), residents),
     fosteredNew: toEntries(started("Foster"), residents),
     fosteredContinued: toEntries(continued, residents),
-    died: toEntries(started("Deceased"), residents),
+    died: toEntries(died, residents),
     hospitalised: toEntries(started("SendToHospital"), residents),
     returned: toEntries(started("ReturnToShelter"), residents),
     bloodWorkInHouse: toEntries(
@@ -365,7 +368,8 @@ export function trend(placements: PlacementRow[], months: number, now: Date): Tr
     if (slot == null) continue;
     if (p.placement_type === "Intake") buckets[slot].intakes += 1;
     else if (p.placement_type === "Adopt") buckets[slot].adoptions += 1;
-    else if (p.placement_type === "Deceased") buckets[slot].deaths += 1;
+    // A closed Deceased row is a death that was withdrawn (see monthReport).
+    else if (p.placement_type === "Deceased" && p.end_date == null) buckets[slot].deaths += 1;
   }
   return buckets;
 }

@@ -199,7 +199,8 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
   helpers).
 - `src/lib/archive/` — the deceased resident archive: the summary PDF, the
   offline `index.html` index page written beside it in the resident's Drive
-  folder, and the step that moves that folder to `Residents/Deceased/`.
+  folder, the step that moves that folder to `Residents/Deceased/`, and
+  its reverse for a death withdrawn as recorded in error.
 - `src/lib/manual/` — the in-app user manual's content (`en.ts`, English
   only so far), rendered by `src/app/manual/page.tsx` at `/manual` for
   every signed-in role. Its screenshots live in `public/manual/` and are
