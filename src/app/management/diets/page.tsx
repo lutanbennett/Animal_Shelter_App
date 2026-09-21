@@ -3,6 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { CreateDietTypeForm } from "./CreateDietTypeForm";
 import { DietTypesTable, type DietTypeRow } from "./DietTypesTable";
+import { ForecastWindowPicker } from "@/components/ForecastWindowPicker";
+import { formatDate } from "@/lib/format";
+import { forecastWindows, parseCustomWindow } from "@/lib/management/forecast-window";
 
 type ForecastRow = {
   diet_type_id: string;
@@ -12,15 +15,6 @@ type ForecastRow = {
   cost: number | string | null;
 };
 
-/** The forecast windows the table shows, in days from today inclusive. */
-const FORECAST_DAYS = [7, 30] as const;
-
-function isoDatePlus(days: number) {
-  const d = new Date();
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
 /**
  * Management → Diets: the food product list and the food forecast, the
  * shape of Management → Medications. Each row is a diet type with its
@@ -28,12 +22,17 @@ function isoDatePlus(days: number) {
  * residents living at the shelter will eat of it in the next 7 / 30 days
  * and what that costs (0051 diet_forecast).
  */
-export default async function DietsManagementPage() {
+export default async function DietsManagementPage(props: PageProps<"/management/diets">) {
   await requireManagementUser();
-  const { t } = await getT();
+  const { t, locale } = await getT();
+  const searchParams = await props.searchParams;
+
+  // The fixed 7 / 30-day columns, plus a custom From/To window from the
+  // picker when the query string carries one.
+  const custom = parseCustomWindow(searchParams);
+  const windows = forecastWindows(custom && "window" in custom ? custom.window : null);
 
   const supabase = await createClient();
-  const today = isoDatePlus(0);
   const [typesResult, dietsResult, ...forecastResults] = await Promise.all([
     supabase
       .from("diet_types")
@@ -46,10 +45,10 @@ export default async function DietsManagementPage() {
       .from("resident_diets")
       .select("diet_type_id")
       .returns<{ diet_type_id: string }[]>(),
-    ...FORECAST_DAYS.map(async (days) => {
+    ...windows.map(async (window) => {
       const { data, error } = await supabase.rpc("diet_forecast", {
-        p_from: today,
-        p_to: isoDatePlus(days - 1),
+        p_from: window.from,
+        p_to: window.to,
       });
       return { data: (data ?? null) as ForecastRow[] | null, error };
     }),
@@ -82,6 +81,14 @@ export default async function DietsManagementPage() {
 
   const m = t.management.diets;
   const forecastError = forecastResults.find((r) => r.error)?.error;
+  const forecastHeadings = windows.map((window) =>
+    window.days != null
+      ? m.table.forecastHeading(window.days)
+      : t.management.forecastWindow.heading(
+          formatDate(window.from, locale),
+          formatDate(window.to, locale),
+        ),
+  );
 
   return (
     <main className="flex flex-1 flex-col gap-8 p-6">
@@ -108,7 +115,12 @@ export default async function DietsManagementPage() {
 
       <section className="flex flex-col gap-4">
         <CreateDietTypeForm />
-        <DietTypesTable dietTypes={dietTypes} forecastDays={[...FORECAST_DAYS]} />
+        <ForecastWindowPicker
+          from={custom && "window" in custom ? custom.window.from : ""}
+          to={custom && "window" in custom ? custom.window.to : ""}
+          invalid={custom != null && "invalid" in custom}
+        />
+        <DietTypesTable dietTypes={dietTypes} forecastHeadings={forecastHeadings} />
         <p className="text-xs text-muted">{m.table.forecastNote}</p>
       </section>
     </main>

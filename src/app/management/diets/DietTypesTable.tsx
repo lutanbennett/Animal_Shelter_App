@@ -19,7 +19,7 @@ export type DietTypeRow = {
   /** Every resident_diets row ever written for it — any at all blocks delete. */
   diet_count: number;
   /**
-   * One entry per forecast window (same order as the table's forecastDays):
+   * One entry per forecast window (same order as the table's forecastHeadings):
    * residents fed at the shelter, the quantity in `unit` and the cost in
    * baht (0051 diet_forecast).
    */
@@ -244,14 +244,15 @@ function DietTypeRowItem({ dietType }: { dietType: DietTypeRow }) {
 
 export function DietTypesTable({
   dietTypes,
-  forecastDays,
+  forecastHeadings,
 }: {
   dietTypes: DietTypeRow[];
-  forecastDays: number[];
+  /** One column heading per forecast window, in the order the rows' forecast arrays use. */
+  forecastHeadings: string[];
 }) {
   const { t, locale } = useI18n();
   const m = t.management.diets;
-  const totals = forecastDays.map((_, i) =>
+  const totals = forecastHeadings.map((_, i) =>
     dietTypes.reduce((sum, row) => sum + (row.forecast[i]?.cost ?? 0), 0),
   );
 
@@ -264,9 +265,9 @@ export function DietTypesTable({
             <th className="px-4 py-2 font-medium">{m.table.unit}</th>
             <th className="px-4 py-2 font-medium">{m.table.cost}</th>
             <th className="px-4 py-2 font-medium">{m.table.dailyQuantities}</th>
-            {forecastDays.map((days) => (
-              <th key={days} className="px-4 py-2 font-medium">
-                {m.table.forecastHeading(days)}
+            {forecastHeadings.map((heading) => (
+              <th key={heading} className="px-4 py-2 font-medium">
+                {heading}
               </th>
             ))}
             <th className="px-4 py-2 font-medium">{m.table.residents}</th>
@@ -279,7 +280,7 @@ export function DietTypesTable({
           ))}
           {dietTypes.length === 0 && (
             <tr>
-              <td colSpan={6 + forecastDays.length} className="px-4 py-6 text-center text-muted">
+              <td colSpan={6 + forecastHeadings.length} className="px-4 py-6 text-center text-muted">
                 {m.table.noDiets}
               </td>
             </tr>

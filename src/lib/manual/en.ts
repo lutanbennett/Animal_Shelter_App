@@ -720,7 +720,7 @@ const manual: Manual = {
           steps: [
             "The medications table is the product list the prescription form offers. Add one with its unit (tablet vs suspension are two medications); rename or fix a unit in place.",
             "Merge a duplicate into the one to keep — its prescriptions move across. Only medications with the same unit can be merged.",
-            "Next N days shows how much of each medication current prescriptions will need.",
+            "Next N days shows how much of each medication current prescriptions will need. For any other period — next month's order, say — enter From and To dates above the table and tap Show window; a column for that period is added beside the fixed ones.",
             "Frequency options are the \"how often\" choices: a label plus a schedule (so many times a day, or one dose every so many days, weeks or months).",
           ],
           screenshot: {
@@ -736,7 +736,7 @@ const manual: Manual = {
           steps: [
             "The diets table is the food list the diet form offers. Add one with its unit (g, ml, can, sachet…), the cost per unit in baht, and the daily quantity for a small, medium and large animal.",
             "Edit any of those in place — a price rise or a corrected portion flows straight through to the forecast. A diet on any resident's record can't be deleted.",
-            "Next N days shows how much of each diet the residents living at the shelter will eat and what it costs, with a total across all diets. Fostered, adopted and deceased residents aren't counted; a resident with no size set counts as Medium.",
+            "Next N days shows how much of each diet the residents living at the shelter will eat and what it costs, with a total across all diets. Fostered, adopted and deceased residents aren't counted; a resident with no size set counts as Medium. For any other period enter From and To dates above the table and tap Show window.",
           ],
           screenshot: {
             src: "/manual/management-diets.png",
