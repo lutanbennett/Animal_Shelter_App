@@ -1,0 +1,14 @@
+{
+  // The tsconfig every *build-time* type check uses: `next build` (through
+  // next.config.ts's typescript.tsconfigPath), `next typegen` and
+  // `npm run typecheck`. It is tsconfig.json minus `.next/dev` — the
+  // directory a running `next dev` rewrites (routes.d.ts, validator.ts, …).
+  // Next 16 hands the tsconfig straight to `tsc --project`, so with the
+  // plain one a build that lands mid-write fails on a wall of TS1005 in
+  // files that aren't ours; a deploy must never depend on what the dev
+  // server is doing. The build's own generated types (`.next/types`) stay
+  // in. tsconfig.json remains what the editor reads, dev types included.
+  // `extends` also keeps Next from rewriting this file on every build.
+  "extends": "./tsconfig.json",
+  "exclude": ["node_modules", ".next/dev"]
+}

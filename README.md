@@ -183,6 +183,14 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    elevated shell, and the build dies with `EPERM … symlink` without it.
    It is a no-op elsewhere.
 
+   Builds are safe to run while a `next dev` is up. `next build` and
+   `npm run typecheck` type-check with `tsconfig.build.json`, which is
+   `tsconfig.json` minus `.next/dev` — the route types the dev server
+   rewrites on every compile. Before that (2026-09-22) a build that read
+   them mid-write died with a wall of `TS1005` in `routes.d.ts` /
+   `validator.ts`. The editor still uses `tsconfig.json`, so it sees the
+   live dev types.
+
 2. **Preview locally on the Workers runtime** — what `next dev` can't
    simulate. It reads `.env.local` directly, no extra setup:
 
@@ -383,6 +391,11 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
   how-to-adopt pages, and the three-rule body format they are written in.
   `/privacy` is the exception: its text is in the dictionaries, because
   Google's sign-in consent screen links to it and it must never be blank.
+- `src/lib/tags/` — the addresses programmed into enclosure QR codes and
+  resident RFID cards (`/e/<id>`, `/r/<R-code>`, short redirects — see
+  `docs/decisions.md`, 2026-09-22) and the origin they are prefixed with;
+  `src/components/CopyTagLink.tsx` is the copy control on the hubs and
+  lists, and `src/app/e/` / `src/app/r/` the redirects.
 - `src/lib/residents/` — the public slice of a resident
   (`public_resident_profiles`, similar residents) and the adoption
   recommendation fields the intake and edit forms share.

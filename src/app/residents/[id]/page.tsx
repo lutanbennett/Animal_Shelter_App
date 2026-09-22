@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DECEASED_ROLES, UNDO_DECEASED_ROLES } from "@/lib/placements/deceased";
 import { canManage } from "@/lib/auth/require-management";
+import { getTagOrigin } from "@/lib/tags/origin";
 import { loadTranslations } from "@/lib/translations/queries";
 import {
   ResidentHub,
@@ -154,7 +155,7 @@ export default async function ResidentPage(
     currentState?.current_status === "Hospitalised"
       ? currentState.active_hospital_previous_enclosure
       : null;
-  const [carerResult, previousEnclosureResult, translations] = await Promise.all([
+  const [carerResult, previousEnclosureResult, translations, tagOrigin] = await Promise.all([
     carerId
       ? supabase
           .from("contacts")
@@ -173,6 +174,7 @@ export default async function ResidentPage(
       : null,
     // The other-language versions of the public profile fields (0056).
     loadTranslations(supabase, "residents", [id]),
+    getTagOrigin(),
   ]);
 
   return (
@@ -206,6 +208,7 @@ export default async function ResidentPage(
       bloodTests={bloodTestsResult.data ?? []}
       photoCount={attachmentsCountResult.count ?? 0}
       now={new Date().toISOString()}
+      tagOrigin={tagOrigin}
     />
   );
 }

@@ -66,6 +66,9 @@ if (envName === "production") {
 
 console.log(`deploy: ${envName} → Supabase project ${projectRef(env)} (${git("rev-parse --short HEAD")})`);
 
+// Safe to run beside a live `next dev`: the build type-checks with
+// tsconfig.build.json (see next.config.ts), which leaves out the
+// `.next/dev` types the dev server keeps rewriting.
 if (!skipBuild) {
   const buildEnv = { ...process.env };
   for (const key of BUILD_VARS) buildEnv[key] = env[key];

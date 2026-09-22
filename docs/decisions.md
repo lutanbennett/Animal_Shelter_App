@@ -1402,6 +1402,50 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   from the backlog item — all real-build work, none of it needed to find
   out whether the shelter wants one.
 
+- **Tag links are short redirect routes, and a resident's serves visitors
+  too (2026-09-22):** the QR code on an enclosure and the RFID card by a
+  kennel carry `/e/<id>` and `/r/<R-code>` (`src/lib/tags/links.ts`),
+  not the hub URLs. A printed tag lives on the kennel for years, so its
+  address must outlast any later move of the pages behind it — the
+  redirect is the one place to update — and a shorter string gives a
+  coarser QR code that scans from further away (the resident link is 30
+  characters end to end; the R-code was chosen over the UUID for that,
+  and because it is what staff already read off the card). Both
+  redirects are temporary (307), since a cached 308 would pin a tag to
+  today's layout. The copy controls build the address with
+  `getSiteOrigin()` so it reads `https://lannacare.org/…` whichever
+  machine it was copied on. Who scanned decides what `/r/` shows
+  (`src/app/r/[code]/page.tsx`): a signed-in user is sent on to the
+  full hub; a visitor stays on `/r/<code>` and sees the resident's
+  public card — for *any* resident, because the first cut (public
+  profile only for residents ticked "visible on the public site",
+  sign-in for the rest) would have had visitors scanning card after
+  card into a login page, and they would stop scanning. That needed
+  its own schema PR first: `0068_public_resident_cards.sql` adds
+  `public_resident_cards`, an anon-readable view of the card-shaped
+  slice of all residents (what the card prints — photo, name, age, sex,
+  temperament — plus species, breed, size, colour, desexed, intake
+  date, bio, the adoption-fit fields and approved translations), with a
+  coarse `status` of Resident / Adopted / Deceased so an old card can
+  say the animal has gone and nothing says where a current resident
+  is; no past story, which is adoption-listing copy.
+  (It was written as 0067 and merged the same hour as the contact-hub
+  stream's 0067 — both schema PRs were opened before either merged,
+  which the rule "two streams needing schema share one schema PR" is
+  there to stop — so it was renumbered 0068 in the feature PR before
+  production ever saw it; dev keeps a stale `0067_public_resident_cards`
+  row in `schema_migrations`, harmless and gone with the pre-launch
+  wipe.)
+  `public_resident_profiles` stays the curated `/adopt` listing, and
+  the card links on to it when the resident is there. So `/r/` is a
+  public path (no app chrome), read with whatever key the request has —
+  the view is what limits what comes back. Enclosure links stay behind
+  the gate: there is no public enclosure page. The sign-in return itself is new: the proxy
+  used to send a signed-out visitor to `/login` and forget where they
+  were going; it now sets `?next=`, which the password form and the
+  Google OAuth leg carry through (`src/lib/auth/next-path.ts`). The
+  card artwork (photo, name, age, sex, temperament) is out of scope.
+
 ## Still open (from Section 11 of the requirements doc)
 
 1. Exact per-table RBAC permission matrix beyond the role descriptions —
@@ -1901,6 +1945,27 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   Worker log, because the hub's one-line message was all there was to go
   on.
 
+- **Builds type-check with `tsconfig.build.json`, not the file the dev
+  server maintains (2026-09-22):** a deploy started while `next dev` was
+  rewriting `.next/dev/types/routes.d.ts` failed on `TS1005`s in files
+  that aren't ours, because Next 16 now passes `tsconfig.json` — which
+  includes `.next/dev/types/**` — straight to `tsc --project`
+  (`experimental.useTypeScriptCli` defaults on; Next's own checker filters
+  that directory out, the CLI path doesn't). Of the three fixes on the
+  backlog item, excluding `.next/dev` from the build-time check is the
+  one taken: `tsconfig.build.json` extends `tsconfig.json` with that
+  exclusion, `next.config.ts` selects it for `next build` / `next typegen`
+  (`tsconfigPath` keyed on NODE_ENV, so `next dev` and the editor keep
+  `tsconfig.json` and its live route types), and `npm run typecheck`
+  passes `-p tsconfig.build.json` because the merge train runs it beside a
+  dev server too. Rejected: building in a scratch copy of `.next` (the
+  tsconfig include is what reads the dev types, so copying the build
+  output moves nothing), stopping the dev server from the deploy script
+  (it belongs to another session in another worktree), and flipping
+  `useTypeScriptCli` off (works today, but it is the experimental flag and
+  would leave `npm run typecheck` exposed). `extends` is also why Next
+  never rewrites the build file: its tsconfig defaults pass bails on an
+  extending config.
 - **`contact_type` is Carer / Volunteer / Vendor, and unused values are
   dropped, not hidden (2026-09-22):** the customer asked for Donor and Other
   to go. Postgres cannot remove a value from an enum, and the easy path was
