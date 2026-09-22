@@ -50,7 +50,8 @@ two or three at once; more than that and merging becomes the bottleneck.
 4. **Finish: the merge train.** When a feature is done and verified:
    `node scripts/worktree.mjs sync` (merges `origin/main` in), then
    `npm run typecheck && npm run lint && npm run build`, then open the PR
-   (GitHub in the user's Chrome, since there is no `gh` here). CI runs the
+   with `gh pr create` (signed in as the user; fall back to GitHub in the
+   user's Chrome if `gh` is missing). CI runs the
    same three checks. Once the user says so, merge it, then
    `node scripts/worktree.mjs done <feature>` from another checkout
    removes the folder and the branch locally and on `origin`. Merges are
