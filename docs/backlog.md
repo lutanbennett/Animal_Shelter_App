@@ -78,6 +78,10 @@ Environments exist since 2026-09-21 (README "Environments"): `test.lannacare.org
 
 ## Auth
 
+## Architecture
+
+- [ ] **Top-to-bottom architectural review by Fable.** Requested 2026-09-22. Open a session on the Fable model (`claude-fable-5-1`) and ask for a read-only review of the whole system, not a feature: the Next.js app (`src/app` routes, `src/lib` services, `src/components`, `src/proxy.ts` auth/redirect handling), the Supabase schema, RLS policies and the migration history in `supabase/migrations/`, the Cloudflare Worker / OpenNext deployment and the environment split (`test.lannacare.org` vs `lannacare.org`, `scripts/deploy.mjs`), the operational scripts (`scripts/apply-migrations.mjs`, `scripts/backup.mjs`, `scripts/pi/`), the Google Drive integration, the public website vs the staff app, and the docs (`README.md`, `docs/decisions.md`, `docs/pi-hosting.md`, `docs/manual`). Ask for: (a) a plain description of the architecture as it actually is, to check against the README; (b) ranked findings — security and data-loss risks first, then coupling / duplication / anything that will hurt when the shelter grows or a second developer arrives, then nits — each with the file(s) and a concrete suggested change; (c) what is fine and should be left alone. Write the result to `docs/architecture-review-2026-09-22.md` (dated, so later reviews sit beside it) and turn each finding worth acting on into its own backlog item under the matching heading. No code changes in that session — the review is the deliverable.
+
 ## Documentation
 
 - [ ] **Review the manual against real use.** Have a staff member and a volunteer follow it on a phone for a day and note every step that didn't match, was missing (e.g. what to do when an upload fails, how to update a vet visit's status), or used a word the shelter doesn't. Fold the answers back into `en.ts` and re-run the screenshot script.
