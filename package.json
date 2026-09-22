@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit",
     "opennext:build": "node -r ./scripts/win-junction-symlinks.cjs node_modules/@opennextjs/cloudflare/dist/cli/index.js build",
     "preview": "npm run opennext:build && opennextjs-cloudflare preview",
     "deploy:test": "node scripts/deploy.mjs --env test",

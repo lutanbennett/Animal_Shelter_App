@@ -101,6 +101,22 @@ A person who leaves is **archived** from `/admin/security` rather than deleted (
    without touching whatever the main checkout is in the middle of; see
    `CLAUDE.md` "The backlog branch" for how it is merged back.
 
+7. **Feature worktrees** (one per workstream)
+
+   ```bash
+   node scripts/worktree.mjs new <feature>
+   ```
+
+   Creates `../Animal_Shelter_<feature>` on branch `claude/<feature>` from
+   `origin/main`, copies `.env.local` in, runs `npm ci` and picks the next
+   free dev-server port (recorded in `.port`; `node scripts/worktree.mjs
+   dev` uses it). The main checkout stays on `main`; each workstream gets
+   its own folder, dev server and Claude session, so two or three
+   features can be built at once. `list`, `sync` and `done` cover the
+   rest of a stream's life — see `CLAUDE.md` "Workstreams". Google
+   sign-in on a new port needs `http://localhost:<port>/auth/callback`
+   in the dev Supabase project's Redirect URLs, once per port.
+
 ## Environments
 
 | | Dev | Test | Production |
@@ -415,8 +431,15 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
 
 ## Day-to-day workflow
 
-The short version of `CLAUDE.md`: start on an up-to-date `main`, one
-branch per feature, every commit auto-pushes (`.githooks/post-commit`), and
-a feature is finished when its PR is merged and the branch deleted. New
-migrations are applied with `node scripts/apply-migrations.mjs` from the
-branch that's about to be merged, never from one that isn't.
+The short version of `CLAUDE.md`. Once a day, in the main checkout,
+`main` is pulled and the `backlog` branch folded in; `/plan-day` does
+this, reads the backlog and proposes two or three workstreams that touch
+different parts of the app. Each becomes a worktree
+(`scripts/worktree.mjs new`) with its own branch, port and Claude session,
+and every commit auto-pushes (`.githooks/post-commit`). A feature is
+finished by merging `main` in, passing `typecheck`/`lint`/`build` (CI runs
+the same three on the PR), merging the PR, and `scripts/worktree.mjs
+done` — merges are serial, and the other streams `sync` after each one.
+Schema changes go first as their own small PR, applied to dev with
+`node scripts/apply-migrations.mjs` at merge time, so only one branch ever
+carries a migration.

@@ -1844,6 +1844,28 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   in view by scrolling itself rather than `scrollIntoView`, which would
   also scroll the page.
 
+- **Parallel workstreams are worktrees, and schema changes land first
+  (2026-09-22):** the process was written for one session at a time —
+  a feature branch in the main checkout, a stray-branch check on start.
+  To run two or three features at once each stream is its own git
+  worktree (`scripts/worktree.mjs new`, sibling folder, own
+  `node_modules`/`.next`, own port in `.port`, own Claude session) and
+  the main checkout only ever holds `main`. Worktrees rather than clones
+  because they share one object store and one `core.hooksPath`, so the
+  post-commit auto-push works everywhere without setup. Merges stay
+  serial (sync, typecheck/lint/build, PR, merge, `done`; the others
+  `sync`) so `main` is always green while the work is parallel; the new
+  GitHub Actions workflow runs the same three checks on every PR because
+  a branch that passed alone can break against what another stream
+  landed. Migrations were the real collision: sequential numbers taken
+  from `main` plus a shared dev database means two in-flight branches
+  can both pick 0067 and leave dev with schema `main` doesn't have — so a
+  feature that needs schema is a small schema-only PR first and a feature
+  branch off the updated `main` after, with at most one migration in
+  flight. `docs/decisions.md` uses the `union` merge driver because
+  every stream appends to its end; `docs/backlog.md` does not, because
+  ticks edit lines rather than append. Chosen over Supabase branching
+  (needs Pro) and local Supabase per worktree (Docker on every stream).
 - **The deceased archive's PDF pipeline is wired for Workers by hand
   (2026-09-22):** the first Retry archive on lannacare.org — for the six
   residents who came across from AppSheet already deceased — failed with

@@ -43,3 +43,7 @@ supabase/.temp/
 
 # Snapshots of the legacy AppSheet sheet (real records) — scripts/appsheet-export.mjs
 appsheet-export/
+
+# Per-worktree dev-server port and task brief (scripts/worktree.mjs, /plan-day)
+.port
+.brief.md

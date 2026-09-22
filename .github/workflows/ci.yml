@@ -1,0 +1,40 @@
+# The merge train's safety net: every PR (and main itself) must type-check,
+# lint and build before it is merged, so a feature that was fine on its own
+# branch is caught if it breaks against what other workstreams landed.
+# See CLAUDE.md "Workstreams".
+#
+# `next build` needs Supabase env vars to exist at build time (the clients
+# read them with `!`), but nothing is fetched during the build, so
+# placeholders are enough. No secrets are involved.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
+      SUPABASE_SERVICE_ROLE_KEY: placeholder
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
