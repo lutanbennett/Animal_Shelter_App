@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { DEFAULT_SIGNED_IN_PATH, safeNextPath } from "@/lib/auth/next-path";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -10,9 +11,11 @@ import { createClient } from "@/lib/supabase/server";
  * auth.users row in place, so an admin can grant them a role from
  * /admin/security and they can simply try again.
  *
- * Password recovery links (requestPasswordReset) come back through here
- * too, with ?next=/account/password?reset=1 — only a same-origin path is
- * honoured, so the parameter can't send anyone off-site.
+ * ?next= is where to land afterwards: the page a signed-out visitor was
+ * bounced from (src/lib/auth/next-path.ts — the proxy sets it, the login
+ * page threads it through signInWithGoogle), or /account/password?reset=1
+ * on a password recovery link (requestPasswordReset). Only a same-origin
+ * path is honoured, so the parameter can't send anyone off-site.
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
@@ -34,9 +37,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/login?error=no_role`);
   }
 
-  const next = searchParams.get("next");
-  if (next && next.startsWith("/") && !next.startsWith("//")) {
-    return NextResponse.redirect(`${origin}${next}`);
-  }
-  return NextResponse.redirect(`${origin}/residents`);
+  const next = safeNextPath(searchParams.get("next"));
+  return NextResponse.redirect(`${origin}${next ?? DEFAULT_SIGNED_IN_PATH}`);
 }

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { occupancyLevel } from "@/lib/enclosures/occupancy";
 import { parseEnclosureSort } from "@/lib/enclosures/sort";
+import { getTagOrigin } from "@/lib/tags/origin";
 import { EnclosureFilters } from "./EnclosureFilters";
 import {
   EnclosureGrid,
@@ -57,7 +58,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   // Resident counts come from resident_list_view rather than a dedicated
   // occupancy view so no migration is needed; the shelter's headcount is
   // small enough that pulling one row per resident is cheap.
-  const [zonesResult, enclosuresResult, residentsResult, jobsResult] = await Promise.all([
+  const [zonesResult, enclosuresResult, residentsResult, jobsResult, tagOrigin] = await Promise.all([
     supabase.from("zones").select("id, name, name_th, internal").order("name"),
     supabase
       .from("enclosures")
@@ -77,6 +78,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       .select("enclosure_id, zone_id")
       .neq("status", "Completed")
       .returns<{ enclosure_id: string | null; zone_id: string }[]>(),
+    getTagOrigin(),
   ]);
 
   const counts = new Map<string, number>();
@@ -173,7 +175,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
         </p>
       )}
 
-      <EnclosureGrid pinned={pinned} groups={groups} flat={flat} />
+      <EnclosureGrid pinned={pinned} groups={groups} flat={flat} tagOrigin={tagOrigin} />
     </main>
   );
 }

@@ -35,8 +35,10 @@ import {
   energyLevelLabel,
 } from "@/lib/i18n/enum-labels";
 import type { AdoptionProfile } from "@/components/AdoptionProfileFields";
+import { CopyTagLink } from "@/components/CopyTagLink";
 import { TranslationPanel } from "@/components/TranslationPanel";
 import { placeName } from "@/lib/enclosures/names";
+import { residentTagPath } from "@/lib/tags/links";
 import type { TranslationRow } from "@/lib/translations/types";
 
 export type Resident = {
@@ -166,6 +168,7 @@ export function ResidentHub({
   bloodTests,
   photoCount,
   now,
+  tagOrigin,
 }: {
   resident: Resident;
   status: ResidentStatus | null;
@@ -202,6 +205,8 @@ export function ResidentHub({
   photoCount: number;
   /** Server-computed timestamp (ISO string) — avoids calling Date.now() during render. */
   now: string;
+  /** Origin for the RFID-card link (src/lib/tags/origin.ts). */
+  tagOrigin: string | null;
 }) {
   const { t, locale } = useI18n();
   const [tab, setTab] = useState<"info" | "medical">("info");
@@ -438,6 +443,17 @@ export function ResidentHub({
               {resident.intake_date &&
                 ` · ${t.residents.hub.intake(formatDate(resident.intake_date, locale))}`}
             </p>
+            {/* The address for the RFID card on the kennel: the R-code,
+                not the id, so the card outlives any restructuring. */}
+            <div className="mt-2 w-full sm:w-80">
+              <CopyTagLink
+                field
+                path={residentTagPath(resident.resident_code)}
+                origin={tagOrigin}
+                name={displayName}
+                label={t.tagLinks.residentLabel}
+              />
+            </div>
           </div>
         </div>
         <div className="flex flex-wrap gap-2 sm:justify-end">

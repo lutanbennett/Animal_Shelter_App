@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CopyTagLink } from "@/components/CopyTagLink";
 import { ENCLOSURE_ICONS } from "@/components/hub-icons";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -13,6 +14,7 @@ import {
   dueState,
   maintenanceStatusLabel,
 } from "@/lib/maintenance/status";
+import { enclosureTagPath } from "@/lib/tags/links";
 import { OccupancyIndicator } from "../OccupancyIndicator";
 
 export type Enclosure = {
@@ -74,6 +76,7 @@ export function EnclosureHub({
   isAdmin,
   canWriteMaintenance,
   maintenanceJobs,
+  tagOrigin,
 }: {
   enclosure: Enclosure;
   residents: EnclosureResident[];
@@ -81,6 +84,8 @@ export function EnclosureHub({
   /** Staff/admin may log jobs; volunteers only see them. */
   canWriteMaintenance: boolean;
   maintenanceJobs: MaintenanceJob[];
+  /** Origin for the QR-code link (src/lib/tags/origin.ts). */
+  tagOrigin: string | null;
 }) {
   const { t, locale } = useI18n();
   const openJobs = maintenanceJobs.filter((job) => job.status !== "Completed");
@@ -127,6 +132,19 @@ export function EnclosureHub({
             >
               {t.enclosures.hub.manageInAdmin}
             </Link>
+          )}
+          {/* The address for the QR code on the kennel door; status
+              buckets have no door. */}
+          {!enclosure.isSystem && (
+            <div className="mt-2 w-full md:w-96">
+              <CopyTagLink
+                field
+                path={enclosureTagPath(enclosure.id)}
+                origin={tagOrigin}
+                name={placeName(locale, enclosure.name, enclosure.name_th)}
+                label={t.tagLinks.enclosureLabel}
+              />
+            </div>
           )}
         </div>
         <div className="w-full md:w-64">

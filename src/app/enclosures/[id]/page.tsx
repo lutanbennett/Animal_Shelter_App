@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { canWriteMaintenance, loadMaintenanceJobs } from "@/lib/maintenance/queries";
+import { getTagOrigin } from "@/lib/tags/origin";
 import {
   EnclosureHub,
   type Enclosure,
@@ -23,7 +24,7 @@ export default async function EnclosurePage(
   const { id } = await props.params;
   const supabase = await createClient();
 
-  const [enclosureResult, occupantsResult, roleResult, maintenanceResult] = await Promise.all([
+  const [enclosureResult, occupantsResult, roleResult, maintenanceResult, tagOrigin] = await Promise.all([
     supabase
       .from("enclosures")
       .select("id, name, name_th, capacity, notes, zone_id, zones(name, name_th, internal)")
@@ -39,6 +40,7 @@ export default async function EnclosurePage(
       .returns<{ resident_id: string }[]>(),
     supabase.rpc("current_user_role"),
     loadMaintenanceJobs(supabase, { enclosureId: id }),
+    getTagOrigin(),
   ]);
 
   const row = enclosureResult.data?.[0];
@@ -75,6 +77,7 @@ export default async function EnclosurePage(
       isAdmin={roleResult.data === "admin"}
       canWriteMaintenance={canWriteMaintenance(roleResult.data)}
       maintenanceJobs={maintenanceResult.jobs}
+      tagOrigin={tagOrigin}
     />
   );
 }

@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { CopyTagLink } from "@/components/CopyTagLink";
 import { ENCLOSURE_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
+import { enclosureTagPath } from "@/lib/tags/links";
 import { OccupancyIndicator } from "./OccupancyIndicator";
 
 export type EnclosureSummary = {
@@ -33,34 +35,54 @@ export type ZoneGroup = {
   zone_wide_jobs: number;
 };
 
-function EnclosureCard({ enclosure }: { enclosure: EnclosureSummary }) {
+function EnclosureCard({
+  enclosure,
+  tagOrigin,
+}: {
+  enclosure: EnclosureSummary;
+  tagOrigin: string | null;
+}) {
   const { t, locale } = useI18n();
+  const name = placeName(locale, enclosure.name, enclosure.name_th);
+  // The whole card opens the enclosure, via the name link's ::after
+  // stretched over it; the copy button sits above that layer so a
+  // batch of QR codes can be programmed straight off this page.
   return (
-    <Link
-      href={`/enclosures/${enclosure.id}`}
-      className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 transition hover:bg-surface-hover"
-    >
+    <div className="relative flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 transition hover:bg-surface-hover">
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           <ENCLOSURE_ICONS.enclosure
             aria-hidden="true"
             className="h-5 w-5 shrink-0 text-muted"
           />
-          <span className="truncate font-medium text-foreground">
-            {placeName(locale, enclosure.name, enclosure.name_th)}
-          </span>
+          <Link
+            href={`/enclosures/${enclosure.id}`}
+            className="truncate font-medium text-foreground after:absolute after:inset-0 after:content-['']"
+          >
+            {name}
+          </Link>
         </div>
         {/* The zone is the section heading already; the corner says what
-            needs fixing here instead. Status buckets have nothing to fix. */}
+            needs fixing here instead. Status buckets have nothing to fix
+            and no door for a QR code. */}
         {!enclosure.is_system && (
-          <span
-            title={t.enclosures.openJobsTitle(enclosure.open_jobs)}
-            className={`flex shrink-0 items-center gap-1 text-xs ${
-              enclosure.open_jobs > 0 ? "font-medium text-foreground" : "text-muted"
-            }`}
-          >
-            <ENCLOSURE_ICONS.maintenance aria-hidden="true" className="h-3.5 w-3.5" />
-            {t.enclosures.openJobs(enclosure.open_jobs)}
+          <span className="flex shrink-0 items-center gap-1">
+            <span
+              title={t.enclosures.openJobsTitle(enclosure.open_jobs)}
+              className={`flex items-center gap-1 text-xs ${
+                enclosure.open_jobs > 0 ? "font-medium text-foreground" : "text-muted"
+              }`}
+            >
+              <ENCLOSURE_ICONS.maintenance aria-hidden="true" className="h-3.5 w-3.5" />
+              {t.enclosures.openJobs(enclosure.open_jobs)}
+            </span>
+            <span className="relative z-10 -my-1">
+              <CopyTagLink
+                path={enclosureTagPath(enclosure.id)}
+                origin={tagOrigin}
+                name={name}
+              />
+            </span>
           </span>
         )}
       </div>
@@ -68,7 +90,7 @@ function EnclosureCard({ enclosure }: { enclosure: EnclosureSummary }) {
         count={enclosure.resident_count}
         capacity={enclosure.capacity}
       />
-    </Link>
+    </div>
   );
 }
 
@@ -80,12 +102,15 @@ export function EnclosureGrid({
   pinned,
   groups,
   flat,
+  tagOrigin,
 }: {
   /** Lifecycle status buckets, shown first without a heading. */
   pinned: EnclosureSummary[];
   groups: ZoneGroup[];
   /** When set, render the enclosures as one list instead of per-zone sections. */
   flat?: EnclosureSummary[];
+  /** Origin for each card's QR-code link (src/lib/tags/origin.ts). */
+  tagOrigin: string | null;
 }) {
   const { t, locale } = useI18n();
 
@@ -102,7 +127,7 @@ export function EnclosureGrid({
   const pinnedGrid = pinned.length > 0 && (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {pinned.map((enclosure) => (
-        <EnclosureCard key={enclosure.id} enclosure={enclosure} />
+        <EnclosureCard key={enclosure.id} enclosure={enclosure} tagOrigin={tagOrigin} />
       ))}
     </div>
   );
@@ -113,7 +138,7 @@ export function EnclosureGrid({
         {pinnedGrid}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {flat.map((enclosure) => (
-            <EnclosureCard key={enclosure.id} enclosure={enclosure} />
+            <EnclosureCard key={enclosure.id} enclosure={enclosure} tagOrigin={tagOrigin} />
           ))}
         </div>
       </div>
@@ -146,7 +171,7 @@ export function EnclosureGrid({
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {zone.enclosures.map((enclosure) => (
-              <EnclosureCard key={enclosure.id} enclosure={enclosure} />
+              <EnclosureCard key={enclosure.id} enclosure={enclosure} tagOrigin={tagOrigin} />
             ))}
           </div>
         </section>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { placeName } from "@/lib/enclosures/names";
+import { getTagOrigin } from "@/lib/tags/origin";
 import { ResidentsTable, type ResidentRow } from "./ResidentsTable";
 
 export default async function ResidentsPage(props: PageProps<"/residents">) {
@@ -14,12 +15,13 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
 
   const supabase = await createClient();
 
-  const [zonesResult, enclosuresResult] = await Promise.all([
+  const [zonesResult, enclosuresResult, tagOrigin] = await Promise.all([
     supabase.from("zones").select("id, name, name_th").order("name"),
     supabase
       .from("enclosures")
       .select("id, name, name_th, zone_id")
       .order("name"),
+    getTagOrigin(),
   ]);
 
   let residentsQuery = supabase
@@ -131,7 +133,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
         </p>
       )}
 
-      <ResidentsTable residents={residents ?? []} />
+      <ResidentsTable residents={residents ?? []} tagOrigin={tagOrigin} />
     </main>
   );
 }
