@@ -39,6 +39,11 @@ const nextConfig: NextConfig = {
   // aliases are exact-match, so "pdfkit/standard-fonts/*" still resolves
   // through pdfkit's exports map.
   transpilePackages: ["@react-pdf/renderer"],
+  // …except the reconciler, which must see the *client* React (it reads
+  // React's client internals); bundled into the RSC layer it would get the
+  // react-server build and fail. External, Node resolution gives it
+  // node_modules/react as before.
+  serverExternalPackages: ["@react-pdf/reconciler"],
   turbopack: {
     resolveAlias: {
       // Paths, not package subpaths: pdfkit's exports map does not expose
@@ -46,6 +51,10 @@ const nextConfig: NextConfig = {
       // would silently not apply.
       pdfkit: "./node_modules/pdfkit/js/pdfkit.browser.mjs",
       "@react-pdf/font": "./node_modules/@react-pdf/font/lib/index.browser.js",
+      // yoga-layout instantiates its WebAssembly from embedded bytes, which
+      // workerd forbids; this loader imports the same binary as a module.
+      // See src/lib/archive/yoga/load.ts.
+      "yoga-layout/load": "./src/lib/archive/yoga/load.ts",
     },
   },
   experimental: {

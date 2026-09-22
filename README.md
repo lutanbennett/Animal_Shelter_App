@@ -398,7 +398,9 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
   `check-public-views.mjs` (go-live check), `manual-screenshots.mjs`
   (user-manual screenshots), `appsheet-export.mjs` + `import-appsheet.mjs`
   (the legacy data migration — see `docs/data-migration.md`), the Google
-  OAuth setup helpers, and the deploy-time env stripper.
+  OAuth setup helpers, the deploy-time env stripper, and
+  `extract-yoga-wasm.mjs` (refreshes `src/lib/archive/yoga/yoga.wasm` after
+  a yoga-layout upgrade — see `docs/decisions.md`, 2026-09-22).
 - `docs/` — requirements, decisions log, backlog and the data-migration
   mapping/runbook.
 - `CLAUDE.md` — the working rules for this repo (branching, migrations,

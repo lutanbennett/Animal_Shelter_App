@@ -1824,3 +1824,38 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   through `/api/photos/` on load. The strip keeps the selected thumbnail
   in view by scrolling itself rather than `scrollIntoView`, which would
   also scroll the page.
+
+- **The deceased archive's PDF pipeline is wired for Workers by hand
+  (2026-09-22):** the first Retry archive on lannacare.org — for the six
+  residents who came across from AppSheet already deceased — failed with
+  `No such module "#standard-fonts/Helvetica"`, and it turned out no summary
+  PDF had ever been produced on a Cloudflare deploy, only under `next dev`.
+  Three separate things in the @react-pdf stack assume Node: pdfkit's Node
+  build loads its built-in fonts through `createRequire("#standard-fonts/…")`
+  at runtime (nothing to resolve against in a bundled Worker, and pdfkit
+  touches Helvetica unconditionally, so registering our own fonts doesn't
+  avoid it); @react-pdf's reconciler reads React's client internals, which
+  the react-server build it gets inside Next's RSC layer doesn't have; and
+  yoga-layout instantiates its WebAssembly from a base64 string, which
+  workerd refuses outright ("Wasm code generation disallowed by embedder").
+  Each was hidden behind the previous one. The fix is all in
+  `next.config.ts` plus one small module: `transpilePackages` pulls
+  `@react-pdf/renderer` into Next's bundle so Turbopack aliases can swap
+  pdfkit and `@react-pdf/font` for their browser builds (fonts as static
+  imports, fflate and an in-memory stream instead of zlib/stream/fs — the
+  better fit for workerd anyway); `serverExternalPackages` keeps the
+  reconciler out so it resolves `react` the plain Node way and gets the
+  client build; and `src/lib/archive/yoga/load.ts` replaces
+  `yoga-layout/load` with a loader that imports the same binary as a
+  compiled module (`yoga.wasm?module`, extracted by
+  `scripts/extract-yoga-wasm.mjs` — rerun it when yoga-layout is upgraded)
+  and hands it to Emscripten's `instantiateWasm` hook, since OpenNext
+  already rewrites Turbopack's wasm loaders for workerd. Rejected: patching
+  OpenNext's bundle after the fact (it has no alias hook; the Node-build
+  font loader would need rewriting in `handler.mjs` and yoga would still
+  be stuck), and moving PDF rendering off the Worker. Verified on
+  test.lannacare.org against the dev database: all six deceased residents
+  archived with Noto Sans Thai embedded and the profile photo in place.
+  `archiveDeceasedResident` now also logs the failure's stack to the
+  Worker log, because the hub's one-line message was all there was to go
+  on.
