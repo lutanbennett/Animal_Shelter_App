@@ -1,0 +1,25 @@
+# systemd unit for the app on the Pi — installed by scripts/pi/setup.sh as
+# /etc/systemd/system/lanna-care.service (WorkingDirectory and User are
+# rewritten to the real ones there). `next start` on port 3000, reached
+# only through cloudflared (scripts/pi/cloudflared-config.yml); nothing
+# listens on the internet.
+[Unit]
+Description=Lanna Care for Animals (Next.js)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__REPO__
+Environment=NODE_ENV=production
+Environment=PORT=3000
+ExecStart=/usr/bin/npm run start -- --port 3000 --hostname 127.0.0.1
+Restart=always
+RestartSec=3
+# A wedged render should not take the box with it.
+MemoryMax=1500M
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target

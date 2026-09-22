@@ -1,0 +1,4 @@
+# Files that run on the Pi must stay LF whatever Windows checks out.
+scripts/pi/*.sh text eol=lf
+scripts/pi/*.service text eol=lf
+scripts/pi/*.yml text eol=lf

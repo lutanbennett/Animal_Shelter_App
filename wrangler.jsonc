@@ -6,7 +6,11 @@
   // what `npm run preview` runs locally, and has no routes so a bare
   // `wrangler deploy` can't reach anything real.
   "name": "lanna-animal-care",
-  "main": ".open-next/worker.js",
+  // worker/index.mjs wraps OpenNext's generated .open-next/worker.js: edge
+  // cache → the Pi through its tunnel (ORIGIN_HOST) → local render. Set
+  // ORIGIN_HOST to the tunnel hostname once the Pi is live (docs/pi-hosting.md);
+  // empty means "render here", which is how the Worker always behaved.
+  "main": "worker/index.mjs",
   "compatibility_date": "2026-09-19",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,
@@ -26,7 +30,7 @@
     "test": {
       "name": "lanna-animal-care-test",
       "routes": [{ "pattern": "test.lannacare.org", "custom_domain": true }],
-      "vars": { "NODE_ENV": "production" }
+      "vars": { "NODE_ENV": "production", "ORIGIN_HOST": "", "ORIGIN_TIMEOUT_MS": "20000" }
     },
     // The live site: the production database. Drive stays on the dev Google
     // account until the shelter's own account is available (docs/decisions.md).
@@ -36,7 +40,7 @@
         { "pattern": "lannacare.org", "custom_domain": true },
         { "pattern": "www.lannacare.org", "custom_domain": true }
       ],
-      "vars": { "NODE_ENV": "production" }
+      "vars": { "NODE_ENV": "production", "ORIGIN_HOST": "", "ORIGIN_TIMEOUT_MS": "20000" }
     }
   }
 }
