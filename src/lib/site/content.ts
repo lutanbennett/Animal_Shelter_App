@@ -3,7 +3,7 @@ import type { Locale } from "@/lib/i18n/locales";
 
 /**
  * The site_content singleton (0018, 0041, 0059): the public site's
- * settings — hero photo, tagline, contact details, visiting hours, the
+ * settings â hero photo, tagline, contact details, visiting hours, the
  * featured resident. Long-form copy lives in site_pages (see pages.ts).
  */
 export type SiteContent = {
@@ -39,7 +39,7 @@ export async function loadSiteContent(
 
 /**
  * A paired-column label (`tagline` / `tagline_th`) in the reader's
- * language — the `name_th` rule: the Thai when set and wanted, else the
+ * language â the `name_th` rule: the Thai when set and wanted, else the
  * English. Empty strings count as unset.
  */
 export function pairedText(
@@ -87,6 +87,14 @@ export function visitingHoursLines(
  * settings row, but every public page loads SITE_CONTENT_COLUMNS and there
  * is no reason to ship an internal cost figure in the landing page's
  * payload. Only /admin/website and the forecast read it, through here.
+ *
+ * That is hygiene, not a security boundary, and must not be mistaken for
+ * one: site_content is public-read (0018, `using (true)`) and the anon key
+ * ships in the client bundle by design, so anyone can read every column of
+ * this row straight from PostgREST whatever the app selects. What keeps
+ * site_content safe is that nothing on it is sensitive. A figure that is —
+ * salaries, rent — needs its own table with its own policy (0039 is the
+ * pattern), not another column here.
  */
 export async function loadVetVisitEstimate(
   supabase: SupabaseClient,
