@@ -237,8 +237,8 @@ export default async function ManagementDashboardPage(
             href="/adopt"
           />
           <StatCard
-            title={d.now.outreach}
-            value={String(current.outreach)}
+            title={d.now.unassigned}
+            value={String(current.unassigned)}
           />
           <StatCard
             href="/vets"

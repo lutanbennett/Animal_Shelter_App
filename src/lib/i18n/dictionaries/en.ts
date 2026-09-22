@@ -578,12 +578,12 @@ const en = {
       now: {
         heading: "Right now",
         inCare: "In care",
-        inCareDetail: "Resident, in hospital or fostered",
+        inCareDetail: "Resident, awaiting an enclosure, in hospital or fostered",
 
         inShelter: "In the shelter",
         inHospital: "In hospital",
         fostered: "Fostered",
-        outreach: "Outreach / unassigned",
+        unassigned: "Awaiting an enclosure",
         readyForAdoption: "Ready for adoption",
         readyForAdoptionDetail: (publicCount: number) =>
           `${publicCount} shown on the public site`,
@@ -2410,7 +2410,7 @@ const en = {
       Deceased: "Deceased",
       Fostered: "Fostered",
       Adopted: "Adopted",
-      Outreach: "Outreach",
+      Unassigned: "Unassigned",
       Resident: "Resident",
       Unknown: "Unknown",
     },

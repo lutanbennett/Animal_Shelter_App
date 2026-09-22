@@ -576,12 +576,12 @@ const th: Dictionary = {
       now: {
         heading: "ขณะนี้",
         inCare: "อยู่ในความดูแล",
-        inCareDetail: "อยู่ในศูนย์ ในโรงพยาบาล หรืออยู่กับผู้อุปถัมภ์",
+        inCareDetail: "อยู่ในศูนย์ (มีกรงหรือยังไม่ระบุกรง) ในโรงพยาบาล หรืออยู่กับผู้อุปถัมภ์",
 
         inShelter: "อยู่ในศูนย์",
         inHospital: "อยู่โรงพยาบาล",
         fostered: "อยู่กับผู้อุปถัมภ์",
-        outreach: "นอกศูนย์ / ยังไม่ระบุกรง",
+        unassigned: "ยังไม่ระบุกรง",
         readyForAdoption: "พร้อมให้รับเลี้ยง",
         readyForAdoptionDetail: (publicCount: number) =>
           `แสดงบนเว็บไซต์สาธารณะ ${publicCount} ตัว`,
@@ -2388,7 +2388,7 @@ const th: Dictionary = {
       Deceased: "เสียชีวิตแล้ว",
       Fostered: "อุปถัมภ์ชั่วคราว",
       Adopted: "รับเลี้ยงแล้ว",
-      Outreach: "ดูแลนอกสถานที่",
+      Unassigned: "ยังไม่ระบุกรง",
       Resident: "อยู่ในความดูแล",
       Unknown: "ไม่ทราบ",
     },
