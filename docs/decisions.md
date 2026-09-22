@@ -2022,6 +2022,27 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   spent `0069_assistant_actions.sql` row in `schema_migrations`, harmless the
   way the `0067_public_resident_cards.sql` one before it is — the file is
   re-runnable, so applying it again as 0070 changed nothing.
+- **Existing residents are seeded onto the standard diet, and the
+  migration adopts the diet type rather than creating one (2026-09-22):**
+  0051 shipped `diet_types` and `resident_diets` empty, so every resident
+  taken in before it read "no diet recorded" — indistinguishable from a
+  question nobody had answered — and the food forecast totalled nothing.
+  Production has since had its standard diet entered by hand (Standard
+  Kibble + Chicken, ฿17 a cup) with no resident on it, so 0069 looks the
+  type up by name, case-insensitively, and creates it only where it is
+  missing (dev, test, any fresh database), leaving production's own cost
+  and portions alone. Rejected: `insert … on conflict (name) do nothing`,
+  which is a duplicate type and a wrongly-fed shelter if the name is
+  spelled with different case than the file assumes. Every resident with
+  no diet at all then gets one ongoing row of it, dated to their intake
+  (bounded to today) so it reads as what they have always eaten rather
+  than something that began the day the migration ran, with a note saying
+  it was seeded. Deceased residents are excluded — 0026 closes the record,
+  and they eat nothing — and adopted ones too; fostered and outreach
+  residents are included, because whether the shelter buys their food is
+  `diet_forecast`'s question, not the record's. Rejected: leaving the
+  lists empty and asking staff to enter one diet per resident by hand,
+  which keeps the forecast at zero until the last one is done.
 - **A resident's wrong placement history is corrected by a scripted
   transaction, not by hand or by the app (2026-09-22):** the shelter
   reported that Panda's history is wrong — she was taken in, fostered to
