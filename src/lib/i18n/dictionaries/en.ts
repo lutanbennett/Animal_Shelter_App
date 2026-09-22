@@ -238,6 +238,26 @@ const en = {
   },
 
   admin: {
+    landing: {
+      title: "Admin",
+      subtitle:
+        "System configuration: the public website, the places residents live, and the type lists the rest of the app picks from.",
+      tiles: {
+        website:
+          "Photos, the wording of each public page in both languages, and how to reach the shelter. Changes go live immediately.",
+        enclosures:
+          "The physical enclosures, and the lifecycle pseudo-enclosures residents pass through.",
+        zones: "The areas enclosures belong to, including the Lifecycle pseudo-zone.",
+        immunizationTypes:
+          "The vaccines tracked per resident, and how often each one has to be repeated.",
+        procedureTypes:
+          "The kinds of procedure staff and vets pick from when logging one, and where duplicates get merged.",
+        bloodTestTypes:
+          "The panels a blood test can be: CBC, chemistry, thyroid, heartworm…",
+        security:
+          "Sign-in accounts, roles and access requests. Also pinned to the bottom of the menu.",
+      },
+    },
     security: {
       title: "Security",
       subtitle:
@@ -616,6 +636,25 @@ const en = {
   },
 
   management: {
+    landing: {
+      title: "Management",
+      subtitle:
+        "The reports and lists behind the shelter's day-to-day work. Pick a section to open it.",
+      tiles: {
+        dashboard:
+          "The month's activity and where the shelter stands today — every figure the monthly report asks for.",
+        contacts:
+          "The people the shelter works with: foster and adoptive carers, volunteers and suppliers.",
+        vets:
+          "The vets and clinics the shelter books visits with, and how much each one has seen.",
+        medications:
+          "The medication list prescriptions are written from — names, units, and duplicates to merge.",
+        diets:
+          "The food list staff pick from, with the unit, cost and daily quantities the forecast uses.",
+        translations:
+          "Public-facing text whose other-language version still has to be written or checked.",
+      },
+    },
     errors: {
       managementAccessRequired: "Management access is required.",
     },
