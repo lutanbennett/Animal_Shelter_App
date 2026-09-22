@@ -14,10 +14,10 @@
  * /our-work the public_projects views (0042), /foster, /volunteer,
  * /donate site_pages / site_content (0059), and /privacy is static text
  * (the notice Google's consent screen links to). /r/ is the address on a
- * resident's RFID card: it sends a visitor to the public profile and a
- * signed-in user to the hub (src/app/r/[code]/page.tsx), so it must be
- * reachable signed out; /e/ (enclosure QR codes) has no public page and
- * stays behind the gate.
+ * resident's RFID card: a visitor sees the resident's public card there
+ * (public_resident_cards, 0067) and a signed-in user is sent on to the
+ * hub (src/app/r/[code]/page.tsx); /e/ (enclosure QR codes) has no
+ * public page and stays behind the gate.
  */
 export const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/auth/callback"];
 
@@ -43,7 +43,7 @@ export function isPublicPath(pathname: string): boolean {
 export function isPublicPage(pathname: string): boolean {
   return (
     pathname === "/" ||
-    ["/adopt", "/our-work", "/foster", "/volunteer", "/donate", "/privacy"].some(
+    ["/adopt", "/our-work", "/foster", "/volunteer", "/donate", "/privacy", "/r"].some(
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`) ,
     )
   );

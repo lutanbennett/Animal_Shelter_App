@@ -2480,6 +2480,17 @@ const en = {
     copyPrompt: "Copy this link:",
   },
 
+  /** What a visitor sees after scanning a resident's RFID card (/r/<code>). */
+  residentCard: {
+    noPhoto: "No photo yet",
+    withUsSince: "With us since",
+    adopted: (name: string) => `${name} has been adopted and is now in a home of their own.`,
+    passed: (name: string) => `${name} is no longer with us.`,
+    fullProfile: (name: string) => `See ${name}'s adoption profile`,
+    staffHint: "Staff and volunteers:",
+    staffSignIn: "sign in to see the full record",
+  },
+
   /** The copyable addresses for enclosure QR codes and resident RFID cards. */
   tagLinks: {
     enclosureLabel: "Link for this enclosure's QR code",

@@ -2456,6 +2456,16 @@ const th: Dictionary = {
     copyPrompt: "คัดลอกลิงก์นี้:",
   },
 
+  residentCard: {
+    noPhoto: "ยังไม่มีรูป",
+    withUsSince: "อยู่กับเราตั้งแต่",
+    adopted: (name: string) => `${name} ได้รับการรับเลี้ยงแล้ว และมีบ้านของตัวเองแล้ว`,
+    passed: (name: string) => `${name} ไม่ได้อยู่กับเราแล้ว`,
+    fullProfile: (name: string) => `ดูโปรไฟล์รับเลี้ยงของ ${name}`,
+    staffHint: "เจ้าหน้าที่และอาสาสมัคร:",
+    staffSignIn: "เข้าสู่ระบบเพื่อดูข้อมูลทั้งหมด",
+  },
+
   tagLinks: {
     enclosureLabel: "ลิงก์สำหรับ QR code ของกรงนี้",
     residentLabel: "ลิงก์สำหรับบัตร RFID ของสัตว์ตัวนี้",

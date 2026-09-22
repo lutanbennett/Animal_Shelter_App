@@ -1414,19 +1414,26 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   redirects are temporary (307), since a cached 308 would pin a tag to
   today's layout. The copy controls build the address with
   `getSiteOrigin()` so it reads `https://lannacare.org/…` whichever
-  machine it was copied on. Who scanned decides where `/r/` lands
-  (`src/app/r/[code]/page.tsx`): a signed-in user gets the full hub; a
-  visitor gets the public profile on `/adopt` when the resident is
-  shown on the public site (the existing "visible on the public site"
-  tick — a resident who isn't ticked, or is adopted or deceased, sends
-  the visitor to sign in instead, and sign-in returns to the scanned
-  address). So `/r/` is a public path and resolves the code with the
-  service-role client — anonymous visitors can't read `residents`; the
-  lookup yields the id only, and the id only ever leads to a page with
-  its own access check. Enclosure links stay behind the gate: there is
-  no public enclosure page. Widening what a visitor sees to *every*
-  resident would mean widening `public_resident_profiles`, a schema
-  change, and is not done. The sign-in return itself is new: the proxy
+  machine it was copied on. Who scanned decides what `/r/` shows
+  (`src/app/r/[code]/page.tsx`): a signed-in user is sent on to the
+  full hub; a visitor stays on `/r/<code>` and sees the resident's
+  public card — for *any* resident, because the first cut (public
+  profile only for residents ticked "visible on the public site",
+  sign-in for the rest) would have had visitors scanning card after
+  card into a login page, and they would stop scanning. That needed
+  its own schema PR first: `0067_public_resident_cards.sql` adds
+  `public_resident_cards`, an anon-readable view of the card-shaped
+  slice of all residents (what the card prints — photo, name, age, sex,
+  temperament — plus species, breed, size, colour, desexed, intake
+  date, bio, the adoption-fit fields and approved translations), with a
+  coarse `status` of Resident / Adopted / Deceased so an old card can
+  say the animal has gone and nothing says where a current resident
+  is; no past story, which is adoption-listing copy.
+  `public_resident_profiles` stays the curated `/adopt` listing, and
+  the card links on to it when the resident is there. So `/r/` is a
+  public path (no app chrome), read with whatever key the request has —
+  the view is what limits what comes back. Enclosure links stay behind
+  the gate: there is no public enclosure page. The sign-in return itself is new: the proxy
   used to send a signed-out visitor to `/login` and forget where they
   were going; it now sets `?next=`, which the password form and the
   Google OAuth leg carry through (`src/lib/auth/next-path.ts`). The
