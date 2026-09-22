@@ -1382,6 +1382,25 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   backlog edits straight to `main` — impossible from a worktree while
   this checkout is on `main` between sessions, which is exactly when the
   second chat wants to write.
+- **The `/assistant` demo hard-codes the understanding, not the doing
+  (2026-09-22):** a sketch to show the Director before deciding whether to
+  build the real assistant in `docs/backlog.md`; it ticks nothing there.
+  The "brain" is `src/lib/assistant/demo-parser.ts`, a keyword matcher
+  over the rows the page loads (resident names/codes, enclosure and vet
+  names, today/tomorrow/weekday/ISO dates, "10am"/"14:30" times) — no
+  model, key, table or migration, so it costs nothing to keep or throw
+  away. The writes are the app's own: `moveResidentToEnclosure` from the
+  move page and `schedule_bulk_appointments` from the booking form, under
+  the caller's session, so RLS and the role checks are exactly what a
+  click gets. Two choices worth carrying into a real build: every request
+  is an editable preview card and nothing is written until Confirm, and
+  whatever the parser didn't find is left blank rather than guessed (a
+  move with no date says so instead of defaulting to today). Rows carry
+  `via the assistant (demo) — "<request>"` in their notes so the hub
+  history shows where they came from. Rejected for the sketch: the
+  slide-over panel, the `dryRun` flag, an env-flag gate and an audit table
+  from the backlog item — all real-build work, none of it needed to find
+  out whether the shelter wants one.
 
 ## Still open (from Section 11 of the requirements doc)
 
