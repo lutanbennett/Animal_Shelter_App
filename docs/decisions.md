@@ -1329,6 +1329,41 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   counts as 0039 intended; the dashboard gets its own Outreach tile so
   the number is visible. Nobody was in an external zone on the day, so
   no figure moved.
+- **The Worker fronts, the Pi renders, the Worker falls back
+  (2026-09-22):** the first evening with real data, the home page threw
+  Cloudflare's `1102 Worker exceeded resource limits`. Measured from the
+  Worker's own logs: every page costs 28–41 ms of CPU (React SSR, the two
+  dictionaries, parsing Supabase responses) against the free plan's 10 ms,
+  which Cloudflare enforces loosely — hence intermittent. Not fixable in
+  code; Workers Paid ($5/month) fixes it but there is no monthly budget.
+  Options weighed: Vercel Hobby (non-commercial ToS, rejected before),
+  Oracle Always-Free VM, Cloud Run, Render/Koyeb, and the Raspberry Pi 5
+  the user already plans to keep always-on in Suphan Buri for backups.
+  The user's choice, and a good one: keep the Worker as the front door
+  and make the Pi the origin through a Cloudflare Tunnel, with the Worker
+  rendering only when the Pi doesn't answer — a power cut degrades to
+  "what it was before", not to nothing. `worker/index.mjs` wraps
+  OpenNext's handler: proxying costs ~2 ms of CPU, well inside the
+  limit; tunnel-down (530) / app-down (502) / gateway timeouts fall back;
+  a POST that gets no answer is *not* retried (the Pi may have recorded
+  it) and returns a 503 telling the user to check. Suphan Buri is ~20 ms
+  from Cloudflare's Bangkok edge, so staff in Chiang Mai see no change;
+  the Mumbai database round-trips that dominate page time are the same
+  from either origin. A second Pi (the shelter is the natural site —
+  different power, different ISP) is just a second connector on the same
+  tunnel. Runbook: `docs/pi-hosting.md`; `ORIGIN_HOST` stays empty
+  until the Pi is live, which leaves the Worker behaving exactly as it did.
+- **Edge cache for the public pages (2026-09-22):** the same Worker
+  answers anonymous GETs of the public pages from the Cache API for ten
+  minutes (per data centre, per `locale` cookie, never when a Supabase
+  auth cookie or an RSC header is present). A hit costs ~0 ms of CPU, so
+  the public site is immune to 1102 regardless of which origin is up, and
+  it keeps serving from cache through a Pi outage. The cost is up to ten
+  minutes' staleness for visitors after a website edit — staff bypass the
+  cache and see changes at once; Purge Everything in the dashboard flushes
+  it. Done in the Worker rather than as a dashboard Cache Rule so the
+  policy is versioned with the code and the cache key can include the
+  language cookie.
 
 ## Still open (from Section 11 of the requirements doc)
 

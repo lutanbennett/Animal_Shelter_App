@@ -27,6 +27,9 @@ const RUNTIME_SECRETS = [
   "GOOGLE_OAUTH_REFRESH_TOKEN",
   "GOOGLE_DRIVE_ROOT_FOLDER_ID",
 ];
+// Shared with the WAF rule that guards the Pi's tunnel hostname
+// (docs/pi-hosting.md); pushed when set, harmless when not.
+const OPTIONAL_SECRETS = ["ORIGIN_KEY"];
 const BUILD_VARS = ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY"];
 
 function run(cmd, opts = {}) {
@@ -71,7 +74,9 @@ if (!skipBuild) {
 }
 
 if (pushSecrets) {
-  const secrets = Object.fromEntries(RUNTIME_SECRETS.map((k) => [k, env[k]]));
+  const secrets = Object.fromEntries(
+    [...RUNTIME_SECRETS, ...OPTIONAL_SECRETS.filter((k) => env[k])].map((k) => [k, env[k]]),
+  );
   run(`npx wrangler secret bulk --env ${envName}`, { input: JSON.stringify(secrets) });
 }
 

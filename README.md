@@ -12,7 +12,10 @@ Decisions and open questions: [`docs/decisions.md`](docs/decisions.md).
 - **Supabase** (Postgres + Auth + RLS) — see `supabase/migrations/`
 - **Google Drive API** for file/photo storage (not Supabase Storage — see `docs/decisions.md`)
 - **@react-pdf/renderer** for resident profile / deceased summary PDFs
-- Hosting: **Cloudflare Workers** (free tier) via `@opennextjs/cloudflare`
+- Hosting: a **Cloudflare Worker** (free tier, via `@opennextjs/cloudflare`)
+  fronts the site — edge cache for the public pages, then the **Raspberry
+  Pi** origin through a Cloudflare Tunnel, then rendering in the Worker
+  itself as the fallback. See `docs/pi-hosting.md`.
 
 Everything is chosen to run on free tiers — see `docs/decisions.md` for the
 reasoning and the trade-offs that come with that.
@@ -374,6 +377,10 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
   regenerated, not edited: `node scripts/manual-screenshots.mjs` opens the
   machine's Edge/Chrome on the running dev server, waits for you to sign
   in as an admin, and captures every screen the manual references.
+- `worker/index.mjs` — the Worker entry: edge cache → Pi through its tunnel
+  → OpenNext render (`docs/pi-hosting.md`).
+- `scripts/pi/` — the Pi origin: one-time `setup.sh`, `deploy-pi.sh`, the
+  systemd unit and cloudflared config.
 - `scripts/` — one-off tooling: `apply-migrations.mjs` (migration runner),
   `check-public-views.mjs` (go-live check), `manual-screenshots.mjs`
   (user-manual screenshots), `appsheet-export.mjs` + `import-appsheet.mjs`

@@ -1,0 +1,30 @@
+# cloudflared config for the Pi — installed by scripts/pi/setup.sh as
+# /etc/cloudflared/config.yml with the tunnel id filled in.
+#
+# One tunnel, one public hostname. The Worker (worker/index.mjs) is the
+# only legitimate caller of pi.lannacare.org — a WAF rule on that hostname
+# rejects requests without the shared x-origin-key header — and it wants
+# the app to believe it is lannacare.org, so cloudflared rewrites the Host
+# header on the way in (redirects, cookies and getSiteOrigin() then match
+# the address the visitor is on).
+#
+# A second Pi later: run cloudflared there with this same tunnel's
+# credentials and Cloudflare balances between the two connectors and drops
+# whichever stops answering. No other change.
+tunnel: __TUNNEL_ID__
+credentials-file: /etc/cloudflared/__TUNNEL_ID__.json
+
+ingress:
+  - hostname: pi.lannacare.org
+    service: http://127.0.0.1:3000
+    originRequest:
+      httpHostHeader: lannacare.org
+      connectTimeout: 10s
+      noHappyEyeballs: true
+  # Test on the same Pi (optional: `deploy-pi.sh --env test` + the
+  # lanna-care-test service on 3001). Remove if unused.
+  - hostname: test-pi.lannacare.org
+    service: http://127.0.0.1:3001
+    originRequest:
+      httpHostHeader: test.lannacare.org
+  - service: http_status:404
