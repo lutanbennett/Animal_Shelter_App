@@ -252,9 +252,15 @@ export function NavLinks({
       {/* Desktop: persistent sidebar */}
       <nav className="hidden w-48 shrink-0 flex-col gap-1 border-r border-border bg-surface p-4 md:flex">
         {renderLinks("sidebar", mainItems)}
-        {/* mt-auto eats the free space, so the footer group sits on the
-            bottom of the sidebar however short the main list is. */}
-        <div className="mt-auto flex flex-col gap-1 border-t border-border pt-3">
+        {/* mt-auto pushes the group to the bottom of the sidebar — but the
+            sidebar is a flex item stretched to the height of the page, not
+            the window, so on a long list (residents) that bottom is
+            thousands of pixels down. sticky keeps it against the bottom of
+            the window until the real bottom scrolls into view, matching the
+            bottom-4 to the nav's own p-4 so it doesn't jump when it lands.
+            bg-surface is for the case where the links themselves overflow
+            the window and would otherwise show through. */}
+        <div className="sticky bottom-4 mt-auto flex flex-col gap-1 border-t border-border bg-surface pt-3">
           {renderLinks("sidebar-footer", footerItems)}
         </div>
       </nav>
