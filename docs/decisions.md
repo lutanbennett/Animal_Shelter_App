@@ -1992,3 +1992,28 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   query out of the full URL (`?q=lat,lng`, `/maps/place/<address>`,
   `@lat,lng`, `!3d…!4d…`); failures just mean no map. Only the hub page
   does this — the contact list never renders the frame.
+
+- **The assistant keeps its own audit table, insert-only, and it doubles as
+  the eval corpus (2026-09-22):** the assistant runs the app's own server
+  actions under the caller's session, so every row it writes is already
+  attributed and already policed by RLS — what nothing recorded was the
+  sentence that caused it. 0069 adds `assistant_actions`: who, when, the
+  request exactly as typed, the intent the parser matched, the draft, how
+  the turn ended, the result, and the row it wrote (a table name and an id,
+  as `translations` addresses arbitrary rows, since one foreign key cannot
+  point at six tables). Three choices worth recording. The row is written
+  once, when the turn settles, and there is no update or delete policy
+  below admin: an audit row its own subject can edit is not evidence, and
+  the LLM assistant (v2) is to be measured against these rows, so a corpus
+  that drifts after the fact is not a measurement — a confirm retried after
+  an error is a second row, not an edit. `intent` is free text although
+  `status` is an enum: the set of intents grows with every batch, and a
+  null intent (the parser placed nothing) is the most valuable row in the
+  table rather than an error, so it has a partial index of its own.
+  Management reads every row where staff and volunteers read only their
+  own — the one departure from "management = staff" (0039) on this table,
+  of the kind 0040 made on `vets`, because reviewing what the assistant is
+  asked belongs with the Management section, while the sentences people
+  type are not a shared feed. Landed as its own schema PR ahead of the
+  feature, per the migrations rule, so production needs it applied before
+  assistant v1 deploys.
