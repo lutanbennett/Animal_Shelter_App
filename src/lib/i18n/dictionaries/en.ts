@@ -65,7 +65,6 @@ const en = {
     publicSite: "Public website",
     changePassword: "Change password",
     assistant: "Assistant",
-    demoBadge: "Demo",
     menu: "Menu",
     openMenu: "Open menu",
     closeMenu: "Close menu",
@@ -994,18 +993,31 @@ const en = {
   assistant: {
     pageTitle: "Assistant",
     pageSubtitle:
-      "A demo. Say what you want done in plain words. It understands two things — moving a resident to another enclosure, and booking a vet visit — and shows you a preview to check before anything is written.",
+      "Say what you want done in plain words. The assistant fills a form in from your sentence and shows it to you first — nothing is written until you confirm it. It understands a fixed list of requests; the user manual lists every one.",
+    pageSubtitleReadOnly:
+      "Ask where a resident is, who is in an enclosure, or what is due. Recording changes is for staff and management.",
     tryTitle: "Try something like",
     examples: (resident: string, enclosure: string, vet: string) => [
+      `Where is ${resident}?`,
+      `Who is in ${enclosure}?`,
+      "What is due this week?",
+      `Send ${resident} to the vet hospital today`,
+      `${resident} is back from hospital`,
+      `${resident} weighs 12.4 kg`,
       `Move ${resident} to ${enclosure} today`,
       `Book a vet visit for ${resident} with ${vet} on Friday at 10am`,
     ],
     placeholder: "What should happen?",
     send: "Send",
+    looking: "Looking...",
     cantHelp:
-      "In this demo I can only move a resident to another enclosure or book a vet visit. Try \"move <name> to <enclosure>\" or \"book a vet visit for <name> on Friday at 10am\".",
+      "I didn't understand that one. I can send a resident to hospital and back, log a weight, move a resident, book a vet visit, and answer \"where is …\", \"who is in …\" and \"what is due this week\". The user manual has the exact sentences.",
     severalMatch: "More than one resident has that name — pick the right one.",
+    whichOne: "Which one do you mean?",
     fillBlanks: "Check the details, fill in anything missing, then confirm.",
+    notAuthorized: "Your account can't use the assistant.",
+    volunteerReadOnly:
+      "Volunteers can ask the assistant questions, but recording this one is for staff and management. Ask someone to record it, or use the resident's own page.",
     move: {
       title: "Move resident",
       summary: (resident: string, from: string, to: string, date: string) =>
@@ -1020,6 +1032,25 @@ const en = {
       done: (resident: string, vet: string, when: string) =>
         `Done — vet visit booked for ${resident} with ${vet} on ${when}.`,
     },
+    hospital: {
+      title: "Send to hospital",
+      summary: (resident: string, date: string) =>
+        `Send ${resident} to the vet hospital on ${date}`,
+      done: (resident: string) => `Done — ${resident} has been sent to the vet hospital.`,
+    },
+    hospitalReturn: {
+      title: "Back from hospital",
+      summary: (resident: string, to: string, date: string) =>
+        `Bring ${resident} back from the vet hospital to ${to} on ${date}`,
+      done: (resident: string, enclosure: string) =>
+        `Done — ${resident} is back from the vet hospital, in ${enclosure}.`,
+    },
+    weight: {
+      title: "Log weight",
+      summary: (resident: string, kg: string, date: string) =>
+        `Record ${resident} at ${kg} kg on ${date}`,
+      done: (resident: string, kg: number) => `Done — ${resident} recorded at ${kg} kg.`,
+    },
     fields: {
       resident: "Resident",
       enclosure: "To enclosure",
@@ -1027,17 +1058,46 @@ const en = {
       date: "Date",
       time: "Time",
       reason: "Reason",
+      weightKg: "Weight (kg)",
     },
     pickResident: "Choose a resident",
     pickVet: "Choose a vet",
     unknown: "…",
     notesStamp: (request: string) =>
-      `Notes will read: via the assistant (demo) — "${request}"`,
+      `Notes will read: via the assistant — "${request}"`,
     confirm: "Confirm",
     working: "Working...",
     cancelled: "Cancelled — nothing was changed.",
     openResident: "Open resident",
     couldntLoad: "Couldn't load the data the assistant needs",
+    lookups: {
+      residentNotFound: "I couldn't find that resident.",
+      enclosureNotFound: "I couldn't find that enclosure.",
+      whichResident:
+        "Which resident do you mean? Use the name as it is written on their record, or their code.",
+      whichEnclosure:
+        "Which enclosure do you mean? Use its name as it is written on the enclosures list.",
+      whereAnswer: (resident: string, place: string) => `${resident} is in ${place}.`,
+      whereNowhere: (resident: string) =>
+        `${resident} isn't in an enclosure at the moment.`,
+      whereStatus: (status: string) => `Status: ${status}`,
+      whoAnswer: (enclosure: string, count: number) =>
+        count === 1 ? `1 resident is in ${enclosure}:` : `${count} residents are in ${enclosure}:`,
+      whoEmpty: (enclosure: string) => `${enclosure} is empty.`,
+      openEnclosure: "Open enclosure",
+      dueTitle: (days: number) =>
+        days === 1 ? "Due today" : `Due in the next ${days} days`,
+      dueNothing: "Nothing is due, and nothing is overdue.",
+      dueOverdue: "Overdue",
+      dueVisits: "Vet visits",
+      dueJobs: "Maintenance",
+    },
+    panel: {
+      open: "Assistant",
+      title: "Assistant",
+      subtitle: "Say what you want done — you get a preview before anything is written.",
+      loading: "Loading...",
+    },
   },
 
   vetVisits: {
