@@ -121,7 +121,7 @@ const STATUS_TONE: Record<string, StatCardTone> = {
   Deceased: "neutral",
   Fostered: "success",
   Adopted: "success",
-  Outreach: "success",
+  Unassigned: "warning",
   Resident: "success",
 };
 

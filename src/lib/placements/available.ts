@@ -43,7 +43,7 @@ export function availablePlacementActions(
       // Adoption ends the shelter's chain; the only way back is a return.
       return ["returnToShelter"];
     default:
-      // Resident / Outreach (Unassigned) / unknown.
+      // Resident / Unassigned / unknown.
       return ["hospital", "rehome", "move"];
   }
 }

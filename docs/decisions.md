@@ -1307,6 +1307,19 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   its one-row-per-dose children — the shape the app's
   `immunization_records` already has. Only the children migrate; the
   18 live rows had no B69 duplicates. Closes open question 2 below.
+- **Unassigned residents are in care (2026-09-22):** the first evening
+  with real data, the home page and the dashboard said 42 animals in care
+  against 70 alive. 0001 had named the Lifecycle 'Unassigned' state
+  'Outreach' and 0039/0062 kept it out of every in-care count, reading it
+  as "somewhere the shelter doesn't look after". In AppSheet, Unassigned
+  was an on-site zone: the 27 residents there are at the shelter without
+  an enclosure yet. Migration 0065 renames the status to `Unassigned`,
+  counts it as in care and in the "in vet care" pool, and the dashboard
+  tile becomes "Awaiting an enclosure" (amber on the hub, as a nudge to
+  house them). Off-site animals the shelter feeds — the Temple, Village
+  and Orchard enclosures — were already plain Residents, so nothing else
+  moves; if a true outreach status is ever wanted it needs its own
+  pseudo-enclosure, not this one.
 
 ## Still open (from Section 11 of the requirements doc)
 

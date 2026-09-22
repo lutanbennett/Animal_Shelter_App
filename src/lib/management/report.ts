@@ -254,7 +254,7 @@ export function entryTotal(entries: NamedEntry[]): number {
 // ---------------------------------------------------------------------------
 
 /** The statuses that count as "in the shelter's care" — matches public_shelter_stats. */
-export const IN_CARE_STATUSES = new Set(["Resident", "Hospitalised", "Fostered"]);
+export const IN_CARE_STATUSES = new Set(["Resident", "Unassigned", "Hospitalised", "Fostered"]);
 
 export type Snapshot = {
   inCare: number;
@@ -263,7 +263,7 @@ export type Snapshot = {
   inShelter: number;
   inHospital: number;
   fostered: number;
-  outreach: number;
+  unassigned: number;
   readyForAdoption: number;
   publicVisible: number;
   /** Scheduled visits in the next seven days. */
@@ -284,7 +284,7 @@ export function snapshot(
   },
 ): Snapshot {
   const statusOf = new Map(data.states.map((s) => [s.resident_id, s.current_status ?? "Resident"]));
-  const counts = { Resident: 0, Hospitalised: 0, Fostered: 0, Outreach: 0 };
+  const counts = { Resident: 0, Unassigned: 0, Hospitalised: 0, Fostered: 0 };
   const species = new Map<string | null, number>();
   let readyForAdoption = 0;
   let publicVisible = 0;
@@ -321,14 +321,14 @@ export function snapshot(
   }
 
   return {
-    inCare: counts.Resident + counts.Hospitalised + counts.Fostered,
+    inCare: counts.Resident + counts.Unassigned + counts.Hospitalised + counts.Fostered,
     bySpecies: [...species.entries()]
       .map(([s, count]) => ({ species: s, count }))
       .sort((a, b) => b.count - a.count),
     inShelter: counts.Resident,
     inHospital: counts.Hospitalised,
     fostered: counts.Fostered,
-    outreach: counts.Outreach,
+    unassigned: counts.Unassigned,
     readyForAdoption,
     publicVisible,
     vetVisitsDue,
