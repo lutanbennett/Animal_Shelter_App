@@ -28,6 +28,15 @@ const eslintConfig = defineConfig([
       "@next/next/no-img-element": "off",
     },
   },
+  {
+    // CommonJS by definition (Node `-r` preload scripts); `require` is the
+    // only import there is. Without this, `npm run lint` — and CI — fail on
+    // scripts/win-junction-symlinks.cjs.
+    files: ["**/*.cjs"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

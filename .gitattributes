@@ -2,3 +2,7 @@
 scripts/pi/*.sh text eol=lf
 scripts/pi/*.service text eol=lf
 scripts/pi/*.yml text eol=lf
+
+# Append-only log: parallel branches each add an entry at the end, so take both
+# sides instead of conflicting.
+docs/decisions.md merge=union

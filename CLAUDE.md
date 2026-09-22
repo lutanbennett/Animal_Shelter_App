@@ -2,30 +2,74 @@
 
 # Working on this repo
 
-One developer, one machine, one session at a time. Every session works
-locally in this checkout; nothing is started elsewhere. These rules keep
-`main`, GitHub and the dev database in step — follow them without being
-asked.
+One developer, one machine, **several Claude sessions at once** — each in
+its own git worktree, on its own branch, with its own dev server. These
+rules keep `main`, GitHub and the dev database in step while two or three
+features are built in parallel; follow them without being asked.
 
-## Branches
+## Where am I?
 
-1. **Start from `main`, up to date.** First thing in a session:
-   `git checkout main && git pull`, then fold in the backlog branch (see
-   "The backlog branch" below): `git merge backlog && git push`, then
-   `git -C ../Animal_Shelter_Backlog merge --ff-only main`. Then
-   `git branch -a`: if any `claude/*` branch still exists, locally or on
-   `origin`, stop and ask the user whether to merge or delete it *before*
-   creating a new one. Never branch from another feature branch.
-2. **One feature, one branch** (`claude/<feature>`), commit as you go.
-   `.githooks/post-commit` pushes every commit, so GitHub always matches
-   the checkout (a fresh clone enables it with
-   `git config core.hooksPath .githooks`). Prefer new commits over
-   `--amend`/rebase — those need a manual `git push --force-with-lease`.
-3. **A session ends merged.** When the feature is done and verified: open
-   the PR (GitHub in the user's Chrome, since there is no `gh` here), and
-   once the user says so, merge it, delete the branch locally and on
-   `origin`, and leave the checkout on an updated `main`. A branch that
-   outlives its session is how work gets stacked and lost.
+First thing in any session: `git rev-parse --show-toplevel` and
+`git branch --show-current`.
+
+- **`C:\Development\Animal_Shelter_App` is the main checkout and is only
+  ever on `main`.** It is the sync and merge station, not a place to
+  build features. If you are here and asked to build something, create a
+  worktree for it (below) and tell the user to open a session on that
+  folder — do not branch in this checkout.
+- **`C:\Development\Animal_Shelter_<feature>` is a workstream**: branch
+  `claude/<feature>`, port from its `.port` file. Feature work happens
+  here, and only work for *this* feature. If there is a `.brief.md`,
+  that is the task — `/plan-day` wrote it from the backlog item — so read
+  it before anything else.
+- **`C:\Development\Animal_Shelter_Backlog`** is the backlog branch (below).
+
+## Workstreams
+
+`git worktree list` is the registry: every `claude/*` branch has a
+worktree and every worktree has a live session or a PR waiting. Aim for
+two or three at once; more than that and merging becomes the bottleneck.
+
+1. **Start one:** `node scripts/worktree.mjs new <feature>` in any
+   checkout. It branches `claude/<feature>` from `origin/main`, copies
+   `.env.local`, runs `npm ci` and records the next free port in `.port`.
+   Never branch from another feature branch. Then open a Claude session
+   on the new folder; `node scripts/worktree.mjs dev` starts `next dev`
+   on its port. (`/plan-day` picks the day's workstreams from the backlog
+   and creates them.)
+2. **One feature, one branch,** commit as you go. `.githooks/post-commit`
+   pushes every commit, so GitHub always matches the checkout. Prefer new
+   commits over `--amend`/rebase — those need a manual
+   `git push --force-with-lease`.
+3. **Pick non-overlapping work.** Streams should touch different areas
+   (a `/admin` page, a resident-hub tab, the `worker/`). The files nearly
+   every UI feature touches — `src/lib/manual/en.ts`, `src/app/NavLinks.tsx`,
+   `docs/backlog.md`, `docs/decisions.md` — will conflict trivially; two
+   streams both adding nav entries or rewriting the same manual topic will
+   conflict badly. `docs/decisions.md` merges by union, so just append.
+4. **Finish: the merge train.** When a feature is done and verified:
+   `node scripts/worktree.mjs sync` (merges `origin/main` in), then
+   `npm run typecheck && npm run lint && npm run build`, then open the PR
+   (GitHub in the user's Chrome, since there is no `gh` here). CI runs the
+   same three checks. Once the user says so, merge it, then
+   `node scripts/worktree.mjs done <feature>` from another checkout
+   removes the folder and the branch locally and on `origin`. Merges are
+   serial: after each one, every other live workstream runs `sync` so the
+   next PR is already integrated. A branch that outlives its PR is how
+   work gets stacked and lost.
+5. **Stale streams.** `node scripts/worktree.mjs list` shows each
+   worktree's dirty files and how far it is beyond `main`. A worktree with
+   nothing beyond `main` and no session is a leftover — `done` it (with
+   `--force` if it has junk changes) rather than reusing it.
+
+## The main checkout
+
+Once a day, before starting streams, in `C:\Development\Animal_Shelter_App`:
+`git checkout main && git pull`, fold in the backlog branch (see below):
+`git merge backlog && git push`, then
+`git -C ../Animal_Shelter_Backlog merge --ff-only main`. New streams
+branch from `origin/main`, so this is what makes fresh backlog items and
+yesterday's merges visible to them. `/plan-day` does this step.
 
 ## The backlog branch
 
@@ -33,7 +77,7 @@ asked.
 touches `docs/backlog.md`. It is checked out as a git worktree at
 `C:\Development\Animal_Shelter_Backlog` (a fresh clone recreates it with
 `git worktree add ../Animal_Shelter_Backlog backlog`), so backlog edits
-never depend on what this checkout is doing — mid-feature, dirty tree,
+never depend on what any workstream is doing — mid-feature, dirty tree,
 dev server running, none of it matters.
 
 - **To add, reword or reprioritise an item** — in any session, at any
@@ -44,20 +88,28 @@ dev server running, none of it matters.
 - **Ticking the item a feature completes** stays on the feature branch,
   as part of finishing it — that is the one edit to `docs/backlog.md`
   that belongs in a PR.
-- **Syncing** is step 1 above: merging `backlog` into `main` at session
-  start makes new items visible everywhere; fast-forwarding `backlog` to
-  `main` afterwards picks up the ticks that came in through PRs. The
+- **Syncing** is the daily step above: merging `backlog` into `main`
+  makes new items visible everywhere; fast-forwarding `backlog` to `main`
+  afterwards picks up the ticks that came in through PRs. The
   fast-forward always works because `main` has just absorbed `backlog`.
   If the merge conflicts (a PR ticked an item while `backlog` reworded
-  it), resolve it in this checkout, commit, and carry on.
-- `backlog` is exempt from rule 3 and from the stray-branch check in
-  rule 1. It is never deleted.
+  it), resolve it in the main checkout, commit, and carry on.
+- `backlog` is exempt from the workstream rules. It is never deleted.
 
 ## Database migrations
 
 - Files live in `supabase/migrations/` and are numbered sequentially. The
   next number is one more than the highest file **on `main`**, so an
   unmerged branch never "owns" a number.
+- **Schema changes land first, as their own small PR.** A feature that
+  needs a migration is two streams in sequence, not one: a
+  `claude/<feature>-schema` branch holding only the migration (additive,
+  re-runnable, harmless to code that doesn't know about it), merged and
+  applied to dev the same day; then the feature branch created from the
+  updated `main`. Only one in-flight branch may carry a migration at a
+  time, so two streams can never claim the same number and the dev
+  database never carries schema that `main` doesn't. If two streams both
+  need schema, their migrations go in one schema PR.
 - Apply with `node scripts/apply-migrations.mjs` (`--dry-run` first for
   anything non-trivial, `--status` to look). It records each file in
   `schema_migrations` in the target database and applies only what is

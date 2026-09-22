@@ -89,6 +89,10 @@ Environments exist since 2026-09-21 (README "Environments"): `test.lannacare.org
 
 Done items, kept under the same headings as the open work above so follow-ups can be traced back to what they build on.
 
+### Process
+
+- [x] **Run several workstreams at once.** Done 2026-09-22: one git worktree per feature (`scripts/worktree.mjs new|dev|sync|list|done`), the main checkout stays on `main`, `/plan-day` syncs `main` and proposes the day's two or three non-overlapping streams from this file, schema changes land first as their own PR, CI type-checks/lints/builds every PR, and `docs/decisions.md` merges by union. `CLAUDE.md` "Workstreams", README "Day-to-day workflow", `docs/decisions.md`.
+
 ### Deployment
 
 - [x] **Scheduled production backups.** Done 2026-09-21: `scripts/backup.mjs --env production` (`pg_dump` custom format of `public` + `auth` over the session pooler — the direct host is IPv6-only — into `Backups/` under the Drive root, newest twelve kept) and `scripts/backup-schedule.ps1` for the Sunday 03:00 Task Scheduler job; README "Backups". The restore rehearsal is its own open item above. Original brief: Free-tier Supabase has no backups. Write `scripts/backup.mjs --env production`: `pg_dump` (custom format) over the project's direct connection string, uploaded into a `Backups/` folder under the Drive root with the date in the name, keep the last N. Run it weekly from Task Scheduler on this machine (or a reminder) until something better exists. Test a restore into a scratch project once. Nothing destructive should happen on production until this runs.
