@@ -2456,6 +2456,15 @@ const th: Dictionary = {
     copyPrompt: "คัดลอกลิงก์นี้:",
   },
 
+  tagLinks: {
+    enclosureLabel: "ลิงก์สำหรับ QR code ของกรงนี้",
+    residentLabel: "ลิงก์สำหรับบัตร RFID ของสัตว์ตัวนี้",
+    copy: "คัดลอกลิงก์",
+    copied: "คัดลอกแล้ว",
+    copyFor: (name: string) => `คัดลอกลิงก์ของ ${name}`,
+    copiedFor: (name: string) => `คัดลอกลิงก์ของ ${name} แล้ว`,
+  },
+
   ourWork: {
     pageTitle: "ผลงานของเรา",
     pageSubtitle:

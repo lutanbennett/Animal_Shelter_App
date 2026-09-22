@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { PawPrint, Pencil } from "lucide-react";
 import { ActionLink } from "@/components/ActionLink";
+import { CopyTagLink } from "@/components/CopyTagLink";
 import { SECTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
 import { SYSTEM_ZONE } from "@/lib/enclosures/options";
 import { statusLabel } from "@/lib/i18n/enum-labels";
+import { residentTagPath } from "@/lib/tags/links";
 
 export type ResidentRow = {
   resident_id: string;
@@ -33,7 +35,14 @@ function fullName(resident: Pick<ResidentRow, "name" | "thai_name">) {
     : resident.name;
 }
 
-export function ResidentsTable({ residents }: { residents: ResidentRow[] }) {
+export function ResidentsTable({
+  residents,
+  tagOrigin,
+}: {
+  residents: ResidentRow[];
+  /** Origin for each row's RFID-card link (src/lib/tags/origin.ts). */
+  tagOrigin: string | null;
+}) {
   const { t, locale } = useI18n();
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -135,7 +144,9 @@ export function ResidentsTable({ residents }: { residents: ResidentRow[] }) {
               <th className="hidden px-4 py-2 font-medium md:table-cell">
                 {t.residents.list.table.location}
               </th>
-              <th className="w-10 px-2 py-2" />
+              {/* Copy link (for the RFID card) and edit. The copy button
+                  stays on phones: NFC cards are usually written from one. */}
+              <th className="w-20 px-2 py-2" />
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -189,7 +200,12 @@ export function ResidentsTable({ residents }: { residents: ResidentRow[] }) {
                       ? t.admin.zones.table.internal
                       : t.admin.zones.table.external}
                 </td>
-                <td className="w-10 px-2 py-2 text-right">
+                <td className="w-20 px-2 py-2 text-right whitespace-nowrap">
+                  <CopyTagLink
+                    path={residentTagPath(resident.resident_code)}
+                    origin={tagOrigin}
+                    name={fullName(resident)}
+                  />
                   <Link
                     href={`/residents/${resident.resident_id}/edit`}
                     title={t.residents.list.table.editAriaLabel(fullName(resident))}

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { safeNextPath } from "@/lib/auth/next-path";
 import { getT } from "@/lib/i18n/get-t";
 import { LoginForm } from "./LoginForm";
 import { LanguageSwitcher } from "../LanguageSwitcher";
@@ -12,10 +13,10 @@ type ErrorCode = (typeof ERROR_CODES)[number];
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 }) {
   const { t } = await getT();
-  const { error } = await searchParams;
+  const { error, next } = await searchParams;
   const errorMessage =
     error && ERROR_CODES.includes(error as ErrorCode)
       ? error === "no_role"
@@ -44,7 +45,7 @@ export default async function LoginPage({
             {t.login.heading}
           </h1>
         </div>
-        <LoginForm error={errorMessage} />
+        <LoginForm error={errorMessage} next={safeNextPath(next)} />
         <Link
           href="/"
           className="flex items-center justify-center gap-1.5 text-sm font-medium text-muted hover:text-foreground"

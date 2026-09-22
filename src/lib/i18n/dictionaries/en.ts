@@ -2480,6 +2480,16 @@ const en = {
     copyPrompt: "Copy this link:",
   },
 
+  /** The copyable addresses for enclosure QR codes and resident RFID cards. */
+  tagLinks: {
+    enclosureLabel: "Link for this enclosure's QR code",
+    residentLabel: "Link for this resident's RFID card",
+    copy: "Copy link",
+    copied: "Copied",
+    copyFor: (name: string) => `Copy link for ${name}`,
+    copiedFor: (name: string) => `Link for ${name} copied`,
+  },
+
   ourWork: {
     pageTitle: "Our work",
     pageSubtitle:

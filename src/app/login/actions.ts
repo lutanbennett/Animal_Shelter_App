@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { DEFAULT_SIGNED_IN_PATH, safeNextPath } from "@/lib/auth/next-path";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,21 +21,29 @@ export async function login(
     return { error: error.message };
   }
 
-  redirect("/residents");
+  // Back to the page that sent them to sign in, if any (the form carries
+  // /login?next=… as a hidden field); src/lib/auth/next-path.ts.
+  redirect(safeNextPath(formData.get("next") as string) ?? DEFAULT_SIGNED_IN_PATH);
 }
 
 /**
  * Starts the Google OAuth flow via Supabase Auth (PKCE). The server client
  * writes the code-verifier cookie here; src/app/auth/callback/route.ts
  * exchanges the returned code for a session and checks the user has a
- * user_roles row before letting them in.
+ * user_roles row before letting them in. `next` (the page that sent them
+ * to sign in) rides along on the callback URL, as the password-reset
+ * link does.
  */
-export async function signInWithGoogle() {
+export async function signInWithGoogle(formData: FormData) {
+  const next = safeNextPath(formData.get("next") as string);
+  const callback = new URL(`${await requestOrigin()}/auth/callback`);
+  if (next) callback.searchParams.set("next", next);
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${await requestOrigin()}/auth/callback`,
+      redirectTo: callback.toString(),
       queryParams: { prompt: "select_account" },
     },
   });
