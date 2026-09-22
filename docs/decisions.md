@@ -1365,6 +1365,24 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   policy is versioned with the code and the cache key can include the
   language cookie.
 
+- **A permanent `backlog` branch in its own worktree (2026-09-22):** until
+  now every backlog-only edit went through a throwaway `claude/backlog-*`
+  branch and a merge commit, and adding an item mid-feature meant either
+  smuggling it into the PR or juggling branches in a dirty checkout. The
+  branch `backlog` is now the one long-lived branch besides `main`; it
+  only ever touches `docs/backlog.md`, and it is checked out as a git
+  worktree at `C:DevelopmentAnimal_Shelter_Backlog`, so any session —
+  including a second chat running while a feature is in progress — adds
+  an item by editing the file there and committing (the post-commit hook
+  pushes). It is folded into `main` at every session start and then
+  fast-forwarded back to `main`, which always succeeds because `main` has
+  just absorbed it. Ticking a finished item stays on the feature PR, so
+  the two writers can only collide when a PR moves an item that `backlog`
+  reworded — a small, hand-resolved merge conflict. Rejected: committing
+  backlog edits straight to `main` — impossible from a worktree while
+  this checkout is on `main` between sessions, which is exactly when the
+  second chat wants to write.
+
 ## Still open (from Section 11 of the requirements doc)
 
 1. Exact per-table RBAC permission matrix beyond the role descriptions —

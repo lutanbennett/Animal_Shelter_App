@@ -10,10 +10,12 @@ asked.
 ## Branches
 
 1. **Start from `main`, up to date.** First thing in a session:
-   `git checkout main && git pull`. Then `git branch -a`: if any
-   `claude/*` branch still exists, locally or on `origin`, stop and ask the
-   user whether to merge or delete it *before* creating a new one. Never
-   branch from another feature branch.
+   `git checkout main && git pull`, then fold in the backlog branch (see
+   "The backlog branch" below): `git merge backlog && git push`, then
+   `git -C ../Animal_Shelter_Backlog merge --ff-only main`. Then
+   `git branch -a`: if any `claude/*` branch still exists, locally or on
+   `origin`, stop and ask the user whether to merge or delete it *before*
+   creating a new one. Never branch from another feature branch.
 2. **One feature, one branch** (`claude/<feature>`), commit as you go.
    `.githooks/post-commit` pushes every commit, so GitHub always matches
    the checkout (a fresh clone enables it with
@@ -24,6 +26,32 @@ asked.
    once the user says so, merge it, delete the branch locally and on
    `origin`, and leave the checkout on an updated `main`. A branch that
    outlives its session is how work gets stacked and lost.
+
+## The backlog branch
+
+`backlog` is the one permanent branch besides `main`, and it only ever
+touches `docs/backlog.md`. It is checked out as a git worktree at
+`C:\Development\Animal_Shelter_Backlog` (a fresh clone recreates it with
+`git worktree add ../Animal_Shelter_Backlog backlog`), so backlog edits
+never depend on what this checkout is doing — mid-feature, dirty tree,
+dev server running, none of it matters.
+
+- **To add, reword or reprioritise an item** — in any session, at any
+  point — edit `C:\Development\Animal_Shelter_Backlog\docs\backlog.md`
+  and commit there (`git -C ../Animal_Shelter_Backlog commit -am
+  "Backlog: <what>"`); the post-commit hook pushes it. No `claude/*`
+  branch, no PR. Never edit `docs/backlog.md` on `main` directly.
+- **Ticking the item a feature completes** stays on the feature branch,
+  as part of finishing it — that is the one edit to `docs/backlog.md`
+  that belongs in a PR.
+- **Syncing** is step 1 above: merging `backlog` into `main` at session
+  start makes new items visible everywhere; fast-forwarding `backlog` to
+  `main` afterwards picks up the ticks that came in through PRs. The
+  fast-forward always works because `main` has just absorbed `backlog`.
+  If the merge conflicts (a PR ticked an item while `backlog` reworded
+  it), resolve it in this checkout, commit, and carry on.
+- `backlog` is exempt from rule 3 and from the stray-branch check in
+  rule 1. It is never deleted.
 
 ## Database migrations
 
@@ -47,6 +75,7 @@ asked.
 
 ## Finishing a feature
 
-Tick or add the item in `docs/backlog.md`, record non-obvious design
+Tick the item in `docs/backlog.md` (follow-ups you notice go on the
+`backlog` branch, not the PR), record non-obvious design
 choices in `docs/decisions.md` (dated), and keep `README.md` accurate.
 Commit messages say why, not just what.
