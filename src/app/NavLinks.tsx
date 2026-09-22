@@ -10,6 +10,8 @@ import { useMobileNav } from "./MobileNavContext";
 type NavItem = {
   href: string;
   label: string;
+  /** Small pill after the label, e.g. "Demo". */
+  badge?: string;
   children?: { href: string; label: string }[];
 };
 
@@ -105,6 +107,9 @@ export function NavLinks({
     { href: "/projects", label: t.nav.projects },
     { href: "/vets", label: t.nav.vets },
     { href: "/contacts", label: t.nav.contacts },
+    // Throwaway sketch to find out whether the shelter wants a real one;
+    // see the "Assistant" section of docs/backlog.md.
+    { href: "/assistant", label: t.nav.assistant, badge: t.nav.demoBadge },
     { href: "/manual", label: t.nav.manual },
     { href: "/account/password", label: t.nav.changePassword },
     // Operational management (reports, contacts) lives under Management;
@@ -176,6 +181,11 @@ export function NavLinks({
               }`}
             >
               {item.label}
+              {item.badge && (
+                <span className="ml-2 rounded-full border border-current px-1.5 py-px align-middle text-[10px] font-semibold uppercase tracking-wide">
+                  {item.badge}
+                </span>
+              )}
             </Link>
             {item.children && (
               // The label navigates to the landing page; only the chevron
