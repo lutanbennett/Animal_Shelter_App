@@ -82,6 +82,9 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
           <Link href="/our-work" className="hover:text-foreground">{t.adopt.ourWorkNav}</Link>
         </div>
       </div>
+      <div className="mx-auto mt-8 w-full max-w-5xl text-xs">
+        <Link href="/privacy" className="hover:text-foreground">{t.privacy.nav}</Link>
+      </div>
     </footer>
   );
 }

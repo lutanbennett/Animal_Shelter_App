@@ -11,8 +11,9 @@
  * pages render photos for signed-out visitors and would otherwise
  * 307-redirect every <img> request to /login. /adopt reads
  * public_resident_profiles (Section 6 "Public/Anonymous" RBAC tier),
- * /our-work the public_projects views (0042), and /foster, /volunteer,
- * /donate site_pages / site_content (0059).
+ * /our-work the public_projects views (0042), /foster, /volunteer,
+ * /donate site_pages / site_content (0059), and /privacy is static text
+ * (the notice Google's consent screen links to).
  */
 export const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/auth/callback"];
 
@@ -23,6 +24,7 @@ export const PUBLIC_PATH_PREFIXES = [
   "/foster",
   "/volunteer",
   "/donate",
+  "/privacy",
 ];
 
 export function isPublicPath(pathname: string): boolean {
@@ -36,7 +38,7 @@ export function isPublicPath(pathname: string): boolean {
 export function isPublicPage(pathname: string): boolean {
   return (
     pathname === "/" ||
-    ["/adopt", "/our-work", "/foster", "/volunteer", "/donate"].some(
+    ["/adopt", "/our-work", "/foster", "/volunteer", "/donate", "/privacy"].some(
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`) ,
     )
   );

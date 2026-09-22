@@ -1792,3 +1792,20 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   store the Windows password with the task, and a laptop in daily use
   doesn't need it. The known gap is that a restore has never been
   rehearsed — on the backlog, blocked on having a scratch project.
+
+- **`/privacy` is a static page, and it exists because Google demands it
+  (2026-09-22):** the production Google sign-in app (OAuth consent screen
+  in the `endless-bonus-458210-d4` project) cannot leave *Testing* — where
+  only listed test users can sign in — without a privacy-policy URL on an
+  authorised domain; the disabled Publish button's tooltip is the only
+  place that says so. The notice is written into the dictionaries rather
+  than as a `site_pages` row, since an admin blanking a `site_pages` body
+  is a supported edit and would silently break the consent screen's
+  link. Its contact email still comes from `site_content`. Along the way
+  the consent screen was renamed from the project's previous tenant
+  ("Home assistant") to "Lanna Care", `lannacare.org` was added to its
+  authorised domains, and the three sign-in scopes (`openid`, `email`,
+  `profile`) were registered under Data access — all non-sensitive, so
+  publishing needs no Google verification. Sign-in itself requests
+  nothing beyond those, so the page can truthfully say the app never
+  reads a user's Google account.
