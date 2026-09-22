@@ -1900,3 +1900,25 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   `archiveDeceasedResident` now also logs the failure's stack to the
   Worker log, because the hub's one-line message was all there was to go
   on.
+
+- **Builds type-check with `tsconfig.build.json`, not the file the dev
+  server maintains (2026-09-22):** a deploy started while `next dev` was
+  rewriting `.next/dev/types/routes.d.ts` failed on `TS1005`s in files
+  that aren't ours, because Next 16 now passes `tsconfig.json` — which
+  includes `.next/dev/types/**` — straight to `tsc --project`
+  (`experimental.useTypeScriptCli` defaults on; Next's own checker filters
+  that directory out, the CLI path doesn't). Of the three fixes on the
+  backlog item, excluding `.next/dev` from the build-time check is the
+  one taken: `tsconfig.build.json` extends `tsconfig.json` with that
+  exclusion, `next.config.ts` selects it for `next build` / `next typegen`
+  (`tsconfigPath` keyed on NODE_ENV, so `next dev` and the editor keep
+  `tsconfig.json` and its live route types), and `npm run typecheck`
+  passes `-p tsconfig.build.json` because the merge train runs it beside a
+  dev server too. Rejected: building in a scratch copy of `.next` (the
+  tsconfig include is what reads the dev types, so copying the build
+  output moves nothing), stopping the dev server from the deploy script
+  (it belongs to another session in another worktree), and flipping
+  `useTypeScriptCli` off (works today, but it is the experimental flag and
+  would leave `npm run typecheck` exposed). `extends` is also why Next
+  never rewrites the build file: its tsconfig defaults pass bails on an
+  extending config.
