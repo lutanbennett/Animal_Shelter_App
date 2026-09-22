@@ -55,6 +55,7 @@ Environments exist since 2026-09-21 (README "Environments"): `test.lannacare.org
 
 ## Facility
 
+- [ ] **A public view behind enclosure QR codes.** Raised 2026-09-22 when the tag links landed (#41, `docs/decisions.md`): a resident's card (`/r/<code>`) now shows a visitor a public card and a signed-in user the hub, but an enclosure's QR code (`/e/<id>`) still sends a visitor to sign-in, because there is no public enclosure page. If visitors are expected to scan the codes on the kennels — a walk round the shelter reading who lives where — give `/e/<id>` the same shape as `/r/`: signed in → `/enclosures/<id>`; signed out → a public page with the enclosure's name (and Thai name), zone, and the residents in it as cards linking to their `/r/` pages. Needs a schema PR first: an anon-readable view (say `public_enclosure_residents`: enclosure id, names, zone, and per resident the card fields from `public_resident_cards` 0068) — occupancy against capacity, notes and maintenance stay staff-only, and the Lifecycle pseudo-enclosures (Hospital, Fostered…) must not appear. Then `/e/` joins `PUBLIC_PATH_PREFIXES` / `isPublicPage` in `src/lib/public-paths.ts`, `check-public-views.mjs` gets the view, and the manual's enclosure-page topic says what a visitor sees. Decide with the user whether an enclosure page should show the residents at all, or only the enclosure — a visitor who scans a kennel is looking at the animals in it, so residents is the useful answer, but it is the shelter's call.
 
 ## Admin
 
