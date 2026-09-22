@@ -63,7 +63,7 @@ const manual: Manual = {
             "Enter your email and password and tap Sign in — or tap Continue with Google if your account was set up with Google.",
             "You land on the Residents list. Sign out any time with the Sign out button at the top right.",
             "Forgotten your password? Tap Forgot password? under the Sign in button, enter your email, and follow the link in the message to choose a new one — it's valid for an hour. If you were given a temporary password and it's lost, ask an admin to issue another instead.",
-            "To change your password at any time, pick Change password from the menu.",
+            "To change your password at any time, pick Change password from the bottom of the menu.",
           ],
           screenshot: {
             src: "/manual/login.png",
@@ -89,8 +89,9 @@ const manual: Manual = {
           id: "navigation",
           title: "Finding your way around",
           steps: [
-            "On a computer the menu is always visible down the left: Residents, Enclosures, Maintenance, Projects, Vets, Contacts, this manual, and — depending on your role — Management and Admin. Those last two are folded up when you sign in: tap the ⌄ beside the name to see what is under it, or the name itself to open that section's front page. A section you are already in is always open.",
-            "On a phone tap the ☰ button at the top left to open the same menu; tap outside it to close.",
+            "On a computer the menu is always visible down the left: Residents, Enclosures, Maintenance, Projects, Vets, Contacts and — depending on your role — Management and Admin. Those last two are folded up when you sign in: tap the ⌄ beside the name to see what is under it, or the name itself to open that section's front page. A section you are already in is always open.",
+            "Under a dividing line at the very bottom of the menu sit the things you only need now and then, so they are always in the same place: this manual, Change password and — for admins — Security, where accounts and roles are managed.",
+            "On a phone tap the ☰ button at the top left to open the same menu; tap outside it to close. The same three are the last entries in it, below the same line.",
             "The LCA logo and your email are in the header, with the language switch and Sign out. Tap the logo to see the public website as a visitor does — it opens in a new tab so you don't lose your place.",
           ],
           screenshot: {
@@ -785,11 +786,11 @@ const manual: Manual = {
           id: "security",
           title: "Accounts and roles",
           roles: ["admin"],
-          path: "Admin → Security",
+          path: "Security (bottom of the menu)",
           steps: [
             "Create a user with an email and a role. A temporary password is generated and shown once — copy it and pass it on (LINE is fine; it only works until they've signed in). The first time they sign in with it they must choose their own password before anything else opens. Someone who will only use Google sign-in can ignore the temporary password.",
             "Someone signing in with Google for the first time is turned away with \"hasn't been given access yet\" and appears under Access requests at the top of the page. Choose a role and tap Approve, then ask them to try again — or Deny to remove the account. If their Google email matches a login you created, the two are linked automatically.",
-            "Change a role from the dropdown in the table. Issue temporary password does what it says — their old password stops working and they choose a new one at their next sign-in. You can't change your own role, reset your own password here or delete yourself; change your own password from Change password in the menu.",
+            "Change a role from the dropdown in the table. Issue temporary password does what it says — their old password stops working and they choose a new one at their next sign-in. You can't change your own role, reset your own password here or delete yourself; change your own password from Change password at the bottom of the menu.",
             "When someone leaves, Archive them rather than delete: they can no longer sign in, they disappear from the maintenance Assigned to list, and their name stays on the jobs they did. Archived accounts sit at the bottom of the table with Restore beside them. Delete is for accounts made by mistake — it removes them from past jobs too.",
           ],
           screenshot: {

@@ -2013,6 +2013,28 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   `@lat,lng`, `!3d…!4d…`); failures just mean no map. Only the hub page
   does this — the contact list never renders the frame.
 
+- **Security moved to the nav's pinned footer group, and `/admin` now
+  opens Website (2026-09-22):** the customer asked for User manual, Change
+  password and Security pinned to the bottom of the left nav, which takes
+  Security out of the Admin accordion. Two things followed that the
+  request didn't spell out. `/admin` has no landing page listing the
+  sections — it is a bare `redirect()`, and it pointed at
+  `/admin/security`, so clicking Admin would have opened a page the group
+  no longer lists; it now redirects to `/admin/website`, the first page
+  it does. And the accordion's auto-expand asked `pathname.startsWith`
+  the group href, so `/admin/security` would still have sprung Admin
+  open from the footer; a group is now "inside" when the route matches one
+  of its own children. Management is unaffected either way — every page
+  under it is one of its children. The footer group is `mt-auto` *and*
+  `sticky bottom-4`: the sidebar is a stretched flex item as tall as the
+  document, so `mt-auto` on its own put the group at the bottom of a
+  4000px column on the residents list rather than the bottom of the
+  window. The known edge is an admin with both accordions expanded on a
+  window under ~950px, where the last two or three Admin children sit
+  behind the (opaque) group until the page scrolls ~200px; bounding the
+  sidebar to the window and giving it its own scrollbar would need the
+  header pinned at a fixed height, which is a bigger change than this
+  one asked for.
 - **The assistant keeps its own audit table, insert-only, and it doubles as
   the eval corpus (2026-09-22):** the assistant runs the app's own server
   actions under the caller's session, so every row it writes is already
