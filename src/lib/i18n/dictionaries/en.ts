@@ -64,6 +64,8 @@ const en = {
     manual: "User manual",
     publicSite: "Public website",
     changePassword: "Change password",
+    assistant: "Assistant",
+    demoBadge: "Demo",
     menu: "Menu",
     openMenu: "Open menu",
     closeMenu: "Close menu",
@@ -960,6 +962,55 @@ const en = {
       invalidDate: "Invalid date administered.",
       dateInFuture: "Date administered can't be in the future.",
     },
+  },
+
+  assistant: {
+    pageTitle: "Assistant",
+    pageSubtitle:
+      "A demo. Say what you want done in plain words. It understands two things — moving a resident to another enclosure, and booking a vet visit — and shows you a preview to check before anything is written.",
+    tryTitle: "Try something like",
+    examples: (resident: string, enclosure: string, vet: string) => [
+      `Move ${resident} to ${enclosure} today`,
+      `Book a vet visit for ${resident} with ${vet} on Friday at 10am`,
+    ],
+    placeholder: "What should happen?",
+    send: "Send",
+    cantHelp:
+      "In this demo I can only move a resident to another enclosure or book a vet visit. Try \"move <name> to <enclosure>\" or \"book a vet visit for <name> on Friday at 10am\".",
+    severalMatch: "More than one resident has that name — pick the right one.",
+    fillBlanks: "Check the details, fill in anything missing, then confirm.",
+    move: {
+      title: "Move resident",
+      summary: (resident: string, from: string, to: string, date: string) =>
+        `Move ${resident} from ${from} to ${to} on ${date}`,
+      done: (resident: string, enclosure: string) =>
+        `Done — ${resident} has been moved to ${enclosure}.`,
+    },
+    vet: {
+      title: "Book vet visit",
+      summary: (resident: string, vet: string, when: string) =>
+        `Book a vet visit for ${resident} with ${vet} on ${when}`,
+      done: (resident: string, vet: string, when: string) =>
+        `Done — vet visit booked for ${resident} with ${vet} on ${when}.`,
+    },
+    fields: {
+      resident: "Resident",
+      enclosure: "To enclosure",
+      vet: "Vet / clinic",
+      date: "Date",
+      time: "Time",
+      reason: "Reason",
+    },
+    pickResident: "Choose a resident",
+    pickVet: "Choose a vet",
+    unknown: "…",
+    notesStamp: (request: string) =>
+      `Notes will read: via the assistant (demo) — "${request}"`,
+    confirm: "Confirm",
+    working: "Working...",
+    cancelled: "Cancelled — nothing was changed.",
+    openResident: "Open resident",
+    couldntLoad: "Couldn't load the data the assistant needs",
   },
 
   vetVisits: {

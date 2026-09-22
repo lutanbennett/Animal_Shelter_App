@@ -66,6 +66,8 @@ const th: Dictionary = {
     manual: "คู่มือการใช้งาน",
     publicSite: "เว็บไซต์สาธารณะ",
     changePassword: "เปลี่ยนรหัสผ่าน",
+    assistant: "ผู้ช่วย",
+    demoBadge: "ทดลอง",
     menu: "เมนู",
     openMenu: "เปิดเมนู",
     closeMenu: "ปิดเมนู",
@@ -951,6 +953,55 @@ const th: Dictionary = {
       invalidDate: "วันที่ฉีดไม่ถูกต้อง",
       dateInFuture: "วันที่ฉีดต้องไม่เป็นวันในอนาคต",
     },
+  },
+
+  assistant: {
+    pageTitle: "ผู้ช่วย",
+    pageSubtitle:
+      "รุ่นทดลอง พิมพ์สิ่งที่ต้องการให้ทำเป็นภาษาธรรมดา ระบบเข้าใจสองอย่าง คือ ย้ายสัตว์ไปกรงอื่น และนัดหมอ แล้วจะแสดงตัวอย่างให้ตรวจก่อนบันทึกทุกครั้ง",
+    tryTitle: "ลองพิมพ์ เช่น",
+    examples: (resident: string, enclosure: string, vet: string) => [
+      `ย้าย ${resident} ไป ${enclosure} วันนี้`,
+      `นัดหมอให้ ${resident} กับ ${vet} วันศุกร์ 10:00`,
+    ],
+    placeholder: "ต้องการให้ทำอะไร?",
+    send: "ส่ง",
+    cantHelp:
+      "ในรุ่นทดลองนี้ทำได้แค่ย้ายสัตว์ไปกรงอื่นหรือนัดหมอเท่านั้น ลองพิมพ์ \"ย้าย <ชื่อ> ไป <กรง>\" หรือ \"นัดหมอให้ <ชื่อ> วันศุกร์ 10:00\"",
+    severalMatch: "มีสัตว์ชื่อนี้มากกว่าหนึ่งตัว กรุณาเลือกตัวที่ถูกต้อง",
+    fillBlanks: "ตรวจรายละเอียด เติมส่วนที่ขาด แล้วกดยืนยัน",
+    move: {
+      title: "ย้ายสัตว์",
+      summary: (resident: string, from: string, to: string, date: string) =>
+        `ย้าย ${resident} จาก ${from} ไป ${to} วันที่ ${date}`,
+      done: (resident: string, enclosure: string) =>
+        `เรียบร้อย ย้าย ${resident} ไป ${enclosure} แล้ว`,
+    },
+    vet: {
+      title: "นัดหมอ",
+      summary: (resident: string, vet: string, when: string) =>
+        `นัดหมอให้ ${resident} กับ ${vet} วันที่ ${when}`,
+      done: (resident: string, vet: string, when: string) =>
+        `เรียบร้อย นัดหมอให้ ${resident} กับ ${vet} วันที่ ${when} แล้ว`,
+    },
+    fields: {
+      resident: "สัตว์",
+      enclosure: "ไปกรง",
+      vet: "หมอ / คลินิก",
+      date: "วันที่",
+      time: "เวลา",
+      reason: "เหตุผล",
+    },
+    pickResident: "เลือกสัตว์",
+    pickVet: "เลือกหมอ",
+    unknown: "…",
+    notesStamp: (request: string) =>
+      `หมายเหตุจะบันทึกว่า: via the assistant (demo) — "${request}"`,
+    confirm: "ยืนยัน",
+    working: "กำลังทำ...",
+    cancelled: "ยกเลิกแล้ว ไม่มีการเปลี่ยนแปลงใด ๆ",
+    openResident: "เปิดหน้าสัตว์",
+    couldntLoad: "โหลดข้อมูลที่ผู้ช่วยต้องใช้ไม่ได้",
   },
 
   vetVisits: {
