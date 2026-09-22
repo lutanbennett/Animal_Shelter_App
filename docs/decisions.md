@@ -1992,3 +1992,17 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   query out of the full URL (`?q=lat,lng`, `/maps/place/<address>`,
   `@lat,lng`, `!3d…!4d…`); failures just mean no map. Only the hub page
   does this — the contact list never renders the frame.
+
+- **Security moved to the nav's pinned footer group, and `/admin` now
+  opens Website (2026-09-22):** the customer asked for User manual, Change
+  password and Security pinned to the bottom of the left nav, which takes
+  Security out of the Admin accordion. Two things followed that the
+  request didn't spell out. `/admin` has no landing page listing the
+  sections — it is a bare `redirect()`, and it pointed at
+  `/admin/security`, so clicking Admin would have opened a page the group
+  no longer lists; it now redirects to `/admin/website`, the first page
+  it does. And the accordion's auto-expand asked `pathname.startsWith`
+  the group href, so `/admin/security` would still have sprung Admin
+  open from the footer; a group is now "inside" when the route matches one
+  of its own children. Management is unaffected either way — every page
+  under it is one of its children.

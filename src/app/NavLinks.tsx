@@ -85,22 +85,26 @@ export function NavLinks({
   // reveals it — a refresh on /admin/zones must still show where you are.
   // A collapse made on the current page is honoured over that, so the
   // chevron doesn't fight the user; moving to another page in the group
-  // opens it again.
-  const isGroupOpen = (href: string) => {
-    const inside = pathname.startsWith(href);
-    const choice = choices[href];
+  // opens it again. "Inside" is measured against the group's own children
+  // rather than its href, so /admin/security — which now lives in the
+  // footer group — doesn't spring the Admin group open.
+  const isGroupOpen = (item: NavItem) => {
+    const inside = !!item.children?.some((child) =>
+      pathname.startsWith(child.href),
+    );
+    const choice = choices[item.href];
     if (!choice) return inside;
     return choice.open || (inside && choice.path !== pathname);
   };
 
-  const toggleGroup = (href: string) => {
+  const toggleGroup = (item: NavItem) => {
     writeChoices({
       ...choices,
-      [href]: { open: !isGroupOpen(href), path: pathname },
+      [item.href]: { open: !isGroupOpen(item), path: pathname },
     });
   };
 
-  const items: NavItem[] = [
+  const mainItems: NavItem[] = [
     { href: "/residents", label: t.nav.residents },
     { href: "/enclosures", label: t.nav.enclosures },
     { href: "/maintenance", label: t.nav.maintenance },
@@ -110,11 +114,9 @@ export function NavLinks({
     // Throwaway sketch to find out whether the shelter wants a real one;
     // see the "Assistant" section of docs/backlog.md.
     { href: "/assistant", label: t.nav.assistant, badge: t.nav.demoBadge },
-    { href: "/manual", label: t.nav.manual },
-    { href: "/account/password", label: t.nav.changePassword },
     // Operational management (reports, contacts) lives under Management;
-    // Admin keeps the system-level configuration (security, website,
-    // zones, enclosures, immunization and procedure types).
+    // Admin keeps the system-level configuration (website, zones,
+    // enclosures, immunization and procedure types).
     ...(canManage
       ? [
           {
@@ -138,7 +140,6 @@ export function NavLinks({
             label: t.nav.admin,
             children: [
               { href: "/admin/website", label: t.nav.website },
-              { href: "/admin/security", label: t.nav.security },
               { href: "/admin/enclosures", label: t.nav.enclosures },
               { href: "/admin/zones", label: t.nav.zones },
               {
@@ -159,12 +160,23 @@ export function NavLinks({
       : []),
   ];
 
+  // Pinned to the bottom of the sidebar instead of sitting in the flow:
+  // the pages you reach for now and then rather than while working
+  // (customer request 2026-09-22). Security is admin-only but belongs with
+  // the other occasional links rather than inside the Admin group, which
+  // keeps the rest of the system configuration.
+  const footerItems: NavItem[] = [
+    { href: "/manual", label: t.nav.manual },
+    { href: "/account/password", label: t.nav.changePassword },
+    ...(isAdmin ? [{ href: "/admin/security", label: t.nav.security }] : []),
+  ];
+
   // Rendered twice (sidebar and drawer), so the ids the chevrons point at
   // carry a prefix to stay unique.
-  const renderLinks = (idPrefix: string) =>
-    items.map((item) => {
+  const renderLinks = (idPrefix: string, list: NavItem[]) =>
+    list.map((item) => {
       const isActive = pathname.startsWith(item.href);
-      const isOpen = !!item.children && isGroupOpen(item.href);
+      const isOpen = !!item.children && isGroupOpen(item);
       const childrenId = item.children
         ? `${idPrefix}-group-${item.href.slice(1)}`
         : undefined;
@@ -192,7 +204,7 @@ export function NavLinks({
               // opens and closes the group.
               <button
                 type="button"
-                onClick={() => toggleGroup(item.href)}
+                onClick={() => toggleGroup(item)}
                 aria-expanded={isOpen}
                 aria-controls={childrenId}
                 aria-label={item.label}
@@ -239,7 +251,12 @@ export function NavLinks({
     <>
       {/* Desktop: persistent sidebar */}
       <nav className="hidden w-48 shrink-0 flex-col gap-1 border-r border-border bg-surface p-4 md:flex">
-        {renderLinks("sidebar")}
+        {renderLinks("sidebar", mainItems)}
+        {/* mt-auto eats the free space, so the footer group sits on the
+            bottom of the sidebar however short the main list is. */}
+        <div className="mt-auto flex flex-col gap-1 border-t border-border pt-3">
+          {renderLinks("sidebar-footer", footerItems)}
+        </div>
       </nav>
 
       {/* Mobile: hamburger-toggled drawer, only mounted while open */}
@@ -254,7 +271,12 @@ export function NavLinks({
             aria-label={t.nav.menu}
             className="absolute inset-y-0 left-0 flex w-64 max-w-[80vw] flex-col gap-1 overflow-y-auto border-r border-border bg-surface p-4 shadow-xl"
           >
-            {renderLinks("drawer")}
+            {renderLinks("drawer", mainItems)}
+            {/* The drawer scrolls, so the same group simply comes last
+                behind a divider instead of being pinned to the bottom. */}
+            <div className="mt-2 flex flex-col gap-1 border-t border-border pt-3">
+              {renderLinks("drawer-footer", footerItems)}
+            </div>
           </nav>
         </div>
       )}
