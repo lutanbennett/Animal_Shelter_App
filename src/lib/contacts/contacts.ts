@@ -5,13 +5,14 @@
  */
 
 /**
- * contacts.type — the `contact_type` enum (0001), in the order the type
- * picker and filter chips offer it. Stored in English; labels come from
- * `enums.contactType` in the dictionaries. Only Carer contacts can be
- * given a resident (placement_history_check_carer_type), which is why the
- * residents hub's carer picker filters on it — see carers.ts.
+ * contacts.type — the `contact_type` enum (0001, trimmed to these three
+ * in 0067), in the order the type picker and filter chips offer it. Stored
+ * in English; labels come from `enums.contactType` in the dictionaries.
+ * Only Carer contacts can be given a resident
+ * (placement_history_check_carer_type), which is why the residents hub's
+ * carer picker filters on it — see carers.ts.
  */
-export const CONTACT_TYPES = ["Carer", "Volunteer", "Vendor", "Donor", "Other"] as const;
+export const CONTACT_TYPES = ["Carer", "Volunteer", "Vendor"] as const;
 export type ContactType = (typeof CONTACT_TYPES)[number];
 
 export const CARER_CONTACT_TYPE: ContactType = "Carer";
@@ -120,4 +121,45 @@ export function mapHref(address: string | null | undefined): string | null {
   if (!trimmed) return null;
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(trimmed)}`;
+}
+
+/**
+ * The keyless Google Maps embed the contact hub shows under the address:
+ * the same search `mapHref` opens, framed. Takes the *query* — plain
+ * address text or "lat,lng" — not a URL; see `mapQueryFromUrl` and
+ * map-preview.ts for turning a pasted maps link into one.
+ */
+export function mapEmbedSrc(query: string | null | undefined): string | null {
+  const trimmed = query?.trim();
+  if (!trimmed) return null;
+  return `https://www.google.com/maps?q=${encodeURIComponent(trimmed)}&output=embed`;
+}
+
+/**
+ * What a full Google Maps URL is pointing at, as a search query — the
+ * shapes a shared link resolves to: `maps.google.com/?q=18.84,99.07`,
+ * `/maps/place/<address>/…`, `/maps/search/<text>`, `…/@lat,lng,17z`
+ * or a `!3dlat!4dlng` pin in the data blob. Null when the URL carries
+ * none of those (a bare short link, an unrelated site).
+ */
+export function mapQueryFromUrl(url: string): string | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  if (!/(^|\.)google\.[a-z.]+$/i.test(parsed.hostname)) return null;
+  const q = parsed.searchParams.get("q");
+  if (q?.trim()) return q.trim();
+  const pin = parsed.pathname.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/);
+  if (pin) return `${pin[1]},${pin[2]}`;
+  const place = parsed.pathname.match(/\/maps\/(?:place|search)\/([^/]+)/);
+  if (place) {
+    const text = decodeURIComponent(place[1].replace(/\+/g, " ")).trim();
+    if (text) return text;
+  }
+  const at = url.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+  if (at) return `${at[1]},${at[2]}`;
+  return null;
 }

@@ -62,10 +62,13 @@ export function ContactHub({
   contact,
   placements,
   canManage,
+  mapSrc,
 }: {
   contact: Contact;
   placements: CarerPlacement[];
   canManage: boolean;
+  /** Embed URL for the address, resolved by the page (map-preview.ts); null hides the map. */
+  mapSrc: string | null;
 }) {
   const { t, locale } = useI18n();
   const h = t.contacts.hub;
@@ -74,14 +77,16 @@ export function ContactHub({
   const inCare = placements.filter((p) => !p.end_date);
   const past = placements.filter((p) => p.end_date);
 
-  const details = [
-    { key: "phone", label: h.phone, value: contact.phone, icon: CONTACT_ICONS.call },
-    { key: "line", label: h.lineId, value: contact.line_id, icon: CONTACT_ICONS.line },
-    { key: "messenger", label: h.messenger, value: contact.messenger_id, icon: CONTACT_ICONS.messenger },
-    { key: "whatsapp", label: h.whatsapp, value: contact.whatsapp, icon: CONTACT_ICONS.whatsapp },
-    { key: "email", label: h.email, value: contact.email, icon: CONTACT_ICONS.email },
-    { key: "address", label: h.address, value: contact.address, icon: CONTACT_ICONS.address },
-  ].filter((d) => d.value);
+  const hasDetails = Boolean(
+    contact.phone ||
+      contact.line_id ||
+      contact.messenger_id ||
+      contact.whatsapp ||
+      contact.email ||
+      contact.address,
+  );
+  const address = contact.address?.trim() || null;
+  const addressIsLink = address !== null && /^https?:\/\//i.test(address);
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-4 md:p-6">
@@ -112,20 +117,45 @@ export function ContactHub({
           )}
         </div>
 
-        {details.length > 0 ? (
+        {/* The action tiles carry each channel's value, so the only detail
+            repeated below them is the address: a tile truncates a long Thai
+            address, and the map preview belongs under the full text. */}
+        {hasDetails ? (
           <>
             <ContactActions contact={contact} size="lg" />
-            <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
-              {details.map((d) => (
-                <div key={d.key} className="flex items-start gap-2">
-                  <d.icon aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
-                  <div className="flex min-w-0 flex-col">
-                    <dt className="text-xs text-muted">{d.label}</dt>
-                    <dd className="break-words text-sm text-foreground">{d.value}</dd>
+            {address && (
+              <div className="flex items-start gap-2">
+                <CONTACT_ICONS.address aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                  <div className="flex flex-col">
+                    <span className="text-xs text-muted">{h.address}</span>
+                    {addressIsLink ? (
+                      <a
+                        href={address}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="break-all text-sm text-primary hover:underline"
+                      >
+                        {address}
+                      </a>
+                    ) : (
+                      <span className="whitespace-pre-line break-words text-sm text-foreground">
+                        {address}
+                      </span>
+                    )}
                   </div>
+                  {mapSrc && (
+                    <iframe
+                      src={mapSrc}
+                      title={h.mapPreview(contact.name)}
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      className="h-[200px] w-full rounded-lg border border-border bg-surface-hover"
+                    />
+                  )}
                 </div>
-              ))}
-            </dl>
+              </div>
+            )}
           </>
         ) : (
           <p className="text-sm text-muted">{h.noDetails}</p>
@@ -194,6 +224,7 @@ export function ContactHub({
               <h2 className="text-lg font-semibold text-foreground">{h.pastPlacements}</h2>
               <span className="text-sm text-muted">({past.length})</span>
             </div>
+            <p className="text-xs text-muted">{h.pastPlacementsDetail}</p>
             {past.length > 0 ? (
               <ul className="flex flex-col gap-2">
                 {past.map((p) => {

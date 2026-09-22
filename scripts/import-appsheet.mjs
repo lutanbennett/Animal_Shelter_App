@@ -238,14 +238,17 @@ for (const e of enclosureRows) {
 // Reference rows: contacts, vets, origins, medication, frequency, immunization types
 // ---------------------------------------------------------------------------
 
-const CONTACT_TYPES = { Carer: "Carer", Volunteer: "Volunteer", Supplier: "Vendor", Vendor: "Vendor", Donor: "Donor" };
+// contact_type is Carer / Volunteer / Vendor only (0067 dropped Donor and
+// Other). The snapshot has never held a Donor, so an unmapped type is a
+// surprise: it lands as Volunteer and is flagged for the summary.
+const CONTACT_TYPES = { Carer: "Carer", Volunteer: "Volunteer", Supplier: "Vendor", Vendor: "Vendor" };
 const contacts = src.Contacts.filter((c) => c.ID).map((c) => {
   const type = CONTACT_TYPES[c.Type];
-  if (!type) note("unknown-value", `Contact ${c["Name/s"]}: type "${c.Type}" → Other`);
+  if (!type) note("unknown-value", `Contact ${c["Name/s"]}: type "${c.Type}" → Volunteer`);
   return {
     id: uuid("contacts", c.ID),
     name: c["Name/s"].trim(),
-    type: type ?? "Other",
+    type: type ?? "Volunteer",
     phone: blank(c.Phone),
     address: blank(c.Address),
     whatsapp: blank(c["Watsapp ID"]),
