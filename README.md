@@ -365,6 +365,8 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
   `site_content` singleton (contact details, paired Thai labels), the
   `site_pages` rows behind the story and the Foster / Volunteer / Donate /
   how-to-adopt pages, and the three-rule body format they are written in.
+  `/privacy` is the exception: its text is in the dictionaries, because
+  Google's sign-in consent screen links to it and it must never be blank.
 - `src/lib/residents/` — the public slice of a resident
   (`public_resident_profiles`, similar residents) and the adoption
   recommendation fields the intake and edit forms share.

@@ -127,6 +127,64 @@ const en = {
     alsoSee: "See also:",
   },
 
+  /**
+   * /privacy — static, not a site_pages row: Google's consent screen links
+   * to it and an admin blanking it would break sign-in (docs/decisions.md).
+   */
+  privacy: {
+    nav: "Privacy",
+    title: "Privacy notice",
+    updated: "Last updated 22 September 2026",
+    intro:
+      "Lanna Care for Animals Foundation runs this website and the record-keeping app behind it. This page explains what personal information we hold, why we hold it, and how to ask us about it.",
+    sections: [
+      {
+        heading: "Visiting the website",
+        paragraphs: [
+          "You can read the public pages — the home page, Adopt, Our work, Foster, Volunteer and Donate — without an account, and we don't ask you for anything to do so.",
+          "The only cookie we set is your language choice (English or Thai), which stays in your browser for a year. There is no advertising and no analytics tracking. Cloudflare, which serves the site, keeps standard connection logs such as your IP address for a short time to protect the site from abuse.",
+        ],
+      },
+      {
+        heading: "Signing in (staff and volunteers)",
+        paragraphs: [
+          "Only people the shelter has given an account can sign in. We keep your name, email address and role, and a record of the changes you make, so the shelter knows who updated an animal's records.",
+          "If you sign in with Google, Google tells us your name, email address and profile picture, and that is all we use it for: identifying you. The app never reads your Gmail, Drive, contacts or anything else in your Google account, and never posts anything on your behalf.",
+        ],
+      },
+      {
+        heading: "People in the shelter's records",
+        paragraphs: [
+          "To care for its animals the shelter keeps records about the people connected to them: adopters and carers, foster families, volunteers, vets and clinics, suppliers and donors. Typically that is a name, phone number, email address, postal address, LINE ID, and notes about the animals involved — for example the outcome of a home visit.",
+          "We collect this directly from you when you adopt, foster, volunteer or donate, and use it only to run the shelter: arranging adoptions and fosters, following up on an animal's welfare, and keeping in touch with you. We never sell it and never share it for marketing.",
+        ],
+      },
+      {
+        heading: "Where information is kept",
+        paragraphs: [
+          "Records live in a database hosted by Supabase (in its Mumbai region), photos and documents in the shelter's own Google Drive, and the website is served by Cloudflare and by a server the shelter runs in Thailand. Each provider processes the data only to provide that service to us.",
+        ],
+      },
+      {
+        heading: "How long we keep it",
+        paragraphs: [
+          "An animal's care records, and the people attached to them, are kept for as long as that history is useful — for a shelter that is usually indefinitely, because an animal may come back years later. Staff and volunteer accounts are archived when someone leaves rather than deleted, so past records still show who made them.",
+        ],
+      },
+      {
+        heading: "Your choices",
+        paragraphs: [
+          "You can ask us what we hold about you, ask us to correct it, or ask us to remove it — we'll explain if part of it has to stay, for example a vet record. Just get in touch:",
+        ],
+      },
+      {
+        heading: "Changes to this notice",
+        paragraphs: ["If this notice changes, the date at the top changes with it."],
+      },
+    ],
+    contactFallback: "using the contact details in the footer of this page.",
+  },
+
   account: {
     password: {
       title: "Change password",
