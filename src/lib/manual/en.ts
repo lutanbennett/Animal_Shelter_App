@@ -89,9 +89,9 @@ const manual: Manual = {
           id: "navigation",
           title: "Finding your way around",
           steps: [
-            "On a computer the menu is always visible down the left: Residents, Enclosures, Maintenance, Projects, Vets, Contacts, this manual, and — depending on your role — Management and Admin.",
+            "On a computer the menu is always visible down the left: Residents, Enclosures, Maintenance, Projects, Vets, Contacts, this manual, and — depending on your role — Management and Admin. Those last two are folded up when you sign in: tap the ⌄ beside the name to see what is under it, or the name itself to open that section's front page. A section you are already in is always open.",
             "On a phone tap the ☰ button at the top left to open the same menu; tap outside it to close.",
-            "The LCA logo and your email are in the header, with the language switch and Sign out.",
+            "The LCA logo and your email are in the header, with the language switch and Sign out. Tap the logo to see the public website as a visitor does — it opens in a new tab so you don't lose your place.",
           ],
           screenshot: {
             src: "/manual/nav-mobile.png",

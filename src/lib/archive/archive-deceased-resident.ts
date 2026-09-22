@@ -134,6 +134,10 @@ export async function archiveDeceasedResident(
 
     return { ok: true, alreadyArchived };
   } catch (error) {
+    // The hub shows only the message; the stack goes to the Worker log so a
+    // Drive or PDF failure can be traced with `wrangler tail` rather than a
+    // redeploy.
+    console.error(`archiveDeceasedResident(${residentId}) failed:`, error);
     return {
       error: error instanceof Error ? error.message : "Failed to archive the resident.",
     };

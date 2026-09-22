@@ -1382,6 +1382,25 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   backlog edits straight to `main` — impossible from a worktree while
   this checkout is on `main` between sessions, which is exactly when the
   second chat wants to write.
+- **The `/assistant` demo hard-codes the understanding, not the doing
+  (2026-09-22):** a sketch to show the Director before deciding whether to
+  build the real assistant in `docs/backlog.md`; it ticks nothing there.
+  The "brain" is `src/lib/assistant/demo-parser.ts`, a keyword matcher
+  over the rows the page loads (resident names/codes, enclosure and vet
+  names, today/tomorrow/weekday/ISO dates, "10am"/"14:30" times) — no
+  model, key, table or migration, so it costs nothing to keep or throw
+  away. The writes are the app's own: `moveResidentToEnclosure` from the
+  move page and `schedule_bulk_appointments` from the booking form, under
+  the caller's session, so RLS and the role checks are exactly what a
+  click gets. Two choices worth carrying into a real build: every request
+  is an editable preview card and nothing is written until Confirm, and
+  whatever the parser didn't find is left blank rather than guessed (a
+  move with no date says so instead of defaulting to today). Rows carry
+  `via the assistant (demo) — "<request>"` in their notes so the hub
+  history shows where they came from. Rejected for the sketch: the
+  slide-over panel, the `dryRun` flag, an env-flag gate and an audit table
+  from the backlog item — all real-build work, none of it needed to find
+  out whether the shelter wants one.
 
 ## Still open (from Section 11 of the requirements doc)
 
@@ -1847,3 +1866,37 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   every stream appends to its end; `docs/backlog.md` does not, because
   ticks edit lines rather than append. Chosen over Supabase branching
   (needs Pro) and local Supabase per worktree (Docker on every stream).
+- **The deceased archive's PDF pipeline is wired for Workers by hand
+  (2026-09-22):** the first Retry archive on lannacare.org — for the six
+  residents who came across from AppSheet already deceased — failed with
+  `No such module "#standard-fonts/Helvetica"`, and it turned out no summary
+  PDF had ever been produced on a Cloudflare deploy, only under `next dev`.
+  Three separate things in the @react-pdf stack assume Node: pdfkit's Node
+  build loads its built-in fonts through `createRequire("#standard-fonts/…")`
+  at runtime (nothing to resolve against in a bundled Worker, and pdfkit
+  touches Helvetica unconditionally, so registering our own fonts doesn't
+  avoid it); @react-pdf's reconciler reads React's client internals, which
+  the react-server build it gets inside Next's RSC layer doesn't have; and
+  yoga-layout instantiates its WebAssembly from a base64 string, which
+  workerd refuses outright ("Wasm code generation disallowed by embedder").
+  Each was hidden behind the previous one. The fix is all in
+  `next.config.ts` plus one small module: `transpilePackages` pulls
+  `@react-pdf/renderer` into Next's bundle so Turbopack aliases can swap
+  pdfkit and `@react-pdf/font` for their browser builds (fonts as static
+  imports, fflate and an in-memory stream instead of zlib/stream/fs — the
+  better fit for workerd anyway); `serverExternalPackages` keeps the
+  reconciler out so it resolves `react` the plain Node way and gets the
+  client build; and `src/lib/archive/yoga/load.ts` replaces
+  `yoga-layout/load` with a loader that imports the same binary as a
+  compiled module (`yoga.wasm?module`, extracted by
+  `scripts/extract-yoga-wasm.mjs` — rerun it when yoga-layout is upgraded)
+  and hands it to Emscripten's `instantiateWasm` hook, since OpenNext
+  already rewrites Turbopack's wasm loaders for workerd. Rejected: patching
+  OpenNext's bundle after the fact (it has no alias hook; the Node-build
+  font loader would need rewriting in `handler.mjs` and yoga would still
+  be stuck), and moving PDF rendering off the Worker. Verified on
+  test.lannacare.org against the dev database: all six deceased residents
+  archived with Noto Sans Thai embedded and the profile photo in place.
+  `archiveDeceasedResident` now also logs the failure's stack to the
+  Worker log, because the hub's one-line message was all there was to go
+  on.

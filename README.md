@@ -406,6 +406,12 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
   regenerated, not edited: `node scripts/manual-screenshots.mjs` opens the
   machine's Edge/Chrome on the running dev server, waits for you to sign
   in as an admin, and captures every screen the manual references.
+- `src/lib/assistant/` — the keyword parser behind the `/assistant` demo
+  (a throwaway sketch to gauge interest in a real assistant — see the
+  "Assistant" section of `docs/backlog.md`). It matches resident, enclosure
+  and vet names against real rows and a small date/time vocabulary; the
+  writes in `src/app/assistant/actions.ts` reuse the move helper and the
+  vet-visit RPC, and nothing is written until the preview card is confirmed.
 - `worker/index.mjs` — the Worker entry: edge cache → Pi through its tunnel
   → OpenNext render (`docs/pi-hosting.md`).
 - `scripts/pi/` — the Pi origin: one-time `setup.sh`, `deploy-pi.sh`, the
@@ -414,7 +420,9 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
   `check-public-views.mjs` (go-live check), `manual-screenshots.mjs`
   (user-manual screenshots), `appsheet-export.mjs` + `import-appsheet.mjs`
   (the legacy data migration — see `docs/data-migration.md`), the Google
-  OAuth setup helpers, and the deploy-time env stripper.
+  OAuth setup helpers, the deploy-time env stripper, and
+  `extract-yoga-wasm.mjs` (refreshes `src/lib/archive/yoga/yoga.wasm` after
+  a yoga-layout upgrade — see `docs/decisions.md`, 2026-09-22).
 - `docs/` — requirements, decisions log, backlog and the data-migration
   mapping/runbook.
 - `CLAUDE.md` — the working rules for this repo (branching, migrations,
