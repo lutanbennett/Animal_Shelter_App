@@ -2211,3 +2211,43 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   itself is one component used by both, and the message list and input
   below it know nothing about drafts or intents — that is the seam version
   2 is meant to come in at.
+- **An enum value and the code that uses it need two migration files
+  (2026-09-21, recorded 2026-09-23):** `alter type … add value` cannot share
+  a transaction with any use of the new value — a policy qual, a cast, a
+  view that references it — and `scripts/apply-migrations.mjs` wraps each
+  file in its own `begin…commit`. So a feature that adds an enum value RLS
+  or a view depends on is two numbered files, not one: the `alter type`
+  alone, then everything that uses it. Precedent is 0038 (the management
+  role value) followed by 0039 (the policies that reference it). There is a
+  rehearsal caveat worth knowing before it wastes an afternoon: `--dry-run`
+  of the second file fails until the first is actually committed, because
+  the value does not exist in the dry run's transaction. The sequence that
+  works is to move the second file aside, apply the first for real, restore
+  the second, dry-run it, then apply. Note this in the first file's header
+  when you write the pair, so whoever applies them is not surprised.
+
+- **Test data left in dev is not worth cleaning up (2026-09-20, recorded
+  2026-09-23):** rows, uploaded photos and Drive folders created while
+  verifying a feature against the dev Supabase project and dev Drive
+  account can be left where they are. The whole dev environment is wiped
+  before the live AppSheet migration, so the tidying buys nothing, costs a
+  turn each time, and carries a real risk of deleting something that
+  belonged to another stream rather than to the verification. Mention what
+  was left behind once, in the summary, and move on. This is about dev and
+  test only — it says nothing about production, where nothing should be
+  created for verification in the first place.
+
+- **`lannacare.org` is registered and DNS-hosted at Cloudflare, and its
+  email is receive-only (2026-09-21, recorded 2026-09-23):** the domain sits
+  on Cloudflare's nameservers (`athena`/`dean.ns.cloudflare.com`) and is
+  attached to the `lanna-animal-care` Worker as custom domains — apex and
+  `www` — through `routes` in `wrangler.jsonc`, so there is no separate DNS
+  record to keep in step. Cloudflare Email Routing is enabled with a
+  catch-all: anything `@lannacare.org` forwards to the shelter's Gmail.
+  That is receive-only by design; sending *as* `@lannacare.org` would need
+  a "Send mail as" entry plus an SMTP relay, which is deliberately not set
+  up. Vercel was removed the same day — both projects deleted, the Vercel
+  GitHub App uninstalled from the repo, the template SVGs dropped in PR #33
+  — so Cloudflare is the only host and the only DNS authority. Stale GitHub
+  Environments named `animal-shelter-app*` may still be listed; they do
+  nothing.
