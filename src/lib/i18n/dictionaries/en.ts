@@ -584,6 +584,8 @@ const en = {
         inHospital: "In hospital",
         fostered: "Fostered",
         unassigned: "Awaiting an enclosure",
+        outreach: "Outreach",
+        outreachDetail: "Looked after off-site, in an external zone — not counted as in care",
         readyForAdoption: "Ready for adoption",
         readyForAdoptionDetail: (publicCount: number) =>
           `${publicCount} shown on the public site`,
@@ -2411,6 +2413,7 @@ const en = {
       Fostered: "Fostered",
       Adopted: "Adopted",
       Unassigned: "Unassigned",
+      Outreach: "Outreach",
       Resident: "Resident",
       Unknown: "Unknown",
     },

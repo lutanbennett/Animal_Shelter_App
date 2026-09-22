@@ -582,6 +582,8 @@ const th: Dictionary = {
         inHospital: "อยู่โรงพยาบาล",
         fostered: "อยู่กับผู้อุปถัมภ์",
         unassigned: "ยังไม่ระบุกรง",
+        outreach: "ดูแลนอกสถานที่",
+        outreachDetail: "อยู่ในโซนภายนอก — ไม่นับรวมในสัตว์ที่อยู่ในความดูแล",
         readyForAdoption: "พร้อมให้รับเลี้ยง",
         readyForAdoptionDetail: (publicCount: number) =>
           `แสดงบนเว็บไซต์สาธารณะ ${publicCount} ตัว`,
@@ -2389,6 +2391,7 @@ const th: Dictionary = {
       Fostered: "อุปถัมภ์ชั่วคราว",
       Adopted: "รับเลี้ยงแล้ว",
       Unassigned: "ยังไม่ระบุกรง",
+      Outreach: "ดูแลนอกสถานที่",
       Resident: "อยู่ในความดูแล",
       Unknown: "ไม่ทราบ",
     },
