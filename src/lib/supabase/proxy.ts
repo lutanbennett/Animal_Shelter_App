@@ -5,6 +5,7 @@ import {
   mustChangePassword,
   signedInWithPassword,
 } from "@/lib/auth/password-change";
+import { DEFAULT_SIGNED_IN_PATH, safeNextPath } from "@/lib/auth/next-path";
 import { isPublicPath as isPublicPathname } from "@/lib/public-paths";
 
 /**
@@ -42,18 +43,26 @@ export async function updateSession(request: NextRequest) {
 
   const isPublicPath = isPublicPathname(request.nextUrl.pathname);
 
+  // Signed out: to /login, remembering where they were going so the
+  // sign-in lands them back there — someone scanning an enclosure's QR
+  // code (/e/…) or a resident's card (/r/…) should end up on that page,
+  // not the residents list. src/lib/auth/next-path.ts.
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone();
+    const next = `${request.nextUrl.pathname}${request.nextUrl.search}`;
     url.pathname = "/login";
+    url.search = "";
+    url.searchParams.set("next", next);
     return NextResponse.redirect(url);
   }
 
   // "/" is the public home page for everyone — a signed-in staff member
   // sees it as a visitor does, with "Open the app" in its header.
   if (user && request.nextUrl.pathname === "/login") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/residents";
-    return NextResponse.redirect(url);
+    const next = safeNextPath(request.nextUrl.searchParams.get("next"));
+    return NextResponse.redirect(
+      new URL(next ?? DEFAULT_SIGNED_IN_PATH, request.nextUrl.origin),
+    );
   }
 
   // An account on a temporary password (src/lib/auth/password-change.ts)

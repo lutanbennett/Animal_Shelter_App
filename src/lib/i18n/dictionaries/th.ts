@@ -853,7 +853,7 @@ const th: Dictionary = {
     contacts: {
       title: "ผู้ติดต่อ",
       subtitle:
-        "บุคคลที่ศูนย์พักพิงทำงานด้วย: ผู้อุปถัมภ์และผู้รับเลี้ยง อาสาสมัคร ซัพพลายเออร์ และผู้บริจาค ตั้งค่าได้ที่นี่ เฉพาะผู้ติดต่อประเภทผู้ดูแลเท่านั้นที่รับสัตว์ไปดูแลได้ และทำจากหน้าศูนย์รวมของสัตว์ตัวนั้น",
+        "บุคคลที่ศูนย์พักพิงทำงานด้วย: ผู้อุปถัมภ์และผู้รับเลี้ยง อาสาสมัคร และซัพพลายเออร์ ตั้งค่าได้ที่นี่ เฉพาะผู้ติดต่อประเภทผู้ดูแลเท่านั้นที่รับสัตว์ไปดูแลได้ และทำจากหน้าศูนย์รวมของสัตว์ตัวนั้น",
       viewList: "เปิดรายชื่อผู้ติดต่อ →",
       couldntLoad: "โหลดข้อมูลผู้ติดต่อไม่สำเร็จ",
       couldntLoadUsage: "โหลดจำนวนการจัดวางไม่สำเร็จ",
@@ -1125,7 +1125,7 @@ const th: Dictionary = {
   contacts: {
     pageTitle: "ผู้ติดต่อ",
     pageSubtitle:
-      "ผู้ดูแล อาสาสมัคร ซัพพลายเออร์ และผู้บริจาค — แตะเพื่อโทร แชททาง LINE, Messenger หรือ WhatsApp ส่งอีเมล หรือเปิดแผนที่",
+      "ผู้ดูแล อาสาสมัคร และซัพพลายเออร์ — แตะเพื่อโทร แชททาง LINE, Messenger หรือ WhatsApp ส่งอีเมล หรือเปิดแผนที่",
     couldntLoadContacts: "โหลดข้อมูลผู้ติดต่อไม่สำเร็จ",
     couldntLoadPlacements: "โหลดข้อมูลการจัดวางไม่สำเร็จ",
     manageInAdmin: "แก้ไขผู้ติดต่อในหน้าการจัดการ",
@@ -1150,13 +1150,10 @@ const th: Dictionary = {
     },
     hub: {
       backToContacts: "← กลับไปหน้าผู้ติดต่อ",
-      details: "รายละเอียด",
       phone: "โทรศัพท์",
       email: "อีเมล",
-      lineId: "LINE ID",
-      messenger: "Messenger",
-      whatsapp: "WhatsApp",
       address: "ที่อยู่",
+      mapPreview: (name: string) => `แผนที่ที่อยู่ของ ${name}`,
       notes: "หมายเหตุ",
       noDetails: "ยังไม่มีข้อมูลติดต่อ — ผู้ดูแลระบบเพิ่มได้ที่ ผู้ดูแลระบบ → ผู้ติดต่อ",
       residentsInCare: "สัตว์ในความดูแล",
@@ -1166,6 +1163,7 @@ const th: Dictionary = {
         "เฉพาะผู้ติดต่อประเภทผู้ดูแลเท่านั้นที่อุปถัมภ์หรือรับเลี้ยงสัตว์ได้ ผู้ดูแลระบบเปลี่ยนประเภทได้ที่ ผู้ดูแลระบบ → ผู้ติดต่อ",
       since: (date: string) => `ตั้งแต่ ${date}`,
       pastPlacements: "การจัดวางที่ผ่านมา",
+      pastPlacementsDetail: "สัตว์ที่เคยอยู่กับผู้ดูแลนี้",
       noPastPlacements: "ไม่มีการจัดวางก่อนหน้ากับผู้ดูแลนี้",
       placementRange: (from: string, to: string) => `${from} – ${to}`,
       unknownResident: "ไม่ทราบชื่อสัตว์",
@@ -2456,6 +2454,25 @@ const th: Dictionary = {
     copyPrompt: "คัดลอกลิงก์นี้:",
   },
 
+  residentCard: {
+    noPhoto: "ยังไม่มีรูป",
+    withUsSince: "อยู่กับเราตั้งแต่",
+    adopted: (name: string) => `${name} ได้รับการรับเลี้ยงแล้ว และมีบ้านของตัวเองแล้ว`,
+    passed: (name: string) => `${name} ไม่ได้อยู่กับเราแล้ว`,
+    fullProfile: (name: string) => `ดูโปรไฟล์รับเลี้ยงของ ${name}`,
+    staffHint: "เจ้าหน้าที่และอาสาสมัคร:",
+    staffSignIn: "เข้าสู่ระบบเพื่อดูข้อมูลทั้งหมด",
+  },
+
+  tagLinks: {
+    enclosureLabel: "ลิงก์สำหรับ QR code ของกรงนี้",
+    residentLabel: "ลิงก์สำหรับบัตร RFID ของสัตว์ตัวนี้",
+    copy: "คัดลอกลิงก์",
+    copied: "คัดลอกแล้ว",
+    copyFor: (name: string) => `คัดลอกลิงก์ของ ${name}`,
+    copiedFor: (name: string) => `คัดลอกลิงก์ของ ${name} แล้ว`,
+  },
+
   ourWork: {
     pageTitle: "ผลงานของเรา",
     pageSubtitle:
@@ -2520,8 +2537,6 @@ const th: Dictionary = {
       Carer: "ผู้ดูแล",
       Volunteer: "อาสาสมัคร",
       Vendor: "ซัพพลายเออร์",
-      Donor: "ผู้บริจาค",
-      Other: "อื่นๆ",
     },
     sex: { Male: "เพศผู้", Female: "เพศเมีย" },
     size: { Small: "เล็ก", Medium: "กลาง", Large: "ใหญ่" },

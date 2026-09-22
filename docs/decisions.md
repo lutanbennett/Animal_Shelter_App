@@ -1402,6 +1402,50 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   from the backlog item — all real-build work, none of it needed to find
   out whether the shelter wants one.
 
+- **Tag links are short redirect routes, and a resident's serves visitors
+  too (2026-09-22):** the QR code on an enclosure and the RFID card by a
+  kennel carry `/e/<id>` and `/r/<R-code>` (`src/lib/tags/links.ts`),
+  not the hub URLs. A printed tag lives on the kennel for years, so its
+  address must outlast any later move of the pages behind it — the
+  redirect is the one place to update — and a shorter string gives a
+  coarser QR code that scans from further away (the resident link is 30
+  characters end to end; the R-code was chosen over the UUID for that,
+  and because it is what staff already read off the card). Both
+  redirects are temporary (307), since a cached 308 would pin a tag to
+  today's layout. The copy controls build the address with
+  `getSiteOrigin()` so it reads `https://lannacare.org/…` whichever
+  machine it was copied on. Who scanned decides what `/r/` shows
+  (`src/app/r/[code]/page.tsx`): a signed-in user is sent on to the
+  full hub; a visitor stays on `/r/<code>` and sees the resident's
+  public card — for *any* resident, because the first cut (public
+  profile only for residents ticked "visible on the public site",
+  sign-in for the rest) would have had visitors scanning card after
+  card into a login page, and they would stop scanning. That needed
+  its own schema PR first: `0068_public_resident_cards.sql` adds
+  `public_resident_cards`, an anon-readable view of the card-shaped
+  slice of all residents (what the card prints — photo, name, age, sex,
+  temperament — plus species, breed, size, colour, desexed, intake
+  date, bio, the adoption-fit fields and approved translations), with a
+  coarse `status` of Resident / Adopted / Deceased so an old card can
+  say the animal has gone and nothing says where a current resident
+  is; no past story, which is adoption-listing copy.
+  (It was written as 0067 and merged the same hour as the contact-hub
+  stream's 0067 — both schema PRs were opened before either merged,
+  which the rule "two streams needing schema share one schema PR" is
+  there to stop — so it was renumbered 0068 in the feature PR before
+  production ever saw it; dev keeps a stale `0067_public_resident_cards`
+  row in `schema_migrations`, harmless and gone with the pre-launch
+  wipe.)
+  `public_resident_profiles` stays the curated `/adopt` listing, and
+  the card links on to it when the resident is there. So `/r/` is a
+  public path (no app chrome), read with whatever key the request has —
+  the view is what limits what comes back. Enclosure links stay behind
+  the gate: there is no public enclosure page. The sign-in return itself is new: the proxy
+  used to send a signed-out visitor to `/login` and forget where they
+  were going; it now sets `?next=`, which the password form and the
+  Google OAuth leg carry through (`src/lib/auth/next-path.ts`). The
+  card artwork (photo, name, age, sex, temperament) is out of scope.
+
 ## Still open (from Section 11 of the requirements doc)
 
 1. Exact per-table RBAC permission matrix beyond the role descriptions —
@@ -1922,3 +1966,29 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   would leave `npm run typecheck` exposed). `extends` is also why Next
   never rewrites the build file: its tsconfig defaults pass bails on an
   extending config.
+- **`contact_type` is Carer / Volunteer / Vendor, and unused values are
+  dropped, not hidden (2026-09-22):** the customer asked for Donor and Other
+  to go. Postgres cannot remove a value from an enum, and the easy path was
+  to leave the two values in the type and stop offering them in the form.
+  Rejected: a value that the UI never offers but the database still accepts
+  is a trap for the next import script or SQL fix, and "we will add types
+  back when we need them" is a cleaner story than "some of these are dead".
+  So migration 0067 recreates the type (rename aside, create, retype the
+  column, drop the old) behind a guard that refuses while any row still
+  carries a departing value — dev and the AppSheet source have none. The
+  same shape works for any future removal. `scripts/import-appsheet.mjs`
+  lands an unrecognised AppSheet type as Volunteer and flags it, since
+  Other no longer exists to catch it.
+
+- **The contact hub previews the address on a keyless Google Maps embed,
+  and resolves shared short links on the server (2026-09-22):** staff
+  store addresses as the `maps.app.goo.gl` link the Maps app shares — no
+  text, so the "search embed on the text after the link" fallback would
+  never fire. `google.com/maps?q=…&output=embed` needs no API key but
+  will not take a URL, and an iframe cannot follow the short link
+  through its redirect. Rather than a coordinates column (a second
+  schema change for a preview), `src/lib/contacts/map-preview.ts` follows
+  the redirect once per Worker isolate with a 3 s timeout and reads the
+  query out of the full URL (`?q=lat,lng`, `/maps/place/<address>`,
+  `@lat,lng`, `!3d…!4d…`); failures just mean no map. Only the hub page
+  does this — the contact list never renders the frame.

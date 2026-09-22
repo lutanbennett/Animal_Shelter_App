@@ -9,13 +9,24 @@ import { login, signInWithGoogle } from "./actions";
 const inputClass =
   "rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
 
-export function LoginForm({ error }: { error?: string }) {
+/**
+ * `next` is where to go after signing in (src/lib/auth/next-path.ts);
+ * both forms carry it as a hidden field so either route back there.
+ */
+export function LoginForm({
+  error,
+  next,
+}: {
+  error?: string;
+  next?: string | null;
+}) {
   const [state, formAction, pending] = useActionState(login, undefined);
   const { t } = useI18n();
 
   return (
     <div className="flex w-full max-w-sm flex-col gap-4">
       <form action={formAction} className="flex flex-col gap-4">
+        {next && <input type="hidden" name="next" value={next} />}
         <div className="flex flex-col gap-1">
           <label htmlFor="email" className="text-sm font-medium text-muted">
             {t.login.email}
@@ -65,6 +76,7 @@ export function LoginForm({ error }: { error?: string }) {
 
       {/* Separate form: the OAuth action needs no fields, and forms can't nest. */}
       <form action={signInWithGoogle}>
+        {next && <input type="hidden" name="next" value={next} />}
         <GoogleButton label={t.login.continueWithGoogle} />
       </form>
     </div>

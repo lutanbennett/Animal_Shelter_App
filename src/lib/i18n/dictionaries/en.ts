@@ -860,7 +860,7 @@ const en = {
     contacts: {
       title: "Contacts",
       subtitle:
-        "The people the shelter works with: foster and adoptive carers, volunteers, suppliers and donors. Set them up here; only contacts of type Carer can be given a resident, and that's done from the resident's hub.",
+        "The people the shelter works with: foster and adoptive carers, volunteers and suppliers. Set them up here; only contacts of type Carer can be given a resident, and that's done from the resident's hub.",
       viewList: "Open the contact list →",
       couldntLoad: "Couldn't load contacts",
       couldntLoadUsage: "Couldn't load placement counts",
@@ -1133,7 +1133,7 @@ const en = {
   contacts: {
     pageTitle: "Contacts",
     pageSubtitle:
-      "Carers, volunteers, suppliers and donors — tap to call, chat on LINE, Messenger or WhatsApp, email, or open in maps.",
+      "Carers, volunteers and suppliers — tap to call, chat on LINE, Messenger or WhatsApp, email, or open in maps.",
     couldntLoadContacts: "Couldn't load contacts",
     couldntLoadPlacements: "Couldn't load placements",
     manageInAdmin: "Edit contacts in Management",
@@ -1158,13 +1158,10 @@ const en = {
     },
     hub: {
       backToContacts: "← Back to contacts",
-      details: "Details",
       phone: "Phone",
       email: "Email",
-      lineId: "LINE ID",
-      messenger: "Messenger",
-      whatsapp: "WhatsApp",
       address: "Address",
+      mapPreview: (name: string) => `Map of ${name}'s address`,
       notes: "Notes",
       noDetails: "No contact details recorded — an admin can add them under Admin → Contacts.",
       residentsInCare: "Residents in care",
@@ -1175,6 +1172,7 @@ const en = {
         "Only contacts of type Carer can foster or adopt residents. An admin can change the type under Admin → Contacts.",
       since: (date: string) => `since ${date}`,
       pastPlacements: "Past placements",
+      pastPlacementsDetail: "Residents who used to live with this carer.",
       noPastPlacements: "No earlier placements with this carer.",
       placementRange: (from: string, to: string) => `${from} – ${to}`,
       unknownResident: "Unknown resident",
@@ -2480,6 +2478,27 @@ const en = {
     copyPrompt: "Copy this link:",
   },
 
+  /** What a visitor sees after scanning a resident's RFID card (/r/<code>). */
+  residentCard: {
+    noPhoto: "No photo yet",
+    withUsSince: "With us since",
+    adopted: (name: string) => `${name} has been adopted and is now in a home of their own.`,
+    passed: (name: string) => `${name} is no longer with us.`,
+    fullProfile: (name: string) => `See ${name}'s adoption profile`,
+    staffHint: "Staff and volunteers:",
+    staffSignIn: "sign in to see the full record",
+  },
+
+  /** The copyable addresses for enclosure QR codes and resident RFID cards. */
+  tagLinks: {
+    enclosureLabel: "Link for this enclosure's QR code",
+    residentLabel: "Link for this resident's RFID card",
+    copy: "Copy link",
+    copied: "Copied",
+    copyFor: (name: string) => `Copy link for ${name}`,
+    copiedFor: (name: string) => `Link for ${name} copied`,
+  },
+
   ourWork: {
     pageTitle: "Our work",
     pageSubtitle:
@@ -2547,8 +2566,6 @@ const en = {
       Carer: "Carer",
       Volunteer: "Volunteer",
       Vendor: "Supplier",
-      Donor: "Donor",
-      Other: "Other",
     },
     sex: { Male: "Male", Female: "Female" },
     size: { Small: "Small", Medium: "Medium", Large: "Large" },
