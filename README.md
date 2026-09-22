@@ -383,6 +383,11 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
   how-to-adopt pages, and the three-rule body format they are written in.
   `/privacy` is the exception: its text is in the dictionaries, because
   Google's sign-in consent screen links to it and it must never be blank.
+- `src/lib/tags/` — the addresses programmed into enclosure QR codes and
+  resident RFID cards (`/e/<id>`, `/r/<R-code>`, short redirects — see
+  `docs/decisions.md`, 2026-09-22) and the origin they are prefixed with;
+  `src/components/CopyTagLink.tsx` is the copy control on the hubs and
+  lists, and `src/app/e/` / `src/app/r/` the redirects.
 - `src/lib/residents/` — the public slice of a resident
   (`public_resident_profiles`, similar residents) and the adoption
   recommendation fields the intake and edit forms share.

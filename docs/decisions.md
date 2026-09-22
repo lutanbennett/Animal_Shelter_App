@@ -1402,6 +1402,36 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   from the backlog item — all real-build work, none of it needed to find
   out whether the shelter wants one.
 
+- **Tag links are short redirect routes, and a resident's serves visitors
+  too (2026-09-22):** the QR code on an enclosure and the RFID card by a
+  kennel carry `/e/<id>` and `/r/<R-code>` (`src/lib/tags/links.ts`),
+  not the hub URLs. A printed tag lives on the kennel for years, so its
+  address must outlast any later move of the pages behind it — the
+  redirect is the one place to update — and a shorter string gives a
+  coarser QR code that scans from further away (the resident link is 30
+  characters end to end; the R-code was chosen over the UUID for that,
+  and because it is what staff already read off the card). Both
+  redirects are temporary (307), since a cached 308 would pin a tag to
+  today's layout. The copy controls build the address with
+  `getSiteOrigin()` so it reads `https://lannacare.org/…` whichever
+  machine it was copied on. Who scanned decides where `/r/` lands
+  (`src/app/r/[code]/page.tsx`): a signed-in user gets the full hub; a
+  visitor gets the public profile on `/adopt` when the resident is
+  shown on the public site (the existing "visible on the public site"
+  tick — a resident who isn't ticked, or is adopted or deceased, sends
+  the visitor to sign in instead, and sign-in returns to the scanned
+  address). So `/r/` is a public path and resolves the code with the
+  service-role client — anonymous visitors can't read `residents`; the
+  lookup yields the id only, and the id only ever leads to a page with
+  its own access check. Enclosure links stay behind the gate: there is
+  no public enclosure page. Widening what a visitor sees to *every*
+  resident would mean widening `public_resident_profiles`, a schema
+  change, and is not done. The sign-in return itself is new: the proxy
+  used to send a signed-out visitor to `/login` and forget where they
+  were going; it now sets `?next=`, which the password form and the
+  Google OAuth leg carry through (`src/lib/auth/next-path.ts`). The
+  card artwork (photo, name, age, sex, temperament) is out of scope.
+
 ## Still open (from Section 11 of the requirements doc)
 
 1. Exact per-table RBAC permission matrix beyond the role descriptions —

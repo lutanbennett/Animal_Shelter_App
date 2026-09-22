@@ -169,6 +169,7 @@ const manual: Manual = {
             "The hub is the resident's front page: who they are, where they are, and a card for each part of their record. Every card is a link to the full list behind it.",
           steps: [
             "Top: profile photo, name, ID, species, sex, age, status and intake date. The pencil opens Edit resident details.",
+            "Link for this resident's RFID card: the address to program into the card by the kennel. Tap Copy link, or select it by hand; the residents list has the same copy icon on every row. Someone who scans the card while signed in lands on this hub; a visitor sees the public profile if the resident is shown on the public site (Edit resident details), otherwise the sign-in page.",
             "Housing & Status: current enclosure (or hospital / carer) and the actions that apply right now — Move enclosure, Send to hospital, Foster / adopt, and so on.",
             "Photos: the Google Drive gallery for this resident.",
             "Medical cards: Immunizations, Vet Appointments, Prescriptions, Weight, Procedures and Blood Tests. Each shows the latest state (for example \"2 missing\" mandatory vaccines, or the next vet visit) and a quick link to add a record.",
@@ -518,6 +519,7 @@ const manual: Manual = {
           path: "Enclosures → (an enclosure)",
           steps: [
             "The occupancy bar and notes are at the top; tap a resident to jump to their hub.",
+            "Link for this enclosure's QR code: the address to program into the QR code on the enclosure. Tap Copy link, or select the address by hand. The enclosure browser has the same copy icon on every card, for doing a batch.",
             "The Maintenance card shows open jobs on this enclosure, with Log maintenance to add one already pointed at this enclosure.",
             "Admins can change the name, Thai name, capacity and notes under Admin → Enclosures.",
           ],
