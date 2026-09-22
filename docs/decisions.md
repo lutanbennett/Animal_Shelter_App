@@ -1809,3 +1809,18 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   publishing needs no Google verification. Sign-in itself requests
   nothing beyond those, so the page can truthfully say the app never
   reads a user's Google account.
+
+- **Photo thumbnails are bounded two different ways (2026-09-22):** the
+  public galleries (`src/app/adopt/[id]/PhotoGallery.tsx`,
+  `src/app/our-work/[id]/StoryGallery.tsx`) share
+  `src/components/ThumbnailStrip.tsx`, a single row that scrolls sideways
+  — the hero photo is the point of those pages and the thumbnails are
+  secondary, so they should never push the text down. The staff Photos
+  tab (`src/components/PhotoGallery.tsx`) instead shows the first 8 tiles
+  with a "Show all (N)" toggle, because set-as-profile and delete need
+  every tile reachable and a scrolling strip hides most of them. Both
+  keep lazy loading (`loading="lazy"`, and the staff tab doesn't render
+  hidden tiles at all) so a resident with 45 photos doesn't fetch all 45
+  through `/api/photos/` on load. The strip keeps the selected thumbnail
+  in view by scrolling itself rather than `scrollIntoView`, which would
+  also scroll the page.
