@@ -6,6 +6,14 @@ import { driveImageUrl } from "@/lib/google/drive-client";
 import { deletePhoto, setProfilePhoto } from "@/app/residents/[id]/photos/actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
+/**
+ * Tiles shown before "Show all". Two full rows on the widest grid, so a
+ * resident with dozens of photos no longer pushes the rest of the tab off
+ * the bottom of the screen; the hidden tiles aren't rendered at all, so
+ * they don't go through the photo proxy until asked for.
+ */
+const INITIAL_TILE_COUNT = 8;
+
 export type PhotoRow = {
   id: string;
   drive_file_id: string;
@@ -33,6 +41,7 @@ export function PhotoGallery({
 }) {
   const { t } = useI18n();
   const [openPhoto, setOpenPhoto] = useState<PhotoRow | null>(null);
+  const [showAll, setShowAll] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -78,10 +87,12 @@ export function PhotoGallery({
     );
   }
 
+  const visiblePhotos = showAll ? photos : photos.slice(0, INITIAL_TILE_COUNT);
+
   return (
     <>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-        {photos.map((photo) => {
+        {visiblePhotos.map((photo) => {
           const isProfile = photo.drive_file_id === profilePhotoDriveFileId;
           return (
             <button
@@ -95,6 +106,8 @@ export function PhotoGallery({
               <img
                 src={driveImageUrl(photo.drive_file_id)}
                 alt={photo.file_name ?? t.photos.residentPhotoAlt}
+                loading="lazy"
+                decoding="async"
                 className="h-full w-full object-cover transition group-hover:brightness-90"
               />
               {isProfile && (
@@ -111,6 +124,17 @@ export function PhotoGallery({
           );
         })}
       </div>
+
+      {photos.length > INITIAL_TILE_COUNT && (
+        <button
+          type="button"
+          onClick={() => setShowAll((v) => !v)}
+          aria-expanded={showAll}
+          className="mt-3 w-full rounded border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
+        >
+          {showAll ? t.photos.showFewer : t.photos.showAll(photos.length)}
+        </button>
+      )}
 
       {openPhoto &&
         typeof document !== "undefined" &&

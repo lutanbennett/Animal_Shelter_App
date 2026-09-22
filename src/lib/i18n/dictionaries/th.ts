@@ -14,6 +14,8 @@ const th: Dictionary = {
     retry: "ลองใหม่",
     dismiss: "ปิด",
     close: "ปิด",
+    scrollBack: "เลื่อนกลับ",
+    scrollForward: "เลื่อนไปข้างหน้า",
     creating: "กำลังสร้าง...",
     uploading: "กำลังอัปโหลด...",
     add: "เพิ่ม",
@@ -2252,6 +2254,8 @@ const th: Dictionary = {
     confirmRemove: "ยืนยันการลบ",
     photoFallback: "รูปภาพ",
     residentPhotoAlt: "รูปภาพสัตว์",
+    showAll: (n: number) => `แสดงทั้งหมด (${n})`,
+    showFewer: "แสดงน้อยลง",
     uploader: {
       dateTaken: "วันที่ถ่าย",
       folder: "โฟลเดอร์",

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { ThumbnailStrip } from "@/components/ThumbnailStrip";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
@@ -50,29 +51,15 @@ export function StoryGallery({
       )}
 
       {photos.length > 1 && (
-        <div className="flex flex-wrap gap-2">
-          {photos.map((photo, index) => (
-            <button
-              key={photo.id}
-              type="button"
-              onClick={() => setSelected(index)}
-              aria-label={t.ourWork.showPhoto(index + 1, photos.length)}
-              aria-current={index === selected}
-              className={`relative h-16 w-16 shrink-0 overflow-hidden rounded border transition ${
-                index === selected
-                  ? "border-primary ring-2 ring-primary/50"
-                  : "border-border opacity-80 hover:opacity-100"
-              }`}
-            >
-              <Image
-                src={driveImageUrl(photo.drive_file_id)}
-                alt=""
-                fill
-                className="object-cover"
-              />
-            </button>
-          ))}
-        </div>
+        <ThumbnailStrip
+          thumbnails={photos.map((photo) => ({
+            key: photo.id,
+            src: driveImageUrl(photo.drive_file_id),
+          }))}
+          selected={selected}
+          onSelect={setSelected}
+          thumbLabel={t.ourWork.showPhoto}
+        />
       )}
     </figure>
   );

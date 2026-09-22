@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { ThumbnailStrip } from "@/components/ThumbnailStrip";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
@@ -39,29 +40,12 @@ export function PhotoGallery({
       </div>
 
       {photoIds.length > 1 && (
-        <div className="flex flex-wrap gap-2">
-          {photoIds.map((fileId, index) => (
-            <button
-              key={fileId}
-              type="button"
-              onClick={() => setSelected(index)}
-              aria-label={t.adopt.showPhoto(index + 1, photoIds.length)}
-              aria-current={index === selected}
-              className={`relative h-16 w-16 shrink-0 overflow-hidden rounded border transition ${
-                index === selected
-                  ? "border-primary ring-2 ring-primary/50"
-                  : "border-border opacity-80 hover:opacity-100"
-              }`}
-            >
-              <Image
-                src={driveImageUrl(fileId)}
-                alt=""
-                fill
-                className="object-cover"
-              />
-            </button>
-          ))}
-        </div>
+        <ThumbnailStrip
+          thumbnails={photoIds.map((fileId) => ({ key: fileId, src: driveImageUrl(fileId) }))}
+          selected={selected}
+          onSelect={setSelected}
+          thumbLabel={t.adopt.showPhoto}
+        />
       )}
     </div>
   );

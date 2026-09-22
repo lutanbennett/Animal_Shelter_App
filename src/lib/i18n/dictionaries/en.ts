@@ -12,6 +12,8 @@ const en = {
     retry: "Retry",
     dismiss: "Dismiss",
     close: "Close",
+    scrollBack: "Scroll back",
+    scrollForward: "Scroll forward",
     creating: "Creating...",
     uploading: "Uploading...",
     add: "Add",
@@ -2272,6 +2274,8 @@ const en = {
     confirmRemove: "Confirm remove",
     photoFallback: "Photo",
     residentPhotoAlt: "Resident photo",
+    showAll: (n: number) => `Show all (${n})`,
+    showFewer: "Show fewer",
     uploader: {
       dateTaken: "Date taken",
       folder: "Folder",
