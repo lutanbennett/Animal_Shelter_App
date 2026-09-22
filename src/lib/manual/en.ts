@@ -145,21 +145,31 @@ const manual: Manual = {
           roles: ["admin", "management", "staff"],
           path: "Residents → New resident (intake)",
           intro:
-            "Intake creates the resident record and their first placement in one step.",
+            "Intake creates the resident record and their first placement in one go. The questions come a few at a time over five short steps and a final review, so it fits on a phone at the gate — and the whole record is written when you tap Register resident, never before.",
           steps: [
             "On the Residents list tap New resident (intake).",
-            "Identity: name (required), Thai name, other names, species, breed, sex, size (required — small, medium or large, which sets their default meal size) and an estimated age in years.",
-            "Arrival & placement: the intake date (required), where they came from (pick an existing origin or add a new one), and the zone and enclosure they're going into. Leave the enclosure blank and they're recorded as Unassigned until you move them.",
-            "Optionally enter a weight at intake — it becomes their first weight reading — and pick a starting diet from the list management keeps under Management → Diets; it's recorded from the intake date and can be adjusted on the hub's Diet page.",
-            "Bio & background: bio, temperament, past story and behaviour notes. These can be filled in later from Edit.",
-            "Tick Ready for adoption only if they should appear on the public adoption page straight away.",
-            "Tap Register resident. You're taken to their new hub.",
+            "Step 1, Who: name (required), Thai name, other names, species, breed, sex and size (required — small, medium or large, which sets their default meal size). Tap Next.",
+            "Step 2, Arrival: the intake date (required), where they came from (pick an existing origin or add a new one), the zone and enclosure they're going into, intake notes, and the Ready for adoption tick. Leave the enclosure blank and they're recorded as Unassigned until you move them; tick Ready for adoption only if they should appear on the public adoption page straight away.",
+            "Step 3, Health — all optional: an estimated age in years, a weight at intake (it becomes their first weight reading), how often they need routine blood work, and a starting diet from the list management keeps under Management → Diets. The diet is recorded from the intake date and can be adjusted on the hub's Diet page.",
+            "Step 4, For adopters — all optional: colour, desexed, good with dogs / cats / children, and energy level. These fill the \"Is (name) right for you?\" block on the public profile.",
+            "Step 5, Story — all optional: bio, temperament, past story and behaviour notes. These are the ones most often written later, from Edit resident.",
+            "Step 6, Review: every answer on one page, with an Edit link beside each group to go back and change something. Tap Register resident and you're taken to their new hub.",
           ],
           screenshot: {
             src: "/manual/resident-intake.png",
-            alt: "The resident intake form",
-            caption: "The intake form. Only name, intake date and size are required — everything else can be added later.",
+            alt: "The first step of the resident intake form, with the step numbers along the top",
+            caption: "Step 1 of the intake form. Only the name, the size and the intake date are required — everything else can be added later.",
           },
+          callouts: [
+            {
+              kind: "tip",
+              text: "Next won't move on while a required field on the step is empty — it highlights the box to fill in. The numbered steps along the top go back to anything you've already been through, and so does Edit on the review.",
+            },
+            {
+              kind: "note",
+              text: "Nothing is saved until Register resident, so walking away part-way through leaves no half-made resident. Refreshing the page keeps your place in the steps but empties the answers.",
+            },
+          ],
         },
         {
           id: "hub",

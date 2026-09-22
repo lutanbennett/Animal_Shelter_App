@@ -6,6 +6,26 @@ Section 11, plus decisions made during setup that aren't in the original doc.
 
 ## Confirmed
 
+- **Intake is a wizard over one form, not a sequence of saves
+  (2026-09-22):** `/residents/new` asks its ~25 questions over five steps
+  and a Review, but the write is exactly what it was — a single
+  `recordIntake` call to the `record_intake` RPC when Register is
+  pressed. The steps are a client-side view over one `<form>`: inactive
+  ones are hidden rather than unmounted, so their values and their
+  `required` attributes survive, and there is never a half-registered
+  resident to clean up. Two consequences worth remembering. Every
+  forward move runs `checkValidity()` over the steps it passes and opens
+  the first one at fault, because a `required` field on a hidden step is
+  still a validation candidate. And Register is a `type="button"` that
+  validates and then calls `requestSubmit()`, not a submit button: the
+  browser validates before the submit event, so a plain submit button
+  would have refused silently over a control it could not focus to
+  complain about. `?step=` carries the place across a refresh, never the
+  answers. The adoption recommendation fields got a step of their own
+  (the backlog item named four field groups but only five steps);
+  `EditResidentForm` stays the flat form it is, since editing one field
+  through a wizard is worse.
+
 - **Maintenance jobs are assigned to a login, not a contact (2026-09-21):**
   the first cut wired `maintenance.assigned_to` (a contacts FK from 0001)
   to a picker of every contact. The user's correction: whoever actions a
