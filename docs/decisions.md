@@ -1997,7 +1997,7 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   the eval corpus (2026-09-22):** the assistant runs the app's own server
   actions under the caller's session, so every row it writes is already
   attributed and already policed by RLS — what nothing recorded was the
-  sentence that caused it. 0069 adds `assistant_actions`: who, when, the
+  sentence that caused it. 0070 adds `assistant_actions`: who, when, the
   request exactly as typed, the intent the parser matched, the draft, how
   the turn ended, the result, and the row it wrote (a table name and an id,
   as `translations` addresses arbitrary rows, since one foreign key cannot
@@ -2017,6 +2017,11 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   type are not a shared feed. Landed as its own schema PR ahead of the
   feature, per the migrations rule, so production needs it applied before
   assistant v1 deploys.
+  It was written and applied to dev as 0069, then renumbered: a diet-seeding
+  branch had claimed the same number and merges first. Dev therefore keeps a
+  spent `0069_assistant_actions.sql` row in `schema_migrations`, harmless the
+  way the `0067_public_resident_cards.sql` one before it is — the file is
+  re-runnable, so applying it again as 0070 changed nothing.
 - **A resident's wrong placement history is corrected by a scripted
   transaction, not by hand or by the app (2026-09-22):** the shelter
   reported that Panda's history is wrong — she was taken in, fostered to
