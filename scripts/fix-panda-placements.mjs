@@ -1,22 +1,28 @@
 // Cut one resident's placement history back to "Intake, then fostered" —
 // written for Panda, whose AppSheet history came across with placements
 // that never happened (docs/data-migration.md; confirmed with the shelter
-// 2026-09-22: intake, then fostered to Lutan in June, nothing else).
+// 2026-09-22: taken in, then fostered to Lutan on 1 June 2026 and with her
+// continuously since — no other placement, and the foster is still open).
 //
 //   node scripts/fix-panda-placements.mjs --env production              # report, change nothing
 //   node scripts/fix-panda-placements.mjs --env production --dry-run    # the whole fix inside begin…rollback
 //   node scripts/fix-panda-placements.mjs --env production --apply      # commit it
 //   … --resident "Panda" | --resident R-0042      # who (name or code; default Panda)
 //   … --carer Lutan                               # the foster carer to match on (default Lutan)
-//   … --month 06                                  # the foster month to match on (default June)
+//   … --foster-date 2026-06-01                    # the day the foster starts (default 1 June 2026)
 //   … --intake <uuid> --foster <uuid>             # pick the two rows by hand when the match is ambiguous
-//   … --relink-previous-enclosure                 # also repoint the Foster row at the intake enclosure
+//   … --previous-enclosure Unassigned             # where she came from (default the Lifecycle Unassigned)
 //
-// It only ever DELETES the rows that shouldn't be there and adjusts
-// `end_date` on the two that should. It never invents a placement: if the
-// June Foster row is missing, it says so and stops — record the foster
-// through the app (resident hub → Foster), which writes the row with the
-// right zone, enclosure and carer, then re-run this.
+// It DELETES the rows that shouldn't be there, adjusts end_date on the two
+// that should, and puts the Foster row's previous_enclosure_id back to the
+// enclosure she actually came from. That column is immutable (0001), so
+// correcting it means rewriting the row under its own id, keeping its
+// author and created_at.
+//
+// It never invents a placement: if the Foster row is missing, it says so
+// and stops — record the foster through the app (resident hub → Foster),
+// which writes the row with the right zone, enclosure and carer, then
+// re-run this.
 //
 // Why SQL and not the app: placement_history is append-only by design
 // (0001's immutability trigger, and the app has no "delete a placement"
@@ -56,13 +62,20 @@ const flag = (name, fallback = null) => {
 
 const apply = args.includes("--apply");
 const dryRun = args.includes("--dry-run");
-const relinkPrevious = args.includes("--relink-previous-enclosure");
 const residentArg = flag("--resident", "Panda");
 const carerArg = flag("--carer", "Lutan");
-const monthArg = String(flag("--month", "06")).padStart(2, "0");
+const fosterDateArg = flag("--foster-date", "2026-06-01");
+// Intake parks a resident in the Lifecycle 'Unassigned' pseudo-enclosure
+// (0008–0011), so that is where a straight intake → foster came from, and it
+// is what a later Return to shelter should offer her back into.
+const previousEnclosureArg = flag("--previous-enclosure", "Unassigned");
 const intakeArg = flag("--intake");
 const fosterArg = flag("--foster");
 
+if (!/^\d{4}-\d{2}-\d{2}$/.test(fosterDateArg)) {
+  console.error("--foster-date must be YYYY-MM-DD.");
+  process.exit(2);
+}
 if (apply && dryRun) {
   console.error("--apply and --dry-run are mutually exclusive.");
   process.exit(2);
@@ -129,6 +142,21 @@ if (residents.length > 1) {
 const resident = residents[0];
 console.log(`Resident: ${resident.resident_code} ${resident.name} — currently ${resident.current_status}.\n`);
 
+const enclosures = await query(`
+  select e.id, e.name, z.name as zone
+  from enclosures e
+  join zones z on z.id = e.zone_id
+  where e.name = ${q(previousEnclosureArg)}
+  order by z.name;
+`);
+if (enclosures.length === 0) die(`No enclosure named ${previousEnclosureArg}.`);
+if (enclosures.length > 1) {
+  console.error(`More than one enclosure is named ${previousEnclosureArg}:`);
+  for (const e of enclosures) console.error(`  ${e.zone} / ${e.name}`);
+  process.exit(1);
+}
+const previousEnclosure = enclosures[0];
+
 const rows = await query(`
   select
     p.id,
@@ -147,9 +175,11 @@ const rows = await query(`
     p.created_by,
     to_char(p.created_at at time zone 'UTC', 'YYYY-MM-DD HH24:MI:SS.US+00') as created_utc,
     e.name as enclosure,
+    pe.name as previous_enclosure,
     c.name as carer
   from placement_history p
   left join enclosures e on e.id = p.enclosure_id
+  left join enclosures pe on pe.id = p.previous_enclosure_id
   left join contacts c on c.id = p.carer_id
   where p.resident_id = ${q(resident.id)}
   order by p.start_date, p.created_at;
@@ -193,18 +223,36 @@ if (fosterArg) {
     (r) =>
       r.placement_type === "Foster" &&
       (r.carer ?? "").toLowerCase().includes(carerNeedle) &&
-      r.start_day.slice(5, 7) === monthArg,
+      r.start_day === fosterDateArg,
   );
   if (fosters.length === 0) {
-    die(
-      `No Foster row in month ${monthArg} with a carer matching "${carerArg}".\n` +
-        "This script never invents a placement. Record the foster through the app\n" +
-        "(resident hub → Foster) so the row gets the right zone, enclosure and\n" +
-        "carer, then run this again — or name the row with --foster <uuid>.",
+    // List what Foster rows there are, so a date or spelling that's slightly
+    // off can be settled from this output rather than another query.
+    const others = rows.filter((r) => r.placement_type === "Foster");
+    console.error(
+      `\nNo Foster row starting ${fosterDateArg} with a carer matching "${carerArg}".`,
     );
+    if (others.length) {
+      console.error("Foster rows on this resident:");
+      for (const r of others) console.error(`  ${r.id}  ${r.start_day}  carer ${r.carer ?? "—"}`);
+      console.error(
+        "\nIf one of those is the right one, name it with --foster <uuid>,\n" +
+          "or give the day it really starts with --foster-date YYYY-MM-DD.",
+      );
+    } else {
+      console.error(
+        "This resident has no Foster row at all, and this script never invents a\n" +
+          "placement. Record the foster through the app (resident hub → Foster) so\n" +
+          "the row gets the right zone, enclosure and carer, then run this again.",
+      );
+    }
+    process.exit(1);
   }
   if (fosters.length > 1) {
-    console.error(`\n${fosters.length} Foster rows match "${carerArg}" — pick one with --foster <uuid>:`);
+    console.error(
+      `\n${fosters.length} Foster rows start ${fosterDateArg} with a carer matching ` +
+        `"${carerArg}" — pick one with --foster <uuid>:`,
+    );
     for (const r of fosters) console.error(`  ${r.id}  ${r.start_day}  carer ${r.carer}`);
     process.exit(1);
   }
@@ -223,9 +271,7 @@ if (!foster.carer_id) die("The Foster row has no carer on it — name the right 
 const doomed = rows.filter((r) => r.id !== intake.id && r.id !== foster.id);
 const intakeNeedsEnd = intake.end_utc !== foster.start_utc;
 const fosterNeedsOpen = foster.end_utc !== null;
-const previousWrong =
-  String(foster.previous_enclosure_id ?? "") !== String(intake.enclosure_id ?? "");
-const previousNeedsRelink = relinkPrevious && previousWrong;
+const previousNeedsFix = String(foster.previous_enclosure_id ?? "") !== previousEnclosure.id;
 
 console.log("\nPlan:");
 console.log(`  keep    ${intake.start_day} Intake`);
@@ -235,20 +281,14 @@ if (intakeNeedsEnd) {
   console.log(`  end the Intake row at ${foster.start_day} (was ${intake.end_day ?? "open"})`);
 }
 if (fosterNeedsOpen) console.log(`  reopen the Foster row (end_date was ${foster.end_day})`);
-if (previousNeedsRelink) {
-  console.log("  repoint the Foster row's previous_enclosure_id at the Intake enclosure");
-}
-
-if (previousWrong && !relinkPrevious) {
+if (previousNeedsFix) {
   console.log(
-    "\nNote: the Foster row remembers a different enclosure as the one she left,\n" +
-      "      which is where a later Return to shelter would offer to put her back.\n" +
-      "      That column is immutable, so fixing it means rewriting the row —\n" +
-      "      re-run with --relink-previous-enclosure if you want that too.",
+    `  rewrite the Foster row so it came from ${previousEnclosure.zone} / ` +
+      `${previousEnclosure.name} (was ${foster.previous_enclosure ?? "nothing"})`,
   );
 }
 
-if (!doomed.length && !intakeNeedsEnd && !fosterNeedsOpen && !previousNeedsRelink) {
+if (!doomed.length && !intakeNeedsEnd && !fosterNeedsOpen && !previousNeedsFix) {
   console.log("\nNothing to do — the history already reads Intake then Foster.");
   process.exit(0);
 }
@@ -283,11 +323,11 @@ if (intakeNeedsEnd) {
   sql.push(`update placement_history set end_date = ${q(foster.start_utc)} where id = ${q(intake.id)};`);
 }
 // Skipped when the row is about to be rewritten anyway, below.
-if (fosterNeedsOpen && !previousNeedsRelink) {
+if (fosterNeedsOpen && !previousNeedsFix) {
   sql.push(`update placement_history set end_date = null where id = ${q(foster.id)};`);
 }
 
-if (previousNeedsRelink) {
+if (previousNeedsFix) {
   // previous_enclosure_id is immutable (0001), so the row is rewritten under
   // its own id, keeping its author and created_at. The delete leaves the
   // resident with no open placement, and the insert's close-prior trigger
@@ -298,7 +338,7 @@ if (previousNeedsRelink) {
      previous_enclosure_id, carer_id, notes, created_by, created_at)
     values (${q(foster.id)}, ${q(resident.id)}, 'Foster', ${q(foster.start_utc)}, null,
       (select zone_id from enclosures where id = ${q(foster.enclosure_id)}),
-      ${q(foster.enclosure_id)}, ${q(intake.enclosure_id)}, ${q(foster.carer_id)},
+      ${q(foster.enclosure_id)}, ${q(previousEnclosure.id)}, ${q(foster.carer_id)},
       ${q(foster.notes)}, ${q(foster.created_by)}, ${q(foster.created_utc)});`);
   // The insert's close-prior trigger re-ends any open row at the foster date;
   // the Intake row is already closed there, so this only restates it.
@@ -325,7 +365,8 @@ begin
     select 1 from placement_history
     where id = ${q(foster.id)} and placement_type = 'Foster' and end_date is null
       and carer_id = ${q(foster.carer_id)}
-  ) then raise exception 'the Foster row is not the open one'; end if;
+      and previous_enclosure_id = ${q(previousEnclosure.id)}
+  ) then raise exception 'the Foster row is not the open one, or came from the wrong enclosure'; end if;
 
   if not exists (
     select 1 from placement_history

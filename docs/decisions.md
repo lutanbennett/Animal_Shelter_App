@@ -1930,28 +1930,32 @@ Section 11, plus decisions made during setup that aren't in the original doc.
 
 - **A resident's wrong placement history is corrected by a scripted
   transaction, not by hand or by the app (2026-09-22):** the shelter
-  reported that Panda's history is wrong — she was taken in and then
-  fostered to Lutan in June, and the placements between those two never
+  reported that Panda's history is wrong — she was taken in, fostered to
+  Lutan on 1 June 2026, and has been with her continuously since; the
+  placements AppSheet brought across between and after those two never
   happened. `placement_history` is append-only on purpose (0001's
   immutability trigger, and no UI anywhere deletes a placement), so there
   is no in-app way to remove history that never happened, and doing it
   through the SQL editor is exactly the "POST SQL by hand" the migration
   rules forbid. `scripts/fix-panda-placements.mjs` does it instead: it
   reports the current rows, works out which two should survive **from the
-  data** (the single Intake row; the Foster row in the given month whose
-  carer matches), and sends `delete` plus the two `end_date` adjustments
-  as one Management-API transaction with assertions — two rows left, one
-  of them open, the Intake ending where the Foster starts, the resident
-  reading as Fostered — so a wrong plan rolls back. It has `--dry-run` and
-  refuses to act without `--apply`. Deliberately it **never inserts a
-  placement**: if the June Foster row is missing it stops and says to
-  record the foster in the app, whose `rehomeResident` writes the row with
-  the right Lifecycle enclosure, zone and carer. Rejected: a migration
-  (data, not schema, and it would run against dev where the rows differ)
-  and a generic "edit any placement" admin screen (the append-only log is
-  the point; a one-off correction shouldn't buy a permanent hole in it).
-  The one thing the script can't do with an `update` is
-  `previous_enclosure_id` — immutable, and it decides which enclosure a
-  later Return to shelter offers — so it reports the mismatch and rewrites
-  the row under its own id only when asked with
-  `--relink-previous-enclosure`.
+  data** (the single Intake row; the Foster row starting on the given day
+  whose carer matches), and sends the deletes, the two `end_date`
+  adjustments and the Foster row's `previous_enclosure_id` correction as
+  one Management-API transaction with assertions — two rows left, one of
+  them open, the Intake ending where the Foster starts, the Foster coming
+  from the right enclosure, the resident reading as Fostered — so a wrong
+  plan rolls back. It has `--dry-run` and refuses to act without
+  `--apply`. Deliberately it **never inserts a placement**: if the Foster
+  row is missing it lists whatever Foster rows exist and stops, since
+  recording the foster belongs in the app, whose `rehomeResident` writes
+  the row with the right Lifecycle enclosure, zone and carer. Rejected: a
+  migration (data, not schema, and it would run against dev where the rows
+  differ) and a generic "edit any placement" admin screen (the append-only
+  log is the point; a one-off correction shouldn't buy a permanent hole in
+  it). `previous_enclosure_id` — which decides the enclosure a later
+  Return to shelter offers her back into — is the one field an `update`
+  cannot touch, so the row is rewritten under its own id, keeping its
+  author and `created_at`; it goes back to the Lifecycle `Unassigned`
+  pseudo-enclosure, where intake parks a resident (0008–0011), because a
+  straight intake → foster came from nowhere else.
