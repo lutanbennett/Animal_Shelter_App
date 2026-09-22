@@ -1993,22 +1993,24 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   `@lat,lng`, `!3d…!4d…`); failures just mean no map. Only the hub page
   does this — the contact list never renders the frame.
 
-- **Existing residents are seeded with one placeholder diet rather than
-  left blank (2026-09-22):** 0051 shipped `diet_types` and
-  `resident_diets` empty, so every resident taken in before it read "no
-  diet recorded" and the food forecast totalled nothing — and a blank tab
-  can't be told apart from "nobody has filled this in". 0069 adds a single
-  **Standard dry food** type (g, 200 / 350 / 500 g a day by size, cost 0)
-  and gives one ongoing row of it to every resident who has no diet at
-  all. Deceased residents are excluded (0026 closes the record, and they
-  eat nothing) and adopted ones too; fostered and outreach residents are
-  included, because whether the shelter buys their food is
-  `diet_forecast`'s question, not the record's. The row is dated to the
-  resident's intake, bounded to today, so the diet reads as what they have
-  always eaten rather than something that started the day of the
-  migration, and both the type and every seeded row carry a note saying
-  the numbers are placeholders. Rejected: seeding nothing and asking staff
-  to enter one by hand per resident (the forecast stays empty until the
-  last one is done), and inventing a cost per gram (a made-up price
-  silently becomes the shelter's budget — zero is visibly unset, and it
-  is one field on Management → Diets).
+- **Existing residents are seeded onto the standard diet, and the
+  migration adopts the diet type rather than creating one (2026-09-22):**
+  0051 shipped `diet_types` and `resident_diets` empty, so every resident
+  taken in before it read "no diet recorded" — indistinguishable from a
+  question nobody had answered — and the food forecast totalled nothing.
+  Production has since had its standard diet entered by hand (Standard
+  Kibble + Chicken, ฿17 a cup) with no resident on it, so 0069 looks the
+  type up by name, case-insensitively, and creates it only where it is
+  missing (dev, test, any fresh database), leaving production's own cost
+  and portions alone. Rejected: `insert … on conflict (name) do nothing`,
+  which is a duplicate type and a wrongly-fed shelter if the name is
+  spelled with different case than the file assumes. Every resident with
+  no diet at all then gets one ongoing row of it, dated to their intake
+  (bounded to today) so it reads as what they have always eaten rather
+  than something that began the day the migration ran, with a note saying
+  it was seeded. Deceased residents are excluded — 0026 closes the record,
+  and they eat nothing — and adopted ones too; fostered and outreach
+  residents are included, because whether the shelter buys their food is
+  `diet_forecast`'s question, not the record's. Rejected: leaving the
+  lists empty and asking staff to enter one diet per resident by hand,
+  which keeps the forecast at zero until the last one is done.
