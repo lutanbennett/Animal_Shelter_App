@@ -92,13 +92,13 @@ export function WizardNav({
   const isReview = current === REVIEW_STEP;
 
   return (
-    <div className="sticky bottom-0 z-10 -mx-6 flex gap-3 border-t border-border bg-background px-6 py-3">
+    <div className="sticky bottom-0 z-10 -mx-6 flex gap-3 border-t border-border bg-background px-6 py-3 sm:justify-end">
       {current > 0 && (
         <button
           type="button"
           onClick={onBack}
           disabled={pending}
-          className="rounded border border-border px-4 py-3 text-base font-medium text-foreground hover:bg-surface-hover disabled:opacity-50"
+          className="rounded border border-border px-4 py-3 text-base font-medium text-foreground hover:bg-surface-hover disabled:opacity-50 sm:mr-auto"
         >
           {w.back}
         </button>
@@ -117,7 +117,7 @@ export function WizardNav({
           type="button"
           onClick={onRegister}
           disabled={pending}
-          className="flex-1 rounded bg-primary px-4 py-3 text-base font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
+          className="flex-1 rounded bg-primary px-4 py-3 text-base font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50 sm:flex-none sm:px-10"
         >
           {pending
             ? t.residents.new.registering
@@ -127,7 +127,7 @@ export function WizardNav({
         <button
           type="button"
           onClick={onNext}
-          className="flex-1 rounded bg-primary px-4 py-3 text-base font-medium text-primary-foreground hover:bg-primary-hover"
+          className="flex-1 rounded bg-primary px-4 py-3 text-base font-medium text-primary-foreground hover:bg-primary-hover sm:flex-none sm:px-10"
         >
           {w.next}
         </button>

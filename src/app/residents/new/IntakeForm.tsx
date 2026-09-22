@@ -204,6 +204,18 @@ export function IntakeForm({
 
   const enclosuresInZone = enclosures.filter((e) => e.zoneId === selectedZoneId);
 
+  const openStep = useCallback((next: number) => {
+    setStep(next);
+    setMaxVisited((seen) => Math.max(seen, next));
+    const { pathname } = window.location;
+    window.history.replaceState(
+      null,
+      "",
+      next === 0 ? pathname : `${pathname}?step=${next + 1}`,
+    );
+    window.scrollTo(0, 0);
+  }, []);
+
   /**
    * Moves to `target`, refusing to go forward past a step whose required
    * fields aren't filled in — it opens that step instead and lets the
@@ -214,18 +226,6 @@ export function IntakeForm({
     (target: number) => {
       const form = formRef.current;
       if (!form) return;
-
-      const openStep = (next: number) => {
-        setStep(next);
-        setMaxVisited((seen) => Math.max(seen, next));
-        const { pathname } = window.location;
-        window.history.replaceState(
-          null,
-          "",
-          next === 0 ? pathname : `${pathname}?step=${next + 1}`,
-        );
-        window.scrollTo(0, 0);
-      };
 
       if (target > step) {
         for (let i = step; i < target; i++) {
@@ -243,7 +243,7 @@ export function IntakeForm({
       if (target === REVIEW_STEP) setReview(buildReview(form, t, locale));
       openStep(target);
     },
-    [step, t, locale],
+    [step, t, locale, openStep],
   );
 
   /** The one submission, from the Review step. */
@@ -253,7 +253,7 @@ export function IntakeForm({
     for (let i = 0; i < REVIEW_STEP; i++) {
       const invalid = firstInvalid(stepRefs.current[i]);
       if (invalid) {
-        setStep(i);
+        openStep(i);
         requestAnimationFrame(() => invalid.reportValidity());
         return;
       }
