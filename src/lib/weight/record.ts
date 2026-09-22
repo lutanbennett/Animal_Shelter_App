@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import { isFutureDate, isIsoDate } from "@/lib/placements/dates";
 
 export type RecordWeightInput = {
   residentId: string;
@@ -36,10 +37,17 @@ export async function recordWeight(
 
   if (!input.residentId) return { error: errors.missingResident };
 
-  if (!input.date) return { error: errors.enterDate };
-  const parsedDate = new Date(input.date);
-  if (Number.isNaN(parsedDate.getTime())) return { error: errors.invalidDate };
-  if (parsedDate.getTime() > Date.now()) return { error: errors.dateInFuture };
+  // The same date rules the placement actions use. The check this
+  // replaced compared a date-only value against the current instant, which
+  // reads today as tomorrow for the first seven hours of every day in
+  // Thailand — the server runs in UTC and the shelter does not (see the
+  // backlog, d98695a). `isFutureDate` carries a day of slack for exactly
+  // that, so this now behaves like move and send-to-hospital.
+  if (!isIsoDate(input.date)) return { error: errors.enterDate };
+  if (Number.isNaN(new Date(`${input.date}T00:00:00Z`).getTime())) {
+    return { error: errors.invalidDate };
+  }
+  if (isFutureDate(input.date, new Date())) return { error: errors.dateInFuture };
 
   if (input.weightKg === null || input.weightKg === undefined) {
     return { error: errors.enterWeight };

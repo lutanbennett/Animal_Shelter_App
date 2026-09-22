@@ -8,6 +8,7 @@ import { placeName } from "@/lib/enclosures/names";
 import type { EnclosureOption, ZoneOption } from "@/lib/enclosures/options";
 import { EnclosurePicker } from "@/components/EnclosurePicker";
 import type { AssistantResident, AssistantVet } from "@/lib/assistant/data";
+import { isoLocal } from "@/lib/assistant/text";
 import type {
   Draft,
   HospitalDraft,
@@ -53,10 +54,9 @@ export type CardContext = {
   onSettle: (outcome: AssistantOutcome) => void;
 };
 
+/** Today where the person is, never where the server is. */
 function todayIso() {
-  const d = new Date();
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  return isoLocal(new Date());
 }
 
 function residentLabel(r: AssistantResident) {
@@ -75,6 +75,7 @@ function Card({
   title,
   summary,
   hint,
+  hintTone,
   error,
   pending,
   canConfirm,
@@ -86,6 +87,8 @@ function Card({
   title: string;
   summary: string;
   hint: string | null;
+  /** Red is for "this one needs a decision", not for ordinary blanks. */
+  hintTone: "danger" | "muted";
   error: string | null;
   pending: boolean;
   canConfirm: boolean;
@@ -101,7 +104,13 @@ function Card({
       <div>
         <p className="text-xs font-medium uppercase tracking-wide text-muted">{title}</p>
         <p className="text-base font-semibold text-foreground">{summary}</p>
-        {hint && <p className="mt-1 text-sm text-danger">{hint}</p>}
+        {hint && (
+          <p
+            className={`mt-1 text-sm ${hintTone === "danger" ? "text-danger" : "text-muted"}`}
+          >
+            {hint}
+          </p>
+        )}
       </div>
       <div className="flex flex-col gap-3">{children}</div>
       <p className="text-xs text-muted">{notesStamp}</p>
@@ -279,9 +288,11 @@ function ResidentField({
 function useCardChrome(ctx: CardContext, residentChosen: boolean) {
   const { t } = useI18n();
   const a = t.assistant;
+  const ambiguous = ctx.candidates.length > 1 && !residentChosen;
   return {
     notesStamp: a.notesStamp(ctx.request),
-    hint: ctx.candidates.length > 1 && !residentChosen ? a.severalMatch : a.fillBlanks,
+    hint: ambiguous ? a.severalMatch : a.fillBlanks,
+    hintTone: (ambiguous ? "danger" : "muted") as "danger" | "muted",
   };
 }
 
@@ -338,6 +349,7 @@ function MoveCard({ ctx, draft }: { ctx: CardContext; draft: MoveDraft }) {
         date ? formatDate(date, locale) : a.unknown,
       )}
       hint={chrome.hint}
+      hintTone={chrome.hintTone}
       error={error}
       pending={pending}
       canConfirm={!!resident && !!target && !!date}
@@ -427,6 +439,7 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
         whenLabel,
       )}
       hint={chrome.hint}
+      hintTone={chrome.hintTone}
       error={error}
       pending={pending}
       canConfirm={!!resident && !!vet && !!when}
@@ -544,6 +557,7 @@ function HospitalCard({ ctx, draft }: { ctx: CardContext; draft: HospitalDraft }
         date ? formatDate(date, locale) : a.unknown,
       )}
       hint={chrome.hint}
+      hintTone={chrome.hintTone}
       error={error}
       pending={pending}
       canConfirm={!!resident && !!date}
@@ -637,6 +651,7 @@ function HospitalReturnCard({
         date ? formatDate(date, locale) : a.unknown,
       )}
       hint={chrome.hint}
+      hintTone={chrome.hintTone}
       error={error}
       pending={pending}
       canConfirm={!!resident && !!target && !!date}
@@ -716,6 +731,7 @@ function WeightCard({ ctx, draft }: { ctx: CardContext; draft: WeightDraft }) {
         date ? formatDate(date, locale) : a.unknown,
       )}
       hint={chrome.hint}
+      hintTone={chrome.hintTone}
       error={error}
       pending={pending}
       canConfirm={!!resident && weightOk && !!date}

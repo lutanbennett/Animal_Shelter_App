@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { parseRequest, type ParsedRequest } from "@/lib/assistant/parse";
+import { isoLocal } from "@/lib/assistant/text";
 import { isWriteIntent } from "@/lib/assistant/types";
 import type { AssistantContext } from "@/lib/assistant/data";
 import { recordAssistantTurn } from "@/app/assistant/actions";
@@ -119,7 +120,13 @@ export function AssistantConversation({
 
     const draft = parsed.draft;
     if (draft.kind !== "where" && draft.kind !== "who" && draft.kind !== "due") return;
-    void assistantLookup({ request: trimmed, draft }).then((result) => {
+    // The server runs on Workers, in UTC; "this week" has to be counted
+    // from the calendar date of whoever is asking (backlog d98695a).
+    void assistantLookup({
+      request: trimmed,
+      draft,
+      today: isoLocal(new Date()),
+    }).then((result) => {
       update(
         id,
         "error" in result

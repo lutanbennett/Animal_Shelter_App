@@ -59,7 +59,9 @@ export async function AppHeader() {
           </span>
         )}
       </div>
-      <div className="flex items-center gap-4">
+      {/* Tighter on a phone: this row gained the assistant button, and at
+          375px the old gap-4 pushed "Sign out" off the edge. */}
+      <div className="flex items-center gap-2 sm:gap-4">
         {canUseAssistant(role) && <AssistantPanel />}
         <LanguageSwitcher />
         <span className="hidden text-sm text-muted md:inline">

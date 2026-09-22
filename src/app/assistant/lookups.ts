@@ -210,13 +210,33 @@ type JobRow = {
   zones: { name: string; name_th: string | null } | null;
 };
 
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Calendar arithmetic on a YYYY-MM-DD string, via UTC so that it stays
+ * pure date arithmetic whatever timezone the server happens to be in.
+ */
+function addCalendarDays(isoDate: string, days: number): string {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
 async function answerDue(
   supabase: Awaited<ReturnType<typeof createClient>>,
   days: number,
+  /** The asker's own calendar date, YYYY-MM-DD, from their browser. */
+  today: string,
 ): Promise<LookupResult> {
   const now = new Date();
   const end = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
-  const endDate = end.toISOString().slice(0, 10);
+  // `maintenance.due_date` is a date, not an instant, so its upper bound
+  // has to be a calendar date — and deriving one from a UTC timestamp is
+  // how you get "yesterday" for the first seven hours of every day in
+  // Thailand (backlog d98695a). It comes from the asker's clock instead,
+  // and only falls back to the server's if the browser sent nonsense.
+  const endDate = ISO_DATE.test(today)
+    ? addCalendarDays(today, days)
+    : end.toISOString().slice(0, 10);
 
   const [visitsResult, jobsResult] = await Promise.all([
     // The dashboard's own "due" set: still scheduled, and either already
@@ -283,6 +303,8 @@ async function answerDue(
 export async function assistantLookup(input: {
   request: string;
   draft: WhereDraft | WhoDraft | DueDraft;
+  /** The asker's own calendar date, YYYY-MM-DD; see `answerDue`. */
+  today: string;
 }): Promise<LookupResult> {
   const { t } = await getT();
   const supabase = await createClient();
@@ -300,7 +322,7 @@ export async function assistantLookup(input: {
         ? draft.enclosureId
           ? await answerWho(supabase, draft.enclosureId)
           : { error: t.assistant.lookups.whichEnclosure }
-        : await answerDue(supabase, draft.days);
+        : await answerDue(supabase, draft.days, input.today);
 
   await logAssistantAction(supabase, {
     requestText: input.request,
