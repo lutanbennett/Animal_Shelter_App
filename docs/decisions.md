@@ -1953,9 +1953,18 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   migration (data, not schema, and it would run against dev where the rows
   differ) and a generic "edit any placement" admin screen (the append-only
   log is the point; a one-off correction shouldn't buy a permanent hole in
-  it). `previous_enclosure_id` — which decides the enclosure a later
-  Return to shelter offers her back into — is the one field an `update`
-  cannot touch, so the row is rewritten under its own id, keeping its
-  author and `created_at`; it goes back to the Lifecycle `Unassigned`
-  pseudo-enclosure, where intake parks a resident (0008–0011), because a
-  straight intake → foster came from nowhere else.
+  it). The dry run against production then turned up why this needed more
+  than deletes: the 1 June Foster row came across **typed Foster but
+  parked in the Lifecycle `Unassigned` pseudo-enclosure**, and
+  `resident_current_state` reads a resident's status off the current
+  placement's enclosure, not its `placement_type` — so keeping that row
+  as-is would have left her reading "Unassigned" while the history said
+  fostered. The script now also puts the kept row in `Fostered`, where
+  `rehomeResident` puts one, and points `previous_enclosure_id` at
+  `Unassigned`, where intake parks a resident (0008–0011) and what a later
+  Return to shelter should offer her back into. `enclosure_id`, `zone_id`
+  and `previous_enclosure_id` are all immutable, so correcting any of them
+  means rewriting the row under its own id, keeping its author and
+  `created_at` — and the assertion that the resident ends up `Fostered` is
+  what caught the problem in the first place, rather than a silent commit
+  and a wrong hub page.

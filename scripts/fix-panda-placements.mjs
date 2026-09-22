@@ -11,13 +11,19 @@
 //   … --carer Lutan                               # the foster carer to match on (default Lutan)
 //   … --foster-date 2026-06-01                    # the day the foster starts (default 1 June 2026)
 //   … --intake <uuid> --foster <uuid>             # pick the two rows by hand when the match is ambiguous
+//   … --foster-enclosure Fostered                 # where a fostered resident lives (default the Lifecycle Fostered)
 //   … --previous-enclosure Unassigned             # where she came from (default the Lifecycle Unassigned)
 //
 // It DELETES the rows that shouldn't be there, adjusts end_date on the two
-// that should, and puts the Foster row's previous_enclosure_id back to the
-// enclosure she actually came from. That column is immutable (0001), so
-// correcting it means rewriting the row under its own id, keeping its
-// author and created_at.
+// that should, and puts the Foster row in the enclosure a foster belongs in
+// — coming from the one she actually left. Both of those matter: a
+// resident's status is read off the current placement's enclosure
+// (resident_current_state), so a Foster row parked in 'Unassigned' — which
+// is how Panda's came across — reads as Unassigned however the row is
+// typed, and previous_enclosure_id decides what a later Return to shelter
+// offers her back into. enclosure_id, zone_id and previous_enclosure_id are
+// all immutable (0001), so correcting any of them means rewriting the row
+// under its own id, keeping its author and created_at.
 //
 // It never invents a placement: if the Foster row is missing, it says so
 // and stops — record the foster through the app (resident hub → Foster),
@@ -65,9 +71,12 @@ const dryRun = args.includes("--dry-run");
 const residentArg = flag("--resident", "Panda");
 const carerArg = flag("--carer", "Lutan");
 const fosterDateArg = flag("--foster-date", "2026-06-01");
-// Intake parks a resident in the Lifecycle 'Unassigned' pseudo-enclosure
-// (0008–0011), so that is where a straight intake → foster came from, and it
-// is what a later Return to shelter should offer her back into.
+// A fostered resident lives in the Lifecycle 'Fostered' pseudo-enclosure —
+// what rehomeResident() writes and what resident_current_state reads the
+// 'Fostered' status off. Intake parks a resident in 'Unassigned'
+// (0008–0011), so that is where a straight intake → foster came from and
+// what a later Return to shelter should offer her back into.
+const fosterEnclosureArg = flag("--foster-enclosure", "Fostered");
 const previousEnclosureArg = flag("--previous-enclosure", "Unassigned");
 const intakeArg = flag("--intake");
 const fosterArg = flag("--foster");
@@ -142,20 +151,28 @@ if (residents.length > 1) {
 const resident = residents[0];
 console.log(`Resident: ${resident.resident_code} ${resident.name} — currently ${resident.current_status}.\n`);
 
+const enclosureNames = [...new Set([fosterEnclosureArg, previousEnclosureArg])];
 const enclosures = await query(`
-  select e.id, e.name, z.name as zone
+  select e.id, e.name, e.zone_id, z.name as zone
   from enclosures e
   join zones z on z.id = e.zone_id
-  where e.name = ${q(previousEnclosureArg)}
+  where e.name in (${enclosureNames.map(q).join(", ")})
   order by z.name;
 `);
-if (enclosures.length === 0) die(`No enclosure named ${previousEnclosureArg}.`);
-if (enclosures.length > 1) {
-  console.error(`More than one enclosure is named ${previousEnclosureArg}:`);
-  for (const e of enclosures) console.error(`  ${e.zone} / ${e.name}`);
-  process.exit(1);
-}
-const previousEnclosure = enclosures[0];
+
+const resolveEnclosure = (name) => {
+  const found = enclosures.filter((e) => e.name === name);
+  if (found.length === 0) die(`No enclosure named ${name}.`);
+  if (found.length > 1) {
+    console.error(`More than one enclosure is named ${name}:`);
+    for (const e of found) console.error(`  ${e.zone} / ${e.name}`);
+    process.exit(1);
+  }
+  return found[0];
+};
+
+const fosterEnclosure = resolveEnclosure(fosterEnclosureArg);
+const previousEnclosure = resolveEnclosure(previousEnclosureArg);
 
 const rows = await query(`
   select
@@ -271,7 +288,11 @@ if (!foster.carer_id) die("The Foster row has no carer on it — name the right 
 const doomed = rows.filter((r) => r.id !== intake.id && r.id !== foster.id);
 const intakeNeedsEnd = intake.end_utc !== foster.start_utc;
 const fosterNeedsOpen = foster.end_utc !== null;
+const enclosureNeedsFix = String(foster.enclosure_id ?? "") !== fosterEnclosure.id;
 const previousNeedsFix = String(foster.previous_enclosure_id ?? "") !== previousEnclosure.id;
+// enclosure_id, zone_id and previous_enclosure_id can't be updated, so
+// either one being wrong means the whole row is rewritten.
+const rewriteFoster = enclosureNeedsFix || previousNeedsFix;
 
 console.log("\nPlan:");
 console.log(`  keep    ${intake.start_day} Intake`);
@@ -280,15 +301,25 @@ for (const r of doomed) console.log(`  DELETE  ${r.start_day} ${r.placement_type
 if (intakeNeedsEnd) {
   console.log(`  end the Intake row at ${foster.start_day} (was ${intake.end_day ?? "open"})`);
 }
-if (fosterNeedsOpen) console.log(`  reopen the Foster row (end_date was ${foster.end_day})`);
+if (fosterNeedsOpen && !rewriteFoster) {
+  console.log(`  reopen the Foster row (end_date was ${foster.end_day})`);
+}
+if (enclosureNeedsFix) {
+  console.log(
+    `  rewrite the Foster row into ${fosterEnclosure.zone} / ${fosterEnclosure.name}` +
+      `${fosterNeedsOpen ? ", open," : ","} was ${foster.enclosure ?? "nothing"} ` +
+      "— a Foster row parked anywhere else reads as that enclosure's status",
+  );
+}
 if (previousNeedsFix) {
   console.log(
-    `  rewrite the Foster row so it came from ${previousEnclosure.zone} / ` +
-      `${previousEnclosure.name} (was ${foster.previous_enclosure ?? "nothing"})`,
+    `  ${enclosureNeedsFix ? "and have it come" : "rewrite the Foster row so it came"} ` +
+      `from ${previousEnclosure.zone} / ${previousEnclosure.name} ` +
+      `(was ${foster.previous_enclosure ?? "nothing"})`,
   );
 }
 
-if (!doomed.length && !intakeNeedsEnd && !fosterNeedsOpen && !previousNeedsFix) {
+if (!doomed.length && !intakeNeedsEnd && !fosterNeedsOpen && !rewriteFoster) {
   console.log("\nNothing to do — the history already reads Intake then Foster.");
   process.exit(0);
 }
@@ -323,12 +354,12 @@ if (intakeNeedsEnd) {
   sql.push(`update placement_history set end_date = ${q(foster.start_utc)} where id = ${q(intake.id)};`);
 }
 // Skipped when the row is about to be rewritten anyway, below.
-if (fosterNeedsOpen && !previousNeedsFix) {
+if (fosterNeedsOpen && !rewriteFoster) {
   sql.push(`update placement_history set end_date = null where id = ${q(foster.id)};`);
 }
 
-if (previousNeedsFix) {
-  // previous_enclosure_id is immutable (0001), so the row is rewritten under
+if (rewriteFoster) {
+  // Those columns are immutable (0001), so the row is rewritten under
   // its own id, keeping its author and created_at. The delete leaves the
   // resident with no open placement, and the insert's close-prior trigger
   // finds nothing to close — the Intake row is already ended above.
@@ -337,8 +368,8 @@ if (previousNeedsFix) {
     (id, resident_id, placement_type, start_date, end_date, zone_id, enclosure_id,
      previous_enclosure_id, carer_id, notes, created_by, created_at)
     values (${q(foster.id)}, ${q(resident.id)}, 'Foster', ${q(foster.start_utc)}, null,
-      (select zone_id from enclosures where id = ${q(foster.enclosure_id)}),
-      ${q(foster.enclosure_id)}, ${q(previousEnclosure.id)}, ${q(foster.carer_id)},
+      ${q(fosterEnclosure.zone_id)}, ${q(fosterEnclosure.id)},
+      ${q(previousEnclosure.id)}, ${q(foster.carer_id)},
       ${q(foster.notes)}, ${q(foster.created_by)}, ${q(foster.created_utc)});`);
   // The insert's close-prior trigger re-ends any open row at the foster date;
   // the Intake row is already closed there, so this only restates it.
@@ -365,8 +396,9 @@ begin
     select 1 from placement_history
     where id = ${q(foster.id)} and placement_type = 'Foster' and end_date is null
       and carer_id = ${q(foster.carer_id)}
+      and enclosure_id = ${q(fosterEnclosure.id)}
       and previous_enclosure_id = ${q(previousEnclosure.id)}
-  ) then raise exception 'the Foster row is not the open one, or came from the wrong enclosure'; end if;
+  ) then raise exception 'the Foster row is not the open one, or sits in the wrong enclosure'; end if;
 
   if not exists (
     select 1 from placement_history
