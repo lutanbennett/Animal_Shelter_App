@@ -5,6 +5,7 @@ import { assertManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { DOSE_UNITS, type DoseUnit } from "@/lib/i18n/enum-labels";
+import { parseBahtAmount } from "@/lib/format";
 import {
   parseSchedule,
   type ScheduleError,
@@ -19,6 +20,8 @@ export type MedicationFormState =
 export type MedicationFields = {
   name: string;
   doseUnit: string;
+  /** Baht per dose_unit, or null for "not priced yet" (0071). */
+  costPerUnit: number | null;
 };
 
 export type FrequencyFields = {
@@ -88,10 +91,14 @@ export async function createMedication(
     return { error: t.management.medications.errors.unitInvalid };
   }
 
+  // Optional: a medication can be added before anyone knows the price.
+  const cost = parseBahtAmount(formData.get("costPerUnit") as string | null);
+  if (!cost.ok) return { error: t.management.medications.errors.costInvalid };
+
   const supabase = await createClient();
   const { error } = await supabase
     .from("medication")
-    .insert({ name, dose_unit: doseUnit });
+    .insert({ name, dose_unit: doseUnit, cost_per_unit: cost.value });
 
   if (error) return { error: error.message };
 
@@ -114,11 +121,15 @@ export async function updateMedication(id: string, fields: MedicationFields) {
   if (!isDoseUnit(doseUnit)) {
     throw new Error(t.management.medications.errors.unitInvalid);
   }
+  // Re-checked here, not only in the table: null clears the price back to
+  // "not priced yet", but a bad number must not become one.
+  const cost = parseBahtAmount(fields.costPerUnit?.toString() ?? null);
+  if (!cost.ok) throw new Error(t.management.medications.errors.costInvalid);
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("medication")
-    .update({ name, dose_unit: doseUnit })
+    .update({ name, dose_unit: doseUnit, cost_per_unit: cost.value })
     .eq("id", id);
 
   if (error) throw new Error(error.message);

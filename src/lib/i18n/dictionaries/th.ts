@@ -383,6 +383,9 @@ const th: Dictionary = {
         intervalMonths: "ฉีดซ้ำทุก (เดือน)",
         intervalPlaceholder: "เช่น 24",
         intervalHint: "เว้นว่าง = ฉีดครั้งเดียว ไม่มีวันครบกำหนด",
+        cost: "ราคาต่อโดส",
+        costPlaceholder: "เช่น 250",
+        costHint: "บาทต่อหนึ่งโดส เว้นว่าง = ยังไม่ได้ระบุราคา",
         mandatory: "จำเป็น",
         addButton: "เพิ่มประเภทวัคซีน",
       },
@@ -390,6 +393,9 @@ const th: Dictionary = {
         name: "ชื่อ",
         status: "สถานะ",
         repeatInterval: "ระยะฉีดซ้ำ",
+        cost: "ราคาต่อโดส",
+        costPlaceholder: "บาท",
+        notPricedYet: "ยังไม่ได้ระบุราคา",
         mandatory: "จำเป็น",
         optional: "ไม่บังคับ",
         everyMonths: (months: number) => `ทุก ${months} เดือน`,
@@ -403,6 +409,7 @@ const th: Dictionary = {
       errors: {
         nameRequired: "กรุณากรอกชื่อ",
         intervalPositive: "ระยะฉีดซ้ำต้องเป็นจำนวนเดือนที่มากกว่า 0",
+        costInvalid: "ราคาต้องเป็นตัวเลขบาทตั้งแต่ 0 ขึ้นไป หากยังไม่ได้ระบุราคา ให้เว้นว่างไว้",
         invalidInterval: "ระยะเวลาไม่ถูกต้อง",
       },
     },
@@ -513,6 +520,17 @@ const th: Dictionary = {
         contactAddress: "ที่อยู่",
         contactMapUrl: "ลิงก์แผนที่",
         contactMapUrlHint: "ลิงก์ Google Maps — ที่อยู่ในส่วนท้ายจะเปิดลิงก์นี้",
+      },
+      vetVisit: {
+        heading: "ค่าพบสัตวแพทย์โดยทั่วไป",
+        subtitle:
+          "ค่าใช้จ่ายโดยทั่วไปของการพบสัตวแพทย์หนึ่งครั้ง การคาดการณ์กระแสเงินสดใช้ตัวเลขนี้กับนัดที่จองไว้แต่ยังไม่มีใบแจ้งหนี้ เมื่อบันทึกค่าใช้จ่ายจริงของนัดใดแล้ว ระบบจะใช้ตัวเลขจริงแทน ไม่แสดงบนเว็บไซต์สาธารณะ",
+        label: "ค่าใช้จ่ายต่อครั้ง",
+        placeholder: "เช่น 800",
+        hint:
+          "หากไม่ต้องการคาดเดา ให้เว้นว่างไว้ — การคาดการณ์จะแสดงว่า \"ยังไม่ได้ระบุราคา\" แทนที่จะนับเป็นศูนย์ ใช้ตัวเลขเดียวกับสัตวแพทย์ทุกราย เพราะยังมีประวัติใบแจ้งหนี้ไม่มากพอที่จะเฉลี่ยรายสัตวแพทย์ได้",
+        invalid:
+          "ค่าประมาณต้องเป็นตัวเลขบาทตั้งแต่ 0 ขึ้นไป หากไม่ต้องการระบุ ให้เว้นว่างไว้",
       },
       pages: {
         heading: "หน้าเว็บ",
@@ -785,6 +803,9 @@ const th: Dictionary = {
         namePlaceholder: "เช่น Amoxicillin 250mg เม็ด",
         unit: "หน่วย",
         unitHint: "หน่วยวัดของยาหนึ่งโดส ยาเม็ดกับยาน้ำ = ยาสองรายการ",
+        cost: "ราคาต่อหน่วย",
+        costPlaceholder: "เช่น 2.50",
+        costHint: "บาทต่อหนึ่งหน่วย ไม่ใช่ต่อแพ็ค เว้นว่าง = ยังไม่ได้ระบุราคา",
         addButton: "เพิ่มยา",
       },
       frequencyForm: {
@@ -797,6 +818,10 @@ const th: Dictionary = {
       table: {
         name: "ชื่อ",
         unit: "หน่วย",
+        cost: "ราคาต่อหน่วย",
+        costPlaceholder: "บาท",
+        costPerUnit: (amount: string, unit: string) => `${amount} / ${unit}`,
+        notPricedYet: "ยังไม่ได้ระบุราคา",
         forecastHeading: (days: number) => `${days} วันข้างหน้า`,
         forecastQuantity: (quantity: number, unit: string) => `${quantity} ${unit}`,
         forecastDetail: (doses: number, residents: number) =>
@@ -839,6 +864,8 @@ const th: Dictionary = {
         nameRequired: "กรุณากรอกชื่อ",
         unitInvalid: "กรุณาเลือกหน่วย",
         labelRequired: "กรุณากรอกชื่อ",
+        costInvalid:
+          "ราคาต้องเป็นตัวเลขบาทตั้งแต่ 0 ขึ้นไป หากยังไม่ได้ระบุราคา ให้เว้นว่างไว้",
         hasPrescriptions: (n: number) =>
           `ยานี้อยู่ในใบสั่งยา ${n} ใบ จึงลบไม่ได้ — ใบสั่งยาเป็นส่วนหนึ่งของประวัติการรักษาของสัตว์ ให้รวมเข้ากับยาอื่นแทน`,
         frequencyHasPrescriptions: (n: number) =>

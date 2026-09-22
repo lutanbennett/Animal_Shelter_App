@@ -77,3 +77,27 @@ export function visitingHoursLines(
     .map((line) => line.trim())
     .filter(Boolean);
 }
+
+/**
+ * The typical-vet-visit estimate (0071): the flat figure the cashflow
+ * forecast uses for a visit that is booked but not yet invoiced.
+ *
+ * Deliberately not part of SITE_CONTENT_COLUMNS, and so not in SiteContent.
+ * It lives on site_content because that is the app's only singleton
+ * settings row, but every public page loads SITE_CONTENT_COLUMNS and there
+ * is no reason to ship an internal cost figure in the landing page's
+ * payload. Only /admin/website and the forecast read it, through here.
+ */
+export async function loadVetVisitEstimate(
+  supabase: SupabaseClient,
+): Promise<number | null> {
+  const { data } = await supabase
+    .from("site_content")
+    .select("vet_visit_estimate")
+    .eq("id", true)
+    .limit(1)
+    .returns<{ vet_visit_estimate: number | string | null }[]>();
+  // numeric(12, 2) can come back as a string from PostgREST.
+  const raw = data?.[0]?.vet_visit_estimate;
+  return raw == null ? null : Number(raw);
+}

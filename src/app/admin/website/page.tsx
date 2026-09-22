@@ -1,10 +1,11 @@
 import { requireAdminUser } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { loadSiteContent } from "@/lib/site/content";
+import { loadSiteContent, loadVetVisitEstimate } from "@/lib/site/content";
 import { SITE_PAGE_SLUGS, type SitePageSlug } from "@/lib/site/pages";
 import { loadTranslations, translationKey } from "@/lib/translations/queries";
 import { SiteSettingsForm } from "./SiteSettingsForm";
+import { VetVisitEstimate } from "./VetVisitEstimate";
 import { SitePageForm, type SitePageRow } from "./SitePageForm";
 import { HeroPhoto } from "./HeroPhoto";
 import { GalleryPhotos, type GalleryPhotoRow } from "./GalleryPhotos";
@@ -36,6 +37,7 @@ export default async function WebsitePage() {
 
   const [
     content,
+    vetVisitEstimate,
     pagesResult,
     photosResult,
     publicResidentsResult,
@@ -43,6 +45,9 @@ export default async function WebsitePage() {
     publishedResult,
   ] = await Promise.all([
       loadSiteContent(supabase),
+      // Not part of loadSiteContent: it is an internal figure kept out of
+      // the column list every public page loads (0071).
+      loadVetVisitEstimate(supabase),
       supabase
         .from("site_pages")
         .select("id, slug, title, body")
@@ -126,6 +131,7 @@ export default async function WebsitePage() {
             residents={publicResidents}
           />
           <SiteSettingsForm content={content} />
+          <VetVisitEstimate estimate={vetVisitEstimate} />
 
           <section className="flex flex-col gap-4">
             <div>
