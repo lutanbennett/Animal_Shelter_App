@@ -3,6 +3,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { getAppEnv } from "@/lib/app-env";
+import { canUseAssistant } from "@/lib/assistant/data";
+import { AssistantPanel } from "@/components/assistant/AssistantPanel";
 import { SignOutButton } from "./login/SignOutButton";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { MobileNavToggle } from "./MobileNavToggle";
@@ -16,6 +18,9 @@ export async function AppHeader() {
   if (!user) return null;
 
   const { t } = await getT();
+  // The assistant opens from here so it is reachable from every screen,
+  // including the phone. The vet role does not get it (0070).
+  const { data: role } = await supabase.rpc("current_user_role");
 
   return (
     <header className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 md:px-6">
@@ -55,6 +60,7 @@ export async function AppHeader() {
         )}
       </div>
       <div className="flex items-center gap-4">
+        {canUseAssistant(role) && <AssistantPanel />}
         <LanguageSwitcher />
         <span className="hidden text-sm text-muted md:inline">
           {user.email}

@@ -102,6 +102,37 @@ const manual: Manual = {
           },
         },
         {
+          id: "assistant",
+          title: "Asking the assistant",
+          roles: ["admin", "management", "staff", "volunteer"],
+          path: "Assistant in the header (any screen), or Assistant in the left nav",
+          intro:
+            "The assistant turns one typed sentence into a filled-in form, shows it to you, and writes nothing until you press Confirm. It is not a chatbot and it does not guess: it recognises the requests listed below, in English or Thai, and leaves blank whatever your sentence didn't say. Anything else gets a polite \"I didn't understand that one\" — so the list below is the whole of what it knows.",
+          steps: [
+            "Open it with the Assistant button in the header — it slides in over whatever you were looking at — or from Assistant in the left nav for a full page.",
+            "Type one request and press Send. Check the card that comes back, fill in or correct anything on it, then press Confirm. Cancel writes nothing.",
+            "To record something: \"Send Panda to the vet hospital today\" · \"Panda is back from hospital\" · \"Panda weighs 12.4 kg\" (or \"log weight 12.4 for Panda\") · \"Move Panda to B1 today\" · \"Book a vet visit for Panda with Dr Somchai on Friday at 10am\".",
+            "To ask something: \"Where is Panda?\" · \"Who is in B1?\" · \"What is due this week?\" — these are answered straight away, with no card and nothing to confirm.",
+            "Names: use the name as it is written on the resident's record, or their code (R-0042). If more than one resident has that name, the assistant shows you their photos, codes and enclosures and asks which one you meant.",
+            "Dates: today, tomorrow, yesterday, a weekday name (Friday means the next Friday), or a full date such as 2026-09-30. Times: 10am, 2.30pm, 14:30.",
+            "Thai works the same way: ส่ง … ไปโรงพยาบาล · … กลับจากโรงพยาบาล · … น้ำหนัก 12.4 กก. · ย้าย … ไป … · นัดหมอให้ … · … อยู่ไหน · ใครอยู่ใน … · สัปดาห์นี้มีอะไรครบกำหนด.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "The assistant can't do anything you couldn't do yourself on the page it stands in for. It runs the same checks and obeys the same permissions — so volunteers can ask it questions, but recording a change is for staff and management.",
+            },
+            {
+              kind: "tip",
+              text: "Everything it records carries a note saying it came from the assistant, together with the sentence you typed, so the resident's history shows where the entry came from.",
+            },
+            {
+              kind: "warning",
+              text: "If it says it didn't understand, it has written nothing — use the ordinary page instead. It is worth typing the request anyway: the sentences it can't place are kept, and they are what the next version is taught on.",
+            },
+          ],
+        },
+        {
           id: "roles",
           title: "Roles — who can do what",
           intro:

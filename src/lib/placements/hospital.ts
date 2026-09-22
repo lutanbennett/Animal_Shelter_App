@@ -14,7 +14,10 @@ export type SendToHospitalInput = {
   notes: string | null;
 };
 
-export type SendToHospitalResult = { error: string } | { ok: true };
+export type SendToHospitalResult =
+  | { error: string }
+  /** id is the placement_history row that was written. */
+  | { ok: true; id: string };
 
 export type ReturnFromHospitalInput = {
   residentId: string;
@@ -25,7 +28,10 @@ export type ReturnFromHospitalInput = {
   notes: string | null;
 };
 
-export type ReturnFromHospitalResult = { error: string } | { ok: true };
+export type ReturnFromHospitalResult =
+  | { error: string }
+  /** id is the placement_history row that was written. */
+  | { ok: true; id: string };
 
 /**
  * Roles whose placement_history insert policy admits SendToHospital.
@@ -114,19 +120,23 @@ export async function sendResidentToHospital(
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { error } = await supabase.from("placement_history").insert({
-    resident_id: input.residentId,
-    placement_type: "SendToHospital",
-    start_date: startDate,
-    zone_id: hospital.zone_id,
-    enclosure_id: hospital.id,
-    previous_enclosure_id: current?.enclosure_id ?? null,
-    notes: input.notes,
-    created_by: user?.id ?? null,
-  });
+  const { data, error } = await supabase
+    .from("placement_history")
+    .insert({
+      resident_id: input.residentId,
+      placement_type: "SendToHospital",
+      start_date: startDate,
+      zone_id: hospital.zone_id,
+      enclosure_id: hospital.id,
+      previous_enclosure_id: current?.enclosure_id ?? null,
+      notes: input.notes,
+      created_by: user?.id ?? null,
+    })
+    .select("id")
+    .single<{ id: string }>();
   if (error) return { error: error.message };
 
-  return { ok: true };
+  return { ok: true, id: data.id };
 }
 
 /**
@@ -209,17 +219,21 @@ export async function returnResidentFromHospital(
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { error } = await supabase.from("placement_history").insert({
-    resident_id: input.residentId,
-    placement_type: "ReturnFromHospital",
-    start_date: startDate,
-    zone_id: target.zone_id,
-    enclosure_id: target.id,
-    previous_enclosure_id: current?.enclosure_id ?? null,
-    notes: input.notes,
-    created_by: user?.id ?? null,
-  });
+  const { data, error } = await supabase
+    .from("placement_history")
+    .insert({
+      resident_id: input.residentId,
+      placement_type: "ReturnFromHospital",
+      start_date: startDate,
+      zone_id: target.zone_id,
+      enclosure_id: target.id,
+      previous_enclosure_id: current?.enclosure_id ?? null,
+      notes: input.notes,
+      created_by: user?.id ?? null,
+    })
+    .select("id")
+    .single<{ id: string }>();
   if (error) return { error: error.message };
 
-  return { ok: true };
+  return { ok: true, id: data.id };
 }
