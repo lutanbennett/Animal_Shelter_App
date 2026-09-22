@@ -1927,3 +1927,31 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   query out of the full URL (`?q=lat,lng`, `/maps/place/<address>`,
   `@lat,lng`, `!3d…!4d…`); failures just mean no map. Only the hub page
   does this — the contact list never renders the frame.
+
+- **A resident's wrong placement history is corrected by a scripted
+  transaction, not by hand or by the app (2026-09-22):** the shelter
+  reported that Panda's history is wrong — she was taken in and then
+  fostered to Lutan in June, and the placements between those two never
+  happened. `placement_history` is append-only on purpose (0001's
+  immutability trigger, and no UI anywhere deletes a placement), so there
+  is no in-app way to remove history that never happened, and doing it
+  through the SQL editor is exactly the "POST SQL by hand" the migration
+  rules forbid. `scripts/fix-panda-placements.mjs` does it instead: it
+  reports the current rows, works out which two should survive **from the
+  data** (the single Intake row; the Foster row in the given month whose
+  carer matches), and sends `delete` plus the two `end_date` adjustments
+  as one Management-API transaction with assertions — two rows left, one
+  of them open, the Intake ending where the Foster starts, the resident
+  reading as Fostered — so a wrong plan rolls back. It has `--dry-run` and
+  refuses to act without `--apply`. Deliberately it **never inserts a
+  placement**: if the June Foster row is missing it stops and says to
+  record the foster in the app, whose `rehomeResident` writes the row with
+  the right Lifecycle enclosure, zone and carer. Rejected: a migration
+  (data, not schema, and it would run against dev where the rows differ)
+  and a generic "edit any placement" admin screen (the append-only log is
+  the point; a one-off correction shouldn't buy a permanent hole in it).
+  The one thing the script can't do with an `update` is
+  `previous_enclosure_id` — immutable, and it decides which enclosure a
+  later Return to shelter offers — so it reports the mismatch and rewrites
+  the row under its own id only when asked with
+  `--relink-previous-enclosure`.
