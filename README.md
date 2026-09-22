@@ -419,12 +419,24 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
   regenerated, not edited: `node scripts/manual-screenshots.mjs` opens the
   machine's Edge/Chrome on the running dev server, waits for you to sign
   in as an admin, and captures every screen the manual references.
-- `src/lib/assistant/` — the keyword parser behind the `/assistant` demo
-  (a throwaway sketch to gauge interest in a real assistant — see the
-  "Assistant" section of `docs/backlog.md`). It matches resident, enclosure
-  and vet names against real rows and a small date/time vocabulary; the
-  writes in `src/app/assistant/actions.ts` reuse the move helper and the
-  vet-visit RPC, and nothing is written until the preview card is confirmed.
+- `src/lib/assistant/` — the assistant's brain: one small parser per
+  intent under `intents/`, tried in the order `parse.ts` lists (the order
+  is load-bearing — see `docs/decisions.md`, 2026-09-23). Each one turns a
+  typed sentence into a `Draft` with nulls for whatever the sentence
+  didn't say, matching resident, enclosure and vet names against real rows
+  and a small date/time vocabulary in English and Thai. `data.ts` loads
+  those rows and the caller's role; `audit.ts` writes the
+  `assistant_actions` row (0070) every turn leaves behind, confirmed,
+  cancelled or unrecognised. Version 2 (an LLM — see the "Assistant"
+  section of `docs/backlog.md`) replaces this directory and keeps the rest.
+- `src/components/assistant/` — the conversation: the message list and
+  input, one preview card per writing intent, and the answers to the
+  read-only questions. Rendered both by `/assistant` and by the header's
+  slide-over. Nothing is written until a card is confirmed, and Confirm
+  calls `src/app/assistant/actions.ts`, which runs the same server helper
+  the matching page or form runs — the assistant has no write path of its
+  own. Admin, management and staff can confirm writes; volunteers get the
+  lookups ("where is …", "who is in …", "what is due this week").
 - `worker/index.mjs` — the Worker entry: edge cache → Pi through its tunnel
   → OpenNext render (`docs/pi-hosting.md`).
 - `scripts/pi/` — the Pi origin: one-time `setup.sh`, `deploy-pi.sh`, the

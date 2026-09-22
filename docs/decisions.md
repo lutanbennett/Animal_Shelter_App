@@ -2105,3 +2105,75 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   `created_at` — and the assertion that the resident ends up `Fostered` is
   what caught the problem in the first place, rather than a silent commit
   and a wrong hub page.
+
+- **The Director saw the assistant demo and asked for it in production, so
+  the sketch became version 1 (2026-09-23):** shown "move Panda to B1" and
+  "book a vet visit for Panda tomorrow 10am" on 2026-09-22. The reaction
+  was that this is how the staff who don't like forms would record things,
+  and the question was not whether to keep it but what else it could be
+  taught — hospital and weight first, and being able to *ask* it where an
+  animal is. So the demo item is closed, the scripted assistant is the
+  production tool, and the LLM item below it is version 2: same panel,
+  same preview cards, a smarter brain later. What the demo deliberately
+  left out (see the 2026-09-22 entry, "hard-codes the understanding, not
+  the doing") is now in: the slide-over, the audit table (0070) and a
+  manual topic. The `NEXT_PUBLIC_ASSISTANT_DEMO` flag is not — the point
+  of a flag was to hide a sketch, and there is no sketch to hide.
+
+- **The assistant's parsers are an ordered list, and the order is the
+  design (2026-09-23):** promoting `demo-parser.ts` meant choosing between
+  one regex that grows with every intent and one file per intent. The
+  latter, behind `parse(text, ctx) → Draft | null` tried in order, so the
+  next batch is a new file. The cost is that a sentence several parsers
+  would claim goes to whichever comes first, which makes the list in
+  `src/lib/assistant/parse.ts` load-bearing: the lookups run first so
+  "where is Panda going" is a question rather than a move; the hospital
+  parsers run before the vet one because "the vet hospital" mentions a vet
+  and is not a booking; the return runs before the admission because "back
+  from hospital" is still about a hospital; and move runs last because
+  "put" and "shift" claim almost anything. Rejected: scoring every parser
+  and taking the best match — with hand-written regexes the scores would
+  be arbitrary, and a first-match list is something a person can read and
+  predict. Version 2 replaces the list; the Drafts, the cards and the
+  server actions are what it keeps.
+
+- **The assistant never grows its own write path (2026-09-23):** every
+  intent calls the helper the matching page or form already calls, under
+  the caller's own session, so the role rules and RLS apply exactly as
+  they do from the page. Hospital already had `sendResidentToHospital` /
+  `returnResidentFromHospital`; weight did not — its rules lived inline in
+  `/weight/new`'s action — so they were lifted into
+  `src/lib/weight/record.ts` first and both callers now share it. The
+  three placement helpers also now return the id of the row they wrote, so
+  the audit table can point at it; every existing caller only tested for
+  `"error" in result`, so this is additive. The assistant does add one
+  check of its own on top: admin / management / staff confirm writes and
+  volunteers get the read-only lookups, which is narrower than the move
+  helper alone (it admits volunteers, because moving between enclosures is
+  volunteer work from the resident's own page). A typed sentence is a
+  blunter instrument than a page you had to navigate to, so it gets the
+  narrower gate.
+
+- **Every turn at the assistant writes an audit row, including the ones
+  that went nowhere (2026-09-23):** `assistant_actions` (0070) gets a row
+  when the person confirms a card, when they cancel it, and when no parser
+  recognised the sentence at all. The unmatched rows are the point — they
+  are the sentences a keyword parser could not place, which is the test
+  set version 2 has to beat — so the request text is stored exactly as
+  typed. The write never fails the action it describes: `logAssistantAction`
+  swallows its own errors into the server log, because somebody who has
+  just moved a resident should not be told the move failed when what
+  failed was the note about it. One gap, accepted rather than worked
+  around: a volunteer who types a *write* request is turned away in the
+  browser and no row is written, because the status enum has values for
+  confirmed, cancelled and unmatched and none of them is true of it —
+  giving it one is a migration, and this batch carries no schema.
+
+- **The assistant is a slide-over from the header, and `/assistant` stays
+  (2026-09-23):** the panel fetches the rows it matches names against when
+  it opens rather than with every page render, because most screens never
+  open it, and again on each open, so a tab left open all afternoon isn't
+  matching against enclosures that have since changed. The conversation
+  itself is one component used by both, and the message list and input
+  below it know nothing about drafts or intents — that is the seam version
+  2 is meant to come in at.
