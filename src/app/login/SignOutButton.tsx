@@ -9,6 +9,8 @@ export function SignOutButton() {
   const supabase = createClient();
   const { t } = useI18n();
 
+  // whitespace-nowrap: the header gained the assistant button, and at
+  // phone width "Sign out" was the thing that broke onto a second line.
   return (
     <button
       type="button"
@@ -17,7 +19,7 @@ export function SignOutButton() {
         router.push("/login");
         router.refresh();
       }}
-      className="text-sm font-medium text-muted hover:text-foreground"
+      className="whitespace-nowrap text-sm font-medium text-muted hover:text-foreground"
     >
       {t.header.signOut}
     </button>

@@ -67,7 +67,6 @@ const th: Dictionary = {
     publicSite: "เว็บไซต์สาธารณะ",
     changePassword: "เปลี่ยนรหัสผ่าน",
     assistant: "ผู้ช่วย",
-    demoBadge: "ทดลอง",
     menu: "เมนู",
     openMenu: "เปิดเมนู",
     closeMenu: "ปิดเมนู",
@@ -958,18 +957,31 @@ const th: Dictionary = {
   assistant: {
     pageTitle: "ผู้ช่วย",
     pageSubtitle:
-      "รุ่นทดลอง พิมพ์สิ่งที่ต้องการให้ทำเป็นภาษาธรรมดา ระบบเข้าใจสองอย่าง คือ ย้ายสัตว์ไปกรงอื่น และนัดหมอ แล้วจะแสดงตัวอย่างให้ตรวจก่อนบันทึกทุกครั้ง",
+      "พิมพ์สิ่งที่ต้องการให้ทำเป็นภาษาธรรมดา ผู้ช่วยจะกรอกแบบฟอร์มจากประโยคของคุณแล้วแสดงให้ดูก่อน ไม่มีการบันทึกใด ๆ จนกว่าคุณจะกดยืนยัน ผู้ช่วยเข้าใจคำสั่งตามรายการที่กำหนดไว้ ดูรายการทั้งหมดได้ในคู่มือการใช้งาน",
+    pageSubtitleReadOnly:
+      "ถามได้ว่าสัตว์อยู่ที่ไหน ใครอยู่ในกรงไหน หรือมีอะไรครบกำหนดบ้าง ส่วนการบันทึกข้อมูลเป็นหน้าที่ของเจ้าหน้าที่และผู้จัดการ",
     tryTitle: "ลองพิมพ์ เช่น",
     examples: (resident: string, enclosure: string, vet: string) => [
+      `${resident} อยู่ไหน`,
+      `ใครอยู่ใน ${enclosure}`,
+      "สัปดาห์นี้มีอะไรครบกำหนด",
+      `ส่ง ${resident} ไปโรงพยาบาลวันนี้`,
+      `${resident} กลับจากโรงพยาบาลแล้ว`,
+      `${resident} น้ำหนัก 12.4 กก.`,
       `ย้าย ${resident} ไป ${enclosure} วันนี้`,
       `นัดหมอให้ ${resident} กับ ${vet} วันศุกร์ 10:00`,
     ],
     placeholder: "ต้องการให้ทำอะไร?",
     send: "ส่ง",
+    looking: "กำลังค้นหา...",
     cantHelp:
-      "ในรุ่นทดลองนี้ทำได้แค่ย้ายสัตว์ไปกรงอื่นหรือนัดหมอเท่านั้น ลองพิมพ์ \"ย้าย <ชื่อ> ไป <กรง>\" หรือ \"นัดหมอให้ <ชื่อ> วันศุกร์ 10:00\"",
+      "ไม่เข้าใจประโยคนี้ ผู้ช่วยทำได้คือ ส่งสัตว์ไปโรงพยาบาลและรับกลับ บันทึกน้ำหนัก ย้ายกรง นัดหมอ และตอบคำถามว่า \"…อยู่ไหน\" \"ใครอยู่ใน…\" และ \"สัปดาห์นี้มีอะไรครบกำหนด\" ดูประโยคที่ใช้ได้ทั้งหมดในคู่มือการใช้งาน",
     severalMatch: "มีสัตว์ชื่อนี้มากกว่าหนึ่งตัว กรุณาเลือกตัวที่ถูกต้อง",
+    whichOne: "หมายถึงตัวไหน?",
     fillBlanks: "ตรวจรายละเอียด เติมส่วนที่ขาด แล้วกดยืนยัน",
+    notAuthorized: "บัญชีของคุณไม่สามารถใช้ผู้ช่วยได้",
+    volunteerReadOnly:
+      "อาสาสมัครถามผู้ช่วยได้ แต่การบันทึกรายการนี้เป็นหน้าที่ของเจ้าหน้าที่และผู้จัดการ กรุณาแจ้งเจ้าหน้าที่ หรือบันทึกจากหน้าของสัตว์ตัวนั้น",
     move: {
       title: "ย้ายสัตว์",
       summary: (resident: string, from: string, to: string, date: string) =>
@@ -984,6 +996,26 @@ const th: Dictionary = {
       done: (resident: string, vet: string, when: string) =>
         `เรียบร้อย นัดหมอให้ ${resident} กับ ${vet} วันที่ ${when} แล้ว`,
     },
+    hospital: {
+      title: "ส่งโรงพยาบาล",
+      summary: (resident: string, date: string) =>
+        `ส่ง ${resident} ไปโรงพยาบาลสัตว์ วันที่ ${date}`,
+      done: (resident: string) => `เรียบร้อย ส่ง ${resident} ไปโรงพยาบาลสัตว์แล้ว`,
+    },
+    hospitalReturn: {
+      title: "กลับจากโรงพยาบาล",
+      summary: (resident: string, to: string, date: string) =>
+        `รับ ${resident} กลับจากโรงพยาบาลสัตว์ไปที่ ${to} วันที่ ${date}`,
+      done: (resident: string, enclosure: string) =>
+        `เรียบร้อย ${resident} กลับจากโรงพยาบาลสัตว์แล้ว อยู่ที่ ${enclosure}`,
+    },
+    weight: {
+      title: "บันทึกน้ำหนัก",
+      summary: (resident: string, kg: string, date: string) =>
+        `บันทึก ${resident} น้ำหนัก ${kg} กก. วันที่ ${date}`,
+      done: (resident: string, kg: number) =>
+        `เรียบร้อย บันทึก ${resident} น้ำหนัก ${kg} กก. แล้ว`,
+    },
     fields: {
       resident: "สัตว์",
       enclosure: "ไปกรง",
@@ -991,17 +1023,42 @@ const th: Dictionary = {
       date: "วันที่",
       time: "เวลา",
       reason: "เหตุผล",
+      weightKg: "น้ำหนัก (กก.)",
     },
     pickResident: "เลือกสัตว์",
     pickVet: "เลือกหมอ",
     unknown: "…",
     notesStamp: (request: string) =>
-      `หมายเหตุจะบันทึกว่า: via the assistant (demo) — "${request}"`,
+      `หมายเหตุจะบันทึกว่า: via the assistant — "${request}"`,
     confirm: "ยืนยัน",
     working: "กำลังทำ...",
     cancelled: "ยกเลิกแล้ว ไม่มีการเปลี่ยนแปลงใด ๆ",
     openResident: "เปิดหน้าสัตว์",
     couldntLoad: "โหลดข้อมูลที่ผู้ช่วยต้องใช้ไม่ได้",
+    lookups: {
+      residentNotFound: "ไม่พบสัตว์ตัวนี้",
+      enclosureNotFound: "ไม่พบกรงนี้",
+      whichResident: "หมายถึงตัวไหน? ลองพิมพ์ชื่อตามที่บันทึกไว้ หรือรหัสประจำตัว",
+      whichEnclosure: "หมายถึงกรงไหน? ลองพิมพ์ชื่อกรงตามที่อยู่ในรายการกรง",
+      whereAnswer: (resident: string, place: string) => `${resident} อยู่ที่ ${place}`,
+      whereNowhere: (resident: string) => `ตอนนี้ ${resident} ไม่ได้อยู่ในกรงใด`,
+      whereStatus: (status: string) => `สถานะ: ${status}`,
+      whoAnswer: (enclosure: string, count: number) => `มี ${count} ตัวอยู่ใน ${enclosure}:`,
+      whoEmpty: (enclosure: string) => `${enclosure} ว่างอยู่`,
+      openEnclosure: "เปิดหน้ากรง",
+      dueTitle: (days: number) =>
+        days === 1 ? "ครบกำหนดวันนี้" : `ครบกำหนดใน ${days} วันข้างหน้า`,
+      dueNothing: "ไม่มีรายการที่ครบกำหนดหรือเลยกำหนด",
+      dueOverdue: "เลยกำหนด",
+      dueVisits: "นัดหมอ",
+      dueJobs: "งานซ่อมบำรุง",
+    },
+    panel: {
+      open: "ผู้ช่วย",
+      title: "ผู้ช่วย",
+      subtitle: "พิมพ์สิ่งที่ต้องการให้ทำ ระบบจะแสดงตัวอย่างให้ตรวจก่อนบันทึกเสมอ",
+      loading: "กำลังโหลด...",
+    },
   },
 
   vetVisits: {
