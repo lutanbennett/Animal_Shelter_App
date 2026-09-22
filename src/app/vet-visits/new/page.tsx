@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { NOT_DECEASED } from "@/lib/residents/status";
 import { VetVisitForm, type ResidentOption, type VetOption } from "./VetVisitForm";
 
 export default async function NewVetVisitPage(
@@ -27,7 +28,7 @@ export default async function NewVetVisitPage(
     supabase
       .from("resident_list_view")
       .select("resident_id, name, thai_name, current_status")
-      .or("current_status.neq.Deceased,current_status.is.null")
+      .or(NOT_DECEASED)
       .order("name"),
     supabase.from("vets").select("id, name, clinic_name").order("name"),
   ]);

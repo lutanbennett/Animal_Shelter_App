@@ -124,6 +124,7 @@ const manual: Manual = {
           path: "Residents",
           steps: [
             "Open Residents from the menu. Every resident is listed by name with their ID, enclosure, zone and status.",
+            "Residents who have died are left out. The line under the heading says how many are hidden — \"212 residents · 38 deceased hidden\" — and Show all brings them back, dimmed, with Deceased in the Status column. Tap Hide deceased to put them away again.",
             "Type part of a name (English, Thai or an \"also known as\" name) in Search and tap Filter.",
             "On a computer you can also narrow the list by Zone and Enclosure. Tap Clear to see everyone again.",
             "Tap a resident's name to open their hub.",
@@ -137,6 +138,10 @@ const manual: Manual = {
             {
               kind: "tip",
               text: "Tick several residents (computer only) to log immunizations or book one vet visit for all of them at once — the buttons appear above the table.",
+            },
+            {
+              kind: "tip",
+              text: "Searching for an animal who has died still finds them: the count line says \"1 deceased resident matches — show\", and show adds them to the list.",
             },
           ],
         },

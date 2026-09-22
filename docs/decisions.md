@@ -2180,3 +2180,31 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   — so Cloudflare is the only host and the only DNS authority. Stale GitHub
   Environments named `animal-shelter-app*` may still be listed; they do
   nothing.
+
+- **A name search names the dead rather than resurrecting them
+  (2026-09-23):** `/residents` hides deceased residents by default, which
+  risks telling staff that an animal they are looking up does not exist. The
+  backlog item offered two ways out — auto-switch the list to "all" when the
+  typed name only matches deceased rows, or leave the list alone and show a
+  one-line "1 deceased resident matches — show" hint. The hint won. The
+  auto-switch silently puts the list in a mode the toggle does not claim, so
+  the next search from the same screen behaves differently from the one
+  before it for reasons nobody can see, and a name that matches one living
+  and one dead animal has to pick a rule anyway. The hint is one line, always
+  truthful about what is on screen, and the toggle stays the single thing
+  that decides what the list contains. It shows whenever a search matches a
+  deceased resident, not only when nothing else matched — "3 residents · 1
+  deceased resident matches — show" is the case that would otherwise silently
+  drop the animal being looked for.
+
+- **The deceased count is filtered, not global (2026-09-23):** the line under
+  the heading counts the deceased residents the *current* name / zone /
+  enclosure filters would have shown, not every animal that ever died, so it
+  runs the same filters as the list query (`applyFilters` in
+  `src/app/residents/page.tsx`). A global count would read "38 deceased
+  hidden" next to a zone that has none. It costs a second, head-only request
+  alongside the list. The PostgREST "not dead" expression itself moved to
+  `src/lib/residents/status.ts` as `NOT_DECEASED`; the vet-visit and
+  immunization pickers now import it instead of repeating the string.
+  `src/app/assistant/page.tsx` still has its own copy — it was being rewritten
+  on another branch at the time and was left alone deliberately.
