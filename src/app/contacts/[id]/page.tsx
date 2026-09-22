@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { canManage } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { CONTACT_COLUMNS, type Contact } from "@/lib/contacts/contacts";
+import { addressMapEmbedSrc } from "@/lib/contacts/map-preview";
 import { ContactHub, type CarerPlacement } from "./ContactHub";
 
 export default async function ContactPage(props: PageProps<"/contacts/[id]">) {
@@ -35,11 +36,16 @@ export default async function ContactPage(props: PageProps<"/contacts/[id]">) {
   if (!contact) notFound();
   if (placementsResult.error) throw new Error(placementsResult.error.message);
 
+  // The map preview may need a network round trip (a shared short link is
+  // followed to what it points at), so it waits until the contact is known.
+  const mapSrc = await addressMapEmbedSrc(contact.address);
+
   return (
     <ContactHub
       contact={contact}
       placements={placementsResult.data ?? []}
       canManage={canManage(roleResult.data)}
+      mapSrc={mapSrc}
     />
   );
 }

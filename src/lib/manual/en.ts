@@ -646,7 +646,7 @@ const manual: Manual = {
           title: "Contacts",
           path: "Contacts",
           steps: [
-            "Open Contacts to find carers, volunteers, suppliers and donors. Search by name, phone, email or chat ID, and filter by type.",
+            "Open Contacts to find carers, volunteers and suppliers. Search by name, phone, email or chat ID, and filter by type.",
             "Each contact has one-tap buttons: Call, LINE, Messenger, WhatsApp, Email and Map — handy on a phone.",
             "Tap a contact for their page, including the residents currently fostered or adopted with them and past placements.",
           ],
@@ -694,7 +694,7 @@ const manual: Manual = {
           roles: ["admin", "management"],
           path: "Management → Contacts",
           steps: [
-            "Add a contact with their type (Carer, Volunteer, Supplier, Donor, Other), phone, email, LINE ID, Messenger, WhatsApp, address and notes — what a supplier sells, when a volunteer is free, a carer's home set-up. Notes show on the contact's page and are searched from the contact list.",
+            "Add a contact with their type (Carer, Volunteer or Supplier), phone, email, LINE ID, Messenger, WhatsApp, address and notes — what a supplier sells, when a volunteer is free, a carer's home set-up. Notes show on the contact's page and are searched from the contact list.",
             "Edit details in the table. A contact who has fostered or adopted must stay a Carer, and one with placements can't be deleted.",
           ],
           screenshot: {

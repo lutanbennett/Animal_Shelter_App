@@ -1900,3 +1900,30 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   `archiveDeceasedResident` now also logs the failure's stack to the
   Worker log, because the hub's one-line message was all there was to go
   on.
+
+- **`contact_type` is Carer / Volunteer / Vendor, and unused values are
+  dropped, not hidden (2026-09-22):** the customer asked for Donor and Other
+  to go. Postgres cannot remove a value from an enum, and the easy path was
+  to leave the two values in the type and stop offering them in the form.
+  Rejected: a value that the UI never offers but the database still accepts
+  is a trap for the next import script or SQL fix, and "we will add types
+  back when we need them" is a cleaner story than "some of these are dead".
+  So migration 0067 recreates the type (rename aside, create, retype the
+  column, drop the old) behind a guard that refuses while any row still
+  carries a departing value — dev and the AppSheet source have none. The
+  same shape works for any future removal. `scripts/import-appsheet.mjs`
+  lands an unrecognised AppSheet type as Volunteer and flags it, since
+  Other no longer exists to catch it.
+
+- **The contact hub previews the address on a keyless Google Maps embed,
+  and resolves shared short links on the server (2026-09-22):** staff
+  store addresses as the `maps.app.goo.gl` link the Maps app shares — no
+  text, so the "search embed on the text after the link" fallback would
+  never fire. `google.com/maps?q=…&output=embed` needs no API key but
+  will not take a URL, and an iframe cannot follow the short link
+  through its redirect. Rather than a coordinates column (a second
+  schema change for a preview), `src/lib/contacts/map-preview.ts` follows
+  the redirect once per Worker isolate with a 3 s timeout and reads the
+  query out of the full URL (`?q=lat,lng`, `/maps/place/<address>`,
+  `@lat,lng`, `!3d…!4d…`); failures just mean no map. Only the hub page
+  does this — the contact list never renders the frame.
