@@ -9,6 +9,19 @@ const nextConfig: NextConfig = {
   // octet. Ignored in production builds.
   allowedDevOrigins: ["192.168.1.*"],
 
+  typescript: {
+    // `next build` (and `next typegen`) type-check with tsconfig.build.json,
+    // which excludes `.next/dev` — the types a running `next dev` keeps
+    // rewriting. Next 16 passes the tsconfig straight to `tsc --project`,
+    // so with tsconfig.json a build that reads routes.d.ts / validator.ts
+    // mid-write fails with TS1005s in files that aren't ours, and a
+    // deploy beside a dev server was a coin toss. NODE_ENV is set by the
+    // CLI before this file loads: production for build/typegen,
+    // development for dev, which keeps tsconfig.json (the one Next
+    // watches, and the one the editor reads with the live dev types).
+    tsconfigPath: process.env.NODE_ENV === "development" ? "tsconfig.json" : "tsconfig.build.json",
+  },
+
   images: {
     // No `/_next/image` optimizer on Cloudflare Workers. The OpenNext
     // adapter's stand-in for that route can only serve images from the

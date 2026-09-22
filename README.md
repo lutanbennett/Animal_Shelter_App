@@ -183,6 +183,14 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    elevated shell, and the build dies with `EPERM … symlink` without it.
    It is a no-op elsewhere.
 
+   Builds are safe to run while a `next dev` is up. `next build` and
+   `npm run typecheck` type-check with `tsconfig.build.json`, which is
+   `tsconfig.json` minus `.next/dev` — the route types the dev server
+   rewrites on every compile. Before that (2026-09-22) a build that read
+   them mid-write died with a wall of `TS1005` in `routes.d.ts` /
+   `validator.ts`. The editor still uses `tsconfig.json`, so it sees the
+   live dev types.
+
 2. **Preview locally on the Workers runtime** — what `next dev` can't
    simulate. It reads `.env.local` directly, no extra setup:
 
