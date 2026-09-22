@@ -1318,8 +1318,17 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   tile becomes "Awaiting an enclosure" (amber on the hub, as a nudge to
   house them). Off-site animals the shelter feeds — the Temple, Village
   and Orchard enclosures — were already plain Residents, so nothing else
-  moves; if a true outreach status is ever wanted it needs its own
-  pseudo-enclosure, not this one.
+  moves.
+- **Outreach is any external zone (2026-09-22, minutes later):** the
+  user's rule — `zones.internal` decides: internal is a shelter resident,
+  external is outreach, with Hospital, Foster, Adopted and Deceased (and
+  Unassigned, above) as the Lifecycle exceptions. 0066 makes
+  `current_status` say `Outreach` for a resident whose enclosure is in an
+  external zone (Offsite / Temple, Village, Orchard in the migrated
+  data), where it had said Resident. Outreach stays out of the "in care"
+  counts as 0039 intended; the dashboard gets its own Outreach tile so
+  the number is visible. Nobody was in an external zone on the day, so
+  no figure moved.
 
 ## Still open (from Section 11 of the requirements doc)
 

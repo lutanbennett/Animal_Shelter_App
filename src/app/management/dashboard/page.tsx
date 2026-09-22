@@ -241,6 +241,11 @@ export default async function ManagementDashboardPage(
             value={String(current.unassigned)}
           />
           <StatCard
+            title={d.now.outreach}
+            value={String(current.outreach)}
+            detail={d.now.outreachDetail}
+          />
+          <StatCard
             href="/vets"
             title={d.now.vetVisitsDue}
             value={String(current.vetVisitsDue)}

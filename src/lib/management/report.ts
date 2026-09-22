@@ -264,6 +264,7 @@ export type Snapshot = {
   inHospital: number;
   fostered: number;
   unassigned: number;
+  outreach: number;
   readyForAdoption: number;
   publicVisible: number;
   /** Scheduled visits in the next seven days. */
@@ -284,7 +285,7 @@ export function snapshot(
   },
 ): Snapshot {
   const statusOf = new Map(data.states.map((s) => [s.resident_id, s.current_status ?? "Resident"]));
-  const counts = { Resident: 0, Unassigned: 0, Hospitalised: 0, Fostered: 0 };
+  const counts = { Resident: 0, Unassigned: 0, Hospitalised: 0, Fostered: 0, Outreach: 0 };
   const species = new Map<string | null, number>();
   let readyForAdoption = 0;
   let publicVisible = 0;
@@ -329,6 +330,7 @@ export function snapshot(
     inHospital: counts.Hospitalised,
     fostered: counts.Fostered,
     unassigned: counts.Unassigned,
+    outreach: counts.Outreach,
     readyForAdoption,
     publicVisible,
     vetVisitsDue,
