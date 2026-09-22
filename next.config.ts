@@ -20,6 +20,34 @@ const nextConfig: NextConfig = {
     // Workers, the edge Cache API (see docs/decisions.md).
     unoptimized: true,
   },
+  // The deceased-resident archive renders its summary PDF with
+  // @react-pdf/renderer, which Next keeps out of its server bundle by
+  // default (it is on the built-in serverExternalPackages list), so on a
+  // deploy it and its dependencies were resolved by OpenNext's esbuild pass
+  // instead — with Node conditions, giving pdfkit's Node build. That build
+  // loads its 14 built-in fonts lazily through
+  // createRequire(import.meta.url)("#standard-fonts/…"): fine under
+  // `next dev`, but a bundled Worker has nothing for that require to
+  // resolve against, and the first touch of Helvetica (pdfkit's default
+  // font, @react-pdf's fallback family) threw `No such module
+  // "#standard-fonts/Helvetica"` — no archive ever completed on Cloudflare,
+  // only locally. Bundling the renderer here instead lets the alias below
+  // pick pdfkit's browser build, which carries the fonts as static imports
+  // (and swaps fs/stream/zlib for fflate and an in-memory Readable — what a
+  // Worker wants anyway). The renderer stays on its Node entry, where
+  // renderToBuffer lives; only pdfkit and the font store switch. Turbopack
+  // aliases are exact-match, so "pdfkit/standard-fonts/*" still resolves
+  // through pdfkit's exports map.
+  transpilePackages: ["@react-pdf/renderer"],
+  turbopack: {
+    resolveAlias: {
+      // Paths, not package subpaths: pdfkit's exports map does not expose
+      // its build files, so "pdfkit/js/…" would fail to resolve and the alias
+      // would silently not apply.
+      pdfkit: "./node_modules/pdfkit/js/pdfkit.browser.mjs",
+      "@react-pdf/font": "./node_modules/@react-pdf/font/lib/index.browser.js",
+    },
+  },
   experimental: {
     // Next.js dev mode caches fetch() responses across HMR refreshes by
     // default — even for requests to Route Handlers made repeatedly via
