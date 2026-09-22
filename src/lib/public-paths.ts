@@ -15,7 +15,7 @@
  * /donate site_pages / site_content (0059), and /privacy is static text
  * (the notice Google's consent screen links to). /r/ is the address on a
  * resident's RFID card: a visitor sees the resident's public card there
- * (public_resident_cards, 0067) and a signed-in user is sent on to the
+ * (public_resident_cards, 0068) and a signed-in user is sent on to the
  * hub (src/app/r/[code]/page.tsx); /e/ (enclosure QR codes) has no
  * public page and stays behind the gate.
  */

@@ -3,7 +3,7 @@ import type { PublicTranslations } from "@/lib/translations/types";
 import { isUuid } from "@/lib/tags/links";
 
 /**
- * public_resident_cards (0067): the card-shaped slice of *any* resident
+ * public_resident_cards (0068): the card-shaped slice of *any* resident
  * that a visitor may see after scanning the RFID card by a kennel
  * (src/app/r/[code]/page.tsx). Unlike public_resident_profiles it has no
  * "shown on the public site" filter — the card is on the door, so the

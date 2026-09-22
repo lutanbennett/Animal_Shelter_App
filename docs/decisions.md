@@ -1421,7 +1421,7 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   profile only for residents ticked "visible on the public site",
   sign-in for the rest) would have had visitors scanning card after
   card into a login page, and they would stop scanning. That needed
-  its own schema PR first: `0067_public_resident_cards.sql` adds
+  its own schema PR first: `0068_public_resident_cards.sql` adds
   `public_resident_cards`, an anon-readable view of the card-shaped
   slice of all residents (what the card prints — photo, name, age, sex,
   temperament — plus species, breed, size, colour, desexed, intake
@@ -1429,6 +1429,13 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   coarse `status` of Resident / Adopted / Deceased so an old card can
   say the animal has gone and nothing says where a current resident
   is; no past story, which is adoption-listing copy.
+  (It was written as 0067 and merged the same hour as the contact-hub
+  stream's 0067 — both schema PRs were opened before either merged,
+  which the rule "two streams needing schema share one schema PR" is
+  there to stop — so it was renumbered 0068 in the feature PR before
+  production ever saw it; dev keeps a stale `0067_public_resident_cards`
+  row in `schema_migrations`, harmless and gone with the pre-launch
+  wipe.)
   `public_resident_profiles` stays the curated `/adopt` listing, and
   the card links on to it when the resident is there. So `/r/` is a
   public path (no app chrome), read with whatever key the request has —

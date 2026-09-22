@@ -28,7 +28,7 @@ import { PublicFooter } from "@/app/adopt/PublicFooter";
  * Who scanned decides what they get (docs/decisions.md, 2026-09-22): a
  * signed-in user is sent on to the hub; a visitor stays here and sees
  * the resident's public card — photo, name, age, sex, temperament and
- * the rest of public_resident_cards (0067) — for *any* resident, so a
+ * the rest of public_resident_cards (0068) — for *any* resident, so a
  * card never dead-ends on a sign-in page. The route is therefore public
  * (src/lib/public-paths.ts) and reads with whatever key the request
  * has; the view is what limits what comes back.
