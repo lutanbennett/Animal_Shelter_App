@@ -90,6 +90,17 @@ A person who leaves is **archived** from `/admin/security` rather than deleted (
    `.githooks/post-commit` pushes the current branch to GitHub after every
    commit, so the remote always matches the local checkout.
 
+6. **Check out the backlog worktree** (once per clone)
+
+   ```bash
+   git worktree add ../Animal_Shelter_Backlog backlog
+   ```
+
+   `backlog` is a permanent branch that only ever changes `docs/backlog.md`.
+   Having it in its own folder means an item can be added at any moment
+   without touching whatever the main checkout is in the middle of; see
+   `CLAUDE.md` "The backlog branch" for how it is merged back.
+
 ## Environments
 
 | | Dev | Test | Production |
