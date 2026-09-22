@@ -7,10 +7,14 @@ import {
   type OriginOption,
   type ZoneOption,
 } from "./IntakeForm";
+import { parseStepParam } from "./steps";
 
-export default async function NewResidentPage() {
+export default async function NewResidentPage(
+  props: PageProps<"/residents/new">,
+) {
   const supabase = await createClient();
   const { t } = await getT();
+  const initialStep = parseStepParam((await props.searchParams).step);
 
   const [zonesResult, enclosuresResult, originsResult, dietTypesResult] = await Promise.all([
     supabase
@@ -73,6 +77,7 @@ export default async function NewResidentPage() {
         enclosures={enclosures}
         origins={origins}
         dietTypes={dietTypesResult.data ?? []}
+        initialStep={initialStep}
       />
     </main>
   );

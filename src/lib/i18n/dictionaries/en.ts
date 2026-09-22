@@ -1490,11 +1490,34 @@ const en = {
       couldntLoadZones: "Couldn't load zones",
       couldntLoadEnclosures: "Couldn't load enclosures",
       couldntLoadOrigins: "Couldn't load origins",
-      sections: {
-        identity: "Identity",
-        arrival: "Arrival & placement",
-        bio: "Bio & background",
-        adoption: "For adopters",
+      /**
+       * The intake wizard's chrome: the step names in the progress header,
+       * the Back / Next buttons and the Review step. The questions
+       * themselves are in `fields` below, shared with the edit form.
+       */
+      wizard: {
+        stepOf: (current: number, total: number) =>
+          `Step ${current} of ${total}`,
+        goToStep: (n: number, title: string) => `Go to step ${n}: ${title}`,
+        steps: {
+          who: "Who",
+          arrival: "Arrival",
+          health: "Health",
+          adoption: "For adopters",
+          story: "Story",
+          review: "Review",
+        },
+        back: "Back",
+        next: "Next",
+        edit: "Edit",
+        healthHint:
+          "All optional — a weight or a blood test can be recorded later from the resident's hub.",
+        storyHint:
+          "All optional — these can be written later from Edit resident.",
+        reviewIntro:
+          "Check the answers below. Nothing is saved until you tap Register resident.",
+        notProvided: "Not given",
+        enclosureUnassigned: "Unassigned",
       },
       adoptionHint:
         "What a family needs to know before they visit. Shown on the public profile as \"Is {name} right for you?\" — leave anything unknown blank.",
@@ -1545,6 +1568,8 @@ const en = {
           "e.g. found as a stray near..., surrendered by owner, rescued with litter of 4",
         readyForAdoption:
           "Ready for adoption (also publishes them on the public adoptable-residents page)",
+        /** The same tick, as a row label on the wizard's Review step. */
+        readyForAdoptionShort: "Ready for adoption",
         bio: "Bio",
         temperament: "Temperament",
         pastStory: "Past story",
