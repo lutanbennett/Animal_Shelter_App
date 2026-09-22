@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { recordWeight } from "@/lib/weight/record";
 
 export type WeightFormState = { error: string } | undefined;
 
@@ -16,9 +17,7 @@ function str(formData: FormData, key: string): string | null {
 
 /**
  * Records one weight reading and redirects to the resident's Weight tab.
- * The deceased lock (0026) and the positive-kg check (0028) are enforced by
- * the database as well as here, so a stray deep link still can't get a bad
- * row in.
+ * The rules live in the shared helper, which the assistant uses too.
  */
 export async function createWeight(
   _state: WeightFormState,
@@ -28,38 +27,18 @@ export async function createWeight(
   const residentId = str(formData, "residentId");
   if (!residentId) return { error: t.weight.errors.missingResident };
 
-  const date = str(formData, "date");
-  if (!date) return { error: t.weight.errors.enterDate };
-  const parsedDate = new Date(date);
-  if (Number.isNaN(parsedDate.getTime())) {
-    return { error: t.weight.errors.invalidDate };
-  }
-  if (parsedDate.getTime() > Date.now()) {
-    return { error: t.weight.errors.dateInFuture };
-  }
-
   const weightRaw = str(formData, "weightKg");
   if (!weightRaw) return { error: t.weight.errors.enterWeight };
-  const weightKg = Number(weightRaw);
-  if (!Number.isFinite(weightKg) || weightKg <= 0) {
-    return { error: t.weight.errors.weightPositive };
-  }
-
-  const vetAppointmentId = str(formData, "vetAppointmentId");
-  const notes = str(formData, "notes");
 
   const supabase = await createClient();
-  const { error } = await supabase.from("weight").insert({
-    resident_id: residentId,
-    vet_appointment_id: vetAppointmentId,
-    date,
-    weight_kg: weightKg,
-    notes,
+  const result = await recordWeight(supabase, t, {
+    residentId,
+    date: str(formData, "date") ?? "",
+    weightKg: Number(weightRaw),
+    vetAppointmentId: str(formData, "vetAppointmentId"),
+    notes: str(formData, "notes"),
   });
-
-  if (error) {
-    return { error: error.message };
-  }
+  if ("error" in result) return result;
 
   revalidatePath(`/residents/${residentId}`);
   revalidatePath(`/residents/${residentId}/weight`);

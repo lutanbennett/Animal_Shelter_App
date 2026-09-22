@@ -12,7 +12,10 @@ export type MoveResidentInput = {
   notes: string | null;
 };
 
-export type MoveResidentResult = { error: string } | { ok: true };
+export type MoveResidentResult =
+  | { error: string }
+  /** id is the placement_history row that was written. */
+  | { ok: true; id: string };
 
 /** Roles whose placement_history insert policy admits ChangeEnclosure. */
 const MOVE_ROLES = new Set(["admin", "management", "staff", "volunteer"]);
@@ -99,17 +102,21 @@ export async function moveResidentToEnclosure(
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { error } = await supabase.from("placement_history").insert({
-    resident_id: input.residentId,
-    placement_type: "ChangeEnclosure",
-    start_date: startDate,
-    zone_id: target.zone_id,
-    enclosure_id: target.id,
-    previous_enclosure_id: current?.enclosure_id ?? null,
-    notes: input.notes,
-    created_by: user?.id ?? null,
-  });
+  const { data, error } = await supabase
+    .from("placement_history")
+    .insert({
+      resident_id: input.residentId,
+      placement_type: "ChangeEnclosure",
+      start_date: startDate,
+      zone_id: target.zone_id,
+      enclosure_id: target.id,
+      previous_enclosure_id: current?.enclosure_id ?? null,
+      notes: input.notes,
+      created_by: user?.id ?? null,
+    })
+    .select("id")
+    .single<{ id: string }>();
   if (error) return { error: error.message };
 
-  return { ok: true };
+  return { ok: true, id: data.id };
 }

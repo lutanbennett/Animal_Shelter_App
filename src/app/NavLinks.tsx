@@ -111,9 +111,9 @@ export function NavLinks({
     { href: "/projects", label: t.nav.projects },
     { href: "/vets", label: t.nav.vets },
     { href: "/contacts", label: t.nav.contacts },
-    // Throwaway sketch to find out whether the shelter wants a real one;
-    // see the "Assistant" section of docs/backlog.md.
-    { href: "/assistant", label: t.nav.assistant, badge: t.nav.demoBadge },
+    // The full-page assistant; the same conversation also opens as a
+    // slide-over from the header, on every screen.
+    { href: "/assistant", label: t.nav.assistant },
     // Operational management (reports, contacts) lives under Management;
     // Admin keeps the system-level configuration (website, zones,
     // enclosures, immunization and procedure types).
