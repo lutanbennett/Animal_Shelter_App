@@ -13,7 +13,11 @@
  * public_resident_profiles (Section 6 "Public/Anonymous" RBAC tier),
  * /our-work the public_projects views (0042), /foster, /volunteer,
  * /donate site_pages / site_content (0059), and /privacy is static text
- * (the notice Google's consent screen links to).
+ * (the notice Google's consent screen links to). /r/ is the address on a
+ * resident's RFID card: it sends a visitor to the public profile and a
+ * signed-in user to the hub (src/app/r/[code]/page.tsx), so it must be
+ * reachable signed out; /e/ (enclosure QR codes) has no public page and
+ * stays behind the gate.
  */
 export const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/auth/callback"];
 
@@ -25,6 +29,7 @@ export const PUBLIC_PATH_PREFIXES = [
   "/volunteer",
   "/donate",
   "/privacy",
+  "/r/",
 ];
 
 export function isPublicPath(pathname: string): boolean {

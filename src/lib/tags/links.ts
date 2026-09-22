@@ -7,7 +7,8 @@
  * move of the pages behind it, and the fewer characters a QR code holds
  * the coarser — and more scannable from a distance — its modules are.
  * Residents use their R-code (30 characters end to end) rather than the
- * UUID; enclosures have no such code, so they carry their id.
+ * UUID; enclosures have no such code, so they carry their id. A resident
+ * link also serves visitors — see src/app/r/[code]/page.tsx.
  */
 export function residentTagPath(residentCode: string): string {
   return `/r/${encodeURIComponent(residentCode)}`;
