@@ -2012,3 +2012,65 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   query out of the full URL (`?q=lat,lng`, `/maps/place/<address>`,
   `@lat,lng`, `!3d…!4d…`); failures just mean no map. Only the hub page
   does this — the contact list never renders the frame.
+
+- **Existing residents are seeded onto the standard diet, and the
+  migration adopts the diet type rather than creating one (2026-09-22):**
+  0051 shipped `diet_types` and `resident_diets` empty, so every resident
+  taken in before it read "no diet recorded" — indistinguishable from a
+  question nobody had answered — and the food forecast totalled nothing.
+  Production has since had its standard diet entered by hand (Standard
+  Kibble + Chicken, ฿17 a cup) with no resident on it, so 0069 looks the
+  type up by name, case-insensitively, and creates it only where it is
+  missing (dev, test, any fresh database), leaving production's own cost
+  and portions alone. Rejected: `insert … on conflict (name) do nothing`,
+  which is a duplicate type and a wrongly-fed shelter if the name is
+  spelled with different case than the file assumes. Every resident with
+  no diet at all then gets one ongoing row of it, dated to their intake
+  (bounded to today) so it reads as what they have always eaten rather
+  than something that began the day the migration ran, with a note saying
+  it was seeded. Deceased residents are excluded — 0026 closes the record,
+  and they eat nothing — and adopted ones too; fostered and outreach
+  residents are included, because whether the shelter buys their food is
+  `diet_forecast`'s question, not the record's. Rejected: leaving the
+  lists empty and asking staff to enter one diet per resident by hand,
+  which keeps the forecast at zero until the last one is done.
+- **A resident's wrong placement history is corrected by a scripted
+  transaction, not by hand or by the app (2026-09-22):** the shelter
+  reported that Panda's history is wrong — she was taken in, fostered to
+  Lutan on 1 June 2026, and has been with her continuously since; the
+  placements AppSheet brought across between and after those two never
+  happened. `placement_history` is append-only on purpose (0001's
+  immutability trigger, and no UI anywhere deletes a placement), so there
+  is no in-app way to remove history that never happened, and doing it
+  through the SQL editor is exactly the "POST SQL by hand" the migration
+  rules forbid. `scripts/fix-panda-placements.mjs` does it instead: it
+  reports the current rows, works out which two should survive **from the
+  data** (the single Intake row; the Foster row starting on the given day
+  whose carer matches), and sends the deletes, the two `end_date`
+  adjustments and the Foster row's `previous_enclosure_id` correction as
+  one Management-API transaction with assertions — two rows left, one of
+  them open, the Intake ending where the Foster starts, the Foster coming
+  from the right enclosure, the resident reading as Fostered — so a wrong
+  plan rolls back. It has `--dry-run` and refuses to act without
+  `--apply`. Deliberately it **never inserts a placement**: if the Foster
+  row is missing it lists whatever Foster rows exist and stops, since
+  recording the foster belongs in the app, whose `rehomeResident` writes
+  the row with the right Lifecycle enclosure, zone and carer. Rejected: a
+  migration (data, not schema, and it would run against dev where the rows
+  differ) and a generic "edit any placement" admin screen (the append-only
+  log is the point; a one-off correction shouldn't buy a permanent hole in
+  it). The dry run against production then turned up why this needed more
+  than deletes: the 1 June Foster row came across **typed Foster but
+  parked in the Lifecycle `Unassigned` pseudo-enclosure**, and
+  `resident_current_state` reads a resident's status off the current
+  placement's enclosure, not its `placement_type` — so keeping that row
+  as-is would have left her reading "Unassigned" while the history said
+  fostered. The script now also puts the kept row in `Fostered`, where
+  `rehomeResident` puts one, and points `previous_enclosure_id` at
+  `Unassigned`, where intake parks a resident (0008–0011) and what a later
+  Return to shelter should offer her back into. `enclosure_id`, `zone_id`
+  and `previous_enclosure_id` are all immutable, so correcting any of them
+  means rewriting the row under its own id, keeping its author and
+  `created_at` — and the assertion that the resident ends up `Fostered` is
+  what caught the problem in the first place, rather than a silent commit
+  and a wrong hub page.
