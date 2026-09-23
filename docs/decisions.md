@@ -2381,6 +2381,85 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   step is a **later, separate stage**. Build success therefore does not by
   itself prove the bundle is complete; checking the bundle is a different check,
   not a redundant one.
+- **What `worktree.mjs done` guarantees, and what it cannot (2026-09-23):**
+  `done` either finishes everything or says exactly what it left: the folder
+  gone, git's worktree entry pruned, the branch gone locally and on `origin`,
+  each checked afterwards rather than assumed. It refuses up front, before
+  touching anything, in three cases:
+  - **The branch has commits no origin ref has.** No flag overrides this,
+    `--force` included. Lost commits are the one unrecoverable outcome.
+  - **Any process has the folder open.** Windows will not delete a directory
+    that is a process's working directory or holds an open file. So this is
+    not a policy choice, it is a fact about Windows, not a bug to fix. Pressing
+    on would only unregister the worktree under the session sitting in it and
+    leave a husk, which is exactly what happened with cashflow-schema.
+  - **The folder is no longer a repo and holds more than build output.** Git
+    can no longer say what in it is uncommitted work (`--force` overrides).
+
+  The backlog item asked for a warning, not a refusal, on the grounds that
+  the check races. It does race, but only within milliseconds, and a refusal
+  that is right almost every time beats a warning people learn to scroll past.
+  **The check** renames the folder to a sibling name and straight back: it
+  succeeds only when nothing has anything under it open, so when it succeeds
+  nobody can notice it. A process holding the folder is named in two ways:
+  - a Claude session, from `~/.claude/sessions/<pid>.json`, trusted only when
+    the pid is alive *with the recorded start time*. That format is
+    undocumented, so it only ever adds a name. A missing name never turns
+    `HELD` into `free`.
+  - a dev server, when it is `node.exe` running a script under the folder's
+    `node_modules`, or an executable inside the folder.
+
+  The dev-server match is deliberately narrow. A first version matched any
+  command line that mentioned the path, and in testing `--stop-servers`
+  killed this session's own bash tool shells. Another session's shell would
+  have gone the same way.
+
+- **`.claude/launch.json` is per checkout, generated from `.port`
+  (2026-09-23):** a committed file can name only one port, so every worktree's
+  browser pane aimed at 3000. It is now gitignored and written by
+  `worktree.mjs new` / `dev` / `sync` / `launch` and by `.githooks/post-merge`,
+  which also regenerates it in the main checkout when the pull that untracks
+  it deletes the committed copy. While a branch still tracks the old file,
+  it is left alone, so `new` does not leave a branch cut before this change
+  looking dirty.
+
+- **Merges push too (2026-09-23):** git runs `post-commit` only for `git
+  commit`, so every `sync` and every `backlog` fast-forward used to sit
+  unpushed. `sync` now pushes as its last step and `.githooks/post-merge`
+  pushes after any merge or pull. Both exist on purpose: the hook covers
+  merges made by hand, and the explicit push covers a clone without
+  `core.hooksPath`. `new` also now fails outright if
+  `node_modules/.bin/next` is missing after `npm ci`. `new` did not return
+  early. That check turns a wrong assumption about a half-installed tree
+  (three gates once read green having never run) into a loud error.
+- **A one-day-early date is a candidate, not an error (2026-09-23):**
+  `docs/utc-date-audit-2026-09-23.md` audits which stored dates the UTC "today"
+  bug may have written a day early, and deliberately corrects nothing. The
+  detector is exact — stored date one day before the Bangkok date of the row's
+  `created_at`, written while the Bangkok clock read 00:00–07:00 — and it
+  still cannot tell the bug from a volunteer legitimately recording yesterday's
+  weight at 6am. Dev shows why this matters rather than being a caveat: 43 of
+  the 46 candidates there are the AppSheet import, which stamped
+  `age_estimated_on` from the export file's date, and are not the bug at all.
+  So *provenance* decides, not the date arithmetic — rows sharing a
+  `created_at` to the microsecond are a bulk insert, and a cluster across
+  several tables is one intake-wizard submission. Corrections, if any, are
+  therefore per-table and from a confirmed id list, never a re-run of the
+  detector as an `update … where`: that would sweep in every false positive and
+  is not re-runnable, since a corrected row stops matching.
+
+- **The UTC "today" bug has a second home, in SQL (2026-09-23):** the same
+  audit found six `current_date` sites inside the database — a column default
+  (`maintenance.date_created`), a trigger (`maintenance.date_completed`), the
+  deceased cascade that end-dates prescriptions, a seed, and three views
+  including the public `in_treatment` figure. The database's session timezone
+  is UTC, so each is wrong for the same seven hours, and a `todayIso()` helper
+  in `src/lib/format.ts` reaches none of them. Worth writing down because the
+  natural reading of the backlog item — "27 call sites in `src/`" — makes the
+  code fix look complete when it is not. The sharpest of them: a death recorded
+  before 07:00 closes every open prescription the day *before* the animal died,
+  because `new.start_date::date` casts a correct `timestamptz` in a UTC
+  session. The placement row itself is right; only what it triggers is wrong.
 - **The vet forecast is one flat figure, not an average (2026-09-23):** booked
   vet visits are costed at a single editable "typical vet visit" amount held in
   `site_content.vet_visit_estimate` and edited on `/admin/website`, multiplied by
@@ -2506,6 +2585,60 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   stands as robustness; the claim did not. Caught only because someone wrote an
   assertion for it, which is exactly why it is now a line.
 
+- **A checklist line has three states, because the work does (2026-09-23):**
+  `- [ ] … — deferred: <owner>` joins `- [x]` and `n/a: <reason>`, and is
+  accepted **only** under section 8. The deploy gates there cannot be true at PR
+  time — there is no deployed build, no production apply — so writing them `n/a`
+  put a falsehood in a box labelled "did not apply", and the Cashflow Forecast
+  session was right that once that becomes habit people write `n/a` for things
+  they simply did not do. `deferred:` passes rather than failing, because a PR
+  cannot be held open waiting for a deploy it precedes; it is confined to
+  section 8 because anywhere else it would be a general-purpose escape hatch,
+  which is the single thing this check exists to prevent.
+
+- **The checker says which kind of red it is (2026-09-23):** a *correct* plan is
+  red for most of its life, because the manual signature cannot be filled until a
+  person has looked. Printing one flat problem list made "nobody has looked yet"
+  indistinguishable from "a check was skipped", so red carried no information —
+  and an uninformative red is one people learn to ignore, which matters a great
+  deal more if the check ever becomes blocking. Output is now grouped: problems,
+  then items awaiting a person, then gates deferred to release; and a plan whose
+  only outstanding items are human signatures prints "the plan is complete and
+  correct, and N item(s) await a person. Nothing to fix."
+
+- **Three smaller corrections from streams using the checklist (2026-09-23):**
+  the manual-verification checkbox said only the person who looked could tick it
+  while the text above told you to write `n/a` when there was nothing to look at,
+  so an empty manual list could never go green — it now says explicitly that
+  whoever filled the plan may tick it when the list is empty. Section 6's
+  "checked from a second, unrelated page" now says *by loading that page, not by
+  reading the file*, because reading proves only that you did not edit it, which
+  is the tempting weaker reading. And section 8 gains the banding rule: assert
+  both edges of a band and both sides of a boundary, never only the case the bug
+  report named — `dueState()` was reported as a due-today fault, but due-today
+  does not move under either clock, so a test written faithfully from the report
+  would have passed with the bug still in place.
+
+- **`n/a:` and `pending:` signatures carry no date (2026-09-23):** the signature
+  parser anchored on `Date:` before it looked at the value, so an undated
+  `pending: <what is outstanding>` failed with "no `Manual verification by:
+  <name>  Date: <yyyy-mm-dd>` line" — an error pointing at the wrong thing, for a
+  line that was correct. The template's own bullets show the three forms without
+  a `Date:` segment, so dropping it is the obvious reading. The parser now tries
+  the dated form first and falls back to a bare line only when the value begins
+  `n/a` or `pending`; a bare *name* still requires its date, which is what keeps
+  an empty signature from passing. Found by the Cashflow Forecast session, which
+  only got it right by noticing that two existing plans wrote `Date: —`.
+
+- **The checker ignores fenced code blocks (2026-09-23):** requiring evidence to
+  be pasted unedited and requiring template placeholders to be filled turned out
+  to contradict each other — pasted checker output quotes the checker's own
+  messages, which mention `<name>` and `<yyyy-mm-dd>`, so a faithful record of a
+  run was flagged as an unfilled template. Placeholder and checkbox scanning now
+  skip fenced blocks; outside a fence both still fail. Found by regenerating a
+  plan's own evidence block, which is precisely what the unedited-evidence rule
+  asks for — the rule caught the conflict its own sibling created, in its first
+  use.
 - **Release notes register (2026-09-23):** the register is a checked-in
   typed file, `src/lib/releases.ts`, rendered at `/releases` for every
   signed-in role (Lutan: the notes are written for users, so everyone reads
@@ -2619,3 +2752,83 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   by reading, and the first was plausible enough to have been written down as
   fact. Worth knowing that no gate could have caught this: a deploy is the one
   thing a PR cannot exercise before it merges.
+
+- **UAT is an environment in the code before it is a site (2026-09-23):**
+  `uat` is the customer's acceptance-testing environment. It lives on
+  `lannacare.org` for good, on the Supabase project that is production's
+  today (`dbkodyyxxhtygxcxmfcu`, demoted at the cutover), and on the current
+  Google Drive tree, which dev and Test also use. It gets no Supabase project
+  of its own: production is the one that moves, to a new project and to
+  `lannacareforanimals.org`. Until that cutover, UAT is plumbing only.
+  `UAT_PROJECT_REF` in `src/lib/app-env.ts` is empty, because the only ref
+  it could hold would put a UAT badge on the live site. The `uat` Worker
+  (`lanna-animal-care-uat`) has no routes, because `lannacare.org` still
+  belongs to production. The new UAT Worker is the one named for it,
+  rather than production's `lanna-animal-care` being renamed: production
+  keeps its Worker and version history, and at the cutover the UAT Worker
+  gets its secrets with `--secrets` like any new Worker. UAT wears
+  production's exact colours so the customer tests what will go live.
+  The only differences are a header badge and a watermark on the archive
+  PDF, since a PDF in Drive carries no other trace of where it was made.
+  Dev builds get a `DEV` watermark for the same reason, because their PDFs
+  land in the same Drive. `deploy.mjs` now checks, for every environment,
+  that the env file's project is the one app-env would badge as that
+  environment. That check is what makes `deploy:uat` refuse today, and what
+  stops a mixed-up `.env.deploy.*` from shipping a build with the wrong
+  badge after the cutover. UAT also gets production's guards (clean pushed
+  `main`, a written-down release): once it exists, it is what the customer
+  signs off.
+- **The role matrix lists the five roles that exist, and says where they come
+  from (2026-09-23):** `docs/test-plan-template.md` shipped with a `resident` row
+  and no `management` row. Both were wrong in the same way: the list was derived
+  by grepping `src/lib` for quoted strings, which matched
+  `.eq("owner_type", "resident")` in `archive/resident-record.ts` — a query about
+  animals, not users — and missed `management`, which is added to the enum by a
+  later migration rather than appearing in the initial one. The authority is
+  `app_role`: `('admin', 'staff', 'vet', 'volunteer')` in
+  `0001_initial_schema.sql`, plus `'management'` in `0038_management_role.sql`.
+  The template now names both files, so the next person reads the enum instead of
+  re-deriving it.
+
+  This failed in both directions at once, which is what makes it worth recording.
+  A row for a role that cannot exist is noise — it can only ever be ticked
+  meaninglessly. A *missing* row is worse: `management` is the role that gates
+  every `/management/*` page, so the matrix built to catch access bugs omitted the
+  role most likely to be in one. The Cashflow Forecast session noticed the gap and
+  added `management` to its own plan by hand; its checklist was better than the
+  template it was copied from, and nothing in the process would have surfaced that
+  if Lutan had not asked what a resident account was.
+- **"Settings" is the menu's name for `/admin`; the URL and the role keep
+  "admin" (2026-09-23):** Lutan asked for the Admin menu to read Settings.
+  Moving the pages to `/settings/*` with redirects (as `/admin/vets` →
+  `/management/vets` was done) would be tidier, but the rename is about what
+  people read, and a label-only change leaves every bookmark, link and
+  `requireAdminUser` gate untouched — agreed with
+  Lutan. So the sidebar label, the `/admin` landing heading and every "Admin →
+  X" menu path in `en.ts`, `th.ts` and the manual say Settings (Thai
+  การตั้งค่า); `nav.admin` became `nav.settings`. What deliberately still says
+  Admin is the **role**: `roles.admin`, the manual's `roleNames`, README's
+  roles table row and prose like "an admin can…" — those describe who someone
+  is, not where a page lives. The same pass sent the long-stale "Admin →
+  Contacts / Vets" hints to Management, where those pages have been since
+  2026-09-21, and names a manager rather than an admin as who can fix them.
+  The sidebar is also flat now — Management and Settings are one link each,
+  their tile-grid landing pages being the menu — which retires the accordion
+  state in `sessionStorage`. That alone did not end the footer overlap: an
+  admin's flat list plus the pinned group still needs ~690px, so the group is
+  pinned only on windows at least 44rem tall and otherwise follows the list.
+- **Production was clean because the bug had no time, not because it works
+  (2026-09-23):** the production run of the UTC date audit found zero rows
+  needing correction across every date column — the only hits were the 42
+  `age_estimated_on` values from the AppSheet import, which carry the export
+  file's own date and share one `created_at` to the microsecond. The deceased
+  cascade had never fired early either. That is a real answer, but the reason
+  matters more than the number: production's data arrived in a single import on
+  2026-09-22 and almost nothing has been hand-entered since, so the exposure
+  window was about a day and a half rather than the months the backlog item
+  assumed. Dev, where someone actually used the intake wizard at 01:26,
+  produced a genuine three-table candidate at once. The audit therefore clears
+  the rows that exist today and expires the first time anyone works an
+  overnight shift — `docs/utc-date-audit-2026-09-23.md` §8 keeps the triage and
+  the correction SQL unused on purpose, and the script is kept rather than
+  deleted so the next run is one command.

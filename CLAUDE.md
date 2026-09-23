@@ -32,15 +32,20 @@ two or three at once; more than that and merging becomes the bottleneck.
 
 1. **Start one:** `node scripts/worktree.mjs new <feature>` in any
    checkout. It branches `claude/<feature>` from `origin/main`, copies
-   `.env.local`, runs `npm ci` and records the next free port in `.port`.
+   `.env.local`, runs `npm ci`, records the next free port in `.port`
+   and writes a gitignored `.claude/launch.json` aimed at that port.
    Never branch from another feature branch. Then open a Claude session
    on the new folder; `node scripts/worktree.mjs dev` starts `next dev`
-   on its port. (`/plan-day` picks the day's workstreams from the backlog
+   on its port, and so does `preview_start` with `name: "dev"` (a checkout
+   without the file gets one from `node scripts/worktree.mjs launch`). (`/plan-day` picks the day's workstreams from the backlog
    and creates them.)
 2. **One feature, one branch,** commit as you go. `.githooks/post-commit`
-   pushes every commit, so GitHub always matches the checkout. Prefer new
-   commits over `--amend`/rebase — those need a manual
-   `git push --force-with-lease`.
+   pushes every commit and `.githooks/post-merge` every merge or pull
+   (git runs no hook at all for a merge that stops on conflicts — the
+   commit that resolves it is what pushes), and `worktree.mjs sync`
+   pushes as its last step. Prefer new commits over `--amend`/rebase —
+   those need a manual `git push --force-with-lease`. `list`'s
+   `unpushed` column is the check that it all worked.
 3. **Pick non-overlapping work.** Streams should touch different areas
    (a `/admin` page, a resident-hub tab, the `worker/`). The files nearly
    every UI feature touches — `src/lib/manual/en.ts`, `src/app/NavLinks.tsx`,
@@ -54,14 +59,23 @@ two or three at once; more than that and merging becomes the bottleneck.
    user's Chrome if `gh` is missing). CI runs the
    same three checks. Once the user says so, merge it, then
    `node scripts/worktree.mjs done <feature>` from another checkout
-   removes the folder and the branch locally and on `origin`. Merges are
+   removes the folder and the branch locally and on `origin`, prunes
+   git's registry and checks that all of it actually happened. It
+   refuses a branch with commits `origin` does not have (no flag
+   overrides that) and a folder any process has open — usually the
+   session that built it, so close that session first. Merges are
    serial: after each one, every other live workstream runs `sync` so the
    next PR is already integrated. A branch that outlives its PR is how
    work gets stacked and lost.
 5. **Stale streams.** `node scripts/worktree.mjs list` shows each
-   worktree's dirty files and how far it is beyond `main`. A worktree with
-   nothing beyond `main` and no session is a leftover — `done` it (with
-   `--force` if it has junk changes) rather than reusing it.
+   worktree's dirty files, how far it is beyond `main`, unpushed
+   commits, and `held`: whether any process has the folder open, with the
+   Claude session's name when it can be read. A worktree with nothing
+   beyond `main` and `free` is a leftover — `done` it (with `--force`
+   if it has junk changes) rather than reusing it. `HELD` means someone
+   is still in it: ask, don't tear it down. `list` also names *husks* —
+   `Animal_Shelter_*` folders git no longer knows — which `done <name>`
+   clears.
 
 ## Testing
 
@@ -120,7 +134,9 @@ predates the rule.
 Once a day, before starting streams, in `C:\Development\Animal_Shelter_App`:
 `git checkout main && git pull`, fold in the backlog branch (see below):
 `git merge backlog && git push`, then
-`git -C ../Animal_Shelter_Backlog merge --ff-only main`. New streams
+`git -C ../Animal_Shelter_Backlog merge --ff-only main` (the post-merge
+hook pushes it; `git -C ../Animal_Shelter_Backlog status -sb` should not
+say `ahead`). New streams
 branch from `origin/main`, so this is what makes fresh backlog items and
 yesterday's merges visible to them. `/plan-day` does this step.
 

@@ -3,6 +3,7 @@
 // knows what has been applied — no memory notes, no "did I run 0026?".
 //
 //   node scripts/apply-migrations.mjs            # apply every unapplied file (dev/test)
+//   node scripts/apply-migrations.mjs --env uat           # after the cutover
 //   node scripts/apply-migrations.mjs --env production
 //   node scripts/apply-migrations.mjs --status   # list applied / pending, change nothing
 //   node scripts/apply-migrations.mjs --dry-run  # run pending files inside begin…rollback
@@ -20,8 +21,9 @@
 // the Management API's query endpoint with the personal access token in
 // SUPABASE_ACCESS_TOKEN (which must be able to see every project it targets).
 // The project comes from NEXT_PUBLIC_SUPABASE_URL of the chosen environment
-// (scripts/lib/env.mjs: .env.local for test, .env.deploy.production layered
-// on top for production). The target is printed before anything runs.
+// (scripts/lib/env.mjs: .env.local for test, .env.deploy.uat or
+// .env.deploy.production layered on top for the other two). The target is
+// printed before anything runs.
 
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";

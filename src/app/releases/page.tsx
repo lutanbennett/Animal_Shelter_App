@@ -7,13 +7,14 @@ export const metadata: Metadata = {
 };
 
 /**
- * What each environment is called on this page. lannacare.org and the
- * database behind it are UAT for good (docs/decisions.md), so the build
- * app-env still calls "production" is labelled UAT here, matching the
- * `[UAT]` its release mail carries (wrangler.jsonc RELEASE_MAIL_ENV). The
- * cutover adds a real "uat" to AppEnv and this becomes a plain lookup.
+ * What each environment is called on this page. Until the cutover the
+ * build app-env calls "production" is lannacare.org — UAT for good
+ * (docs/decisions.md) — so it is still labelled UAT, matching the `[UAT]`
+ * its release mail carries (wrangler.jsonc RELEASE_MAIL_ENV). The cutover
+ * sets UAT_PROJECT_REF in app-env and changes production's label here to
+ * "Production" in the same commit.
  */
-const ENV_LABEL = { dev: "Dev", production: "UAT" } as const;
+const ENV_LABEL = { dev: "Dev", uat: "UAT", production: "UAT" } as const;
 
 const formatDate = (iso: string) =>
   new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", {

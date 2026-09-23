@@ -40,11 +40,13 @@ const en = {
     signOut: "Sign out",
     devBadge: "Dev",
     devBadgeTitle: "Dev database — this is not the live site",
+    uatBadge: "UAT",
+    uatBadgeTitle: "UAT — acceptance testing, not the live site",
   },
 
   nav: {
     residents: "Residents",
-    admin: "Admin",
+    settings: "Settings",
     management: "Management",
     dashboard: "Dashboard",
     website: "Website",
@@ -240,7 +242,7 @@ const en = {
 
   admin: {
     landing: {
-      title: "Admin",
+      title: "Settings",
       subtitle:
         "System configuration: the public website, the places residents live, and the type lists the rest of the app picks from.",
       tiles: {
@@ -1058,7 +1060,7 @@ const en = {
     everyMonths: (months: number) => `Every ${months} mo`,
     oneOff: "One-off",
     noTypesConfigured:
-      "No immunization types configured yet. Add some under Admin → Immunization Types.",
+      "No immunization types configured yet. Add some under Settings → Immunization Types.",
     dateAdministered: "Date administered",
     administeredBy: "Administered by",
     administeredByPlaceholder: "e.g. Dr. Somchai",
@@ -1256,7 +1258,7 @@ const en = {
       upcoming: (n: number) => `${n} upcoming`,
       overdue: (n: number) => `${n} overdue`,
       nothingScheduled: "Nothing scheduled",
-      noVets: "No vets yet — an admin can add them under Admin → Vets.",
+      noVets: "No vets yet — a manager can add them under Management → Vets.",
     },
     hub: {
       backToVets: "← Back to vets",
@@ -1339,7 +1341,7 @@ const en = {
     },
     list: {
       inCare: (n: number) => `${n} in care`,
-      noContacts: "No contacts yet — an admin can add them under Admin → Contacts.",
+      noContacts: "No contacts yet — a manager can add them under Management → Contacts.",
       noMatches: "No contacts match.",
       count: (shown: number, total: number) =>
         shown === total ? `${total} contact${total === 1 ? "" : "s"}` : `${shown} of ${total}`,
@@ -1351,13 +1353,13 @@ const en = {
       address: "Address",
       mapPreview: (name: string) => `Map of ${name}'s address`,
       notes: "Notes",
-      noDetails: "No contact details recorded — an admin can add them under Admin → Contacts.",
+      noDetails: "No contact details recorded — a manager can add them under Management → Contacts.",
       residentsInCare: "Residents in care",
       residentsInCareDetail:
         "Fostered or adopted residents living with this carer right now.",
       noResidentsInCare: "No residents are with this carer at the moment.",
       notACarer:
-        "Only contacts of type Carer can foster or adopt residents. An admin can change the type under Admin → Contacts.",
+        "Only contacts of type Carer can foster or adopt residents. A manager can change the type under Management → Contacts.",
       since: (date: string) => `since ${date}`,
       pastPlacements: "Past placements",
       pastPlacementsDetail: "Residents who used to live with this carer.",
@@ -2074,7 +2076,7 @@ const en = {
       currentCarerSuffix: "(current carer)",
       noCarers: "No carers in contacts yet — add the first one below.",
       carersOnlyHint:
-        "Only contacts of type Carer are listed — volunteers and suppliers can't be given a resident. Manage contacts under Admin → Contacts.",
+        "Only contacts of type Carer are listed — volunteers and suppliers can't be given a resident. Manage contacts under Management → Contacts.",
       addNewCarer: "Add a new carer",
       chooseExisting: "Choose an existing carer instead",
       newCarer: {
@@ -2364,9 +2366,9 @@ const en = {
     form: {
       unassigned: "Nobody yet",
       teamCount: (n: number) => (n === 1 ? "1 person" : `${n} people`),
-      noAssignees: "No one to assign to yet — accounts are made under Admin → Security.",
+      noAssignees: "No one to assign to yet — accounts are made under Settings → Security.",
       archivedMember: "(no longer here — untick to reassign)",
-      assignedHint: "Tick everyone doing the work — staff, volunteers, management; a fence can take three people. Accounts are made under Admin → Security.",
+      assignedHint: "Tick everyone doing the work — staff, volunteers, management; a fence can take three people. Accounts are made under Settings → Security.",
       titlePlaceholder: "e.g. Gate latch broken",
       descriptionPlaceholder: "What needs doing, what's been tried, who to contact…",
       zoneWideToggle: "Zone-wide job (no single enclosure)",

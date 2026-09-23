@@ -1,0 +1,17 @@
+#!/bin/sh
+# git runs post-commit for `git commit` only — never for the merge commit or
+# fast-forward that `git merge` / `git pull` makes — so without this a merged
+# branch sits ahead of origin until someone notices (the `backlog`
+# fast-forward in the daily step, a manual merge of origin/main). Same push
+# as post-commit; a pull with nothing new makes it a no-op.
+#
+# It also rewrites .claude/launch.json, which is generated per checkout from
+# .port and would otherwise vanish when a pull brings in the commit that
+# stopped tracking it.
+branch=$(git symbolic-ref --short HEAD 2>/dev/null) || exit 0
+if ! git push -q -u origin "$branch"; then
+  echo "post-merge: push of '$branch' failed — run 'git push -u origin $branch' when back online" >&2
+fi
+if [ -f scripts/worktree.mjs ]; then
+  node scripts/worktree.mjs launch --quiet || true
+fi

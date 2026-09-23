@@ -38,7 +38,7 @@ import { createReadStream, existsSync, mkdirSync, readdirSync, statSync, unlinkS
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { google } from "googleapis";
-import { loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
+import { envFile, loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
 
 const MIN_PG_MAJOR = 17;
 const SCHEMAS = ["public", "auth"];
@@ -193,7 +193,7 @@ async function connectionDetails() {
   if (!password) {
     fail(
       `SUPABASE_DB_PASSWORD is not set for ${envName} — add the project's database password to ${
-        envName === "production" ? ".env.deploy.production" : ".env.local"
+        envFile(envName)
       } (or set SUPABASE_DB_URL).`,
     );
   }

@@ -28,7 +28,7 @@ Five `app_role` values, enforced by row-level security
 
 | Role | Access |
 |---|---|
-| **admin** | Everything, including the Admin section (security, website, zones, enclosures, immunization and procedure types) and the Management section. |
+| **admin** | Everything, including the Settings section (the /admin pages: security, website, zones, enclosures, immunization and procedure types) and the Management section. |
 | **management** | Staff's operational access plus the Management section: the reporting dashboard (`/management/dashboard`), contact, vet, medication and diet management, and the translations of public text (`/management/translations`). |
 | **staff** | Read/write on residents, placements, weights, photos, maintenance, projects and contacts; read on medical records. |
 | **vet** | Read/write on vet visits, procedures, blood tests, prescriptions and immunizations; read on residents. |
@@ -119,21 +119,48 @@ A person who leaves is **archived** from `/admin/security` rather than deleted (
 
 ## Environments
 
-| | Dev | Test | Production |
-|---|---|---|---|
-| Where | `next dev` on your machine | `test.lannacare.org` | `lannacare.org`, `www.lannacare.org` |
-| Worker | — | `lanna-animal-care-test` | `lanna-animal-care` |
-| Database | dev Supabase project (`qxkmhwybjggxvsfxsxbd`) | **the same dev project** | production project (`dbkodyyxxhtygxcxmfcu`) |
-| Google Drive | dev account | dev account | dev account, until the shelter's own account exists |
-| Values from | `.env.local` | `.env.local` | `.env.deploy.production` over `.env.local` |
-| Looks | teal, **Dev** badge in the header | teal, **Dev** badge | orange |
+Four environments, three of them deployed. **UAT exists in the code and
+the tooling but not yet as a site**: until the production domain cutover,
+`lannacare.org` is served by the production block and `--env uat` refuses
+to deploy. The UAT column is what the cutover makes true.
+
+| | Dev | Test | UAT | Production |
+|---|---|---|---|---|
+| Where | `next dev` on your machine | `test.lannacare.org` | `lannacare.org`, `www.lannacare.org` — for good | `lannacare.org` until the cutover, then `lannacareforanimals.org` |
+| Worker | — | `lanna-animal-care-test` | `lanna-animal-care-uat` (no routes until the cutover) | `lanna-animal-care` |
+| Database | dev Supabase project (`qxkmhwybjggxvsfxsxbd`) | **the same dev project** | `dbkodyyxxhtygxcxmfcu` — today's production project, demoted at the cutover | `dbkodyyxxhtygxcxmfcu` today; a new project from the cutover |
+| Google Drive | dev account | dev account | dev account (the current tree) | dev account, until the shelter's own account exists |
+| Values from | `.env.local` | `.env.local` | `.env.deploy.uat` over `.env.local` | `.env.deploy.production` over `.env.local` |
+| Deploy | — | `npm run deploy:test` | `npm run deploy:uat` | `npm run deploy:prod` |
+| Looks | teal, **Dev** badge in the header | teal, **Dev** badge | orange, **UAT** badge | orange |
+| Generated PDFs | `DEV` watermark | `DEV` watermark | `UAT` watermark | none |
+| Release mail | never | never | `[UAT]` | `[UAT]` until the cutover, then `[Production]` |
 
 Dev and Test are recoloured (teal instead of orange, greenish surfaces, a
 **Dev** badge beside the logo once signed in) so a tab on the dev database
-is never mistaken for the live site. `src/lib/app-env.ts` decides from
-the Supabase project ref the build was made with — not from `NODE_ENV`,
-which is `production` on Test too — and the layout sets
-`<html data-env>`, which `globals.css` keys the colour tokens on.
+is never mistaken for the live site. UAT is deliberately *not* recoloured —
+the customer should be testing the real thing — and differs from
+Production only by its **UAT** badge and the watermark on the archive PDF
+(`src/lib/archive/resident-summary-pdf.tsx`), which lands in a Drive that
+dev, Test and UAT share. `src/lib/app-env.ts` decides from the Supabase
+project ref the build was made with — not from `NODE_ENV`, which is
+`production` on Test too — and the layout sets `<html data-env>`, which
+`globals.css` keys the colour tokens on. Its `UAT_PROJECT_REF` is empty
+until the cutover, because the project that will be UAT is production's
+today; set early, it would badge the live site.
+
+**What the cutover changes here**, in one commit: `UAT_PROJECT_REF` in
+`src/lib/app-env.ts` and production's label in `src/app/releases/page.tsx`;
+the `lannacare.org` routes move from the `production` block of
+`wrangler.jsonc` to `uat`, and production gets the new domain,
+`RELEASE_MAIL_ENV` `Production` and a From on that domain;
+`SITE_ORIGINS.production` in `scripts/deploy.mjs` and `HOST=` in
+`scripts/pi/deploy-pi.sh` follow. Outside the repo: today's
+`.env.deploy.production` becomes `.env.deploy.uat`, a new
+`.env.deploy.production` holds the new project's values, and
+`node scripts/deploy.mjs --env uat --secrets` gives the UAT Worker its
+secrets. The Pi has no `lanna-care-uat` service yet; `setup.sh` installs
+only `lanna-care`.
 
 Two databases, both on Supabase's free tier (the org allows two). Test
 deliberately shares the dev database: one developer, throwaway data, and
@@ -146,9 +173,11 @@ up.
 
 `scripts/lib/env.mjs` is the one place that knows which values belong to
 which environment; `scripts/deploy.mjs`, `scripts/apply-migrations.mjs`,
-`scripts/check-public-views.mjs` and `scripts/bootstrap-admin.mjs` all take
-`--env test|production` (default `test`) and print the environment and
-Supabase project ref before doing anything.
+`scripts/backup.mjs`, `scripts/check-public-views.mjs` and
+`scripts/bootstrap-admin.mjs` all take `--env test|uat|production`
+(default `test`) and print the environment and Supabase project ref before
+doing anything. `--env uat` stops at once while `.env.deploy.uat` does
+not exist, which is until the cutover.
 
 `.env.deploy.production` (gitignored) holds the production
 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and
@@ -212,15 +241,24 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    secrets from `.env.local` first — needed once per Worker and whenever a
    value changes; `npx wrangler secret list --env test` shows what is set.
 
-4. **Deploy to Production**
+4. **Deploy to UAT or Production**
+
+   ```bash
+   npm run deploy:uat
+   ```
 
    ```bash
    npm run deploy:prod
    ```
 
-   Same steps with `.env.deploy.production`, and a guard: it refuses unless
-   the checkout is `main`, clean, and identical to `origin/main`, so what is
-   live is always a commit GitHub has. Merge first, then deploy.
+   Same steps with `.env.deploy.uat` / `.env.deploy.production`, and a
+   guard: it refuses unless the checkout is `main`, clean, and identical to
+   `origin/main`, so what the customer tests and what is live are always
+   commits GitHub has. Merge first, then deploy. Every environment,
+   Test included, also refuses when its env file points at a project
+   `src/lib/app-env.ts` would badge as something else — which is why
+   `deploy:uat` fails today: UAT has no project of its own until the
+   cutover.
 
    **Why the strip step matters.** The OpenNext adapter copies *everything*
    in `.env.local` into the Worker bundle as a fallback for any variable not
@@ -357,7 +395,7 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    A PR that changes something users notice adds a line to `unreleased`;
    before deploying, a small release PR moves those lines into a new
    numbered entry and sets `package.json`'s version to match (the rules are
-   at the top of that file). `deploy.mjs` refuses a production deploy that
+   at the top of that file). `deploy.mjs` refuses a UAT or production deploy that
    has unreleased notes or a version mismatch, tags the Worker version with
    the release (dashboard → Workers → Deployments), and after deploying
    emails a **major** release that is new to the site to that environment's
