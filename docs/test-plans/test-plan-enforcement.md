@@ -11,7 +11,7 @@
 | PR | https://github.com/lutanbennett/Animal_Shelter_App/pull/55 |
 | Tested by / date | Claude (test manager session) / 2026-09-23 |
 | Carries a migration? | no |
-| Tested at SHA | recorded in the follow-up commit on this branch, see Defects #1 |
+| Tested at SHA | 0009ac6 — the commit under test. The follow-up commit that writes this line edits only this field and the CI line below |
 
 ## 1. Scope and risk
 
@@ -26,7 +26,7 @@
 - [x] `npm run typecheck` — clean
 - [x] `npm run lint` — clean
 - [x] `npm run build` — succeeds, exit 0
-- [x] CI green on the PR — re-run after the enforcement commit; result recorded in the follow-up commit
+- [x] CI green on the PR — `check` and `test-plan` both passing on 0009ac6, 2 passing / 0 failing
 
 ## 3. Schema and data
 
@@ -90,7 +90,7 @@ No runtime surface, so no role can reach this change.
 
 ## 8. Pre-production gate
 
-- [x] Tested SHA recorded in the header — lands in the follow-up commit, see Defects #1
+- [x] Tested SHA recorded in the header — 0009ac6
 - [ ] Deployed SHA matches the tested SHA — n/a: nothing is deployed; this change ships no runtime code
 - [ ] Deployed to test — n/a: no runtime code to deploy
 - [ ] Smoke-tested on `test.lannacare.org` — n/a: no runtime code to deploy
