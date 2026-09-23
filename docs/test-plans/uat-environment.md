@@ -16,7 +16,7 @@ or `n/a` with the reason.
 | PR | linked from the PR itself |
 | Tested by / date | Claude, 2026-09-23 |
 | Carries a migration? | no |
-| Tested at SHA | working tree on top of `9f1bc76` (`origin/main` after `sync`) |
+| Tested at SHA | `23f5ac3` (behaviour); gates re-run at `058ce43` after syncing `main` to `0d5c49c` (docs only) |
 
 ## 1. Scope and risk
 
@@ -27,10 +27,10 @@ or `n/a` with the reason.
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` (`9f1bc76`) merged in cleanly and pushed
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly and pushed, twice (`9f1bc76`, then `0d5c49c` after #65)
 - [x] `npm run typecheck` — clean (exit 0)
 - [x] `npm run lint` — clean (exit 0)
-- [x] `npm run build` — succeeds (exit 0, captured to a log, not through a pipe)
+- [x] `npm run build` — succeeds (exit 0, captured to a log, not through a pipe; typecheck, lint and build all re-run after the second sync)
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
