@@ -38,7 +38,9 @@ export type Release = {
 };
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: string[] = [];
+export const unreleased: string[] = [
+  "The summary PDF kept for a resident who has died is easier to read: the name no longer prints on top of the line beneath it, and every page now has a footer with the resident's name and ID, the date the PDF was made, and the page number.",
+];
 
 /** Newest first. */
 export const releases: Release[] = [
