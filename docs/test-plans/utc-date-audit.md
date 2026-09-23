@@ -8,10 +8,10 @@
 | Backlog item | `docs/backlog.md` → **"'Today' is UTC everywhere, so it is yesterday in Thailand until 07:00."** — the *data* half (piece 2). The item stays unticked; `claude/utc-today` owns the code half. |
 | Branch / worktree | `claude/utc-date-audit` @ `C:\Development\Animal_Shelter_utc-date-audit` |
 | Dev server | not started — no runtime surface to look at |
-| PR | see the PR this file is committed to |
+| PR | [#57](https://github.com/lutanbennett/Animal_Shelter_App/pull/57) |
 | Tested by / date | Claude Opus 5 / 2026-09-23 |
 | Carries a migration? | no |
-| Tested at SHA | recorded in the PR; the branch tip at the time of the run |
+| Tested at SHA | `4112e57` |
 
 ## 1. Scope and risk
 
@@ -26,7 +26,7 @@
 - [x] `npm run typecheck` — clean
 - [x] `npm run lint` — clean
 - [x] `npm run build` — succeeds
-- [ ] CI green on the PR (runs the same three) — n/a: the PR does not exist at this commit. Ticked in a follow-up commit once the run is actually green, not before
+- [x] CI green on the PR (runs the same three) — `check` pass (1m35s) and `test-plan` pass (6s) on run 35820560809
 
 ## 3. Schema and data — *skip if no migration*
 
