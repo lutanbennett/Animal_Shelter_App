@@ -2399,6 +2399,59 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   `node_modules/.bin/next` is missing after `npm ci`. `new` did not return
   early. That check turns a wrong assumption about a half-installed tree
   (three gates once read green having never run) into a loud error.
+- **The vet forecast is one flat figure, not an average (2026-09-23):** booked
+  vet visits are costed at a single editable "typical vet visit" amount held in
+  `site_content.vet_visit_estimate` and edited on `/admin/website`, multiplied by
+  the visits booked in the window; a visit that already carries a real
+  `vet_appointments.cost` uses that figure instead, and the month is then
+  labelled `invoiced` rather than `estimated`. A per-vet or per-reason average
+  was the obvious alternative and was rejected on the grounds that
+  `vet_appointments.cost` only arrived in 0053 and there is not yet enough
+  invoice history for an average to mean anything — an average of three visits
+  looks authoritative and is noise. One figure someone can see and correct beats
+  a derived number nobody can explain. The page prints the figure it used and
+  links to where it is changed, so the thing to fix is never a mystery. A
+  per-vet average is the natural successor once a few months of invoices are in,
+  and is logged as a follow-up rather than built.
+
+- **Unpriced categories read "not priced yet", never ฿0 (2026-09-23):**
+  `cashflow_forecast` (0072) returns `amount` and `missing_prices` as two
+  separate numbers rather than folding an unpriced item in as zero. An item the
+  shelter owns but cannot cost adds nothing to `amount` and one to
+  `missing_prices`, and the page prints the words instead of a figure. The
+  reasoning is that the two states a zero would collapse are opposites: "nothing
+  is booked this month" is good news, and "seven medications are being dispensed
+  and nobody has priced them" is a hole in the forecast. Printed identically,
+  the second reads as the first and a manager plans against a number that is
+  silently too low — which is the specific failure a cashflow page is supposed
+  to prevent. Where a month is partly priced the figure shows with a `+n` marker
+  beside it, so a total is never quietly short without saying so, and the "Not
+  priced yet" row links to the page where each price is entered. This is also
+  why 0071's three columns are nullable with no default: a `default 0` would
+  have made the gap unrepresentable at the schema level.
+
+- **Cashflow reuses the existing forecasts rather than restating them
+  (2026-09-23):** `cashflow_forecast` calls `diet_forecast` (0051) and
+  `medication_forecast` (0044) once per month with that month's slice of the
+  window, instead of reimplementing their arithmetic in a third place. Those
+  functions already encode prescription dose schedules, per-resident diet
+  overrides, size defaults and which residents still count; a copy would have
+  drifted the first time any of that changed. The cost is one lateral call per
+  month per category, which at shelter scale is nothing. Verified lossless
+  against the whole-window figures: a 90-day window summed from its four monthly
+  slices matches `diet_forecast` over the same 90 days to the baht.
+
+- **Cashflow series get their own colour tokens (2026-09-23):** the five
+  `--series-*` variables in `globals.css` are defined once and deliberately not
+  overridden by the dev/test teal theme. Two things forced this. The status
+  colours (`--danger`, `--warning`) mean "something is wrong" everywhere else in
+  the app and must not quietly become "series 4"; and `--primary` is orange in
+  production but teal on dev, so a chart built from it would show each category
+  in a different colour depending on which tab you were looking at. The five
+  were checked against both surfaces for lightness, chroma, contrast and
+  colour-blind separation in stack order — worst adjacent pair ΔE 8.4 under
+  protanopia, 19.3 with normal vision. The order is part of what was checked, so
+  reordering the stack means re-checking.
 - **The schema section names the `begin; … rollback;` harness explicitly
   (2026-09-23):** section 3 of `docs/test-plan-template.md` listed the mechanics
   of applying a migration — numbering, `--status`, `--dry-run`, re-runnability,
@@ -2564,3 +2617,23 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   deploy is the proof. If it fails with `E_SENDER_DOMAIN_NOT_AVAILABLE`, the
   fallback is to relay through Resend's API from the account set up for Auth
   SMTP. Don't buy Workers Paid.
+
+- **Deploys go straight to wrangler, not through npx or OpenNext (2026-09-23):**
+  release stamping added `--message "v<version> <title>"` to the deploy, and
+  every deploy immediately began failing with `Unknown arguments: …`. The cause
+  is two hops deep. `npx wrangler …` through a shell is cmd.exe → npx.cmd →
+  wrangler.cmd → node on Windows, and wrangler then *detects an OpenNext project
+  and re-invokes itself* through `opennextjs-cloudflare deploy` with a re-joined
+  command line. The quoting dies in that last hop, which is inside a dependency,
+  so passing the first invocation an argv array does not help. `deploy.mjs` now
+  spawns wrangler's own entry point with node and passes `--autoconfig false` to
+  stop the hand-off; the OpenNext build and env strip have already run by then,
+  so nothing is lost. Three earlier diagnoses were wrong and are worth recording
+  so nobody re-tries them: `shell: true` alone does not lose quotes for a plain
+  executable; `npx.cmd` cannot be given an argv array at all, because Node has
+  refused to spawn a `.cmd` without a shell since the fix for CVE-2024-27980; and
+  wrangler's `exports` map does not expose `./bin/wrangler.js`, so the entry is
+  resolved through `package.json`. Each was disproved by running it rather than
+  by reading, and the first was plausible enough to have been written down as
+  fact. Worth knowing that no gate could have caught this: a deploy is the one
+  thing a PR cannot exercise before it merges.
