@@ -32,7 +32,7 @@
 - [x] `npm run typecheck` — clean
 - [x] `npm run lint` — clean
 - [x] `npm run build` — succeeds, all 60+ routes compiled
-- [ ] CI green on the PR (runs the same three) — n/a: not yet observed at the time of writing; the PR is opened at the end of this session. The three gates were run locally and are the same three CI runs.
+- [ ] CI green on the PR (runs the same three) — n/a: not yet — `check` is green on the PR and was watched, not assumed (run 35837905567, 1m30s); `test-plan` is red by design while manual verification is `pending`, so "CI green" as a whole is not true and is not ticked.
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -162,7 +162,11 @@ The `2026-09-22T18:26Z` case is the exact instant from the bug report — 01:26 
 
 - [ ] Deployed to test: `npm run deploy:test` — n/a: not deployed from this branch. Deploying an unmerged feature branch to the shared test environment would take it away from whatever else is using it; this goes to test after merge.
 - [ ] Smoke-tested on `test.lannacare.org` — n/a: not deployed from this branch; see above. Listed for manual verification after merge.
-- [ ] **Timezone-sensitive behaviour checked on test, not locally.** — n/a: deliberately not ticked. This is the one check the deterministic suite above **cannot** stand in for. The suite proves the logic handles the boundary; this asks whether the deployed Workers bundle behaves as the source does, which is a different claim and is only answerable on `test.lannacare.org` during 00:00–07:00 Thailand. Moved to **Left for manual verification** with a concrete instruction rather than ticked.
+- [ ] **Timezone-sensitive behaviour proved, not observed at a convenient hour.** — n/a: split into its two claims, per the template. Both are addressed, neither by this line:
+  - *Does the logic handle the boundary?* — **yes, and asserted**: the real exported functions against fixed instants, then the same suite under `TZ=UTC`. Full output in *Deterministic boundary checks* above. Ticked there.
+  - *Does the deployed build behave as the source does?* — **not answered.** Only `test.lannacare.org` during 00:00–07:00 Thai can, and nobody was there at that hour. In **Left for manual verification**, and named on the `pending` signature line, rather than ticked.
+- [x] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned** — and this is the plan where that line earned its place. Two claims in my own commit messages about `dueState()` were reasoned, plausible and wrong, in opposite directions (defects 1 and 1a); a third, from the audit stream, was right in direction but named the one case in the band that does not move. All three would have shipped past `typecheck`, `lint`, `build` and this checklist. Each is now measured, and the measurements are pasted from run output rather than described.
+- [ ] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness — n/a: no migration and no schema in this PR; there is no constraint or default to exercise.
 - [ ] Public pages re-checked after a cache purge or a 10-minute wait — n/a: this PR changes nothing on `/`, `/adopt`, `/our-work` or `/donate`. Worth noting for the release manager that `public_shelter_stats.in_treatment` on those pages **is** timezone-wrong, but from SQL `current_date`, which this PR does not touch and cannot fix.
 
 ### Deploy safety
@@ -225,14 +229,15 @@ Automated checks by: Claude (Opus 5)  Date: 2026-09-23
 
 ### Manual verification
 
-Deliberately unsigned. The item in **Left for manual verification** is real and
-outstanding, so this line is neither signed nor marked `n/a` — the `test-plan`
-check stays red until a person has done it and signed. That is the gate working,
-not a defect in the plan.
+`pending`, not `n/a`. The item in **Left for manual verification** is real and
+outstanding: the deployed 00:00–07:00 Thailand check has not been done, and
+Claude cannot do it. `test-plan` stays red until a person has, which is the gate
+working rather than a defect in the plan — and with `pending` the red now says
+*what* it is waiting for instead of looking like a plan filled in badly.
 
-- [ ] Every item in the manual list was checked by a person, or the list is empty — n/a: outstanding, see above; the deployed 00:00–07:00 Thailand check has not been done and Claude cannot do it.
+- [ ] Every item in the manual list was checked by a person, or the list is empty — n/a: nothing to sign yet; the one outstanding item is on the signature line below as `pending`.
 
-Manual verification by: <name>  Date: <yyyy-mm-dd>
+Manual verification by: pending: /residents/new on test.lannacare.org between 00:00 and 07:00 Thailand — intake date defaults to the new day, and the new day is selectable  Date: —
 
 ### Result
 
@@ -242,4 +247,4 @@ Manual verification by: <name>  Date: <yyyy-mm-dd>
 
 Result: pass with accepted defects
 
-Release manager acknowledgement: <name>  Date: <yyyy-mm-dd>
+Release manager acknowledgement: pending  Date: pending
