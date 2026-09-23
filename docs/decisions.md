@@ -2372,16 +2372,27 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   question from what date gets stored, and reconciling the two is left open in
   the backlog. Dates derived from today go through `addDaysIso()` rather than
   `setDate()`/`setUTCDate()` on a parsed Date, which mixes local getters with
-  UTC setters. `dueState()` did exactly that, and measuring it before changing
-  it is worth recording, because the intuitive answer is wrong: it was **not**
-  a day out at UTC+7. `new Date("2026-09-23")` is UTC midnight, and at a
-  *positive* offset that is still the same local day, so the round trip came
-  back correct. Over 400 consecutive dates the old expression agreed with the
-  calendar version on every one at UTC+7 and at UTC — the only two runtimes
-  that matter here, the dev machine and Workers — and differed on exactly
-  three days a year, the DST transitions, in zones that have them (New York,
-  London, Auckland). That one is therefore a robustness change, not a bug fix,
-  and is recorded as such rather than being quietly counted as one.
+  UTC setters. `dueState()` is worth recording in detail, because it had two
+  separate things wrong with it and only one of them was real — and the real
+  one is not the one that looks wrong. **The fault was its `today` default**,
+  which was the UTC date: all three call sites (EnclosureHub, MaintenanceBoard,
+  MaintenanceJobView) take the default, so during the overnight window every
+  badge was computed against yesterday and fired a day **late**. A job due
+  yesterday-in-Bangkok read `dueSoon` instead of `overdue`, and the far edge
+  of the due-soon band was a day short. Under-reporting, which is the worse
+  direction for a maintenance board. Fixed by the substitution. **The
+  `DUE_SOON_DAYS` arithmetic was not a fault at all**, though it looks exactly
+  like one: `new Date("2026-09-23")` is UTC midnight, and at a *positive*
+  offset that is still the same local day, so the `setDate()` round trip came
+  back correct. Over 400 consecutive dates it agreed with the calendar version
+  on every one at UTC+7 and at UTC — the only two runtimes that matter here,
+  the dev machine and Workers — and differed on exactly three days a year, the
+  DST transitions, in zones that have them (New York, London, Auckland). It is
+  rewritten anyway, because it is fragile and unreadable, but as a robustness
+  change and not as a bug fix. Both halves are written down because the
+  function invites exactly the wrong diagnosis: the eye goes to the date
+  arithmetic, which is fine, and slides past the default argument, which was
+  not. Measured, twice, after being reasoned about wrongly the first time.
   `todayIso()` takes the instant as an optional argument so the 17:00Z
   boundary can be asserted at any hour; a timezone fix verified only by
   looking at a running app at the wrong time of day proves nothing, because a

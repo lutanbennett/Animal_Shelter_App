@@ -106,40 +106,46 @@ system zone (UTC+7) and again under `TZ=UTC`, which is the Workers case. All pas
 
 ```
 -- todayIso: the shelter's calendar, from an injected instant --
-PASS  bug report instant 2026-09-22T18:26Z            -> 2026-09-23
-PASS  16:59:59Z is still the 22nd                     -> 2026-09-22
-PASS  17:00:00Z rolls over to the 23rd                -> 2026-09-23
-PASS  06:59 Thai, inside the broken window            -> 2026-09-23
-PASS  07:00 Thai, where the old code agreed           -> 2026-09-23
-PASS  new year's eve                                  -> 2027-01-01
-PASS  end of february                                 -> 2026-03-01
-PASS  leap day                                        -> 2024-02-29
+PASS  bug report instant 2026-09-22T18:26Z                    -> 2026-09-23
+PASS  16:59:59Z is still the 22nd                             -> 2026-09-22
+PASS  17:00:00Z rolls over to the 23rd                        -> 2026-09-23
+PASS  06:59 Thai, inside the broken window                    -> 2026-09-23
+PASS  07:00 Thai, where the old code agreed                   -> 2026-09-23
+PASS  new year's eve                                          -> 2027-01-01
+PASS  end of february                                         -> 2026-03-01
+PASS  leap day                                                -> 2024-02-29
 
--- dueState: maintenance overdue / due-soon banding --
-PASS  due today is dueSoon, not overdue
-PASS  due yesterday is overdue
-PASS  due on the 26th (today+3) is dueSoon
-PASS  due on the 27th (today+4) is none
-PASS  completed is never overdue
-PASS  no due date is none
-PASS  dueSoon across a month end
-PASS  dueSoon across a year end
+-- dueState: overdue / due-soon banding, and the UTC today that skewed it --
+PASS  due today is dueSoon, not overdue                       -> dueSoon
+PASS  due yesterday is overdue                                -> overdue
+PASS  due on the 26th (today+3) is dueSoon                    -> dueSoon
+PASS  due on the 27th (today+4) is none                       -> none
+PASS  completed is never overdue                              -> none
+PASS  no due date is none                                     -> none
+PASS  dueSoon across a month end                              -> dueSoon
+PASS  dueSoon across a year end                               -> dueSoon
+PASS  due yesterday IS overdue on the shelter calendar        -> overdue
+PASS  ...and read only dueSoon on the UTC one (the real fault)-> dueSoon
+PASS  far edge of the due-soon band, shelter calendar         -> dueSoon
+PASS  ...a day short on the UTC one                           -> none
 
 -- isFutureDate: the day of slack is gone --
-PASS  today is not future (the reported case)
-PASS  yesterday is not future
-PASS  tomorrow IS future again
+PASS  today is not future (the reported case)                 -> false
+PASS  yesterday is not future                                 -> false
+PASS  tomorrow IS future again                                -> true
 
 -- placementStartDate: same-day keeps the instant, back-dated uses midday --
-PASS  same shelter day keeps the instant
-PASS  back-dated gets midday UTC
+PASS  same shelter day keeps the instant                      -> 2026-09-22T18:26:00.000Z
+PASS  back-dated gets midday UTC                              -> 2026-09-20T12:00:00.000Z
 
 -- isoDatePlus / addDaysIso --
-PASS  isoDatePlus(0) is today at the shelter
-PASS  a 7-day window is 6 days wide
-PASS  addDaysIso across a year end
-PASS  addDaysIso backwards
-PASS  addDaysIso leap
+PASS  isoDatePlus(0) is today at the shelter                  -> 2026-09-23
+PASS  a 7-day window is 6 days wide                           -> 2026-09-29
+PASS  addDaysIso across a year end                            -> 2027-01-04
+PASS  addDaysIso backwards                                    -> 2026-02-28
+PASS  addDaysIso leap                                         -> 2024-02-29
+
+ALL PASS
 ```
 
 The `2026-09-22T18:26Z` case is the exact instant from the bug report — 01:26 on
@@ -180,14 +186,22 @@ The `2026-09-22T18:26Z` case is the exact instant from the bug report — 01:26 
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
-| 1 | low | My own commit message for `537f1f0` claims `dueState()` was "off by one for the whole of every day at UTC+7". That is wrong. I measured it after writing it: `new Date("2026-09-23")` is UTC midnight, and at a *positive* offset that is still the same local day, so the old `setDate()` round trip came back correct. Over 400 consecutive dates it agreed with the calendar version on every one at UTC+7 **and** at UTC — the only two runtimes that matter — and differed on exactly 3 days a year, the DST transitions, in zones that have them. | fixed in the record: `docs/decisions.md` states the measured result, and a follow-up commit corrects the claim. The code change stands as a robustness improvement, not as a bug fix. |
+| 1 | low | My own commit message for `537f1f0` misdiagnosed `dueState()`. It claims the `DUE_SOON_DAYS` arithmetic was "off by one for the whole of every day at UTC+7"; measured, it was not — `new Date("2026-09-23")` is UTC midnight, which at a *positive* offset is still the same local day, so the `setDate()` round trip came back correct at UTC+7 **and** at UTC, differing only on the 3 DST-transition days a year in zones that have them. | fixed in the record: `docs/decisions.md` and defect 1a now state the measured result for both halves. The arithmetic is still rewritten, as a robustness change rather than a bug fix. |
+| 1a | medium | **The correction has a correction.** `dueState()` *did* have a real fault, and it was the half I had just called fine: its `today` default was the UTC date, and all three call sites (`EnclosureHub`, `MaintenanceBoard`, `MaintenanceJobView`) take the default. During the overnight window every badge was computed against yesterday and fired a day **late** — a job due yesterday-in-Bangkok read `dueSoon` instead of `overdue`, and the far edge of the due-soon band was a day short. Under-reporting on a maintenance board. Raised by the `utc-date-audit` stream, which had the direction backwards in its own first pass. | fixed — the substitution to `todayIso()` covers it, so no further code change was needed. Measured before recording this time: with the shelter today, due-yesterday returns `overdue`; with the UTC today it returned `dueSoon`. |
 | 2 | medium | Postgres has its own copy of the bug in six places; `todayIso()` cannot reach SQL. Includes the deceased cascade end-dating prescriptions the day *before* a death. | deferred to backlog — commit `87fb883` on the `backlog` branch; needs its own migration PR. Reported by the `utc-date-audit` stream. |
 | 3 | low | `prescriptions` and `resident_diets` have no `updated_at`, so a wrong `end_date` can never be audited after the fact. | deferred to backlog — same commit. |
 | 4 | — | `node_modules/.bin` was missing in this worktree, so every npm script failed with "'next' is not recognized". `npm ci` fixed it. Not caused by this change; noting it in case `worktree.mjs new` is leaving installs half-finished. | accepted — environment, not code. Worth a look if it recurs. |
 
-Two findings from the audit stream turned out to be **already fixed** by this
-change and were confirmed rather than actioned: `endPrescriptionToday` and
-`endDietToday` both took the mechanical substitution, which fixes both the
+Defect 1a is the one worth drawing a lesson from. Two sessions looked at
+`dueState()` and both got it wrong on the first pass, in opposite directions,
+because the function invites the wrong diagnosis: the eye goes to the visibly
+gnarly date arithmetic, which is correct, and slides past the default argument,
+which was not. Neither of us was right until it was measured.
+
+Three findings from the audit stream turned out to be **already fixed** by this
+change and were confirmed rather than actioned. One is the `dueState()` default
+in defect 1a above. The other two are `endPrescriptionToday` and
+`endDietToday`, which both took the mechanical substitution, fixing both the
 day-early end date and the silent zero-row failure (`start_date <= today` matched
 nothing for a course started today). The zero-row case was exercised in the
 browser: a diet created today and ended with "End today" now reads
