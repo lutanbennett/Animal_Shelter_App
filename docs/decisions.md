@@ -2399,3 +2399,168 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   `node_modules/.bin/next` is missing after `npm ci`. `new` did not return
   early. That check turns a wrong assumption about a half-installed tree
   (three gates once read green having never run) into a loud error.
+- **The schema section names the `begin; … rollback;` harness explicitly
+  (2026-09-23):** section 3 of `docs/test-plan-template.md` listed the mechanics
+  of applying a migration — numbering, `--status`, `--dry-run`, re-runnability,
+  a down-migration — but had no line for asserting that the schema actually
+  behaves: that checks reject invalid values, that `null` means "not set" rather
+  than zero, that values round-trip at full precision, and that nothing was
+  silently back-filled. CLAUDE.md has described that `do $$ … $$` harness under
+  "Database migrations" for some time, so the template was out of step with a
+  practice the repo already documents. The practical effect was worse than a
+  missing line: with nothing to record, a schema-only checklist read as almost
+  entirely `n/a`, which made the gate look like a formality on exactly the change
+  type where it has the most to catch — and that is how a rule starts being
+  waived. Raised by the Cashflow Schema session from filling one in for real on
+  PR #53, which is the intended way for this template to change.
+
+- **The timezone check is two claims, not one (2026-09-23):** section 8 asked
+  for timezone-sensitive behaviour to be "checked on test, not locally", which
+  conflated *does the logic handle the boundary* with *does the deployed build
+  behave as the source does*. The first is provable at any hour by injecting
+  fixed instants into the real exported helper — both sides of 17:00Z, the 00:00
+  and 06:59 Thai ends of the broken window, month/year end, a leap day — and
+  re-running under `TZ=UTC`, which is the Workers case. That is stronger than a
+  timed observation, because it does not depend on the tester happening to be
+  awake during 00:00–07:00 Thai, and it fails loudly rather than silently
+  passing at the wrong hour. The second genuinely needs `test.lannacare.org`
+  during that window, and when nobody can be there it belongs in **Left for
+  manual verification** rather than ticked. The distinction was raised by the
+  UTC time bug fix session, which had already substituted injection for
+  observation and wanted the template to say whether that was legitimate — it
+  is, and the template now says so, including that the test must call the real
+  exported function rather than a re-typed copy, since a copy proves only that
+  the copy works.
+
+- **Two wording fixes that the checker was silently punishing (2026-09-23):**
+  the template said to mark an inapplicable line `n/a: <reason>`, but the checker
+  requires the reason to follow the colon immediately, so `n/a as a deploy check,
+  because …` — which reads perfectly well — failed. The strictness is worth
+  keeping, because it is what makes every reason greppable across every checklist
+  in the repo; the instruction is what needed to be explicit. Separately, "CI
+  green on the PR" cannot be true in the commit that creates the PR, so every
+  first push is red on `test-plan` by construction; the template now says to mark
+  it `n/a: not yet` and tick it in a follow-up commit. Both were raised by the
+  UTC date audit session, which hit them while filling in a real checklist —
+  which is the only way this kind of thing surfaces. The second matters more than
+  it looks: an item that cannot be honestly ticked invites pre-ticking, and a
+  pre-tick is indistinguishable from a check that passed.
+
+- **"Pending" is a third signature state, and it still fails (2026-09-23):**
+  `Manual verification by:` now accepts `pending: <what is outstanding>` beside a
+  name and `n/a: <reason>`. It fails the check — nobody has looked — but it fails
+  saying *awaiting manual verification: <what>*, which the checker previously
+  could not distinguish from a plan filled in badly. The point is not to soften
+  the gate: it is that a red check which says what it is waiting for gets acted
+  on, and an illegible one teaches people to ignore red. It also removes the
+  incentive to reach for `n/a` to get green, which would be a false assurance
+  about the single thing the author could not verify. Raised by the UTC time bug
+  fix session, which deliberately left its plan red rather than `n/a` a real
+  outstanding item, and then asked whether the template should represent that
+  case properly.
+
+- **Section 7 asks whether claims were measured or reasoned (2026-09-23):** no
+  gate reads prose. `typecheck`, `lint`, `build` and the checklist all pass with
+  a confidently wrong explanation in the commit that ships the fix, and that
+  explanation is what the next person inherits and reasons from. The UTC session
+  caught one of its own: a commit message asserting `dueState()` was "off by one
+  for the whole of every day at UTC+7", written from reasoning. Measured over 400
+  consecutive dates it agreed with the calendar version at every offset tested
+  and differed only on DST transitions, in zones that have them — Thailand has
+  none and Workers run UTC, so it had never been wrong in production. The fix
+  stands as robustness; the claim did not. Caught only because someone wrote an
+  assertion for it, which is exactly why it is now a line.
+
+- **Release notes register (2026-09-23):** the register is a checked-in
+  typed file, `src/lib/releases.ts`, rendered at `/releases` for every
+  signed-in role (Lutan: the notes are written for users, so everyone reads
+  them). Seeded with exactly one entry, `0.0.1` "Current Baseline Build",
+  2026-09-23, which stands for everything built until then. No history was
+  reconstructed from git: the point is to record from here on.
+  - *(a) Where notes live: a file, not a table.* It is reviewable in the PR
+    that makes the change, needs no schema PR, and the same file feeds the
+    page, the deploy script (loaded under Node's type stripping) and the
+    Worker, so none of them can disagree. Nothing asks for editing in the app
+    yet. Moving to a table later is a copy of one array; going from a table
+    back to a file would mean exporting rows people had edited in the app.
+  - *(b) How a release is recorded: written in the PR, stamped at deploy.*
+    Feature PRs add plain-language lines to `unreleased`. Cutting a release is
+    its own small PR: the lines move into a numbered entry and `package.json`
+    takes the same version. `deploy.mjs` refuses a production deploy while
+    `unreleased` has lines or the versions disagree, so a deploy can't ship
+    changes nobody wrote down. It passes `--tag v<version> --message …` to
+    `wrangler deploy`, so Cloudflare's version history records which release
+    went to which environment and when, without a table of our own. The
+    deploy doesn't write the notes, because a note nobody wrote before
+    deploy time never gets written. Nor does it write the file afterwards: a
+    production deploy requires a clean, pushed `main`, so it can't commit.
+    The page shows one environment per entry, the site's own, because a page
+    is always the build it describes. Knowing per entry *when* it reached
+    each environment would need that table, and Cloudflare's deployment list
+    already answers it.
+  - *(c) Major vs minor: a `major` flag per entry.* Only major releases are
+    emailed. Numbering until go-live is `0.MAJOR.MINOR`: a major release
+    bumps the middle number and anything else the last. Go-live is `1.0.0`,
+    and after that major bumps the first. Whoever cuts the release, in the
+    release PR, sets the flag and the number. The baseline is not major,
+    because it changes nothing for anyone.
+  - *The email.* The sender is **Cloudflare Email Service through a Worker
+    `send_email` binding**, chosen because it costs nothing (Lutan's rule:
+    email must not cost money). A free account may mail its *verified*
+    destination addresses, the same ones Email Routing forwards to. Mailing
+    arbitrary addresses needs Workers Paid ($5/month). For a handful of
+    admins, a one-time verification click each is a fair price. The binding
+    needs no API key, so no secret enters the repo or the deploy. Because only
+    the Worker holds the binding, `worker/release-mail.mjs` answers
+    `/api/releases/*` itself, ahead of the edge cache and the Pi. `deploy.mjs`
+    picks the releases (those newer than what the live site reported at
+    `/api/releases/current` before the deploy, so a redeploy sends nothing)
+    and the recipients: admins in `user_roles`, with emails from the Auth
+    admin API, because the `app_users` view is empty without a signed-in
+    role. The Worker adds `[UAT]` / `[Production]` to the subject and the
+    From address from its own vars, so the environment label can't come from
+    a laptop. It sends one message per admin, so nobody sees the others'
+    addresses. An unverified admin is skipped with Cloudflare's error code
+    and the others still get the mail. The relay authenticates with the
+    service-role key, which the Worker and the deploy script both hold
+    already, so there is no new secret.
+  - *The guard: dev never sends.* The relay sends only when
+    `RELEASE_MAIL_ENV` is exactly `UAT` or `Production` *and* the binding
+    exists. The `test` environment (dev database) has neither, and `next dev`
+    and the Pi never reach the relay. A disabled relay answers with every
+    address skipped and the reason, which the deploy prints.
+  - *Which deploy counts as UAT today.* `--env production`: `lannacare.org`
+    and the current production database are the domain and database that
+    become UAT at the cutover (Lutan, 2026-09-23). So it already sends as
+    `[UAT]` from `releases@lannacare.org`, and `/releases` labels it UAT.
+    That is the literal backlog wording ("dev stands in for UAT") read
+    against the later decision to keep `lannacare.org` as UAT for good.
+  - *Two sending domains, permanently.* UAT is `lannacare.org`, and
+    Production will be `lannacareforanimals.org`. Adding the second is
+    configuration and DNS: a `production` block with `RELEASE_MAIL_ENV =
+    "Production"`, a From on the new domain and the binding, Email Routing
+    on that domain, and its admins verified (`docs/email-sending.md`). That page's last section
+    is the checklist the cutover item picks up.
+  - *Password-reset SMTP goes elsewhere.* Supabase Auth mails any user, and
+    Cloudflare's free route can't. Lutan chose **Resend's free tier for
+    UAT** (one domain), set up by him from the runbook in
+    `docs/email-sending.md` §2. It uses its own `send.` subdomain for MX and
+    SPF, so neither provider touches the root MX that Email Routing uses or
+    the root SPF record. There is no DMARC record yet, so Resend's optional
+    one is safe to add, but only ever one. The Production domain will
+    need a second free Resend account or the paid plan, which is decided at
+    the cutover.
+
+- **Release mail needs Email Routing, not Email Sending (2026-09-23):** the
+  first draft of `docs/email-sending.md` had Lutan onboard `lannacare.org`
+  under Compute → Email Service → Email Sending. On the free plan that screen
+  offers only "Purchase Workers Paid", because Email Sending is the paid
+  feature that mails arbitrary addresses. Cloudflare's pricing page says
+  verified-destination sends are "free on all plans, including when only
+  Email Routing is configured", and Email Routing has been on for
+  `lannacare.org` since the catch-all was set up. So the onboarding step and
+  its DNS records are dropped, and verifying each admin is the whole setup.
+  This rests on Cloudflare's docs, not on a send: the first major-release
+  deploy is the proof. If it fails with `E_SENDER_DOMAIN_NOT_AVAILABLE`, the
+  fallback is to relay through Resend's API from the account set up for Auth
+  SMTP. Don't buy Workers Paid.

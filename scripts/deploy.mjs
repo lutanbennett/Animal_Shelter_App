@@ -5,6 +5,7 @@
 //   node scripts/deploy.mjs --env production --secrets
 //       # also (re)upload the five runtime secrets for that environment first
 //   ... --skip-build   # reuse the .open-next output of the previous run
+//   ... --no-mail      # deploy without emailing a major release to admins
 //
 // Why a script rather than `opennextjs-cloudflare deploy --env`: the Supabase
 // URL and anon key are inlined by `next build`, so each environment needs its
@@ -13,12 +14,30 @@
 // emptied before upload (scripts/strip-baked-env.mjs). Production also gets a
 // guard: the checkout must be a clean, pushed `main`, so what is live is
 // always a commit GitHub has.
+//
+// Every deploy is also a release (src/lib/releases.ts): package.json must
+// name the newest entry, production refuses to ship unreleased notes, the
+// Worker version is tagged with it, and a major release that is new to the
+// site is mailed to that environment's admins through the Worker (announce()).
 import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
+// TypeScript, loaded through Node's type stripping: the same file the app
+// renders, so the page, the tag and the email can't disagree.
+import { latestRelease, majorReleasesSince, unreleased } from "../src/lib/releases.ts";
+import { buildReleaseMail } from "../src/lib/release-mail.ts";
 
 const { name: envName, rest } = parseEnvArg(process.argv.slice(2));
 const pushSecrets = rest.includes("--secrets");
 const skipBuild = rest.includes("--skip-build");
+const noMail = rest.includes("--no-mail");
+
+// Where each environment answers: for asking the live site which release it
+// runs, and for the link in the email. The cutover changes production's.
+const SITE_ORIGINS = {
+  test: "https://test.lannacare.org",
+  production: "https://lannacare.org",
+};
 
 const RUNTIME_SECRETS = [
   "SUPABASE_SERVICE_ROLE_KEY",
@@ -64,6 +83,37 @@ if (envName === "production") {
   }
 }
 
+// The release this deploy ships.
+{
+  const pkgVersion = JSON.parse(readFileSync("package.json", "utf8")).version;
+  const problems = [];
+  if (pkgVersion !== latestRelease.version) {
+    problems.push(`package.json says ${pkgVersion} but the newest release in src/lib/releases.ts is ${latestRelease.version}`);
+  }
+  if (unreleased.length) {
+    problems.push(`src/lib/releases.ts has ${unreleased.length} unreleased note(s); cut a release first (see the top of that file)`);
+  }
+  if (problems.length && envName === "production") {
+    console.error("deploy: production ships only a written-down release:\n  - " + problems.join("\n  - "));
+    process.exit(2);
+  }
+  for (const p of problems) console.warn(`deploy: warning: ${p}`);
+}
+
+/** The release the live site says it runs, or null if it can't say. */
+async function liveVersion() {
+  try {
+    const r = await fetch(`${SITE_ORIGINS[envName]}/api/releases/current`, { signal: AbortSignal.timeout(10_000) });
+    if (!r.ok) return null;
+    const { version } = await r.json();
+    return typeof version === "string" ? version : null;
+  } catch {
+    return null;
+  }
+}
+const previous = await liveVersion();
+
+console.log(`deploy: release ${latestRelease.version} "${latestRelease.title}" (live now: ${previous ?? "unknown"})`);
 console.log(`deploy: ${envName} → Supabase project ${projectRef(env)} (${git("rev-parse --short HEAD")})`);
 
 // Safe to run beside a live `next dev`: the build type-checks with
@@ -83,4 +133,78 @@ if (pushSecrets) {
   run(`npx wrangler secret bulk --env ${envName}`, { input: JSON.stringify(secrets) });
 }
 
-run(`npx wrangler deploy --env ${envName}`);
+// The tag and message land in the Worker's version history (dashboard →
+// Workers → Deployments): a record of what went where and when, with no
+// table of our own. Only characters that survive a cmd.exe command line.
+const message = `v${latestRelease.version} ${latestRelease.title}`.replace(/[^\w .,:-]/g, "");
+run(`npx wrangler deploy --env ${envName} --tag v${latestRelease.version} --message "${message}"`);
+
+await announce();
+
+/**
+ * Mail the major releases this deploy brought to the site. This script
+ * picks the releases and the admins; the Worker labels the environment,
+ * sets the From and decides whether to send at all (worker/release-mail.mjs).
+ * On test it answers that mail is off, and that is printed like any result.
+ */
+async function announce() {
+  const majors = majorReleasesSince(previous);
+  if (!majors.length) {
+    console.log(`deploy: no major release new to ${envName} (was ${previous ?? "unknown"}), so no email.`);
+    return;
+  }
+  const versions = majors.map((r) => r.version).join(", ");
+  if (noMail) {
+    console.log(`deploy: --no-mail, not announcing ${versions}.`);
+    return;
+  }
+  const key = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!key) {
+    console.warn(`deploy: SUPABASE_SERVICE_ROLE_KEY is not set for ${envName}; not announcing ${versions}.`);
+    return;
+  }
+
+  // The new Worker takes a few seconds to answer everywhere. Mail only once
+  // it does, so the relay that sends is the one that knows this release.
+  for (let i = 0; i < 12 && (await liveVersion()) !== latestRelease.version; i++) {
+    await new Promise((r) => setTimeout(r, 5_000));
+  }
+
+  // user_roles, then each login's email from the Auth admin API — not the
+  // app_users view, which shows nothing without a signed-in role (0063).
+  const auth = { headers: { apikey: key, authorization: `Bearer ${key}` } };
+  const rolesRes = await fetch(
+    `${env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/user_roles?select=user_id&role=eq.admin&archived_at=is.null`,
+    auth,
+  );
+  if (!rolesRes.ok) {
+    console.warn(`deploy: could not list admins (${rolesRes.status}); not announcing ${versions}.`);
+    return;
+  }
+  const to = [];
+  for (const { user_id } of await rolesRes.json()) {
+    const userRes = await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users/${user_id}`, auth);
+    const email = userRes.ok ? (await userRes.json()).email : null;
+    if (email) to.push(email);
+  }
+  if (!to.length) {
+    console.warn(`deploy: no admin in ${envName} has an email; not announcing ${versions}.`);
+    return;
+  }
+
+  const res = await fetch(`${SITE_ORIGINS[envName]}/api/releases/mail`, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+    body: JSON.stringify({ ...buildReleaseMail(majors, SITE_ORIGINS[envName]), to }),
+  });
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    console.warn(`deploy: the release mail relay answered ${res.status}: ${result.error ?? "no detail"}`);
+    return;
+  }
+  console.log(
+    `deploy: release mail for ${versions} [${result.environment || "off"}]: sent ${result.sent.length}, skipped ${result.skipped.length}`,
+  );
+  for (const a of result.sent) console.log(`  sent     ${a}`);
+  for (const s of result.skipped) console.log(`  skipped  ${s.address}: ${s.reason}`);
+}

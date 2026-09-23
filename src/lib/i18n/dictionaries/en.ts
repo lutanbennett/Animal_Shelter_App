@@ -62,6 +62,7 @@ const en = {
     translations: "Translations",
     contacts: "Contacts",
     manual: "User manual",
+    releaseNotes: "Release notes",
     publicSite: "Public website",
     changePassword: "Change password",
     assistant: "Assistant",

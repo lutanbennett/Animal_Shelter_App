@@ -167,6 +167,7 @@ export function NavLinks({
   // keeps the rest of the system configuration.
   const footerItems: NavItem[] = [
     { href: "/manual", label: t.nav.manual },
+    { href: "/releases", label: t.nav.releaseNotes },
     { href: "/account/password", label: t.nav.changePassword },
     ...(isAdmin ? [{ href: "/admin/security", label: t.nav.security }] : []),
   ];
