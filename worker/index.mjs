@@ -32,10 +32,14 @@
 //      full CPU cost. With ORIGIN_HOST unset this is the only step, and the
 //      Worker behaves exactly as before this file existed.
 //
+// Before all three: /api/releases/* is answered here and never cached or
+// sent to the Pi — only this Worker has the mail binding (release-mail.mjs).
+//
 // `x-lanna-served-by` (pi | worker) and `x-lanna-cache` (HIT | MISS | BYPASS)
 // on every response say which path a request took.
 
 import openNext from "../.open-next/worker.js";
+import { handleReleaseRequest } from "./release-mail.mjs";
 
 // OpenNext's Durable Object classes must stay exported from the entry module.
 export { DOQueueHandler, DOShardedTagCache, BucketCachePurge } from "../.open-next/worker.js";
@@ -143,6 +147,9 @@ async function serve(request, env, ctx) {
 
 const worker = {
   async fetch(request, env, ctx) {
+    const release = await handleReleaseRequest(request, env);
+    if (release) return withHeaders(release, { "x-lanna-served-by": "worker", "x-lanna-cache": "BYPASS" });
+
     const url = new URL(request.url);
     const cacheable = isCacheable(request, url);
     if (!cacheable) {
