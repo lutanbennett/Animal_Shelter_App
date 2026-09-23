@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Architecture → "One command to run the three gates, printing each exit code" |
 | Branch / worktree | `claude/gates-command` @ `C:\Development\Animal_Shelter_gates-command` |
 | Dev server | not used — no UI surface |
-| PR | opened from this commit |
+| PR | #78 |
 | Tested by / date | Claude, 2026-09-24 |
 | Carries a migration? | no |
 | Tested at SHA | `6c94a5c` |
@@ -38,7 +38,7 @@ Run in the feature worktree, after `node scripts/worktree.mjs sync`, with
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): `check` passed in 1m33s on #78 (run 35906325161), and the `test-plan` log says `check-test-plan: ok`, not merely a green job, since that job is `continue-on-error`
 
 ## 3. Schema and data — *skip if no migration*
 
