@@ -2348,6 +2348,34 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   manual verification** table, so the handover to a human is a short concrete
   list rather than "please check it".
 
+- **A one-day-early date is a candidate, not an error (2026-09-23):**
+  `docs/utc-date-audit-2026-09-23.md` audits which stored dates the UTC "today"
+  bug may have written a day early, and deliberately corrects nothing. The
+  detector is exact — stored date one day before the Bangkok date of the row's
+  `created_at`, written while the Bangkok clock read 00:00–07:00 — and it
+  still cannot tell the bug from a volunteer legitimately recording yesterday's
+  weight at 6am. Dev shows why this matters rather than being a caveat: 43 of
+  the 46 candidates there are the AppSheet import, which stamped
+  `age_estimated_on` from the export file's date, and are not the bug at all.
+  So *provenance* decides, not the date arithmetic — rows sharing a
+  `created_at` to the microsecond are a bulk insert, and a cluster across
+  several tables is one intake-wizard submission. Corrections, if any, are
+  therefore per-table and from a confirmed id list, never a re-run of the
+  detector as an `update … where`: that would sweep in every false positive and
+  is not re-runnable, since a corrected row stops matching.
+
+- **The UTC "today" bug has a second home, in SQL (2026-09-23):** the same
+  audit found six `current_date` sites inside the database — a column default
+  (`maintenance.date_created`), a trigger (`maintenance.date_completed`), the
+  deceased cascade that end-dates prescriptions, a seed, and three views
+  including the public `in_treatment` figure. The database's session timezone
+  is UTC, so each is wrong for the same seven hours, and a `todayIso()` helper
+  in `src/lib/format.ts` reaches none of them. Worth writing down because the
+  natural reading of the backlog item — "27 call sites in `src/`" — makes the
+  code fix look complete when it is not. The sharpest of them: a death recorded
+  before 07:00 closes every open prescription the day *before* the animal died,
+  because `new.start_date::date` casts a correct `timestamptz` in a UTC
+  session. The placement row itself is right; only what it triggers is wrong.
 - **The vet forecast is one flat figure, not an average (2026-09-23):** booked
   vet visits are costed at a single editable "typical vet visit" amount held in
   `site_content.vet_visit_estimate` and edited on `/admin/website`, multiplied by
