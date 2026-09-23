@@ -127,6 +127,23 @@ discovers it.
     `actual`; the same month with one invoiced and one uninvoiced visit returns
     `estimated` and ฿2,250 (the real ฿1,450 plus the ฿800 estimate), confirming a real
     cost overrides the estimate and that the weaker label wins a mixed month.
+  - **Month boundaries, proven with fixed dates rather than by waiting for midnight.**
+    Six windows pushed through the real function, each checked so that the monthly
+    slices sum to exactly what the whole window returns:
+
+    | case | window | months | slices == whole |
+    |---|---|---|---|
+    | exactly one whole month | 2026-10-01 .. 10-31 | 1 | ✓ ฿84,413 |
+    | single day | 2026-10-15 .. 10-15 | 1 | ✓ ฿2,723 |
+    | ends on the 1st | 2026-10-20 .. 11-01 | 2 | ✓ ฿35,399 |
+    | straddles a month end | 2026-10-31 .. 11-01 | 2 | ✓ ฿5,446 (2 × ฿2,723) |
+    | starts on the 1st | 2026-11-01 .. 12-15 | 2 | ✓ ฿122,535 |
+    | **crosses a year end** | 2026-12-15 .. 2027-01-15 | 2 | ✓ ฿87,136 |
+
+    This separates the two questions the timezone line conflates: *does the bucketing
+    logic handle the boundary* is answerable at any hour by feeding it fixed dates, and
+    is answered here; *does the deployed build agree with the source* is the only part
+    that needs `test.lannacare.org` between 00:00 and 07:00 Thai (§8).
   - **Unset vet estimate** — with `vet_visit_estimate` null, booked visits return
     `missing_prices 2` rather than being silently free.
 
@@ -239,12 +256,18 @@ underlying price columns were checked directly with the anon key too — `medica
       deployed from a feature branch, and this cannot be checked on `next dev`, which is
       the whole point of the line. **Flagged hard for the release manager, because this
       page is date arithmetic end to end and this is the check most likely to be waved
-      through.** What to look at on the deployed build is the **window edges**, not the
-      month buckets: `isoDatePlus(0)` derives "today" from the runtime clock, so between
-      00:00 and 07:00 Thai time a Workers build offers a window starting the previous
-      day. That is expected and not a defect — what must be confirmed is that it is only
-      a one-day shift in the window, not a shifted or double-counted total. The month
-      bucketing itself is knowingly UTC (§1) and is Dashboard follow-ups (e), not this.
+      through.** What is left for the deployed build is narrower than it looks, because
+      the *logic* half is already proven: §4 pushes six fixed windows — including one
+      crossing a year end — through the real function and confirms the monthly slices
+      sum to the whole every time. That needed no particular hour of day.
+
+      What genuinely cannot be answered here is whether the **deployed** build agrees
+      with the source. `isoDatePlus(0)` derives "today" from the runtime clock, so
+      between 00:00 and 07:00 Thai time a Workers build offers a window starting the
+      previous day. That is expected and not a defect; what must be confirmed is that it
+      is only a one-day shift in the **window edges**, not a shifted or double-counted
+      total. The month bucketing itself is knowingly UTC (§1) and is Dashboard
+      follow-ups (e), not this.
 - [ ] Public pages re-checked after a cache purge — n/a: nothing is deployed yet, and this change adds no public page. `globals.css` gains five tokens and redefines nothing, so the only exposure is a glance at `/` once the release manager deploys.
 
 ### Deploy safety
@@ -260,17 +283,26 @@ underlying price columns were checked directly with the anon key too — `medica
       `0072` adds `cashflow_forecast` and `/management/cashflow` calls it, so the
       production apply must happen **before** the deploy. This is the PR #53 failure mode
       and is called out here deliberately.
-      **Production also still needs `0071`**, which was deliberately not applied when the
-      schema PR merged. So production is two migrations behind and both must land, in
-      order, before this deploys.
+      **How far behind production is was NOT verified from here.** This worktree has no
+      `.env.deploy.production` (`worktree.mjs` copies only `.env.local`), so
+      `--status --env production` cannot run in it, and production credentials were not
+      gone looking for. My brief said 0071 was deliberately left unapplied to production;
+      the test-manager session reports it checked and found production at **71 applied,
+      0 pending**. Both are second-hand here and they disagree, so the apply plan below
+      is written to be correct either way: **read the dry-run and apply what it says is
+      pending**, rather than trusting any number written in advance. If 0071 is already
+      there the runner skips it, which is why this is safe to leave to the output rather
+      than settle now.
 - [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — n/a: needs production credentials and is the release manager's step. Flagged for them in the apply plan above, deliberately not attempted from a feature branch.
 - [x] For a **destructive or rewriting** migration only: backup fresh — **n/a: 0072 adds
       one function and touches no data. 0071 is additive nullable columns.** Neither
       rewrites a row.
 - [x] Apply plan stated:
-      1. `node scripts/apply-migrations.mjs --env production --dry-run` — expect **0071
-         and 0072 both pending**.
-      2. Apply both to production (`dbkodyyxxhtygxcxmfcu`), 0071 then 0072.
+      1. `node scripts/apply-migrations.mjs --status --env production`, then `--dry-run`.
+         **Read what it says is pending — do not assume.** `0072` will be pending; `0071`
+         may or may not be (see the note above). The runner skips anything already
+         recorded in `schema_migrations`, so either answer is fine.
+      2. Apply whatever is pending to production (`dbkodyyxxhtygxcxmfcu`), in file order.
       3. **Then** deploy. Reversing this order leaves `/management/cashflow` calling a
          function production does not have.
       4. After deploying, set the typical-vet-visit figure on `/admin/website` — until it
