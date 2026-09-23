@@ -186,7 +186,18 @@ as $$
   vet as (
     select
       mo.month,
-      coalesce(sum(coalesce(va.cost, e.vet_visit_estimate)), 0) as amount,
+      -- The `filter` is load-bearing. months is LEFT JOINed to
+      -- vet_appointments so a month with nothing booked still produces a
+      -- row, and in that row va.* is all null — at which point
+      -- coalesce(va.cost, estimate) happily returns the estimate and the
+      -- month is charged for a visit that does not exist. Counting only
+      -- rows that matched an appointment is what makes an empty month
+      -- cost zero. (Found 2026-09-23: every month past the two booked
+      -- visits was reading ฿800.)
+      coalesce(
+        sum(coalesce(va.cost, e.vet_visit_estimate)) filter (where va.id is not null),
+        0
+      ) as amount,
       count(*) filter (
         where va.id is not null and va.cost is null and e.vet_visit_estimate is null
       ) as missing,
@@ -240,6 +251,31 @@ as $$
   select 'maintenance', month, amount, 'estimated', missing from maint
   order by 2, 1;
 $$;
+
+-- Signed-in callers only. The function is security invoker, so RLS already
+-- reduces it to zeroes for anyone who cannot read the underlying tables.
+-- This is defence in depth on top of that, and it takes BOTH statements:
+--
+--   - Postgres grants EXECUTE to PUBLIC on every new function, which is the
+--     `=X/postgres` entry in pg_proc.proacl.
+--   - Supabase additionally carries `alter default privileges` granting
+--     EXECUTE to anon, authenticated and service_role on new functions in
+--     `public`, so `anon=X/postgres` is granted *explicitly* at creation.
+--
+-- A revoke from PUBLIC alone therefore leaves anon holding its own grant
+-- and changes nothing observable — checked against pg_proc.proacl rather
+-- than assumed, after exactly that mistake. Compare diet_forecast, which
+-- still has both entries.
+--
+-- Worth doing even though RLS holds: site_content is public-read (0018,
+-- `using (true)`), so vet_visit_estimate is genuinely anon-readable, and
+-- this is the one function in the app whose entire purpose is to total
+-- money. Note this does NOT restrict it to management — any signed-in role
+-- may execute it and RLS decides what they see. The page's
+-- requireManagementUser() and RLS remain the actual boundary.
+revoke execute on function cashflow_forecast(date, date) from public;
+revoke execute on function cashflow_forecast(date, date) from anon;
+grant execute on function cashflow_forecast(date, date) to authenticated;
 
 comment on function cashflow_forecast(date, date) is
   'Forecast outgoings in baht, one row per category per month across the window. Reuses diet_forecast (0051) and medication_forecast (0044) rather than restating them. amount counts only what could be priced; missing_prices counts what could not, so the page shows a gap instead of a zero. Month boundaries are UTC — see backlog Dashboard follow-ups (e).';
