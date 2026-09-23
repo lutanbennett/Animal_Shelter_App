@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Architecture → **Postgres has its own copy of the UTC "today" bug — `current_date` in a UTC session** |
 | Branch / worktree | `claude/postgres-current-date` @ `C:\Development\Animal_Shelter_postgres-current-date` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3003` |
-| PR | set in the follow-up commit once it exists |
+| PR | #71 |
 | Tested by / date | Claude (automated) 2026-09-24, 00:20–00:38 Bangkok — inside the 00:00–07:00 window, so `current_date` and the shelter's today really differed |
 | Carries a migration? | yes — `0073_shelter_today.sql` |
 | Tested at SHA | `a0b10ce` (branch on `main` @ `84e61e0` — #59 and #69 merged). Synced since to `d3997a8` (#70), which changes only `.github/workflows/ci.yml`, so the gates and the harness still stand for the tip |
