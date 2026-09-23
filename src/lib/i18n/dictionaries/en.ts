@@ -721,7 +721,10 @@ const en = {
         perMonth: "Average per month",
         perMonthDetail: "The window's total divided by the months it covers.",
         notPriced: "Not priced yet",
-        notPricedDetail: "Items the shelter owns but can't cost. The total below is short by this much.",
+        notPricedOne: (category: string) =>
+          `All in ${category}. Click to add the missing prices — the total is short until then.`,
+        notPricedMany: (categories: number) =>
+          `Spread across ${categories} categories. Click to see which, with a link to price each.`,
         notPricedNone: "Everything in the window has a price.",
       },
       chart: {
@@ -741,6 +744,10 @@ const en = {
           `${n} more item${n === 1 ? "" : "s"} in this month have no price, so they are not in this figure.`,
         basisNote:
           "“Priced” multiplies a price someone entered by what the records imply. “Estimated” uses a stand-in figure — a maintenance job's estimated cost, or the typical vet visit below. “Invoiced” means every visit that month already has its real cost.",
+      },
+      csv: {
+        download: "Download CSV",
+        notPricedColumn: (category: string) => `${category} not priced`,
       },
       vetNote: (amount: string) =>
         `Vet visits are costed at ${amount} a visit, except where the invoice has already been recorded against the visit.`,
