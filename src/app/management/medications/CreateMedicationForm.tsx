@@ -46,6 +46,22 @@ export function CreateMedicationForm() {
         </select>
         <span className="text-xs text-muted">{m.createForm.unitHint}</span>
       </div>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="medication-cost" className="text-sm font-medium text-muted">
+          {m.createForm.cost}
+        </label>
+        <input
+          id="medication-cost"
+          name="costPerUnit"
+          type="number"
+          min={0}
+          step="0.01"
+          inputMode="decimal"
+          placeholder={m.createForm.costPlaceholder}
+          className="w-40 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+        />
+        <span className="text-xs text-muted">{m.createForm.costHint}</span>
+      </div>
       <button
         type="submit"
         disabled={pending}

@@ -10,6 +10,16 @@ import { ForecastWindowPicker } from "@/components/ForecastWindowPicker";
 import { formatDate } from "@/lib/format";
 import { forecastWindows, parseCustomWindow } from "@/lib/management/forecast-window";
 
+type MedicationQueryRow = {
+  id: string;
+  name: string;
+  dose_unit: string;
+  // numeric(12, 2): PostgREST normally hands this back as a JSON number, but
+  // ForecastRow below shows it can arrive as a string, so it is normalised
+  // once here rather than guessed at in the table.
+  cost_per_unit: number | string | null;
+};
+
 type ForecastRow = {
   medication_id: string;
   prescription_count: number;
@@ -33,9 +43,9 @@ export default async function MedicationsAdminPage(props: PageProps<"/management
     await Promise.all([
       supabase
         .from("medication")
-        .select("id, name, dose_unit")
+        .select("id, name, dose_unit, cost_per_unit")
         .order("name")
-        .returns<Pick<MedicationRow, "id" | "name" | "dose_unit">[]>(),
+        .returns<MedicationQueryRow[]>(),
       supabase
         .from("frequency")
         .select("id, label, doses_per_day, interval_count, interval_unit")
@@ -78,6 +88,8 @@ export default async function MedicationsAdminPage(props: PageProps<"/management
   const medications: MedicationRow[] = (medicationsResult.data ?? []).map(
     (medication) => ({
       ...medication,
+      cost_per_unit:
+        medication.cost_per_unit == null ? null : Number(medication.cost_per_unit),
       prescription_count: medicationCounts.get(medication.id) ?? 0,
       forecast: forecasts.map((byMedication) => {
         const row = byMedication.get(medication.id);

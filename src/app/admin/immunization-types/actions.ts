@@ -5,6 +5,7 @@ import { assertAdminRole } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import { parseBahtAmount } from "@/lib/format";
 
 export type ImmunizationTypeFormState =
   | { error: string }
@@ -45,11 +46,16 @@ export async function createImmunizationType(
     };
   }
 
+  // Optional: a vaccine can be listed before anyone knows what it costs.
+  const cost = parseBahtAmount(formData.get("cost") as string | null);
+  if (!cost.ok) return { error: t.admin.immunizationTypes.errors.costInvalid };
+
   const supabase = await createClient();
   const { error } = await supabase.from("immunization_types").insert({
     name,
     is_mandatory: isMandatory,
     interval_months: intervalMonths,
+    cost: cost.value,
   });
 
   if (error) return { error: error.message };
@@ -60,7 +66,13 @@ export async function createImmunizationType(
 
 export async function updateImmunizationType(
   id: string,
-  fields: { name: string; isMandatory: boolean; intervalMonths: number | null },
+  fields: {
+    name: string;
+    isMandatory: boolean;
+    intervalMonths: number | null;
+    /** Baht per dose, or null for "not priced yet" (0071). */
+    cost: number | null;
+  },
 ) {
   await assertAdminRole();
   const { t } = await getT();
@@ -70,6 +82,10 @@ export async function updateImmunizationType(
   if (fields.intervalMonths != null && fields.intervalMonths <= 0) {
     throw new Error(t.admin.immunizationTypes.errors.intervalPositive);
   }
+  // Re-checked here, not only in the table: null clears the price back to
+  // "not priced yet", but a bad number must not become one.
+  const cost = parseBahtAmount(fields.cost?.toString() ?? null);
+  if (!cost.ok) throw new Error(t.admin.immunizationTypes.errors.costInvalid);
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -78,6 +94,7 @@ export async function updateImmunizationType(
       name: fields.name.trim(),
       is_mandatory: fields.isMandatory,
       interval_months: fields.intervalMonths,
+      cost: cost.value,
     })
     .eq("id", id);
 
