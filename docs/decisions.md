@@ -2682,4 +2682,6 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   2026-09-21, and names a manager rather than an admin as who can fix them.
   The sidebar is also flat now — Management and Settings are one link each,
   their tile-grid landing pages being the menu — which retires the accordion
-  state in `sessionStorage` and the footer-overlap bug it caused.
+  state in `sessionStorage`. That alone did not end the footer overlap: an
+  admin's flat list plus the pinned group still needs ~690px, so the group is
+  pinned only on windows at least 44rem tall and otherwise follows the list.
