@@ -59,6 +59,7 @@ const en = {
     vets: "Vets",
     medications: "Medications",
     diets: "Diets",
+    cashflow: "Cashflow",
     translations: "Translations",
     contacts: "Contacts",
     manual: "User manual",
@@ -669,6 +670,8 @@ const en = {
           "The medication list prescriptions are written from — names, units, and duplicates to merge.",
         diets:
           "The food list staff pick from, with the unit, cost and daily quantities the forecast uses.",
+        cashflow:
+          "What the shelter is about to spend, in one place: food, medication, vaccinations, vet visits and maintenance.",
         translations:
           "Public-facing text whose other-language version still has to be written or checked.",
       },
@@ -684,6 +687,64 @@ const en = {
       hint: "Add a column for any period up to a year — e.g. next month's order, or a fundraising appeal's quarter.",
       invalid: "Enter a From and To date, To on or after From, no more than a year apart.",
       heading: (from: string, to: string) => `${from} – ${to}`,
+    },
+    cashflow: {
+      title: "Cashflow forecast",
+      subtitle:
+        "What the shelter is committed to spending over the window, added up from the records: food, medication, vaccinations falling due, booked vet visits and open maintenance jobs.",
+      notABudgetLead: "This is not a budget.",
+      notABudget:
+        "It is the outgoings the shelter's own records imply, and nothing else — no donations or other income, no salaries, no rent, no utilities, nothing the database does not hold. Treat it as a floor under what the month will cost, not as the whole picture.",
+      couldntLoad: "Couldn't load the forecast",
+      empty: "Nothing falls in this window.",
+      window: {
+        fixed: (days: number) => `Next ${days} days`,
+      },
+      categories: {
+        food: "Food",
+        medication: "Medication",
+        immunization: "Vaccinations",
+        vet: "Vet visits",
+        maintenance: "Maintenance",
+      },
+      basis: {
+        priced: "priced",
+        estimated: "estimated",
+        actual: "invoiced",
+      },
+      stats: {
+        total: "Total for the window",
+        totalDetail: (months: number) =>
+          months === 1 ? "Across 1 month" : `Across ${months} months`,
+        perMonth: "Average per month",
+        perMonthDetail: "The window's total divided by the months it covers.",
+        notPriced: "Not priced yet",
+        notPricedDetail: "Items the shelter owns but can't cost. The total below is short by this much.",
+        notPricedNone: "Everything in the window has a price.",
+      },
+      chart: {
+        ariaLabel: (months: number) =>
+          `Stacked column chart of forecast outgoings by category over ${months} month${months === 1 ? "" : "s"}.`,
+        noCategories: "No categories are showing — switch one back on above.",
+      },
+      table: {
+        heading: "Month by category",
+        month: "Month",
+        total: "Total",
+        nothing: "—",
+        notPricedYet: "not priced yet",
+        notPricedRow: "Not priced yet",
+        fixCount: (n: number) => `${n} to price`,
+        partialTitle: (n: number) =>
+          `${n} more item${n === 1 ? "" : "s"} in this month have no price, so they are not in this figure.`,
+        basisNote:
+          "“Priced” multiplies a price someone entered by what the records imply. “Estimated” uses a stand-in figure — a maintenance job's estimated cost, or the typical vet visit below. “Invoiced” means every visit that month already has its real cost.",
+      },
+      vetNote: (amount: string) =>
+        `Vet visits are costed at ${amount} a visit, except where the invoice has already been recorded against the visit.`,
+      vetNoteUnset:
+        "No typical vet visit figure has been set, so booked visits without an invoice are not costed at all.",
+      vetNoteLink: "Change it on the website settings",
     },
     dashboard: {
       title: "Management dashboard",
