@@ -2915,3 +2915,29 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   for someone who has not looked, or signing unasked. CLAUDE.md
   "Testing" (PR #64) and docs/test-plan-template.md carry the same
   wording.
+
+- **The shelter's "today" lives in one SQL function, not in the session
+  (2026-09-24):** `0073_shelter_today.sql` adds `shelter_time_zone()`
+  (`'Asia/Bangkok'`, the twin of `SHELTER_TIME_ZONE` in `src/lib/format.ts` —
+  the two must name the same zone), `shelter_today()` in place of
+  `current_date`, and `shelter_date(timestamptz)` in place of a bare `::date`
+  cast. Eight sites moved onto them: the `maintenance.date_created` default,
+  the `date_completed` stamp, both lines of the death cascade (which
+  prescriptions to close *and* the end date written — the brief named only the
+  second, but the first picked the wrong ones), `public_shelter_stats`'
+  `in_treatment` and both "this year" counts, and `public_recent_adoptions.
+  adopted_on`. Setting the database or role `TimeZone` to Bangkok was the
+  one-line alternative and was rejected: PostgREST would then serialise every
+  timestamptz as `+07:00` instead of `+00:00`, a silent change to every value
+  the app reads, far wider than this bug. The functions are `stable`, not
+  `immutable`, because `shelter_today()` reads `now()` — which is also what
+  lets it be a column default. `anon` needs EXECUTE on them because a view
+  checks function privileges as the caller; Supabase's default grant covers
+  that, and the rollback harness reads both public views as `anon` to prove
+  it. **Existing rows were deliberately not repaired:** fixing forward and
+  correcting history are different jobs, and the production audit (above,
+  2026-09-23) found nothing to correct; dev had 0 prescriptions closed early
+  by a death. `medication_daily_requirement`, listed in the backlog item, was
+  already dropped by 0044; the 0069 diet seed has run and is left alone; the
+  cashflow month boundaries (0072) stay with Dashboard follow-ups (e), which
+  can now call `shelter_date()` rather than inventing its own constant.
