@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| Feature | Five template fixes: a section 3 line for exercising a migration's constraints in a `begin; … rollback;` harness, a section 2 warning that gates are ticked on exit codes rather than plausible-looking output, a section 8 split of the timezone check into boundary logic versus deployed behaviour, and two wording fixes the checker was silently punishing |
+| Feature | Seven template fixes: a section 3 line for exercising a migration's constraints in a `begin; … rollback;` harness, a section 2 warning that gates are ticked on exit codes rather than plausible-looking output, a section 8 split of the timezone check into boundary logic versus deployed behaviour, two wording fixes the checker was silently punishing, a third  signature state, and a section 7 line asking whether claims were measured or reasoned |
 | Backlog item | none; feedback from the Cashflow Schema session on 2026-09-23, approved by Lutan the same day |
 | Branch / worktree | `claude/test-plan-schema-harness` @ `C:\Development\Animal_Shelter_test-plan-schema-harness` |
 | Dev server | not started — this change ships no runtime code |
@@ -18,7 +18,7 @@
 - [x] Change is described in one sentence, and it matches what was asked — one checklist line in section 3 of `docs/test-plan-template.md` for the `do $$ … $$` harness CLAUDE.md already describes, plus the section 2, section 8 and wording changes added in response to defects 1, 3, 4 and 5 below
 - [x] Files/areas touched listed — `docs/test-plan-template.md`, `docs/test-plans/`, `docs/decisions.md`. No `src/`, no `worker/`, no `scripts/`, no `.github/`, no `supabase/migrations/`
 - [x] Roles affected identified — none; no runtime surface, so no role can reach it
-- [x] Anything explicitly out of scope written down — not changing `scripts/check-test-plan.mjs` (the new line needs no new validation; it is an ordinary checklist item), not changing the release smoke test (owned by the release manager session), and not retrofitting the line onto already-merged checklists
+- [x] Anything explicitly out of scope written down — `scripts/check-test-plan.mjs` **is** now changed, to accept the `pending` signature state; that was originally out of scope and the scope grew deliberately as feedback arrived. Still out: not changing the release smoke test (owned by the release manager session), and not retrofitting the line onto already-merged checklists
 
 ## 2. Automated gates
 
@@ -112,10 +112,12 @@ No runtime surface, so no role can reach this change.
 | # | Severity | What | Status |
 |---|---|---|---|
 | 1 | high | While filling in this very checklist I nearly ticked `typecheck`, `lint` and `build` on a false green: `npm ci` had not finished linking `node_modules/.bin`, so every gate failed with "'next' is not recognized", and piping each through `tail` made the shell report `tail`'s exit status instead. Three gates read as passing having never run | fixed — section 2 now warns about both causes, and the gates were re-run capturing each exit code separately |
+| 2 | medium | Section 3 had no line for the `begin; … rollback;` harness, so the most valuable check on a migration had nowhere to be recorded. A schema checklist read as almost entirely `n/a`, making it look like a formality on exactly the change type where it should have teeth — and the template was out of step with a practice CLAUDE.md already documents | fixed — this PR |
+| 3 | medium | Section 8 conflated two different timezone claims — whether the logic handles the boundary, and whether the deployed build behaves as the source does. Read as written it pushed testers toward a timed observation that silently passes at the wrong hour, when deterministic instant injection is both stronger and available | fixed — the line now separates the two and prefers injection where the code allows it |
 | 4 | low | The template said to write `n/a: <reason>` but did not say the reason must follow the colon immediately, so a natural phrasing like `n/a as a deploy check, because …` failed the checker and read as a false positive | fixed — instruction made explicit, strictness kept because it is what makes reasons greppable |
 | 5 | medium | "CI green on the PR" cannot be true in the commit that creates the PR, so every first push is red by construction. An item that cannot be honestly ticked invites pre-ticking, and a pre-tick is indistinguishable from a real pass | fixed — template now says to mark it `n/a: not yet` and tick it in a follow-up commit |
-| 3 | medium | Section 8 conflated two different timezone claims — whether the logic handles the boundary, and whether the deployed build behaves as the source does. Read as written it pushed testers toward a timed observation that silently passes at the wrong hour, when deterministic instant injection is both stronger and available | fixed — the line now separates the two and prefers injection where the code allows it |
-| 2 | medium | Section 3 had no line for the `begin; … rollback;` harness, so the most valuable check on a migration had nowhere to be recorded. A schema checklist read as almost entirely `n/a`, making it look like a formality on exactly the change type where it should have teeth — and the template was out of step with a practice CLAUDE.md already documents | fixed — this PR |
+| 6 | medium | The checker could not tell a plan awaiting a human from one filled in badly — both rendered as "is empty". An illegible red is one people learn to ignore, and it created an incentive to write `n/a` over a real outstanding item to get green | fixed — `pending: <what is outstanding>` is a third state; it still fails, but says what it is waiting for |
+| 7 | medium | No gate reads prose, so a confidently wrong claim in a commit message or `docs/decisions.md` ships with a passing checklist and becomes what the next person inherits | fixed — section 7 now asks whether claims were measured or reasoned |
 
 ## Left for manual verification
 

@@ -2394,3 +2394,28 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   which is the only way this kind of thing surfaces. The second matters more than
   it looks: an item that cannot be honestly ticked invites pre-ticking, and a
   pre-tick is indistinguishable from a check that passed.
+
+- **"Pending" is a third signature state, and it still fails (2026-09-23):**
+  `Manual verification by:` now accepts `pending: <what is outstanding>` beside a
+  name and `n/a: <reason>`. It fails the check — nobody has looked — but it fails
+  saying *awaiting manual verification: <what>*, which the checker previously
+  could not distinguish from a plan filled in badly. The point is not to soften
+  the gate: it is that a red check which says what it is waiting for gets acted
+  on, and an illegible one teaches people to ignore red. It also removes the
+  incentive to reach for `n/a` to get green, which would be a false assurance
+  about the single thing the author could not verify. Raised by the UTC time bug
+  fix session, which deliberately left its plan red rather than `n/a` a real
+  outstanding item, and then asked whether the template should represent that
+  case properly.
+
+- **Section 7 asks whether claims were measured or reasoned (2026-09-23):** no
+  gate reads prose. `typecheck`, `lint`, `build` and the checklist all pass with
+  a confidently wrong explanation in the commit that ships the fix, and that
+  explanation is what the next person inherits and reasons from. The UTC session
+  caught one of its own: a commit message asserting `dueState()` was "off by one
+  for the whole of every day at UTC+7", written from reasoning. Measured over 400
+  consecutive dates it agreed with the calendar version at every offset tested
+  and differed only on DST transitions, in zones that have them — Thailand has
+  none and Workers run UTC, so it had never been wrong in production. The fix
+  stands as robustness; the claim did not. Caught only because someone wrote an
+  assertion for it, which is exactly why it is now a line.

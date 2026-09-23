@@ -134,6 +134,7 @@ must be refused by the server, not merely hidden in the UI.
 - [ ] Non-obvious design choices appended to `docs/decisions.md`, dated
 - [ ] `README.md` still accurate
 - [ ] Commit messages say why, not just what
+- [ ] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned.** No gate reads prose: `typecheck`, `lint`, `build` and this checklist all pass with a confidently wrong explanation in the commit that ships the fix, and the wrong explanation is what the next person inherits. Worth real attention on timezone, concurrency and floating-point work, where intuition is unusually unreliable and a plausible story is easy to tell
 
 ## 8. Pre-production gate
 
@@ -207,8 +208,19 @@ Automated checks by: <name>  Date: <yyyy-mm-dd>
 ### Manual verification
 
 The items in **Left for manual verification** above. Signed by the person who
-looked. Claude never signs this line on someone else's behalf; if there was
-nothing to look at, write `n/a: <reason>` in place of the name.
+looked. Claude never signs this line on someone else's behalf. Three valid states:
+
+- `<name>  Date: <yyyy-mm-dd>` — a person looked.
+- `n/a: <reason>` — there was nothing to look at.
+- `pending: <what is outstanding>` — the work is done and something genuinely
+  needs a person who has not got to it yet. **This still fails the check**, and
+  should: nobody has looked. But it fails saying *awaiting manual verification:
+  <what>*, which is a different thing from a plan filled in badly. Use it rather
+  than reaching for `n/a` to get green — an `n/a` over a real outstanding item is
+  a false assurance about the one thing you could not verify.
+
+A red `test-plan` that says what it is waiting for is a red people act on. An
+illegible one is a red people learn to ignore.
 
 - [ ] Every item in the manual list was checked by a person, or the list is empty
 
