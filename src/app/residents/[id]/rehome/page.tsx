@@ -11,6 +11,7 @@ import {
 } from "@/lib/placements/rehome";
 import { PLACEMENT_ICONS } from "@/components/hub-icons";
 import { RehomeForm } from "./RehomeForm";
+import { todayIso } from "@/lib/format";
 
 export default async function RehomePage(props: PageProps<"/residents/[id]/rehome">) {
   const { id } = await props.params;
@@ -91,7 +92,7 @@ export default async function RehomePage(props: PageProps<"/residents/[id]/rehom
   const state = stateResult.data?.[0];
   const canRehome = REHOME_ROLES.has(roleResult.data ?? "");
   const Icon = PLACEMENT_ICONS.rehome;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
 
   const carers = carerOptions.carers;
   const carerName = (carerId: string | null) =>

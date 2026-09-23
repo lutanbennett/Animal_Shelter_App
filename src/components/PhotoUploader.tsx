@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { PHOTO_CATEGORIES, type PhotoCategory } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import { todayIso } from "@/lib/format";
 
 type UploadStatus = "queued" | "uploading" | "done" | "error";
 
@@ -25,10 +26,6 @@ type QueueItem = {
 // folders. Uploading one at a time means every upload after the first
 // reuses the folder the first one just created/cached.
 const CONCURRENCY = 1;
-
-function todayIsoDate(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 
 function uploadFile(
   t: Dictionary,
@@ -72,7 +69,7 @@ export function PhotoUploader({ residentId }: { residentId: string }) {
   const { t } = useI18n();
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [dragActive, setDragActive] = useState(false);
-  const [dateTaken, setDateTaken] = useState(todayIsoDate);
+  const [dateTaken, setDateTaken] = useState(todayIso);
   // Empty by default, deliberately — a photo dropped in before picking a
   // folder should be rejected, not silently filed under a guessed default.
   const [category, setCategory] = useState<PhotoCategory | "">("");
@@ -155,7 +152,7 @@ export function PhotoUploader({ residentId }: { residentId: string }) {
             id="photo-date-taken"
             type="date"
             value={dateTaken}
-            max={todayIsoDate()}
+            max={todayIso()}
             onChange={(e) => setDateTaken(e.target.value)}
             className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
           />

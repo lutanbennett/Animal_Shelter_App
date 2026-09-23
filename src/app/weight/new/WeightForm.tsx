@@ -3,17 +3,13 @@
 import { useActionState, useState } from "react";
 import { createWeight } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { formatDate, weightUnit } from "@/lib/format";
+import { formatDate, todayIso, weightUnit } from "@/lib/format";
 
 export type VetAppointmentOption = {
   id: string;
   appointment_date: string;
   reason: string | null;
 };
-
-function todayIsoDate(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 
 export function WeightForm({
   residentId,
@@ -39,7 +35,7 @@ export function WeightForm({
       const match = vetAppointments.find((a) => a.id === preselectedVetAppointmentId);
       if (match) return match.appointment_date.slice(0, 10);
     }
-    return todayIsoDate();
+    return todayIso();
   });
 
   function handleVetAppointmentChange(id: string) {
@@ -99,7 +95,7 @@ export function WeightForm({
             type="date"
             required
             value={date}
-            max={todayIsoDate()}
+            max={todayIso()}
             onChange={(e) => {
               setDateTouched(true);
               setDate(e.target.value);

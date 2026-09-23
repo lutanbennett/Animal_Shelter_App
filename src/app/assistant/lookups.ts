@@ -5,6 +5,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { logAssistantAction } from "@/lib/assistant/audit";
 import { canUseAssistant } from "@/lib/assistant/data";
 import type { DueDraft, WhereDraft, WhoDraft } from "@/lib/assistant/types";
+import { addDaysIso, todayIso } from "@/lib/format";
 
 /**
  * The three questions that write nothing. They are answered here rather
@@ -212,15 +213,6 @@ type JobRow = {
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-/**
- * Calendar arithmetic on a YYYY-MM-DD string, via UTC so that it stays
- * pure date arithmetic whatever timezone the server happens to be in.
- */
-function addCalendarDays(isoDate: string, days: number): string {
-  const [y, m, d] = isoDate.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
-}
-
 async function answerDue(
   supabase: Awaited<ReturnType<typeof createClient>>,
   days: number,
@@ -232,11 +224,10 @@ async function answerDue(
   // `maintenance.due_date` is a date, not an instant, so its upper bound
   // has to be a calendar date — and deriving one from a UTC timestamp is
   // how you get "yesterday" for the first seven hours of every day in
-  // Thailand (backlog d98695a). It comes from the asker's clock instead,
-  // and only falls back to the server's if the browser sent nonsense.
-  const endDate = ISO_DATE.test(today)
-    ? addCalendarDays(today, days)
-    : end.toISOString().slice(0, 10);
+  // Thailand (backlog d98695a). It comes from the asker's clock, falling
+  // back to the shelter's calendar — never the server's — if the browser
+  // sent nonsense.
+  const endDate = addDaysIso(ISO_DATE.test(today) ? today : todayIso(), days);
 
   const [visitsResult, jobsResult] = await Promise.all([
     // The dashboard's own "due" set: still scheduled, and either already

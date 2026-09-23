@@ -6,6 +6,7 @@ import { SYSTEM_ZONE, loadEnclosureOptions } from "@/lib/enclosures/options";
 import { REHOME_ROLES } from "@/lib/placements/rehome";
 import { PLACEMENT_ICONS } from "@/components/hub-icons";
 import { ReturnToShelterForm } from "./ReturnToShelterForm";
+import { todayIso } from "@/lib/format";
 
 export default async function ReturnToShelterPage(
   props: PageProps<"/residents/[id]/rehome/return">,
@@ -75,7 +76,7 @@ export default async function ReturnToShelterPage(
   const withCarer = currentStatus === "Fostered" || currentStatus === "Adopted";
   const canReturn = REHOME_ROLES.has(roleResult.data ?? "");
   const Icon = PLACEMENT_ICONS.returnToShelter;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
 
   const carerResult =
     withCarer && state?.current_carer_id

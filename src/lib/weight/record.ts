@@ -37,12 +37,10 @@ export async function recordWeight(
 
   if (!input.residentId) return { error: errors.missingResident };
 
-  // The same date rules the placement actions use. The check this
-  // replaced compared a date-only value against the current instant, which
-  // reads today as tomorrow for the first seven hours of every day in
-  // Thailand — the server runs in UTC and the shelter does not (see the
-  // backlog, d98695a). `isFutureDate` carries a day of slack for exactly
-  // that, so this now behaves like move and send-to-hospital.
+  // The same date rules the placement actions use. `isFutureDate` now
+  // compares against today at the shelter (see @/lib/format), so a weight
+  // recorded at 01:00 in Chiang Mai is dated today rather than being
+  // rejected as tomorrow, and a date that really is tomorrow still is.
   if (!isIsoDate(input.date)) return { error: errors.enterDate };
   if (Number.isNaN(new Date(`${input.date}T00:00:00Z`).getTime())) {
     return { error: errors.invalidDate };

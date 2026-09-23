@@ -7,6 +7,7 @@ import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { DOSE_UNITS, type DoseUnit } from "@/lib/i18n/enum-labels";
 import { parseSchedule, type FrequencySchedule } from "@/lib/prescriptions/frequency";
+import { todayIso } from "@/lib/format";
 
 export type PrescriptionFormState = { error: string } | undefined;
 
@@ -19,10 +20,6 @@ function str(formData: FormData, key: string): string | null {
 
 function isoDate(value: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value));
-}
-
-function todayIsoDate(): string {
-  return new Date().toISOString().slice(0, 10);
 }
 
 function revalidateResidentPages(residentId: string) {
@@ -259,7 +256,7 @@ export async function endPrescriptionToday(
   prescriptionId: string,
 ): Promise<{ error: string } | undefined> {
   const { t } = await getT();
-  const today = todayIsoDate();
+  const today = todayIso();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("prescriptions")
