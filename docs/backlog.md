@@ -4,6 +4,18 @@ Each item is a self-contained prompt for a new thread. Ordered by suggested prio
 
 ## Deployment (before go-live)
 
+> **MERGE HOLD, 2026-09-23 — PRs #56–#60 are not to be merged yet.** Lutan's
+> sequencing: the release register must exist *before* those five features land, so
+> they are recorded in it as they deploy rather than being invisible to a register
+> minted after the fact. The order is: (1) finish the release register, the mailer and
+> SMTP on `claude/release-notes`; (2) merge that alone; (3) deploy it to UAT, which
+> mints `v0.0.1` "Current Baseline Build"; (4) *then* merge #56–#60; (5) deploy again
+> and check the five features appear as the next release. Merging #56–#60 early does
+> not break anything, but it spends the one chance to prove the register works on real
+> changes. If you are a session holding one of those PRs: it is finished, it is just
+> waiting — do not close it, do not merge it, and keep it synced.
+
+
 Environments exist since 2026-09-21 (README "Environments"): `test.lannacare.org` runs `main` against the dev database; `lannacare.org` runs the production Supabase project (`dbkodyyxxhtygxcxmfcu`, all 63 migrations applied, public views checked, Google provider and redirect URLs set, Lutan seeded as admin). Google Drive is the dev account in every environment for now. What still separates this from a live shelter system:
 
 - [ ] **Add a third environment, `uat`, to the app and the deploy tooling.** Prerequisite for the cutover item below, and buildable now — it needs no domain and no new database. Today `src/lib/app-env.ts` returns `dev | production`, keyed on the Supabase project ref that `next build` inlines, and `globals.css` recolours everything under `data-env="dev"`. Add `uat`: **production's exact colours** — the customer should be testing the real thing — distinguished only by a badge in `AppHeader` beside the Dev one, and by a **`UAT` watermark on generated PDFs** (`src/lib/archive/resident-summary-pdf.tsx`): a screen badge stops at the browser, but an archive PDF lands in Drive where nothing says which environment made it. A faint full-page diagonal watermark in the UI is optional and probably not worth it — the app is read all day in tables and forms — but a thin coloured strip along the top of the viewport is cheap if the badge alone feels too quiet. Also add `uat` as a deploy target: an environment block in `wrangler.jsonc`, `--env uat` in `scripts/deploy.mjs` and `scripts/apply-migrations.mjs`, `.env.deploy.uat`, and `scripts/pi/deploy-pi.sh`'s `HOST=`. **Do not set the UAT project ref until the cutover itself** — the ref that will mean "uat" is `dbkodyyxxhtygxcxmfcu`, which is *production's* ref until the day it is demoted, so hard-coding it early would put a UAT badge on the live site. Land the plumbing with the constant left empty and flip it in the cutover change. Update README "Environments" and `docs/decisions.md`.
