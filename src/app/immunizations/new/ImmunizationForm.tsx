@@ -2,7 +2,7 @@
 
 import { useActionState, useMemo, useState } from "react";
 import { ResidentPicker } from "@/components/ResidentPicker";
-import { formatDate } from "@/lib/format";
+import { formatDate, todayIso } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
 import { recordImmunizations } from "./actions";
@@ -25,10 +25,6 @@ export type ImmunizationTypeOption = {
 
 export type ZoneOption = { id: string; name: string; name_th: string | null };
 export type EnclosureOption = { id: string; name: string; name_th: string | null; zone_id: string };
-
-function todayIsoDate() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 export function ImmunizationForm({
   residents,
@@ -264,8 +260,8 @@ export function ImmunizationForm({
               name="dateAdministered"
               type="date"
               required
-              defaultValue={todayIsoDate()}
-              max={todayIsoDate()}
+              defaultValue={todayIso()}
+              max={todayIso()}
               className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
             />
           </div>

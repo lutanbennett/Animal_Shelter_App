@@ -7,7 +7,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { RESIDENT_SIZES, type ResidentSize } from "@/lib/i18n/enum-labels";
 import { readAdoptionProfile } from "@/lib/residents/adoption-profile";
 import { parseBloodTestInterval } from "@/lib/residents/blood-test-interval";
-import { estimatedAgeNow } from "@/lib/format";
+import { estimatedAgeNow, todayIso } from "@/lib/format";
 import { moveResidentToEnclosure } from "@/lib/placements/move";
 import { refreshDeceasedArchiveIfNeeded } from "@/lib/archive/refresh-deceased-archive";
 
@@ -100,7 +100,7 @@ export async function updateResident(
     ? {
         estimated_age_years: estimatedAgeYears,
         age_estimated_on:
-          estimatedAgeYears === null ? null : new Date().toISOString().slice(0, 10),
+          estimatedAgeYears === null ? null : todayIso(),
       }
     : {};
 

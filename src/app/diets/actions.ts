@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import { todayIso } from "@/lib/format";
 
 export type DietFormState = { error: string } | undefined;
 
@@ -17,10 +18,6 @@ function str(formData: FormData, key: string): string | null {
 
 function isoDate(value: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value));
-}
-
-function todayIsoDate(): string {
-  return new Date().toISOString().slice(0, 10);
 }
 
 function revalidateResidentPages(residentId: string) {
@@ -160,7 +157,7 @@ export async function endDietToday(
   dietId: string,
 ): Promise<{ error: string } | undefined> {
   const { t } = await getT();
-  const today = todayIsoDate();
+  const today = todayIso();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("resident_diets")

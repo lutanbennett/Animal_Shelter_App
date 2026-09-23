@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Minus, TrendingDown, TrendingUp } from "lucide-react";
-import { formatBaht, formatDate, formatWeightDelta, formatWeightKg } from "@/lib/format";
+import { formatBaht, formatDate, formatWeightDelta, formatWeightKg, todayIso } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
 import { placeName } from "@/lib/enclosures/names";
 import {
@@ -251,7 +251,7 @@ export default async function ResidentSectionPage(
         .not("next_due_date", "is", null)
         .order("next_due_date", { ascending: true })
         .returns<{ immunization_type_name: string; next_due_date: string }[]>();
-      const today = new Date().toISOString().slice(0, 10);
+      const today = todayIso();
       body = (
         <div className="flex flex-col gap-4">
           {!isDeceased && (
@@ -455,7 +455,7 @@ export default async function ResidentSectionPage(
       // expired = its end date has passed. A death ends every open
       // prescription on the date of death (0027), so a deceased resident's
       // list is all expired.
-      const today = new Date().toISOString().slice(0, 10);
+      const today = todayIso();
       const rows = data ?? [];
       const current = rows.filter((row) => !row.end_date || row.end_date >= today);
       const expired = rows.filter((row) => row.end_date && row.end_date < today);
@@ -589,7 +589,7 @@ export default async function ResidentSectionPage(
       // Current = still running today (including one dated to start later);
       // past = its end date has passed. A closed record (deceased) has no
       // current diets whatever the dates say.
-      const today = new Date().toISOString().slice(0, 10);
+      const today = todayIso();
       const rows = data ?? [];
       const current = isDeceased
         ? []

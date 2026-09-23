@@ -6,6 +6,7 @@ import { placeName } from "@/lib/enclosures/names";
 import { DECEASED_ROLES } from "@/lib/placements/deceased";
 import { PLACEMENT_ICONS } from "@/components/hub-icons";
 import { RecordDeathForm } from "./RecordDeathForm";
+import { todayIso } from "@/lib/format";
 
 export default async function RecordDeathPage(
   props: PageProps<"/residents/[id]/deceased">,
@@ -102,7 +103,7 @@ export default async function RecordDeathPage(
             zoneName: placeName(locale, status?.zone_name, status?.zone_name_th) || null,
             since: placementResult.data?.[0]?.start_date ?? null,
           }}
-          today={new Date().toISOString().slice(0, 10)}
+          today={todayIso()}
         />
       )}
     </main>

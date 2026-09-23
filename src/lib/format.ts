@@ -51,6 +51,55 @@ export function formatDateTime(
   return locale === "th" ? `${day} ${month} ${year} ${time}` : `${day} ${month} ${year}, ${time}`;
 }
 
+/**
+ * The shelter's clock. Everything the app calls a "date" — an intake date,
+ * a dose administered, a diet's start — is a calendar day *at the shelter*,
+ * not an instant, so it has to be read in the shelter's zone rather than in
+ * the viewer's or the server's. Cloudflare Workers run in UTC wherever they
+ * are and Thailand is UTC+7, so `new Date().toISOString().slice(0, 10)`
+ * returned *yesterday* between 00:00 and 07:00 local, every day, for
+ * everyone: an overnight intake could not be dated today, because the same
+ * value was also the input's `max` (backlog d98695a, fixed 2026-09-23; see
+ * docs/decisions.md).
+ */
+export const SHELTER_TIME_ZONE = "Asia/Bangkok";
+
+// Assembled from parts rather than taking the formatted string whole:
+// en-CA is YYYY-MM-DD in every ICU we have met, but this file already
+// declines to trust locale output to be byte-identical across runtimes
+// (see SHORT_MONTHS), and unlike a label on screen this value is written
+// to date columns.
+const SHELTER_DATE_FORMAT = new Intl.DateTimeFormat("en-CA", {
+  timeZone: SHELTER_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+/**
+ * Today at the shelter, as YYYY-MM-DD. The default for every date input,
+ * and the `max` for any date that cannot be in the future. Identical on the
+ * server and in the browser, so it is also safe as a hydrated default.
+ */
+export function todayIso(now: Date | number = Date.now()): string {
+  const parts = SHELTER_DATE_FORMAT.formatToParts(now);
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "";
+  return `${part("year")}-${part("month")}-${part("day")}`;
+}
+
+/**
+ * Calendar arithmetic on a YYYY-MM-DD string, done in UTC so that it stays
+ * pure date arithmetic whatever zone the runtime is in: `addDaysIso(todayIso(), 1)`
+ * is tomorrow at the shelter, not the instant 24 hours from now. Use this
+ * rather than setDate()/setUTCDate() on a Date built from a shelter date —
+ * that mixes the two and drifts by a day.
+ */
+export function addDaysIso(isoDate: string, days: number): string {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
 const MS_PER_YEAR = 1000 * 60 * 60 * 24 * 365.25;
 
 // Ages are always a staff estimate (the shelter never has a real DOB), so

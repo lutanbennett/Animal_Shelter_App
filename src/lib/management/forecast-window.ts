@@ -5,6 +5,8 @@
  * table). Shared so both pages read the same parameters the same way.
  */
 
+import { addDaysIso, todayIso } from "@/lib/format";
+
 export type ForecastWindow = {
   /** Inclusive ISO dates. */
   from: string;
@@ -19,10 +21,14 @@ export const FIXED_FORECAST_DAYS = [7, 30] as const;
 /** Longest custom window accepted, so a stray year-long range can't stall the query. */
 const MAX_CUSTOM_DAYS = 366;
 
+/**
+ * A shelter calendar date `days` from today — the bounds every forecast
+ * window is built from. Counted from the shelter's today, not UTC's: a
+ * forecast opened at 02:00 in Chiang Mai used to start yesterday and stop a
+ * day short (backlog d98695a).
+ */
 export function isoDatePlus(days: number): string {
-  const d = new Date();
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
+  return addDaysIso(todayIso(), days);
 }
 
 function isIsoDate(value: unknown): value is string {

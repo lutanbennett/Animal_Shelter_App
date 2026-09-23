@@ -4,7 +4,7 @@ import { useActionState, useRef, useState } from "react";
 import Link from "next/link";
 import { moveResident } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { formatDate } from "@/lib/format";
+import { formatDate, todayIso } from "@/lib/format";
 import type { EnclosureOption, ZoneOption } from "@/lib/enclosures/options";
 import {
   EnclosurePicker,
@@ -22,10 +22,6 @@ export type CurrentLocation = {
 const inputClass =
   "rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
 const textareaClass = `${inputClass} field-sizing-content`;
-
-function todayIso() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 export function MoveResidentForm({
   residentId,

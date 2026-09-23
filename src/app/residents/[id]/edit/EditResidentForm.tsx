@@ -19,6 +19,7 @@ import {
   AdoptionProfileFields,
   type AdoptionProfile,
 } from "@/components/AdoptionProfileFields";
+import { todayIso } from "@/lib/format";
 
 export type HousingState = {
   /** Current enclosure (physical or Lifecycle pseudo-enclosure), if any. */
@@ -31,10 +32,6 @@ export type HousingState = {
   /** Fostered or adopted — the way back into an enclosure is a return to shelter. */
   isWithCarer: boolean;
 };
-
-function todayIso() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 export type EditableResident = {
   id: string;
