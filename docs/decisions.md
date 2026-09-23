@@ -2419,3 +2419,58 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   none and Workers run UTC, so it had never been wrong in production. The fix
   stands as robustness; the claim did not. Caught only because someone wrote an
   assertion for it, which is exactly why it is now a line.
+
+- **A checklist line has three states, because the work does (2026-09-23):**
+  `- [ ] … — deferred: <owner>` joins `- [x]` and `n/a: <reason>`, and is
+  accepted **only** under section 8. The deploy gates there cannot be true at PR
+  time — there is no deployed build, no production apply — so writing them `n/a`
+  put a falsehood in a box labelled "did not apply", and the Cashflow Forecast
+  session was right that once that becomes habit people write `n/a` for things
+  they simply did not do. `deferred:` passes rather than failing, because a PR
+  cannot be held open waiting for a deploy it precedes; it is confined to
+  section 8 because anywhere else it would be a general-purpose escape hatch,
+  which is the single thing this check exists to prevent.
+
+- **The checker says which kind of red it is (2026-09-23):** a *correct* plan is
+  red for most of its life, because the manual signature cannot be filled until a
+  person has looked. Printing one flat problem list made "nobody has looked yet"
+  indistinguishable from "a check was skipped", so red carried no information —
+  and an uninformative red is one people learn to ignore, which matters a great
+  deal more if the check ever becomes blocking. Output is now grouped: problems,
+  then items awaiting a person, then gates deferred to release; and a plan whose
+  only outstanding items are human signatures prints "the plan is complete and
+  correct, and N item(s) await a person. Nothing to fix."
+
+- **Three smaller corrections from streams using the checklist (2026-09-23):**
+  the manual-verification checkbox said only the person who looked could tick it
+  while the text above told you to write `n/a` when there was nothing to look at,
+  so an empty manual list could never go green — it now says explicitly that
+  whoever filled the plan may tick it when the list is empty. Section 6's
+  "checked from a second, unrelated page" now says *by loading that page, not by
+  reading the file*, because reading proves only that you did not edit it, which
+  is the tempting weaker reading. And section 8 gains the banding rule: assert
+  both edges of a band and both sides of a boundary, never only the case the bug
+  report named — `dueState()` was reported as a due-today fault, but due-today
+  does not move under either clock, so a test written faithfully from the report
+  would have passed with the bug still in place.
+
+- **`n/a:` and `pending:` signatures carry no date (2026-09-23):** the signature
+  parser anchored on `Date:` before it looked at the value, so an undated
+  `pending: <what is outstanding>` failed with "no `Manual verification by:
+  <name>  Date: <yyyy-mm-dd>` line" — an error pointing at the wrong thing, for a
+  line that was correct. The template's own bullets show the three forms without
+  a `Date:` segment, so dropping it is the obvious reading. The parser now tries
+  the dated form first and falls back to a bare line only when the value begins
+  `n/a` or `pending`; a bare *name* still requires its date, which is what keeps
+  an empty signature from passing. Found by the Cashflow Forecast session, which
+  only got it right by noticing that two existing plans wrote `Date: —`.
+
+- **The checker ignores fenced code blocks (2026-09-23):** requiring evidence to
+  be pasted unedited and requiring template placeholders to be filled turned out
+  to contradict each other — pasted checker output quotes the checker's own
+  messages, which mention `<name>` and `<yyyy-mm-dd>`, so a faithful record of a
+  run was flagged as an unfilled template. Placeholder and checkbox scanning now
+  skip fenced blocks; outside a fence both still fail. Found by regenerating a
+  plan's own evidence block, which is precisely what the unedited-evidence rule
+  asks for — the rule caught the conflict its own sibling created, in its first
+  use.
