@@ -126,7 +126,7 @@ or `n/a` with the reason.
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | Header badge, signed in: **Dev** still shows on the dev build, and **UAT** shows (in production colours) with app-env temporarily mapping the dev ref to `uat`. Claude could not sign in, since entering a password isn't something it does | `http://localhost:3001` |
+| 1 | Header badge, signed in: **Dev** still shows on the dev build, and **UAT** shows (in production colours) with app-env temporarily mapping the dev ref to `uat`. Lutan signed in; Claude then took both screenshots on `/residents`: teal **DEV** badge, then orange **UAT** badge with title "UAT — acceptance testing, not the live site" and orange buttons. Temporary edit reverted | `http://localhost:3001` |
 
 ## Sign-off
 
@@ -139,9 +139,9 @@ Automated checks by: Claude  Date: 2026-09-23
 
 ### Manual verification
 
-- [ ] Every item in the manual list was checked by a person, or the list is empty — n/a: not yet — awaiting Lutan's sign-in for item 1
+- [ ] Every item in the manual list was checked by a person, or the list is empty — n/a: not yet — Claude has the screenshots; Lutan to confirm item 1
 
-Manual verification by: pending: header badge check signed in (item 1)  Date: —
+Manual verification by: pending: Lutan to confirm the Dev / UAT badge screenshots (item 1)  Date: —
 
 ### Result
 
