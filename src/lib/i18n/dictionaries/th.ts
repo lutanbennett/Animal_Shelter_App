@@ -42,6 +42,8 @@ const th: Dictionary = {
     signOut: "ออกจากระบบ",
     devBadge: "Dev",
     devBadgeTitle: "ฐานข้อมูลทดสอบ — ไม่ใช่เว็บไซต์จริง",
+    uatBadge: "UAT",
+    uatBadgeTitle: "UAT — ระบบสำหรับทดสอบการใช้งาน ไม่ใช่เว็บไซต์จริง",
   },
 
   nav: {

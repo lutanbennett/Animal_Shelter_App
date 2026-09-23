@@ -2665,3 +2665,29 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   by reading, and the first was plausible enough to have been written down as
   fact. Worth knowing that no gate could have caught this: a deploy is the one
   thing a PR cannot exercise before it merges.
+
+- **UAT is an environment in the code before it is a site (2026-09-23):**
+  `uat` is the customer's acceptance-testing environment. It lives on
+  `lannacare.org` for good, on the Supabase project that is production's
+  today (`dbkodyyxxhtygxcxmfcu`, demoted at the cutover), and on the current
+  Google Drive tree, which dev and Test also use. It gets no Supabase project
+  of its own: production is the one that moves, to a new project and to
+  `lannacareforanimals.org`. Until that cutover, UAT is plumbing only.
+  `UAT_PROJECT_REF` in `src/lib/app-env.ts` is empty, because the only ref
+  it could hold would put a UAT badge on the live site. The `uat` Worker
+  (`lanna-animal-care-uat`) has no routes, because `lannacare.org` still
+  belongs to production. The new UAT Worker is the one named for it,
+  rather than production's `lanna-animal-care` being renamed: production
+  keeps its Worker and version history, and at the cutover the UAT Worker
+  gets its secrets with `--secrets` like any new Worker. UAT wears
+  production's exact colours so the customer tests what will go live.
+  The only differences are a header badge and a watermark on the archive
+  PDF, since a PDF in Drive carries no other trace of where it was made.
+  Dev builds get a `DEV` watermark for the same reason, because their PDFs
+  land in the same Drive. `deploy.mjs` now checks, for every environment,
+  that the env file's project is the one app-env would badge as that
+  environment. That check is what makes `deploy:uat` refuse today, and what
+  stops a mixed-up `.env.deploy.*` from shipping a build with the wrong
+  badge after the cutover. UAT also gets production's guards (clean pushed
+  `main`, a written-down release): once it exists, it is what the customer
+  signs off.

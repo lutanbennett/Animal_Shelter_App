@@ -1,8 +1,8 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  // Two deployable environments, each its own Worker with its own secrets and
-  // hostnames (README, "Deploying to Cloudflare"). Always deploy with
-  // `scripts/deploy.mjs --env test|production`; the top level alone is only
+  // Three deployable environments, each its own Worker with its own secrets and
+  // hostnames (README, "Environments"). Always deploy with
+  // `scripts/deploy.mjs --env test|uat|production`; the top level alone is only
   // what `npm run preview` runs locally, and has no routes so a bare
   // `wrangler deploy` can't reach anything real.
   "name": "lanna-animal-care",
@@ -34,6 +34,24 @@
       // never sends release mail (worker/release-mail.mjs).
       "vars": { "NODE_ENV": "production", "ORIGIN_HOST": "", "ORIGIN_TIMEOUT_MS": "20000", "RELEASE_MAIL_ENV": "" }
     },
+    // The customer's acceptance testing: the UAT database and the current
+    // Google Drive, on lannacare.org for good (docs/decisions.md). Plumbing
+    // only until the cutover: no routes, because lannacare.org still belongs
+    // to the production block below, and scripts/deploy.mjs refuses --env uat
+    // until src/lib/app-env.ts knows UAT's project. The cutover adds the
+    // lannacare.org and www routes here and takes them off production.
+    "uat": {
+      "name": "lanna-animal-care-uat",
+      "routes": [],
+      "vars": {
+        "NODE_ENV": "production",
+        "ORIGIN_HOST": "",
+        "ORIGIN_TIMEOUT_MS": "20000",
+        "RELEASE_MAIL_ENV": "UAT",
+        "RELEASE_MAIL_FROM": "releases@lannacare.org"
+      },
+      "send_email": [{ "name": "RELEASE_MAIL" }]
+    },
     // The live site: the production database. Drive stays on the dev Google
     // account until the shelter's own account is available (docs/decisions.md).
     "production": {
@@ -46,7 +64,7 @@
       // and this database becomes UAT at the cutover, so it already sends as
       // UAT. At the cutover the production block moves to
       // lannacareforanimals.org with RELEASE_MAIL_ENV "Production" and a
-      // From on that domain, and a new uat block takes these values.
+      // From on that domain, and the uat block above takes over these routes.
       "vars": {
         "NODE_ENV": "production",
         "ORIGIN_HOST": "",

@@ -1,7 +1,8 @@
 // Build and deploy one environment's Worker.
 //
 //   node scripts/deploy.mjs --env test                # test.lannacare.org
-//   node scripts/deploy.mjs --env production          # lannacare.org
+//   node scripts/deploy.mjs --env uat                 # lannacare.org, from the cutover
+//   node scripts/deploy.mjs --env production          # lannacare.org until the cutover
 //   node scripts/deploy.mjs --env production --secrets
 //       # also (re)upload the five runtime secrets for that environment first
 //   ... --skip-build   # reuse the .open-next output of the previous run
@@ -11,12 +12,14 @@
 // URL and anon key are inlined by `next build`, so each environment needs its
 // own build with its own values in the shell (shell beats .env.local for
 // Next), and the env-file snapshot OpenNext bakes into the bundle has to be
-// emptied before upload (scripts/strip-baked-env.mjs). Production also gets a
-// guard: the checkout must be a clean, pushed `main`, so what is live is
-// always a commit GitHub has.
+// emptied before upload (scripts/strip-baked-env.mjs). UAT and production also
+// get a guard: the checkout must be a clean, pushed `main`, so what the
+// customer tests and what is live are always commits GitHub has. And every
+// environment's build must wear its own badge (src/lib/app-env.ts), so a
+// wrong env file can't put Production's look on a UAT database or the reverse.
 //
 // Every deploy is also a release (src/lib/releases.ts): package.json must
-// name the newest entry, production refuses to ship unreleased notes, the
+// name the newest entry, UAT and production refuse unreleased notes, the
 // Worker version is tagged with it, and a major release that is new to the
 // site is mailed to that environment's admins through the Worker (announce()).
 import { spawnSync } from "node:child_process";
@@ -27,6 +30,7 @@ import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
 // TypeScript, loaded through Node's type stripping: the same file the app
 // renders, so the page, the tag and the email can't disagree.
 import { latestRelease, majorReleasesSince, unreleased } from "../src/lib/releases.ts";
+import { appEnvForSupabaseUrl } from "../src/lib/app-env.ts";
 import { buildReleaseMail } from "../src/lib/release-mail.ts";
 
 const { name: envName, rest } = parseEnvArg(process.argv.slice(2));
@@ -35,11 +39,20 @@ const skipBuild = rest.includes("--skip-build");
 const noMail = rest.includes("--no-mail");
 
 // Where each environment answers: for asking the live site which release it
-// runs, and for the link in the email. The cutover changes production's.
+// runs, and for the link in the email. lannacare.org is UAT's for good; the
+// cutover moves production to lannacareforanimals.org and until then uat
+// can't deploy (below), so the two sharing an origin never meet.
 const SITE_ORIGINS = {
   test: "https://test.lannacare.org",
+  uat: "https://lannacare.org",
   production: "https://lannacare.org",
 };
+
+// What src/lib/app-env.ts must call each environment's database.
+const EXPECTED_APP_ENV = { test: "dev", uat: "uat", production: "production" };
+
+// Environments where a deploy is something a customer or the shelter sees.
+const GUARDED = envName === "uat" || envName === "production";
 
 const RUNTIME_SECRETS = [
   "SUPABASE_SERVICE_ROLE_KEY",
@@ -105,7 +118,19 @@ for (const key of [...BUILD_VARS, ...(pushSecrets ? RUNTIME_SECRETS : [])]) {
   }
 }
 
-if (envName === "production") {
+{
+  const builds = appEnvForSupabaseUrl(env.NEXT_PUBLIC_SUPABASE_URL);
+  if (builds !== EXPECTED_APP_ENV[envName]) {
+    console.error(
+      `deploy: --env ${envName} points at Supabase project ${projectRef(env)}, which src/lib/app-env.ts ` +
+        `calls "${builds}" — the build would wear ${builds}'s badge, not ${envName}'s.` +
+        (envName === "uat" ? "\n  UAT has no project of its own until the cutover sets UAT_PROJECT_REF there." : ""),
+    );
+    process.exit(2);
+  }
+}
+
+if (GUARDED) {
   git("fetch origin main --quiet");
   const branch = git("rev-parse --abbrev-ref HEAD");
   const dirty = git("status --porcelain");
@@ -115,7 +140,7 @@ if (envName === "production") {
   if (dirty) problems.push("working tree has uncommitted changes");
   if (behindAhead !== "0\t0") problems.push(`main and origin/main differ (${behindAhead.replace("\t", " behind / ")} ahead)`);
   if (problems.length) {
-    console.error("deploy: production deploys only from a clean, pushed main:\n  - " + problems.join("\n  - "));
+    console.error(`deploy: ${envName} deploys only from a clean, pushed main:\n  - ` + problems.join("\n  - "));
     process.exit(2);
   }
 }
@@ -130,8 +155,8 @@ if (envName === "production") {
   if (unreleased.length) {
     problems.push(`src/lib/releases.ts has ${unreleased.length} unreleased note(s); cut a release first (see the top of that file)`);
   }
-  if (problems.length && envName === "production") {
-    console.error("deploy: production ships only a written-down release:\n  - " + problems.join("\n  - "));
+  if (problems.length && GUARDED) {
+    console.error(`deploy: ${envName} ships only a written-down release:\n  - ` + problems.join("\n  - "));
     process.exit(2);
   }
   for (const p of problems) console.warn(`deploy: warning: ${p}`);

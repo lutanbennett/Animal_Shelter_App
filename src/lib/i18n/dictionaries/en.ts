@@ -40,6 +40,8 @@ const en = {
     signOut: "Sign out",
     devBadge: "Dev",
     devBadgeTitle: "Dev database — this is not the live site",
+    uatBadge: "UAT",
+    uatBadgeTitle: "UAT — acceptance testing, not the live site",
   },
 
   nav: {

@@ -3,6 +3,7 @@
 #
 #   ./scripts/pi/deploy-pi.sh                 # production values
 #   ./scripts/pi/deploy-pi.sh --env test      # a Test instance on the same Pi
+#   ./scripts/pi/deploy-pi.sh --env uat       # a UAT instance, from the cutover
 #
 # Builds into a fresh .next before swapping, so the running server keeps
 # serving the old build until the new one is ready; the restart itself
@@ -16,6 +17,7 @@ SERVICE=lanna-care
 if [[ "${1:-}" == "--env" && -n "${2:-}" ]]; then
   ENV_NAME="$2"
   [[ "$ENV_NAME" == "test" ]] && SERVICE=lanna-care-test
+  [[ "$ENV_NAME" == "uat" ]] && SERVICE=lanna-care-uat
 fi
 
 echo "deploy-pi: fetching main"
@@ -40,7 +42,10 @@ sudo systemctl is-active --quiet "$SERVICE" && echo "deploy-pi: $SERVICE running
 }
 
 # The public site through Cloudflare should now come from here.
+# lannacare.org is UAT's for good; production keeps it only until the
+# cutover moves it to lannacareforanimals.org (docs/decisions.md).
 HOST=lannacare.org
 [[ "$ENV_NAME" == "test" ]] && HOST=test.lannacare.org
+[[ "$ENV_NAME" == "uat" ]] && HOST=lannacare.org
 echo -n "deploy-pi: https://$HOST/ served by: "
 curl -s -D - -o /dev/null "https://$HOST/?deploy=$(date +%s)" | grep -i x-lanna-served-by | tr -d '\r' || echo "(no header — Worker not deployed?)"
