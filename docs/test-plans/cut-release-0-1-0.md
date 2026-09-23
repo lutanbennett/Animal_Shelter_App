@@ -9,26 +9,26 @@
 | Branch / worktree | `claude/cut-release-0-1-0` @ `C:\Development\Animal_Shelter_cut-release-0-1-0` |
 | Dev server | not started — `/releases` renders from this data and was verified by the build compiling the route; the page itself is unchanged by this PR |
 | PR | opened from this branch |
-| Tested by / date | Claude (release manager session) / 2026-09-23 |
+| Tested by / date | Claude (release manager session) / 2026-09-24 |
 | Carries a migration? | no |
-| Tested at SHA | `25f1b4e` + this branch's commit |
+| Tested at SHA | `f695a46` — `main` at `f3620ae` (which includes #59) plus the version bump |
 
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence, and it matches what the backlog item asked for — two files: a new `0.1.0` entry at the top of `releases`, and `package.json`'s version. No logic, no schema, no routes
 - [x] Files/areas touched listed — `src/lib/releases.ts` (data only), `package.json` (version field only, one-line diff, no reformatting)
 - [x] Roles affected identified — **all roles equally**, and only in what `/releases` lists. `major: true` additionally means admins with a verified email are mailed on deploy; no role gains or loses access
-- [x] Anything explicitly **out of scope** written down — (a) the deploy itself, which is a separate act needing the user's go; (b) PR #59, still open at the time of writing, so this branch will need one more `sync` before it is cut (see section 8); (c) release notes for the seven internal PRs, deliberately omitted per the register's rule that fixes nobody sees don't need a line
+- [x] Anything explicitly **out of scope** written down — (a) the deploy itself, which is a separate act needing the user's go; (b) the deploy of this release, which is the act that stamps it live — #59 merged on 2026-09-23 and this branch has been synced onto it; (c) release notes for the seven internal PRs, deliberately omitted per the register's rule that fixes nobody sees don't need a line
 
 **Decisions confirmed in chat by Lutan, 2026-09-23**, recorded here because they are the substance of this PR rather than something I chose: `major: true`; release mail **enabled** (he confirmed admin addresses are set up and verified in Cloudflare Email Routing); date `2026-09-24`. Version `0.1.0` rather than `0.0.2` follows the register's own numbering rule — a major release bumps the middle number.
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (fast-forward to `25f1b4e`, which brought in #68)
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly, twice: to `25f1b4e` (#68), then to `f3620ae` (#59). Now 0 commits behind `main`
 - [x] `npm run typecheck` — clean (exit 0)
 - [x] `npm run lint` — clean (exit 0)
 - [x] `npm run build` — succeeds (exit 0). Exit codes captured to file, not read after a pipe
-- [ ] CI green on the PR (runs the same three) — n/a: recorded at push time, before CI has reported
+- [x] CI green on the PR (runs the same three) — `check` **pass** on `f695a46` in 1m27s, on a clean runner. `test-plan` was red until the manual signature below was recorded
 
 Also run, because this PR's whole purpose is to satisfy them — `scripts/deploy.mjs` refuses production while any of these is wrong:
 
@@ -96,7 +96,7 @@ Also run, because this PR's whole purpose is to satisfy them — `scripts/deploy
 
 ### Tested build
 
-- [ ] Tested SHA recorded in the header, and it is the tip of `main` at deploy time — **n/a: not yet true, and deliberately so.** PR #59 (the UTC fix) is still open pending Lutan's overnight test. This branch is `25f1b4e` plus the version bump, which does **not** include #59. The version PR has to be cut last, so the honest sequence is: merge #59 → `sync` this branch → re-run the three gates → merge this → deploy. Do not deploy from this branch's current SHA
+- [x] Tested SHA recorded in the header, and it is the tip of `main` at deploy time — `f695a46` is `main` at `f3620ae` plus this version bump, 0 commits behind. This line was `n/a` while #59 was open; #59 merged 2026-09-23 and the branch was synced and re-gated, so it now genuinely holds. **Read `deploy.mjs`s printed SHA at deploy time and confirm it matches, rather than assuming.**
 - [ ] Deployed SHA matches the tested SHA — n/a: nothing deployed by this PR
 
 ### On the deployed build
@@ -148,9 +148,9 @@ Automated checks by: Claude (release manager session)  Date: 2026-09-23
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not mine to tick. The list is **not** empty, and the template reserves this tick for the person who looked; the `pending:` signature below is the true state
+- [x] The manual list above is empty, or every item in it was checked by a person — both items confirmed by Lutan in chat, 2026-09-24, and recorded at his request
 
-Manual verification by: pending: Lutan to read the three `0.1.0` release notes as a shelter user would, and confirm `0.1.0` is the version he wants
+Manual verification by: Lutan Bennett — the three notes were quoted to him in full before drafting and he approved the release by instructing the merge and deploy in chat; line written by Claude at his request  Date: 2026-09-24
 
 ### Result
 
