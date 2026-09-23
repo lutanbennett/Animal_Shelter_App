@@ -30,7 +30,9 @@
   - No `worker/` changes. `src/lib/management/forecast-window.ts` deliberately **not**
     touched — owned this round by the `utc-today` stream.
 - [x] Roles affected identified: admin and management can reach the page; staff, vet,
-  volunteer, resident and signed-out cannot (§4 matrix).
+  volunteer and signed-out cannot (§4 matrix). Note the app has five roles —
+  `admin`, `staff`, `vet`, `volunteer` (0001) and `management` (0038). There is no
+  `resident` role; in this app a resident is an animal.
 - [x] Anything explicitly **out of scope** written down:
   - **Month boundaries stay UTC.** The bucketing is wrong for part of every Thai day.
     Not fixed here on purpose — it is backlog Dashboard follow-ups (e), whose point is a
@@ -165,7 +167,6 @@ only rows that matched an appointment; re-verified (Oct/Nov/Dec now ฿0). Recor
 | staff | `/management/cashflow` | no — redirect | not verified (see manual list) |
 | vet | `/management/cashflow` | no — redirect | not verified (see manual list) |
 | volunteer | `/management/cashflow` | no — redirect | not verified (see manual list) |
-| resident | `/management/cashflow` | no — redirect | not verified (see manual list) |
 | signed out | `/management/cashflow` | no — redirect to `/login` | **pass** — hitting the URL directly served the sign-in page, server-side |
 | signed out | RPC direct, anon key | no | **pass** — `401 permission denied for function cashflow_forecast` |
 
@@ -341,7 +342,7 @@ underlying price columns were checked directly with the anon key too — `medica
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | Sign in as **management, staff, vet, volunteer and resident** and hit `/management/cashflow` directly. Management should see it; the other four should be redirected, not merely have the nav entry hidden. Admin and signed-out are already verified. Each needs its own password, which this session does not handle. | `http://localhost:3007/management/cashflow` |
+| 1 | Sign in as **management, staff, vet and volunteer** and hit `/management/cashflow` directly. Management should see it; the other three should be redirected, not merely have the nav entry hidden. Admin and signed-out are already verified. Each needs its own password, which this session does not handle. | `http://localhost:3007/management/cashflow` |
 | 2 | Confirm the Thai reads naturally — written to match the existing register, not reviewed by a Thai speaker. Particularly "คาดการณ์กระแสเงินสด", the not-a-budget paragraph, and the basis labels (มีราคาแล้ว / ประมาณการ / มีใบแจ้งหนี้). One known nit: the vet note ends in a full stop after the link, which English wants and Thai generally does not. | `/management/cashflow` with ไทย selected |
 | 3 | Whether **"Average per month"** is the per-month figure the backlog item meant. It divides the window total by the months it spans, so a part-month at either end drags it down — a 90-day window starting 23 Sep reads ฿65,332 across four months, two of which are partial. The current month, or a full-month average, may be the more useful number. A judgement call, not a defect. | `/management/cashflow` |
 | 4 | Whether the chart earns its space at only **one or two** months. A 30-day window often spans two months, and two lone columns in a wide plot look sparse next to the table. Fine at 90 days. | `/management/cashflow?days=30` |
@@ -359,7 +360,7 @@ Automated checks by: Claude Opus 5  Date: 2026-09-23
 
 - [ ] Every item in the manual list was checked by a person, or the list is empty
 
-Manual verification by: pending: items 1–4 above — four role checks at the URL directly, a Thai read-through, and two judgement calls on the "Average per month" card and the chart at one or two months.  Date: —
+Manual verification by: pending: items 1–4 above — four role checks at the URL directly, a Thai read-through, and two judgement calls on the "Average per month" card and the chart at one or two months. Reported as tested and passing on `test.lannacare.org` (`7abc796`), but relayed through another session — this line is Lutan's to sign, not mine to sign on his behalf.  Date: —
 
 ### Result
 
