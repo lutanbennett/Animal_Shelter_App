@@ -293,18 +293,29 @@ Sorted by consequence, not by count.
 `maintenance.due_date` is **not** in this list: it is typed by hand with no
 default (`MaintenanceForm.tsx:298`), so no stored value is wrong. The *reading*
 of it is — `dueState()` (`src/lib/maintenance/status.ts:74–85`) takes `today`
-from `todayIsoDate()` at all three call sites, so between 00:00 and 07:00 it
-compares against yesterday and a job due today-in-Bangkok reads as **not yet
-overdue**. A day **late**, not early: the badge under-reports rather than
-over-reports, which is the worse direction for a maintenance board.
+from `todayIsoDate()` at all three call sites (`EnclosureHub`, `MaintenanceBoard`,
+`MaintenanceJobView` all use the default), so between 00:00 and 07:00 it judges
+every job against yesterday. Run at 01:26 Bangkok — UTC today `2026-09-22`,
+shelter today `2026-09-23` — exactly two bands move:
+
+| Due date | with UTC today | with shelter today |
+|---|---|---|
+| 2026-09-22 (yesterday in Bangkok) | `dueSoon` | **`overdue`** |
+| 2026-09-26 (far edge of the band) | `none` | **`dueSoon`** |
+
+A day **late**, not early: an overdue job is demoted to merely due-soon, and the
+due-soon band is a day short at its far edge. Under-reporting on a maintenance
+board, which is the worse direction. A job due *today* in Bangkok reads the same
+either way, so the obvious test case is the one that would not have caught it.
 
 The `DUE_SOON_DAYS` round trip in the same function (`new Date(today)`,
 `setDate(+3)`, `toISOString().slice(0, 10)`) is *not* a fault — `new Date("YYYY-MM-DD")`
 is UTC midnight, which at a positive offset is still the same local day, so it
 returns the right string at UTC+7 and at UTC. Only the `today` it starts from is
-wrong. Noted because the round trip looks like the bug and isn't; measured by
-`claude/utc-today` (PR #59) after they had initially flagged it, and confirmed
-here against the call sites.
+wrong, one line above. Worth stating both halves together: the visibly gnarly
+arithmetic is correct and the plain default argument is not, which is why this
+function was called a bug, then cleared, then found to be a bug after all.
+Measured independently by `claude/utc-today` (PR #59, 8311678) and here.
 
 **Cosmetic — a day out is noise:**
 
