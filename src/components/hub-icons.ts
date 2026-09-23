@@ -1,30 +1,38 @@
 import {
   Ambulance,
   ArrowRightLeft,
+  BookOpen,
   BookUser,
+  BriefcaseBusiness,
   Building2,
   CalendarClock,
   Camera,
   Droplet,
   Fence,
+  Folder,
   HeartCrack,
   HeartHandshake,
   HeartPlus,
   HeartPulse,
   House,
   Info,
+  KeyRound,
   Mail,
   MapPin,
   MessageCircle,
   MessageCircleMore,
   MessageSquare,
+  MessagesSquare,
   Navigation,
+  Newspaper,
   PawPrint,
   Phone,
   PhoneCall,
   Pill,
   RotateCcw,
   Scissors,
+  Settings,
+  ShieldCheck,
   Stethoscope,
   Syringe,
   Undo2,
@@ -122,4 +130,30 @@ export const VET_ICONS = {
   procedures: SECTION_ICONS.procedures,
   bloodTests: SECTION_ICONS["blood-tests"],
   prescriptions: SECTION_ICONS.prescriptions,
+} satisfies Record<string, LucideIcon>;
+
+
+/**
+ * One icon per sidebar link (src/app/NavLinks.tsx). Pages that also have a
+ * tile or a heading icon elsewhere reuse that icon, so the menu and the
+ * landing pages agree: Enclosures and Maintenance match the enclosure hub,
+ * Vets and Contacts the Management tiles, Security the Settings tile,
+ * Projects the folder grid and Assistant the header button. Management and
+ * Settings have no tile of their own, so they take icons none of their
+ * children use.
+ */
+export const NAV_ICONS = {
+  residents: CONTACT_ICONS.residents,
+  enclosures: ENCLOSURE_ICONS.enclosure,
+  maintenance: ENCLOSURE_ICONS.maintenance,
+  vets: VET_ICONS.vet,
+  contacts: CONTACT_ICONS.contact,
+  projects: Folder,
+  assistant: MessagesSquare,
+  management: BriefcaseBusiness,
+  settings: Settings,
+  manual: BookOpen,
+  releaseNotes: Newspaper,
+  changePassword: KeyRound,
+  security: ShieldCheck,
 } satisfies Record<string, LucideIcon>;
