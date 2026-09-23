@@ -128,6 +128,7 @@ export function NavLinks({
               { href: "/management/vets", label: t.nav.vets },
               { href: "/management/medications", label: t.nav.medications },
               { href: "/management/diets", label: t.nav.diets },
+              { href: "/management/cashflow", label: t.nav.cashflow },
               { href: "/management/translations", label: t.nav.translations },
             ],
           },
@@ -167,6 +168,7 @@ export function NavLinks({
   // keeps the rest of the system configuration.
   const footerItems: NavItem[] = [
     { href: "/manual", label: t.nav.manual },
+    { href: "/releases", label: t.nav.releaseNotes },
     { href: "/account/password", label: t.nav.changePassword },
     ...(isAdmin ? [{ href: "/admin/security", label: t.nav.security }] : []),
   ];
