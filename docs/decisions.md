@@ -2333,3 +2333,17 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   ten minutes on purpose; depth belongs in the feature checklist, because a
   release ritual that takes an hour is one that gets skipped on the day it
   matters.
+
+- **A test plan carries two signatures, not one (2026-09-23):** the checklist
+  separates *Automated checks by* — gates, scripts, server-side behaviour, and
+  any browser check actually driven rather than assumed — from *Manual
+  verification by*, signed only by the person who looked. Claude may sign the
+  first and never signs the second on someone's behalf; where there is nothing
+  to look at, the manual line is `n/a: <reason>`. The reason is not
+  bureaucratic: a single signature let one name cover checks it could not have
+  made, and a sign-off that does not correspond to someone having actually
+  looked is worse than no sign-off, because it converts an unknown into a false
+  assurance. `scripts/check-test-plan.mjs` requires both lines, so the split
+  cannot quietly collapse back into one. The checklist also carries a **Left for
+  manual verification** table, so the handover to a human is a short concrete
+  list rather than "please check it".

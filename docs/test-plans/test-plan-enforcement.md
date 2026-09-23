@@ -113,17 +113,41 @@ No runtime surface, so no role can reach this change.
 | 2 | low | `test-plan` is not a required check in branch protection, so it reports red but does not physically block merge | accepted — deliberate. Lutan's call 2026-09-23: run it as a red flag first, promote it to a hard block once the process has bedded in. Backlog item raised for the revisit |
 | 3 | medium | The check only looked at committed diffs, so running it locally before committing reported "no completed test plan" even when the file was sitting in the working tree. Would have trained people to distrust it | fixed — now unions the committed diff with `git status --porcelain -- docs/test-plans` |
 | 4 | medium | The `Tested by:` emptiness check never fired: the regex matched the `Date:` text on the same line, so a blank name passed. Sign-off could have been anonymous | fixed — anchored on `Date:`, and the date is now validated as `yyyy-mm-dd` |
+| 6 | medium | A single `Tested by:` line let one signature cover both automated and manual verification. On a UI feature that would have been Claude signing for checks only a person can make — an unknown turned into a false assurance | fixed — two signature lines, and the checker requires both |
+| 7 | low | A bare `n/a:` signature with no reason reported a date error instead of the missing reason, pointing at the wrong problem | fixed — an `n/a` signature is now judged as one |
 | 5 | medium | Release smoke lists would have matched `docs/test-plans/**`, so committing one could have satisfied a feature PR's gate without any feature having been tested | fixed — they live in `docs/releases/` instead, outside what the checker looks at, and the checker now rejects a release record filed under `docs/test-plans/` outright rather than relying on anyone knowing the path matters |
+
+## Left for manual verification
+
+Nothing. This change has no runtime surface — no route, no UI, no data path — so
+there is no screen for a person to look at. Everything verifiable about it is a
+command, and every command was run.
+
+| # | What to check | Where |
+|---|---|---|
+| — | nothing | — |
 
 ## Sign-off
 
-- [x] All applicable boxes ticked, every `n/a` justified
+### Automated and scripted checks
+
+- [x] Everything in this checklist that could be verified without human eyes was run, not assumed
+- [x] Nothing is ticked that was not actually executed
+
+Automated checks by: Claude (test manager session)  Date: 2026-09-23
+
+### Manual verification
+
+- [ ] Every item in the manual list was checked by a person, or the list is empty — n/a: the list is empty; no runtime surface exists to look at
+
+Manual verification by: n/a: no runtime surface — no route, UI or data path for a person to check  Date: —
+
+### Result
+
 - [x] Open defects are either fixed or explicitly accepted above
 - [x] Checklist pasted into the PR
 - [x] Handed to the production release manager
 
 Result: pass with accepted defects
-
-Tested by: Claude (test manager session)  Date: 2026-09-23
 
 Release manager acknowledgement: pending  Date: pending

@@ -159,15 +159,49 @@ database; `lannacare.org` runs **production** (`dbkodyyxxhtygxcxmfcu`).
 |---|---|---|---|
 | | | | |
 
+## Left for manual verification
+
+Anything above that Claude could not honestly verify, listed here so it is a
+short, concrete handover rather than a vague "please check it". Empty is a valid
+answer when the change has no surface a person needs to look at.
+
+| # | What to check | Where |
+|---|---|---|
+| | | |
+
 ## Sign-off
 
-- [ ] All applicable boxes ticked, every `n/a` justified
-- [ ] Open defects are either fixed or explicitly accepted below
+Two signatures, because they certify different things and neither covers the
+other. A sign-off line that does not correspond to someone having actually
+looked is worse than no sign-off, because it turns an unknown into a false
+assurance.
+
+### Automated and scripted checks
+
+Gates, scripts, server-side behaviour, and any browser check that was actually
+driven rather than assumed. Signed by whoever ran them — Claude may sign this.
+
+- [ ] Everything in this checklist that could be verified without human eyes was run, not assumed
+- [ ] Nothing is ticked that was not actually executed
+
+Automated checks by: <name>  Date: <yyyy-mm-dd>
+
+### Manual verification
+
+The items in **Left for manual verification** above. Signed by the person who
+looked. Claude never signs this line on someone else's behalf; if there was
+nothing to look at, write `n/a: <reason>` in place of the name.
+
+- [ ] Every item in the manual list was checked by a person, or the list is empty
+
+Manual verification by: <name>  Date: <yyyy-mm-dd>
+
+### Result
+
+- [ ] Open defects are either fixed or explicitly accepted above
 - [ ] Checklist pasted into the PR
 - [ ] Handed to the production release manager
 
 Result: <pass | pass with accepted defects | fail>
-
-Tested by: <name>  Date: <yyyy-mm-dd>
 
 Release manager acknowledgement: <name>  Date: <yyyy-mm-dd>

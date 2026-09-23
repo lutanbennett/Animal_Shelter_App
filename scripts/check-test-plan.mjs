@@ -126,18 +126,40 @@ for (const file of changed) {
     }
   }
 
-  // Anchor on `Date:` so an empty name cannot be satisfied by the date text
-  // that follows it on the same line.
-  const signoff = text.match(/^Tested by:[ \t]*(.*?)[ \t]{2,}Date:[ \t]*(.*)$/m);
-  if (!signoff) {
-    note(file, 0, "no `Tested by: <name>  Date: <yyyy-mm-dd>` line");
-  } else {
-    const [, who, when] = signoff;
-    if (who.trim().length < 2 || /^_+$/.test(who.trim())) {
-      note(file, 0, "`Tested by:` is empty — say who ran this");
+  // Two signatures, certifying different things. The automated line may be
+  // signed by whoever ran the scripts; the manual line is signed by the person
+  // who actually looked, or marked `n/a: <reason>` when there was nothing to
+  // look at. Neither is allowed to stand in for the other, because a signature
+  // that does not correspond to someone having looked turns an unknown into a
+  // false assurance.
+  //
+  // Each is anchored on `Date:` so an empty name cannot be satisfied by the date
+  // text that follows it on the same line.
+  for (const label of ["Automated checks by", "Manual verification by"]) {
+    const re = new RegExp(`^${label}:[ \\t]*(.*?)[ \\t]{2,}Date:[ \\t]*(.*)$`, "m");
+    const signoff = text.match(re);
+    if (!signoff) {
+      note(file, 0, `no \`${label}: <name>  Date: <yyyy-mm-dd>\` line`);
+      continue;
     }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(when.trim())) {
-      note(file, 0, `\`Date:\` must be yyyy-mm-dd — got "${when.trim()}"`);
+    const who = signoff[1].trim();
+    const when = signoff[2].trim();
+
+    // Anything starting `n/a` is an n/a signature and is judged as one, so a
+    // bare `n/a:` reports the missing reason rather than falling through to the
+    // date check and complaining about the wrong thing.
+    if (/^n\/a\b/i.test(who)) {
+      const na = who.match(/^n\/a\s*[:\-—]\s*(.+)$/i);
+      if (!na || na[1].trim().length < 3) {
+        note(file, 0, `\`${label}:\` marked n/a with no reason — say why there was nothing to check`);
+      }
+      continue; // An n/a signature carries no date.
+    }
+    if (who.length < 2 || /^_+$/.test(who)) {
+      note(file, 0, `\`${label}:\` is empty — say who did this, or \`n/a: <reason>\``);
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(when)) {
+      note(file, 0, `\`${label}\` date must be yyyy-mm-dd — got "${when}"`);
     }
   }
 }
