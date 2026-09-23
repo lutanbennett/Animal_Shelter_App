@@ -154,7 +154,12 @@ export function ResidentsTable({
               <tr
                 key={resident.resident_id}
                 onClick={(event) => openResident(event, resident.resident_id)}
-                className="cursor-pointer hover:bg-surface-hover"
+                // Deceased rows only appear with "Show all" on, and are
+                // dimmed so a list of mostly-living animals still reads at a
+                // glance; the Status column names them outright.
+                className={`cursor-pointer hover:bg-surface-hover ${
+                  resident.current_status === "Deceased" ? "opacity-70" : ""
+                }`}
               >
                 <td className="hidden px-4 py-2 md:table-cell">
                   <input

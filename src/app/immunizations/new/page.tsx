@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { NOT_DECEASED } from "@/lib/residents/status";
 import {
   ImmunizationForm,
   type EnclosureOption,
@@ -36,7 +37,7 @@ export default async function NewImmunizationPage(
         .select(
           "resident_id, name, thai_name, current_status, zone_id, enclosure_id",
         )
-        .or("current_status.neq.Deceased,current_status.is.null")
+        .or(NOT_DECEASED)
         .order("name"),
       supabase
         .from("immunization_types")

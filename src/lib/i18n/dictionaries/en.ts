@@ -1662,6 +1662,23 @@ const en = {
       allEnclosures: "All enclosures",
       filter: "Filter",
       clear: "Clear",
+      /**
+       * The line under the heading. Deceased residents are hidden by
+       * default, so the count always says which mode it is counting in —
+       * "212 residents · 38 deceased hidden".
+       */
+      count: (n: number) => (n === 1 ? "1 resident" : `${n} residents`),
+      deceasedHidden: (n: number) =>
+        n === 1 ? "1 deceased hidden" : `${n} deceased hidden`,
+      deceasedIncluded: (n: number) =>
+        n === 1 ? "including 1 deceased" : `including ${n} deceased`,
+      deceasedMatches: (n: number) =>
+        n === 1
+          ? "1 deceased resident matches"
+          : `${n} deceased residents match`,
+      deceasedMatchesShow: "show",
+      showAllDeceased: "Show all",
+      hideDeceased: "Hide deceased",
       couldntLoad: "Couldn't load residents",
       selectedCount: (n: number) => `${n} selected`,
       selectPrompt: "Select residents to act on several at once.",
