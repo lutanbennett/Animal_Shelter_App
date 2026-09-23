@@ -6,7 +6,10 @@
  *
  *  - A PR that changes something a user would notice adds a line to
  *    `unreleased`, in the same PR — written for a shelter user, not as a
- *    commit message. Fixes nobody sees don't need one.
+ *    commit message. Fixes nobody sees don't need one, but the test plan
+ *    says so: its release-notes line is `n/a: <reason>`, and
+ *    scripts/check-test-plan.mjs flags a PR that touches pages, components,
+ *    the manual, i18n or the Worker with neither.
  *  - Cutting a release is its own small PR: move `unreleased` into a new
  *    entry at the top of `releases`, give it the next version and today's
  *    date, decide `major`, and set package.json's "version" to match.
