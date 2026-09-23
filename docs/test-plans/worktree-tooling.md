@@ -16,7 +16,7 @@ or `n/a` with the reason.
 | PR | linked from the PR itself |
 | Tested by / date | Claude (Tooling updates session), 2026-09-23 |
 | Carries a migration? | no |
-| Tested at SHA | `c3d82c6` (script behaviour); gates re-run at `3986c8d` after syncing `main` to `dfb01c3` |
+| Tested at SHA | `c3d82c6` (script behaviour); gates re-run at `97660ec` after syncing `main` to `fe3626f` |
 
 ## 1. Scope and risk
 
@@ -29,10 +29,10 @@ or `n/a` with the reason.
 
 Run in the feature worktree, after `node scripts/worktree.mjs sync`:
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (`83bf4a6`, then again at `dfb01c3` after PRs #56 and #62, no conflicts), and the branch pushed both times
-- [x] `npm run typecheck` — clean (exit 0, re-run after the second sync)
-- [x] `npm run lint` — clean (exit 0 after the second sync; also `npx eslint scripts/worktree.mjs` exit 0)
-- [x] `npm run build` — succeeds (exit 0, re-run after the second sync)
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (`83bf4a6`, then `dfb01c3` after #56/#62, then `fe3626f` after #60/#63, all conflict-free), and `sync` pushed each time
+- [x] `npm run typecheck` — clean (exit 0, re-run after the third sync)
+- [x] `npm run lint` — clean (exit 0 after the third sync; also `npx eslint scripts/worktree.mjs` exit 0)
+- [x] `npm run build` — succeeds (exit 0, re-run after the third sync)
 - [ ] CI green on the PR — n/a: not yet run at the time of writing; the PR will show it, and it is not merged without it
 
 ## 3. Schema and data — *skip if no migration*
@@ -107,7 +107,7 @@ machine for `list`. Exit codes recorded, not inferred from output.
   - `new wt-install-test` with a real `npm ci` passed the new `.bin/next.cmd` check (exit 0, clean tree), then `done` removed it, `node_modules` included. The failure branch (`.bin` missing) was not provoked.
   - `dev` via the browser pane, `sync`, `list`, `done`, and the help text (`node scripts/worktree.mjs` with no args prints the header up to the imports)
 - [x] Shared files touched: `CLAUDE.md` and `plan-day/SKILL.md` re-read after editing, and the commands they quote were the ones run above
-- [x] Nothing merged from `main` during `sync` was broken: the second sync brought #56 (test-plan checker) and #62 (release notes, app code). This branch touches none of their files, the merge was conflict-free, and typecheck/lint/build all exit 0 on the merged tree
+- [x] Nothing merged from `main` during `sync` was broken: later syncs brought #56 (test-plan checker), #62 (release notes), #60 (cashflow, incl. migration 0072) and #63 (deploy script). This branch touches none of their files, the merge was conflict-free, and typecheck/lint/build all exit 0 on the merged tree
 
 ## 7. Documentation
 
