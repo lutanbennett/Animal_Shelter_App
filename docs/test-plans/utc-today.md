@@ -243,15 +243,25 @@ Automated checks by: Claude (Opus 5)  Date: 2026-09-23
 
 ### Manual verification
 
-`pending`, not `n/a`. The item in **Left for manual verification** is real and
-outstanding: the deployed 00:00–07:00 Thailand check has not been done, and
-Claude cannot do it. `test-plan` stays red until a person has, which is the gate
-working rather than a defect in the plan — and with `pending` the red now says
-*what* it is waiting for instead of looking like a plan filled in badly.
+Done. Lutan ran the deployed 00:00–07:00 Thailand check on the morning of
+2026-09-24 and it passed: on `test.lannacare.org/residents/new` step 2, the
+intake date defaulted to the new day and the new day was selectable. Under the
+old code both would have read yesterday.
 
-- [ ] Every item in the manual list was checked by a person, or the list is empty — n/a: nothing to sign yet; the one outstanding item is on the signature line below as `pending`.
+The build he checked was `7abc796` — `main` + this branch + `claude/cashflow`,
+because test holds one build and the cashflow forecast needed verifying the same
+evening. That is not this branch's tip, so it was checked before he started:
+`src/lib/format.ts` is **byte-identical** between `7abc796` and the tip, and
+`IntakeForm.tsx` has no diff. What moved in between was the nav rework, cashflow
+and the QA docs — not the code under test.
 
-Manual verification by: pending: /residents/new on test.lannacare.org between 00:00 and 07:00 Thailand — intake date defaults to the new day, and the new day is selectable  Date: —
+Recorded by the test manager session on Lutan's instruction, with his result
+given to that session directly. The route is stated rather than implied, so this
+is not read later as a signature its author witnessed.
+
+- [x] Every item in the manual list was checked by a person — Lutan, in the 00:00–07:00 Thai window on 2026-09-24
+
+Manual verification by: Lutan (recorded by the test manager session on his instruction)  Date: 2026-09-24
 
 ### Result
 
