@@ -8,10 +8,10 @@
 | Backlog item | `docs/backlog.md` → Management → "Cashflow forecast: what the shelter is about to spend, in one place" (half 2 of 2) |
 | Branch / worktree | `claude/cashflow` @ `C:\Development\Animal_Shelter_cashflow` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3007` |
-| PR | (filled in at `gh pr create`) |
+| PR | [#60](https://github.com/lutanbennett/Animal_Shelter_App/pull/60) |
 | Tested by / date | Claude Opus 5, 2026-09-23 |
 | Carries a migration? | **yes** — `0072_cashflow_forecast.sql` (function only, no table or column changes) |
-| Tested at SHA | (filled in at PR time) |
+| Tested at SHA | `65093f2` (branch tip when the PR was opened) |
 
 ## 1. Scope and risk
 
@@ -102,11 +102,22 @@ discovers it.
       than 30/90 fall back to 30.
 - [x] Boundary cases checked:
   - **Month slicing is lossless** — a 90-day window summed from its four monthly slices
-    equals `diet_forecast` over the same 90 days exactly (฿245,070.00 both ways) and
+    equals `diet_forecast` over the same 90 days exactly (฿245,104.00 both ways) and
     `medication_forecast × cost` exactly (฿7,382.50 both ways). This is the check that
-    would have caught double-counting or a dropped partial month.
-  - **Partial first month** — a window starting 23 Sep gives Sep 8 days and Oct 31 days
-    at the same daily rate (฿21,784 / ฿84,413 = ฿2,723 a day both).
+    would have caught double-counting or a dropped partial month, and it was re-run at
+    the end of the session as well as the start.
+  - **Partial first month** — a window starting 23 Sep yields an 8-day September slice
+    (฿21,818) beside full months for Oct (฿84,413), Nov (฿81,690) and Dec (฿57,183),
+    and those four sum to exactly the whole-window figure above. An earlier run also
+    showed Sep and Oct at an identical ฿2,723/day; that no longer reproduces because
+    dev's diet records changed under the session (see the note below), which is why the
+    sum-to-the-whole check is the one relied on rather than the daily rate.
+
+    **Note on dev data moving:** dev is shared with other live sessions and its figures
+    shifted twice mid-session (September food read ฿21,784, then ฿22,056, then ฿21,818).
+    Each time, `cashflow_forecast` and `diet_forecast` were re-compared over the same
+    range and agreed exactly, and a 30-day and a 90-day window returned the same
+    September figure as each other. The invariant is what was verified, not a snapshot.
   - **Zero vs gap** — a category with items but no prices returns `amount 0,
     missing_prices > 0` and reads "not priced yet"; a category with nothing booked
     returns `0 / 0` and reads `—`. Both states produced on dev.
@@ -310,7 +321,7 @@ Manual verification by: <name>  Date: <yyyy-mm-dd>
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR
+- [x] Checklist pasted into the PR — https://github.com/lutanbennett/Animal_Shelter_App/pull/60
 - [ ] Handed to the production release manager — n/a: the handover happens at merge, which is after this checklist is written. The apply plan and the timezone flag above are what the handover consists of.
 
 Result: <pass | pass with accepted defects | fail>
