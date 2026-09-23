@@ -1,11 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { loadEnclosureOptions } from "@/lib/enclosures/options";
 import {
   IntakeForm,
   type DietTypeOption,
-  type EnclosureOption,
   type OriginOption,
-  type ZoneOption,
 } from "./IntakeForm";
 import { parseStepParam } from "./steps";
 
@@ -16,19 +15,11 @@ export default async function NewResidentPage(
   const { t } = await getT();
   const initialStep = parseStepParam((await props.searchParams).step);
 
-  const [zonesResult, enclosuresResult, originsResult, dietTypesResult] = await Promise.all([
-    supabase
-      .from("zones")
-      .select("id, name, name_th")
-      .neq("name", "Lifecycle")
-      .order("name")
-      .returns<ZoneOption[]>(),
-    supabase
-      .from("enclosures")
-      .select("id, name, name_th, zone_id, zones!inner(name)")
-      .neq("zones.name", "Lifecycle")
-      .order("name")
-      .returns<{ id: string; name: string; name_th: string | null; zone_id: string }[]>(),
+  // Zones and enclosures come from the same loader as Move, with each
+  // enclosure's headcount, so intake's capacity warning can't disagree
+  // with the other placement screens about what "full" means.
+  const [options, originsResult, dietTypesResult] = await Promise.all([
+    loadEnclosureOptions(supabase),
     supabase
       .from("group_origins")
       .select("id, name")
@@ -41,10 +32,6 @@ export default async function NewResidentPage(
       .returns<DietTypeOption[]>(),
   ]);
 
-  const zones = zonesResult.data ?? [];
-  const enclosures: EnclosureOption[] = (enclosuresResult.data ?? []).map(
-    (e) => ({ id: e.id, name: e.name, name_th: e.name_th, zoneId: e.zone_id }),
-  );
   const origins = originsResult.data ?? [];
 
   return (
@@ -56,14 +43,9 @@ export default async function NewResidentPage(
         <p className="text-sm text-muted">{t.residents.new.pageSubtitle}</p>
       </div>
 
-      {zonesResult.error && (
+      {options.error && (
         <p className="text-sm text-danger">
-          {t.residents.new.couldntLoadZones}: {zonesResult.error.message}
-        </p>
-      )}
-      {enclosuresResult.error && (
-        <p className="text-sm text-danger">
-          {t.residents.new.couldntLoadEnclosures}: {enclosuresResult.error.message}
+          {t.residents.new.couldntLoadEnclosures}: {options.error}
         </p>
       )}
       {originsResult.error && (
@@ -73,8 +55,8 @@ export default async function NewResidentPage(
       )}
 
       <IntakeForm
-        zones={zones}
-        enclosures={enclosures}
+        zones={options.zones}
+        enclosures={options.enclosures}
         origins={origins}
         dietTypes={dietTypesResult.data ?? []}
         initialStep={initialStep}

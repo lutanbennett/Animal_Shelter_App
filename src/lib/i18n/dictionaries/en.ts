@@ -1624,7 +1624,6 @@ const en = {
       pageTitle: "Resident Intake",
       pageSubtitle:
         "Register a new resident arriving at the shelter. This creates the resident record and its opening placement record in one step.",
-      couldntLoadZones: "Couldn't load zones",
       couldntLoadEnclosures: "Couldn't load enclosures",
       couldntLoadOrigins: "Couldn't load origins",
       /**
@@ -1655,6 +1654,14 @@ const en = {
           "Check the answers below. Nothing is saved until you tap Register resident.",
         notProvided: "Not given",
         enclosureUnassigned: "Unassigned",
+        // The capacity warning on Register. Titles are shared with Move
+        // (residents.move.warning.title); only the sentences differ.
+        capacityWarning: {
+          body: (enclosure: string, now: string, after: string) =>
+            `${enclosure} currently holds ${now}. With this resident it will hold ${after}.`,
+          question: "Register the resident there anyway?",
+          confirm: "Register anyway",
+        },
       },
       adoptionHint:
         "What a family needs to know before they visit. Shown on the public profile as \"Is {name} right for you?\" — leave anything unknown blank.",

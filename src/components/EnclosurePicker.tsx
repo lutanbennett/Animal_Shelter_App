@@ -48,6 +48,7 @@ export function EnclosurePicker({
   allowCurrent = true,
   required = false,
   idPrefix = "enclosure-picker",
+  placeholders,
 }: {
   zones: ZoneOption[];
   enclosures: EnclosureOption[];
@@ -60,6 +61,11 @@ export function EnclosurePicker({
   allowCurrent?: boolean;
   required?: boolean;
   idPrefix?: string;
+  /**
+   * The empty options' text, where leaving the picker blank means something
+   * (intake: blank is Unassigned) rather than "not chosen yet".
+   */
+  placeholders?: { zone?: string; enclosure?: string };
 }) {
   const { t, locale } = useI18n();
   const m = t.residents.move;
@@ -89,7 +95,7 @@ export function EnclosurePicker({
           }}
           className={inputClass}
         >
-          <option value="">{m.selectZone}</option>
+          <option value="">{placeholders?.zone ?? m.selectZone}</option>
           {zones.map((z) => (
             <option key={z.id} value={z.id}>
               {placeName(locale, z.name, z.name_th)}
@@ -112,7 +118,7 @@ export function EnclosurePicker({
           className={inputClass}
         >
           <option value="">
-            {zoneId ? m.selectEnclosure : m.selectZoneFirst}
+            {zoneId ? (placeholders?.enclosure ?? m.selectEnclosure) : m.selectZoneFirst}
           </option>
           {enclosuresInZone.map((e) => {
             const isCurrent = e.id === currentEnclosureId;

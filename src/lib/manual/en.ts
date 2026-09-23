@@ -204,11 +204,11 @@ const manual: Manual = {
           steps: [
             "On the Residents list tap New resident (intake).",
             "Step 1, Who: name (required), Thai name, other names, species, breed, sex and size (required — small, medium or large, which sets their default meal size). Tap Next.",
-            "Step 2, Arrival: the intake date (required), where they came from (pick an existing origin or add a new one), the zone and enclosure they're going into, intake notes, and the Ready for adoption tick. Leave the enclosure blank and they're recorded as Unassigned until you move them; tick Ready for adoption only if they should appear on the public adoption page straight away.",
+            "Step 2, Arrival: the intake date (required), where they came from (pick an existing origin or add a new one), the zone and enclosure they're going into, intake notes, and the Ready for adoption tick. Each enclosure in the list shows how many residents it holds against its capacity, and the one you pick shows it again underneath — green for space, orange for nearly full or full, red for over. Leave the enclosure blank and they're recorded as Unassigned until you move them; tick Ready for adoption only if they should appear on the public adoption page straight away.",
             "Step 3, Health — all optional: an estimated age in years, a weight at intake (it becomes their first weight reading), how often they need routine blood work, and a starting diet from the list management keeps under Management → Diets. The diet is recorded from the intake date and can be adjusted on the hub's Diet page.",
             "Step 4, For adopters — all optional: colour, desexed, good with dogs / cats / children, and energy level. These fill the \"Is (name) right for you?\" block on the public profile.",
             "Step 5, Story — all optional: bio, temperament, past story and behaviour notes. These are the ones most often written later, from Edit resident.",
-            "Step 6, Review: every answer on one page, with an Edit link beside each group to go back and change something. Tap Register resident and you're taken to their new hub.",
+            "Step 6, Review: every answer on one page, with an Edit link beside each group to go back and change something. Tap Register resident and you're taken to their new hub. If the enclosure you chose is nearly full or full, you're shown its current and new occupancy first and asked to confirm — Register anyway still takes them in, because the animal at the gate has to go somewhere; Cancel lets you pick another.",
           ],
           screenshot: {
             src: "/manual/resident-intake.png",

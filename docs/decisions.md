@@ -3033,3 +3033,21 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   already dropped by 0044; the 0069 diet seed has run and is left alone; the
   cashflow month boundaries (0072) stay with Dashboard follow-ups (e), which
   can now call `shelter_date()` rather than inventing its own constant.
+- **Intake asks about a full enclosure on Register, not on the Arrival step
+  (2026-09-24):** `/residents/new` now uses `EnclosurePicker` and
+  `loadEnclosureOptions()`, the pair every other placement screen uses, so
+  "nearly full" is one definition (`capacityWarningLevel`, count + 1 against
+  80% of capacity) rather than two that could drift. The wizard is one form with
+  hidden steps, so the confirm could sit on Arrival's Next, on Register, or
+  both. It sits on **Register**: that is the moment something is written, it
+  asks once however many times the volunteer walks back and forth through the
+  steps, and it matches Move, which asks on submit. Arrival still shows the
+  headcount in the enclosure list and under the chosen one as it is picked, and
+  Review reads the enclosure back with its count ("Front Zone 6 — 5 / 5"), so
+  a full kennel is visible three times before the dialog. It warns and allows,
+  as everywhere else — a full shelter still takes the animal at the gate.
+  `CapacityWarningDialog` grew an optional `copy` prop for intake's
+  sentences ("With this resident it will hold…", "Register anyway"); titles and
+  thresholds stay shared. `EnclosurePicker` grew optional `placeholders` so
+  intake keeps "No zone (defaults to Unassigned)" / "Unassigned (default)",
+  since at intake a blank enclosure is an answer, not a gap.
