@@ -2347,3 +2347,50 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   cannot quietly collapse back into one. The checklist also carries a **Left for
   manual verification** table, so the handover to a human is a short concrete
   list rather than "please check it".
+
+- **Shelter dates are Asia/Bangkok — not the viewer's clock, and not UTC
+  (2026-09-23):** anything the app stores or shows in a `date` column is a
+  calendar day *at the shelter*, and is produced by `todayIso()` in
+  `src/lib/format.ts`, which formats through `Intl.DateTimeFormat` with an
+  explicit `timeZone`. It therefore returns the same answer on `next dev`, on
+  Cloudflare Workers and in a browser in any country. It replaced 27 copies of
+  `new Date().toISOString().slice(0, 10)`, which is the *UTC* date: the
+  shelter is UTC+7, so between 00:00 and 07:00 local that expression returned
+  yesterday, and since the same value was also the date input's `max`, an
+  animal taken in overnight could not be dated today at all. On Workers the
+  server-side copies were wrong for those seven hours for everyone, wherever
+  they were, because Workers run in UTC regardless of where they are invoked.
+  The three-way choice matters and is easy to get wrong in either direction:
+  **UTC** is wrong because nobody at the shelter lives in it; the **viewer's
+  clock** is wrong because it makes the same animal's intake date depend on
+  who opened the form — a vet in Europe and a volunteer in Chiang Mai would
+  write different days onto the same event, and the row would then disagree
+  with its own `created_at`. A shelter in one place keeps one calendar. The
+  deliberate exception is the assistant's date *parsing* (`viewerToday()` in
+  `AssistantCards.tsx`): "tomorrow" and "Friday" are resolved against the
+  calendar the person asking is reading them from, which is a different
+  question from what date gets stored, and reconciling the two is left open in
+  the backlog. Dates derived from today go through `addDaysIso()` rather than
+  `setDate()`/`setUTCDate()` on a parsed Date, which mixes local getters with
+  UTC setters. `dueState()` did exactly that, and measuring it before changing
+  it is worth recording, because the intuitive answer is wrong: it was **not**
+  a day out at UTC+7. `new Date("2026-09-23")` is UTC midnight, and at a
+  *positive* offset that is still the same local day, so the round trip came
+  back correct. Over 400 consecutive dates the old expression agreed with the
+  calendar version on every one at UTC+7 and at UTC — the only two runtimes
+  that matter here, the dev machine and Workers — and differed on exactly
+  three days a year, the DST transitions, in zones that have them (New York,
+  London, Auckland). That one is therefore a robustness change, not a bug fix,
+  and is recorded as such rather than being quietly counted as one.
+  `todayIso()` takes the instant as an optional argument so the 17:00Z
+  boundary can be asserted at any hour; a timezone fix verified only by
+  looking at a running app at the wrong time of day proves nothing, because a
+  broken one and a working one are identical for seventeen hours out of
+  twenty-four. Two real behaviour changes came out of the same pass and are
+  worth knowing about: a placement **back-dated to yesterday** during the
+  overnight window used to be stamped with the current instant rather than
+  midday, landing it on the wrong calendar day; and `isFutureDate()` carried a
+  deliberate day of slack to compensate for the UTC today, which meant it
+  accepted **tomorrow's** date as valid right through normal working hours —
+  at 10:00 and at 15:00 local a volunteer could date an intake or a weight a
+  day ahead. Both now follow the shelter calendar exactly.
