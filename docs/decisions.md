@@ -2292,3 +2292,19 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   residents, combined with the deceased filter, returned exactly the 71 living.
   Worth knowing before anyone works around a second `.or()` they assume is
   unsafe.
+
+- **Features get a written test plan before production (2026-09-23):** there is
+  no automated test runner in this repo — CI is `typecheck`, `lint`, `build`,
+  and everything behavioural is verified by hand against the dev database. That
+  is workable for one developer but leaves no record of *what* was checked, so a
+  feature could reach `lannacare.org` having been "tested" in ways nobody can
+  reconstruct a month later. `docs/test-plan-template.md` is copied per feature
+  into `docs/test-plans/<feature>.md`, ticked during verification, and pasted
+  into the PR; the production release manager reads it before `deploy:prod`.
+  The checklist is deliberately opinionated about the things this app keeps
+  getting wrong across features: per-role access (admin/staff/vet/volunteer/
+  resident/signed-out) checked server-side rather than by hiding UI, the shared
+  files that every feature touches (`NavLinks.tsx`, `manual/en.ts`,
+  translations), and a smoke test on `test.lannacare.org` rather than only on
+  the local dev server, since the deployed OpenNext build is not the same
+  artifact as `next dev`.
