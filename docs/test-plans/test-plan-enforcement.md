@@ -11,7 +11,7 @@
 | PR | https://github.com/lutanbennett/Animal_Shelter_App/pull/55 |
 | Tested by / date | Claude (test manager session) / 2026-09-23 |
 | Carries a migration? | no |
-| Tested at SHA | 0009ac6 — the commit under test. The follow-up commit that writes this line edits only this field and the CI line below |
+| Tested at SHA | 5b27541 — the last commit carrying content. Earlier verification ran at 0009ac6; 5b27541 added the release smoke test and re-ran clean. The follow-up commit writing this line edits only this field and the CI line below |
 
 ## 1. Scope and risk
 
@@ -26,7 +26,7 @@
 - [x] `npm run typecheck` — clean
 - [x] `npm run lint` — clean
 - [x] `npm run build` — succeeds, exit 0
-- [x] CI green on the PR — `check` and `test-plan` both passing on 0009ac6, 2 passing / 0 failing
+- [x] CI green on the PR — `check` and `test-plan` both passing on 5b27541, and previously on 0009ac6
 
 ## 3. Schema and data
 
