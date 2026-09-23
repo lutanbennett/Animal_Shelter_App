@@ -68,13 +68,13 @@
 - [ ] Nav entry correct (`src/app/NavLinks.tsx`) — appears for the right roles, no dead links — n/a: no nav change
 - [x] Manual updated (`src/lib/manual/en.ts`): two steps added to the cashflow topic, for the card shortcut and for Download CSV
 - [x] Translatable strings go through the translation path. The new strings are in both the `en` and `th` dictionaries, which typecheck requires to match. They are static UI strings, not free-text rows for `/management/translations`
-- [x] Mobile viewport (375px) — no overflow, controls reachable. The browser pane was 590px wide, which is the phone layout: two-column cards, no chart. The card and the CSV button were both visible and reachable, and the table scrolls inside its own container as before
-- [x] Browser console clean — no errors or React warnings (none reported during the run)
+- [x] Mobile viewport (375px) — no overflow, controls reachable. Emulated 375×812: `scrollWidth` did not exceed the viewport, the card still linked to `/management/medications`, and the CSV button was present. The table scrolls inside its own container as before
+- [x] Browser console clean — no errors or React warnings. The console was read after the 375px and 1280px loads. The only errors were the HMR websocket failing while the dev server was stopped for `npm run build`; there were no app errors or React warnings
 - [ ] Network clean — no unexpected 4xx/5xx on the feature's pages — n/a: the feature makes no new request; the CSV is a local blob
 
 ## 6. Regression
 
-- [x] The pages nearest the change still work (list the ones checked): `/management/cashflow` at 90 days, including the chart and table, the category toggles and the vet note
+- [x] The pages nearest the change still work (list the ones checked): `/management/cashflow` at 90 days: the table, the category toggles and the vet note at phone width, and the stacked chart rendering (with no overflow) at an emulated 1280×900
 - [x] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a second, unrelated page — by loading that page, not by reading the file. `/` loaded 200 on this branch's dev server (it was the first page compiled). `manual/en.ts` changed by two array entries in the cashflow topic and the build prerendered it without error
 - [x] Nothing merged from `main` during `sync` was broken by this branch: the merge brought only a CI workflow line, and typecheck, lint and build all ran after it
 
