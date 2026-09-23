@@ -90,8 +90,8 @@ const manual: Manual = {
           title: "Finding your way around",
           steps: [
             "On a computer the menu is always visible down the left: Residents, Enclosures, Maintenance, Projects, Vets, Contacts and — depending on your role — Management and Admin. Those last two are folded up when you sign in: tap the ⌄ beside the name to see what is under it, or the name itself to open that section's front page. A section you are already in is always open.",
-            "Under a dividing line at the very bottom of the menu sit the things you only need now and then, so they are always in the same place: this manual, Change password and — for admins — Security, where accounts and roles are managed.",
-            "On a phone tap the ☰ button at the top left to open the same menu; tap outside it to close. The same three are the last entries in it, below the same line.",
+            "Under a dividing line at the very bottom of the menu sit the things you only need now and then, so they are always in the same place: this manual, Release notes, Change password and — for admins — Security, where accounts and roles are managed.",
+            "On a phone tap the ☰ button at the top left to open the same menu; tap outside it to close. The same links are the last entries in it, below the same line.",
             "The LCA logo and your email are in the header, with the language switch and Sign out. Tap the logo to see the public website as a visitor does — it opens in a new tab so you don't lose your place.",
           ],
           screenshot: {
@@ -100,6 +100,24 @@ const manual: Manual = {
             caption: "The menu on a phone. On a computer the same links sit in a sidebar.",
             mobile: true,
           },
+        },
+        {
+          id: "release-notes",
+          title: "What changed: release notes",
+          path: "Release notes (bottom of the menu)",
+          intro:
+            "Every update to the system is listed on the Release notes page, newest at the top, in plain words: what you will notice, not how it was built. Everyone who can sign in can read it.",
+          steps: [
+            "Open Release notes from the bottom of the menu.",
+            "Each release shows its number, the date it was prepared and the environment you are looking at. A Major badge marks a release worth reading before you carry on working.",
+            "Admins also get each major release by email. The subject starts with [UAT] or [Production], so a test release is never mistaken for a live one.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "The first entry, 0.0.1 “Current Baseline Build”, is where the record starts: it stands for everything the system did on 23 September 2026. Changes are listed from there on.",
+            },
+          ],
         },
         {
           id: "assistant",

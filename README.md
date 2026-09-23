@@ -288,11 +288,26 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    for every hostname; Providers → Google uses the same OAuth web client as
    dev, which means the client in Google Cloud Console must list the new
    project's `https://<ref>.supabase.co/auth/v1/callback` as an authorised
-   redirect URI. SMTP Settings → configure a real provider (Resend,
-   Postmark, SES…) — Supabase's built-in mailer is for development only and
-   is rate-limited to a handful of messages an hour, so **Forgot password?**
-   only works in production once this is done. The reset email template
-   can carry the shelter's name and logo.
+   redirect URI. SMTP Settings → Resend, field by field in
+   [`docs/email-sending.md`](docs/email-sending.md) §2 — Supabase's built-in
+   mailer is for development only and is rate-limited to a handful of
+   messages an hour, so **Forgot password?** only works in production once
+   this is done. The reset email template can carry the shelter's name and
+   logo.
+
+7. **Every deploy is a release.** Release notes live in
+   `src/lib/releases.ts` and show at `/releases` for every signed-in role.
+   A PR that changes something users notice adds a line to `unreleased`;
+   before deploying, a small release PR moves those lines into a new
+   numbered entry and sets `package.json`'s version to match (the rules are
+   at the top of that file). `deploy.mjs` refuses a production deploy that
+   has unreleased notes or a version mismatch, tags the Worker version with
+   the release (dashboard → Workers → Deployments), and after deploying
+   emails a **major** release that is new to the site to that environment's
+   admins, with `[UAT]` / `[Production]` in the subject; `--no-mail` skips
+   the email. Test never sends. The one-off Cloudflare setup the email needs
+   — onboarding the domain and verifying each admin's address, both free —
+   is [`docs/email-sending.md`](docs/email-sending.md) §1.
 
 ## Backups
 
