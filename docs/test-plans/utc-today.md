@@ -11,8 +11,8 @@
 | PR | #59 |
 | Tested by / date | Claude (automated) 2026-09-23 |
 | Carries a migration? | no |
-| Tested at SHA | `d01bf2b` — the branch merged up to `main` at `dfb01c3`. Code is unchanged since `537f1f0`; the assertion suite was re-run against the merged tree. |
-| Deployed to test | `d01bf2b` on `test.lannacare.org` (project `qxkmhwybjggxvsfxsxbd`), 2026-09-23T12:26Z |
+| Tested at SHA | `48dc754` — the branch merged up to `main` at `fe3626f`. **Every line of the fix is unchanged since `537f1f0`**; the four syncs since brought in other streams' work only, and the assertion suite was re-run against the merged tree after each. |
+| Deployed to test | `d01bf2b` on `test.lannacare.org` (project `qxkmhwybjggxvsfxsxbd`), 2026-09-23T12:26Z. The branch has since merged past it, but **no file this change touches differs between `d01bf2b` and the tip**, so the pending manual check on that deployment is still valid and does not need a redeploy. |
 
 ## 1. Scope and risk
 
@@ -27,9 +27,19 @@
 2. **The SQL half.** Postgres sessions run in UTC, so `current_date` inside the database has the same bug in six places — `maintenance.date_created` default (0001), the `date_completed` trigger (0033), the deceased cascade (0049), the 0069 diet seed, and two reads, `medication_daily_requirement` (0027) and `public_shelter_stats.in_treatment` (0062→0065), the last of which is a public website figure. `todayIso()` is TypeScript and cannot reach any of them. Reported by the audit stream mid-round; filed as its own backlog item on the `backlog` branch (commit 87fb883) because per CLAUDE.md a schema change is its own migration PR, and this stream carries no migration.
 3. **The assistant's date parsing.** `AssistantCards` resolves "tomorrow" and weekday names against the *asker's* clock. That is deliberate and unchanged; it is renamed `viewerToday()` here so it cannot be confused with the shelter helper. Reconciling the two is left open.
 
+**Shared file, and the stream that consumes it:** `src/lib/management/forecast-window.ts` is
+owned by this stream and consumed by cashflow (#60), which merged ahead of this PR.
+Its **exported shape is unchanged** — same six exports, same signatures, and
+`FIXED_FORECAST_DAYS` still `[7, 30]`, verified by diffing the export lines against
+`origin/main`. Only the body of `isoDatePlus()` moved, from counting off the UTC date
+to counting off the shelter's. Cashflow needs no adaptation and in fact wants that
+change: it defines its own `CASHFLOW_FIXED_DAYS = [30, 90]` deliberately, and builds
+its window with `isoDatePlus(0)` / `isoDatePlus(days - 1)`, which would otherwise have
+started a day early for the first seven hours of every Thai day.
+
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — merged cleanly, three times as `main` moved: `83bf4a6` (no-op, already the base), then `4c3f284` (#56), then `dfb01c3` (#62). The last was run by the test-manager session in this worktree, not by me. `docs/decisions.md` took the union merge each time; no conflicts anywhere.
+- [x] `node scripts/worktree.mjs sync` — merged cleanly four times as `main` moved: `83bf4a6` (no-op, already the base), `4c3f284` (#56), `dfb01c3` (#62, run by the test-manager session), and `fe3626f` — which brought in #63 deploy-message-quoting and **#60 cashflow**, the latter having merged *ahead* of this PR rather than behind it as the merge order had it. `docs/decisions.md` took the union merge every time; no conflicts anywhere. Gates re-run in full after the last one, and the assertion suite re-run against the merged tree under both the system zone and `TZ=UTC`.
 - [x] `npm run typecheck` — clean
 - [x] `npm run lint` — clean
 - [x] `npm run build` — succeeds, all 60+ routes compiled
