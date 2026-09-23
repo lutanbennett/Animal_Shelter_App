@@ -815,6 +815,37 @@ const manual: Manual = {
           },
         },
         {
+          id: "cashflow",
+          title: "The cashflow forecast",
+          roles: ["admin", "management"],
+          path: "Management → Cashflow",
+          intro:
+            "Food, medication, vaccinations, vet visits and maintenance are each forecast on their own page in their own unit. This is the one page where they add up, in baht.",
+          steps: [
+            "Pick a window: Next 30 days or Next 90 days, or enter From and To dates for any period up to a year.",
+            "The three cards are the window's total, the average month, and how many items still have no price. Below them, a stacked column — one column per month, one colour per category — and the table it is drawn from.",
+            "Tap a category name to take it out of the chart, the table and the totals; tap it again to bring it back.",
+            "A category with items but no prices reads “not priced yet” rather than ฿0, and the “Not priced yet” row links straight to the page where that price is entered. A figure with a small orange +3 beside it means three more items that month have no price, so the real cost is higher.",
+            "Under each category name is where its figure came from: priced (a price someone entered, times what the records imply), estimated (a stand-in — a maintenance job's estimated cost, or the typical vet visit) or invoiced (every visit that month already has its real cost).",
+          ],
+          callouts: [
+            {
+              kind: "warning",
+              text: "This is not a budget. It is only what the shelter's own records imply it is committed to spending — no donations or other income, no salaries, no rent, no utilities. Treat it as a floor under the month, not the whole picture.",
+            },
+            {
+              kind: "note",
+              text: "Vet visits that are booked but not yet invoiced are costed at one flat “typical vet visit” figure, set on Admin → Website. A visit that already has its real cost recorded uses that instead. If the figure is blank, booked visits are not costed at all and the page says so.",
+            },
+          ],
+          screenshot: {
+            src: "/manual/management-cashflow.png",
+            alt: "The cashflow forecast page with the stacked column chart and the table below it",
+            caption:
+              "One column per month, one colour per category. The table below is the same figures, with a link to fix anything still unpriced.",
+          },
+        },
+        {
           id: "translations",
           title: "Translating public text",
           roles: ["admin", "management"],
