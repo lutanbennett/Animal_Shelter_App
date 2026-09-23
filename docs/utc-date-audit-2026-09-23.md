@@ -23,9 +23,12 @@ a production run still owed.
 4. Only then decide about correcting rows, and decide it **per table**, not in
    one sweep. §7 explains why a blanket update is the wrong instrument.
 
-Two things this audit turned up that are not data questions at all, and belong
-to the code half: a death closes prescriptions a day *before* the death (§3.3),
-and "end today" silently fails for seven hours a day (§3.4).
+Three things this audit turned up that are not "is this row wrong?" questions,
+and belong to the code half: a death closes prescriptions a day *before* the
+death (§3.3), a deliberately back-dated placement lands a day *after* the day
+chosen (§3.3), and "end today" silently fails for seven hours a day (§3.4). The
+second and third are fixed in `claude/utc-today` (PR #59); the first needs a
+migration and is filed on the backlog.
 
 ## 2. Scope and method
 
@@ -89,16 +92,44 @@ need a migration.
 | `0027_prescriptions.sql:233` (`medication_daily_requirement`) | a course starting today is missing from the medication rollup; one that ended yesterday is still counted |
 | `0062_stats_in_treatment.sql:43` → `0065:74` (`public_shelter_stats.in_treatment`) | the **public** "in treatment" figure on the website counts a prescription that ended yesterday as current |
 
-### 3.3 Placements are safe — but what a death triggers is not
+### 3.3 Placements store instants — but neither the branch nor the cascade was safe
 
-`placement_history` uses `timestamptz` and goes through `placementStartDate()`
-(`src/lib/placements/dates.ts`), which stores the true instant when the chosen
-date is UTC-today and midday-UTC when it is back-dated. Both land on the right
-Bangkok calendar day. **Moves, hospital, rehome and the death record itself are
-not affected** — the concern the brief raised most sharply. There is no
-`date`-typed death column anywhere; deaths are `placement_history` rows.
+`placement_history` uses `timestamptz`, so **every value it stores is a valid
+instant** and nothing in it is corrupt. There is no `date`-typed death column
+anywhere; deaths are `placement_history` rows. That much answers the concern the
+brief raised most sharply — but "not affected" would be too strong, in two
+different ways.
 
-The cascade fired by that row is a different matter. `0049_undo_deceased.sql:118`
+**The column is sound; the branch that fills it was not.**
+`placementStartDate()` (`src/lib/placements/dates.ts`) stores the current
+instant when the chosen date is UTC-today and midday-UTC when it is back-dated —
+and it decided which by comparing against the **UTC** date:
+
+```ts
+const today = now.toISOString().slice(0, 10);
+return date >= today ? now.toISOString() : `${date}T12:00:00.000Z`;
+```
+
+At 01:26 Bangkok on the 23rd, UTC-today is the 22nd. A volunteer deliberately
+back-dating a move to the 22nd — *yesterday* to them, and the latest date the
+form would let them pick, since the same UTC value is the input's `max` — hits
+`"2026-09-22" >= "2026-09-22"`, takes the same-day branch, and gets stamped
+18:26Z, which reads as the **23rd** in Bangkok. The placement lands a day
+*after* the day they chose.
+
+Accepting the form's default is the harmless case: the label said 22 Sep, the
+stored instant is "now", and now is the truth of when they did it. It is the
+deliberate back-date that moves.
+
+This is ambiguous in the same way as everything else in §2, and worse: a
+same-day placement and a mis-branched back-date are both `start_date =
+created_at` to the microsecond, so no query separates them. There is nothing to
+detect and nothing to correct — the values are instants and each one is a real
+moment; only the volunteer knows which day they meant. Raised here so that
+"`placement_history` is fine" is not read as clearing `dates.ts`. Fixed and
+asserted in `claude/utc-today` (PR #59).
+
+**The cascade a death fires is a genuine data fault.** `0049_undo_deceased.sql:118`
 casts the correct instant to a date **in UTC**:
 
 ```sql
@@ -136,8 +167,10 @@ const today = todayIsoDate();          // UTC — yesterday, 00:00–07:00 Bangk
   `saveFailed` message. For seven hours a day, "end today" on a same-day
   prescription or diet simply does not work and does not say why.
 
-That second one is a live functional defect, not a data question.
-`claude/utc-today` owns both lines; flagged to them rather than fixed here.
+That second one is a live functional defect, not a data question. Fixed in
+`claude/utc-today` (PR #59) by the `todayIso()` substitution alone — no extra
+guard needed — and the zero-row case was exercised in the browser rather than
+assumed, which matters for a failure that is otherwise silent.
 
 ## 4. Results — dev (`qxkmhwybjggxvsfxsxbd`), 2026-09-23
 
@@ -259,9 +292,19 @@ Sorted by consequence, not by count.
 
 `maintenance.due_date` is **not** in this list: it is typed by hand with no
 default (`MaintenanceForm.tsx:298`), so no stored value is wrong. The *reading*
-of it is — `dueState()` (`src/lib/maintenance/status.ts:77,103`) compares it to
-the UTC date, so overdue and due-soon badges fire a day early overnight. Display
-fault, code half's to fix.
+of it is — `dueState()` (`src/lib/maintenance/status.ts:74–85`) takes `today`
+from `todayIsoDate()` at all three call sites, so between 00:00 and 07:00 it
+compares against yesterday and a job due today-in-Bangkok reads as **not yet
+overdue**. A day **late**, not early: the badge under-reports rather than
+over-reports, which is the worse direction for a maintenance board.
+
+The `DUE_SOON_DAYS` round trip in the same function (`new Date(today)`,
+`setDate(+3)`, `toISOString().slice(0, 10)`) is *not* a fault — `new Date("YYYY-MM-DD")`
+is UTC midnight, which at a positive offset is still the same local day, so it
+returns the right string at UTC+7 and at UTC. Only the `today` it starts from is
+wrong. Noted because the round trip looks like the bug and isn't; measured by
+`claude/utc-today` (PR #59) after they had initially flagged it, and confirmed
+here against the call sites.
 
 **Cosmetic — a day out is noise:**
 
@@ -269,7 +312,10 @@ fault, code half's to fix.
 `group_origins.date`, `residents.age_estimated_on` (it dates an estimate that is
 rounded to the half-year; a day cannot move it).
 
-**Not affected:** `placement_history` — moves, hospital, rehome, deaths (§3.3).
+**Nothing to correct:** `placement_history` — moves, hospital, rehome, deaths.
+Every stored value is a valid instant, so there is no wrong date to fix; but a
+*deliberately back-dated* placement made overnight landed a day later than
+intended, undetectably, and that is not the same as "not affected" (§3.3).
 
 ## 7. What this method cannot see
 
