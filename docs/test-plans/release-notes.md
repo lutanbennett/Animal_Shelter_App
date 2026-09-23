@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Admin → "Release notes register, with an email to admins on each major release." |
 | Branch / worktree | `claude/release-notes` @ `C:\Development\Animal_Shelter_release-notes` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3008` |
-| PR | opened after this checklist; number recorded in the follow-up commit |
+| PR | #62 |
 | Tested by / date | Claude (Release notes feature session) / 2026-09-23 |
 | Carries a migration? | no |
 | Tested at SHA | working tree on top of `4c3f284` (origin/main after `sync`), gates re-run on the committed tree; CI covers the tip |
@@ -151,7 +151,7 @@ Manual verification by: pending: the three items above, which need a deploy and 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR (#62 description)
 - [ ] Handed to the production release manager — n/a: not yet — handed over with the PR
 
 Result: pass
