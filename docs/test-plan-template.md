@@ -3,10 +3,21 @@
 Copy this file to the feature branch as `docs/test-plans/<feature>.md`, fill the
 header, and tick as you go.
 
-Every line must end up in one of two states, and CI checks this:
+Every line must end up in one of three states, and CI checks this:
 
 - `- [x]` — the check was actually run and passed.
 - `- [ ] … — n/a: <reason>` — the check did not apply, and the reason says why.
+- `- [ ] … — deferred: <owner>` — **section 8 only.** The check cannot be true
+  yet, and this names who picks it up.
+
+That third state exists because the deploy gates in section 8 cannot be true at
+PR time: there is no deployed build to check and no production apply to have run.
+Writing them `n/a` is a lie in a box labelled "did not apply", and once that habit
+forms people write `n/a` for things they simply did not do. `deferred:` says the
+truthful thing and passes, because a PR cannot be held open waiting for a deploy
+it precedes. It is confined to section 8 deliberately — anywhere else it would be
+a general-purpose escape hatch, which is the one thing this check exists to
+prevent — and the checker rejects it elsewhere.
 
 **The reason must follow `n/a:` immediately.** `n/a: no UI surface` passes;
 `n/a as a deploy check, because …` reads fine to a human but fails, and that
@@ -99,15 +110,25 @@ Per `CLAUDE.md`, schema lands as its own PR before the feature.
 ### Role access matrix
 
 Sign in as each role that matters and record what they see. Unauthorised access
-must be refused by the server, not merely hidden in the UI.
+must be refused by the server, not merely hidden in the UI — hit the URL
+directly rather than checking whether the nav entry is hidden. That distinction
+is what found the cashflow money bug: the page redirected correctly, and the RPC
+behind it did not.
+
+These are all of them. `app_role` is `('admin', 'staff', 'vet', 'volunteer')`
+from `0001_initial_schema.sql`, plus `'management'` added by
+`0038_management_role.sql`. **There is no `resident` role** — in this app a
+resident is an animal — and do not re-derive this list by grepping for quoted
+strings, which is how `resident` got into this template and `management` got left
+out of it for a day.
 
 | Role | Can reach | Expected | Result |
 |---|---|---|---|
 | admin | | | |
+| management | | | |
 | staff | | | |
 | vet | | | |
 | volunteer | | | |
-| resident | | | |
 | signed out | | | |
 
 - [ ] Every role above tested
@@ -125,7 +146,7 @@ must be refused by the server, not merely hidden in the UI.
 ## 6. Regression
 
 - [ ] The pages nearest the change still work (list the ones checked)
-- [ ] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a second, unrelated page
+- [ ] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a second, unrelated page — **by loading that page, not by reading the file**. Reading proves only that you did not edit it; loading proves the value it still supplies at runtime is the one the other page expects. The weaker reading is the tempting one
 - [ ] Nothing merged from `main` during `sync` was broken by this branch
 
 ## 7. Documentation
@@ -153,6 +174,8 @@ database; `lannacare.org` runs **production** (`dbkodyyxxhtygxcxmfcu`).
 - [ ] **Timezone-sensitive behaviour proved, not observed at a convenient hour.** Workers run in UTC wherever they are, so anything deriving "today" is wrong for part of every day in Thailand. That is two separate claims and they need different checks:
   - *Does the logic handle the boundary?* Where the code lets an instant be injected, assert it rather than waiting for the clock: run the **real exported** function against fixed instants — both sides of 17:00Z, the 00:00 and 06:59 Thai ends of the broken window, month-end, year-end, a leap day — and then the same suite under `TZ=UTC`, which is the Workers case. Deterministic, and it does not depend on what hour you happened to be testing. Prefer this where it is available, and never re-type the logic into the test; a copy proves only that the copy works
   - *Does the deployed build behave as the source does?* A different claim, and only `test.lannacare.org` answers it — during 00:00–07:00 Thai, when the two dates differ. If you cannot be there at that hour, put it in **Left for manual verification** rather than ticking it
+- [ ] **For a boundary or banding change, the assertions cover both edges of the band and both sides of the boundary — not only the case the bug report named.** A bug report names the case that was *noticed*, which is rarely the case that *discriminates*, so a test written faithfully from the report can pass while the fault survives. This is not hypothetical: `dueState()` was reported as "a job due today reads as not yet overdue", but due-today behaves identically under both clocks and does not move at all; the cases that moved were due-yesterday and the far end of the due-soon band. Applies to any threshold, rounding rule, retry window, pagination limit or permission cutoff, not only to dates
+- [ ] **Evidence pasted into this plan is the tool's actual output, unedited.** A hand-maintained table of results is prose about a measurement rather than the measurement, and it drifts from the run without anyone noticing — which is precisely what the evidence was there to prevent. Regenerate it; do not tidy it
 - [ ] Public pages (`/`, `/adopt`, `/our-work`, `/donate`) re-checked after a cache purge or a 10-minute wait — anonymous GETs are edge-cached per data centre, so a stale page can look like a defect that isn't one, or hide one that is
 
 ### Deploy safety
@@ -210,7 +233,7 @@ Automated checks by: <name>  Date: <yyyy-mm-dd>
 The items in **Left for manual verification** above. Signed by the person who
 looked. Claude never signs this line on someone else's behalf. Three valid states:
 
-- `<name>  Date: <yyyy-mm-dd>` — a person looked.
+- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
 - `n/a: <reason>` — there was nothing to look at.
 - `pending: <what is outstanding>` — the work is done and something genuinely
   needs a person who has not got to it yet. **This still fails the check**, and
@@ -219,10 +242,15 @@ looked. Claude never signs this line on someone else's behalf. Three valid state
   than reaching for `n/a` to get green — an `n/a` over a real outstanding item is
   a false assurance about the one thing you could not verify.
 
+`n/a:` and `pending:` take **no `Date:` segment** — there is no date to record, so
+write the line and stop. A trailing `Date: —` is accepted too, since existing
+plans use it. A bare *name* with no date is still rejected, which is what stops an
+empty signature quietly passing.
+
 A red `test-plan` that says what it is waiting for is a red people act on. An
 illegible one is a red people learn to ignore.
 
-- [ ] Every item in the manual list was checked by a person, or the list is empty
+- [ ] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the plan may tick this** and write `n/a: <reason>` on the signature below — there is nothing for a person to look at, so nothing is being signed for. If the list is not empty, only the person who looked may tick it
 
 Manual verification by: <name>  Date: <yyyy-mm-dd>
 
