@@ -2932,3 +2932,15 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   PDF on the backlog would be next) should follow the same rule, and should
   check the output by opening the rendered PDF — both bugs shipped because
   the JSX read correctly.
+
+- **The summary PDF embeds Drive's thumbnail of the profile photo, not the
+  original (2026-09-24):** the PDF only ever took the uploaded original, and
+  only a JPEG/PNG under 4 MB — so a HEIC from an iPhone, or an ordinary
+  camera JPEG over 4 MB, produced a PDF with no photo and no trace of why.
+  `DriveClient.downloadThumbnail()` fetches Drive's own rendition at 480px
+  (Drive renders HEIC and serves JPEG; ~400dpi at the printed 84pt), asking
+  for JPEG/PNG explicitly since googleusercontent otherwise may answer WebP.
+  The original remains the fallback for a file Drive has not thumbnailed yet,
+  and when neither can be embedded the reason goes to the Worker log. This
+  is the one place the app reads a thumbnail: the on-screen photo proxy still
+  serves originals, deliberately (see the Drive throttling entry).

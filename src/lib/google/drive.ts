@@ -141,6 +141,7 @@ export type DriveFile = {
   mimeType?: string;
   createdTime?: string;
   parents?: string[];
+  thumbnailLink?: string;
 };
 
 export type DriveDownload = {
@@ -317,6 +318,39 @@ export class DriveClient {
     const res = await this.request(
       `${DRIVE_API}/files/${encodeURIComponent(fileId)}?alt=media`,
     );
+    return {
+      contentType: res.headers.get("content-type") || "application/octet-stream",
+      body: await res.arrayBuffer(),
+    };
+  }
+
+  /**
+   * Drive's own rendition of an image, scaled so its longer side is `size`
+   * pixels. Drive renders these for formats nothing else here can read
+   * (HEIC from phones) and serves them as JPEG, so this is the way to get a
+   * small, embeddable copy of any photo. Null when Drive has no thumbnail
+   * for the file (not yet generated, or not an image).
+   *
+   * `thumbnailLink` is a short-lived googleusercontent.com URL ending in a
+   * size suffix (`=s220`); the suffix is rewritten to ask for `size`.
+   * It is tried with this client's token first and then bare, since for
+   * some files the link is pre-signed and for others it wants the token.
+   */
+  async downloadThumbnail(fileId: string, size: number): Promise<DriveDownload | null> {
+    const { thumbnailLink } = await this.getFile(fileId, "thumbnailLink");
+    if (!thumbnailLink) return null;
+    const url = thumbnailLink.replace(/=sd+$/, `=s${size}`);
+    // Without an Accept header googleusercontent may answer with WebP,
+    // which the PDF renderer can't embed.
+    const accept = { Accept: "image/jpeg,image/png" };
+
+    let res = await fetch(url, {
+      headers: { ...accept, Authorization: `Bearer ${await getAccessToken()}` },
+    });
+    if (!res.ok) res = await fetch(url, { headers: accept });
+    if (!res.ok) {
+      throw new DriveApiError(`Drive thumbnail for ${fileId} failed: ${res.status}`, res.status);
+    }
     return {
       contentType: res.headers.get("content-type") || "application/octet-stream",
       body: await res.arrayBuffer(),

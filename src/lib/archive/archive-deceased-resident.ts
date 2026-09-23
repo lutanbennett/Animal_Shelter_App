@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
+  type DriveClient,
   getDriveClient,
   moveResidentFolderToDeceasedArchive,
   upsertGeneratedFile,
@@ -43,6 +44,13 @@ const MAX_EMBEDDED_PHOTO_BYTES = 4 * 1024 * 1024;
 /** @react-pdf can only embed these. HEIC photos from phones can't go in. */
 const EMBEDDABLE_IMAGE_TYPES = new Set(["image/jpeg", "image/png"]);
 
+/**
+ * Longer side, in pixels, of the Drive thumbnail put in the PDF. The photo
+ * prints at 84pt (about 1.2in), so this is roughly 400dpi — sharp on paper,
+ * and tens of kilobytes rather than a phone camera's several megabytes.
+ */
+const PDF_PHOTO_SIZE = 480;
+
 function toBase64(bytes: ArrayBuffer): string {
   const view = new Uint8Array(bytes);
   let binary = "";
@@ -52,6 +60,53 @@ function toBase64(bytes: ArrayBuffer): string {
     binary += String.fromCharCode(...view.subarray(i, i + CHUNK));
   }
   return btoa(binary);
+}
+
+/**
+ * The profile photo as a data URI the PDF can embed, or null.
+ *
+ * A photo in the PDF makes it a record of the resident rather than a form,
+ * but it is never worth failing the archive over, so every problem here
+ * ends in null and the summary renders without it. Drive's JPEG thumbnail
+ * is tried first: the original is often a HEIC or a multi-megabyte camera
+ * JPEG, and taking only the original is why archives went out with no
+ * photo. The original is the fallback, for a file Drive has not made a
+ * thumbnail of yet. Why a photo was left out is logged, because a PDF with
+ * no photo looks exactly like one whose resident never had one.
+ */
+async function loadProfilePhoto(
+  drive: DriveClient,
+  residentId: string,
+  fileId: string,
+): Promise<string | null> {
+  const reasons: string[] = [];
+  const attempts: [string, () => Promise<{ contentType: string; body: ArrayBuffer } | null>][] = [
+    ["thumbnail", () => drive.downloadThumbnail(fileId, PDF_PHOTO_SIZE)],
+    ["original", () => drive.downloadFile(fileId)],
+  ];
+  for (const [label, load] of attempts) {
+    try {
+      const photo = await load();
+      if (!photo) {
+        reasons.push(`${label}: none`);
+        continue;
+      }
+      const type = photo.contentType.split(";")[0].trim();
+      if (!EMBEDDABLE_IMAGE_TYPES.has(type)) {
+        reasons.push(`${label}: ${type} can't be embedded`);
+      } else if (photo.body.byteLength > MAX_EMBEDDED_PHOTO_BYTES) {
+        reasons.push(`${label}: ${photo.body.byteLength} bytes is too large`);
+      } else {
+        return `data:${type};base64,${toBase64(photo.body)}`;
+      }
+    } catch (error) {
+      reasons.push(`${label}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  console.warn(
+    `archiveDeceasedResident(${residentId}): summary PDF has no photo — ${reasons.join("; ")}`,
+  );
+  return null;
 }
 
 export async function archiveDeceasedResident(
@@ -88,24 +143,9 @@ export async function archiveDeceasedResident(
     const { residentFolderId, alreadyArchived } =
       await moveResidentFolderToDeceasedArchive(drive, resident);
 
-    // A photo in the PDF makes it a record of the resident rather than a form.
-    // Never worth failing the archive over, so any problem fetching it is
-    // swallowed and the summary renders without it.
-    let profilePhotoDataUri: string | null = null;
-    if (resident.profile_photo_drive_file_id) {
-      try {
-        const photo = await drive.downloadFile(resident.profile_photo_drive_file_id);
-        const type = photo.contentType.split(";")[0].trim();
-        if (
-          EMBEDDABLE_IMAGE_TYPES.has(type) &&
-          photo.body.byteLength <= MAX_EMBEDDED_PHOTO_BYTES
-        ) {
-          profilePhotoDataUri = `data:${type};base64,${toBase64(photo.body)}`;
-        }
-      } catch {
-        profilePhotoDataUri = null;
-      }
-    }
+    const profilePhotoDataUri = resident.profile_photo_drive_file_id
+      ? await loadProfilePhoto(drive, residentId, resident.profile_photo_drive_file_id)
+      : null;
 
     const pdfName = summaryPdfFileName(record);
     const pdfBytes = await renderResidentSummaryPdf(record, { profilePhotoDataUri });
