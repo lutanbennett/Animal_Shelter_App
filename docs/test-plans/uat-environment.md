@@ -31,7 +31,7 @@ or `n/a` with the reason.
 - [x] `npm run typecheck` — clean (exit 0)
 - [x] `npm run lint` — clean (exit 0)
 - [x] `npm run build` — succeeds (exit 0, captured to a log, not through a pipe; typecheck, lint and build all re-run after the second sync)
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: `check` and `test-plan` both passed at `6d0f2cc` (the earlier red was `test-plan` alone, while the manual sign-off was pending)
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -146,7 +146,7 @@ Manual verification by: Lutan Bennett (reviewed the Dev / UAT badge screenshots 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [ ] Checklist pasted into the PR — n/a: the PR links this file, which is the checklist
 - [ ] Handed to the production release manager — n/a: not yet — after the PR is open
 
 Result: pass with accepted defects
