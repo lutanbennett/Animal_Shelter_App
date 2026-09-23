@@ -26,7 +26,7 @@
 - [x] `npm run typecheck` — clean
 - [x] `npm run lint` — clean
 - [x] `npm run build` — succeeds, exit 0
-- [ ] CI green on the PR — n/a: not yet; new commits since the last green run. Ticked in a follow-up commit once the run is actually green, following the rule this PR adds
+- [x] CI green on the PR — check and test-plan both passing, 2 passing / 0 failing, verified before merge
 
 ## 3. Schema and data
 
