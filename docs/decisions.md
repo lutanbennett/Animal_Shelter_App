@@ -2319,3 +2319,17 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   check once the process has visibly bedded in. Recorded because a red
   non-blocking check looks exactly like a misconfiguration to anyone who finds it
   later, and it is not one.
+
+- **Release smoke list lives outside `docs/test-plans/` (2026-09-23):**
+  `docs/release-smoke-test.md` is run once per production release and copied to
+  `docs/releases/<date>.md`, deliberately *not* under `docs/test-plans/`, which
+  is what `scripts/check-test-plan.mjs` enforces. The checker matches
+  `docs/test-plans/**`, so a release record filed there would have satisfied a
+  feature PR's gate without any feature having been verified. Two different
+  jobs: the per-feature checklist proves one change works in isolation, the
+  smoke list proves the app as a whole still works after several changes land
+  together — `main` took four merges on 2026-09-23 alone, and no per-feature
+  gate can catch two features interacting badly. The smoke list is kept under
+  ten minutes on purpose; depth belongs in the feature checklist, because a
+  release ritual that takes an hour is one that gets skipped on the day it
+  matters.
