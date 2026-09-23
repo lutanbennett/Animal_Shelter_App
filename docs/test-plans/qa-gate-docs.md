@@ -141,9 +141,9 @@ Automated checks by: Claude (release manager session)  Date: 2026-09-23
 
 ### Manual verification
 
-- [ ] Every item in the manual list was checked by a person, or the list is empty — n/a: not yet done. Two items above need Lutan's eyes, both about whether the wording matches his own decisions
+- [x] Every item in the manual list was checked by a person, or the list is empty
 
-Manual verification by: pending — awaiting Lutan on the two items above: whether the CLAUDE.md "Testing" wording matches his rulings, and whether the branch-protection parenthetical should stay  Date: pending
+Manual verification by: Lutan Bennett — confirmed the Testing wording in chat with one change (a manual signature may be written for someone who has looked and asks for it), and ruled the branch-protection note stale (`main` had no protection when checked 2026-09-23), so it was removed; line written by Claude at their request  Date: 2026-09-23
 
 ### Result
 

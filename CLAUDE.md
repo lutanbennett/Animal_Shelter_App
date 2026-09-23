@@ -100,7 +100,9 @@ before pushing.
   *Manual verification by* is signed **only by the person who looked**, or
   `n/a: <reason>` where there was nothing to look at, and a **Left for
   manual verification** table makes the handover concrete. Claude never
-  signs that line on someone's behalf. A signature that does not
+  signs that line on someone's behalf unless that person has looked and
+  explicitly asks in chat, and the line then says so (ruled 2026-09-23).
+  A signature that does not
   correspond to someone having looked is worse than none: it turns an
   unknown into a false assurance, and it is the first artifact anyone
   reaches for when something has gone wrong.
@@ -115,8 +117,7 @@ before pushing.
   `test-plan` as noise either. Promoting it to a required check in branch
   protection is the user's call and no session's to make; if you find
   protection already requiring it, say so rather than assuming it was
-  intended (it was found enabled on 2026-09-23 with `enforce_admins:
-  false`, which nobody had asked for and no session admitted to).
+  intended.
 - **Because it does not block, a PR can reach `main` unchecked.** Closing
   that is release-time work: before any production deploy, confirm by hand
   that every PR in the release has a completed checklist and stop if one
