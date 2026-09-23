@@ -90,8 +90,8 @@ const manual: Manual = {
           title: "Finding your way around",
           steps: [
             "On a computer the menu is always visible down the left: Residents, Enclosures, Maintenance, Projects, Vets, Contacts and — depending on your role — Management and Admin. Those last two are folded up when you sign in: tap the ⌄ beside the name to see what is under it, or the name itself to open that section's front page. A section you are already in is always open.",
-            "Under a dividing line at the very bottom of the menu sit the things you only need now and then, so they are always in the same place: this manual, Change password and — for admins — Security, where accounts and roles are managed.",
-            "On a phone tap the ☰ button at the top left to open the same menu; tap outside it to close. The same three are the last entries in it, below the same line.",
+            "Under a dividing line at the very bottom of the menu sit the things you only need now and then, so they are always in the same place: this manual, Release notes, Change password and — for admins — Security, where accounts and roles are managed.",
+            "On a phone tap the ☰ button at the top left to open the same menu; tap outside it to close. The same links are the last entries in it, below the same line.",
             "The LCA logo and your email are in the header, with the language switch and Sign out. Tap the logo to see the public website as a visitor does — it opens in a new tab so you don't lose your place.",
           ],
           screenshot: {
@@ -100,6 +100,24 @@ const manual: Manual = {
             caption: "The menu on a phone. On a computer the same links sit in a sidebar.",
             mobile: true,
           },
+        },
+        {
+          id: "release-notes",
+          title: "What changed: release notes",
+          path: "Release notes (bottom of the menu)",
+          intro:
+            "Every update to the system is listed on the Release notes page, newest at the top, in plain words: what you will notice, not how it was built. Everyone who can sign in can read it.",
+          steps: [
+            "Open Release notes from the bottom of the menu.",
+            "Each release shows its number, the date it was prepared and the environment you are looking at. A Major badge marks a release worth reading before you carry on working.",
+            "Admins also get each major release by email. The subject starts with [UAT] or [Production], so a test release is never mistaken for a live one.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "The first entry, 0.0.1 “Current Baseline Build”, is where the record starts: it stands for everything the system did on 23 September 2026. Changes are listed from there on.",
+            },
+          ],
         },
         {
           id: "assistant",
@@ -794,6 +812,37 @@ const manual: Manual = {
           screenshot: {
             src: "/manual/management-diets.png",
             alt: "The diets management page with the forecast and cost columns",
+          },
+        },
+        {
+          id: "cashflow",
+          title: "The cashflow forecast",
+          roles: ["admin", "management"],
+          path: "Management → Cashflow",
+          intro:
+            "Food, medication, vaccinations, vet visits and maintenance are each forecast on their own page in their own unit. This is the one page where they add up, in baht.",
+          steps: [
+            "Pick a window: Next 30 days or Next 90 days, or enter From and To dates for any period up to a year.",
+            "The three cards are the window's total, the average month, and how many items still have no price. Below them, a stacked column — one column per month, one colour per category — and the table it is drawn from.",
+            "Tap a category name to take it out of the chart, the table and the totals; tap it again to bring it back.",
+            "A category with items but no prices reads “not priced yet” rather than ฿0, and the “Not priced yet” row links straight to the page where that price is entered. A figure with a small orange +3 beside it means three more items that month have no price, so the real cost is higher.",
+            "Under each category name is where its figure came from: priced (a price someone entered, times what the records imply), estimated (a stand-in — a maintenance job's estimated cost, or the typical vet visit) or invoiced (every visit that month already has its real cost).",
+          ],
+          callouts: [
+            {
+              kind: "warning",
+              text: "This is not a budget. It is only what the shelter's own records imply it is committed to spending — no donations or other income, no salaries, no rent, no utilities. Treat it as a floor under the month, not the whole picture.",
+            },
+            {
+              kind: "note",
+              text: "Vet visits that are booked but not yet invoiced are costed at one flat “typical vet visit” figure, set on Admin → Website. A visit that already has its real cost recorded uses that instead. If the figure is blank, booked visits are not costed at all and the page says so.",
+            },
+          ],
+          screenshot: {
+            src: "/manual/management-cashflow.png",
+            alt: "The cashflow forecast page with the stacked column chart and the table below it",
+            caption:
+              "One column per month, one colour per category. The table below is the same figures, with a link to fix anything still unpriced.",
           },
         },
         {

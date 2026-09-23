@@ -155,8 +155,24 @@ for (const file of changed) {
       }
       continue; // An n/a signature carries no date.
     }
+
+    // `pending: <what is outstanding>` is a real state, distinct from a badly
+    // filled-in plan: the work is done and something genuinely needs a person.
+    // It still fails — nobody has looked yet — but it says so in those words, so
+    // a red check stays legible instead of looking like sloppiness. An illegible
+    // red is one people learn to ignore.
+    if (/^pending\b/i.test(who)) {
+      const p = who.match(/^pending\s*[:\-—]\s*(.+)$/i);
+      if (!p || p[1].trim().length < 3) {
+        note(file, 0, `\`${label}:\` is pending with no detail — say what is outstanding`);
+      } else {
+        note(file, 0, `awaiting ${label.toLowerCase()}: ${p[1].trim()}`);
+      }
+      continue; // Pending carries no date.
+    }
+
     if (who.length < 2 || /^_+$/.test(who)) {
-      note(file, 0, `\`${label}:\` is empty — say who did this, or \`n/a: <reason>\``);
+      note(file, 0, `\`${label}:\` is empty — say who did this, \`n/a: <reason>\`, or \`pending: <what is outstanding>\``);
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(when)) {
       note(file, 0, `\`${label}\` date must be yyyy-mm-dd — got "${when}"`);

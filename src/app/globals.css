@@ -22,6 +22,25 @@
   /* Board colours for the maintenance Kanban: in-progress and blocked. */
   --info: #0a84ff;
   --warning: #ffd60a;
+
+  /* Cashflow forecast series, one per category, in stack order. Their own
+     tokens rather than the status colours for two reasons: --danger and
+     --warning mean "something is wrong" everywhere else in the app and
+     must not quietly become "series 4"; and --primary is orange in
+     production but teal on dev/test (below), so a chart built on it would
+     change what each category looks like between two tabs.
+
+     Defined once here and deliberately not overridden by the dev theme, so
+     a colour always means the same category. Checked against both surfaces
+     (#121212 and dev's #0e1615) for lightness, chroma, contrast and
+     colour-blind separation in this adjacent order — worst adjacent pair
+     is ΔE 8.4 under protanopia, 19.3 with normal vision. Re-check if the
+     order changes: adjacency is what was measured. */
+  --series-food: #3987e5;
+  --series-medication: #d95926;
+  --series-immunization: #199e70;
+  --series-vet: #c98500;
+  --series-maintenance: #d55181;
 }
 
 /* Dev and Test (the dev database) wear teal instead of the production
