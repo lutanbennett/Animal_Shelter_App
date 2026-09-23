@@ -100,27 +100,34 @@ these values.
 
 ### 2b. DNS in Cloudflare
 
-Resend lists three or four records. As of this writing they are all on
-subdomains:
+Choose **Manual setup** to see the records before anything changes. What
+Resend asked for on 2026-09-23 (done, and live within minutes):
 
 | Type | Name | Value | Notes |
 |---|---|---|---|
-| MX | `send` | `feedback-smtp.<region>.amazonses.com`, priority 10 | Bounces. **On `send.lannacare.org`, not the root**, so Email Routing's MX is untouched |
-| TXT | `send` | `v=spf1 include:amazonses.com ~all` | SPF for `send.` only. The root SPF record stays as it is |
-| TXT | `resend._domainkey` | the DKIM key Resend shows | |
-| TXT | `_dmarc` | *(optional in Resend)* | Optional. There is no DMARC record today, so adding Resend's is safe, but only ever one `_dmarc` record |
+| TXT | `resend._domainkey` | the DKIM key Resend shows (`p=MIGfMA…`) | |
+| CNAME | `send` | `send.forge.rmta.net` | SPF and bounces, delegated to Resend. DNS only (grey cloud) |
+| CNAME | `rsend` | `rsend.forge.rmta.net` | as above |
+| TXT | `_dmarc` | `v=DMARC1; p=none;` *(optional)* | not added for `lannacare.org`. Safe to add, but only ever one `_dmarc` record |
 
-Copy the exact values from Resend's screen, not from this table. Add each
-record in Cloudflare → `lannacare.org` → **DNS** → **Add record**, with the
-proxy **off** (grey cloud) and TTL Auto. Then press **Verify** in Resend.
+All of them are on subdomains, so the root MX that Email Routing uses and the
+root SPF record are untouched. Once the manual view shows the records, Resend's
+**Auto configure / Go to Cloudflare** adds them through a Cloudflare consent
+screen that lists them, which avoids copy mistakes with the DKIM key. Or add
+each one by hand in Cloudflare → `lannacare.org` → **DNS** → **Add record**,
+proxy **off**, TTL Auto. Then press **Verify** in Resend.
+
+**Leave "Enable Receiving" off.** Receiving would want the root MX, which is
+what forwards `lannacare.org` mail to Gmail.
 
 **If Resend asks for an MX on the root (`@`) rather than on `send`, stop.**
 That would take mail away from Email Routing's catch-all.
 
 ### 2c. An SMTP key
 
-Resend → **API Keys** → **Create API key**, permission *Sending access*,
-domain `lannacare.org`. You see it once, and it goes straight into the
+Resend → **API Keys** → **Create API key**, permission *Sending access*.
+Until the domain verifies, the Domain list offers only *All domains*. That's
+equivalent here, because the free account holds one domain. You see it once, and it goes straight into the
 Supabase field below. It doesn't belong in any file in this repo.
 
 ### 2d. Supabase: which fields go where
@@ -147,7 +154,7 @@ number (e.g. 30/hour). The **Reset password** template under **Emails** →
 The dev project (`qxkmhwybjggxvsfxsxbd`) can keep Supabase's built-in mailer.
 It is rate-limited but real, and dev has no users outside the team.
 
-### 2e. Test it
+### 2e. Test it (passed 2026-09-23: Lutan received the reset mail)
 
 1. Sign out of `lannacare.org`, then open **Forgot password?** and enter an
    address that has a login and that you can read.
