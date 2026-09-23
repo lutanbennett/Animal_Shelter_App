@@ -63,7 +63,8 @@ function tryGit(args, opts = {}) {
 }
 
 function run(cmd, args, cwd) {
-  const r = spawnSync(cmd, args, { cwd, stdio: "inherit", shell: WINDOWS });
+  // npm is a .cmd shim on Windows and needs a shell; git does not.
+  const r = spawnSync(cmd, args, { cwd, stdio: "inherit", shell: WINDOWS && cmd === "npm" });
   if (r.status !== 0) fail(`${cmd} ${args.join(" ")} exited with ${r.status}`);
 }
 
