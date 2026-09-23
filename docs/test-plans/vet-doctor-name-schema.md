@@ -26,7 +26,7 @@
 - [x] `npm run typecheck` — clean (exit 0)
 - [x] `npm run lint` — clean (exit 0)
 - [x] `npm run build` — succeeds (exit 0)
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — `check` and `test-plan` both pass on #76 (run 35904966047)
 
 ## 3. Schema and data
 
