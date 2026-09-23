@@ -5,6 +5,7 @@ import { assertAdminRole } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { isSitePageSlug, type SitePageSlug } from "@/lib/site/pages";
+import { parseBahtAmount } from "@/lib/format";
 import {
   findOrCreateFolder,
   getDriveClient,
@@ -102,6 +103,49 @@ export async function updateSiteContent(
 
   revalidateWebsitePages();
   const { t } = await getT();
+  return { success: t.common.saved };
+}
+
+/**
+ * The typical-vet-visit estimate (0071) — the flat figure the cashflow
+ * forecast stands in for a booked-but-not-yet-invoiced visit. Its own
+ * action rather than a field on updateSiteContent: it is an operational
+ * number, not website copy, and only the forecast reads it, so saving it
+ * has no reason to revalidate every public page.
+ *
+ * Blank clears it back to "not priced yet", which the forecast shows as a
+ * gap. A zero would read as "vet visits are free".
+ */
+export async function updateVetVisitEstimate(
+  _state: SiteContentFormState,
+  formData: FormData,
+): Promise<SiteContentFormState> {
+  await assertAdminRole();
+  const { t } = await getT();
+
+  const estimate = parseBahtAmount(formData.get("vetVisitEstimate") as string | null);
+  if (!estimate.ok) return { error: t.admin.website.vetVisit.invalid };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { error } = await supabase
+    .from("site_content")
+    .update({
+      vet_visit_estimate: estimate.value,
+      updated_at: new Date().toISOString(),
+      updated_by: user?.id ?? null,
+    })
+    .eq("id", true);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/admin/website");
+  // The forecast page reads this figure (next branch); it is not on any
+  // public page, so revalidateWebsitePages() is deliberately not called.
+  revalidatePath("/management/cashflow");
   return { success: t.common.saved };
 }
 

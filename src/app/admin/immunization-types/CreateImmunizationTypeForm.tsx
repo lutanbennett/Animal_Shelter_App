@@ -47,6 +47,24 @@ export function CreateImmunizationTypeForm() {
           {t.admin.immunizationTypes.createForm.intervalHint}
         </span>
       </div>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="cost" className="text-sm font-medium text-muted">
+          {t.admin.immunizationTypes.createForm.cost}
+        </label>
+        <input
+          id="cost"
+          name="cost"
+          type="number"
+          min={0}
+          step="0.01"
+          inputMode="decimal"
+          placeholder={t.admin.immunizationTypes.createForm.costPlaceholder}
+          className="w-40 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+        />
+        <span className="text-xs text-muted">
+          {t.admin.immunizationTypes.createForm.costHint}
+        </span>
+      </div>
       <label className="flex items-center gap-2 pb-2 text-sm text-muted">
         <input
           type="checkbox"

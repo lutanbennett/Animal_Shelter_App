@@ -12,11 +12,18 @@ export default async function ImmunizationTypesPage() {
   const { t } = await getT();
 
   const supabase = await createClient();
+  // cost is numeric(12, 2); PostgREST normally sends a JSON number but can
+  // send a string, so it is normalised once here.
   const { data, error } = await supabase
     .from("immunization_types")
-    .select("id, name, is_mandatory, interval_months")
+    .select("id, name, is_mandatory, interval_months, cost")
     .order("name")
-    .returns<ImmunizationTypeRow[]>();
+    .returns<(Omit<ImmunizationTypeRow, "cost"> & { cost: number | string | null })[]>();
+
+  const immunizationTypes: ImmunizationTypeRow[] = (data ?? []).map((row) => ({
+    ...row,
+    cost: row.cost == null ? null : Number(row.cost),
+  }));
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
@@ -36,7 +43,7 @@ export default async function ImmunizationTypesPage() {
       )}
 
       <CreateImmunizationTypeForm />
-      <ImmunizationTypesTable immunizationTypes={data ?? []} />
+      <ImmunizationTypesTable immunizationTypes={immunizationTypes} />
     </main>
   );
 }

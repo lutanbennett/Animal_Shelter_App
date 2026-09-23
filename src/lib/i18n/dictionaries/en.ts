@@ -387,6 +387,9 @@ const en = {
         intervalMonths: "Repeat every (months)",
         intervalPlaceholder: "e.g. 24",
         intervalHint: "Blank = one-off, no due date",
+        cost: "Cost per dose",
+        costPlaceholder: "e.g. 250",
+        costHint: "Baht for one dose. Blank = not priced yet.",
         mandatory: "Mandatory",
         addButton: "Add immunization type",
       },
@@ -394,6 +397,9 @@ const en = {
         name: "Name",
         status: "Status",
         repeatInterval: "Repeat interval",
+        cost: "Cost per dose",
+        costPlaceholder: "Baht",
+        notPricedYet: "Not priced yet",
         mandatory: "Mandatory",
         optional: "Optional",
         everyMonths: (months: number) => `Every ${months} mo`,
@@ -407,6 +413,7 @@ const en = {
       errors: {
         nameRequired: "Name is required.",
         intervalPositive: "Repeat interval must be a positive number of months.",
+        costInvalid: "Cost must be a number of baht, 0 or more. Leave it blank if it isn't priced yet.",
         invalidInterval: "Invalid interval.",
       },
     },
@@ -517,6 +524,17 @@ const en = {
         contactAddress: "Address",
         contactMapUrl: "Map link",
         contactMapUrlHint: "A Google Maps link; the address in the footer opens it.",
+      },
+      vetVisit: {
+        heading: "Typical vet visit",
+        subtitle:
+          "What one vet visit usually costs. The cashflow forecast uses this for visits that are booked but not yet invoiced; once a real invoice is recorded against a visit, that figure is used instead. Not shown anywhere on the public website.",
+        label: "Cost per visit",
+        placeholder: "e.g. 800",
+        hint:
+          "Leave it blank if you would rather not guess — the forecast then shows vet visits as \"not priced yet\" instead of counting them as free. One figure for every vet: there isn't enough invoice history yet for a per-vet average to mean much.",
+        invalid:
+          "The estimate must be a number of baht, 0 or more. Leave it blank if you don't want one.",
       },
       pages: {
         heading: "Pages",
@@ -791,6 +809,9 @@ const en = {
         namePlaceholder: "e.g. Amoxicillin 250mg tablet",
         unit: "Unit",
         unitHint: "What one dose is measured in. Tablet vs suspension = two medications.",
+        cost: "Cost per unit",
+        costPlaceholder: "e.g. 2.50",
+        costHint: "Baht for one unit, not one pack. Blank = not priced yet.",
         addButton: "Add medication",
       },
       frequencyForm: {
@@ -803,6 +824,10 @@ const en = {
       table: {
         name: "Name",
         unit: "Unit",
+        cost: "Cost per unit",
+        costPlaceholder: "Baht",
+        costPerUnit: (amount: string, unit: string) => `${amount} / ${unit}`,
+        notPricedYet: "Not priced yet",
         forecastHeading: (days: number) => `Next ${days} days`,
         forecastQuantity: (quantity: number, unit: string) => `${quantity} ${unit}`,
         forecastDetail: (doses: number, residents: number) =>
@@ -845,6 +870,8 @@ const en = {
         nameRequired: "Name is required.",
         unitInvalid: "Choose a unit.",
         labelRequired: "Label is required.",
+        costInvalid:
+          "Cost must be a number of baht, 0 or more. Leave it blank if it isn't priced yet.",
         hasPrescriptions: (n: number) =>
           `This medication is on ${n} prescription${n === 1 ? "" : "s"} and can't be deleted — prescriptions are part of the residents' medical records. Merge it into another medication instead.`,
         frequencyHasPrescriptions: (n: number) =>

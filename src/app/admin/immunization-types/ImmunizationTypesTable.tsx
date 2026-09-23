@@ -3,12 +3,15 @@
 import { Fragment, useState, useTransition } from "react";
 import { deleteImmunizationType, updateImmunizationType } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { formatBahtPrice, parseBahtAmount } from "@/lib/format";
 
 export type ImmunizationTypeRow = {
   id: string;
   name: string;
   is_mandatory: boolean;
   interval_months: number | null;
+  /** Baht for one dose (0071). Null means nobody has priced it yet. */
+  cost: number | null;
 };
 
 function ImmunizationTypeRowItem({
@@ -16,12 +19,13 @@ function ImmunizationTypeRowItem({
 }: {
   immunizationType: ImmunizationTypeRow;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [name, setName] = useState(immunizationType.name);
   const [isMandatory, setIsMandatory] = useState(immunizationType.is_mandatory);
   const [intervalMonths, setIntervalMonths] = useState(
     immunizationType.interval_months?.toString() ?? "",
   );
+  const [cost, setCost] = useState(immunizationType.cost?.toString() ?? "");
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState<
     { type: "error" | "success"; text: string } | null
@@ -41,12 +45,23 @@ function ImmunizationTypeRowItem({
       });
       return;
     }
+    // Blank is a real answer (not priced yet); a bad number is not, and
+    // must never reach the cashflow forecast as a zero.
+    const parsedCost = parseBahtAmount(cost);
+    if (!parsedCost.ok) {
+      setMessage({
+        type: "error",
+        text: t.admin.immunizationTypes.errors.costInvalid,
+      });
+      return;
+    }
     startTransition(async () => {
       try {
         await updateImmunizationType(immunizationType.id, {
           name,
           isMandatory,
           intervalMonths: parsedInterval,
+          cost: parsedCost.value,
         });
         setEditing(false);
         setMessage({ type: "success", text: t.common.saved });
@@ -129,6 +144,31 @@ function ImmunizationTypeRowItem({
           )}
         </td>
         <td className="px-4 py-2">
+          {editing ? (
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              inputMode="decimal"
+              placeholder={t.admin.immunizationTypes.table.costPlaceholder}
+              aria-label={t.admin.immunizationTypes.table.cost}
+              value={cost}
+              onChange={(e) => setCost(e.target.value)}
+              className="w-28 rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary"
+            />
+          ) : immunizationType.cost == null ? (
+            // Never "฿0" — an unpriced vaccine is a gap in the cashflow
+            // forecast, which counts these rows rather than adding a zero.
+            <span className="text-muted">
+              {t.admin.immunizationTypes.table.notPricedYet}
+            </span>
+          ) : (
+            <span className="text-foreground">
+              {formatBahtPrice(immunizationType.cost, locale)}
+            </span>
+          )}
+        </td>
+        <td className="px-4 py-2">
           <div className="flex items-center gap-2">
             {editing ? (
               <>
@@ -150,6 +190,7 @@ function ImmunizationTypeRowItem({
                     setIntervalMonths(
                       immunizationType.interval_months?.toString() ?? "",
                     );
+                    setCost(immunizationType.cost?.toString() ?? "");
                   }}
                   className="rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover"
                 >
@@ -179,7 +220,7 @@ function ImmunizationTypeRowItem({
       {message && (
         <tr>
           <td
-            colSpan={4}
+            colSpan={5}
             className={`px-4 pb-2 text-xs ${
               message.type === "error" ? "text-danger" : "text-success"
             }`}
@@ -213,6 +254,9 @@ export function ImmunizationTypesTable({
             <th className="px-4 py-2 font-medium">
               {t.admin.immunizationTypes.table.repeatInterval}
             </th>
+            <th className="px-4 py-2 font-medium">
+              {t.admin.immunizationTypes.table.cost}
+            </th>
             <th className="px-4 py-2 font-medium" />
           </tr>
         </thead>
@@ -225,7 +269,7 @@ export function ImmunizationTypesTable({
           ))}
           {immunizationTypes.length === 0 && (
             <tr>
-              <td colSpan={4} className="px-4 py-6 text-center text-muted">
+              <td colSpan={5} className="px-4 py-6 text-center text-muted">
                 {t.admin.immunizationTypes.table.noTypes}
               </td>
             </tr>

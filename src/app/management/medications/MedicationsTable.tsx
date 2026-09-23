@@ -3,12 +3,15 @@
 import { Fragment, useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { DOSE_UNITS, doseUnitLabel } from "@/lib/i18n/enum-labels";
+import { formatBahtPrice, parseBahtAmount } from "@/lib/format";
 import { deleteMedication, mergeMedication, updateMedication } from "./actions";
 
 export type MedicationRow = {
   id: string;
   name: string;
   dose_unit: string;
+  /** Baht per one dose_unit (0071). Null means nobody has priced it yet. */
+  cost_per_unit: number | null;
   /** Every prescription ever written for it — any at all blocks delete. */
   prescription_count: number;
   /**
@@ -33,10 +36,13 @@ function MedicationRowItem({
   /** Other medications with the same unit — the only valid merge targets. */
   mergeTargets: MedicationRow[];
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const m = t.management.medications;
   const [name, setName] = useState(medication.name);
   const [doseUnit, setDoseUnit] = useState(medication.dose_unit);
+  const [costPerUnit, setCostPerUnit] = useState(
+    medication.cost_per_unit?.toString() ?? "",
+  );
   const [mode, setMode] = useState<"view" | "edit" | "merge">("view");
   const [mergeInto, setMergeInto] = useState("");
   const [message, setMessage] = useState<
@@ -47,6 +53,7 @@ function MedicationRowItem({
   function reset() {
     setName(medication.name);
     setDoseUnit(medication.dose_unit);
+    setCostPerUnit(medication.cost_per_unit?.toString() ?? "");
     setMergeInto("");
     setMode("view");
   }
@@ -59,6 +66,13 @@ function MedicationRowItem({
   }
 
   function handleSave() {
+    // Blank is a real answer (not priced yet); a bad number is not, and
+    // must never reach the forecast as a zero.
+    const parsedCost = parseBahtAmount(costPerUnit);
+    if (!parsedCost.ok) {
+      setMessage({ type: "error", text: m.errors.costInvalid });
+      return;
+    }
     // The unit is what every prescription's dose is measured in, so
     // changing it rewrites their meaning (0027). Make that explicit.
     if (doseUnit !== medication.dose_unit && medication.prescription_count > 0) {
@@ -75,7 +89,11 @@ function MedicationRowItem({
     setMessage(null);
     startTransition(async () => {
       try {
-        await updateMedication(medication.id, { name, doseUnit });
+        await updateMedication(medication.id, {
+          name,
+          doseUnit,
+          costPerUnit: parsedCost.value,
+        });
         setMode("view");
         setMessage({ type: "success", text: t.common.saved });
       } catch (err) {
@@ -149,6 +167,32 @@ function MedicationRowItem({
           ) : (
             <span className="text-muted">
               {doseUnitLabel(t, medication.dose_unit)}
+            </span>
+          )}
+        </td>
+        <td className="px-4 py-2">
+          {editing ? (
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              inputMode="decimal"
+              value={costPerUnit}
+              onChange={(e) => setCostPerUnit(e.target.value)}
+              placeholder={m.table.costPlaceholder}
+              aria-label={m.table.cost}
+              className={`${inputClass} min-w-28`}
+            />
+          ) : medication.cost_per_unit == null ? (
+            // Never "฿0" — an unpriced medication is a gap in the cashflow
+            // forecast, and the forecast page counts these rows.
+            <span className="text-muted">{m.table.notPricedYet}</span>
+          ) : (
+            <span className="text-foreground">
+              {m.table.costPerUnit(
+                formatBahtPrice(medication.cost_per_unit, locale),
+                doseUnitLabel(t, medication.dose_unit),
+              )}
             </span>
           )}
         </td>
@@ -267,7 +311,7 @@ function MedicationRowItem({
       </tr>
       {mode === "merge" && (
         <tr>
-          <td colSpan={4 + medication.forecast.length} className="px-4 pb-2 text-xs text-muted">
+          <td colSpan={5 + medication.forecast.length} className="px-4 pb-2 text-xs text-muted">
             {m.merge.hint}
           </td>
         </tr>
@@ -275,7 +319,7 @@ function MedicationRowItem({
       {message && (
         <tr>
           <td
-            colSpan={4 + medication.forecast.length}
+            colSpan={5 + medication.forecast.length}
             className={`px-4 pb-2 text-xs ${
               message.type === "error" ? "text-danger" : "text-success"
             }`}
@@ -306,6 +350,7 @@ export function MedicationsTable({
           <tr>
             <th className="px-4 py-2 font-medium">{m.table.name}</th>
             <th className="px-4 py-2 font-medium">{m.table.unit}</th>
+            <th className="px-4 py-2 font-medium">{m.table.cost}</th>
             {forecastHeadings.map((heading) => (
               <th key={heading} className="px-4 py-2 font-medium">
                 {heading}
@@ -329,7 +374,7 @@ export function MedicationsTable({
           {medications.length === 0 && (
             <tr>
               <td
-                colSpan={4 + forecastHeadings.length}
+                colSpan={5 + forecastHeadings.length}
                 className="px-4 py-6 text-center text-muted"
               >
                 {m.table.noMedications}
