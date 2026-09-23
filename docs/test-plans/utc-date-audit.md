@@ -26,7 +26,7 @@
 - [x] `npm run typecheck` — clean (re-run post-sync)
 - [x] `npm run lint` — clean (re-run post-sync)
 - [x] `npm run build` — succeeds (re-run post-sync, after `npm ci` for the lockfile change)
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — re-run pending after the 2026-09-23 sync. Green at 4112e57 (run 35820560809); ticked again in a follow-up commit once the post-sync run is green, not before
+- [x] CI green on the PR (runs the same three) — post-sync at `b06a59b`: `check` pass (1m28s), `test-plan` pass (7s), run 35872689743. Previously green at `4112e57` (run 35820560809)
 
 ## 3. Schema and data — *skip if no migration*
 
