@@ -358,9 +358,21 @@ Automated checks by: Claude Opus 5  Date: 2026-09-23
 
 ### Manual verification
 
-- [ ] Every item in the manual list was checked by a person, or the list is empty
+- [x] Every item in the manual list was checked by a person — Lutan, on `test.lannacare.org` at `7abc796`
 
-Manual verification by: pending: items 1–4 above — four role checks at the URL directly, a Thai read-through, and two judgement calls on the "Average per month" card and the chart at one or two months. Reported as tested and passing on `test.lannacare.org` (`7abc796`), but relayed through another session — this line is Lutan's to sign, not mine to sign on his behalf.  Date: —
+Items 1–4 tested and passed: the four role checks at the URL directly, the Thai
+read-through, and the two judgement calls. Two enhancements came out of it and
+went to the `backlog` branch as `49713f1` rather than into this PR — making the
+"not priced yet" card clickable, and basing the vet forecast on recent visit
+frequency rather than a flat per-visit estimate.
+
+Written here by the test manager session on Lutan's explicit instruction, with
+his sign-off given to that session directly. The route is stated rather than
+implied, so nobody later reads this as a signature the author witnessed. Note the
+tested build `7abc796` is `main` + this branch + `claude/utc-today`, not this
+branch's tip: test holds one build and tomorrow's UTC check had to survive.
+
+Manual verification by: Lutan (recorded by the test manager session on his instruction)  Date: 2026-09-23
 
 ### Result
 
@@ -368,6 +380,6 @@ Manual verification by: pending: items 1–4 above — four role checks at the U
 - [x] Checklist pasted into the PR — https://github.com/lutanbennett/Animal_Shelter_App/pull/60
 - [ ] Handed to the production release manager — n/a: the handover happens at merge, which is after this checklist is written. The apply plan and the timezone flag above are what the handover consists of.
 
-Result: <pass | pass with accepted defects | fail>
+Result: pass
 
-Release manager acknowledgement: <name>  Date: <yyyy-mm-dd>
+Release manager acknowledgement: pending  Date: pending
