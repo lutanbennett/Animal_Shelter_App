@@ -136,9 +136,11 @@ const added = unreleasedLines(headReleases).filter((l) => !before.has(l));
 const visible = touched.filter((f) => USER_VISIBLE.some((p) => p.test(f)));
 
 // The §7 checklist line that answers "would a shelter user notice this?", found
-// by what it names rather than by its exact wording, so rephrasing it does not
-// silently switch the check off.
-const isReleaseLine = (body) => /`unreleased`/.test(body) && /releases\.ts/.test(body);
+// by its bold label so the rest of the wording can change freely. Matching on
+// what it mentions instead (`unreleased` and releases.ts) caught any other line
+// that talked about the register — the first plan written against this check
+// failed on its own evidence notes.
+const isReleaseLine = (body) => /^\*\*Release notes\.?\*\*/i.test(body.trim());
 let releaseAnswered = false;
 const releaseNa = [];
 
