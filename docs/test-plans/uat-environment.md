@@ -139,9 +139,9 @@ Automated checks by: Claude  Date: 2026-09-23
 
 ### Manual verification
 
-- [ ] Every item in the manual list was checked by a person, or the list is empty — n/a: not yet — Claude has the screenshots; Lutan to confirm item 1
+- [x] Every item in the manual list was checked by a person, or the list is empty
 
-Manual verification by: pending: Lutan to confirm the Dev / UAT badge screenshots (item 1)  Date: —
+Manual verification by: Lutan Bennett (reviewed the Dev / UAT badge screenshots and confirmed in chat; line written by Claude at his request)  Date: 2026-09-23
 
 ### Result
 
