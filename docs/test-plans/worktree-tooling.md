@@ -107,7 +107,7 @@ machine for `list`. Exit codes recorded, not inferred from output.
   - `new wt-install-test` with a real `npm ci` passed the new `.bin/next.cmd` check (exit 0, clean tree), then `done` removed it, `node_modules` included. The failure branch (`.bin` missing) was not provoked.
   - `dev` via the browser pane, `sync`, `list`, `done`, and the help text (`node scripts/worktree.mjs` with no args prints the header up to the imports)
 - [x] Shared files touched: `CLAUDE.md` and `plan-day/SKILL.md` re-read after editing, and the commands they quote were the ones run above
-- [x] Nothing merged from `main` during `sync` was broken: `main`'s only new commits were backlog text; typecheck/lint/build all exit 0 after the merge
+- [x] Nothing merged from `main` during `sync` was broken: the second sync brought #56 (test-plan checker) and #62 (release notes, app code). This branch touches none of their files, the merge was conflict-free, and typecheck/lint/build all exit 0 on the merged tree
 
 ## 7. Documentation
 
