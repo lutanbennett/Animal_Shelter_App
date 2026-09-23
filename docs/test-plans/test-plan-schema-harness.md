@@ -11,7 +11,7 @@
 | PR | opened after this checklist; number recorded in the follow-up commit |
 | Tested by / date | Claude (test manager session) / 2026-09-23 |
 | Carries a migration? | no |
-| Tested at SHA | recorded in the follow-up commit, as on the previous template PR |
+| Tested at SHA | gates run locally at `308afb2`, exit 0 each. The later `sync` merged only a 2-line `docs/backlog.md` change, so they were not re-run over a docs edit; CI covers the merged tip `f95df6d` |
 
 ## 1. Scope and risk
 
@@ -22,11 +22,11 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — branch created from `origin/main` at `ca10680`; nothing to merge
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly at `f95df6d`; the merge brought a 2-line `docs/backlog.md` change and no code
 - [x] `npm run typecheck` — clean
 - [x] `npm run lint` — clean
-- [x] `npm run build` — succeeds
-- [x] CI green on the PR — recorded in the follow-up commit once `check` and `test-plan` both report
+- [x] `npm run build` — succeeds, exit 0
+- [x] CI green on the PR — recorded in the follow-up commit once `check` and `test-plan` both report on the merged tip
 
 ## 3. Schema and data
 
