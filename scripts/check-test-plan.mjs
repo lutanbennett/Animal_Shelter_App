@@ -40,24 +40,24 @@ const awaits = (file, msg) => awaiting.push(`${file} — ${msg}`);
 
 const isPlan = (f) => /^docs\/test-plans\/.+\.md$/.test(f);
 
-let changed = [];
-try {
-  // Committed on this branch...
-  const committed = git(["diff", "--name-only", "--diff-filter=AM", `${base}...HEAD`])
-    .split("\n")
-    .filter(isPlan);
-  // ...plus anything still in the working tree, so running this locally before
-  // committing does not report a false failure. In CI the tree is clean, so this
-  // adds nothing.
-  //
-  // Parsed by matching the status field rather than cutting at a fixed offset.
-  // `git()` trims the whole output, which eats the leading space of porcelain's
-  // ` M path` — but only on the *first* line, so a plan that was modified but
-  // not staged silently vanished while a second entry parsed fine, making it
-  // look intermittent. The failure was the worst available shape: it told
-  // someone who had filled in a plan that they had not, under instructions to
-  // copy the template over it.
-  const working = git(["status", "--porcelain", "--", "docs/test-plans"])
+// Paths where a change is probably something a shelter user would notice: the
+// pages, their components, the manual and translated copy, and the Worker
+// (release mail, scheduled jobs). Deliberately broad — a refactor here gets an
+// `n/a: <reason>` on the release-notes line, which costs a sentence, whereas a
+// user-visible change that slips past leaves the release register quietly
+// untrue. Noisy in the right direction.
+const USER_VISIBLE = [/^src\/app\//, /^src\/components\//, /^src\/lib\/manual\//, /^src\/lib\/i18n\//, /^worker\//];
+const RELEASES = "src/lib/releases.ts";
+
+// Paths in porcelain output, parsed by matching the status field rather than
+// cutting at a fixed offset. `git()` trims the whole output, which eats the
+// leading space of porcelain's ` M path` — but only on the *first* line, so a
+// plan that was modified but not staged silently vanished while a second entry
+// parsed fine, making it look intermittent. The failure was the worst available
+// shape: it told someone who had filled in a plan that they had not, under
+// instructions to copy the template over it.
+const porcelainPaths = (out) =>
+  out
     .split("\n")
     .map((l) => {
       const m = l.match(/^\s*\S{1,2}\s+(.*)$/);
@@ -66,8 +66,24 @@ try {
       const path = m[1].includes(" -> ") ? m[1].split(" -> ").pop() : m[1];
       return path.trim().replace(/^"|"$/g, "");
     })
+    .filter(Boolean);
+
+let changed = [];
+let touched = [];
+try {
+  // Committed on this branch...
+  const committed = git(["diff", "--name-only", "--diff-filter=AM", `${base}...HEAD`])
+    .split("\n")
     .filter(isPlan);
-  changed = [...new Set([...committed, ...working])];
+  // ...plus anything still in the working tree, so running this locally before
+  // committing does not report a false failure. In CI the tree is clean, so this
+  // adds nothing.
+  const working = porcelainPaths(git(["status", "--porcelain"]));
+  changed = [...new Set([...committed, ...working.filter(isPlan)])];
+  // Every path the PR touches, deletions included, for the release-notes check.
+  touched = [
+    ...new Set([...git(["diff", "--name-only", `${base}...HEAD`]).split("\n").filter(Boolean), ...working]),
+  ];
 } catch {
   console.error(
     `check-test-plan: cannot diff against ${base}. Fetch it first ` +
@@ -92,6 +108,39 @@ if (changed.length === 0) {
 }
 
 const RESULTS = ["pass", "pass with accepted defects", "fail"];
+
+// The lines in `unreleased`, read as text rather than imported, because the base
+// side only exists as a blob. Strings are pulled out of the array literal; a
+// file without the declaration (none at the base, or renamed) reads as empty.
+const unreleasedLines = (src) => {
+  const block = src.match(/export const unreleased\b[^=]*=\s*\[([\s\S]*?)\];/);
+  if (!block) return [];
+  return [...block[1].matchAll(/"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|`((?:[^`\\]|\\.)*)`/g)].map(
+    (m) => m[1] ?? m[2] ?? m[3],
+  );
+};
+let baseReleases = "";
+try {
+  baseReleases = git(["show", `${git(["merge-base", base, "HEAD"])}:${RELEASES}`]);
+} catch {
+  // Not on the base: nothing was unreleased there.
+}
+let headReleases = "";
+try {
+  headReleases = readFileSync(RELEASES, "utf8");
+} catch {
+  // Deleted on this branch; every line is gone, none added.
+}
+const before = new Set(unreleasedLines(baseReleases));
+const added = unreleasedLines(headReleases).filter((l) => !before.has(l));
+const visible = touched.filter((f) => USER_VISIBLE.some((p) => p.test(f)));
+
+// The §7 checklist line that answers "would a shelter user notice this?", found
+// by what it names rather than by its exact wording, so rephrasing it does not
+// silently switch the check off.
+const isReleaseLine = (body) => /`unreleased`/.test(body) && /releases\.ts/.test(body);
+let releaseAnswered = false;
+const releaseNa = [];
 
 // A release smoke record is a different document doing a different job, and it
 // belongs in docs/releases/. Filed under docs/test-plans/ it would satisfy a
@@ -162,8 +211,27 @@ for (const file of changed) {
     const box = l.match(/^\s*-\s\[( |x|X)\]\s*(.*)$/);
     if (!box) return;
     boxes += 1;
-    if (box[1] !== " ") return;
     const body = box[2];
+
+    // Release notes: a tick claims `unreleased` gained a line, so it is held to
+    // the diff. An `n/a` is the escape hatch for a change nobody would notice,
+    // and its reason is echoed in the output so a reviewer reads it.
+    if (isReleaseLine(body)) {
+      releaseAnswered = true;
+      if (box[1] !== " " && added.length === 0) {
+        note(
+          file,
+          i + 1,
+          `release-notes line is ticked, but \`unreleased\` in ${RELEASES} gained no line in this PR — ` +
+            "add one written for a shelter user, or untick it and say `n/a: <why nobody would notice>`",
+        );
+        return;
+      }
+      const na = box[1] === " " && body.match(/n\/a\s*[:\-—]\s*(.+)$/i);
+      if (na && na[1].trim().length >= 3) releaseNa.push(`${file}:${i + 1} — ${na[1].trim()}`);
+    }
+
+    if (box[1] !== " ") return;
 
     const na = body.match(/n\/a\s*[:\-—]\s*(.+)$/i);
     if (na) {
@@ -268,6 +336,24 @@ for (const file of changed) {
   }
 }
 
+// The combination that emptied the register before 0.1.0: pages changed, no
+// `unreleased` line, and nobody asked. A plan copied from a template older than
+// the release-notes line has nowhere to answer, so it is asked here instead.
+const shown = visible.slice(0, 3).join(", ") + (visible.length > 3 ? `, +${visible.length - 3} more` : "");
+if (visible.length && added.length === 0 && !releaseAnswered) {
+  note(
+    null,
+    0,
+    `this PR touches ${shown} and adds nothing to \`unreleased\` in ${RELEASES}, and no test plan ` +
+      "has the §7 release-notes line — copy it from docs/test-plan-template.md and tick it with a " +
+      "line added, or say `n/a: <why nobody would notice>`",
+  );
+}
+const releaseNote =
+  visible.length && added.length === 0 && releaseNa.length
+    ? `\nNo release note, on the plan's word (touches ${shown}):\n` + releaseNa.map((r) => `  ${r}`).join("\n")
+    : "";
+
 // Say plainly which of the two reds this is. A correct plan is red for most of
 // its life — it cannot be signed until a person has looked — so "red" on its own
 // carries no information. The headline says whether anyone needs to fix
@@ -288,7 +374,7 @@ if (problems.length) {
     console.error("\nAwaiting a person (not a defect — nobody has looked yet):");
     for (const a of awaiting) console.error(`  ${a}`);
   }
-  console.error(deferredNote);
+  console.error(deferredNote + releaseNote);
   console.error("\nEvery line is ticked, `n/a: <reason>`, or — in the pre-production gate — `deferred: <owner>`.");
   process.exit(1);
 }
@@ -296,9 +382,9 @@ if (problems.length) {
 if (awaiting.length) {
   console.error(`check-test-plan: the plan is complete and correct, and ${awaiting.length} item(s) await a person:\n`);
   for (const a of awaiting) console.error(`  ${a}`);
-  console.error(deferredNote);
+  console.error(deferredNote + releaseNote);
   console.error("\nNothing to fix. This stays red until someone looks and signs.");
   process.exit(1);
 }
 
-console.log(`check-test-plan: ok — ${changed.join(", ")}${deferredNote}`);
+console.log(`check-test-plan: ok — ${changed.join(", ")}${deferredNote}${releaseNote}`);

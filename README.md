@@ -392,7 +392,9 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
 
 7. **Every deploy is a release.** Release notes live in
    `src/lib/releases.ts` and show at `/releases` for every signed-in role.
-   A PR that changes something users notice adds a line to `unreleased`;
+   A PR that changes something users notice adds a line to `unreleased`
+   (the test plan asks, and `check-test-plan.mjs` flags a UI change that has
+   no line and no stated reason);
    before deploying, a small release PR moves those lines into a new
    numbered entry and sets `package.json`'s version to match (the rules are
    at the top of that file). `deploy.mjs` refuses a UAT or production deploy that

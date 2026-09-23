@@ -126,6 +126,14 @@ before pushing.
   deliberately **not** under `docs/test-plans/`, because a release record
   filed there would satisfy a feature PR's gate with no feature verified;
   `check-test-plan.mjs` rejects it if you try.
+- **The release-notes line is answered for real.** §7 asks whether a
+  shelter user would notice the change. Tick it only if
+  `src/lib/releases.ts`'s `unreleased` gained a line in this PR, written for
+  a user. Otherwise write `n/a: <why nobody would notice>`. The checker fails a tick
+  with no new line, and a PR touching `src/app/`, `src/components/`,
+  `src/lib/manual/`, `src/lib/i18n/` or `worker/` with no new line and no
+  answer. An empty `unreleased` otherwise looks exactly like "nothing visible
+  shipped" (decisions.md, 2026-09-24).
 
 Everything merged up to `f32f2c1` (PRs #51–#54) is the agreed baseline and
 predates the rule.
