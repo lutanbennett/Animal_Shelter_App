@@ -20,6 +20,7 @@
 // Worker version is tagged with it, and a major release that is new to the
 // site is mailed to that environment's admins through the Worker (announce()).
 import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
 // TypeScript, loaded through Node's type stripping: the same file the app
@@ -55,6 +56,35 @@ function run(cmd, opts = {}) {
   const r = spawnSync(cmd, { stdio: opts.input ? ["pipe", "inherit", "inherit"] : "inherit", shell: true, ...opts });
   if (r.status !== 0) {
     console.error(`\ndeploy: \`${cmd}\` exited with ${r.status}`);
+    process.exit(r.status ?? 1);
+  }
+}
+
+/**
+ * Run wrangler with its arguments as an array, so one containing spaces stays
+ * one argument.
+ *
+ * `npx wrangler …` through a shell goes cmd.exe → npx.cmd → wrangler.cmd → node
+ * on Windows, and each shim re-parses the line. The quotes did not survive that,
+ * so `--message "v0.0.1 Current Baseline Build"` reached wrangler as separate
+ * words: it took `v0.0.1` as the message, `Current` as the positional script
+ * argument, and rejected the rest with `Unknown arguments: Baseline, Build`.
+ * Every release title has a space in it, so every deploy failed.
+ *
+ * Spawning wrangler's own entry point with node skips all three shims. Passing
+ * `npx.cmd` an argv array instead is not an option: since the fix for
+ * CVE-2024-27980, Node refuses to spawn a .cmd without `shell: true`, which puts
+ * the parsing back.
+ */
+const WRANGLER = createRequire(import.meta.url).resolve("wrangler/bin/wrangler.js");
+
+function wrangler(args, opts = {}) {
+  const r = spawnSync(process.execPath, [WRANGLER, ...args], {
+    stdio: opts.input ? ["pipe", "inherit", "inherit"] : "inherit",
+    ...opts,
+  });
+  if (r.status !== 0) {
+    console.error(`\ndeploy: \`wrangler ${args.join(" ")}\` exited with ${r.status}`);
     process.exit(r.status ?? 1);
   }
 }
@@ -130,14 +160,15 @@ if (pushSecrets) {
   const secrets = Object.fromEntries(
     [...RUNTIME_SECRETS, ...OPTIONAL_SECRETS.filter((k) => env[k])].map((k) => [k, env[k]]),
   );
-  run(`npx wrangler secret bulk --env ${envName}`, { input: JSON.stringify(secrets) });
+  wrangler(["secret", "bulk", "--env", envName], { input: JSON.stringify(secrets) });
 }
 
 // The tag and message land in the Worker's version history (dashboard →
 // Workers → Deployments): a record of what went where and when, with no
-// table of our own. Only characters that survive a cmd.exe command line.
+// table of our own. The strip keeps the message readable in that list; it is
+// no longer load-bearing for quoting, since wrangler() does not use a shell.
 const message = `v${latestRelease.version} ${latestRelease.title}`.replace(/[^\w .,:-]/g, "");
-run(`npx wrangler deploy --env ${envName} --tag v${latestRelease.version} --message "${message}"`);
+wrangler(["deploy", "--env", envName, "--tag", `v${latestRelease.version}`, "--message", message]);
 
 await announce();
 
