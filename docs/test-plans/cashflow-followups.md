@@ -26,7 +26,7 @@
 - [x] `npm run typecheck`: clean (exit 0)
 - [x] `npm run lint`: clean (exit 0)
 - [x] `npm run build`: succeeds (exit 0, with the dev server stopped first so they do not share `.next`)
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): `check` and `test-plan` both passed on #74 before the merge
 
 ## 3. Schema and data (no migration)
 
@@ -143,14 +143,14 @@ Automated checks by: Claude  Date: 2026-09-24
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — two items await a person
+- [x] The manual list above is empty, or every item in it was checked by a person — both items (the CSV opened in a spreadsheet in Thai, and the card click) checked by Lutan after the merge
 
-Manual verification by: pending: CSV opened in a spreadsheet in Thai, and the card click, by Lutan
+Manual verification by: Lutan Bennett — confirmed in chat; line written by Claude at their request  Date: 2026-09-24
 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
-- [ ] Handed to the production release manager — n/a: not yet — awaiting manual verification
+- [ ] Checklist pasted into the PR — n/a: #74's description summarises it and links this file rather than pasting it in full
+- [ ] Handed to the production release manager — n/a: not yet — it goes to them with the next release
 
 Result: pass
