@@ -38,3 +38,19 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run build
+
+  # No merge without a signed-off test checklist (CLAUDE.md, "Testing").
+  # Deliberately has no exemption: a small change is not excused from the
+  # checklist, it just fills it out fast, because most lines are honestly n/a.
+  test-plan:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/check-test-plan.mjs --base origin/${{ github.base_ref }}

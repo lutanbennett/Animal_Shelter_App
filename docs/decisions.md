@@ -2292,3 +2292,58 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   residents, combined with the deceased filter, returned exactly the 71 living.
   Worth knowing before anyone works around a second `.or()` they assume is
   unsafe.
+
+- **Features get a written test plan before production (2026-09-23):** there is
+  no automated test runner in this repo — CI is `typecheck`, `lint`, `build`,
+  and everything behavioural is verified by hand against the dev database. That
+  is workable for one developer but leaves no record of *what* was checked, so a
+  feature could reach `lannacare.org` having been "tested" in ways nobody can
+  reconstruct a month later. `docs/test-plan-template.md` is copied per feature
+  into `docs/test-plans/<feature>.md`, ticked during verification, and pasted
+  into the PR; the production release manager reads it before `deploy:prod`.
+  The checklist is deliberately opinionated about the things this app keeps
+  getting wrong across features: per-role access (admin/staff/vet/volunteer/
+  resident/signed-out) checked server-side rather than by hiding UI, the shared
+  files that every feature touches (`NavLinks.tsx`, `manual/en.ts`,
+  translations), and a smoke test on `test.lannacare.org` rather than only on
+  the local dev server, since the deployed OpenNext build is not the same
+  artifact as `next dev`.
+
+- **The test-plan check runs as a red flag, not a hard block (2026-09-23):**
+  `test-plan` fails a PR with no completed `docs/test-plans/<feature>.md`, but it
+  is deliberately *not* a required check in branch protection, so a red result
+  does not physically prevent the merge. The reasoning is that a soft gate people
+  follow beats a hard gate they resent: running it this way surfaces where the
+  checklist is annoying or wrong while it is still cheap to change, and nothing
+  is currently live — no users until the Pi lands. It is promoted to a required
+  check once the process has visibly bedded in. Recorded because a red
+  non-blocking check looks exactly like a misconfiguration to anyone who finds it
+  later, and it is not one.
+
+- **Release smoke list lives outside `docs/test-plans/` (2026-09-23):**
+  `docs/release-smoke-test.md` is run once per production release and copied to
+  `docs/releases/<date>.md`, deliberately *not* under `docs/test-plans/`, which
+  is what `scripts/check-test-plan.mjs` enforces. The checker matches
+  `docs/test-plans/**`, so a release record filed there would have satisfied a
+  feature PR's gate without any feature having been verified. Two different
+  jobs: the per-feature checklist proves one change works in isolation, the
+  smoke list proves the app as a whole still works after several changes land
+  together — `main` took four merges on 2026-09-23 alone, and no per-feature
+  gate can catch two features interacting badly. The smoke list is kept under
+  ten minutes on purpose; depth belongs in the feature checklist, because a
+  release ritual that takes an hour is one that gets skipped on the day it
+  matters.
+
+- **A test plan carries two signatures, not one (2026-09-23):** the checklist
+  separates *Automated checks by* — gates, scripts, server-side behaviour, and
+  any browser check actually driven rather than assumed — from *Manual
+  verification by*, signed only by the person who looked. Claude may sign the
+  first and never signs the second on someone's behalf; where there is nothing
+  to look at, the manual line is `n/a: <reason>`. The reason is not
+  bureaucratic: a single signature let one name cover checks it could not have
+  made, and a sign-off that does not correspond to someone having actually
+  looked is worse than no sign-off, because it converts an unknown into a false
+  assurance. `scripts/check-test-plan.mjs` requires both lines, so the split
+  cannot quietly collapse back into one. The checklist also carries a **Left for
+  manual verification** table, so the handover to a human is a short concrete
+  list rather than "please check it".
