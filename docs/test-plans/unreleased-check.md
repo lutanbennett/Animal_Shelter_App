@@ -31,7 +31,7 @@ or marked `n/a` with a reason.
 - [x] `npm run typecheck` — clean (exit 0)
 - [x] `npm run lint` — clean (exit 0)
 - [x] `npm run build` — succeeds (exit 0)
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — `check` and `test-plan` both passed on `119eea7` (run 35899880510)
 
 ## 3. Schema and data — *skip if no migration*
 
