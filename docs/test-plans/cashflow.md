@@ -190,11 +190,17 @@ underlying price columns were checked directly with the anon key too — `medica
       No dead links: all four "not priced" links resolve — `/management/medications`,
       `/admin/immunization-types`, `/maintenance` — and the vet note links to
       `/admin/website`.
-- [x] Manual updated (`src/lib/manual/en.ts`) — new `cashflow` topic under Management with
-      steps, a warning callout carrying the "not a budget" sentence and a note on the vet
-      estimate. The screenshot it references (`/manual/management-cashflow.png`) does not
-      exist yet; per the standing decision, `/manual` PNGs are regenerated in one pass
-      when the current batch of features is done, not per PR.
+- [x] Manual updated (`src/lib/manual/en.ts`) **and the topic reads correctly at
+      `/manual`** — checked in the running app, not just written: the `cashflow` topic
+      renders under Management with its heading, its `Management → Cashflow` path, the
+      Admin/Management role badges, five steps, and both callouts (the red "Careful"
+      carrying the not-a-budget sentence and the blue "Note" on the vet estimate). It
+      appears in both the section list and the sidebar index, and `#cashflow` anchors to
+      it. The screenshot it references (`/manual/management-cashflow.png`) does not exist
+      yet and shows as a broken image — as does the Diets one directly above it, so this
+      is the existing state on dev rather than something introduced here. Per the
+      standing decision, `/manual` PNGs are regenerated in one pass when the current
+      batch of features is done, not per PR.
 - [x] Translatable strings go through the translation path — every string on the page is a
       dictionary key in both `en.ts` and `th.ts` (no literal copy in the components).
       `/management/translations` covers user-entered content, not app labels, so there is
