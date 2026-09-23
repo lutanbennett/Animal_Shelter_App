@@ -49,9 +49,23 @@ try {
   // ...plus anything still in the working tree, so running this locally before
   // committing does not report a false failure. In CI the tree is clean, so this
   // adds nothing.
+  //
+  // Parsed by matching the status field rather than cutting at a fixed offset.
+  // `git()` trims the whole output, which eats the leading space of porcelain's
+  // ` M path` — but only on the *first* line, so a plan that was modified but
+  // not staged silently vanished while a second entry parsed fine, making it
+  // look intermittent. The failure was the worst available shape: it told
+  // someone who had filled in a plan that they had not, under instructions to
+  // copy the template over it.
   const working = git(["status", "--porcelain", "--", "docs/test-plans"])
     .split("\n")
-    .map((l) => l.slice(3).trim().replace(/^"|"$/g, ""))
+    .map((l) => {
+      const m = l.match(/^\s*\S{1,2}\s+(.*)$/);
+      if (!m) return "";
+      // A rename reads "old -> new"; the new path is the one on disk.
+      const path = m[1].includes(" -> ") ? m[1].split(" -> ").pop() : m[1];
+      return path.trim().replace(/^"|"$/g, "");
+    })
     .filter(isPlan);
   changed = [...new Set([...committed, ...working])];
 } catch {
