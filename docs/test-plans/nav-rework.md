@@ -12,7 +12,7 @@ Filled from `docs/test-plan-template.md`; see it for how each line is judged.
 | Backlog item | `docs/backlog.md` → Quick wins: "Nav rework: rename Admin to Settings, drop the chevrons, reorder, add icons"; closes "The pinned nav footer group hides the last Admin links…" and Documentation: "Fix UI hints that still say Admin → Contacts / Admin → Vets" |
 | Branch / worktree | `claude/nav-rework` @ `C:\Development\Animal_Shelter_nav-rework` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3009` |
-| PR | linked from the PR itself |
+| PR | #67 |
 | Tested by / date | Claude (nav-rework session), with Lutan signing in as each role, 2026-09-23 |
 | Carries a migration? | no |
 | Tested at SHA | browser checks at `bbca3a2`; gates re-run at `c4d3d67` after syncing `main` |
@@ -30,7 +30,7 @@ Filled from `docs/test-plan-template.md`; see it for how each line is judged.
 - [x] `npm run typecheck` — clean (exit 0)
 - [x] `npm run lint` — clean (exit 0)
 - [x] `npm run build` — succeeds (exit 0)
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: the typecheck / lint / build job passed on #67; `test-plan` was red only for the pending manual sign-off, recorded in this commit
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -131,7 +131,7 @@ Filled from `docs/test-plan-template.md`; see it for how each line is judged.
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | The icons chosen where no tile existed — briefcase (Management), cog (Settings), open book (User manual), newspaper (Release notes), key (Change password) — read right to you, and the dividers look right | Sidebar on any signed-in page, desktop and phone |
+| 1 | ✔ Approved by Lutan 2026-09-23 ("icons look great"). The icons chosen where no tile existed — briefcase (Management), cog (Settings), open book (User manual), newspaper (Release notes), key (Change password) — read right to you, and the dividers look right | Sidebar on any signed-in page, desktop and phone |
 
 ## Sign-off
 
@@ -144,14 +144,14 @@ Automated checks by: Claude (nav-rework session)  Date: 2026-09-23
 
 ### Manual verification
 
-- [ ] Every item in the manual list was checked by a person, or the list is empty
+- [x] Every item in the manual list was checked by a person, or the list is empty
 
-Manual verification by: pending: Lutan to look at the icon choices and dividers (item 1)
+Manual verification by: Lutan Bennett  Date: 2026-09-23
 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR (#67 description)
 - [ ] Handed to the production release manager — n/a: not yet — after manual verification
 
 Result: pass
