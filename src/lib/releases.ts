@@ -43,6 +43,17 @@ export const unreleased: string[] = [];
 /** Newest first. */
 export const releases: Release[] = [
   {
+    version: "0.1.0",
+    date: "2026-09-24",
+    title: "Dates, navigation and the cashflow forecast",
+    major: true,
+    notes: [
+      "Dates now follow Thailand's clock. Anything dated \"today\" between midnight and 7am used to record the day before, and an animal taken in overnight could not be dated today at all.",
+      "The menu has been reworked: links are grouped with icons, and the Admin section is now called Settings.",
+      "New Cashflow page under Management: what the shelter is about to spend on food, medication, immunizations and vet visits, in one place. Anything nobody has priced yet shows as a gap rather than as zero.",
+    ],
+  },
+  {
     version: "0.0.1",
     date: "2026-09-23",
     title: "Current Baseline Build",
