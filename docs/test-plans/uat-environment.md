@@ -87,7 +87,7 @@ or `n/a` with the reason.
 
 ## 6. Regression
 
-- [x] The pages nearest the change still work: `/` and the login page render. `/releases` label lookup typechecks with the widened `AppEnv`, and dev still hides unreleased notes from every non-dev env. Production PDF output is identical to before apart from the new code path (no watermark, same footer)
+- [x] The pages nearest the change still work: `/` and the login page render. `/releases` label lookup typechecks with the widened `AppEnv`, and its unreleased-notes panel is still gated on `dev` alone, so UAT will not show it. The production-env PDF render has no watermark and no footer suffix. It was not diffed against a pre-change render; the only code path it takes is the `null` branch
 - [x] Shared file checked from a second page: `app-env.ts` also drives `layout.tsx` (`data-env`), checked on the login page
 - [x] Nothing merged from `main` during `sync` was broken by this branch: the `worktree.mjs` changes from #58 are untouched and `sync` itself ran with them
 
