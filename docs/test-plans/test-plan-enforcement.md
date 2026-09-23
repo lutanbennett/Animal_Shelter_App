@@ -47,7 +47,7 @@ The feature here is a CLI check, so the happy path is the script's behaviour.
 - [x] Data persists — verified instead that the check is stateless and gives the same result on re-run
 - [ ] Create / edit / delete all exercised — n/a: the change has no CRUD surface
 - [x] Empty state renders sensibly — verified the no-checklist case exits 1 with the `cp docs/test-plan-template.md …` instruction rather than a stack trace
-- [x] Invalid input is rejected with a readable message, not a crash — verified unticked-box, `n/a`-without-reason, unfilled placeholder, bad `Result:` and empty `Tested by:` all fail with a file:line message
+- [x] Invalid input is rejected with a readable message, not a crash — verified unticked-box, `n/a`-without-reason, unfilled placeholder, bad `Result:` and empty `Tested by:` all fail with a file:line message, and a release smoke record copied into `docs/test-plans/` is rejected as misfiled rather than passing
 - [x] Boundary cases checked — a checklist with zero checkbox lines is rejected; a missing base ref exits 2 with a `git fetch` hint rather than a raw diff error
 
 ### Role access matrix
@@ -113,7 +113,7 @@ No runtime surface, so no role can reach this change.
 | 2 | low | `test-plan` is not a required check in branch protection, so it reports red but does not physically block merge | accepted — deliberate. Lutan's call 2026-09-23: run it as a red flag first, promote it to a hard block once the process has bedded in. Backlog item raised for the revisit |
 | 3 | medium | The check only looked at committed diffs, so running it locally before committing reported "no completed test plan" even when the file was sitting in the working tree. Would have trained people to distrust it | fixed — now unions the committed diff with `git status --porcelain -- docs/test-plans` |
 | 4 | medium | The `Tested by:` emptiness check never fired: the regex matched the `Date:` text on the same line, so a blank name passed. Sign-off could have been anonymous | fixed — anchored on `Date:`, and the date is now validated as `yyyy-mm-dd` |
-| 5 | medium | Release smoke lists would have matched `docs/test-plans/**`, so committing one could have satisfied a feature PR's gate without any feature having been tested | fixed — they live in `docs/releases/` instead, outside what the checker looks at |
+| 5 | medium | Release smoke lists would have matched `docs/test-plans/**`, so committing one could have satisfied a feature PR's gate without any feature having been tested | fixed — they live in `docs/releases/` instead, outside what the checker looks at, and the checker now rejects a release record filed under `docs/test-plans/` outright rather than relying on anyone knowing the path matters |
 
 ## Sign-off
 

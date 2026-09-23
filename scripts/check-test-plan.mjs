@@ -70,9 +70,26 @@ if (changed.length === 0) {
 
 const RESULTS = ["pass", "pass with accepted defects", "fail"];
 
+// A release smoke record is a different document doing a different job, and it
+// belongs in docs/releases/. Filed under docs/test-plans/ it would satisfy a
+// feature PR's gate with no feature verified — a green check certifying nothing.
+// Rejecting it explicitly means nobody has to know the path matters.
+const RELEASE_MARKERS = [/^#\s+Release smoke test/m, /^\|\s*Deployed SHA\s*\|/m, /^Result:\s*(<\s*)?pass\s*\|\s*rolled back/m];
+
 for (const file of changed) {
   const text = readFileSync(file, "utf8");
   const lines = text.split(/\r?\n/);
+
+  if (RELEASE_MARKERS.some((m) => m.test(text))) {
+    note(
+      file,
+      0,
+      "this looks like a release smoke record, not a feature test plan — move it to " +
+        "`docs/releases/<yyyy-mm-dd>.md`. A release record here would satisfy a " +
+        "feature PR's gate with no feature verified",
+    );
+    continue;
+  }
 
   // Template placeholders must be replaced.
   lines.forEach((l, i) => {
