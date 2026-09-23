@@ -7,7 +7,7 @@ import { CalendarClock, Camera, Plus, UserRound } from "lucide-react";
 import { ENCLOSURE_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
-import { formatBaht, formatDate } from "@/lib/format";
+import { addDaysIso, formatBaht, formatDate, todayIso } from "@/lib/format";
 import type { EnclosureOption, ZoneOption } from "@/lib/enclosures/options";
 import type { MaintenanceJob } from "@/lib/maintenance/queries";
 import {
@@ -112,11 +112,10 @@ export function MaintenanceBoard({
     [enclosures, filters.zoneId],
   );
 
-  const recentCutoff = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - RECENT_COMPLETED_DAYS);
-    return d.toISOString().slice(0, 10);
-  }, []);
+  const recentCutoff = useMemo(
+    () => addDaysIso(todayIso(), -RECENT_COMPLETED_DAYS),
+    [],
+  );
 
   const visible = useMemo(
     () =>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { createPrescription, updatePrescription } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { formatDate } from "@/lib/format";
+import { formatDate, todayIso } from "@/lib/format";
 import { DOSE_UNITS, doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { compareSchedules, describeSchedule } from "@/lib/prescriptions/frequency";
 import {
@@ -33,10 +33,6 @@ export type PrescriptionInitial = {
 
 const inputClass =
   "rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
-
-function todayIsoDate(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 
 /**
  * One form for adding and editing. Edit mode prefills every field from
@@ -96,7 +92,7 @@ export function PrescriptionForm({
       const match = vetAppointments.find((a) => a.id === preselectedVetAppointmentId);
       if (match) return match.appointment_date.slice(0, 10);
     }
-    return todayIsoDate();
+    return todayIso();
   });
   const [endDate, setEndDate] = useState(initial?.end_date ?? "");
 

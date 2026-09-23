@@ -1,4 +1,5 @@
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import { addDaysIso, todayIso } from "@/lib/format";
 
 /**
  * The maintenance_status enum (0001, renamed in 0033), in board-column
@@ -74,13 +75,11 @@ export type DueState = "overdue" | "dueSoon" | "none";
 export function dueState(
   dueDate: string | null,
   status: MaintenanceStatus | string,
-  today: string = todayIsoDate(),
+  today: string = todayIso(),
 ): DueState {
   if (!dueDate || status === "Completed") return "none";
   if (dueDate < today) return "overdue";
-  const soon = new Date(today);
-  soon.setDate(soon.getDate() + DUE_SOON_DAYS);
-  if (dueDate <= soon.toISOString().slice(0, 10)) return "dueSoon";
+  if (dueDate <= addDaysIso(today, DUE_SOON_DAYS)) return "dueSoon";
   return "none";
 }
 
@@ -98,7 +97,3 @@ export const DUE_TONE: Record<DueState, { card: string; badge: string }> = {
     badge: "",
   },
 };
-
-export function todayIsoDate(): string {
-  return new Date().toISOString().slice(0, 10);
-}

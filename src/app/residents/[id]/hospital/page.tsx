@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { placeName } from "@/lib/enclosures/names";
-import { formatDate } from "@/lib/format";
+import { formatDate, todayIso } from "@/lib/format";
 import { HOSPITAL_ROLES } from "@/lib/placements/hospital";
 import { PLACEMENT_ICONS } from "@/components/hub-icons";
 import { SendToHospitalForm } from "./SendToHospitalForm";
@@ -90,7 +90,7 @@ export default async function SendToHospitalPage(
   const Icon = PLACEMENT_ICONS.hospital;
 
   const visit = visitResult.data?.[0] ?? null;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
   const visitDate = visit?.appointment_date.slice(0, 10) ?? null;
   const defaultDate = visitDate && visitDate <= today ? visitDate : today;
   const defaultNotes = visit

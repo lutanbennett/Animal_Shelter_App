@@ -3,6 +3,8 @@
  * input (move, send to hospital, …).
  */
 
+import { todayIso } from "@/lib/format";
+
 /**
  * A date-only input has no time of day. Tie a same-day placement to the
  * current instant so it sorts after anything recorded earlier today (an
@@ -12,8 +14,7 @@
  * the same date.
  */
 export function placementStartDate(date: string, now: Date) {
-  const today = now.toISOString().slice(0, 10);
-  return date >= today ? now.toISOString() : `${date}T12:00:00.000Z`;
+  return date >= todayIso(now) ? now.toISOString() : `${date}T12:00:00.000Z`;
 }
 
 export function isIsoDate(value: string) {
@@ -21,13 +22,13 @@ export function isIsoDate(value: string) {
 }
 
 /**
- * True when the date is more than a day ahead of UTC "today". The slack
- * means a date picked in Bangkok shortly after local midnight isn't
- * rejected as being in the future.
+ * True when the date is after today at the shelter. This used to compare a
+ * date-only value against the current instant and carry a day of slack, so
+ * that a date picked in Bangkok shortly after local midnight was not
+ * rejected as being in the future — the slack was covering for a UTC
+ * "today" (backlog d98695a). With a shelter-timezone today it is a plain
+ * calendar comparison, and genuinely-tomorrow is rejected again.
  */
 export function isFutureDate(date: string, now: Date) {
-  return (
-    new Date(`${date}T00:00:00Z`).getTime() - now.getTime() >
-    24 * 60 * 60 * 1000
-  );
+  return date > todayIso(now);
 }

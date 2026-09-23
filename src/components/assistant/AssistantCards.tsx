@@ -54,8 +54,13 @@ export type CardContext = {
   onSettle: (outcome: AssistantOutcome) => void;
 };
 
-/** Today where the person is, never where the server is. */
-function todayIso() {
+/**
+ * Today where the person is — deliberately the asker's own clock, not the
+ * shelter's `todayIso()` from @/lib/format, because the assistant resolves
+ * "tomorrow" and weekday names against the calendar the asker is reading
+ * them from. See docs/backlog.md for reconciling the two.
+ */
+function viewerToday() {
   return isoLocal(new Date());
 }
 
@@ -378,7 +383,7 @@ function MoveCard({ ctx, draft }: { ctx: CardContext; draft: MoveDraft }) {
         label={a.fields.date}
         value={date}
         onChange={setDate}
-        max={todayIso()}
+        max={viewerToday()}
       />
     </Card>
   );
@@ -523,7 +528,7 @@ function HospitalCard({ ctx, draft }: { ctx: CardContext; draft: HospitalDraft }
   const { t, locale } = useI18n();
   const a = t.assistant;
   const [residentId, setResidentId] = useState(draft.residentId ?? "");
-  const [date, setDate] = useState(draft.date ?? todayIso());
+  const [date, setDate] = useState(draft.date ?? viewerToday());
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -576,7 +581,7 @@ function HospitalCard({ ctx, draft }: { ctx: CardContext; draft: HospitalDraft }
         label={a.fields.date}
         value={date}
         onChange={setDate}
-        max={todayIso()}
+        max={viewerToday()}
       />
     </Card>
   );
@@ -605,7 +610,7 @@ function HospitalReturnCard({
   const [enclosureId, setEnclosureId] = useState(
     draft.enclosureId ?? (draft.residentId ? cameFrom(draft.residentId) : ""),
   );
-  const [date, setDate] = useState(draft.date ?? todayIso());
+  const [date, setDate] = useState(draft.date ?? viewerToday());
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -682,7 +687,7 @@ function HospitalReturnCard({
         label={a.fields.date}
         value={date}
         onChange={setDate}
-        max={todayIso()}
+        max={viewerToday()}
       />
     </Card>
   );
@@ -693,7 +698,7 @@ function WeightCard({ ctx, draft }: { ctx: CardContext; draft: WeightDraft }) {
   const a = t.assistant;
   const [residentId, setResidentId] = useState(draft.residentId ?? "");
   const [weight, setWeight] = useState(draft.weightKg === null ? "" : String(draft.weightKg));
-  const [date, setDate] = useState(draft.date ?? todayIso());
+  const [date, setDate] = useState(draft.date ?? viewerToday());
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -769,7 +774,7 @@ function WeightCard({ ctx, draft }: { ctx: CardContext; draft: WeightDraft }) {
           label={a.fields.date}
           value={date}
           onChange={setDate}
-          max={todayIso()}
+          max={viewerToday()}
         />
       </div>
     </Card>

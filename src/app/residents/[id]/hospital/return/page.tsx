@@ -6,6 +6,7 @@ import { loadEnclosureOptions } from "@/lib/enclosures/options";
 import { HOSPITAL_ROLES } from "@/lib/placements/hospital";
 import { PLACEMENT_ICONS } from "@/components/hub-icons";
 import { ReturnFromHospitalForm } from "./ReturnFromHospitalForm";
+import { todayIso } from "@/lib/format";
 
 export default async function ReturnFromHospitalPage(
   props: PageProps<"/residents/[id]/hospital/return">,
@@ -59,7 +60,7 @@ export default async function ReturnFromHospitalPage(
   const currentStatus = state?.current_status ?? null;
   const canReturn = HOSPITAL_ROLES.has(roleResult.data ?? "");
   const Icon = PLACEMENT_ICONS.hospitalReturn;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
 
   // previous_enclosure_id is only "where they'll return to" while the
   // resident is actually in hospital (it's set on every move as well). It's

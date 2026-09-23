@@ -10,6 +10,7 @@ import {
   formatQuantity,
   type DietTypeOption,
 } from "@/lib/diets/options";
+import { todayIso } from "@/lib/format";
 
 export type { DietTypeOption };
 
@@ -26,10 +27,6 @@ export type DietInitial = {
 
 const inputClass =
   "rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
-
-function todayIsoDate(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 
 /**
  * One form for adding and editing a resident's diet, the shape of
@@ -60,7 +57,7 @@ export function DietForm({
   const { t } = useI18n();
 
   const [dietTypeId, setDietTypeId] = useState(initial?.diet_type_id ?? "");
-  const [startDate, setStartDate] = useState(initial?.start_date ?? todayIsoDate());
+  const [startDate, setStartDate] = useState(initial?.start_date ?? todayIso());
   const [endDate, setEndDate] = useState(initial?.end_date ?? "");
 
   const selectedType = dietTypes.find((type) => type.id === dietTypeId);
