@@ -80,7 +80,7 @@ No runtime surface, so no role can reach this change.
 
 - [x] The pages nearest the change still work — no page surface; `npm run build` compiled every route, which is the available evidence
 - [x] Any shared file touched checked from a second angle — `docs/test-plan-template.md` is the shared file. Verified a copy of it filled in as a real checklist still passes, and that the already-merged `docs/test-plans/test-plan-enforcement.md` is unaffected, since the new line applies only to future copies
-- [x] Nothing merged from `main` was broken by this branch — branched from `ca10680`, nothing to merge back in
+- [x] Nothing merged from `main` was broken by this branch — branched from `ca10680` and synced to `83bf4a6`; the merge brought only a 2-line `docs/backlog.md` change, which this branch does not touch
 
 ## 7. Documentation
 
@@ -91,7 +91,7 @@ No runtime surface, so no role can reach this change.
 
 ## 8. Pre-production gate
 
-- [x] Tested SHA recorded in the header — lands in the follow-up commit
+- [x] Tested SHA recorded in the header — `308afb2` for the local gates, merged tip `f95df6d` covered by CI
 - [ ] Deployed SHA matches the tested SHA — n/a: nothing deployed; no runtime code
 - [ ] Deployed to test — n/a: no runtime code to deploy
 - [ ] Smoke-tested on `test.lannacare.org` — n/a: no runtime code to deploy
