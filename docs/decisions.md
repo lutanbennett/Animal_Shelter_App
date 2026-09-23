@@ -2392,7 +2392,20 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   change and not as a bug fix. Both halves are written down because the
   function invites exactly the wrong diagnosis: the eye goes to the date
   arithmetic, which is fine, and slides past the default argument, which was
-  not. Measured, twice, after being reasoned about wrongly the first time.
+  not. Measured, twice, after being reasoned about wrongly the first time. One
+  thing that fell out of getting it wrong repeatedly is worth keeping, because
+  it is the argument for how the rest of this was verified: the audit stream's
+  description of the fault named "a job due today" as the case that moved, and
+  a test written faithfully from that sentence would have **passed** — due-today
+  is `dueSoon` under both clocks, identically — while the fault sat untouched.
+  The cases that actually move are the two edges, due-yesterday and the far end
+  of the due-soon band. So a date-banding function is asserted across the whole
+  band and against *both* clocks, not at the one example the prose happened to
+  name; a test derived from a wrong account of a bug is a test that agrees with
+  the account rather than with the code. The evidence block in the test plan is
+  likewise regenerated from run output rather than hand-edited, for the same
+  reason: both wrong accounts of this function were prose *about* a
+  measurement, and a hand-maintained paste is just more prose.
   `todayIso()` takes the instant as an optional argument so the 17:00Z
   boundary can be asserted at any hour; a timezone fix verified only by
   looking at a running app at the wrong time of day proves nothing, because a
