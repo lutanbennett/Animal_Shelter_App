@@ -2902,3 +2902,16 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   overnight shift — `docs/utc-date-audit-2026-09-23.md` §8 keeps the triage and
   the correction SQL unused on purpose, and the script is kept rather than
   deleted so the next run is one command.
+
+- **A manual signature may be written on request (2026-09-23):** the
+  test-plan rule said Claude never signs *Manual verification by* for
+  someone else. Lutan ruled that it may, when that person has looked at the
+  evidence and explicitly asks in chat, and the line says so (for example
+  `— confirmed in chat; line written by Claude at their request`). It came
+  up on PR #66, where Lutan reviewed the badge screenshots Claude took and
+  asked for the sign-off rather than editing the file. What the rule protects
+  is that a signature always corresponds to a person having looked, and a
+  written-on-request line still does. What stays forbidden is Claude signing
+  for someone who has not looked, or signing unasked. CLAUDE.md
+  "Testing" (PR #64) and docs/test-plan-template.md carry the same
+  wording.
