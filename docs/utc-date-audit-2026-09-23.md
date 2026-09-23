@@ -51,6 +51,14 @@ distinguishes the two. §6 shows a case where the detector fires 43 times and is
 wrong all 43 times, which is the clearest argument for reading this as a
 worklist rather than a verdict.
 
+**`src/` line numbers here are as of 2026-09-23, against `main` before the
+code fix landed.** The fix (`claude/utc-today`, PR #59) rewrites 27 call sites
+across 24 files and merges *after* this document, so the line numbers below go
+stale on that merge and the cited code is by then the thing that was replaced —
+which is the point of citing it. The behaviour each one describes is what to
+match on; the file paths stay right. Migration line numbers do not move: applied
+files are never edited (`CLAUDE.md`).
+
 The script is `scripts/throwaway-utc-date-audit.mjs` — read-only (`read_only`
 on the API call, and it refuses anything that is not a `select`/`with`),
 connecting the way `scripts/apply-migrations.mjs` does. Delete it once this is

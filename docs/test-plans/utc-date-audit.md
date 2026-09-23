@@ -11,7 +11,7 @@
 | PR | [#57](https://github.com/lutanbennett/Animal_Shelter_App/pull/57) |
 | Tested by / date | Claude Opus 5 / 2026-09-23 |
 | Carries a migration? | no |
-| Tested at SHA | `4112e57` |
+| Tested at SHA | `4112e57`, re-run post-sync at `de54b4e` |
 
 ## 1. Scope and risk
 
@@ -22,11 +22,11 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
-- [x] `npm run typecheck` — clean
-- [x] `npm run lint` — clean
-- [x] `npm run build` — succeeds
-- [x] CI green on the PR (runs the same three) — `check` pass (1m35s) and `test-plan` pass (6s) on run 35820560809
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly; re-run for the merge train (42 commits, no conflicts, `de54b4e`)
+- [x] `npm run typecheck` — clean (re-run post-sync)
+- [x] `npm run lint` — clean (re-run post-sync)
+- [x] `npm run build` — succeeds (re-run post-sync, after `npm ci` for the lockfile change)
+- [ ] CI green on the PR (runs the same three) — n/a: not yet — re-run pending after the 2026-09-23 sync. Green at 4112e57 (run 35820560809); ticked again in a follow-up commit once the post-sync run is green, not before
 
 ## 3. Schema and data — *skip if no migration*
 
