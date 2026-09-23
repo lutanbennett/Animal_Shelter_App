@@ -152,7 +152,7 @@ Manual verification by: Lutan Bennett  Date: 2026-09-23
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [x] Checklist pasted into the PR (#67 description)
-- [ ] Handed to the production release manager — n/a: not yet — after manual verification
+- [ ] Handed to the production release manager — n/a: not yet — happens after the merge
 
 Result: pass
 
