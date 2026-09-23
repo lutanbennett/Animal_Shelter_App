@@ -64,6 +64,7 @@ const th: Dictionary = {
     translations: "คำแปล",
     contacts: "ผู้ติดต่อ",
     manual: "คู่มือการใช้งาน",
+    releaseNotes: "บันทึกการเปลี่ยนแปลง",
     publicSite: "เว็บไซต์สาธารณะ",
     changePassword: "เปลี่ยนรหัสผ่าน",
     assistant: "ผู้ช่วย",
