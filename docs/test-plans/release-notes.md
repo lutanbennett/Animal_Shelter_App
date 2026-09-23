@@ -18,7 +18,7 @@
 - [x] Change is described in one sentence, and it matches what the backlog item asked for: a register, a page every role can read, a version the deploy stamps, and an email to admins on a major release named `[UAT]` / `[Production]`, with dev never sending. Settled with Lutan 2026-09-23: Cloudflare's free verified-address route for the release mail, `--env production` counts as UAT today, and Resend free for Auth SMTP (runbook only)
 - [x] Files/areas touched listed: `src/lib/releases.ts`, `src/lib/release-mail.ts`, `src/app/releases/page.tsx`, `src/app/NavLinks.tsx` (one footer entry), `src/lib/i18n/dictionaries/{en,th}.ts` (one key), `src/lib/manual/en.ts`, `worker/index.mjs`, `worker/release-mail.mjs`, `wrangler.jsonc`, `scripts/deploy.mjs`, `package.json` / `package-lock.json` (version only), `README.md`, `docs/email-sending.md`, `docs/decisions.md`, `docs/backlog.md`
 - [x] Roles affected identified: every signed-in role reads `/releases`; admins receive the email; signed-out users are redirected to `/login`
-- [x] Out of scope written down: the Supabase Auth SMTP setup is Lutan's dashboard and DNS work (`docs/email-sending.md` §2), and the Deployment item stays open. The Cloudflare domain onboarding and admin-address verification (§1) are also his, and until they are done a deploy's mail is skipped with an error code rather than sent. No real email has been sent to anyone. There is no `uat` wrangler environment yet (its own backlog item). Per-entry deploy dates per environment are not stored; Cloudflare's deployment list has them
+- [x] Out of scope written down: the Supabase Auth SMTP setup is Lutan's dashboard and DNS work (`docs/email-sending.md` §2), and the Deployment item stays open. Verifying admin addresses under Email Routing (§1) is also his; an unverified admin is skipped with an error code. No domain onboarding is needed: verified-address sends work with Email Routing alone, per Cloudflare's pricing page (the Email Sending screen asks for Workers Paid, which is not needed). No real email has been sent to anyone. There is no `uat` wrangler environment yet (its own backlog item). Per-entry deploy dates per environment are not stored; Cloudflare's deployment list has them
 
 ## 2. Automated gates
 
@@ -129,7 +129,7 @@
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | After Lutan's `docs/email-sending.md` §1a (onboard `lannacare.org` for sending): the first major-release deploy with `--env production` prints `release mail … [UAT]: sent 1` and the mail arrives in Lutan's Gmail with `[UAT]` in the subject from `releases@lannacare.org` | `lannacare.org`, Lutan's inbox |
+| 1 | With Email Routing only (the Email Sending screen asks for Workers Paid, so it is not used; `docs/email-sending.md` §1a): the first major-release deploy with `--env production` prints `release mail … [UAT]: sent 1` and the mail arrives in Lutan's Gmail with `[UAT]` in the subject from `releases@lannacare.org` | `lannacare.org`, Lutan's inbox |
 | 2 | `npm run deploy:test` prints `release mail … [off]` for a major release (dev never sends), and `https://test.lannacare.org/api/releases/current` answers `{"version":"…"}` | `test.lannacare.org` |
 | 3 | `/releases` opens for a staff, vet and volunteer login | dev or `test.lannacare.org` |
 
@@ -146,7 +146,7 @@ Automated checks by: Claude (Release notes feature session)  Date: 2026-09-23
 
 - [ ] Every item in the manual list was checked by a person, or the list is empty — n/a: awaiting the deploys and Lutan's Cloudflare setup, see the pending signature
 
-Manual verification by: pending: the three items above, which need a deploy and Lutan's Cloudflare email onboarding  Date: —
+Manual verification by: pending: the three items above, which need a deploy (and, for 1, a major release to send)  Date: —
 
 ### Result
 

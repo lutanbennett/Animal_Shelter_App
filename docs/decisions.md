@@ -2487,15 +2487,29 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   - *Two sending domains, permanently.* UAT is `lannacare.org`, and
     Production will be `lannacareforanimals.org`. Adding the second is
     configuration and DNS: a `production` block with `RELEASE_MAIL_ENV =
-    "Production"`, a From on the new domain and the binding, and the
-    onboarding steps in `docs/email-sending.md`. That page's last section
+    "Production"`, a From on the new domain and the binding, Email Routing
+    on that domain, and its admins verified (`docs/email-sending.md`). That page's last section
     is the checklist the cutover item picks up.
   - *Password-reset SMTP goes elsewhere.* Supabase Auth mails any user, and
     Cloudflare's free route can't. Lutan chose **Resend's free tier for
     UAT** (one domain), set up by him from the runbook in
     `docs/email-sending.md` §2. It uses its own `send.` subdomain for MX and
     SPF, so neither provider touches the root MX that Email Routing uses or
-    the root SPF record. Cloudflare's onboarding creates the single DMARC
-    record, and Resend's optional one is skipped. The Production domain will
+    the root SPF record. There is no DMARC record yet, so Resend's optional
+    one is safe to add, but only ever one. The Production domain will
     need a second free Resend account or the paid plan, which is decided at
     the cutover.
+
+- **Release mail needs Email Routing, not Email Sending (2026-09-23):** the
+  first draft of `docs/email-sending.md` had Lutan onboard `lannacare.org`
+  under Compute → Email Service → Email Sending. On the free plan that screen
+  offers only "Purchase Workers Paid", because Email Sending is the paid
+  feature that mails arbitrary addresses. Cloudflare's pricing page says
+  verified-destination sends are "free on all plans, including when only
+  Email Routing is configured", and Email Routing has been on for
+  `lannacare.org` since the catch-all was set up. So the onboarding step and
+  its DNS records are dropped, and verifying each admin is the whole setup.
+  This rests on Cloudflare's docs, not on a send: the first major-release
+  deploy is the proof. If it fails with `E_SENDER_DOMAIN_NOT_AVAILABLE`, the
+  fallback is to relay through Resend's API from the account set up for Auth
+  SMTP. Don't buy Workers Paid.

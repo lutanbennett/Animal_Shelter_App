@@ -34,24 +34,18 @@ Routing's catch-all keeps working.
 The Worker already has the binding (`wrangler.jsonc`, production environment:
 `send_email` → `RELEASE_MAIL`, `RELEASE_MAIL_ENV = "UAT"`,
 `RELEASE_MAIL_FROM = releases@lannacare.org`). There is no API key or secret.
-What it needs is the domain and the recipients.
+What it needs is the recipients.
 
-### 1a. Onboard the domain for sending (once per domain)
+### 1a. Nothing to onboard: Email Routing is enough
 
-1. Cloudflare dashboard → **Compute** → **Email Service** → **Email Sending** →
-   **Onboard Domain** → pick `lannacare.org`.
-2. Cloudflare shows the records it will add, then adds them itself:
-   - on **`cf-bounce.lannacare.org`**: an MX (bounces back to Cloudflare) and
-     an SPF TXT. These are on the subdomain, not the root, so the root MX that
-     Email Routing uses and the root SPF record are left alone. There is no
-     second root SPF record to merge.
-   - a DKIM TXT under `_domainkey`.
-   - a DMARC TXT on **`_dmarc.lannacare.org`**. There is none today, so this is
-     the one DMARC record. Step 2 must not add another.
-3. **Done.** It usually verifies within 5–15 minutes.
-
-If it asks you to move to Workers Paid first, stop. Then the free route has
-gone and the choice needs revisiting.
+**Do not use Compute → Email Service → Email Sending.** On the free plan
+that screen offers only "Purchase Workers Paid" (seen 2026-09-23), because
+*Email Sending* is the paid feature that mails arbitrary addresses.
+Verified-address sends don't need it. Cloudflare's pricing page: "Sending
+to verified destination addresses in your account is free on all plans,
+including when only Email Routing is configured." Email Routing is already
+on for `lannacare.org` (the catch-all), and the From address
+(`releases@lannacare.org`) is on that domain. No DNS changes are needed.
 
 ### 1b. Verify each admin's address (once per person)
 
@@ -80,8 +74,9 @@ deploy: release mail for 0.1.0 [UAT]: sent 1, skipped 1
 ```
 
 - `E_RECIPIENT_NOT_ALLOWED`: that admin hasn't verified (1b).
-- `E_SENDER_DOMAIN_NOT_AVAILABLE` / `E_SENDER_NOT_VERIFIED`: 1a isn't done
-  or hasn't finished verifying.
+- `E_SENDER_DOMAIN_NOT_AVAILABLE` / `E_SENDER_NOT_VERIFIED`: Cloudflare
+  wants the domain onboarded after all. Don't buy Workers Paid: raise it,
+  and the fallback is to send through Resend's API (§2's account) instead.
 - `[off]` with every address skipped: the environment doesn't send. That is
   **expected on `--env test`**, which runs on the dev database.
 - `--no-mail` deploys without announcing.
@@ -113,7 +108,7 @@ subdomains:
 | MX | `send` | `feedback-smtp.<region>.amazonses.com`, priority 10 | Bounces. **On `send.lannacare.org`, not the root**, so Email Routing's MX is untouched |
 | TXT | `send` | `v=spf1 include:amazonses.com ~all` | SPF for `send.` only. The root SPF record stays as it is |
 | TXT | `resend._domainkey` | the DKIM key Resend shows | |
-| TXT | `_dmarc` | *(optional in Resend)* | **Skip it.** Step 1a already created the one DMARC record |
+| TXT | `_dmarc` | *(optional in Resend)* | Optional. There is no DMARC record today, so adding Resend's is safe, but only ever one `_dmarc` record |
 
 Copy the exact values from Resend's screen, not from this table. Add each
 record in Cloudflare → `lannacare.org` → **DNS** → **Add record**, with the
@@ -168,7 +163,8 @@ It is rate-limited but real, and dev has no users outside the team.
 This is configuration and DNS. No code changes. The cutover item in
 `docs/backlog.md` should:
 
-1. Run **1a** for `lannacareforanimals.org`, and verify admin addresses (1b).
+1. Turn on Email Routing for `lannacareforanimals.org` (verified-address
+   sends need nothing more), and verify admin addresses (1b).
    The production database has its own admins.
 2. In `wrangler.jsonc`, the new `production` block gets `RELEASE_MAIL_ENV =
    "Production"`, `RELEASE_MAIL_FROM = releases@lannacareforanimals.org` and

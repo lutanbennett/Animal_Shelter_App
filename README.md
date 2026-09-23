@@ -306,7 +306,7 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    emails a **major** release that is new to the site to that environment's
    admins, with `[UAT]` / `[Production]` in the subject; `--no-mail` skips
    the email. Test never sends. The one-off Cloudflare setup the email needs
-   — onboarding the domain and verifying each admin's address, both free —
+   — verifying each admin's address under Email Routing, free —
    is [`docs/email-sending.md`](docs/email-sending.md) §1.
 
 ## Backups
