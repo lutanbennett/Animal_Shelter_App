@@ -3033,3 +3033,21 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   already dropped by 0044; the 0069 diet seed has run and is left alone; the
   cashflow month boundaries (0072) stay with Dashboard follow-ups (e), which
   can now call `shelter_date()` rather than inventing its own constant.
+- **`scripts/gates.mjs` runs every gate and reports each exit code
+  (2026-09-24):** it runs `npm run typecheck`, `lint` and `build` in CI's
+  order, each one even after an earlier failure, and ends with
+  `gates: typecheck=N lint=N build=N`. It exits 1 if any gate failed and 2 if
+  it ran nothing. What it replaces is `A && B && C`, which stops at the first
+  failure: a session then reported what it had seen and read as green. The
+  gates call `npm run`, not `next`/`tsc` directly, so the same scripts as CI's
+  `check` job are run. It refuses to start when `node_modules/.bin` lacks
+  `next`, `tsc` or `eslint`. It checks that the files exist and does not run
+  them, because running them in that state gives three ordinary-looking
+  failures. `check-test-plan` is opt-in (`--plan`) rather than a fourth
+  default gate. CI runs it as a separate job that does not block, and a
+  correct plan stays red until a person signs. Adding it by default would
+  make the summary line red for most of a PR's life. Known difference from
+  CI: the build reads `.env.local` here and placeholder Supabase values
+  there, which ci.yml's own comment says is equivalent because nothing is
+  fetched during the build. CI also uses Node 22, and a local machine may run a different
+  version.
