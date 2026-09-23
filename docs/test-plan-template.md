@@ -8,6 +8,12 @@ Every line must end up in one of two states, and CI checks this:
 - `- [x]` — the check was actually run and passed.
 - `- [ ] … — n/a: <reason>` — the check did not apply, and the reason says why.
 
+**The reason must follow `n/a:` immediately.** `n/a: no UI surface` passes;
+`n/a as a deploy check, because …` reads fine to a human but fails, and that
+strictness is deliberate — it is what makes every reason greppable in one pass
+across every checklist in the repo. Put any qualifying words after the colon,
+not before it.
+
 Never tick something you did not do, and never leave a line untouched. Anything
 that failed goes under **Defects**.
 
@@ -50,13 +56,22 @@ release manager before `npm run deploy:prod`.
 
 ## 2. Automated gates
 
-Run in the feature worktree, after `node scripts/worktree.mjs sync`:
+Run in the feature worktree, after `node scripts/worktree.mjs sync`.
+
+**Tick these on the exit code, not on output that looks plausible.** Two ways a
+gate reads green without having run: `npm run build | tail` reports the exit
+status of `tail`, not of the build; and in a worktree where `npm ci` has not
+finished linking `node_modules/.bin`, every script fails with "'next' is not
+recognized" — which scrolls past as noise. Check each command's own status, and
+wait for `worktree.mjs new` to exit before trusting the tree. A gate ticked
+because nothing looked wrong is worse than one left unticked, because it is
+indistinguishable from one that passed.
 
 - [ ] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
 - [ ] `npm run typecheck` — clean
 - [ ] `npm run lint` — clean
 - [ ] `npm run build` — succeeds
-- [ ] CI green on the PR (runs the same three)
+- [ ] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so leave it `n/a: not yet — the PR does not exist at this commit` on the first push and tick it in a follow-up commit once the run is actually green. Every PR hits this; the first push is red on `test-plan` by construction. Do not pre-tick it — a green you have not seen is the exact failure this checklist exists to prevent
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -68,6 +83,7 @@ Per `CLAUDE.md`, schema lands as its own PR before the feature.
 - [ ] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations`
 - [ ] File is re-runnable (`if not exists` / `or replace` / `drop … if exists`)
 - [ ] Existing rows still read correctly after the change (checked against real dev data)
+- [ ] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness — the `do $$ … $$` block CLAUDE.md describes under "Database migrations", whose `raise exception` assertions surface as errors. Say what was asserted, not merely that it ran: typically that checks reject invalid values, that `null` means "not set" rather than zero, that values round-trip at full precision, and that nothing was silently back-filled. This is usually the most valuable single thing done to a migration, and it signs under **Automated checks** — it is scripted and repeatable, not a person looking at a screen
 - [ ] Down-migration written, or the reason one is not needed is stated
 - [ ] Production apply plan stated for the release manager (which file, which project, when)
 
@@ -118,6 +134,7 @@ must be refused by the server, not merely hidden in the UI.
 - [ ] Non-obvious design choices appended to `docs/decisions.md`, dated
 - [ ] `README.md` still accurate
 - [ ] Commit messages say why, not just what
+- [ ] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned.** No gate reads prose: `typecheck`, `lint`, `build` and this checklist all pass with a confidently wrong explanation in the commit that ships the fix, and the wrong explanation is what the next person inherits. Worth real attention on timezone, concurrency and floating-point work, where intuition is unusually unreliable and a plausible story is easy to tell
 
 ## 8. Pre-production gate
 
@@ -133,7 +150,9 @@ database; `lannacare.org` runs **production** (`dbkodyyxxhtygxcxmfcu`).
 
 - [ ] Deployed to test: `npm run deploy:test`
 - [ ] Smoke-tested on `test.lannacare.org` — the happy path works on the deployed Workers build, not just `next dev`
-- [ ] **Timezone-sensitive behaviour checked on test, not locally.** Workers run in UTC wherever they are; anything deriving "today" is wrong for part of every day in Thailand and only shows up on a real Workers build
+- [ ] **Timezone-sensitive behaviour proved, not observed at a convenient hour.** Workers run in UTC wherever they are, so anything deriving "today" is wrong for part of every day in Thailand. That is two separate claims and they need different checks:
+  - *Does the logic handle the boundary?* Where the code lets an instant be injected, assert it rather than waiting for the clock: run the **real exported** function against fixed instants — both sides of 17:00Z, the 00:00 and 06:59 Thai ends of the broken window, month-end, year-end, a leap day — and then the same suite under `TZ=UTC`, which is the Workers case. Deterministic, and it does not depend on what hour you happened to be testing. Prefer this where it is available, and never re-type the logic into the test; a copy proves only that the copy works
+  - *Does the deployed build behave as the source does?* A different claim, and only `test.lannacare.org` answers it — during 00:00–07:00 Thai, when the two dates differ. If you cannot be there at that hour, put it in **Left for manual verification** rather than ticking it
 - [ ] Public pages (`/`, `/adopt`, `/our-work`, `/donate`) re-checked after a cache purge or a 10-minute wait — anonymous GETs are edge-cached per data centre, so a stale page can look like a defect that isn't one, or hide one that is
 
 ### Deploy safety
@@ -189,8 +208,19 @@ Automated checks by: <name>  Date: <yyyy-mm-dd>
 ### Manual verification
 
 The items in **Left for manual verification** above. Signed by the person who
-looked. Claude never signs this line on someone else's behalf; if there was
-nothing to look at, write `n/a: <reason>` in place of the name.
+looked. Claude never signs this line on someone else's behalf. Three valid states:
+
+- `<name>  Date: <yyyy-mm-dd>` — a person looked.
+- `n/a: <reason>` — there was nothing to look at.
+- `pending: <what is outstanding>` — the work is done and something genuinely
+  needs a person who has not got to it yet. **This still fails the check**, and
+  should: nobody has looked. But it fails saying *awaiting manual verification:
+  <what>*, which is a different thing from a plan filled in badly. Use it rather
+  than reaching for `n/a` to get green — an `n/a` over a real outstanding item is
+  a false assurance about the one thing you could not verify.
+
+A red `test-plan` that says what it is waiting for is a red people act on. An
+illegible one is a red people learn to ignore.
 
 - [ ] Every item in the manual list was checked by a person, or the list is empty
 
