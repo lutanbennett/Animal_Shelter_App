@@ -196,7 +196,6 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
             back to a resident who has died. */}
         <Link
           href={toggleHref(!showAll)}
-          aria-pressed={showAll}
           className={`rounded-full border px-3 py-2 text-sm font-medium ${
             showAll
               ? "border-primary bg-primary/10 text-primary"
