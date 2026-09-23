@@ -2279,3 +2279,16 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   immunization pickers now import it instead of repeating the string.
   `src/app/assistant/page.tsx` still has its own copy — it was being rewritten
   on another branch at the time and was left alone deliberately.
+
+- **Two PostgREST `or=` params are ANDed, not last-wins (verified
+  2026-09-23):** chaining `.or()` twice on one supabase-js query — as
+  `/residents` does, once for "not deceased" and once for the name search —
+  appends two `or=` params (`searchParams.append`, not `set`), and PostgREST
+  joins top-level filters with AND. So the two narrow each other rather than
+  the second replacing the first. This is load-bearing: if the last one won,
+  the residents list would have shown deceased animals the moment anyone typed
+  in the search box, and nothing in the UI would have said so. Checked against
+  the dev database rather than reasoned about — a search matching all 77
+  residents, combined with the deceased filter, returned exactly the 71 living.
+  Worth knowing before anyone works around a second `.or()` they assume is
+  unsafe.
