@@ -1,13 +1,25 @@
 # Feature test plan
 
 Copy this file to the feature branch as `docs/test-plans/<feature>.md`, fill the
-header, and tick as you go. A box is only ticked when the check was actually run
-and passed — write `n/a` with a reason instead of ticking something that did not
-apply, and record anything that failed under **Defects**.
+header, and tick as you go.
 
-The completed checklist is pasted into the feature's PR (description or a single
-comment) and handed to the production release manager before `npm run deploy:prod`.
-A feature without a completed checklist does not go to production.
+Every line must end up in one of two states, and CI checks this:
+
+- `- [x]` — the check was actually run and passed.
+- `- [ ] … — n/a: <reason>` — the check did not apply, and the reason says why.
+
+Never tick something you did not do, and never leave a line untouched. Anything
+that failed goes under **Defects**.
+
+**No merge without a signed-off checklist. No exceptions.** CI enforces it: a PR
+with no completed `docs/test-plans/<feature>.md` fails. Small changes are not
+exempt — they are simply fast, because most lines are honestly `n/a`. Writing the
+`n/a` reason *is* the check; that is what says someone looked at everything rather
+than at the happy path.
+
+Run `node scripts/check-test-plan.mjs` locally before pushing to see what CI will say.
+The completed checklist is also pasted into the PR and read by the production
+release manager before `npm run deploy:prod`.
 
 ---
 
@@ -22,6 +34,7 @@ A feature without a completed checklist does not go to production.
 | PR | |
 | Tested by / date | |
 | Carries a migration? | yes / no |
+| Tested at SHA | |
 
 ## 1. Scope and risk
 
@@ -104,13 +117,36 @@ must be refused by the server, not merely hidden in the UI.
 ## 8. Pre-production gate
 
 Owned jointly with the release manager. `test.lannacare.org` runs the **dev**
-database; `lannacare.org` runs **production**.
+database; `lannacare.org` runs **production** (`dbkodyyxxhtygxcxmfcu`).
+
+### Tested build
+
+- [ ] Tested SHA recorded in the header, and it is the tip of `main` at deploy time
+- [ ] Deployed SHA matches the tested SHA — `deploy.mjs` prints both the target project and the short SHA; read that line, do not assume it
+
+### On the deployed build
 
 - [ ] Deployed to test: `npm run deploy:test`
-- [ ] Smoke-tested on `test.lannacare.org` — the feature's happy path works on the deployed build, not just the dev server
+- [ ] Smoke-tested on `test.lannacare.org` — the happy path works on the deployed Workers build, not just `next dev`
+- [ ] **Timezone-sensitive behaviour checked on test, not locally.** Workers run in UTC wherever they are; anything deriving "today" is wrong for part of every day in Thailand and only shows up on a real Workers build
+- [ ] Public pages (`/`, `/adopt`, `/our-work`, `/donate`) re-checked after a cache purge or a 10-minute wait — anonymous GETs are edge-cached per data centre, so a stale page can look like a defect that isn't one, or hide one that is
+
+### Deploy safety
+
+- [ ] `deploy: production → Supabase project <ref>` line read and the ref **matches production**. `scripts/lib/env.mjs` resolves shell over `.env.deploy.production` over `.env.local`, so a stray exported `NEXT_PUBLIC_SUPABASE_URL` silently builds production against dev and nothing errors
+- [ ] `strip-baked-env: removed N env var(s) from the Worker bundle` seen in the deploy output — without it the bundle still carries a snapshot of `.env.local`, shipping dev credentials as silent fallbacks
 - [ ] Any new secret/env var exists in the production Cloudflare environment
-- [ ] Production migration (if any) named and scheduled with the release manager
-- [ ] Rollback understood: what to revert, and whether the schema change survives a revert
+
+### Migration ordering — *skip if no migration*
+
+- [ ] **Does this PR contain both a migration and code that reads it?** If yes, the production apply must happen *before* the deploy, and that ordering is written into the apply plan below. (PR #53 shipped both together; `main` briefly carried code selecting columns production did not have.)
+- [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — it executes the real DDL inside `begin…rollback` against production's actual schema, which has drifted from dev
+- [ ] For a **destructive or rewriting** migration only: a production backup exists and is fresh. (Additive nullable columns do not need this gate. Note the README restore recipe has never been exercised.)
+- [ ] Apply plan stated: which file, which project, and whether it runs before or after the deploy
+
+### Rollback
+
+- [ ] Rollback position stated, **including what it does not cover**. `npx wrangler rollback --env production` reverts the Worker in seconds; it does **not** revert migrations. Purely additive schema is safe to leave; anything else needs its own down-migration before "rollback available" is a true statement
 
 ## Defects found
 
@@ -125,8 +161,8 @@ database; `lannacare.org` runs **production**.
 - [ ] Checklist pasted into the PR
 - [ ] Handed to the production release manager
 
-Result: **pass / pass with accepted defects / fail**
+Result: <pass | pass with accepted defects | fail>
 
-Tested by: ______________  Date: ____________
+Tested by: <name>  Date: <yyyy-mm-dd>
 
-Release manager acknowledgement: ______________  Date: ____________
+Release manager acknowledgement: <name>  Date: <yyyy-mm-dd>
