@@ -2915,3 +2915,41 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   for someone who has not looked, or signing unasked. CLAUDE.md
   "Testing" (PR #64) and docs/test-plan-template.md carry the same
   wording.
+
+- **The cashflow vet line stays on the flat per-visit figure, for now
+  (2026-09-24):** the backlog asked for vet visits to be forecast from
+  recent frequency — per week, `max(last quarter's average visits a week,
+  visits booked that week)` times the cost of a visit. Measured on dev
+  before designing it: 71 completed visits since May 2025, **none** with a
+  `vet_appointments.cost`, and 20 in the last quarter (about 1.5 a week);
+  of the 2 booked visits, 1 carries a cost. So the frequency half has
+  real history and the cost half has none: an average of actual costs is
+  not possible yet, and "cost per visit" would have stayed the flat ฿800
+  from `site_content` either way. The rule also needs `cashflow_forecast`
+  (0072) changed, which is a migration, and 0073 (`shelter_today()`) was
+  in flight in another stream. Lutan chose to keep the flat figure
+  rather than queue a schema PR behind it. When it is picked up, the design
+  worked out was: count per week (split at month boundaries so the monthly
+  columns still add up), apply the historical rate only from today onward,
+  use a booked visit's own cost where it has one and the estimate for the
+  rest, and treat "no completed visit on record" as unknown rather than as
+  a rate of zero — the same "no visits" vs "no data" care the #60 LEFT JOIN
+  fix needed.
+
+- **The "not priced yet" card links to one page or to the table
+  (2026-09-24):** with gaps in a single category the card opens that
+  category's pricing page; with gaps across several it jumps to the
+  table's "Not priced yet" row, which already links each category. Of the
+  three options in the backlog item, a per-category breakdown inside the
+  card was rejected because it duplicates that row on a card that has two
+  lines of room. Categories switched off with the toggles do not count,
+  matching the card's number.
+
+- **Cashflow CSV carries a "not priced" column per category (2026-09-24):**
+  amounts are exported as plain numbers so a spreadsheet can sum them,
+  which means an unpriced month would export as 0 — exactly the silent
+  zero the page refuses to show. Each category's amount is therefore
+  followed by a count of what could not be priced. The file is built in
+  the browser from the rows already on the page (no route, no second
+  query), follows the category toggles, and starts with a UTF-8 BOM so
+  Excel shows Thai headings correctly.
