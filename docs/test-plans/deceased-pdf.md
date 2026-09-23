@@ -135,7 +135,7 @@ subtitle on page 1, and no footer text on any page of any render.
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
 | 1 | Low | A name long enough to wrap in the heading, breaking between `(` and a Thai word, gets a hyphen at the break (`… Valley (-`) although the hyphenation callback returns whole words. Seen only in the contrived `wrap.pdf`; predates this change | deferred to backlog |
-| 3 | High | Local Google credentials are dead: every `.env.local` / `.dev.vars` in the checkouts carries the same OAuth client, and Google's token endpoint answers `invalid_client: The OAuth client was not found`. So the real Drive thumbnail fetch could not be exercised from here, and local dev cannot reach Drive at all. Whether the Cloudflare secrets for test / production use the same client is unknown from here | raised with Lutan in chat; not a code defect |
+| 3 | Medium | Local Google credentials are dead: every `.env.local` / `.dev.vars` in the checkouts carries the same OAuth client, and Google's token endpoint answers `invalid_client: The OAuth client was not found`. So the real Drive thumbnail fetch could not be exercised from here, and local dev cannot reach Drive at all. Lutan confirmed 2026-09-24 that UAT and production are not affected — the dead client is only in the local dev credentials | local dev only; not a code defect |
 | 2 | Medium | The six summary PDFs already in production Drive carry both bugs and are not rewritten by a deploy — only a bio/photo edit or Retry regenerates one | deferred to backlog (release follow-up) |
 
 ## Left for manual verification
