@@ -2347,3 +2347,18 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   cannot quietly collapse back into one. The checklist also carries a **Left for
   manual verification** table, so the handover to a human is a short concrete
   list rather than "please check it".
+
+- **The schema section names the `begin; … rollback;` harness explicitly
+  (2026-09-23):** section 3 of `docs/test-plan-template.md` listed the mechanics
+  of applying a migration — numbering, `--status`, `--dry-run`, re-runnability,
+  a down-migration — but had no line for asserting that the schema actually
+  behaves: that checks reject invalid values, that `null` means "not set" rather
+  than zero, that values round-trip at full precision, and that nothing was
+  silently back-filled. CLAUDE.md has described that `do $$ … $$` harness under
+  "Database migrations" for some time, so the template was out of step with a
+  practice the repo already documents. The practical effect was worse than a
+  missing line: with nothing to record, a schema-only checklist read as almost
+  entirely `n/a`, which made the gate look like a formality on exactly the change
+  type where it has the most to catch — and that is how a rule starts being
+  waived. Raised by the Cashflow Schema session from filling one in for real on
+  PR #53, which is the intended way for this template to change.

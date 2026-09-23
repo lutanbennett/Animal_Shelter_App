@@ -50,7 +50,16 @@ release manager before `npm run deploy:prod`.
 
 ## 2. Automated gates
 
-Run in the feature worktree, after `node scripts/worktree.mjs sync`:
+Run in the feature worktree, after `node scripts/worktree.mjs sync`.
+
+**Tick these on the exit code, not on output that looks plausible.** Two ways a
+gate reads green without having run: `npm run build | tail` reports the exit
+status of `tail`, not of the build; and in a worktree where `npm ci` has not
+finished linking `node_modules/.bin`, every script fails with "'next' is not
+recognized" — which scrolls past as noise. Check each command's own status, and
+wait for `worktree.mjs new` to exit before trusting the tree. A gate ticked
+because nothing looked wrong is worse than one left unticked, because it is
+indistinguishable from one that passed.
 
 - [ ] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
 - [ ] `npm run typecheck` — clean
@@ -68,6 +77,7 @@ Per `CLAUDE.md`, schema lands as its own PR before the feature.
 - [ ] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations`
 - [ ] File is re-runnable (`if not exists` / `or replace` / `drop … if exists`)
 - [ ] Existing rows still read correctly after the change (checked against real dev data)
+- [ ] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness — the `do $$ … $$` block CLAUDE.md describes under "Database migrations", whose `raise exception` assertions surface as errors. Say what was asserted, not merely that it ran: typically that checks reject invalid values, that `null` means "not set" rather than zero, that values round-trip at full precision, and that nothing was silently back-filled. This is usually the most valuable single thing done to a migration, and it signs under **Automated checks** — it is scripted and repeatable, not a person looking at a screen
 - [ ] Down-migration written, or the reason one is not needed is stated
 - [ ] Production apply plan stated for the release manager (which file, which project, when)
 
