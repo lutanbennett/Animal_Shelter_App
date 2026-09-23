@@ -2347,3 +2347,55 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   cannot quietly collapse back into one. The checklist also carries a **Left for
   manual verification** table, so the handover to a human is a short concrete
   list rather than "please check it".
+
+- **What `worktree.mjs done` guarantees, and what it cannot (2026-09-23):**
+  `done` either finishes everything or says exactly what it left: the folder
+  gone, git's worktree entry pruned, the branch gone locally and on `origin`,
+  each checked afterwards rather than assumed. It refuses up front, before
+  touching anything, in three cases:
+  - **The branch has commits no origin ref has.** No flag overrides this,
+    `--force` included. Lost commits are the one unrecoverable outcome.
+  - **Any process has the folder open.** Windows will not delete a directory
+    that is a process's working directory or holds an open file. So this is
+    not a policy choice, it is a fact about Windows, not a bug to fix. Pressing
+    on would only unregister the worktree under the session sitting in it and
+    leave a husk, which is exactly what happened with cashflow-schema.
+  - **The folder is no longer a repo and holds more than build output.** Git
+    can no longer say what in it is uncommitted work (`--force` overrides).
+
+  The backlog item asked for a warning, not a refusal, on the grounds that
+  the check races. It does race, but only within milliseconds, and a refusal
+  that is right almost every time beats a warning people learn to scroll past.
+  **The check** renames the folder to a sibling name and straight back: it
+  succeeds only when nothing has anything under it open, so when it succeeds
+  nobody can notice it. A process holding the folder is named in two ways:
+  - a Claude session, from `~/.claude/sessions/<pid>.json`, trusted only when
+    the pid is alive *with the recorded start time*. That format is
+    undocumented, so it only ever adds a name. A missing name never turns
+    `HELD` into `free`.
+  - a dev server, when it is `node.exe` running a script under the folder's
+    `node_modules`, or an executable inside the folder.
+
+  The dev-server match is deliberately narrow. A first version matched any
+  command line that mentioned the path, and in testing `--stop-servers`
+  killed this session's own bash tool shells. Another session's shell would
+  have gone the same way.
+
+- **`.claude/launch.json` is per checkout, generated from `.port`
+  (2026-09-23):** a committed file can name only one port, so every worktree's
+  browser pane aimed at 3000. It is now gitignored and written by
+  `worktree.mjs new` / `dev` / `sync` / `launch` and by `.githooks/post-merge`,
+  which also regenerates it in the main checkout when the pull that untracks
+  it deletes the committed copy. While a branch still tracks the old file,
+  it is left alone, so `new` does not leave a branch cut before this change
+  looking dirty.
+
+- **Merges push too (2026-09-23):** git runs `post-commit` only for `git
+  commit`, so every `sync` and every `backlog` fast-forward used to sit
+  unpushed. `sync` now pushes as its last step and `.githooks/post-merge`
+  pushes after any merge or pull. Both exist on purpose: the hook covers
+  merges made by hand, and the explicit push covers a clone without
+  `core.hooksPath`. `new` also now fails outright if
+  `node_modules/.bin/next` is missing after `npm ci`. `new` did not return
+  early. That check turns a wrong assumption about a half-installed tree
+  (three gates once read green having never run) into a loud error.
