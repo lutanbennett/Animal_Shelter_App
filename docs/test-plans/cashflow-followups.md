@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Management → **Make the "not priced yet" card on /management/cashflow actionable** (ticked); **Cashflow follow-ups** (c) CSV export (marked done, item stays open); **Base the vet forecast on recent visit frequency** (measured, left open on Lutan's call) |
 | Branch / worktree | `claude/cashflow-followups` @ `C:\Development\Animal_Shelter_cashflow-followups` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3011` |
-| PR | opened from this branch; number recorded in the follow-up commit |
+| PR | #74 |
 | Tested by / date | Claude (automated) 2026-09-24 |
 | Carries a migration? | no |
 | Tested at SHA | `c7ab5bb`, the branch after syncing with `origin/main`. The only change `sync` brought in was `.github/workflows/ci.yml` (test-plan made `continue-on-error`), and none of the feature files were touched |
