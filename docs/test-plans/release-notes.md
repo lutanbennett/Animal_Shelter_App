@@ -127,11 +127,20 @@
 
 ## Left for manual verification
 
+Checked by a person before merge:
+
+| # | What to check | Where | Result |
+|---|---|---|---|
+| 1 | The Cloudflare side of release mail is in place: Email Routing enabled on `lannacare.org` and Lutan's Gmail a **Verified** destination address | Cloudflare → Email Routing → Destination addresses | seen with Lutan in his Chrome 2026-09-23 |
+| 2 | Password reset goes out through Resend: `lannacare.org` verified in Resend, Supabase SMTP saved, a real **Forgot password?** mail received | Resend, Supabase, Lutan's Gmail | Lutan received it 2026-09-23 |
+
+**Deferred to the release deploy, accepted by Lutan 2026-09-23.** These can only run after this PR merges and deploys. They belong to the v0.0.1 and next-release deploys, and the release manager should carry them into that smoke test:
+
 | # | What to check | Where |
 |---|---|---|
-| 1 | With Email Routing only (the Email Sending screen asks for Workers Paid, so it is not used; `docs/email-sending.md` §1a): the first major-release deploy with `--env production` prints `release mail … [UAT]: sent 1` and the mail arrives in Lutan's Gmail with `[UAT]` in the subject from `releases@lannacare.org` | `lannacare.org`, Lutan's inbox |
-| 2 | `npm run deploy:test` prints `release mail … [off]` for a major release (dev never sends), and `https://test.lannacare.org/api/releases/current` answers `{"version":"…"}` | `test.lannacare.org` |
-| 3 | `/releases` opens for a staff, vet and volunteer login | dev or `test.lannacare.org` |
+| D1 | The first **major**-release deploy with `--env production` prints `release mail … [UAT]: sent 1`, and the mail arrives in Lutan's Gmail with `[UAT]` in the subject from `releases@lannacare.org`. If it fails with `E_SENDER_DOMAIN_NOT_AVAILABLE`, the fallback is Resend's API (`docs/decisions.md`), not Workers Paid | `lannacare.org`, Lutan's inbox |
+| D2 | `npm run deploy:test` prints `[off]` for a major release (dev never sends), and `https://test.lannacare.org/api/releases/current` answers `{"version":"…"}` | `test.lannacare.org` |
+| D3 | `/releases` opens for a staff, vet and volunteer login | `test.lannacare.org` |
 
 ## Sign-off
 
@@ -144,9 +153,9 @@ Automated checks by: Claude (Release notes feature session)  Date: 2026-09-23
 
 ### Manual verification
 
-- [ ] Every item in the manual list was checked by a person, or the list is empty — n/a: awaiting the deploys and Lutan's Cloudflare setup, see the pending signature
+- [x] Every item in the manual list was checked by a person (1 and 2); D1–D3 are deferred to the release deploy with Lutan's acceptance
 
-Manual verification by: pending: the three items above, which need a deploy (and, for 1, a major release to send)  Date: —
+Manual verification by: Lutan Bennett  Date: 2026-09-23
 
 ### Result
 
@@ -155,5 +164,7 @@ Manual verification by: pending: the three items above, which need a deploy (and
 - [ ] Handed to the production release manager — n/a: not yet — handed over with the PR
 
 Result: pass
+
+Lutan asked to mark this tested and passed and to merge (2026-09-23), accepting D1–D3 as release-deploy checks.
 
 Release manager acknowledgement: pending  Date: pending
