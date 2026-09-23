@@ -246,6 +246,33 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    back after (`npx wrangler rollback --env production`, seconds) over
    killing it.
 
+   **`npm ci` alone is not always enough, and neither is that audit.** Later
+   the same day a worktree had every one of the 713 packages present with its
+   `package.json` intact — so both the audit above and `npm ci` itself
+   reported nothing to do — while files *inside* packages were missing:
+   `next/server.d.ts`, `next/headers.d.ts`, `next/types.d.ts`, deleted by an
+   interrupted purge. `npm ci` decides from package presence, so it no-opped,
+   and `npm rebuild` restored the `.bin` shims without restoring any file.
+   The only thing that caught it was running the compiler:
+   `error TS7016: Could not find a declaration file for module 'next/server'`.
+   So when a build fails on missing types or a missing module that the
+   lockfile clearly contains, do not trust a package-level audit — purge
+   `node_modules` outright and reinstall. On Windows `rm -rf` and
+   `rmdir /s /q` both stall or fail on the deep `node_modules` tree (the
+   Cloudflare SDK's resource folders exceed the 260-character path limit);
+   what works is mirroring an empty directory over it and then removing it:
+
+   ```bash
+   robocopy %TEMP%\empty node_modules /MIR /NFL /NDL /NJH /NJS /R:1 /W:1
+   rmdir /s /q node_modules
+   npm ci --no-audit --no-fund
+   ```
+
+   **Capture real exit codes when running the gates.** `npm run build | tail`
+   makes `$?` the exit status of `tail`, not of npm, so a failed build reports
+   success — redirect to a file and read `$?`, or use `${PIPESTATUS[0]}`. A
+   test plan ticked from piped output is ticking something that never passed.
+
    **`ERROR Failed to copy … color-string` and `… data-uri-to-buffer` are
    cosmetic.** They appear during `Building server function` on every run,
    with or without a clean `.open-next`, a dev server, or a fresh

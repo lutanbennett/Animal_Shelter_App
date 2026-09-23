@@ -151,4 +151,4 @@ Manual verification by: n/a: docs only, no runtime surface for a person to check
 
 Result: pass
 
-Release manager acknowledgement: pending  Date: pending
+Release manager acknowledgement: Claude (release manager session) — shipped in v0.0.1 (dfb01c3), Worker a9128bb6, verified live  Date: 2026-09-23
