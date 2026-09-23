@@ -168,10 +168,13 @@ export function NavLinks({
             thousands of pixels down. sticky keeps it against the bottom of
             the window until the real bottom scrolls into view, matching the
             bottom-4 to the nav's own p-4 so it doesn't jump when it lands.
-            With the Management and Settings children gone the links above
-            fit any window this sidebar is shown in, so it no longer floats
-            over them; bg-surface stays for a very short window. */}
-        <div className="sticky bottom-4 mt-auto flex flex-col gap-1 border-t border-border bg-surface pt-3">
+            A pinned group floats over whatever links share the window with
+            it, so it is only pinned on a window tall enough for the header,
+            the whole list and the group together — an admin's needs ~690px
+            (measured 2026-09-23), which a 768px laptop screen does not
+            leave the page. Shorter than that it simply follows the list
+            behind its divider, as it does in the drawer. */}
+        <div className="mt-2 flex flex-col gap-1 border-t border-border bg-surface pt-3 [@media(min-height:44rem)]:sticky [@media(min-height:44rem)]:bottom-4 [@media(min-height:44rem)]:mt-auto">
           {renderLinks(footerItems)}
         </div>
       </nav>
