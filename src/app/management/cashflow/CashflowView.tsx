@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Coins, CalendarRange, CircleHelp } from "lucide-react";
+import { Coins, CalendarRange, CircleHelp, Download } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
 import { formatBaht, formatMonth } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -11,8 +11,10 @@ import {
   CATEGORY_FILL,
   CATEGORY_PRICE_PATH,
   buildCashflowMonths,
+  cashflowCsv,
   categoryTotal,
   monthTotal,
+  notPricedTarget,
   windowTotal,
   type CashflowCategory,
   type CashflowCell,
@@ -33,11 +35,19 @@ import { CashflowChart } from "./CashflowChart";
  * The rows arrive already fetched; the folding is done here so the same
  * `shown` set drives every number on the page.
  */
+/** The table footer row the "not priced yet" card jumps to. */
+const NOT_PRICED_ANCHOR = "not-priced";
+
 export function CashflowView({
   rows,
   vetEstimate,
+  from,
+  to,
 }: {
   rows: CashflowRow[];
+  /** The window, ISO — only used to name the CSV file. */
+  from: string;
+  to: string;
   /** The typical-vet-visit figure from site_content, or null if unset. */
   vetEstimate: number | null;
 }) {
@@ -59,6 +69,29 @@ export function CashflowView({
       ) as Record<CashflowCategory, CashflowCell>,
     [months],
   );
+
+  const gap = useMemo(
+    () => notPricedTarget(totals, shown, NOT_PRICED_ANCHOR),
+    [totals, shown],
+  );
+
+  function downloadCsv() {
+    const csv = cashflowCsv(months, shown, {
+      month: c.table.month,
+      total: c.table.total,
+      notPriced: c.csv.notPricedColumn,
+      categories: c.categories,
+    });
+    // The BOM is what makes Excel read the file as UTF-8, so Thai headings
+    // survive being double-clicked open.
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `cashflow-${from}-to-${to}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   function toggle(category: CashflowCategory) {
     setHidden((prev) => {
@@ -123,7 +156,14 @@ export function CashflowView({
         <StatCard
           title={c.stats.notPriced}
           value={String(total.missing)}
-          detail={total.missing > 0 ? c.stats.notPricedDetail : c.stats.notPricedNone}
+          detail={
+            gap == null
+              ? c.stats.notPricedNone
+              : gap.categories.length === 1
+                ? c.stats.notPricedOne(c.categories[gap.categories[0]])
+                : c.stats.notPricedMany(gap.categories.length)
+          }
+          href={gap?.href}
           icon={CircleHelp}
           tone={total.missing > 0 ? "warning" : "success"}
         />
@@ -168,7 +208,18 @@ export function CashflowView({
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold text-foreground">{c.table.heading}</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold text-foreground">{c.table.heading}</h2>
+          <button
+            type="button"
+            onClick={downloadCsv}
+            disabled={columns.length === 0}
+            className="inline-flex items-center gap-1.5 rounded border border-border px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-surface-hover disabled:opacity-50"
+          >
+            <Download aria-hidden className="h-3.5 w-3.5" />
+            {c.csv.download}
+          </button>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[32rem] border-collapse text-sm">
             <thead>
@@ -228,7 +279,7 @@ export function CashflowView({
                 </td>
               </tr>
               {/* The gap, and the one click that closes it. */}
-              <tr className="text-xs">
+              <tr id={NOT_PRICED_ANCHOR} className="scroll-mt-24 text-xs target:bg-primary/10">
                 <th scope="row" className="py-2 pr-3 text-left font-normal text-muted">
                   {c.table.notPricedRow}
                 </th>

@@ -41,7 +41,10 @@ export type Release = {
 };
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: string[] = [];
+export const unreleased: string[] = [
+  "On the Cashflow page, the \"Not priced yet\" card now takes you to the prices that are missing: straight to the right page when they are all in one category, or to the row that links each category when they are spread out.",
+  "The Cashflow table can be downloaded as a CSV file for the monthly report.",
+];
 
 /** Newest first. */
 export const releases: Release[] = [
