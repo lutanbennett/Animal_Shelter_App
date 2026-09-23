@@ -12,6 +12,7 @@ import {
 import { NOTO_SANS_THAI_REGULAR } from "./fonts/noto-sans-thai-regular";
 import { NOTO_SANS_THAI_BOLD } from "./fonts/noto-sans-thai-bold";
 import type { ResidentArchiveRecord } from "./resident-record";
+import { getAppEnv, type AppEnv } from "@/lib/app-env";
 
 /**
  * The Deceased Resident Summary PDF (requirements doc, Section 7.6) —
@@ -38,6 +39,18 @@ Font.register({
 // @react-pdf hyphenates aggressively by default, breaking words (and Thai,
 // which has no spaces) mid-glyph-cluster. Keep words whole.
 Font.registerHyphenationCallback((word) => [word]);
+
+/**
+ * The watermark a non-production build puts on every page. A screen badge
+ * stops at the browser; this PDF lands in Drive — which dev, test and UAT
+ * share (docs/decisions.md) — where nothing else says which environment
+ * made it. Dev is marked as well as UAT for that reason.
+ */
+const ENV_WATERMARK: Record<AppEnv, string | null> = {
+  dev: "DEV",
+  uat: "UAT",
+  production: null,
+};
 
 const COLORS = {
   text: "#1f2933",
@@ -97,6 +110,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.accent,
     borderRadius: 4,
+  },
+  // Page-sized and centred, so the rotated word sits in the middle of every
+  // page whatever the content; faint enough to read the record through.
+  watermark: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  watermarkText: {
+    fontSize: 140,
+    fontWeight: 700,
+    color: COLORS.accent,
+    opacity: 0.12,
+    letterSpacing: 8,
+    transform: "rotate(-45deg)",
   },
   footer: {
     position: "absolute",
@@ -209,6 +241,8 @@ export type SummaryPdfOptions = {
    * photo must never be the reason an archive fails.
    */
   profilePhotoDataUri?: string | null;
+  /** Which environment's watermark to use; this build's own by default. */
+  appEnv?: AppEnv;
 };
 
 function ResidentSummaryDocument({
@@ -219,6 +253,7 @@ function ResidentSummaryDocument({
   options: SummaryPdfOptions;
 }) {
   const { resident, death } = record;
+  const watermark = ENV_WATERMARK[options.appEnv ?? getAppEnv()];
   const displayName = resident.thaiName
     ? `${resident.name} (${resident.thaiName})`
     : resident.name;
@@ -230,6 +265,11 @@ function ResidentSummaryDocument({
       subject="Deceased resident summary"
     >
       <Page size="A4" style={styles.page}>
+        {watermark && (
+          <View style={styles.watermark} fixed>
+            <Text style={styles.watermarkText}>{watermark}</Text>
+          </View>
+        )}
         <View style={styles.header}>
           {options.profilePhotoDataUri && (
             // @react-pdf's Image is a PDF primitive, not an <img> — there is
@@ -457,7 +497,7 @@ function ResidentSummaryDocument({
 
         <View style={styles.footer} fixed>
           <Text>
-            {`Lanna Care for Animals · ${resident.name} (${resident.residentCode}) · generated ${day(record.generatedAt)}`}
+            {`Lanna Care for Animals · ${resident.name} (${resident.residentCode}) · generated ${day(record.generatedAt)}${watermark ? ` · ${watermark}` : ""}`}
           </Text>
           <Text
             render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`}

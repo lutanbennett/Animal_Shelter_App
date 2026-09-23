@@ -22,6 +22,16 @@ export async function AppHeader() {
   // including the phone. The vet role does not get it (0070).
   const { data: role } = await supabase.rpc("current_user_role");
 
+  // Production has no badge. UAT has nothing else: it keeps production's
+  // colours so the customer tests the real thing (src/lib/app-env.ts).
+  const appEnv = getAppEnv();
+  const badge =
+    appEnv === "dev"
+      ? { label: t.header.devBadge, title: t.header.devBadgeTitle }
+      : appEnv === "uat"
+        ? { label: t.header.uatBadge, title: t.header.uatBadgeTitle }
+        : null;
+
   return (
     <header className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 md:px-6">
       <div className="flex items-center gap-3">
@@ -50,12 +60,12 @@ export async function AppHeader() {
             {t.header.shortName}
           </span>
         </Link>
-        {getAppEnv() === "dev" && (
+        {badge && (
           <span
             className="rounded bg-primary px-1.5 py-0.5 text-xs font-bold uppercase tracking-wide text-primary-foreground"
-            title={t.header.devBadgeTitle}
+            title={badge.title}
           >
-            {t.header.devBadge}
+            {badge.label}
           </span>
         )}
       </div>
