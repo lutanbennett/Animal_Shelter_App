@@ -94,7 +94,7 @@ export default async function CashflowPage(props: PageProps<"/management/cashflo
           {c.couldntLoad}: {forecast.error.message}
         </p>
       ) : (
-        <CashflowView rows={rows} vetEstimate={vetEstimate} />
+        <CashflowView rows={rows} vetEstimate={vetEstimate} from={window.from} to={window.to} />
       )}
     </main>
   );

@@ -206,3 +206,69 @@ export function resolveCashflowWindow(params: CashflowWindowParams): {
     invalid: custom != null && "invalid" in custom,
   };
 }
+
+/**
+ * Where the "not priced yet" card sends you. When every gap in the window
+ * sits in one category the card links straight to where that price is
+ * entered; when they are spread across several there is no single right
+ * page, so it drops to the table's "Not priced yet" row, which already
+ * links each category to its own. Null when nothing is missing — the card
+ * then stays a plain read-out rather than a link to nowhere.
+ */
+export function notPricedTarget(
+  totals: Record<CashflowCategory, CashflowCell>,
+  shown: ReadonlySet<CashflowCategory>,
+  anchor: string,
+): { href: string; categories: CashflowCategory[] } | null {
+  const categories = CASHFLOW_CATEGORIES.filter(
+    (k) => shown.has(k) && totals[k].missing > 0,
+  );
+  if (categories.length === 0) return null;
+  return {
+    href: categories.length === 1 ? CATEGORY_PRICE_PATH[categories[0]] : `#${anchor}`,
+    categories,
+  };
+}
+
+/** Quotes one CSV field only when it has to (RFC 4180). */
+function csvField(value: string): string {
+  return /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+}
+
+/**
+ * The month-by-category table as CSV, for the monthly report. Same months
+ * and the same switched-on categories as the table on screen.
+ *
+ * Amounts are plain numbers (no ฿, no thousands separators) so a
+ * spreadsheet can add them up, and each category carries a second column
+ * counting what could not be priced. That column is the CSV's version of
+ * the page's "not priced yet": without it a zero exported for an unpriced
+ * month would be exactly the silent zero the page refuses to show.
+ */
+export function cashflowCsv(
+  months: CashflowMonth[],
+  shown: ReadonlySet<CashflowCategory>,
+  labels: {
+    month: string;
+    total: string;
+    notPriced: (category: string) => string;
+    categories: Record<CashflowCategory, string>;
+  },
+): string {
+  const columns = CASHFLOW_CATEGORIES.filter((k) => shown.has(k));
+  const round = (n: number) => String(Math.round(n * 100) / 100);
+  const header = [
+    labels.month,
+    ...columns.flatMap((k) => [labels.categories[k], labels.notPriced(labels.categories[k])]),
+    labels.total,
+  ];
+  const lines = [header];
+  for (const month of months) {
+    lines.push([
+      month.month.slice(0, 7),
+      ...columns.flatMap((k) => [round(month.cells[k].amount), String(month.cells[k].missing)]),
+      round(monthTotal(month, shown)),
+    ]);
+  }
+  return lines.map((row) => row.map(csvField).join(",")).join("\r\n") + "\r\n";
+}

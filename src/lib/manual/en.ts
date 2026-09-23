@@ -826,6 +826,8 @@ const manual: Manual = {
             "The three cards are the window's total, the average month, and how many items still have no price. Below them, a stacked column — one column per month, one colour per category — and the table it is drawn from.",
             "Tap a category name to take it out of the chart, the table and the totals; tap it again to bring it back.",
             "A category with items but no prices reads “not priced yet” rather than ฿0, and the “Not priced yet” row links straight to the page where that price is entered. A figure with a small orange +3 beside it means three more items that month have no price, so the real cost is higher.",
+            "The “Not priced yet” card is a shortcut to the same fix. If every missing price is in one category, it opens that category's page; if they are spread across several, it jumps down to the “Not priced yet” row so you can pick one.",
+            "Download CSV saves the table as a spreadsheet for the monthly report — the same months and the same categories that are switched on. Amounts are plain numbers so the spreadsheet can add them up, and each category has a second column counting what is not priced yet, so a 0 there never hides a gap.",
             "Under each category name is where its figure came from: priced (a price someone entered, times what the records imply), estimated (a stand-in — a maintenance job's estimated cost, or the typical vet visit) or invoiced (every visit that month already has its real cost).",
           ],
           callouts: [
