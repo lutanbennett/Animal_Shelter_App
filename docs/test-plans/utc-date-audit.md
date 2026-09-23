@@ -8,10 +8,10 @@
 | Backlog item | `docs/backlog.md` → **"'Today' is UTC everywhere, so it is yesterday in Thailand until 07:00."** — the *data* half (piece 2). The item stays unticked; `claude/utc-today` owns the code half. |
 | Branch / worktree | `claude/utc-date-audit` @ `C:\Development\Animal_Shelter_utc-date-audit` |
 | Dev server | not started — no runtime surface to look at |
-| PR | [#57](https://github.com/lutanbennett/Animal_Shelter_App/pull/57) (merged `e547164`), then the production follow-up |
+| PR | [#57](https://github.com/lutanbennett/Animal_Shelter_App/pull/57) (merged `e547164`), then [#65](https://github.com/lutanbennett/Animal_Shelter_App/pull/65) for the production run |
 | Tested by / date | Claude Opus 5 / 2026-09-23 |
 | Carries a migration? | no |
-| Tested at SHA | `4112e57`, re-run post-sync at `de54b4e` |
+| Tested at SHA | `4112e57`, `de54b4e` post-sync, `213a60e` for the production pass |
 
 ## 1. Scope and risk
 
@@ -26,7 +26,7 @@
 - [x] `npm run typecheck` — clean (re-run post-sync)
 - [x] `npm run lint` — clean (re-run post-sync)
 - [x] `npm run build` — succeeds (re-run post-sync, after `npm ci` for the lockfile change)
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — re-run pending for the production follow-up. Green twice already (`4112e57` run 35820560809, `b06a59b` run 35872689743); ticked again once this run is green, not before
+- [x] CI green on the PR (runs the same three) — PR #65 at `213a60e`: `check` pass (1m4s), `test-plan` pass (7s), run 35876733432. Previously green at `4112e57` and `b06a59b` for PR #57
 
 ## 3. Schema and data — *skip if no migration*
 
