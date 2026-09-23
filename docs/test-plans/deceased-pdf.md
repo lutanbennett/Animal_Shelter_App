@@ -15,7 +15,7 @@ Filled from `docs/test-plan-template.md`; see it for how each line is judged.
 | PR | #73 |
 | Tested by / date | Claude (deceased-pdf session), 2026-09-24 |
 | Carries a migration? | no |
-| Tested at SHA | PDF layout at `a0172af` (fix `cfc9bdc` merged with `origin/main` at `d3997a8`); profile photo change tested on the working tree committed after `b843a13` |
+| Tested at SHA | PDF layout at `a0172af`; profile photo change at `a145251`; gates re-run at `e603bab` after syncing `main` (#71, #74, #75) |
 
 ## 1. Scope and risk
 
@@ -26,10 +26,10 @@ Filled from `docs/test-plan-template.md`; see it for how each line is judged.
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (exit 0, merge `a0172af`, pushed)
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in (`a0172af` clean; `e603bab` had one conflict in `src/lib/releases.ts`, both sides' `unreleased` lines kept, main's first), pushed
 - [x] `npm run typecheck` — clean (exit 0)
 - [x] `npm run lint` — clean (exit 0)
-- [x] `npm run build` — succeeds (exit 0), re-run after the photo change
+- [x] `npm run build` — succeeds (exit 0), re-run after the photo change and again at `e603bab`
 - [ ] CI green on the PR — n/a: not yet — CI for the photo commit has not run at this commit
 
 ## 3. Schema and data — *skip if no migration*
@@ -107,7 +107,7 @@ subtitle on page 1, and no footer text on any page of any render.
 ### On the deployed build
 
 - [ ] Deployed to test: `npm run deploy:test` — deferred: production release manager
-- [ ] Smoke-tested on `test.lannacare.org` — regenerate one deceased resident's archive on the Workers build (edit its bio, or Retry) and open the PDF in Drive — deferred: production release manager
+- [ ] Smoke-tested on `test.lannacare.org` — regenerate the archive of R-0001 Chico or R-0060 Por-Aor (the only two deceased residents with a profile photo) on the Workers build, and open the PDF in Drive: layout, footer, and the photo from Drive's thumbnail — the live `thumbnailLink` fetch has not yet run anywhere — deferred: production release manager
 - [ ] Timezone-sensitive behaviour proved — n/a: no date logic changed; the footer's generated date uses the existing `day()` helper
 - [ ] Boundary or banding change covered on both edges — n/a: no threshold or banding logic
 - [ ] Evidence pasted into this plan is the tool's actual output, unedited — n/a: the evidence is the rendered PDFs themselves, described above rather than pasted
@@ -143,7 +143,6 @@ subtitle on page 1, and no footer text on any page of any render.
 | # | What to check | Where |
 |---|---|---|
 | 1 | Open the rendered stub PDFs and confirm the heading, photo and footer read correctly by eye | `latin.pdf`, `thai.pdf`, `thai-only.pdf`, `wrap.pdf`, `long.pdf`, sent in chat |
-| 2 | With working Google credentials, regenerate the archive of a deceased resident whose profile photo is a HEIC or a large phone JPEG, and confirm the photo appears (the live `thumbnailLink` fetch is the one path not run) | dev, or `test.lannacare.org` after `deploy:test` |
 
 ## Sign-off
 
@@ -156,9 +155,9 @@ Automated checks by: Claude (deceased-pdf session)  Date: 2026-09-24
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — awaiting Lutan's look at the stub PDFs
+- [x] The manual list above is empty, or every item in it was checked by a person — Lutan confirmed in chat. The real-Drive photo check was moved out of this list into §8's deployed smoke test, because nobody has run it yet and this signature must not cover it
 
-Manual verification by: pending: Lutan to open the five stub PDFs sent in chat, and one real regeneration with a HEIC or large profile photo
+Manual verification by: Lutan Bennett — reviewed the stub PDFs sent in chat and asked for the sign-off; line written by Claude at his request  Date: 2026-09-24
 
 ### Result
 
