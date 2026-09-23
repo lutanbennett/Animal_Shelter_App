@@ -2665,3 +2665,21 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   by reading, and the first was plausible enough to have been written down as
   fact. Worth knowing that no gate could have caught this: a deploy is the one
   thing a PR cannot exercise before it merges.
+
+- **"Settings" is the menu's name for `/admin`; the URL and the role keep
+  "admin" (2026-09-23):** Lutan asked for the Admin menu to read Settings.
+  Moving the pages to `/settings/*` with redirects (as `/admin/vets` →
+  `/management/vets` was done) would be tidier, but the rename is about what
+  people read, and a label-only change leaves every bookmark, link and
+  `requireAdminUser` gate untouched — agreed with
+  Lutan. So the sidebar label, the `/admin` landing heading and every "Admin →
+  X" menu path in `en.ts`, `th.ts` and the manual say Settings (Thai
+  การตั้งค่า); `nav.admin` became `nav.settings`. What deliberately still says
+  Admin is the **role**: `roles.admin`, the manual's `roleNames`, README's
+  roles table row and prose like "an admin can…" — those describe who someone
+  is, not where a page lives. The same pass sent the long-stale "Admin →
+  Contacts / Vets" hints to Management, where those pages have been since
+  2026-09-21, and names a manager rather than an admin as who can fix them.
+  The sidebar is also flat now — Management and Settings are one link each,
+  their tile-grid landing pages being the menu — which retires the accordion
+  state in `sessionStorage` and the footer-overlap bug it caused.
