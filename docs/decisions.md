@@ -2348,6 +2348,85 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   manual verification** table, so the handover to a human is a short concrete
   list rather than "please check it".
 
+- **What `worktree.mjs done` guarantees, and what it cannot (2026-09-23):**
+  `done` either finishes everything or says exactly what it left: the folder
+  gone, git's worktree entry pruned, the branch gone locally and on `origin`,
+  each checked afterwards rather than assumed. It refuses up front, before
+  touching anything, in three cases:
+  - **The branch has commits no origin ref has.** No flag overrides this,
+    `--force` included. Lost commits are the one unrecoverable outcome.
+  - **Any process has the folder open.** Windows will not delete a directory
+    that is a process's working directory or holds an open file. So this is
+    not a policy choice, it is a fact about Windows, not a bug to fix. Pressing
+    on would only unregister the worktree under the session sitting in it and
+    leave a husk, which is exactly what happened with cashflow-schema.
+  - **The folder is no longer a repo and holds more than build output.** Git
+    can no longer say what in it is uncommitted work (`--force` overrides).
+
+  The backlog item asked for a warning, not a refusal, on the grounds that
+  the check races. It does race, but only within milliseconds, and a refusal
+  that is right almost every time beats a warning people learn to scroll past.
+  **The check** renames the folder to a sibling name and straight back: it
+  succeeds only when nothing has anything under it open, so when it succeeds
+  nobody can notice it. A process holding the folder is named in two ways:
+  - a Claude session, from `~/.claude/sessions/<pid>.json`, trusted only when
+    the pid is alive *with the recorded start time*. That format is
+    undocumented, so it only ever adds a name. A missing name never turns
+    `HELD` into `free`.
+  - a dev server, when it is `node.exe` running a script under the folder's
+    `node_modules`, or an executable inside the folder.
+
+  The dev-server match is deliberately narrow. A first version matched any
+  command line that mentioned the path, and in testing `--stop-servers`
+  killed this session's own bash tool shells. Another session's shell would
+  have gone the same way.
+
+- **`.claude/launch.json` is per checkout, generated from `.port`
+  (2026-09-23):** a committed file can name only one port, so every worktree's
+  browser pane aimed at 3000. It is now gitignored and written by
+  `worktree.mjs new` / `dev` / `sync` / `launch` and by `.githooks/post-merge`,
+  which also regenerates it in the main checkout when the pull that untracks
+  it deletes the committed copy. While a branch still tracks the old file,
+  it is left alone, so `new` does not leave a branch cut before this change
+  looking dirty.
+
+- **Merges push too (2026-09-23):** git runs `post-commit` only for `git
+  commit`, so every `sync` and every `backlog` fast-forward used to sit
+  unpushed. `sync` now pushes as its last step and `.githooks/post-merge`
+  pushes after any merge or pull. Both exist on purpose: the hook covers
+  merges made by hand, and the explicit push covers a clone without
+  `core.hooksPath`. `new` also now fails outright if
+  `node_modules/.bin/next` is missing after `npm ci`. `new` did not return
+  early. That check turns a wrong assumption about a half-installed tree
+  (three gates once read green having never run) into a loud error.
+- **A one-day-early date is a candidate, not an error (2026-09-23):**
+  `docs/utc-date-audit-2026-09-23.md` audits which stored dates the UTC "today"
+  bug may have written a day early, and deliberately corrects nothing. The
+  detector is exact — stored date one day before the Bangkok date of the row's
+  `created_at`, written while the Bangkok clock read 00:00–07:00 — and it
+  still cannot tell the bug from a volunteer legitimately recording yesterday's
+  weight at 6am. Dev shows why this matters rather than being a caveat: 43 of
+  the 46 candidates there are the AppSheet import, which stamped
+  `age_estimated_on` from the export file's date, and are not the bug at all.
+  So *provenance* decides, not the date arithmetic — rows sharing a
+  `created_at` to the microsecond are a bulk insert, and a cluster across
+  several tables is one intake-wizard submission. Corrections, if any, are
+  therefore per-table and from a confirmed id list, never a re-run of the
+  detector as an `update … where`: that would sweep in every false positive and
+  is not re-runnable, since a corrected row stops matching.
+
+- **The UTC "today" bug has a second home, in SQL (2026-09-23):** the same
+  audit found six `current_date` sites inside the database — a column default
+  (`maintenance.date_created`), a trigger (`maintenance.date_completed`), the
+  deceased cascade that end-dates prescriptions, a seed, and three views
+  including the public `in_treatment` figure. The database's session timezone
+  is UTC, so each is wrong for the same seven hours, and a `todayIso()` helper
+  in `src/lib/format.ts` reaches none of them. Worth writing down because the
+  natural reading of the backlog item — "27 call sites in `src/`" — makes the
+  code fix look complete when it is not. The sharpest of them: a death recorded
+  before 07:00 closes every open prescription the day *before* the animal died,
+  because `new.start_date::date` casts a correct `timestamptz` in a UTC
+  session. The placement row itself is right; only what it triggers is wrong.
 - **The vet forecast is one flat figure, not an average (2026-09-23):** booked
   vet visits are costed at a single editable "typical vet visit" amount held in
   `site_content.vet_visit_estimate` and edited on `/admin/website`, multiplied by
@@ -2661,3 +2740,18 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   added `management` to its own plan by hand; its checklist was better than the
   template it was copied from, and nothing in the process would have surfaced that
   if Lutan had not asked what a resident account was.
+- **Production was clean because the bug had no time, not because it works
+  (2026-09-23):** the production run of the UTC date audit found zero rows
+  needing correction across every date column — the only hits were the 42
+  `age_estimated_on` values from the AppSheet import, which carry the export
+  file's own date and share one `created_at` to the microsecond. The deceased
+  cascade had never fired early either. That is a real answer, but the reason
+  matters more than the number: production's data arrived in a single import on
+  2026-09-22 and almost nothing has been hand-entered since, so the exposure
+  window was about a day and a half rather than the months the backlog item
+  assumed. Dev, where someone actually used the intake wizard at 01:26,
+  produced a genuine three-table candidate at once. The audit therefore clears
+  the rows that exist today and expires the first time anyone works an
+  overnight shift — `docs/utc-date-audit-2026-09-23.md` §8 keeps the triage and
+  the correction SQL unused on purpose, and the script is kept rather than
+  deleted so the next run is one command.

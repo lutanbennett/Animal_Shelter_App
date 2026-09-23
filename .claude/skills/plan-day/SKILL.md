@@ -23,13 +23,20 @@ git -C C:\Development\Animal_Shelter_App pull
 git -C C:\Development\Animal_Shelter_App merge backlog
 git -C C:\Development\Animal_Shelter_App push
 git -C C:\Development\Animal_Shelter_Backlog merge --ff-only main
+git -C C:\Development\Animal_Shelter_Backlog push
 ```
+
+(The post-merge hook pushes both merges too; the explicit pushes cost
+nothing and do not depend on `core.hooksPath` being set.)
 
 ## 2. What is already in flight
 
 `node C:\Development\Animal_Shelter_App\scripts\worktree.mjs list`.
 Live `claude/*` worktrees count toward today's cap of three. Flag any
-that show "nothing beyond main" with no PR open as leftovers to `done`.
+that show "nothing beyond main" with no PR open as leftovers to `done` —
+but only if `held` says `free`. A `HELD` worktree has a session or a
+process in it; name it and ask rather than tearing it down. List any
+husks it prints so the user can clear them.
 
 ## 3. Read the backlog
 
