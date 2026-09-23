@@ -4,24 +4,25 @@ The data half of the backlog item *"'Today' is UTC everywhere, so it is yesterda
 in Thailand until 07:00."* The code half is `claude/utc-today`; this branch
 changed **no data and no code under `src/`**.
 
-**Status: incomplete.** Dev is audited in full. **Production was not** — every
-route to it is blocked for this session (§5). The numbers that matter are the
-production ones, so treat this as the method, the detector and the triage, with
-a production run still owed.
+**Status: complete.** Dev and production both audited (§4, §5). **No row in
+production needs correcting** — but read §5's second half before filing that as
+good news, because production is clean for a reason that expires.
 
 ---
 
 ## 1. What to do with this
 
-1. Nothing needs correcting today. No date found so far is dangerous, and the
-   bug writes a *plausible* wrong date, not a corrupt one.
-2. **Fix the code first.** Correcting rows while the bug is live just means
-   doing it again. That is `claude/utc-today`'s PR — **plus six SQL sites a
-   `todayIso()` helper cannot reach** (§3.2), which need a migration and are
-   currently nobody's.
-3. Then run §5's commands against production and finish this document.
-4. Only then decide about correcting rows, and decide it **per table**, not in
-   one sweep. §7 explains why a blanket update is the wrong instrument.
+1. **Correct nothing.** Production holds no wrong date: every candidate there
+   is the AppSheet import, and the deceased cascade has never fired early
+   (§5). The §9 SQL run today would damage 42 correct rows.
+2. **The code is still broken**, which is the open half. `claude/utc-today`
+   (PR #59) covers the call sites; the six `current_date` sites in SQL (§3.2) are
+   in nobody's PR and need a migration. The deceased cascade is the one of
+   those with a clinical consequence.
+3. **Re-run this after a month of real overnight use** (§10). Production is
+   clean because the bug has barely had the opportunity — go-live was
+   2026-09-22 and almost every row is the import — not because it does not
+   work. §8's triage and §9's SQL are written and unused on purpose.
 
 Three things this audit turned up that are not "is this row wrong?" questions,
 and belong to the code half: a death closes prescriptions a day *before* the
@@ -155,7 +156,8 @@ Detectable, though, because `placement_history.start_date` is a trustworthy
 instant. On dev: 6 `Deceased` placements, all imported at 00:00 Bangkok, and **0
 prescriptions closed early** — the import had already end-dated them, so the
 cascade skipped them. The mechanism is live and untested against real overnight
-deaths; §5's production run includes the same query.
+deaths. Production says the same: 6 deceased residents, 0 prescriptions closed
+early (§5). The mechanism is live and has simply not been exercised yet.
 
 ### 3.4 "End today" is also broken, not just wrong
 
@@ -245,35 +247,81 @@ Two things follow, both of which matter more than the count itself:
   the first step of any production analysis, or the false-positive rate will
   swamp the real signal.
 
-## 5. Production — not run
+## 5. Results — production (`dbkodyyxxhtygxcxmfcu`), 2026-09-23
 
-Every route was refused by this session's permission classifier:
+Run 2026-09-23 at 21:28 Bangkok, read-only, after Lutan authorised it directly.
+**No row in production needs correcting.**
 
-| Attempt | Refused as |
+| Table.column | Examined | Candidates |
+|---|---:|---:|
+| `residents.intake_date` | 76 | 0 |
+| `residents.age_estimated_on` | 42 | **42 — all one import, see below** |
+| `weight.date` | 19 | 0 |
+| `blood_tests.date` | 51 | 0 |
+| `immunization_records.date_administered` | 13 | 0 |
+| `prescriptions.start_date` | 59 | 0 |
+| `resident_diets.start_date` | 70 | 0 |
+| `procedures.date` | 7 | 0 |
+| `attachments.date_taken` | 155 | 0 |
+| `maintenance.date_created` / `due_date` / `date_completed` | 2 / 2 / 0 | 0 |
+| `group_origins.date`, `project_folders.project_date` | 0 | 0 |
+| **Deceased cascade** (§3.3) | 6 deceased residents | **0 prescriptions closed early** |
+
+The 42 are the same false-positive class as dev's 43 (§4): `age_estimated_on`
+came from the AppSheet export's own date, 2026-09-21, and the import ran at
+**01:16 Bangkok on the 22nd** — inside the window by coincidence. Every one of
+the 76 residents carries that single `created_at` to the microsecond
+(`2026-09-21 18:16:46.918223+00`, one distinct value), which is the bulk-insert
+signature §4 says to check for. Not the bug.
+
+**Why production is clean, which matters more than the zeros.** The brief
+expected damage accumulating "for seven hours of every local day since
+go-live". That premise was wrong about the calendar, not about the mechanism:
+production's data arrived in a single import on 2026-09-22 and almost nothing
+has been hand-entered since. The exposure window was about a day and a half, not
+months. **Production is clean because the bug barely had the chance, not because
+it does not work** — dev, where someone actually used the intake wizard at 01:26,
+produced a real three-table candidate immediately (§4).
+
+So this clears the rows that exist **today**. It is not a verdict on the bug, and
+it expires the moment someone works an overnight shift.
+
+### Target verification
+
+The script was pointed at the project ref directly (`--project`), so the
+`Environment: test` label in its output is the default env name and **not** a
+statement about the target. Confirmed as production independently:
+
+| Check | Result |
 |---|---|
-| Copy `.env.deploy.production` from the main checkout into this worktree | Sensitive-Source Provenance |
-| `GET /v1/projects` to confirm the production ref | Credential Exploration |
-| Read-only `select` against the production ref directly | Production Reads |
+| Residents | 76 — matches `docs/data-migration.md`'s record of the production import |
+| Attachments | 205 — matches the same record exactly |
+| Placements | 125 against 130 recorded; 5 fewer, consistent with normal churn since |
+| Resident rows | all 76 share one `created_at`, i.e. the import and nothing hand-entered since |
 
-The refusals look right — this is a feature worktree, and `scripts/worktree.mjs`
-deliberately copies only `.env.local` (`ENV_FILES`), so production credentials
-are not meant to be here at all. Nothing was worked around.
+Dev has 77 residents — the 76 plus the "Wizard Test 23 Sep" row from §4 — which
+is the clearest single tell that these are two different databases.
 
-To finish this section, from the **main checkout** (`C:\Development\Animal_Shelter_App`),
-where `.env.deploy.production` lives:
+Every statement was a `select` with `read_only` set. Nothing was written.
 
-```bash
-node scripts/throwaway-utc-date-audit.mjs --env production --rows
-```
+### What was refused earlier, and why it is recorded
 
-It prints the §4 table as JSON and every candidate row. It is read-only. Paste
-the output into a session on this branch, or hand it to whoever can run it, and
-§4 gets a production twin.
+Three earlier routes were refused by this session's permission classifier:
+copying `.env.deploy.production` into the worktree (Sensitive-Source
+Provenance), listing projects to confirm the ref (Credential Exploration), and
+this same read-only query (Production Reads). The run above happened only after
+Lutan asked for it directly.
 
-**Until that runs, the production blast radius is unknown.** The window is seven
-hours of every day since go-live (2026-09-22 for the imported data; earlier for
-anything entered before), and the shelter's overnight hours are real working
-hours, so it is not safe to assume the count is small.
+Two things are worth keeping from that, because they will come up again:
+
+- The rule is about **production**, not about which folder the command runs
+  from. Running it from the main checkout would not have made it a different
+  read.
+- A peer session offered to run it and pass the output over. That was declined:
+  routing refused data through a peer is laundering whether the peer offers or
+  is asked, since the effect is identical. The legitimate path is the one that
+  was taken — the user authorises it, or the user runs it and hands over the
+  file.
 
 ## 6. What matters if it is wrong
 
@@ -361,37 +409,53 @@ specific row; SQL cannot.
 
 ## 8. Recommendation
 
-1. **Do not bulk-update anything now.** Not because the count is small — it is
-   unknown — but because the bug is still live and the candidates are not all
-   errors.
-2. **Land the code fix**, including the two things outside its current scope:
-   the `CURRENT_DATE` default (§3.2) and the `endPrescriptionToday` /
-   `endDietToday` filter (§3.3).
-3. **Run §5 against production** and complete §4.
-4. **Then triage in three buckets, by table:**
-   - *Cosmetic* (§6) — leave alone. Correcting them is churn on medical records
-     for no benefit, and every update is a chance to make something worse.
-   - *Clinically significant* — export the candidates with resident name, the
-     Bangkok write time and the neighbouring rows, and have someone who was
-     there read the list. Correct only confirmed rows, one by one. An open
-     prescription whose start is a day early is worth a phone call; a course
-     that finished in March is not.
-   - *`residents.intake_date`* — likely correctable in bulk **after** excluding
-     import rows, since an intake is nearly always recorded on arrival; but it
-     is the animal's official date, so confirm the list rather than assume it.
-5. **Exclude imported rows from every bucket** (§4). They came from AppSheet
-   with their own dates and were never touched by this bug.
-6. **Add `updated_at` to `prescriptions` and `resident_diets`** if end-date
-   accuracy is ever going to be auditable (§7.1). Backlog, not now.
+**Correct nothing. Fix the rest of the bug.** Production holds no wrong date
+today (§5), so the data question is closed and the code question is not.
 
-If the production numbers come back at a handful of rows, option 4 is an
-afternoon with the shelter manager. If they come back in the hundreds, the
-bucket split is what keeps it from being a mass rewrite of medical history.
+1. **No data correction, anywhere.** Not "defer it" — there is nothing to
+   correct. Every production candidate is the AppSheet import, and the deceased
+   cascade has never fired early. Running the §9 SQL against production today
+   would change 42 correct rows into 42 wrong ones.
+2. **Finish the code fix.** `claude/utc-today` (PR #59) covers the 27 call
+   sites, the placement branch and "end today". Still outstanding and owned by
+   nobody's PR: the six `current_date` sites in SQL (§3.2), of which the
+   **deceased cascade is the one with a clinical consequence**. It needs a
+   migration, so it needs a schema slot — not a backlog entry that ages.
+3. **Re-run this audit after the first month of real overnight use**, and
+   before any decision that trusts a date typed at night. The command is in §10;
+   it takes a minute and it is read-only. §9's SQL and §8's triage are written
+   and unused on purpose — the next run is the one likely to need them.
 
-## 9. The SQL that would fix it — **not run**
+**When there is something to correct, triage in three buckets, by table:**
 
-None of this has been executed anywhere. Read §8 first; this exists so the
-correction is written down, reviewed and boring by the time anyone runs it.
+- *Cosmetic* (§6) — leave alone. Correcting them is churn on medical records for
+  no benefit, and every update is a chance to make something worse.
+- *Clinically significant* — export the candidates with resident name, the
+  Bangkok write time and the neighbouring rows, and have someone who was there
+  read the list. Correct only confirmed rows, one by one. An open prescription
+  whose start is a day early is worth a phone call; a course that finished in
+  March is not.
+- *`residents.intake_date`* — likely correctable in bulk **after** excluding
+  import rows, since an intake is nearly always recorded on arrival; but it is
+  the animal's official date, so confirm the list rather than assume it.
+
+And in every bucket, **exclude imported rows** (§4, §5). They came from AppSheet
+with their own dates and were never touched by this bug. That single exclusion
+is the difference between this audit's real answer — zero — and a headline of
+"42 wrong dates in production".
+
+**One thing to add regardless of any of the above:** `updated_at` on
+`prescriptions` and `resident_diets` (§7.1). Without it, a wrong `end_date` is
+undetectable forever, and `end_date` is the field the deceased cascade and the
+"end today" button both write. Backlog item, small, and it only helps if it
+lands before the damage rather than after.
+
+## 9. The SQL that would fix it — **not run, and not needed today**
+
+None of this has been executed anywhere, and per §5 there is nothing in
+production for it to fix — running it now would turn 42 correct rows into 42
+wrong ones. It is written down so that when a future run *does* find something,
+the correction is already reviewed and boring rather than improvised.
 
 **Review first — this is the query to export for a human:**
 
@@ -464,10 +528,19 @@ its own schema PR per `CLAUDE.md`, not to this audit.
 ## 10. Reproducing this
 
 ```bash
-node scripts/throwaway-utc-date-audit.mjs --rows              # dev
-node scripts/throwaway-utc-date-audit.mjs --env production --rows   # main checkout only
-node scripts/throwaway-utc-date-audit.mjs --sql "select 1"    # ad hoc, selects only
+node scripts/throwaway-utc-date-audit.mjs --rows                       # dev
+node scripts/throwaway-utc-date-audit.mjs --project <prod-ref> --rows  # production, read-only
+node scripts/throwaway-utc-date-audit.mjs --sql "select 1"             # ad hoc, selects only
 ```
 
-Delete `scripts/throwaway-utc-date-audit.mjs` once the production run is done
-and the triage in §8 is settled.
+`--project` aims at a ref directly, which is how the production run was done: a
+worktree has no `.env.deploy.production` (`scripts/worktree.mjs` copies only
+`.env.local`), so `--env production` cannot resolve there. With `--project` the
+`Environment:` line still prints the default env name — **read the ref, not the
+label** (§5).
+
+**Keep the script.** §8 recommends re-running this after the first month of
+real overnight use, and after the code fix deploys; it is one read-only command
+and it is the only way to tell whether the answer is still zero. Delete it when
+the UTC item is closed in full, including the six SQL sites in §3.2 — not
+before.
