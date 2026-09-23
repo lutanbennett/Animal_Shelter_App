@@ -30,7 +30,7 @@ Filled from `docs/test-plan-template.md`; see it for how each line is judged.
 - [x] `npm run typecheck` — clean (exit 0)
 - [x] `npm run lint` — clean (exit 0)
 - [x] `npm run build` — succeeds (exit 0), re-run after the photo change and again at `e603bab`
-- [ ] CI green on the PR — n/a: not yet — CI for the photo commit has not run at this commit
+- [x] CI green on the PR: run 35901610353 on `9986ae8` (after both syncs and the sign-off) passed, `check` and `test-plan` both green
 
 ## 3. Schema and data — *skip if no migration*
 
