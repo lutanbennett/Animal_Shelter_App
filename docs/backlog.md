@@ -4,16 +4,14 @@ Each item is a self-contained prompt for a new thread. Ordered by suggested prio
 
 ## Deployment (before go-live)
 
-> **MERGE HOLD, 2026-09-23 — PRs #56–#60 are not to be merged yet.** Lutan's
-> sequencing: the release register must exist *before* those five features land, so
-> they are recorded in it as they deploy rather than being invisible to a register
-> minted after the fact. The order is: (1) finish the release register, the mailer and
-> SMTP on `claude/release-notes`; (2) merge that alone; (3) deploy it to UAT, which
-> mints `v0.0.1` "Current Baseline Build"; (4) *then* merge #56–#60; (5) deploy again
-> and check the five features appear as the next release. Merging #56–#60 early does
-> not break anything, but it spends the one chance to prove the register works on real
-> changes. If you are a session holding one of those PRs: it is finished, it is just
-> waiting — do not close it, do not merge it, and keep it synced.
+> **MERGE HOLD LIFTED, 2026-09-23.** The gate has cleared: `claude/release-notes`
+> merged (#62), and both environments now answer `{"version":"0.0.1"}` at
+> `/api/releases/current` — the register is live on UAT *and* production with
+> `v0.0.1` "Current Baseline Build" seeded, and the SMTP item is closed with it.
+> The held PRs may now merge. What remains of Lutan’s sequence is step 5: **after
+> merging them, deploy again and confirm the features appear as the next release
+> entry** — that second deploy is the only real test that the register records
+> changes as they ship, so do not let the merges pile up without one.
 
 
 Environments exist since 2026-09-21 (README "Environments"): `test.lannacare.org` runs `main` against the dev database; `lannacare.org` runs the production Supabase project (`dbkodyyxxhtygxcxmfcu`, all 63 migrations applied, public views checked, Google provider and redirect URLs set, Lutan seeded as admin). Google Drive is the dev account in every environment for now. What still separates this from a live shelter system:
