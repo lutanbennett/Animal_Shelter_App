@@ -2944,6 +2944,33 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   and when neither can be embedded the reason goes to the Worker log. This
   is the one place the app reads a thumbnail: the on-screen photo proxy still
   serves originals, deliberately (see the Drive throttling entry).
+- **What counts as user-visible, and the escape hatch (2026-09-24):** cutting
+  `0.1.0` found `unreleased` empty after ten merged PRs, two of them plainly
+  user-visible (#60 cashflow, #67 nav). `deploy.mjs` refuses a *non-empty*
+  list, but an empty one looks exactly like "nothing visible shipped", so nothing
+  caught it. The fix works through the test plan, not the diff.
+  `docs/test-plan-template.md` §7 now has a release-notes line: tick it when
+  `unreleased` gained a line in this PR, or write `n/a: <why nobody would
+  notice>`. `check-test-plan.mjs` checks that line against the diff. **The
+  definition:** a change under `src/app/`, `src/components/`,
+  `src/lib/manual/`, `src/lib/i18n/` or `worker/` (pages, their parts, the
+  manual and translated copy, release mail and scheduled jobs) is *presumed*
+  visible. Such a PR with no new `unreleased` line fails unless a plan answers
+  the line. A tick with no new line fails anywhere, because it claims something
+  the diff contradicts. The file list is only a presumption. Plenty of
+  `src/app/` changes are invisible, and a `scripts/` change can be visible, so
+  the author decides, and the check only makes sure the question gets asked
+  while they still remember what they changed. **The escape hatch** is the
+  same `n/a: <reason>` people already write on every other line (Lutan chose
+  it over a PR-body marker, 2026-09-24). No new idiom, it stays in git history
+  beside the change, and the reason is printed in the CI output ("No release
+  note, on the plan's word") so a reviewer reads it rather than trusting it.
+  The path list is deliberately broad: a wrong prompt costs one sentence, while
+  a missed release note leaves the register quietly untrue. Plans written
+  before this line existed have nowhere to answer, so the missing-line failure
+  only fires when UI paths changed. A follow-up edit to an old plan in a
+  docs-only PR still passes. This is part of `test-plan`, so it is a red
+  flag and not a hard block, like the rest of that job.
 - **The cashflow vet line stays on the flat per-visit figure, for now
   (2026-09-24):** the backlog asked for vet visits to be forecast from
   recent frequency — per week, `max(last quarter's average visits a week,
