@@ -21,6 +21,7 @@
 // site is mailed to that environment's admins through the Worker (announce()).
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
 import { readFileSync } from "node:fs";
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
 // TypeScript, loaded through Node's type stripping: the same file the app
@@ -76,7 +77,13 @@ function run(cmd, opts = {}) {
  * CVE-2024-27980, Node refuses to spawn a .cmd without `shell: true`, which puts
  * the parsing back.
  */
-const WRANGLER = createRequire(import.meta.url).resolve("wrangler/bin/wrangler.js");
+// Resolved via package.json: wrangler's "exports" map does not expose
+// ./bin/wrangler.js, so asking for it directly throws ERR_PACKAGE_PATH_NOT_EXPORTED.
+const WRANGLER = join(
+  dirname(createRequire(import.meta.url).resolve("wrangler/package.json")),
+  "bin",
+  "wrangler.js",
+);
 
 function wrangler(args, opts = {}) {
   const r = spawnSync(process.execPath, [WRANGLER, ...args], {
@@ -168,7 +175,22 @@ if (pushSecrets) {
 // table of our own. The strip keeps the message readable in that list; it is
 // no longer load-bearing for quoting, since wrangler() does not use a shell.
 const message = `v${latestRelease.version} ${latestRelease.title}`.replace(/[^\w .,:-]/g, "");
-wrangler(["deploy", "--env", envName, "--tag", `v${latestRelease.version}`, "--message", message]);
+// --autoconfig false stops wrangler detecting an OpenNext project and handing
+// off to `opennextjs-cloudflare deploy`, which re-invokes wrangler with a
+// re-joined command line and loses the quoting again — downstream of anything
+// this script can control. We have already run the OpenNext build and the env
+// strip above, so there is nothing for that hand-off to add.
+wrangler([
+  "deploy",
+  "--env",
+  envName,
+  "--tag",
+  `v${latestRelease.version}`,
+  "--message",
+  message,
+  "--autoconfig",
+  "false",
+]);
 
 await announce();
 
