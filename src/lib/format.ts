@@ -142,3 +142,37 @@ export function formatMonth(
   const { month, year } = dateParts(value, locale);
   return withYear ? `${month} ${year}` : month;
 }
+
+// A unit price — per tablet, per ml, per dose — is often a few baht and
+// change, so unlike formatBaht (whole baht, for totals and invoice figures)
+// this keeps up to two decimals, matching the numeric(12, 2) the prices are
+// stored in. "฿2.50", "฿120".
+export function formatBahtPrice(amount: number, locale: Locale = "en") {
+  return amount.toLocaleString(NUMBER_LOCALE_TAG[locale], {
+    style: "currency",
+    currency: "THB",
+    currencyDisplay: "narrowSymbol",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
+}
+
+// The largest numeric(12, 2) there is — the type every price column uses.
+const MAX_BAHT = 9_999_999_999.99;
+
+export type ParsedBaht = { ok: true; value: number | null } | { ok: false };
+
+/**
+ * A baht amount typed into a form (0071's price fields). Blank is a real
+ * answer — null, "nobody has priced this yet" — and anything that isn't a
+ * non-negative number in range is rejected rather than coerced, because
+ * the one thing the cashflow forecast must never do is invent a zero.
+ * Rounded to two decimals so what is stored is what was shown.
+ */
+export function parseBahtAmount(raw: string | null | undefined): ParsedBaht {
+  const trimmed = typeof raw === "string" ? raw.trim() : "";
+  if (!trimmed) return { ok: true, value: null };
+  const value = Number(trimmed);
+  if (!Number.isFinite(value) || value < 0 || value > MAX_BAHT) return { ok: false };
+  return { ok: true, value: Math.round(value * 100) / 100 };
+}
