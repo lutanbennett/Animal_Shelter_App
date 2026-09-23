@@ -93,6 +93,7 @@ subtitle on page 1, and no footer text on any page of any render.
 
 - [x] Backlog item ticked in `docs/backlog.md` **on this branch** (follow-ups filed on the `backlog` branch)
 - [x] Non-obvious design choices appended to `docs/decisions.md`, dated
+- [x] **Release notes.** Shelter users will notice both changes (the PDF they keep for a resident who has died), so `unreleased` in `src/lib/releases.ts` gains two lines in this PR: the readable layout with a footer, and the profile photo now appearing for iPhone and large photos
 - [x] `README.md` still accurate (it does not describe the PDF layout)
 - [x] Commit messages say why, not just what
 - [x] Claims in commit messages and `docs/decisions.md` were measured, not reasoned: the 5,315.625pt footer height was read from an instrumented copy of `@react-pdf/layout`'s final page relayout (then restored); the compounding was confirmed by a second run with the footer at `lineHeight: 1.2`, which measured 3,796.875 = 9 × 7.5³; and both fixes are confirmed by rendered output, not by reading the JSX
