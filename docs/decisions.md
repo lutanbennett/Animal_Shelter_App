@@ -2513,3 +2513,23 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   deploy is the proof. If it fails with `E_SENDER_DOMAIN_NOT_AVAILABLE`, the
   fallback is to relay through Resend's API from the account set up for Auth
   SMTP. Don't buy Workers Paid.
+
+- **Deploys go straight to wrangler, not through npx or OpenNext (2026-09-23):**
+  release stamping added `--message "v<version> <title>"` to the deploy, and
+  every deploy immediately began failing with `Unknown arguments: …`. The cause
+  is two hops deep. `npx wrangler …` through a shell is cmd.exe → npx.cmd →
+  wrangler.cmd → node on Windows, and wrangler then *detects an OpenNext project
+  and re-invokes itself* through `opennextjs-cloudflare deploy` with a re-joined
+  command line. The quoting dies in that last hop, which is inside a dependency,
+  so passing the first invocation an argv array does not help. `deploy.mjs` now
+  spawns wrangler's own entry point with node and passes `--autoconfig false` to
+  stop the hand-off; the OpenNext build and env strip have already run by then,
+  so nothing is lost. Three earlier diagnoses were wrong and are worth recording
+  so nobody re-tries them: `shell: true` alone does not lose quotes for a plain
+  executable; `npx.cmd` cannot be given an argv array at all, because Node has
+  refused to spawn a `.cmd` without a shell since the fix for CVE-2024-27980; and
+  wrangler's `exports` map does not expose `./bin/wrangler.js`, so the entry is
+  resolved through `package.json`. Each was disproved by running it rather than
+  by reading, and the first was plausible enough to have been written down as
+  fact. Worth knowing that no gate could have caught this: a deploy is the one
+  thing a PR cannot exercise before it merges.
