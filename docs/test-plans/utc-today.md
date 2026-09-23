@@ -11,7 +11,8 @@
 | PR | #59 |
 | Tested by / date | Claude (automated) 2026-09-23 |
 | Carries a migration? | no |
-| Tested at SHA | `537f1f0` (code), plus docs commits on the same branch |
+| Tested at SHA | `d01bf2b` — the branch merged up to `main` at `dfb01c3`. Code is unchanged since `537f1f0`; the assertion suite was re-run against the merged tree. |
+| Deployed to test | `d01bf2b` on `test.lannacare.org` (project `qxkmhwybjggxvsfxsxbd`), 2026-09-23T12:26Z |
 
 ## 1. Scope and risk
 
@@ -28,7 +29,7 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (`origin/main` at `83bf4a6`, already the branch's base; nothing to merge)
+- [x] `node scripts/worktree.mjs sync` — merged cleanly, three times as `main` moved: `83bf4a6` (no-op, already the base), then `4c3f284` (#56), then `dfb01c3` (#62). The last was run by the test-manager session in this worktree, not by me. `docs/decisions.md` took the union merge each time; no conflicts anywhere.
 - [x] `npm run typecheck` — clean
 - [x] `npm run lint` — clean
 - [x] `npm run build` — succeeds, all 60+ routes compiled
@@ -155,16 +156,16 @@ The `2026-09-22T18:26Z` case is the exact instant from the bug report — 01:26 
 
 ### Tested build
 
-- [ ] Tested SHA recorded in the header, and it is the tip of `main` at deploy time — n/a: this branch is not merged yet, so it is not the tip of `main`. The release manager re-records this at deploy time.
-- [ ] Deployed SHA matches the tested SHA — n/a: nothing deployed from this branch.
+- [ ] Tested SHA recorded in the header, and it is the tip of `main` at deploy time — n/a: this branch is not merged yet, so it is not the tip of `main`. The release manager re-records this at the production deploy. It *is* the tip of `test`, which is the header's "Deployed to test" row.
+- [x] Deployed SHA matches the tested SHA — `d01bf2b` on both, confirmed against `origin/claude/utc-today` after pushing the merge (see defect 5 — the merge was briefly unpushed, so the PR and the deployed build had drifted apart).
 
 ### On the deployed build
 
-- [ ] Deployed to test: `npm run deploy:test` — n/a: not deployed from this branch. Deploying an unmerged feature branch to the shared test environment would take it away from whatever else is using it; this goes to test after merge.
-- [ ] Smoke-tested on `test.lannacare.org` — n/a: not deployed from this branch; see above. Listed for manual verification after merge.
+- [x] Deployed to test: `npm run deploy:test` — done by the test-manager session, not by me: `d01bf2b` to project `qxkmhwybjggxvsfxsxbd`, `2026-09-23T12:26Z`, `strip-baked-env` removed 10 vars. Attributed rather than claimed, because I did not run it.
+- [x] Smoke-tested on `test.lannacare.org` — **partially, and the part I could reach I verified myself rather than accepting the report.** `/adopt` renders residents and dates on the deployed Workers build, and fetching all 13 script chunks from the running site finds `Asia/Bangkok` present in a client chunk — so the artefact genuinely carries the fix, which is the specific failure that voided the first attempt (test was serving `main`, without this branch). What is *not* smoke-tested is the authenticated intake path, which needs a login I do not have; that is the manual item.
 - [ ] **Timezone-sensitive behaviour proved, not observed at a convenient hour.** — n/a: split into its two claims, per the template. Both are addressed, neither by this line:
   - *Does the logic handle the boundary?* — **yes, and asserted**: the real exported functions against fixed instants, then the same suite under `TZ=UTC`. Full output in *Deterministic boundary checks* above. Ticked there.
-  - *Does the deployed build behave as the source does?* — **not answered.** Only `test.lannacare.org` during 00:00–07:00 Thai can, and nobody was there at that hour. In **Left for manual verification**, and named on the `pending` signature line, rather than ticked.
+  - *Does the deployed build behave as the source does?* — **still not answered, but now answerable.** The branch is on `test.lannacare.org` as of `d01bf2b`, and I have confirmed the uploaded bundle contains `Asia/Bangkok`; what remains is watching it render during 00:00–07:00 Thai. Narrower than it was — "the deploy didn't include the branch" is ruled out — but not closed. In **Left for manual verification**, and named on the `pending` signature line, rather than ticked.
 - [x] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned** — and this is the plan where that line earned its place. Two claims in my own commit messages about `dueState()` were reasoned, plausible and wrong, in opposite directions (defects 1 and 1a); a third, from the audit stream, was right in direction but named the one case in the band that does not move. All three would have shipped past `typecheck`, `lint`, `build` and this checklist. Each is now measured, and the measurements are pasted from run output rather than described.
 - [ ] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness — n/a: no migration and no schema in this PR; there is no constraint or default to exercise.
 - [ ] Public pages re-checked after a cache purge or a 10-minute wait — n/a: this PR changes nothing on `/`, `/adopt`, `/our-work` or `/donate`. Worth noting for the release manager that `public_shelter_stats.in_treatment` on those pages **is** timezone-wrong, but from SQL `current_date`, which this PR does not touch and cannot fix.
@@ -195,6 +196,8 @@ The `2026-09-22T18:26Z` case is the exact instant from the bug report — 01:26 
 | 2 | medium | Postgres has its own copy of the bug in six places; `todayIso()` cannot reach SQL. Includes the deceased cascade end-dating prescriptions the day *before* a death. | deferred to backlog — commit `87fb883` on the `backlog` branch; needs its own migration PR. Reported by the `utc-date-audit` stream. |
 | 3 | low | `prescriptions` and `resident_diets` have no `updated_at`, so a wrong `end_date` can never be audited after the fact. | deferred to backlog — same commit. |
 | 4 | — | `node_modules/.bin` was missing in this worktree, so every npm script failed with "'next' is not recognized". `npm ci` fixed it. Not caused by this change; noting it in case `worktree.mjs new` is leaving installs half-finished. | accepted — environment, not code. Worth a look if it recurs. |
+| 5 | medium | **The merge that put this branch on test was never pushed.** Another session ran `sync` here, reported it "pushed by the post-commit hook", and it was not — the branch sat 9 commits ahead of `origin`. So `test.lannacare.org` was serving `d01bf2b` while PR #59 still showed `165cdb1`: the deployed build and the reviewable build had silently diverged, and the manual check would have been run against a commit not on the PR. This is the known backlog item "`sync` leaves the branch unpushed — the post-commit hook does not fire for merges" biting in a new way, now that a deploy depends on it. | fixed — pushed manually; `origin/claude/utc-today` and the deployed build are both `d01bf2b`, re-verified after the push. The underlying hook gap is already on the backlog. |
+| 6 | high (not mine) | **Deploys from `main` are broken** — `main`'s release-notes change lost the quoting on `wrangler … --message "v0.0.1 Current Baseline Build"`, so every deploy fails with `Unknown arguments: Baseline, Build`. The cause is that wrangler detects an OpenNext project and delegates to `opennextjs-cloudflare deploy`, which re-joins the command line downstream of any argv array; `--autoconfig false` stops the delegation. | deferred — not this PR's change and not this PR's to fix. Fix is on `claude/deploy-message-quoting`, unmerged. **The release manager must not attempt a production deploy until that lands.** Recorded here because this plan is what they read. |
 
 Defect 1a is the one worth drawing a lesson from. Two sessions looked at
 `dueState()` and both got it wrong on the first pass, in opposite directions,
@@ -215,8 +218,9 @@ browser: a diet created today and ended with "End today" now reads
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | Open `/residents/new` and go to step 2 (Arrival). Confirm the **Intake date defaults to the new day** and that the new day is **selectable** — the field's `max` must not be stuck on the previous date. This must be done **between 00:00 and 07:00 Thailand time**; at any other hour UTC and Bangkok agree and the check proves nothing. | `test.lannacare.org`, after this branch is merged and deployed |
+| 1 | Open `/residents/new` and go to step 2 (Arrival). Confirm the **Intake date defaults to the new day** and that the new day is **selectable** — the field's `max` must not be stuck on the previous date. This must be done **between 00:00 and 07:00 Thailand time**; at any other hour UTC and Bangkok agree and the check proves nothing. | `test.lannacare.org`, **runnable now** — it serves `d01bf2b`, which is this branch |
 | 2 | Optional, same window, same page load: the resident hub of anything created in step 1 should read the new day under "Intake", and its placement "Since" the new day. | `test.lannacare.org` |
+| 3 | Before starting, confirm you are looking at this branch and not `main`: the intake step-2 date field is the test, and `main` does **not** contain the fix. The first attempt at this check was run against `main` and its results were void. | `test.lannacare.org` |
 
 ## Sign-off
 
