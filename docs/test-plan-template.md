@@ -110,15 +110,25 @@ Per `CLAUDE.md`, schema lands as its own PR before the feature.
 ### Role access matrix
 
 Sign in as each role that matters and record what they see. Unauthorised access
-must be refused by the server, not merely hidden in the UI.
+must be refused by the server, not merely hidden in the UI — hit the URL
+directly rather than checking whether the nav entry is hidden. That distinction
+is what found the cashflow money bug: the page redirected correctly, and the RPC
+behind it did not.
+
+These are all of them. `app_role` is `('admin', 'staff', 'vet', 'volunteer')`
+from `0001_initial_schema.sql`, plus `'management'` added by
+`0038_management_role.sql`. **There is no `resident` role** — in this app a
+resident is an animal — and do not re-derive this list by grepping for quoted
+strings, which is how `resident` got into this template and `management` got left
+out of it for a day.
 
 | Role | Can reach | Expected | Result |
 |---|---|---|---|
 | admin | | | |
+| management | | | |
 | staff | | | |
 | vet | | | |
 | volunteer | | | |
-| resident | | | |
 | signed out | | | |
 
 - [ ] Every role above tested

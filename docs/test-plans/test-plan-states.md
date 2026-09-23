@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| Feature | A third `deferred:` state for section 8, grouped checker output so a red says which kind it is, and five corrections from streams using the checklist |
+| Feature | A third `deferred:` state for section 8, grouped checker output so a red says which kind it is, five corrections from streams using the checklist, and a corrected role matrix |
 | Backlog item | none; feedback from the Cashflow Forecast and UTC time bug fix sessions, 2026-09-23 |
 | Branch / worktree | `claude/test-plan-states` @ `C:\Development\Animal_Shelter_test-plan-states` |
 | Dev server | not started — this change ships no runtime code |
@@ -22,10 +22,10 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — branch created from `origin/main` at `4c3f284`, which is the tip; nothing to merge
+- [x] `node scripts/worktree.mjs sync` — cut from `4c3f284`, then synced to `main` at `457f395` as `8590ff6` and pushed (checked with `git status -sb`, not assumed: the merge left the branch 33 ahead, which the post-commit hook does not push)
 - [x] `npm run typecheck` — exit 0
 - [x] `npm run lint` — exit 0
-- [x] `npm run build` — exit 0. Run before the last two commits, both of which are Markdown only and invisible to `next build`; CI re-runs it on the tip
+- [x] `npm run build` — exit 0, re-run after the sync
 - [ ] CI green on the PR — n/a: not yet; the PR does not exist at this commit. Ticked in a follow-up commit once the run is actually green
 
 ## 3. Schema and data
@@ -97,13 +97,13 @@ No runtime surface, so no role can reach this change.
 | Role | Can reach | Expected | Result |
 |---|---|---|---|
 | admin | nothing | n/a | n/a |
+| management | nothing | n/a | n/a |
 | staff | nothing | n/a | n/a |
 | vet | nothing | n/a | n/a |
 | volunteer | nothing | n/a | n/a |
-| resident | nothing | n/a | n/a |
 | signed out | nothing | n/a | n/a |
 
-- [ ] Every role above tested — n/a: no runtime surface exists for any role to reach
+- [ ] Every role above tested — n/a: no runtime surface exists for any role to reach. Note this PR *corrects* the matrix itself; the rows below are the real five roles
 - [ ] A role that should not have access is blocked server-side — n/a: no route added
 
 ## 5. Cross-cutting
@@ -119,7 +119,7 @@ No runtime surface, so no role can reach this change.
 
 - [x] The pages nearest the change still work — no page surface; `npm run build` compiled every route, which is the available evidence
 - [x] Any shared file touched checked from a second, unrelated page, by loading it — `scripts/check-test-plan.mjs` has no page, so the equivalent second consumer is the already-merged `docs/test-plans/test-plan-enforcement.md`: ran the new checker against it unchanged and it still passes, confirming the three-state change did not invalidate plans written under the two-state rule
-- [x] Nothing merged from `main` was broken by this branch — branched from `4c3f284`, the tip; nothing to merge back in
+- [x] Nothing merged from `main` was broken by this branch — synced to `457f395`, which brought the cashflow forecast, the deploy fix and the release register; none of them touch the checker or the template
 
 ## 7. Documentation
 
@@ -163,6 +163,7 @@ No runtime surface, so no role can reach this change.
 | 8 | low | `deferred` with no owner reported "not marked `n/a`", pointing at the wrong problem — the same class of bug as the bare `n/a:` fixed on the previous PR | fixed — matched on the word, not on a well-formed value |
 | 9 | medium | The two new rules fought each other: evidence must be pasted unedited, but pasted checker output quotes the checker's own error messages, which contain the template's angle-bracket name and date tokens — so the placeholder check flagged a faithful record of a run as an unfilled template. Found by regenerating this plan's own evidence block, which is what rule 6 asks for | fixed — fenced code blocks are skipped for placeholder and checkbox scanning; a token outside a fence still fails, verified both ways |
 | 10 | low | Writing up defect 9 reproduced it: naming the tokens in prose, outside a fence, failed the check. Correct behaviour, but it means any plan *discussing* the template needs the fence too | accepted — the checker is right; the wording avoids the literal tokens instead |
+| 11 | high | The role matrix listed a `resident` role that does not exist, and omitted `management`, which gates every `/management/*` page. Derived by grepping for quoted strings rather than reading `app_role`, so it matched a query about animals and missed a role added by a later migration. Wrong in both directions: a row nobody can meaningfully tick, and a missing row for the role most likely to be in an access bug. Every checklist written so far carries it | fixed — matrix corrected and the two migrations cited in the template, so the list is read rather than re-derived |
 
 ## Left for manual verification
 

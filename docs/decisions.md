@@ -2640,3 +2640,24 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   by reading, and the first was plausible enough to have been written down as
   fact. Worth knowing that no gate could have caught this: a deploy is the one
   thing a PR cannot exercise before it merges.
+
+- **The role matrix lists the five roles that exist, and says where they come
+  from (2026-09-23):** `docs/test-plan-template.md` shipped with a `resident` row
+  and no `management` row. Both were wrong in the same way: the list was derived
+  by grepping `src/lib` for quoted strings, which matched
+  `.eq("owner_type", "resident")` in `archive/resident-record.ts` — a query about
+  animals, not users — and missed `management`, which is added to the enum by a
+  later migration rather than appearing in the initial one. The authority is
+  `app_role`: `('admin', 'staff', 'vet', 'volunteer')` in
+  `0001_initial_schema.sql`, plus `'management'` in `0038_management_role.sql`.
+  The template now names both files, so the next person reads the enum instead of
+  re-deriving it.
+
+  This failed in both directions at once, which is what makes it worth recording.
+  A row for a role that cannot exist is noise — it can only ever be ticked
+  meaninglessly. A *missing* row is worse: `management` is the role that gates
+  every `/management/*` page, so the matrix built to catch access bugs omitted the
+  role most likely to be in one. The Cashflow Forecast session noticed the gap and
+  added `management` to its own plan by hand; its checklist was better than the
+  template it was copied from, and nothing in the process would have surfaced that
+  if Lutan had not asked what a resident account was.
