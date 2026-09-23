@@ -16,7 +16,7 @@ or `n/a` with the reason.
 | PR | linked from the PR itself |
 | Tested by / date | Claude (Tooling updates session), 2026-09-23 |
 | Carries a migration? | no |
-| Tested at SHA | `c3d82c6` (script); docs-only commits after it |
+| Tested at SHA | `c3d82c6` (script behaviour); gates re-run at `3986c8d` after syncing `main` to `dfb01c3` |
 
 ## 1. Scope and risk
 
@@ -29,10 +29,10 @@ or `n/a` with the reason.
 
 Run in the feature worktree, after `node scripts/worktree.mjs sync`:
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (`83bf4a6`, "Already up to date" on the rerun), and the branch pushed
-- [x] `npm run typecheck` — clean (exit 0)
-- [x] `npm run lint` — clean (exit 0; also `npx eslint scripts/worktree.mjs` exit 0)
-- [x] `npm run build` — succeeds (exit 0)
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (`83bf4a6`, then again at `dfb01c3` after PRs #56 and #62, no conflicts), and the branch pushed both times
+- [x] `npm run typecheck` — clean (exit 0, re-run after the second sync)
+- [x] `npm run lint` — clean (exit 0 after the second sync; also `npx eslint scripts/worktree.mjs` exit 0)
+- [x] `npm run build` — succeeds (exit 0, re-run after the second sync)
 - [ ] CI green on the PR — n/a: not yet run at the time of writing; the PR will show it, and it is not merged without it
 
 ## 3. Schema and data — *skip if no migration*
