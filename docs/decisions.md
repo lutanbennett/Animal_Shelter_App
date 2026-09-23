@@ -2916,6 +2916,34 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   "Testing" (PR #64) and docs/test-plan-template.md carry the same
   wording.
 
+- **Line height in the summary PDF is set per text style, never on the page
+  (2026-09-24):** @react-pdf resolves a unitless `lineHeight` against the
+  font size of the node that declares it and children inherit the resulting
+  absolute number, not the ratio. The page's `lineHeight: 1.4` therefore
+  gave every descendant 12.6pt whatever its own size — the 20pt resident name
+  printed over the subtitle. It also destroyed the footer: a Text with a
+  `render` prop is laid out again after the render runs, and each pass read
+  the inherited 12.6 as a unitless multiplier once more (instrumented: the
+  footer row measured 5,315.625pt = 12.6 × 7.5³), so the bottom-anchored
+  footer was placed ~4,500pt above the page. Anchoring it with `top` would
+  have made it *look* right while the box stayed 5,000pt tall, so the fix is
+  the cause: `resident-summary-pdf.tsx` declares `lineHeight` on each text
+  style and nothing above a Text carries one. Anyone adding a PDF (the manual
+  PDF on the backlog would be next) should follow the same rule, and should
+  check the output by opening the rendered PDF — both bugs shipped because
+  the JSX read correctly.
+
+- **The summary PDF embeds Drive's thumbnail of the profile photo, not the
+  original (2026-09-24):** the PDF only ever took the uploaded original, and
+  only a JPEG/PNG under 4 MB — so a HEIC from an iPhone, or an ordinary
+  camera JPEG over 4 MB, produced a PDF with no photo and no trace of why.
+  `DriveClient.downloadThumbnail()` fetches Drive's own rendition at 480px
+  (Drive renders HEIC and serves JPEG; ~400dpi at the printed 84pt), asking
+  for JPEG/PNG explicitly since googleusercontent otherwise may answer WebP.
+  The original remains the fallback for a file Drive has not thumbnailed yet,
+  and when neither can be embedded the reason goes to the Worker log. This
+  is the one place the app reads a thumbnail: the on-screen photo proxy still
+  serves originals, deliberately (see the Drive throttling entry).
 - **What counts as user-visible, and the escape hatch (2026-09-24):** cutting
   `0.1.0` found `unreleased` empty after ten merged PRs, two of them plainly
   user-visible (#60 cashflow, #67 nav). `deploy.mjs` refuses a *non-empty*

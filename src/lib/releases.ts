@@ -44,6 +44,8 @@ export type Release = {
 export const unreleased: string[] = [
   "On the Cashflow page, the \"Not priced yet\" card now takes you to the prices that are missing: straight to the right page when they are all in one category, or to the row that links each category when they are spread out.",
   "The Cashflow table can be downloaded as a CSV file for the monthly report.",
+  "The summary PDF kept for a resident who has died is easier to read: the name no longer prints on top of the line beneath it, and every page now has a footer with the resident's name and ID, the date the PDF was made, and the page number.",
+  "That PDF now shows the resident's profile photo much more reliably. Photos taken on iPhones, and large photos, used to be left out without any warning.",
 ];
 
 /** Newest first. */

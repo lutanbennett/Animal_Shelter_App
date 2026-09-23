@@ -59,6 +59,17 @@ const COLORS = {
   accent: "#a35f00",
 };
 
+// Line height is set per text style, never on the page or a View. A
+// unitless lineHeight is resolved against the font size of the node that
+// declares it and inherited as that absolute number, so the page's old
+// `lineHeight: 1.4` (9pt × 1.4 = 12.6pt) gave the 20pt name a 12.6pt line
+// box and it printed over the subtitle. Worse, the footer's page-number text
+// is re-laid-out after each render pass, and every pass read the inherited
+// 12.6 as a multiplier again (12.6 × 7.5³ ≈ 5,300pt): the bottom-anchored
+// footer was placed thousands of points above the page and never appeared.
+// Declared on the Text itself it is re-resolved from 1.4, not compounded.
+const BODY_LINE_HEIGHT = 1.4;
+
 const styles = StyleSheet.create({
   page: {
     fontFamily: "NotoSansThai",
@@ -67,22 +78,23 @@ const styles = StyleSheet.create({
     paddingTop: 36,
     paddingBottom: 44,
     paddingHorizontal: 40,
-    lineHeight: 1.4,
   },
   header: { flexDirection: "row", gap: 12, marginBottom: 6 },
   headerText: { flexGrow: 1 },
   kicker: {
     fontSize: 8,
+    lineHeight: BODY_LINE_HEIGHT,
     letterSpacing: 1.1,
     color: COLORS.accent,
     fontWeight: 700,
   },
-  name: { fontSize: 20, fontWeight: 700, marginTop: 2 },
-  subtitle: { fontSize: 9, color: COLORS.muted },
+  name: { fontSize: 20, lineHeight: 1.25, fontWeight: 700, marginTop: 2 },
+  subtitle: { fontSize: 9, lineHeight: BODY_LINE_HEIGHT, color: COLORS.muted },
   photo: { width: 84, height: 84, objectFit: "cover", borderRadius: 4 },
   section: { marginTop: 14 },
   sectionTitle: {
     fontSize: 10,
+    lineHeight: BODY_LINE_HEIGHT,
     fontWeight: 700,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.rule,
@@ -92,8 +104,13 @@ const styles = StyleSheet.create({
   fieldGrid: { flexDirection: "row", flexWrap: "wrap" },
   field: { width: "50%", paddingRight: 10, marginBottom: 5 },
   fieldWide: { width: "100%", paddingRight: 10, marginBottom: 5 },
-  fieldLabel: { fontSize: 7.5, color: COLORS.muted, letterSpacing: 0.4 },
-  fieldValue: { fontSize: 9.5 },
+  fieldLabel: {
+    fontSize: 7.5,
+    lineHeight: BODY_LINE_HEIGHT,
+    color: COLORS.muted,
+    letterSpacing: 0.4,
+  },
+  fieldValue: { fontSize: 9.5, lineHeight: BODY_LINE_HEIGHT },
   row: {
     flexDirection: "row",
     borderBottomWidth: 0.5,
@@ -101,9 +118,19 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   headRow: { flexDirection: "row", paddingVertical: 3 },
-  headCell: { fontSize: 7.5, color: COLORS.muted, letterSpacing: 0.4 },
-  cell: { fontSize: 9, paddingRight: 6 },
-  empty: { fontSize: 9, color: COLORS.muted, fontStyle: "normal" },
+  headCell: {
+    fontSize: 7.5,
+    lineHeight: BODY_LINE_HEIGHT,
+    color: COLORS.muted,
+    letterSpacing: 0.4,
+  },
+  cell: { fontSize: 9, lineHeight: BODY_LINE_HEIGHT, paddingRight: 6 },
+  empty: {
+    fontSize: 9,
+    lineHeight: BODY_LINE_HEIGHT,
+    color: COLORS.muted,
+    fontStyle: "normal",
+  },
   deathBox: {
     marginTop: 12,
     padding: 10,
