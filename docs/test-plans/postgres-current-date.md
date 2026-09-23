@@ -36,7 +36,7 @@
 - [x] `npm run typecheck` — clean (exit 0)
 - [x] `npm run lint` — clean (exit 0; the new script re-linted on its own after its last edit, exit 0)
 - [x] `npm run build` — succeeds (exit 0)
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — `check` and `test-plan` both pass on #71 (run 35897584059)
 
 ## 3. Schema and data
 
@@ -167,7 +167,7 @@ Manual verification by: n/a: the manual list is empty — SQL-only change, verif
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
-- [ ] Handed to the production release manager — n/a: not yet — handed over with the PR, in the follow-up commit
+- [ ] Checklist pasted into the PR — n/a: the PR links it (`docs/test-plans/postgres-current-date.md`) and quotes the harness output rather than duplicating the whole plan
+- [x] Handed to the production release manager — the PR states the production apply as Lutan's, with the exact commands
 
 Result: pass
