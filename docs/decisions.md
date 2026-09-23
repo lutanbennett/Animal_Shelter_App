@@ -2622,6 +2622,60 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   stands as robustness; the claim did not. Caught only because someone wrote an
   assertion for it, which is exactly why it is now a line.
 
+- **A checklist line has three states, because the work does (2026-09-23):**
+  `- [ ] … — deferred: <owner>` joins `- [x]` and `n/a: <reason>`, and is
+  accepted **only** under section 8. The deploy gates there cannot be true at PR
+  time — there is no deployed build, no production apply — so writing them `n/a`
+  put a falsehood in a box labelled "did not apply", and the Cashflow Forecast
+  session was right that once that becomes habit people write `n/a` for things
+  they simply did not do. `deferred:` passes rather than failing, because a PR
+  cannot be held open waiting for a deploy it precedes; it is confined to
+  section 8 because anywhere else it would be a general-purpose escape hatch,
+  which is the single thing this check exists to prevent.
+
+- **The checker says which kind of red it is (2026-09-23):** a *correct* plan is
+  red for most of its life, because the manual signature cannot be filled until a
+  person has looked. Printing one flat problem list made "nobody has looked yet"
+  indistinguishable from "a check was skipped", so red carried no information —
+  and an uninformative red is one people learn to ignore, which matters a great
+  deal more if the check ever becomes blocking. Output is now grouped: problems,
+  then items awaiting a person, then gates deferred to release; and a plan whose
+  only outstanding items are human signatures prints "the plan is complete and
+  correct, and N item(s) await a person. Nothing to fix."
+
+- **Three smaller corrections from streams using the checklist (2026-09-23):**
+  the manual-verification checkbox said only the person who looked could tick it
+  while the text above told you to write `n/a` when there was nothing to look at,
+  so an empty manual list could never go green — it now says explicitly that
+  whoever filled the plan may tick it when the list is empty. Section 6's
+  "checked from a second, unrelated page" now says *by loading that page, not by
+  reading the file*, because reading proves only that you did not edit it, which
+  is the tempting weaker reading. And section 8 gains the banding rule: assert
+  both edges of a band and both sides of a boundary, never only the case the bug
+  report named — `dueState()` was reported as a due-today fault, but due-today
+  does not move under either clock, so a test written faithfully from the report
+  would have passed with the bug still in place.
+
+- **`n/a:` and `pending:` signatures carry no date (2026-09-23):** the signature
+  parser anchored on `Date:` before it looked at the value, so an undated
+  `pending: <what is outstanding>` failed with "no `Manual verification by:
+  <name>  Date: <yyyy-mm-dd>` line" — an error pointing at the wrong thing, for a
+  line that was correct. The template's own bullets show the three forms without
+  a `Date:` segment, so dropping it is the obvious reading. The parser now tries
+  the dated form first and falls back to a bare line only when the value begins
+  `n/a` or `pending`; a bare *name* still requires its date, which is what keeps
+  an empty signature from passing. Found by the Cashflow Forecast session, which
+  only got it right by noticing that two existing plans wrote `Date: —`.
+
+- **The checker ignores fenced code blocks (2026-09-23):** requiring evidence to
+  be pasted unedited and requiring template placeholders to be filled turned out
+  to contradict each other — pasted checker output quotes the checker's own
+  messages, which mention `<name>` and `<yyyy-mm-dd>`, so a faithful record of a
+  run was flagged as an unfilled template. Placeholder and checkbox scanning now
+  skip fenced blocks; outside a fence both still fail. Found by regenerating a
+  plan's own evidence block, which is precisely what the unedited-evidence rule
+  asks for — the rule caught the conflict its own sibling created, in its first
+  use.
 - **Release notes register (2026-09-23):** the register is a checked-in
   typed file, `src/lib/releases.ts`, rendered at `/releases` for every
   signed-in role (Lutan: the notes are written for users, so everyone reads
@@ -2735,3 +2789,58 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   by reading, and the first was plausible enough to have been written down as
   fact. Worth knowing that no gate could have caught this: a deploy is the one
   thing a PR cannot exercise before it merges.
+
+- **The role matrix lists the five roles that exist, and says where they come
+  from (2026-09-23):** `docs/test-plan-template.md` shipped with a `resident` row
+  and no `management` row. Both were wrong in the same way: the list was derived
+  by grepping `src/lib` for quoted strings, which matched
+  `.eq("owner_type", "resident")` in `archive/resident-record.ts` — a query about
+  animals, not users — and missed `management`, which is added to the enum by a
+  later migration rather than appearing in the initial one. The authority is
+  `app_role`: `('admin', 'staff', 'vet', 'volunteer')` in
+  `0001_initial_schema.sql`, plus `'management'` in `0038_management_role.sql`.
+  The template now names both files, so the next person reads the enum instead of
+  re-deriving it.
+
+  This failed in both directions at once, which is what makes it worth recording.
+  A row for a role that cannot exist is noise — it can only ever be ticked
+  meaninglessly. A *missing* row is worse: `management` is the role that gates
+  every `/management/*` page, so the matrix built to catch access bugs omitted the
+  role most likely to be in one. The Cashflow Forecast session noticed the gap and
+  added `management` to its own plan by hand; its checklist was better than the
+  template it was copied from, and nothing in the process would have surfaced that
+  if Lutan had not asked what a resident account was.
+- **"Settings" is the menu's name for `/admin`; the URL and the role keep
+  "admin" (2026-09-23):** Lutan asked for the Admin menu to read Settings.
+  Moving the pages to `/settings/*` with redirects (as `/admin/vets` →
+  `/management/vets` was done) would be tidier, but the rename is about what
+  people read, and a label-only change leaves every bookmark, link and
+  `requireAdminUser` gate untouched — agreed with
+  Lutan. So the sidebar label, the `/admin` landing heading and every "Admin →
+  X" menu path in `en.ts`, `th.ts` and the manual say Settings (Thai
+  การตั้งค่า); `nav.admin` became `nav.settings`. What deliberately still says
+  Admin is the **role**: `roles.admin`, the manual's `roleNames`, README's
+  roles table row and prose like "an admin can…" — those describe who someone
+  is, not where a page lives. The same pass sent the long-stale "Admin →
+  Contacts / Vets" hints to Management, where those pages have been since
+  2026-09-21, and names a manager rather than an admin as who can fix them.
+  The sidebar is also flat now — Management and Settings are one link each,
+  their tile-grid landing pages being the menu — which retires the accordion
+  state in `sessionStorage`. That alone did not end the footer overlap: an
+  admin's flat list plus the pinned group still needs ~690px, so the group is
+  pinned only on windows at least 44rem tall and otherwise follows the list.
+- **Production was clean because the bug had no time, not because it works
+  (2026-09-23):** the production run of the UTC date audit found zero rows
+  needing correction across every date column — the only hits were the 42
+  `age_estimated_on` values from the AppSheet import, which carry the export
+  file's own date and share one `created_at` to the microsecond. The deceased
+  cascade had never fired early either. That is a real answer, but the reason
+  matters more than the number: production's data arrived in a single import on
+  2026-09-22 and almost nothing has been hand-entered since, so the exposure
+  window was about a day and a half rather than the months the backlog item
+  assumed. Dev, where someone actually used the intake wizard at 01:26,
+  produced a genuine three-table candidate at once. The audit therefore clears
+  the rows that exist today and expires the first time anyone works an
+  overnight shift — `docs/utc-date-audit-2026-09-23.md` §8 keeps the triage and
+  the correction SQL unused on purpose, and the script is kept rather than
+  deleted so the next run is one command.
