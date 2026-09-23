@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Quick wins → **"Today" is UTC everywhere, so it is yesterday in Thailand until 07:00** (d98695a), code half |
 | Branch / worktree | `claude/utc-today` @ `C:\Development\Animal_Shelter_utc-today` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3004` |
-| PR | #58 |
+| PR | #59 |
 | Tested by / date | Claude (automated) 2026-09-23 |
 | Carries a migration? | no |
 | Tested at SHA | `537f1f0` (code), plus docs commits on the same branch |
