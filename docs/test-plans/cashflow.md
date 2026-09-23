@@ -289,25 +289,30 @@ underlying price columns were checked directly with the anon key too — `medica
       `0072` adds `cashflow_forecast` and `/management/cashflow` calls it, so the
       production apply must happen **before** the deploy. This is the PR #53 failure mode
       and is called out here deliberately.
-      **How far behind production is was NOT verified from here.** This worktree has no
-      `.env.deploy.production` (`worktree.mjs` copies only `.env.local`), so
-      `--status --env production` cannot run in it, and production credentials were not
-      gone looking for. My brief said 0071 was deliberately left unapplied to production;
-      the test-manager session reports it checked and found production at **71 applied,
-      0 pending**. Both are second-hand here and they disagree, so the apply plan below
-      is written to be correct either way: **read the dry-run and apply what it says is
-      pending**, rather than trusting any number written in advance. If 0071 is already
-      there the runner skips it, which is why this is safe to leave to the output rather
-      than settle now.
+      **`0071` is already applied to production — the brief that said otherwise is
+      wrong.** This worktree has no `.env.deploy.production` (`worktree.mjs` copies only
+      `.env.local`), so `--status --env production` cannot run in it and production
+      credentials were not gone looking for from a feature branch. The test-manager
+      session ran it **first-hand from the main checkout**, which does have that file:
+      `Environment: production — project dbkodyyxxhtygxcxmfcu`, then **71 applied, 0
+      pending**, with `0071_cashflow_prices.sql` the highest file on `main`. That is a
+      direct read of production's `schema_migrations`, so production is one migration
+      behind, not two.
+
+      The apply plan below still says *read the dry-run and apply what it reports*
+      rather than naming files, and deliberately so: that form is correct whatever the
+      state turns out to be on the day, and cannot go stale the way "expect 0071 and
+      0072 pending" already did once.
 - [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — n/a: needs production credentials and is the release manager's step. Flagged for them in the apply plan above, deliberately not attempted from a feature branch.
 - [x] For a **destructive or rewriting** migration only: backup fresh — **n/a: 0072 adds
       one function and touches no data. 0071 is additive nullable columns.** Neither
       rewrites a row.
 - [x] Apply plan stated:
       1. `node scripts/apply-migrations.mjs --status --env production`, then `--dry-run`.
-         **Read what it says is pending — do not assume.** `0072` will be pending; `0071`
-         may or may not be (see the note above). The runner skips anything already
-         recorded in `schema_migrations`, so either answer is fine.
+         **Read what it reports pending — do not assume.** Expect `0072` alone, since
+         `0071` was measured as already applied (note above), but let the output say so
+         rather than this file. The runner skips anything already recorded in
+         `schema_migrations`, so a surprise either way is safe.
       2. Apply whatever is pending to production (`dbkodyyxxhtygxcxmfcu`), in file order.
       3. **Then** deploy. Reversing this order leaves `/management/cashflow` calling a
          function production does not have.
@@ -354,7 +359,7 @@ Automated checks by: Claude Opus 5  Date: 2026-09-23
 
 - [ ] Every item in the manual list was checked by a person, or the list is empty
 
-Manual verification by: <name>  Date: <yyyy-mm-dd>
+Manual verification by: pending: items 1–4 above — four role checks at the URL directly, a Thai read-through, and two judgement calls on the "Average per month" card and the chart at one or two months.  Date: —
 
 ### Result
 
