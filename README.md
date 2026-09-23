@@ -231,6 +231,36 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    the stripped build locally the way production runs, put the five values
    in a gitignored `.dev.vars` file (wrangler's local stand-in for secrets).
 
+   **Never interrupt an OpenNext build on Windows** (2026-09-23, which cost
+   four deploy attempts). The bundling step rewrites symlinks under
+   `node_modules` — that is what `scripts/win-junction-symlinks.cjs` is
+   managing — so killing the build mid-way can leave a package as an empty
+   directory. Here it gutted `@react-pdf/reconciler`, and the damage only
+   surfaced on the *next* build as
+   `Module not found: Can't resolve '@react-pdf/reconciler'` pointing at
+   `src/lib/archive/resident-summary-pdf.tsx`, several minutes into a run
+   that looked fine. If a build has to be stopped, treat `npm ci` as
+   mandatory before the next attempt; `node -e "…"` over `package-lock.json`
+   comparing each entry against a `package.json` on disk is how the two
+   gutted packages were found. Prefer letting a bad build finish and rolling
+   back after (`npx wrangler rollback --env production`, seconds) over
+   killing it.
+
+   **`ERROR Failed to copy … color-string` and `… data-uri-to-buffer` are
+   cosmetic.** They appear during `Building server function` on every run,
+   with or without a clean `.open-next`, a dev server, or a fresh
+   `node_modules`, and the packages land in the bundle anyway — verified in
+   `.open-next/server-functions/default/node_modules/` after a successful
+   deploy. Do not go looking for a missing dependency; three separate
+   diagnoses of these lines were all wrong. Note also that a green
+   `next build` proves only *build-time* resolution: Turbopack resolves the
+   server-component import graph, which is why the reconciler failure above
+   was fatal, but OpenNext's copy step is a **later, separate stage**, so
+   build success alone does not prove the bundle is complete. And a
+   `deploy:prod` failure is not necessarily a code problem — CI passed on
+   `f32f2c1` three times while this machine could not build it, because CI
+   runs `npm ci` on a clean runner and this checkout's tree was damaged.
+
    The hostnames are Workers custom domains (`routes` in `wrangler.jsonc`)
    on the zone registered in the same Cloudflare account, so Cloudflare
    manages DNS and certificates; the `*.workers.dev` URLs are disabled.

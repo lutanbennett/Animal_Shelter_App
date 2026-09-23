@@ -63,6 +63,58 @@ two or three at once; more than that and merging becomes the bottleneck.
    nothing beyond `main` and no session is a leftover — `done` it (with
    `--force` if it has junk changes) rather than reusing it.
 
+## Testing
+
+Since 2026-09-23 every feature carries a test plan checklist, and it is
+part of the PR rather than an afterthought. The test manager writes it
+from `docs/test-plan-template.md`; it is filled in during verification
+and committed as `docs/test-plans/<feature>.md` on the feature branch, so
+the record of what was checked sits beside the change in git history for
+good. `node scripts/check-test-plan.mjs` is what CI runs — run it locally
+before pushing.
+
+- **Every PR, no exemptions — including schema-only ones.** Ruled
+  2026-09-23: an exemption for migration-only PRs was granted and then
+  reversed within minutes. A schema PR's checklist is mostly
+  `n/a: no UI surface, no code reads these columns yet`, which costs
+  about a minute and is exactly the record you want on the day that
+  migration turns out to matter. Writing the `n/a` reason *is* the check.
+  Do not reopen the exemption without asking the user.
+- **Two signatures, certifying different things.** *Automated checks by*
+  covers gates, scripts, server-side behaviour and any browser check
+  actually driven — Claude may sign this for work it genuinely ran.
+  *Manual verification by* is signed **only by the person who looked**, or
+  `n/a: <reason>` where there was nothing to look at, and a **Left for
+  manual verification** table makes the handover concrete. Claude never
+  signs that line on someone's behalf. A signature that does not
+  correspond to someone having looked is worse than none: it turns an
+  unknown into a false assurance, and it is the first artifact anyone
+  reaches for when something has gone wrong.
+- **`test-plan` reports red without blocking the merge, on purpose.** It
+  validates content, not presence — every line ticked or reasoned `n/a`,
+  no placeholders, both signatures, `Result:` one of three values. But it
+  is deliberately **not meant to block** yet: the user's staged rollout,
+  "see how we go, and if it is working smoothly then we can change to a
+  hard block", so that a check firing wrongly on its first legitimate PR
+  gets fixed rather than resented. **The soft gate is a decision, not a
+  misconfiguration** — do not make it required, and do not treat a red
+  `test-plan` as noise either. Promoting it to a required check in branch
+  protection is the user's call and no session's to make; if you find
+  protection already requiring it, say so rather than assuming it was
+  intended (it was found enabled on 2026-09-23 with `enforce_admins:
+  false`, which nobody had asked for and no session admitted to).
+- **Because it does not block, a PR can reach `main` unchecked.** Closing
+  that is release-time work: before any production deploy, confirm by hand
+  that every PR in the release has a completed checklist and stop if one
+  slipped through. `docs/release-smoke-test.md` is the short per-release
+  pass that goes with it, copied to `docs/releases/<date>.md`. It is
+  deliberately **not** under `docs/test-plans/`, because a release record
+  filed there would satisfy a feature PR's gate with no feature verified;
+  `check-test-plan.mjs` rejects it if you try.
+
+Everything merged up to `f32f2c1` (PRs #51–#54) is the agreed baseline and
+predates the rule.
+
 ## The main checkout
 
 Once a day, before starting streams, in `C:\Development\Animal_Shelter_App`:
