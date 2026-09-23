@@ -11,8 +11,8 @@
 | PR | #59 |
 | Tested by / date | Claude (automated) 2026-09-23 |
 | Carries a migration? | no |
-| Tested at SHA | `48dc754` — the branch merged up to `main` at `fe3626f`. **Every line of the fix is unchanged since `537f1f0`**; the four syncs since brought in other streams' work only, and the assertion suite was re-run against the merged tree after each. |
-| Deployed to test | `d01bf2b` on `test.lannacare.org` (project `qxkmhwybjggxvsfxsxbd`), 2026-09-23T12:26Z. The branch has since merged past it, but **no file this change touches differs between `d01bf2b` and the tip**, so the pending manual check on that deployment is still valid and does not need a redeploy. |
+| Tested at SHA | `f3a45b9` — the branch merged up to `main` at `9f1bc76`. **Every line of the fix is unchanged since `537f1f0`**; the five syncs since brought in other streams' work only, and the assertion suite was re-run against the merged tree after each. |
+| Deployed to test | `d01bf2b` on `test.lannacare.org` (project `qxkmhwybjggxvsfxsxbd`), 2026-09-23T12:26Z. The branch has since merged past it, but **all 27 files this change touches are byte-identical between `d01bf2b` and the tip** — checked by diffing that exact file list, not by diffing `src/` as a whole, which does differ because other streams' work landed in it. So the pending manual check on that deployment is still valid and does not need a redeploy. |
 
 ## 1. Scope and risk
 
@@ -39,7 +39,7 @@ started a day early for the first seven hours of every Thai day.
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — merged cleanly four times as `main` moved: `83bf4a6` (no-op, already the base), `4c3f284` (#56), `dfb01c3` (#62, run by the test-manager session), and `fe3626f` — which brought in #63 deploy-message-quoting and **#60 cashflow**, the latter having merged *ahead* of this PR rather than behind it as the merge order had it. `docs/decisions.md` took the union merge every time; no conflicts anywhere. Gates re-run in full after the last one, and the assertion suite re-run against the merged tree under both the system zone and `TZ=UTC`.
+- [x] `node scripts/worktree.mjs sync` — merged cleanly **five** times as `main` moved: `83bf4a6` (no-op), `4c3f284` (#56), `dfb01c3` (#62, run by the test-manager session), `fe3626f` (#63 and #60 cashflow), and `9f1bc76` (#57 audit and #58 worktree-tooling). No conflict on any of them; `docs/decisions.md` took the union merge every time. Gates and the assertion suite re-run in full after each of the last two.
 - [x] `npm run typecheck` — clean
 - [x] `npm run lint` — clean
 - [x] `npm run build` — succeeds, all 60+ routes compiled
