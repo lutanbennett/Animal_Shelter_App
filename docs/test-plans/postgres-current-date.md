@@ -11,7 +11,7 @@
 | PR | set in the follow-up commit once it exists |
 | Tested by / date | Claude (automated) 2026-09-24, 00:20–00:38 Bangkok — inside the 00:00–07:00 window, so `current_date` and the shelter's today really differed |
 | Carries a migration? | yes — `0073_shelter_today.sql` |
-| Tested at SHA | `a0b10ce` (branch on `main` @ `f3620ae`, #59 merged) |
+| Tested at SHA | `a0b10ce` (branch on `main` @ `84e61e0` — #59 and #69 merged). Synced since to `d3997a8` (#70), which changes only `.github/workflows/ci.yml`, so the gates and the harness still stand for the tip |
 
 ## 1. Scope and risk
 
@@ -32,7 +32,7 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (exit 0; nothing new beyond `f3620ae`)
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (exit 0) — first sync brought in #69 (release cut, no migration) before the gates ran; a second brought in #70 (`ci.yml` only)
 - [x] `npm run typecheck` — clean (exit 0)
 - [x] `npm run lint` — clean (exit 0; the new script re-linted on its own after its last edit, exit 0)
 - [x] `npm run build` — succeeds (exit 0)
@@ -40,7 +40,7 @@
 
 ## 3. Schema and data
 
-- [x] Migration number is one above the highest on `main`, and no other in-flight branch carries one — `main` tops out at `0072_cashflow_forecast.sql`; the open PR (#69, release cut) carries no migration
+- [x] Migration number is one above the highest on `main`, and no other in-flight branch carries one — `main` tops out at `0072_cashflow_forecast.sql`; #69 (release cut, merged during sync) carried none, and there is no other open PR
 - [x] `node scripts/apply-migrations.mjs --status` reviewed before applying — `74 applied, 1 pending. pending: 0073_shelter_today.sql` on `qxkmhwybjggxvsfxsxbd`
 - [x] `node scripts/apply-migrations.mjs --dry-run` reviewed — `dry-run 0073_shelter_today.sql … ok`
 - [x] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations` — `applying 0073_shelter_today.sql … ok`; afterwards `maintenance.date_created` default reads `shelter_today()`
