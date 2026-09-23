@@ -30,7 +30,9 @@
     "test": {
       "name": "lanna-animal-care-test",
       "routes": [{ "pattern": "test.lannacare.org", "custom_domain": true }],
-      "vars": { "NODE_ENV": "production", "ORIGIN_HOST": "", "ORIGIN_TIMEOUT_MS": "20000" }
+      // No RELEASE_MAIL binding and RELEASE_MAIL_ENV empty: the dev database
+      // never sends release mail (worker/release-mail.mjs).
+      "vars": { "NODE_ENV": "production", "ORIGIN_HOST": "", "ORIGIN_TIMEOUT_MS": "20000", "RELEASE_MAIL_ENV": "" }
     },
     // The live site: the production database. Drive stays on the dev Google
     // account until the shelter's own account is available (docs/decisions.md).
@@ -40,7 +42,19 @@
         { "pattern": "lannacare.org", "custom_domain": true },
         { "pattern": "www.lannacare.org", "custom_domain": true }
       ],
-      "vars": { "NODE_ENV": "production", "ORIGIN_HOST": "", "ORIGIN_TIMEOUT_MS": "20000" }
+      // Release mail (worker/release-mail.mjs). lannacare.org is UAT for good
+      // and this database becomes UAT at the cutover, so it already sends as
+      // UAT. At the cutover the production block moves to
+      // lannacareforanimals.org with RELEASE_MAIL_ENV "Production" and a
+      // From on that domain, and a new uat block takes these values.
+      "vars": {
+        "NODE_ENV": "production",
+        "ORIGIN_HOST": "",
+        "ORIGIN_TIMEOUT_MS": "20000",
+        "RELEASE_MAIL_ENV": "UAT",
+        "RELEASE_MAIL_FROM": "releases@lannacare.org"
+      },
+      "send_email": [{ "name": "RELEASE_MAIL" }]
     }
   }
 }

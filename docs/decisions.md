@@ -2489,3 +2489,97 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   none and Workers run UTC, so it had never been wrong in production. The fix
   stands as robustness; the claim did not. Caught only because someone wrote an
   assertion for it, which is exactly why it is now a line.
+
+- **Release notes register (2026-09-23):** the register is a checked-in
+  typed file, `src/lib/releases.ts`, rendered at `/releases` for every
+  signed-in role (Lutan: the notes are written for users, so everyone reads
+  them). Seeded with exactly one entry, `0.0.1` "Current Baseline Build",
+  2026-09-23, which stands for everything built until then. No history was
+  reconstructed from git: the point is to record from here on.
+  - *(a) Where notes live: a file, not a table.* It is reviewable in the PR
+    that makes the change, needs no schema PR, and the same file feeds the
+    page, the deploy script (loaded under Node's type stripping) and the
+    Worker, so none of them can disagree. Nothing asks for editing in the app
+    yet. Moving to a table later is a copy of one array; going from a table
+    back to a file would mean exporting rows people had edited in the app.
+  - *(b) How a release is recorded: written in the PR, stamped at deploy.*
+    Feature PRs add plain-language lines to `unreleased`. Cutting a release is
+    its own small PR: the lines move into a numbered entry and `package.json`
+    takes the same version. `deploy.mjs` refuses a production deploy while
+    `unreleased` has lines or the versions disagree, so a deploy can't ship
+    changes nobody wrote down. It passes `--tag v<version> --message …` to
+    `wrangler deploy`, so Cloudflare's version history records which release
+    went to which environment and when, without a table of our own. The
+    deploy doesn't write the notes, because a note nobody wrote before
+    deploy time never gets written. Nor does it write the file afterwards: a
+    production deploy requires a clean, pushed `main`, so it can't commit.
+    The page shows one environment per entry, the site's own, because a page
+    is always the build it describes. Knowing per entry *when* it reached
+    each environment would need that table, and Cloudflare's deployment list
+    already answers it.
+  - *(c) Major vs minor: a `major` flag per entry.* Only major releases are
+    emailed. Numbering until go-live is `0.MAJOR.MINOR`: a major release
+    bumps the middle number and anything else the last. Go-live is `1.0.0`,
+    and after that major bumps the first. Whoever cuts the release, in the
+    release PR, sets the flag and the number. The baseline is not major,
+    because it changes nothing for anyone.
+  - *The email.* The sender is **Cloudflare Email Service through a Worker
+    `send_email` binding**, chosen because it costs nothing (Lutan's rule:
+    email must not cost money). A free account may mail its *verified*
+    destination addresses, the same ones Email Routing forwards to. Mailing
+    arbitrary addresses needs Workers Paid ($5/month). For a handful of
+    admins, a one-time verification click each is a fair price. The binding
+    needs no API key, so no secret enters the repo or the deploy. Because only
+    the Worker holds the binding, `worker/release-mail.mjs` answers
+    `/api/releases/*` itself, ahead of the edge cache and the Pi. `deploy.mjs`
+    picks the releases (those newer than what the live site reported at
+    `/api/releases/current` before the deploy, so a redeploy sends nothing)
+    and the recipients: admins in `user_roles`, with emails from the Auth
+    admin API, because the `app_users` view is empty without a signed-in
+    role. The Worker adds `[UAT]` / `[Production]` to the subject and the
+    From address from its own vars, so the environment label can't come from
+    a laptop. It sends one message per admin, so nobody sees the others'
+    addresses. An unverified admin is skipped with Cloudflare's error code
+    and the others still get the mail. The relay authenticates with the
+    service-role key, which the Worker and the deploy script both hold
+    already, so there is no new secret.
+  - *The guard: dev never sends.* The relay sends only when
+    `RELEASE_MAIL_ENV` is exactly `UAT` or `Production` *and* the binding
+    exists. The `test` environment (dev database) has neither, and `next dev`
+    and the Pi never reach the relay. A disabled relay answers with every
+    address skipped and the reason, which the deploy prints.
+  - *Which deploy counts as UAT today.* `--env production`: `lannacare.org`
+    and the current production database are the domain and database that
+    become UAT at the cutover (Lutan, 2026-09-23). So it already sends as
+    `[UAT]` from `releases@lannacare.org`, and `/releases` labels it UAT.
+    That is the literal backlog wording ("dev stands in for UAT") read
+    against the later decision to keep `lannacare.org` as UAT for good.
+  - *Two sending domains, permanently.* UAT is `lannacare.org`, and
+    Production will be `lannacareforanimals.org`. Adding the second is
+    configuration and DNS: a `production` block with `RELEASE_MAIL_ENV =
+    "Production"`, a From on the new domain and the binding, Email Routing
+    on that domain, and its admins verified (`docs/email-sending.md`). That page's last section
+    is the checklist the cutover item picks up.
+  - *Password-reset SMTP goes elsewhere.* Supabase Auth mails any user, and
+    Cloudflare's free route can't. Lutan chose **Resend's free tier for
+    UAT** (one domain), set up by him from the runbook in
+    `docs/email-sending.md` §2. It uses its own `send.` subdomain for MX and
+    SPF, so neither provider touches the root MX that Email Routing uses or
+    the root SPF record. There is no DMARC record yet, so Resend's optional
+    one is safe to add, but only ever one. The Production domain will
+    need a second free Resend account or the paid plan, which is decided at
+    the cutover.
+
+- **Release mail needs Email Routing, not Email Sending (2026-09-23):** the
+  first draft of `docs/email-sending.md` had Lutan onboard `lannacare.org`
+  under Compute → Email Service → Email Sending. On the free plan that screen
+  offers only "Purchase Workers Paid", because Email Sending is the paid
+  feature that mails arbitrary addresses. Cloudflare's pricing page says
+  verified-destination sends are "free on all plans, including when only
+  Email Routing is configured", and Email Routing has been on for
+  `lannacare.org` since the catch-all was set up. So the onboarding step and
+  its DNS records are dropped, and verifying each admin is the whole setup.
+  This rests on Cloudflare's docs, not on a send: the first major-release
+  deploy is the proof. If it fails with `E_SENDER_DOMAIN_NOT_AVAILABLE`, the
+  fallback is to relay through Resend's API from the account set up for Auth
+  SMTP. Don't buy Workers Paid.
