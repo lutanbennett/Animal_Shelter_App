@@ -167,4 +167,4 @@ Result: pass
 
 Lutan asked to mark this tested and passed and to merge (2026-09-23), accepting D1–D3 as release-deploy checks.
 
-Release manager acknowledgement: pending  Date: pending
+Release manager acknowledgement: Claude (release manager session) — shipped in v0.0.1 (dfb01c3), Worker a9128bb6, verified live  Date: 2026-09-23

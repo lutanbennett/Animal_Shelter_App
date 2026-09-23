@@ -2418,6 +2418,39 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   accepted **tomorrow's** date as valid right through normal working hours —
   at 10:00 and at 15:00 local a volunteer could date an intake or a weight a
   day ahead. Both now follow the shelter calendar exactly.
+- **Never interrupt an OpenNext build on Windows (2026-09-23):** deploying
+  `f32f2c1` took four attempts, and two of the failures were caused by stopping
+  a build rather than by anything in the code. The bundling step rewrites
+  symlinks under `node_modules` — what `scripts/win-junction-symlinks.cjs`
+  exists to manage — so a build killed mid-way can leave a package as an empty
+  directory. Here it gutted `@react-pdf/reconciler`, and nothing reported it:
+  the damage surfaced only on the *next* build, minutes in, as
+  `Module not found: Can't resolve '@react-pdf/reconciler'` traced to
+  `src/lib/archive/resident-summary-pdf.tsx`. A lockfile-vs-disk audit found
+  exactly two broken packages out of 713; `npm ci` fixed both. So: if a build
+  must be stopped, `npm ci` before the next attempt is mandatory, and letting a
+  bad build finish and rolling the Worker back afterwards
+  (`npx wrangler rollback --env production`, seconds) is cheaper than killing
+  it. The wider lesson is that on this stack a failed `deploy:prod` is not
+  necessarily a code problem — CI passed on `f32f2c1` three times while this
+  machine could not build it, because CI runs `npm ci` on a clean runner.
+
+- **The `Failed to copy color-string / data-uri-to-buffer` errors are cosmetic
+  (2026-09-23):** they appear during `Building server function` on every run —
+  stale or clean `.open-next`, dev servers up or down, `node_modules` as-found
+  or freshly installed — and the packages are nonetheless present and populated
+  in `.open-next/server-functions/default/node_modules/` after a successful
+  deploy, `color-string` included, which `@react-pdf/render` and
+  `@react-pdf/stylesheet` both need. Three separate diagnoses of these lines
+  were wrong before that was established (a missing dependency, then
+  interrupted-build damage, then "resolved"), so they are recorded here as noise
+  to stop the fourth. One genuine distinction came out of it and is worth
+  keeping: a green `next build` proves only **build-time** resolution, because
+  Turbopack resolves the server-component import graph — which is why the
+  reconciler failure above was fatal at build time — whereas OpenNext's copy
+  step is a **later, separate stage**. Build success therefore does not by
+  itself prove the bundle is complete; checking the bundle is a different check,
+  not a redundant one.
 - **What `worktree.mjs done` guarantees, and what it cannot (2026-09-23):**
   `done` either finishes everything or says exactly what it left: the folder
   gone, git's worktree entry pruned, the branch gone locally and on `origin`,
