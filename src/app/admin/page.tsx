@@ -1,18 +1,22 @@
-import { Globe, ShieldCheck } from "lucide-react";
+import { Globe } from "lucide-react";
 import { requireAdminUser } from "@/lib/auth/require-admin";
 import { getT } from "@/lib/i18n/get-t";
 import { SectionTiles, type SectionTile } from "@/components/SectionTiles";
-import { ENCLOSURE_ICONS, SECTION_ICONS } from "@/components/hub-icons";
+import {
+  ENCLOSURE_ICONS,
+  NAV_ICONS,
+  SECTION_ICONS,
+} from "@/components/hub-icons";
 
 /**
- * Admin → the group's own landing page: a tile per page the Admin nav group
- * lists, in the same order. It used to redirect to the first page in the
- * group, which stopped reading as a section once the group grew past a
- * handful of links (user, 2026-09-23).
+ * Settings → its landing page: a tile per admin page. "Settings" is the
+ * menu's name for /admin since 2026-09-23; the URL and the admin role kept
+ * theirs. The sidebar lists only Settings itself, so this grid is the menu
+ * for everything under it.
  *
- * Security moved to the pinned footer group in the nav on 2026-09-22 and so
- * isn't in the Admin group any more, but it is still admin configuration and
- * belongs on this page — its tile says where else to find it. Every page
+ * Security is also pinned to the bottom of the sidebar (2026-09-22), but it
+ * is still admin configuration and belongs on this page too — its tile
+ * says where else to find it. Every page
  * listed, Security included, is admin-gated, so the one check covers the
  * whole grid; a manager never reaches this page at all.
  */
@@ -61,7 +65,7 @@ export default async function AdminPage() {
       href: "/admin/security",
       label: t.nav.security,
       description: t.admin.landing.tiles.security,
-      icon: ShieldCheck,
+      icon: NAV_ICONS.security,
     },
   ];
 

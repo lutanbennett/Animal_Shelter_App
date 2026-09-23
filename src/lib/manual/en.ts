@@ -35,7 +35,7 @@ const manual: Manual = {
   },
   roleSummary: {
     admin:
-      "Everything, including the Admin section (users, website, zones, enclosures, immunization and procedure types) and the Management section.",
+      "Everything, including the Settings section (users, website, zones, enclosures, immunization and procedure types) and the Management section.",
     management:
       "Everything staff can do, plus the Management section: the reporting dashboard, the contact, vet, medication and diet lists, and the translations of public text.",
     staff:
@@ -52,7 +52,7 @@ const manual: Manual = {
       title: "Getting started",
       icon: BookOpen,
       intro:
-        "The app runs in a web browser on a phone, tablet or computer — nothing to install. On a phone it works as a field tool: find a resident, log what you did, add photos. On a computer you get the extra columns, filters and the Management and Admin sections.",
+        "The app runs in a web browser on a phone, tablet or computer — nothing to install. On a phone it works as a field tool: find a resident, log what you did, add photos. On a computer you get the extra columns, filters and the Management and Settings sections.",
       topics: [
         {
           id: "sign-in",
@@ -73,7 +73,7 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "If Google sign-in says your account hasn't been given access yet, an admin needs to add you under Admin → Security first.",
+              text: "If Google sign-in says your account hasn't been given access yet, an admin needs to add you under Settings → Security first.",
             },
           ],
         },
@@ -89,7 +89,7 @@ const manual: Manual = {
           id: "navigation",
           title: "Finding your way around",
           steps: [
-            "On a computer the menu is always visible down the left: Residents, Enclosures, Maintenance, Projects, Vets, Contacts and — depending on your role — Management and Admin. Those last two are folded up when you sign in: tap the ⌄ beside the name to see what is under it, or the name itself to open that section's front page. A section you are already in is always open.",
+            "On a computer the menu is always visible down the left, each link with its own icon: Residents, Enclosures and Maintenance first, then Vets, Contacts and Projects, then the Assistant — and, depending on your role, Management and Settings. Those two open a front page of tiles, one for each page inside them; the same icons are used on the tiles and in the menu.",
             "Under a dividing line at the very bottom of the menu sit the things you only need now and then, so they are always in the same place: this manual, Release notes, Change password and — for admins — Security, where accounts and roles are managed.",
             "On a phone tap the ☰ button at the top left to open the same menu; tap outside it to close. The same links are the last entries in it, below the same line.",
             "The LCA logo and your email are in the header, with the language switch and Sign out. Tap the logo to see the public website as a visitor does — it opens in a new tab so you don't lose your place.",
@@ -405,7 +405,7 @@ const manual: Manual = {
             "One form records any number of vaccines for any number of residents — a litter's first shots, or a whole enclosure's rabies boosters.",
           steps: [
             "Choose the residents: pick them individually, or use Add all in zone / Add all in enclosure.",
-            "Tick the immunization types given. Mandatory ones are marked; each type's repeat interval is set under Admin → Immunization Types.",
+            "Tick the immunization types given. Mandatory ones are marked; each type's repeat interval is set under Settings → Immunization Types.",
             "Enter the date administered, who gave it, and any notes. The notes apply to every record in the batch.",
             "The button tells you how many records will be created. Tap it, and a table shows each resident, vaccine, and its next-due date.",
           ],
@@ -517,7 +517,7 @@ const manual: Manual = {
           roles: ["admin", "management", "staff", "vet"],
           path: "Resident hub → Blood Tests → Log blood test",
           steps: [
-            "Pick the test type — CBC is preselected as the routine panel; the list (chemistry, thyroid, heartworm, tick-borne, cortisol, urinalysis) is kept under Admin → Blood Test Types.",
+            "Pick the test type — CBC is preselected as the routine panel; the list (chemistry, thyroid, heartworm, tick-borne, cortisol, urinalysis) is kept under Settings → Blood Test Types.",
             "Enter the date of the test and, if it was done at a vet visit, link the visit.",
             "Type the results or the vet's summary in the notes (optional — you can just attach the scan).",
             "Drop in the lab scan or PDF (several files can go on one test), then tap Save blood test — the files upload as part of the save. A report that arrives later goes in from the row's Attach files link on the Blood Tests page.",
@@ -586,7 +586,7 @@ const manual: Manual = {
             "The occupancy bar and notes are at the top; tap a resident to jump to their hub.",
             "Link for this enclosure's QR code: the address to program into the QR code on the enclosure. Tap Copy link, or select the address by hand. The enclosure browser has the same copy icon on every card, for doing a batch.",
             "The Maintenance card shows open jobs on this enclosure, with Log maintenance to add one already pointed at this enclosure.",
-            "Admins can change the name, Thai name, capacity and notes under Admin → Enclosures.",
+            "Admins can change the name, Thai name, capacity and notes under Settings → Enclosures.",
           ],
           screenshot: {
             src: "/manual/enclosure-hub.png",
@@ -677,7 +677,7 @@ const manual: Manual = {
             "Tap New folder, give it a name (this is also its Drive folder name) and, optionally, a Thai name.",
             "Use Rename, Move or Delete on a folder's page. Only an empty folder can be deleted; the twelve categories can't be changed.",
             "Under About this project tap Edit details to write the story, set the date and location.",
-            "Turn on Show on website to publish the folder's title, story and photos on the public Our work page. Turn it off — or use Admin → Website — to take it down.",
+            "Turn on Show on website to publish the folder's title, story and photos on the public Our work page. Turn it off — or use Settings → Website — to take it down.",
           ],
           screenshot: {
             src: "/manual/projects.png",
@@ -835,7 +835,7 @@ const manual: Manual = {
             },
             {
               kind: "note",
-              text: "Vet visits that are booked but not yet invoiced are costed at one flat “typical vet visit” figure, set on Admin → Website. A visit that already has its real cost recorded uses that instead. If the figure is blank, booked visits are not costed at all and the page says so.",
+              text: "Vet visits that are booked but not yet invoiced are costed at one flat “typical vet visit” figure, set on Settings → Website. A visit that already has its real cost recorded uses that instead. If the figure is blank, booked visits are not costed at all and the page says so.",
             },
           ],
           screenshot: {
@@ -863,7 +863,7 @@ const manual: Manual = {
     // ------------------------------------------------------------------
     {
       id: "admin",
-      title: "Admin",
+      title: "Settings",
       icon: Settings,
       intro: "Admin-only setup: accounts, the public website, and the shelter's structure.",
       topics: [
@@ -887,7 +887,7 @@ const manual: Manual = {
           id: "website",
           title: "The public website",
           roles: ["admin"],
-          path: "Admin → Website",
+          path: "Settings → Website",
           steps: [
             "Hero photo: the big photo at the top of the welcome page.",
             "Labels and contact details: the tagline, hero photo description and visiting hours in English and Thai side by side, plus the email, phone, LINE id, address and map link shown in the footer of every public page and on each resident's profile.",
@@ -906,7 +906,7 @@ const manual: Manual = {
           id: "zones-enclosures",
           title: "Zones and enclosures",
           roles: ["admin"],
-          path: "Admin → Zones, Admin → Enclosures",
+          path: "Settings → Zones, Settings → Enclosures",
           steps: [
             "Zones are the physical areas of the shelter (marked Internal) plus off-site ones (External). Add a zone with a name and, optionally, a Thai name.",
             "Enclosures belong to a zone and have a capacity and notes. The capacity drives the occupancy colours and the nearly-full warning when moving a resident.",
@@ -922,7 +922,7 @@ const manual: Manual = {
           id: "immunization-types",
           title: "Immunization types",
           roles: ["admin"],
-          path: "Admin → Immunization Types",
+          path: "Settings → Immunization Types",
           steps: [
             "Add each vaccine with how many months until it must be repeated (leave blank for a one-off) and whether it's mandatory.",
             "Mandatory types are what the resident hub checks when it says \"2 missing\"; the repeat interval sets the next-due date when a dose is logged.",
@@ -936,7 +936,7 @@ const manual: Manual = {
           id: "procedure-types",
           title: "Procedure types",
           roles: ["admin"],
-          path: "Admin → Procedure Types",
+          path: "Settings → Procedure Types",
           steps: [
             "The list the procedure form offers — X-ray, ultrasound, teeth cleaning, nail clipping. Staff and vets can add a type inline when logging a procedure, so this is where duplicates and misspellings get tidied up.",
             "Rename a type in place, or Merge… a duplicate into the one to keep — its procedures move across. A type with logged procedures can't be deleted; merge it instead.",
@@ -950,7 +950,7 @@ const manual: Manual = {
           id: "blood-test-types",
           title: "Blood test types",
           roles: ["admin"],
-          path: "Admin → Blood Test Types",
+          path: "Settings → Blood Test Types",
           steps: [
             "The panels the blood test form offers — CBC, Blood Chemistry Panel, Thyroid Panel, Heartworm Test, Tick Borne Disease Panel, Cortisol Test, Urinary Analysis. Add one here when the vet starts running a new panel; the form defaults to CBC.",
             "Rename a type in place, or Merge… a duplicate into the one to keep — its blood tests move across. A type with logged blood tests can't be deleted; merge it instead.",
@@ -978,7 +978,7 @@ const manual: Manual = {
             "Home: the hero photo, live counts (in care, adopted this year, in vet care, in foster care), the shelter's story and gallery, the Pet of the week, recent stories and the ways to help.",
             "Adopt: every resident with Ready for adoption ticked, except those adopted or deceased, with species / size / ready filters. Each profile shows their photos, bio, the For adopters answers (good with dogs, cats, children; energy level; desexed; vaccinated from the immunization history), where and when to meet them, a share button and similar residents. Recent adoptions show as Happy endings, and How adoption works sits at the foot of the listing.",
             "Our work: project folders marked Show on website, by category, with their story and photos.",
-            "Foster, Volunteer and Donate: the pages written under Admin → Website, each with the shelter's email and LINE.",
+            "Foster, Volunteer and Donate: the pages written under Settings → Website, each with the shelter's email and LINE.",
           ],
           screenshot: {
             src: "/manual/public-adopt.png",
