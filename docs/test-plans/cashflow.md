@@ -95,10 +95,11 @@ discovers it.
       invoiced vet visit) and the forecast followed each change.
 - [x] Empty state renders sensibly — categories with nothing booked read `—`, and
       `months.length === 0` renders the "nothing falls in this window" line.
-- [x] Invalid input is rejected with a readable message, not a crash — a half-filled or
-      out-of-range From/To falls back to the default 30-day window and shows the picker's
-      existing `invalid` message; `?days=` values other than 30/90 fall back to 30 rather
-      than erroring.
+- [x] Invalid input is rejected with a readable message, not a crash — driven in the
+      browser: `?from=2026-09-23&to=2026-09-01` (To before From) renders "Enter a From and
+      To date, To on or after From, no more than a year apart" *and* still shows the
+      default 30-day window's figures rather than an empty page. `?days=` values other
+      than 30/90 fall back to 30.
 - [x] Boundary cases checked:
   - **Month slicing is lossless** — a 90-day window summed from its four monthly slices
     equals `diet_forecast` over the same 90 days exactly (฿245,070.00 both ways) and
@@ -131,16 +132,16 @@ only rows that matched an appointment; re-verified (Oct/Nov/Dec now ฿0). Recor
 
 | Role | Can reach | Expected | Result |
 |---|---|---|---|
-| admin | `/management/cashflow` | yes | (see note) |
-| management | `/management/cashflow` | yes | (see note) |
-| staff | `/management/cashflow` | no — redirect | (see note) |
-| vet | `/management/cashflow` | no — redirect | (see note) |
-| volunteer | `/management/cashflow` | no — redirect | (see note) |
-| resident | `/management/cashflow` | no — redirect | (see note) |
+| admin | `/management/cashflow` | yes | **pass** — page loads, nav entry present, all figures render |
+| management | `/management/cashflow` | yes | not verified — no management account signed in (see manual list) |
+| staff | `/management/cashflow` | no — redirect | not verified (see manual list) |
+| vet | `/management/cashflow` | no — redirect | not verified (see manual list) |
+| volunteer | `/management/cashflow` | no — redirect | not verified (see manual list) |
+| resident | `/management/cashflow` | no — redirect | not verified (see manual list) |
 | signed out | `/management/cashflow` | no — redirect to `/login` | **pass** — hitting the URL directly served the sign-in page, server-side |
 | signed out | RPC direct, anon key | no | **pass** — `401 permission denied for function cashflow_forecast` |
 
-- [ ] Every role above tested — n/a: the five signed-in roles each need a password, which this session does not handle; the repo's own `scripts/manual-screenshots.mjs` takes the same line ("the script never sees the password"). Signed-out *is* verified server-side, twice — by hitting the URL directly and by calling the RPC with the anon key. The five signed-in roles are item 1 under **Left for manual verification**.
+- [ ] Every role above tested — n/a: **admin** is verified (signed in, page drives correctly) and **signed out** is verified twice over, server-side. The remaining four roles each need their own password, which this session does not handle; the repo's own `scripts/manual-screenshots.mjs` takes the same line ("the script never sees the password"). They are item 1 under **Left for manual verification**.
 - [x] A role that should not have access is blocked server-side (hitting the URL directly
       fails) — confirmed for signed-out by URL, and the page uses the same
       `requireManagementUser()` redirect every other `/management/*` page uses, which is a
@@ -155,9 +156,12 @@ underlying price columns were checked directly with the anon key too — `medica
 
 ## 5. Cross-cutting
 
-- [ ] Nav entry correct (`src/app/NavLinks.tsx`) — added under Management between Diets
-      and Translations, and a landing tile on `/management`; both inside the existing
-      admin-or-management branch. *Rendering pending sign-in.*
+- [x] Nav entry correct (`src/app/NavLinks.tsx`) — verified in the running app in **both
+      languages**: `Cashflow` / `กระแสเงินสด` → `/management/cashflow`, sitting between
+      Diets and Translations, and the landing tile on `/management` renders in position.
+      No dead links: all four "not priced" links resolve — `/management/medications`,
+      `/admin/immunization-types`, `/maintenance` — and the vet note links to
+      `/admin/website`.
 - [x] Manual updated (`src/lib/manual/en.ts`) — new `cashflow` topic under Management with
       steps, a warning callout carrying the "not a budget" sentence and a note on the vet
       estimate. The screenshot it references (`/manual/management-cashflow.png`) does not
@@ -167,13 +171,26 @@ underlying price columns were checked directly with the anon key too — `medica
       dictionary key in both `en.ts` and `th.ts` (no literal copy in the components).
       `/management/translations` covers user-entered content, not app labels, so there is
       nothing for it to show here.
-- [ ] Mobile viewport (375px) — *pending sign-in*
-- [ ] Browser console clean — *pending sign-in*
-- [ ] Network clean — *pending sign-in*
+- [x] Mobile viewport (375px) — no horizontal page overflow (`scrollWidth` 375 ===
+      `clientWidth` 375, measured, not eyeballed). The chart is correctly absent below
+      `md`; the table sits in its own `overflow-x: auto` container (327 visible / 665
+      content) so it scrolls within itself rather than dragging the page. Category
+      toggles wrap onto two rows and stay tappable.
+- [x] Browser console clean — no errors and no React warnings; only Next's HMR/Fast
+      Refresh logs and the React DevTools notice.
+- [x] Network clean — no 4xx/5xx across the page's requests; document and RSC fetches
+      200. One transient `TypeError: fetch failed` to Supabase was seen once and did not
+      reproduce on reload — dev-network noise, not a code path, and the page degraded to
+      its "Couldn't load the forecast" message rather than crashing, which is the
+      behaviour that line is asking about.
 
 ## 6. Regression
 
-- [ ] The pages nearest the change still work — *pending sign-in*
+- [x] The pages nearest the change still work — `/management/diets` still draws its
+      **Next 7 days / Next 30 days** columns and `/management/medications` still renders
+      its list and cost column, both checked in the running app. That is the check that
+      matters here: it proves `FIXED_FORECAST_DAYS` is genuinely untouched at runtime,
+      not merely unedited in the file. `/management` landing renders all seven tiles.
 - [x] Any shared file touched checked from a second, unrelated page:
   - `forecast-window.ts` — **not modified**, only imported, so Diets and Medications are
     untouched by construction. Verified `FIXED_FORECAST_DAYS` is still `[7, 30]`.
@@ -207,13 +224,16 @@ underlying price columns were checked directly with the anon key too — `medica
 
 - [ ] Deployed to test: `npm run deploy:test` — n/a: deploys run from `main` after merge, not from this branch.
 - [ ] Smoke-tested on `test.lannacare.org` — n/a: nothing is deployed yet. Release-manager step after merge.
-- [ ] **Timezone-sensitive behaviour checked on test, not locally** — *pending deploy, and
-      this one matters more here than usual.* The whole page is date arithmetic, and the
-      month bucketing is UTC by design (§1). What must be checked on a real Workers build
-      is the **window edges**, not the buckets: `isoDatePlus(0)` derives "today" from the
-      runtime clock, so between 00:00 and 07:00 Thai time a Workers build will offer a
-      window starting the previous day. Expected, not a defect — but it should be seen
-      once and confirmed to be only a one-day shift in the window, not a shifted total.
+- [ ] **Timezone-sensitive behaviour checked on test, not locally** — n/a: nothing is
+      deployed from a feature branch, and this cannot be checked on `next dev`, which is
+      the whole point of the line. **Flagged hard for the release manager, because this
+      page is date arithmetic end to end and this is the check most likely to be waved
+      through.** What to look at on the deployed build is the **window edges**, not the
+      month buckets: `isoDatePlus(0)` derives "today" from the runtime clock, so between
+      00:00 and 07:00 Thai time a Workers build offers a window starting the previous
+      day. That is expected and not a defect — what must be confirmed is that it is only
+      a one-day shift in the window, not a shifted or double-counted total. The month
+      bucketing itself is knowingly UTC (§1) and is Dashboard follow-ups (e), not this.
 - [ ] Public pages re-checked after a cache purge — n/a: nothing is deployed yet, and this change adds no public page. `globals.css` gains five tokens and redefines nothing, so the only exposure is a glance at `/` once the release manager deploys.
 
 ### Deploy safety
@@ -267,9 +287,10 @@ underlying price columns were checked directly with the anon key too — `medica
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | Sign in as **staff, vet, volunteer and resident** and hit `/management/cashflow` directly — each should be redirected, not shown the page. Signing in needs a password, which this session does not handle. | `http://localhost:3007/management/cashflow` |
-| 2 | Confirm the Thai strings read naturally — they were written to match the existing register but not reviewed by a Thai speaker. Particularly "คาดการณ์กระแสเงินสด" and the not-a-budget paragraph. | `/management/cashflow` with ไทย selected |
-| 3 | Whether the "average per month" card is the per-month figure the item meant, or whether it should be the *current* month. A partial first month drags the average down. | `/management/cashflow` |
+| 1 | Sign in as **management, staff, vet, volunteer and resident** and hit `/management/cashflow` directly. Management should see it; the other four should be redirected, not merely have the nav entry hidden. Admin and signed-out are already verified. Each needs its own password, which this session does not handle. | `http://localhost:3007/management/cashflow` |
+| 2 | Confirm the Thai reads naturally — written to match the existing register, not reviewed by a Thai speaker. Particularly "คาดการณ์กระแสเงินสด", the not-a-budget paragraph, and the basis labels (มีราคาแล้ว / ประมาณการ / มีใบแจ้งหนี้). One known nit: the vet note ends in a full stop after the link, which English wants and Thai generally does not. | `/management/cashflow` with ไทย selected |
+| 3 | Whether **"Average per month"** is the per-month figure the backlog item meant. It divides the window total by the months it spans, so a part-month at either end drags it down — a 90-day window starting 23 Sep reads ฿65,332 across four months, two of which are partial. The current month, or a full-month average, may be the more useful number. A judgement call, not a defect. | `/management/cashflow` |
+| 4 | Whether the chart earns its space at only **one or two** months. A 30-day window often spans two months, and two lone columns in a wide plot look sparse next to the table. Fine at 90 days. | `/management/cashflow?days=30` |
 
 ## Sign-off
 
@@ -290,7 +311,7 @@ Manual verification by: <name>  Date: <yyyy-mm-dd>
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [ ] Checklist pasted into the PR
-- [ ] Handed to the production release manager
+- [ ] Handed to the production release manager — n/a: the handover happens at merge, which is after this checklist is written. The apply plan and the timezone flag above are what the handover consists of.
 
 Result: <pass | pass with accepted defects | fail>
 
