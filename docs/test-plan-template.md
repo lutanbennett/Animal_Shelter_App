@@ -18,6 +18,11 @@ exempt — they are simply fast, because most lines are honestly `n/a`. Writing 
 than at the happy path.
 
 Run `node scripts/check-test-plan.mjs` locally before pushing to see what CI will say.
+
+The `test-plan` CI job currently reports **red without blocking the merge** — it is
+a deliberate soft gate while the process beds in, not an oversight. Treat a red
+`test-plan` as a stop anyway; it becomes a required check once we know the
+checklist is working.
 The completed checklist is also pasted into the PR and read by the production
 release manager before `npm run deploy:prod`.
 

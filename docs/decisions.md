@@ -2308,3 +2308,14 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   translations), and a smoke test on `test.lannacare.org` rather than only on
   the local dev server, since the deployed OpenNext build is not the same
   artifact as `next dev`.
+
+- **The test-plan check runs as a red flag, not a hard block (2026-09-23):**
+  `test-plan` fails a PR with no completed `docs/test-plans/<feature>.md`, but it
+  is deliberately *not* a required check in branch protection, so a red result
+  does not physically prevent the merge. The reasoning is that a soft gate people
+  follow beats a hard gate they resent: running it this way surfaces where the
+  checklist is annoying or wrong while it is still cheap to change, and nothing
+  is currently live — no users until the Pi lands. It is promoted to a required
+  check once the process has visibly bedded in. Recorded because a red
+  non-blocking check looks exactly like a misconfiguration to anyone who finds it
+  later, and it is not one.

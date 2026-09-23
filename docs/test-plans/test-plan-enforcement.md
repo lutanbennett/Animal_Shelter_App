@@ -110,7 +110,7 @@ No runtime surface, so no role can reach this change.
 | # | Severity | What | Status |
 |---|---|---|---|
 | 1 | low | Bootstrap wrinkle: this PR's own tested SHA cannot be written into the commit that creates it, so it lands in a follow-up commit on the same branch. Every later feature records it normally | accepted |
-| 2 | low | `test-plan` is not yet a required check in branch protection, so it reports red but does not physically block merge. Needs a GitHub settings change, which is Lutan's to make | deferred — raised with Lutan |
+| 2 | low | `test-plan` is not a required check in branch protection, so it reports red but does not physically block merge | accepted — deliberate. Lutan's call 2026-09-23: run it as a red flag first, promote it to a hard block once the process has bedded in. Backlog item raised for the revisit |
 | 3 | medium | The check only looked at committed diffs, so running it locally before committing reported "no completed test plan" even when the file was sitting in the working tree. Would have trained people to distrust it | fixed — now unions the committed diff with `git status --porcelain -- docs/test-plans` |
 | 4 | medium | The `Tested by:` emptiness check never fired: the regex matched the `Date:` text on the same line, so a blank name passed. Sign-off could have been anonymous | fixed — anchored on `Date:`, and the date is now validated as `yyyy-mm-dd` |
 
