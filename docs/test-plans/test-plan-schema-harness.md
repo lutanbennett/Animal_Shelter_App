@@ -4,18 +4,18 @@
 
 | | |
 |---|---|
-| Feature | Two template fixes: a section 3 line for exercising a migration's constraints in a `begin; … rollback;` harness, and a section 2 warning that gates are ticked on exit codes rather than plausible-looking output |
+| Feature | Three template fixes: a section 3 line for exercising a migration's constraints in a `begin; … rollback;` harness, a section 2 warning that gates are ticked on exit codes rather than plausible-looking output, and a section 8 split of the timezone check into boundary logic versus deployed behaviour |
 | Backlog item | none; feedback from the Cashflow Schema session on 2026-09-23, approved by Lutan the same day |
 | Branch / worktree | `claude/test-plan-schema-harness` @ `C:\Development\Animal_Shelter_test-plan-schema-harness` |
 | Dev server | not started — this change ships no runtime code |
 | PR | opened after this checklist; number recorded in the follow-up commit |
 | Tested by / date | Claude (test manager session) / 2026-09-23 |
 | Carries a migration? | no |
-| Tested at SHA | gates run locally at `308afb2`, exit 0 each. The later `sync` merged only a 2-line `docs/backlog.md` change, so they were not re-run over a docs edit; CI covers the merged tip `f95df6d` |
+| Tested at SHA | gates run locally at `308afb2`, exit 0 each. Everything after that commit is Markdown only — a sync that merged 2 lines of `docs/backlog.md`, and the section 8 change — none of which `typecheck`, `lint` or `build` can see, so they were not re-run over documentation. CI re-runs all three on every push and covers the tip |
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence, and it matches what was asked — one checklist line in section 3 of `docs/test-plan-template.md` for the `do $$ … $$` harness CLAUDE.md already describes, plus a section 2 note added after defect 1 below
+- [x] Change is described in one sentence, and it matches what was asked — one checklist line in section 3 of `docs/test-plan-template.md` for the `do $$ … $$` harness CLAUDE.md already describes, plus the section 2 and section 8 changes added in response to defects 1 and 3 below
 - [x] Files/areas touched listed — `docs/test-plan-template.md`, `docs/test-plans/`, `docs/decisions.md`. No `src/`, no `worker/`, no `scripts/`, no `.github/`, no `supabase/migrations/`
 - [x] Roles affected identified — none; no runtime surface, so no role can reach it
 - [x] Anything explicitly out of scope written down — not changing `scripts/check-test-plan.mjs` (the new line needs no new validation; it is an ordinary checklist item), not changing the release smoke test (owned by the release manager session), and not retrofitting the line onto already-merged checklists
@@ -112,6 +112,7 @@ No runtime surface, so no role can reach this change.
 | # | Severity | What | Status |
 |---|---|---|---|
 | 1 | high | While filling in this very checklist I nearly ticked `typecheck`, `lint` and `build` on a false green: `npm ci` had not finished linking `node_modules/.bin`, so every gate failed with "'next' is not recognized", and piping each through `tail` made the shell report `tail`'s exit status instead. Three gates read as passing having never run | fixed — section 2 now warns about both causes, and the gates were re-run capturing each exit code separately |
+| 3 | medium | Section 8 conflated two different timezone claims — whether the logic handles the boundary, and whether the deployed build behaves as the source does. Read as written it pushed testers toward a timed observation that silently passes at the wrong hour, when deterministic instant injection is both stronger and available | fixed — the line now separates the two and prefers injection where the code allows it |
 | 2 | medium | Section 3 had no line for the `begin; … rollback;` harness, so the most valuable check on a migration had nowhere to be recorded. A schema checklist read as almost entirely `n/a`, making it look like a formality on exactly the change type where it should have teeth — and the template was out of step with a practice CLAUDE.md already documents | fixed — this PR |
 
 ## Left for manual verification

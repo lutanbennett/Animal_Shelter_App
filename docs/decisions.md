@@ -2362,3 +2362,21 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   type where it has the most to catch — and that is how a rule starts being
   waived. Raised by the Cashflow Schema session from filling one in for real on
   PR #53, which is the intended way for this template to change.
+
+- **The timezone check is two claims, not one (2026-09-23):** section 8 asked
+  for timezone-sensitive behaviour to be "checked on test, not locally", which
+  conflated *does the logic handle the boundary* with *does the deployed build
+  behave as the source does*. The first is provable at any hour by injecting
+  fixed instants into the real exported helper — both sides of 17:00Z, the 00:00
+  and 06:59 Thai ends of the broken window, month/year end, a leap day — and
+  re-running under `TZ=UTC`, which is the Workers case. That is stronger than a
+  timed observation, because it does not depend on the tester happening to be
+  awake during 00:00–07:00 Thai, and it fails loudly rather than silently
+  passing at the wrong hour. The second genuinely needs `test.lannacare.org`
+  during that window, and when nobody can be there it belongs in **Left for
+  manual verification** rather than ticked. The distinction was raised by the
+  UTC time bug fix session, which had already substituted injection for
+  observation and wanted the template to say whether that was legitimate — it
+  is, and the template now says so, including that the test must call the real
+  exported function rather than a re-typed copy, since a copy proves only that
+  the copy works.
