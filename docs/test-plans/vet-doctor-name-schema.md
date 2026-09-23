@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Medical records → **Optional doctor name on a vet appointment** (ticked on the feature PR, not this one) |
 | Branch / worktree | `claude/vet-doctor-name-schema` @ `C:\Development\Animal_Shelter_vet-doctor-name-schema` |
 | Dev server | not started — this change ships no runtime code |
-| PR | opened after this checklist; number recorded in the follow-up commit |
+| PR | #76 |
 | Tested by / date | Claude (automated) / 2026-09-24 |
 | Carries a migration? | yes — `0074_vet_doctor_name.sql` |
 | Tested at SHA | branch on `main` @ `06e208c` (#73); the migration, harness, `decisions.md` entry and this plan are the only changes |
