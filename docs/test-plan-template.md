@@ -8,6 +8,12 @@ Every line must end up in one of two states, and CI checks this:
 - `- [x]` — the check was actually run and passed.
 - `- [ ] … — n/a: <reason>` — the check did not apply, and the reason says why.
 
+**The reason must follow `n/a:` immediately.** `n/a: no UI surface` passes;
+`n/a as a deploy check, because …` reads fine to a human but fails, and that
+strictness is deliberate — it is what makes every reason greppable in one pass
+across every checklist in the repo. Put any qualifying words after the colon,
+not before it.
+
 Never tick something you did not do, and never leave a line untouched. Anything
 that failed goes under **Defects**.
 
@@ -65,7 +71,7 @@ indistinguishable from one that passed.
 - [ ] `npm run typecheck` — clean
 - [ ] `npm run lint` — clean
 - [ ] `npm run build` — succeeds
-- [ ] CI green on the PR (runs the same three)
+- [ ] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so leave it `n/a: not yet — the PR does not exist at this commit` on the first push and tick it in a follow-up commit once the run is actually green. Every PR hits this; the first push is red on `test-plan` by construction. Do not pre-tick it — a green you have not seen is the exact failure this checklist exists to prevent
 
 ## 3. Schema and data — *skip if no migration*
 

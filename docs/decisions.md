@@ -2380,3 +2380,17 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   is, and the template now says so, including that the test must call the real
   exported function rather than a re-typed copy, since a copy proves only that
   the copy works.
+
+- **Two wording fixes that the checker was silently punishing (2026-09-23):**
+  the template said to mark an inapplicable line `n/a: <reason>`, but the checker
+  requires the reason to follow the colon immediately, so `n/a as a deploy check,
+  because …` — which reads perfectly well — failed. The strictness is worth
+  keeping, because it is what makes every reason greppable across every checklist
+  in the repo; the instruction is what needed to be explicit. Separately, "CI
+  green on the PR" cannot be true in the commit that creates the PR, so every
+  first push is red on `test-plan` by construction; the template now says to mark
+  it `n/a: not yet` and tick it in a follow-up commit. Both were raised by the
+  UTC date audit session, which hit them while filling in a real checklist —
+  which is the only way this kind of thing surfaces. The second matters more than
+  it looks: an item that cannot be honestly ticked invites pre-ticking, and a
+  pre-tick is indistinguishable from a check that passed.
