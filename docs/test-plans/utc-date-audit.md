@@ -4,11 +4,11 @@
 
 | | |
 |---|---|
-| Feature | UTC "today" data audit — a report on which stored dates may be a day early, plus the read-only script that produced it. No data changed, no `src/` changed. |
+| Feature | UTC "today" data audit — which stored dates may be a day early, plus the read-only script that produced it. **Second pass 2026-09-23: production run completed**, audit now covers dev and production. No data changed, no `src/` changed. |
 | Backlog item | `docs/backlog.md` → **"'Today' is UTC everywhere, so it is yesterday in Thailand until 07:00."** — the *data* half (piece 2). The item stays unticked; `claude/utc-today` owns the code half. |
 | Branch / worktree | `claude/utc-date-audit` @ `C:\Development\Animal_Shelter_utc-date-audit` |
 | Dev server | not started — no runtime surface to look at |
-| PR | [#57](https://github.com/lutanbennett/Animal_Shelter_App/pull/57) |
+| PR | [#57](https://github.com/lutanbennett/Animal_Shelter_App/pull/57) (merged `e547164`), then the production follow-up |
 | Tested by / date | Claude Opus 5 / 2026-09-23 |
 | Carries a migration? | no |
 | Tested at SHA | `4112e57`, re-run post-sync at `de54b4e` |
@@ -26,7 +26,7 @@
 - [x] `npm run typecheck` — clean (re-run post-sync)
 - [x] `npm run lint` — clean (re-run post-sync)
 - [x] `npm run build` — succeeds (re-run post-sync, after `npm ci` for the lockfile change)
-- [x] CI green on the PR (runs the same three) — post-sync at `b06a59b`: `check` pass (1m28s), `test-plan` pass (7s), run 35872689743. Previously green at `4112e57` (run 35820560809)
+- [ ] CI green on the PR (runs the same three) — n/a: not yet — re-run pending for the production follow-up. Green twice already (`4112e57` run 35820560809, `b06a59b` run 35872689743); ticked again once this run is green, not before
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -35,13 +35,13 @@
 - [ ] `node scripts/apply-migrations.mjs --dry-run` reviewed — n/a: nothing to apply
 - [ ] Applied to **dev** and recorded in `schema_migrations` — n/a: nothing to apply
 - [ ] File is re-runnable — n/a: no migration file
-- [ ] Existing rows still read correctly after the change — n/a: no rows were written. Every statement this branch ran was a `select`, and the script enforces that (`read_only` on the API call plus a `select`/`with` guard); dev row counts are unchanged
+- [ ] Existing rows still read correctly after the change — n/a: no rows were written, **in production either**. Every statement was a `select`, and the script enforces it (`read_only` on the API call plus a `select`/`with` guard); dev and production row counts are unchanged
 - [ ] Down-migration written, or the reason one is not needed is stated — n/a: no migration
 - [ ] Production apply plan stated for the release manager — n/a: no migration. The production *read* that is still owed is in the document's §5 and in the handover table below
 
 ## 4. Functional checks
 
-- [x] Happy path works end to end — `node scripts/throwaway-utc-date-audit.mjs --rows` ran against dev and produced the figures in §4 of the document; the summary table and the worked examples were copied from its output, not written by hand
+- [x] Happy path works end to end — run against **both** databases now. Dev produced §4's figures; `--project dbkodyyxxhtygxcxmfcu --rows` produced §5's. Both tables were copied from script output, not written by hand
 - [ ] Data persists — reload the page and the change is still there — n/a: no page, and nothing is written to persist
 - [ ] Create / edit / delete all exercised — n/a: the script only reads
 - [x] Empty state renders sensibly (no rows yet) — the `maintenance`, `group_origins` and `project_folders` targets have no qualifying rows on dev and report `0 of 0` rather than erroring or dividing by zero; those zeros are marked in the document as "table empty"/"no dates set" so they are not read as clean
@@ -69,7 +69,7 @@
 - [ ] Translatable strings go through the translation path — n/a: no user-facing strings
 - [ ] Mobile viewport (375px) — n/a: no UI
 - [ ] Browser console clean — n/a: nothing runs in a browser
-- [ ] Network clean — no unexpected 4xx/5xx — n/a: no app requests. The script's own calls to the Supabase Management API all returned 200 on dev; the three production attempts were refused by this session's permission classifier before any request left the machine (document §5)
+- [x] Network clean — no unexpected 4xx/5xx — no app requests to make; the script's own calls to the Supabase Management API returned 200 against both projects. Three **earlier** production attempts were refused by the permission classifier before any request left the machine; the run that succeeded happened only after Lutan authorised it directly (document §5)
 
 ## 6. Regression
 
@@ -83,6 +83,7 @@
 - [x] Non-obvious design choices appended to `docs/decisions.md`, dated — the candidate definition and, more importantly, why a candidate is not an error and why no bulk correction was run
 - [x] `README.md` still accurate — it names individual scripts where it explains a workflow (`apply-migrations`, `deploy`, `backup`, `worktree`) rather than carrying a list of `scripts/`, so a deliberately disposable audit script needs no entry. Nothing else in it is affected
 - [x] Commit messages say why, not just what
+- [x] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned** — adopted from the template after it landed mid-branch, and it is the line this branch most needed. Two claims here were reasoned and wrong: that `placement_history` was "not affected" (true of the stored values, false of the branch that chose them) and that `dueState()` fired a day *early* (it fires a day late, and my example case was the one that does not move at all). Both were corrected only because a second stream measured rather than agreed — twice, in both directions. The `dueState` bands in §6 and the production figures in §5 are now pasted from run output; the two corrections are in the commit log with what was measured
 
 ## 8. Pre-production gate
 
@@ -122,7 +123,7 @@
 | 1 | high | A `Deceased` placement closes every open prescription with `new.start_date::date`, cast in the database's UTC session (`0049_undo_deceased.sql:118`), so a death recorded before 07:00 Bangkok end-dates the course the day *before* the animal died. Found by reading the trigger; 0 instances on dev (the 6 deceased residents there were imported with end dates already set) | deferred — belongs to `claude/utc-today` / a schema PR; flagged to that stream. Document §3.3 |
 | 2 | high | "End today" on a prescription or diet matches no row when the course started today in Bangkok (`.lte("start_date", today)` with a UTC `today`), so it fails with the generic `saveFailed` for seven hours a day; and when it does match, it ends the course a day early | deferred — same owner. Document §3.4 |
 | 3 | medium | Six `current_date` sites inside SQL (a column default, a trigger, a seed, and three views incl. the public `in_treatment` figure) that a `todayIso()` helper in `src/lib/format.ts` cannot reach. Currently nobody's | deferred — needs a migration; raised so the code half's PR does not close the item while these remain. Document §3.2 |
-| 4 | medium | The production half of this audit was not run — all three routes to production were refused by this session's permission classifier | accepted and documented — the document leads with it, §5 gives the exact command and where to run it, and the PR says the audit is incomplete |
+| 4 | ~~medium~~ | ~~The production half of this audit was not run~~ | **resolved 2026-09-23** — Lutan authorised the run directly; §5 now carries the production table, the target verification and the provenance of the refusals. No production row needs correcting |
 | 5 | low | `prescriptions` and `resident_diets` have no `updated_at`, so wrong `end_date` values are permanently undetectable from the data | deferred to backlog — document §7.1 |
 
 ## Left for manual verification

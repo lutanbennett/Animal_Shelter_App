@@ -2665,3 +2665,19 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   by reading, and the first was plausible enough to have been written down as
   fact. Worth knowing that no gate could have caught this: a deploy is the one
   thing a PR cannot exercise before it merges.
+
+- **Production was clean because the bug had no time, not because it works
+  (2026-09-23):** the production run of the UTC date audit found zero rows
+  needing correction across every date column — the only hits were the 42
+  `age_estimated_on` values from the AppSheet import, which carry the export
+  file's own date and share one `created_at` to the microsecond. The deceased
+  cascade had never fired early either. That is a real answer, but the reason
+  matters more than the number: production's data arrived in a single import on
+  2026-09-22 and almost nothing has been hand-entered since, so the exposure
+  window was about a day and a half rather than the months the backlog item
+  assumed. Dev, where someone actually used the intake wizard at 01:26,
+  produced a genuine three-table candidate at once. The audit therefore clears
+  the rows that exist today and expires the first time anyone works an
+  overnight shift — `docs/utc-date-audit-2026-09-23.md` §8 keeps the triage and
+  the correction SQL unused on purpose, and the script is kept rather than
+  deleted so the next run is one command.
