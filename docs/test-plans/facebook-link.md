@@ -150,9 +150,9 @@ Automated checks by: Claude (Opus 5.5), in the in-app browser signed in by Lutan
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — items 1 and 2 are Lutan's
+- [x] The manual list above is empty, or every item in it was checked by a person — items 1 and 2 checked by Lutan on :3012, 2026-09-25 ("checked both, all good")
 
-Manual verification by: pending: items 1–2 under Left for manual verification
+Manual verification by: Lutan Bennett — confirmed in chat; line written by Claude at their request  Date: 2026-09-25
 
 ### Result
 
