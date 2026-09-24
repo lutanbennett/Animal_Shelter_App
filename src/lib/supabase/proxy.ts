@@ -44,9 +44,9 @@ export async function updateSession(request: NextRequest) {
   const isPublicPath = isPublicPathname(request.nextUrl.pathname);
 
   // Signed out: to /login, remembering where they were going so the
-  // sign-in lands them back there — someone scanning an enclosure's QR
-  // code (/e/…) or a resident's card (/r/…) should end up on that page,
-  // not the residents list. src/lib/auth/next-path.ts.
+  // sign-in lands them back there, not on the residents list.
+  // src/lib/auth/next-path.ts. (Enclosure QR codes, /e/…, and resident
+  // cards, /r/…, are public pages now and never come through here.)
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone();
     const next = `${request.nextUrl.pathname}${request.nextUrl.search}`;

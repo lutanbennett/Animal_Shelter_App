@@ -3582,3 +3582,31 @@ is `claude/enclosure-public-view`.
   describes the dogs a visitor there can see. To show only the enclosure
   after all, or to drop outreach zones, narrow the view in a new migration.
   The page reads `residents` only.
+
+## 2026-09-24 — The shelter's social links carry a database URL check after all (0080)
+
+`site_content.facebook_url` and `instagram_url` are the schema half of "Link
+to the LCA Facebook page". The brief said to add no URL check constraint
+unless the schema already had one, because a database rule that disagrees
+with the form's validator is a trap. The schema does have one: 0076 puts
+`~* '^https?://'` on `shelter_friends.facebook_url` and `website_url`, and
+`src/lib/links/validate.ts`, the validator this feature will reuse, names
+that check as the last line against a `javascript:` link. So 0080 uses the
+same check, word for word.
+
+- **It cannot disagree with the form, because it is strictly looser.** The
+  validator allows only https URLs on the right host, and it saves what
+  `URL.toString()` gives back. That value always starts `https://`. The
+  database refuses only what has no http(s) scheme. The host rule stays in
+  one place, the validator.
+- **No back-fill.** `site_content` is a singleton, so the columns appear on
+  its one row as NULL, which means "no icon". The harness checks that every
+  other value on the row is unchanged.
+## 2026-09-24 — `/e/<id>`: the public enclosure page
+
+The feature half of the 0079 entry above. `/e/` now behaves like `/r/`: signed in → `/enclosures/<id>`; signed out → a public page (`src/app/e/[id]/page.tsx`) with the enclosure's name and Thai name, its zone, and a card per resident linking to their `/r/` page. `/e/` is in `PUBLIC_PATH_PREFIXES` and `isPublicPage`.
+
+- **Signed in is checked first, with no lookup.** `/r/` looks the resident up and then redirects; `/e/` redirects before touching the view. The view has no Lifecycle rows, so looking up first would turn Hospital or Fostered into a 404 for staff too, and `/enclosures/[id]` already 404s on an id that has gone.
+- **Signed out reads `public_enclosures` and nothing else.** A Lifecycle id, an unknown uuid and a non-uuid all get the same plain 404 with the app's name as the title, so the page can't be used to confirm that Hospital exists or what its id is. (The uuid check runs before the query because Postgres rejects a malformed uuid with an error, not an empty result.)
+- **The cards are the `/adopt` card** (`src/app/adopt/ResidentCard.tsx`, now with an `href`), linking to `/r/<code>` rather than `/adopt/<id>`. Every resident in a kennel has an `/r/` page, but only those shown on the public site have an adoption profile, and `/r/` links on to the profile when there is one. Reusing the adoption card keeps a kennel's page and the adoption listing looking the same, and `/r/`'s own layout is a single-resident page, not a grid.
+- **An empty enclosure is a page**, not a 404: "Nobody is living here at the moment." The view returns `[]` for it, so the kennel still exists as far as a visitor is concerned.

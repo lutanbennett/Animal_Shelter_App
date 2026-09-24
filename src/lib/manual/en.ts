@@ -587,6 +587,7 @@ const manual: Manual = {
           steps: [
             "The occupancy bar and notes are at the top; tap a resident to jump to their hub.",
             "Link for this enclosure's QR code: the address to program into the QR code on the enclosure. Tap Copy link, or select the address by hand. The enclosure browser has the same copy icon on every card, for doing a batch.",
+            "Someone who scans the QR code while signed in lands on this page. A visitor sees a public page instead: the enclosure's name and Thai name, its zone, and a card for each resident living there — tap one for that resident's public card, the same page their RFID card opens. Nothing else is shown: no capacity, notes or maintenance. An empty enclosure says nobody is living there at the moment. Hospital, Fostered and the other Lifecycle statuses have no public page.",
             "The Maintenance card shows open jobs on this enclosure, with Log maintenance to add one already pointed at this enclosure.",
             "Admins can change the name, Thai name, capacity and notes under Settings → Enclosures.",
           ],
@@ -1026,6 +1027,7 @@ const manual: Manual = {
             "Our work: project folders marked Show on website, by category, with their story and photos.",
             "Foster, Volunteer and Donate: the pages written under Settings → Website, each with the shelter's email and LINE.",
             "Shelter Friends: a card for each published friend of the shelter, with only the contact details they agreed to show (see Shelter Friends under Management). It is linked from the menu once there is at least one.",
+            "Tags on the kennels: scanning a resident's RFID card shows that resident's public card, and scanning an enclosure's QR code shows the enclosure and who lives there (see The enclosure page). Neither is linked from the menu — they are reached by scanning.",
           ],
           screenshot: {
             src: "/manual/public-adopt.png",
