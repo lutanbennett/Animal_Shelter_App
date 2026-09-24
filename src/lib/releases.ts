@@ -41,14 +41,21 @@ export type Release = {
 };
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: string[] = [
-  "Contacts can now be archived instead of deleted. Archive a carer, volunteer or supplier the shelter no longer works with, from Management → Contacts or their own page, and add a reason if you like. They leave the contact lists and the carer picker but keep their history: a resident's housing history still names them, with an Archived badge. Show archived lists them again, a search still finds them, and Restore brings them back. A resident can't be placed with an archived carer until they're restored.",
-  "The Enclosures page has a new Has open maintenance tick that shows only the enclosures with a repair job still outstanding. It works with the zone buttons and the search, and a filtered page can be bookmarked. Vets don't see it, because maintenance isn't part of their access.",
-  "Release notes now show each release as a single line — its number, title and date — so older releases are no longer buried under the newer ones. Click a release to see what changed; the newest opens by itself.",
-];
+export const unreleased: string[] = [];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.2.1",
+    date: "2026-09-24",
+    title: "Archiving contacts, and a tidier release list",
+    major: false,
+    notes: [
+      "Contacts can now be archived instead of deleted. Archive a carer, volunteer or supplier the shelter no longer works with, from Management → Contacts or their own page, and add a reason if you like. They leave the contact lists and the carer picker but keep their history: a resident's housing history still names them, with an Archived badge. Show archived lists them again, a search still finds them, and Restore brings them back. A resident can't be placed with an archived carer until they're restored.",
+      "The Enclosures page has a new Has open maintenance tick that shows only the enclosures with a repair job still outstanding. It works with the zone buttons and the search, and a filtered page can be bookmarked. Vets don't see it, because maintenance isn't part of their access.",
+      "Release notes now show each release as a single line — its number, title and date — so older releases are no longer buried under the newer ones. Click a release to see what changed; the newest opens by itself.",
+    ],
+  },
   {
     version: "0.2.0",
     date: "2026-09-24",
