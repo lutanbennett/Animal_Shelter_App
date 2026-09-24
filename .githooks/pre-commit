@@ -6,8 +6,21 @@
 #
 # This hook runs in every worktree on the machine (core.hooksPath is shared),
 # so it fails open: no node, no script (an older branch), no origin/main, or a
-# crash all let the commit through with a note. A commit touching no migration
-# costs one `git diff`. It never fetches; CI checks against a fresh main.
+# crash all let the commit through with a note. It never fetches; CI checks
+# against a fresh main.
+#
+# A commit that adds no migration file stops at the `git diff` below, before
+# node starts — node alone takes about a second on this machine, and every
+# commit in every stream would pay it. The script repeats the same test, so
+# this line only decides how fast the answer comes, never what it is.
+git diff --cached --quiet --no-renames --diff-filter=A -- supabase/migrations/ && exit 0
 command -v node >/dev/null 2>&1 || exit 0
 [ -f scripts/check-migration-numbers.mjs ] || exit 0
 node scripts/check-migration-numbers.mjs --staged
+rc=$?
+# 3 is the script's refusal. Anything else non-zero is node failing before it
+# could give a verdict (a syntax error, a broken import), which must not wedge
+# the commit.
+[ "$rc" -eq 3 ] && exit 1
+[ "$rc" -ne 0 ] && echo "pre-commit: migration numbering check crashed (exit $rc) — commit allowed; CI checks the PR." >&2
+exit 0

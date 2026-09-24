@@ -30,6 +30,9 @@
 //     last fetch is over STALE_HOURS old a problem is printed as a warning and
 //     the commit goes through — the local ref may simply not know what main
 //     holds now. CI checks against a fresh origin/main either way.
+// A refusal exits 1, or 3 under --staged: the hook blocks on 3 alone, so node
+// dying before it reaches a verdict (exit 1 from a syntax error or a broken
+// import) lets the commit through rather than reading as a refusal.
 // Deliberately bypassing it is `git commit --no-verify`; CI will still say.
 
 import { spawnSync } from "node:child_process";
@@ -49,6 +52,7 @@ if (unknown.length || (baseArg >= 0 && !base)) {
 }
 
 const TAG = "migration numbers";
+const REFUSED = staged ? 3 : 1;
 
 function git(gitArgs) {
   const r = spawnSync("git", gitArgs, { encoding: "utf8" });
@@ -131,9 +135,9 @@ function main() {
 
   let added = null;
   if (staged) {
-    // The fast path, and the only git call a commit that touches no migration
-    // pays for. --no-renames so `git mv 0082_x.sql 0083_x.sql` shows the new
-    // name as added and is judged.
+    // The same test .githooks/pre-commit makes before starting node, repeated
+    // so the script gives the same answer run on its own. --no-renames so
+    // `git mv 0082_x.sql 0083_x.sql` shows the new name as added and is judged.
     const diff = git(["diff", "--cached", "--name-only", "--no-renames", "--diff-filter=A", "--", `${MIGRATIONS_DIR}/`]);
     if (diff.ok && !diff.out) process.exit(0);
     added = diff.out.split("\n").filter(Boolean).map(basename);
@@ -184,7 +188,7 @@ function main() {
       `  Numbers belong to main, not to a branch (CLAUDE.md, "Database migrations"). If this file is already applied\n` +
       `  to dev under its old name, that row stays behind as drift — see apply-migrations.mjs --drift.`,
   );
-  process.exit(1);
+  process.exit(REFUSED);
 }
 
 try {
