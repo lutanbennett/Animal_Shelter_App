@@ -41,12 +41,19 @@ export type Release = {
 };
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: string[] = [
-  "In the user manual on a computer, the Contents list beside the text now stays in place with its own scroll bar, so you can reach any topic without scrolling back to the top of the page. Opening a link to a particular topic highlights it in the list and scrolls the list to show it.",
-];
+export const unreleased: string[] = [];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.2.2",
+    date: "2026-09-24",
+    title: "The manual's Contents list stays put",
+    major: false,
+    notes: [
+      "In the user manual on a computer, the Contents list beside the text now stays in place with its own scroll bar, so you can reach any topic without scrolling back to the top of the page. Opening a link to a particular topic highlights it in the list and scrolls the list to show it.",
+    ],
+  },
   {
     version: "0.2.1",
     date: "2026-09-24",
