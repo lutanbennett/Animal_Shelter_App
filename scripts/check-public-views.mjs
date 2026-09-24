@@ -44,6 +44,7 @@ for (const view of [
   "public_site_pages",
   "public_recent_adoptions",
   "public_resident_cards",
+  "public_shelter_friends",
 ]) {
   const read = await fetch(`${url}/rest/v1/${view}?select=id&limit=1`, { headers });
   report(read.ok, `${view}: anon can SELECT`, `HTTP ${read.status}`);
@@ -64,6 +65,14 @@ for (const view of [
       `HTTP ${write.status}`,
     );
   }
+}
+
+// Tables behind a public view that anon must not read directly. RLS alone
+// would return an empty list; these also have their anon grants revoked, so
+// the read is refused outright — the view is the only way in.
+for (const table of ["shelter_friends"]) {
+  const read = await fetch(`${url}/rest/v1/${table}?select=id&limit=1`, { headers });
+  report(!read.ok, `${table}: anon SELECT is refused`, `HTTP ${read.status}`);
 }
 
 console.log(`\nProject: ${new URL(url).hostname}`);

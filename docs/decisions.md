@@ -3219,3 +3219,32 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   in-page anchor click never re-mounts. Expand all / Collapse all was
   left out: with three releases it is chrome nobody needs; revisit once
   there are enough that opening them one by one is a chore.
+
+- **Shelter Friends: a separate public-profile table, per-field opt-ins
+  (2026-09-24):** a Shelter Friend is a contact with a public profile, so
+  0076 keys `shelter_friends` 1:1 on `contact_id` (unique, `on delete
+  cascade`) instead of adding columns to `contacts` or copying the
+  business into a second address book. It is keyed on the contact, not on
+  its type: the type stays `Vendor`, and any contact can become a Friend.
+  Why a separate table rather than more `contacts` columns: the website
+  must never show something because it was added to `contacts` later.
+  With the profile on its own table, and anon reading only
+  `public_shelter_friends`, a new column reaches the site only if someone
+  adds it to that view. The base table's anon grants are revoked as
+  well, so the view is the only way in. Why an opt-in per field rather than
+  one "show contact details" switch: a feed shop may want its LINE on the
+  page but not the owner's mobile, and publishing a Friend should publish
+  its name, blurb and links, never a phone number nobody agreed to share.
+  So `show_phone` / `show_email` / `show_line` / `show_address` /
+  `show_map` all default false, and the view returns null for each one
+  left unticked. `show_map` is separate from `show_address`: the view
+  exposes the address twice, as `address` and `map_location`, so a pin can
+  appear without the address printed. A Friend whose contact is archived
+  (0075) drops out of the view with no second switch. `help_kind` is
+  free text (Lutan, 2026-09-24), not a fixed list, so it goes through the
+  translation queue with `blurb` and `discount_note`. Website and Facebook
+  links must start `http(s)://` at the schema level, because they become
+  `href`s on a public page. Logos pass through the photo proxy
+  (`is_known_drive_file`). Measured, not reasoned: the rollback harness
+  `scripts/check-shelter-friends.mjs` reads the view as `anon` for
+  each of these cases.
