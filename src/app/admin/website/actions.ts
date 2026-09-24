@@ -7,6 +7,13 @@ import { getT } from "@/lib/i18n/get-t";
 import { isSitePageSlug, type SitePageSlug } from "@/lib/site/pages";
 import { parseBahtAmount } from "@/lib/format";
 import {
+  checkFacebookUrl,
+  checkInstagramUrl,
+  FACEBOOK_HOSTS,
+  INSTAGRAM_HOSTS,
+  linkErrorText,
+} from "@/lib/links/validate";
+import {
   findOrCreateFolder,
   getDriveClient,
   uploadImageToFolder,
@@ -71,14 +78,28 @@ export async function updateSiteContent(
   formData: FormData,
 ): Promise<SiteContentFormState> {
   await assertAdminRole();
+  const { t } = await getT();
+
+  const text = (name: string) => (formData.get(name) as string | null)?.trim() ?? "";
+  const optional = (name: string) => text(name) || null;
+
+  // The form checks these as they are typed; this is the same rule again
+  // for a request that skipped the form. The database's own check (0080)
+  // is looser on purpose — see src/lib/links/validate.ts.
+  const s = t.admin.website.settings;
+  const facebook = checkFacebookUrl(text("facebook_url"));
+  const instagram = checkInstagramUrl(text("instagram_url"));
+  if (!facebook.ok) {
+    return { error: `${s.facebookUrl}: ${linkErrorText(t.linkErrors, facebook, FACEBOOK_HOSTS)}` };
+  }
+  if (!instagram.ok) {
+    return { error: `${s.instagramUrl}: ${linkErrorText(t.linkErrors, instagram, INSTAGRAM_HOSTS)}` };
+  }
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const text = (name: string) => (formData.get(name) as string | null)?.trim() ?? "";
-  const optional = (name: string) => text(name) || null;
 
   const { error } = await supabase
     .from("site_content")
@@ -94,6 +115,8 @@ export async function updateSiteContent(
       contact_phone: optional("contact_phone"),
       contact_line: optional("contact_line"),
       contact_map_url: optional("contact_map_url"),
+      facebook_url: facebook.url,
+      instagram_url: instagram.url,
       updated_at: new Date().toISOString(),
       updated_by: user?.id ?? null,
     })
@@ -102,7 +125,6 @@ export async function updateSiteContent(
   if (error) return { error: error.message };
 
   revalidateWebsitePages();
-  const { t } = await getT();
   return { success: t.common.saved };
 }
 

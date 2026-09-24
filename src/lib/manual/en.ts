@@ -928,6 +928,7 @@ const manual: Manual = {
           steps: [
             "Hero photo: the big photo at the top of the welcome page.",
             "Labels and contact details: the tagline, hero photo description and visiting hours in English and Thai side by side, plus the email, phone, LINE id, address and map link shown in the footer of every public page and on each resident's profile.",
+            "Facebook page and Instagram: paste the shelter's links (they must start with https:// and be on facebook.com or instagram.com — the form says so if not). Each shows as a small icon in the footer; Facebook also sits at the top of every public page on a computer. Leave a box empty and its icon doesn't appear.",
             "Pages: the wording of Our story, How adoption works, Foster, Volunteer and Donate. Separate paragraphs with a blank line; start a line with ## for a sub-heading or - for a bullet. The other language's version is written or approved in the translation panel under each field.",
             "Photo gallery: the strip of photos in the Our story section, in order.",
             "Pet of the week: one resident to spotlight, chosen from those on the public adoption page.",

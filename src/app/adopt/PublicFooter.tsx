@@ -4,10 +4,13 @@ import { getT } from "@/lib/i18n/get-t";
 import {
   lineLink,
   loadSiteContent,
+  socialLinks,
   visitingHoursLines,
   type SiteContent,
 } from "@/lib/site/content";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
+import { FacebookIcon } from "@/components/FacebookIcon";
+import { InstagramIcon } from "@/components/InstagramIcon";
 
 /**
  * Footer for every public page: how to find and reach the shelter, and
@@ -22,6 +25,7 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
   ]);
   const hours = visitingHoursLines(locale, site);
   const line = lineLink(site?.contact_line);
+  const social = socialLinks(site);
   const f = t.publicFooter;
 
   return (
@@ -74,6 +78,32 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
             <a href={line.href} target="_blank" rel="noreferrer" className="underline hover:text-foreground">
               LINE: {line.label}
             </a>
+          )}
+          {(social.facebook || social.instagram) && (
+            <div className="flex items-center gap-3 pt-1">
+              {social.facebook && (
+                <a
+                  href={social.facebook}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={f.facebook}
+                  className="hover:text-foreground"
+                >
+                  <FacebookIcon aria-hidden="true" className="h-5 w-5" />
+                </a>
+              )}
+              {social.instagram && (
+                <a
+                  href={social.instagram}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={f.instagram}
+                  className="hover:text-foreground"
+                >
+                  <InstagramIcon aria-hidden="true" className="h-5 w-5" />
+                </a>
+              )}
+            </div>
           )}
         </div>
 

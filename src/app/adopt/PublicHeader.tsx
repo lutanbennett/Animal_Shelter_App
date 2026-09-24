@@ -3,6 +3,8 @@ import Link from "next/link";
 import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
+import { loadSiteContent, socialLinks } from "@/lib/site/content";
+import { FacebookIcon } from "@/components/FacebookIcon";
 import { LanguageSwitcher } from "../LanguageSwitcher";
 
 export type PublicSection =
@@ -27,7 +29,12 @@ export async function PublicHeader({ current }: { current?: PublicSection }) {
       data: { user },
     },
     showFriends,
-  ] = await Promise.all([supabase.auth.getUser(), hasPublicFriends()]);
+    site,
+  ] = await Promise.all([supabase.auth.getUser(), hasPublicFriends(), loadSiteContent(supabase)]);
+  // Facebook is where most of the shelter's supporters are, so its link
+  // sits in the header too — on a computer only; a phone's header is
+  // already full, and the footer has it.
+  const facebook = socialLinks(site).facebook;
   // Shelter Friends is listed once there is someone to thank — or while
   // the visitor is on /friends itself, so the current page stays marked.
   const sections: { key: PublicSection; href: string; label: string }[] = [
@@ -87,6 +94,17 @@ export async function PublicHeader({ current }: { current?: PublicSection }) {
             {t.adopt.donateNav}
           </Link>
         </nav>
+        {facebook && (
+          <a
+            href={facebook}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={t.publicFooter.facebook}
+            className="hidden text-muted hover:text-foreground sm:inline-flex"
+          >
+            <FacebookIcon aria-hidden="true" className="h-5 w-5" />
+          </a>
+        )}
         <LanguageSwitcher />
         <Link
           href={user ? "/residents" : "/login"}

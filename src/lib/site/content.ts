@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Locale } from "@/lib/i18n/locales";
+import { checkFacebookUrl, checkInstagramUrl } from "@/lib/links/validate";
 
 /**
  * The site_content singleton (0018, 0041, 0059): the public site's
@@ -17,13 +18,16 @@ export type SiteContent = {
   contact_phone: string | null;
   contact_line: string | null;
   contact_map_url: string | null;
+  /** The shelter's own Facebook page and Instagram (0080). Not `contact_`-prefixed. */
+  facebook_url: string | null;
+  instagram_url: string | null;
   visiting_hours: string | null;
   visiting_hours_th: string | null;
   featured_resident_id: string | null;
 };
 
 export const SITE_CONTENT_COLUMNS =
-  "hero_drive_file_id, hero_alt, hero_alt_th, tagline, tagline_th, contact_email, contact_address, contact_phone, contact_line, contact_map_url, visiting_hours, visiting_hours_th, featured_resident_id";
+  "hero_drive_file_id, hero_alt, hero_alt_th, tagline, tagline_th, contact_email, contact_address, contact_phone, contact_line, contact_map_url, facebook_url, instagram_url, visiting_hours, visiting_hours_th, featured_resident_id";
 
 export async function loadSiteContent(
   supabase: SupabaseClient,
@@ -65,6 +69,24 @@ export function lineLink(contactLine: string | null | undefined): {
   if (/^https?:\/\//i.test(value)) return { href: value, label: value };
   const id = value.replace(/^@/, "");
   return { href: `https://line.me/R/ti/p/~${encodeURIComponent(id)}`, label: value };
+}
+
+/**
+ * The shelter's social links as the public pages show them: each only
+ * when set *and* passing the same check the Website form applies. The
+ * form already refuses anything else, but the database check is looser
+ * (any http(s) link), so a value that got in some other way is left
+ * out rather than linked.
+ */
+export function socialLinks(
+  content: Pick<SiteContent, "facebook_url" | "instagram_url"> | null,
+): { facebook: string | null; instagram: string | null } {
+  const facebook = checkFacebookUrl(content?.facebook_url);
+  const instagram = checkInstagramUrl(content?.instagram_url);
+  return {
+    facebook: facebook.ok ? facebook.url : null,
+    instagram: instagram.ok ? instagram.url : null,
+  };
 }
 
 /** Visiting hours as lines, one per day or range. */
