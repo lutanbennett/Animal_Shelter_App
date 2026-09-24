@@ -149,9 +149,9 @@ Automated checks by: Claude (release manager session)  Date: 2026-09-24
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not mine to tick. The list is **not** empty and the template reserves this tick for the person who looked; the `pending:` signature below is the true state
+- [x] The manual list above is empty, or every item in it was checked by a person — confirmed by Lutan in chat, 2026-09-24, and recorded at his request
 
-Manual verification by: pending: Lutan to read the one `0.2.2` note and the title. The feature itself he has already tested, recorded above
+Manual verification by: Lutan Bennett — he tested the Contents list in a browser on 2026-09-24 (the release's only customer-facing change), the note and title were shown to him before the cut, and he approved by instructing the merge and deploy; line written by Claude at his request  Date: 2026-09-24
 
 ### Result
 
