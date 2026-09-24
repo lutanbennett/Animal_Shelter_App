@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Public website: **"Shelter Friends" — thank the businesses that help, on the public site** |
 | Branch / worktree | `claude/shelter-friends` @ `C:\Development\Animal_Shelter_shelter-friends` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3003` |
-| PR | opened from this branch after this commit |
+| PR | [#103](https://github.com/lutanbennett/Animal_Shelter_App/pull/103) |
 | Tested by / date | Claude, 2026-09-24 |
 | Carries a migration? | no — builds on 0076 (on `main`, applied to dev) |
 | Tested at SHA | `2eb9510` for the gates (after the second sync). Browser checks ran on `9be8589` plus the uncommitted docs; the only code change after them is two dictionary strings ("Vendor" → "Supplier") |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — #103: 2 of 2 checks passing, mergeable
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -165,7 +165,7 @@ Every server action also starts with `assertManagementRole()`, and
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | Logo upload, replace and remove on a Friend — not driven: the local Google OAuth client is dead (`invalid_client` since 2026-09-24), so Drive uploads only work on UAT | `test.lannacare.org` → a Supplier → Shelter Friend → Edit profile → Upload logo; then `/friends` and the home strip |
+| 1 | **Done — Lutan, 2026-09-24, on test.lannacare.org (build `11ee873`), confirmed in chat: logo upload works.** Logo upload, replace and remove on a Friend — not driven by Claude: the local Google OAuth client is dead (`invalid_client` since 2026-09-24), so Drive uploads only work on UAT | `test.lannacare.org` → a Supplier → Shelter Friend → Edit profile → Upload logo; then `/friends` and the home strip |
 | 2 | Signed in as staff (or vet / volunteer): a Friend contact shows the badge and a read-only Shelter Friend card with no Publish / Edit, and `/management/shelter-friends` redirects away | `/contacts/[id]`, `/management/shelter-friends` |
 | 3 | Remove profile: the card leaves `/friends`, the contact stays, and its translations leave `/management/translations` | a test Friend → Edit profile → Remove profile |
 | 4 | Thai wording of the new strings reads naturally (written by Claude, not reviewed by a Thai speaker), and the customer confirms or replaces the placeholder title "เพื่อนของศูนย์พักพิง" | switch to ไทย on `/friends`, a Friend's contact page, `/management/shelter-friends` |
@@ -182,9 +182,9 @@ Automated checks by: Claude  Date: 2026-09-24
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — five items await Lutan
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — item 1 checked by Lutan; items 2–5 await Lutan
 
-Manual verification by: pending: logo upload on UAT, the staff read-only view, Remove profile, the Thai wording and title, and the look of the public pages
+Manual verification by: pending: the staff read-only view, Remove profile, the Thai wording and title, and the look of the public pages (logo upload checked by Lutan on test, 2026-09-24)
 
 ### Result
 
