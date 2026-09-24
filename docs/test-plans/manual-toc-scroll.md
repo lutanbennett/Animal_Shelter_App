@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Documentation → **Give the manual's table of contents its own scroll bar.** |
 | Branch / worktree | `claude/manual-toc-scroll` @ `C:\Development\Animal_Shelter_manual-toc-scroll` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3005` |
-| PR | not yet — opened from the commit after this one |
+| PR | #98 |
 | Tested by / date | Claude, 2026-09-24 |
 | Carries a migration? | no |
 | Tested at SHA | `fc60526` (code); this file is the commit after it |
