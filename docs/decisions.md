@@ -3709,6 +3709,41 @@ only mean "no longer a Friend", or press it expecting the contact to go.
   role key) and fails if anon can read any that is not on its public list.
   So a new object is covered without anyone remembering to add it, and a
   new `public_*` view fails until it is listed on purpose.
+- **Migration drift is measured against `origin/main`, never the working
+  tree, and guarded environments refuse to write from a checkout that
+  differs from it (2026-09-25):** `schema_migrations` lives inside each
+  database, so `--status` used to answer only "which of *this checkout's*
+  files has this database run" — which is how `0069_seed_standard_diet.sql`
+  sat on production with no file on `main` and dev held rows for the
+  renumbered `0067`/`0069` while every report said `0 pending`. The
+  authority is what `main` holds, because schema reaches `main` before any
+  database; a feature branch's own files would hide exactly the gap being
+  looked for. So `apply-migrations.mjs` fetches `origin/main` and reads its
+  tree with `git ls-tree`. `--drift <env>` names both halves (files on
+  `origin/main` not applied; applied rows with no file) and exits 1 on
+  either, and `--status` prints the same two lists under its checkout view,
+  so "what has production not run?" is `--drift production`. Both are now
+  genuinely read-only: they check for `schema_migrations` with
+  `to_regclass` instead of creating it. For **uat and production**, any
+  run that writes or executes DDL (apply, `--dry-run`, `--baseline`)
+  refuses unless every migration file in the checkout is on `origin/main`
+  with the same blob id (`git hash-object`, so CRLF checkouts compare
+  equal) and every file on `origin/main` is in the checkout; a failed
+  fetch refuses too. The check runs **before** `loadEnv`, so it needs no
+  credentials and never reaches a database, and it has no override flag —
+  matching `deploy.mjs`'s clean-pushed-`main` gate rather than a prompt,
+  since a prompt that can be answered yes is not a gate. Dev (`test`) is
+  not guarded: the schema PR is applied there before it merges. Output
+  names files, counts and the project ref only; the Supabase URL is no
+  longer printed, since this output gets pasted into PRs. **Known limits:**
+  a row records a filename, not a checksum, so a file edited after it was
+  applied is not detected; and dev's two leftover rows
+  (`0067_public_resident_cards.sql`, `0069_assistant_actions.sql`) are
+  reported as drift on every run until someone deletes them — deliberately
+  not allow-listed, since an allow-list is how drift goes quiet again.
+  **Boundary with `migration-numbering-check`:** this stream compares a
+  database with `main`; checking that files are numbered one above `main`
+  and that no two branches claim a number is the numbering item's, in CI.
 
 ## 2026-09-25 — Manual screenshot sizes come from the PNGs, not from `en.ts`
 
