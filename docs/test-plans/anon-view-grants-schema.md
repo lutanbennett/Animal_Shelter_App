@@ -32,7 +32,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: #110, run 36035998533 — `check` pass (1m33s), `test-plan` pass (8s)
 
 ## 3. Schema and data
 
