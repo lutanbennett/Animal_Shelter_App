@@ -3318,3 +3318,120 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   (`is_known_drive_file`). Measured, not reasoned: the rollback harness
   `scripts/check-shelter-friends.mjs` reads the view as `anon` for
   each of these cases.
+- **Data API grants: every migration grants what it creates
+  (2026-09-24):** Supabase wrote on 2026-09-24 that from 2026-10-30 new
+  objects in `public` stop getting automatic grants to `anon`,
+  `authenticated` and `service_role`. Until now every table, view and
+  sequence we created got them from the project's `alter default
+  privileges`, so almost none of the migrations before 0077 grant anything.
+  Existing objects keep their grants. But replaying `0001`… on a fresh
+  project after that date would create every table unreachable through
+  supabase-js ("permission denied", whatever RLS says), and so would any
+  new table that forgot to grant. **The rule:** a migration that creates a
+  table, view or sequence (a `serial` column's implicit sequence included)
+  grants it in the same file. The default is `select, insert, update,
+  delete` to `authenticated, service_role` for a table, `select` for a
+  view and `usage, select` for a sequence. `anon` gets something only when
+  the object is deliberately public: a `public_*` view, or a base table
+  with a `public_read_*` policy. RLS stays the access control. The grant
+  only lets PostgREST reach the policies, so it does not replace them.
+  `0077_data_api_grants.sql` writes down those grants for everything that
+  already exists. It was measured on dev, not reasoned: in a rolled-back
+  transaction, every grant held by anon, authenticated and service_role was
+  revoked, 0077 was run and `has_table_privilege` was asserted for each
+  role and object. Planting a gap made the check fail. `npm run lint` runs
+  `scripts/check-migration-grants.mjs`, which fails any migration above
+  0077 that creates one of these objects without a grant naming a Data API
+  role. That puts it in `scripts/gates.mjs` and CI with no workflow change,
+  and it keeps the `gates:` summary line the test plan quotes. Functions
+  are out of scope because the notice is about tables. `EXECUTE` still
+  comes from the defaults (0072 grants `cashflow_forecast` explicitly).
+  **Found while inspecting dev, and deliberately not changed here:** the
+  old defaults gave `anon` full DML on every base table and `select` on
+  every view that did not revoke it. For base tables this is harmless,
+  because RLS is on everywhere and no policy admits anon except the three
+  `public_read_*` ones. It is not harmless for four internal views that run
+  as their owner (no `security_invoker`), so RLS does not apply to them.
+  With only the public anon key and no sign-in, `current_placement`,
+  `resident_current_state` and `immunization_compliance` returned rows on
+  dev, and `immunization_duplicate_check` is readable too: resident names
+  and status, placement notes and carer ids. Production presumably matches,
+  but it was not checked, because sessions do not read production.
+  0077 grants these views to `authenticated` and `service_role` only, so a
+  rebuilt database would not have the gap. Revoking it on existing
+  databases needs Lutan's go, and is a backlog item.
+- **Manual contents: capped to the window, measured against the window
+  (2026-09-24):** the desktop Contents panel on `/manual` was already
+  `sticky top-6` but had no height limit, so its lower half scrolled away
+  with the page. Before sizing it we checked which element scrolls, because
+  sticky does nothing under an `overflow` ancestor and `100dvh` is the wrong
+  reference if an inner container scrolls. Measured on dev at 1400×900:
+  `document.scrollingElement` is `<html>`, no ancestor of the `<aside>` sets
+  overflow, and the app header is not sticky, so it scrolls away with the page.
+  So the cap is `100dvh - 3rem` (top-6 plus the same gap below), with no
+  allowance for the header. Allowing for it would waste that much of the
+  list for the whole time the panel is stuck, which is nearly always. The
+  cost is that at the very top of the page, before the header scrolls away,
+  the last ~160px of the list sits below the window (measured at 900px
+  tall) until the page has scrolled ~190px and the panel sticks. The "Contents" heading stays put and only the list below it scrolls,
+  with `overscroll-contain`. A small client wrapper
+  (`src/app/manual/TocScroller.tsx`) marks the `#anchor`'s entry
+  `aria-current` and scrolls the list to show it, on first load and on
+  `hashchange`. It sets the list's own `scrollTop` rather than calling
+  `scrollIntoView()`, which would also scroll the page and fight the
+  browser's jump to the anchor. It follows the address bar, not the reading
+  position: a scroll-spy that tracks the section on screen was not built.
+- **`updated_at` on prescriptions and resident_diets: back-filled,
+  so only trustworthy from 0078 on (2026-09-24):** `0078_prescriptions_diets_updated_at.sql`
+  adds `updated_at timestamptz not null default now()` to both tables,
+  so a future audit of `end_date` has a reference timestamp, as
+  `created_at` already gives the insert-time `date` columns. **The
+  non-obvious part is the back-fill.** Adding a `not null default now()`
+  column stamps every existing row with the moment the migration ran,
+  not the moment the row last changed. Nothing records that. So a value
+  at or before the apply time means "unchanged since the column was
+  added", never "edited then". The column comments say so, and any
+  `end_date` written before 0078 is still unauditable, as the backlog
+  item said it would be. The column only does its job because of the
+  trigger. A default alone freezes it at insert time. One generic
+  `touch_updated_at()` BEFORE trigger serves both tables and can be
+  reused by the next table that needs one. maintenance and
+  project_folders already set `updated_at`, but inside their own
+  validation triggers, so there was nothing to share. The trigger sets
+  `now()` on every insert and on every update that changes another
+  column. It keeps the old value on a no-op update, so
+  `update … set x = x` does not pass for an edit. A caller cannot set
+  or backdate the column by hand. Writes made under the deceased-lock
+  bypass (the death cascade and its undo) are real `end_date` edits and
+  move it. All of this was measured, not reasoned:
+  `scripts/check-prescriptions-updated-at.mjs` asserts each case against
+  real dev rows in a rolled-back transaction. A copy with the trigger
+  neutered fails at the first case.
+
+## 2026-09-24 — A sign-off PR's release-notes tick is checked against the PR that introduced the plan
+
+`check-test-plan.mjs` held the §7 **Release notes.** tick to the current PR's
+diff, so a follow-up that only records a post-merge check (the shape of #80,
+recording #77's phone pass) failed. The only way through was to reword the
+feature's permanent record as `n/a`. The checker now makes an exception when
+**every** path the PR touches, including uncommitted files, is under
+`docs/test-plans/` and the plan already existed at the merge-base. In that
+case a tick is held to the merge that introduced the plan: the commit that
+added the file (`git log --diff-filter=A`), then the oldest first-parent
+commit on the base that contains it, whose `unreleased` must have gained a line
+over its first parent. The claim is still checked, only against the PR it was
+made about. A PR that touches a plan and any other file gets no exception.
+Shallow history is reported as a problem, not guessed at (CI already fetches
+with `fetch-depth: 0`). All of this was run against the real #77/#80 commits and
+#78 (gates-command, which added no line).
+
+Chosen over (b), accepting a tick when `unreleased` or a cut release contains a
+line the plan quotes. That would need plans to quote their line exactly, and it
+would pass a plan that quotes someone else's line. Also chosen over (c), a
+`release line: #77` marker, which is new syntax to learn and something the
+feature author has to remember. (a) needs nothing from the author.
+
+Restoring #80's ticked wording on `intake-capacity-warning.md` cannot happen in
+the same PR as the checker change. That PR touches a script, so it is not a
+sign-off PR, and a tick with no new line fails against it, which is correct.
+It follows as its own plan-only PR, the new path's first real run.

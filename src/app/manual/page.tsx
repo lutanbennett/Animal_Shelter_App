@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AlertTriangle, Info, Lightbulb } from "lucide-react";
 import manual from "@/lib/manual/en";
+import { TocScroller } from "./TocScroller";
 import type {
   ManualCallout,
   ManualRole,
@@ -32,6 +33,12 @@ const CALLOUT_STYLES: Record<
  * only for now — the Thai edition is a later pass once the app settles);
  * this file is just the layout: a sticky table of contents beside the
  * sections on wide screens, a collapsible one above them on a phone.
+ *
+ * The page scrolls on the window (nothing between here and <body> sets
+ * overflow, and the app header scrolls away with it), so the sticky
+ * contents are measured against the viewport: top-6 plus an equal gap at
+ * the bottom is 100dvh - 3rem. The heading stays put and the list below it
+ * scrolls in its own box.
  */
 export default function ManualPage() {
   return (
@@ -53,12 +60,14 @@ export default function ManualPage() {
           </div>
         </details>
 
-        {/* Desktop: sticky contents beside the text. */}
-        <aside className="hidden w-56 shrink-0 lg:sticky lg:top-6 lg:block">
+        {/* Desktop: sticky contents beside the text, with their own scroll bar. */}
+        <aside className="hidden w-56 shrink-0 lg:sticky lg:top-6 lg:flex lg:max-h-[calc(100dvh-3rem)] lg:flex-col">
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">
             Contents
           </h2>
-          <Toc />
+          <TocScroller>
+            <Toc />
+          </TocScroller>
         </aside>
 
         <div className="flex min-w-0 max-w-3xl flex-1 flex-col gap-12">
@@ -93,14 +102,14 @@ export default function ManualPage() {
 function Toc() {
   return (
     <nav aria-label="Manual contents" className="flex flex-col gap-1 text-sm">
-      <a href="#roles-table" className="rounded px-2 py-1 text-muted hover:bg-surface-hover hover:text-foreground">
+      <a href="#roles-table" className="rounded px-2 py-1 text-muted hover:bg-surface-hover hover:text-foreground aria-[current=location]:bg-surface-hover aria-[current=location]:text-foreground">
         Roles at a glance
       </a>
       {manual.sections.map((section) => (
         <div key={section.id} className="flex flex-col">
           <a
             href={`#${section.id}`}
-            className="rounded px-2 py-1 font-medium text-foreground hover:bg-surface-hover"
+            className="rounded px-2 py-1 font-medium text-foreground hover:bg-surface-hover aria-[current=location]:bg-surface-hover"
           >
             {section.title}
           </a>
@@ -109,7 +118,7 @@ function Toc() {
               <a
                 key={topic.id}
                 href={`#${topic.id}`}
-                className="rounded px-2 py-1 text-xs text-muted hover:bg-surface-hover hover:text-foreground"
+                className="rounded px-2 py-1 text-xs text-muted hover:bg-surface-hover hover:text-foreground aria-[current=location]:bg-surface-hover aria-[current=location]:text-foreground"
               >
                 {topic.title}
               </a>

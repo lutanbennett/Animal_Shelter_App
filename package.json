@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint && node scripts/check-migration-grants.mjs",
     "typecheck": "next typegen && tsc --noEmit -p tsconfig.build.json",
     "opennext:build": "node -r ./scripts/win-junction-symlinks.cjs node_modules/@opennextjs/cloudflare/dist/cli/index.js build",
     "preview": "npm run opennext:build && opennextjs-cloudflare preview",
