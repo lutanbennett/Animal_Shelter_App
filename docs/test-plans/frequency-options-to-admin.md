@@ -60,7 +60,7 @@ All driven in the in-app browser against `next dev` on :3008 (dev database), sig
 | Role | Can reach | Expected | Result |
 |---|---|---|---|
 | admin | `/admin/frequencies`, the Settings tile, `/management/medications` | page with create/edit/merge/delete; Medications without frequencies | **pass** — as in §4 above |
-| management | `/management/medications`; **not** `/admin/frequencies` | Medications without the frequency section; `/admin/frequencies` refused by `requireAdminUser` | not signed in as (needs a management password): left for manual verification, item 1 |
+| management | `/management/medications`; **not** `/admin/frequencies` | Medications without the frequency section; `/admin/frequencies` refused by `requireAdminUser` | **pass** — checked by Lutan, signed in as management (manual item 1, reported in chat 2026-09-24) |
 | staff | prescription form | frequency picker and "+ Add new frequency…" unchanged | not signed in as; the form, its page and `src/app/prescriptions/actions.ts` are untouched by this diff, and the picker was checked as admin |
 | vet | prescription form | same as staff | not signed in as; same reason as staff |
 | volunteer | none | nothing changes | not signed in as; no guard or nav entry changed for volunteers |
