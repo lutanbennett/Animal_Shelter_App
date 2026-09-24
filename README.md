@@ -65,6 +65,13 @@ A person who leaves is **archived** from `/admin/security` rather than deleted (
    dashboard) in `.env.local`; the target project comes from
    `NEXT_PUBLIC_SUPABASE_URL`.
 
+   A migration that creates a table, view or sequence must `grant` it in
+   the same file (`authenticated, service_role` by default, `anon` only
+   for deliberately public objects). From 2026-10-30 Supabase no longer
+   adds those grants automatically. `npm run lint` fails a migration that
+   leaves them out (`scripts/check-migration-grants.mjs`; see
+   `docs/decisions.md`, 2026-09-24).
+
 4. **Run the dev server**
 
    ```bash
