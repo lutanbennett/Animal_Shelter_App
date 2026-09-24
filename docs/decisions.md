@@ -3318,3 +3318,45 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   (`is_known_drive_file`). Measured, not reasoned: the rollback harness
   `scripts/check-shelter-friends.mjs` reads the view as `anon` for
   each of these cases.
+- **Data API grants: every migration grants what it creates
+  (2026-09-24):** Supabase wrote on 2026-09-24 that from 2026-10-30 new
+  objects in `public` stop getting automatic grants to `anon`,
+  `authenticated` and `service_role`. Until now every table, view and
+  sequence we created got them from the project's `alter default
+  privileges`, so almost none of the migrations before 0077 grant anything.
+  Existing objects keep their grants. But replaying `0001`… on a fresh
+  project after that date would create every table unreachable through
+  supabase-js ("permission denied", whatever RLS says), and so would any
+  new table that forgot to grant. **The rule:** a migration that creates a
+  table, view or sequence (a `serial` column's implicit sequence included)
+  grants it in the same file. The default is `select, insert, update,
+  delete` to `authenticated, service_role` for a table, `select` for a
+  view and `usage, select` for a sequence. `anon` gets something only when
+  the object is deliberately public: a `public_*` view, or a base table
+  with a `public_read_*` policy. RLS stays the access control. The grant
+  only lets PostgREST reach the policies, so it does not replace them.
+  `0077_data_api_grants.sql` writes down those grants for everything that
+  already exists. It was measured on dev, not reasoned: in a rolled-back
+  transaction, every grant held by anon, authenticated and service_role was
+  revoked, 0077 was run and `has_table_privilege` was asserted for each
+  role and object. Planting a gap made the check fail. `npm run lint` runs
+  `scripts/check-migration-grants.mjs`, which fails any migration above
+  0077 that creates one of these objects without a grant naming a Data API
+  role. That puts it in `scripts/gates.mjs` and CI with no workflow change,
+  and it keeps the `gates:` summary line the test plan quotes. Functions
+  are out of scope because the notice is about tables. `EXECUTE` still
+  comes from the defaults (0072 grants `cashflow_forecast` explicitly).
+  **Found while inspecting dev, and deliberately not changed here:** the
+  old defaults gave `anon` full DML on every base table and `select` on
+  every view that did not revoke it. For base tables this is harmless,
+  because RLS is on everywhere and no policy admits anon except the three
+  `public_read_*` ones. It is not harmless for four internal views that run
+  as their owner (no `security_invoker`), so RLS does not apply to them.
+  With only the public anon key and no sign-in, `current_placement`,
+  `resident_current_state` and `immunization_compliance` returned rows on
+  dev, and `immunization_duplicate_check` is readable too: resident names
+  and status, placement notes and carer ids. Production presumably matches,
+  but it was not checked, because sessions do not read production.
+  0077 grants these views to `authenticated` and `service_role` only, so a
+  rebuilt database would not have the gap. Revoking it on existing
+  databases needs Lutan's go, and is a backlog item.
