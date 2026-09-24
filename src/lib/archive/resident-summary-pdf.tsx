@@ -4,11 +4,12 @@ import {
   Font,
   Page,
   StyleSheet,
-  Text,
+  Text as PdfText,
   View,
   Image,
   renderToBuffer,
 } from "@react-pdf/renderer";
+import type { ComponentProps } from "react";
 import { NOTO_SANS_THAI_REGULAR } from "./fonts/noto-sans-thai-regular";
 import { NOTO_SANS_THAI_BOLD } from "./fonts/noto-sans-thai-bold";
 import type { ResidentArchiveRecord } from "./resident-record";
@@ -39,6 +40,19 @@ Font.register({
 // @react-pdf hyphenates aggressively by default, breaking words (and Thai,
 // which has no spaces) mid-glyph-cluster. Keep words whole.
 Font.registerHyphenationCallback((word) => [word]);
+
+// That callback only ever sees one run at a time, and textkit starts a new
+// run wherever the script changes: `Valley (เจ้าหญิง…)` reaches it as `(`
+// and `เจ้าหญิง…)`. With no space between them the line breaker takes the
+// join for a hyphenation point of its own, and breaking there printed
+// `Valley (-`. A penalty of textkit's infinity (linebreak.infinity) makes
+// such a point unbreakable, so lines break only at spaces. Every Text in
+// this file is this one.
+const NO_HYPHENATION = 10000;
+
+function Text(props: ComponentProps<typeof PdfText>) {
+  return <PdfText hyphenationPenalty={NO_HYPHENATION} {...props} />;
+}
 
 /**
  * The watermark a non-production build puts on every page. A screen badge
