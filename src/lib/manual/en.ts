@@ -110,6 +110,7 @@ const manual: Manual = {
           steps: [
             "Open Release notes from the bottom of the menu.",
             "Each release shows its number, the date it was prepared and the environment you are looking at. A Major badge marks a release worth reading before you carry on working.",
+            "Click a release to see what changed in it, and click it again to fold it away. The newest release is already open.",
             "Admins also get each major release by email. The subject starts with [UAT] or [Production], so a test release is never mistaken for a live one.",
           ],
           callouts: [

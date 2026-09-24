@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { ChevronRight } from "lucide-react";
 import { getAppEnv } from "@/lib/app-env";
 import { releases, unreleased } from "@/lib/releases";
+import { OpenReleaseFromHash } from "./OpenReleaseFromHash";
 
 export const metadata: Metadata = {
   title: "Release notes · Lanna Care for Animals",
@@ -36,6 +38,7 @@ export default function ReleasesPage() {
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-6">
+      <OpenReleaseFromHash />
       <header className="flex max-w-3xl flex-col gap-2">
         <h1 className="text-2xl font-semibold text-foreground">Release notes</h1>
         <p className="text-sm text-muted">
@@ -61,16 +64,27 @@ export default function ReleasesPage() {
           </section>
         )}
 
-        {releases.map((release) => (
-          <article
+        {releases.map((release, index) => (
+          // One row each, so the page doesn't grow a screenful per release;
+          // the newest starts open, being the one people come to read. The
+          // id sits on the <details> so OpenReleaseFromHash can open
+          // whatever a #v0.2.0 link targets.
+          <details
             key={release.version}
             id={`v${release.version}`}
-            className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4"
+            open={index === 0}
+            className="group scroll-mt-4 rounded-lg border border-border bg-surface"
           >
-            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h2 className="text-lg font-semibold text-foreground">
-                {release.version}
-                <span className="font-normal text-muted"> · {release.title}</span>
+            <summary className="flex cursor-pointer list-none flex-wrap items-baseline gap-x-3 gap-y-1 rounded-lg p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
+              <h2 className="flex items-baseline gap-2 text-lg font-semibold text-foreground">
+                <ChevronRight
+                  aria-hidden
+                  className="size-4 shrink-0 self-center text-muted transition-transform group-open:rotate-90 motion-reduce:transition-none"
+                />
+                <span>
+                  {release.version}
+                  <span className="font-normal text-muted"> · {release.title}</span>
+                </span>
               </h2>
               <span className="text-sm text-muted">{formatDate(release.date)}</span>
               <span className="ml-auto flex gap-2">
@@ -83,13 +97,13 @@ export default function ReleasesPage() {
                   {envLabel}
                 </span>
               </span>
-            </div>
-            <ul className="flex list-disc flex-col gap-1 pl-5 text-sm text-foreground">
+            </summary>
+            <ul className="flex list-disc flex-col gap-1 pr-4 pb-4 pl-11 text-sm text-foreground">
               {release.notes.map((note, i) => (
                 <li key={i}>{note}</li>
               ))}
             </ul>
-          </article>
+          </details>
         ))}
       </div>
     </main>
