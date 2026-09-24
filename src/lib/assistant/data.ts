@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { loadEnclosureOptions, type EnclosureOption, type ZoneOption } from "@/lib/enclosures/options";
+import { NOT_DECEASED } from "@/lib/residents/status";
 
 /** Roles that may confirm a write. Volunteers get the lookups only. */
 export const ASSISTANT_WRITE_ROLES = new Set(["admin", "management", "staff"]);
@@ -77,7 +78,7 @@ export async function loadAssistantContext(
       .select(
         "resident_id, name, thai_name, resident_code, current_status, enclosure_id, enclosure_name, enclosure_name_th",
       )
-      .or("current_status.neq.Deceased,current_status.is.null")
+      .or(NOT_DECEASED)
       .order("name")
       .returns<ListRow[]>(),
     supabase
