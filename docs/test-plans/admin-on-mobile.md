@@ -11,7 +11,7 @@
 | PR | opened from this commit |
 | Tested by / date | Claude, 2026-09-24 (browser pane signed in by Lutan as admin) |
 | Carries a migration? | no |
-| Tested at SHA | `3b3df28` (code); later commits touch only `docs/` |
+| Tested at SHA | `3b3df28` (code, browser-checked); gates re-run at `541f5ec` after merging `origin/main` |
 
 ## 1. Scope and risk
 
@@ -22,12 +22,12 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly ("Already up to date." at `66d5550`, release 0.2.2 already in)
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: first "Already up to date." at `66d5550` (release 0.2.2 already in), then again as `541f5ec`, bringing in 0079_public_enclosures.sql and its check script — no conflict, nothing this branch touches; gates re-run on top of it
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
 - [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
 
 ```
-=== gates: build exited 0 after 249s
+=== gates: build exited 0 after 129s
 
 gates: typecheck=0 lint=0 build=0
 ```
@@ -82,7 +82,7 @@ All driven in the in-app browser against `next dev` on :3007 (dev database), sig
 
 - [x] The pages nearest the change still work (list the ones checked) — `/admin/procedure-types`, `/admin/blood-test-types`, `/admin/security`, `/admin/website`, `/management/dashboard`, `/management/cashflow`, `/management/translations` (no notice, unchanged) at 375; the seven wrapped pages at 1280
 - [x] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a second, unrelated page — `SectionTiles` loaded on both hubs (pills where set, none on the other tiles); `manual/en.ts` loaded at `/manual`
-- [x] Nothing merged from `main` during `sync` was broken by this branch — sync was already up to date with `origin/main` after release 0.2.2
+- [x] Nothing merged from `main` during `sync` was broken by this branch — the second sync brought only a migration file and `scripts/check-public-views.mjs`; gates pass on the merge
 
 ## 7. Documentation
 
