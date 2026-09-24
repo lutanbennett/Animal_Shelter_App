@@ -149,9 +149,9 @@ Automated checks by: Claude (release manager session)  Date: 2026-09-24
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not mine to tick. The list is **not** empty and the template reserves this tick for the person who looked; the `pending:` signature below is the true state
+- [x] The manual list above is empty, or every item in it was checked by a person — both items confirmed by Lutan in chat, 2026-09-24, and recorded at his request
 
-Manual verification by: pending: Lutan to read the three `0.2.1` notes and the title, and confirm no admin email is intended
+Manual verification by: Lutan Bennett — he chose 0.2.1 with major: false in chat (so no admin email, knowingly), the three notes were listed to him beforehand, and he approved the release by instructing the merge and deploy; line written by Claude at his request  Date: 2026-09-24
 
 ### Result
 
