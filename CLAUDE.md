@@ -75,7 +75,8 @@ two or three at once; more than that and merging becomes the bottleneck.
    if it has junk changes) rather than reusing it. `HELD` means someone
    is still in it: ask, don't tear it down. `list` also names *husks* —
    `Animal_Shelter_*` folders git no longer knows — which `done <name>`
-   clears.
+   clears. `/clean-streams` does this round in one go: it checks each
+   leftover's PR is merged, asks, then `done`s the ones confirmed.
 
 ## Testing
 
