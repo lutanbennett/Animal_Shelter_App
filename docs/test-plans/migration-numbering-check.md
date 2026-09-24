@@ -27,11 +27,11 @@ or `n/a` with the reason.
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly ("Already up to date" at `2f7f6b8`; pushed)
-- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Closing lines as printed, at `d92dc4e`:
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: a no-op at `2f7f6b8` before testing, then `2e0b0eb` (#116, `src/` only) as `388a547`, conflict-free, pushed
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Closing lines as printed, at `388a547` (after the second sync; the same result at `d92dc4e` before it):
 
 ```
-=== gates: build exited 0 after 235s
+=== gates: build exited 0 after 213s
 
 gates: typecheck=0 lint=0 build=0
 ```
@@ -264,7 +264,7 @@ exit=0
 
 - [x] The pages nearest the change still work: `apply-migrations.mjs --drift test` (the other consumer of the shared lib) reports as before, and this branch's own commits went through the new hook and were pushed by `post-commit` as usual
 - [x] Any shared file touched checked from a second, unrelated place: the hook is shared by every worktree. Commits touching no migration (docs, rename) passed through it in the case run above, as did this branch's own commits to `docs/` and `scripts/`
-- [x] Nothing merged from `main` during `sync` was broken by this branch: sync was a no-op at `2f7f6b8`
+- [x] Nothing merged from `main` during `sync` was broken by this branch: #116 came in conflict-free and the gates above ran on the merged tree; `check-migration-numbers.mjs` there prints `ok — no new migration files (against origin/main 2e0b0eb, highest 0082_anon_function_execute.sql)`
 
 ## 7. Documentation
 
