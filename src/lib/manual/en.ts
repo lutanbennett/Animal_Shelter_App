@@ -776,6 +776,34 @@ const manual: Manual = {
           },
         },
         {
+          id: "shelter-friends",
+          title: "Shelter Friends — thanking the businesses that help",
+          roles: ["admin", "management"],
+          path: "Contacts → a supplier → Shelter Friend; Management → Shelter Friends",
+          intro:
+            "Local businesses that donate goods or give a discount to the shelter's supporters can be thanked on the public website's Shelter Friends page — a card each, with what they do for the shelter and how to find them. Everyone who signs in sees the Shelter Friend badge on a contact; only admin and management can change a profile.",
+          steps: [
+            "Enter the business as a contact first, with the type Supplier — a business that only donates is a Supplier too. Open it from Contacts and, in the Shelter Friend box, tap Make a Shelter Friend. Only suppliers are offered this for now.",
+            "Fill in the profile: Kind of help (a short line such as \"Donates cat litter every month\"), What they do for the shelter (a sentence or two), an Offer for supporters if they give one (\"10% off for adopters — show your adoption card\"), their logo, website and Facebook page, and Friend since. Links must be secure (start with https://), and the Facebook page must be a facebook.com or fb.com link — the form says so if one isn't.",
+            "What they agreed to show: phone, email, LINE, the address as text, and a map. Each is off until ticked, and each ticked box shows exactly that one detail on their card — the map can be shown without printing the address, or the other way round. Details the contact doesn't have are marked \"not recorded\".",
+            "Preview shows the card exactly as visitors will see it, including changes you haven't saved yet.",
+            "Save, then tap Publish. The card goes on the Shelter Friends page, which from then on is linked from the website's menu and footer, gets a strip of logos on the home page and a mention on the Donate page. Unpublish takes it down again; View on the website opens their card.",
+            "Management → Shelter Friends lists every profile in the order the website shows them: use the arrows to move one up or down, and Publish / Unpublish from the list. To edit one, open the contact.",
+            "Archiving the contact takes their card off the website straight away and keeps the profile; restoring the contact brings the card back. Remove profile (while editing) deletes the profile and its translations but keeps the contact.",
+            "What they do, Kind of help and the Offer are translated like other public text: they appear under Management → Translations, and the translation box sits under each one on the contact's page.",
+          ],
+          callouts: [
+            {
+              kind: "warning",
+              text: "Ask the business before you tick anything under What they agreed to show, and tick only what they said yes to. Their name, the text you write and their links are public as soon as you publish — their phone, email, LINE and address never are unless ticked.",
+            },
+            {
+              kind: "note",
+              text: "The Shelter Friends link, the home-page strip and the Donate mention only appear once at least one friend is published, so the website looks exactly as before until then.",
+            },
+          ],
+        },
+        {
           id: "manage-vets",
           title: "Managing vets",
           roles: ["admin", "management"],
@@ -987,6 +1015,7 @@ const manual: Manual = {
             "Adopt: every resident with Ready for adoption ticked, except those adopted or deceased, with species / size / ready filters. Each profile shows their photos, bio, the For adopters answers (good with dogs, cats, children; energy level; desexed; vaccinated from the immunization history), where and when to meet them, a share button and similar residents. Recent adoptions show as Happy endings, and How adoption works sits at the foot of the listing.",
             "Our work: project folders marked Show on website, by category, with their story and photos.",
             "Foster, Volunteer and Donate: the pages written under Settings → Website, each with the shelter's email and LINE.",
+            "Shelter Friends: a card for each published friend of the shelter, with only the contact details they agreed to show (see Shelter Friends under Management). It is linked from the menu once there is at least one.",
           ],
           screenshot: {
             src: "/manual/public-adopt.png",

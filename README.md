@@ -545,6 +545,15 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
   one-tap link builders (`tel:`, LINE, Messenger, WhatsApp, `mailto:`, maps) used by the
   `/contacts` list and hub, and the Carer-only loader behind the resident
   hub's foster / adopt picker.
+- `src/lib/shelter-friends/` — Shelter Friends (0076), the businesses
+  thanked on the public `/friends` page: `friends.ts` holds the one gate on
+  which contact types may become a Friend, the row types and the staff
+  preview; `public.ts` is the public slice, which reads only the
+  `public_shelter_friends` view (published, live contacts, opted-in
+  details only). `src/components/FriendCard.tsx` is the card both
+  `/friends` and the contact hub's preview draw.
+- `src/lib/links/` — checks for links staff paste into forms that end up
+  on a public page (https only; Facebook links on facebook.com / fb.com).
 - `src/lib/maintenance/` — the enclosure maintenance feature's shared
   pieces: status vocabulary and colours, the job loader, and the
   after-change Drive folder sync used by the server actions.
