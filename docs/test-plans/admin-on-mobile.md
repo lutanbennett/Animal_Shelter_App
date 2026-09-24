@@ -60,13 +60,13 @@ All driven in the in-app browser against `next dev` on :3007 (dev database), sig
 | Role | Can reach | Expected | Result |
 |---|---|---|---|
 | admin | `/admin/*`, `/management/*` | notice on 7 pages + 7 pills below `md`; nothing at desktop | **pass** — signed in, every route at 375 and 1280 |
-| management | `/management/*` | notice on contacts/vets/medications/diets, 4 pills | not signed in as; same components as admin's view (`requireManagementUser`, unchanged) — manual item 1 |
+| management | `/management/*` | notice on contacts/vets/medications/diets, 4 pills | **pass** — checked by Lutan, signed in as management on a phone (manual item 1, confirmed in chat 2026-09-24) |
 | staff | none of these | redirected by the page guard, as before | not signed in as; no guard or nav entry changed |
 | vet | none of these | same as staff | not signed in as; no guard or nav entry changed |
 | volunteer | none of these | same as staff | not signed in as; no guard or nav entry changed |
 | signed out | nothing | sent to sign-in | **pass** — `/admin/enclosures` by URL while signed out served `/login` |
 
-- [ ] Every role above tested — n/a: admin and signed-out verified; management needs its own sign-in (manual item 1); staff, vet and volunteer reach no page this PR touches and no guard or nav entry changed
+- [ ] Every role above tested — n/a: admin and signed-out verified by Claude, management by Lutan on a phone (manual item 1); staff, vet and volunteer reach no page this PR touches and no guard or nav entry changed
 - [x] A role that should not have access is blocked server-side (hitting the URL directly fails) — signed-out direct URL to `/admin/enclosures` served the sign-in page; the notice is explicitly layout, not access control, and every wrapped page keeps its own server guard
 
 ## 5. Cross-cutting
@@ -151,9 +151,9 @@ Automated checks by: Claude  Date: 2026-09-24
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — two items await Lutan
+- [x] The manual list above is empty, or every item in it was checked by a person — both items checked by Lutan after the merge of #102, confirmed in chat 2026-09-24
 
-Manual verification by: pending: management sign-in on a phone, and a real-phone look at the notice (items 1–2)
+Manual verification by: Lutan Bennett — confirmed in chat; line written by Claude at their request  Date: 2026-09-24
 
 ### Result
 
