@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Management → **Archive contacts instead of deleting them.** |
 | Branch / worktree | `claude/contacts-archive` @ `C:\Development\Animal_Shelter_contacts-archive` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3010` |
-| PR | not yet — opened from this commit |
+| PR | #90 |
 | Tested by / date | Claude, 2026-09-24 |
 | Carries a migration? | no (reads 0075, already on `main` and applied to dev) |
 | Tested at SHA | `995c49d` (code), merged with `origin/main` after; this file is the commit after that |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — #90, run 35988339258: `check` pass (1m29s), `test-plan` pass
 
 ## 3. Schema and data — *skip if no migration*
 
