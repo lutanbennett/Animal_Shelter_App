@@ -22,11 +22,11 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (brought in #89, shelter-friends schema; no overlap)
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly, twice: first #89 (shelter-friends schema; no overlap), then before merging #90 (contacts archive), which also appends to `unreleased` and edits `manual/en.ts` (the contacts topic) — both merged without conflict, all three `unreleased` lines present
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Closing lines as printed:
 
 ```
-=== gates: build exited 0 after 103s
+=== gates: build exited 0 after 95s
 
 gates: typecheck=0 lint=0 build=0
 ```
@@ -81,7 +81,7 @@ gates: typecheck=0 lint=0 build=0
 
 - [x] The pages nearest the change still work (list the ones checked) — `/releases` (all three releases), `/manual`
 - [x] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a second, unrelated page — `manual/en.ts` loaded via `/manual`; `releases.ts` is also read by `scripts/deploy.mjs` and the Worker — only an array element was added, the shape is unchanged, and `build` passed
-- [x] Nothing merged from `main` during `sync` was broken by this branch — sync brought #89 (migration 0076, scripts, docs); none of it touches `/releases`, and the gates above ran after the merge
+- [x] Nothing merged from `main` during `sync` was broken by this branch — sync brought #89 (migration 0076, scripts, docs) and #90 (contacts archive); the gates above ran after the second merge, and a fresh load of `/releases#v0.1.0` afterwards opened 0.2.0 and 0.1.0 only, with three unreleased lines and no console errors
 
 ## 7. Documentation
 
