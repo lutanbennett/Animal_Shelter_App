@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Completed → Quick wins → "The assistant still carries its own copy of the "not deceased" filter" |
 | Branch / worktree | `claude/assistant-deceased-filter` @ `C:\Development\Animal_Shelter_assistant-deceased-filter` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3008` |
-| PR | opened from this commit |
+| PR | [#81](https://github.com/lutanbennett/Animal_Shelter_App/pull/81) |
 | Tested by / date | Claude (assistant-deceased-filter session), 2026-09-24 |
 | Carries a migration? | no |
 | Tested at SHA | the working tree committed as the feature commit on `claude/assistant-deceased-filter`, synced to `2f2ca39` (`main` at #77/#78) |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — `check` and `test-plan` both pass on #81 at `1710ac3`
 
 ## 3. Schema and data — *skip if no migration*
 
