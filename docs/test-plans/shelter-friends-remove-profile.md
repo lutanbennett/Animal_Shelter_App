@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Public website: **Shelter Friends: make "Remove profile" clearly about the Friend status, not the contact** |
 | Branch / worktree | `claude/shelter-friends-remove-profile` @ `C:\Development\Animal_Shelter_shelter-friends-remove-profile` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3013` |
-| PR | set in the PR description (this file is committed before the PR exists) |
+| PR | [#111](https://github.com/lutanbennett/Animal_Shelter_App/pull/111) |
 | Tested by / date | Claude, 2026-09-25 (browser pane signed in by Lutan as admin) |
 | Carries a migration? | no |
 | Tested at SHA | `0c1a745` for the browser checks; `3bdc86e` (after sync — only `releases.ts` changed) for the gates |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — #111 at `fddc887`: `check` pass, `test-plan` pass
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -138,8 +138,8 @@ through the Management API (dev only).
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | **The wording.** Does "Remove Shelter Friend status", the hint line under the buttons and the confirm's first line ("The contact … stays") read, to someone seeing them for the first time, as ending the Friendship and not deleting the contact? And does Unpublish vs Remove read clearly side by side? Lutan raised the concern, so it is his call | a Friend's contact page (`localhost:3013` or `test.lannacare.org`) → the Shelter Friend card; press Remove and read the confirm, then Cancel |
-| 2 | The same in Thai: "ยกเลิกสถานะเพื่อนของศูนย์", the hint line and the confirm (written by Claude, not reviewed by a Thai speaker) | switch to ไทย on the same page |
+| 1 | **Done — Lutan, 2026-09-25, confirmed in chat ("wording reads fine").** **The wording.** Does "Remove Shelter Friend status", the hint line under the buttons and the confirm's first line ("The contact … stays") read, to someone seeing them for the first time, as ending the Friendship and not deleting the contact? And does Unpublish vs Remove read clearly side by side? Lutan raised the concern, so it is his call | a Friend's contact page (`localhost:3013` or `test.lannacare.org`) → the Shelter Friend card; press Remove and read the confirm, then Cancel |
+| 2 | **Done — Lutan, 2026-09-25, in the same confirmation.** The same in Thai: "ยกเลิกสถานะเพื่อนของศูนย์", the hint line and the confirm (written by Claude, not reviewed by a Thai speaker) | switch to ไทย on the same page |
 
 ## Sign-off
 
@@ -152,14 +152,14 @@ Automated checks by: Claude  Date: 2026-09-25
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — both items wait for Lutan
+- [x] The manual list above is empty, or every item in it was checked by a person — Lutan read the wording in both languages
 
-Manual verification by: pending: Lutan reading the new wording, in English and Thai
+Manual verification by: Lutan — confirmed in chat; line written by Claude at his request  Date: 2026-09-25
 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
-- [ ] Handed to the production release manager — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR — summarised in #111's description, which links this file
+- [ ] Handed to the production release manager — n/a: not yet — goes with the next release cut
 
 Result: pass
