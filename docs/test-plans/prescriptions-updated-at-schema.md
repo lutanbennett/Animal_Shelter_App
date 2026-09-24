@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Architecture → **`prescriptions` and `resident_diets` have no `updated_at`, so a wrong `end_date` is permanently undetectable** (ticked on this branch: the item is complete once the columns and trigger exist) |
 | Branch / worktree | `claude/prescriptions-updated-at-schema` @ `C:\Development\Animal_Shelter_prescriptions-updated-at-schema` |
 | Dev server | not started: this change ships no runtime code |
-| PR | see the PR this plan is committed on |
+| PR | #97 |
 | Tested by / date | Claude (automated) / 2026-09-24 |
 | Carries a migration? | yes: `0078_prescriptions_diets_updated_at.sql` |
 | Tested at SHA | `894aee0` (branch on `main` @ `c684fbb`); the migration, harness, backlog tick, `decisions.md` entry and this plan are the only changes |
@@ -31,7 +31,7 @@
   gates: typecheck=0 lint=0 build=0
   ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): PR #97, run 36000586834 at `f29fc46` — `check` pass (1m31s), `test-plan` pass
 
 ## 3. Schema and data
 
