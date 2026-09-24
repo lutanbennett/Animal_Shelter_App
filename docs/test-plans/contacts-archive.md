@@ -161,14 +161,14 @@ Automated checks by: Claude  Date: 2026-09-24
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: three items are outstanding; see the pending line below
+- [x] The manual list above is empty, or every item in it was checked by a person — Lutan checked items 1–3 and confirmed in chat
 
-Manual verification by: pending: phone width, Thai wording and the /manual topics (Left for manual verification 1–3)
+Manual verification by: Lutan Bennett — confirmed in chat; line written by Claude at their request  Date: 2026-09-24
 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above — both fixed
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR — in #90's description
 - [ ] Handed to the production release manager — n/a: not yet — the PR does not exist at this commit
 
 Result: pass
