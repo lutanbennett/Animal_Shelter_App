@@ -17,12 +17,17 @@ export type CarerOption = {
  * placement_history_check_carer_type rejects any other type (0001) — a
  * volunteer or supplier in the same table is never a candidate. Changing
  * someone's type to Carer is done on /management/contacts.
+ *
+ * Archived carers are left out: placing a new resident with one is refused
+ * (rehome.ts) until the contact is restored, which is the point of
+ * archiving them.
  */
 export async function loadCarerOptions(supabase: SupabaseClient) {
   const { data, error } = await supabase
     .from("contacts")
     .select("id, name, phone, email, line_id")
     .eq("type", CARER_CONTACT_TYPE)
+    .is("archived_at", null)
     .order("name")
     .returns<CarerOption[]>();
 

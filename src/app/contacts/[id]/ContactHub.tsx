@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 
+import { ArchiveContactControl } from "@/components/ArchiveContactControl";
+import { ArchivedBadge } from "@/components/ArchivedBadge";
 import { ContactActions } from "@/components/ContactActions";
 import { CONTACT_ICONS } from "@/components/hub-icons";
 import { formatDate } from "@/lib/format";
@@ -12,7 +14,7 @@ import {
   placementTypeLabel,
   speciesLabel,
 } from "@/lib/i18n/enum-labels";
-import { CARER_CONTACT_TYPE, type Contact } from "@/lib/contacts/contacts";
+import { CARER_CONTACT_TYPE, isArchived, type Contact } from "@/lib/contacts/contacts";
 
 /** A placement_history row naming this contact as carer, with its resident. */
 export type CarerPlacement = {
@@ -73,6 +75,8 @@ export function ContactHub({
   const { t, locale } = useI18n();
   const h = t.contacts.hub;
   const isCarer = contact.type === CARER_CONTACT_TYPE;
+  const archived = isArchived(contact);
+  const a = t.contacts.archive;
 
   const inCare = placements.filter((p) => !p.end_date);
   const past = placements.filter((p) => p.end_date);
@@ -106,16 +110,36 @@ export function ContactHub({
             >
               {contactTypeLabel(t, contact.type)}
             </span>
+            {archived && <ArchivedBadge label={a.badge} />}
           </div>
           {canManage && (
             <Link
-              href="/management/contacts"
+              href={archived ? "/management/contacts?archived=1" : "/management/contacts"}
               className="text-xs font-medium text-primary hover:underline"
             >
               {t.contacts.manageInAdmin}
             </Link>
           )}
         </div>
+
+        {archived && (
+          <div className="flex flex-col gap-0.5 rounded border border-dashed border-border bg-background px-3 py-2 text-sm text-muted">
+            <span className="font-medium">
+              {a.archivedOn(formatDate(contact.archived_at, locale))}
+            </span>
+            {contact.archive_reason && (
+              <span className="whitespace-pre-line">{a.reason(contact.archive_reason)}</span>
+            )}
+          </div>
+        )}
+        {canManage && (
+          <div className="self-start">
+            <ArchiveContactControl
+              contact={contact}
+              blocker={inCare.length > 0 ? a.errors.hasResidentsInCare(inCare.length) : null}
+            />
+          </div>
+        )}
 
         {/* The action tiles carry each channel's value, so the only detail
             repeated below them is the address: a tile truncates a long Thai
@@ -215,7 +239,11 @@ export function ContactHub({
                 {isCarer ? h.noResidentsInCare : h.notACarer}
               </p>
             )}
-            {isCarer && <p className="text-xs text-muted">{h.assignFromResident}</p>}
+            {isCarer && (
+              <p className="text-xs text-muted">
+                {archived ? h.archivedCarer : h.assignFromResident}
+              </p>
+            )}
           </section>
 
           <section className="flex flex-col gap-3">

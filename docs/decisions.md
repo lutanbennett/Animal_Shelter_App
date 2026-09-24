@@ -3204,3 +3204,37 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   the deployed Workers build.
   `management/translations` was never affected: `TranslationPanel` and
   `TranslationQueue` update from the row the action returns.
+
+- **Contacts: archive vs delete, and who can be archived (2026-09-24):**
+  `deleteContact` stays, but only for a contact with no placements at all
+  (a duplicate, a typo). Anyone with history is archived instead: the row
+  stays, `archived_at` / `archived_by` / `archive_reason` (0075) are set,
+  and the contact drops out of the default `/contacts` and
+  `/management/contacts` lists and out of `loadCarerOptions`, the one
+  picker that reads contacts (there are no vendor or donor pickers yet).
+  Nothing else changes: history keeps naming them, with an Archived badge.
+  Three choices here were not obvious:
+  1. **A carer with a resident living with them now can't be archived.**
+     The resident's hub, the return-to-shelter form and the rehome form all
+     read that carer as *current*, and the rehome form resolves the
+     current carer's name from the picker's options. So an archived current
+     carer would be both a contradiction and a blank name. The refusal is in
+     `archiveContact`, and the button is disabled with the same message.
+     Return the resident or move them to another carer first.
+  2. **`rehomeResident` refuses an archived carer by id**, as well as the
+     picker leaving them out. A form opened before the archive still posts
+     the id, and that is exactly the case archiving is meant to stop.
+  3. **A search on `/contacts` looks through archived contacts even with
+     the toggle off**, and lists matches after the live ones with the
+     badge. This is the deceased-resident rule ("a name search must never
+     say a past animal does not exist"), applied more directly. `/contacts`
+     already filters on the client, so the matches can just be shown rather
+     than pointed at. `/management/contacts` has no search, so it only has
+     the `?archived=1` link toggle, the same one `/residents` uses.
+  Restore clears all three columns in one update, because
+  `contacts_archive_fields_consistent` rejects a half-restored row.
+  Archive and restore both guard on the current state
+  (`.is("archived_at", null)` / `.not(...)`), so a second click or a
+  second tab can't overwrite who archived the contact and when.
+  `shelter-friends` filters `archived_at is null` in its public view. That
+  is the same meaning as here, so nothing changes for it.

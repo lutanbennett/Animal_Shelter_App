@@ -717,6 +717,7 @@ const manual: Manual = {
             "Open Contacts to find carers, volunteers and suppliers. Search by name, phone, email or chat ID, and filter by type.",
             "Each contact has one-tap buttons: Call, LINE, Messenger, WhatsApp, Email and Map — handy on a phone.",
             "Tap a contact for their page, including the residents currently fostered or adopted with them and past placements.",
+            "Contacts the shelter no longer works with are archived rather than deleted. They're hidden from the list; tap Show archived under the search box to see them, greyed out with an Archived badge and the reason. A search always finds them, so you can still look up an old number.",
           ],
           screenshot: {
             src: "/manual/contacts.png",
@@ -763,7 +764,10 @@ const manual: Manual = {
           path: "Management → Contacts",
           steps: [
             "Add a contact with their type (Carer, Volunteer or Supplier), phone, email, LINE ID, Messenger, WhatsApp, address and notes — what a supplier sells, when a volunteer is free, a carer's home set-up. Notes show on the contact's page and are searched from the contact list.",
-            "Edit details in the table. A contact who has fostered or adopted must stay a Carer, and one with placements can't be deleted.",
+            "Edit details in the table. A contact who has fostered or adopted must stay a Carer.",
+            "When the shelter stops working with someone — a carer who no longer fosters, a volunteer who has moved on, a supplier you no longer buy from — tap Archive on their row or on their page and, if you like, say why. They leave the lists and the carer picker but keep their history: a resident's housing history still names them, with an Archived badge.",
+            "Show archived lists them again, and Restore brings one back. A resident can't be placed with an archived carer until they're restored, and a carer with a resident living with them now can't be archived until that resident has been returned or moved.",
+            "Delete is only for a contact with no placements at all, such as a duplicate or a typo. Anyone with history is archived instead.",
           ],
           screenshot: {
             src: "/manual/management-contacts.png",

@@ -5,8 +5,11 @@ import { getT } from "@/lib/i18n/get-t";
 import { CONTACT_COLUMNS, type Contact } from "@/lib/contacts/contacts";
 import { ContactList, type ContactSummary } from "./ContactList";
 
-export default async function ContactsPage() {
+export default async function ContactsPage(props: PageProps<"/contacts">) {
   const { t } = await getT();
+  // Archived contacts are loaded either way — a search still finds them —
+  // and ContactList hides them unless this is set.
+  const showArchived = (await props.searchParams).archived === "1";
   const supabase = await createClient();
 
   // Every signed-in role can read contacts and placement_history (0001),
@@ -70,7 +73,7 @@ export default async function ContactsPage() {
         </p>
       )}
 
-      <ContactList contacts={contacts} />
+      <ContactList contacts={contacts} initialShowArchived={showArchived} />
     </main>
   );
 }

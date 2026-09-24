@@ -130,10 +130,12 @@ export async function rehomeResident(
       input.carerId && !input.newCarer
         ? supabase
             .from("contacts")
-            .select("id, type")
+            .select("id, name, type, archived_at")
             .eq("id", input.carerId)
             .limit(1)
-            .returns<{ id: string; type: string }[]>()
+            .returns<
+              { id: string; name: string; type: string; archived_at: string | null }[]
+            >()
         : Promise.resolve({ data: null, error: null }),
     ]);
 
@@ -160,6 +162,9 @@ export async function rehomeResident(
     const carer = carerResult.data?.[0];
     if (!carer) return { error: errors.carerNotFound };
     if (carer.type !== CARER_CONTACT_TYPE) return { error: errors.carerNotCarer };
+    // The picker no longer offers an archived carer, but a form opened
+    // before they were archived still posts their id.
+    if (carer.archived_at) return { error: errors.carerArchived(carer.name) };
   }
 
   const current = currentResult.data?.[0];
