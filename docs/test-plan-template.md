@@ -67,7 +67,10 @@ release manager before `npm run deploy:prod`.
 
 ## 2. Automated gates
 
-Run in the feature worktree, after `node scripts/worktree.mjs sync`.
+Run in the feature worktree, after `node scripts/worktree.mjs sync`, with
+`node scripts/gates.mjs`. It exists because of the traps below: it runs all three
+gates even when one fails, prints each one's own exit code, and refuses to start
+on a half-installed `node_modules`.
 
 **Tick these on the exit code, not on output that looks plausible.** Two ways a
 gate reads green without having run: `npm run build | tail` reports the exit
@@ -79,9 +82,7 @@ because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
 - [ ] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
-- [ ] `npm run typecheck` — clean
-- [ ] `npm run lint` — clean
-- [ ] `npm run build` — succeeds
+- [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
 - [ ] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so leave it `n/a: not yet — the PR does not exist at this commit` on the first push and tick it in a follow-up commit once the run is actually green. Every PR hits this; the first push is red on `test-plan` by construction. Do not pre-tick it — a green you have not seen is the exact failure this checklist exists to prevent
 
 ## 3. Schema and data — *skip if no migration*
