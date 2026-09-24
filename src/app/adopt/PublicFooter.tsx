@@ -7,6 +7,7 @@ import {
   visitingHoursLines,
   type SiteContent,
 } from "@/lib/site/content";
+import { hasPublicFriends } from "@/lib/shelter-friends/public";
 
 /**
  * Footer for every public page: how to find and reach the shelter, and
@@ -15,7 +16,10 @@ import {
  */
 export async function PublicFooter({ content }: { content?: SiteContent | null }) {
   const { t, locale } = await getT();
-  const site = content === undefined ? await loadSiteContent(await createClient()) : content;
+  const [site, showFriends] = await Promise.all([
+    content === undefined ? createClient().then(loadSiteContent) : content,
+    hasPublicFriends(),
+  ]);
   const hours = visitingHoursLines(locale, site);
   const line = lineLink(site?.contact_line);
   const f = t.publicFooter;
@@ -80,6 +84,11 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
           <Link href="/volunteer" className="hover:text-foreground">{t.adopt.volunteerNav}</Link>
           <Link href="/donate" className="hover:text-foreground">{t.adopt.donateNav}</Link>
           <Link href="/our-work" className="hover:text-foreground">{t.adopt.ourWorkNav}</Link>
+          {showFriends && (
+            <Link href="/friends" className="hover:text-foreground">
+              {t.shelterFriends.navLabel}
+            </Link>
+          )}
         </div>
       </div>
       <div className="mx-auto mt-8 w-full max-w-5xl text-xs">

@@ -1,4 +1,4 @@
-import { Coins, LayoutDashboard, Languages } from "lucide-react";
+import { Coins, HeartHandshake, LayoutDashboard, Languages } from "lucide-react";
 import { requireManagementUser } from "@/lib/auth/require-management";
 import { getT } from "@/lib/i18n/get-t";
 import { SectionTiles, type SectionTile } from "@/components/SectionTiles";
@@ -29,6 +29,12 @@ export default async function ManagementPage() {
       label: t.nav.contacts,
       description: t.management.landing.tiles.contacts,
       icon: CONTACT_ICONS.contact,
+    },
+    {
+      href: "/management/shelter-friends",
+      label: t.nav.shelterFriends,
+      description: t.management.landing.tiles.shelterFriends,
+      icon: HeartHandshake,
     },
     {
       href: "/management/vets",

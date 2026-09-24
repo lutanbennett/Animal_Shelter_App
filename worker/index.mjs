@@ -50,7 +50,7 @@ const DEFAULT_ORIGIN_TIMEOUT_MS = 20_000;
 // Mirrors isPublicPage() in src/lib/public-paths.ts — the pages a signed-out
 // visitor can see. Not /login (forms), not /api/photos (already edge-cached
 // by its own Cache-Control headers, and not HTML).
-const PUBLIC_PAGE_PREFIXES = ["/adopt", "/our-work", "/foster", "/volunteer", "/donate", "/privacy"];
+const PUBLIC_PAGE_PREFIXES = ["/adopt", "/our-work", "/foster", "/volunteer", "/donate", "/friends", "/privacy"];
 const isPublicPage = (pathname) =>
   pathname === "/" ||
   PUBLIC_PAGE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));

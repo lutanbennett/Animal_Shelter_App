@@ -6,6 +6,7 @@ import { getSiteOrigin } from "@/lib/site-origin";
 import { bodyLead } from "@/lib/site/body";
 import { lineLink, loadSiteContent } from "@/lib/site/content";
 import { loadSitePage, sitePageText, type SitePageSlug } from "@/lib/site/pages";
+import { hasPublicFriends } from "@/lib/shelter-friends/public";
 import { SiteBody } from "@/components/SiteBody";
 import { PublicHeader, type PublicSection } from "./PublicHeader";
 import { PublicFooter } from "./PublicFooter";
@@ -50,9 +51,11 @@ export async function SitePageView({
 }) {
   const supabase = await createClient();
   const { t, locale } = await getT();
-  const [page, content] = await Promise.all([
+  const [page, content, showFriends] = await Promise.all([
     loadSitePage(supabase, slug),
     loadSiteContent(supabase),
+    // /donate points at the Shelter Friends — only once there are some.
+    slug === "donate" ? hasPublicFriends() : false,
   ]);
   const text = page ? sitePageText(page, locale) : null;
   const line = lineLink(content?.contact_line);
@@ -97,6 +100,21 @@ export async function SitePageView({
                 </a>
               )}
             </div>
+          </div>
+        )}
+
+        {showFriends && (
+          <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-6">
+            <h2 className="text-lg font-semibold text-foreground">
+              {t.shelterFriends.donateMention.heading}
+            </h2>
+            <p className="text-sm text-muted">{t.shelterFriends.donateMention.body}</p>
+            <Link
+              href="/friends"
+              className="self-start text-sm font-semibold text-primary hover:underline"
+            >
+              {t.shelterFriends.donateMention.link} &rarr;
+            </Link>
           </div>
         )}
 

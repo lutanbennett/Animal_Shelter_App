@@ -16,7 +16,7 @@ export default async function ContactsPage(props: PageProps<"/contacts">) {
   // so the list is open to all — a volunteer doing a foster pick-up needs
   // the carer's number as much as staff do. Open placements give each
   // carer their "N in care" badge.
-  const [contactsResult, placementsResult, roleResult] = await Promise.all([
+  const [contactsResult, placementsResult, roleResult, friendsResult] = await Promise.all([
     supabase
       .from("contacts")
       .select(CONTACT_COLUMNS)
@@ -29,15 +29,25 @@ export default async function ContactsPage(props: PageProps<"/contacts">) {
       .is("end_date", null)
       .returns<{ carer_id: string }[]>(),
     supabase.rpc("current_user_role"),
+    // Which contacts are Shelter Friends (0076), for the badge and the chip.
+    // A failed query just means no badges, not a broken list.
+    supabase
+      .from("shelter_friends")
+      .select("contact_id, published")
+      .returns<{ contact_id: string; published: boolean }[]>(),
   ]);
 
   const inCare = new Map<string, number>();
   for (const row of placementsResult.data ?? []) {
     inCare.set(row.carer_id, (inCare.get(row.carer_id) ?? 0) + 1);
   }
+  const friends = new Map(
+    (friendsResult.data ?? []).map((row) => [row.contact_id, row.published]),
+  );
   const contacts: ContactSummary[] = (contactsResult.data ?? []).map((contact) => ({
     ...contact,
     inCareCount: inCare.get(contact.id) ?? 0,
+    friendPublished: friends.get(contact.id) ?? null,
   }));
 
   return (

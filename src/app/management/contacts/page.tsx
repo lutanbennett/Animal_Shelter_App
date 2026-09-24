@@ -14,13 +14,23 @@ export default async function ContactsAdminPage(
   const a = t.contacts.archive;
   // Archived contacts are hidden unless ?archived=1 — the same link toggle
   // the residents list uses for the deceased.
-  const showArchived = (await props.searchParams).archived === "1";
+  const searchParams = await props.searchParams;
+  const showArchived = searchParams.archived === "1";
+  // ?friends=1 narrows the table to Shelter Friends (0076), like the chip on /contacts.
+  const onlyFriends = searchParams.friends === "1";
+  const hrefWith = (archived: boolean, friends: boolean) => {
+    const params = new URLSearchParams();
+    if (archived) params.set("archived", "1");
+    if (friends) params.set("friends", "1");
+    const query = params.toString();
+    return query ? `/management/contacts?${query}` : "/management/contacts";
+  };
 
   const supabase = await createClient();
   let contactsQuery = supabase.from("contacts").select(CONTACT_COLUMNS).order("name");
   if (!showArchived) contactsQuery = contactsQuery.is("archived_at", null);
 
-  const [contactsResult, placementsResult, archivedResult] = await Promise.all([
+  const [contactsResult, placementsResult, archivedResult, friendsResult] = await Promise.all([
     contactsQuery.returns<Contact[]>(),
     // One row per carer placement (ever) is small at shelter scale; the
     // counts gate the delete button and the type select, and the open
@@ -41,8 +51,15 @@ export default async function ContactsAdminPage(
       .from("contacts")
       .select("id", { count: "exact", head: true })
       .not("archived_at", "is", null),
+    supabase
+      .from("shelter_friends")
+      .select("contact_id, published")
+      .returns<{ contact_id: string; published: boolean }[]>(),
   ]);
   const archivedCount = archivedResult.count ?? 0;
+  const friends = new Map(
+    (friendsResult.data ?? []).map((row) => [row.contact_id, row.published]),
+  );
 
   const placements = new Map<
     string,
@@ -58,12 +75,23 @@ export default async function ContactsAdminPage(
     }
     placements.set(row.carer_id, entry);
   }
-  const contacts: ContactRow[] = (contactsResult.data ?? []).map((contact) => ({
+  const allContacts: ContactRow[] = (contactsResult.data ?? []).map((contact) => ({
     ...contact,
     placement_count: placements.get(contact.id)?.total ?? 0,
     in_care_count: placements.get(contact.id)?.active ?? 0,
     residents_in_care: placements.get(contact.id)?.inCare ?? [],
+    friend_published: friends.get(contact.id) ?? null,
   }));
+  const friendCount = allContacts.filter((c) => c.friend_published !== null).length;
+  const contacts = onlyFriends
+    ? allContacts.filter((c) => c.friend_published !== null)
+    : allContacts;
+  const chipClass = (active: boolean) =>
+    `rounded-full border px-3 py-1 text-xs font-medium ${
+      active
+        ? "border-primary bg-primary/10 text-primary"
+        : "border-border bg-surface text-muted hover:text-foreground"
+    }`;
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
@@ -92,22 +120,39 @@ export default async function ContactsAdminPage(
 
       <CreateContactForm />
       <div className="flex flex-col gap-2">
-        {archivedCount > 0 && (
+        {(archivedCount > 0 || friendCount > 0 || onlyFriends) && (
           <p className="flex flex-wrap items-center gap-2 text-sm text-muted">
-            {showArchived
-              ? a.archivedIncluded(archivedCount)
-              : a.archivedHidden(archivedCount)}
-            {/* A link, not a checkbox: flipping it changes the list straight away. */}
-            <Link
-              href={showArchived ? "/management/contacts" : "/management/contacts?archived=1"}
-              className={`rounded-full border px-3 py-1 text-xs font-medium ${
-                showArchived
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border bg-surface text-muted hover:text-foreground"
-              }`}
-            >
-              {showArchived ? a.hideArchived : a.showArchived}
-            </Link>
+            {archivedCount > 0 && (
+              <>
+                {showArchived
+                  ? a.archivedIncluded(archivedCount)
+                  : a.archivedHidden(archivedCount)}
+                {/* A link, not a checkbox: flipping it changes the list straight away. */}
+                <Link
+                  href={hrefWith(!showArchived, onlyFriends)}
+                  className={chipClass(showArchived)}
+                >
+                  {showArchived ? a.hideArchived : a.showArchived}
+                </Link>
+              </>
+            )}
+            {(friendCount > 0 || onlyFriends) && (
+              <Link
+                href={hrefWith(showArchived, !onlyFriends)}
+                aria-current={onlyFriends ? "true" : undefined}
+                className={chipClass(onlyFriends)}
+              >
+                {t.shelterFriends.filterChip} {friendCount}
+              </Link>
+            )}
+            {friendCount > 0 && (
+              <Link
+                href="/management/shelter-friends"
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                {t.shelterFriends.manage.title} &rarr;
+              </Link>
+            )}
           </p>
         )}
         <ContactsTable contacts={contacts} />

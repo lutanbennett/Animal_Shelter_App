@@ -5,6 +5,7 @@ import Link from "next/link";
 import { deleteContact, updateContact } from "./actions";
 import { ArchiveContactControl } from "@/components/ArchiveContactControl";
 import { ArchivedBadge } from "@/components/ArchivedBadge";
+import { FriendBadge } from "@/components/FriendBadge";
 import { formatDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { contactTypeLabel } from "@/lib/i18n/enum-labels";
@@ -23,6 +24,8 @@ export type ContactRow = Contact & {
   in_care_count: number;
   /** The residents behind in_care_count — blocks archiving, with a return link each. */
   residents_in_care: { id: string; name: string }[];
+  /** Shelter Friend profile (0076): null when there is none, else whether it is published. */
+  friend_published: boolean | null;
 };
 
 const inputClass =
@@ -133,6 +136,17 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
               >
                 {contact.name}
               </Link>
+              {contact.friend_published !== null && (
+                <FriendBadge
+                  label={t.shelterFriends.badge}
+                  published={contact.friend_published && !archived}
+                  title={
+                    contact.friend_published && !archived
+                      ? t.shelterFriends.card.onWebsite
+                      : t.shelterFriends.card.notOnWebsite
+                  }
+                />
+              )}
               {archived && (
                 <>
                   <ArchivedBadge label={a.badge} />

@@ -64,6 +64,7 @@ const en = {
     cashflow: "Cashflow",
     translations: "Translations",
     contacts: "Contacts",
+    shelterFriends: "Shelter Friends",
     manual: "User manual",
     releaseNotes: "Release notes",
     publicSite: "Public website",
@@ -676,6 +677,8 @@ const en = {
           "What the shelter is about to spend, in one place: food, medication, vaccinations, vet visits and maintenance.",
         translations:
           "Public-facing text whose other-language version still has to be written or checked.",
+        shelterFriends:
+          "The businesses thanked on the public website — their order, and which are live.",
       },
     },
     errors: {
@@ -2798,6 +2801,131 @@ const en = {
     moreStories: "More of our work",
     /** Open Graph description when a story has no summary. */
     shareFallback: "A story from Lanna Care for Animals.",
+  },
+
+  /**
+   * Errors for links pasted into forms that end up on a public page
+   * (src/lib/links/validate.ts) — a Shelter Friend's website and Facebook
+   * page, and the shelter's own social links next.
+   */
+  linkErrors: {
+    notUrl: "That doesn't look like a web address.",
+    notHttps: "Use a secure link that starts with https://",
+    wrongHost: (hosts: string) => `Use a link on ${hosts}.`,
+  },
+
+  /** Shelter Friends (0076): the businesses thanked on the public site. */
+  shelterFriends: {
+    // --- public: /friends, the home strip, /donate
+    navLabel: "Shelter Friends",
+    pageTitle: "Shelter Friends",
+    pageSubtitle:
+      "Local businesses that help us care for the animals — with food, supplies, services, or a discount for our supporters. Thank you. Give them your custom, and tell them Lanna Care for Animals sent you.",
+    couldntLoad: "Couldn't load our friends",
+    noneYet: "We're just getting started on thanking the businesses that help us — check back soon.",
+    /** A card whose profile has no prose yet still says why it is there. */
+    fallbackBlurb: "A friend of the shelter.",
+    supporterOffer: "Offer for supporters",
+    friendSince: (date: string) => `Friend since ${date}`,
+    website: "Website",
+    facebook: "Facebook",
+    websiteOf: (name: string) => `${name}'s website`,
+    facebookOf: (name: string) => `${name} on Facebook`,
+    call: "Call",
+    email: "Email",
+    line: (id: string) => `LINE ${id}`,
+    openInMaps: "Open in Google Maps",
+    mapOf: (name: string) => `Map showing where ${name} is`,
+    logoAlt: (name: string) => `${name} logo`,
+    /** Open Graph description for /friends. */
+    shareFallback: "The local businesses that help Lanna Care for Animals — thank you.",
+    homeStrip: {
+      heading: "Thank you to our Shelter Friends",
+      subtitle: "Local businesses that help us care for the animals.",
+      seeAll: "Meet our friends",
+    },
+    donateMention: {
+      heading: "Give in kind",
+      body: "Our Shelter Friends donate supplies and give discounts to people who support us — buying from them goes further.",
+      link: "Meet our Shelter Friends",
+    },
+
+    // --- staff: the contact hub, the contact lists, Management
+    badge: "Shelter Friend",
+    filterChip: "Shelter Friends",
+    card: {
+      heading: "Shelter Friend",
+      intro:
+        "A business that helps the shelter can be thanked on the website's Shelter Friends page, with what they do for us and the links and contact details they agree to show.",
+      make: "Make a Shelter Friend",
+      making: "Creating…",
+      onWebsite: "On the website",
+      notOnWebsite: "Not on the website",
+      publish: "Publish",
+      unpublish: "Unpublish",
+      viewOnSite: "View on the website",
+      editProfile: "Edit profile",
+      readOnly: "A manager can change this profile under Management.",
+      archivedHidden:
+        "This contact is archived, so their card is off the website until they are restored.",
+      blurb: "What they do for the shelter",
+      blurbHint: "A sentence or two in your own words — the main text of their card.",
+      helpKind: "Kind of help",
+      helpKindPlaceholder: "e.g. Donates cat litter every month",
+      discountNote: "Offer for supporters",
+      discountNotePlaceholder: "e.g. 10% off for adopters — show your adoption card",
+      website: "Website",
+      websitePlaceholder: "https://…",
+      facebook: "Facebook page",
+      facebookPlaceholder: "https://facebook.com/…",
+      friendSince: "Friend since",
+      optInsHeading: "What they agreed to show",
+      optInsHint:
+        "Ask the business first and tick only what they said yes to. Nothing below appears on the website until it is ticked.",
+      optIns: {
+        show_phone: "Phone",
+        show_email: "Email",
+        show_line: "LINE",
+        show_address: "Address (as text)",
+        show_map: "Map",
+      },
+      notRecorded: "not recorded for this contact",
+      logo: "Logo",
+      noLogo: "No logo",
+      uploadLogo: "Upload logo",
+      replaceLogo: "Replace logo",
+      removeLogo: "Remove logo",
+      removeLogoConfirm: "Remove this logo from the profile?",
+      logoUpdated: "Logo updated.",
+      preview: "Preview",
+      hidePreview: "Hide preview",
+      previewHeading: "How their card looks on the website",
+      previewUnsaved: "Showing your unsaved changes.",
+      previewNotLive: "Not live yet — Publish to put it on the website.",
+      removeProfile: "Remove profile",
+      removeConfirm: (name: string) =>
+        `Remove ${name}'s Shelter Friend profile? It comes off the website and its text and translations are deleted. The contact stays.`,
+      created: "Profile created — fill it in, then Publish.",
+      published: "Published — it's on the website now.",
+      unpublished: "Taken off the website.",
+    },
+    errors: {
+      notOffered: "Only Supplier contacts can be made Shelter Friends for now.",
+      alreadyFriend: "This contact is already a Shelter Friend.",
+      notFound: "That Shelter Friend profile no longer exists.",
+      invalidDate: "Friend since must be a date.",
+    },
+    manage: {
+      title: "Shelter Friends",
+      subtitle:
+        "The businesses thanked on the public website, in the order they appear there. Edit a profile from the contact's page.",
+      viewPage: "View the Shelter Friends page",
+      empty: "No Shelter Friends yet. Open a Supplier under Contacts and tap Make a Shelter Friend.",
+      moveUp: (name: string) => `Move ${name} up`,
+      moveDown: (name: string) => `Move ${name} down`,
+      openContact: "Open contact",
+      archivedNote: "Contact archived — hidden from the website",
+    },
   },
 
   format: {
