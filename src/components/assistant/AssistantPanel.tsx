@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { MessagesSquare, X } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Maximize2, MessagesSquare, X } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { AssistantContext } from "@/lib/assistant/data";
 import { fetchAssistantContext } from "@/app/assistant/actions";
@@ -24,6 +26,7 @@ import { AssistantConversation } from "./AssistantConversation";
 export function AssistantPanel() {
   const { t } = useI18n();
   const a = t.assistant;
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [context, setContext] = useState<AssistantContext | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -97,6 +100,22 @@ export function AssistantPanel() {
                     {a.panel.title}
                   </h2>
                   <p className="text-sm text-muted">{a.panel.subtitle}</p>
+                  {/* The only way to the full page since the sidebar entry
+                      went (docs/decisions.md, 2026-09-25), so it is a
+                      labelled link rather than a bare icon. Hidden on the
+                      page itself, where it would lead nowhere; the header
+                      lives in the layout, so the panel is closed on the way
+                      or it would stay open over the page it opened. */}
+                  {pathname !== "/assistant" && (
+                    <Link
+                      href="/assistant"
+                      onClick={() => setOpen(false)}
+                      className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                    >
+                      <Maximize2 aria-hidden="true" className="h-3.5 w-3.5" />
+                      {a.panel.fullPage}
+                    </Link>
+                  )}
                 </div>
                 <button
                   type="button"

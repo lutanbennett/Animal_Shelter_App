@@ -22,7 +22,6 @@ import {
   MessageCircle,
   MessageCircleMore,
   MessageSquare,
-  MessagesSquare,
   Navigation,
   Newspaper,
   PawPrint,
@@ -138,7 +137,7 @@ export const VET_ICONS = {
  * tile or a heading icon elsewhere reuse that icon, so the menu and the
  * landing pages agree: Enclosures and Maintenance match the enclosure hub,
  * Vets and Contacts the Management tiles, Security the Settings tile,
- * Projects the folder grid and Assistant the header button. Management and
+ * and Projects the folder grid. Management and
  * Settings have no tile of their own, so they take icons none of their
  * children use.
  */
@@ -149,7 +148,6 @@ export const NAV_ICONS = {
   vets: VET_ICONS.vet,
   contacts: CONTACT_ICONS.contact,
   projects: Folder,
-  assistant: MessagesSquare,
   management: BriefcaseBusiness,
   settings: Settings,
   manual: BookOpen,
