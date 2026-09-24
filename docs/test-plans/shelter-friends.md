@@ -11,7 +11,7 @@
 | PR | opened from this branch after this commit |
 | Tested by / date | Claude, 2026-09-24 |
 | Carries a migration? | no — builds on 0076 (on `main`, applied to dev) |
-| Tested at SHA | `fab1411` for the gates. Browser checks ran on `9be8589` plus the uncommitted docs; the only code change after them is two dictionary strings ("Vendor" → "Supplier") |
+| Tested at SHA | `2eb9510` for the gates (after the second sync). Browser checks ran on `9be8589` plus the uncommitted docs; the only code change after them is two dictionary strings ("Vendor" → "Supplier") |
 
 ## 1. Scope and risk
 
@@ -22,7 +22,7 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (brought in 0079 / enclosure public view; `docs/decisions.md` auto-merged by union)
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in twice. The first brought in 0079 (enclosure public view) cleanly. The second brought admin-on-mobile and conflicted in `src/lib/releases.ts` (both lines kept) and `src/app/management/contacts/page.tsx` (main’s `LargerScreenNotice` wrapper around this branch’s chip row). The page was reloaded after resolving: `?friends=1` lists the two Friends with the chip active
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
 
 ```
