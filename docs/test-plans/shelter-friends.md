@@ -165,7 +165,7 @@ Every server action also starts with `assertManagementRole()`, and
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | **Done — Lutan, 2026-09-24, on test.lannacare.org (build `11ee873`), confirmed in chat: logo upload works.** Logo upload, replace and remove on a Friend — not driven by Claude: the local Google OAuth client is dead (`invalid_client` since 2026-09-24), so Drive uploads only work on UAT | `test.lannacare.org` → a Supplier → Shelter Friend → Edit profile → Upload logo; then `/friends` and the home strip |
+| 1 | **Open.** On test (build `11ee873`) Lutan saw the upload work, but the logo did not reach `/friends`: both published profiles still have `logo_drive_file_id` null. Being investigated. Logo upload, replace and remove on a Friend — not driven by Claude: the local Google OAuth client is dead (`invalid_client` since 2026-09-24), so Drive uploads only work on UAT | `test.lannacare.org` → a Supplier → Shelter Friend → Edit profile → Upload logo; then `/friends` and the home strip |
 | 2 | Signed in as staff (or vet / volunteer): a Friend contact shows the badge and a read-only Shelter Friend card with no Publish / Edit, and `/management/shelter-friends` redirects away | `/contacts/[id]`, `/management/shelter-friends` |
 | 3 | Remove profile: the card leaves `/friends`, the contact stays, and its translations leave `/management/translations` | a test Friend → Edit profile → Remove profile |
 | 4 | Thai wording of the new strings reads naturally (written by Claude, not reviewed by a Thai speaker), and the customer confirms or replaces the placeholder title "เพื่อนของศูนย์พักพิง" | switch to ไทย on `/friends`, a Friend's contact page, `/management/shelter-friends` |
@@ -182,9 +182,9 @@ Automated checks by: Claude  Date: 2026-09-24
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — item 1 checked by Lutan; items 2–5 await Lutan
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — five items await Lutan; item 1 is under investigation
 
-Manual verification by: pending: the staff read-only view, Remove profile, the Thai wording and title, and the look of the public pages (logo upload checked by Lutan on test, 2026-09-24)
+Manual verification by: pending: the staff read-only view, Remove profile, the Thai wording and title, and the look of the public pages (logo upload: saved logo not reaching /friends on test, under investigation)
 
 ### Result
 
