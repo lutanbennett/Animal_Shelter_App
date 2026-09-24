@@ -3159,3 +3159,32 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   never fails on, or removes, a contact it archived. The rollback harness
   (`scripts/check-contacts-archive.mjs`) measured each of these against a
   real dev carer with placement history.
+
+- **Button-called server actions need no `refresh()` after `revalidatePath`
+  (2026-09-24):** the backlog item "Inline-edited rows show stale data
+  until reload" said a server action called from a button via
+  `startTransition` revalidates but leaves the client router on the old
+  row, and prescribed `refresh()` from `next/cache` in every
+  admin/management action. It does not reproduce on Next 16.3.5. With
+  `refresh()` removed from `admin/zones` and from
+  `admin/procedure-types` (where it was first reported, 7cc8874), on a
+  freshly started dev server, a zone rename, a zone delete and four
+  procedure-type renames all updated the row in place (a fifth is the
+  ambiguous reading below). Every save whose network log was read
+  was a single POST with no follow-up page request, so the action's response carries
+  the re-rendered page, which is what the bundled docs say
+  (`revalidatePath` in a Server Function "updates the UI immediately (if
+  viewing the affected path)"). The original commit recorded the stale
+  row but no run without `refresh()`; the likeliest explanation is a slow
+  dev-server save read too early: one of our own readings looked stale
+  at 5 s, and every save was correct when read at 10 s. So the item was
+  closed with no code change. The four actions that already call
+  `refresh()` (procedure-types, blood-test-types, security, diets) keep
+  it: it is harmless, and removing it is a change nobody asked for. Do
+  not add it elsewhere as a fix for stale rows; if a row really does go
+  stale, first check whether the component renders local state seeded
+  from props (`useState(prop)` does not follow a re-render), which
+  `refresh()` would not cure either. Measured on `next dev` only, not on
+  the deployed Workers build.
+  `management/translations` was never affected: `TranslationPanel` and
+  `TranslationQueue` update from the row the action returns.
