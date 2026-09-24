@@ -135,7 +135,7 @@ gates: typecheck=0 lint=0 build=0
 | # | What to check | Where |
 |---|---|---|
 | 1 | Signed in (any role, ideally one staff and one volunteer): scanning or opening `/e/<id>` lands on the enclosure page, as before — **checked by Lutan 2026-09-24 (told in chat): redirect works** | `/e/7e6bd871-f2f8-5622-a02f-11e63dbed85e` on dev or test |
-| 2 | The two new manual lines read well at `/manual` (Enclosures → The enclosure page; What the public sees) | `/manual` |
+| 2 | The two new manual lines read well at `/manual` (Enclosures → The enclosure page; What the public sees) — **checked by Lutan 2026-09-24 (told in chat): wording looks fine** | `/manual` |
 
 ## Sign-off
 
@@ -148,9 +148,9 @@ Automated checks by: Claude  Date: 2026-09-24
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: item 2 is outstanding; see the pending line below
+- [x] The manual list above is empty, or every item in it was checked by a person — both items checked by Lutan, 2026-09-24
 
-Manual verification by: pending: the manual wording (Left for manual verification 2); item 1 checked by Lutan 2026-09-24
+Manual verification by: Lutan Bennett — confirmed in chat; line written by Claude at their request  Date: 2026-09-24
 
 ### Result
 
