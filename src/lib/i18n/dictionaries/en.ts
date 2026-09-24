@@ -67,6 +67,7 @@ const en = {
     immunizationTypes: "Immunization Types",
     procedureTypes: "Procedure Types",
     bloodTestTypes: "Blood Test Types",
+    frequencies: "Frequencies",
     vets: "Vets",
     medications: "Medications",
     diets: "Diets",
@@ -267,6 +268,8 @@ const en = {
           "The kinds of procedure staff and vets pick from when logging one, and where duplicates get merged.",
         bloodTestTypes:
           "The panels a blood test can be: CBC, chemistry, thyroid, heartworm…",
+        frequencies:
+          "The \"how often\" choices a prescription picks from, and the schedule the medication forecast counts for each.",
         security:
           "Sign-in accounts, roles and access requests. Also pinned to the bottom of the menu.",
       },
@@ -486,6 +489,47 @@ const en = {
         hasProcedures: (n: number) =>
           `This type is on ${n} procedure${n === 1 ? "" : "s"} and can't be deleted — procedures are part of the residents' medical records. Merge it into another type instead.`,
         mergeSelf: "Choose a different procedure type to merge into.",
+        mergeFailed: "Merge failed.",
+      },
+    },
+    frequencies: {
+      title: "Frequencies",
+      subtitle:
+        "The \"how often\" choices the prescription form offers — Twice daily, Weekly, Monthly… The label is what staff see; the schedule is what the medication forecast counts: so many times a day, or one dose every so many days, weeks or months starting on the prescription's start date. \"As needed\" can't be forecast. New ones can be added inline from the prescription form, so duplicates collect here: fix one in place, or merge it into the one to keep — its prescriptions move with it. A frequency that is on any prescription can't be deleted.",
+      couldntLoad: "Couldn't load frequencies",
+      couldntLoadUsage: "Couldn't load prescription counts",
+      createForm: {
+        label: "Label",
+        labelPlaceholder: "e.g. Every 8 hours",
+        schedule: "Schedule",
+        scheduleHint: "Whole numbers only — a weekly tablet is one dose every 1 week, not a fraction a day.",
+        addButton: "Add frequency",
+      },
+      table: {
+        label: "Label",
+        schedule: "Schedule",
+        prescriptions: "Prescriptions",
+        prescriptionCount: (n: number) => `${n} prescription${n === 1 ? "" : "s"}`,
+        noFrequencies: "No frequencies yet.",
+      },
+      merge: {
+        open: "Merge…",
+        into: "Merge into",
+        pickTarget: "Merge into…",
+        button: "Merge",
+        hint:
+          "Every prescription using this frequency moves to the one you pick and this row is removed. Moved prescriptions take the kept frequency's schedule.",
+      },
+      deleteConfirm: (label: string) =>
+        `Delete frequency "${label}"? This can't be undone.`,
+      mergeConfirm: (from: string, into: string, n: number, target: string) =>
+        `Merge "${from}" into "${into}" (${target})? ${n} prescription${n === 1 ? "" : "s"} will move and "${from}" will be removed. This can't be undone.`,
+      createdFrequency: (label: string) => `Created frequency "${label}".`,
+      errors: {
+        labelRequired: "Label is required.",
+        hasPrescriptions: (n: number) =>
+          `This frequency is on ${n} prescription${n === 1 ? "" : "s"} and can't be deleted. Merge it into another frequency instead.`,
+        mergeSelf: "Choose a different frequency to merge into.",
         mergeFailed: "Merge failed.",
       },
     },
@@ -920,12 +964,8 @@ const en = {
       subtitle:
         "The list of medications staff and vets pick from when writing a prescription. The dose, how often and for how long are set on each prescription for that resident; this page is the product list. Rename one, fix its unit, or merge a duplicate into the one to keep — its prescriptions move with it. A medication that has ever been prescribed can't be deleted: the prescription is part of the resident's medical record.",
       couldntLoad: "Couldn't load medications",
-      couldntLoadFrequencies: "Couldn't load frequencies",
       couldntLoadUsage: "Couldn't load prescription counts",
       couldntLoadForecast: "Couldn't load the forecast",
-      frequenciesHeading: "Frequency options",
-      frequenciesIntro:
-        "The \"how often\" choices the prescription form offers — Twice daily, Weekly, Monthly… The label is what staff see; the schedule is what the forecast counts: so many times a day, or one dose every so many days, weeks or months starting on the prescription's start date. \"As needed\" can't be forecast.",
       createForm: {
         name: "Name",
         namePlaceholder: "e.g. Amoxicillin 250mg tablet",
@@ -935,13 +975,6 @@ const en = {
         costPlaceholder: "e.g. 2.50",
         costHint: "Baht for one unit, not one pack. Blank = not priced yet.",
         addButton: "Add medication",
-      },
-      frequencyForm: {
-        label: "Label",
-        labelPlaceholder: "e.g. Every 8 hours",
-        schedule: "Schedule",
-        scheduleHint: "Whole numbers only — a weekly tablet is one dose every 1 week, not a fraction a day.",
-        addButton: "Add frequency",
       },
       table: {
         name: "Name",
@@ -961,11 +994,6 @@ const en = {
         prescriptionCount: (n: number) => `${n} prescription${n === 1 ? "" : "s"}`,
         noMedications: "No medications yet.",
       },
-      frequencyTable: {
-        label: "Label",
-        schedule: "Schedule",
-        noFrequencies: "No frequencies yet.",
-      },
       merge: {
         open: "Merge…",
         into: "Merge into",
@@ -974,30 +1002,20 @@ const en = {
         noTargets: "No other medication uses this unit.",
         hint:
           "Every prescription of this medication moves to the one you pick and this row is removed. Only medications measured in the same unit are offered, so the doses keep their meaning.",
-        frequencyHint:
-          "Every prescription using this frequency moves to the one you pick and this row is removed. Moved prescriptions take the kept frequency's schedule.",
       },
       deleteConfirm: (name: string) => `Delete medication "${name}"? This can't be undone.`,
-      deleteFrequencyConfirm: (label: string) =>
-        `Delete frequency "${label}"? This can't be undone.`,
       unitChangeConfirm: (name: string, n: number, from: string, to: string) =>
         `"${name}" has ${n} prescription${n === 1 ? "" : "s"} whose dose is recorded in ${from}. Changing the unit to ${to} changes what every one of those doses means — the numbers stay the same. Continue?`,
       mergeConfirm: (from: string, into: string, n: number) =>
         `Merge "${from}" into "${into}"? ${n} prescription${n === 1 ? "" : "s"} will move to "${into}" and "${from}" will be removed. This can't be undone.`,
-      mergeFrequencyConfirm: (from: string, into: string, n: number, target: string) =>
-        `Merge "${from}" into "${into}" (${target})? ${n} prescription${n === 1 ? "" : "s"} will move and "${from}" will be removed. This can't be undone.`,
       createdMedication: (name: string) => `Created medication "${name}".`,
-      createdFrequency: (label: string) => `Created frequency "${label}".`,
       errors: {
         nameRequired: "Name is required.",
         unitInvalid: "Choose a unit.",
-        labelRequired: "Label is required.",
         costInvalid:
           "Cost must be a number of baht, 0 or more. Leave it blank if it isn't priced yet.",
         hasPrescriptions: (n: number) =>
           `This medication is on ${n} prescription${n === 1 ? "" : "s"} and can't be deleted — prescriptions are part of the residents' medical records. Merge it into another medication instead.`,
-        frequencyHasPrescriptions: (n: number) =>
-          `This frequency is on ${n} prescription${n === 1 ? "" : "s"} and can't be deleted. Merge it into another frequency instead.`,
         notFound: "Medication not found.",
         mergeSelf: "Choose a different medication to merge into.",
         mergeUnitMismatch:

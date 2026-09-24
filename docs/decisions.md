@@ -3610,3 +3610,36 @@ The feature half of the 0079 entry above. `/e/` now behaves like `/r/`: signed i
 - **Signed out reads `public_enclosures` and nothing else.** A Lifecycle id, an unknown uuid and a non-uuid all get the same plain 404 with the app's name as the title, so the page can't be used to confirm that Hospital exists or what its id is. (The uuid check runs before the query because Postgres rejects a malformed uuid with an error, not an empty result.)
 - **The cards are the `/adopt` card** (`src/app/adopt/ResidentCard.tsx`, now with an `href`), linking to `/r/<code>` rather than `/adopt/<id>`. Every resident in a kennel has an `/r/` page, but only those shown on the public site have an adoption profile, and `/r/` links on to the profile when there is one. Reusing the adoption card keeps a kennel's page and the adoption listing looking the same, and `/r/`'s own layout is a single-resident page, not a grid.
 - **An empty enclosure is a page**, not a 404: "Nobody is living here at the moment." The view returns `[]` for it, so the kennel still exists as far as a visitor is concerned.
+
+## 2026-09-24 — Frequencies move to Settings; the policy stays
+
+`/admin/frequencies` is the frequency list's own page, beside procedure and
+blood-test types, and `/management/medications` is medications only. The
+move is the page, the actions and the text (`admin.frequencies` in both
+dictionaries); `FrequencyScheduleFields` and `parseSchedule` stay shared
+because the prescription form's inline add still uses them.
+
+- **The actions are admin-only now** (`assertAdminRole`), matching the page
+  guard, as on every other Settings page. The management-gated frequency
+  actions are deleted, not left behind.
+- **The database policy is unchanged, on Lutan's call.**
+  `management_rw_frequency` (0043) still gives management update and delete
+  on `frequency`, though no page offers it any more. The backlog item left
+  "revoke it or keep it" open. Lutan answered it two ways during the day, and
+  then settled it in this stream's session: leave the RLS alone. So there is
+  no migration. If it is ever revoked, the file drops `management_rw_frequency` and recreates
+  `management_insert_frequency` (`for insert with check (current_user_role()
+  = 'management')`). That keeps management's policy count equal to staff's,
+  the invariant 0039's mirror block asserts.
+- **Revoking management alone would not make the list "set up once".**
+  Staff and vets insert through `staff_insert_frequency` and
+  `vet_insert_frequency` (0027), which the prescription form's "+ Add new
+  frequency…" uses. Admin-only additions would mean removing that inline
+  add, a UI change as well as a policy one. That is a different decision from
+  the one the backlog item asked.
+- **No `refresh()` in the actions.** `/admin/procedure-types` calls it after
+  each action because of a stale-row report that #88 closed as not
+  reproducible. The frequency actions came across without it, and in
+  testing a deleted row left the table without a reload. A merge I checked
+  after 5 seconds still showed the row, but its request took 5.2 seconds on
+  a cold dev server, so that says nothing either way.

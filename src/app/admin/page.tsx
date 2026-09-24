@@ -65,6 +65,13 @@ export default async function AdminPage() {
       icon: SECTION_ICONS["blood-tests"],
     },
     {
+      href: "/admin/frequencies",
+      label: t.nav.frequencies,
+      description: t.admin.landing.tiles.frequencies,
+      icon: SECTION_ICONS.prescriptions,
+      phoneNote: t.largerScreen.tileLabel,
+    },
+    {
       href: "/admin/security",
       label: t.nav.security,
       description: t.admin.landing.tiles.security,

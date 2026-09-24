@@ -35,7 +35,7 @@ const manual: Manual = {
   },
   roleSummary: {
     admin:
-      "Everything, including the Settings section (users, website, zones, enclosures, immunization and procedure types) and the Management section.",
+      "Everything, including the Settings section (users, website, zones, enclosures, immunization and procedure types, frequencies) and the Management section.",
     management:
       "Everything staff can do, plus the Management section: the reporting dashboard, the contact, vet, medication and diet lists, and the translations of public text.",
     staff:
@@ -52,7 +52,7 @@ const manual: Manual = {
       title: "Getting started",
       icon: BookOpen,
       intro:
-        "The app runs in a web browser on a phone, tablet or computer — nothing to install. On a phone it works as a field tool: find a resident, log what you did, add photos. On a computer you get the extra columns, filters and the Management and Settings sections. Their setup pages — zones, enclosures and immunization types, and Management's vets, contacts, medications and diets — are wide tables made for a computer, so on a phone they show a \"Best on a larger screen\" note first, and their tiles say \"Larger screen\". If it can't wait, tap Show anyway and the page is all there.",
+        "The app runs in a web browser on a phone, tablet or computer — nothing to install. On a phone it works as a field tool: find a resident, log what you did, add photos. On a computer you get the extra columns, filters and the Management and Settings sections. Their setup pages — zones, enclosures, immunization types and frequencies, and Management's vets, contacts, medications and diets — are wide tables made for a computer, so on a phone they show a \"Best on a larger screen\" note first, and their tiles say \"Larger screen\". If it can't wait, tap Show anyway and the page is all there.",
       topics: [
         {
           id: "sign-in",
@@ -820,14 +820,14 @@ const manual: Manual = {
         },
         {
           id: "manage-medications",
-          title: "Managing medications and frequencies",
+          title: "Managing medications",
           roles: ["admin", "management"],
           path: "Management → Medications",
           steps: [
             "The medications table is the product list the prescription form offers. Add one with its unit (tablet vs suspension are two medications); rename or fix a unit in place.",
             "Merge a duplicate into the one to keep — its prescriptions move across. Only medications with the same unit can be merged.",
             "Next N days shows how much of each medication current prescriptions will need. For any other period — next month's order, say — enter From and To dates above the table and tap Show window; a column for that period is added beside the fixed ones.",
-            "Frequency options are the \"how often\" choices: a label plus a schedule (so many times a day, or one dose every so many days, weeks or months).",
+            "The \"how often\" choices a prescription picks from are under Settings → Frequencies, and only an admin can change them (see Frequencies).",
           ],
           screenshot: {
             src: "/manual/management-medications.png",
@@ -996,6 +996,16 @@ const manual: Manual = {
             src: "/manual/admin-blood-test-types.png",
             alt: "The blood test types admin page",
           },
+        },
+        {
+          id: "frequencies",
+          title: "Frequencies",
+          roles: ["admin"],
+          path: "Settings → Frequencies",
+          steps: [
+            "The \"how often\" choices the prescription form offers — Twice daily, Weekly, Monthly. Each is a label staff see plus a schedule the medication forecast counts: so many times a day, or one dose every so many days, weeks or months from the prescription's start date. As needed can't be forecast.",
+            "Staff and vets can add a frequency inline when writing a prescription, so this is where duplicates get tidied up. Fix a label or schedule in place, or Merge… a duplicate into the one to keep — its prescriptions move across and take the kept one's schedule. A frequency on any prescription can't be deleted; merge it instead.",
+          ],
         },
       ],
     },
