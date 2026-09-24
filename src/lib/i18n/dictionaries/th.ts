@@ -79,7 +79,6 @@ const th: Dictionary = {
     releaseNotes: "บันทึกการเปลี่ยนแปลง",
     publicSite: "เว็บไซต์สาธารณะ",
     changePassword: "เปลี่ยนรหัสผ่าน",
-    assistant: "ผู้ช่วย",
     menu: "เมนู",
     openMenu: "เปิดเมนู",
     closeMenu: "ปิดเมนู",
@@ -1230,6 +1229,7 @@ const th: Dictionary = {
       title: "ผู้ช่วย",
       subtitle: "พิมพ์สิ่งที่ต้องการให้ทำ ระบบจะแสดงตัวอย่างให้ตรวจก่อนบันทึกเสมอ",
       loading: "กำลังโหลด...",
+      fullPage: "เปิดแบบเต็มหน้า",
     },
   },
 

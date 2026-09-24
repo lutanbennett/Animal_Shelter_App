@@ -89,10 +89,10 @@ const manual: Manual = {
           id: "navigation",
           title: "Finding your way around",
           steps: [
-            "On a computer the menu is always visible down the left, each link with its own icon: Residents, Enclosures and Maintenance first, then Vets, Contacts and Projects, then the Assistant — and, depending on your role, Management and Settings. Those two open a front page of tiles, one for each page inside them; the same icons are used on the tiles and in the menu.",
+            "On a computer the menu is always visible down the left, each link with its own icon: Residents, Enclosures and Maintenance first, then Vets, Contacts and Projects — and, depending on your role, Management and Settings. Those two open a front page of tiles, one for each page inside them; the same icons are used on the tiles and in the menu.",
             "Under a dividing line at the very bottom of the menu sit the things you only need now and then, so they are always in the same place: this manual, Release notes, Change password and — for admins — Security, where accounts and roles are managed.",
             "On a phone tap the ☰ button at the top left to open the same menu; tap outside it to close. The same links are the last entries in it, below the same line.",
-            "The LCA logo and your email are in the header, with the language switch and Sign out. Tap the logo to see the public website as a visitor does — it opens in a new tab so you don't lose your place.",
+            "The LCA logo and your email are in the header, with the Assistant button, the language switch and Sign out. Tap the logo to see the public website as a visitor does — it opens in a new tab so you don't lose your place.",
           ],
           screenshot: {
             src: "/manual/nav-mobile.png",
@@ -124,11 +124,11 @@ const manual: Manual = {
           id: "assistant",
           title: "Asking the assistant",
           roles: ["admin", "management", "staff", "volunteer"],
-          path: "Assistant in the header (any screen), or Assistant in the left nav",
+          path: "Assistant button in the header (any screen)",
           intro:
             "The assistant turns one typed sentence into a filled-in form, shows it to you, and writes nothing until you press Confirm. It is not a chatbot and it does not guess: it recognises the requests listed below, in English or Thai, and leaves blank whatever your sentence didn't say. Anything else gets a polite \"I didn't understand that one\" — so the list below is the whole of what it knows.",
           steps: [
-            "Open it with the Assistant button in the header — it slides in over whatever you were looking at — or from Assistant in the left nav for a full page.",
+            "Open it with the Assistant button in the header, at the top of every screen — it slides in over whatever you were looking at, so you don't lose your place. On a phone the button shows just its speech-bubble icon. For more room, press Open full page under the panel's title: the same assistant fills a page of its own.",
             "Type one request and press Send. Check the card that comes back, fill in or correct anything on it, then press Confirm. Cancel writes nothing.",
             "To record something: \"Send Panda to the vet hospital today\" · \"Panda is back from hospital\" · \"Panda weighs 12.4 kg\" (or \"log weight 12.4 for Panda\") · \"Move Panda to B1 today\" · \"Book a vet visit for Panda with Dr Somchai on Friday at 10am\".",
             "To ask something: \"Where is Panda?\" · \"Who is in B1?\" · \"What is due this week?\" — these are answered straight away, with no card and nothing to confirm.",
