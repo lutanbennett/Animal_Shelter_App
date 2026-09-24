@@ -107,18 +107,27 @@ before pushing.
   correspond to someone having looked is worse than none: it turns an
   unknown into a false assurance, and it is the first artifact anyone
   reaches for when something has gone wrong.
-- **`test-plan` reports red without blocking the merge, on purpose.** It
-  validates content, not presence — every line ticked or reasoned `n/a`,
-  no placeholders, both signatures, `Result:` one of three values. But it
-  is deliberately **not meant to block** yet: the user's staged rollout,
-  "see how we go, and if it is working smoothly then we can change to a
-  hard block", so that a check firing wrongly on its first legitimate PR
-  gets fixed rather than resented. **The soft gate is a decision, not a
-  misconfiguration** — do not make it required, and do not treat a red
-  `test-plan` as noise either. Promoting it to a required check in branch
-  protection is the user's call and no session's to make; if you find
-  protection already requiring it, say so rather than assuming it was
-  intended.
+- **`test-plan` goes red only when the plan is wrong, and never blocks the
+  merge.** It validates content, not presence — every line ticked or
+  reasoned `n/a`, no placeholders, both signatures, `Result:` one of three
+  values. A plan that is complete and correct but **unsigned** exits 0
+  (changed 2026-09-24): that is the normal state for most of a PR's life,
+  and it still prints what it is waiting for. So a red `test-plan` is
+  always someone's mistake to fix — never noise, and never just "nobody
+  has signed yet".
+  The history is worth knowing, because the obvious fix is the wrong one.
+  The job once carried `continue-on-error: true` for a real reason: a
+  correct-but-unsigned plan failed the workflow every few minutes with
+  several sessions pushing, and a red people are emailed about hourly is
+  one they filter. But suppressing the job lost the signal too — a
+  genuinely broken plan also reported green. Putting the distinction in
+  the script gets both; **do not reintroduce `continue-on-error`, and do
+  not make the script fail on an unsigned plan.**
+  It is still deliberately **not** a required check: the user's staged
+  rollout, "see how we go, and if it is working smoothly then we can
+  change to a hard block". Promoting it in branch protection is the
+  user's call and no session's to make; if you find protection already
+  requiring it, say so rather than assuming it was intended.
 - **Because it does not block, a PR can reach `main` unchecked.** Closing
   that is release-time work: before any production deploy, confirm by hand
   that every PR in the release has a completed checklist and stop if one
