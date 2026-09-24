@@ -2735,6 +2735,13 @@ const th: Dictionary = {
     staffSignIn: "เข้าสู่ระบบเพื่อดูข้อมูลทั้งหมด",
   },
 
+  enclosureCard: {
+    zone: "โซน",
+    residentsHeading: "ใครอยู่ที่นี่",
+    empty: "ตอนนี้ยังไม่มีใครอยู่ที่นี่",
+    staffSignIn: "เข้าสู่ระบบเพื่อเปิดกรงนี้ในแอป",
+  },
+
   tagLinks: {
     enclosureLabel: "ลิงก์สำหรับ QR code ของกรงนี้",
     residentLabel: "ลิงก์สำหรับบัตร RFID ของสัตว์ตัวนี้",
