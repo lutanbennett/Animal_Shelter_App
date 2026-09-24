@@ -26,7 +26,7 @@
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
 
 ```
-=== gates: build exited 0 after 172s
+=== gates: build exited 0 after 104s
 
 gates: typecheck=0 lint=0 build=0
 ```
