@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — #98, run 36000819558: `check` pass (1m28s), `test-plan` pass
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -150,15 +150,15 @@ Automated checks by: Claude  Date: 2026-09-24
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: one item is outstanding; see the pending line below
+- [x] The manual list above is empty, or every item in it was checked by a person — Lutan looked at item 1 and confirmed in chat
 
-Manual verification by: pending: a full-size-window look at the Contents scrolling (Left for manual verification 1)
+Manual verification by: Lutan Bennett — confirmed in chat ("looked at it, works fine"); line written by Claude at their request  Date: 2026-09-24
 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above — 3 accepted; 1 and 2 are pre-existing and deferred to the backlog
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
-- [ ] Handed to the production release manager — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR — in #98's description
+- [ ] Handed to the production release manager — n/a: not yet — no release is being cut; the release manager's pre-deploy pass picks it up
 
 Result: pass with accepted defects
 
