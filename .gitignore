@@ -49,3 +49,7 @@ appsheet-export/
 .port
 .brief.md
 .claude/launch.json
+
+# The saved three-batch plan in the main checkout (/plan-day). Local
+# day-scoped state that lets the next run resume instead of re-planning.
+.plan-day.md

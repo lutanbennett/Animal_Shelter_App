@@ -3219,6 +3219,41 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   in-page anchor click never re-mounts. Expand all / Collapse all was
   left out: with three releases it is chrome nobody needs; revisit once
   there are enough that opening them one by one is a chore.
+- **`/plan-day` plans nine items as three sequential batches, and
+  disjointness applies only within a batch (2026-09-24):** Lutan averages
+  6–9 backlog items per release and works through them in chunks of
+  three, so planning one round of three meant re-planning two or three
+  times a day — `/plan-day` ran twice on 2026-09-24 alone. It now orders
+  nine items into three batches of three, saves the plan, and sets up one
+  batch at a time; a later run reads the saved plan and resumes instead
+  of re-planning. The rule that changed shape is the interesting one.
+  Disjoint areas (rule 2) existed because the three streams ran *at the
+  same time*: two items both adding nav entries, or both rewriting the
+  same topic in `src/lib/manual/en.ts`, would conflict badly, so the
+  lower-priority one was dropped from the round. Batches are sequential,
+  so that reasoning stops applying across them — those two items now go
+  in *different batches* rather than one being dropped, and the
+  constraint only has to hold among the three streams of a single batch.
+  That is what makes nine items plannable where three were a squeeze; the
+  backlog's priority order survives largely intact instead of being cut
+  apart by collisions. Two structures fall out of it rather than being
+  imposed: a schema-first item spans adjacent batches (schema PR in N,
+  feature in N+1, never together, since the feature needs the migration
+  on `main` and applied to dev), and a dependency orders batches
+  forwards — both happened by accident on 2026-09-24, when
+  `contacts-archive-schema` landed in the morning round and
+  `contacts-archive` in the afternoon one, and when Shelter Friends
+  turned out to need `contacts.archived_at`. The migration limit is
+  per batch for the same reason. Worktrees are still created one batch at
+  a time: CLAUDE.md caps live worktrees at two or three because merging
+  is the bottleneck, and nine folders would each cost an `npm ci` and go
+  stale before their turn. The saved plan lives in `.plan-day.md` in the
+  main checkout, gitignored beside `.port` and `.brief.md` — it is
+  day-scoped local state, and committing it would put a planning
+  artifact in the history of every branch. Nine is a target, not a
+  quota: the skill is told to plan fewer and say why rather than pad the
+  list with user-driven items (the Pi, dashboard clicking, guided
+  walkthroughs) to reach it.
 
 - **Contacts: archive vs delete, and who can be archived (2026-09-24):**
   `deleteContact` stays, but only for a contact with no placements at all
