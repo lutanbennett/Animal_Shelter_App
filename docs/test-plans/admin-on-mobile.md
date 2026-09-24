@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Mobile → **Review which admin features (if any) belong on mobile.** |
 | Branch / worktree | `claude/admin-on-mobile` @ `C:\Development\Animal_Shelter_admin-on-mobile` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3007` |
-| PR | opened from this commit |
+| PR | #102 |
 | Tested by / date | Claude, 2026-09-24 (browser pane signed in by Lutan as admin) |
 | Carries a migration? | no |
 | Tested at SHA | `3b3df28` (code, browser-checked); gates re-run at `541f5ec` after merging `origin/main` |
@@ -24,7 +24,7 @@
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: first "Already up to date." at `66d5550` (release 0.2.2 already in), then again as `541f5ec`, bringing in 0079_public_enclosures.sql and its check script — no conflict, nothing this branch touches; gates re-run on top of it
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — both checks green on #102 at `cdea6e3`
 
 ```
 === gates: build exited 0 after 129s
