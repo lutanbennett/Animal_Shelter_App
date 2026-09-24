@@ -35,7 +35,7 @@ const manual: Manual = {
   },
   roleSummary: {
     admin:
-      "Everything, including the Settings section (users, website, zones, enclosures, immunization and procedure types) and the Management section.",
+      "Everything, including the Settings section (users, website, zones, enclosures, immunization and procedure types, frequencies) and the Management section.",
     management:
       "Everything staff can do, plus the Management section: the reporting dashboard, the contact, vet, medication and diet lists, and the translations of public text.",
     staff:
@@ -52,7 +52,7 @@ const manual: Manual = {
       title: "Getting started",
       icon: BookOpen,
       intro:
-        "The app runs in a web browser on a phone, tablet or computer — nothing to install. On a phone it works as a field tool: find a resident, log what you did, add photos. On a computer you get the extra columns, filters and the Management and Settings sections. Their setup pages — zones, enclosures and immunization types, and Management's vets, contacts, medications and diets — are wide tables made for a computer, so on a phone they show a \"Best on a larger screen\" note first, and their tiles say \"Larger screen\". If it can't wait, tap Show anyway and the page is all there.",
+        "The app runs in a web browser on a phone, tablet or computer — nothing to install. On a phone it works as a field tool: find a resident, log what you did, add photos. On a computer you get the extra columns, filters and the Management and Settings sections. Their setup pages — zones, enclosures, immunization types and frequencies, and Management's vets, contacts, medications and diets — are wide tables made for a computer, so on a phone they show a \"Best on a larger screen\" note first, and their tiles say \"Larger screen\". If it can't wait, tap Show anyway and the page is all there.",
       topics: [
         {
           id: "sign-in",
