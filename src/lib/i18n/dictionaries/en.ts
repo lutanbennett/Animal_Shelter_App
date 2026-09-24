@@ -2783,6 +2783,14 @@ const en = {
     staffSignIn: "sign in to see the full record",
   },
 
+  /** The page a visitor sees after scanning an enclosure's QR code (/e/). */
+  enclosureCard: {
+    zone: "Zone",
+    residentsHeading: "Who lives here",
+    empty: "Nobody is living here at the moment.",
+    staffSignIn: "sign in to open this enclosure in the app",
+  },
+
   /** The copyable addresses for enclosure QR codes and resident RFID cards. */
   tagLinks: {
     enclosureLabel: "Link for this enclosure's QR code",
