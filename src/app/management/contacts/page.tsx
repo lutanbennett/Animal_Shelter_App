@@ -27,9 +27,15 @@ export default async function ContactsAdminPage(
     // ones are the "in care" figure.
     supabase
       .from("placement_history")
-      .select("carer_id, end_date")
+      .select("carer_id, end_date, residents(id, name)")
       .not("carer_id", "is", null)
-      .returns<{ carer_id: string; end_date: string | null }[]>(),
+      .returns<
+        {
+          carer_id: string;
+          end_date: string | null;
+          residents: { id: string; name: string } | null;
+        }[]
+      >(),
     // Counted in both modes: hidden, it is what the toggle would reveal.
     supabase
       .from("contacts")
@@ -38,17 +44,25 @@ export default async function ContactsAdminPage(
   ]);
   const archivedCount = archivedResult.count ?? 0;
 
-  const placements = new Map<string, { total: number; active: number }>();
+  const placements = new Map<
+    string,
+    { total: number; active: number; inCare: { id: string; name: string }[] }
+  >();
   for (const row of placementsResult.data ?? []) {
-    const entry = placements.get(row.carer_id) ?? { total: 0, active: 0 };
+    const entry = placements.get(row.carer_id) ?? { total: 0, active: 0, inCare: [] };
     entry.total += 1;
-    if (!row.end_date) entry.active += 1;
+    if (!row.end_date) {
+      entry.active += 1;
+      // Who is with them now: the Archive button links each one's return form.
+      if (row.residents) entry.inCare.push(row.residents);
+    }
     placements.set(row.carer_id, entry);
   }
   const contacts: ContactRow[] = (contactsResult.data ?? []).map((contact) => ({
     ...contact,
     placement_count: placements.get(contact.id)?.total ?? 0,
     in_care_count: placements.get(contact.id)?.active ?? 0,
+    residents_in_care: placements.get(contact.id)?.inCare ?? [],
   }));
 
   return (

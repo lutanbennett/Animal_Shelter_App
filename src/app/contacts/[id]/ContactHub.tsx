@@ -136,7 +136,9 @@ export function ContactHub({
           <div className="self-start">
             <ArchiveContactControl
               contact={contact}
-              blocker={inCare.length > 0 ? a.errors.hasResidentsInCare(inCare.length) : null}
+              residentsInCare={inCare.flatMap((p) =>
+                p.residents ? [{ id: p.residents.id, name: p.residents.name }] : [],
+              )}
             />
           </div>
         )}

@@ -766,7 +766,7 @@ const manual: Manual = {
             "Add a contact with their type (Carer, Volunteer or Supplier), phone, email, LINE ID, Messenger, WhatsApp, address and notes — what a supplier sells, when a volunteer is free, a carer's home set-up. Notes show on the contact's page and are searched from the contact list.",
             "Edit details in the table. A contact who has fostered or adopted must stay a Carer.",
             "When the shelter stops working with someone — a carer who no longer fosters, a volunteer who has moved on, a supplier you no longer buy from — tap Archive on their row or on their page and, if you like, say why. They leave the lists and the carer picker but keep their history: a resident's housing history still names them, with an Archived badge.",
-            "Show archived lists them again, and Restore brings one back. A resident can't be placed with an archived carer until they're restored, and a carer with a resident living with them now can't be archived until that resident has been returned or moved.",
+            "Show archived lists them again, and Restore brings one back. A resident can't be placed with an archived carer until they're restored, and a carer with a resident living with them now can't be archived until that resident has been returned or moved — the Archive button says who, with a link to each one's Return to shelter form.",
             "Delete is only for a contact with no placements at all, such as a duplicate or a typo. Anyone with history is archived instead.",
           ],
           screenshot: {

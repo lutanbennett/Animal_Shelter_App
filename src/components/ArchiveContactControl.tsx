@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { archiveContact, restoreContact } from "@/app/management/contacts/actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { isArchived } from "@/lib/contacts/contacts";
@@ -14,15 +15,18 @@ const inputClass =
  * than a browser prompt so the reason can be typed in Thai on a phone and
  * the explanation sits next to it.
  *
- * `blocker` mirrors the server's refusal (a resident living with the carer
- * now) so the button explains itself instead of failing on click.
+ * `residentsInCare` mirrors the server's refusal (a resident living with the
+ * carer now): the button is disabled, and the note under it links each of
+ * those residents' Return to shelter form, so the way forward is one tap
+ * away. The return keeps its own form because it needs a date and an
+ * enclosure; archiving can't answer those for it.
  */
 export function ArchiveContactControl({
   contact,
-  blocker,
+  residentsInCare = [],
 }: {
   contact: { id: string; name: string; archived_at: string | null };
-  blocker?: string | null;
+  residentsInCare?: { id: string; name: string }[];
 }) {
   const { t } = useI18n();
   const a = t.contacts.archive;
@@ -31,6 +35,8 @@ export function ArchiveContactControl({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const archived = isArchived(contact);
+  const blocker =
+    residentsInCare.length > 0 ? a.errors.hasResidentsInCare(residentsInCare.length) : null;
 
   function run(action: () => Promise<void>) {
     setError(null);
@@ -49,7 +55,7 @@ export function ArchiveContactControl({
     "rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50";
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col items-start gap-2">
       {archived ? (
         <button
           type="button"
@@ -110,6 +116,23 @@ export function ArchiveContactControl({
         >
           {a.archive}
         </button>
+      )}
+      {!archived && blocker && (
+        <div className="flex max-w-64 flex-col gap-1 text-xs text-muted">
+          <p>{blocker}</p>
+          <ul className="flex flex-col gap-0.5">
+            {residentsInCare.map((r) => (
+              <li key={r.id}>
+                <Link
+                  href={`/residents/${r.id}/rehome/return`}
+                  className="font-medium text-primary hover:underline"
+                >
+                  {a.returnResident(r.name)}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       {error && <p className="max-w-56 text-xs text-danger">{error}</p>}
     </div>

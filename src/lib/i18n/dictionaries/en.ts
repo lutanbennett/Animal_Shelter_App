@@ -1401,6 +1401,7 @@ const en = {
       searchIncludesArchived: "Archived contacts that match are shown with a badge.",
       archivedContact: (name: string) => `Archived "${name}".`,
       restoredContact: (name: string) => `Restored "${name}".`,
+      returnResident: (name: string) => `Return ${name} to the shelter →`,
       errors: {
         hasResidentsInCare: (n: number) =>
           `${n === 1 ? "A resident is" : `${n} residents are`} living with this carer now. Return them or move them to another carer before archiving.`,

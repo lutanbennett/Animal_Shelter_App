@@ -3219,8 +3219,10 @@ Section 11, plus decisions made during setup that aren't in the original doc.
      read that carer as *current*, and the rehome form resolves the
      current carer's name from the picker's options. So an archived current
      carer would be both a contradiction and a blank name. The refusal is in
-     `archiveContact`, and the button is disabled with the same message.
-     Return the resident or move them to another carer first.
+     `archiveContact`, and the button is disabled with the same message
+     plus a link to each of those residents' Return to shelter form (the
+     user's call, 2026-09-24). It does not return them as part of the
+     archive: a return needs its own date and enclosure.
   2. **`rehomeResident` refuses an archived carer by id**, as well as the
      picker leaving them out. A form opened before the archive still posts
      the id, and that is exactly the case archiving is meant to stop.

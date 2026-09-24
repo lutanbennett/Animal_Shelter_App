@@ -1388,6 +1388,7 @@ const th: Dictionary = {
       searchIncludesArchived: "ผู้ติดต่อที่เก็บเข้าคลังซึ่งตรงกับคำค้นจะแสดงพร้อมป้ายกำกับ",
       archivedContact: (name: string) => `เก็บ "${name}" เข้าคลังแล้ว`,
       restoredContact: (name: string) => `กู้คืน "${name}" แล้ว`,
+      returnResident: (name: string) => `รับ ${name} กลับศูนย์พักพิง →`,
       errors: {
         hasResidentsInCare: (n: number) =>
           `ขณะนี้มีสัตว์ ${n} ตัวอยู่กับผู้ดูแลนี้ ให้รับกลับศูนย์หรือย้ายไปอยู่กับผู้ดูแลคนอื่นก่อนเก็บเข้าคลัง`,

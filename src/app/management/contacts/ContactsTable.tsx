@@ -21,6 +21,8 @@ export type ContactRow = Contact & {
   placement_count: number;
   /** Of those, still open: residents living with this carer now. */
   in_care_count: number;
+  /** The residents behind in_care_count — blocks archiving, with a return link each. */
+  residents_in_care: { id: string; name: string }[];
 };
 
 const inputClass =
@@ -51,8 +53,6 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
   const typeLocked = contact.placement_count > 0;
   const deleteBlocker =
     contact.placement_count > 0 ? c.errors.hasPlacements(contact.placement_count) : null;
-  const archiveBlocker =
-    contact.in_care_count > 0 ? a.errors.hasResidentsInCare(contact.in_care_count) : null;
 
   const messaging = [
     { label: c.createForm.lineId, value: contact.line_id },
@@ -337,7 +337,10 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
               {t.common.delete}
             </button>
             {!editing && (
-              <ArchiveContactControl contact={contact} blocker={archiveBlocker} />
+              <ArchiveContactControl
+                contact={contact}
+                residentsInCare={contact.residents_in_care}
+              />
             )}
           </div>
         </td>
