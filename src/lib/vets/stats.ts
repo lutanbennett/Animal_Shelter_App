@@ -50,11 +50,11 @@ export function periodStart(months: VisitPeriod, now: Date): Date | null {
  * visits are excluded — they haven't happened yet, and get their own
  * upcoming/overdue card.
  */
-export function visitsInPeriod(
-  visits: VetVisit[],
+export function visitsInPeriod<V extends VetVisit>(
+  visits: V[],
   months: VisitPeriod,
   now: Date,
-): VetVisit[] {
+): V[] {
   const start = periodStart(months, now)?.getTime() ?? -Infinity;
   const end = now.getTime();
   return visits.filter((v) => {

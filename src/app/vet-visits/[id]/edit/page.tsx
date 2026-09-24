@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { loadDoctorNamesByVet } from "@/lib/vets/doctors";
 import type { VetOption } from "@/app/vet-visits/new/VetVisitForm";
 import { VetVisitEditForm, type VetVisitInitial } from "./VetVisitEditForm";
 
@@ -13,7 +14,7 @@ export default async function EditVetVisitPage(props: PageProps<"/vet-visits/[id
 
   const { data: rows, error } = await supabase
     .from("vet_appointments")
-    .select("id, resident_id, vet_id, appointment_date, status, reason, notes, cost")
+    .select("id, resident_id, vet_id, appointment_date, status, reason, doctor_name, notes, cost")
     .eq("id", id)
     .limit(1)
     .returns<VetVisitInitial[]>();
@@ -21,7 +22,7 @@ export default async function EditVetVisitPage(props: PageProps<"/vet-visits/[id
   const visit = rows?.[0];
   if (!visit) notFound();
 
-  const [residentResult, stateResult, vetsResult] = await Promise.all([
+  const [residentResult, stateResult, vetsResult, doctorNamesByVet] = await Promise.all([
     supabase
       .from("residents")
       .select("id, name, thai_name")
@@ -35,6 +36,7 @@ export default async function EditVetVisitPage(props: PageProps<"/vet-visits/[id
       .limit(1)
       .returns<{ is_deceased: boolean }[]>(),
     supabase.from("vets").select("id, name, clinic_name").order("name").returns<VetOption[]>(),
+    loadDoctorNamesByVet(supabase),
   ]);
   const resident = residentResult.data?.[0];
   if (!resident) notFound();
@@ -73,6 +75,7 @@ export default async function EditVetVisitPage(props: PageProps<"/vet-visits/[id
       <VetVisitEditForm
         visit={{ ...visit, cost: visit.cost == null ? null : Number(visit.cost) }}
         vets={vetsResult.data ?? []}
+        doctorNamesByVet={doctorNamesByVet}
         residentDisplayName={displayName}
         cancelHref={tabHref}
       />

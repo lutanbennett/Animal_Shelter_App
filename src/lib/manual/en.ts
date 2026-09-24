@@ -427,12 +427,12 @@ const manual: Manual = {
           roles: ["admin", "management", "staff", "vet"],
           path: "Resident hub → Vet Appointments → Book vet visit",
           steps: [
-            "Choose one or more residents and the vet or clinic (vets are set up under Management → Vets).",
+            "Choose one or more residents and the vet or clinic (vets are set up under Management → Vets). If you know which doctor will see them, type their name in Doctor — it is optional. Names already recorded for that vet are offered as you type, so pick one rather than spelling it a new way.",
             "Enter the date and time. Use a past date to record a visit that already happened, including emergencies.",
             "Give the reason, set the status — Scheduled (upcoming) or Completed (already happened) — and add notes.",
             "Tap Book vet visit.",
             "On the resident's Vet Appointments page each visit has quick links to log a blood test, prescription, weight or procedure against that visit, and to send the resident to hospital.",
-            "After the visit, tap Edit on its row to mark it Completed (or Cancelled), fix the date or vet, and enter the cost from the invoice. The vet's hub totals those costs for the period shown.",
+            "After the visit, tap Edit on its row to mark it Completed (or Cancelled), fix the date or vet, add the doctor who saw them, and enter the cost from the invoice. The vet's hub totals those costs for the period shown.",
           ],
           screenshot: {
             src: "/manual/vet-visit-new.png",

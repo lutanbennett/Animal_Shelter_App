@@ -386,7 +386,7 @@ export function renderResidentIndexHtml(
         ["Date", "Vet", "Status", "Reason / notes"],
         record.appointments.map((appointment) => [
           esc(day(appointment.appointmentDate)),
-          escOrDash(appointment.vetName),
+          escOrDash(join([appointment.vetName, appointment.doctorName])),
           esc(appointment.status),
           escOrDash(join([appointment.reason, appointment.notes])),
         ]),

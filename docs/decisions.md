@@ -3087,3 +3087,19 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   the same invariant and was proved to hold with the trigger disabled. Inner
   spacing and case are left exactly as typed: collapsing or normalising them
   is guessing at what a name is, which is the lookup's job.
+- **The booking form sets a visit's doctor after the RPC, not through it (2026-09-24):**
+  the backlog item planned a `p_doctor_name` parameter on
+  `schedule_bulk_appointments`, but the schema half (#76, 0074) shipped the
+  column alone, and CLAUDE.md allows only one in-flight branch to carry a
+  migration. So `bookVetVisit` calls the RPC unchanged and, only when a name
+  was typed, updates `doctor_name` on the rows the RPC returned (it
+  `returns setof vet_appointments`; staff hold update wherever they hold
+  insert, 0030). **Its known cost:** the two writes are not one transaction.
+  If the second fails, the visits already exist, so the form says exactly
+  that and points to Edit rather than returning a plain error that invites
+  booking them twice. Folding the parameter into the RPC is worth doing the
+  next time a schema PR touches vet visits, not worth a migration of its own.
+  The Doctor field's suggestions are every distinct `doctor_name` per vet,
+  loaded with the page (`src/lib/vets/doctors.ts`) so changing the vet select
+  costs no round trip. They are kept exactly as typed, because 0074 left
+  spelling alone on purpose.

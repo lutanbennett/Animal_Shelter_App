@@ -28,7 +28,7 @@ export default async function VetPage(props: PageProps<"/vets/[id]">) {
       supabase
         .from("vet_appointments")
         .select(
-          "id, resident_id, appointment_date, status, reason, cost, residents(name, thai_name, resident_code)",
+          "id, resident_id, appointment_date, status, reason, doctor_name, cost, residents(name, thai_name, resident_code)",
         )
         .eq("vet_id", id)
         .order("appointment_date", { ascending: false })

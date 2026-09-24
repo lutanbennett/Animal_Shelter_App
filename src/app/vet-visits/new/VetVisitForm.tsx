@@ -4,6 +4,8 @@ import { useActionState, useState } from "react";
 import { bookVetVisit } from "./actions";
 import { ResidentPicker, type ResidentOption } from "@/components/ResidentPicker";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import type { DoctorNamesByVet } from "@/lib/vets/doctors";
+import { DoctorNameField } from "../DoctorNameField";
 
 export type { ResidentOption };
 
@@ -16,10 +18,12 @@ export type VetOption = {
 export function VetVisitForm({
   residents,
   vets,
+  doctorNamesByVet,
   preselectedResidentIds,
 }: {
   residents: ResidentOption[];
   vets: VetOption[];
+  doctorNamesByVet: DoctorNamesByVet;
   preselectedResidentIds: string[];
 }) {
   const [state, formAction, pending] = useActionState(bookVetVisit, undefined);
@@ -27,6 +31,7 @@ export function VetVisitForm({
   const [selectedIds, setSelectedIds] = useState<string[]>(
     preselectedResidentIds,
   );
+  const [vetId, setVetId] = useState("");
   const [statusTouched, setStatusTouched] = useState(false);
   const [status, setStatus] = useState<"scheduled" | "completed">(
     "scheduled",
@@ -63,7 +68,8 @@ export function VetVisitForm({
             id="vetId"
             name="vetId"
             required
-            defaultValue=""
+            value={vetId}
+            onChange={(e) => setVetId(e.target.value)}
             className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
           >
             <option value="" disabled>
@@ -76,6 +82,12 @@ export function VetVisitForm({
             ))}
           </select>
         </div>
+
+        <DoctorNameField
+          vetId={vetId}
+          namesByVet={doctorNamesByVet}
+          className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+        />
 
         <div className="flex flex-col gap-1">
           <label

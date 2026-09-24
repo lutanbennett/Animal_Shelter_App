@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { updateVetVisit } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { VetOption } from "@/app/vet-visits/new/VetVisitForm";
+import type { DoctorNamesByVet } from "@/lib/vets/doctors";
+import { DoctorNameField } from "../../DoctorNameField";
 
 export type VetVisitInitial = {
   id: string;
@@ -13,6 +15,7 @@ export type VetVisitInitial = {
   appointment_date: string;
   status: string;
   reason: string | null;
+  doctor_name: string | null;
   notes: string | null;
   cost: number | null;
 };
@@ -36,17 +39,20 @@ function toLocalInput(iso: string): string {
 export function VetVisitEditForm({
   visit,
   vets,
+  doctorNamesByVet,
   residentDisplayName,
   cancelHref,
 }: {
   visit: VetVisitInitial;
   vets: VetOption[];
+  doctorNamesByVet: DoctorNamesByVet;
   residentDisplayName: string;
   cancelHref: string;
 }) {
   const [state, formAction, pending] = useActionState(updateVetVisit, undefined);
   const { t } = useI18n();
   const v = t.vetVisits;
+  const [vetId, setVetId] = useState(visit.vet_id ?? "");
 
   return (
     <form action={formAction} className="flex max-w-3xl flex-col gap-6">
@@ -60,7 +66,14 @@ export function VetVisitEditForm({
           <label htmlFor="vetId" className="text-sm font-medium text-muted">
             {v.vetClinic}
           </label>
-          <select id="vetId" name="vetId" required defaultValue={visit.vet_id ?? ""} className={inputClass}>
+          <select
+            id="vetId"
+            name="vetId"
+            required
+            value={vetId}
+            onChange={(e) => setVetId(e.target.value)}
+            className={inputClass}
+          >
             <option value="" disabled>
               {v.selectVet}
             </option>
@@ -71,6 +84,13 @@ export function VetVisitEditForm({
             ))}
           </select>
         </div>
+
+        <DoctorNameField
+          vetId={vetId}
+          namesByVet={doctorNamesByVet}
+          defaultValue={visit.doctor_name ?? ""}
+          className={inputClass}
+        />
 
         <div className="flex flex-col gap-1">
           <label htmlFor="appointmentDate" className="text-sm font-medium text-muted">

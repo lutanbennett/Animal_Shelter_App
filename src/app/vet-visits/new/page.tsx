@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { NOT_DECEASED } from "@/lib/residents/status";
+import { loadDoctorNamesByVet } from "@/lib/vets/doctors";
 import { VetVisitForm, type ResidentOption, type VetOption } from "./VetVisitForm";
 
 export default async function NewVetVisitPage(
@@ -24,13 +25,14 @@ export default async function NewVetVisitPage(
 
   const supabase = await createClient();
 
-  const [residentsResult, vetsResult] = await Promise.all([
+  const [residentsResult, vetsResult, doctorNamesByVet] = await Promise.all([
     supabase
       .from("resident_list_view")
       .select("resident_id, name, thai_name, current_status")
       .or(NOT_DECEASED)
       .order("name"),
     supabase.from("vets").select("id, name, clinic_name").order("name"),
+    loadDoctorNamesByVet(supabase),
   ]);
 
   const residents: ResidentOption[] = (residentsResult.data ?? []).map(
@@ -67,6 +69,7 @@ export default async function NewVetVisitPage(
       <VetVisitForm
         residents={residents}
         vets={vets}
+        doctorNamesByVet={doctorNamesByVet}
         preselectedResidentIds={[...preselectedIds]}
       />
     </main>

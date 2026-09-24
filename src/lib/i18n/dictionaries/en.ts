@@ -1220,6 +1220,9 @@ const en = {
     selectResidents: "Select residents",
     vetClinic: "Vet / clinic",
     selectVet: "Select a vet",
+    doctorName: "Doctor (optional)",
+    doctorNamePlaceholder: "e.g. Dr Somchai",
+    doctorNameHint: "Who saw the resident, if you know. Leave blank otherwise.",
     dateTime: "Date & time",
     dateTimeHint: "Use a past date/time to log a visit that already happened.",
     reason: "Reason",
@@ -1248,6 +1251,8 @@ const en = {
       invalidCost: "Cost must be a number of baht, zero or more.",
       notFound: "Vet visit not found.",
       notAuthorized: "You don't have permission to change vet visits.",
+      doctorNotSaved: (message: string) =>
+        `The visit was booked, but the doctor's name wasn't saved (${message}). Add it with Edit on the resident's Vet Appointments tab — don't book again.`,
     },
   },
 
