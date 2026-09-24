@@ -391,7 +391,19 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    since sign-in and password reset redirect through the requesting origin.
 
 5. **Database migrations.** Dev/Test first, production once the branch is
-   merged (CLAUDE.md has the rules):
+   merged (CLAUDE.md has the rules). First, what production has not run —
+   it compares production's `schema_migrations` with the files on
+   `origin/main`, names both halves (files not applied, rows with no file)
+   and exits 1 if they disagree:
+
+   ```bash
+   node scripts/apply-migrations.mjs --drift production
+   ```
+
+   Production and UAT refuse to apply, dry-run or baseline from a checkout
+   whose `supabase/migrations/` differs from `origin/main`'s in any way,
+   before reading an env file or reaching the database; there is no
+   override, so merge first and run from the main checkout.
 
    ```bash
    node scripts/apply-migrations.mjs --env production --dry-run

@@ -6,6 +6,10 @@
 //   node scripts/apply-migrations.mjs --env uat           # after the cutover
 //   node scripts/apply-migrations.mjs --env production
 //   node scripts/apply-migrations.mjs --status   # list applied / pending, change nothing
+//   node scripts/apply-migrations.mjs --drift production
+//       # diff that database's schema_migrations against the files on
+//       # origin/main, both ways; exits 1 if they disagree (same as
+//       # `--drift --env production`)
 //   node scripts/apply-migrations.mjs --dry-run  # run pending files inside begin…rollback
 //   node scripts/apply-migrations.mjs --baseline 0027_prescriptions.sql
 //       # mark every file up to and including that one as applied WITHOUT
@@ -17,21 +21,117 @@
 // fix the file and re-run. Files are applied in filename order and must
 // never be edited once applied — write a new one.
 //
+// Two lists of files matter, and they are not the same thing. The working
+// tree's supabase/migrations/ is what gets *applied*; the files on
+// origin/main are what a database *should* hold, because schema reaches main
+// before any database (CLAUDE.md, "Database migrations"). --status and
+// --drift report against origin/main so a feature branch's own files can't
+// hide a gap — that was the bug: 0069 sat on production with no file on
+// main, and --status said "0 pending" throughout (decisions.md 2026-09-22).
+// For the same reason uat and production refuse to write from a checkout
+// whose migration files differ from origin/main's in any way, before any
+// environment file is read or any database is reached. There is no flag
+// that overrides it; merge the migration first.
+//
 // There's no psql or Supabase CLI link on the dev machine; the SQL goes to
 // the Management API's query endpoint with the personal access token in
 // SUPABASE_ACCESS_TOKEN (which must be able to see every project it targets).
 // The project comes from NEXT_PUBLIC_SUPABASE_URL of the chosen environment
 // (scripts/lib/env.mjs: .env.local for test, .env.deploy.uat or
-// .env.deploy.production layered on top for the other two). The target is
-// printed before anything runs.
+// .env.deploy.production layered on top for the other two). The target's
+// project ref is printed before anything runs — and nothing else about the
+// connection, since this output gets pasted into PRs and chat.
 
+import { spawnSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
+import { ENVIRONMENTS, loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
 
 const MIGRATIONS_DIR = "supabase/migrations";
+const MIGRATION_NAME = /^\d{4}_.+\.sql$/;
 
-const { name: envName, rest: args } = parseEnvArg(process.argv.slice(2));
+// `--drift <env>` is shorthand for `--drift --env <env>`.
+const argv = process.argv.slice(2);
+{
+  const i = argv.indexOf("--drift");
+  if (i >= 0 && ENVIRONMENTS.includes(argv[i + 1])) {
+    if (argv.includes("--env")) {
+      console.error("Give the environment once: --drift <env> or --drift --env <env>, not both.");
+      process.exit(2);
+    }
+    argv.splice(i + 1, 1, "--env", argv[i + 1]);
+  }
+}
+const { name: envName, rest: args } = parseEnvArg(argv);
+
+const statusOnly = args.includes("--status");
+const drift = args.includes("--drift");
+const dryRun = args.includes("--dry-run");
+const baselineIndex = args.indexOf("--baseline");
+const baseline = baselineIndex >= 0 ? args[baselineIndex + 1] : null;
+if (baselineIndex >= 0 && !baseline) {
+  console.error("--baseline needs a migration filename, e.g. --baseline 0027_prescriptions.sql");
+  process.exit(2);
+}
+const readOnly = statusOnly || drift;
+// Environments where a database write is something the shelter lives with.
+const GUARDED = envName === "uat" || envName === "production";
+
+function git(gitArgs) {
+  const r = spawnSync("git", gitArgs, { encoding: "utf8" });
+  return { ok: r.status === 0, out: (r.stdout ?? "").trim(), err: (r.stderr ?? "").trim() };
+}
+
+const files = readdirSync(MIGRATIONS_DIR)
+  .filter((name) => MIGRATION_NAME.test(name))
+  .sort();
+
+// The files on origin/main, name → blob id, fetched fresh. A failed fetch is
+// fatal only where it decides a write; a report says how old its reference is.
+const fetched = git(["fetch", "origin", "main", "--quiet"]);
+const mainTree = git(["ls-tree", "origin/main", `${MIGRATIONS_DIR}/`]);
+if (!mainTree.ok) {
+  console.error(`Could not read origin/main: ${mainTree.err || "git ls-tree failed"}`);
+  process.exit(2);
+}
+const mainBlobs = new Map();
+for (const line of mainTree.out.split("\n").filter(Boolean)) {
+  // "<mode> blob <sha>\t<path>"
+  const [meta, path] = line.split("\t");
+  const name = path.slice(MIGRATIONS_DIR.length + 1);
+  if (MIGRATION_NAME.test(name)) mainBlobs.set(name, meta.split(" ")[2]);
+}
+const mainFiles = [...mainBlobs.keys()].sort();
+const mainSha = git(["rev-parse", "--short", "origin/main"]).out;
+
+if (GUARDED && !readOnly) {
+  // Every file here must be on origin/main with the same content, and every
+  // file on origin/main must be here: anything else is applying schema that
+  // main doesn't have, or skipping schema it does.
+  const problems = [];
+  if (!fetched.ok) problems.push(`could not fetch origin/main (${fetched.err || "git fetch failed"}), so what main holds is unknown`);
+  const hashes = files.length
+    ? git(["hash-object", ...files.map((name) => `${MIGRATIONS_DIR}/${name}`)]).out.split("\n")
+    : [];
+  files.forEach((name, i) => {
+    if (!mainBlobs.has(name)) problems.push(`${name} is not on origin/main`);
+    else if (mainBlobs.get(name) !== hashes[i]) problems.push(`${name} differs from origin/main's copy`);
+  });
+  for (const name of mainFiles) {
+    if (!files.includes(name)) problems.push(`${name} is on origin/main but not in this checkout — sync first`);
+  }
+  if (problems.length) {
+    const what = dryRun ? "dry-runs" : baseline ? "records" : "applies";
+    console.error(
+      `apply-migrations: ${envName} ${what} migrations only from a checkout whose ${MIGRATIONS_DIR}/ matches origin/main (${mainSha}):\n  - ` +
+        problems.join("\n  - ") +
+        "\nSchema reaches main before any database. Merge the migration's PR, then run this from the main checkout." +
+        "\nNothing was read from or sent to any database.",
+    );
+    process.exit(2);
+  }
+}
+
 const env = loadEnv(envName);
 const url = env.NEXT_PUBLIC_SUPABASE_URL;
 const token = env.SUPABASE_ACCESS_TOKEN;
@@ -40,15 +140,6 @@ if (!url || !token) {
   process.exit(2);
 }
 const projectRef = refOf(env);
-
-const statusOnly = args.includes("--status");
-const dryRun = args.includes("--dry-run");
-const baselineIndex = args.indexOf("--baseline");
-const baseline = baselineIndex >= 0 ? args[baselineIndex + 1] : null;
-if (baselineIndex >= 0 && !baseline) {
-  console.error("--baseline needs a migration filename, e.g. --baseline 0027_prescriptions.sql");
-  process.exit(2);
-}
 
 async function query(sql) {
   const res = await fetch(
@@ -80,25 +171,52 @@ function literal(value) {
   return `$mig$${value}$mig$`;
 }
 
-const files = readdirSync(MIGRATIONS_DIR)
-  .filter((name) => /^\d{4}_.+\.sql$/.test(name))
-  .sort();
+console.log(`Environment: ${envName} — project ${projectRef}`);
 
-console.log(`Environment: ${envName} — project ${projectRef} (${url})`);
-
-await query(`
-  create table if not exists schema_migrations (
-    filename text primary key,
-    applied_at timestamptz not null default now()
+// A report changes nothing, not even by creating the table it reads.
+let hasTable = true;
+if (readOnly) {
+  [{ exists: hasTable }] = await query(
+    "select to_regclass('public.schema_migrations') is not null as exists",
   );
-  alter table schema_migrations enable row level security;
-`);
+  if (!hasTable) console.log("No schema_migrations table here — nothing has been applied by this script.");
+} else {
+  await query(`
+    create table if not exists schema_migrations (
+      filename text primary key,
+      applied_at timestamptz not null default now()
+    );
+    alter table schema_migrations enable row level security;
+  `);
+}
 
 const applied = new Set(
-  (await query("select filename from schema_migrations order by filename")).map(
-    (row) => row.filename,
-  ),
+  hasTable
+    ? (await query("select filename from schema_migrations order by filename")).map((row) => row.filename)
+    : [],
 );
+
+/**
+ * Both halves of the gap between this database and origin/main. Names only —
+ * this is what gets pasted into chat and PRs.
+ */
+function driftReport() {
+  const missingFile = [...applied].filter((name) => !mainBlobs.has(name)).sort();
+  const unapplied = mainFiles.filter((name) => !applied.has(name));
+  const stale = fetched.ok ? "" : " (as of the last fetch — git fetch failed just now)";
+  console.log(`Against origin/main ${mainSha}${stale}: ${mainFiles.length} file(s), ${applied.size} applied row(s).`);
+  console.log(`  On origin/main, not applied here: ${unapplied.length}`);
+  for (const name of unapplied) console.log(`    ${name}`);
+  console.log(`  Applied here, no file on origin/main: ${missingFile.length}`);
+  for (const name of missingFile) console.log(`    ${name}`);
+  return missingFile.length + unapplied.length;
+}
+
+if (drift) {
+  const gaps = driftReport();
+  console.log(gaps ? `Drift: ${envName} and origin/main disagree.` : `No drift: ${envName} matches origin/main.`);
+  process.exit(gaps ? 1 : 0);
+}
 
 if (baseline) {
   if (!files.includes(baseline)) {
@@ -121,10 +239,13 @@ if (baseline) {
 }
 
 const pending = files.filter((name) => !applied.has(name));
-console.log(`${applied.size} applied, ${pending.length} pending.`);
+console.log(`This checkout: ${applied.size} applied, ${pending.length} pending.`);
 
 if (statusOnly || pending.length === 0) {
-  for (const name of pending) console.log(`  pending: ${name}`);
+  for (const name of pending) {
+    console.log(`  pending: ${name}${mainBlobs.has(name) ? "" : " (not on origin/main)"}`);
+  }
+  if (statusOnly) driftReport();
   process.exit(0);
 }
 
