@@ -21,6 +21,13 @@ export type LinkCheck = { ok: true; url: string | null } | { ok: false; error: L
  */
 export const FACEBOOK_HOSTS = ["facebook.com", "fb.com"] as const;
 
+/**
+ * Hosts an Instagram profile link may be on — instagram.com with any
+ * subdomain (www., m.), and the instagr.am short form older share
+ * sheets produced.
+ */
+export const INSTAGRAM_HOSTS = ["instagram.com", "instagr.am"] as const;
+
 function onHost(hostname: string, hosts: readonly string[]) {
   const host = hostname.toLowerCase().replace(/\.$/, "");
   return hosts.some((h) => host === h || host.endsWith(`.${h}`));
@@ -55,4 +62,24 @@ export function checkHttpsUrl(
 /** An optional link to a Facebook page: https, on facebook.com or fb.com. */
 export function checkFacebookUrl(value: string | null | undefined): LinkCheck {
   return checkHttpsUrl(value, FACEBOOK_HOSTS);
+}
+
+/**
+ * The message for a failed check, from the dictionary's `linkErrors`
+ * (passed in so this file stays free of imports). `hosts` names the
+ * allowed sites in a wrongHost message.
+ */
+export function linkErrorText(
+  messages: { notUrl: string; notHttps: string; wrongHost: (hosts: string) => string },
+  check: LinkCheck,
+  hosts?: readonly string[],
+): string | null {
+  if (check.ok) return null;
+  if (check.error === "wrongHost") return messages.wrongHost((hosts ?? []).join(" / "));
+  return messages[check.error];
+}
+
+/** An optional link to an Instagram profile: https, on instagram.com or instagr.am. */
+export function checkInstagramUrl(value: string | null | undefined): LinkCheck {
+  return checkHttpsUrl(value, INSTAGRAM_HOSTS);
 }

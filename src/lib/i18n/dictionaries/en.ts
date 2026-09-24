@@ -133,6 +133,9 @@ const en = {
     visitingHours: "Visiting hours",
     contact: "Contact",
     help: "How to help",
+    /** aria-labels for the icon-only social links (footer, and Facebook in the header). */
+    facebook: "Lanna Care for Animals on Facebook",
+    instagram: "Lanna Care for Animals on Instagram",
   },
 
   /** /foster, /volunteer, /donate and the how-to-adopt section (0059). */
@@ -602,6 +605,12 @@ const en = {
         contactAddress: "Address",
         contactMapUrl: "Map link",
         contactMapUrlHint: "A Google Maps link; the address in the footer opens it.",
+        facebookUrl: "Facebook page",
+        facebookUrlHint:
+          "The shelter's Facebook page, as an https:// link on facebook.com. Shown as an icon in the footer and, on a computer, at the top of every public page. Leave blank to hide.",
+        instagramUrl: "Instagram",
+        instagramUrlHint:
+          "The shelter's Instagram profile, as an https:// link on instagram.com. Shown as an icon in the footer. Leave blank to hide.",
       },
       vetVisit: {
         heading: "Typical vet visit",

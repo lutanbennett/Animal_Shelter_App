@@ -42,6 +42,7 @@ export type Release = {
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
+  "The public website can link to the shelter's Facebook page and Instagram. An admin pastes the links under Settings → Website, and each appears as a small icon in the footer of every public page — Facebook also at the top of the page on a computer. Until a link is added, nothing shows.",
   "Shelter Friends: \"Remove profile\" is now \"Remove Shelter Friend status\", and it has moved out of Edit profile onto the card, next to Unpublish. A short line under the buttons says which is which: Unpublish hides the card for now, and Remove Shelter Friend status means the business is no longer a Friend. Removing never deletes the contact, and the confirmation now says that first.",
 ];
 

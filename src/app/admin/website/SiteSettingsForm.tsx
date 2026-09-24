@@ -1,8 +1,15 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { SiteContent } from "@/lib/site/content";
+import {
+  checkFacebookUrl,
+  checkInstagramUrl,
+  FACEBOOK_HOSTS,
+  INSTAGRAM_HOSTS,
+  linkErrorText,
+} from "@/lib/links/validate";
 import { updateSiteContent } from "./actions";
 
 const inputClass =
@@ -17,6 +24,58 @@ export function SiteSettingsForm({ content }: { content: SiteContent }) {
   const [state, formAction, pending] = useActionState(updateSiteContent, undefined);
   const { t } = useI18n();
   const s = t.admin.website.settings;
+
+  // The social links are checked as they are typed, with the same rule
+  // the action applies, and kept in state so a refused save doesn't
+  // clear what was pasted (React resets a form's uncontrolled fields).
+  const [facebookUrl, setFacebookUrl] = useState(content.facebook_url ?? "");
+  const [instagramUrl, setInstagramUrl] = useState(content.instagram_url ?? "");
+  const facebookError = linkErrorText(t.linkErrors, checkFacebookUrl(facebookUrl), FACEBOOK_HOSTS);
+  const instagramError = linkErrorText(
+    t.linkErrors,
+    checkInstagramUrl(instagramUrl),
+    INSTAGRAM_HOSTS,
+  );
+
+  function socialLink(
+    name: "facebook_url" | "instagram_url",
+    label: string,
+    hint: string,
+    value: string,
+    setValue: (value: string) => void,
+    error: string | null,
+    placeholder: string,
+  ) {
+    const hintId = `${name}-hint`;
+    return (
+      <label className="flex flex-col gap-1 text-sm font-medium text-muted">
+        {label}
+        {/* Not type="url": the browser's own check would refuse a bare
+            "facebook.com/…" that the validator accepts, and speak over
+            its messages with one of its own. */}
+        <input
+          name={name}
+          inputMode="url"
+          autoComplete="url"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder={placeholder}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={hintId}
+          className={inputClass}
+        />
+        {error ? (
+          <span id={hintId} className="text-xs font-normal text-danger">
+            {error}
+          </span>
+        ) : (
+          <span id={hintId} className="text-xs font-normal">
+            {hint}
+          </span>
+        )}
+      </label>
+    );
+  }
 
   function pair(
     name: keyof SiteContent & string,
@@ -119,12 +178,30 @@ export function SiteSettingsForm({ content }: { content: SiteContent }) {
           />
           <span className="text-xs font-normal">{s.contactMapUrlHint}</span>
         </label>
+        {socialLink(
+          "facebook_url",
+          s.facebookUrl,
+          s.facebookUrlHint,
+          facebookUrl,
+          setFacebookUrl,
+          facebookError,
+          "https://www.facebook.com/…",
+        )}
+        {socialLink(
+          "instagram_url",
+          s.instagramUrl,
+          s.instagramUrlHint,
+          instagramUrl,
+          setInstagramUrl,
+          instagramError,
+          "https://www.instagram.com/…",
+        )}
       </div>
 
       <div className="flex items-center gap-3">
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || Boolean(facebookError || instagramError)}
           className="w-fit rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
         >
           {pending ? t.common.saving : t.common.saveChanges}

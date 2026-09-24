@@ -130,6 +130,8 @@ const th: Dictionary = {
     visitingHours: "เวลาเปิดให้เยี่ยมชม",
     contact: "ติดต่อ",
     help: "ช่วยเหลือเรา",
+    facebook: "Lanna Care for Animals บน Facebook",
+    instagram: "Lanna Care for Animals บน Instagram",
   },
 
   sitePages: {
@@ -595,6 +597,12 @@ const th: Dictionary = {
         contactAddress: "ที่อยู่",
         contactMapUrl: "ลิงก์แผนที่",
         contactMapUrlHint: "ลิงก์ Google Maps — ที่อยู่ในส่วนท้ายจะเปิดลิงก์นี้",
+        facebookUrl: "เพจ Facebook",
+        facebookUrlHint:
+          "เพจ Facebook ของศูนย์ เป็นลิงก์ https:// บน facebook.com แสดงเป็นไอคอนในส่วนท้ายและด้านบนของทุกหน้าสาธารณะเมื่อเปิดบนคอมพิวเตอร์ เว้นว่างเพื่อซ่อน",
+        instagramUrl: "Instagram",
+        instagramUrlHint:
+          "โปรไฟล์ Instagram ของศูนย์ เป็นลิงก์ https:// บน instagram.com แสดงเป็นไอคอนในส่วนท้าย เว้นว่างเพื่อซ่อน",
       },
       vetVisit: {
         heading: "ค่าพบสัตวแพทย์โดยทั่วไป",
