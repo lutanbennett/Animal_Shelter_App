@@ -8,7 +8,7 @@
 | Backlog item | none: follow-ups recorded in `docs/releases/2026-09-24.md` ("Belongs in CLAUDE.md's migrations section") and from cutting `0.2.0` |
 | Branch / worktree | `claude/document-two-traps` @ `C:\Development\Animal_Shelter_document-two-traps` |
 | Dev server | n/a: documentation only; no page is served |
-| PR | linked from the PR itself |
+| PR | #99 |
 | Tested by / date | Claude, 2026-09-24 |
 | Carries a migration? | no |
 | Tested at SHA | `7c91b20` (after syncing `origin/main`) |
@@ -24,7 +24,7 @@
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (#95–#98), pushed, exit 0
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: #99, `check` and `test-plan` both passed on 9eee9dc
 
 ```
 === gates: typecheck exited 0 after 26s
@@ -156,7 +156,7 @@ Manual verification by: n/a: nothing to look at — documentation only, every cl
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR (summary in the #99 description; full plan in this file)
 - [ ] Handed to the production release manager — n/a: nothing deploys
 
 Result: pass
