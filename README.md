@@ -404,9 +404,11 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    On a fresh project that applies every file from `0001` up (2026-09-21:
    all 63 ran clean on the new production project); otherwise only what is
    pending. Then confirm the public views are readable and **not writable**
-   by the anonymous role — Supabase's default privileges grant `anon`
-   INSERT/UPDATE/DELETE on every new object, which
-   `0025_public_views_exclude_adopted.sql` revokes:
+   by the anonymous role, and that `anon` is refused on every other table
+   and view — Supabase's default privileges granted `anon` everything on
+   every new object, which `0081_anon_view_grants.sql` revokes. The check
+   lists the Data API's objects with `SUPABASE_SERVICE_ROLE_KEY`, so a new
+   one is covered without being added to the script:
 
    ```bash
    node scripts/check-public-views.mjs --env production

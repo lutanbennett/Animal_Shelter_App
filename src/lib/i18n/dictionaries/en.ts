@@ -2946,9 +2946,12 @@ const en = {
       previewHeading: "How their card looks on the website",
       previewUnsaved: "Showing your unsaved changes.",
       previewNotLive: "Not live yet — Publish to put it on the website.",
-      removeProfile: "Remove profile",
+      removeProfile: "Remove Shelter Friend status",
       removeConfirm: (name: string) =>
-        `Remove ${name}'s Shelter Friend profile? It comes off the website and its text and translations are deleted. The contact stays.`,
+        `The contact ${name} stays, with everything recorded on it. Only their Shelter Friend status ends: the card comes off the website and its text, logo and translations are deleted. To hide the card for now instead, cancel and use Unpublish.`,
+      actionsHint:
+        "Unpublish hides the card for now and keeps the profile. Remove Shelter Friend status means they are no longer a Friend — the profile is deleted, the contact stays.",
+      removed: "No longer a Shelter Friend. The contact is unchanged.",
       created: "Profile created — fill it in, then Publish.",
       published: "Published — it's on the website now.",
       unpublished: "Taken off the website.",

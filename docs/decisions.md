@@ -3643,3 +3643,69 @@ because the prescription form's inline add still uses them.
   testing a deleted row left the table without a reload. A merge I checked
   after 5 seconds still showed the row, but its request took 5.2 seconds on
   a cold dev server, so that says nothing either way.
+
+## 2026-09-25 — Shelter Friends: "Remove Shelter Friend status", beside Unpublish
+
+Lutan found **Remove profile** when checking #103 on test, and it worked. His
+concern was that a red "Remove profile" on a contact's own page reads as
+*delete this contact*. That can go wrong both ways: staff avoid it when they
+only mean "no longer a Friend", or press it expecting the contact to go.
+
+- **Relabelled** "Remove Shelter Friend status" (Thai "ยกเลิกสถานะเพื่อนของศูนย์").
+  It names what ends, the status, not a thing that sounds like the contact.
+- **The confirm leads with "The contact … stays"** and ends by pointing at
+  Unpublish for "hide for now". People read the first line of a
+  `window.confirm` and little else, so the first line carries the reassurance.
+- **Moved out of the edit form, onto the card's row next to Unpublish**, with a
+  line under the row: Unpublish hides the card for now, and Remove means no
+  longer a Friend. Inside Edit profile, the one action that ends the Friendship
+  sat beside Save and Cancel, where nobody compared it with Unpublish. On the
+  row, the two that differ are read side by side. It stays danger-styled and is
+  pushed to the end of the row (`sm:ml-auto`; on a phone it wraps in line).
+- **The success message says so** ("No longer a Shelter Friend. The contact is
+  unchanged.") instead of the generic "Saved". The card then drops back to
+  Make a Shelter Friend, which is itself the evidence that the contact survived.
+- No server change beyond that message. `deleteFriend` already checked
+  `assertManagementRole()` and RLS already refuses staff, vet and volunteer. A
+  rolled-back harness on dev showed 0 rows deleted for those three, and 1 for
+  management and admin.
+- **Anon loses the internal views, by allow-list (2026-09-25):**
+  `0081_anon_view_grants.sql` closes the exposure recorded under "Data API
+  grants" (2026-09-24). **What was exposed:** with only the public anon key
+  and no sign-in, dev answered `current_placement` (81 rows: placements,
+  notes, carer ids), `resident_current_state` (81: names, status, deceased
+  flag and date) and `immunization_compliance` (220: names and immunisation
+  gaps); `immunization_duplicate_check` returned 200 with no rows. **Why:**
+  Supabase's project default privileges gave `anon` ALL on every object
+  created in `public`, and these four views run as their owner (no
+  `security_invoker`), so the RLS on the tables underneath never applies to
+  them. Every other object also carried anon's full set, TRUNCATE included,
+  but RLS kept base-table reads and writes empty; `schema_migrations` was
+  readable the same way. **The fix is an allow-list, not the four names:**
+  revoke everything anon holds on every table, view and sequence in
+  `public`, then grant back SELECT on what the public site actually reads
+  with the anon key (the ten `public_*` views and `site_content`,
+  `site_content_photos`, `site_pages`). Naming the four would have left
+  the same trap for the next owner-rights view. It also removes anon
+  PATCH/DELETE on `site_content_photos` and `site_pages`, which answered
+  `204` (grant held, RLS matched nothing) and which the old check never
+  tried. The `postgres` role's default privileges in `public` no longer
+  include anon, so a table created afterwards starts with no anon grant
+  (measured: `create table` in a rolled-back transaction, anon SELECT
+  false, authenticated true). `supabase_admin`'s defaults are Supabase's
+  and nothing of ours runs as that role. **TRUNCATE:** PostgREST maps
+  DELETE to `DELETE`, has no verb that issues TRUNCATE, and no function in
+  `public` contains it, so anon's TRUNCATE was never reachable through the
+  Data API; anon now holds it on nothing. **Not changed:**
+  `security_invoker` on the four views, since turning it on changes what
+  signed-in staff, vets and volunteers see through them, and it is not
+  needed to close the anon hole. Function EXECUTE is also untouched. The
+  photo proxy calls `is_known_drive_file` as anon, and the public views
+  call `approved_translations` as the caller, so revoking anon EXECUTE
+  would break the public site. `approved_translations` does answer anon
+  directly for any row id, so it is a backlog item of its own. **What the
+  check now prevents:** `scripts/check-public-views.mjs` lists every table
+  and view the Data API exposes (the schema root, which needs the service
+  role key) and fails if anon can read any that is not on its public list.
+  So a new object is covered without anyone remembering to add it, and a
+  new `public_*` view fails until it is listed on purpose.

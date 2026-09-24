@@ -349,5 +349,5 @@ export async function deleteFriend(id: string): Promise<FriendActionResult> {
 
   if (current.logo_drive_file_id) await deleteFromDrive(current.logo_drive_file_id);
   revalidateFriendPages(current.contact_id);
-  return { success: t.common.saved };
+  return { success: t.shelterFriends.card.removed };
 }
