@@ -91,7 +91,7 @@ residents left in dev, which is disposable.
 - [x] Backlog item ticked in `docs/backlog.md` on this branch and moved to Completed → Resident operations
 - [x] Non-obvious design choice appended to `docs/decisions.md`, dated: why the confirm is on Register rather than Arrival's Next
 - [ ] `README.md` still accurate — n/a: the README does not describe the intake form
-- [x] **Release notes.** `unreleased` in `src/lib/releases.ts` has a staff-facing line for the intake warning
+- [ ] **Release notes.** n/a: in this follow-up PR, which only records the phone sign-off — the feature's staff-facing line ("Registering a new resident now warns you…") went into `unreleased` in `src/lib/releases.ts` with #77 itself, where this line was ticked
 - [x] Commit messages say why, not just what
 - [x] Claims in commit messages and `docs/decisions.md` were measured, not reasoned: the dialog text, counts and placeholders quoted above were read from the running page; "`record_intake` never checked capacity" was checked by grepping every migration for a capacity `raise`
 
@@ -104,8 +104,8 @@ residents left in dev, which is disposable.
 
 ### On the deployed build
 
-- [ ] Deployed to test: `npm run deploy:test` — deferred: production release manager
-- [ ] Smoke-tested on `test.lannacare.org` — an intake into a full enclosure asks, and Register anyway registers; **done on a real phone** (moved here from Left for manual verification: nobody has done the phone pass yet, and the manual signature below must not cover it) — deferred: production release manager
+- [x] Deployed to test: `npm run deploy:test` from `main` at `a80f090` (#77 merge), 2026-09-24 — output read `deploy: test → Supabase project qxkmhwybjggxvsfxsxbd (a80f090)`, `strip-baked-env: removed 10 env var(s)`, Worker `lanna-animal-care-test` version `bf50a3ec-42bd-473d-be1a-95f7b4d37717`
+- [x] Smoke-tested on `test.lannacare.org` on a real phone by Lutan, 2026-09-24: an intake into a full enclosure (Front Zone 6) asks, and Register anyway registers — passed (see Left for manual verification 2)
 - [ ] Timezone-sensitive behaviour proved — n/a: no date logic changed
 - [ ] Boundary or banding change covered on both edges — n/a: no threshold changed; `capacityWarningLevel()` and `occupancyLevel()` are reused as they are
 - [ ] Evidence pasted into this plan is the tool's actual output, unedited — n/a: the evidence is browser text quoted inline above, not a pasted tool run
@@ -139,6 +139,7 @@ residents left in dev, which is disposable.
 | # | What to check | Where |
 |---|---|---|
 | 1 | The Thai wording of the new dialog sentences reads naturally ("… เมื่อรับตัวนี้เข้าจะเป็น …", "ลงทะเบียนต่อไป") — **checked by Lutan, 2026-09-24** | `/residents/new` in ไทย, choose a full enclosure (e.g. Front Zone 6), Register |
+| 2 | The flow on a real phone at the gate: picker readable, occupancy line visible, dialog buttons reachable, Cancel and Register anyway both behave — **checked by Lutan on `test.lannacare.org` at `a80f090`, 2026-09-24: passed** | `/residents/new` on a phone against `test.lannacare.org` |
 
 ## Sign-off
 
@@ -151,9 +152,9 @@ Automated checks by: Claude (intake-capacity-warning session)  Date: 2026-09-24
 
 ### Manual verification
 
-- [x] The manual list above is empty, or every item in it was checked by a person — Lutan confirmed the Thai wording in chat. The real-phone pass was moved to §8's deployed smoke test, because nobody has done it yet and this signature must not cover it
+- [x] The manual list above is empty, or every item in it was checked by a person — Lutan confirmed the Thai wording in chat, and later the real-phone pass on `test.lannacare.org`
 
-Manual verification by: Lutan Bennett — confirmed the Thai wording in chat and asked for the sign-off; line written by Claude at their request  Date: 2026-09-24
+Manual verification by: Lutan Bennett — confirmed the Thai wording and the real-phone pass on test.lannacare.org in chat and asked for them to be recorded; line written by Claude at their request  Date: 2026-09-24
 
 ### Result
 
