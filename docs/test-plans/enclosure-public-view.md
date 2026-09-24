@@ -57,11 +57,11 @@ gates: typecheck=0 lint=0 build=0
 
 | Role | Can reach | Expected | Result |
 |---|---|---|---|
-| admin | `/e/<id>` → `/enclosures/<id>` | redirect, as before | pass (signed-in redirect checked by Lutan, 2026-09-24; one role-independent branch) |
-| management | same | same | pass (signed-in redirect checked by Lutan, 2026-09-24; one role-independent branch) |
-| staff | same | same | pass (signed-in redirect checked by Lutan, 2026-09-24; one role-independent branch) |
-| vet | same | same | pass (signed-in redirect checked by Lutan, 2026-09-24; one role-independent branch) |
-| volunteer | same | same | pass (signed-in redirect checked by Lutan, 2026-09-24; one role-independent branch) |
+| admin | `/e/<id>` → `/enclosures/<id>` | redirect, as before | not signed in as this role separately — Lutan checked the redirect signed in (2026-09-24); the branch does not read the role |
+| management | same | same | not signed in as this role separately — Lutan checked the redirect signed in (2026-09-24); the branch does not read the role |
+| staff | same | same | not signed in as this role separately — Lutan checked the redirect signed in (2026-09-24); the branch does not read the role |
+| vet | same | same | not signed in as this role separately — Lutan checked the redirect signed in (2026-09-24); the branch does not read the role |
+| volunteer | same | same | not signed in as this role separately — Lutan checked the redirect signed in (2026-09-24); the branch does not read the role |
 | signed out | `/e/<id>` public page; `/enclosures`, `/enclosures/<id>`, `/residents` not | public page for physical enclosures, 404 for Lifecycle/unknown, staff routes → sign-in | pass — `/e/` 200/404 as listed above; `/enclosures`, `/enclosures/<id>`, `/residents` all 307 → `/login?next=…` |
 
 - [ ] Every role above tested — n/a: signed out driven by curl and the browser pane; Lutan checked the signed-in redirect (2026-09-24, told in chat), and the five roles share one role-independent branch (`if (user) redirect(...)` before any lookup), so each role was not signed in separately
