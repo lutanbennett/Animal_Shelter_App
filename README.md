@@ -574,7 +574,7 @@ this, reads the backlog and proposes two or three workstreams that touch
 different parts of the app. Each becomes a worktree
 (`scripts/worktree.mjs new`) with its own branch, port and Claude session,
 and every commit auto-pushes (`.githooks/post-commit`). A feature is
-finished by merging `main` in, passing `typecheck`/`lint`/`build` (CI runs
+finished by merging `main` in, passing `node scripts/gates.mjs` (CI runs
 the same three on the PR), merging the PR, and `scripts/worktree.mjs
 done` — merges are serial, and the other streams `sync` after each one.
 Schema changes go first as their own small PR, applied to dev with
