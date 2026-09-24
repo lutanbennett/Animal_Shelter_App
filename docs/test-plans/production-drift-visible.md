@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Architecture: "Make production drift visible: nothing records what production has actually run." |
 | Branch / worktree | `claude/production-drift-visible` @ `C:\Development\Animal_Shelter_production-drift-visible` |
 | Dev server | n/a: script only, no dev server involved |
-| PR | opened from this commit |
+| PR | #114 |
 | Tested by / date | Claude, 2026-09-25 |
 | Carries a migration? | no |
 | Tested at SHA | `279da03` |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: #114, `Check` and `test-plan` both passed on the `50051d4` push (run 36042684874)
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -217,7 +217,7 @@ Manual verification by: pending: `--drift production` from the main checkout
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR is created from this commit
+- [x] Checklist pasted into the PR (#114 description)
 - [ ] Handed to the production release manager — n/a: not yet — the PR is not merged
 
 Result: pass with accepted defects
