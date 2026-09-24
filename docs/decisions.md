@@ -3381,6 +3381,32 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   `scrollIntoView()`, which would also scroll the page and fight the
   browser's jump to the anchor. It follows the address bar, not the reading
   position: a scroll-spy that tracks the section on screen was not built.
+- **`updated_at` on prescriptions and resident_diets: back-filled,
+  so only trustworthy from 0078 on (2026-09-24):** `0078_prescriptions_diets_updated_at.sql`
+  adds `updated_at timestamptz not null default now()` to both tables,
+  so a future audit of `end_date` has a reference timestamp, as
+  `created_at` already gives the insert-time `date` columns. **The
+  non-obvious part is the back-fill.** Adding a `not null default now()`
+  column stamps every existing row with the moment the migration ran,
+  not the moment the row last changed. Nothing records that. So a value
+  at or before the apply time means "unchanged since the column was
+  added", never "edited then". The column comments say so, and any
+  `end_date` written before 0078 is still unauditable, as the backlog
+  item said it would be. The column only does its job because of the
+  trigger. A default alone freezes it at insert time. One generic
+  `touch_updated_at()` BEFORE trigger serves both tables and can be
+  reused by the next table that needs one. maintenance and
+  project_folders already set `updated_at`, but inside their own
+  validation triggers, so there was nothing to share. The trigger sets
+  `now()` on every insert and on every update that changes another
+  column. It keeps the old value on a no-op update, so
+  `update … set x = x` does not pass for an edit. A caller cannot set
+  or backdate the column by hand. Writes made under the deceased-lock
+  bypass (the death cascade and its undo) are real `end_date` edits and
+  move it. All of this was measured, not reasoned:
+  `scripts/check-prescriptions-updated-at.mjs` asserts each case against
+  real dev rows in a rolled-back transaction. A copy with the trigger
+  neutered fails at the first case.
 
 ## 2026-09-24 — A sign-off PR's release-notes tick is checked against the PR that introduced the plan
 
