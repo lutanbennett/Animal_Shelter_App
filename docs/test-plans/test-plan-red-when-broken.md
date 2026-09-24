@@ -144,9 +144,9 @@ Automated checks by: Claude (release manager session)  Date: 2026-09-24
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not mine to tick. The list is **not** empty and the template reserves this tick for the person who looked; the `pending:` signature below is the true state
+- [x] The manual list above is empty, or every item in it was checked by a person — item 1 confirmed by Lutan in chat, 2026-09-24, recorded at his request. Item 2 is **not** done and is not claimed to be; it stays outstanding in the release record
 
-Manual verification by: pending: Lutan to confirm red-only-when-broken is the trade-off he wants, and to decide whether the browser items the release record lists as not done get run
+Manual verification by: Lutan Bennett — confirmed the red-only-when-broken trade-off by choosing option A in chat and instructing this merge; line written by Claude at his request. **Item 2 remains undone**: the browser checks (Dev badge, both sign-in paths, x-lanna-cache HIT) have still not been run by anyone, and stay recorded as outstanding in docs/releases/2026-09-24.md rather than resolved here  Date: 2026-09-24
 
 ### Result
 
