@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Documentation → **Release notes as an accordion: version and title first, details on click.** |
 | Branch / worktree | `claude/release-notes-accordion` @ `C:\Development\Animal_Shelter_release-notes-accordion` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3012` |
-| PR | not yet — opened after this commit |
+| PR | #92 |
 | Tested by / date | Claude, 2026-09-24 |
 | Carries a migration? | no |
 | Tested at SHA | `930579f` (code), synced as `d5ae348`; this file is the commit after it |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — #92, run 35988993224: `check` pass (1m28s), `test-plan` pass
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -155,7 +155,7 @@ Manual verification by: pending: a real-phone (Safari) look at the accordion (Le
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above — the one defect is fixed
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR — in #92’s description
 - [ ] Handed to the production release manager — n/a: not yet — the PR does not exist at this commit
 
 Result: pass
