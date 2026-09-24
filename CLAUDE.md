@@ -202,6 +202,21 @@ dev server running, none of it matters.
   anything non-trivial, `--status` to look). It records each file in
   `schema_migrations` in the target database and applies only what is
   pending — never POST SQL by hand or paste files into the SQL editor.
+- **`--dry-run` cannot validate a file that depends on another pending
+  file, and reports it as FAILED.** Each file is dry-run in its own
+  `begin … rollback`, so the previous file's changes are gone before the
+  next one runs. On 2026-09-24 `0076_shelter_friends.sql` came back
+  `FAILED: column c.archived_at does not exist` — a column added by the
+  still-pending `0075_contacts_archive.sql` and rolled back before `0076`
+  built a view referencing it. Both then applied cleanly, because a real
+  apply commits each file before the next one starts. Same mechanism as
+  the enum caveat: add-value and use cannot share the runner's per-file
+  transaction. **The trap is that a red dry-run normally means "do not
+  apply", and here the correct action was to apply.** So when a dry-run
+  fails on something an earlier pending file would have provided, read
+  both files before concluding the migration is broken — and report which
+  it was, because "the dry-run failed" and "the file is wrong" are not the
+  same statement.
 - Only apply a migration from the branch you are about to merge. If a
   branch is abandoned, its migration must be reverted from the dev
   database (write a down-migration, apply it, delete both files) before
