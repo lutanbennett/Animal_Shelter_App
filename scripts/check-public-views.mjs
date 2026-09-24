@@ -8,7 +8,11 @@
 // residents leave the public pages"). Everything else must refuse anon
 // outright: until 0081, four internal views that run as their owner
 // answered anon with resident names, placements and death dates
-// (docs/decisions.md, "Anon loses the internal views"). Run this against
+// (docs/decisions.md, "Anon loses the internal views"). The same goes for
+// functions: until 0082 anon could call every one through /rest/v1/rpc/,
+// including security-definer helpers that answered for any row id and role
+// guards that let a NULL role through (docs/decisions.md, "Anon loses the
+// functions"). Run this against
 // the production project after applying the migrations and before
 // announcing the site.
 //
@@ -17,9 +21,11 @@
 // Reads NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY from the
 // environment or the env files for the chosen environment (scripts/lib/env.mjs;
 // `--env production` for the live database), and SUPABASE_SERVICE_ROLE_KEY
-// to list every table and view the Data API exposes, so an object added
-// later is checked without anyone adding it here. Exits non-zero if a
-// public object is unreadable or writable, or anon can read anything else.
+// to list every table, view and function the Data API exposes, so an object
+// added later is checked without anyone adding it here. Exits non-zero if a
+// public object is unreadable or writable, anon can read anything else, a
+// function the public site calls refuses anon, or anon can execute any
+// other function.
 
 import { loadEnv, parseEnvArg } from "./lib/env.mjs";
 
@@ -64,6 +70,18 @@ const PUBLIC_VIEWS = [
 const PUBLIC_TABLES = ["site_content", "site_content_photos", "site_pages"];
 const PUBLIC = new Set([...PUBLIC_VIEWS, ...PUBLIC_TABLES]);
 
+// Functions anon may execute, each granted back by 0082, with arguments
+// for a harmless call. The public views call the shelter_* ones (EXECUTE is
+// checked as the caller even inside a view), the site_* policies call
+// current_user_role, and the photo proxy calls is_known_drive_file.
+const PUBLIC_FUNCTIONS = {
+  current_user_role: {},
+  is_known_drive_file: { p_drive_file_id: "check-public-views-no-such-file" },
+  shelter_date: { p_at: new Date().toISOString() },
+  shelter_time_zone: {},
+  shelter_today: {},
+};
+
 for (const name of PUBLIC) {
   const read = await fetch(`${url}/rest/v1/${name}?limit=1`, { headers });
   report(read.ok, `${name}: anon can SELECT`, `HTTP ${read.status}`);
@@ -92,7 +110,8 @@ const root = await fetch(`${url}/rest/v1/`, {
 if (!root.ok) {
   report(false, "list the Data API's tables and views", `HTTP ${root.status}`);
 } else {
-  const exposed = Object.keys((await root.json()).paths ?? {})
+  const paths = (await root.json()).paths ?? {};
+  const exposed = Object.keys(paths)
     .filter((path) => path !== "/" && !path.startsWith("/rpc/"))
     .map((path) => path.slice(1))
     .sort();
@@ -106,6 +125,46 @@ if (!root.ok) {
       `${name}: anon SELECT is refused`,
       `HTTP ${read.status}${read.ok && name.startsWith("public_") ? " (a new public view? add it to PUBLIC_VIEWS)" : ""}`,
     );
+  }
+
+  // Every function the Data API exposes. The allow-listed ones must answer
+  // anon; every other one must be refused *as a function* (42501 naming the
+  // function), not merely fail further in — before 0082 most write RPCs
+  // "refused" anon only because a table inside them did, and the
+  // security-definer ones did not refuse at all. Arguments are all null:
+  // enough for PostgREST to find the function, and the privilege check
+  // comes before the body runs.
+  const rpcs = Object.entries(paths)
+    .filter(([path]) => path.startsWith("/rpc/"))
+    .map(([path, def]) => [path.slice(5), def])
+    .sort(([a], [b]) => a.localeCompare(b));
+  for (const name of Object.keys(PUBLIC_FUNCTIONS)) {
+    if (!rpcs.some(([n]) => n === name)) report(false, `${name}(): listed as public but not exposed`);
+  }
+  for (const [name, def] of rpcs) {
+    const allowed = Object.hasOwn(PUBLIC_FUNCTIONS, name);
+    const params = def.post?.parameters?.find((p) => p.in === "body")?.schema?.properties ?? {};
+    const args = allowed
+      ? PUBLIC_FUNCTIONS[name]
+      : Object.fromEntries(Object.keys(params).map((p) => [p, null]));
+    const call = await fetch(`${url}/rest/v1/rpc/${name}`, {
+      method: "POST",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify(args),
+    });
+    const body = await call.text();
+    if (allowed) {
+      report(call.ok, `${name}(): anon can EXECUTE`, `HTTP ${call.status}`);
+      continue;
+    }
+    let message = body;
+    try {
+      message = JSON.parse(body).message ?? body;
+    } catch {
+      // not JSON — keep the raw body
+    }
+    const refused = !call.ok && message === `permission denied for function ${name}`;
+    report(refused, `${name}(): anon EXECUTE is refused`, `HTTP ${call.status}${refused ? "" : `: ${message.slice(0, 120)}`}`);
   }
 }
 
