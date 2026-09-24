@@ -422,7 +422,7 @@ function ResidentSummaryDocument({
             widths={["13%", "22%", "13%", "52%"]}
             rows={record.appointments.map((appointment) => [
               day(appointment.appointmentDate),
-              appointment.vetName ?? "—",
+              join([appointment.vetName, appointment.doctorName], " · "),
               appointment.status,
               join([appointment.reason, appointment.notes], " · "),
             ])}

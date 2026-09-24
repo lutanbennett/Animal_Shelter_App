@@ -17,7 +17,7 @@ function str(formData: FormData, key: string): string | null {
 }
 
 /**
- * Updates one visit: vet, date/time, status, reason, notes and — after
+ * Updates one visit: vet, doctor, date/time, status, reason, notes and — after
  * the visit, from the invoice — the cost (0053). Rows for a deceased
  * resident are locked (0026), which the page refuses to show a form for.
  * RLS filters rather than rejects, so a volunteer's update matches no
@@ -61,6 +61,8 @@ export async function updateVetVisit(
       appointment_date: appointmentDate.toISOString(),
       status,
       reason: str(formData, "reason"),
+      // str() trims and turns blank into null, as 0074's comment promises.
+      doctor_name: str(formData, "doctorName"),
       notes: str(formData, "notes"),
       cost,
     })

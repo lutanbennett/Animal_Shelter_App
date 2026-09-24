@@ -19,6 +19,10 @@ export async function bookVetVisit(
   const reason = formData.get("reason");
   const notes = formData.get("notes");
   const status = formData.get("status");
+  // 0074 promises trimmed text with blank stored as null, not ''.
+  const doctorRaw = formData.get("doctorName");
+  const doctorName =
+    typeof doctorRaw === "string" && doctorRaw.trim() ? doctorRaw.trim() : null;
 
   if (residentIds.length === 0) {
     return { error: t.vetVisits.errors.selectResident };
@@ -36,7 +40,7 @@ export async function bookVetVisit(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.rpc("schedule_bulk_appointments", {
+  const { data: booked, error } = await supabase.rpc("schedule_bulk_appointments", {
     p_resident_ids: residentIds,
     p_vet_id: vetId,
     p_appointment_date: appointmentDate.toISOString(),
@@ -47,6 +51,21 @@ export async function bookVetVisit(
 
   if (error) {
     return { error: error.message };
+  }
+
+  // The RPC has no doctor parameter and this feature carries no migration,
+  // so the name is set on the rows it just returned. Staff can update what
+  // they can insert (0030). If this half fails the visits exist already —
+  // say so, so nobody books them twice.
+  if (doctorName) {
+    const ids = ((booked ?? []) as { id: string }[]).map((row) => row.id);
+    const { error: doctorError } = await supabase
+      .from("vet_appointments")
+      .update({ doctor_name: doctorName })
+      .in("id", ids);
+    if (doctorError) {
+      return { error: t.vetVisits.errors.doctorNotSaved(doctorError.message) };
+    }
   }
 
   redirect("/");

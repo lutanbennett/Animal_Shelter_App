@@ -326,7 +326,7 @@ export default async function ResidentSectionPage(
     case "vet-appointments": {
       const { data } = await supabase
         .from("vet_appointments")
-        .select("id, appointment_date, status, reason, notes, cost, vets(name)")
+        .select("id, appointment_date, status, reason, doctor_name, notes, cost, vets(name)")
         .eq("resident_id", id)
         .order("appointment_date", { ascending: false })
         .returns<
@@ -335,6 +335,7 @@ export default async function ResidentSectionPage(
             appointment_date: string;
             status: string;
             reason: string | null;
+            doctor_name: string | null;
             notes: string | null;
             cost: number | null;
             vets: { name: string } | null;
@@ -367,8 +368,10 @@ export default async function ResidentSectionPage(
                   <span className="font-medium">
                     {row.reason ?? t.residents.sections.vetVisitFallback}
                   </span>
-                  {row.vets?.name && (
-                    <span className="text-xs text-muted">{row.vets.name}</span>
+                  {(row.vets?.name || row.doctor_name) && (
+                    <span className="text-xs text-muted">
+                      {[row.vets?.name, row.doctor_name].filter(Boolean).join(" · ")}
+                    </span>
                   )}
                 </div>
                 <div className="flex flex-col items-end gap-1">

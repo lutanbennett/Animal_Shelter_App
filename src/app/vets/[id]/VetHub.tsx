@@ -30,6 +30,7 @@ export type Vet = {
 };
 
 export type VetHubVisit = VetVisit & {
+  doctor_name: string | null;
   residents: { name: string; thai_name: string | null; resident_code: string } | null;
 };
 
@@ -380,6 +381,7 @@ export function VetHub({
                       </span>
                       <span className="truncate text-xs text-muted">
                         {visit.reason ?? t.residents.sections.vetVisitFallback}
+                        {visit.doctor_name && ` · ${visit.doctor_name}`}
                       </span>
                     </div>
                     <div className="flex shrink-0 flex-col items-end">

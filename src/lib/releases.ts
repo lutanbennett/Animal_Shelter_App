@@ -48,6 +48,7 @@ export const unreleased: string[] = [
   "That PDF now shows the resident's profile photo much more reliably. Photos taken on iPhones, and large photos, used to be left out without any warning.",
   "In that PDF, a long name followed by a Thai name no longer gets a stray hyphen where it wraps onto a second line.",
   "Registering a new resident now warns you when the enclosure you've chosen is nearly full or full, just like moving a resident does. The enclosure list shows how many residents each one holds, and Register asks you to confirm before putting one more into a full enclosure — you can still go ahead.",
+  "A vet visit can now record which doctor saw the resident. It is optional: fill it in when booking the visit, or later with Edit on the resident's Vet Appointments tab. The name shows on that tab and on the vet's page.",
 ];
 
 /** Newest first. */
