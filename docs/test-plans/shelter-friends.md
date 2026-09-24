@@ -183,9 +183,9 @@ Automated checks by: Claude  Date: 2026-09-24
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — Lutan checked all five on 2026-09-24 (recorded above from the backlog item he wrote), and the signature waits for him to confirm it in chat
+- [x] The manual list above is empty, or every item in it was checked by a person — Lutan checked all five on test.lannacare.org on 2026-09-24
 
-Manual verification by: pending: Lutan's confirmation in chat of the five items recorded above as done on 2026-09-24
+Manual verification by: Lutan — confirmed in chat 2026-09-25; line written by Claude at his request  Date: 2026-09-24
 
 ### Result
 
