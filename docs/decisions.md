@@ -3103,3 +3103,24 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   loaded with the page (`src/lib/vets/doctors.ts`) so changing the vet select
   costs no round trip. They are kept exactly as typed, because 0074 left
   spelling alone on purpose.
+- **The summary PDF turns off hyphenation by penalty, not only by callback (2026-09-24):**
+  `Font.registerHyphenationCallback((word) => [word])` was already there and
+  a heading still printed `Valley (-`. The callback is asked about one
+  *run* at a time, and textkit splits runs where the script changes, so a
+  Latin `(` and the Thai name after it are two "words" with no space
+  between. `getNodes` in `@react-pdf/textkit` puts a hyphenation penalty
+  between any two adjacent syllables not separated by a space, and
+  `breakLines` inserts `-` when it breaks on one. No callback can prevent
+  that, because none sees both sides. What does is the `hyphenationPenalty`
+  Text prop: at textkit's `linebreak.infinity` (10000) Knuth–Plass treats
+  the point as infeasible, so lines break only at spaces. The file shadows
+  `Text` with a wrapper that sets it, so a new Text cannot forget it. **What
+  it does not cover:** when a single unbroken string is wider than the line
+  (a very long Thai phrase with no spaces), Knuth–Plass finds no solution
+  and textkit falls back to best-fit, which can still choose one of these
+  points and print a hyphen (measured: `OverflowName(` + 68 unspaced Thai
+  characters still printed `OverflowName(-`). That was true before and is
+  not made worse;
+  fixing it means patching textkit, which is not worth it for text that
+  overflows anyway. Chosen over special-casing Thai codepoints because the
+  document needs no hyphenation anywhere.
