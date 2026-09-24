@@ -44,6 +44,7 @@ export type Release = {
 export const unreleased: string[] = [
   "On a phone, the setup pages made for a computer — Zones, Enclosures, Immunization Types, and Management's Contacts, Vets, Medications and Diets — now say \"Best on a larger screen\" instead of opening as a table you have to scroll sideways, and their tiles are marked Larger screen. Tap Show anyway if it can't wait.",
   "Shelter Friends: thank the local businesses that help the shelter on the public website. Open a supplier under Contacts and tap Make a Shelter Friend, write what they do for the shelter and any offer for supporters, add their logo, website and Facebook page, tick only the contact details they agreed to show, and Publish. Their card appears on a new Shelter Friends page — linked from the website's menu, with a thank-you strip of logos on the home page and a mention on Donate — and Management → Shelter Friends sets the order. Nothing shows on the website until you publish, and archiving the contact takes their card down.",
+  "Frequency options — the \"how often\" choices on a prescription, like Twice daily or Weekly — have moved off Management → Medications to their own page, Settings → Frequencies, beside the other lists the app picks from. Only an admin can rename, merge or delete one there. Staff and vets can still add a new one while writing a prescription, as before.",
 ];
 
 /** Newest first. */

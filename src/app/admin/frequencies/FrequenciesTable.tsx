@@ -30,7 +30,7 @@ function FrequencyRowItem({
   mergeTargets: FrequencyRow[];
 }) {
   const { t } = useI18n();
-  const m = t.management.medications;
+  const f = t.admin.frequencies;
   const [label, setLabel] = useState(frequency.label);
   const [schedule, setSchedule] = useState(() => scheduleToFields(frequency));
   const [mode, setMode] = useState<"view" | "edit" | "merge">("view");
@@ -72,7 +72,7 @@ function FrequencyRowItem({
   }
 
   function handleDelete() {
-    if (!window.confirm(m.deleteFrequencyConfirm(frequency.label))) return;
+    if (!window.confirm(f.deleteConfirm(frequency.label))) return;
     setMessage(null);
     startTransition(async () => {
       try {
@@ -88,7 +88,7 @@ function FrequencyRowItem({
     if (!target) return;
     if (
       !window.confirm(
-        m.mergeFrequencyConfirm(
+        f.mergeConfirm(
           frequency.label,
           target.label,
           frequency.prescription_count,
@@ -103,7 +103,7 @@ function FrequencyRowItem({
       try {
         await mergeFrequency(frequency.id, target.id);
       } catch (err) {
-        fail(err, m.errors.mergeFailed);
+        fail(err, f.errors.mergeFailed);
       }
     });
   }
@@ -137,7 +137,7 @@ function FrequencyRowItem({
           )}
         </td>
         <td className="px-4 py-2 text-muted">
-          {m.table.prescriptionCount(frequency.prescription_count)}
+          {f.table.prescriptionCount(frequency.prescription_count)}
         </td>
         <td className="px-4 py-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -166,10 +166,10 @@ function FrequencyRowItem({
                 <select
                   value={mergeInto}
                   onChange={(e) => setMergeInto(e.target.value)}
-                  aria-label={m.merge.into}
+                  aria-label={f.merge.into}
                   className={`${inputClass} w-auto min-w-40`}
                 >
-                  <option value="">{m.merge.pickTarget}</option>
+                  <option value="">{f.merge.pickTarget}</option>
                   {mergeTargets.map((row) => (
                     <option key={row.id} value={row.id}>
                       {row.label} ({describe(row)})
@@ -182,7 +182,7 @@ function FrequencyRowItem({
                   onClick={handleMerge}
                   className="rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
                 >
-                  {m.merge.button}
+                  {f.merge.button}
                 </button>
                 <button
                   type="button"
@@ -209,14 +209,14 @@ function FrequencyRowItem({
                   onClick={() => setMode("merge")}
                   className={smallButton}
                 >
-                  {m.merge.open}
+                  {f.merge.open}
                 </button>
                 <button
                   type="button"
                   disabled={isPending || frequency.prescription_count > 0}
                   title={
                     frequency.prescription_count > 0
-                      ? m.errors.frequencyHasPrescriptions(frequency.prescription_count)
+                      ? f.errors.hasPrescriptions(frequency.prescription_count)
                       : undefined
                   }
                   onClick={handleDelete}
@@ -232,7 +232,7 @@ function FrequencyRowItem({
       {mode === "merge" && (
         <tr>
           <td colSpan={4} className="px-4 pb-2 text-xs text-muted">
-            {m.merge.frequencyHint}
+            {f.merge.hint}
           </td>
         </tr>
       )}
@@ -254,16 +254,16 @@ function FrequencyRowItem({
 
 export function FrequenciesTable({ frequencies }: { frequencies: FrequencyRow[] }) {
   const { t } = useI18n();
-  const m = t.management.medications;
+  const f = t.admin.frequencies;
 
   return (
     <div className="overflow-x-auto rounded border border-border">
       <table className="w-full text-left text-sm">
         <thead className="bg-surface text-muted">
           <tr>
-            <th className="px-4 py-2 font-medium">{m.frequencyTable.label}</th>
-            <th className="px-4 py-2 font-medium">{m.frequencyTable.schedule}</th>
-            <th className="px-4 py-2 font-medium">{m.table.prescriptions}</th>
+            <th className="px-4 py-2 font-medium">{f.table.label}</th>
+            <th className="px-4 py-2 font-medium">{f.table.schedule}</th>
+            <th className="px-4 py-2 font-medium">{f.table.prescriptions}</th>
             <th className="px-4 py-2 font-medium" />
           </tr>
         </thead>
@@ -278,7 +278,7 @@ export function FrequenciesTable({ frequencies }: { frequencies: FrequencyRow[] 
           {frequencies.length === 0 && (
             <tr>
               <td colSpan={4} className="px-4 py-6 text-center text-muted">
-                {m.frequencyTable.noFrequencies}
+                {f.table.noFrequencies}
               </td>
             </tr>
           )}

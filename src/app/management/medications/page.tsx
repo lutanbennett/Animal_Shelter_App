@@ -1,11 +1,8 @@
 import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { compareSchedules, type FrequencySchedule } from "@/lib/prescriptions/frequency";
 import { CreateMedicationForm } from "./CreateMedicationForm";
 import { MedicationsTable, type MedicationRow } from "./MedicationsTable";
-import { CreateFrequencyForm } from "./CreateFrequencyForm";
-import { FrequenciesTable, type FrequencyRow } from "./FrequenciesTable";
 import { ForecastWindowPicker } from "@/components/ForecastWindowPicker";
 import { formatDate } from "@/lib/format";
 import { forecastWindows, parseCustomWindow } from "@/lib/management/forecast-window";
@@ -40,23 +37,19 @@ export default async function MedicationsAdminPage(props: PageProps<"/management
   const windows = forecastWindows(custom && "window" in custom ? custom.window : null);
 
   const supabase = await createClient();
-  const [medicationsResult, frequenciesResult, prescriptionsResult, ...forecastResults] =
+  const [medicationsResult, prescriptionsResult, ...forecastResults] =
     await Promise.all([
       supabase
         .from("medication")
         .select("id, name, dose_unit, cost_per_unit")
         .order("name")
         .returns<MedicationQueryRow[]>(),
-      supabase
-        .from("frequency")
-        .select("id, label, doses_per_day, interval_count, interval_unit")
-        .returns<(FrequencySchedule & { id: string; label: string })[]>(),
-      // One row per prescription is cheap at shelter scale and gives both
-      // reference counts (which gate the delete buttons) in one query.
+      // One row per prescription is cheap at shelter scale and gives the
+      // reference counts that gate the delete buttons.
       supabase
         .from("prescriptions")
-        .select("medication_id, frequency_id")
-        .returns<{ medication_id: string; frequency_id: string | null }[]>(),
+        .select("medication_id")
+        .returns<{ medication_id: string }[]>(),
       // Whole doses due in each window, from each prescription's own start
       // date (0044) — a weekly tablet is counted on the days it falls.
       ...windows.map(async (window) => {
@@ -69,18 +62,11 @@ export default async function MedicationsAdminPage(props: PageProps<"/management
     ]);
 
   const medicationCounts = new Map<string, number>();
-  const frequencyCounts = new Map<string, number>();
   for (const row of prescriptionsResult.data ?? []) {
     medicationCounts.set(
       row.medication_id,
       (medicationCounts.get(row.medication_id) ?? 0) + 1,
     );
-    if (row.frequency_id) {
-      frequencyCounts.set(
-        row.frequency_id,
-        (frequencyCounts.get(row.frequency_id) ?? 0) + 1,
-      );
-    }
   }
   const forecasts = forecastResults.map(
     (result) => new Map((result.data ?? []).map((row) => [row.medication_id, row])),
@@ -102,12 +88,6 @@ export default async function MedicationsAdminPage(props: PageProps<"/management
       }),
     }),
   );
-  const frequencies: FrequencyRow[] = (frequenciesResult.data ?? [])
-    .map((frequency) => ({
-      ...frequency,
-      prescription_count: frequencyCounts.get(frequency.id) ?? 0,
-    }))
-    .sort((a, b) => compareSchedules(a, b) || a.label.localeCompare(b.label));
 
   const m = t.management.medications;
   const forecastError = forecastResults.find((r) => r.error)?.error;
@@ -153,22 +133,6 @@ export default async function MedicationsAdminPage(props: PageProps<"/management
           />
           <MedicationsTable medications={medications} forecastHeadings={forecastHeadings} />
           <p className="text-xs text-muted">{m.table.forecastNote}</p>
-        </section>
-
-        <section className="flex flex-col gap-4">
-          <div>
-            <h2 className="text-lg font-semibold text-foreground">
-              {m.frequenciesHeading}
-            </h2>
-            <p className="text-sm text-muted">{m.frequenciesIntro}</p>
-          </div>
-          {frequenciesResult.error && (
-            <p className="text-sm text-danger">
-              {m.couldntLoadFrequencies}: {frequenciesResult.error.message}
-            </p>
-          )}
-          <CreateFrequencyForm />
-          <FrequenciesTable frequencies={frequencies} />
         </section>
       </LargerScreenNotice>
     </main>

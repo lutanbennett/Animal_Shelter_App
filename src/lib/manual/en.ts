@@ -819,14 +819,14 @@ const manual: Manual = {
         },
         {
           id: "manage-medications",
-          title: "Managing medications and frequencies",
+          title: "Managing medications",
           roles: ["admin", "management"],
           path: "Management → Medications",
           steps: [
             "The medications table is the product list the prescription form offers. Add one with its unit (tablet vs suspension are two medications); rename or fix a unit in place.",
             "Merge a duplicate into the one to keep — its prescriptions move across. Only medications with the same unit can be merged.",
             "Next N days shows how much of each medication current prescriptions will need. For any other period — next month's order, say — enter From and To dates above the table and tap Show window; a column for that period is added beside the fixed ones.",
-            "Frequency options are the \"how often\" choices: a label plus a schedule (so many times a day, or one dose every so many days, weeks or months).",
+            "The \"how often\" choices a prescription picks from are under Settings → Frequencies, and only an admin can change them (see Frequencies).",
           ],
           screenshot: {
             src: "/manual/management-medications.png",
@@ -995,6 +995,16 @@ const manual: Manual = {
             src: "/manual/admin-blood-test-types.png",
             alt: "The blood test types admin page",
           },
+        },
+        {
+          id: "frequencies",
+          title: "Frequencies",
+          roles: ["admin"],
+          path: "Settings → Frequencies",
+          steps: [
+            "The \"how often\" choices the prescription form offers — Twice daily, Weekly, Monthly. Each is a label staff see plus a schedule the medication forecast counts: so many times a day, or one dose every so many days, weeks or months from the prescription's start date. As needed can't be forecast.",
+            "Staff and vets can add a frequency inline when writing a prescription, so this is where duplicates get tidied up. Fix a label or schedule in place, or Merge… a duplicate into the one to keep — its prescriptions move across and take the kept one's schedule. A frequency on any prescription can't be deleted; merge it instead.",
+          ],
         },
       ],
     },
