@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { occupancyLevel } from "@/lib/enclosures/occupancy";
 import { parseEnclosureSort } from "@/lib/enclosures/sort";
+import { parseEnclosurePlace, parseZoneIds, zoneInPlace } from "@/lib/enclosures/place";
 import { getTagOrigin } from "@/lib/tags/origin";
 import { canReadMaintenance } from "@/lib/maintenance/queries";
 import { EnclosureFilters } from "./EnclosureFilters";
@@ -51,7 +52,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   const searchParams = await props.searchParams;
   const { t } = await getT();
   const q = typeof searchParams.q === "string" ? searchParams.q.trim() : "";
-  const zoneId = typeof searchParams.zone === "string" ? searchParams.zone : "";
+  const place = parseEnclosurePlace(searchParams.place);
   const sort = parseEnclosureSort(searchParams.sort);
 
   const supabase = await createClient();
@@ -102,6 +103,27 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
     }
   }
 
+  // Physical zones first (alphabetical), the Lifecycle pseudo-zone last.
+  const zones = [...(zonesResult.data ?? [])].sort((a, b) => {
+    const aSys = a.name === SYSTEM_ZONE ? 1 : 0;
+    const bSys = b.name === SYSTEM_ZONE ? 1 : 0;
+    return aSys - bSys || a.name.localeCompare(b.name);
+  });
+
+  // The zone chips on offer: every zone under "all"; under On-site or
+  // Off-site only that place's physical zones, since Lifecycle holds
+  // statuses and is neither (decisions.md, 2026-09-25).
+  const zoneOptions = zones.filter(
+    (zone) =>
+      place === "all" || (zone.name !== SYSTEM_ZONE && zoneInPlace(zone.internal, place)),
+  );
+  // A zone that isn't on offer is dropped rather than obeyed, so a link
+  // with ?place=external&zone=<an on-site zone> shows every off-site
+  // enclosure instead of an empty page. The chips switching place drop
+  // them the same way before they get here.
+  const offered = new Set(zoneOptions.map((zone) => zone.id));
+  const zoneIds = parseZoneIds(searchParams.zone).filter((id) => offered.has(id));
+
   const term = q.toLowerCase();
   const enclosures: EnclosureSummary[] = (enclosuresResult.data ?? [])
     .map((row) => ({
@@ -119,7 +141,9 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       open_jobs: openJobs.get(row.id) ?? 0,
     }))
     .filter((e) => !e.is_system || PINNED_STATUSES.includes(e.name))
-    .filter((e) => !zoneId || e.zone_id === zoneId)
+    // On-site / Off-site leaves the Lifecycle cards out, as ?maint=open does.
+    .filter((e) => place === "all" || (!e.is_system && zoneInPlace(e.zone_internal, place)))
+    .filter((e) => zoneIds.length === 0 || zoneIds.includes(e.zone_id))
     // Only jobs on the enclosure itself, matching the count on its card;
     // zone-wide jobs stay on the zone heading (decisions.md, 2026-09-24).
     // That also drops the Lifecycle cards, which carry no jobs.
@@ -130,13 +154,6 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
         e.name.toLowerCase().includes(term) ||
         (e.name_th ?? "").toLowerCase().includes(term),
     );
-
-  // Physical zones first (alphabetical), the Lifecycle pseudo-zone last.
-  const zones = [...(zonesResult.data ?? [])].sort((a, b) => {
-    const aSys = a.name === SYSTEM_ZONE ? 1 : 0;
-    const bSys = b.name === SYSTEM_ZONE ? 1 : 0;
-    return aSys - bSys || a.name.localeCompare(b.name);
-  });
 
   // The status buckets go above the zones, in their fixed order, whatever
   // the sort; the physical enclosures are grouped or sorted below them.
@@ -174,8 +191,9 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       </div>
 
       <EnclosureFilters
-        zones={zones}
-        zoneId={zoneId}
+        zones={zones.map((zone) => ({ ...zone, is_system: zone.name === SYSTEM_ZONE }))}
+        place={place}
+        zoneIds={zoneIds}
         q={q}
         sort={sort}
         maintOpen={maintOpen}

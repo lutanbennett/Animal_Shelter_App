@@ -2354,6 +2354,8 @@ const en = {
     pageSubtitle: "Browse residents by zone and enclosure.",
     couldntLoadEnclosures: "Couldn't load enclosures",
     couldntLoadResidents: "Couldn't load resident counts",
+    placeLabel: "On-site or off-site",
+    placeAll: "Everywhere",
     allZones: "All zones",
     search: "Search",
     searchPlaceholder: "Enclosure name",

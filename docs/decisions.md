@@ -3855,6 +3855,32 @@ the internal views"), and it closes more than the backlog item described.
   `permission denied for function <name>`. Before, most write RPCs "refused"
   anon only because a table inside them did, and the `security definer` ones
   did not refuse at all. On dev: 23 FAIL before `0082`, 0 after.
+- **Enclosures On-site / Off-site filter, multi-zone chips, and where Lifecycle sits (2026-09-25):**
+  `/enclosures` gains `?place=internal|external` (absent = Everywhere),
+  read from `zones.internal` (0004), and `?zone=` becomes a comma list
+  (`?place=internal&zone=<id>,<id>`). The zone chips stay links, now
+  toggles: tapping one adds or removes it, and All zones empties the list,
+  so every state is still a plain GET URL and back/bookmarks keep working.
+  No zones picked means the place alone applies.
+  **Lifecycle is neither place.** Its chip is offered only under
+  Everywhere, and the Hospital / Unassigned / Fostered cards hide under
+  On-site or Off-site, following the `?maint=open` precedent (2026-09-24).
+  The alternative was to follow `zones.internal` for Lifecycle too, but
+  that value was set by hand (0004's comment) and a hospital stay is not
+  "on site" in the sense a keeper filtering by place means. Picking
+  zones under Everywhere keeps today's behaviour: the cards show only if
+  the Lifecycle chip is among them.
+  **Stale zones are dropped silently, in two places.** Switching place
+  keeps only the picked zones that belong to the new one — between
+  On-site and Off-site that is none, so the result is the whole of the
+  new place rather than an empty grid. The page also drops any `?zone=`
+  id that is not on offer under the URL's place (a hand-edited or old
+  link), for the same reason. Silent rather than a notice, because the
+  dropped zones are not on screen under the new place to be confused
+  about, and the chips show exactly what is applied. Vets see the control
+  unchanged: zones are readable to every role, unlike `maintenance`.
+  `/residents`' zone filter does not get the cascade in this PR; it is a
+  backlog item.
 
 ## 2026-09-25 — Migration numbering is checked, at commit time and in CI
 

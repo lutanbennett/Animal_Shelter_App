@@ -571,6 +571,7 @@ const manual: Manual = {
           path: "Enclosures",
           steps: [
             "Open Enclosures. Tap a zone chip to show only that zone, search by enclosure name, or sort by zone, name or Fullest first.",
+            "Choose On-site or Off-site at the top to see only the enclosures at the shelter, or only those away from it; Everywhere shows both. The zone chips then list just that place's zones. You can pick more than one zone — tap a chip to add it and tap it again to take it off; All zones clears them. Switching between On-site and Off-site clears the zones you had picked, since they belong to the other place. Hospital, Unassigned and Fostered are statuses rather than places, so they only show under Everywhere.",
             "Each card shows how many residents are in the enclosure against its capacity — green for space available, orange for nearly full or full, red for over capacity.",
             "Tick Has open maintenance to show only enclosures with a job that isn't Completed; it works alongside the zone chips, search and sort, and the address keeps it, so a filtered view can be bookmarked or shared. It counts jobs logged on the enclosure itself — a zone-wide job doesn't put every enclosure in that zone on the list; it stays as the zone-wide count beside the zone's name. Hospital, Unassigned and Fostered are hidden while it's ticked. Vets don't see this option, as maintenance isn't part of their access.",
             "Tap a card to open the enclosure: its notes, every resident in it with a thumbnail, and its open maintenance jobs.",
