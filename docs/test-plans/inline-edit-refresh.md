@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Mobile → **Inline-edited rows show stale data until reload.** |
 | Branch / worktree | `claude/inline-edit-refresh` @ `C:\Development\Animal_Shelter_inline-edit-refresh` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3003` |
-| PR | opened from this commit |
+| PR | #88 |
 | Tested by / date | Claude, 2026-09-24 (browser pane signed in by Lutan as admin) |
 | Carries a migration? | no |
 | Tested at SHA | browser checks on `c50a13b` plus temporary uncommitted control edits (below); gates on `789f537` (synced tip) plus this PR's docs |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): `check` and `test-plan` both passed on #88 at `cd2b9a0`
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -174,7 +174,7 @@ Manual verification by: n/a: no code changed; the browser checks were driven by 
 ### Result
 
 - [ ] Open defects are either fixed or explicitly accepted above — n/a: none found
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR (#88 description)
 - [ ] Handed to the production release manager — n/a: nothing in this PR is deployed
 
 Result: pass
