@@ -41,18 +41,25 @@ export type Release = {
 };
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: string[] = [
-  "On the Cashflow page, the \"Not priced yet\" card now takes you to the prices that are missing: straight to the right page when they are all in one category, or to the row that links each category when they are spread out.",
-  "The Cashflow table can be downloaded as a CSV file for the monthly report.",
-  "The summary PDF kept for a resident who has died is easier to read: the name no longer prints on top of the line beneath it, and every page now has a footer with the resident's name and ID, the date the PDF was made, and the page number.",
-  "That PDF now shows the resident's profile photo much more reliably. Photos taken on iPhones, and large photos, used to be left out without any warning.",
-  "In that PDF, a long name followed by a Thai name no longer gets a stray hyphen where it wraps onto a second line.",
-  "Registering a new resident now warns you when the enclosure you've chosen is nearly full or full, just like moving a resident does. The enclosure list shows how many residents each one holds, and Register asks you to confirm before putting one more into a full enclosure — you can still go ahead.",
-  "A vet visit can now record which doctor saw the resident. It is optional: fill it in when booking the visit, or later with Edit on the resident's Vet Appointments tab. The name shows on that tab and on the vet's page.",
-];
+export const unreleased: string[] = [];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.2.0",
+    date: "2026-09-24",
+    title: "Cashflow CSV, clearer PDFs, capacity warnings and doctor names",
+    major: true,
+    notes: [
+      "On the Cashflow page, the \"Not priced yet\" card now takes you to the prices that are missing: straight to the right page when they are all in one category, or to the row that links each category when they are spread out.",
+      "The Cashflow table can be downloaded as a CSV file for the monthly report.",
+      "The summary PDF kept for a resident who has died is easier to read: the name no longer prints on top of the line beneath it, and every page now has a footer with the resident's name and ID, the date the PDF was made, and the page number.",
+      "That PDF now shows the resident's profile photo much more reliably. Photos taken on iPhones, and large photos, used to be left out without any warning.",
+      "In that PDF, a long name followed by a Thai name no longer gets a stray hyphen where it wraps onto a second line.",
+      "Registering a new resident now warns you when the enclosure you've chosen is nearly full or full, just like moving a resident does. The enclosure list shows how many residents each one holds, and Register asks you to confirm before putting one more into a full enclosure — you can still go ahead.",
+      "A vet visit can now record which doctor saw the resident. It is optional: fill it in when booking the visit, or later with Edit on the resident's Vet Appointments tab. The name shows on that tab and on the vet's page.",
+    ],
+  },
   {
     version: "0.1.0",
     date: "2026-09-24",
