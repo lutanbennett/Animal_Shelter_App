@@ -13,7 +13,7 @@ or `n/a` with the reason.
 | Backlog item | `docs/backlog.md` → Architecture: "Enforce migration numbering with a check, not prose" |
 | Branch / worktree | `claude/migration-numbering-check` @ `C:\Development\Animal_Shelter_migration-numbering-check` |
 | Dev server | n/a: nothing served; `.port` is 3002 |
-| PR | linked from the PR itself |
+| PR | #118 |
 | Tested by / date | Claude (migration-numbering-check session), 2026-09-25 |
 | Carries a migration? | no |
 | Tested at SHA | `d92dc4e` (hook, script, gates); against `origin/main` `2f7f6b8` |
@@ -36,7 +36,7 @@ or `n/a` with the reason.
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on PR #118: `check`, `test-plan` and the new `migration-numbers` all pass (run 36049949157)
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -340,7 +340,7 @@ Manual verification by: n/a: nothing to look at — a commit hook and a CI job, 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above: both fixed on this branch
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [ ] Checklist pasted into the PR — n/a: the PR description summarises it and links this file, which is the record
 - [ ] Handed to the production release manager — n/a: not yet — after merge
 
 Result: pass
