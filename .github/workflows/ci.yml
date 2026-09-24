@@ -69,3 +69,22 @@ jobs:
       # merge. The release manager's pre-deploy pass is what catches a PR that
       # reached main unchecked.
       - run: node scripts/check-test-plan.mjs --base origin/${{ github.base_ref }}
+
+  # A new supabase/migrations/ file must be numbered one past the highest on
+  # main, with no number used twice (CLAUDE.md, "Database migrations"). The
+  # same script is .githooks/pre-commit; here it runs on the PR's merge commit
+  # against a freshly fetched base, which the hook deliberately never fetches.
+  # Pull requests only: on main itself every file is main's, so there is
+  # nothing new to judge.
+  migration-numbers:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/check-migration-numbers.mjs --base origin/${{ github.base_ref }}

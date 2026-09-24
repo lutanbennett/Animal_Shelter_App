@@ -96,6 +96,11 @@ A person who leaves is **archived** from `/admin/security` rather than deleted (
 
    `.githooks/post-commit` pushes the current branch to GitHub after every
    commit, so the remote always matches the local checkout.
+   `.githooks/pre-commit` refuses a commit that adds a migration not
+   numbered one past the highest on `origin/main`, and names the file to
+   rename it to (`scripts/check-migration-numbers.mjs`, which CI runs too).
+   It never fetches, and it lets the commit through with a note when it
+   cannot give a verdict.
 
 6. **Check out the backlog worktree** (once per clone)
 
