@@ -2316,6 +2316,8 @@ const th: Dictionary = {
     pageSubtitle: "ดูสัตว์ในความดูแลตามโซนและกรง",
     couldntLoadEnclosures: "โหลดข้อมูลกรงไม่สำเร็จ",
     couldntLoadResidents: "โหลดจำนวนสัตว์ไม่สำเร็จ",
+    placeLabel: "ภายในหรือภายนอกศูนย์",
+    placeAll: "ทุกที่",
     allZones: "ทุกโซน",
     search: "ค้นหา",
     searchPlaceholder: "ชื่อกรง",
