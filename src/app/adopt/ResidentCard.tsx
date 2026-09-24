@@ -16,19 +16,22 @@ export type ResidentCardRow = {
 };
 
 /**
- * One resident as a card: the /adopt grid and the "Similar residents"
- * strip on a profile share it, so the two read alike.
+ * One resident as a card: the /adopt grid, the "Similar residents" strip
+ * on a profile and the public enclosure page (/e/, linking to each
+ * resident's /r/ card instead) share it, so they read alike.
  */
 export function ResidentCard({
   resident,
   t,
+  href = `/adopt/${resident.id}`,
 }: {
   resident: ResidentCardRow;
   t: Dictionary;
+  href?: string;
 }) {
   return (
     <Link
-      href={`/adopt/${resident.id}`}
+      href={href}
       className="group flex flex-col overflow-hidden rounded-lg border border-border bg-surface hover:border-primary"
     >
       <div className="relative aspect-[4/3] w-full bg-background">
