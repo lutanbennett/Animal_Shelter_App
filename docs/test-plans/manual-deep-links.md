@@ -11,7 +11,7 @@ Filled from `docs/test-plan-template.md`. See the template for what each state
 | Backlog item | `docs/backlog.md` → Documentation → "Deep links into the manual land short of their topic." |
 | Branch / worktree | `claude/manual-deep-links` @ `C:\Development\Animal_Shelter_manual-deep-links` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3006` |
-| PR | opened from this branch; number in the PR itself |
+| PR | #113 |
 | Tested by / date | Claude, 2026-09-25 (browser pane signed in by Lutan) |
 | Carries a migration? | no |
 | Tested at SHA | `3a122c6` |
@@ -34,7 +34,7 @@ Filled from `docs/test-plan-template.md`. See the template for what each state
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — #113: `check` pass (1m33s), `test-plan` pass, run 36042670643
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -173,7 +173,7 @@ Manual verification by: pending: Lutan to open a manual deep link on an iPhone o
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above — 1 fixed; 2 and 3 pre-existing and deferred to the backlog
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit; the PR body links this file
+- [ ] Checklist pasted into the PR — n/a: the PR body links this file and summarises its measurements rather than pasting it
 - [ ] Handed to the production release manager — n/a: not yet — no release is being cut; the release manager's pre-deploy pass picks it up
 
 Result: pass with accepted defects
