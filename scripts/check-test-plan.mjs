@@ -381,12 +381,19 @@ if (problems.length) {
   process.exit(1);
 }
 
+// A plan that is complete and correct but unsigned is the normal state for most
+// of a PR's life, so it does NOT fail: red was permanent, and a permanent red is
+// one people filter rather than act on (the reason ci.yml carried
+// `continue-on-error: true` until 2026-09-24). The waiting is still printed, and
+// still has to be resolved before the release manager deploys — it is just not
+// the CI job's job to shout about it. Red now means a plan that is missing,
+// incomplete or self-contradictory, which is always someone's mistake to fix.
 if (awaiting.length) {
-  console.error(`check-test-plan: the plan is complete and correct, and ${awaiting.length} item(s) await a person:\n`);
-  for (const a of awaiting) console.error(`  ${a}`);
-  console.error(deferredNote + releaseNote);
-  console.error("\nNothing to fix. This stays red until someone looks and signs.");
-  process.exit(1);
+  console.log(`check-test-plan: the plan is complete and correct, and ${awaiting.length} item(s) await a person:\n`);
+  for (const a of awaiting) console.log(`  ${a}`);
+  console.log(deferredNote + releaseNote);
+  console.log("\nNothing to fix. A person still has to look and sign before this ships.");
+  process.exit(0);
 }
 
 console.log(`check-test-plan: ok — ${changed.join(", ")}${deferredNote}${releaseNote}`);
