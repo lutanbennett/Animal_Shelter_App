@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
+import { ArchivedBadge } from "@/components/ArchivedBadge";
 import { ContactActions } from "@/components/ContactActions";
 import { CONTACT_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -10,6 +11,7 @@ import { contactTypeLabel } from "@/lib/i18n/enum-labels";
 import {
   CARER_CONTACT_TYPE,
   CONTACT_TYPES,
+  isArchived,
   type Contact,
   type ContactType,
 } from "@/lib/contacts/contacts";
@@ -42,16 +44,23 @@ function matches(contact: Contact, query: string) {
 function ContactCard({ contact }: { contact: ContactSummary }) {
   const { t } = useI18n();
   const isCarer = contact.type === CARER_CONTACT_TYPE;
+  const archived = isArchived(contact);
 
   // The name link's ::after overlay makes the whole card tappable without
   // nesting the action links inside it (same trick as StatCard).
   return (
-    <li className="relative flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 transition hover:bg-surface-hover">
+    <li
+      className={`relative flex flex-col gap-3 rounded-lg border p-4 transition hover:bg-surface-hover ${
+        archived ? "border-dashed border-border bg-background" : "border-border bg-surface"
+      }`}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1">
           <Link
             href={`/contacts/${contact.id}`}
-            className="truncate font-medium text-foreground after:absolute after:inset-0 after:content-['']"
+            className={`truncate font-medium after:absolute after:inset-0 after:content-[''] ${
+              archived ? "text-muted" : "text-foreground"
+            }`}
           >
             {contact.name}
           </Link>
@@ -63,6 +72,7 @@ function ContactCard({ contact }: { contact: ContactSummary }) {
             >
               {contactTypeLabel(t, contact.type)}
             </span>
+            {archived && <ArchivedBadge label={t.contacts.archive.badge} />}
             {contact.inCareCount > 0 && (
               <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
                 <CONTACT_ICONS.inCare aria-hidden="true" className="h-3 w-3" />
@@ -73,6 +83,11 @@ function ContactCard({ contact }: { contact: ContactSummary }) {
           {/* Wider screens have room for the details themselves; on a
               phone the buttons carry them (as tooltips) and the hub has
               the full read-out. */}
+          {archived && contact.archive_reason && (
+            <p className="truncate text-xs text-muted">
+              {t.contacts.archive.reason(contact.archive_reason)}
+            </p>
+          )}
           <p className="hidden truncate text-xs text-muted md:block">
             {[contact.phone, contact.line_id && `LINE ${contact.line_id}`, contact.email]
               .filter(Boolean)
@@ -85,24 +100,60 @@ function ContactCard({ contact }: { contact: ContactSummary }) {
   );
 }
 
-export function ContactList({ contacts }: { contacts: ContactSummary[] }) {
+export function ContactList({
+  contacts,
+  initialShowArchived = false,
+}: {
+  /** Every contact, archived ones included — the list decides what to show. */
+  contacts: ContactSummary[];
+  /** From ?archived=1, so a bookmarked or shared link keeps the toggle. */
+  initialShowArchived?: boolean;
+}) {
   const { t } = useI18n();
+  const a = t.contacts.archive;
   const [query, setQuery] = useState("");
   const [type, setType] = useState<TypeFilter>("all");
+  const [showArchived, setShowArchived] = useState(initialShowArchived);
+
+  const archivedCount = useMemo(() => contacts.filter(isArchived).length, [contacts]);
+  // What the list is "about": live contacts, or everyone with the toggle on.
+  // The type chips and the "N of M" count are over this.
+  const listed = useMemo(
+    () => (showArchived ? contacts : contacts.filter((c) => !isArchived(c))),
+    [contacts, showArchived],
+  );
 
   const countByType = useMemo(() => {
-    const counts = new Map<TypeFilter, number>([["all", contacts.length]]);
-    for (const c of contacts) counts.set(c.type, (counts.get(c.type) ?? 0) + 1);
+    const counts = new Map<TypeFilter, number>([["all", listed.length]]);
+    for (const c of listed) counts.set(c.type, (counts.get(c.type) ?? 0) + 1);
     return counts;
-  }, [contacts]);
+  }, [listed]);
 
-  const shown = useMemo(
-    () =>
-      contacts.filter(
-        (c) => (type === "all" || c.type === type) && matches(c, query.trim()),
-      ),
-    [contacts, type, query],
-  );
+  const q = query.trim();
+  // A name search looks through archived contacts too, toggle or not: the
+  // question "do we have a number for Khun Nid?" must never be answered
+  // "no match" when we do. Archived matches come after the live ones.
+  const shown = useMemo(() => {
+    const pool = q ? contacts : listed;
+    const hits = pool.filter((c) => (type === "all" || c.type === type) && matches(c, q));
+    return [...hits.filter((c) => !isArchived(c)), ...hits.filter(isArchived)];
+  }, [contacts, listed, type, q]);
+  const archivedMatchesShown =
+    !showArchived && q !== "" && shown.some((c) => isArchived(c));
+
+  function toggleArchived() {
+    const next = !showArchived;
+    setShowArchived(next);
+    // Keep the URL in step without a server round trip, so reload keeps it.
+    try {
+      const url = new URL(window.location.href);
+      if (next) url.searchParams.set("archived", "1");
+      else url.searchParams.delete("archived");
+      window.history.replaceState(null, "", url);
+    } catch {
+      // The toggle still works for this visit.
+    }
+  }
 
   if (contacts.length === 0) {
     return (
@@ -166,9 +217,30 @@ export function ContactList({ contacts }: { contacts: ContactSummary[] }) {
         </div>
       </div>
 
-      <p className="text-xs text-muted">
-        {t.contacts.list.count(shown.length, contacts.length)}
-      </p>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+        <span>{t.contacts.list.count(shown.length, listed.length)}</span>
+        {archivedCount > 0 && (
+          <>
+            <span aria-hidden="true">·</span>
+            <span>
+              {showArchived ? a.archivedIncluded(archivedCount) : a.archivedHidden(archivedCount)}
+            </span>
+            <button
+              type="button"
+              aria-pressed={showArchived}
+              onClick={toggleArchived}
+              className={`rounded-full border px-2.5 py-0.5 font-medium ${
+                showArchived
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-surface text-muted hover:text-foreground"
+              }`}
+            >
+              {showArchived ? a.hideArchived : a.showArchived}
+            </button>
+          </>
+        )}
+        {archivedMatchesShown && <span className="w-full">{a.searchIncludesArchived}</span>}
+      </div>
 
       {shown.length > 0 ? (
         <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
