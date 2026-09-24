@@ -135,7 +135,7 @@ Method: a scratch harness bundled `renderResidentSummaryPdf` (the real export) w
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
-| 1 | low | A single unspaced string wider than the line (e.g. a very long Thai phrase with a script change inside it) still gets a hyphen from textkit's best-fit fallback, which ignores the penalty's meaning | accepted: pre-existing, not made worse, needs a textkit patch; recorded in `docs/decisions.md` |
+| 1 | low | A single unspaced string wider than the line (e.g. a very long Thai phrase with a script change inside it) still gets a hyphen from textkit's best-fit fallback, which ignores the penalty's meaning | accepted by Lutan in chat 2026-09-24: pre-existing, not made worse, needs a textkit patch; recorded in `docs/decisions.md` |
 
 ## Left for manual verification
 
@@ -160,7 +160,7 @@ Manual verification by: Lutan Bennett — confirmed in chat; line written by Cla
 
 ### Result
 
-- [ ] Open defects are either fixed or explicitly accepted above — n/a: not yet — defect 1 is accepted by Claude, pending Lutan's agreement
+- [x] Open defects are either fixed or explicitly accepted above: defect 1 accepted by Lutan in chat, 2026-09-24
 - [x] Checklist pasted into the PR (#82 description)
 - [ ] Handed to the production release manager — n/a: not yet — at the next release, not part of this PR
 
