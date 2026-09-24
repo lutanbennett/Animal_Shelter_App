@@ -3124,3 +3124,22 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   fixing it means patching textkit, which is not worth it for text that
   overflows anyway. Chosen over special-casing Thai codepoints because the
   document needs no hyphenation anywhere.
+- **Cleaning up streams is a skill, not a `worktree.mjs clean` subcommand (2026-09-24):**
+  `/clean-streams` (`.claude/skills/clean-streams/SKILL.md`) is the round
+  done by hand in the utc-today session: `list`, pick the leftovers, check
+  each one's PR, confirm, `done` them one at a time. The script already
+  owns every destructive step and its safety checks (`done` refuses
+  unmerged, unpushed, dirty and held); what was missing is the part that
+  needs judgement. "Nothing beyond main and free" is not the same as
+  finished: a stream `/plan-day` created an hour ago looks identical to
+  one whose PR merged last week, and only `gh` (a PR, and whether it
+  merged) plus a look for `.brief.md` tells them apart. A squash-merged
+  branch is the opposite case, ahead of `main` yet finished (measured:
+  `claude/worktree-tooling` sits at #58's head commit and `list` shows it
+  11 ahead, because #58 was squash-merged). Putting
+  that in the script would mean shelling out to `gh` from a tool that
+  otherwise needs only git, and an unattended `clean` that guesses wrong
+  deletes a branch; as a prompt it reports the ambiguous ones and asks.
+  It deliberately never adds `--force` or `--stop-servers` itself, and
+  never works around `done` with raw `git worktree remove` / `branch -D`
+  when a folder name does not match its branch.
