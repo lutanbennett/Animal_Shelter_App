@@ -3051,3 +3051,21 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   thresholds stay shared. `EnclosurePicker` grew optional `placeholders` so
   intake keeps "No zone (defaults to Unassigned)" / "Unassigned (default)",
   since at intake a blank enclosure is an answer, not a gap.
+- **A vet appointment's doctor is free text, not a lookup (2026-09-24):**
+  `0074_vet_doctor_name.sql` adds a nullable `vet_appointments.doctor_name
+  text` — Lutan's call, made on purpose and not to be reopened as an
+  oversight. **Its known cost:** free text cannot be counted reliably, so
+  "how many visits did Dr X do" means grouping strings that differ by
+  spacing, title and spelling ("Dr Somchai", "Somchai", "Dr. Somchai"). That
+  is an acceptable trade for a field that is optional and mostly for the
+  record. If the shelter later wants reporting by doctor, promoting it to a
+  `vet_doctors` table under `vets` is its own backlog item; nothing here is
+  pre-built for it. The one tidy-up done now is the part that is painful to
+  retrofit: a `before insert or update of doctor_name` trigger trims
+  surrounding whitespace (tabs and newlines too — `btrim()` alone strips only
+  spaces) and stores blank as `NULL`, so there is one "not recorded" and not
+  two. It is a trigger rather than an application rule so every writer — the
+  app, the SQL editor, a future import — gets it; a check constraint states
+  the same invariant and was proved to hold with the trigger disabled. Inner
+  spacing and case are left exactly as typed: collapsing or normalising them
+  is guessing at what a name is, which is the lookup's job.
