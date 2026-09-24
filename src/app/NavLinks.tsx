@@ -42,7 +42,7 @@ export function NavLinks({
 
   // Grouped by how often each link is reached for (agreed with the user
   // 2026-09-23): the daily field pages, then the people and project
-  // reference lists, then the assistant, then the role-gated sections.
+  // reference lists, then the role-gated sections.
   // Management and Settings are single links now — their landing pages are
   // tile grids of everything inside them, so the sidebar no longer repeats
   // those children under chevrons.
@@ -65,9 +65,9 @@ export function NavLinks({
       { href: "/contacts", label: t.nav.contacts, icon: NAV_ICONS.contacts },
       { href: "/projects", label: t.nav.projects, icon: NAV_ICONS.projects },
     ],
-    // The full-page assistant; the same conversation also opens as a
-    // slide-over from the header, on every screen.
-    [{ href: "/assistant", label: t.nav.assistant, icon: NAV_ICONS.assistant }],
+    // No Assistant entry: the header button opens it on every screen, and
+    // its slide-over links through to the full /assistant page
+    // (docs/decisions.md, 2026-09-25).
     [
       ...(canManage
         ? [
