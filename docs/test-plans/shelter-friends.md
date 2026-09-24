@@ -167,10 +167,10 @@ Every server action also starts with `assertManagementRole()`, and
 | # | What to check | Where |
 |---|---|---|
 | 1 | **Done — Lutan, 2026-09-24, on test.lannacare.org (build `11ee873`), confirmed in chat.** Uploaded to Harness Hardware; saved at 15:00:32 UTC and served on `/friends` via `/api/photos/1SJzLnkEPk358gw931Rk7CsqyX-2egHe9`. An earlier "not on the public page" was a check made before the save landed, not a defect. Replace and remove were not reported. Logo upload, replace and remove on a Friend — not driven by Claude: the local Google OAuth client is dead (`invalid_client` since 2026-09-24), so Drive uploads only work on UAT | `test.lannacare.org` → a Supplier → Shelter Friend → Edit profile → Upload logo; then `/friends` and the home strip |
-| 2 | Signed in as staff (or vet / volunteer): a Friend contact shows the badge and a read-only Shelter Friend card with no Publish / Edit, and `/management/shelter-friends` redirects away | `/contacts/[id]`, `/management/shelter-friends` |
-| 3 | Remove profile: the card leaves `/friends`, the contact stays, and its translations leave `/management/translations` | a test Friend → Edit profile → Remove profile |
-| 4 | Thai wording of the new strings reads naturally (written by Claude, not reviewed by a Thai speaker), and the customer confirms or replaces the placeholder title "เพื่อนของศูนย์พักพิง" | switch to ไทย on `/friends`, a Friend's contact page, `/management/shelter-friends` |
-| 5 | The look of `/friends`, the home strip and the `/donate` mention is what the shelter wants to show a business it is thanking | `/friends`, `/`, `/donate` |
+| 2 | **Done — Lutan, 2026-09-24, on test.lannacare.org** (backlog item 1 of #103's sign-off). Signed in as staff (or vet / volunteer): a Friend contact shows the badge and a read-only Shelter Friend card with no Publish / Edit, and `/management/shelter-friends` redirects away | `/contacts/[id]`, `/management/shelter-friends` |
+| 3 | **Done — Lutan, 2026-09-24, on test.lannacare.org** (backlog item 2): he found it and it works. His concern was the wording — a red "Remove profile" on a contact's page reads as deleting the contact — and the follow-up `shelter-friends-remove-profile` relabelled and moved it. Remove profile: the card leaves `/friends`, the contact stays, and its translations leave `/management/translations` | a test Friend → Edit profile → Remove profile |
+| 4 | **Done — Lutan, 2026-09-24** (backlog item 3): the Thai wording passed and the title "เพื่อนของศูนย์พักพิง" is kept. Thai wording of the new strings reads naturally (written by Claude, not reviewed by a Thai speaker), and the customer confirms or replaces the placeholder title "เพื่อนของศูนย์พักพิง" | switch to ไทย on `/friends`, a Friend's contact page, `/management/shelter-friends` |
+| 5 | **Done — Lutan, 2026-09-24** (backlog item 4): "fine for now". The look of `/friends`, the home strip and the `/donate` mention is what the shelter wants to show a business it is thanking | `/friends`, `/`, `/donate` |
 
 ## Sign-off
 
@@ -183,9 +183,9 @@ Automated checks by: Claude  Date: 2026-09-24
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — item 1 checked by Lutan; items 2–5 await Lutan
+- [x] The manual list above is empty, or every item in it was checked by a person — Lutan checked all five on test.lannacare.org on 2026-09-24
 
-Manual verification by: pending: the staff read-only view, Remove profile, the Thai wording and title, and the look of the public pages (logo upload checked by Lutan on test, 2026-09-24)
+Manual verification by: Lutan — confirmed in chat 2026-09-25; line written by Claude at his request  Date: 2026-09-24
 
 ### Result
 

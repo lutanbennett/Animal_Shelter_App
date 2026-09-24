@@ -3643,6 +3643,32 @@ because the prescription form's inline add still uses them.
   testing a deleted row left the table without a reload. A merge I checked
   after 5 seconds still showed the row, but its request took 5.2 seconds on
   a cold dev server, so that says nothing either way.
+
+## 2026-09-25 — Shelter Friends: "Remove Shelter Friend status", beside Unpublish
+
+Lutan found **Remove profile** when checking #103 on test, and it worked. His
+concern was that a red "Remove profile" on a contact's own page reads as
+*delete this contact*. That can go wrong both ways: staff avoid it when they
+only mean "no longer a Friend", or press it expecting the contact to go.
+
+- **Relabelled** "Remove Shelter Friend status" (Thai "ยกเลิกสถานะเพื่อนของศูนย์").
+  It names what ends, the status, not a thing that sounds like the contact.
+- **The confirm leads with "The contact … stays"** and ends by pointing at
+  Unpublish for "hide for now". People read the first line of a
+  `window.confirm` and little else, so the first line carries the reassurance.
+- **Moved out of the edit form, onto the card's row next to Unpublish**, with a
+  line under the row: Unpublish hides the card for now, and Remove means no
+  longer a Friend. Inside Edit profile, the one action that ends the Friendship
+  sat beside Save and Cancel, where nobody compared it with Unpublish. On the
+  row, the two that differ are read side by side. It stays danger-styled and is
+  pushed to the end of the row (`sm:ml-auto`; on a phone it wraps in line).
+- **The success message says so** ("No longer a Shelter Friend. The contact is
+  unchanged.") instead of the generic "Saved". The card then drops back to
+  Make a Shelter Friend, which is itself the evidence that the contact survived.
+- No server change beyond that message. `deleteFriend` already checked
+  `assertManagementRole()` and RLS already refuses staff, vet and volunteer. A
+  rolled-back harness on dev showed 0 rows deleted for those three, and 1 for
+  management and admin.
 - **Anon loses the internal views, by allow-list (2026-09-25):**
   `0081_anon_view_grants.sql` closes the exposure recorded under "Data API
   grants" (2026-09-24). **What was exposed:** with only the public anon key

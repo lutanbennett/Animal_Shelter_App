@@ -261,7 +261,24 @@ export function ShelterFriendCard({
             {c.viewOnSite}
           </Link>
         )}
+        {/* Beside Unpublish rather than inside the edit form, so "hide for
+            now" and "no longer a Friend" are read side by side. */}
+        {canManage && !editing && (
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={() => {
+              if (window.confirm(c.removeConfirm(contact.name))) {
+                run(() => deleteFriend(friend.id), () => setDraft(null));
+              }
+            }}
+            className="rounded border border-danger/40 px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger/10 disabled:opacity-50 sm:ml-auto"
+          >
+            {c.removeProfile}
+          </button>
+        )}
       </div>
+      {canManage && !editing && <p className="text-xs text-muted">{c.actionsHint}</p>}
       {!editing && feedback}
 
       {showPreview && (
@@ -486,21 +503,6 @@ export function ShelterFriendCard({
               className={buttonClass}
             >
               {t.common.cancel}
-            </button>
-            <button
-              type="button"
-              disabled={isPending}
-              onClick={() => {
-                if (window.confirm(c.removeConfirm(contact.name))) {
-                  run(() => deleteFriend(friend.id), () => {
-                    setEditing(false);
-                    setDraft(null);
-                  });
-                }
-              }}
-              className="ml-auto rounded border border-danger/40 px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
-            >
-              {c.removeProfile}
             </button>
           </div>
           {feedback}

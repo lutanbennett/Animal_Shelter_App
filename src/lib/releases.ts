@@ -41,7 +41,9 @@ export type Release = {
 };
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: string[] = [];
+export const unreleased: string[] = [
+  "Shelter Friends: \"Remove profile\" is now \"Remove Shelter Friend status\", and it has moved out of Edit profile onto the card, next to Unpublish. A short line under the buttons says which is which: Unpublish hides the card for now, and Remove Shelter Friend status means the business is no longer a Friend. Removing never deletes the contact, and the confirmation now says that first.",
+];
 
 /** Newest first. */
 export const releases: Release[] = [
