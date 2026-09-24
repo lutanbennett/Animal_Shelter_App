@@ -53,11 +53,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      # Advisory, not blocking. The check still runs and its output is in the log,
-      # but a missing or unsigned checklist no longer fails the job — a correct
-      # plan is red for most of its life while it waits for a person to sign,
-      # and with several sessions pushing constantly that turned into a failing
-      # workflow every couple of minutes. A red people are emailed about hourly
-      # is a red they filter, which is worse than no gate at all.
+      # Red means the plan is missing, incomplete or self-contradictory — always
+      # someone's mistake to fix. It does NOT go red merely because nobody has
+      # signed the manual line yet: that is the normal state for most of a PR's
+      # life, and check-test-plan.mjs exits 0 for it while still printing what is
+      # outstanding (2026-09-24). This job used to carry `continue-on-error: true`
+      # for exactly that reason — with several sessions pushing, a correct-but-
+      # unsigned plan failed the workflow every couple of minutes, and a red
+      # people are emailed about hourly is one they filter. Suppressing the job
+      # fixed the noise and lost the signal: a genuinely broken plan also went
+      # green. Moving the distinction into the script gets both.
+      #
+      # Still not a required check in branch protection — that is the user's
+      # staged rollout (CLAUDE.md, "Testing"), and a red here does not block a
+      # merge. The release manager's pre-deploy pass is what catches a PR that
+      # reached main unchecked.
       - run: node scripts/check-test-plan.mjs --base origin/${{ github.base_ref }}
-        continue-on-error: true

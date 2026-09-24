@@ -241,11 +241,16 @@ Three valid states:
 - `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
 - `n/a: <reason>` — there was nothing to look at.
 - `pending: <what is outstanding>` — the work is done and something genuinely
-  needs a person who has not got to it yet. **This still fails the check**, and
-  should: nobody has looked. But it fails saying *awaiting manual verification:
-  <what>*, which is a different thing from a plan filled in badly. Use it rather
-  than reaching for `n/a` to get green — an `n/a` over a real outstanding item is
-  a false assurance about the one thing you could not verify.
+  needs a person who has not got to it yet. **This does not fail the check**
+  (changed 2026-09-24): it is the normal state for most of a PR's life, and a
+  check that is permanently red is one people learn to filter. The checker prints
+  *awaiting manual verification: <what>* and exits 0, so the outstanding item is
+  on the record without drowning the signal. What still fails is a plan that is
+  missing, incomplete or self-contradictory. Use `pending:` rather than reaching
+  for `n/a` — green is no longer something you have to buy, and an `n/a` over a
+  real outstanding item is a false assurance about the one thing you could not
+  verify. **Nothing ships on a `pending:`** — the release manager's pre-deploy
+  pass is what holds that line, not CI.
 
 `n/a:` and `pending:` take **no `Date:` segment** — there is no date to record, so
 write the line and stop. A trailing `Date: —` is accepted too, since existing
