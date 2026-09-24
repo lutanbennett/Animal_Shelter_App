@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
+import { hasPublicFriends } from "@/lib/shelter-friends/public";
 import { LanguageSwitcher } from "../LanguageSwitcher";
 
 export type PublicSection =
@@ -10,7 +11,8 @@ export type PublicSection =
   | "our-work"
   | "foster"
   | "volunteer"
-  | "donate";
+  | "donate"
+  | "friends";
 
 /**
  * Header for the signed-out public pages. `current` marks the section the
@@ -20,15 +22,23 @@ export type PublicSection =
  */
 export async function PublicHeader({ current }: { current?: PublicSection }) {
   const [{ t }, supabase] = await Promise.all([getT(), createClient()]);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const sections = [
+  const [
+    {
+      data: { user },
+    },
+    showFriends,
+  ] = await Promise.all([supabase.auth.getUser(), hasPublicFriends()]);
+  // Shelter Friends is listed once there is someone to thank — or while
+  // the visitor is on /friends itself, so the current page stays marked.
+  const sections: { key: PublicSection; href: string; label: string }[] = [
     { key: "adopt", href: "/adopt", label: t.adopt.adoptNav },
     { key: "our-work", href: "/our-work", label: t.adopt.ourWorkNav },
     { key: "foster", href: "/foster", label: t.adopt.fosterNav },
     { key: "volunteer", href: "/volunteer", label: t.adopt.volunteerNav },
-  ] as const;
+    ...(showFriends || current === "friends"
+      ? [{ key: "friends" as const, href: "/friends", label: t.shelterFriends.navLabel }]
+      : []),
+  ];
 
   return (
     <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b border-border bg-surface px-6 py-4">

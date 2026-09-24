@@ -15,6 +15,10 @@ import {
   speciesLabel,
 } from "@/lib/i18n/enum-labels";
 import { CARER_CONTACT_TYPE, isArchived, type Contact } from "@/lib/contacts/contacts";
+import { FriendBadge } from "@/components/FriendBadge";
+import type { ShelterFriend } from "@/lib/shelter-friends/friends";
+import type { TranslationRow } from "@/lib/translations/types";
+import { ShelterFriendCard } from "./ShelterFriendCard";
 
 /** A placement_history row naming this contact as carer, with its resident. */
 export type CarerPlacement = {
@@ -65,12 +69,17 @@ export function ContactHub({
   placements,
   canManage,
   mapSrc,
+  friend,
+  friendTranslations,
 }: {
   contact: Contact;
   placements: CarerPlacement[];
   canManage: boolean;
   /** Embed URL for the address, resolved by the page (map-preview.ts); null hides the map. */
   mapSrc: string | null;
+  /** The contact's Shelter Friend profile (0076), or null. */
+  friend: ShelterFriend | null;
+  friendTranslations: Partial<Record<"blurb" | "help_kind" | "discount_note", TranslationRow>>;
 }) {
   const { t, locale } = useI18n();
   const h = t.contacts.hub;
@@ -111,6 +120,12 @@ export function ContactHub({
               {contactTypeLabel(t, contact.type)}
             </span>
             {archived && <ArchivedBadge label={a.badge} />}
+            {friend && (
+              <FriendBadge
+                label={t.shelterFriends.badge}
+                published={friend.published && !archived}
+              />
+            )}
           </div>
           {canManage && (
             <Link
@@ -193,6 +208,14 @@ export function ContactHub({
           </div>
         )}
       </div>
+
+      <ShelterFriendCard
+        contact={contact}
+        friend={friend}
+        canManage={canManage}
+        mapSrc={mapSrc}
+        translations={friendTranslations}
+      />
 
       {/* Residents only make sense for carers. A contact of another type
           that somehow has placements (the type was Carer at the time)

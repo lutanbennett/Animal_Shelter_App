@@ -10,6 +10,8 @@ import { localizedField } from "@/lib/translations/localize";
 import type { PublicTranslations } from "@/lib/translations/types";
 import { speciesLabel } from "@/lib/i18n/enum-labels";
 import { loadPublicProjects } from "@/lib/projects/public";
+import { friendAnchor } from "@/lib/shelter-friends/friends";
+import { loadPublicFriends } from "@/lib/shelter-friends/public";
 import { loadSiteContent, pairedText } from "@/lib/site/content";
 import { loadSitePages, sitePageText } from "@/lib/site/pages";
 import { bodyLead } from "@/lib/site/body";
@@ -85,7 +87,7 @@ export default async function WelcomePage() {
   const supabase = await createClient();
   const { t, locale } = await getT();
 
-  const [content, pages, photosResult, statsResult, recentWork] = await Promise.all([
+  const [content, pages, photosResult, statsResult, recentWork, friendsResult] = await Promise.all([
     loadSiteContent(supabase),
     loadSitePages(supabase),
     supabase
@@ -100,7 +102,11 @@ export default async function WelcomePage() {
       .returns<ShelterStats[]>(),
     // "What we do": the three newest published project stories (0042).
     loadPublicProjects(supabase, 3),
+    // The Shelter Friends strip (0076) — the public view only.
+    loadPublicFriends(supabase),
   ]);
+  // No friends (or a failed query): no strip, rather than an empty thank-you.
+  const friends = friendsResult.friends;
 
   const gallery = photosResult.data ?? [];
   const tagline = pairedText(locale, content?.tagline, content?.tagline_th);
@@ -392,6 +398,59 @@ export default async function WelcomePage() {
             ))}
           </div>
         </div>
+
+        {friends.length > 0 && (
+          <div
+            role="region"
+            aria-labelledby="shelter-friends-heading"
+            className="mt-6 flex flex-col gap-4"
+          >
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex flex-col gap-1">
+                <h3
+                  id="shelter-friends-heading"
+                  className="text-sm font-semibold uppercase tracking-wide text-primary"
+                >
+                  {t.shelterFriends.homeStrip.heading}
+                </h3>
+                <p className="max-w-xl text-sm text-muted">
+                  {t.shelterFriends.homeStrip.subtitle}
+                </p>
+              </div>
+              <Link
+                href="/friends"
+                className="shrink-0 text-sm font-semibold text-primary hover:underline"
+              >
+                {t.shelterFriends.homeStrip.seeAll} &rarr;
+              </Link>
+            </div>
+            {/* A logo where there is one, the name where there isn't — each
+                a way into that friend's card on /friends. */}
+            <ul className="flex flex-wrap items-center gap-3">
+              {friends.map((friend) => (
+                <li key={friend.id}>
+                  <Link
+                    href={`/friends#${friendAnchor(friend.id)}`}
+                    title={friend.name}
+                    className="flex h-16 min-w-16 items-center justify-center rounded-lg border border-border bg-white px-3 hover:border-primary"
+                  >
+                    {friend.logo_drive_file_id ? (
+                      <Image
+                        src={driveImageUrl(friend.logo_drive_file_id)}
+                        alt={friend.name}
+                        width={96}
+                        height={48}
+                        className="h-12 w-auto max-w-24 object-contain"
+                      />
+                    ) : (
+                      <span className="text-sm font-semibold text-neutral-700">{friend.name}</span>
+                    )}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="mt-6 flex flex-col items-start gap-3 rounded-lg border border-border bg-surface p-6 sm:flex-row sm:items-center sm:justify-between">
           <div>

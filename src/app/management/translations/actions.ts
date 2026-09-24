@@ -32,6 +32,8 @@ function revalidateFor(row: TranslationRow, recordPathHint?: string | null) {
       revalidatePath(path);
     }
   }
+  // A Friend's prose shows on /friends; record_path is its contact's page.
+  if (row.table_name === "shelter_friends") revalidatePath("/friends");
   if (recordPathHint && recordPathHint !== own) revalidatePath(recordPathHint);
   revalidatePath("/");
   revalidatePath("/adopt");

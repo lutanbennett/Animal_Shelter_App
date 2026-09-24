@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { ArchivedBadge } from "@/components/ArchivedBadge";
 import { ContactActions } from "@/components/ContactActions";
+import { FriendBadge } from "@/components/FriendBadge";
 import { CONTACT_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { contactTypeLabel } from "@/lib/i18n/enum-labels";
@@ -19,9 +20,18 @@ import {
 export type ContactSummary = Contact & {
   /** Residents fostered or adopted and living with this carer now. */
   inCareCount: number;
+  /** Shelter Friend profile (0076): null when there is none, else whether it is published. */
+  friendPublished: boolean | null;
 };
 
-type TypeFilter = ContactType | "all";
+/**
+ * A contact type, everyone, or the Shelter Friends. Friends sit in the
+ * same row of chips rather than a second filter: they are all Vendors
+ * today, so "Vendor and Friend" would be the same list as "Friend".
+ */
+type TypeFilter = ContactType | "all" | "friends";
+
+const isFriend = (c: ContactSummary) => c.friendPublished !== null;
 
 /** Case-insensitive substring match over the fields someone would search by. */
 function matches(contact: Contact, query: string) {
@@ -73,6 +83,17 @@ function ContactCard({ contact }: { contact: ContactSummary }) {
               {contactTypeLabel(t, contact.type)}
             </span>
             {archived && <ArchivedBadge label={t.contacts.archive.badge} />}
+            {contact.friendPublished !== null && (
+              <FriendBadge
+                label={t.shelterFriends.badge}
+                published={contact.friendPublished && !archived}
+                title={
+                  contact.friendPublished && !archived
+                    ? t.shelterFriends.card.onWebsite
+                    : t.shelterFriends.card.notOnWebsite
+                }
+              />
+            )}
             {contact.inCareCount > 0 && (
               <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
                 <CONTACT_ICONS.inCare aria-hidden="true" className="h-3 w-3" />
@@ -124,7 +145,10 @@ export function ContactList({
   );
 
   const countByType = useMemo(() => {
-    const counts = new Map<TypeFilter, number>([["all", listed.length]]);
+    const counts = new Map<TypeFilter, number>([
+      ["all", listed.length],
+      ["friends", listed.filter(isFriend).length],
+    ]);
     for (const c of listed) counts.set(c.type, (counts.get(c.type) ?? 0) + 1);
     return counts;
   }, [listed]);
@@ -135,7 +159,11 @@ export function ContactList({
   // "no match" when we do. Archived matches come after the live ones.
   const shown = useMemo(() => {
     const pool = q ? contacts : listed;
-    const hits = pool.filter((c) => (type === "all" || c.type === type) && matches(c, q));
+    const hits = pool.filter(
+      (c) =>
+        (type === "all" || (type === "friends" ? isFriend(c) : c.type === type)) &&
+        matches(c, q),
+    );
     return [...hits.filter((c) => !isArchived(c)), ...hits.filter(isArchived)];
   }, [contacts, listed, type, q]);
   const archivedMatchesShown =
@@ -163,7 +191,12 @@ export function ContactList({
     );
   }
 
-  const filters: TypeFilter[] = ["all", ...CONTACT_TYPES];
+  // The Friends chip appears once there is a Friend to filter to.
+  const filters: TypeFilter[] = [
+    "all",
+    ...CONTACT_TYPES,
+    ...(contacts.some(isFriend) ? (["friends"] as const) : []),
+  ];
 
   return (
     <div className="flex flex-col gap-4">
@@ -207,7 +240,11 @@ export function ContactList({
                     : "border-border bg-surface text-muted hover:text-foreground"
                 }`}
               >
-                {filter === "all" ? t.contacts.allTypes : contactTypeLabel(t, filter)}
+                {filter === "all"
+                  ? t.contacts.allTypes
+                  : filter === "friends"
+                    ? t.shelterFriends.filterChip
+                    : contactTypeLabel(t, filter)}
                 <span className={`ml-1 text-xs ${active ? "opacity-80" : "opacity-60"}`}>
                   {count}
                 </span>
