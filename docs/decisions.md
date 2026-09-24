@@ -3143,3 +3143,19 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   It deliberately never adds `--force` or `--stop-servers` itself, and
   never works around `done` with raw `git worktree remove` / `branch -D`
   when a folder name does not match its branch.
+- **Contact archive columns: who and why exist only while archived (2026-09-24):**
+  `0075_contacts_archive.sql` adds `archived_at`, `archived_by` and
+  `archive_reason` to `contacts`, and a check constraint that `archived_by`
+  and `archive_reason` are null whenever `archived_at` is. Restore therefore
+  clears all three, and the history of who archived a contact and why is
+  not kept after a restore. A keep-the-last-reason variant was the
+  alternative; it leaves a restored, live contact carrying "moved away",
+  which the list's Archived badge logic would have to know to ignore, and
+  one rule across the schema was judged simpler than that. Both `archived_by`
+  and `archive_reason` stay optional: an archive by SQL or import has no
+  login, and the reason prompt is optional per the backlog item.
+  `archived_by` is `on delete set null` (as `reviewed_by` in 0056), not
+  the bare reference the older `*_by` columns use, so deleting a login
+  never fails on, or removes, a contact it archived. The rollback harness
+  (`scripts/check-contacts-archive.mjs`) measured each of these against a
+  real dev carer with placement history.
