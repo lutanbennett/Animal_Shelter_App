@@ -26,7 +26,7 @@
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
 
 ```
-=== gates: build exited 0 after 104s
+=== gates: build exited 0 after 120s
 
 gates: typecheck=0 lint=0 build=0
 ```
@@ -160,12 +160,13 @@ Every server action also starts with `assertManagementRole()`, and
 | 1 | medium | After Save / Publish the card kept showing the old profile until a reload: the actions are called directly, and `revalidatePath` alone doesn't re-render the caller here | fixed — the actions call `refresh()`, as `management/diets/actions.ts` does |
 | 2 | low | The browser's own `type="url"` check refused `www.feedshop.example.com`, which the shared validator accepts | fixed — the form is `noValidate`; the shared rule is the only one |
 | 3 | low | User-facing strings said "Vendor"; the app calls that type "Supplier" | fixed |
+| 4 | low | The logo upload said "Logo updated." without confirming the row changed; an update matching no row is not an error to PostgREST. Found while chasing a logo that turned out simply not to be saved yet | fixed — the update selects the row back and reports an error (removing the uploaded file) unless the new id is on it. Code-only change after the test deploy; gates re-run |
 
 ## Left for manual verification
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | **Open.** On test (build `11ee873`) Lutan saw the upload work, but the logo did not reach `/friends`: both published profiles still have `logo_drive_file_id` null. Being investigated. Logo upload, replace and remove on a Friend — not driven by Claude: the local Google OAuth client is dead (`invalid_client` since 2026-09-24), so Drive uploads only work on UAT | `test.lannacare.org` → a Supplier → Shelter Friend → Edit profile → Upload logo; then `/friends` and the home strip |
+| 1 | **Done — Lutan, 2026-09-24, on test.lannacare.org (build `11ee873`), confirmed in chat.** Uploaded to Harness Hardware; saved at 15:00:32 UTC and served on `/friends` via `/api/photos/1SJzLnkEPk358gw931Rk7CsqyX-2egHe9`. An earlier "not on the public page" was a check made before the save landed, not a defect. Replace and remove were not reported. Logo upload, replace and remove on a Friend — not driven by Claude: the local Google OAuth client is dead (`invalid_client` since 2026-09-24), so Drive uploads only work on UAT | `test.lannacare.org` → a Supplier → Shelter Friend → Edit profile → Upload logo; then `/friends` and the home strip |
 | 2 | Signed in as staff (or vet / volunteer): a Friend contact shows the badge and a read-only Shelter Friend card with no Publish / Edit, and `/management/shelter-friends` redirects away | `/contacts/[id]`, `/management/shelter-friends` |
 | 3 | Remove profile: the card leaves `/friends`, the contact stays, and its translations leave `/management/translations` | a test Friend → Edit profile → Remove profile |
 | 4 | Thai wording of the new strings reads naturally (written by Claude, not reviewed by a Thai speaker), and the customer confirms or replaces the placeholder title "เพื่อนของศูนย์พักพิง" | switch to ไทย on `/friends`, a Friend's contact page, `/management/shelter-friends` |
@@ -182,9 +183,9 @@ Automated checks by: Claude  Date: 2026-09-24
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — five items await Lutan; item 1 is under investigation
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — item 1 checked by Lutan; items 2–5 await Lutan
 
-Manual verification by: pending: the staff read-only view, Remove profile, the Thai wording and title, and the look of the public pages (logo upload: saved logo not reaching /friends on test, under investigation)
+Manual verification by: pending: the staff read-only view, Remove profile, the Thai wording and title, and the look of the public pages (logo upload checked by Lutan on test, 2026-09-24)
 
 ### Result
 

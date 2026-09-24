@@ -293,13 +293,18 @@ export async function uploadFriendLogo(
     return { error: err instanceof Error ? err.message : w.uploadFailed };
   }
 
-  const { error } = await supabase
+  // .select() so "Logo updated." is only said when the row really changed:
+  // an update that matches nothing (a profile removed meanwhile, or RLS)
+  // is not an error to PostgREST, just zero rows.
+  const { data: saved, error } = await supabase
     .from("shelter_friends")
     .update({ logo_drive_file_id: driveFileId, updated_at: new Date().toISOString() })
-    .eq("id", id);
-  if (error) {
+    .eq("id", id)
+    .select("logo_drive_file_id")
+    .returns<{ logo_drive_file_id: string | null }[]>();
+  if (error || saved?.[0]?.logo_drive_file_id !== driveFileId) {
     await deleteFromDrive(driveFileId);
-    return { error: error.message };
+    return { error: error?.message ?? t.shelterFriends.errors.notFound };
   }
 
   if (current.logo_drive_file_id) await deleteFromDrive(current.logo_drive_file_id);
