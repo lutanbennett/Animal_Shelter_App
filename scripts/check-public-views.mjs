@@ -45,6 +45,7 @@ for (const view of [
   "public_recent_adoptions",
   "public_resident_cards",
   "public_shelter_friends",
+  "public_enclosures",
 ]) {
   const read = await fetch(`${url}/rest/v1/${view}?select=id&limit=1`, { headers });
   report(read.ok, `${view}: anon can SELECT`, `HTTP ${read.status}`);
