@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Facility → **Filter the enclosures page to those with open maintenance.** |
 | Branch / worktree | `claude/enclosure-maintenance-filter` @ `C:\Development\Animal_Shelter_enclosure-maintenance-filter` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3008` |
-| PR | opened from this branch; number in the PR itself |
+| PR | #87 |
 | Tested by / date | Claude, 2026-09-24 |
 | Carries a migration? | no |
 | Tested at SHA | `175bf46` (code; this file is the commit after it) |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — #87, run 35959822136: `check` pass (1m29s), `test-plan` pass
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -156,7 +156,7 @@ Manual verification by: pending: the vet view (Left for manual verification 1)
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above — both fixed
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR — in #87's description, refreshed after the zone-wide check
 - [ ] Handed to the production release manager — n/a: not yet — the PR does not exist at this commit
 
 Result: pass
