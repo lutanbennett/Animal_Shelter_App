@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none: requested directly by Lutan on 2026-09-24 (see `.brief.md`) |
 | Branch / worktree | `claude/clean-streams` @ `C:\Development\Animal_Shelter_clean-streams` |
 | Dev server | not used — no UI surface |
-| PR | opened after this commit |
+| PR | #85 |
 | Tested by / date | Claude, 2026-09-24 |
 | Carries a migration? | no |
 | Tested at SHA | `14f183f` (synced tip; the plan's own commit follows) |
@@ -35,7 +35,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): `check` passed in 1m10s on #85 (run 35950556818); `test-plan` job green but `continue-on-error`, its verdict is the `pending:` manual line
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -159,7 +159,7 @@ Manual verification by: pending: Lutan to run `/clean-streams` from the main che
 ### Result
 
 - [ ] Open defects are either fixed or explicitly accepted above — n/a: none found
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR (#85 description)
 - [ ] Handed to the production release manager — n/a: nothing in this PR is deployed
 
 Result: pass
