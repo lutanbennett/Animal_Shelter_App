@@ -6,6 +6,7 @@ import { TriangleAlert } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
 import type { EnclosureOption } from "@/lib/enclosures/options";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { capacityWarningLevel } from "./EnclosurePicker";
 
 /**
@@ -19,15 +20,21 @@ export function CapacityWarningDialog({
   pending = false,
   onCancel,
   onConfirm,
+  copy,
 }: {
   /** The enclosure being moved into; null hides the dialog. */
   enclosure: EnclosureOption | null;
   pending?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
+  /**
+   * The sentences, for a placement that isn't a move (intake). The titles
+   * and the thresholds stay the same everywhere.
+   */
+  copy?: Pick<Dictionary["residents"]["move"]["warning"], "body" | "question" | "confirm">;
 }) {
   const { t, locale } = useI18n();
-  const w = t.residents.move.warning;
+  const w = { ...t.residents.move.warning, ...copy };
 
   useEffect(() => {
     if (!enclosure) return;

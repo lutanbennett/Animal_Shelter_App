@@ -3,8 +3,13 @@
 import { useActionState, useCallback, useEffect, useRef, useState } from "react";
 import { recordIntake } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { placeName } from "@/lib/enclosures/names";
 import { formatDate, todayIso } from "@/lib/format";
+import type { EnclosureOption, ZoneOption } from "@/lib/enclosures/options";
+import {
+  EnclosurePicker,
+  capacityWarningLevel,
+} from "@/components/EnclosurePicker";
+import { CapacityWarningDialog } from "@/components/CapacityWarningDialog";
 import { RESIDENT_SIZES, sizeLabel } from "@/lib/i18n/enum-labels";
 import { AdoptionProfileFields } from "@/components/AdoptionProfileFields";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -21,9 +26,7 @@ import {
   type ReviewGroup,
 } from "./WizardChrome";
 
-export type ZoneOption = { id: string; name: string; name_th: string | null };
 export type DietTypeOption = { id: string; name: string };
-export type EnclosureOption = { id: string; name: string; name_th: string | null; zoneId: string };
 export type OriginOption = { id: string; name: string };
 
 const inputClass =
@@ -54,7 +57,10 @@ function firstInvalid(container: HTMLElement | null): FormControl | null {
  * What a control currently reads as, for the Review step: the chosen
  * option's own text for a select, Yes / No for a checkbox, the trimmed
  * value otherwise. null means "nothing entered". Controls are found by id
- * because a couple of them (the zone filter) aren't part of the submission.
+ * because a couple of them (the zone filter) aren't part of the submission —
+ * and the enclosure's own select isn't either: EnclosurePicker submits a
+ * hidden `enclosureId`, and names its selects `intake-zone` /
+ * `intake-enclosure` from its `idPrefix`.
  */
 function display(
   form: HTMLFormElement,
@@ -118,10 +124,12 @@ function buildReview(
         // Whichever of the two origin controls is on screen: the picker,
         // or the box that appears when "+ Add new origin…" is chosen.
         { label: f.origin, value: v("originId") ?? v("newOriginName") },
-        { label: f.zone, value: v("zoneId") },
+        { label: f.zone, value: v("intake-zone") },
         // Blank means the resident is placed as Unassigned, which is a
-        // real outcome rather than a gap.
-        { label: f.enclosure, value: v("enclosureId") ?? w.enclosureUnassigned },
+        // real outcome rather than a gap. The option text carries the
+        // enclosure's current headcount ("Kennel 4 — 3 / 4"), so a full
+        // one is visible here as well as in the dialog on Register.
+        { label: f.enclosure, value: v("intake-enclosure") ?? w.enclosureUnassigned },
         { label: f.intakeNotes, value: v("notes") },
         { label: f.readyForAdoptionShort, value: v("readyForAdoption") },
       ],
@@ -185,8 +193,8 @@ export function IntakeForm({
 }) {
   const [state, formAction, pending] = useActionState(recordIntake, undefined);
   const { t, locale } = useI18n();
-  const [selectedZoneId, setSelectedZoneId] = useState("");
-  const [selectedEnclosureId, setSelectedEnclosureId] = useState("");
+  const [enclosureId, setEnclosureId] = useState("");
+  const [warningFor, setWarningFor] = useState<EnclosureOption | null>(null);
   const [isAddingOrigin, setIsAddingOrigin] = useState(false);
 
   const [step, setStep] = useState(initialStep);
@@ -197,8 +205,6 @@ export function IntakeForm({
 
   const w = t.residents.new.wizard;
   const stepTitles = INTAKE_STEPS.map((id) => w.steps[id]);
-
-  const enclosuresInZone = enclosures.filter((e) => e.zoneId === selectedZoneId);
 
   const openStep = useCallback((next: number) => {
     setStep(next);
@@ -242,8 +248,15 @@ export function IntakeForm({
     [step, t, locale, openStep],
   );
 
-  /** The one submission, from the Review step. */
-  function register() {
+  /**
+   * The one submission, from the Review step. A full or nearly-full
+   * enclosure asks first, as Move does — and, as with Move, only asks: the
+   * animal at the gate still has to go somewhere, so confirming registers.
+   * It asks here rather than on the Arrival step's Next so that it asks
+   * once, at the moment something is actually written; Arrival shows the
+   * headcount under the picker as the enclosure is chosen.
+   */
+  function register(confirmed = false) {
     const form = formRef.current;
     if (!form) return;
     for (let i = 0; i < REVIEW_STEP; i++) {
@@ -254,10 +267,15 @@ export function IntakeForm({
         return;
       }
     }
+    const target = enclosures.find((e) => e.id === enclosureId) ?? null;
+    if (!confirmed && target && capacityWarningLevel(target)) {
+      setWarningFor(target);
+      return;
+    }
     form.requestSubmit();
   }
 
-  // A rejected intake (name taken, enclosure full, the RPC itself) comes
+  // A rejected intake (name taken, the RPC itself) comes
   // back as an error on the action's state, and lands the user on Review
   // with the message rather than back at step 1 — Register is only
   // reachable from Review, and Back is disabled while the action is in
@@ -441,49 +459,18 @@ export function IntakeForm({
                 </select>
               )}
             </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="zoneId" className="text-sm font-medium text-muted">
-                {t.residents.new.fields.zone}
-              </label>
-              <select
-                id="zoneId"
-                value={selectedZoneId}
-                onChange={(e) => {
-                  setSelectedZoneId(e.target.value);
-                  setSelectedEnclosureId("");
-                }}
-                className={inputClass}
-              >
-                <option value="">{t.residents.new.fields.noZoneDefault}</option>
-                {zones.map((z) => (
-                  <option key={z.id} value={z.id}>
-                    {placeName(locale, z.name, z.name_th)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="enclosureId" className="text-sm font-medium text-muted">
-                {t.residents.new.fields.enclosure}
-              </label>
-              <select
-                id="enclosureId"
-                name="enclosureId"
-                value={selectedEnclosureId}
-                onChange={(e) => setSelectedEnclosureId(e.target.value)}
-                className={inputClass}
-              >
-                <option value="">
-                  {t.residents.new.fields.unassignedDefault}
-                </option>
-                {enclosuresInZone.map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {placeName(locale, e.name, e.name_th)}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
+          <EnclosurePicker
+            zones={zones}
+            enclosures={enclosures}
+            value={enclosureId}
+            onChange={setEnclosureId}
+            idPrefix="intake"
+            placeholders={{
+              zone: t.residents.new.fields.noZoneDefault,
+              enclosure: t.residents.new.fields.unassignedDefault,
+            }}
+          />
           <div className="flex flex-col gap-1">
             <label htmlFor="notes" className="text-sm font-medium text-muted">
               {t.residents.new.fields.intakeNotes}
@@ -698,7 +685,18 @@ export function IntakeForm({
         pending={pending}
         onBack={() => go(step - 1)}
         onNext={() => go(step + 1)}
-        onRegister={register}
+        onRegister={() => register()}
+      />
+
+      <CapacityWarningDialog
+        enclosure={warningFor}
+        pending={pending}
+        copy={w.capacityWarning}
+        onCancel={() => setWarningFor(null)}
+        onConfirm={() => {
+          setWarningFor(null);
+          register(true);
+        }}
       />
     </form>
   );
