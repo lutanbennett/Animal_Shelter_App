@@ -150,9 +150,9 @@ Automated checks by: Claude (Opus 5.5), in the in-app browser signed in by Lutan
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — item 1 is waiting for Lutan
+- [x] The manual list above is empty, or every item in it was checked by a person — item 1 checked by Lutan as management, 2026-09-24
 
-Manual verification by: pending: item 1, management's view of Medications and a direct hit on /admin/frequencies
+Manual verification by: Lutan Bennett — confirmed in chat; line written by Claude at their request  Date: 2026-09-24
 
 ### Result
 
