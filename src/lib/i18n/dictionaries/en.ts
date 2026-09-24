@@ -79,7 +79,6 @@ const en = {
     releaseNotes: "Release notes",
     publicSite: "Public website",
     changePassword: "Change password",
-    assistant: "Assistant",
     menu: "Menu",
     openMenu: "Open menu",
     closeMenu: "Close menu",
@@ -1246,6 +1245,7 @@ const en = {
       title: "Assistant",
       subtitle: "Say what you want done — you get a preview before anything is written.",
       loading: "Loading...",
+      fullPage: "Open full page",
     },
   },
 
