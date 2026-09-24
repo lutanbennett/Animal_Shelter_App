@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Management → **Archive contacts instead of deleting them** (ticked on the feature PR, not this one) |
 | Branch / worktree | `claude/contacts-archive-schema` @ `C:\Development\Animal_Shelter_contacts-archive-schema` |
 | Dev server | not started: this change ships no runtime code |
-| PR | opened from this commit |
+| PR | #86 |
 | Tested by / date | Claude (automated) / 2026-09-24 |
 | Carries a migration? | yes: `0075_contacts_archive.sql` |
 | Tested at SHA | branch on `main` @ `c50a13b`; the migration, harness, `decisions.md` entry and this plan are the only changes |
@@ -32,7 +32,7 @@
   ```
 
   That run began before `scripts/check-contacts-archive.mjs` existed, so `npm run lint` was run again afterwards over the final tree: exit 0.
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): `check` and `test-plan` both pass on #86 (run 35955936539, at `c11fe81`)
 
 ## 3. Schema and data
 
