@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Public website → **Link to the LCA Facebook page from the public site.** |
 | Branch / worktree | `claude/facebook-link` @ `C:\Development\Animal_Shelter_facebook-link` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3012` |
-| PR | to be opened from this commit |
+| PR | #112 |
 | Tested by / date | Claude, 2026-09-25 (in-app browser signed in by Lutan as admin; public pages fetched signed out) |
 | Carries a migration? | no — the columns came in `0080_social_urls.sql` (#105), already on `main` and applied to dev |
 | Tested at SHA | `2668f52` (code, browser-checked); gates run at `dd61c35` after merging `origin/main` |
@@ -24,7 +24,7 @@
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in at `dd61c35`, bringing #109 (the 0.3.0 release cut). One conflict in `src/lib/releases.ts`: main had emptied `unreleased`; resolved to hold only this branch's line. A second `sync` said `Already up to date.`
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — `check` (1m7s) and `test-plan` both green on #112 at `72caf6c`
 
 ```
 === gates: build exited 0 after 160s
@@ -157,7 +157,7 @@ Manual verification by: pending: items 1–2 under Left for manual verification
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR — summarised in the #112 description, with a pointer to this file
 - [ ] Handed to the production release manager — n/a: not yet — after merge
 
 Result: pass
