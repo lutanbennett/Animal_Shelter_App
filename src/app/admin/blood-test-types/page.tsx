@@ -6,6 +6,7 @@ import {
   BloodTestTypesTable,
   type BloodTestTypeRow,
 } from "./BloodTestTypesTable";
+import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 
 export default async function BloodTestTypesPage() {
   await requireAdminUser();
@@ -43,19 +44,21 @@ export default async function BloodTestTypesPage() {
         <p className="text-sm text-muted">{p.subtitle}</p>
       </div>
 
-      {typesResult.error && (
-        <p className="text-sm text-danger">
-          {p.couldntLoad}: {typesResult.error.message}
-        </p>
-      )}
-      {bloodTestsResult.error && (
-        <p className="text-sm text-danger">
-          {p.couldntLoadUsage}: {bloodTestsResult.error.message}
-        </p>
-      )}
+      <LargerScreenNotice>
+        {typesResult.error && (
+          <p className="text-sm text-danger">
+            {p.couldntLoad}: {typesResult.error.message}
+          </p>
+        )}
+        {bloodTestsResult.error && (
+          <p className="text-sm text-danger">
+            {p.couldntLoadUsage}: {bloodTestsResult.error.message}
+          </p>
+        )}
 
-      <CreateBloodTestTypeForm />
-      <BloodTestTypesTable bloodTestTypes={bloodTestTypes} />
+        <CreateBloodTestTypeForm />
+        <BloodTestTypesTable bloodTestTypes={bloodTestTypes} />
+      </LargerScreenNotice>
     </main>
   );
 }

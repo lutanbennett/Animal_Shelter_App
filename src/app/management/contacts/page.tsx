@@ -5,6 +5,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { CONTACT_COLUMNS, type Contact } from "@/lib/contacts/contacts";
 import { CreateContactForm } from "./CreateContactForm";
 import { ContactsTable, type ContactRow } from "./ContactsTable";
+import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 
 export default async function ContactsAdminPage(
   props: PageProps<"/management/contacts">,
@@ -79,39 +80,41 @@ export default async function ContactsAdminPage(
         </p>
       </div>
 
-      {contactsResult.error && (
-        <p className="text-sm text-danger">
-          {t.management.contacts.couldntLoad}: {contactsResult.error.message}
-        </p>
-      )}
-      {placementsResult.error && (
-        <p className="text-sm text-danger">
-          {t.management.contacts.couldntLoadUsage}: {placementsResult.error.message}
-        </p>
-      )}
-
-      <CreateContactForm />
-      <div className="flex flex-col gap-2">
-        {archivedCount > 0 && (
-          <p className="flex flex-wrap items-center gap-2 text-sm text-muted">
-            {showArchived
-              ? a.archivedIncluded(archivedCount)
-              : a.archivedHidden(archivedCount)}
-            {/* A link, not a checkbox: flipping it changes the list straight away. */}
-            <Link
-              href={showArchived ? "/management/contacts" : "/management/contacts?archived=1"}
-              className={`rounded-full border px-3 py-1 text-xs font-medium ${
-                showArchived
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border bg-surface text-muted hover:text-foreground"
-              }`}
-            >
-              {showArchived ? a.hideArchived : a.showArchived}
-            </Link>
+      <LargerScreenNotice>
+        {contactsResult.error && (
+          <p className="text-sm text-danger">
+            {t.management.contacts.couldntLoad}: {contactsResult.error.message}
           </p>
         )}
-        <ContactsTable contacts={contacts} />
-      </div>
+        {placementsResult.error && (
+          <p className="text-sm text-danger">
+            {t.management.contacts.couldntLoadUsage}: {placementsResult.error.message}
+          </p>
+        )}
+
+        <CreateContactForm />
+        <div className="flex flex-col gap-2">
+          {archivedCount > 0 && (
+            <p className="flex flex-wrap items-center gap-2 text-sm text-muted">
+              {showArchived
+                ? a.archivedIncluded(archivedCount)
+                : a.archivedHidden(archivedCount)}
+              {/* A link, not a checkbox: flipping it changes the list straight away. */}
+              <Link
+                href={showArchived ? "/management/contacts" : "/management/contacts?archived=1"}
+                className={`rounded-full border px-3 py-1 text-xs font-medium ${
+                  showArchived
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-surface text-muted hover:text-foreground"
+                }`}
+              >
+                {showArchived ? a.hideArchived : a.showArchived}
+              </Link>
+            </p>
+          )}
+          <ContactsTable contacts={contacts} />
+        </div>
+      </LargerScreenNotice>
     </main>
   );
 }

@@ -6,6 +6,7 @@ import {
   ImmunizationTypesTable,
   type ImmunizationTypeRow,
 } from "./ImmunizationTypesTable";
+import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 
 export default async function ImmunizationTypesPage() {
   await requireAdminUser();
@@ -36,14 +37,16 @@ export default async function ImmunizationTypesPage() {
         </p>
       </div>
 
-      {error && (
-        <p className="text-sm text-danger">
-          {t.admin.immunizationTypes.couldntLoad}: {error.message}
-        </p>
-      )}
+      <LargerScreenNotice>
+        {error && (
+          <p className="text-sm text-danger">
+            {t.admin.immunizationTypes.couldntLoad}: {error.message}
+          </p>
+        )}
 
-      <CreateImmunizationTypeForm />
-      <ImmunizationTypesTable immunizationTypes={immunizationTypes} />
+        <CreateImmunizationTypeForm />
+        <ImmunizationTypesTable immunizationTypes={immunizationTypes} />
+      </LargerScreenNotice>
     </main>
   );
 }

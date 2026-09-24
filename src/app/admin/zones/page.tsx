@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { CreateZoneForm } from "./CreateZoneForm";
 import { ZonesTable, type ZoneRow } from "./ZonesTable";
+import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 
 export default async function ZonesPage() {
   await requireAdminUser();
@@ -24,14 +25,16 @@ export default async function ZonesPage() {
         <p className="text-sm text-muted">{t.admin.zones.subtitle}</p>
       </div>
 
-      {error && (
-        <p className="text-sm text-danger">
-          {t.admin.zones.couldntLoad}: {error.message}
-        </p>
-      )}
+      <LargerScreenNotice>
+        {error && (
+          <p className="text-sm text-danger">
+            {t.admin.zones.couldntLoad}: {error.message}
+          </p>
+        )}
 
-      <CreateZoneForm />
-      <ZonesTable zones={data ?? []} />
+        <CreateZoneForm />
+        <ZonesTable zones={data ?? []} />
+      </LargerScreenNotice>
     </main>
   );
 }

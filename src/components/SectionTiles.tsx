@@ -8,6 +8,11 @@ export type SectionTile = {
   /** One sentence on what the page is for — the tiles teach as well as navigate. */
   description: string;
   icon: LucideIcon;
+  /**
+   * A pill after the label on phones only, for a page that shows a
+   * LargerScreenNotice there — so the tile warns before the tap does.
+   */
+  phoneNote?: string;
 };
 
 /**
@@ -18,7 +23,7 @@ export type SectionTile = {
 export function SectionTiles({ tiles }: { tiles: SectionTile[] }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {tiles.map(({ href, label, description, icon: Icon }) => (
+      {tiles.map(({ href, label, description, icon: Icon, phoneNote }) => (
         <Link
           key={href}
           href={href}
@@ -31,6 +36,11 @@ export function SectionTiles({ tiles }: { tiles: SectionTile[] }) {
             />
             <span className="min-w-0 flex-1 font-medium text-foreground">
               {label}
+              {phoneNote && (
+                <span className="ml-2 rounded-full border border-border px-1.5 py-px align-middle text-[10px] font-semibold uppercase tracking-wide text-muted md:hidden">
+                  {phoneNote}
+                </span>
+              )}
             </span>
             <ChevronRight
               aria-hidden="true"
