@@ -70,7 +70,9 @@ const porcelainPaths = (out) =>
 
 let changed = [];
 let touched = [];
+let mergeBase = "";
 try {
+  mergeBase = git(["merge-base", base, "HEAD"]);
   // Committed on this branch...
   const committed = git(["diff", "--name-only", "--diff-filter=AM", `${base}...HEAD`])
     .split("\n")
@@ -121,7 +123,7 @@ const unreleasedLines = (src) => {
 };
 let baseReleases = "";
 try {
-  baseReleases = git(["show", `${git(["merge-base", base, "HEAD"])}:${RELEASES}`]);
+  baseReleases = git(["show", `${mergeBase}:${RELEASES}`]);
 } catch {
   // Not on the base: nothing was unreleased there.
 }
@@ -134,6 +136,53 @@ try {
 const before = new Set(unreleasedLines(baseReleases));
 const added = unreleasedLines(headReleases).filter((l) => !before.has(l));
 const visible = touched.filter((f) => USER_VISIBLE.some((p) => p.test(f)));
+
+// A sign-off PR records a check made after the feature merged — the deployed
+// smoke test in §8 can only happen then — and touches nothing but the plan. Its
+// own diff cannot gain an `unreleased` line, because the feature PR already
+// added it, so a ticked release-notes line would fail against it and the only
+// way out was to reword the feature's permanent record to suit the later PR
+// (#80). For such a PR the tick is held to the diff of the merge that
+// introduced the plan instead: the claim is still checked, just against the PR
+// it was made about. The exemption needs *every* touched path to be a plan, so
+// a PR that also changes code is judged on its own diff as before.
+const signoffOnly = touched.length > 0 && touched.every(isPlan);
+const shortRef = (sha) => git(["log", "-1", "--format=%h (%s)", sha]);
+const releaseOrigin = (file) => {
+  try {
+    git(["cat-file", "-e", `${mergeBase}:${file}`]);
+  } catch {
+    return null; // New in this PR: it is the feature PR, judged on its own diff.
+  }
+  // CI checks out with fetch-depth: 0. Without the history the origin cannot be
+  // found, and guessing either way would be a false red or a silent pass.
+  if (git(["rev-parse", "--is-shallow-repository"]) === "true") {
+    return { error: "history is shallow, so the PR that introduced this plan cannot be found — fetch it (`git fetch --unshallow`)" };
+  }
+  const adds = git(["log", "--diff-filter=A", "--format=%H", mergeBase, "--", file]).split("\n").filter(Boolean);
+  if (!adds.length) return { error: "cannot find the commit that added this plan" };
+  const added = adds[adds.length - 1];
+  // The merge that brought it onto the base: the oldest first-parent commit
+  // that has it as an ancestor. First-parent history is newest first, and the
+  // commits containing it are a prefix of that list.
+  const contains = new Set([added, ...git(["rev-list", "--ancestry-path", `${added}..${mergeBase}`]).split("\n")]);
+  let merge = "";
+  for (const c of git(["rev-list", "--first-parent", mergeBase]).split("\n")) {
+    if (!contains.has(c)) break;
+    merge = c;
+  }
+  if (!merge) return { error: "cannot find the merge that introduced this plan" };
+  const at = (rev) => {
+    try {
+      return unreleasedLines(git(["show", `${rev}:${RELEASES}`]));
+    } catch {
+      return [];
+    }
+  };
+  const prior = new Set(at(`${merge}^1`));
+  return { merge: shortRef(merge), gained: at(merge).filter((l) => !prior.has(l)) };
+};
+const releaseFrom = [];
 
 // The §7 checklist line that answers "would a shelter user notice this?", found
 // by its bold label so the rest of the wording can change freely. Matching on
@@ -220,7 +269,23 @@ for (const file of changed) {
     // and its reason is echoed in the output so a reviewer reads it.
     if (isReleaseLine(body)) {
       releaseAnswered = true;
-      if (box[1] !== " " && added.length === 0) {
+      const origin = box[1] !== " " && added.length === 0 && signoffOnly ? releaseOrigin(file) : null;
+      if (origin?.error) {
+        note(file, i + 1, `release-notes line is ticked in a sign-off PR, but ${origin.error}`);
+        return;
+      }
+      if (origin && origin.gained.length === 0) {
+        note(
+          file,
+          i + 1,
+          `release-notes line is ticked, but neither this sign-off PR nor ${origin.merge}, which introduced ` +
+            `this plan, added a line to \`unreleased\` in ${RELEASES}`,
+        );
+        return;
+      }
+      if (origin) {
+        releaseFrom.push(`${file}:${i + 1} — ${origin.merge}`);
+      } else if (box[1] !== " " && added.length === 0) {
         note(
           file,
           i + 1,
@@ -355,6 +420,10 @@ const releaseNote =
   visible.length && added.length === 0 && releaseNa.length
     ? `\nNo release note, on the plan's word (touches ${shown}):\n` + releaseNa.map((r) => `  ${r}`).join("\n")
     : "";
+const releaseFromNote = releaseFrom.length
+  ? "\nSign-off PR: release-notes tick checked against the merge that introduced the plan:\n" +
+    releaseFrom.map((r) => `  ${r}`).join("\n")
+  : "";
 
 // Say plainly which of the two reds this is. A correct plan is red for most of
 // its life — it cannot be signed until a person has looked — so "red" on its own
@@ -376,7 +445,7 @@ if (problems.length) {
     console.error("\nAwaiting a person (not a defect — nobody has looked yet):");
     for (const a of awaiting) console.error(`  ${a}`);
   }
-  console.error(deferredNote + releaseNote);
+  console.error(deferredNote + releaseNote + releaseFromNote);
   console.error("\nEvery line is ticked, `n/a: <reason>`, or — in the pre-production gate — `deferred: <owner>`.");
   process.exit(1);
 }
@@ -391,9 +460,9 @@ if (problems.length) {
 if (awaiting.length) {
   console.log(`check-test-plan: the plan is complete and correct, and ${awaiting.length} item(s) await a person:\n`);
   for (const a of awaiting) console.log(`  ${a}`);
-  console.log(deferredNote + releaseNote);
+  console.log(deferredNote + releaseNote + releaseFromNote);
   console.log("\nNothing to fix. A person still has to look and sign before this ships.");
   process.exit(0);
 }
 
-console.log(`check-test-plan: ok — ${changed.join(", ")}${deferredNote}${releaseNote}`);
+console.log(`check-test-plan: ok — ${changed.join(", ")}${deferredNote}${releaseNote}${releaseFromNote}`);
