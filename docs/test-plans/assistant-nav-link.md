@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Quick wins → "Remove the Assistant link from the left nav — it lives in the header now." |
 | Branch / worktree | `claude/assistant-nav-link` @ `C:\Development\Animal_Shelter_assistant-nav-link` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3003` |
-| PR | opened from this branch; see the PR page |
+| PR | https://github.com/lutanbennett/Animal_Shelter_App/pull/116 |
 | Tested by / date | Claude, 2026-09-25 (browser pane signed in by Lutan as admin) |
 | Carries a migration? | no |
 | Tested at SHA | `0d20369` (code, browser-checked and gated); this plan is committed on top |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — PR #116 at `fc2552b`: `check` pass (1m12s), `test-plan` pass
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -156,7 +156,7 @@ Manual verification by: pending: vet direct-URL refusal at /assistant; staff or 
 ### Result
 
 - [ ] Open defects are either fixed or explicitly accepted above — n/a: the one defect predates this change and is deferred to the backlog
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [ ] Checklist pasted into the PR — n/a: the PR description summarises it and links `docs/test-plans/assistant-nav-link.md`, which is in the PR
 - [ ] Handed to the production release manager — n/a: not yet — handed over with the PR once it merges
 
 Result: pass
