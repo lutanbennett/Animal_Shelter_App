@@ -70,6 +70,42 @@ Public pages are the live surface; internal screens are seen only by staff.
 
 - [ ] Anything showing "today" is correct **for Thailand**, not UTC. Workers run in UTC wherever they are, so this is wrong for part of every day and is invisible on `next dev`. Worth checking deliberately during Thai evening, when the two dates differ
 
+## Test gets the same release
+
+Standing rule from 2026-09-24: **a production release also goes to test, from
+the same commit.** Test is where `main` is exercised on the Workers runtime, so
+it drifting *behind* production makes it useless as a pre-production check —
+which is what happened on `0.1.0`, where production went to `0.1.0` while test
+sat on `0.0.1`. Test being a few commits *ahead* between releases is fine and
+expected; test being behind is the thing this prevents.
+
+- [ ] **Check what is already on test before overwriting it.** `curl -s https://test.lannacare.org/api/releases/current`, and ask whether anyone is mid-test on it. Test holds one build, and it is sometimes deliberately an integration build that exists nowhere else — on 2026-09-23 it held `main` + cashflow + `claude/utc-today` for an overnight timezone check, and deploying over it would have destroyed the thing under test
+- [ ] `npm run deploy:test` from the same commit as the production deploy
+- [ ] `deploy: test → Supabase project qxkmhwybjggxvsfxsxbd (<sha>)` — the ref is the **dev** project and the SHA matches production's
+- [ ] Both report the same version: `curl -s https://test.lannacare.org/api/releases/current` and the same on `lannacare.org`
+
+Three things about this worth knowing rather than discovering:
+
+- **Same code, different data.** Test runs the dev Supabase project; production
+  runs the real one. Syncing them means the same build against different
+  records, so test catches a broken build, a Workers-runtime problem or a
+  UTC-in-Workers bug, and will not reproduce anything data-shaped. "Test and
+  production are in sync" is a claim about code only.
+- **Two builds, not one.** `next build` inlines the Supabase URL and anon key,
+  so each environment needs its own build with its own values and `--skip-build`
+  cannot be reused across them — reusing it would ship dev-pointing code to
+  production. Budget twice the time.
+- **A test deploy cannot mail anybody.** `RELEASE_MAIL_ENV` is `""` on test and
+  there is no `RELEASE_MAIL` binding, so `worker/release-mail.mjs` refuses by
+  construction. It prints who it *would* have mailed and why it did not, so
+  deploying both environments cannot double-mail admins. Note the admin list
+  comes from each environment's own database, so test's list is the dev
+  project's and will not match production's.
+
+Deploy **test first** where the release allows it: a build that is going to fail
+should fail somewhere that is not the live site. Where production has already
+gone out, bring test up straight afterwards rather than leaving it behind.
+
 ## Result
 
 - [ ] All of the above either ticked or `n/a: <reason>`

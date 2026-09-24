@@ -241,6 +241,30 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    secrets from `.env.local` first — needed once per Worker and whenever a
    value changes; `npx wrangler secret list --env test` shows what is set.
 
+   **Every production release also goes to test, from the same commit**
+   (standing rule, 2026-09-24; the checklist is in
+   `docs/release-smoke-test.md`). Test is where `main` is exercised on the
+   Workers runtime, so test drifting *behind* production makes it useless as a
+   pre-production check — on `0.1.0` production shipped while test sat on
+   `0.0.1`. Test being a few commits *ahead* between releases is expected and
+   healthy; behind is the failure. Deploy test first where the release allows
+   it, since a build that is going to fail should fail somewhere that is not
+   the live site.
+
+   Two consequences of how the builds work. Each environment needs **its own
+   build**: `next build` inlines the Supabase URL and anon key, so
+   `--skip-build` cannot be reused across environments without shipping
+   dev-pointing code to production — budget twice the time, not one build
+   deployed twice. And **check what is already on test before overwriting it**:
+   test holds one build, and it is sometimes deliberately an integration build
+   that exists nowhere else (on 2026-09-23 it held `main` + cashflow +
+   `claude/utc-today` for an overnight timezone check, which a blind test
+   deploy would have destroyed).
+
+   Syncing the two means the **same code against different databases** — test
+   runs the dev project. It catches a broken build, a Workers-runtime problem
+   or a UTC-in-Workers bug; it will not reproduce anything data-shaped.
+
 4. **Deploy to UAT or Production**
 
    ```bash
