@@ -3450,15 +3450,15 @@ worth using there, not which ones are broken.
 | `/admin/security` | nice-to-have | Access requests and Create user sit on top and fit — approving someone at the gate is real. Users table is 749/325, so changing a role means a sideways scroll |
 | `/admin/website` | nice-to-have | Fits (nothing overflows); uploading a gallery photo straight from the phone is a real use |
 | `/admin/procedure-types`, `/admin/blood-test-types` | nice-to-have | Fit exactly (325/325), buttons stack; adding a missing type mid-visit is plausible |
-| `/admin/zones`, `/admin/enclosures`, `/admin/immunization-types` | desktop only | Rare setup; inline-edit tables 450–624/325 put Edit off-screen |
+| `/admin/zones`, `/admin/enclosures`, `/admin/immunization-types` | desktop only | Rare setup; inline-edit tables 434–624/325 put Edit off-screen |
 | `/admin/contacts`, `/admin/vets` | n/a | Redirects to `/management/*` |
 | `/management` (tiles), `/management/dashboard`, `/management/translations` | nice-to-have | Fit; dashboard was built mobile-first |
 | `/management/cashflow` | nice-to-have | Already adapted: chart hidden on phones, compact table scrolls on purpose |
 | `/management/contacts`, `/management/vets` | desktop only | 1151 and 773/325; the field lookups are `/contacts` and `/vets`, which the subtitles link to |
 | `/management/medications`, `/management/diets` | desktop only | Stock and cost setup; 681 and 636/325 |
 | Residents bulk selection | desktop only | Already `hidden md:table-cell` by design; nothing to change |
-| Enclosure zone/filters | field-needed | Chip strip scrolls, search full width |
-| Resident edit, intake | field-needed | Long but single-column; intake is a step wizard |
+| `/enclosures` filters and cards | field-needed | Chips scroll in their strip, but the page itself scrolls sideways (492px): the per-zone card grids have no column template below `sm` — sweep item |
+| Resident edit, intake | field-needed | Fit at 375 (measured); long but single-column, intake is a step wizard |
 
 **Desktop-only pages show a notice, not nothing.** Below `md` they render
 `LargerScreenNotice` — "Best on a larger screen" with a **Show anyway** button
@@ -3480,5 +3480,7 @@ notice in front of a page that works is friction for nothing.
 them. The phone question is an admin's and a manager's.
 
 **For the Mobile responsiveness sweep** (backlog), which inherits this list:
-the field-needed rows above, plus Security's users table role column (the one
-nice-to-have page that scrolls sideways to reach a control).
+the field-needed rows above — `/enclosures` first, the one page found
+scrolling sideways as a whole, recorded with its cause on the sweep item —
+plus Security's users table role column (the one nice-to-have page that
+scrolls sideways to reach a control).
