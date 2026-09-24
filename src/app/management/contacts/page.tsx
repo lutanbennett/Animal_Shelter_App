@@ -5,6 +5,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { CONTACT_COLUMNS, type Contact } from "@/lib/contacts/contacts";
 import { CreateContactForm } from "./CreateContactForm";
 import { ContactsTable, type ContactRow } from "./ContactsTable";
+import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 
 export default async function ContactsAdminPage(
   props: PageProps<"/management/contacts">,
@@ -107,56 +108,58 @@ export default async function ContactsAdminPage(
         </p>
       </div>
 
-      {contactsResult.error && (
-        <p className="text-sm text-danger">
-          {t.management.contacts.couldntLoad}: {contactsResult.error.message}
-        </p>
-      )}
-      {placementsResult.error && (
-        <p className="text-sm text-danger">
-          {t.management.contacts.couldntLoadUsage}: {placementsResult.error.message}
-        </p>
-      )}
-
-      <CreateContactForm />
-      <div className="flex flex-col gap-2">
-        {(archivedCount > 0 || friendCount > 0 || onlyFriends) && (
-          <p className="flex flex-wrap items-center gap-2 text-sm text-muted">
-            {archivedCount > 0 && (
-              <>
-                {showArchived
-                  ? a.archivedIncluded(archivedCount)
-                  : a.archivedHidden(archivedCount)}
-                {/* A link, not a checkbox: flipping it changes the list straight away. */}
-                <Link
-                  href={hrefWith(!showArchived, onlyFriends)}
-                  className={chipClass(showArchived)}
-                >
-                  {showArchived ? a.hideArchived : a.showArchived}
-                </Link>
-              </>
-            )}
-            {(friendCount > 0 || onlyFriends) && (
-              <Link
-                href={hrefWith(showArchived, !onlyFriends)}
-                aria-current={onlyFriends ? "true" : undefined}
-                className={chipClass(onlyFriends)}
-              >
-                {t.shelterFriends.filterChip} {friendCount}
-              </Link>
-            )}
-            {friendCount > 0 && (
-              <Link
-                href="/management/shelter-friends"
-                className="text-xs font-medium text-primary hover:underline"
-              >
-                {t.shelterFriends.manage.title} &rarr;
-              </Link>
-            )}
+      <LargerScreenNotice>
+        {contactsResult.error && (
+          <p className="text-sm text-danger">
+            {t.management.contacts.couldntLoad}: {contactsResult.error.message}
           </p>
         )}
-        <ContactsTable contacts={contacts} />
-      </div>
+        {placementsResult.error && (
+          <p className="text-sm text-danger">
+            {t.management.contacts.couldntLoadUsage}: {placementsResult.error.message}
+          </p>
+        )}
+
+        <CreateContactForm />
+        <div className="flex flex-col gap-2">
+          {(archivedCount > 0 || friendCount > 0 || onlyFriends) && (
+            <p className="flex flex-wrap items-center gap-2 text-sm text-muted">
+              {archivedCount > 0 && (
+                <>
+                  {showArchived
+                    ? a.archivedIncluded(archivedCount)
+                    : a.archivedHidden(archivedCount)}
+                  {/* A link, not a checkbox: flipping it changes the list straight away. */}
+                  <Link
+                    href={hrefWith(!showArchived, onlyFriends)}
+                    className={chipClass(showArchived)}
+                  >
+                    {showArchived ? a.hideArchived : a.showArchived}
+                  </Link>
+                </>
+              )}
+              {(friendCount > 0 || onlyFriends) && (
+                <Link
+                  href={hrefWith(showArchived, !onlyFriends)}
+                  aria-current={onlyFriends ? "true" : undefined}
+                  className={chipClass(onlyFriends)}
+                >
+                  {t.shelterFriends.filterChip} {friendCount}
+                </Link>
+              )}
+              {friendCount > 0 && (
+                <Link
+                  href="/management/shelter-friends"
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  {t.shelterFriends.manage.title} &rarr;
+                </Link>
+              )}
+            </p>
+          )}
+          <ContactsTable contacts={contacts} />
+        </div>
+      </LargerScreenNotice>
     </main>
   );
 }

@@ -42,6 +42,7 @@ export type Release = {
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
+  "On a phone, the setup pages made for a computer — Zones, Enclosures, Immunization Types, and Management's Contacts, Vets, Medications and Diets — now say \"Best on a larger screen\" instead of opening as a table you have to scroll sideways, and their tiles are marked Larger screen. Tap Show anyway if it can't wait.",
   "Shelter Friends: thank the local businesses that help the shelter on the public website. Open a supplier under Contacts and tap Make a Shelter Friend, write what they do for the shelter and any offer for supporters, add their logo, website and Facebook page, tick only the contact details they agreed to show, and Publish. Their card appears on a new Shelter Friends page — linked from the website's menu, with a thank-you strip of logos on the home page and a mention on Donate — and Management → Shelter Friends sets the order. Nothing shows on the website until you publish, and archiving the contact takes their card down.",
 ];
 

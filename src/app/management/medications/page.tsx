@@ -9,6 +9,7 @@ import { FrequenciesTable, type FrequencyRow } from "./FrequenciesTable";
 import { ForecastWindowPicker } from "@/components/ForecastWindowPicker";
 import { formatDate } from "@/lib/format";
 import { forecastWindows, parseCustomWindow } from "@/lib/management/forecast-window";
+import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 
 type MedicationQueryRow = {
   id: string;
@@ -126,48 +127,50 @@ export default async function MedicationsAdminPage(props: PageProps<"/management
         <p className="text-sm text-muted">{m.subtitle}</p>
       </div>
 
-      {medicationsResult.error && (
-        <p className="text-sm text-danger">
-          {m.couldntLoad}: {medicationsResult.error.message}
-        </p>
-      )}
-      {prescriptionsResult.error && (
-        <p className="text-sm text-danger">
-          {m.couldntLoadUsage}: {prescriptionsResult.error.message}
-        </p>
-      )}
-      {forecastError && (
-        <p className="text-sm text-danger">
-          {m.couldntLoadForecast}: {forecastError.message}
-        </p>
-      )}
-
-      <section className="flex flex-col gap-4">
-        <CreateMedicationForm />
-        <ForecastWindowPicker
-          from={custom && "window" in custom ? custom.window.from : ""}
-          to={custom && "window" in custom ? custom.window.to : ""}
-          invalid={custom != null && "invalid" in custom}
-        />
-        <MedicationsTable medications={medications} forecastHeadings={forecastHeadings} />
-        <p className="text-xs text-muted">{m.table.forecastNote}</p>
-      </section>
-
-      <section className="flex flex-col gap-4">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">
-            {m.frequenciesHeading}
-          </h2>
-          <p className="text-sm text-muted">{m.frequenciesIntro}</p>
-        </div>
-        {frequenciesResult.error && (
+      <LargerScreenNotice>
+        {medicationsResult.error && (
           <p className="text-sm text-danger">
-            {m.couldntLoadFrequencies}: {frequenciesResult.error.message}
+            {m.couldntLoad}: {medicationsResult.error.message}
           </p>
         )}
-        <CreateFrequencyForm />
-        <FrequenciesTable frequencies={frequencies} />
-      </section>
+        {prescriptionsResult.error && (
+          <p className="text-sm text-danger">
+            {m.couldntLoadUsage}: {prescriptionsResult.error.message}
+          </p>
+        )}
+        {forecastError && (
+          <p className="text-sm text-danger">
+            {m.couldntLoadForecast}: {forecastError.message}
+          </p>
+        )}
+
+        <section className="flex flex-col gap-4">
+          <CreateMedicationForm />
+          <ForecastWindowPicker
+            from={custom && "window" in custom ? custom.window.from : ""}
+            to={custom && "window" in custom ? custom.window.to : ""}
+            invalid={custom != null && "invalid" in custom}
+          />
+          <MedicationsTable medications={medications} forecastHeadings={forecastHeadings} />
+          <p className="text-xs text-muted">{m.table.forecastNote}</p>
+        </section>
+
+        <section className="flex flex-col gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">
+              {m.frequenciesHeading}
+            </h2>
+            <p className="text-sm text-muted">{m.frequenciesIntro}</p>
+          </div>
+          {frequenciesResult.error && (
+            <p className="text-sm text-danger">
+              {m.couldntLoadFrequencies}: {frequenciesResult.error.message}
+            </p>
+          )}
+          <CreateFrequencyForm />
+          <FrequenciesTable frequencies={frequencies} />
+        </section>
+      </LargerScreenNotice>
     </main>
   );
 }

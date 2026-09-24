@@ -36,18 +36,21 @@ export default async function AdminPage() {
       label: t.nav.enclosures,
       description: t.admin.landing.tiles.enclosures,
       icon: ENCLOSURE_ICONS.enclosure,
+      phoneNote: t.largerScreen.tileLabel,
     },
     {
       href: "/admin/zones",
       label: t.nav.zones,
       description: t.admin.landing.tiles.zones,
       icon: ENCLOSURE_ICONS.zone,
+      phoneNote: t.largerScreen.tileLabel,
     },
     {
       href: "/admin/immunization-types",
       label: t.nav.immunizationTypes,
       description: t.admin.landing.tiles.immunizationTypes,
       icon: SECTION_ICONS.immunizations,
+      phoneNote: t.largerScreen.tileLabel,
     },
     {
       href: "/admin/procedure-types",

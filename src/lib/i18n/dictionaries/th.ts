@@ -36,6 +36,13 @@ const th: Dictionary = {
     status: "สถานะ",
   },
 
+  largerScreen: {
+    title: "ใช้งานบนจอใหญ่จะดีกว่า",
+    body: "หน้านี้ใช้สำหรับตั้งค่าระบบ และตารางกว้างเกินกว่าจะแก้ไขบนโทรศัพท์ได้สะดวก เปิดบนคอมพิวเตอร์หรือแท็บเล็ต — หรือใช้งานที่นี่ต่อหากรอไม่ได้",
+    showAnyway: "แสดงต่อ",
+    tileLabel: "จอใหญ่",
+  },
+
   header: {
     appName: "Lanna Care for Animals",
     shortName: "LCA",

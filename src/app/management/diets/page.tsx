@@ -6,6 +6,7 @@ import { DietTypesTable, type DietTypeRow } from "./DietTypesTable";
 import { ForecastWindowPicker } from "@/components/ForecastWindowPicker";
 import { formatDate } from "@/lib/format";
 import { forecastWindows, parseCustomWindow } from "@/lib/management/forecast-window";
+import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 
 type ForecastRow = {
   diet_type_id: string;
@@ -97,32 +98,34 @@ export default async function DietsManagementPage(props: PageProps<"/management/
         <p className="text-sm text-muted">{m.subtitle}</p>
       </div>
 
-      {typesResult.error && (
-        <p className="text-sm text-danger">
-          {m.couldntLoad}: {typesResult.error.message}
-        </p>
-      )}
-      {dietsResult.error && (
-        <p className="text-sm text-danger">
-          {m.couldntLoadUsage}: {dietsResult.error.message}
-        </p>
-      )}
-      {forecastError && (
-        <p className="text-sm text-danger">
-          {m.couldntLoadForecast}: {forecastError.message}
-        </p>
-      )}
+      <LargerScreenNotice>
+        {typesResult.error && (
+          <p className="text-sm text-danger">
+            {m.couldntLoad}: {typesResult.error.message}
+          </p>
+        )}
+        {dietsResult.error && (
+          <p className="text-sm text-danger">
+            {m.couldntLoadUsage}: {dietsResult.error.message}
+          </p>
+        )}
+        {forecastError && (
+          <p className="text-sm text-danger">
+            {m.couldntLoadForecast}: {forecastError.message}
+          </p>
+        )}
 
-      <section className="flex flex-col gap-4">
-        <CreateDietTypeForm />
-        <ForecastWindowPicker
-          from={custom && "window" in custom ? custom.window.from : ""}
-          to={custom && "window" in custom ? custom.window.to : ""}
-          invalid={custom != null && "invalid" in custom}
-        />
-        <DietTypesTable dietTypes={dietTypes} forecastHeadings={forecastHeadings} />
-        <p className="text-xs text-muted">{m.table.forecastNote}</p>
-      </section>
+        <section className="flex flex-col gap-4">
+          <CreateDietTypeForm />
+          <ForecastWindowPicker
+            from={custom && "window" in custom ? custom.window.from : ""}
+            to={custom && "window" in custom ? custom.window.to : ""}
+            invalid={custom != null && "invalid" in custom}
+          />
+          <DietTypesTable dietTypes={dietTypes} forecastHeadings={forecastHeadings} />
+          <p className="text-xs text-muted">{m.table.forecastNote}</p>
+        </section>
+      </LargerScreenNotice>
     </main>
   );
 }
