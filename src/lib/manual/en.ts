@@ -571,6 +571,7 @@ const manual: Manual = {
           steps: [
             "Open Enclosures. Tap a zone chip to show only that zone, search by enclosure name, or sort by zone, name or Fullest first.",
             "Each card shows how many residents are in the enclosure against its capacity — green for space available, orange for nearly full or full, red for over capacity.",
+            "Tick Has open maintenance to show only enclosures with a job that isn't Completed; it works alongside the zone chips, search and sort, and the address keeps it, so a filtered view can be bookmarked or shared. It counts jobs logged on the enclosure itself — a zone-wide job doesn't put every enclosure in that zone on the list; it stays as the zone-wide count beside the zone's name. Hospital, Unassigned and Fostered are hidden while it's ticked. Vets don't see this option, as maintenance isn't part of their access.",
             "Tap a card to open the enclosure: its notes, every resident in it with a thumbnail, and its open maintenance jobs.",
           ],
           screenshot: {

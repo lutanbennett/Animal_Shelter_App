@@ -2300,6 +2300,7 @@ const en = {
     openJobsTitle: (n: number) =>
       n === 0 ? "No open maintenance jobs" : `${n} open maintenance job${n === 1 ? "" : "s"}`,
     zoneWideJobs: (n: number) => `${n} zone-wide job${n === 1 ? "" : "s"}`,
+    hasOpenMaintenance: "Has open maintenance",
     residentsCount: (n: number) => `${n} resident${n === 1 ? "" : "s"}`,
     occupancy: (count: number, capacity: number) => `${count} / ${capacity}`,
     noCapacity: "No capacity set",
