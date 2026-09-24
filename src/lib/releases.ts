@@ -41,7 +41,9 @@ export type Release = {
 };
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: string[] = [];
+export const unreleased: string[] = [
+  "The Enclosures page has a new Has open maintenance tick that shows only the enclosures with a repair job still outstanding. It works with the zone buttons and the search, and a filtered page can be bookmarked. Vets don't see it, because maintenance isn't part of their access.",
+];
 
 /** Newest first. */
 export const releases: Release[] = [
