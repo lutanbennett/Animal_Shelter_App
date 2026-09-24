@@ -13,10 +13,10 @@ is held to.
 | Backlog item | `docs/backlog.md` → Completed → Resident operations → "Intake warns when the chosen enclosure is nearly full or full" |
 | Branch / worktree | `claude/intake-capacity-warning` @ `C:\Development\Animal_Shelter_intake-capacity-warning` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3003` |
-| PR | not yet open at this commit |
+| PR | [#77](https://github.com/lutanbennett/Animal_Shelter_App/pull/77) |
 | Tested by / date | Claude (intake-capacity-warning session), 2026-09-24 |
 | Carries a migration? | no |
-| Tested at SHA | the working tree committed as the feature commit on `claude/intake-capacity-warning`, after `sync` to `06e208c` |
+| Tested at SHA | the working tree committed as the feature commit on `claude/intake-capacity-warning`, `a6c21f3`, synced to `6908d14` (#76, migration + script only — nothing this branch touches) |
 
 ## 1. Scope and risk
 
@@ -31,7 +31,7 @@ is held to.
 - [x] `npm run typecheck` — exit 0
 - [x] `npm run lint` — exit 0
 - [x] `npm run build` — exit 0
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — `check` and `test-plan` both pass on #77 at `a6c21f3`
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -105,7 +105,7 @@ residents left in dev, which is disposable.
 ### On the deployed build
 
 - [ ] Deployed to test: `npm run deploy:test` — deferred: production release manager
-- [ ] Smoke-tested on `test.lannacare.org` — an intake into a full enclosure asks, and Register anyway registers — deferred: production release manager
+- [ ] Smoke-tested on `test.lannacare.org` — an intake into a full enclosure asks, and Register anyway registers; **done on a real phone** (moved here from Left for manual verification: nobody has done the phone pass yet, and the manual signature below must not cover it) — deferred: production release manager
 - [ ] Timezone-sensitive behaviour proved — n/a: no date logic changed
 - [ ] Boundary or banding change covered on both edges — n/a: no threshold changed; `capacityWarningLevel()` and `occupancyLevel()` are reused as they are
 - [ ] Evidence pasted into this plan is the tool's actual output, unedited — n/a: the evidence is browser text quoted inline above, not a pasted tool run
@@ -138,8 +138,7 @@ residents left in dev, which is disposable.
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | The Thai wording of the new dialog sentences reads naturally ("… เมื่อรับตัวนี้เข้าจะเป็น …", "ลงทะเบียนต่อไป") — the Thai dialog was not seen on screen, only the Thai intake page and the Unassigned registration | `/residents/new` in ไทย, choose a full enclosure (e.g. Front Zone 6), Register |
-| 2 | The flow feels right on a real phone at the gate: picker readable, dialog buttons reachable | `/residents/new` on a phone against `test.lannacare.org` |
+| 1 | The Thai wording of the new dialog sentences reads naturally ("… เมื่อรับตัวนี้เข้าจะเป็น …", "ลงทะเบียนต่อไป") — **checked by Lutan, 2026-09-24** | `/residents/new` in ไทย, choose a full enclosure (e.g. Front Zone 6), Register |
 
 ## Sign-off
 
@@ -152,14 +151,14 @@ Automated checks by: Claude (intake-capacity-warning session)  Date: 2026-09-24
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — two items await Lutan
+- [x] The manual list above is empty, or every item in it was checked by a person — Lutan confirmed the Thai wording in chat. The real-phone pass was moved to §8's deployed smoke test, because nobody has done it yet and this signature must not cover it
 
-Manual verification by: pending: Thai dialog wording and a real-phone pass (Left for manual verification 1–2)
+Manual verification by: Lutan Bennett — confirmed the Thai wording in chat and asked for the sign-off; line written by Claude at their request  Date: 2026-09-24
 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist in the PR: `docs/test-plans/intake-capacity-warning.md` in #77's diff, summarised in its description
 - [ ] Handed to the production release manager — n/a: not yet — handed over once the PR is open and signed
 
 Result: pass with accepted defects
