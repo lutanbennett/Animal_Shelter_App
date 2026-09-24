@@ -3204,6 +3204,21 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   the deployed Workers build.
   `management/translations` was never affected: `TranslationPanel` and
   `TranslationQueue` update from the row the action returns.
+- **Release notes accordion: `<details>`, newest open, a hash effect for
+  anchors, no Expand all (2026-09-24):** each release on `/releases` is a
+  native `<details>`/`<summary>`, so the page stays a server component
+  and is keyboard and screen-reader accessible with no client code. The
+  newest release starts open — it is the one people come to read — and
+  the dev-only "Not released yet" block is not a `<details>` at all, so
+  it stays expanded. The `id="v<version>"` sits on the `<details>`
+  itself, and `OpenReleaseFromHash` (the page's only client child;
+  renders nothing) opens the targeted release on mount and on
+  `hashchange`, then scrolls to it: without it, existing
+  `/releases#v0.2.0` links land on a closed row with the notes hidden.
+  Both paths are needed — a cold load never fires `hashchange`, and an
+  in-page anchor click never re-mounts. Expand all / Collapse all was
+  left out: with three releases it is chrome nobody needs; revisit once
+  there are enough that opening them one by one is a chore.
 - **`/plan-day` plans nine items as three sequential batches, and
   disjointness applies only within a batch (2026-09-24):** Lutan averages
   6–9 backlog items per release and works through them in chunks of
