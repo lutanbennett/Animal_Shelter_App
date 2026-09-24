@@ -34,7 +34,7 @@
   ```
 
   (`0 file(s) checked` is correct: nothing above 0077 exists yet.)
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): PR #95, run 35996874923 — `check` pass (1m13s), `test-plan` pass
 
 ## 3. Schema and data
 
