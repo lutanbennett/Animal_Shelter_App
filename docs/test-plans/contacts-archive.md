@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [x] CI green on the PR (runs the same three) — #90, run 35988339258: `check` pass (1m29s), `test-plan` pass
+- [x] CI green on the PR (runs the same three) — #90, run 35988339258: `check` pass (1m29s). `test-plan` shows pass only because the soft gate doesn't block; its step exited 1, "1 item(s) await a person" (the manual items below)
 
 ## 3. Schema and data — *skip if no migration*
 
