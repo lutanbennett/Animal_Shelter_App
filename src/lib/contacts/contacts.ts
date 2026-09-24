@@ -33,10 +33,24 @@ export type Contact = {
   whatsapp: string | null;
   address: string | null;
   notes: string | null;
+  /** Set = archived (0075): kept with its history, out of default lists and pickers. */
+  archived_at: string | null;
+  /** Optional reason given when archiving; null whenever archived_at is. */
+  archive_reason: string | null;
 };
 
 export const CONTACT_COLUMNS =
-  "id, name, type, phone, email, line_id, messenger_id, whatsapp, address, notes";
+  "id, name, type, phone, email, line_id, messenger_id, whatsapp, address, notes, archived_at, archive_reason";
+
+/**
+ * Archived contacts stay in the table — a carer's placements, a supplier's
+ * notes — but drop out of the default lists and every picker. The lists
+ * offer them back behind a Show archived toggle, and a search still finds
+ * them (with the badge) rather than reporting no match.
+ */
+export function isArchived(contact: { archived_at: string | null }) {
+  return contact.archived_at !== null;
+}
 
 /**
  * `tel:` link for a stored phone number. Staff type numbers the way they

@@ -22,6 +22,7 @@ import { endDietToday } from "@/app/diets/actions";
 import { defaultDailyQuantity, formatQuantity } from "@/lib/diets/options";
 import { WeightChart } from "@/components/WeightChart";
 import { ActionLink } from "@/components/ActionLink";
+import { ArchivedBadge } from "@/components/ArchivedBadge";
 import {
   PLACEMENT_ICONS,
   SECTION_ICONS,
@@ -120,7 +121,7 @@ export default async function ResidentSectionPage(
       const { data, error } = await supabase
         .from("placement_history")
         .select(
-          "id, placement_type, start_date, end_date, notes, cause_of_death, enclosure:enclosures!enclosure_id(name, name_th), previous_enclosure:enclosures!previous_enclosure_id(name, name_th), carer:contacts(name)",
+          "id, placement_type, start_date, end_date, notes, cause_of_death, enclosure:enclosures!enclosure_id(name, name_th), previous_enclosure:enclosures!previous_enclosure_id(name, name_th), carer:contacts(name, archived_at, archive_reason)",
         )
         .eq("resident_id", id)
         .order("start_date", { ascending: false })
@@ -134,7 +135,13 @@ export default async function ResidentSectionPage(
             cause_of_death: string | null;
             enclosure: { name: string; name_th: string | null } | null;
             previous_enclosure: { name: string; name_th: string | null } | null;
-            carer: { name: string } | null;
+            // An archived carer is still named — this is their history —
+            // with the badge, so nobody tries to place a new animal there.
+            carer: {
+              name: string;
+              archived_at: string | null;
+              archive_reason: string | null;
+            } | null;
           }[]
         >();
       // Which placement actions apply depends on the lifecycle status — see
@@ -179,7 +186,7 @@ export default async function ResidentSectionPage(
                   </span>
                 </div>
                 {row.enclosure?.name && (
-                  <span className="text-xs text-muted">
+                  <span className="flex flex-wrap items-center gap-x-1 text-xs text-muted">
                     {[
                       row.previous_enclosure?.name
                         ? `${placeName(locale, row.previous_enclosure.name, row.previous_enclosure.name_th)} → ${placeName(locale, row.enclosure.name, row.enclosure.name_th)}`
@@ -188,6 +195,16 @@ export default async function ResidentSectionPage(
                     ]
                       .filter(Boolean)
                       .join(" · ")}
+                    {row.carer?.archived_at && (
+                      <ArchivedBadge
+                        label={t.contacts.archive.badge}
+                        title={
+                          row.carer.archive_reason
+                            ? t.contacts.archive.reason(row.carer.archive_reason)
+                            : undefined
+                        }
+                      />
+                    )}
                   </span>
                 )}
                 {row.cause_of_death && (

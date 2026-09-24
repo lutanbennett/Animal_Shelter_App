@@ -1041,7 +1041,7 @@ const en = {
         nameRequired: "Name is required.",
         invalidType: "Choose a contact type.",
         hasPlacements: (n: number) =>
-          `This contact has ${n} placement${n === 1 ? "" : "s"} recorded and can't be deleted — the placements are part of the residents' history.`,
+          `This contact has ${n} placement${n === 1 ? "" : "s"} recorded and can't be deleted — the placements are part of the residents' history. Archive them instead.`,
         typeLockedByPlacements: (n: number) =>
           `This contact has ${n} placement${n === 1 ? "" : "s"} as a carer, so their type must stay Carer.`,
       },
@@ -1380,6 +1380,34 @@ const en = {
       unknownResident: "Unknown resident",
       assignFromResident:
         "To place a resident with this carer, open the resident's hub and use Foster / adopt.",
+      archivedCarer:
+        "Archived contacts can't be given a new resident. Restore them first.",
+    },
+    archive: {
+      badge: "Archived",
+      archivedOn: (date: string) => `Archived on ${date}`,
+      reason: (reason: string) => `Reason: ${reason}`,
+      archive: "Archive",
+      restore: "Restore",
+      reasonLabel: "Reason (optional)",
+      reasonPlaceholder: "e.g. moved to Chiang Rai",
+      confirmArchive: "Archive contact",
+      explain:
+        "Archiving keeps the contact and their history but takes them out of the lists and pickers. You can restore them at any time.",
+      showArchived: "Show archived",
+      hideArchived: "Hide archived",
+      archivedHidden: (n: number) => `${n} archived hidden`,
+      archivedIncluded: (n: number) => `including ${n} archived`,
+      searchIncludesArchived: "Archived contacts that match are shown with a badge.",
+      archivedContact: (name: string) => `Archived "${name}".`,
+      restoredContact: (name: string) => `Restored "${name}".`,
+      returnResident: (name: string) => `Return ${name} to the shelter →`,
+      errors: {
+        hasResidentsInCare: (n: number) =>
+          `${n === 1 ? "A resident is" : `${n} residents are`} living with this carer now. Return them or move them to another carer before archiving.`,
+        alreadyArchived: "This contact is already archived.",
+        notArchived: "This contact isn't archived.",
+      },
     },
   },
   bloodTests: {
@@ -2136,6 +2164,8 @@ const en = {
           "This resident has been adopted. Return them to the shelter first if they're coming back into foster care.",
         carerNotFound: "That carer no longer exists in contacts.",
         carerNotCarer: "That contact isn't recorded as a carer.",
+        carerArchived: (name: string) =>
+          `${name} is archived. A manager can restore them under Management → Contacts before a resident is placed with them.`,
         sameCarer: "The resident is already with that carer.",
       },
     },

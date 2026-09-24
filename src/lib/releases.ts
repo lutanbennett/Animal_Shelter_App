@@ -42,6 +42,7 @@ export type Release = {
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
+  "Contacts can now be archived instead of deleted. Archive a carer, volunteer or supplier the shelter no longer works with, from Management → Contacts or their own page, and add a reason if you like. They leave the contact lists and the carer picker but keep their history: a resident's housing history still names them, with an Archived badge. Show archived lists them again, a search still finds them, and Restore brings them back. A resident can't be placed with an archived carer until they're restored.",
   "The Enclosures page has a new Has open maintenance tick that shows only the enclosures with a repair job still outstanding. It works with the zone buttons and the search, and a filtered page can be bookmarked. Vets don't see it, because maintenance isn't part of their access.",
 ];
 

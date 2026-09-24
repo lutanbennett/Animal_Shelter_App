@@ -3,11 +3,15 @@
 import { Fragment, useState, useTransition } from "react";
 import Link from "next/link";
 import { deleteContact, updateContact } from "./actions";
+import { ArchiveContactControl } from "@/components/ArchiveContactControl";
+import { ArchivedBadge } from "@/components/ArchivedBadge";
+import { formatDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { contactTypeLabel } from "@/lib/i18n/enum-labels";
 import {
   CARER_CONTACT_TYPE,
   CONTACT_TYPES,
+  isArchived,
   type Contact,
   type ContactType,
 } from "@/lib/contacts/contacts";
@@ -17,15 +21,18 @@ export type ContactRow = Contact & {
   placement_count: number;
   /** Of those, still open: residents living with this carer now. */
   in_care_count: number;
-  /** Maintenance jobs assigned to them — blocks delete. */
+  /** The residents behind in_care_count — blocks archiving, with a return link each. */
+  residents_in_care: { id: string; name: string }[];
 };
 
 const inputClass =
   "w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary";
 
 function ContactRowItem({ contact }: { contact: ContactRow }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const c = t.management.contacts;
+  const a = t.contacts.archive;
+  const archived = isArchived(contact);
   const [name, setName] = useState(contact.name);
   const [type, setType] = useState<ContactType>(contact.type);
   const [phone, setPhone] = useState(contact.phone ?? "");
@@ -108,7 +115,9 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
 
   return (
     <Fragment>
-      <tr className="align-top hover:bg-surface-hover">
+      <tr
+        className={`align-top hover:bg-surface-hover ${archived && !editing ? "bg-surface/60" : ""}`}
+      >
         <td className="px-4 py-2">
           {editing ? (
             <input
@@ -117,12 +126,27 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
               className={`${inputClass} min-w-36`}
             />
           ) : (
-            <Link
-              href={`/contacts/${contact.id}`}
-              className="font-medium text-foreground hover:underline"
-            >
-              {contact.name}
-            </Link>
+            <div className="flex flex-col gap-1">
+              <Link
+                href={`/contacts/${contact.id}`}
+                className={`font-medium hover:underline ${archived ? "text-muted" : "text-foreground"}`}
+              >
+                {contact.name}
+              </Link>
+              {archived && (
+                <>
+                  <ArchivedBadge label={a.badge} />
+                  <span className="text-xs text-muted">
+                    {a.archivedOn(formatDate(contact.archived_at, locale))}
+                  </span>
+                  {contact.archive_reason && (
+                    <span className="max-w-48 whitespace-pre-line text-xs text-muted">
+                      {a.reason(contact.archive_reason)}
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
           )}
         </td>
         <td className="px-4 py-2">
@@ -271,7 +295,7 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
           )}
         </td>
         <td className="px-4 py-2">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-start gap-2">
             {editing ? (
               <>
                 <button
@@ -312,6 +336,12 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
             >
               {t.common.delete}
             </button>
+            {!editing && (
+              <ArchiveContactControl
+                contact={contact}
+                residentsInCare={contact.residents_in_care}
+              />
+            )}
           </div>
         </td>
       </tr>

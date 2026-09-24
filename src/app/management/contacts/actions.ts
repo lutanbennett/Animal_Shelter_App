@@ -36,6 +36,9 @@ function revalidateContactPages(id?: string) {
   revalidatePath("/management/contacts");
   revalidatePath("/contacts");
   if (id) revalidatePath(`/contacts/${id}`);
+  // Housing history names the carer (with the Archived badge), and the
+  // foster / adopt form's picker leaves archived carers out.
+  revalidatePath("/residents", "layout");
 }
 
 export async function createContact(
@@ -121,6 +124,76 @@ export async function updateContact(id: string, fields: ContactFields) {
     .eq("id", id);
 
   if (error) throw new Error(error.message);
+  revalidateContactPages(id);
+}
+
+/**
+ * Archives a contact: kept, with every placement naming them, but out of
+ * the default lists and the carer picker. The way to "remove" anyone with
+ * history — deleteContact is only for a contact with none.
+ *
+ * A carer with a resident living with them now can't be archived: the
+ * resident's hub, the return form and the rehome form all read that carer
+ * as current, and an archived current carer is a contradiction. Return or
+ * move the resident first.
+ */
+export async function archiveContact(id: string, reason: string | null) {
+  await assertManagementRole();
+  const { t } = await getT();
+  const a = t.contacts.archive;
+
+  const supabase = await createClient();
+
+  const { count: inCare, error: inCareError } = await supabase
+    .from("placement_history")
+    .select("id", { count: "exact", head: true })
+    .eq("carer_id", id)
+    .is("end_date", null);
+  if (inCareError) throw new Error(inCareError.message);
+  if ((inCare ?? 0) > 0) throw new Error(a.errors.hasResidentsInCare(inCare ?? 0));
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Only a live row is archived, so a second click (or a second tab)
+  // can't overwrite who archived it and when.
+  const { data, error } = await supabase
+    .from("contacts")
+    .update({
+      archived_at: new Date().toISOString(),
+      archived_by: user?.id ?? null,
+      archive_reason: optional(reason),
+    })
+    .eq("id", id)
+    .is("archived_at", null)
+    .select("id");
+
+  if (error) throw new Error(error.message);
+  if (!data?.length) throw new Error(a.errors.alreadyArchived);
+  revalidateContactPages(id);
+}
+
+/**
+ * Restores an archived contact. All three archive columns clear in the one
+ * update: contacts_archive_fields_consistent (0075) only lets who and why
+ * exist while archived_at is set, so clearing archived_at alone is
+ * rejected by the database.
+ */
+export async function restoreContact(id: string) {
+  await assertManagementRole();
+  const { t } = await getT();
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("contacts")
+    .update({ archived_at: null, archived_by: null, archive_reason: null })
+    .eq("id", id)
+    .not("archived_at", "is", null)
+    .select("id");
+
+  if (error) throw new Error(error.message);
+  if (!data?.length) throw new Error(t.contacts.archive.errors.notArchived);
   revalidateContactPages(id);
 }
 
