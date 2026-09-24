@@ -1,0 +1,162 @@
+{
+  "/manual/admin-enclosures.png": {
+    "width": 1920,
+    "height": 1200
+  },
+  "/manual/admin-immunization-types.png": {
+    "width": 1920,
+    "height": 1200
+  },
+  "/manual/admin-procedure-types.png": {
+    "width": 1920,
+    "height": 1200
+  },
+  "/manual/admin-security.png": {
+    "width": 1920,
+    "height": 1200
+  },
+  "/manual/admin-website.png": {
+    "width": 1898,
+    "height": 3203
+  },
+  "/manual/admin-zones.png": {
+    "width": 1920,
+    "height": 1200
+  },
+  "/manual/blood-test-new.png": {
+    "width": 1898,
+    "height": 1238
+  },
+  "/manual/contact-hub.png": {
+    "width": 1898,
+    "height": 1238
+  },
+  "/manual/contacts.png": {
+    "width": 1920,
+    "height": 1200
+  },
+  "/manual/enclosure-hub.png": {
+    "width": 1898,
+    "height": 1238
+  },
+  "/manual/enclosures.png": {
+    "width": 1920,
+    "height": 1200
+  },
+  "/manual/immunizations-new.png": {
+    "width": 1898,
+    "height": 1238
+  },
+  "/manual/login.png": {
+    "width": 1920,
+    "height": 1200
+  },
+  "/manual/maintenance-board.png": {
+    "width": 1920,
+    "height": 1200
+  },
+  "/manual/maintenance-new.png": {
+    "width": 1898,
+    "height": 1547
+  },
+  "/manual/management-contacts.png": {
+    "width": 1920,
+    "height": 1200
+  },
+  "/manual/management-dashboard.png": {
+    "width": 1898,
+    "height": 2106
+  },
+  "/manual/management-medications.png": {
+    "width": 1898,
+    "height": 1892
+  },
+  "/manual/management-vets.png": {
+    "width": 1920,
+    "height": 1200
+  },
+  "/manual/nav-mobile.png": {
+    "width": 585,
+    "height": 1266
+  },
+  "/manual/prescription-new.png": {
+    "width": 1898,
+    "height": 1238
+  },
+  "/manual/procedure-new.png": {
+    "width": 1898,
+    "height": 1238
+  },
+  "/manual/project-folder.png": {
+    "width": 1898,
+    "height": 1238
+  },
+  "/manual/projects.png": {
+    "width": 1920,
+    "height": 1200
+  },
+  "/manual/public-adopt.png": {
+    "width": 1920,
+    "height": 1200
+  },
+  "/manual/public-home.png": {
+    "width": 1898,
+    "height": 3840
+  },
+  "/manual/public-our-work.png": {
+    "width": 1920,
+    "height": 1200
+  },
+  "/manual/resident-deceased.png": {
+    "width": 1898,
+    "height": 1238
+  },
+  "/manual/resident-hospital.png": {
+    "width": 1898,
+    "height": 1238
+  },
+  "/manual/resident-housing.png": {
+    "width": 1898,
+    "height": 1238
+  },
+  "/manual/resident-hub.png": {
+    "width": 1898,
+    "height": 1259
+  },
+  "/manual/resident-intake.png": {
+    "width": 1898,
+    "height": 1880
+  },
+  "/manual/resident-move.png": {
+    "width": 1898,
+    "height": 1238
+  },
+  "/manual/resident-photos.png": {
+    "width": 1898,
+    "height": 1238
+  },
+  "/manual/resident-rehome.png": {
+    "width": 1898,
+    "height": 1316
+  },
+  "/manual/residents-list.png": {
+    "width": 1920,
+    "height": 1200
+  },
+  "/manual/vet-hub.png": {
+    "width": 1898,
+    "height": 1590
+  },
+  "/manual/vet-visit-new.png": {
+    "width": 1898,
+    "height": 1238
+  },
+  "/manual/vets.png": {
+    "width": 1920,
+    "height": 1200
+  },
+  "/manual/weight-history.png": {
+    "width": 1898,
+    "height": 1272
+  }
+}

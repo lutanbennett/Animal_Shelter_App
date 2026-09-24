@@ -19,17 +19,29 @@
 // The signed-in session is kept in a JSON file under the OS temp folder so
 // a re-run the same day skips the sign-in step; delete that file (its path
 // is printed) or pass --fresh to sign in again.
+//
+// Every run ends by writing src/lib/manual/screenshot-sizes.json: the pixel
+// size of each PNG in public/manual/, read from the files themselves. The
+// manual gives each <img> that width and height so the browser reserves the
+// space before the lazy images load, and a link to /manual#topic lands on
+// the topic instead of above it. To refresh just that file without
+// re-capturing anything (after adding or replacing a PNG by hand):
+//
+//   node scripts/manual-screenshots.mjs --sizes
 
-import { access, mkdir, rm } from "node:fs/promises";
+import { access, mkdir, open, readdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright-core";
 
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BASE = (process.env.MANUAL_BASE_URL ?? "http://localhost:3000").replace(/\/$/, "");
-const OUT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "public", "manual");
+const OUT = path.join(ROOT, "public", "manual");
+const SIZES_FILE = path.join(ROOT, "src", "lib", "manual", "screenshot-sizes.json");
 const STATE_FILE = path.join(os.tmpdir(), "lca-manual-screenshots-session.json");
 const FRESH = process.argv.includes("--fresh");
+const SIZES_ONLY = process.argv.includes("--sizes");
 
 /** Placeholder shown where the signed-in user's email would be. */
 const EMAIL_PLACEHOLDER = "you@example.com";
@@ -90,6 +102,7 @@ const SIGNED_OUT = [
 ];
 
 async function main() {
+  if (SIZES_ONLY) return writeSizes();
   await mkdir(OUT, { recursive: true });
 
   const browser = await launch();
@@ -155,6 +168,36 @@ async function main() {
     console.log(`Done — ${SIGNED_IN.length + SIGNED_OUT.length + 1} screenshots in ${path.relative(process.cwd(), OUT)}`);
   } finally {
     await browser.close();
+  }
+  await writeSizes();
+}
+
+/**
+ * Record every PNG's size in SIZES_FILE, keyed by the `src` the manual uses.
+ * Read from the files rather than worked out from the viewport, because a
+ * full-page capture's height is only known once it has been taken, and a
+ * PNG dropped in by hand is covered too.
+ */
+async function writeSizes() {
+  const sizes = {};
+  for (const name of (await readdir(OUT)).filter((n) => n.endsWith(".png")).sort()) {
+    sizes[`/manual/${name}`] = await pngSize(path.join(OUT, name));
+  }
+  await writeFile(SIZES_FILE, `${JSON.stringify(sizes, null, 2)}\n`);
+  console.log(`${Object.keys(sizes).length} sizes in ${path.relative(process.cwd(), SIZES_FILE)}`);
+}
+
+/** Width and height from a PNG's IHDR chunk, which always comes first. */
+async function pngSize(file) {
+  const handle = await open(file);
+  try {
+    const { buffer } = await handle.read(Buffer.alloc(24), 0, 24, 0);
+    if (buffer.readUInt32BE(0) !== 0x89504e47 || buffer.toString("ascii", 12, 16) !== "IHDR") {
+      throw new Error(`${file} is not a PNG`);
+    }
+    return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
+  } finally {
+    await handle.close();
   }
 }
 
