@@ -37,7 +37,7 @@ export function SectionTiles({ tiles }: { tiles: SectionTile[] }) {
             <span className="min-w-0 flex-1 font-medium text-foreground">
               {label}
               {phoneNote && (
-                <span className="ml-2 rounded-full border border-border px-1.5 py-px align-middle text-[10px] font-semibold uppercase tracking-wide text-muted md:hidden">
+                <span className="ml-2 inline-block whitespace-nowrap rounded-full border border-border px-1.5 py-px align-middle text-[10px] font-semibold uppercase tracking-wide text-muted md:hidden">
                   {phoneNote}
                 </span>
               )}

@@ -6,7 +6,6 @@ import {
   ProcedureTypesTable,
   type ProcedureTypeRow,
 } from "./ProcedureTypesTable";
-import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 
 export default async function ProcedureTypesPage() {
   await requireAdminUser();
@@ -44,21 +43,19 @@ export default async function ProcedureTypesPage() {
         <p className="text-sm text-muted">{p.subtitle}</p>
       </div>
 
-      <LargerScreenNotice>
-        {typesResult.error && (
-          <p className="text-sm text-danger">
-            {p.couldntLoad}: {typesResult.error.message}
-          </p>
-        )}
-        {proceduresResult.error && (
-          <p className="text-sm text-danger">
-            {p.couldntLoadUsage}: {proceduresResult.error.message}
-          </p>
-        )}
+      {typesResult.error && (
+        <p className="text-sm text-danger">
+          {p.couldntLoad}: {typesResult.error.message}
+        </p>
+      )}
+      {proceduresResult.error && (
+        <p className="text-sm text-danger">
+          {p.couldntLoadUsage}: {proceduresResult.error.message}
+        </p>
+      )}
 
-        <CreateProcedureTypeForm />
-        <ProcedureTypesTable procedureTypes={procedureTypes} />
-      </LargerScreenNotice>
+      <CreateProcedureTypeForm />
+      <ProcedureTypesTable procedureTypes={procedureTypes} />
     </main>
   );
 }

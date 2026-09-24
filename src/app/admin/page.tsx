@@ -57,14 +57,12 @@ export default async function AdminPage() {
       label: t.nav.procedureTypes,
       description: t.admin.landing.tiles.procedureTypes,
       icon: SECTION_ICONS.procedures,
-      phoneNote: t.largerScreen.tileLabel,
     },
     {
       href: "/admin/blood-test-types",
       label: t.nav.bloodTestTypes,
       description: t.admin.landing.tiles.bloodTestTypes,
       icon: SECTION_ICONS["blood-tests"],
-      phoneNote: t.largerScreen.tileLabel,
     },
     {
       href: "/admin/security",
