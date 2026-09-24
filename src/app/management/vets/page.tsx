@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { CreateVetForm } from "./CreateVetForm";
 import { VetsTable, type VetRow } from "./VetsTable";
+import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 
 export default async function VetsAdminPage() {
   await requireManagementUser();
@@ -48,19 +49,21 @@ export default async function VetsAdminPage() {
         </p>
       </div>
 
-      {vetsResult.error && (
-        <p className="text-sm text-danger">
-          {t.management.vets.couldntLoad}: {vetsResult.error.message}
-        </p>
-      )}
-      {visitsResult.error && (
-        <p className="text-sm text-danger">
-          {t.management.vets.couldntLoadVisits}: {visitsResult.error.message}
-        </p>
-      )}
+      <LargerScreenNotice>
+        {vetsResult.error && (
+          <p className="text-sm text-danger">
+            {t.management.vets.couldntLoad}: {vetsResult.error.message}
+          </p>
+        )}
+        {visitsResult.error && (
+          <p className="text-sm text-danger">
+            {t.management.vets.couldntLoadVisits}: {visitsResult.error.message}
+          </p>
+        )}
 
-      <CreateVetForm />
-      <VetsTable vets={vets} />
+        <CreateVetForm />
+        <VetsTable vets={vets} />
+      </LargerScreenNotice>
     </main>
   );
 }

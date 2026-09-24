@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { CreateEnclosureForm } from "./CreateEnclosureForm";
 import { EnclosuresTable, type EnclosureRow } from "./EnclosuresTable";
+import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 
 export default async function EnclosuresPage() {
   await requireAdminUser();
@@ -30,19 +31,21 @@ export default async function EnclosuresPage() {
         <p className="text-sm text-muted">{t.admin.enclosures.subtitle}</p>
       </div>
 
-      {enclosuresResult.error && (
-        <p className="text-sm text-danger">
-          {t.admin.enclosures.couldntLoadEnclosures}: {enclosuresResult.error.message}
-        </p>
-      )}
-      {zonesResult.error && (
-        <p className="text-sm text-danger">
-          {t.admin.enclosures.couldntLoadZones}: {zonesResult.error.message}
-        </p>
-      )}
+      <LargerScreenNotice>
+        {enclosuresResult.error && (
+          <p className="text-sm text-danger">
+            {t.admin.enclosures.couldntLoadEnclosures}: {enclosuresResult.error.message}
+          </p>
+        )}
+        {zonesResult.error && (
+          <p className="text-sm text-danger">
+            {t.admin.enclosures.couldntLoadZones}: {zonesResult.error.message}
+          </p>
+        )}
 
-      <CreateEnclosureForm zones={zones} />
-      <EnclosuresTable enclosures={enclosuresResult.data ?? []} zones={zones} />
+        <CreateEnclosureForm zones={zones} />
+        <EnclosuresTable enclosures={enclosuresResult.data ?? []} zones={zones} />
+      </LargerScreenNotice>
     </main>
   );
 }

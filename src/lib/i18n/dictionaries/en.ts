@@ -34,6 +34,15 @@ const en = {
     status: "Status",
   },
 
+  // The notice a desktop-only Settings/Management page shows on a phone
+  // (components/LargerScreenNotice.tsx), and the tile label that warns of it.
+  largerScreen: {
+    title: "Best on a larger screen",
+    body: "This page is for setting things up, and its tables are too wide to edit comfortably on a phone. Open it on a computer or tablet — or carry on here if it can't wait.",
+    showAnyway: "Show anyway",
+    tileLabel: "Larger screen",
+  },
+
   header: {
     appName: "Lanna Care for Animals",
     shortName: "LCA",

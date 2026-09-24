@@ -41,7 +41,9 @@ export type Release = {
 };
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: string[] = [];
+export const unreleased: string[] = [
+  "On a phone, the setup pages made for a computer — Zones, Enclosures, Immunization Types, and Management's Contacts, Vets, Medications and Diets — now say \"Best on a larger screen\" instead of opening as a table you have to scroll sideways, and their tiles are marked Larger screen. Tap Show anyway if it can't wait.",
+];
 
 /** Newest first. */
 export const releases: Release[] = [

@@ -52,7 +52,7 @@ const manual: Manual = {
       title: "Getting started",
       icon: BookOpen,
       intro:
-        "The app runs in a web browser on a phone, tablet or computer — nothing to install. On a phone it works as a field tool: find a resident, log what you did, add photos. On a computer you get the extra columns, filters and the Management and Settings sections.",
+        "The app runs in a web browser on a phone, tablet or computer — nothing to install. On a phone it works as a field tool: find a resident, log what you did, add photos. On a computer you get the extra columns, filters and the Management and Settings sections. Their setup pages — zones, enclosures and immunization types, and Management's vets, contacts, medications and diets — are wide tables made for a computer, so on a phone they show a \"Best on a larger screen\" note first, and their tiles say \"Larger screen\". If it can't wait, tap Show anyway and the page is all there.",
       topics: [
         {
           id: "sign-in",
