@@ -52,7 +52,7 @@ gates: typecheck=0 lint=0 build=0
 - [ ] Create / edit / delete all exercised (whichever the feature has) — n/a: a read-only filter; it creates, edits and deletes nothing
 - [x] Empty state renders sensibly (no rows yet) — `?zone=<Cat Zone>&maint=open` and `?q=cat&maint=open` both render "No enclosures match these filters."
 - [x] Invalid input is rejected with a readable message, not a crash — `?maint=bogus` is ignored (64 cards, as unfiltered)
-- [x] Boundary cases checked (long text, zero, negative, missing optional fields, dates) — combined with a zone chip (`zone=<Blue>&maint=open` → the one card), with search (`q=blue` → the card, `q=cat` → empty), with `sort=name` (flat list, the one card); zone chips' links carry `maint=open` while it is on; Clear returns to `/enclosures` with the box unticked. The zone-wide-only case could not be driven: dev has no open zone-wide job (see Left for manual verification 1)
+- [x] Boundary cases checked (long text, zero, negative, missing optional fields, dates) — combined with a zone chip (`zone=<Blue>&maint=open` → the one card), with search (`q=blue` → the card, `q=cat` → empty), with `sort=name` (flat list, the one card); zone chips' links carry `maint=open` while it is on; Clear returns to `/enclosures` with the box unticked. Zone-wide-only case: logged a Not started zone-wide job on Cat Zone on dev (`/maintenance/b80e26eb-0ef7-48cf-b463-b91a18a8f66b`, "TEST zone-wide job (enclosure-maintenance-filter verification)", left in place: dev test data is disposable). Unfiltered, Cat Zone's heading reads "1 zone-wide job" and Cat Enclosure's card "0 open"; `?maint=open` drops Cat Zone entirely (only Main Zone - Blue remains); `?zone=<Cat Zone>&maint=open` shows "No enclosures match these filters.", as decided
 
 ### Role access matrix
 
@@ -61,11 +61,11 @@ gates: typecheck=0 lint=0 build=0
 | admin | `/enclosures` | tick shown, filter works | driven in the browser: as expected |
 | management | `/enclosures` | tick shown (`canReadMaintenance` → `canWriteMaintenance`; RLS twin of staff, 0039) | not signed in as; same code path as admin/staff |
 | staff | `/enclosures` | tick shown | not signed in as; same code path as admin |
-| vet | `/enclosures` | tick absent, `?maint=open` ignored | not driven: signing in as a vet needs a vet account's password (Left for manual verification 2) |
+| vet | `/enclosures` | tick absent, `?maint=open` ignored | not driven: signing in as a vet needs a vet account's password (Left for manual verification 1) |
 | volunteer | `/enclosures` | tick shown (`volunteer_read_maintenance`, 0001) | not signed in as |
 | signed out | nothing | sent to sign-in, as before | unchanged by this PR |
 
-- [ ] Every role above tested — n/a: only admin was driven; vet is handed over below, and the other three share admin's code path through `canReadMaintenance`
+- [ ] Every role above tested — n/a: only admin was driven; vet is handed over below (item 1), and the other three share admin's code path through `canReadMaintenance`
 - [ ] A role that should not have access is blocked server-side (hitting the URL directly fails) — n/a: no access is granted or withdrawn; for a vet the server ignores `?maint=open` rather than trusting the hidden control, and RLS already returns vets no jobs
 
 ## 5. Cross-cutting
@@ -90,7 +90,7 @@ gates: typecheck=0 lint=0 build=0
 - [x] `README.md` still accurate — it does not describe the enclosure filters
 - [x] **Release notes.** `unreleased` in `src/lib/releases.ts` gained one line: the Enclosures page's new Has open maintenance tick, that it works with zones and search and can be bookmarked, and that vets don't see it
 - [x] Commit messages say why, not just what
-- [x] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned.** — the RLS claims were read from 0001/0039; the filtered count, Clear behaviour and the mobile squeeze were observed in the browser. The zone-wide consequence ("a zone whose only open job is zone-wide disappears") follows from the code and is item 1 below, not yet observed
+- [x] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned.** — the RLS claims were read from 0001/0039; the filtered count, Clear behaviour and the mobile squeeze were observed in the browser. The zone-wide consequence ("a zone whose only open job is zone-wide disappears") was observed with a test zone-wide job on Cat Zone (section 4)
 
 ## 8. Pre-production gate
 
@@ -136,8 +136,7 @@ gates: typecheck=0 lint=0 build=0
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | An enclosure whose only open job is zone-wide does **not** appear with the tick on, and a zone whose only open job is zone-wide disappears from the filtered list. Dev has no open zone-wide job, so this was not driven | dev or `test.lannacare.org`: log a job on a zone with no enclosure chosen, then `/enclosures?maint=open` |
-| 2 | Signed in as a **vet**: no Has open maintenance tick, and `/enclosures?maint=open` shows every enclosure as if unfiltered. Needs a vet account's sign-in | `/enclosures` and `/enclosures?maint=open` |
+| 1 | Signed in as a **vet**: no Has open maintenance tick, and `/enclosures?maint=open` shows every enclosure as if unfiltered. Needs a vet account's sign-in | `/enclosures` and `/enclosures?maint=open` |
 
 ## Sign-off
 
@@ -150,9 +149,9 @@ Automated checks by: Claude  Date: 2026-09-24
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: two items are outstanding; see the pending line below
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: one item is outstanding; see the pending line below
 
-Manual verification by: pending: the zone-wide-only case and the vet view (Left for manual verification 1 and 2)
+Manual verification by: pending: the vet view (Left for manual verification 1)
 
 ### Result
 
