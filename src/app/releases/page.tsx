@@ -79,7 +79,7 @@ export default function ReleasesPage() {
               <h2 className="flex items-baseline gap-2 text-lg font-semibold text-foreground">
                 <ChevronRight
                   aria-hidden
-                  className="size-4 shrink-0 self-center text-muted transition-transform group-open:rotate-90 motion-reduce:transition-none"
+                  className="mt-1.5 size-4 shrink-0 self-start text-muted transition-transform group-open:rotate-90 motion-reduce:transition-none"
                 />
                 <span>
                   {release.version}
