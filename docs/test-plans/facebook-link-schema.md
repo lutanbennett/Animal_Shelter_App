@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Public website → **Link to the LCA Facebook page from the public site** (ticked on the feature PR, not this one) |
 | Branch / worktree | `claude/facebook-link-schema` @ `C:\Development\Animal_Shelter_facebook-link-schema` |
 | Dev server | not started. This change ships no runtime code |
-| PR | see the PR this plan ships in |
+| PR | #105 |
 | Tested by / date | Claude (automated) / 2026-09-24 |
 | Carries a migration? | yes: `0080_social_urls.sql` |
 | Tested at SHA | branch on `main` @ `1254631` (#103). The migration, harness, `decisions.md` entry and this plan are the only changes |
@@ -30,7 +30,7 @@
 
   gates: typecheck=0 lint=0 build=0
   ```
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — `check` and `test-plan` both pass on #105 (run 36024351925)
 
 ## 3. Schema and data
 
