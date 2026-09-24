@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Facility → **Filter the enclosures page by Internal / External, cascading into the zone filter.** |
 | Branch / worktree | `claude/enclosures-internal-external` @ `C:\Development\Animal_Shelter_enclosures-internal-external` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3001` |
-| PR | opened from this commit |
+| PR | #117 |
 | Tested by / date | Claude, 2026-09-25 (browser pane signed in by Lutan as admin) |
 | Carries a migration? | no |
 | Tested at SHA | `cd04aaa` (code + merge of `origin/main`; this file is the commit after it) |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — #117, run 36049920301: `check` pass (1m35s), `test-plan` pass
 
 ## 3. Schema and data — *skip if no migration*
 
