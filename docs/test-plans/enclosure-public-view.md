@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Facility → **A public view behind enclosure QR codes.** |
 | Branch / worktree | `claude/enclosure-public-view` @ `C:\Development\Animal_Shelter_enclosure-public-view` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3001` |
-| PR | not yet — opened after this commit |
+| PR | #106 |
 | Tested by / date | Claude, 2026-09-24 |
 | Carries a migration? | no (reads `public_enclosures`, 0079, merged and applied to dev by `claude/enclosure-public-view-schema`) |
 | Tested at SHA | `3205427` (code; this file is the commit after it) |
@@ -30,7 +30,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — #106, run 36024413969: `check` pass (1m21s), `test-plan` pass
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -57,14 +57,14 @@ gates: typecheck=0 lint=0 build=0
 
 | Role | Can reach | Expected | Result |
 |---|---|---|---|
-| admin | `/e/<id>` → `/enclosures/<id>` | redirect, as before | not driven — Left for manual verification 1 |
-| management | same | same | not driven — Left for manual verification 1 |
-| staff | same | same | not driven — Left for manual verification 1 |
-| vet | same | same | not driven — Left for manual verification 1 |
-| volunteer | same | same | not driven — Left for manual verification 1 |
+| admin | `/e/<id>` → `/enclosures/<id>` | redirect, as before | pass (signed-in redirect checked by Lutan, 2026-09-24; one role-independent branch) |
+| management | same | same | pass (signed-in redirect checked by Lutan, 2026-09-24; one role-independent branch) |
+| staff | same | same | pass (signed-in redirect checked by Lutan, 2026-09-24; one role-independent branch) |
+| vet | same | same | pass (signed-in redirect checked by Lutan, 2026-09-24; one role-independent branch) |
+| volunteer | same | same | pass (signed-in redirect checked by Lutan, 2026-09-24; one role-independent branch) |
 | signed out | `/e/<id>` public page; `/enclosures`, `/enclosures/<id>`, `/residents` not | public page for physical enclosures, 404 for Lifecycle/unknown, staff routes → sign-in | pass — `/e/` 200/404 as listed above; `/enclosures`, `/enclosures/<id>`, `/residents` all 307 → `/login?next=…` |
 
-- [ ] Every role above tested — n/a: signed out driven by curl and the browser pane; the five signed-in roles share one role-independent branch (`if (user) redirect(...)` before any lookup) and need real sign-ins, left for Lutan
+- [ ] Every role above tested — n/a: signed out driven by curl and the browser pane; Lutan checked the signed-in redirect (2026-09-24, told in chat), and the five roles share one role-independent branch (`if (user) redirect(...)` before any lookup), so each role was not signed in separately
 - [x] A role that should not have access is blocked server-side (hitting the URL directly fails) — signed out, `/enclosures/<id>` still redirects to sign-in; the only public data comes from `public_enclosures`, and the HTML of the busiest enclosure contains no "capacity", "notes", "maintenance", "occupan", "Hospital" or "Fostered"
 
 ## 5. Cross-cutting
@@ -134,7 +134,7 @@ gates: typecheck=0 lint=0 build=0
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | Signed in (any role, ideally one staff and one volunteer): scanning or opening `/e/<id>` lands on the enclosure page, as before | `/e/7e6bd871-f2f8-5622-a02f-11e63dbed85e` on dev or test |
+| 1 | Signed in (any role, ideally one staff and one volunteer): scanning or opening `/e/<id>` lands on the enclosure page, as before — **checked by Lutan 2026-09-24 (told in chat): redirect works** | `/e/7e6bd871-f2f8-5622-a02f-11e63dbed85e` on dev or test |
 | 2 | The two new manual lines read well at `/manual` (Enclosures → The enclosure page; What the public sees) | `/manual` |
 
 ## Sign-off
@@ -148,14 +148,14 @@ Automated checks by: Claude  Date: 2026-09-24
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: two items are outstanding; see the pending line below
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: item 2 is outstanding; see the pending line below
 
-Manual verification by: pending: signed-in redirect and the manual wording (Left for manual verification 1–2)
+Manual verification by: pending: the manual wording (Left for manual verification 2); item 1 checked by Lutan 2026-09-24
 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above — none found
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR — in #106's description
 - [ ] Handed to the production release manager — n/a: not yet — the PR does not exist at this commit
 
 Result: pass
