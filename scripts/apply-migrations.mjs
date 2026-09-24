@@ -46,9 +46,7 @@ import { spawnSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { ENVIRONMENTS, loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
-
-const MIGRATIONS_DIR = "supabase/migrations";
-const MIGRATION_NAME = /^\d{4}_.+\.sql$/;
+import { MIGRATION_NAME, MIGRATIONS_DIR, parseLsTree } from "./lib/migrations.mjs";
 
 // `--drift <env>` is shorthand for `--drift --env <env>`.
 const argv = process.argv.slice(2);
@@ -94,13 +92,7 @@ if (!mainTree.ok) {
   console.error(`Could not read origin/main: ${mainTree.err || "git ls-tree failed"}`);
   process.exit(2);
 }
-const mainBlobs = new Map();
-for (const line of mainTree.out.split("\n").filter(Boolean)) {
-  // "<mode> blob <sha>\t<path>"
-  const [meta, path] = line.split("\t");
-  const name = path.slice(MIGRATIONS_DIR.length + 1);
-  if (MIGRATION_NAME.test(name)) mainBlobs.set(name, meta.split(" ")[2]);
-}
+const mainBlobs = parseLsTree(mainTree.out);
 const mainFiles = [...mainBlobs.keys()].sort();
 const mainSha = git(["rev-parse", "--short", "origin/main"]).out;
 

@@ -1,0 +1,13 @@
+#!/bin/sh
+# Refuse a commit that adds a misnumbered migration: a new file under
+# supabase/migrations/ must be one past the highest on origin/main, and no
+# number may be used twice. The rule lives in scripts/check-migration-numbers.mjs,
+# which CI runs too, so the two cannot drift apart.
+#
+# This hook runs in every worktree on the machine (core.hooksPath is shared),
+# so it fails open: no node, no script (an older branch), no origin/main, or a
+# crash all let the commit through with a note. A commit touching no migration
+# costs one `git diff`. It never fetches; CI checks against a fresh main.
+command -v node >/dev/null 2>&1 || exit 0
+[ -f scripts/check-migration-numbers.mjs ] || exit 0
+node scripts/check-migration-numbers.mjs --staged
