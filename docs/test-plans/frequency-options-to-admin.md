@@ -8,17 +8,17 @@
 | Backlog item | `docs/backlog.md` → Management → **Move frequency options to Admin, apart from medication management.** |
 | Branch / worktree | `claude/frequency-options-to-admin` @ `C:\Development\Animal_Shelter_frequency-options-to-admin` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3008` |
-| PR | not yet opened at this commit |
+| PR | #108 |
 | Tested by / date | Claude, 2026-09-24 (browser pane signed in by Lutan as admin) |
 | Carries a migration? | no |
 | Tested at SHA | `4129248` (code, browser-checked); gates run at `a687e0c` after merging `origin/main` |
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence, and it matches what the backlog item asked for — the frequency create form, table and actions move to `/admin/frequencies` (shaped like `/admin/procedure-types`), and `/management/medications` becomes medications only. The item's RLS question is **not** settled here, see Out of scope
+- [x] Change is described in one sentence, and it matches what the backlog item asked for — the frequency create form, table and actions move to `/admin/frequencies` (shaped like `/admin/procedure-types`), and `/management/medications` becomes medications only. The item's RLS question was settled by Lutan as "leave it alone", so there is no migration
 - [x] Files/areas touched listed (routes, `worker/`, `supabase/migrations/`, shared libs) — new `src/app/admin/frequencies/{page,actions}.ts(x)`; `CreateFrequencyForm.tsx` / `FrequenciesTable.tsx` moved there from `src/app/management/medications/`; frequency code removed from that folder's `page.tsx` and `actions.ts`; a tile in `src/app/admin/page.tsx`; `admin.frequencies` + `nav.frequencies` + a landing tile string added to both dictionaries, and the frequency keys removed from `management.medications`; `src/lib/manual/en.ts`; `src/lib/releases.ts`; `README.md`; `docs/`. `NavLinks.tsx` not touched (Settings pages are reached by its landing tiles). `FrequencyScheduleFields` / `parseSchedule` not touched. No `worker/`, no migration
 - [x] Roles affected identified: admin / staff / vet / volunteer / resident / signed-out public — admin gains the page; management loses the frequency section of its Medications page. Staff and vet are affected only if the prescription form's frequency picker broke (checked, it did not). Volunteer and signed-out reach none of it
-- [x] Anything explicitly **out of scope** written down, so the release manager is not surprised — **the RLS half of the backlog item.** `management_rw_frequency` (0043) is unchanged, so management can still update, delete and merge frequencies directly against the database, though no page offers it any more. Lutan gave two different answers on the day ("revoke" in this session, "leave it alone" to the Daily Planner), and batch 3's migration slot went to 0080. The revoke SQL, and why revoking management alone would not make the list admin-only, are in `docs/decisions.md` (2026-09-24). Also out: the manual screenshots (deferred for one full rerun), and moving any other page between Management and Settings (a separate backlog item)
+- [x] Anything explicitly **out of scope** written down, so the release manager is not surprised — **the RLS half of the backlog item.** `management_rw_frequency` (0043) is unchanged, so management can still update, delete and merge frequencies directly against the database, though no page offers it any more. Lutan decided to leave it alone (in this session, 2026-09-24). The revoke SQL, if it is ever wanted, is in `docs/decisions.md` (2026-09-24). Also out: the manual screenshots (deferred for one full rerun), and moving any other page between Management and Settings (a separate backlog item)
 
 ## 2. Automated gates
 
@@ -131,7 +131,7 @@ All driven in the in-app browser against `next dev` on :3008 (dev database), sig
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
 | 1 | low | `mergeFrequency` said "Choose a different **medication** to merge into." on a self-merge, because it borrowed the medications error | fixed: `admin.frequencies.errors.mergeSelf` names a frequency |
-| 2 | low | `management_rw_frequency` still lets management write `frequency` directly although no page offers it | accepted: waiting on Lutan's decision, recorded in `docs/decisions.md` (2026-09-24) |
+| 2 | low | `management_rw_frequency` still lets management write `frequency` directly although no page offers it | accepted: Lutan, in chat 2026-09-24 ("leave the RLS alone"), recorded in `docs/decisions.md` |
 
 ## Left for manual verification
 
@@ -156,7 +156,7 @@ Manual verification by: pending: item 1, management's view of Medications and a 
 
 ### Result
 
-- [ ] Open defects are either fixed or explicitly accepted above — n/a: not yet — defect 2's acceptance is Lutan's call on the RLS question
+- [x] Open defects are either fixed or explicitly accepted above
 - [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
 - [ ] Handed to the production release manager — n/a: not yet — after merge
 

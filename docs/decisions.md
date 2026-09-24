@@ -3611,7 +3611,7 @@ The feature half of the 0079 entry above. `/e/` now behaves like `/r/`: signed i
 - **The cards are the `/adopt` card** (`src/app/adopt/ResidentCard.tsx`, now with an `href`), linking to `/r/<code>` rather than `/adopt/<id>`. Every resident in a kennel has an `/r/` page, but only those shown on the public site have an adoption profile, and `/r/` links on to the profile when there is one. Reusing the adoption card keeps a kennel's page and the adoption listing looking the same, and `/r/`'s own layout is a single-resident page, not a grid.
 - **An empty enclosure is a page**, not a 404: "Nobody is living here at the moment." The view returns `[]` for it, so the kennel still exists as far as a visitor is concerned.
 
-## 2026-09-24 — Frequencies move to Settings; the policy stays for now
+## 2026-09-24 — Frequencies move to Settings; the policy stays
 
 `/admin/frequencies` is the frequency list's own page, beside procedure and
 blood-test types, and `/management/medications` is medications only. The
@@ -3622,14 +3622,12 @@ because the prescription form's inline add still uses them.
 - **The actions are admin-only now** (`assertAdminRole`), matching the page
   guard, as on every other Settings page. The management-gated frequency
   actions are deleted, not left behind.
-- **The database policy is unchanged, and that is a known gap.**
+- **The database policy is unchanged, on Lutan's call.**
   `management_rw_frequency` (0043) still gives management update and delete
-  on `frequency`; no page offers it any more. The backlog item left
-  "revoke it or keep it" open. Lutan answered it two ways on the day, "revoke"
-  in this stream's session and "leave it alone" to the Daily Planner, and
-  batch 3's one migration slot (0080) was already taken. So the move shipped
-  without a migration and the question goes back to him.
-  If it is revoked, the file drops `management_rw_frequency` and recreates
+  on `frequency`, though no page offers it any more. The backlog item left
+  "revoke it or keep it" open. Lutan answered it two ways during the day, and
+  then settled it in this stream's session: leave the RLS alone. So there is
+  no migration. If it is ever revoked, the file drops `management_rw_frequency` and recreates
   `management_insert_frequency` (`for insert with check (current_user_role()
   = 'management')`). That keeps management's policy count equal to staff's,
   the invariant 0039's mirror block asserts.
