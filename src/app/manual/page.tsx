@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AlertTriangle, Info, Lightbulb } from "lucide-react";
 import manual from "@/lib/manual/en";
+import screenshotSizes from "@/lib/manual/screenshot-sizes.json";
 import { TocScroller } from "./TocScroller";
 import type {
   ManualCallout,
@@ -12,6 +13,10 @@ import type {
 export const metadata: Metadata = {
   title: `${manual.title} · Lanna Care for Animals`,
 };
+
+/** Pixel size of each PNG, written by scripts/manual-screenshots.mjs. */
+const SCREENSHOT_SIZES: Record<string, { width: number; height: number } | undefined> =
+  screenshotSizes;
 
 const ROLE_ORDER: ManualRole[] = ["admin", "management", "staff", "vet", "volunteer"];
 
@@ -203,6 +208,12 @@ function Topic({ topic }: { topic: ManualTopic }) {
 }
 
 function Screenshot({ shot }: { shot: ManualScreenshot }) {
+  // The file's own size, so the browser reserves the space before the lazy
+  // image arrives. Without it every screenshot is zero-height until it
+  // loads, and a deep link like /manual#weight lands on the topic and is
+  // then pushed down the page as the pictures above it fill in. Missing
+  // only for a src with no PNG on disk yet.
+  const size = SCREENSHOT_SIZES[shot.src];
   return (
     <figure className={`flex flex-col gap-2 ${shot.mobile ? "items-center" : ""}`}>
       {/* Plain <img>: screenshots are static files under public/manual and
@@ -210,8 +221,10 @@ function Screenshot({ shot }: { shot: ManualScreenshot }) {
       <img
         src={shot.src}
         alt={shot.alt}
+        width={size?.width}
+        height={size?.height}
         loading="lazy"
-        className={`rounded-lg border border-border bg-surface ${
+        className={`h-auto rounded-lg border border-border bg-surface ${
           shot.mobile ? "w-full max-w-xs" : "w-full"
         }`}
       />

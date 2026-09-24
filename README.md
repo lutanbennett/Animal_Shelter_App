@@ -601,7 +601,10 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
   every signed-in role. Its screenshots live in `public/manual/` and are
   regenerated, not edited: `node scripts/manual-screenshots.mjs` opens the
   machine's Edge/Chrome on the running dev server, waits for you to sign
-  in as an admin, and captures every screen the manual references.
+  in as an admin, and captures every screen the manual references. It
+  then writes each PNG's pixel size to `src/lib/manual/screenshot-sizes.json`
+  so the page can reserve the space; `--sizes` rewrites just that file
+  after a PNG is added or replaced by hand.
 - `src/lib/assistant/` — the assistant's brain: one small parser per
   intent under `intents/`, tried in the order `parse.ts` lists (the order
   is load-bearing — see `docs/decisions.md`, 2026-09-23). Each one turns a
