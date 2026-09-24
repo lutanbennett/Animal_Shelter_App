@@ -2264,6 +2264,7 @@ const th: Dictionary = {
     openJobs: (n: number) => `ค้าง ${n}`,
     openJobsTitle: (n: number) => (n === 0 ? "ไม่มีงานซ่อมบำรุงค้าง" : `งานซ่อมบำรุงค้าง ${n} งาน`),
     zoneWideJobs: (n: number) => `งานทั้งโซน ${n} งาน`,
+    hasOpenMaintenance: "มีงานซ่อมบำรุงค้าง",
     residentsCount: (n: number) => `สัตว์ ${n} ตัว`,
     occupancy: (count: number, capacity: number) => `${count} / ${capacity}`,
     noCapacity: "ยังไม่ได้กำหนดความจุ",

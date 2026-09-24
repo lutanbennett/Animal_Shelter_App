@@ -3,6 +3,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { occupancyLevel } from "@/lib/enclosures/occupancy";
 import { parseEnclosureSort } from "@/lib/enclosures/sort";
 import { getTagOrigin } from "@/lib/tags/origin";
+import { canReadMaintenance } from "@/lib/maintenance/queries";
 import { EnclosureFilters } from "./EnclosureFilters";
 import {
   EnclosureGrid,
@@ -58,7 +59,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   // Resident counts come from resident_list_view rather than a dedicated
   // occupancy view so no migration is needed; the shelter's headcount is
   // small enough that pulling one row per resident is cheap.
-  const [zonesResult, enclosuresResult, residentsResult, jobsResult, tagOrigin] = await Promise.all([
+  const [zonesResult, enclosuresResult, residentsResult, jobsResult, tagOrigin, roleResult] = await Promise.all([
     supabase.from("zones").select("id, name, name_th, internal").order("name"),
     supabase
       .from("enclosures")
@@ -79,7 +80,13 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       .neq("status", "Completed")
       .returns<{ enclosure_id: string | null; zone_id: string }[]>(),
     getTagOrigin(),
+    supabase.rpc("current_user_role"),
   ]);
+
+  // The open-maintenance filter is hidden from vets, and a ?maint=open link
+  // is ignored for them, since RLS would leave it showing nothing at all.
+  const canFilterMaintenance = canReadMaintenance(roleResult.data);
+  const maintOpen = canFilterMaintenance && searchParams.maint === "open";
 
   const counts = new Map<string, number>();
   for (const row of residentsResult.data ?? []) {
@@ -113,6 +120,10 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
     }))
     .filter((e) => !e.is_system || PINNED_STATUSES.includes(e.name))
     .filter((e) => !zoneId || e.zone_id === zoneId)
+    // Only jobs on the enclosure itself, matching the count on its card;
+    // zone-wide jobs stay on the zone heading (decisions.md, 2026-09-24).
+    // That also drops the Lifecycle cards, which carry no jobs.
+    .filter((e) => !maintOpen || (!e.is_system && e.open_jobs > 0))
     .filter(
       (e) =>
         !term ||
@@ -162,7 +173,14 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
         <p className="text-sm text-muted">{t.enclosures.pageSubtitle}</p>
       </div>
 
-      <EnclosureFilters zones={zones} zoneId={zoneId} q={q} sort={sort} />
+      <EnclosureFilters
+        zones={zones}
+        zoneId={zoneId}
+        q={q}
+        sort={sort}
+        maintOpen={maintOpen}
+        canFilterMaintenance={canFilterMaintenance}
+      />
 
       {enclosuresResult.error && (
         <p className="text-sm text-danger">

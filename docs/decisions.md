@@ -3143,6 +3143,22 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   It deliberately never adds `--force` or `--stop-servers` itself, and
   never works around `done` with raw `git worktree remove` / `branch -D`
   when a folder name does not match its branch.
+- **The open-maintenance filter counts enclosure jobs only, not zone-wide ones (2026-09-24):**
+  `/enclosures?maint=open` keeps an enclosure when `open_jobs > 0`, the
+  jobs logged against it, and ignores jobs with `enclosure_id` null. The
+  question behind the tick is "which kennels need work", and the card
+  already answers it with its own count: counting a zone-wide job for every
+  enclosure in the zone would put cards reading "0 open" on the filtered
+  list, and one job on a zone of twelve would fill the page with kennels
+  that each have nothing logged. A zone-wide job is still shown where it
+  was, as the count beside the zone's name linking to
+  `/maintenance?zone=`. The cost: a zone whose only open job is zone-wide
+  disappears from the filtered view, heading and all, and the manual says
+  so. The Lifecycle cards (Hospital / Unassigned / Fostered) drop out too.
+  They are status buckets that carry no jobs. For vets the tick is not
+  rendered and `?maint=open` is ignored (`canReadMaintenance` in
+  `src/lib/maintenance/queries.ts`), because `maintenance` has no vet
+  policy and the filter would silently return an empty page.
 - **Contact archive columns: who and why exist only while archived (2026-09-24):**
   `0075_contacts_archive.sql` adds `archived_at`, `archived_by` and
   `archive_reason` to `contacts`, and a check constraint that `archived_by`

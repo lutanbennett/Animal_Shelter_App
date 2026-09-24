@@ -141,3 +141,11 @@ export async function loadMaintenanceJob(
 export function canWriteMaintenance(role: string | null | undefined): boolean {
   return role === "admin" || role === "management" || role === "staff";
 }
+
+/**
+ * Who can see jobs at all. Vets have no maintenance policy (0001, 0039), so
+ * anything that filters on jobs would silently come back empty for them.
+ */
+export function canReadMaintenance(role: string | null | undefined): boolean {
+  return canWriteMaintenance(role) || role === "volunteer";
+}
