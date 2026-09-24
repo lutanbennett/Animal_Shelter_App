@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Architecture: "`check-test-plan.mjs` can't tell a post-merge sign-off PR from a feature PR that forgot its release line" |
 | Branch / worktree | `claude/check-test-plan-signoff` @ `C:\Development\Animal_Shelter_check-test-plan-signoff` |
 | Dev server | n/a: a CI script; no page is served |
-| PR | opened from this branch; number recorded in the follow-up commit |
+| PR | #96 |
 | Tested by / date | Claude, 2026-09-24 |
 | Carries a migration? | no |
 | Tested at SHA | `c684fbb` (tip of `main`) plus this branch's diff |
@@ -24,7 +24,7 @@
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly ("Already up to date.")
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: #96, `check` and `test-plan` both passed on 38886fb
 
 ```
 === gates: typecheck exited 0 after 33s
@@ -185,7 +185,7 @@ Manual verification by: n/a: nothing to look at — a CI checker, exercised by t
 ### Result
 
 - [ ] Open defects fixed or accepted — n/a: none found
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR (summary and case table in the #96 description; full plan in this file)
 - [ ] Handed to the production release manager — n/a: nothing deploys; the release manager's pre-deploy pass reads this plan as part of the release anyway
 
 Result: pass
