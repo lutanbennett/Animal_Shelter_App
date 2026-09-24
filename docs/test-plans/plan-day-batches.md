@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none — asked for directly by Lutan in chat, 2026-09-24 |
 | Branch / worktree | `claude/plan-day-batches` @ `C:\Development\Animal_Shelter_plan-day-batches` |
 | Dev server | not used — no `src/` change |
-| PR | #90 |
+| PR | #91 |
 | Tested by / date | Claude (Daily Planner session) / 2026-09-24 |
 | Carries a migration? | no |
 | Tested at SHA | `8de011f` |
