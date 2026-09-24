@@ -3360,3 +3360,24 @@ Section 11, plus decisions made during setup that aren't in the original doc.
   0077 grants these views to `authenticated` and `service_role` only, so a
   rebuilt database would not have the gap. Revoking it on existing
   databases needs Lutan's go, and is a backlog item.
+- **Manual contents: capped to the window, measured against the window
+  (2026-09-24):** the desktop Contents panel on `/manual` was already
+  `sticky top-6` but had no height limit, so its lower half scrolled away
+  with the page. Before sizing it we checked which element scrolls, because
+  sticky does nothing under an `overflow` ancestor and `100dvh` is the wrong
+  reference if an inner container scrolls. Measured on dev at 1400×900:
+  `document.scrollingElement` is `<html>`, no ancestor of the `<aside>` sets
+  overflow, and the app header is not sticky, so it scrolls away with the page.
+  So the cap is `100dvh - 3rem` (top-6 plus the same gap below), with no
+  allowance for the header. Allowing for it would waste that much of the
+  list for the whole time the panel is stuck, which is nearly always. The
+  cost is that at the very top of the page, before the header scrolls away,
+  the last ~160px of the list sits below the window (measured at 900px
+  tall) until the page has scrolled ~190px and the panel sticks. The "Contents" heading stays put and only the list below it scrolls,
+  with `overscroll-contain`. A small client wrapper
+  (`src/app/manual/TocScroller.tsx`) marks the `#anchor`'s entry
+  `aria-current` and scrolls the list to show it, on first load and on
+  `hashchange`. It sets the list's own `scrollTop` rather than calling
+  `scrollIntoView()`, which would also scroll the page and fight the
+  browser's jump to the anchor. It follows the address bar, not the reading
+  position: a scroll-spy that tracks the section on screen was not built.
