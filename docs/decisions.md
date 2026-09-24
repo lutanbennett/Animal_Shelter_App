@@ -3643,3 +3643,43 @@ because the prescription form's inline add still uses them.
   testing a deleted row left the table without a reload. A merge I checked
   after 5 seconds still showed the row, but its request took 5.2 seconds on
   a cold dev server, so that says nothing either way.
+- **Anon loses the internal views, by allow-list (2026-09-25):**
+  `0081_anon_view_grants.sql` closes the exposure recorded under "Data API
+  grants" (2026-09-24). **What was exposed:** with only the public anon key
+  and no sign-in, dev answered `current_placement` (81 rows: placements,
+  notes, carer ids), `resident_current_state` (81: names, status, deceased
+  flag and date) and `immunization_compliance` (220: names and immunisation
+  gaps); `immunization_duplicate_check` returned 200 with no rows. **Why:**
+  Supabase's project default privileges gave `anon` ALL on every object
+  created in `public`, and these four views run as their owner (no
+  `security_invoker`), so the RLS on the tables underneath never applies to
+  them. Every other object also carried anon's full set, TRUNCATE included,
+  but RLS kept base-table reads and writes empty; `schema_migrations` was
+  readable the same way. **The fix is an allow-list, not the four names:**
+  revoke everything anon holds on every table, view and sequence in
+  `public`, then grant back SELECT on what the public site actually reads
+  with the anon key (the ten `public_*` views and `site_content`,
+  `site_content_photos`, `site_pages`). Naming the four would have left
+  the same trap for the next owner-rights view. It also removes anon
+  PATCH/DELETE on `site_content_photos` and `site_pages`, which answered
+  `204` (grant held, RLS matched nothing) and which the old check never
+  tried. The `postgres` role's default privileges in `public` no longer
+  include anon, so a table created afterwards starts with no anon grant
+  (measured: `create table` in a rolled-back transaction, anon SELECT
+  false, authenticated true). `supabase_admin`'s defaults are Supabase's
+  and nothing of ours runs as that role. **TRUNCATE:** PostgREST maps
+  DELETE to `DELETE`, has no verb that issues TRUNCATE, and no function in
+  `public` contains it, so anon's TRUNCATE was never reachable through the
+  Data API; anon now holds it on nothing. **Not changed:**
+  `security_invoker` on the four views, since turning it on changes what
+  signed-in staff, vets and volunteers see through them, and it is not
+  needed to close the anon hole. Function EXECUTE is also untouched. The
+  photo proxy calls `is_known_drive_file` as anon, and the public views
+  call `approved_translations` as the caller, so revoking anon EXECUTE
+  would break the public site. `approved_translations` does answer anon
+  directly for any row id, so it is a backlog item of its own. **What the
+  check now prevents:** `scripts/check-public-views.mjs` lists every table
+  and view the Data API exposes (the schema root, which needs the service
+  role key) and fails if anon can read any that is not on its public list.
+  So a new object is covered without anyone remembering to add it, and a
+  new `public_*` view fails until it is listed on purpose.
