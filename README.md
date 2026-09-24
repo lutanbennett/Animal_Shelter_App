@@ -334,6 +334,32 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    makes `$?` the exit status of `tail`, not of npm, so a failed build reports
    success — redirect to a file and read `$?`, or use `${PIPESTATUS[0]}`. A
    test plan ticked from piped output is ticking something that never passed.
+   `node scripts/gates.mjs` runs all three and prints each exit code, which is
+   why it exists.
+
+   **Tracked files are CRLF on disk — preserve the line endings when editing
+   one by script.** The repository stores LF, but Git for Windows ships
+   `core.autocrlf=true` in its system gitconfig, so every checkout writes
+   `\r\n` (`git ls-files --eol <file>` shows `i/lf w/crlf`). `.gitattributes`
+   pins only `scripts/pi/*` to LF. Git keeps reporting `LF will be replaced by
+   CRLF`, which is easy to read as noise, and Git Bash's `grep '\r$'` finds
+   nothing on these files, so a quick check says they are LF when they are
+   not; `tr -cd '\r' < f | wc -c` counts them. Two consequences, both hit while
+   cutting `0.2.0` on 2026-09-24. A string anchor written with `\n` silently
+   fails to match, so a script that edits the file reports something like
+   `unreleased opening not found` and looks like a parsing bug in the file it
+   is reading. Worse, writing LF back converts the *whole* file, so a
+   seventeen-line change arrives as a whole-file diff and the actual edit is
+   invisible to review. Detect the existing endings, edit with `\n`
+   internally, and write back what you found:
+
+   ```js
+   const raw = readFileSync(f, "utf8");
+   const crlf = raw.includes("\r\n");
+   let s = crlf ? raw.split("\r\n").join("\n") : raw;
+   // …edit s with \n anchors…
+   writeFileSync(f, crlf ? s.split("\n").join("\r\n") : s);
+   ```
 
    **`ERROR Failed to copy … color-string` and `… data-uri-to-buffer` are
    cosmetic.** They appear during `Building server function` on every run,
