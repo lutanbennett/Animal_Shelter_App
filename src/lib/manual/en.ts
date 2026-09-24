@@ -790,7 +790,8 @@ const manual: Manual = {
             "Preview shows the card exactly as visitors will see it, including changes you haven't saved yet.",
             "Save, then tap Publish. The card goes on the Shelter Friends page, which from then on is linked from the website's menu and footer, gets a strip of logos on the home page and a mention on the Donate page. Unpublish takes it down again; View on the website opens their card.",
             "Management → Shelter Friends lists every profile in the order the website shows them: use the arrows to move one up or down, and Publish / Unpublish from the list. To edit one, open the contact.",
-            "Archiving the contact takes their card off the website straight away and keeps the profile; restoring the contact brings the card back. Remove profile (while editing) deletes the profile and its translations but keeps the contact.",
+            "Archiving the contact takes their card off the website straight away and keeps the profile; restoring the contact brings the card back.",
+            "Unpublish and Remove Shelter Friend status sit side by side on the card and do different things. Unpublish hides the card for now and keeps everything, ready to publish again. Remove Shelter Friend status is for a business that is no longer a Friend: the profile, its logo and its translations are deleted, and the contact itself stays exactly as it was — it can be made a Shelter Friend again later, starting from an empty profile.",
             "What they do, Kind of help and the Offer are translated like other public text: they appear under Management → Translations, and the translation box sits under each one on the contact's page.",
           ],
           callouts: [
