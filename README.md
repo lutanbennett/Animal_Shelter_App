@@ -584,7 +584,9 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
   which contact types may become a Friend, the row types and the staff
   preview; `public.ts` is the public slice, which reads only the
   `public_shelter_friends` view (published, live contacts, opted-in
-  details only). `src/components/FriendCard.tsx` is the card both
+  details only); `staff-drafts.ts` is the one exception, a count of
+  unpublished drafts shown only to signed-in staff on `/friends`.
+  `src/components/FriendCard.tsx` is the card both
   `/friends` and the contact hub's preview draw.
 - `src/lib/links/` — checks for links staff paste into forms that end up
   on a public page (https only; Facebook links on facebook.com / fb.com).
