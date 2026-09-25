@@ -47,6 +47,7 @@ export const unreleased: string[] = [
   "A link to a topic in the user manual now opens on that topic. Before, the pictures above it could load after the page had jumped there and push the topic off the screen — most often on an iPhone or iPad.",
   "Enclosures: choose Everywhere, On-site or Off-site above the zone chips to see just the enclosures at the shelter or just those away from it, and the zone chips narrow to match. You can now pick more than one zone — tap a chip to add it, tap again to take it off. Hospital, Unassigned and Fostered show only under Everywhere.",
   "Assistant is no longer in the menu on the left — it was the same as the Assistant button at the top of every screen. Press that button to open it over the page you are on. For the full-page version, press Open full page just under the title in the panel that slides in.",
+  "Four topics in the user manual showed a broken picture — adding a diet, Management → Diets, Management → Cashflow and Settings → Blood test types. Each now shows its screenshot.",
 ];
 
 /** Newest first. */
