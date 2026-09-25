@@ -46,7 +46,11 @@ eq("zero, no lead: out but not flagged", readStock(fig(0, "2026-09-25T02:00:00Z"
 eq("counted now, 10 at 1/day", readStock(fig(10, "2026-09-25T03:00:00Z"), 30, now), { state: "days", daysLeft: 10, runsOutOn: "2026-10-05", countedDaysAgo: 0, reorder: false });
 eq("counted 4 days ago: 10-4=6", readStock(fig(10, "2026-09-21T03:00:00Z"), 30, now).daysLeft, 6);
 eq("counted 4d ago shows 4 days ago", readStock(fig(10, "2026-09-21T03:00:00Z"), 30, now).countedDaysAgo, 4);
-eq("half a day elapsed floors 9.5 -> 9", readStock(fig(10, "2026-09-24T15:00:00Z"), 30, now).daysLeft, 9);
+eq("counted 22:00 Thai yesterday = 1 shelter day ago -> 9", readStock(fig(10, "2026-09-24T15:00:00Z"), 30, now).daysLeft, 9);
+// Found in the browser: a count saved seconds ago read a day short.
+eq("20 counted 5 minutes ago reads 20, not 19", readStock(fig(20, "2026-09-25T02:55:00Z"), 30, now).daysLeft, 20);
+eq("counted 08:00 Thai, read 20:00 same day: still 10", readStock(fig(10, "2026-09-25T01:00:00Z"), 30, at("2026-09-25T13:00:00Z")).daysLeft, 10);
+eq("float quotient 0.3 / 0.1 is 3 days, not 2", readStock(fig(0.3, "2026-09-25T03:00:00Z"), 3, now).daysLeft, 3);
 eq("used up since count", readStock(fig(10, "2026-09-10T03:00:00Z", 3), 30, now), { state: "runDown", daysLeft: 0, runsOutOn: "2026-09-25", countedDaysAgo: 15, reorder: true });
 eq("exactly used up is runDown", readStock(fig(10, "2026-09-15T03:00:00Z"), 30, now).state, "runDown");
 eq("nothing forecast: notUsed", readStock(fig(10, "2026-09-25T03:00:00Z", 30), 0, now), { state: "notUsed", daysLeft: null, runsOutOn: null, countedDaysAgo: 0, reorder: false });

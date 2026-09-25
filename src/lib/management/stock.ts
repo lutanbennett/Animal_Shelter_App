@@ -81,15 +81,17 @@ export function readStock(
     return { state: "notUsed", daysLeft: null, runsOutOn: null, countedDaysAgo, reorder: false };
   }
 
-  // Elapsed real time, not calendar days: a count taken this morning has
-  // already lost this morning's doses by tonight.
-  const elapsedDays = Math.max(0, (now - countedMs) / MS_PER_DAY);
-  const remaining = stock - perDay * elapsedDays;
+  // Usage since the count is taken off in whole shelter days — the same
+  // "counted N days ago" the cell shows — not in elapsed real time, which
+  // made a count saved seconds ago read a day short once floored
+  // (20 tablets at 1 a day read "About 19 days").
+  const remaining = stock - perDay * countedDaysAgo;
   if (remaining <= 0) {
     return { state: "runDown", daysLeft: 0, runsOutOn: today, countedDaysAgo, reorder: flag(0) };
   }
 
-  const daysLeft = Math.floor(remaining / perDay);
+  // The epsilon keeps a float quotient like 2.9999999 from losing a day.
+  const daysLeft = Math.floor(remaining / perDay + 1e-9);
   return {
     state: "days",
     daysLeft,

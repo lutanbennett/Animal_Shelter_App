@@ -4087,7 +4087,14 @@ The schema half of "Stock on hand and days-of-stock". The feature stream
   must be a number ≥ 0 (blank = not counted), a lead time a whole number of
   days 1–365 (blank = none). 365 is not in the schema — it is there so a typo
   gets a readable message rather than an integer-overflow error.
-- **"Counted N days ago" is shelter calendar days** (Asia/Bangkok), like
-  every other date in the app; the elapsed usage uses real elapsed time, so a
-  count taken this morning has lost this morning's doses by tonight. Both
-  measured against fixed instants either side of 17:00Z and under `TZ=UTC`.
+- **The usage since the count is taken off in whole shelter calendar days**
+  (Asia/Bangkok), the same N as the "counted N days ago" line under the
+  figure, not in elapsed real time. The first version used real time, and
+  the browser check caught it: 20 tablets at 1 a day, counted seconds
+  earlier, read "About 19 days", because the few seconds of usage pushed the
+  quotient under 20 before it was floored. With calendar days a count reads
+  its full figure all day and drops by the daily rate at shelter midnight.
+  The floor also carries a 1e-9 epsilon, because 0.3 ÷ 0.1 is 2.9999999999999996
+  in floating point. `scripts/check-stock-reading.mjs` asserts all of this
+  against fixed instants either side of 17:00Z, in local time and under
+  `TZ=UTC`, and its three regression cases fail against the real-time version.
