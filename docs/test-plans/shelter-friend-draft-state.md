@@ -151,9 +151,9 @@ Automated checks by: Claude (Opus 5.5)  Date: 2026-09-25
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: three items await Lutan
+- [x] The manual list above is empty, or every item in it was checked by a person
 
-Manual verification by: pending: the three items under Left for manual verification
+Manual verification by: Lutan Bennett — confirmed in chat ("Looked, all good — merge it"); line written by Claude at their request  Date: 2026-09-25
 
 ### Result
 
