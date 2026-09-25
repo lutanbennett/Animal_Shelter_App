@@ -8,10 +8,10 @@
 | Backlog item | `docs/backlog.md` → **Four manual screenshots are missing from `public/manual/`.** |
 | Branch / worktree | `claude/manual-missing-screenshots` @ `C:\Development\Animal_Shelter_manual-missing-screenshots` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3008` |
-| PR | to be opened from this commit |
+| PR | #122 |
 | Tested by / date | Claude (automated) 2026-09-25 |
 | Carries a migration? | no |
-| Tested at SHA | `814fb6e` — the branch merged up to `origin/main` |
+| Tested at SHA | `ffe6823` — re-synced after #120 merged (no overlap with this PR's files); gates re-run there, `typecheck=0 lint=0 build=0` |
 
 ## 1. Scope and risk
 
@@ -36,7 +36,7 @@ Two additions beyond the brief, both in the script:
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — seen green on #122 before the re-sync: `check` pass (1m33s), `migration-numbers` pass, `test-plan` pass (run 36089918733)
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -153,14 +153,14 @@ Automated checks by: Claude  Date: 2026-09-25
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — one item awaits Lutan
+- [x] The manual list above is empty, or every item in it was checked by a person — Lutan looked at the four topics and said "they look good" in chat
 
-Manual verification by: pending: Lutan to look at the four manual topics' pictures
+Manual verification by: Lutan Bennett — confirmed in chat; line written by Claude at their request  Date: 2026-09-25
 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR is opened after this commit
+- [ ] Checklist pasted into the PR — n/a: the PR body links `docs/test-plans/manual-missing-screenshots.md` and summarises it; the file on the branch is the record
 - [ ] Handed to the production release manager — n/a: not yet — goes with the release, after merge
 
 Result: pass
