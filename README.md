@@ -147,6 +147,7 @@ to deploy. The UAT column is what the cutover makes true.
 | Looks | teal, **Dev** badge in the header | teal, **Dev** badge | orange, **UAT** badge | orange |
 | Generated PDFs | `DEV` watermark | `DEV` watermark | `UAT` watermark | none |
 | Release mail | never | never | `[UAT]` | `[UAT]` until the cutover, then `[Production]` |
+| Public website | open | **locked** — sign-in landing page | **locked** | **locked** until the cutover, then open |
 
 Dev and Test are recoloured (teal instead of orange, greenish surfaces, a
 **Dev** badge beside the logo once signed in) so a tab on the dev database
@@ -161,11 +162,22 @@ project ref the build was made with — not from `NODE_ENV`, which is
 until the cutover, because the project that will be UAT is production's
 today; set early, it would badge the live site.
 
+**Locked public website.** `"PUBLIC_SITE": "locked"` on a Worker block in
+`wrangler.jsonc` (test, UAT, and production until the cutover) closes the
+public pages to anyone signed out: `/` shows a sign-in landing page, other
+pages redirect to `/login` and come back after sign-in, and every response
+is `noindex`. Only `/login`, `/login/forgot`, `/auth/callback`, `/privacy`
+and `robots.txt` stay open. Signed-in staff see everything as usual.
+`src/lib/public-site.ts` has the rest; `docs/decisions.md` (2026-09-25) has
+why. To look at it locally, put `PUBLIC_SITE=locked` in
+`.env.development.local` (gitignored) and restart `next dev`.
+
 **What the cutover changes here**, in one commit: `UAT_PROJECT_REF` in
 `src/lib/app-env.ts` and production's label in `src/app/releases/page.tsx`;
 the `lannacare.org` routes move from the `production` block of
 `wrangler.jsonc` to `uat`, and production gets the new domain,
-`RELEASE_MAIL_ENV` `Production` and a From on that domain;
+`RELEASE_MAIL_ENV` `Production` and a From on that domain, and loses
+`"PUBLIC_SITE": "locked"`, or the live site opens on a sign-in page;
 `SITE_ORIGINS.production` in `scripts/deploy.mjs` and `HOST=` in
 `scripts/pi/deploy-pi.sh` follow. Outside the repo: today's
 `.env.deploy.production` becomes `.env.deploy.uat`, a new

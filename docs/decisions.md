@@ -4092,3 +4092,87 @@ The schema half of "Stock on hand and days-of-stock". The feature stream
   user now sees words rather than a code. The number should still be
   measured on test.lannacare.org and set from what works. That is a
   backlog item, not a guess in the code.
+## 2026-09-25 — UAT and test are locked behind sign-in by a Worker var, `PUBLIC_SITE`
+
+lannacare.org is UAT for good and test.lannacare.org is staff testing; until
+go-live strangers should not browse the public pages on either (Lutan).
+
+- **A per-Worker var, not `getAppEnv()`.** `"PUBLIC_SITE": "locked"` is set on
+  the `test`, `uat` and `production` blocks of `wrangler.jsonc`. An
+  environment check would not fire where it is needed: lannacare.org reports
+  "production" until the cutover sets `UAT_PROJECT_REF`. **The cutover must
+  drop `PUBLIC_SITE` from the `production` block** when it moves to
+  lannacareforanimals.org, or the live site opens on a sign-in page; the
+  comment on that block says so. Local `next dev` has no var and stays open.
+- **Read from `process.env` per request.** OpenNext's `init.js` copies every
+  string Worker var onto `process.env` on the first request — the same route
+  the Drive and service-role secrets take — so `src/lib/public-site.ts` reads
+  it there, never at module scope. `scripts/pi/write-env.mjs` copies it from
+  `wrangler.jsonc` into the Pi's env file, so a Pi origin locks the same host
+  the Worker does rather than serving it open behind the tunnel.
+- **The gate shrinks the public list rather than adding a second gate.**
+  `isPublicPath(pathname, locked)` in `src/lib/public-paths.ts` returns only
+  `/`, `/login`, `/login/forgot`, `/auth/callback`, `/robots.txt` and
+  `/privacy` when locked, so everything else takes the existing redirect to
+  `/login?next=…` — which is also why a scanned `/r/` card or `/e/` QR code
+  resumes after sign-in with no new code. `/privacy` stays open because
+  Google's OAuth consent screen links to it; the consent screen also lists
+  the homepage, so `/` is a real page (`src/app/LockedLanding.tsx`, rendered
+  by the home page for a signed-out visitor) rather than a redirect.
+- **`/api/photos/` is not public while locked.** The landing page shows only
+  the static logo, and every page that renders Drive photos is behind
+  sign-in, so its image requests carry the session cookie.
+- **The temporary-password check keeps the open list.** The lock is about
+  strangers; a signed-in account on a temporary password is still left alone
+  on the public pages as before.
+- **`noindex` in the proxy, not per page.** Every response on a locked host
+  gets `X-Robots-Tag: noindex, nofollow`, redirects included, and
+  `src/app/robots.ts` (dynamic, since the var is only known at request time)
+  disallows everything. Unlocked, robots.txt allows everything — the same as
+  having none, which is what the site had.
+- **Expected costs.** Open Graph previews of locked pages stop working on UAT
+  and test (the landing page has none on purpose — it would describe a site
+  the visitor can't see). The Worker's edge cache may hand out a public page
+  cached just before the deploy for up to its 10-minute TTL.
+## 2026-09-25 — Public Drive files are the ones the public views show (`0084_is_public_drive_file.sql`)
+
+The schema half of "The photo proxy serves any known Drive file to a
+signed-out visitor". `is_public_drive_file(text)` answers the question the
+proxy should ask for a visitor; `is_known_drive_file` stays as it is, and
+the route switches in the feature half (`claude/photo-proxy-session-check`).
+
+- **"Public" is read from the public views, not restated.** The function
+  asks the objects anon can already read a Drive id from — nine columns
+  across `public_resident_photos`, `public_resident_profiles`,
+  `public_recent_adoptions`, `public_resident_cards`, `public_projects`,
+  `public_project_photos`, `public_shelter_friends`, `site_content` and
+  `site_content_photos` — so hiding a resident, unpublishing a project or
+  archiving a Friend's contact withdraws its files with no second place to
+  update. It is the same reasoning as `0082`'s `approved_translations`: one
+  definition of public, in the views.
+- **The list is wider than the backlog item guessed.** It named four
+  sources; checking every view anon may read found `public_recent_adoptions`
+  and `public_resident_cards` too. The second matters: `0068` publishes a
+  card for *every* resident (the `/r/<code>` RFID page), so every resident's
+  **profile** photo is public, hidden and deceased residents included. That
+  is `0068`'s decision; this function only agrees with it, or the card pages
+  would lose their photos once the proxy switches. A hidden resident's
+  *other* photos stay private.
+- **Security invoker, unlike `is_known_drive_file`.** Everything it reads,
+  anon can read (owner-rights views, and `site_content(_photos)` behind
+  `using (true)` policies), so it borrows no privilege, there is no role to
+  check, and every caller gets the same answer. A definer version would
+  have had to re-apply each view's filters by hand and would see the tables
+  as their owner — the class of mistake `0082` fixed. A side effect, found
+  by mutating the function in the harness: a branch that read a base table
+  such as `attachments` fails for anon with `permission denied`, so the
+  function cannot quietly widen to an internal table.
+- **Granted explicitly** to anon, authenticated and service_role, and not
+  PUBLIC: since `0082` a new function starts closed.
+- Evidence: `scripts/check-public-drive-file.mjs`, a rollback harness on
+  dev (fixtures for each public and each internal kind, asked as anon and
+  as an admin; toggling each visibility flag; every real public-view id is
+  public and no real blood-test or procedure file is). Its negative control,
+  with the `public_resident_cards` branch removed, fails case A.
+  `check-public-views.mjs` now calls the function with the anon key for a
+  real public photo and a real blood-test/procedure file.
