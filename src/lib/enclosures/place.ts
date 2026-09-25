@@ -25,3 +25,34 @@ export function parseZoneIds(value: unknown): string[] {
   const raw = Array.isArray(value) ? value.join(",") : typeof value === "string" ? value : "";
   return [...new Set(raw.split(",").map((id) => id.trim()).filter(Boolean))];
 }
+
+/**
+ * The zone chips on offer under a place: every zone under "all"; under
+ * On-site or Off-site only that place's physical zones, since the Lifecycle
+ * pseudo-zone holds statuses and is neither (decisions.md, 2026-09-25).
+ * Shared by /enclosures and /residents so the two cascades cannot drift.
+ */
+export function offeredZones<Z extends { internal: boolean; is_system: boolean }>(
+  zones: readonly Z[],
+  place: EnclosurePlace,
+): Z[] {
+  return zones.filter(
+    (zone) => place === "all" || (!zone.is_system && zoneInPlace(zone.internal, place)),
+  );
+}
+
+/**
+ * The picked zones that survive under `place`, in order. Used both when a
+ * place chip is tapped (switching between On-site and Off-site keeps none,
+ * so the result is the whole of the new place rather than an empty list)
+ * and when a page reads `?zone=`, so a stale or hand-edited link is
+ * narrowed rather than obeyed.
+ */
+export function zonesKeptIn<Z extends { id: string; internal: boolean; is_system: boolean }>(
+  zones: readonly Z[],
+  zoneIds: readonly string[],
+  place: EnclosurePlace,
+): string[] {
+  const offered = new Set(offeredZones(zones, place).map((zone) => zone.id));
+  return zoneIds.filter((id) => offered.has(id));
+}
