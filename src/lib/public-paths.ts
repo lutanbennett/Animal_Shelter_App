@@ -20,9 +20,10 @@
  * hub (src/app/r/[code]/page.tsx). /e/ is the address on an enclosure's
  * QR code and works the same way: a visitor sees the enclosure and who
  * lives there (public_enclosures, 0079), a signed-in user is sent on to
- * the enclosure page (src/app/e/[id]/page.tsx).
+ * the enclosure page (src/app/e/[id]/page.tsx). /robots.txt is
+ * src/app/robots.ts, which a crawler fetches signed out.
  */
-export const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/auth/callback"];
+export const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/auth/callback", "/robots.txt"];
 
 export const PUBLIC_PATH_PREFIXES = [
   "/api/photos/",
@@ -37,7 +38,28 @@ export const PUBLIC_PATH_PREFIXES = [
   "/e/",
 ];
 
-export function isPublicPath(pathname: string): boolean {
+/**
+ * What stays reachable signed out while the public site is locked
+ * (src/lib/public-site.ts): sign-in and its callback, the landing page at
+ * "/" (the home page renders it for a signed-out visitor), robots.txt, and
+ * /privacy — Google's OAuth consent screen links to it, and lists the
+ * homepage too, which is why "/" is a real page rather than a redirect.
+ * No /api/photos/: the landing page shows only the static logo, and every
+ * page that renders Drive photos is behind sign-in, so its <img> requests
+ * carry the session cookie. No /r/ or /e/ either: a scanned card or QR
+ * code lands on /login with ?next= and goes back there after sign-in.
+ */
+export const LOCKED_PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/auth/callback", "/robots.txt"];
+
+export const LOCKED_PUBLIC_PATH_PREFIXES = ["/privacy"];
+
+export function isPublicPath(pathname: string, locked = false): boolean {
+  if (locked) {
+    return (
+      LOCKED_PUBLIC_PATHS.includes(pathname) ||
+      LOCKED_PUBLIC_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+    );
+  }
   return (
     PUBLIC_PATHS.includes(pathname) ||
     PUBLIC_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix))

@@ -19,6 +19,8 @@ import { SiteBody } from "@/components/SiteBody";
 import { PublicHeader } from "./adopt/PublicHeader";
 import { PublicFooter } from "./adopt/PublicFooter";
 import { ProjectCard } from "./our-work/ProjectCard";
+import { LockedLanding } from "./LockedLanding";
+import { isPublicSiteLocked } from "@/lib/public-site";
 
 /** The "Pet of the week" card — read through public_resident_profiles. */
 type FeaturedResident = {
@@ -53,6 +55,11 @@ export async function generateMetadata(): Promise<Metadata> {
     getT(),
     getSiteOrigin(),
   ]);
+  // Locked and signed out: no share preview — it would describe the site
+  // the visitor can't see (docs/decisions.md, 2026-09-25).
+  if (await showsLockedLanding(supabase)) {
+    return { title: t.header.appName, robots: { index: false, follow: false } };
+  }
   const content = await loadSiteContent(supabase);
   const description =
     pairedText(locale, content?.tagline, content?.tagline_th) || t.home.shareFallback;
@@ -83,8 +90,24 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+/**
+ * While the public site is locked (src/lib/public-site.ts) a signed-out
+ * visitor gets the sign-in landing page here instead; signed-in staff
+ * still see the home page, so they can test it.
+ */
+async function showsLockedLanding(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+): Promise<boolean> {
+  if (!isPublicSiteLocked()) return false;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return !user;
+}
+
 export default async function WelcomePage() {
   const supabase = await createClient();
+  if (await showsLockedLanding(supabase)) return <LockedLanding />;
   const { t, locale } = await getT();
 
   const [content, pages, photosResult, statsResult, recentWork, friendsResult] = await Promise.all([

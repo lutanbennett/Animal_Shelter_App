@@ -237,6 +237,12 @@ const en = {
     continueWithGoogle: "Continue with Google",
     forgotPassword: "Forgot password?",
     backToHome: "Back to home page",
+    /** The landing page a signed-out visitor sees while the public site is locked. */
+    locked: {
+      title: "Staff testing site",
+      body: "This site is for shelter staff during testing. The public website isn't open yet.",
+      signInHint: "Shelter staff: sign in to see the app and the public pages.",
+    },
     forgot: {
       title: "Reset your password",
       subtitle: "Enter the email you sign in with and we'll send a link to choose a new password.",

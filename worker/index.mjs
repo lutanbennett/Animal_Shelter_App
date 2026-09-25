@@ -17,7 +17,11 @@
 //      CACHE_TTL_SECONDS without touching any origin. Keyed by URL and the
 //      `locale` cookie, skipped when a Supabase auth cookie is present (a
 //      signed-in visitor sees a different header) and for RSC payload
-//      requests (same URL, different body). ~1 ms of CPU.
+//      requests (same URL, different body). ~1 ms of CPU. While
+//      PUBLIC_SITE is "locked" (src/lib/public-site.ts) this still holds:
+//      a signed-out "/" is the sign-in landing page and is cached as such,
+//      and every other public page is a redirect to /login, which is never
+//      stored (only a 200 is).
 //
 //   2. The Pi. When ORIGIN_HOST is set, the request is replayed against it
 //      with a shared secret header (a WAF rule on that hostname rejects
