@@ -685,6 +685,8 @@ const en = {
         uploadFailed: "Upload failed.",
         unsupportedFileType: (type: string) => `Unsupported file type: ${type}.`,
         fileTooLarge: "File is larger than 15MB.",
+        processingFailed:
+          "The server couldn't process that file, so nothing was saved. Try a smaller copy of the image (under about 2 MB), or try again in a moment.",
         driveNotConfigured: "GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured.",
       },
     },

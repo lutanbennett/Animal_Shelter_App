@@ -43,6 +43,7 @@ export type Release = {
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
   "Four topics in the user manual showed a broken picture — adding a diet, Management → Diets, Management → Cashflow and Settings → Blood test types. Each now shows its screenshot.",
+  "Uploading a photo or logo larger than 1 MB — a Shelter Friend logo, or the Website page's hero and gallery photos — failed with a “Minified React error” code. Files up to 15 MB now upload, a larger file is refused straight away with a message saying so, and if the server ever can't process an upload you are told in words, with the suggestion to try a smaller image.",
 ];
 
 /** Newest first. */

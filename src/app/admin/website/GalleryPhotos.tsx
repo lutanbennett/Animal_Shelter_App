@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRef, useState, useTransition } from "react";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { runUploadAction } from "@/lib/uploads/run-upload-action";
 import { deleteGalleryPhoto, moveGalleryPhoto, uploadGalleryPhoto } from "./actions";
 
 export type GalleryPhotoRow = { id: string; drive_file_id: string };
@@ -20,7 +21,9 @@ export function GalleryPhotos({ photos }: { photos: GalleryPhotoRow[] }) {
     const formData = new FormData();
     formData.append("file", file);
     startTransition(async () => {
-      const result = await uploadGalleryPhoto(formData);
+      const result = await runUploadAction(file, t.admin.website.errors, () =>
+        uploadGalleryPhoto(formData),
+      );
       if (result && "error" in result) setMessage(result.error);
     });
   }
