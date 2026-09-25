@@ -75,6 +75,10 @@ const manual: Manual = {
               kind: "note",
               text: "If Google sign-in says your account hasn't been given access yet, an admin needs to add you under Settings → Security first.",
             },
+            {
+              kind: "note",
+              text: "On the testing sites (lannacare.org and test.lannacare.org) the public website is closed until the shelter goes live: the home page shows a Staff testing site page with a Sign in button instead. Once you've signed in you see everything as normal, public pages included. A resident card or enclosure QR code scanned there asks you to sign in first, then opens what you scanned.",
+            },
           ],
         },
         {
