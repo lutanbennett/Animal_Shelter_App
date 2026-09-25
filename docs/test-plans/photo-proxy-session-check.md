@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Architecture → "The photo proxy serves any known Drive file to a signed-out visitor, internal attachments included." (feature half; closes it) |
 | Branch / worktree | `claude/photo-proxy-session-check` @ `C:\Development\Animal_Shelter_photo-proxy-session-check` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3012` |
-| PR | opened from this branch after this commit |
+| PR | #131 |
 | Tested by / date | Claude, 2026-09-25 |
 | Carries a migration? | no (0084 landed in #124; 0085/0086 on `main` belong to the public-viewer stream) |
 | Tested at SHA | `793a88b` (the change is `bd00a12`; `sync` merged `origin/main` @ `7910b0f`) |
@@ -25,7 +25,7 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: `Auto-merging docs/decisions.md` / `Merge made by the 'ort' strategy.` (brought in 0085/0086 and the public-viewer schema plan)
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: `Auto-merging docs/decisions.md` / `Merge made by the 'ort' strategy.` (brought in 0085/0086 and the public-viewer schema plan). After the PR opened, a second `sync` merged `origin/main` @ `4c29f2e` (#129, Shelter Friend draft state: UI files only, nothing under `supabase/` or `src/app/api/`); gates were not re-run locally on that merge, and CI runs them
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`:
 
 ```
