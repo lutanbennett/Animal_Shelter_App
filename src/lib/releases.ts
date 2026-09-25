@@ -47,6 +47,7 @@ export const unreleased: string[] = [
   "The testing sites (lannacare.org and test.lannacare.org) are closed to the public until go-live. Visitors see a Staff testing site page with a Sign in button; once you sign in, everything — public pages included — works as before. Scanning a resident card or enclosure QR code asks you to sign in first, then opens what you scanned.",
   "Management → Medications and → Diets now keep track of what's in the cupboard. Tap Count after a stocktake to record how much is left; the table shows how long ago it was counted and roughly how many days it will last at the next 30 days' rate. Give an item its supplier's lead time and it is flagged Reorder when stock gets that low.",
   "A Shelter Friend profile that has been saved but not published now says so: its badge reads “Draft — not on the website”, the card reminds you that saving keeps it a draft until you tap Publish, and signed-in staff looking at the Shelter Friends page see a note when drafts are waiting.",
+  "The Residents list has the same On-site / Off-site choice and zone chips as the Enclosures page, on phones too. Pick one or more zones, or none to see the whole place. Residents waiting for an enclosure count as on site; residents in hospital or with a foster carer count as off site. The Location column now shows On-site or Off-site to match.",
 ];
 
 /** Newest first. */

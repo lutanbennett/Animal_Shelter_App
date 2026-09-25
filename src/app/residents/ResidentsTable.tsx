@@ -11,6 +11,7 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
 import { SYSTEM_ZONE } from "@/lib/enclosures/options";
 import { statusLabel } from "@/lib/i18n/enum-labels";
+import { residentPlace } from "@/lib/residents/place";
 import { residentTagPath } from "@/lib/tags/links";
 
 export type ResidentRow = {
@@ -70,6 +71,11 @@ export function ResidentsTable({
     if (target.closest("a, input, button, label")) return;
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     router.push(`/residents/${residentId}`);
+  }
+
+  function whereLabel(status: string | null) {
+    const where = residentPlace(status);
+    return where ? t.enclosures.hub[where] : t.common.dash;
   }
 
   const bookingHref =
@@ -186,8 +192,7 @@ export function ResidentsTable({
                 </td>
                 {/* A resident in hospital or with a carer sits in the
                     Lifecycle pseudo-zone; that's the Status column's job,
-                    so Zone and Location stay blank rather than say
-                    "Lifecycle · On-site". */}
+                    so Zone stays blank rather than say "Lifecycle". */}
                 <td className="hidden px-4 py-2 text-muted md:table-cell">
                   {resident.zone_name === SYSTEM_ZONE
                     ? t.common.dash
@@ -199,11 +204,10 @@ export function ResidentsTable({
                     : t.common.dash}
                 </td>
                 <td className="hidden px-4 py-2 text-muted md:table-cell">
-                  {resident.zone_internal === null || resident.zone_name === SYSTEM_ZONE
-                    ? t.common.dash
-                    : resident.zone_internal
-                      ? t.admin.zones.table.internal
-                      : t.admin.zones.table.external}
+                  {/* The place the On-site / Off-site filter uses, so the
+                      two agree: Unassigned is on site, Hospital and Fostered
+                      off it, Adopted and Deceased neither. */}
+                  {whereLabel(resident.current_status)}
                 </td>
                 <td className="w-20 px-2 py-2 text-right whitespace-nowrap">
                   <CopyTagLink

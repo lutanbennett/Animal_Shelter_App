@@ -2,7 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { occupancyLevel } from "@/lib/enclosures/occupancy";
 import { parseEnclosureSort } from "@/lib/enclosures/sort";
-import { parseEnclosurePlace, parseZoneIds, zoneInPlace } from "@/lib/enclosures/place";
+import {
+  parseEnclosurePlace,
+  parseZoneIds,
+  zoneInPlace,
+  zonesKeptIn,
+} from "@/lib/enclosures/place";
 import { getTagOrigin } from "@/lib/tags/origin";
 import { canReadMaintenance } from "@/lib/maintenance/queries";
 import { EnclosureFilters } from "./EnclosureFilters";
@@ -104,25 +109,16 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   }
 
   // Physical zones first (alphabetical), the Lifecycle pseudo-zone last.
-  const zones = [...(zonesResult.data ?? [])].sort((a, b) => {
-    const aSys = a.name === SYSTEM_ZONE ? 1 : 0;
-    const bSys = b.name === SYSTEM_ZONE ? 1 : 0;
-    return aSys - bSys || a.name.localeCompare(b.name);
-  });
+  const zones = [...(zonesResult.data ?? [])]
+    .map((zone) => ({ ...zone, is_system: zone.name === SYSTEM_ZONE }))
+    .sort((a, b) => Number(a.is_system) - Number(b.is_system) || a.name.localeCompare(b.name));
 
-  // The zone chips on offer: every zone under "all"; under On-site or
-  // Off-site only that place's physical zones, since Lifecycle holds
-  // statuses and is neither (decisions.md, 2026-09-25).
-  const zoneOptions = zones.filter(
-    (zone) =>
-      place === "all" || (zone.name !== SYSTEM_ZONE && zoneInPlace(zone.internal, place)),
-  );
-  // A zone that isn't on offer is dropped rather than obeyed, so a link
-  // with ?place=external&zone=<an on-site zone> shows every off-site
-  // enclosure instead of an empty page. The chips switching place drop
-  // them the same way before they get here.
-  const offered = new Set(zoneOptions.map((zone) => zone.id));
-  const zoneIds = parseZoneIds(searchParams.zone).filter((id) => offered.has(id));
+  // A zone that isn't on offer under the place (offeredZones: Lifecycle is
+  // neither On-site nor Off-site, decisions.md 2026-09-25) is dropped rather
+  // than obeyed, so a link with ?place=external&zone=<an on-site zone> shows
+  // every off-site enclosure instead of an empty page. The chips switching
+  // place drop them the same way before they get here.
+  const zoneIds = zonesKeptIn(zones, parseZoneIds(searchParams.zone), place);
 
   const term = q.toLowerCase();
   const enclosures: EnclosureSummary[] = (enclosuresResult.data ?? [])
@@ -163,7 +159,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   const physical = enclosures.filter((e) => !e.is_system);
 
   const groups: ZoneGroup[] = zones
-    .filter((zone) => zone.name !== SYSTEM_ZONE)
+    .filter((zone) => !zone.is_system)
     .map((zone) => ({
       id: zone.id,
       name: zone.name,
@@ -191,7 +187,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       </div>
 
       <EnclosureFilters
-        zones={zones.map((zone) => ({ ...zone, is_system: zone.name === SYSTEM_ZONE }))}
+        zones={zones}
         place={place}
         zoneIds={zoneIds}
         q={q}
