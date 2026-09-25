@@ -40,6 +40,20 @@ const MIGRATIONS_DIR = path.resolve(here, "..", "supabase", "migrations");
 // catch-up that grants all of it.
 const LAST_EXEMPT = 77;
 const API_ROLES = ["anon", "authenticated", "service_role"];
+// 0086 moved these into `private` and left a gated view of the same name in
+// `public`. A later `create or replace view <name>` in `public` would replace
+// the gate, so a file after 0086 edits `private.<name>` and may re-create the
+// public one only as the gate again (it must, to pick up a new column:
+// `select *` is expanded when the view is created).
+const GATED_SINCE = 86;
+const GATED_VIEWS = [
+  "app_users",
+  "current_placement",
+  "resident_current_state",
+  "immunization_compliance",
+  "immunization_duplicate_check",
+  "translation_queue",
+];
 
 /** Blank out comments and dollar-quoted strings, keeping the rest as is. */
 function stripSql(sql) {
@@ -157,7 +171,24 @@ const files = args.length
       .map((f) => path.join(MIGRATIONS_DIR, f));
 
 let failed = 0;
+let ungated = 0;
 for (const file of files) {
+  if ((numberOf(file) ?? 0) > GATED_SINCE) {
+    for (const statement of stripSql(readFileSync(file, "utf8")).split(";")) {
+      const [obj] = createdObjects(statement);
+      if (obj?.kind !== "view" || !GATED_VIEWS.includes(obj.name)) continue;
+      const gated =
+        new RegExp(String.raw`\bfrom\s+private\.${obj.name}\b`, "i").test(statement) &&
+        /\bprivate\.has_app_access\(\)/i.test(statement);
+      if (gated) continue;
+      ungated++;
+      console.error(
+        `${path.basename(file)}: re-creates public.${obj.name} without the gate (0086). Change` +
+          ` private.${obj.name}, then re-create the public one as \`select * from private.${obj.name}` +
+          ` where private.has_app_access()\` so it picks up the new columns.`,
+      );
+    }
+  }
   for (const obj of checkFile(file)) {
     failed++;
     const how = obj.kind === "sequence" ? "grant usage, select on sequence" : "grant select, … on";
@@ -168,11 +199,17 @@ for (const file of files) {
     );
   }
 }
+if (ungated) {
+  console.error(
+    `\nmigration grants: ${ungated} gated view(s) re-created without the gate (docs/decisions.md,` +
+      ` 2026-09-25, "Internal views need a staff role, not a session").`,
+  );
+}
 if (failed) {
   console.error(
     `\nmigration grants: ${failed} object(s) without Data API grants. Supabase no longer adds them` +
       ` automatically (docs/decisions.md, 2026-09-24).`,
   );
-  process.exit(1);
 }
+if (failed || ungated) process.exit(1);
 console.log(`migration grants: ok (${files.length} file(s) checked)`);
