@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Facility → **Give `/residents` the same On-site / Off-site cascade as `/enclosures`.** |
 | Branch / worktree | `claude/residents-place-cascade` @ `C:\Development\Animal_Shelter_residents-place-cascade` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3016` |
-| PR | not yet opened at this commit |
+| PR | #130 |
 | Tested by / date | Claude, 2026-09-25 (browser pane signed in by Lutan as admin) |
 | Carries a migration? | no |
 | Tested at SHA | `ccf49bd` (code + sync; this file is the commit after it) |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — #130: 3 checks passing, 0 failing, merge state CLEAN
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -151,15 +151,15 @@ Automated checks by: Claude  Date: 2026-09-25
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: two items are outstanding; see the pending line below
+- [x] The manual list above is empty, or every item in it was checked by a person — Lutan checked items 1–2 and said so in chat ("Checked it, looks right")
 
-Manual verification by: pending: the look of the control and the Thai labels (Left for manual verification 1–2)
+Manual verification by: Lutan Bennett — confirmed in chat; line written by Claude at their request  Date: 2026-09-25
 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above — the one defect is a dev-server artefact, accepted
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
-- [ ] Handed to the production release manager — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR — in #130's description
+- [ ] Handed to the production release manager — n/a: not yet — happens at the next production release, not at merge
 
 Result: pass
 
