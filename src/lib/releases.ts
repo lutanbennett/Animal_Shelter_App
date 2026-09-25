@@ -43,6 +43,7 @@ export type Release = {
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
   "Four topics in the user manual showed a broken picture — adding a diet, Management → Diets, Management → Cashflow and Settings → Blood test types. Each now shows its screenshot.",
+  "The testing sites (lannacare.org and test.lannacare.org) are closed to the public until go-live. Visitors see a Staff testing site page with a Sign in button; once you sign in, everything — public pages included — works as before. Scanning a resident card or enclosure QR code asks you to sign in first, then opens what you scanned.",
 ];
 
 /** Newest first. */

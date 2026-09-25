@@ -32,7 +32,9 @@
       "routes": [{ "pattern": "test.lannacare.org", "custom_domain": true }],
       // No RELEASE_MAIL binding and RELEASE_MAIL_ENV empty: the dev database
       // never sends release mail (worker/release-mail.mjs).
-      "vars": { "NODE_ENV": "production", "ORIGIN_HOST": "", "ORIGIN_TIMEOUT_MS": "20000", "RELEASE_MAIL_ENV": "" }
+      // PUBLIC_SITE "locked": signed-out visitors get the sign-in landing page,
+      // not the public website (src/lib/public-site.ts).
+      "vars": { "NODE_ENV": "production", "ORIGIN_HOST": "", "ORIGIN_TIMEOUT_MS": "20000", "RELEASE_MAIL_ENV": "", "PUBLIC_SITE": "locked" }
     },
     // The customer's acceptance testing: the UAT database and the current
     // Google Drive, on lannacare.org for good (docs/decisions.md). Plumbing
@@ -48,7 +50,9 @@
         "ORIGIN_HOST": "",
         "ORIGIN_TIMEOUT_MS": "20000",
         "RELEASE_MAIL_ENV": "UAT",
-        "RELEASE_MAIL_FROM": "releases@lannacare.org"
+        "RELEASE_MAIL_FROM": "releases@lannacare.org",
+        // UAT is never the public website (src/lib/public-site.ts).
+        "PUBLIC_SITE": "locked"
       },
       "send_email": [{ "name": "RELEASE_MAIL" }]
     },
@@ -65,12 +69,17 @@
       // UAT. At the cutover the production block moves to
       // lannacareforanimals.org with RELEASE_MAIL_ENV "Production" and a
       // From on that domain, and the uat block above takes over these routes.
+      // PUBLIC_SITE "locked" for the same reason: lannacare.org is UAT and not
+      // for the public (src/lib/public-site.ts). THE CUTOVER MUST DROP IT
+      // from this block when it moves to lannacareforanimals.org, or the live
+      // site opens on a sign-in page.
       "vars": {
         "NODE_ENV": "production",
         "ORIGIN_HOST": "",
         "ORIGIN_TIMEOUT_MS": "20000",
         "RELEASE_MAIL_ENV": "UAT",
-        "RELEASE_MAIL_FROM": "releases@lannacare.org"
+        "RELEASE_MAIL_FROM": "releases@lannacare.org",
+        "PUBLIC_SITE": "locked"
       },
       "send_email": [{ "name": "RELEASE_MAIL" }]
     }
