@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **A logo or photo upload that exhausts the Worker shows the user a minified React error.** |
 | Branch / worktree | `claude/upload-worker-error` @ `C:\Development\Animal_Shelter_upload-worker-error` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3006` |
-| PR | opened right after this commit; the number is added in the next one |
+| PR | #125 |
 | Tested by / date | Claude (automated) 2026-09-25 |
 | Carries a migration? | no |
 | Tested at SHA | `5053dcc` — the code commit; everything after it touches `docs/` only. Gates run on the clean tree there, `typecheck=0 lint=0 build=0` |
