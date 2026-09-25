@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { MAX_UPLOAD_BODY_BYTES } from "./src/lib/uploads/limits";
 
 const nextConfig: NextConfig = {
   // `next dev` already listens on 0.0.0.0, but it rejects dev assets/HMR
@@ -79,6 +80,14 @@ const nextConfig: NextConfig = {
     // making every upload think no Drive folder existed yet. See
     // node_modules/next/dist/docs/.../serverComponentsHmrCache.md.
     serverComponentsHmrCache: false,
+    // Uploads. A Server Action's body defaults to 1 MB, enforced before the
+    // action runs, so a 1–15 MB Website photo or Shelter Friend logo failed
+    // as an unreadable framework error instead of reaching the action's own
+    // checks. proxy.ts clones request bodies up to 10 MB by default and
+    // truncates the rest — the same problem for the upload routes. Both
+    // follow the app's one limit (src/lib/uploads/limits.ts).
+    serverActions: { bodySizeLimit: MAX_UPLOAD_BODY_BYTES },
+    proxyClientMaxBodySize: MAX_UPLOAD_BODY_BYTES,
   },
 };
 
