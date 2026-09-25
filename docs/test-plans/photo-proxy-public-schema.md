@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Architecture → "The photo proxy serves any known Drive file to a signed-out visitor, internal attachments included." (schema half; the feature half closes it) |
 | Branch / worktree | `claude/photo-proxy-public-schema` @ `C:\Development\Animal_Shelter_photo-proxy-public-schema` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3004` |
-| PR | opened from this branch (number in the PR itself) |
+| PR | #124 (merged as `6cec4dc`); production apply recorded in a follow-up PR from the same branch |
 | Tested by / date | Claude, 2026-09-25 |
 | Carries a migration? | yes — `0084_is_public_drive_file.sql` |
 | Tested at SHA | `5acfd97` (the change; `sync` found `origin/main` @ `4dc8e10` already merged) |
@@ -74,7 +74,7 @@ CONTEXT:  PL/pgSQL function inline_code_block line 98 at RAISE
 
   I ran two negative controls, editing the migration file temporarily and restoring it afterwards. Removing the `public_resident_cards` branch failed with `FAIL A anon: h0084resHiddenProfile should be public`. Adding an `attachments` branch failed with `42501: permission denied for table attachments`. So invoker rights stop the function widening to an internal table
 - [x] Down-migration written, or the reason one is not needed is stated: none written. It adds one function and changes no data. The inverse is `drop function if exists is_public_drive_file(text);`, and nothing calls the function yet
-- [x] Production apply plan stated for the release manager: **needs Lutan's go**. From the main checkout: `node scripts/apply-migrations.mjs --env production --status`, then `--dry-run`, then apply, then `node scripts/check-public-views.mjs --env production`. It must be applied to production **before** the feature half deploys, because the switched route will call this function. On its own it is independent of any deploy
+- [x] Production apply plan stated for the release manager: **needs Lutan's go**. From the main checkout: `node scripts/apply-migrations.mjs --env production --status`, then `--dry-run`, then apply, then `node scripts/check-public-views.mjs --env production`. It must be applied to production **before** the feature half deploys, because the switched route will call this function. On its own it is independent of any deploy. **Done 2026-09-25 on Lutan's go**, from the main checkout at `6cec4dc`. Production was also missing `0083_stock_on_hand.sql`, and the runner applies every pending file in order, so Lutan approved applying both. Output under §8, Migration ordering
 
 ## 4. Functional checks
 
@@ -169,7 +169,35 @@ ok    is_public_drive_file(): no for a blood-test/procedure file — false
 ### Migration ordering
 
 - [x] **Does this PR contain both a migration and code that reads it?** No. The code that reads it is the feature half, which must not deploy to production before `0084` is applied there (§3 apply plan)
-- [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — deferred: Lutan (production is his go; this worktree has no production credentials)
+- [x] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean. Run from the main checkout on 2026-09-25 on Lutan's go, then applied, then checked. Output, unedited:
+
+```
+Environment: production — project dbkodyyxxhtygxcxmfcu
+This checkout: 82 applied, 2 pending.
+dry-run 0083_stock_on_hand.sql … ok
+dry-run 0084_is_public_drive_file.sql … ok
+Dry run only — nothing was applied.
+```
+
+```
+Environment: production — project dbkodyyxxhtygxcxmfcu
+This checkout: 82 applied, 2 pending.
+applying 0083_stock_on_hand.sql … ok
+applying 0084_is_public_drive_file.sql … ok
+This checkout: 84 applied, 0 pending.
+Against origin/main 6cec4dc: 84 file(s), 84 applied row(s).
+  On origin/main, not applied here: 0
+  Applied here, no file on origin/main: 0
+```
+
+  `node scripts/check-public-views.mjs --env production` exited 0 with 112 ok and 0 FAIL. The function lines:
+
+```
+ok    is_known_drive_file(): anon can EXECUTE — HTTP 200
+ok    is_public_drive_file(): anon can EXECUTE — HTTP 200
+ok    is_public_drive_file(): yes for a public resident photo — true
+ok    is_public_drive_file(): no for a blood-test/procedure file — false
+```
 - [ ] For a **destructive or rewriting** migration only: a production backup exists and is fresh — n/a: additive, one new function
 - [x] Apply plan stated: which file, which project, and whether it runs before or after the deploy (see §3)
 
