@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Next up → "Lock UAT (lannacare.org) and test.lannacare.org behind sign-in — no public access until go-live." (on `backlog`, not yet on `main` — ticked there after merge) |
 | Branch / worktree | `claude/uat-login-gate` @ `C:\Development\Animal_Shelter_uat-login-gate` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3009` |
-| PR | see the PR that adds this file |
+| PR | #123 |
 | Tested by / date | Claude, 2026-09-25 |
 | Carries a migration? | no |
 | Tested at SHA | branch at `main` @ `4dc8e10` plus this PR's changes (the working tree the gates and browser checks ran on) |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — PR #123, run 36130551414 after syncing `main`: check, migration-numbers, test-plan all pass
 
 ## 3. Schema and data — *skip if no migration*
 
