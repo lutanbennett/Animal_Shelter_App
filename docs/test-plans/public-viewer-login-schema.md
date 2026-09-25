@@ -8,7 +8,7 @@
 | Backlog item | none of its own: asked by Lutan on 2026-09-25 (brief). The feature half is `public-viewer-login` |
 | Branch / worktree | `claude/public-viewer-login-schema` @ `C:\Development\Animal_Shelter_public-viewer-login-schema` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3010` |
-| PR | opened from this commit; number recorded in a follow-up |
+| PR | #128 |
 | Tested by / date | Claude, 2026-09-25 |
 | Carries a migration? | yes — `0085_public_viewer_role.sql`, `0086_app_access_gate.sql` |
 | Tested at SHA | `4c2430a` (the change; gates ran here), then `41b0af9` after `sync` merged `origin/main` (`docs/backlog.md` only) |
@@ -39,7 +39,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: #128, run 36137825836 — `check` pass (1m28s), `migration-numbers` pass (12s), `test-plan` pass (7s)
 
 ## 3. Schema and data
 
