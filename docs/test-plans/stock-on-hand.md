@@ -11,7 +11,7 @@
 | PR | opened from the commit that adds this plan; number recorded in the follow-up commit |
 | Tested by / date | Claude (automated and browser-driven) / 2026-09-25 |
 | Carries a migration? | no. It reads `0083_stock_on_hand.sql`, which is merged (#121) and applied to dev |
-| Tested at SHA | `32a6275` (after syncing `origin/main`); this plan is the only change on top |
+| Tested at SHA | `04b51bd` (after a second sync of `origin/main`, which brought in #123 and #126). The gates were first run on `32a6275`, passing all three, and then rerun here; only this plan changes on top |
 
 ## 1. Scope and risk
 
@@ -22,11 +22,11 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: merged the other stream's `0084_is_public_drive_file.sql` schema PR with no conflicts, then pushed
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: synced twice: first `0084_is_public_drive_file.sql` (no conflicts), then #123 (sign-in lock) and #126, where the one conflict was both PRs adding an `unreleased` line in `src/lib/releases.ts`; both lines were kept
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Closing lines as printed:
 
   ```
-  === gates: build exited 0 after 404s
+  === gates: build exited 0 after 325s
 
   gates: typecheck=0 lint=0 build=0
   ```
@@ -43,7 +43,7 @@
 - [ ] Existing rows still read correctly after the change (checked against real dev data) — n/a: no schema change. Before anything was entered, all 24 dev medications and both diets rendered *Not counted* / *—* (section 4)
 - [ ] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness — n/a: no migration in this PR. The trigger behaviour this feature depends on was checked end to end through the UI against dev instead, with the rows read back (section 4). Note for the future: `scripts/check-stock-on-hand.mjs` (0083's harness) asserts that every stock column in dev is null, so it now fails case A by design, since dev holds real counts. It was a check for the day the migration was applied, not a regression suite
 - [ ] Down-migration written, or the reason one is not needed is stated — n/a: no migration in this PR
-- [ ] Production apply plan stated for the release manager (which file, which project, when) — n/a: no migration in this PR. **`0083` must be on production before this deploys**, because both pages select the new columns and would fail to load without them
+- [ ] Production apply plan stated for the release manager (which file, which project, when) — n/a: no migration in this PR. **`0083` must be on production before this deploys**, because both pages select the new columns and would fail to load without them. `d0832eb` on `main` (#126) records `0083` as applied to production on 2026-09-25, together with `0084`. Not re-read from this branch: production reads are not made from a worktree
 
 ## 4. Functional checks
 
@@ -119,9 +119,9 @@ All on `http://localhost:3002` against dev, driven in the built-in browser and s
 ### Migration ordering
 
 - [ ] **Does this PR contain both a migration and code that reads it?** — n/a: no migration here, but this code reads `0083`, so production needs `0083` applied **before** this deploys
-- [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — deferred: release manager (for `0083`)
+- [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — deferred: release manager: confirm `--status` shows `0083` applied on production rather than dry-running it again. `d0832eb` on `main` (#126) records `0083` as applied to production on 2026-09-25, together with `0084`. Not re-read from this branch: production reads are not made from a worktree
 - [ ] For a **destructive or rewriting** migration only: a production backup exists and is fresh. — n/a: 0083 is additive nullable columns and triggers
-- [ ] Apply plan stated: which file, which project, and whether it runs before or after the deploy — deferred: release manager. `0083_stock_on_hand.sql` to production (`dbkodyyxxhtygxcxmfcu`) before the deploy that ships this
+- [ ] Apply plan stated: which file, which project, and whether it runs before or after the deploy — deferred: release manager. `0083_stock_on_hand.sql` on production (`dbkodyyxxhtygxcxmfcu`) before the deploy that ships this. It is recorded as already done, so the release manager only confirms it
 
 ### Rollback
 
