@@ -180,7 +180,10 @@ const manual: Manual = {
             "Open Residents from the menu. Every resident is listed by name with their ID, enclosure, zone and status.",
             "Residents who have died are left out. The line under the heading says how many are hidden — \"212 residents · 38 deceased hidden\" — and Show all brings them back, dimmed, with Deceased in the Status column. Tap Hide deceased to put them away again.",
             "Type part of a name (English, Thai or an \"also known as\" name) in Search and tap Filter.",
-            "On a computer you can also narrow the list by Zone and Enclosure. Tap Clear to see everyone again.",
+            "Choose On-site or Off-site at the top to see only the residents at the shelter, or only those away from it; Everywhere shows everyone. On-site includes residents still waiting for an enclosure (Unassigned). Off-site includes residents in hospital or with a foster carer as well as those in off-site zones, since none of them are at the shelter. Adopted and deceased residents are in neither, so they only show under Everywhere.",
+            "The zone chips beneath list just that place's zones, and work as on the Enclosures page: tap a chip to add it, tap it again to take it off, All zones clears them. Switching between On-site and Off-site clears the zones you had picked. The Location column shows the same On-site / Off-site each resident is filtered by.",
+            "Show all and Hide deceased are offered under Everywhere only. Under On-site or Off-site, a name search that matches a resident who has died still says so, with a link that shows them under Everywhere.",
+            "On a computer you can also narrow the list to one Enclosure. Tap Clear to see everyone again.",
             "Tap a resident's name to open their hub.",
           ],
           screenshot: {

@@ -3,9 +3,14 @@
 import Link from "next/link";
 import { useRef } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { placeName } from "@/lib/enclosures/names";
+import { PlaceZoneChips } from "@/components/PlaceZoneChips";
 import { ENCLOSURE_SORTS, type EnclosureSort } from "@/lib/enclosures/sort";
-import { ENCLOSURE_PLACES, zoneInPlace, type EnclosurePlace } from "@/lib/enclosures/place";
+import {
+  ENCLOSURE_PLACES,
+  offeredZones,
+  zonesKeptIn,
+  type EnclosurePlace,
+} from "@/lib/enclosures/place";
 
 type ZoneOption = {
   id: string;
@@ -32,12 +37,6 @@ function buildHref(params: {
   // Commas read better than %2C in a shared link, and parse the same.
   const qs = search.toString().replace(/%2C/gi, ",");
   return qs ? `/enclosures?${qs}` : "/enclosures";
-}
-
-function offeredIn(zones: ZoneOption[], place: EnclosurePlace) {
-  return zones.filter(
-    (zone) => place === "all" || (!zone.is_system && zoneInPlace(zone.internal, place)),
-  );
 }
 
 /**
@@ -67,7 +66,7 @@ export function EnclosureFilters({
   maintOpen: boolean;
   canFilterMaintenance: boolean;
 }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const formRef = useRef<HTMLFormElement>(null);
   const hasFilters = Boolean(
     place !== "all" || zoneIds.length || q || sort !== "zone" || maintOpen,
@@ -79,19 +78,16 @@ export function EnclosureFilters({
     name: t.enclosures.sortName,
     occupancy: t.enclosures.sortOccupancy,
   };
-  const placeLabels: Record<EnclosurePlace, string> = {
-    all: t.enclosures.placeAll,
-    internal: t.enclosures.hub.internal,
-    external: t.enclosures.hub.external,
-  };
 
   // Switching place keeps only the chosen zones that belong to the new
   // one — none, when going between On-site and Off-site — so the result
   // is the whole of that place rather than an empty grid.
-  function placeHref(next: EnclosurePlace) {
-    const allowed = new Set(offeredIn(zones, next).map((zone) => zone.id));
-    return buildHref({ ...rest, place: next, zones: zoneIds.filter((id) => allowed.has(id)) });
-  }
+  const placeHrefs = Object.fromEntries(
+    ENCLOSURE_PLACES.map((next) => [
+      next,
+      buildHref({ ...rest, place: next, zones: zonesKeptIn(zones, zoneIds, next) }),
+    ]),
+  ) as Record<EnclosurePlace, string>;
 
   function toggleHref(id: string) {
     const next = zoneIds.includes(id)
@@ -100,62 +96,20 @@ export function EnclosureFilters({
     return buildHref({ ...rest, place, zones: next });
   }
 
-  function chipClass(active: boolean) {
-    return `shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition ${
-      active
-        ? "border-primary bg-primary text-primary-foreground"
-        : "border-border bg-surface text-muted hover:bg-surface-hover hover:text-foreground"
-    }`;
-  }
-
-  function segmentClass(active: boolean) {
-    return `rounded px-3 py-1.5 text-sm font-medium transition ${
-      active
-        ? "bg-primary text-primary-foreground"
-        : "text-muted hover:bg-surface-hover hover:text-foreground"
-    }`;
-  }
-
   return (
     <div className="flex flex-col gap-3">
-      <div
-        role="group"
-        aria-label={t.enclosures.placeLabel}
-        className="flex w-fit gap-1 rounded-md border border-border bg-surface p-1"
-      >
-        {ENCLOSURE_PLACES.map((value) => (
-          <Link
-            key={value}
-            href={placeHref(value)}
-            aria-current={place === value ? "true" : undefined}
-            className={segmentClass(place === value)}
-          >
-            {placeLabels[value]}
-          </Link>
-        ))}
-      </div>
-
-      {/* Horizontally scrollable on phones so a long zone list doesn't wrap
-          into a tall block above the enclosures. */}
-      <div className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-1 md:mx-0 md:flex-wrap md:px-0">
-        <Link
-          href={buildHref({ ...rest, place })}
-          aria-current={zoneIds.length === 0 ? "true" : undefined}
-          className={chipClass(zoneIds.length === 0)}
-        >
-          {t.enclosures.allZones}
-        </Link>
-        {offeredIn(zones, place).map((zone) => (
-          <Link
-            key={zone.id}
-            href={toggleHref(zone.id)}
-            aria-current={zoneIds.includes(zone.id) ? "true" : undefined}
-            className={chipClass(zoneIds.includes(zone.id))}
-          >
-            {placeName(locale, zone.name, zone.name_th)}
-          </Link>
-        ))}
-      </div>
+      <PlaceZoneChips
+        place={place}
+        placeHrefs={placeHrefs}
+        allZonesHref={buildHref({ ...rest, place })}
+        zones={offeredZones(zones, place).map((zone) => ({
+          id: zone.id,
+          name: zone.name,
+          name_th: zone.name_th,
+          href: toggleHref(zone.id),
+          active: zoneIds.includes(zone.id),
+        }))}
+      />
 
       {/* Keyed on the filters so Clear or a chip, which navigate on the
           client, remount the inputs instead of leaving their old defaults. */}
