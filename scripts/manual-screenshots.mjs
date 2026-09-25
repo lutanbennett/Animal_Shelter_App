@@ -28,6 +28,11 @@
 // re-capturing anything (after adding or replacing a PNG by hand):
 //
 //   node scripts/manual-screenshots.mjs --sizes
+//
+// To re-capture only some screenshots (a new topic, a screen that changed)
+// rather than all of them, name them — the sizes file is still rewritten:
+//
+//   node scripts/manual-screenshots.mjs --only=diet-new,management-cashflow
 
 import { access, mkdir, open, readdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
@@ -42,6 +47,9 @@ const SIZES_FILE = path.join(ROOT, "src", "lib", "manual", "screenshot-sizes.jso
 const STATE_FILE = path.join(os.tmpdir(), "lca-manual-screenshots-session.json");
 const FRESH = process.argv.includes("--fresh");
 const SIZES_ONLY = process.argv.includes("--sizes");
+const ONLY = process.argv.find((a) => a.startsWith("--only="))?.slice("--only=".length).split(",").filter(Boolean);
+/** Whether --only (if given) includes this screenshot. */
+const wanted = (name) => !ONLY || ONLY.includes(name);
 
 /** Placeholder shown where the signed-in user's email would be. */
 const EMAIL_PLACEHOLDER = "you@example.com";
@@ -68,6 +76,7 @@ const SIGNED_IN = [
   { name: "immunizations-new", path: "/immunizations/new", full: true },
   { name: "vet-visit-new", path: "/vet-visits/new?residentId={resident}", full: true },
   { name: "prescription-new", path: "/prescriptions/new?residentId={resident}", full: true },
+  { name: "diet-new", path: "/diets/new?residentId={resident}", full: true },
   { name: "procedure-new", path: "/procedures/new?residentId={resident}", full: true },
   { name: "blood-test-new", path: "/blood-tests/new?residentId={resident}", full: true },
   { name: "enclosures", path: "/enclosures" },
@@ -85,6 +94,7 @@ const SIGNED_IN = [
   { name: "management-vets", path: "/management/vets" },
   { name: "management-medications", path: "/management/medications", full: true },
   { name: "management-diets", path: "/management/diets", full: true },
+  { name: "management-cashflow", path: "/management/cashflow", full: true },
   { name: "admin-security", path: "/admin/security" },
   { name: "admin-website", path: "/admin/website", full: true },
   { name: "admin-zones", path: "/admin/zones" },
@@ -103,6 +113,9 @@ const SIGNED_OUT = [
 
 async function main() {
   if (SIZES_ONLY) return writeSizes();
+  const known = [...SIGNED_IN, ...SIGNED_OUT].map((s) => s.name).concat("nav-mobile");
+  const unknown = ONLY?.filter((name) => !known.includes(name)) ?? [];
+  if (unknown.length) throw new Error(`--only names no such screenshot: ${unknown.join(", ")}`);
   await mkdir(OUT, { recursive: true });
 
   const browser = await launch();
@@ -134,38 +147,40 @@ async function main() {
     const ids = await discoverIds(page);
     console.log("Using", ids);
 
-    for (const shot of SIGNED_IN) {
+    for (const shot of SIGNED_IN.filter((s) => wanted(s.name))) {
       await capture(page, shot, ids);
     }
 
     // The phone menu: same session, phone-sized viewport, drawer open.
-    const phone = await browser.newContext({
-      viewport: PHONE,
-      deviceScaleFactor: SCALE,
-      isMobile: true,
-      hasTouch: true,
-      storageState: await context.storageState(),
-    });
-    const phonePage = await phone.newPage();
-    await phonePage.goto(`${BASE}/residents`);
-    await settle(phonePage);
-    await phonePage.getByRole("button", { name: /open menu|เปิดเมนู/i }).click();
-    await phonePage.waitForSelector("#mobile-nav");
-    await phonePage.waitForTimeout(300);
-    await phonePage.screenshot({ path: path.join(OUT, "nav-mobile.png") });
-    console.log("  nav-mobile.png");
-    await phone.close();
+    if (wanted("nav-mobile")) {
+      const phone = await browser.newContext({
+        viewport: PHONE,
+        deviceScaleFactor: SCALE,
+        isMobile: true,
+        hasTouch: true,
+        storageState: await context.storageState(),
+      });
+      const phonePage = await phone.newPage();
+      await phonePage.goto(`${BASE}/residents`);
+      await settle(phonePage);
+      await phonePage.getByRole("button", { name: /open menu|เปิดเมนู/i }).click();
+      await phonePage.waitForSelector("#mobile-nav");
+      await phonePage.waitForTimeout(300);
+      await phonePage.screenshot({ path: path.join(OUT, "nav-mobile.png") });
+      console.log("  nav-mobile.png");
+      await phone.close();
+    }
 
     // Public pages, signed out.
     const anon = await browser.newContext({ viewport: DESKTOP, deviceScaleFactor: SCALE });
     const anonPage = await anon.newPage();
-    for (const shot of SIGNED_OUT) {
+    for (const shot of SIGNED_OUT.filter((s) => wanted(s.name))) {
       await capture(anonPage, shot, ids);
     }
     await anon.close();
 
     await context.close();
-    console.log(`Done — ${SIGNED_IN.length + SIGNED_OUT.length + 1} screenshots in ${path.relative(process.cwd(), OUT)}`);
+    console.log(`Done — ${ONLY?.length ?? SIGNED_IN.length + SIGNED_OUT.length + 1} screenshots in ${path.relative(process.cwd(), OUT)}`);
   } finally {
     await browser.close();
   }
@@ -237,6 +252,11 @@ async function settle(page) {
   await page.evaluate((placeholder) => {
     for (const portal of document.querySelectorAll("nextjs-portal")) {
       portal.style.display = "none";
+    }
+    // The DEV / UAT badge beside the logo (AppHeader.tsx): production has
+    // none, and that is what the reader will see.
+    for (const badge of document.querySelectorAll("header span[title]")) {
+      badge.style.display = "none";
     }
     for (const span of document.querySelectorAll("header span")) {
       if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(span.textContent?.trim() ?? "")) {
