@@ -4054,7 +4054,8 @@ The schema half of "Stock on hand and days-of-stock". The feature stream
 
 - **The "Minified React error #441" on a Shelter Friend logo was not the
   Worker running out of resources.** The backlog item's theory was 1102.
-  The cause is Next's default `serverActions.bodySizeLimit` of 1 MB. Next
+  The cause, by every sign short of reading production's log, is Next's
+  default `serverActions.bodySizeLimit` of 1 MB. Next
   enforces it while parsing the request, before the action's code runs, so
   the action's 15 MB check and its try/catch never saw a 1–15 MB file.
   Reproduced on dev: a 2 MB multipart POST to an action returned HTTP 500
