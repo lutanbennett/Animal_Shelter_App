@@ -31,7 +31,7 @@
   gates: typecheck=0 lint=0 build=0
   ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): PR #127, run 36133014032 at `0664cfe` (after syncing #125) — `check` pass (1m20s), `migration-numbers` pass, `test-plan` pass
 
 ## 3. Schema and data
 
@@ -159,7 +159,7 @@ Manual verification by: pending: the desktop look of the new cells and the 375px
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR: in #127's description
 - [ ] Handed to the production release manager — n/a: not yet — handed over at merge
 
 Result: pass
