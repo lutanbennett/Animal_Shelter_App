@@ -56,8 +56,26 @@ type ListRow = {
 };
 
 /**
+ * The context handed to a role the assistant does not open for: no rows at
+ * all, so nothing is loaded that the caller could not have asked for
+ * through the assistant anyway. `error` is the caller's to fill in.
+ */
+export function emptyAssistantContext(
+  role: string | null,
+  error: string | null = null,
+): AssistantContext {
+  return { residents: [], zones: [], enclosures: [], vets: [], role, canWrite: false, error };
+}
+
+/** The caller's role as `current_user_role` reports it, or null. */
+export async function loadAssistantRole(supabase: SupabaseClient): Promise<string | null> {
+  const { data } = await supabase.rpc("current_user_role");
+  return typeof data === "string" ? data : null;
+}
+
+/**
  * Everything the assistant matches a sentence against: every resident who
- * isn't deceased, the physical enclosures, the vets, and the caller's role.
+ * isn't deceased, the physical enclosures and the vets.
  *
  * Loaded once and handed to the browser, where the parsing happens — so
  * "Panda" only resolves when a resident is actually called that, and no
@@ -68,11 +86,17 @@ type ListRow = {
  * a hospitalised resident came from, so both come alongside it, keyed by
  * resident id — the same two-step the enclosure hub does for its
  * thumbnails.
+ *
+ * It does no role check of its own: the caller fetches the role with
+ * `loadAssistantRole`, checks `canUseAssistant` and only then loads, so a
+ * vet never gets the rows by asking directly (docs/decisions.md,
+ * 2026-09-25).
  */
 export async function loadAssistantContext(
   supabase: SupabaseClient,
+  role: string | null,
 ): Promise<AssistantContext> {
-  const [listResult, vetsResult, roleResult, options] = await Promise.all([
+  const [listResult, vetsResult, options] = await Promise.all([
     supabase
       .from("resident_list_view")
       .select(
@@ -86,7 +110,6 @@ export async function loadAssistantContext(
       .select("id, name, clinic_name")
       .order("name")
       .returns<AssistantVet[]>(),
-    supabase.rpc("current_user_role"),
     loadEnclosureOptions(supabase),
   ]);
 
@@ -139,8 +162,6 @@ export async function loadAssistantContext(
         ? (previousOf.get(r.resident_id) ?? null)
         : null,
   }));
-
-  const role = typeof roleResult.data === "string" ? roleResult.data : null;
 
   return {
     residents,
