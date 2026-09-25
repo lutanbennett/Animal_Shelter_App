@@ -73,8 +73,9 @@ const PUBLIC = new Set([...PUBLIC_VIEWS, ...PUBLIC_TABLES]);
 // Functions anon may execute, each granted back by 0082, with arguments
 // for a harmless call. The public views call the shelter_* ones (EXECUTE is
 // checked as the caller even inside a view), the site_* policies call
-// current_user_role, and the photo proxy calls is_known_drive_file (and,
-// once it is switched over, is_public_drive_file from 0084).
+// current_user_role, and the photo proxy calls is_public_drive_file (0084).
+// is_known_drive_file is still granted to anon from when the proxy called it
+// for everyone; nothing anon-facing calls it now (docs/backlog.md).
 const PUBLIC_FUNCTIONS = {
   current_user_role: {},
   is_known_drive_file: { p_drive_file_id: "check-public-views-no-such-file" },
