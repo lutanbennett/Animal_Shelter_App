@@ -1,6 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { canUseAssistant, loadAssistantContext } from "@/lib/assistant/data";
+import {
+  canUseAssistant,
+  emptyAssistantContext,
+  loadAssistantContext,
+  loadAssistantRole,
+} from "@/lib/assistant/data";
 import { AssistantConversation } from "@/components/assistant/AssistantConversation";
 
 /**
@@ -11,11 +16,18 @@ import { AssistantConversation } from "@/components/assistant/AssistantConversat
  * The page loads the rows the parser matches against and hands them to
  * the client, which does the understanding; every write goes through the
  * same server-side operation the matching page or form uses.
+ *
+ * A role the assistant does not open for gets the "can't use" note and
+ * nothing is loaded for it — the rows would only be thrown away
+ * (docs/decisions.md, 2026-09-25).
  */
 export default async function AssistantPage() {
   const { t } = await getT();
   const supabase = await createClient();
-  const context = await loadAssistantContext(supabase);
+  const role = await loadAssistantRole(supabase);
+  const context = canUseAssistant(role)
+    ? await loadAssistantContext(supabase, role)
+    : emptyAssistantContext(role);
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-4 sm:p-6">

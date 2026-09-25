@@ -11,8 +11,11 @@ import {
 import { recordWeight } from "@/lib/weight/record";
 import { logAssistantAction, type AssistantActionStatus } from "@/lib/assistant/audit";
 import {
+  canUseAssistant,
   canWriteWithAssistant,
+  emptyAssistantContext,
   loadAssistantContext,
+  loadAssistantRole,
   type AssistantContext,
 } from "@/lib/assistant/data";
 import type { Draft, Intent } from "@/lib/assistant/types";
@@ -262,8 +265,17 @@ export async function recordAssistantTurn(input: {
  * The rows the parser matches against, for the slide-over — the /assistant
  * page loads them itself. Fetched when the panel is first opened rather
  * than with every layout render, since most screens never open it.
+ *
+ * A server action can be called by anyone signed in, button or not, so it
+ * checks the role itself as `assistantLookup` does: a vet gets an empty
+ * context and `notAuthorized`, not the resident list.
  */
 export async function fetchAssistantContext(): Promise<AssistantContext> {
   const supabase = await createClient();
-  return loadAssistantContext(supabase);
+  const role = await loadAssistantRole(supabase);
+  if (!canUseAssistant(role)) {
+    const { t } = await getT();
+    return emptyAssistantContext(role, t.assistant.notAuthorized);
+  }
+  return loadAssistantContext(supabase, role);
 }
