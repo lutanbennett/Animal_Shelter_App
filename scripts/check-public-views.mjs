@@ -73,10 +73,12 @@ const PUBLIC = new Set([...PUBLIC_VIEWS, ...PUBLIC_TABLES]);
 // Functions anon may execute, each granted back by 0082, with arguments
 // for a harmless call. The public views call the shelter_* ones (EXECUTE is
 // checked as the caller even inside a view), the site_* policies call
-// current_user_role, and the photo proxy calls is_known_drive_file.
+// current_user_role, and the photo proxy calls is_known_drive_file (and,
+// once it is switched over, is_public_drive_file from 0084).
 const PUBLIC_FUNCTIONS = {
   current_user_role: {},
   is_known_drive_file: { p_drive_file_id: "check-public-views-no-such-file" },
+  is_public_drive_file: { p_drive_file_id: "check-public-views-no-such-file" },
   shelter_date: { p_at: new Date().toISOString() },
   shelter_time_zone: {},
   shelter_today: {},
@@ -166,6 +168,40 @@ if (!root.ok) {
     const refused = !call.ok && message === `permission denied for function ${name}`;
     report(refused, `${name}(): anon EXECUTE is refused`, `HTTP ${call.status}${refused ? "" : `: ${message.slice(0, 120)}`}`);
   }
+}
+
+// is_public_drive_file must tell the two kinds of file apart when anon asks:
+// yes for a photo the public site shows, no for an internal attachment the
+// photo proxy also knows (a blood-test or procedure file). Skipped, not
+// failed, when the database has no such file to ask about.
+async function anonIsPublic(fileId) {
+  const call = await fetch(`${url}/rest/v1/rpc/is_public_drive_file`, {
+    method: "POST",
+    headers: { ...headers, "Content-Type": "application/json" },
+    body: JSON.stringify({ p_drive_file_id: fileId }),
+  });
+  return call.ok ? call.json() : `HTTP ${call.status}`;
+}
+const publicPhoto = await fetch(`${url}/rest/v1/public_resident_photos?select=drive_file_id&limit=1`, { headers })
+  .then((r) => (r.ok ? r.json() : []))
+  .then((rows) => rows[0]?.drive_file_id);
+if (publicPhoto) {
+  const answer = await anonIsPublic(publicPhoto);
+  report(answer === true, "is_public_drive_file(): yes for a public resident photo", String(answer));
+} else {
+  console.log("skip  is_public_drive_file(): no public resident photo to ask about");
+}
+const internalFile = await fetch(
+  `${url}/rest/v1/attachments?select=drive_file_id&owner_type=in.(blood_test,procedure)&limit=1`,
+  { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } },
+)
+  .then((r) => (r.ok ? r.json() : []))
+  .then((rows) => rows[0]?.drive_file_id);
+if (internalFile) {
+  const answer = await anonIsPublic(internalFile);
+  report(answer === false, "is_public_drive_file(): no for a blood-test/procedure file", String(answer));
+} else {
+  console.log("skip  is_public_drive_file(): no blood-test or procedure file to ask about");
 }
 
 console.log(`\nProject: ${new URL(url).hostname}`);
