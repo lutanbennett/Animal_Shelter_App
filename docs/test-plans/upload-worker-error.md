@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — seen green on #125: `check` pass (1m34s), `migration-numbers` pass, `test-plan` pass (run 36129147968)
 
 ## 3. Schema and data — *skip if no migration*
 
