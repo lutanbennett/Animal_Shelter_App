@@ -3,6 +3,7 @@
 import { refresh, revalidatePath } from "next/cache";
 import { assertManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
+import { MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { ContactType } from "@/lib/contacts/contacts";
@@ -35,16 +36,6 @@ export type FriendFields = {
   facebookUrl: string;
   friendSince: string;
 } & Record<FriendOptIn, boolean>;
-
-// The same limits and types as the Website page's photos (admin/website/actions.ts).
-const MAX_FILE_BYTES = 15 * 1024 * 1024;
-const ALLOWED_MIME_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/heic",
-  "image/heif",
-]);
 
 function optional(value: string | null | undefined) {
   const trimmed = value?.trim() ?? "";
@@ -269,8 +260,8 @@ export async function uploadFriendLogo(
 
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) return { error: w.noFile };
-  if (!ALLOWED_MIME_TYPES.has(file.type)) return { error: w.unsupportedFileType(file.type || "unknown") };
-  if (file.size > MAX_FILE_BYTES) return { error: w.fileTooLarge };
+  if (!WEBSITE_IMAGE_MIME_TYPES.has(file.type)) return { error: w.unsupportedFileType(file.type || "unknown") };
+  if (file.size > MAX_UPLOAD_BYTES) return { error: w.fileTooLarge };
 
   const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
   if (!rootId) return { error: w.driveNotConfigured };

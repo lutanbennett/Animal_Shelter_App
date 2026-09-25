@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { MAX_UPLOAD_BYTES } from "@/lib/uploads/limits";
 import { assertPhotoWriteAccess } from "@/lib/auth/require-role";
 import {
   getDriveClient,
@@ -9,7 +10,6 @@ import {
 import { driveImageUrl } from "@/lib/google/drive-client";
 import type { MaintenancePhase } from "@/lib/maintenance/queries";
 
-const MAX_FILE_BYTES = 15 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -72,7 +72,7 @@ export async function POST(
       { status: 400 },
     );
   }
-  if (file.size > MAX_FILE_BYTES) {
+  if (file.size > MAX_UPLOAD_BYTES) {
     return NextResponse.json(
       { error: "File is larger than 15MB." },
       { status: 400 },

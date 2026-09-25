@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { assertAdminRole } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
+import { MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits";
 import { getT } from "@/lib/i18n/get-t";
 import { isSitePageSlug, type SitePageSlug } from "@/lib/site/pages";
 import { parseBahtAmount } from "@/lib/format";
@@ -20,15 +21,6 @@ import {
 } from "@/lib/google/drive";
 
 export type SiteContentFormState = { error: string } | { success: string } | undefined;
-
-const MAX_FILE_BYTES = 15 * 1024 * 1024;
-const ALLOWED_MIME_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/heic",
-  "image/heif",
-]);
 
 /** Every public page reads site_content (the footer), so all of them. */
 function revalidateWebsitePages() {
@@ -260,12 +252,12 @@ export async function setFeaturedResident(
 
 async function uploadToWebsiteFolder(file: File) {
   const { t } = await getT();
-  if (!ALLOWED_MIME_TYPES.has(file.type)) {
+  if (!WEBSITE_IMAGE_MIME_TYPES.has(file.type)) {
     throw new Error(
       t.admin.website.errors.unsupportedFileType(file.type || "unknown"),
     );
   }
-  if (file.size > MAX_FILE_BYTES) {
+  if (file.size > MAX_UPLOAD_BYTES) {
     throw new Error(t.admin.website.errors.fileTooLarge);
   }
 

@@ -20,6 +20,7 @@ import {
   type ShelterFriend,
 } from "@/lib/shelter-friends/friends";
 import type { TranslationRow } from "@/lib/translations/types";
+import { runUploadAction } from "@/lib/uploads/run-upload-action";
 import {
   createFriend,
   deleteFriend,
@@ -390,7 +391,11 @@ export function ShelterFriendCard({
                   if (!file) return;
                   const formData = new FormData();
                   formData.append("file", file);
-                  run(() => uploadFriendLogo(friend.id, formData));
+                  run(() =>
+                    runUploadAction(file, t.admin.website.errors, () =>
+                      uploadFriendLogo(friend.id, formData),
+                    ),
+                  );
                 }}
               />
             </div>

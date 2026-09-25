@@ -682,6 +682,8 @@ const th: Dictionary = {
         uploadFailed: "อัปโหลดไม่สำเร็จ",
         unsupportedFileType: (type: string) => `ไม่รองรับไฟล์ประเภท: ${type}`,
         fileTooLarge: "ไฟล์มีขนาดใหญ่กว่า 15MB",
+        processingFailed:
+          "เซิร์ฟเวอร์ประมวลผลไฟล์นี้ไม่ได้ จึงยังไม่ได้บันทึกอะไร ลองใช้รูปที่เล็กลง (ไม่เกินประมาณ 2 MB) หรือลองใหม่อีกครั้งในอีกสักครู่",
         driveNotConfigured: "ยังไม่ได้ตั้งค่า GOOGLE_DRIVE_ROOT_FOLDER_ID",
       },
     },

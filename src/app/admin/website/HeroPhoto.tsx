@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRef, useState, useTransition } from "react";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { runUploadAction } from "@/lib/uploads/run-upload-action";
 import { removeHeroPhoto, uploadHeroPhoto } from "./actions";
 
 export function HeroPhoto({
@@ -24,7 +25,9 @@ export function HeroPhoto({
     const formData = new FormData();
     formData.append("file", file);
     startTransition(async () => {
-      const result = await uploadHeroPhoto(formData);
+      const result = await runUploadAction(file, t.admin.website.errors, () =>
+        uploadHeroPhoto(formData),
+      );
       if (result && "error" in result) {
         setMessage({ type: "error", text: result.error });
       } else {
