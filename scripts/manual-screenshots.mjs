@@ -253,6 +253,11 @@ async function settle(page) {
     for (const portal of document.querySelectorAll("nextjs-portal")) {
       portal.style.display = "none";
     }
+    // The DEV / UAT badge beside the logo (AppHeader.tsx): production has
+    // none, and that is what the reader will see.
+    for (const badge of document.querySelectorAll("header span[title]")) {
+      badge.style.display = "none";
+    }
     for (const span of document.querySelectorAll("header span")) {
       if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(span.textContent?.trim() ?? "")) {
         span.textContent = placeholder;
