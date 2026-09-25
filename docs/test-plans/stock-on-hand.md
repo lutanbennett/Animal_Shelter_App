@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **Stock on hand and days-of-stock** (ticked on this branch) |
 | Branch / worktree | `claude/stock-on-hand` @ `C:\Development\Animal_Shelter_stock-on-hand` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3002` |
-| PR | opened from the commit that adds this plan; number recorded in the follow-up commit |
+| PR | #127 |
 | Tested by / date | Claude (automated and browser-driven) / 2026-09-25 |
 | Carries a migration? | no. It reads `0083_stock_on_hand.sql`, which is merged (#121) and applied to dev |
 | Tested at SHA | `04b51bd` (after a second sync of `origin/main`, which brought in #123 and #126). The gates were first run on `32a6275`, passing all three, and then rerun here; only this plan changes on top |
