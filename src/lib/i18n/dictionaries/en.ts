@@ -745,6 +745,33 @@ const en = {
     errors: {
       managementAccessRequired: "Management access is required.",
     },
+    stock: {
+      stockHeading: "In stock",
+      daysHeading: "Days of stock",
+      notCounted: "Not counted",
+      outOfStock: "Out of stock",
+      quantity: (quantity: string, unit: string) => `${quantity} ${unit}`,
+      countedAgo: (days: number) =>
+        days === 0 ? "counted today" : days === 1 ? "counted yesterday" : `counted ${days} days ago`,
+      notUsed: "None due in the next 30 days",
+      runDown: "Probably used up since the count — count again",
+      daysLeft: (n: number) => `About ${n} day${n === 1 ? "" : "s"}`,
+      runsOut: (date: string) => `runs out around ${date}`,
+      reorder: "Reorder",
+      leadTime: (n: number) => `lead time ${n} day${n === 1 ? "" : "s"}`,
+      leadDaysLabel: "Reorder lead time (days)",
+      leadDaysPlaceholder: "Days",
+      count: "Count",
+      countLabel: (unit: string) => `Count in ${unit}`,
+      countPlaceholder: "Blank = not counted",
+      note:
+        "In stock is the last count, in the item's own unit. Days of stock starts from that count, takes off what the next-30-days forecast says has been used since it was taken, and divides what is left by the same daily rate. Items flagged Reorder have no more days of stock than their lead time. Saving a count — even the same figure — records a new count dated now.",
+      errors: {
+        countInvalid: "Stock must be a number, 0 or more. Leave it blank if it hasn't been counted.",
+        leadDaysInvalid:
+          "Lead time must be a whole number of days, 1 to 365. Leave it blank for no reorder flag.",
+      },
+    },
     forecastWindow: {
       from: "From",
       to: "To",

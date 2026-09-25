@@ -43,6 +43,7 @@ export type Release = {
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
   "Four topics in the user manual showed a broken picture — adding a diet, Management → Diets, Management → Cashflow and Settings → Blood test types. Each now shows its screenshot.",
+  "Management → Medications and → Diets now keep track of what's in the cupboard. Tap Count after a stocktake to record how much is left; the table shows how long ago it was counted and roughly how many days it will last at the next 30 days' rate. Give an item its supplier's lead time and it is flagged Reorder when stock gets that low.",
 ];
 
 /** Newest first. */

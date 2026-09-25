@@ -7,6 +7,7 @@ import { ForecastWindowPicker } from "@/components/ForecastWindowPicker";
 import { formatDate } from "@/lib/format";
 import { forecastWindows, parseCustomWindow } from "@/lib/management/forecast-window";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
+import { STOCK_RATE_DAYS, readStock, stockFiguresOf } from "@/lib/management/stock";
 
 type MedicationQueryRow = {
   id: string;
@@ -16,6 +17,9 @@ type MedicationQueryRow = {
   // ForecastRow below shows it can arrive as a string, so it is normalised
   // once here rather than guessed at in the table.
   cost_per_unit: number | string | null;
+  stock_on_hand: number | string | null;
+  stock_counted_at: string | null;
+  reorder_lead_days: number | null;
 };
 
 type ForecastRow = {
@@ -41,7 +45,9 @@ export default async function MedicationsAdminPage(props: PageProps<"/management
     await Promise.all([
       supabase
         .from("medication")
-        .select("id, name, dose_unit, cost_per_unit")
+        .select(
+          "id, name, dose_unit, cost_per_unit, stock_on_hand, stock_counted_at, reorder_lead_days",
+        )
         .order("name")
         .returns<MedicationQueryRow[]>(),
       // One row per prescription is cheap at shelter scale and gives the
@@ -72,22 +78,33 @@ export default async function MedicationsAdminPage(props: PageProps<"/management
     (result) => new Map((result.data ?? []).map((row) => [row.medication_id, row])),
   );
 
-  const medications: MedicationRow[] = (medicationsResult.data ?? []).map(
-    (medication) => ({
-      ...medication,
+  // Days-of-stock reads the fixed 30-day column, never a custom window,
+  // so it means the same thing whatever the picker shows.
+  const rateWindow = windows.findIndex((window) => window.days === STOCK_RATE_DAYS);
+  const now = Date.now();
+
+  const medications: MedicationRow[] = (medicationsResult.data ?? []).map((medication) => {
+    const forecast = forecasts.map((byMedication) => {
+      const row = byMedication.get(medication.id);
+      return {
+        residents: row?.resident_count ?? 0,
+        doses: row?.dose_count ?? 0,
+        quantity: Number(row?.quantity ?? 0),
+      };
+    });
+    const stock = stockFiguresOf(medication);
+    return {
+      id: medication.id,
+      name: medication.name,
+      dose_unit: medication.dose_unit,
       cost_per_unit:
         medication.cost_per_unit == null ? null : Number(medication.cost_per_unit),
       prescription_count: medicationCounts.get(medication.id) ?? 0,
-      forecast: forecasts.map((byMedication) => {
-        const row = byMedication.get(medication.id);
-        return {
-          residents: row?.resident_count ?? 0,
-          doses: row?.dose_count ?? 0,
-          quantity: Number(row?.quantity ?? 0),
-        };
-      }),
-    }),
-  );
+      forecast,
+      stock,
+      stockReading: readStock(stock, forecast[rateWindow]?.quantity ?? 0, now),
+    };
+  });
 
   const m = t.management.medications;
   const forecastError = forecastResults.find((r) => r.error)?.error;
@@ -133,6 +150,7 @@ export default async function MedicationsAdminPage(props: PageProps<"/management
           />
           <MedicationsTable medications={medications} forecastHeadings={forecastHeadings} />
           <p className="text-xs text-muted">{m.table.forecastNote}</p>
+          <p className="text-xs text-muted">{t.management.stock.note}</p>
         </section>
       </LargerScreenNotice>
     </main>
