@@ -151,6 +151,9 @@ export function ShelterFriendCard({
 
   const archived = isArchived(contact);
   const live = friend.published && !archived;
+  // An archived contact's profile is off the site for a different reason,
+  // which archivedHidden explains.
+  const isDraft = !friend.published && !archived;
   const shown: FriendFields = editing ? fields : fieldsFrom(friend);
   const shownWebsite = checkHttpsUrl(shown.websiteUrl);
   const shownFacebook = checkFacebookUrl(shown.facebookUrl);
@@ -199,11 +202,18 @@ export function ShelterFriendCard({
     <section className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5">
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-lg font-semibold text-foreground">{c.heading}</h2>
-        <FriendBadge
-          label={live ? c.onWebsite : c.notOnWebsite}
-          published={live}
-        />
+        <FriendBadge label={live ? c.onWebsite : isDraft ? c.draft : c.notOnWebsite} published={live} />
       </div>
+
+      {/* Saving and publishing are separate steps, and an unpublished
+          profile is indistinguishable from outside from a broken page
+          (/friends just looks empty). So a draft says so for as long as
+          it is one — including while it is being edited, just above Save. */}
+      {canManage && isDraft && (
+        <p className="rounded border border-dashed border-primary/40 bg-background px-3 py-2 text-sm text-foreground">
+          {c.draftNotice}
+        </p>
+      )}
 
       {archived && friend.published && (
         <p className="rounded border border-dashed border-border bg-background px-3 py-2 text-sm text-muted">
@@ -341,7 +351,16 @@ export function ShelterFriendCard({
           onSubmit={(e) => {
             e.preventDefault();
             if (websiteError || facebookError) return;
-            run(() => updateFriend(friend.id, fields), () => setEditing(false));
+            // "Saved." after Save read as done; on a draft it wasn't.
+            run(
+              async () => {
+                const result = await updateFriend(friend.id, fields);
+                return "success" in result && !friend.published
+                  ? { success: c.savedDraft }
+                  : result;
+              },
+              () => setEditing(false),
+            );
           }}
         >
           <div className="flex flex-col gap-2">
