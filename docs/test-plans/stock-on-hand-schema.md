@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **Stock on hand and days-of-stock** (not ticked here: the item closes when the feature half, `claude/stock-on-hand`, lands) |
 | Branch / worktree | `claude/stock-on-hand-schema` @ `C:\Development\Animal_Shelter_stock-on-hand-schema` |
 | Dev server | not started: this change ships no runtime code |
-| PR | opened from this branch after this commit; number recorded in the follow-up CI commit |
+| PR | #121 |
 | Tested by / date | Claude (automated) / 2026-09-25 |
 | Carries a migration? | yes: `0083_stock_on_hand.sql` |
 | Tested at SHA | `f059306` (branch on `main` @ `7bf0e9c`); the migration, harness, `decisions.md` entry and this plan are the only changes |
@@ -31,7 +31,7 @@
   gates: typecheck=0 lint=0 build=0
   ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): PR #121, run 36088705656 at `895d09d` — `check` pass (1m41s), `migration-numbers` pass, `test-plan` pass
 
 ## 3. Schema and data
 
