@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "Saving a Shelter Friend does not publish it, and nothing says so." |
 | Branch / worktree | `claude/shelter-friend-draft-state` @ `C:\Development\Animal_Shelter_shelter-friend-draft-state` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3015` |
-| PR | opened from this commit |
+| PR | [#129](https://github.com/lutanbennett/Animal_Shelter_App/pull/129) |
 | Tested by / date | Claude, 2026-09-25 |
 | Carries a migration? | no |
 | Tested at SHA | `5642202` (after sync; later commits touch only docs) |
