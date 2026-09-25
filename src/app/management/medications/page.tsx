@@ -81,7 +81,6 @@ export default async function MedicationsAdminPage(props: PageProps<"/management
   // Days-of-stock reads the fixed 30-day column, never a custom window,
   // so it means the same thing whatever the picker shows.
   const rateWindow = windows.findIndex((window) => window.days === STOCK_RATE_DAYS);
-  const now = Date.now();
 
   const medications: MedicationRow[] = (medicationsResult.data ?? []).map((medication) => {
     const forecast = forecasts.map((byMedication) => {
@@ -102,7 +101,7 @@ export default async function MedicationsAdminPage(props: PageProps<"/management
       prescription_count: medicationCounts.get(medication.id) ?? 0,
       forecast,
       stock,
-      stockReading: readStock(stock, forecast[rateWindow]?.quantity ?? 0, now),
+      stockReading: readStock(stock, forecast[rateWindow]?.quantity ?? 0),
     };
   });
 

@@ -75,7 +75,6 @@ export default async function DietsManagementPage(props: PageProps<"/management/
   // Days-of-stock reads the fixed 30-day column, never a custom window,
   // so it means the same thing whatever the picker shows.
   const rateWindow = windows.findIndex((window) => window.days === STOCK_RATE_DAYS);
-  const now = Date.now();
 
   const dietTypes: DietTypeRow[] = (typesResult.data ?? []).map((type) => {
     const forecast = forecasts.map((byType) => {
@@ -99,7 +98,7 @@ export default async function DietsManagementPage(props: PageProps<"/management/
       diet_count: counts.get(type.id) ?? 0,
       forecast,
       stock,
-      stockReading: readStock(stock, forecast[rateWindow]?.quantity ?? 0, now),
+      stockReading: readStock(stock, forecast[rateWindow]?.quantity ?? 0),
     };
   });
 
