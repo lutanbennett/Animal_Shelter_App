@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "`fetchAssistantContext()` has no role check of its own." |
 | Branch / worktree | `claude/assistant-context-role-check` @ `C:\Development\Animal_Shelter_assistant-context-role-check` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3007` |
-| PR | not yet — opened after this commit |
+| PR | https://github.com/lutanbennett/Animal_Shelter_App/pull/120 |
 | Tested by / date | Claude, 2026-09-25 (browser pane signed out; no account signed in) |
 | Carries a migration? | no |
 | Tested at SHA | `bb8b613` (fix `c0e78bf` + sync of `origin/main`); this plan is committed on top |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — PR #120 at `6d7dada`: `check` pass (1m38s), `migration-numbers` pass, `test-plan` pass
 
 ## 3. Schema and data — *skip if no migration*
 
