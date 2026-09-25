@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { DOSE_UNITS, type DoseUnit } from "@/lib/i18n/enum-labels";
 import { parseBahtAmount } from "@/lib/format";
+import { parseLeadDays, parseStockCount } from "@/lib/management/stock";
 
 export type MedicationFormState =
   | { error: string }
@@ -17,6 +18,8 @@ export type MedicationFields = {
   doseUnit: string;
   /** Baht per dose_unit, or null for "not priced yet" (0071). */
   costPerUnit: number | null;
+  /** Supplier lead time in days, as typed; blank = no reorder flag (0083). */
+  reorderLeadDays: string;
 };
 
 function optional(value: FormDataEntryValue | string | null | undefined) {
@@ -98,15 +101,46 @@ export async function updateMedication(id: string, fields: MedicationFields) {
   // "not priced yet", but a bad number must not become one.
   const cost = parseBahtAmount(fields.costPerUnit?.toString() ?? null);
   if (!cost.ok) throw new Error(t.management.medications.errors.costInvalid);
+  const leadDays = parseLeadDays(fields.reorderLeadDays);
+  if (!leadDays.ok) throw new Error(t.management.stock.errors.leadDaysInvalid);
 
+  // stock_on_hand is deliberately not in this write: naming it restamps
+  // stock_counted_at (0083), and a rename is not a stocktake.
   const supabase = await createClient();
   const { error } = await supabase
     .from("medication")
-    .update({ name, dose_unit: doseUnit, cost_per_unit: cost.value })
+    .update({
+      name,
+      dose_unit: doseUnit,
+      cost_per_unit: cost.value,
+      reorder_lead_days: leadDays.value,
+    })
     .eq("id", id);
 
   if (error) throw new Error(error.message);
   revalidateMedicationPages();
+}
+
+/**
+ * Records a stocktake. Always writes stock_on_hand, so the trigger stamps
+ * the count as taken now — re-saving the same figure is a count that
+ * confirmed it (0083). Blank clears it back to "not counted".
+ */
+export async function updateMedicationStock(id: string, count: string) {
+  await assertManagementRole();
+  const { t } = await getT();
+
+  const parsed = parseStockCount(count);
+  if (!parsed.ok) throw new Error(t.management.stock.errors.countInvalid);
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("medication")
+    .update({ stock_on_hand: parsed.value })
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/management/medications");
 }
 
 export async function deleteMedication(id: string) {

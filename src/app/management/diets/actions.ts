@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { DIET_UNITS, type DietUnit } from "@/lib/i18n/enum-labels";
+import { parseLeadDays, parseStockCount } from "@/lib/management/stock";
 
 export type DietTypeFormState =
   | { error: string }
@@ -21,6 +22,8 @@ export type DietTypeFields = {
   dailyQtyMedium: string;
   dailyQtyLarge: string;
   notes: string;
+  /** Supplier lead time in days; blank = no reorder flag (0083). Not on the add form. */
+  reorderLeadDays: string;
 };
 
 type DietTypeRowInput = {
@@ -31,6 +34,7 @@ type DietTypeRowInput = {
   daily_qty_medium: number;
   daily_qty_large: number;
   notes: string | null;
+  reorder_lead_days: number | null;
 };
 
 function optional(value: FormDataEntryValue | string | null | undefined) {
@@ -64,6 +68,7 @@ function fieldsFromForm(formData: FormData): DietTypeFields {
     dailyQtyMedium: get("dailyQtyMedium"),
     dailyQtyLarge: get("dailyQtyLarge"),
     notes: get("notes"),
+    reorderLeadDays: get("reorderLeadDays"),
   };
 }
 
@@ -88,6 +93,9 @@ function parseFields(
     return { error: e.quantitiesInvalid };
   }
 
+  const leadDays = parseLeadDays(fields.reorderLeadDays);
+  if (!leadDays.ok) return { error: t.management.stock.errors.leadDaysInvalid };
+
   return {
     row: {
       name,
@@ -97,6 +105,7 @@ function parseFields(
       daily_qty_medium: quantities[1],
       daily_qty_large: quantities[2],
       notes: optional(fields.notes),
+      reorder_lead_days: leadDays.value,
     },
   };
 }
@@ -132,8 +141,31 @@ export async function updateDietType(id: string, fields: DietTypeFields) {
   const parsed = parseFields(fields, t);
   if (parsed.error !== undefined) throw new Error(parsed.error);
 
+  // stock_on_hand is deliberately not in this write: naming it restamps
+  // stock_counted_at (0083), and a price change is not a stocktake.
   const supabase = await createClient();
   const { error } = await supabase.from("diet_types").update(parsed.row).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidateDietPages();
+}
+
+/**
+ * Records a stocktake. Always writes stock_on_hand, so the trigger stamps
+ * the count as taken now — re-saving the same figure is a count that
+ * confirmed it (0083). Blank clears it back to "not counted".
+ */
+export async function updateDietTypeStock(id: string, count: string) {
+  await assertManagementRole();
+  const { t } = await getT();
+
+  const parsed = parseStockCount(count);
+  if (!parsed.ok) throw new Error(t.management.stock.errors.countInvalid);
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("diet_types")
+    .update({ stock_on_hand: parsed.value })
+    .eq("id", id);
   if (error) throw new Error(error.message);
   revalidateDietPages();
 }

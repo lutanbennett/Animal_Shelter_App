@@ -5,7 +5,19 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatBaht } from "@/lib/format";
 import { DIET_UNITS, dietUnitLabel } from "@/lib/i18n/enum-labels";
 import { formatQuantity } from "@/lib/diets/options";
-import { deleteDietType, updateDietType, type DietTypeFields } from "./actions";
+import {
+  parseLeadDays,
+  parseStockCount,
+  type StockFigures,
+  type StockReading,
+} from "@/lib/management/stock";
+import { DaysOfStockCell, StockOnHandCell } from "@/components/StockCells";
+import {
+  deleteDietType,
+  updateDietType,
+  updateDietTypeStock,
+  type DietTypeFields,
+} from "./actions";
 
 export type DietTypeRow = {
   id: string;
@@ -24,7 +36,14 @@ export type DietTypeRow = {
    * baht (0051 diet_forecast).
    */
   forecast: { residents: number; quantity: number; cost: number }[];
+  /** Stock on hand, when it was counted and the reorder lead time (0083). */
+  stock: StockFigures;
+  /** Days-of-stock, computed on the server from the 30-day forecast. */
+  stockReading: StockReading;
 };
+
+/** Columns besides the forecast windows: name, unit, cost, daily, stock, days, records, actions. */
+const FIXED_COLUMNS = 8;
 
 const inputClass =
   "w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary";
@@ -41,6 +60,7 @@ function fieldsOf(row: DietTypeRow): DietTypeFields {
     dailyQtyMedium: formatQuantity(row.daily_qty_medium),
     dailyQtyLarge: formatQuantity(row.daily_qty_large),
     notes: row.notes ?? "",
+    reorderLeadDays: row.stock.reorder_lead_days?.toString() ?? "",
   };
 }
 
@@ -49,6 +69,8 @@ function DietTypeRowItem({ dietType }: { dietType: DietTypeRow }) {
   const m = t.management.diets;
   const [fields, setFields] = useState<DietTypeFields>(() => fieldsOf(dietType));
   const [editing, setEditing] = useState(false);
+  const [counting, setCounting] = useState(false);
+  const [count, setCount] = useState("");
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -58,6 +80,7 @@ function DietTypeRowItem({ dietType }: { dietType: DietTypeRow }) {
   function reset() {
     setFields(fieldsOf(dietType));
     setEditing(false);
+    setCounting(false);
   }
 
   function fail(err: unknown, fallback: string) {
@@ -65,11 +88,40 @@ function DietTypeRowItem({ dietType }: { dietType: DietTypeRow }) {
   }
 
   function handleSave() {
+    if (!parseLeadDays(fields.reorderLeadDays).ok) {
+      setMessage({ type: "error", text: t.management.stock.errors.leadDaysInvalid });
+      return;
+    }
     setMessage(null);
     startTransition(async () => {
       try {
         await updateDietType(dietType.id, fields);
         setEditing(false);
+        setMessage({ type: "success", text: t.common.saved });
+      } catch (err) {
+        fail(err, t.common.failedToSave);
+      }
+    });
+  }
+
+  function openCount() {
+    // Seeded when opened, not at mount: the row re-renders with the saved
+    // count, and useState would keep the old one.
+    setCount(dietType.stock.stock_on_hand?.toString() ?? "");
+    setMessage(null);
+    setCounting(true);
+  }
+
+  function handleCount() {
+    if (!parseStockCount(count).ok) {
+      setMessage({ type: "error", text: t.management.stock.errors.countInvalid });
+      return;
+    }
+    setMessage(null);
+    startTransition(async () => {
+      try {
+        await updateDietTypeStock(dietType.id, count);
+        setCounting(false);
         setMessage({ type: "success", text: t.common.saved });
       } catch (err) {
         fail(err, t.common.failedToSave);
@@ -192,15 +244,30 @@ function DietTypeRowItem({ dietType }: { dietType: DietTypeRow }) {
             )}
           </td>
         ))}
+        <StockOnHandCell
+          figures={dietType.stock}
+          reading={dietType.stockReading}
+          unit={unit}
+          counting={counting}
+          countValue={count}
+          onCountChange={setCount}
+        />
+        <DaysOfStockCell
+          figures={dietType.stock}
+          reading={dietType.stockReading}
+          editing={editing}
+          leadDaysValue={fields.reorderLeadDays}
+          onLeadDaysChange={set("reorderLeadDays")}
+        />
         <td className="px-4 py-2 text-muted">{m.table.dietCount(dietType.diet_count)}</td>
         <td className="px-4 py-2">
           <div className="flex flex-wrap items-center gap-2">
-            {editing ? (
+            {editing || counting ? (
               <>
                 <button
                   type="button"
                   disabled={isPending}
-                  onClick={handleSave}
+                  onClick={editing ? handleSave : handleCount}
                   className="rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
                 >
                   {t.common.save}
@@ -213,6 +280,9 @@ function DietTypeRowItem({ dietType }: { dietType: DietTypeRow }) {
               <>
                 <button type="button" onClick={() => setEditing(true)} className={smallButton}>
                   {t.common.edit}
+                </button>
+                <button type="button" onClick={openCount} className={smallButton}>
+                  {t.management.stock.count}
                 </button>
                 <button
                   type="button"
@@ -231,7 +301,7 @@ function DietTypeRowItem({ dietType }: { dietType: DietTypeRow }) {
       {message && (
         <tr>
           <td
-            colSpan={7 + dietType.forecast.length}
+            colSpan={FIXED_COLUMNS + dietType.forecast.length}
             className={`px-4 pb-2 text-xs ${message.type === "error" ? "text-danger" : "text-success"}`}
           >
             {message.text}
@@ -270,6 +340,8 @@ export function DietTypesTable({
                 {heading}
               </th>
             ))}
+            <th className="px-4 py-2 font-medium">{t.management.stock.stockHeading}</th>
+            <th className="px-4 py-2 font-medium">{t.management.stock.daysHeading}</th>
             <th className="px-4 py-2 font-medium">{m.table.residents}</th>
             <th className="px-4 py-2 font-medium" />
           </tr>
@@ -280,7 +352,7 @@ export function DietTypesTable({
           ))}
           {dietTypes.length === 0 && (
             <tr>
-              <td colSpan={6 + forecastHeadings.length} className="px-4 py-6 text-center text-muted">
+              <td colSpan={FIXED_COLUMNS + forecastHeadings.length} className="px-4 py-6 text-center text-muted">
                 {m.table.noDiets}
               </td>
             </tr>
@@ -297,7 +369,7 @@ export function DietTypesTable({
                   {formatBaht(total, locale)}
                 </td>
               ))}
-              <td colSpan={2} />
+              <td colSpan={4} />
             </tr>
           </tfoot>
         )}

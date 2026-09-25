@@ -57,7 +57,7 @@ Environments exist since 2026-09-21 (README "Environments"): `test.lannacare.org
 
 ## Medical records
 
-- [ ] **Stock on hand and days-of-stock.** Neither medications nor diets record what's actually in the cupboard, so the forecasts say what will be used but not when it runs out. If the shelter wants that: a `stock_on_hand` (and maybe `reorder_at`) figure on `medication` and `diet_types`, edited in place on the two management pages, and a "days of stock" column computed from the 30-day rate — with a flag when it's inside the reorder lead time. Split out of the medication requirement page item when that closed (2026-09-21).
+- [x] **Stock on hand and days-of-stock.** Neither medications nor diets record what's actually in the cupboard, so the forecasts say what will be used but not when it runs out. If the shelter wants that: a `stock_on_hand` (and maybe `reorder_at`) figure on `medication` and `diet_types`, edited in place on the two management pages, and a "days of stock" column computed from the 30-day rate — with a flag when it's inside the reorder lead time. Split out of the medication requirement page item when that closed (2026-09-21).
 
 ## Facility
 

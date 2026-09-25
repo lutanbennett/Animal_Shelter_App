@@ -834,6 +834,9 @@ const manual: Manual = {
             "Merge a duplicate into the one to keep — its prescriptions move across. Only medications with the same unit can be merged.",
             "Next N days shows how much of each medication current prescriptions will need. For any other period — next month's order, say — enter From and To dates above the table and tap Show window; a column for that period is added beside the fixed ones.",
             "The \"how often\" choices a prescription picks from are under Settings → Frequencies, and only an admin can change them (see Frequencies).",
+            "After a stocktake, tap Count on the row and enter what is in the cupboard, in the medication's own unit (tablets, ml…). In stock shows that figure and how long ago it was counted; saving the same figure again records a fresh count. Leave it blank for an item nobody has counted — it reads Not counted, which is different from 0, Out of stock.",
+            "Days of stock is worked out from the last count and the Next 30 days figure: what has probably been used since the count is taken off, and what is left is divided by the daily rate. An item with nothing due in the next 30 days doesn't run out. Probably used up since the count means the forecast has used the whole count — count it again.",
+            "To be warned in time, tap Edit and enter the supplier's reorder lead time in days. When the days of stock falls to that figure or below, the row is flagged Reorder. Leave it blank and the item is never flagged.",
           ],
           screenshot: {
             src: "/manual/management-medications.png",
@@ -849,6 +852,9 @@ const manual: Manual = {
             "The diets table is the food list the diet form offers. Add one with its unit (g, ml, can, sachet…), the cost per unit in baht, and the daily quantity for a small, medium and large animal.",
             "Edit any of those in place — a price rise or a corrected portion flows straight through to the forecast. A diet on any resident's record can't be deleted.",
             "Next N days shows how much of each diet the residents living at the shelter will eat and what it costs, with a total across all diets. Fostered, adopted and deceased residents aren't counted; a resident with no size set counts as Medium. For any other period enter From and To dates above the table and tap Show window.",
+            "After a stocktake, tap Count on the row and enter what is in the cupboard, in the diet's own unit (g, cans…). In stock shows that figure and how long ago it was counted; saving the same figure again records a fresh count. Leave it blank for an item nobody has counted — it reads Not counted, which is different from 0, Out of stock.",
+            "Days of stock is worked out from the last count and the Next 30 days figure: what has probably been used since the count is taken off, and what is left is divided by the daily rate. An item with nothing due in the next 30 days doesn't run out. Probably used up since the count means the forecast has used the whole count — count it again.",
+            "To be warned in time, tap Edit and enter the supplier's reorder lead time in days. When the days of stock falls to that figure or below, the row is flagged Reorder. Leave it blank and the item is never flagged.",
           ],
           screenshot: {
             src: "/manual/management-diets.png",

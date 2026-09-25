@@ -4,7 +4,19 @@ import { Fragment, useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { DOSE_UNITS, doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { formatBahtPrice, parseBahtAmount } from "@/lib/format";
-import { deleteMedication, mergeMedication, updateMedication } from "./actions";
+import {
+  parseLeadDays,
+  parseStockCount,
+  type StockFigures,
+  type StockReading,
+} from "@/lib/management/stock";
+import { DaysOfStockCell, StockOnHandCell } from "@/components/StockCells";
+import {
+  deleteMedication,
+  mergeMedication,
+  updateMedication,
+  updateMedicationStock,
+} from "./actions";
 
 export type MedicationRow = {
   id: string;
@@ -20,7 +32,14 @@ export type MedicationRow = {
    * quantity in dose_unit (0044 medication_forecast).
    */
   forecast: { residents: number; doses: number; quantity: number }[];
+  /** Stock on hand, when it was counted and the reorder lead time (0083). */
+  stock: StockFigures;
+  /** Days-of-stock, computed on the server from the 30-day forecast. */
+  stockReading: StockReading;
 };
+
+/** Columns besides the forecast windows: name, unit, cost, stock, days, prescriptions, actions. */
+const FIXED_COLUMNS = 7;
 
 const inputClass =
   "w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary";
@@ -43,7 +62,11 @@ function MedicationRowItem({
   const [costPerUnit, setCostPerUnit] = useState(
     medication.cost_per_unit?.toString() ?? "",
   );
-  const [mode, setMode] = useState<"view" | "edit" | "merge">("view");
+  const [leadDays, setLeadDays] = useState(
+    medication.stock.reorder_lead_days?.toString() ?? "",
+  );
+  const [count, setCount] = useState("");
+  const [mode, setMode] = useState<"view" | "edit" | "merge" | "count">("view");
   const [mergeInto, setMergeInto] = useState("");
   const [message, setMessage] = useState<
     { type: "error" | "success"; text: string } | null
@@ -54,6 +77,7 @@ function MedicationRowItem({
     setName(medication.name);
     setDoseUnit(medication.dose_unit);
     setCostPerUnit(medication.cost_per_unit?.toString() ?? "");
+    setLeadDays(medication.stock.reorder_lead_days?.toString() ?? "");
     setMergeInto("");
     setMode("view");
   }
@@ -71,6 +95,10 @@ function MedicationRowItem({
     const parsedCost = parseBahtAmount(costPerUnit);
     if (!parsedCost.ok) {
       setMessage({ type: "error", text: m.errors.costInvalid });
+      return;
+    }
+    if (!parseLeadDays(leadDays).ok) {
+      setMessage({ type: "error", text: t.management.stock.errors.leadDaysInvalid });
       return;
     }
     // The unit is what every prescription's dose is measured in, so
@@ -93,7 +121,33 @@ function MedicationRowItem({
           name,
           doseUnit,
           costPerUnit: parsedCost.value,
+          reorderLeadDays: leadDays,
         });
+        setMode("view");
+        setMessage({ type: "success", text: t.common.saved });
+      } catch (err) {
+        fail(err, t.common.failedToSave);
+      }
+    });
+  }
+
+  function openCount() {
+    // Seeded when opened, not at mount: the row re-renders with the saved
+    // count, and useState would keep the old one.
+    setCount(medication.stock.stock_on_hand?.toString() ?? "");
+    setMessage(null);
+    setMode("count");
+  }
+
+  function handleCount() {
+    if (!parseStockCount(count).ok) {
+      setMessage({ type: "error", text: t.management.stock.errors.countInvalid });
+      return;
+    }
+    setMessage(null);
+    startTransition(async () => {
+      try {
+        await updateMedicationStock(medication.id, count);
         setMode("view");
         setMessage({ type: "success", text: t.common.saved });
       } catch (err) {
@@ -213,17 +267,32 @@ function MedicationRowItem({
             )}
           </td>
         ))}
+        <StockOnHandCell
+          figures={medication.stock}
+          reading={medication.stockReading}
+          unit={doseUnitLabel(t, medication.dose_unit)}
+          counting={mode === "count"}
+          countValue={count}
+          onCountChange={setCount}
+        />
+        <DaysOfStockCell
+          figures={medication.stock}
+          reading={medication.stockReading}
+          editing={editing}
+          leadDaysValue={leadDays}
+          onLeadDaysChange={setLeadDays}
+        />
         <td className="px-4 py-2 text-muted">
           {m.table.prescriptionCount(medication.prescription_count)}
         </td>
         <td className="px-4 py-2">
           <div className="flex flex-wrap items-center gap-2">
-            {mode === "edit" && (
+            {(mode === "edit" || mode === "count") && (
               <>
                 <button
                   type="button"
                   disabled={isPending}
-                  onClick={handleSave}
+                  onClick={mode === "edit" ? handleSave : handleCount}
                   className="rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
                 >
                   {t.common.save}
@@ -280,6 +349,9 @@ function MedicationRowItem({
                 >
                   {t.common.edit}
                 </button>
+                <button type="button" onClick={openCount} className={smallButton}>
+                  {t.management.stock.count}
+                </button>
                 <button
                   type="button"
                   disabled={mergeTargets.length === 0}
@@ -311,7 +383,7 @@ function MedicationRowItem({
       </tr>
       {mode === "merge" && (
         <tr>
-          <td colSpan={5 + medication.forecast.length} className="px-4 pb-2 text-xs text-muted">
+          <td colSpan={FIXED_COLUMNS + medication.forecast.length} className="px-4 pb-2 text-xs text-muted">
             {m.merge.hint}
           </td>
         </tr>
@@ -319,7 +391,7 @@ function MedicationRowItem({
       {message && (
         <tr>
           <td
-            colSpan={5 + medication.forecast.length}
+            colSpan={FIXED_COLUMNS + medication.forecast.length}
             className={`px-4 pb-2 text-xs ${
               message.type === "error" ? "text-danger" : "text-success"
             }`}
@@ -356,6 +428,8 @@ export function MedicationsTable({
                 {heading}
               </th>
             ))}
+            <th className="px-4 py-2 font-medium">{t.management.stock.stockHeading}</th>
+            <th className="px-4 py-2 font-medium">{t.management.stock.daysHeading}</th>
             <th className="px-4 py-2 font-medium">{m.table.prescriptions}</th>
             <th className="px-4 py-2 font-medium" />
           </tr>
@@ -374,7 +448,7 @@ export function MedicationsTable({
           {medications.length === 0 && (
             <tr>
               <td
-                colSpan={5 + forecastHeadings.length}
+                colSpan={FIXED_COLUMNS + forecastHeadings.length}
                 className="px-4 py-6 text-center text-muted"
               >
                 {m.table.noMedications}

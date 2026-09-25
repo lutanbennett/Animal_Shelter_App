@@ -7,6 +7,13 @@ import { ForecastWindowPicker } from "@/components/ForecastWindowPicker";
 import { formatDate } from "@/lib/format";
 import { forecastWindows, parseCustomWindow } from "@/lib/management/forecast-window";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
+import { STOCK_RATE_DAYS, readStock, stockFiguresOf } from "@/lib/management/stock";
+
+type DietTypeQueryRow = Omit<DietTypeRow, "diet_count" | "forecast" | "stock" | "stockReading"> & {
+  stock_on_hand: number | string | null;
+  stock_counted_at: string | null;
+  reorder_lead_days: number | null;
+};
 
 type ForecastRow = {
   diet_type_id: string;
@@ -37,9 +44,11 @@ export default async function DietsManagementPage(props: PageProps<"/management/
   const [typesResult, dietsResult, ...forecastResults] = await Promise.all([
     supabase
       .from("diet_types")
-      .select("id, name, unit, cost_per_unit, daily_qty_small, daily_qty_medium, daily_qty_large, notes")
+      .select(
+        "id, name, unit, cost_per_unit, daily_qty_small, daily_qty_medium, daily_qty_large, notes, stock_on_hand, stock_counted_at, reorder_lead_days",
+      )
       .order("name")
-      .returns<Omit<DietTypeRow, "diet_count" | "forecast">[]>(),
+      .returns<DietTypeQueryRow[]>(),
     // One row per resident diet is cheap at shelter scale and gives the
     // reference counts that gate the delete buttons.
     supabase
@@ -63,22 +72,35 @@ export default async function DietsManagementPage(props: PageProps<"/management/
     (result) => new Map((result.data ?? []).map((row) => [row.diet_type_id, row])),
   );
 
-  const dietTypes: DietTypeRow[] = (typesResult.data ?? []).map((type) => ({
-    ...type,
-    cost_per_unit: Number(type.cost_per_unit),
-    daily_qty_small: Number(type.daily_qty_small),
-    daily_qty_medium: Number(type.daily_qty_medium),
-    daily_qty_large: Number(type.daily_qty_large),
-    diet_count: counts.get(type.id) ?? 0,
-    forecast: forecasts.map((byType) => {
+  // Days-of-stock reads the fixed 30-day column, never a custom window,
+  // so it means the same thing whatever the picker shows.
+  const rateWindow = windows.findIndex((window) => window.days === STOCK_RATE_DAYS);
+
+  const dietTypes: DietTypeRow[] = (typesResult.data ?? []).map((type) => {
+    const forecast = forecasts.map((byType) => {
       const row = byType.get(type.id);
       return {
         residents: row?.resident_count ?? 0,
         quantity: Number(row?.quantity ?? 0),
         cost: Number(row?.cost ?? 0),
       };
-    }),
-  }));
+    });
+    const stock = stockFiguresOf(type);
+    return {
+      id: type.id,
+      name: type.name,
+      unit: type.unit,
+      notes: type.notes,
+      cost_per_unit: Number(type.cost_per_unit),
+      daily_qty_small: Number(type.daily_qty_small),
+      daily_qty_medium: Number(type.daily_qty_medium),
+      daily_qty_large: Number(type.daily_qty_large),
+      diet_count: counts.get(type.id) ?? 0,
+      forecast,
+      stock,
+      stockReading: readStock(stock, forecast[rateWindow]?.quantity ?? 0),
+    };
+  });
 
   const m = t.management.diets;
   const forecastError = forecastResults.find((r) => r.error)?.error;
@@ -124,6 +146,7 @@ export default async function DietsManagementPage(props: PageProps<"/management/
           />
           <DietTypesTable dietTypes={dietTypes} forecastHeadings={forecastHeadings} />
           <p className="text-xs text-muted">{m.table.forecastNote}</p>
+          <p className="text-xs text-muted">{t.management.stock.note}</p>
         </section>
       </LargerScreenNotice>
     </main>
