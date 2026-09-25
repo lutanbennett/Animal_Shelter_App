@@ -11,28 +11,75 @@ import { getDriveClient } from "@/lib/google/drive";
  * bursty traffic (undocumented per-file abuse throttle, ~24h file-wide
  * blackout when tripped).
  *
- * Caching is layered:
+ * Who may fetch what (docs/decisions.md, 2026-09-25, "The photo proxy asks
+ * who is asking"):
+ *  - A file the public site shows (`is_public_drive_file`, 0084) is served
+ *    to anyone, and cached as public.
+ *  - Any other file — blood-test and procedure attachments, a resident's
+ *    non-profile photos, maintenance photos, unpublished project photos and
+ *    Friend logos — only to a caller whose own session can select the row
+ *    that holds it (`canSeeInternalFile`), so RLS decides: signed out, an
+ *    archived login and a role with no app access all see nothing, and a
+ *    vet is refused a maintenance photo as the maintenance pages refuse
+ *    them. It is never cached anywhere: `private, no-store`.
+ *  - Everything else is "Photo not found.", so a signed-out visitor can't
+ *    tell an internal file from a made-up id.
+ *
+ * Caching is layered, and only ever holds public files:
  *  - Cloudflare's edge Cache API (`caches.default`) when running in a
  *    Workers-compatible runtime — the actual fix for the throttling risk,
  *    since it de-dupes concurrent/rapid requests at the edge before they
- *    ever reach this handler. Not available under plain `next dev`/Node
- *    hosting, so it's feature-detected rather than assumed.
+ *    ever reach Drive. Not available under plain `next dev`/Node hosting,
+ *    so it's feature-detected rather than assumed. It is consulted before
+ *    the database, which is safe only because nothing but a public file is
+ *    ever put in it. The key is the file id under its own namespace, not the
+ *    request URL: entries written before this rule (when internal files were
+ *    cached too) are never matched again, and a query string can't be used
+ *    to bypass the cache.
  *  - A `Cache-Control` header on every response, so browsers (and any
  *    CDN/proxy that respects it) also avoid re-requesting unchanged photos.
  *    This layer works everywhere, including local dev.
  *
- * No cache is invalidated when a photo is deleted (deletePhoto in
- * src/app/residents/[id]/photos/actions.ts) — once a photo is removed from
- * the DB, no URL in the app references its file ID again, so the stale
- * cache entry is harmless and simply expires with the TTL below.
+ * No cache is invalidated when a photo is deleted or stops being public
+ * (a resident hidden, a project unpublished) — the entry simply expires with
+ * the TTL below, as any browser's copy does. Deleted photos are no longer
+ * referenced by any URL in the app, so that is harmless.
  */
 
 const FILE_ID_PATTERN = /^[A-Za-z0-9_-]{10,100}$/;
 const CACHE_SECONDS = 60 * 60 * 24; // 24h — well under Drive's throttle window either way.
+// Bump the version to orphan every entry the edge cache holds.
+const EDGE_CACHE_NAMESPACE = "public-v2";
 
 function getEdgeCache(): Cache | null {
   const c = (globalThis as { caches?: CacheStorage }).caches;
   return c && "default" in c ? (c as unknown as { default: Cache }).default : null;
+}
+
+type Supabase = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * Whether the caller's session can read a row that holds this file: the
+ * non-public half of is_known_drive_file (0076), asked as the caller rather
+ * than as the definer. site_content(_photos) are left out because anyone
+ * may read them, so is_public_drive_file has already said yes to theirs.
+ */
+async function canSeeInternalFile(supabase: Supabase, fileId: string) {
+  const lookups = [
+    supabase.from("attachments").select("id").eq("drive_file_id", fileId).limit(1),
+    supabase.from("project_photos").select("id").eq("drive_file_id", fileId).limit(1),
+    supabase.from("maintenance_photos").select("id").eq("drive_file_id", fileId).limit(1),
+    supabase.from("shelter_friends").select("id").eq("logo_drive_file_id", fileId).limit(1),
+  ];
+  const results = await Promise.all(lookups);
+  return results.some(({ data }) => (data?.length ?? 0) > 0);
+}
+
+function notFound() {
+  return NextResponse.json(
+    { error: "Photo not found." },
+    { status: 404, headers: { "Cache-Control": "no-store" } },
+  );
 }
 
 export async function GET(
@@ -45,7 +92,10 @@ export async function GET(
   }
 
   const cache = getEdgeCache();
-  const cacheKey = new Request(request.url, { method: "GET" });
+  const cacheKey = new Request(
+    new URL(`/api/photos/${fileId}?edge=${EDGE_CACHE_NAMESPACE}`, request.url),
+    { method: "GET" },
+  );
 
   if (cache) {
     const cached = await cache.match(cacheKey);
@@ -53,12 +103,14 @@ export async function GET(
   }
 
   const supabase = await createClient();
-  const { data: isKnown, error: lookupError } = await supabase.rpc(
-    "is_known_drive_file",
+  const { data: isPublic, error: publicError } = await supabase.rpc(
+    "is_public_drive_file",
     { p_drive_file_id: fileId },
   );
-  if (lookupError || !isKnown) {
-    return NextResponse.json({ error: "Photo not found." }, { status: 404 });
+  if (publicError) return notFound();
+
+  if (!isPublic) {
+    if (!(await canSeeInternalFile(supabase, fileId))) return notFound();
   }
 
   let contentType: string;
@@ -75,11 +127,13 @@ export async function GET(
     status: 200,
     headers: {
       "Content-Type": contentType,
-      "Cache-Control": `public, max-age=${CACHE_SECONDS}, s-maxage=${CACHE_SECONDS}, immutable`,
+      "Cache-Control": isPublic
+        ? `public, max-age=${CACHE_SECONDS}, s-maxage=${CACHE_SECONDS}, immutable`
+        : "private, no-store",
     },
   });
 
-  if (cache) {
+  if (cache && isPublic) {
     await cache.put(cacheKey, response.clone());
   }
 
