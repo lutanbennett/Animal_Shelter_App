@@ -90,7 +90,9 @@ function ContactCard({ contact }: { contact: ContactSummary }) {
                 title={
                   contact.friendPublished && !archived
                     ? t.shelterFriends.card.onWebsite
-                    : t.shelterFriends.card.notOnWebsite
+                    : archived
+                      ? t.shelterFriends.card.notOnWebsite
+                      : t.shelterFriends.card.draft
                 }
               />
             )}

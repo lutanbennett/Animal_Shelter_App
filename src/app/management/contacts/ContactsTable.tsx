@@ -143,7 +143,9 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
                   title={
                     contact.friend_published && !archived
                       ? t.shelterFriends.card.onWebsite
-                      : t.shelterFriends.card.notOnWebsite
+                      : archived
+                        ? t.shelterFriends.card.notOnWebsite
+                        : t.shelterFriends.card.draft
                   }
                 />
               )}
