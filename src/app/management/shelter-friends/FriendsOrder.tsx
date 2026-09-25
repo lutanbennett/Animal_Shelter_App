@@ -88,7 +88,7 @@ export function FriendsOrder({ friends }: { friends: FriendOrderRow[] }) {
                 </Link>
                 <div className="flex flex-wrap items-center gap-1.5">
                   <FriendBadge
-                    label={live ? f.card.onWebsite : f.card.notOnWebsite}
+                    label={live ? f.card.onWebsite : archived ? f.card.notOnWebsite : f.card.draft}
                     published={live}
                   />
                   {archived && <span className="text-xs text-muted">{f.manage.archivedNote}</span>}

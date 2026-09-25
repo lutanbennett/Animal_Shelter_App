@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { friendMapSources, loadPublicFriends } from "@/lib/shelter-friends/public";
+import { staffDraftFriends } from "@/lib/shelter-friends/staff-drafts";
 import { FriendCard } from "@/components/FriendCard";
 import { PublicHeader } from "../adopt/PublicHeader";
 import { PublicFooter } from "../adopt/PublicFooter";
@@ -54,14 +56,18 @@ export async function generateMetadata(): Promise<Metadata> {
  * published profiles of live contacts, and each contact detail only when
  * its opt-in box was ticked. This page never reads contacts or
  * shelter_friends; if it needs something the view doesn't give, the view
- * is what changes.
+ * is what changes. The one exception is staffDraftFriends(): a count, for
+ * signed-in staff only, of drafts that are why the page looks empty.
  */
 export default async function FriendsPage() {
   const supabase = await createClient();
   const { t, locale } = await getT();
   const f = t.shelterFriends;
 
-  const { friends, error } = await loadPublicFriends(supabase);
+  const [{ friends, error }, drafts] = await Promise.all([
+    loadPublicFriends(supabase),
+    staffDraftFriends(supabase),
+  ]);
   const maps = await friendMapSources(friends);
 
   return (
@@ -73,6 +79,24 @@ export default async function FriendsPage() {
           <h1 className="text-2xl font-semibold text-foreground">{f.pageTitle}</h1>
           <p className="max-w-2xl text-sm text-muted">{f.pageSubtitle}</p>
         </div>
+
+        {drafts && (
+          <p className="rounded border border-dashed border-primary/40 bg-background px-4 py-3 text-sm text-foreground">
+            <span className="block text-xs font-medium text-muted">{f.staffDrafts.label}</span>
+            {f.staffDrafts.count(drafts.count)}{" "}
+            {drafts.canPublish ? (
+              <>
+                {f.staffDrafts.publishFrom}{" "}
+                <Link href="/management/shelter-friends" className="text-primary hover:underline">
+                  {f.staffDrafts.manageLink}
+                </Link>
+                .
+              </>
+            ) : (
+              f.staffDrafts.askManager
+            )}
+          </p>
+        )}
 
         {error && (
           <p className="text-sm text-danger">

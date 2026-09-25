@@ -2904,6 +2904,17 @@ const en = {
       "Local businesses that help us care for the animals — with food, supplies, services, or a discount for our supporters. Thank you. Give them your custom, and tell them Lanna Care for Animals sent you.",
     couldntLoad: "Couldn't load our friends",
     noneYet: "We're just getting started on thanking the businesses that help us — check back soon.",
+    /** Signed-in staff only, on /friends: why a profile they saved isn't here. */
+    staffDrafts: {
+      label: "Only signed-in staff see this",
+      count: (n: number) =>
+        n === 1
+          ? "1 Shelter Friend profile is a draft, so it isn't shown here."
+          : `${n} Shelter Friend profiles are drafts, so they aren't shown here.`,
+      publishFrom: "Publish from",
+      manageLink: "Management → Shelter Friends",
+      askManager: "A manager can publish them.",
+    },
     /** A card whose profile has no prose yet still says why it is there. */
     fallbackBlurb: "A friend of the shelter.",
     supporterOffer: "Offer for supporters",
@@ -2942,6 +2953,11 @@ const en = {
       making: "Creating…",
       onWebsite: "On the website",
       notOnWebsite: "Not on the website",
+      /** An unpublished profile of a live contact: saved, but not public. */
+      draft: "Draft — not on the website",
+      draftNotice:
+        "This profile is a draft. Saving keeps it a draft — it appears on the website only when you tap Publish.",
+      savedDraft: "Saved as a draft. Publish to show this on the website.",
       publish: "Publish",
       unpublish: "Unpublish",
       viewOnSite: "View on the website",
