@@ -66,6 +66,7 @@ const en = {
     security: "Security",
     enclosures: "Enclosures",
     maintenance: "Maintenance",
+    stocktake: "Stocktake",
     projects: "Projects",
     zones: "Zones",
     immunizationTypes: "Immunization Types",
@@ -755,6 +756,64 @@ const en = {
     },
   },
 
+  stocktake: {
+    title: "Stocktake",
+    subtitle:
+      "Count every medication and diet in one go, then save once. Every count saved together gets the same time.",
+    couldntLoad: "Couldn't load the stock list",
+    tabs: { medication: "Medications", diet: "Diets" },
+    searchLabel: "Search the list",
+    searchPlaceholder: "Search by name",
+    blankHint:
+      "Leave a row blank if you didn't count it — it stays as it was. If the figure hasn't changed, tap Same as last time.",
+    noItems: {
+      medication: "No medications yet. Management adds them under Management → Medications.",
+      diet: "No diets yet. Management adds them under Management → Diets.",
+    },
+    noMatches: (query: string) => `Nothing matches “${query}”.`,
+    notCounted: "Never counted",
+    lastCount: (quantity: string, unit: string) => `Last count ${quantity} ${unit}`,
+    countLabel: (name: string, unit: string) => `Today's count of ${name}, in ${unit}`,
+    countPlaceholder: (unit: string) => `Count (${unit})`,
+    same: "Same as last time",
+    samePlaceholder: (quantity: string, unit: string) => `${quantity} ${unit}, same as last time`,
+    sameUnavailable: "Never counted, so there is nothing to confirm. Type the count.",
+    invalid: "Enter a number, 0 or more — or clear it to leave this item as it was.",
+    change: (from: string, to: string, unit: string) => `${from} → ${to} ${unit}`,
+    firstCount: (quantity: string, unit: string) => `First count: ${quantity} ${unit}`,
+    bigChange: "Big change — check it",
+    confirmedLine: (quantity: string, unit: string) => `${quantity} ${unit}, same as last time`,
+    footerNone: "Nothing counted yet.",
+    footer: (counted: number, confirmed: number) =>
+      [
+        counted > 0 ? `${counted} counted` : null,
+        confirmed > 0 ? `${confirmed} same as last time` : null,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+    review: "Review and save",
+    fixFirst: (n: number) =>
+      n === 1 ? "One count isn't a number. Fix it or clear it first." : `${n} counts aren't numbers. Fix or clear them first.`,
+    reviewTitle: "Check before saving",
+    reviewBody: (n: number) =>
+      `${n === 1 ? "This item" : `These ${n} items`} will be saved as counted now.`,
+    reviewBig: (n: number) =>
+      n === 1 ? "One count changed by half or more — worth a second look." : `${n} counts changed by half or more — worth a second look.`,
+    reviewUntouched: (n: number) =>
+      `${n} ${n === 1 ? "item" : "items"} not counted this time — left as ${n === 1 ? "it was" : "they were"}.`,
+    back: "Back to counting",
+    save: (n: number) => `Save ${n} ${n === 1 ? "count" : "counts"}`,
+    saved: (n: number, when: string) => `Saved ${n} ${n === 1 ? "count" : "counts"}, counted ${when}.`,
+    leaveWarning: "You have counts that aren't saved. Leave and lose them?",
+    errors: {
+      notAuthorized: "Your role can't record a stocktake. Ask a manager.",
+      stale:
+        "Nothing was saved: an item on the sheet has been deleted since the page opened. Reload the page — your counts will need entering again.",
+      countInvalid: "Nothing was saved: every count must be a number, 0 or more.",
+      nothingToSave: "Nothing to save yet — type a count or tap Same as last time on at least one row.",
+      failed: "Nothing was saved",
+    },
+  },
   management: {
     landing: {
       title: "Management",
@@ -783,6 +842,7 @@ const en = {
       managementAccessRequired: "Management access is required.",
     },
     stock: {
+      stocktakeLink: "Stocktake: count everything in one go",
       stockHeading: "In stock",
       daysHeading: "Days of stock",
       notCounted: "Not counted",

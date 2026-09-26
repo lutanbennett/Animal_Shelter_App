@@ -33,11 +33,14 @@ function activeHref(pathname: string, items: NavItem[]): string | undefined {
 export function NavLinks({
   isAdmin,
   canManage,
+  canStocktake,
   urgentCount,
 }: {
   isAdmin: boolean;
   /** Admin or management: shows the Management link. */
   canManage: boolean;
+  /** Admin, management, staff, volunteer: shows Stocktake (0091). */
+  canStocktake: boolean;
   /** My tasks due today or overdue, shown on the My tasks link when > 0. */
   urgentCount: number;
 }) {
@@ -72,6 +75,11 @@ export function NavLinks({
         label: t.nav.maintenance,
         icon: NAV_ICONS.maintenance,
       },
+      // A field job, done walking the shelves — with the daily pages, not
+      // under Management, because staff and volunteers do it (0091).
+      ...(canStocktake
+        ? [{ href: "/stocktake", label: t.nav.stocktake, icon: NAV_ICONS.stocktake }]
+        : []),
     ],
     [
       { href: "/vets", label: t.nav.vets, icon: NAV_ICONS.vets },
