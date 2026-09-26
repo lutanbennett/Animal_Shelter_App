@@ -42,6 +42,8 @@ export type Release = {
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
+  "When photo storage is not connected, uploads now say so in plain words (“Photo storage is not connected — tell an admin”) instead of Google’s error text, and Settings shows whether photo storage is connected, so an admin sees it before anyone’s upload fails.",
+  "A Shelter Friend logo’s upload message now appears next to the logo instead of below the Save button.",
 ];
 
 /** Newest first. */

@@ -19,6 +19,7 @@ import {
   getDriveClient,
   uploadImageToFolder,
 } from "@/lib/google/drive";
+import { driveErrorMessage } from "@/lib/google/drive-errors";
 
 export type SiteContentFormState = { error: string } | { success: string } | undefined;
 
@@ -298,9 +299,7 @@ export async function uploadHeroPhoto(
   try {
     driveFileId = await uploadToWebsiteFolder(file);
   } catch (err) {
-    return {
-      error: err instanceof Error ? err.message : t.admin.website.errors.uploadFailed,
-    };
+    return { error: await driveErrorMessage(err, t.admin.website.errors.uploadFailed) };
   }
 
   const supabase = await createClient();
@@ -364,9 +363,7 @@ export async function uploadGalleryPhoto(
   try {
     driveFileId = await uploadToWebsiteFolder(file);
   } catch (err) {
-    return {
-      error: err instanceof Error ? err.message : t.admin.website.errors.uploadFailed,
-    };
+    return { error: await driveErrorMessage(err, t.admin.website.errors.uploadFailed) };
   }
 
   const supabase = await createClient();
