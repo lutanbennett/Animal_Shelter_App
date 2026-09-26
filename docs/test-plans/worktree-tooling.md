@@ -66,6 +66,7 @@ machine for `list`. Exit codes recorded, not inferred from output.
 - [x] Empty state: `list` with husks present and with none tracked; `done` on a name that does not exist → `nothing called wt-broken: no worktree, no branch, no folder`, exit 1
 - [x] Invalid input is rejected with a readable message, not a crash:
   - **Held by an unidentifiable process** (a node child whose cwd was the folder, standing in for a Claude session): refused with "cannot be identified — usually a Claude session…", exit 1. Folder, registry entry and branch all still present afterwards.
+  - **Held with nobody there** (added 2026-09-26, `worktree-done-fix`): the case above is only the *true* positive. The one that actually reached the operator is a probe that fails with no session in the folder, which read in the same words and sent people closing unrelated sessions. It was never run here. It is now covered in `docs/test-plans/worktree-done-fix.md` §4: a holder flickering on and off, and the unnamed message checked against it.
   - **Held by a dev server**: node running a script in the folder's `node_modules` was named as `node.exe (pid …)`, exit 1.
   - **Unpushed commits**: a commit made with hooks off; `done --force` refused with "1 commit(s) that no branch on origin has … --force does not override this", exit 1.
   - **Dirty tree**: `done` without `--force` listed `?? junk.txt`, exit 1.

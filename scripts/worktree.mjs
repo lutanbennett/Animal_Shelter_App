@@ -129,16 +129,47 @@ function unpushed(branch) {
 // then there is nobody to notice. It cannot say *who* the holder is; that is
 // what liveSessions() and holders() are for. Elsewhere a held directory can
 // still be removed, so the question has no answer and the probe returns null.
-function held(dir) {
+//
+// A single failed rename is not proof of a holder. On 2026-09-25 the probe
+// flipped false/true/false within one run of 'done', milliseconds apart, with
+// nothing in the folder — git validating .git/worktrees/<name> from the main
+// checkout, or an indexer/antivirus handle, briefly holds the directory. A
+// session or terminal sitting in the folder holds it for minutes, so the
+// probe is repeated over a few hundred ms and only a folder that refuses every
+// time counts as held.
+function held(dir, { attempts = 4, gapMs = 150 } = {}) {
   if (!WINDOWS || !existsSync(dir)) return null;
   const probe = `${dir}.__worktree-probe`;
-  try {
-    renameSync(dir, probe);
-  } catch {
-    return true;
+  for (let i = 0; i < attempts; i++) {
+    if (i > 0) sleep(gapMs);
+    try {
+      renameSync(dir, probe);
+    } catch {
+      continue;
+    }
+    restore(probe, dir);
+    return false;
   }
-  renameSync(probe, dir);
-  return false;
+  return true;
+}
+
+// The same transient handle that can refuse the first rename can refuse the
+// one back, and a worktree left under the probe name is far worse than a slow
+// probe — so the way back is retried for a couple of seconds before giving up.
+function restore(probe, dir) {
+  for (let i = 0; ; i++) {
+    try {
+      renameSync(probe, dir);
+      return;
+    } catch (e) {
+      if (i >= 20) throw new Error(`could not rename ${probe} back to ${dir} — rename it by hand: ${e.message}`);
+      sleep(100);
+    }
+  }
+}
+
+function sleep(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
 
 /**
@@ -184,8 +215,8 @@ function holders(dirs) {
 // pid is alive *with that start time* is a live session; anything else is a
 // leftover or a reused pid. This is an undocumented format, so it only ever
 // adds names: held() stays the authority on whether a folder is in use, and a
-// missing or changed format just means "held by something unidentified" —
-// never a confident "no session". Only the .json files are read; the .key
+// missing or changed format just means "held by something nobody could
+// name" — never a confident "no session". Only the .json files are read; the .key
 // files beside them are secrets.
 function liveSessions() {
   const home = process.env.USERPROFILE ?? process.env.HOME;
@@ -230,15 +261,12 @@ function sessionsIn(sessions, dir) {
   });
 }
 
-function describeHolders(procs, sessions) {
-  const named = [
+/** Who holds the folder, by name — empty when nobody could be named. */
+function namedHolders(procs, sessions) {
+  return [
     ...sessions.map((s) => `Claude session "${s.name}" (pid ${s.pid})`),
     ...procs.map((p) => `${p.name} (pid ${p.pid})`),
   ];
-  if (named.length === 0) {
-    return "a process that cannot be identified — usually a Claude session or terminal whose working directory is inside it";
-  }
-  return named.join(", ");
 }
 
 /** Sibling Animal_Shelter_* folders that are neither a registered worktree nor a repo of their own. */
@@ -406,7 +434,9 @@ function cmdList() {
   console.table(rows);
   if (WINDOWS) {
     console.log("held: HELD = some process has the folder open (a Claude session, a terminal, a dev server) — do not 'done' it.");
-    console.log("      Named sessions come from ~/.claude/sessions; HELD with no name is still held.");
+    console.log("      Named sessions come from ~/.claude/sessions. HELD with no name means the folder refused to be");
+    console.log("      renamed but no session could be found in it: a plain terminal or editor there, or a brief");
+    console.log("      handle from git or an indexer that is gone on the next run. Look before tearing it down.");
     console.log("      free = nothing has it open right now. A session can still attach a moment later.");
   }
 
@@ -416,7 +446,7 @@ function cmdList() {
     for (const d of orphans) {
       const v = held(d);
       const contents = readdirSync(d).join(", ") || "empty";
-      const holder = v ? `  HELD by ${who(d) ? `session "${who(d)}"` : "an unidentified process (probably a session)"}` : "";
+      const holder = v ? `  HELD${who(d) ? ` by session "${who(d)}"` : " (nobody named — see 'held' above)"}` : "";
       console.log(`  ${path.basename(d)}  [${contents}]${holder}`);
     }
   }
@@ -432,13 +462,29 @@ function removeFolder(dir) {
   return !existsSync(dir);
 }
 
+// Two different situations, and they must not read alike. When a session or
+// dev server can be named, the refusal is the check doing its job. When the
+// folder refused to be renamed but nobody can be named, the likeliest cause is
+// a handle git or an indexer held for a moment — and telling the operator to
+// "close the session" there sends them closing unrelated sessions and then
+// reaching for --force, which is the habit these checks exist to prevent.
 function heldMessage(dir) {
-  const who = describeHolders(holders([dir]).get(dir), sessionsIn(liveSessions(), dir));
+  const who = namedHolders(holders([dir]).get(dir), sessionsIn(liveSessions(), dir));
+  if (who.length) {
+    return (
+      `${dir} is in use by ${who.join(", ")}.\n` +
+      `Windows cannot delete a folder a process is sitting in, and removing the worktree anyway would\n` +
+      `pull git out from under that session and leave a husk. Close the Claude session / terminal /\n` +
+      `dev server there (--stop-servers ends identifiable dev servers), then re-run.`
+    );
+  }
   return (
-    `${dir} is in use by ${who}.\n` +
-    `Windows cannot delete a folder a process is sitting in, and removing the worktree anyway would\n` +
-    `pull git out from under that session and leave a husk. Close the Claude session / terminal /\n` +
-    `dev server there (--stop-servers ends identifiable dev servers), then re-run.`
+    `Windows refused to rename or delete ${dir}, but no Claude session or dev server could be found in it.\n` +
+    `This is usually transient — git or an indexer/antivirus touching the folder for a moment — and\n` +
+    `'list' may well show it as free. Re-run 'done' in a few seconds; --force is not the fix.\n` +
+    `If it keeps refusing, something really is in there that cannot be named from here: a terminal\n` +
+    `or editor whose working directory is inside it, or a session from a Claude build this script\n` +
+    `cannot read. Find and close that, then re-run.`
   );
 }
 
@@ -501,7 +547,15 @@ function cmdDone(args) {
 
   if (folderThere) {
     if (held(dir) && stop) stopServers(dir);
-    if (held(dir)) fail(heldMessage(dir));
+    // Sampled here, immediately before the removal, not earlier among the
+    // merge checks, where git itself can be holding the folder for a moment.
+    // held() already retries; when nobody can be named — the case a transient
+    // handle produces — it gets one longer wait on top before refusing.
+    let busy = held(dir);
+    if (busy && namedHolders(holders([dir]).get(dir), sessionsIn(liveSessions(), dir)).length === 0) {
+      busy = held(dir, { attempts: 6, gapMs: 400 });
+    }
+    if (busy) fail(heldMessage(dir));
     if (tree && isRepo) {
       console.log(`removing worktree ${dir}`);
       if (tryGit(["worktree", "remove", "--force", dir]) === null) console.log("git worktree remove failed; deleting the folder directly");
