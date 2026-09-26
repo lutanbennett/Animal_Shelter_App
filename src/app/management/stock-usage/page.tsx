@@ -4,11 +4,14 @@ import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { dietUnitLabel, doseUnitLabel } from "@/lib/i18n/enum-labels";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { formatDate, formatDateTime, todayIso } from "@/lib/format";
+import { toCsv } from "@/lib/csv";
 import { formatQuantity } from "@/lib/diets/options";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
+import { CsvDownloadButton } from "@/components/CsvDownloadButton";
 import {
   departedDuring,
+  difference,
   editedSince,
   latestPairs,
   planWindow,
@@ -286,6 +289,11 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
     switch (r.state) {
       case "asPlanned":
         return { text: u.readings.asPlanned };
+      case "withinCount":
+        return {
+          text: line.planned ? u.readings.asPlanned : u.readings.withinCountUnplanned,
+          why: u.readings.withinCountWhy(q(Math.abs(r.gap)), q(r.margin)),
+        };
       case "moreThanPlanned":
         return { text: u.readings.moreThanPlanned(q(r.gap)), why: u.readings.moreThanPlannedWhy };
       case "lessThanPlanned":
@@ -312,8 +320,80 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
     return qty(kind, used, line.pair.to.unit);
   };
 
+  /** Used − planned, signed, and as a share of the plan; "—" where there is none. */
+  const differenceText = (kind: Kind, line: Line) => {
+    const diff = difference(line.reading, line.planned);
+    if (!diff) return null;
+    const sign = (n: number) => (n > 0 ? "+" : n < 0 ? "−" : "");
+    return {
+      quantity: `${sign(diff.quantity)}${qty(kind, Math.abs(diff.quantity), line.item.unit)}`,
+      percent: diff.percent == null ? "—" : `${sign(diff.percent)}${Math.abs(diff.percent)}%`,
+    };
+  };
+
   const sections = (["medication", "diet"] as const).map((kind) => ({ kind, ...linesOf(kind) }));
   const nothing = sections.every((s) => s.lines.length === 0);
+
+  // The table as CSV, both sections, same rows and order as the page.
+  // Plain numbers in the item's unit (the unit is its own column) so a
+  // spreadsheet can add them up; a blank cell is a figure the page shows
+  // as "—", and the reading column says why.
+  const num = (n: number | null | undefined) => (n == null ? "" : String(Math.round(n * 100) / 100));
+  const csvColumns = u.csv.columns;
+  const csv = toCsv([
+    [
+      csvColumns.section,
+      csvColumns.item,
+      csvColumns.unit,
+      csvColumns.fromDate,
+      csvColumns.from,
+      csvColumns.received,
+      csvColumns.deliveries,
+      csvColumns.toDate,
+      csvColumns.to,
+      csvColumns.used,
+      csvColumns.planned,
+      csvColumns.days,
+      csvColumns.difference,
+      csvColumns.differencePercent,
+      csvColumns.reading,
+      csvColumns.marked,
+      csvColumns.notes,
+    ],
+    ...sections.flatMap(({ kind, lines }) =>
+      lines.map((line) => {
+        const { text, why } = readingText(kind, line);
+        const diff = difference(line.reading, line.planned);
+        const noUsed = line.reading.state === "unitChanged" || line.reading.state === "sameDay";
+        return [
+          u.sections[kind],
+          line.item.name,
+          unitLabel(kind, line.pair.to.unit),
+          shelterDate(line.pair.from.counted_at),
+          num(line.pair.from.counted_quantity),
+          line.between ? num(line.between.received) : "",
+          line.between ? String(line.between.receipts) : "",
+          shelterDate(line.pair.to.counted_at),
+          num(line.pair.to.counted_quantity),
+          noUsed ? "" : num(line.between?.used),
+          num(line.planned),
+          line.days == null ? "" : String(line.days),
+          num(diff?.quantity),
+          diff?.percent == null ? "" : String(diff.percent),
+          why ? `${text}. ${why}` : text,
+          standsOut(line.reading) ? u.csv.yes : "",
+          [
+            line.departed > 0 ? u.departed(line.departed) : null,
+            line.edited && line.item.stock_counted_at
+              ? u.editedSince(formatDate(line.item.stock_counted_at, locale))
+              : null,
+          ]
+            .filter(Boolean)
+            .join(" "),
+        ];
+      }),
+    ),
+  ]);
 
   const selectClass =
     "rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
@@ -417,6 +497,12 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
 
           {nothing && !historyResult.error && <p className="text-sm text-muted">{u.empty}</p>}
 
+          {!nothing && (
+            <div className="flex justify-end">
+              <CsvDownloadButton csv={csv} filename={`stock-between-counts-${todayIso()}.csv`} label={u.csv.download} />
+            </div>
+          )}
+
           {sections.map(({ kind, lines, skipped }) =>
             lines.length === 0 && skipped.length === 0 ? null : (
               <div key={kind} className="flex flex-col gap-2">
@@ -432,6 +518,7 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
                           <th className="px-4 py-2 font-medium">{u.table.to}</th>
                           <th className="px-4 py-2 font-medium">{u.table.used}</th>
                           <th className="px-4 py-2 font-medium">{u.table.planned}</th>
+                          <th className="px-4 py-2 font-medium">{u.table.difference}</th>
                           <th className="px-4 py-2 font-medium">{u.table.reading}</th>
                         </tr>
                       </thead>
@@ -439,6 +526,7 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
                         {lines.map((line) => {
                           const { text, why } = readingText(kind, line);
                           const marked = standsOut(line.reading);
+                          const diff = differenceText(kind, line);
                           return (
                             <tr
                               key={line.item.id}
@@ -488,6 +576,17 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
                                     {qty(kind, line.planned, line.item.unit)}
                                     <br />
                                     <span className="text-xs text-muted">{u.days(line.days ?? 0)}</span>
+                                  </>
+                                )}
+                              </td>
+                              <td className="whitespace-nowrap px-4 py-2">
+                                {diff == null ? (
+                                  "—"
+                                ) : (
+                                  <>
+                                    <span className={marked ? "font-medium text-foreground" : ""}>{diff.quantity}</span>
+                                    <br />
+                                    <span className="text-xs text-muted">{diff.percent}</span>
                                   </>
                                 )}
                               </td>

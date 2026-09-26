@@ -78,6 +78,30 @@ export function receivedAtFor(
   return { ok: true, value: new Date(afterLast).toISOString() };
 }
 
+/**
+ * Which side of that day's stocktake a recorded delivery fell, for the
+ * recent list: on a day the item was counted the time shown can equal the
+ * count's own minute, so the time alone cannot say. Mirrors receivedAtFor:
+ * "before" is at or before the day's first count (the closed end of the
+ * interval it ends), "after" is past the day's last. "between" only when
+ * the item was counted more than once that day and the delivery sits
+ * between two of them. Null on a day the item was not counted.
+ */
+export type CountSide = "before" | "after" | "between";
+
+export function sideOfCount(receivedAt: string, countedAt: string[]): CountSide | null {
+  const at = Date.parse(receivedAt);
+  const day = todayIso(at);
+  const thatDay = countedAt
+    .filter((c) => todayIso(Date.parse(c)) === day)
+    .map((c) => Date.parse(c))
+    .sort((a, b) => a - b);
+  if (thatDay.length === 0) return null;
+  if (at <= thatDay[0]) return "before";
+  if (at > thatDay[thatDay.length - 1]) return "after";
+  return "between";
+}
+
 /** The shelter days each item was counted on, for the form's before/after question. */
 export function countDaysByItem(rows: { item_id: string; counted_at: string }[]): Record<string, string[]> {
   const days: Record<string, string[]> = {};

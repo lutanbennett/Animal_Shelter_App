@@ -8,7 +8,12 @@ import { formatBahtPrice, formatDateTime, todayIso } from "@/lib/format";
 import { formatQuantity } from "@/lib/diets/options";
 import { appUserLabel, loadAppUsersById } from "@/lib/auth/app-users";
 import { canManage } from "@/lib/auth/require-management";
-import { canRecordDelivery, countDaysByItem, type DeliveryKind } from "@/lib/management/stock-receipts";
+import {
+  canRecordDelivery,
+  countDaysByItem,
+  sideOfCount,
+  type DeliveryKind,
+} from "@/lib/management/stock-receipts";
 import { RecordDeliveryForm, type DeliveryFormItem } from "./RecordDeliveryForm";
 import { DeleteDeliveryButton } from "./DeleteDeliveryButton";
 
@@ -96,6 +101,16 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
     ),
   };
 
+  // Every count instant per item, for the list's before / after tag.
+  const countedAt = new Map<string, string[]>();
+  for (const c of counts) {
+    const id = c.medication_id ?? c.diet_type_id;
+    if (!id) continue;
+    const list = countedAt.get(id) ?? [];
+    list.push(c.counted_at);
+    countedAt.set(id, list);
+  }
+
   const suppliers = suppliersResult.data ?? [];
   const supplierName = new Map(suppliers.map((s) => [s.id, s.name]));
   const itemName = new Map([...medications, ...diets].map((i) => [i.id, i.name]));
@@ -158,6 +173,9 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
               const unit = r.unit ? (isMed ? doseUnitLabel(t, r.unit) : dietUnitLabel(t, r.unit)) : "";
               const supplier = r.supplier_contact_id ? supplierName.get(r.supplier_contact_id) : undefined;
               const recorder = r.recorded_by ? recorders.get(r.recorded_by) : undefined;
+              // On a day the item was counted, the minute shown can be the
+              // count's own, so say which side of it the delivery fell.
+              const side = sideOfCount(r.received_at, countedAt.get(id) ?? []);
               return (
                 <li key={r.id} className="flex flex-wrap items-start justify-between gap-2 px-4 py-3 text-sm">
                   <div className="flex min-w-0 flex-col gap-0.5">
@@ -179,6 +197,11 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
                         .filter(Boolean)
                         .join(" · ")}
                     </span>
+                    {side && (
+                      <span className="w-fit rounded bg-surface px-1.5 py-0.5 text-xs text-foreground">
+                        {d.recent.side[side]}
+                      </span>
+                    )}
                     {r.note && <span className="text-xs text-foreground">{r.note}</span>}
                   </div>
                   <DeleteDeliveryButton id={r.id} label={itemName.get(id) ?? ""} />

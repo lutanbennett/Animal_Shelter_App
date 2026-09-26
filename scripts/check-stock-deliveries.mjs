@@ -22,7 +22,7 @@ register(
       }`),
 );
 const lib = await import(pathToFileURL(join(process.cwd(), "src/lib/management/stock-receipts.ts")).href);
-const { receivedAtFor, countDaysByItem, parseDeliveryQuantity, packTotal, canRecordDelivery } = lib;
+const { receivedAtFor, sideOfCount, countDaysByItem, parseDeliveryQuantity, packTotal, canRecordDelivery } = lib;
 
 let fails = 0;
 const eq = (name, got, want) => {
@@ -54,6 +54,17 @@ eq("after today -> now()", receivedAtFor("2026-09-20", counts, "after", now), { 
 eq("after, count a moment ago -> a second past it, not now", receivedAtFor("2026-09-20", counts, "after", Date.parse(count20b) + 500), { ok: true, value: "2026-09-20T04:30:01.000Z" });
 eq("the shelter day, not the UTC day", receivedAtFor("2026-09-15", [late], null, now), { ok: false, reason: "needsTiming" });
 eq("â€¦and not the UTC day before", receivedAtFor("2026-09-14", [late], null, now), { ok: true, value: "2026-09-14T12:00:00+07:00" });
+
+// --- the recent list's tag: which side of that day's count, from the stored instant ---
+const iso = (ms) => new Date(ms).toISOString();
+eq("side: stored 'before' is before", sideOfCount(receivedAtFor("2026-09-15", counts, "before", now).value, counts), "before");
+eq("side: stored 'after' is after", sideOfCount(receivedAtFor("2026-09-15", counts, "after", now).value, counts), "after");
+eq("side: same minute, a second apart, still told apart",
+  [sideOfCount(iso(Date.parse(count15)), counts), sideOfCount(iso(Date.parse(count15) + 1000), counts)], ["before", "after"]);
+eq("side: 'after' today stamped now() is after both counts", sideOfCount(iso(now), counts), "after");
+eq("side: between two counts that day", sideOfCount("2026-09-20T03:00:00Z", counts), "between");
+eq("side: no count that day -> no tag", sideOfCount("2026-09-18T12:00:00+07:00", counts), null);
+eq("side: the shelter day, not the UTC day", sideOfCount("2026-09-14T19:00:00Z", [late]), "after");
 
 // --- refused ---
 eq("future day", receivedAtFor("2026-09-21", counts, null, now), { ok: false, reason: "future" });
