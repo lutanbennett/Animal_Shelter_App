@@ -1102,6 +1102,25 @@ const manual: Manual = {
             "Staff and vets can add a frequency inline when writing a prescription, so this is where duplicates get tidied up. Fix a label or schedule in place, or Merge… a duplicate into the one to keep — its prescriptions move across and take the kept one's schedule. A frequency on any prescription can't be deleted; merge it instead.",
           ],
         },
+        {
+          id: "system-status",
+          title: "System status",
+          roles: ["admin"],
+          path: "Settings → System status",
+          intro:
+            "One page that says whether everything behind the app is working, and how much it is being used. It only looks; nothing on it changes anything.",
+          steps: [
+            "Health: a tile each for the database, photo storage (Google Drive), database migrations, the running release and when it was deployed, release mail, the weekly backup and the Pi. Green is working, amber means look at it (slow, out of date, or out of step), red is broken, and grey is something deliberately not in use here — release mail on the test site, or the Pi before it is switched on. A red or amber tile shows the reason in small print underneath; it names settings but never shows a password or key.",
+            "Each tile says when it was checked. Results are kept for a minute so the page stays quick; tap Check now to ask again straight away.",
+            "Usage: pick 7, 30 or 90 days to see how many people signed in, how many residents, vet visits, weights and maintenance jobs were added, how many photos and documents were uploaded, how many requests went to the assistant, and how many people visited the website. The visitor figure is Cloudflare's own daily total — no cookies, nothing that follows a visitor — and stays grey until the Cloudflare analytics token is set up.",
+          ],
+          callouts: [
+            {
+              kind: "tip",
+              text: "If photo storage is red, uploads are failing for everyone right now. The small print gives Google's reason; an expired token is the usual one.",
+            },
+          ],
+        },
       ],
     },
 

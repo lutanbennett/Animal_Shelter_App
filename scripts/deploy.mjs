@@ -62,8 +62,10 @@ const RUNTIME_SECRETS = [
   "GOOGLE_DRIVE_ROOT_FOLDER_ID",
 ];
 // Shared with the WAF rule that guards the Pi's tunnel hostname
-// (docs/pi-hosting.md); pushed when set, harmless when not.
-const OPTIONAL_SECRETS = ["ORIGIN_KEY"];
+// (docs/pi-hosting.md); pushed when set, harmless when not. The two
+// Cloudflare ones feed the visitor count on Settings → System status
+// (src/lib/status/usage.ts), which stays grey until both are set.
+const OPTIONAL_SECRETS = ["ORIGIN_KEY", "CLOUDFLARE_ANALYTICS_TOKEN", "CLOUDFLARE_ZONE_ID"];
 const BUILD_VARS = ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY"];
 
 function run(cmd, opts = {}) {

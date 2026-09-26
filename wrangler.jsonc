@@ -24,11 +24,16 @@
   "observability": {
     "enabled": true
   },
+  // The running version's id, tag and upload time, for Settings → System
+  // status (src/lib/status/health.ts). A binding, so each environment below
+  // repeats it: wrangler doesn't inherit bindings into an env block.
+  "version_metadata": { "binding": "CF_VERSION_METADATA" },
   "env": {
     // Staff testing and pre-production checks: the dev database and the dev
     // Google Drive, on the Workers runtime, built from main.
     "test": {
       "name": "lanna-animal-care-test",
+      "version_metadata": { "binding": "CF_VERSION_METADATA" },
       "routes": [{ "pattern": "test.lannacare.org", "custom_domain": true }],
       // No RELEASE_MAIL binding and RELEASE_MAIL_ENV empty: the dev database
       // never sends release mail (worker/release-mail.mjs).
@@ -44,6 +49,7 @@
     // lannacare.org and www routes here and takes them off production.
     "uat": {
       "name": "lanna-animal-care-uat",
+      "version_metadata": { "binding": "CF_VERSION_METADATA" },
       "routes": [],
       "vars": {
         "NODE_ENV": "production",
@@ -60,6 +66,7 @@
     // account until the shelter's own account is available (docs/decisions.md).
     "production": {
       "name": "lanna-animal-care",
+      "version_metadata": { "binding": "CF_VERSION_METADATA" },
       "routes": [
         { "pattern": "lannacare.org", "custom_domain": true },
         { "pattern": "www.lannacare.org", "custom_domain": true }

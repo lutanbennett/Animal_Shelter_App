@@ -1,7 +1,20 @@
+import { readdirSync } from "node:fs";
 import type { NextConfig } from "next";
 import { MAX_UPLOAD_BODY_BYTES } from "./src/lib/uploads/limits";
 
 const nextConfig: NextConfig = {
+  env: {
+    // The migration files this build was made from, for Settings → System
+    // status to compare with the database's schema_migrations
+    // (src/lib/status/health.ts). A Worker has no folder to read at
+    // runtime, so the list is written in here. Same filter as
+    // scripts/lib/migrations.mjs.
+    BUILD_MIGRATIONS: readdirSync("supabase/migrations")
+      .filter((name) => /^\d{4}_.+\.sql$/.test(name))
+      .sort()
+      .join(","),
+  },
+
   // `next dev` already listens on 0.0.0.0, but it rejects dev assets/HMR
   // from any Origin other than localhost. Allow the home Wi-Fi subnet so a
   // phone on the same network can load http://<this-machine-ip>:3000 for

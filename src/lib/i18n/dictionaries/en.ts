@@ -65,6 +65,7 @@ const en = {
     dashboard: "Dashboard",
     website: "Website",
     security: "Security",
+    systemStatus: "System status",
     enclosures: "Enclosures",
     maintenance: "Maintenance",
     stocktake: "Stocktake",
@@ -197,7 +198,7 @@ const en = {
   privacy: {
     nav: "Privacy",
     title: "Privacy notice",
-    updated: "Last updated 22 September 2026",
+    updated: "Last updated 26 September 2026",
     intro:
       "Lanna Care for Animals Foundation runs this website and the record-keeping app behind it. This page explains what personal information we hold, why we hold it, and how to ask us about it.",
     sections: [
@@ -205,7 +206,7 @@ const en = {
         heading: "Visiting the website",
         paragraphs: [
           "You can read the public pages — the home page, Adopt, Our work, Foster, Volunteer and Donate — without an account, and we don't ask you for anything to do so.",
-          "The only cookie we set is your language choice (English or Thai), which stays in your browser for a year. There is no advertising and no analytics tracking. Cloudflare, which serves the site, keeps standard connection logs such as your IP address for a short time to protect the site from abuse.",
+          "The only cookie we set is your language choice (English or Thai), which stays in your browser for a year. There is no advertising and no analytics tracking. Cloudflare, which serves the site, keeps standard connection logs such as your IP address for a short time to protect the site from abuse. From those it also gives us daily totals, such as how many pages were viewed: numbers only, never who visited.",
         ],
       },
       {
@@ -330,6 +331,121 @@ const en = {
           "The \"how often\" choices a prescription picks from, and the schedule the medication forecast counts for each.",
         security:
           "Sign-in accounts, roles and access requests. Also pinned to the bottom of the menu.",
+        systemStatus:
+          "Whether the database, photo storage, migrations, release mail, backups and the Pi are healthy, and how much the app is being used.",
+      },
+    },
+    status: {
+      title: "System status",
+      subtitle:
+        "Is everything working? Each tile is checked when you open this page and remembered for a minute; nothing here changes anything.",
+      checkNow: "Check now",
+      checking: "Checking…",
+      checkedAt: (v: { time: string | number }) =>
+        `Checked ${v.time}`,
+      states: { ok: "OK", warn: "Look at this", fail: "Not working", off: "Not in use" },
+      healthHeading: "Health",
+      usageHeading: "Usage",
+      periodLabel: "Period",
+      periodDays: (v: { days: string | number }) =>
+        `${v.days} days`,
+      unavailable: "Couldn't count this just now.",
+      tiles: {
+        database: {
+          title: "Database",
+          ok: (v: { ms: string | number }) =>
+            `Reachable. A trivial query took ${v.ms} ms.`,
+          slow: (v: { ms: string | number }) =>
+            `Reachable, but a trivial query took ${v.ms} ms — expect slow pages.`,
+          fail: "The database did not answer.",
+        },
+        drive: {
+          title: "Photo storage (Google Drive)",
+          ok: "Connected: a fresh token was issued and the root folder can be read.",
+          notConnected: "Not connected — every upload fails until a new token is set.",
+          failed: "Google Drive did not answer the check.",
+        },
+        migrations: {
+          title: "Database migrations",
+          ok: (v: { expected: string | number }) =>
+            `In step: all ${v.expected} migration files this version was built with are applied.`,
+          ahead: (v: { count: string | number; names: string | number }) =>
+            `The database has ${v.count} migration(s) this version doesn't know about: ${v.names}. Normal on the dev database while a schema change waits to merge.`,
+          behind: (v: { count: string | number; names: string | number }) =>
+            `${v.count} migration(s) this version needs are not applied: ${v.names}. Pages that use them will fail until they are.`,
+          fail: "Couldn't compare migrations.",
+        },
+        release: {
+          title: "Running release",
+          version: (v: { date: string | number; title: string | number; version: string | number }) =>
+            `Release ${v.version} — ${v.title} (${v.date})`,
+          deployed: (v: { time: string | number }) =>
+            `Deployed ${v.time}.`,
+          notDeployed: "Not running on the Worker (a local dev server or the Pi), so there is no deploy time to show.",
+          unreleased: (v: { count: string | number }) =>
+            `${v.count} change(s) merged since that release, not yet in a numbered release.`,
+          mismatch: "The Worker's version tag doesn't match this release.",
+        },
+        releaseMail: {
+          title: "Release mail",
+          ok: (v: { from: string | number; label: string | number }) =>
+            `On: major releases are mailed to admins as ${v.label}, from ${v.from}.`,
+          offHere: "Off by design: this site runs on the dev database, which never sends release mail.",
+          offElsewhere: "Only the Worker sends release mail, and this page wasn't rendered by it.",
+          fail: "Release mail is misconfigured.",
+        },
+        backup: {
+          title: "Weekly backup",
+          ok: (v: { age: string | number; count: string | number; time: string | number }) =>
+            `Newest backup ${v.time} (${v.age}), one of ${v.count} kept in Drive → Backups.`,
+          stale: (v: { age: string | number }) =>
+            `The newest backup is ${v.age} — the weekly run may have stopped. Look at Task Scheduler on the backup machine.`,
+          none: "No backups of this database yet. Only production is backed up every week.",
+          fail: "Couldn't find a recent backup.",
+          ageDays: (v: { days: string | number }) =>
+            `${v.days} days old`,
+          ageToday: "less than a day old",
+        },
+        origin: {
+          title: "Pi origin",
+          off: "Not in use yet: every page is served by the Cloudflare Worker, as before the Pi.",
+          ok: (v: { host: string | number }) =>
+            `Reachable at ${v.host}: pages are rendered on the Pi.`,
+          fallback: (v: { host: string | number }) =>
+            `The Pi at ${v.host} isn't answering: pages are being served from the Worker fallback.`,
+        },
+      },
+      usage: {
+        signIns: {
+          title: "People signing in",
+          value: (v: { accounts: string | number; signedIn: string | number }) =>
+            `${v.signedIn} of ${v.accounts} accounts signed in during the period.`,
+          note: "Counted from each account's most recent sign-in, so it's people, not number of sign-ins.",
+        },
+        records: {
+          title: "Records added",
+          residents: "Residents",
+          vetVisits: "Vet visits",
+          weights: "Weights",
+          maintenanceJobs: "Maintenance jobs",
+        },
+        uploads: {
+          title: "Photos and documents uploaded",
+          value: (v: { total: string | number }) =>
+            `${v.total} files`,
+        },
+        assistant: {
+          title: "Assistant requests",
+          value: (v: { requests: string | number }) =>
+            `${v.requests} requests`,
+        },
+        visitors: {
+          title: "Website visitors",
+          value: (v: { pageViews: string | number; visitors: string | number }) =>
+            `${v.pageViews} page views; ${v.visitors} visitors, counted per day and added up.`,
+          note: "Cloudflare's own totals for the whole lannacare.org domain (test site and staff included). No cookies or tracking — see the privacy page.",
+          off: "Not set up: needs a Cloudflare analytics token (CLOUDFLARE_ANALYTICS_TOKEN) and the zone id (CLOUDFLARE_ZONE_ID) as Worker secrets.",
+        },
       },
     },
     security: {
