@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Noto_Sans_Thai } from "next/font/google";
+import { Fraunces, Geist, Geist_Mono, Noto_Sans_Thai, Source_Sans_3 } from "next/font/google";
 import { AppHeader } from "./AppHeader";
 import { NavPane } from "./NavPane";
 import { MobileNavProvider } from "./MobileNavContext";
@@ -24,6 +24,23 @@ const notoSansThai = Noto_Sans_Thai({
   subsets: ["thai", "latin"],
 });
 
+// The public site's type (globals.css, "Public site"): Fraunces headings
+// over Source Sans 3. Declared here because the tokens sit on :root, but
+// not preloaded — the app's pages never use them, and a browser only
+// downloads a face once text on the page asks for it.
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  axes: ["opsz"],
+  preload: false,
+});
+
+const sourceSans = Source_Sans_3({
+  variable: "--font-source-sans",
+  subsets: ["latin"],
+  preload: false,
+});
+
 export const metadata: Metadata = {
   title: "Lanna Care for Animals",
   description: "Resident and shelter management",
@@ -39,7 +56,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang={locale}
       data-env={getAppEnv()}
-      className={`${geistSans.variable} ${geistMono.variable} ${notoSansThai.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${notoSansThai.variable} ${fraunces.variable} ${sourceSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <I18nProvider locale={locale}>

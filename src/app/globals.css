@@ -58,7 +58,118 @@
   --primary-foreground: #032523;
 }
 
+/* Public site: the "Lanna Care for Animals" visual system (docs/design/,
+   Lutan 2026-09-25). A light theme of its own — cream ground, terracotta
+   actions, forest-green accents — where the app is dark. Named `--site-*`
+   and defined for every page so the public components can use them
+   directly (bg-site-paper, text-site-action, font-display); the scope rule
+   below also points the app's generic tokens at them, so a public page
+   built on bg-surface / text-muted before the redesign follows without
+   being rewritten.
+
+   Contrast (WCAG AA) was checked pair by pair: ink on cream 14:1, ink-muted
+   on cream 6.7:1 and on sand 6.2:1, white on action 5.5:1, action as text
+   on cream 4.9:1, white on accent 7.7:1, the footer's text on ink 10–14:1.
+   One pair falls just short and is not used by the shell: action as
+   normal-size text on sand is 4.46:1 — on a sand band, use action-hover or
+   ink for links. */
+:root {
+  --site-cream: #f6f1e7;
+  --site-paper: #fffdf8;
+  --site-sand: #efe7da;
+  --site-line: #e4dacb;
+  /* Outlines that have to be seen against cream (a toggle, an input): 3:1+. */
+  --site-line-strong: #8c7b68;
+  --site-ink: #2a2118;
+  --site-ink-soft: #4a4037;
+  --site-ink-muted: #5e5247;
+
+  --site-action: #b4461f;
+  --site-action-hover: #8a3416;
+  --site-on-action: #ffffff;
+  --site-accent: #2e5b4a;
+  --site-accent-soft: #dcebe4;
+  --site-on-accent: #ffffff;
+  --site-on-accent-soft: #1f4436;
+
+  --site-footer: #2a2118;
+  --site-on-footer: #f6f1e7;
+  --site-on-footer-soft: #d9cdb9;
+  --site-footer-link: #f2a27e;
+}
+
+/* The same system on the dev database: the action colour turns teal and the
+   cream takes a green cast, as the app does above, so a public page on
+   test.lannacare.org is never mistaken for the live site either. The accent
+   stays forest green — it marks "talk to us", not the environment. */
+:root[data-env="dev"] {
+  --site-cream: #eef3ec;
+  --site-paper: #fbfdfb;
+  --site-sand: #e2ebe5;
+  --site-line: #d2ded7;
+  --site-action: #0f6b63;
+  --site-action-hover: #0b524c;
+  --site-footer: #1c2422;
+  --site-footer-link: #7fd6c9;
+}
+
+/* A page is a public-site page when it renders the public header, which
+   carries data-public-site. :root rather than the page's <main> so the body
+   behind it, overscroll included, is cream too. After the dev rule, which
+   has the same specificity, so this mapping wins and the dev colours still
+   arrive through the --site-* values it points at. */
+:root:has([data-public-site]) {
+  color-scheme: light;
+
+  --background: var(--site-cream);
+  --surface: var(--site-paper);
+  --surface-hover: var(--site-sand);
+  --border: var(--site-line);
+  --foreground: var(--site-ink);
+  --muted: var(--site-ink-muted);
+
+  --primary: var(--site-action);
+  --primary-hover: var(--site-action-hover);
+  --primary-foreground: var(--site-on-action);
+
+  --danger: #b42318;
+  --success: #1e6b45;
+  --success-foreground: #ffffff;
+}
+
+:root:has([data-public-site]) body {
+  font-family: var(--font-source-sans), var(--font-thai), system-ui, sans-serif;
+}
+
+/* Fraunces has no Thai, so Noto Sans Thai follows it for Thai headings. */
+:root:has([data-public-site]) :is(h1, h2, h3) {
+  font-family: var(--font-fraunces), var(--font-thai), Georgia, serif;
+}
+
 @theme inline {
+  --color-site-cream: var(--site-cream);
+  --color-site-paper: var(--site-paper);
+  --color-site-sand: var(--site-sand);
+  --color-site-line: var(--site-line);
+  --color-site-line-strong: var(--site-line-strong);
+  --color-site-ink: var(--site-ink);
+  --color-site-ink-soft: var(--site-ink-soft);
+  --color-site-ink-muted: var(--site-ink-muted);
+  --color-site-action: var(--site-action);
+  --color-site-action-hover: var(--site-action-hover);
+  --color-site-on-action: var(--site-on-action);
+  --color-site-accent: var(--site-accent);
+  --color-site-accent-soft: var(--site-accent-soft);
+  --color-site-on-accent: var(--site-on-accent);
+  --color-site-on-accent-soft: var(--site-on-accent-soft);
+  --color-site-footer: var(--site-footer);
+  --color-site-on-footer: var(--site-on-footer);
+  --color-site-on-footer-soft: var(--site-on-footer-soft);
+  --color-site-footer-link: var(--site-footer-link);
+
+  --font-display: var(--font-fraunces), var(--font-thai), Georgia, serif;
+  --font-site: var(--font-source-sans), var(--font-thai), system-ui, sans-serif;
+
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-surface-hover: var(--surface-hover);

@@ -130,10 +130,25 @@ const th: Dictionary = {
 
   publicFooter: {
     visitingHours: "เวลาเปิดให้เยี่ยมชม",
-    contact: "ติดต่อ",
-    help: "ช่วยเหลือเรา",
+    contact: "ติดต่อเรา",
+    help: "มีส่วนร่วม",
+    followUs: "ติดตามเรา",
+    openMap: "เปิดใน Google Maps",
+    staffLogin: "เข้าสู่ระบบเจ้าหน้าที่",
     facebook: "Lanna Care for Animals บน Facebook",
     instagram: "Lanna Care for Animals บน Instagram",
+  },
+
+  publicNav: {
+    label: "เมนูหลัก",
+    shortName: "Lanna Care",
+    getInvolved: "มีส่วนร่วม",
+    sponsor: "อุปถัมภ์สัตว์ในศูนย์",
+    about: "เกี่ยวกับเราและติดต่อ",
+    language: "ภาษา",
+    talkToUs: "คุยกับเรา",
+    line: "LINE",
+    call: "โทร",
   },
 
   sitePages: {
@@ -2750,13 +2765,11 @@ const th: Dictionary = {
   },
 
   adopt: {
-    home: "หน้าแรก",
     adoptNav: "รับเลี้ยง",
     ourWorkNav: "ผลงานของเรา",
     fosterNav: "อุปถัมภ์ชั่วคราว",
     volunteerNav: "อาสาสมัคร",
     donateNav: "บริจาค",
-    staffLogin: "เข้าสู่ระบบ",
     openApp: "เปิดแอป",
     pageTitle: "พบกับสัตว์ของเรา",
     pageSubtitle:

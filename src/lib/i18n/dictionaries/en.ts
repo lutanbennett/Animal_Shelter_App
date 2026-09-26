@@ -134,11 +134,28 @@ const en = {
   /** The footer on every public page. */
   publicFooter: {
     visitingHours: "Visiting hours",
-    contact: "Contact",
-    help: "How to help",
+    contact: "Contact us",
+    help: "Get involved",
+    followUs: "Follow us",
+    openMap: "Open in Google Maps",
+    staffLogin: "Staff login",
     /** aria-labels for the icon-only social links (footer, and Facebook in the header). */
     facebook: "Lanna Care for Animals on Facebook",
     instagram: "Lanna Care for Animals on Instagram",
+  },
+
+  /** The public header's navigation, desktop and the phone's full-screen menu. */
+  publicNav: {
+    label: "Main",
+    /** The name beside the logo on a phone, where the full one doesn't fit. */
+    shortName: "Lanna Care",
+    getInvolved: "Get involved",
+    sponsor: "Sponsor a resident",
+    about: "About & contact",
+    language: "Language",
+    talkToUs: "Talk to us",
+    line: "LINE",
+    call: "Call",
   },
 
   /** /foster, /volunteer, /donate and the how-to-adopt section (0059). */
@@ -2797,13 +2814,11 @@ const en = {
   },
 
   adopt: {
-    home: "Home",
     adoptNav: "Adopt",
     ourWorkNav: "Our work",
     fosterNav: "Foster",
     volunteerNav: "Volunteer",
     donateNav: "Donate",
-    staffLogin: "Login",
     openApp: "Open the app",
     pageTitle: "Meet Our Residents",
     pageSubtitle:
