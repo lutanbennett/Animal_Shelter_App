@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **Take `is_known_drive_file` back from anon** (ticked here). Schema halves of **Standard diet: flag it, make a diet mandatory at intake, and show special diets on enclosure cards** and **Stocktake page: count everything in one go** (not ticked: they close with their feature branches) |
 | Branch / worktree | `claude/schema-diet-stocktake-drivefile` @ `C:\Development\Animal_Shelter_schema-diet-stocktake-drivefile` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3003`, used only to fetch the photo proxy signed out |
-| PR | opened from this branch after this commit |
+| PR | #134 |
 | Tested by / date | Claude (automated) / 2026-09-26 |
 | Carries a migration? | yes: `0087_standard_diet_flag.sql`, `0088_record_stocktake.sql`, `0089_is_known_drive_file_revoke.sql` |
 | Tested at SHA | `df58e0c` (branch on `main` @ `3fffb91`): migrations, harnesses and the allow-list change. The later commit adds only this plan, `decisions.md`, the backlog tick and the release-notes line |
@@ -30,7 +30,7 @@
 
   gates: typecheck=0 lint=0 build=0
   ```
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): PR #134, run 36207246258 at `d2b8a49` — `check` pass (1m38s), `migration-numbers` pass, `test-plan` pass
 
 ## 3. Schema and data
 
@@ -169,8 +169,8 @@ Manual verification by: n/a: no UI surface, nothing for a person to look at
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
-- [ ] Handed to the production release manager — n/a: not yet — the PR does not exist at this commit
+- [ ] Checklist pasted into the PR — n/a: the PR description summarises it and links `docs/test-plans/schema-diet-stocktake-drivefile.md`, which is the record
+- [ ] Handed to the production release manager — n/a: not yet — happens at the production apply, after merge
 
 Result: pass
 
