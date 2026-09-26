@@ -201,3 +201,55 @@ body {
      has a glyph for it, so Latin and Thai text can mix on the same page. */
   font-family: var(--font-sans), var(--font-thai), Arial, Helvetica, sans-serif;
 }
+
+/* Puppy loader (src/components/PuppyLoader.tsx). The puppy's own colours are
+   fixed — fur is fur, and the orange pyjamas are the reference's — while
+   the laptop, screen and progress bar come from the site tokens, so the
+   scene follows the palette (and the dev recolour) without redrawing. */
+:root {
+  --puppy-fur: #e9b27a;
+  --puppy-fur-shade: #cf8b52;
+  --puppy-fur-light: #f6d3a6;
+  --puppy-pj: #e0732f;
+  --puppy-pj-dot: #fbe3c6;
+  --puppy-pj-dot2: #f7b27c;
+}
+
+/* Hidden, then faded in after --puppy-delay, so a fast navigation never
+   shows it. visibility rather than opacity alone, so nothing invisible sits
+   under the pointer. Not motion — it stays under reduced motion too. */
+.puppy-delay {
+  animation: puppy-appear 150ms ease-out var(--puppy-delay, 300ms) both;
+}
+@keyframes puppy-appear {
+  from { opacity: 0; visibility: hidden; }
+  to { opacity: 1; visibility: visible; }
+}
+
+.puppy-scene .puppy-head { transform-origin: 90px 104px; animation: puppy-lean 2.4s ease-in-out infinite; }
+.puppy-scene .puppy-paw { transform-origin: 100px 120px; animation: puppy-tap 0.6s ease-in-out infinite; }
+.puppy-scene .puppy-eye { transform-origin: 115px 80px; animation: puppy-blink 4.8s infinite; }
+.puppy-scene .puppy-tail { transform-origin: 40px 138px; animation: puppy-wag 0.8s ease-in-out infinite; }
+/* The bar grows by scaleX, not width: CSS width on an SVG rect is not
+   animatable in every browser a phone might carry. */
+.puppy-art .puppy-bar { transform-box: fill-box; transform-origin: left center; }
+.puppy-scene .puppy-bar { animation: puppy-fill 2.4s linear infinite; }
+.puppy-glyph .puppy-head { transform-origin: 13px 22px; animation: puppy-bob 1.2s ease-in-out infinite; }
+.puppy-glyph .puppy-bar { animation: puppy-fill 1.8s linear infinite; }
+
+@keyframes puppy-lean {
+  0%, 100% { transform: rotate(-3deg) translateX(-2px); }
+  45%, 60% { transform: rotate(4deg) translateX(3px); }
+}
+@keyframes puppy-tap { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-9deg); } }
+@keyframes puppy-blink { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+@keyframes puppy-wag { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }
+@keyframes puppy-bob { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+@keyframes puppy-fill { from { transform: scaleX(0.05); } 85%, to { transform: scaleX(1); } }
+
+/* Reduced motion: a still puppy with the bar part-way, beside the label. */
+@media (prefers-reduced-motion: reduce) {
+  .puppy-art * { animation: none !important; }
+  .puppy-delay { animation-duration: 1ms; }
+  .puppy-art .puppy-bar { transform: scaleX(0.65); }
+}

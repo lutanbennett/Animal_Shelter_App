@@ -43,6 +43,7 @@ export type Release = {
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
   "A photo or document that is empty, damaged or not really the kind of file its name says is now refused when you upload it, with a message saying so, instead of being saved and showing as a broken picture. And when you replace or remove the website's hero photo, a gallery photo or a Shelter Friend logo, the old file now goes to the shelter's Google Drive trash for 30 days instead of being deleted, so it can be put back.",
+  "While a page is loading, the website now shows a puppy typing on a laptop instead of a blank screen, and the staff app shows a small version beside “Loading…”. It only appears when a page takes more than a moment, and it stays still if your device is set to reduce motion. It also appears on the website photo and Shelter Friend logo upload buttons when an upload is slow.",
 ];
 
 /** Newest first. */

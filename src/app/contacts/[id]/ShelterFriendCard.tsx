@@ -10,6 +10,7 @@ import { TranslationPanel } from "@/components/TranslationPanel";
 import { isArchived, type Contact } from "@/lib/contacts/contacts";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { PendingPuppy } from "@/components/PuppyLoader";
 import { checkFacebookUrl, checkHttpsUrl, FACEBOOK_HOSTS, type LinkCheck } from "@/lib/links/validate";
 import {
   canBecomeFriend,
@@ -394,6 +395,7 @@ export function ShelterFriendCard({
                 onClick={() => logoInput.current?.click()}
                 className={buttonClass}
               >
+                {isPending && <PendingPuppy />}
                 {isPending ? t.common.uploading : friend.logo_drive_file_id ? c.replaceLogo : c.uploadLogo}
               </button>
               {friend.logo_drive_file_id && (
