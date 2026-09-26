@@ -919,6 +919,27 @@ const manual: Manual = {
           ],
         },
         {
+          id: "stock-usage",
+          title: "Stock between counts",
+          roles: ["admin", "management"],
+          path: "Management → Stock between counts",
+          intro:
+            "Sets how much each count went down or up between two stocktakes beside what the prescriptions and diets planned for the same dates, so that big gaps stand out. It is not a record of what was actually used — see the warning below.",
+          steps: [
+            "Open it from the Management page, or from the link at the top of Management → Medications or → Diets. It needs an item to have been counted in stocktakes on two different days; until then the item isn't shown.",
+            "By default each item's latest count is compared with its last count on an earlier day. A recount on the same day replaces the earlier one rather than being compared with it. To compare two particular stocktakes instead, pick them under Earlier stocktake and Later stocktake and tap Compare; Back to last two counts returns to the default.",
+            "Planned for these dates is what the prescriptions and diets in the app say would be used from the day of the earlier count up to the day before the later one — the same figures as the forecast columns, worked out for those past dates.",
+            "Rows whose fall is more than a quarter away from the plan are marked and listed first. At least N more went than planned means that much more left the cupboard than the plan accounts for, even if nothing arrived. Fell N less than planned means either not everything planned was given or eaten, or stock arrived that nobody logged — the counts can't tell which. A count that went up means stock arrived; how much was used over those dates can't be worked out.",
+            "A row can carry a note. The plan leaves out residents who have since left means an animal adopted, fostered or who died since was on this item during those dates, so the plan reads low and a \"more than planned\" may be them. Changed by hand means the count was edited on the Medications or Diets page after the stocktake; only stocktakes are compared.",
+          ],
+          callouts: [
+            {
+              kind: "warning",
+              text: "Deliveries aren't recorded in the app, so a gap is a reason to look, not proof of anything. A miscount, a dose given but not on a prescription, spillage, or a diet that no longer matches what an animal eats will all show up here.",
+            },
+          ],
+        },
+        {
           id: "cashflow",
           title: "The cashflow forecast",
           roles: ["admin", "management"],
