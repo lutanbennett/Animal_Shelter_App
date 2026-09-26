@@ -91,9 +91,12 @@ begin
   reset role;
   set local role service_role;
   select count(*) into v_n from status_alert_runs;
+  insert into status_alert_runs (trigger) values ('cron');
+  update status_alert_checks set fail_runs = 0, alerted_at = null where check_key = 'harness-drive';
+  delete from status_alert_runs where trigger = 'test';
   reset role;
   if v_n < 3 then raise exception 'S3 service_role sees % run rows', v_n; end if;
-  v_report := v_report || ' | S3 authenticated and anon refused by the grant, service_role reads';
+  v_report := v_report || ' | S3 authenticated and anon refused by the grant, service_role reads, inserts, updates, deletes';
 
   raise exception 'HARNESS-OK 0098 twice%', v_report;
 end $$;

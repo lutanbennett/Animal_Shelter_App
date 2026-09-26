@@ -47,9 +47,10 @@
 --   note        anything else the run wants an admin to see.
 --   Kept for 30 days; each run deletes older rows.
 --
--- Service role only. RLS on with no policies and every grant revoked: the
--- run and the admin page both use the service-role client, and nothing a
--- signed-in user holds should read or write alert state.
+-- Service role only. RLS on with no policies, nothing granted to anon or
+-- authenticated, and the service role granted explicitly: the run and the
+-- admin page both use the service-role client, and nothing a signed-in
+-- user holds should read or write alert state.
 --
 -- Re-runnable: if not exists throughout.
 
@@ -80,3 +81,8 @@ alter table status_alert_runs enable row level security;
 
 revoke all on status_alert_checks from public, anon, authenticated;
 revoke all on status_alert_runs from public, anon, authenticated;
+
+-- The service role's grants, written out: new projects no longer add Data
+-- API grants on their own (docs/decisions.md, 2026-09-24).
+grant select, insert, update, delete on status_alert_checks to service_role;
+grant select, insert, update, delete on status_alert_runs to service_role;
