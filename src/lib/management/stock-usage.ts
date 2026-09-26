@@ -1,22 +1,26 @@
 /**
- * Management → Stock between counts: how each item's count moved between
- * two stocktakes, beside what the prescriptions and diets planned for the
- * same dates (backlog "Actual usage from stocktakes", Lutan 2026-09-26).
- *
- * What this can and cannot say is the whole design, and it is set by
- * 0093_stock_counts.sql: the app knows two counts and the forecast, but
- * nothing records a delivery. So
+ * Management → Stock between counts: what each item used between two
+ * stocktakes, beside what the prescriptions and diets planned for the same
+ * dates (backlog "Actual usage from stocktakes", Lutan 2026-09-26; usage
+ * since "Record stock deliveries", 0096).
  *
  *     used = previous count + received − new count
  *
- * has an unknown in it, and nothing here is called "actual usage".
- *   - A fall is the LEAST that left the cupboard — exactly it only if
- *     nothing arrived. So "fell more than planned" is solid: at least that
- *     much more went than the plan says.
- *   - A fall smaller than planned cannot be told apart: doses or meals not
- *     given, or a delivery nobody logged topping the shelf back up.
- *   - A rise is a delivery nobody logged (or a miscount). Usage over that
- *     interval cannot be read at all.
+ * 0093 knew the two counts; 0096 added stock_receipts, the "received", and
+ * the stock_count_intervals view that does this sum for every pair of
+ * consecutive counts. This file never re-derives the sum: for a pair of
+ * counts it walks the view's consecutive intervals from one to the other
+ * and adds up the view's own figures (receivedBetween).
+ *
+ * What the figure assumes is that every delivery was recorded. So:
+ *   - A delivery nobody recorded makes usage look LOWER than it was: a
+ *     "less than planned" may be one, and the page says so beside it.
+ *   - A delivery recorded twice, or too large, makes usage look higher: a
+ *     "more than planned" says to check that too.
+ *   - Used below zero — the later count is more than the earlier count plus
+ *     what was recorded — can only be an unrecorded delivery or a miscount.
+ *     The view leaves it negative on purpose; here it is "unlogged", with
+ *     the least that must have arrived.
  * And the plan itself can read low for a past interval: medication_forecast
  * and diet_forecast only count residents by their status *today*, so an
  * animal adopted, fostered or died since was eating and taking medicine
@@ -32,6 +36,8 @@ import { addDaysIso, todayIso } from "@/lib/format";
 
 /** One stock_counts row (0093), normalised. */
 export type CountRow = {
+  /** stock_counts.id: how the pair is found in stock_count_intervals. */
+  id: string;
   stocktake_id: string;
   item_id: string;
   counted_quantity: number;
@@ -137,8 +143,55 @@ export function planWindow(pair: CountPair): { from: string; to: string; days: n
   return { from, to: addDaysIso(toDay, -1), days };
 }
 
+/** One stock_count_intervals row (0096): two consecutive counts of one item. */
+export type IntervalRow = {
+  from_count_id: string;
+  to_count_id: string;
+  received: number;
+  receipts: number;
+  /** Null when the counts and receipts do not share one unit. */
+  used: number | null;
+};
+
+/** What arrived and what was used between a pair's two counts. */
+export type Between = {
+  received: number;
+  receipts: number;
+  /** Null across a unit change, as the view has it. */
+  used: number | null;
+};
+
 /**
- * How far a fall may sit from the plan before the row is marked. Loose on
+ * The pair's figures from the view. A pair is not always two consecutive
+ * counts — latest mode skips same-day recounts, and two picked stocktakes
+ * can have others between them — so this follows the view's intervals from
+ * `from` to `to` and adds them up. The sum telescopes: the counts between
+ * cancel, leaving from + all receipts in between − to, which is the view's
+ * own rule applied to the wider interval. Null when the chain does not
+ * reach `to` (the view was not loaded, or is behind the counts).
+ */
+export function receivedBetween(intervals: IntervalRow[], pair: CountPair): Between | null {
+  const next = new Map(intervals.map((i) => [i.from_count_id, i]));
+  let at = pair.from.id;
+  let received = 0;
+  let receipts = 0;
+  let used: number | null = 0;
+  for (let steps = 0; steps <= intervals.length; steps++) {
+    const step = next.get(at);
+    if (!step) return null;
+    received += Number(step.received);
+    receipts += Number(step.receipts);
+    used = used == null || step.used == null ? null : used + Number(step.used);
+    if (step.to_count_id === pair.to.id) {
+      return { received: round2(received), receipts, used: used == null ? null : round2(used) };
+    }
+    at = step.to_count_id;
+  }
+  return null;
+}
+
+/**
+ * How far usage may sit from the plan before the row is marked. Loose on
  * purpose: counts are by eye, diets are estimates by size, and the page
  * is for spotting the big gaps the backlog item asked about.
  */
@@ -149,42 +202,46 @@ export type UsageReading =
   | { state: "unitChanged" }
   /** Both counts on one shelter day. */
   | { state: "sameDay" }
-  /** Count went up: stock arrived that was not logged. Usage unknown. */
-  | { state: "rose"; rise: number }
-  /** Fell (or held) within GAP_RATIO of the plan. */
-  | { state: "asPlanned"; fall: number; gap: number }
-  /** Fell more than planned: at least `gap` more left than planned. */
-  | { state: "moreThanPlanned"; fall: number; gap: number }
-  /** Fell less than planned (or held): `gap` is how far short, > 0. */
-  | { state: "lessThanPlanned"; fall: number; gap: number }
-  /** Fell, and nothing was planned at all. */
-  | { state: "fellUnplanned"; fall: number }
-  /** Held, and nothing was planned: nothing to see. */
+  /** The deliveries could not be read, so nothing is said. */
+  | { state: "unknown" }
+  /** Later count > earlier count + recorded deliveries: at least `missing` arrived unrecorded (or a miscount). */
+  | { state: "unlogged"; missing: number }
+  /** Used within GAP_RATIO of the plan. */
+  | { state: "asPlanned"; used: number; gap: number }
+  /** Used `gap` more than planned. */
+  | { state: "moreThanPlanned"; used: number; gap: number }
+  /** Used `gap` less than planned, > 0. */
+  | { state: "lessThanPlanned"; used: number; gap: number }
+  /** Used some, and nothing was planned at all. */
+  | { state: "usedUnplanned"; used: number }
+  /** Used none, and nothing was planned: nothing to see. */
   | { state: "unchangedUnplanned" };
 
 export function readUsage(
   pair: CountPair,
+  between: Between | null,
   planned: number,
   /** The item's unit now: the forecast is in this unit. */
   currentUnit: string,
 ): UsageReading {
   if (pair.from.unit !== pair.to.unit || pair.to.unit !== currentUnit) return { state: "unitChanged" };
   if (planWindow(pair) == null) return { state: "sameDay" };
+  if (between == null) return { state: "unknown" };
+  if (between.used == null) return { state: "unitChanged" };
 
   // Rounded to the column's two places, so 0.1 + 0.2 style noise never
-  // makes a held count read as a fall.
-  const change = round2(pair.to.counted_quantity - pair.from.counted_quantity);
-  if (change > 0) return { state: "rose", rise: change };
-  const fall = -change;
+  // makes a held count read as used.
+  const used = round2(between.used);
+  if (used < 0) return { state: "unlogged", missing: -used };
 
   if (!(planned > 0)) {
-    return fall > 0 ? { state: "fellUnplanned", fall } : { state: "unchangedUnplanned" };
+    return used > 0 ? { state: "usedUnplanned", used } : { state: "unchangedUnplanned" };
   }
-  const gap = round2(fall - planned);
-  if (Math.abs(gap) <= planned * GAP_RATIO + 1e-9) return { state: "asPlanned", fall, gap };
+  const gap = round2(used - planned);
+  if (Math.abs(gap) <= planned * GAP_RATIO + 1e-9) return { state: "asPlanned", used, gap };
   return gap > 0
-    ? { state: "moreThanPlanned", fall, gap }
-    : { state: "lessThanPlanned", fall, gap: -gap };
+    ? { state: "moreThanPlanned", used, gap }
+    : { state: "lessThanPlanned", used, gap: -gap };
 }
 
 /** Whether the row is one of the gaps the page exists to show. */
@@ -192,7 +249,8 @@ export function standsOut(reading: UsageReading): boolean {
   return (
     reading.state === "moreThanPlanned" ||
     reading.state === "lessThanPlanned" ||
-    reading.state === "fellUnplanned"
+    reading.state === "usedUnplanned" ||
+    reading.state === "unlogged"
   );
 }
 
