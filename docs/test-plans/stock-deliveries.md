@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "Record stock deliveries, so Stock between counts can state usage" (feature half; schema `0096` was #158) |
 | Branch / worktree | `claude/stock-deliveries` @ `C:\Development\Animal_Shelter_stock-deliveries` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3004` |
-| PR | to be opened from this commit |
+| PR | #163 |
 | Tested by / date | Claude (stock-deliveries session), 2026-09-27 |
 | Carries a migration? | no — reads `0096` (`stock_receipts`, `stock_count_intervals`), already on `main` and applied to dev |
 | Tested at SHA | `4a937f8` |
@@ -32,7 +32,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — #163: `check`, `migration-numbers` and `test-plan` all pass
 
 Also run, both zones, each ending `all ok`:
 
@@ -171,7 +171,7 @@ Manual verification by: pending: the five items under Left for manual verificati
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR (#163 description)
 - [ ] Handed to the production release manager — n/a: not yet — handed over once the PR is open
 
 Result: pass
