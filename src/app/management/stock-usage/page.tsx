@@ -290,7 +290,10 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
       case "asPlanned":
         return { text: u.readings.asPlanned };
       case "withinCount":
-        return { text: u.readings.asPlanned, why: u.readings.withinCountWhy(q(Math.abs(r.gap)), q(r.margin)) };
+        return {
+          text: line.planned ? u.readings.asPlanned : u.readings.withinCountUnplanned,
+          why: u.readings.withinCountWhy(q(Math.abs(r.gap)), q(r.margin)),
+        };
       case "moreThanPlanned":
         return { text: u.readings.moreThanPlanned(q(r.gap)), why: u.readings.moreThanPlannedWhy };
       case "lessThanPlanned":
@@ -355,6 +358,7 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
       csvColumns.differencePercent,
       csvColumns.reading,
       csvColumns.marked,
+      csvColumns.notes,
     ],
     ...sections.flatMap(({ kind, lines }) =>
       lines.map((line) => {
@@ -378,6 +382,14 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
           diff?.percent == null ? "" : String(diff.percent),
           why ? `${text}. ${why}` : text,
           standsOut(line.reading) ? u.csv.yes : "",
+          [
+            line.departed > 0 ? u.departed(line.departed) : null,
+            line.edited && line.item.stock_counted_at
+              ? u.editedSince(formatDate(line.item.stock_counted_at, locale))
+              : null,
+          ]
+            .filter(Boolean)
+            .join(" "),
         ];
       }),
     ),

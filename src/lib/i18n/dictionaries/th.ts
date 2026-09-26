@@ -1275,6 +1275,7 @@ const th: Dictionary = {
       deliveries: (n: number) => `รับ ${n} ครั้ง`,
       readings: {
         asPlanned: "ใกล้เคียงกับแผน",
+        withinCountUnplanned: "ไม่มีในแผน และใช้ไปน้อยเกินกว่าจะแยกจากการนับคลาด",
         withinCountWhy: (gap: string, margin: string) =>
           `ต่างจากแผน ${gap} แต่การนับรายการนี้สองครั้งอาจคลาดกันเองได้ถึง ${margin} จึงไม่เน้นแถวนี้`,
         moreThanPlanned: (quantity: string) => `ใช้มากกว่าแผน ${quantity}`,
@@ -1324,6 +1325,7 @@ const th: Dictionary = {
           differencePercent: "ส่วนต่าง %",
           reading: "เทียบกับแผน",
           marked: "เน้น",
+          notes: "หมายเหตุ",
         },
       },
       note:

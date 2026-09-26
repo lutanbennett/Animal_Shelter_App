@@ -1304,6 +1304,7 @@ const en = {
       deliveries: (n: number) => `${n} deliver${n === 1 ? "y" : "ies"}`,
       readings: {
         asPlanned: "About as planned",
+        withinCountUnplanned: "Nothing planned, and too little used to tell from a miscount",
         withinCountWhy: (gap: string, margin: string) =>
           `Off by ${gap}, but two counts of this item can differ by ${margin} on their own, so it isn't marked.`,
         moreThanPlanned: (quantity: string) => `Used ${quantity} more than planned`,
@@ -1353,6 +1354,7 @@ const en = {
           differencePercent: "Difference %",
           reading: "Against the plan",
           marked: "Marked",
+          notes: "Notes",
         },
       },
       note:
