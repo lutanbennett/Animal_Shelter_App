@@ -150,6 +150,9 @@ const th: Dictionary = {
     staffLogin: "เข้าสู่ระบบเจ้าหน้าที่",
     facebook: "Lanna Care for Animals บน Facebook",
     instagram: "Lanna Care for Animals บน Instagram",
+    x: "Lanna Care for Animals บน X",
+    messenger: "ส่งข้อความถึง Lanna Care for Animals ทาง Messenger",
+    whatsapp: "ส่งข้อความถึง Lanna Care for Animals ทาง WhatsApp",
   },
 
   publicNav: {
@@ -162,6 +165,9 @@ const th: Dictionary = {
     talkToUs: "คุยกับเรา",
     line: "LINE",
     call: "โทร",
+    messenger: "Messenger",
+    whatsapp: "WhatsApp",
+    followUs: "ติดตามเรา",
   },
 
   sitePages: {
@@ -642,10 +648,19 @@ const th: Dictionary = {
         contactMapUrlHint: "ลิงก์ Google Maps — ที่อยู่ในส่วนท้ายจะเปิดลิงก์นี้",
         facebookUrl: "เพจ Facebook",
         facebookUrlHint:
-          "เพจ Facebook ของศูนย์ เป็นลิงก์ https:// บน facebook.com แสดงเป็นไอคอนในส่วนท้ายและด้านบนของทุกหน้าสาธารณะเมื่อเปิดบนคอมพิวเตอร์ เว้นว่างเพื่อซ่อน",
+          "เพจ Facebook ของศูนย์ เป็นลิงก์ https:// บน facebook.com แสดงใต้ \"ติดตามเรา\" ในส่วนท้ายและในเมนูบนมือถือ เว้นว่างเพื่อซ่อน",
         instagramUrl: "Instagram",
         instagramUrlHint:
-          "โปรไฟล์ Instagram ของศูนย์ เป็นลิงก์ https:// บน instagram.com แสดงเป็นไอคอนในส่วนท้าย เว้นว่างเพื่อซ่อน",
+          "โปรไฟล์ Instagram ของศูนย์ เป็นลิงก์ https:// บน instagram.com แสดงใต้ \"ติดตามเรา\" ในส่วนท้ายและในเมนูบนมือถือ เว้นว่างเพื่อซ่อน",
+        xUrl: "X (Twitter)",
+        xUrlHint:
+          "โปรไฟล์ X ของศูนย์ เป็นลิงก์ https:// บน x.com หรือ twitter.com แสดงใต้ \"ติดตามเรา\" ในส่วนท้ายและในเมนูบนมือถือ เว้นว่างเพื่อซ่อน",
+        messengerUrl: "Facebook Messenger",
+        messengerUrlHint:
+          "ลิงก์ Messenger ของศูนย์ ปกติคือ https://m.me/ ตามด้วยชื่อผู้ใช้ของเพจ แสดงใต้ \"ติดต่อเรา\" ในส่วนท้ายและเป็นปุ่มแชทในเมนูบนมือถือ เว้นว่างเพื่อซ่อน",
+        whatsappNumber: "หมายเลข WhatsApp",
+        whatsappNumberHint:
+          "ใส่รหัสประเทศด้วย เช่น +66 81 234 5678 — มีช่องว่างหรือขีดได้ ผู้เยี่ยมชมจะเห็นปุ่มที่เปิดแชท WhatsApp เว้นว่างเพื่อซ่อน",
       },
       vetVisit: {
         heading: "ค่าพบสัตวแพทย์โดยทั่วไป",
@@ -2982,6 +2997,7 @@ const th: Dictionary = {
     notUrl: "ดูเหมือนจะไม่ใช่ที่อยู่เว็บไซต์",
     notHttps: "กรุณาใช้ลิงก์ที่ปลอดภัย ขึ้นต้นด้วย https://",
     wrongHost: (hosts: string) => `กรุณาใช้ลิงก์ของ ${hosts}`,
+    whatsappNumber: "กรุณาใส่หมายเลขพร้อมรหัสประเทศ เช่น +66 81 234 5678 (ไม่ใช่ 081…)",
   },
 
   // Thai title "เพื่อนของศูนย์พักพิง" is a placeholder until the customer

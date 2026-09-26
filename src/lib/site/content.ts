@@ -1,6 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Locale } from "@/lib/i18n/locales";
-import { checkFacebookUrl, checkInstagramUrl } from "@/lib/links/validate";
+import {
+  checkFacebookUrl,
+  checkInstagramUrl,
+  checkMessengerUrl,
+  checkWhatsAppNumber,
+  checkXUrl,
+} from "@/lib/links/validate";
 
 /**
  * The site_content singleton (0018, 0041, 0059): the public site's
@@ -21,13 +27,17 @@ export type SiteContent = {
   /** The shelter's own Facebook page and Instagram (0080). Not `contact_`-prefixed. */
   facebook_url: string | null;
   instagram_url: string | null;
+  /** Messenger link, WhatsApp number (digits only, no "+") and X profile (0092). */
+  messenger_url: string | null;
+  whatsapp_number: string | null;
+  x_url: string | null;
   visiting_hours: string | null;
   visiting_hours_th: string | null;
   featured_resident_id: string | null;
 };
 
 export const SITE_CONTENT_COLUMNS =
-  "hero_drive_file_id, hero_alt, hero_alt_th, tagline, tagline_th, contact_email, contact_address, contact_phone, contact_line, contact_map_url, facebook_url, instagram_url, visiting_hours, visiting_hours_th, featured_resident_id";
+  "hero_drive_file_id, hero_alt, hero_alt_th, tagline, tagline_th, contact_email, contact_address, contact_phone, contact_line, contact_map_url, facebook_url, instagram_url, messenger_url, whatsapp_number, x_url, visiting_hours, visiting_hours_th, featured_resident_id";
 
 export async function loadSiteContent(
   supabase: SupabaseClient,
@@ -79,13 +89,29 @@ export function lineLink(contactLine: string | null | undefined): {
  * out rather than linked.
  */
 export function socialLinks(
-  content: Pick<SiteContent, "facebook_url" | "instagram_url"> | null,
-): { facebook: string | null; instagram: string | null } {
+  content: Pick<
+    SiteContent,
+    "facebook_url" | "instagram_url" | "messenger_url" | "whatsapp_number" | "x_url"
+  > | null,
+): {
+  facebook: string | null;
+  instagram: string | null;
+  x: string | null;
+  messenger: string | null;
+  /** The wa.me chat link built from the stored digits. */
+  whatsapp: string | null;
+} {
   const facebook = checkFacebookUrl(content?.facebook_url);
   const instagram = checkInstagramUrl(content?.instagram_url);
+  const x = checkXUrl(content?.x_url);
+  const messenger = checkMessengerUrl(content?.messenger_url);
+  const whatsapp = checkWhatsAppNumber(content?.whatsapp_number);
   return {
     facebook: facebook.ok ? facebook.url : null,
     instagram: instagram.ok ? instagram.url : null,
+    x: x.ok ? x.url : null,
+    messenger: messenger.ok ? messenger.url : null,
+    whatsapp: whatsapp.ok && whatsapp.number ? `https://wa.me/${whatsapp.number}` : null,
   };
 }
 

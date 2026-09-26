@@ -12,6 +12,11 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
+import { FacebookIcon } from "@/components/FacebookIcon";
+import { InstagramIcon } from "@/components/InstagramIcon";
+import { MessengerIcon } from "@/components/MessengerIcon";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
+import { XIcon } from "@/components/XIcon";
 
 /** One link in the public navigation; `current` marks the page the visitor is on. */
 export type PublicNavLink = { key: string; href: string; label: string; current: boolean };
@@ -20,6 +25,30 @@ export type PublicNavLink = { key: string; href: string; label: string; current:
 export type PublicNavEntry =
   | { kind: "link"; link: PublicNavLink }
   | { kind: "group"; key: string; label: string; links: PublicNavLink[] };
+
+/** A way to talk to the shelter in the phone menu, as a big button. */
+export type PublicTalkLink = {
+  kind: "line" | "phone" | "messenger" | "whatsapp";
+  href: string;
+  label: string;
+};
+
+/** A place to follow the shelter in the phone menu, as an icon. */
+export type PublicFollowLink = {
+  kind: "facebook" | "instagram" | "x";
+  href: string;
+  /** Read out in place of the icon: "Lanna Care for Animals on Instagram". */
+  label: string;
+};
+
+const TALK_ICONS = {
+  line: MessageCircle,
+  phone: Phone,
+  messenger: MessengerIcon,
+  whatsapp: WhatsAppIcon,
+} as const;
+
+const FOLLOW_ICONS = { facebook: FacebookIcon, instagram: InstagramIcon, x: XIcon } as const;
 
 /**
  * Open state tied to the page it was opened on, so following a link to
@@ -122,8 +151,10 @@ export function PublicNavGroup({
 /**
  * The phone's menu: a button in the header that opens the whole screen —
  * the four entries with Get involved laid open, the language toggle, and a
- * "Talk to us" panel with LINE and Call at the foot, since on a phone
- * those are how people actually reach the shelter. A modal dialog: focus
+ * "Talk to us" panel at the foot — LINE, Call, Messenger and WhatsApp as
+ * buttons, whichever are set, since on a phone those are how people
+ * actually reach the shelter — then "Follow us" with Facebook, Instagram
+ * and X as icons. A modal dialog: focus
  * moves in and stays in, Escape closes, the page behind doesn't scroll.
  */
 export function PublicMobileMenu({
@@ -142,7 +173,14 @@ export function PublicMobileMenu({
   donate: PublicNavLink;
   languageLabel: string;
   language: ReactNode;
-  talk: { title: string; line: { href: string; label: string } | null; phone: { href: string; label: string } | null; note: string | null };
+  talk: {
+    title: string;
+    /** In order; the first is the filled button. */
+    links: PublicTalkLink[];
+    note: string | null;
+    followTitle: string;
+    follow: PublicFollowLink[];
+  };
   /** Open the app / Sign out for a signed-in reader; nothing for a visitor. */
   account: ReactNode;
   labels: { open: string; close: string; menu: string; nav: string };
@@ -279,36 +317,58 @@ export function PublicMobileMenu({
           </div>
           {account && <div className="px-5 py-2">{account}</div>}
 
-          {(talk.line || talk.phone) && (
+          {(talk.links.length > 0 || talk.follow.length > 0) && (
             <div className="mt-auto flex flex-col gap-3 bg-site-cream p-5">
-              <span className="text-[15px] font-bold text-site-ink-muted">{talk.title}</span>
-              <div className="grid grid-cols-2 gap-2.5">
-                {talk.line && (
-                  <a
-                    href={talk.line.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={`flex h-[52px] items-center justify-center gap-2 rounded-xl bg-site-accent text-base font-bold text-site-on-accent ${
-                      talk.phone ? "" : "col-span-2"
-                    }`}
-                  >
-                    <MessageCircle aria-hidden="true" className="h-5 w-5" />
-                    {talk.line.label}
-                  </a>
-                )}
-                {talk.phone && (
-                  <a
-                    href={talk.phone.href}
-                    className={`flex h-[52px] items-center justify-center gap-2 rounded-xl border-2 border-site-accent text-base font-bold text-site-accent ${
-                      talk.line ? "" : "col-span-2"
-                    }`}
-                  >
-                    <Phone aria-hidden="true" className="h-5 w-5" />
-                    {talk.phone.label}
-                  </a>
-                )}
-              </div>
-              {talk.note && <span className="text-sm text-site-ink-muted">{talk.note}</span>}
+              {talk.links.length > 0 && (
+                <>
+                  <span className="text-[15px] font-bold text-site-ink-muted">{talk.title}</span>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {talk.links.map((link, i) => {
+                      const Icon = TALK_ICONS[link.kind];
+                      // An odd one out at the end takes the whole row.
+                      const wide = i === talk.links.length - 1 && i % 2 === 0;
+                      return (
+                        <a
+                          key={link.kind}
+                          href={link.href}
+                          {...(link.kind === "phone" ? {} : { target: "_blank", rel: "noreferrer" })}
+                          className={`flex h-[52px] items-center justify-center gap-2 rounded-xl text-base font-bold ${
+                            i === 0
+                              ? "bg-site-accent text-site-on-accent"
+                              : "border-2 border-site-accent text-site-accent"
+                          } ${wide ? "col-span-2" : ""}`}
+                        >
+                          <Icon aria-hidden="true" className="h-5 w-5" />
+                          {link.label}
+                        </a>
+                      );
+                    })}
+                  </div>
+                  {talk.note && <span className="text-sm text-site-ink-muted">{talk.note}</span>}
+                </>
+              )}
+              {talk.follow.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <span className="pr-1 text-[15px] font-bold text-site-ink-muted">
+                    {talk.followTitle}
+                  </span>
+                  {talk.follow.map((link) => {
+                    const Icon = FOLLOW_ICONS[link.kind];
+                    return (
+                      <a
+                        key={link.kind}
+                        href={link.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={link.label}
+                        className="flex h-11 w-11 items-center justify-center rounded-full text-site-accent hover:bg-site-sand"
+                      >
+                        <Icon aria-hidden="true" className="h-6 w-6" />
+                      </a>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>

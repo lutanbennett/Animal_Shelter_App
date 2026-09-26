@@ -6,9 +6,14 @@ import type { SiteContent } from "@/lib/site/content";
 import {
   checkFacebookUrl,
   checkInstagramUrl,
+  checkMessengerUrl,
+  checkWhatsAppNumber,
+  checkXUrl,
   FACEBOOK_HOSTS,
   INSTAGRAM_HOSTS,
   linkErrorText,
+  MESSENGER_HOSTS,
+  X_HOSTS,
 } from "@/lib/links/validate";
 import { updateSiteContent } from "./actions";
 
@@ -36,9 +41,26 @@ export function SiteSettingsForm({ content }: { content: SiteContent }) {
     checkInstagramUrl(instagramUrl),
     INSTAGRAM_HOSTS,
   );
+  const [xUrl, setXUrl] = useState(content.x_url ?? "");
+  const xError = linkErrorText(t.linkErrors, checkXUrl(xUrl), X_HOSTS);
+  const [messengerUrl, setMessengerUrl] = useState(content.messenger_url ?? "");
+  const messengerError = linkErrorText(
+    t.linkErrors,
+    checkMessengerUrl(messengerUrl),
+    MESSENGER_HOSTS,
+  );
+  // Stored as digits only (0092); shown back with its "+" so it reads as
+  // the number the admin typed. The action strips it again on save.
+  const [whatsapp, setWhatsapp] = useState(
+    content.whatsapp_number ? `+${content.whatsapp_number}` : "",
+  );
+  const whatsappError = checkWhatsAppNumber(whatsapp).ok ? null : t.linkErrors.whatsappNumber;
+  const anyError = Boolean(
+    facebookError || instagramError || xError || messengerError || whatsappError,
+  );
 
   function socialLink(
-    name: "facebook_url" | "instagram_url",
+    name: "facebook_url" | "instagram_url" | "x_url" | "messenger_url",
     label: string,
     hint: string,
     value: string,
@@ -196,12 +218,50 @@ export function SiteSettingsForm({ content }: { content: SiteContent }) {
           instagramError,
           "https://www.instagram.com/…",
         )}
+        {socialLink(
+          "x_url",
+          s.xUrl,
+          s.xUrlHint,
+          xUrl,
+          setXUrl,
+          xError,
+          "https://x.com/…",
+        )}
+        {socialLink(
+          "messenger_url",
+          s.messengerUrl,
+          s.messengerUrlHint,
+          messengerUrl,
+          setMessengerUrl,
+          messengerError,
+          "https://m.me/…",
+        )}
+        <label className="flex flex-col gap-1 text-sm font-medium text-muted">
+          {s.whatsappNumber}
+          <input
+            name="whatsapp_number"
+            type="tel"
+            autoComplete="tel"
+            value={whatsapp}
+            onChange={(e) => setWhatsapp(e.target.value)}
+            placeholder="+66 81 234 5678"
+            aria-invalid={whatsappError ? true : undefined}
+            aria-describedby="whatsapp_number-hint"
+            className={inputClass}
+          />
+          <span
+            id="whatsapp_number-hint"
+            className={`text-xs font-normal ${whatsappError ? "text-danger" : ""}`}
+          >
+            {whatsappError ?? s.whatsappNumberHint}
+          </span>
+        </label>
       </div>
 
       <div className="flex items-center gap-3">
         <button
           type="submit"
-          disabled={pending || Boolean(facebookError || instagramError)}
+          disabled={pending || anyError}
           className="w-fit rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
         >
           {pending ? t.common.saving : t.common.saveChanges}
