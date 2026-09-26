@@ -36,7 +36,7 @@ or `n/a` with the reason.
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: `check`, `migration-numbers` and `test-plan` all passed at `5731364` (run 36214917338)
 
 ## 3. Schema and data — *skip if no migration*
 
