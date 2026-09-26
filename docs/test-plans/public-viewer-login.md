@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → A "Public viewer" login: signs in past the UAT lock, sees only the public website |
 | Branch / worktree | `claude/public-viewer-login` @ `C:\Development\Animal_Shelter_public-viewer-login` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3002` (run with `PUBLIC_SITE=locked` for the checks below) |
-| PR | (set when opened) |
+| PR | #135 |
 | Tested by / date | Claude, 2026-09-26 |
 | Carries a migration? | no — uses `0085`/`0086`, merged in #128 and applied to dev |
 | Tested at SHA | `a40384a` |
