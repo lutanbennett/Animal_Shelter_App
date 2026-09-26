@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { DEFAULT_SIGNED_IN_PATH, safeNextPath } from "@/lib/auth/next-path";
+import { signedInLandingPath } from "@/lib/auth/app-access";
+import { safeNextPath } from "@/lib/auth/next-path";
+import { PASSWORD_CHANGE_PATH } from "@/lib/auth/password-change";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -37,6 +39,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/login?error=no_role`);
   }
 
+  // A public viewer lands on the home page (src/lib/auth/app-access.ts) —
+  // but a password-recovery link's ?next= is the change-password page,
+  // which every account may use, so that is honoured for anyone.
   const next = safeNextPath(searchParams.get("next"));
-  return NextResponse.redirect(`${origin}${next ?? DEFAULT_SIGNED_IN_PATH}`);
+  const landing = next?.startsWith(PASSWORD_CHANGE_PATH) ? next : signedInLandingPath(role, next);
+  return NextResponse.redirect(`${origin}${landing}`);
 }

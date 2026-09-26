@@ -73,11 +73,11 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "If Google sign-in says your account hasn't been given access yet, an admin needs to add you under Settings → Security first.",
+              text: "If sign-in says your account doesn't have access, an admin needs to give you a role under Settings → Security first. An archived account is turned away the same way, with a password or with Google.",
             },
             {
               kind: "note",
-              text: "On the testing sites (lannacare.org and test.lannacare.org) the public website is closed until the shelter goes live: the home page shows a Staff testing site page with a Sign in button instead. Once you've signed in you see everything as normal, public pages included. A resident card or enclosure QR code scanned there asks you to sign in first, then opens what you scanned.",
+              text: "On the testing sites (lannacare.org and test.lannacare.org) the public website is closed until the shelter goes live: the home page shows a Staff testing site page with a Sign in button instead. Once you've signed in you see everything as normal, public pages included. Someone testing the website as a visitor signs in with a Public viewer account: it opens the public pages and nothing else, and lands on the home page. A resident card or enclosure QR code scanned there asks you to sign in first, then opens what you scanned.",
             },
           ],
         },
@@ -929,6 +929,7 @@ const manual: Manual = {
             "Create a user with an email and a role. A temporary password is generated and shown once — copy it and pass it on (LINE is fine; it only works until they've signed in). The first time they sign in with it they must choose their own password before anything else opens. Someone who will only use Google sign-in can ignore the temporary password.",
             "Someone signing in with Google for the first time is turned away with \"hasn't been given access yet\" and appears under Access requests at the top of the page. Choose a role and tap Approve, then ask them to try again — or Deny to remove the account. If their Google email matches a login you created, the two are linked automatically.",
             "Change a role from the dropdown in the table. Issue temporary password does what it says — their old password stops working and they choose a new one at their next sign-in. You can't change your own role, reset your own password here or delete yourself; change your own password from Change password at the bottom of the menu.",
+            "Public viewer is for testing the website as a visitor while the testing sites are closed to the public: it signs in, sees every public page exactly as a stranger will once the site is open, and never sees the app — any app address sends it to the home page, and the public header offers only Sign out. Give it to testers, never to staff.",
             "When someone leaves, Archive them rather than delete: they can no longer sign in, they disappear from the maintenance Assigned to list, and their name stays on the jobs they did. Archived accounts sit at the bottom of the table with Restore beside them. Delete is for accounts made by mistake — it removes them from past jobs too.",
           ],
           screenshot: {

@@ -25,7 +25,7 @@ export type SecurityUser = {
   mustChangePassword: boolean;
 };
 
-const ROLES = ["admin", "management", "staff", "vet", "volunteer"];
+const ROLES = ["admin", "management", "staff", "vet", "volunteer", "public_viewer"];
 
 function UserRow({
   user,

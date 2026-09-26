@@ -1,11 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
+import { hasAppAccess, loadCurrentRole } from "@/lib/auth/app-access";
 import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
 import { loadSiteContent, socialLinks } from "@/lib/site/content";
 import { FacebookIcon } from "@/components/FacebookIcon";
 import { LanguageSwitcher } from "../LanguageSwitcher";
+import { SignOutButton } from "../login/SignOutButton";
 
 export type PublicSection =
   | "home"
@@ -35,6 +37,9 @@ export async function PublicHeader({ current }: { current?: PublicSection }) {
   // sits in the header too — on a computer only; a phone's header is
   // already full, and the footer has it.
   const facebook = socialLinks(site).facebook;
+  // Staff get "Open the app". A public viewer (src/lib/auth/app-access.ts)
+  // is a visitor here with nothing to open — only a way to sign out.
+  const staff = user ? hasAppAccess(await loadCurrentRole(supabase)) : false;
   // Shelter Friends is listed once there is someone to thank — or while
   // the visitor is on /friends itself, so the current page stays marked.
   const sections: { key: PublicSection; href: string; label: string }[] = [
@@ -106,12 +111,16 @@ export async function PublicHeader({ current }: { current?: PublicSection }) {
           </a>
         )}
         <LanguageSwitcher />
-        <Link
-          href={user ? "/residents" : "/login"}
-          className="whitespace-nowrap rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
-        >
-          {user ? t.adopt.openApp : t.adopt.staffLogin}
-        </Link>
+        {user && !staff ? (
+          <SignOutButton />
+        ) : (
+          <Link
+            href={staff ? "/residents" : "/login"}
+            className="whitespace-nowrap rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
+          >
+            {staff ? t.adopt.openApp : t.adopt.staffLogin}
+          </Link>
+        )}
       </div>
     </header>
   );

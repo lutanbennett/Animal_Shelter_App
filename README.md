@@ -22,7 +22,7 @@ reasoning and the trade-offs that come with that.
 
 ## Roles
 
-Five `app_role` values, enforced by row-level security
+Six `app_role` values, enforced by row-level security
 (`supabase/migrations/0001_initial_schema.sql`, mirrored for management in
 `0039`, vets in `0040`, medications in `0043`/`0044`) and assigned at `/admin/security`:
 
@@ -33,8 +33,9 @@ Five `app_role` values, enforced by row-level security
 | **staff** | Read/write on residents, placements, weights, photos, maintenance, projects and contacts; read on medical records. |
 | **vet** | Read/write on vet visits, procedures, blood tests, prescriptions and immunizations; read on residents. |
 | **volunteer** | Read everything; write photos and enclosure moves only. |
+| **public_viewer** | No app access (0085, 0086): signs in — which gets it past the UAT lock — and sees only the public website. App pages send it to `/` (`src/lib/auth/app-access.ts`). For testers. |
 
-A person who leaves is **archived** from `/admin/security` rather than deleted (`user_roles.archived_at`, 0063): `current_user_role()` returns null for them, so every policy and page treats them as having no access, while their name stays on the maintenance jobs they did. Restore reverses it.
+A person who leaves is **archived** from `/admin/security` rather than deleted (`user_roles.archived_at`, 0063): `current_user_role()` returns null for them, so every policy and page treats them as having no access, while their name stays on the maintenance jobs they did. Restore reverses it. Archived and role-less logins are refused at sign-in, by password or Google, and a session archived after it signed in is signed out at its next app page.
 
 ## Getting started
 

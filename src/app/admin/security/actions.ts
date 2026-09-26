@@ -23,7 +23,8 @@ export type SecurityFormState =
   | { success: string; temporaryPassword: string; email: string }
   | undefined;
 
-const VALID_ROLES = ["admin", "management", "staff", "vet", "volunteer"] as const;
+/** The staff roles, plus public_viewer: a login that sees only the public website (0085). */
+const VALID_ROLES = ["admin", "management", "staff", "vet", "volunteer", "public_viewer"] as const;
 
 /**
  * Creates a login with a generated temporary password and the

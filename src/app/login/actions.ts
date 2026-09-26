@@ -1,7 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { DEFAULT_SIGNED_IN_PATH, safeNextPath } from "@/lib/auth/next-path";
+import { loadCurrentRole, signedInLandingPath } from "@/lib/auth/app-access";
+import { safeNextPath } from "@/lib/auth/next-path";
+import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -21,9 +23,21 @@ export async function login(
     return { error: error.message };
   }
 
+  // An archived login, or one never given a role, is refused here as
+  // Google sign-in refuses it (src/app/auth/callback/route.ts): the
+  // password was right, but the session would open nothing — and on a
+  // locked site it would still get past the lock.
+  const role = await loadCurrentRole(supabase);
+  if (!role) {
+    await supabase.auth.signOut();
+    const { t } = await getT();
+    return { error: t.login.errors.noRole };
+  }
+
   // Back to the page that sent them to sign in, if any (the form carries
-  // /login?next=… as a hidden field); src/lib/auth/next-path.ts.
-  redirect(safeNextPath(formData.get("next") as string) ?? DEFAULT_SIGNED_IN_PATH);
+  // /login?next=… as a hidden field); src/lib/auth/next-path.ts. A public
+  // viewer lands on the home page instead (src/lib/auth/app-access.ts).
+  redirect(signedInLandingPath(role, safeNextPath(formData.get("next") as string)));
 }
 
 /**

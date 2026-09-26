@@ -257,7 +257,7 @@ const en = {
     },
     errors: {
       noRole:
-        "This Google account hasn’t been given access yet. Ask an administrator to assign you a role, then try again.",
+        "This account doesn’t have access. Ask an administrator to assign you a role, then try again.",
       google: "Google sign-in didn’t complete. Please try again.",
     },
   },
@@ -335,6 +335,7 @@ const en = {
         management: "Management",
         vet: "Vet",
         volunteer: "Volunteer",
+        public_viewer: "Public viewer",
       },
       table: {
         email: "Email",
