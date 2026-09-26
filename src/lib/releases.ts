@@ -42,6 +42,7 @@ export type Release = {
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
+  "Every resident living at the shelter now has a diet recorded. Anyone who had none for today — for example because they were taken in with “None yet” — has been put on the standard diet (Standard Kibble + Chicken) from today, with a note on the diet saying so. If they eat something else, change it on their Diet tab.",
 ];
 
 /** Newest first. */
