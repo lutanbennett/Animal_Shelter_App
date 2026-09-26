@@ -1,8 +1,7 @@
 /**
  * Checks for links staff paste into forms that end up on a public page —
- * a Shelter Friend's website and Facebook page today, the shelter's own
- * Facebook / Instagram links in the footer next (the "Link to the LCA
- * Facebook page" backlog item reuses these rather than writing its own).
+ * a Shelter Friend's website and Facebook page, and the shelter's own
+ * Facebook / Instagram / Messenger / X links and WhatsApp number.
  *
  * Pure and dependency-free, so a form can show the error as the user
  * types and the server action applies the very same rule before saving.
@@ -82,4 +81,43 @@ export function linkErrorText(
 /** An optional link to an Instagram profile: https, on instagram.com or instagr.am. */
 export function checkInstagramUrl(value: string | null | undefined): LinkCheck {
   return checkHttpsUrl(value, INSTAGRAM_HOSTS);
+}
+
+/**
+ * Hosts a Messenger link may be on: m.me (what a page's "Send message"
+ * share produces) and messenger.com's /t/<page> form.
+ */
+export const MESSENGER_HOSTS = ["m.me", "messenger.com"] as const;
+
+/** An optional Facebook Messenger link: https, on m.me or messenger.com. */
+export function checkMessengerUrl(value: string | null | undefined): LinkCheck {
+  return checkHttpsUrl(value, MESSENGER_HOSTS);
+}
+
+/** Hosts an X profile may be on — the rename left both working. */
+export const X_HOSTS = ["x.com", "twitter.com"] as const;
+
+/** An optional link to an X (Twitter) profile: https, on x.com or twitter.com. */
+export function checkXUrl(value: string | null | undefined): LinkCheck {
+  return checkHttpsUrl(value, X_HOSTS);
+}
+
+export type WhatsAppCheck =
+  | { ok: true; number: string | null }
+  | { ok: false; error: "notInternational" };
+
+/**
+ * An optional WhatsApp number, stored as digits only (0092): what wa.me
+ * accepts, so the link is always `https://wa.me/<number>`. People paste
+ * "+66 81 234 5678" or "+66-81-234-5678", so the `+`, spaces, dashes,
+ * dots and brackets are dropped first. What is left must be 7–15 digits
+ * (E.164's maximum) and not start with 0 — no country code does, so a
+ * leading 0 is a local number ("081 …") that wa.me cannot open.
+ */
+export function checkWhatsAppNumber(value: string | null | undefined): WhatsAppCheck {
+  const trimmed = value?.trim() ?? "";
+  if (!trimmed) return { ok: true, number: null };
+  const digits = trimmed.replace(/[\s+\-.()]/g, "");
+  if (!/^[1-9][0-9]{6,14}$/.test(digits)) return { ok: false, error: "notInternational" };
+  return { ok: true, number: digits };
 }

@@ -11,9 +11,14 @@ import { parseBahtAmount } from "@/lib/format";
 import {
   checkFacebookUrl,
   checkInstagramUrl,
+  checkMessengerUrl,
+  checkWhatsAppNumber,
+  checkXUrl,
   FACEBOOK_HOSTS,
   INSTAGRAM_HOSTS,
   linkErrorText,
+  MESSENGER_HOSTS,
+  X_HOSTS,
 } from "@/lib/links/validate";
 import {
   confirmUploaded,
@@ -80,16 +85,23 @@ export async function updateSiteContent(
 
   // The form checks these as they are typed; this is the same rule again
   // for a request that skipped the form. The database's own check (0080)
-  // is looser on purpose — see src/lib/links/validate.ts.
+  // is looser on purpose — see src/lib/links/validate.ts. The WhatsApp
+  // check also turns "+66 81 234 5678" into the digits 0092 stores.
   const s = t.admin.website.settings;
-  const facebook = checkFacebookUrl(text("facebook_url"));
-  const instagram = checkInstagramUrl(text("instagram_url"));
-  if (!facebook.ok) {
-    return { error: `${s.facebookUrl}: ${linkErrorText(t.linkErrors, facebook, FACEBOOK_HOSTS)}` };
+  const links = [
+    ["facebook_url", s.facebookUrl, checkFacebookUrl, FACEBOOK_HOSTS],
+    ["instagram_url", s.instagramUrl, checkInstagramUrl, INSTAGRAM_HOSTS],
+    ["x_url", s.xUrl, checkXUrl, X_HOSTS],
+    ["messenger_url", s.messengerUrl, checkMessengerUrl, MESSENGER_HOSTS],
+  ] as const;
+  const checked: Record<string, string | null> = {};
+  for (const [name, label, check, hosts] of links) {
+    const result = check(text(name));
+    if (!result.ok) return { error: `${label}: ${linkErrorText(t.linkErrors, result, hosts)}` };
+    checked[name] = result.url;
   }
-  if (!instagram.ok) {
-    return { error: `${s.instagramUrl}: ${linkErrorText(t.linkErrors, instagram, INSTAGRAM_HOSTS)}` };
-  }
+  const whatsapp = checkWhatsAppNumber(text("whatsapp_number"));
+  if (!whatsapp.ok) return { error: `${s.whatsappNumber}: ${t.linkErrors.whatsappNumber}` };
 
   const supabase = await createClient();
   const {
@@ -110,8 +122,8 @@ export async function updateSiteContent(
       contact_phone: optional("contact_phone"),
       contact_line: optional("contact_line"),
       contact_map_url: optional("contact_map_url"),
-      facebook_url: facebook.url,
-      instagram_url: instagram.url,
+      ...checked,
+      whatsapp_number: whatsapp.number,
       updated_at: new Date().toISOString(),
       updated_by: user?.id ?? null,
     })
