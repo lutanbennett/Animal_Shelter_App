@@ -48,7 +48,7 @@ export const unreleased: string[] = [
 export const releases: Release[] = [
   {
     version: "0.6.1",
-    date: "2026-09-27",
+    date: "2026-09-26",
     title:
       "More ways to get in touch, a new look for each resident, and System status",
     major: false,
