@@ -11,7 +11,7 @@
 | PR | #135 |
 | Tested by / date | Claude, 2026-09-26 |
 | Carries a migration? | no — uses `0085`/`0086`, merged in #128 and applied to dev |
-| Tested at SHA | `a40384a` |
+| Tested at SHA | `a40384a` (browser checks, gates); `147d589` after the second sync (gates, plus viewer `/admin` → `/` and `/adopt` with Sign out rechecked) |
 
 ## 1. Scope and risk
 
@@ -22,13 +22,22 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: `Already up to date.` at 3fffb91
-- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`:
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: `Already up to date.` at 3fffb91 for the first run; after the PR opened, `main` had moved (the Drive upload-errors PR), and the second sync conflicted only in `docs/backlog.md` (both items ticked, both kept) and `src/lib/releases.ts` (both PRs' `unreleased` lines, all four kept). Merge `147d589`
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. At `a40384a`:
 
 ```
 === gates: typecheck exited 0 after 12s
 === gates: lint exited 0 after 105s
 === gates: build exited 0 after 162s
+gates: typecheck=0 lint=0 build=0
+```
+
+At the merge `147d589`:
+
+```
+=== gates: typecheck exited 0 after 25s
+=== gates: lint exited 0 after 56s
+=== gates: build exited 0 after 136s
 gates: typecheck=0 lint=0 build=0
 ```
 
@@ -86,7 +95,7 @@ All in the built-in browser against `next dev` on :3002 started with `PUBLIC_SIT
 
 - [x] The pages nearest the change still work: `/login` (staff sign-in with `?next=`), `/maintenance`, `/r/R-0003` (staff → hub), `/adopt` (staff header), `/admin/security`, `/manual`, `/`
 - [x] Any shared file touched checked from a second, unrelated page: `manual/en.ts` loaded at `/manual`; the proxy and `PublicHeader` exercised from `/adopt`, `/r/`, `/e/`, `/maintenance`
-- [x] Nothing merged from `main` during `sync` was broken by this branch: sync was `Already up to date.`
+- [x] Nothing merged from `main` during `sync` was broken by this branch: the second sync brought the Drive upload-errors change (`src/app/admin/page.tsx` among others). Gates pass on the merge, and as the viewer `/admin` still goes to `/`
 
 ## 7. Documentation
 
