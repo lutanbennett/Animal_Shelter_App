@@ -36,7 +36,7 @@ or `n/a` / `deferred` with the reason.
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — all 3 checks (check, migration-numbers, test-plan) passed on #151 at `cb0e954`, seen before merging
 
 ## 3. Schema and data — *skip if no migration*
 
