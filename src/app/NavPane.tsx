@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { hasAppAccess } from "@/lib/auth/app-access";
 import { canManage } from "@/lib/auth/require-management";
+import { todayIso } from "@/lib/format";
+import { canReadMaintenance } from "@/lib/maintenance/queries";
+import { countMyUrgentMaintenance } from "@/lib/my-tasks/maintenance";
 import { NavLinks } from "./NavLinks";
 
 export async function NavPane() {
@@ -17,5 +20,12 @@ export async function NavPane() {
   // password; a menu of pages it would be bounced from is no use to it.
   if (!hasAppAccess(role)) return null;
 
-  return <NavLinks isAdmin={role === "admin"} canManage={canManage(role)} />;
+  // The My tasks badge: what is due today or overdue across its sources.
+  const urgentCount = canReadMaintenance(role)
+    ? await countMyUrgentMaintenance(supabase, user.id, todayIso())
+    : 0;
+
+  return (
+    <NavLinks isAdmin={role === "admin"} canManage={canManage(role)} urgentCount={urgentCount} />
+  );
 }

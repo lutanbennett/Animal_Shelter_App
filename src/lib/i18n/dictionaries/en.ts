@@ -57,6 +57,7 @@ const en = {
   },
 
   nav: {
+    my: "My tasks",
     residents: "Residents",
     settings: "Settings",
     management: "Management",
@@ -2475,6 +2476,30 @@ const en = {
       maintenanceViewAll: "View all",
       maintenanceLog: "Log maintenance",
     },
+  },
+
+  my: {
+    pageTitle: "My tasks",
+    pageSubtitle: "What's assigned to you, most urgent first.",
+    empty: "Nothing is assigned to you right now.",
+    couldntLoad: (source: string) => `Couldn't load ${source.toLowerCase()}`,
+    sources: {
+      maintenance: "Maintenance",
+    },
+    openFullList: {
+      maintenance: "Open the board",
+    },
+    buckets: {
+      overdue: "Overdue",
+      today: "Due today",
+      later: "Coming up",
+      none: "No due date",
+    },
+    withOthers: (names: string) => `With ${names}`,
+    statusFor: (title: string) => `Status of ${title}`,
+    markedDone: (title: string) => `“${title}” marked Completed.`,
+    undo: "Undo",
+    navBadge: (n: number) => `${n} due today or overdue`,
   },
 
   maintenance: {

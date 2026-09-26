@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { DEFAULT_SIGNED_IN_PATH } from "@/lib/auth/next-path";
 import { MIN_PASSWORD_LENGTH, MUST_CHANGE_PASSWORD, mustChangePassword } from "@/lib/auth/password-change";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -53,6 +54,6 @@ export async function changeOwnPassword(
 
   // Forced change and recovery both go on into the app; a change by choice
   // stays on the page with a confirmation.
-  if (formData.get("continue") === "1") redirect("/residents");
+  if (formData.get("continue") === "1") redirect(DEFAULT_SIGNED_IN_PATH);
   return { success: true };
 }

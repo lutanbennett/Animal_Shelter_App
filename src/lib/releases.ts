@@ -49,6 +49,7 @@ export const unreleased: string[] = [
   "A new Public viewer account type, for testing the website as a visitor while the testing sites are closed: it signs in, sees every public page, and never opens the app. Admins give it under Settings → Security.",
   "Archived accounts, and accounts that were never given a role, can no longer sign in with a password — they are turned away as Google sign-in already turned them away.",
   "A new resident now always gets a starting diet: intake picks the standard diet for you, and you change it only if they need something else. Enclosure cards show how many residents there are on a special diet (tap to see who), the enclosure page shows each one's diet under their photo, and Management → Diets marks which diet is the standard and lets management choose a different one.",
+  "New: My tasks, at the top of the menu, lists the maintenance jobs assigned to you that aren't finished — overdue, due today, coming up and undated — with who else is on each job and buttons to change its status there and then. The number beside it in the menu is how many are due today or overdue. It is now the app's home page: signing in, or tapping Open the app on the public website, takes you there instead of the Residents list.",
 ];
 
 /** Newest first. */

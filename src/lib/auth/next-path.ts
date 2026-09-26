@@ -13,5 +13,10 @@ export function safeNextPath(next: string | null | undefined): string | null {
   return next;
 }
 
-/** Where a fresh sign-in lands when nothing asked for somewhere else. */
-export const DEFAULT_SIGNED_IN_PATH = "/residents";
+/**
+ * The app side's home page: where a fresh sign-in lands when nothing asked
+ * for somewhere else, and where "Open the app" on the public site goes. My
+ * tasks rather than the residents list, since 2026-09-26 (Lutan): "/" is the
+ * public home for everyone, and "/my" is the home of the app.
+ */
+export const DEFAULT_SIGNED_IN_PATH = "/my";

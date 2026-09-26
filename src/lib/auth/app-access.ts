@@ -38,8 +38,8 @@ export async function sessionHasAppAccess(supabase: SupabaseClient): Promise<boo
 }
 
 /**
- * Where a sign-in lands. Staff go where `next` says, else the residents
- * list. A public viewer lands on the home page — or on `next` when that is
+ * Where a sign-in lands. Staff go where `next` says, else the app's home,
+ * My tasks. A public viewer lands on the home page — or on `next` when that is
  * a public page, so a resident card scanned on the locked site still opens
  * after sign-in.
  */

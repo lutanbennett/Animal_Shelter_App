@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { hasAppAccess, loadCurrentRole } from "@/lib/auth/app-access";
+import { DEFAULT_SIGNED_IN_PATH } from "@/lib/auth/next-path";
 import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
@@ -88,7 +89,7 @@ export async function PublicHeader({ current }: { current?: PublicSection }) {
   const account = user ? (
     staff ? (
       <Link
-        href="/residents"
+        href={DEFAULT_SIGNED_IN_PATH}
         className="flex min-h-11 items-center whitespace-nowrap text-[15px] font-semibold text-site-ink-muted underline-offset-4 hover:text-site-ink hover:underline"
       >
         {t.adopt.openApp}
