@@ -6,6 +6,7 @@ import { placeName } from "@/lib/enclosures/names";
 import { estimatedAgeNow } from "@/lib/format";
 import { loadEnclosureOptions } from "@/lib/enclosures/options";
 import type { PhotoRow } from "@/components/PhotoGallery";
+import { RESIDENT_PHOTO_SELECT } from "@/lib/adoption-updates/options";
 import {
   EditResidentForm,
   type EditableResident,
@@ -37,7 +38,7 @@ export default async function EditResidentPage(
       .returns<EditableResident[]>(),
     supabase
       .from("attachments")
-      .select("id, drive_file_id, file_name, sub_folder, date_taken")
+      .select(RESIDENT_PHOTO_SELECT)
       .eq("owner_type", "resident")
       .eq("owner_id", id)
       .order("uploaded_at", { ascending: true })

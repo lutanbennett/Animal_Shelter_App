@@ -42,6 +42,7 @@ export type Release = {
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
+  "New: adoption updates. When an adopter sends news about an animal — on LINE, Facebook, by email or on a visit — add it from the Adoption updates card on the animal's page: the date, who sent it (the adopter is filled in for you), how it came in, what they said, and their photos. Those photos always say who sent them, when and how, on the Photos page too, where you can now show just the shelter's photos or just the adopters'. An animal returned to the shelter keeps the updates from their time away.",
   "Settings → Security now says what went wrong when an action on a login fails, instead of showing an error code. Deleting someone who has records in the system is refused with a note to archive them instead.",
   "New: recurring jobs. Managers set up the routine that comes round every week or month — the Monday stocktake, ordering medication after it, the monthly worming — under Management → Recurring jobs, with who does it and a preview of the next dates. Each date then appears on that person's My tasks with Done and Skip buttons, stays there as overdue (with how many days late) until someone marks it, and can link straight to the screen it's done on. When someone is off, their dates can be handed to someone else for just those days; when someone leaves, their jobs can be moved in one go. The page also keeps the record of who did each one and when.",
 ];

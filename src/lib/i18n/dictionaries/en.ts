@@ -2825,6 +2825,7 @@ const en = {
         procedures: "Procedures",
         "blood-tests": "Blood Tests",
         diet: "Diet",
+        "adoption-updates": "Adoption updates",
       },
       backTo: (name: string) => `← Back to ${name}`,
       empty: {
@@ -3237,6 +3238,84 @@ const en = {
     },
     errors: {
       notAuthorized: "Not authorized to manage attachments.",
+    },
+    filter: {
+      label: "Show photos",
+      all: (n: number) => `All (${n})`,
+      shelter: (n: number) => `Taken by the shelter (${n})`,
+      adopters: (n: number) => `Sent by adopters (${n})`,
+    },
+  },
+
+  adoptionUpdates: {
+    title: "Adoption updates",
+    addUpdate: "Add update",
+    noneYet: "No news from the adopter yet",
+    latest: (date: string, channel: string) => `Latest ${date} · ${channel}`,
+    channels: {
+      line: "LINE",
+      facebook: "Facebook",
+      email: "Email",
+      visit: "Visit",
+    },
+    /** Under every photo an adopter sent, wherever it is shown. */
+    provenance: (sender: string | null, date: string, channel: string) =>
+      `Sent by ${sender ?? "the adopter"} · ${date} · ${channel}`,
+    seeUpdate: "See the update",
+    sentBy: (name: string) => `Sent by ${name}`,
+    senderUnknown: "Sender not recorded",
+    empty: "No updates yet. When the adopter sends news or photos, add it here so it stays on the record.",
+    neverAdoptedEmpty: "Updates can be added once this resident has been adopted.",
+    notAdoptedNow:
+      "This resident is not with an adopter now. These updates are from their time away and stay on the record.",
+    backToUpdates: (name: string) => `← Back to ${name}'s adoption updates`,
+    newTitle: (name: string) => `Add an update about ${name}`,
+    editTitle: (name: string) => `Update about ${name}`,
+    formSubtitle:
+      "News from the adopter: when it came, who sent it, how, and any photos. Photos are saved to the resident's Adoption updates folder in Drive and always show who sent them.",
+    editOrAddPhotos: "Edit / add photos",
+    deleteConfirm: (photos: number) =>
+      photos === 0
+        ? "Delete this update?"
+        : photos === 1
+          ? "Delete this update and its photo?"
+          : `Delete this update and its ${photos} photos?`,
+    confirmDelete: "Delete",
+    deleting: "Deleting…",
+    form: {
+      receivedOn: "Date received",
+      sender: "Sent by",
+      noSender: "Not recorded",
+      adoptersGroup: "Adopted by",
+      otherContactsGroup: "Other contacts",
+      archivedSender: "(archived contact)",
+      senderHint: "The adopter is chosen for you. Change it if someone else in the family sent it.",
+      channel: "Came in by",
+      note: "What they said",
+      notePlaceholder: "Settling in well, sleeps on the sofa, has a new friend next door…",
+      photos: "Photos",
+      addMorePhotos: "Add more photos",
+      photosHint: "Optional. You can pick several at once; each is tagged with this update.",
+      fileTooLarge: "Larger than 15 MB — choose a smaller copy.",
+      photosFailed: (n: number) =>
+        n === 1
+          ? "The update is saved, but one photo did not upload. Save again to retry it."
+          : `The update is saved, but ${n} photos did not upload. Save again to retry them.`,
+      savedRetryHint: "The update is saved. Saving again retries any photos that did not upload.",
+      save: "Save update",
+      saveChanges: "Save changes",
+      saving: "Saving…",
+      done: "Done",
+    },
+    errors: {
+      notAuthorized: "Only admin, management and staff can add or change adoption updates.",
+      neverAdopted: "This resident has never been adopted, so there is no adopter to hear from.",
+      dateRequired: "Enter the date the update was received.",
+      dateInFuture: "The date received can't be in the future.",
+      channelRequired: "Choose how the update came in.",
+      notFound: "That update no longer exists — it may have been deleted.",
+      saveFailed: "Couldn't reach the server, so nothing was saved. Check the connection and try again.",
+      deleteFailed: "Couldn't reach the server, so nothing was deleted. Check the connection and try again.",
     },
   },
 
