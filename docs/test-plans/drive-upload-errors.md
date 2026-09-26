@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "Bug: uploading a Shelter Friend logo fails … invalid_grant", its code follow-ups |
 | Branch / worktree | `claude/drive-upload-errors` @ `C:\Development\Animal_Shelter_drive-upload-errors` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3001` |
-| PR | opened from this commit |
+| PR | [#133](https://github.com/lutanbennett/Animal_Shelter_App/pull/133) |
 | Tested by / date | Claude, 2026-09-26 |
 | Carries a migration? | no |
 | Tested at SHA | `1ab97dc` (code; the later commit adds the manual lines and this plan) |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: #133, run 36206629988 — `check` pass (1m41s), `migration-numbers` pass (8s), `test-plan` pass (7s)
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -150,14 +150,14 @@ Automated checks by: Claude (Opus 5.5)  Date: 2026-09-26
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — two items await Lutan
+- [x] The manual list above is empty, or every item in it was checked by a person
 
-Manual verification by: pending: Thai wording and a look at the Settings line and logo message (items 1–2)
+Manual verification by: Lutan Bennett — confirmed in chat ("Looked, all good — merge it"); line written by Claude at their request  Date: 2026-09-26
 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: the PR is opened from this commit
+- [x] Checklist pasted into the PR (in its description)
 - [ ] Handed to the production release manager — n/a: not yet — happens at release time
 
 Result: pass
