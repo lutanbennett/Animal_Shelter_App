@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "Give the public site some life: spring motion on text and content blocks." |
 | Branch / worktree | `claude/spring-motion` @ `C:\Development\Animal_Shelter_spring-motion` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3017` |
-| PR | opened from this branch; linked from the PR description |
+| PR | #153 |
 | Tested by / date | Claude, 2026-09-26 |
 | Carries a migration? | no |
 | Tested at SHA | working tree on `e22d289` (`origin/main` at sync), committed as the feature commit |
@@ -32,7 +32,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three). — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on PR #153: `check`, `migration-numbers` and `test-plan` all pass (run 36237679232)
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -154,9 +154,9 @@ Automated checks by: Claude  Date: 2026-09-26
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — waiting for Lutan
+- [x] The manual list above is empty, or every item in it was checked by a person — all four looked at by Lutan, 2026-09-26
 
-Manual verification by: pending: Lutan to check the feel, reduced motion, JS off and a phone (items 1–4)
+Manual verification by: Lutan — confirmed in chat; line written by Claude at their request  Date: 2026-09-26
 
 ### Result
 
