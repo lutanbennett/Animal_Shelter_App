@@ -16,7 +16,7 @@ Filled from `docs/test-plan-template.md`. Every line is ticked (run and passed),
 | PR | linked from the PR itself |
 | Tested by / date | Claude (System Status session), 2026-09-26 |
 | Carries a migration? | no |
-| Tested at SHA | `bf8619b` (feature commit; `sync` found `origin/main` already merged) |
+| Tested at SHA | `bf8619b` (feature, all browser checks); gates re-run at `413b92c` after syncing `main` (spring-motion) |
 
 ## 1. Scope and risk
 
@@ -27,11 +27,11 @@ Filled from `docs/test-plan-template.md`. Every line is ticked (run and passed),
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly ("Already up to date."), and it pushed the branch
-- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Closing lines as printed:
+- [x] `node scripts/worktree.mjs sync` — first run "Already up to date."; the second merged spring-motion with one conflict in `src/lib/releases.ts` (both appended to `unreleased`), resolved by keeping both lines in `413b92c`
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`, at `bf8619b` and again at `413b92c`. Closing lines of the second run as printed:
 
 ```
-=== gates: build exited 0 after 346s
+=== gates: build exited 0 after 157s
 
 gates: typecheck=0 lint=0 build=0
 ```
@@ -86,7 +86,7 @@ gates: typecheck=0 lint=0 build=0
 
 - [x] The pages nearest the change still work: `/admin` (Settings grid, with the Drive line above it and the new tile), `/privacy` (new sentence and date, en), `/manual`
 - [x] Shared files checked from a second page by loading it: `en.ts` / `th.ts` via `/privacy` and `/admin` in English and the status page in Thai; `manual/en.ts` via `/manual`; `apply-migrations.mjs` via `--status` against dev (unchanged report)
-- [x] Nothing merged from `main` during `sync` was broken by this branch — `sync` merged nothing ("Already up to date.")
+- [x] Nothing merged from `main` during `sync` was broken by this branch: after merging spring-motion, gates passed again at `413b92c`; its `/privacy` page change and this branch's privacy paragraph merged without conflict
 
 ## 7. Documentation
 
