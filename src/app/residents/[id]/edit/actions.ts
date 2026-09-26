@@ -5,7 +5,12 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { RESIDENT_SIZES, type ResidentSize } from "@/lib/i18n/enum-labels";
-import { readAdoptionProfile } from "@/lib/residents/adoption-profile";
+import {
+  HOOK_LINE_MAX,
+  IDEAL_HOME_MAX,
+  readAdoptionCopy,
+  readAdoptionProfile,
+} from "@/lib/residents/adoption-profile";
 import { parseBloodTestInterval } from "@/lib/residents/blood-test-interval";
 import { estimatedAgeNow, todayIso } from "@/lib/format";
 import { moveResidentToEnclosure } from "@/lib/placements/move";
@@ -115,6 +120,16 @@ export async function updateResident(
     return { error: t.residents.new.errors.sizeRequired };
   }
 
+  const adoptionCopy = readAdoptionCopy(formData);
+  if ("tooLong" in adoptionCopy) {
+    return {
+      error:
+        adoptionCopy.tooLong === "hookLine"
+          ? t.residents.edit.errors.hookLineTooLong(HOOK_LINE_MAX)
+          : t.residents.edit.errors.idealHomeTooLong(IDEAL_HOME_MAX),
+    };
+  }
+
   const bloodTestIntervalMonths = parseBloodTestInterval(
     str(formData, "bloodTestIntervalMonths"),
   );
@@ -142,6 +157,7 @@ export async function updateResident(
       is_public_visible: readyForAdoption,
       blood_test_interval_months: bloodTestIntervalMonths,
       ...readAdoptionProfile(formData),
+      ...adoptionCopy,
     })
     .eq("id", residentId)
     .select("id")
