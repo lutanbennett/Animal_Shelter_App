@@ -22,7 +22,7 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: `Already up to date.`
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: `Already up to date.` before the work. After the PR opened, main gained #133 (Drive failure messages, `ced8216`). The second sync conflicted only in `src/lib/releases.ts`, where both PRs added an `unreleased` line, and both lines were kept. #133 carries no migration and does not call `is_known_drive_file`, `record_stocktake` or `is_standard` (grep of `src/`). CI re-runs the three gates on the merged tree
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Run at `1a9d4ee`; closing lines as printed:
 
   ```
@@ -94,7 +94,7 @@
 
 - [x] The pages nearest the change still work (list the ones checked). The photo proxy, signed out, on `next dev` port 3003 against dev after `0089`: a public resident photo `200 image/jpeg` (twice), and a blood-test/procedure attachment `404 application/json` (twice). `check-public-views.mjs` exited 0 with 113 `ok` lines, including `is_known_drive_file(): anon EXECUTE is refused — HTTP 401`, `is_public_drive_file(): anon can EXECUTE — HTTP 200`, `is_public_drive_file(): yes for a public resident photo — true`, `is_public_drive_file(): no for a blood-test/procedure file — false`. `check-public-drive-file.mjs` (calls `is_known_drive_file` as the owner) and `check-app-access-gate.mjs` both ended `HARNESS-OK`. `test.lannacare.org` could not show this: it sends every signed-out request to `/login` (307)
 - [ ] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a second, unrelated page — by loading that page, not by reading the file — n/a: no shared runtime file touched. `releases.ts` gained one string in `unreleased`, covered by typecheck and build
-- [x] Nothing merged from `main` during `sync` was broken by this branch: `sync` merged nothing (`Already up to date.`)
+- [x] Nothing merged from `main` during `sync` was broken by this branch: the one merge brought in #133, which touches Drive uploads and the admin page. This branch changes no runtime code, and none of #133 calls the three objects changed here
 
 ## 7. Documentation
 
