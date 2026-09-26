@@ -47,6 +47,8 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { ENVIRONMENTS, loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
 import { MIGRATION_NAME, MIGRATIONS_DIR, parseLsTree } from "./lib/migrations.mjs";
+// Shared with Settings → System status, so the page and --drift agree.
+import { migrationDrift } from "../src/lib/migration-drift.ts";
 
 // `--drift <env>` is shorthand for `--drift --env <env>`.
 const argv = process.argv.slice(2);
@@ -193,8 +195,7 @@ const applied = new Set(
  * this is what gets pasted into chat and PRs.
  */
 function driftReport() {
-  const missingFile = [...applied].filter((name) => !mainBlobs.has(name)).sort();
-  const unapplied = mainFiles.filter((name) => !applied.has(name));
+  const { unapplied, missingFile } = migrationDrift(applied, mainFiles);
   const stale = fetched.ok ? "" : " (as of the last fetch — git fetch failed just now)";
   console.log(`Against origin/main ${mainSha}${stale}: ${mainFiles.length} file(s), ${applied.size} applied row(s).`);
   console.log(`  On origin/main, not applied here: ${unapplied.length}`);

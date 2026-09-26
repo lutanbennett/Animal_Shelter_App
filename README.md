@@ -552,6 +552,18 @@ One-time setup on the machine that runs it:
    the last run and its result (0 is success); `-Remove` unregisters it.
    The task runs only while Lutan is logged on, so a laptop that stays
    shut for a fortnight simply has no backup that fortnight.
+   **Settings → System status** makes that visible: its Weekly backup tile
+   reads the newest `lannacare-production-*.dump` in `Backups/` and turns
+   amber after 8 days, red after 15. The Drive file's own creation time is
+   the record of the run, so nothing else needs storing.
+
+**System status** (`/admin/status`, admins only) runs every health check
+server-side with a timeout and caches the results for a minute; the checks
+are small functions in `src/lib/status/`. Its visitor count needs two
+optional Worker secrets, pushed by `deploy.mjs --secrets` when present in
+the environment's file: `CLOUDFLARE_ANALYTICS_TOKEN` (a Cloudflare API
+token with Zone → Analytics → Read on lannacare.org) and
+`CLOUDFLARE_ZONE_ID`. Without them that tile is grey.
 
 **Restoring** into a Supabase project (a scratch one, or production after a
 disaster) — untested until the backlog's restore rehearsal is done:
