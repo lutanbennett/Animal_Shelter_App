@@ -2,7 +2,7 @@ import { Coins, HeartHandshake, LayoutDashboard, Languages, Scale } from "lucide
 import { requireManagementUser } from "@/lib/auth/require-management";
 import { getT } from "@/lib/i18n/get-t";
 import { SectionTiles, type SectionTile } from "@/components/SectionTiles";
-import { CONTACT_ICONS, SECTION_ICONS, VET_ICONS } from "@/components/hub-icons";
+import { CONTACT_ICONS, NAV_ICONS, SECTION_ICONS, VET_ICONS } from "@/components/hub-icons";
 
 /**
  * Management → the group's own landing page: a tile per page the Management
@@ -57,6 +57,12 @@ export default async function ManagementPage() {
       description: t.management.landing.tiles.diets,
       icon: SECTION_ICONS.diet,
       phoneNote: t.largerScreen.tileLabel,
+    },
+    {
+      href: "/management/recurring-jobs",
+      label: t.nav.recurringJobs,
+      description: t.management.landing.tiles.recurringJobs,
+      icon: NAV_ICONS.recurringJobs,
     },
     {
       href: "/management/stock-usage",

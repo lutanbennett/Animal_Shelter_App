@@ -5,6 +5,8 @@ import { canStocktake } from "@/lib/management/stocktake";
 import { todayIso } from "@/lib/format";
 import { canReadMaintenance } from "@/lib/maintenance/queries";
 import { countMyUrgentMaintenance } from "@/lib/my-tasks/maintenance";
+import { countMyUrgentRecurring } from "@/lib/my-tasks/recurring";
+import { canReadRecurringJobs } from "@/lib/recurring-jobs/access";
 import { NavLinks } from "./NavLinks";
 
 export async function NavPane() {
@@ -22,9 +24,12 @@ export async function NavPane() {
   if (!hasAppAccess(role)) return null;
 
   // The My tasks badge: what is due today or overdue across its sources.
-  const urgentCount = canReadMaintenance(role)
-    ? await countMyUrgentMaintenance(supabase, user.id, todayIso())
-    : 0;
+  const today = todayIso();
+  const [maintenanceCount, recurringCount] = await Promise.all([
+    canReadMaintenance(role) ? countMyUrgentMaintenance(supabase, user.id, today) : 0,
+    canReadRecurringJobs(role) ? countMyUrgentRecurring(supabase, user.id, today) : 0,
+  ]);
+  const urgentCount = maintenanceCount + recurringCount;
 
   return (
     <NavLinks
