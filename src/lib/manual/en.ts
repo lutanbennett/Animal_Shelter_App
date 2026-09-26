@@ -925,6 +925,7 @@ const manual: Manual = {
             "To count everything at once, use the Stocktake link at the top of the page (see Doing a stocktake). To correct one item, tap Count on the row and enter what is in the cupboard, in the medication's own unit (tablets, ml…). In stock shows that figure and how long ago it was counted; saving the same figure again records a fresh count. Leave it blank for an item nobody has counted — it reads Not counted, which is different from 0, Out of stock.",
             "Days of stock is worked out from the last count and the Next 30 days figure: what has probably been used since the count is taken off, and what is left is divided by the daily rate. An item with nothing due in the next 30 days doesn't run out. Probably used up since the count means the forecast has used the whole count — count it again.",
             "To be warned in time, tap Edit and enter the supplier's reorder lead time in days. When the days of stock falls to that figure or below, the row is flagged Reorder. Leave it blank and the item is never flagged.",
+            "When stock arrives, use the Record a delivery link at the top of the page (see Recording a delivery). A delivery doesn't change In stock — the next count does.",
           ],
           screenshot: {
             src: "/manual/management-medications.png",
@@ -944,6 +945,7 @@ const manual: Manual = {
             "To count everything at once, use the Stocktake link at the top of the page (see Doing a stocktake). To correct one item, tap Count on the row and enter what is in the cupboard, in the diet's own unit (g, cans…). In stock shows that figure and how long ago it was counted; saving the same figure again records a fresh count. Leave it blank for an item nobody has counted — it reads Not counted, which is different from 0, Out of stock.",
             "Days of stock is worked out from the last count and the Next 30 days figure: what has probably been used since the count is taken off, and what is left is divided by the daily rate. An item with nothing due in the next 30 days doesn't run out. Probably used up since the count means the forecast has used the whole count — count it again.",
             "To be warned in time, tap Edit and enter the supplier's reorder lead time in days. When the days of stock falls to that figure or below, the row is flagged Reorder. Leave it blank and the item is never flagged.",
+            "When stock arrives, use the Record a delivery link at the top of the page (see Recording a delivery). A delivery doesn't change In stock — the next count does.",
           ],
           screenshot: {
             src: "/manual/management-diets.png",
@@ -964,6 +966,7 @@ const manual: Manual = {
             "If the figure hasn't changed, tap Same as last time instead of retyping it. That records a fresh count of the same figure. Typing a number turns the tick off, and tapping the tick clears what you typed, so a row is always one or the other.",
             "Tap Review and save. The summary lists every item you counted, old → new, with changes of half or more marked Big change and shown first — check those before saving. Tap Save to save the whole sheet in one go: either every count is saved or none is.",
             "If you try to leave the page with counts that aren't saved, you are asked first.",
+            "Staff and managers also see Record a delivery at the top of the page, for stock that has just arrived (see Recording a delivery).",
           ],
           callouts: [
             {
@@ -978,18 +981,40 @@ const manual: Manual = {
           roles: ["admin", "management"],
           path: "Management → Stock between counts",
           intro:
-            "Sets how much each count went down or up between two stocktakes beside what the prescriptions and diets planned for the same dates, so that big gaps stand out. It is not a record of what was actually used — see the warning below.",
+            "Shows what each medication and food was used between two stocktakes, beside what the prescriptions and diets planned for the same dates, so that big gaps stand out. Used is the earlier count, plus the deliveries recorded in between, minus the later count — so it is only as good as the delivery records (see the warning below).",
           steps: [
             "Open it from the Management page, or from the link at the top of Management → Medications or → Diets. It needs an item to have been counted in stocktakes on two different days; until then the item isn't shown.",
             "By default each item's latest count is compared with its last count on an earlier day. A recount on the same day replaces the earlier one rather than being compared with it. To compare two particular stocktakes instead, pick them under Earlier stocktake and Later stocktake and tap Compare; Back to last two counts returns to the default.",
+            "Deliveries recorded is what was recorded under Deliveries between the two counts, and how many deliveries that was. A delivery on the day of a stocktake counts towards the stocktake it was on the shelf for — the delivery form asks which.",
             "Planned for these dates is what the prescriptions and diets in the app say would be used from the day of the earlier count up to the day before the later one — the same figures as the forecast columns, worked out for those past dates.",
-            "Rows whose fall is more than a quarter away from the plan are marked and listed first. At least N more went than planned means that much more left the cupboard than the plan accounts for, even if nothing arrived. Fell N less than planned means either not everything planned was given or eaten, or stock arrived that nobody logged — the counts can't tell which. A count that went up means stock arrived; how much was used over those dates can't be worked out.",
+            "Rows where Used is more than a quarter away from the plan are marked and listed first. Used N more than planned: check the counts, doses given without a prescription, spillage and waste — and that no delivery was recorded twice or too large. Used N less than planned: either not everything planned was given or eaten, or a delivery arrived that nobody recorded. At least N arrived that wasn't recorded means the later count is higher than the earlier count plus every delivery recorded — record the missing delivery or check the counts.",
             "A row can carry a note. The plan leaves out residents who have since left means an animal adopted, fostered or who died since was on this item during those dates, so the plan reads low and a \"more than planned\" may be them. Changed by hand means the count was edited on the Medications or Diets page after the stocktake; only stocktakes are compared.",
           ],
           callouts: [
             {
               kind: "warning",
-              text: "Deliveries aren't recorded in the app, so a gap is a reason to look, not proof of anything. A miscount, a dose given but not on a prescription, spillage, or a diet that no longer matches what an animal eats will all show up here.",
+              text: "Used assumes every delivery was recorded. A delivery nobody recorded makes usage look lower than it really was, so a \"less than planned\" may just be a missing delivery. The box at the top of the page says since when deliveries have been recorded; before that date every figure assumes nothing arrived. A gap is a reason to look, not proof of anything.",
+            },
+          ],
+        },
+        {
+          id: "deliveries",
+          title: "Recording a delivery",
+          roles: ["admin", "management", "staff"],
+          path: "Deliveries",
+          intro:
+            "Record each medication or food as it arrives, so Stock between counts can work out what was actually used. Recording a delivery doesn't change the stock count — the next stocktake does.",
+          steps: [
+            "Open it from the Record a delivery link at the top of the Stocktake page, Management → Medications or → Diets, or Stock between counts.",
+            "Pick Medication or Food, then the item. Enter the quantity in the item's own unit — tablets, ml, g — not boxes or bags. If it came in packs, fill in Came in packs? (2 × 50, say) and the quantity is worked out for you.",
+            "Arrived on is today unless you change it; a delivery can't be dated in the future. If the item was counted in a stocktake that day, you are asked whether the delivery was already on the shelf when it was counted, so it is set against the right stocktake.",
+            "Supplier (a Vendor from Contacts), the total cost in baht (0 for a donation) and a note are optional. Tap Record delivery. The day and supplier stay filled in, so the rest of the same delivery can be entered one item after another.",
+            "Recent deliveries lists the latest ones with who recorded them. A delivery typed wrong is deleted and recorded again.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "Volunteers can do a stocktake but can't record deliveries.",
             },
           ],
         },
