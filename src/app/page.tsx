@@ -1,24 +1,23 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { HandHeart, Heart, Home } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { localizedField } from "@/lib/translations/localize";
 import type { PublicTranslations } from "@/lib/translations/types";
-import { speciesLabel } from "@/lib/i18n/enum-labels";
-import { loadPublicProjects } from "@/lib/projects/public";
+import { sexLabel, speciesLabel } from "@/lib/i18n/enum-labels";
+import { formatAge } from "@/lib/format";
 import { friendAnchor } from "@/lib/shelter-friends/friends";
 import { loadPublicFriends } from "@/lib/shelter-friends/public";
 import { loadSiteContent, pairedText } from "@/lib/site/content";
 import { loadSitePages, sitePageText } from "@/lib/site/pages";
 import { bodyLead } from "@/lib/site/body";
+import { impactStats, SHELTER_STATS_COLUMNS, type ShelterStats } from "@/lib/site/impact";
 import { SiteBody } from "@/components/SiteBody";
 import { PublicHeader } from "./adopt/PublicHeader";
 import { PublicFooter } from "./adopt/PublicFooter";
-import { ProjectCard } from "./our-work/ProjectCard";
 import { LockedLanding } from "./LockedLanding";
 import { isPublicSiteLocked } from "@/lib/public-site";
 
@@ -28,6 +27,10 @@ type FeaturedResident = {
   name: string;
   species: string | null;
   breed: string | null;
+  sex: string | null;
+  estimated_age_years: number | null;
+  age_estimated_on: string | null;
+  is_desexed: boolean | null;
   ready_for_adoption: boolean;
   bio: string | null;
   profile_photo_drive_file_id: string | null;
@@ -36,14 +39,15 @@ type FeaturedResident = {
 
 type GalleryPhoto = { id: string; drive_file_id: string; alt: string };
 
-/** Counts only — public_shelter_stats (0039, 0062) is granted to anon. */
-type ShelterStats = {
-  in_care: number;
-  in_foster: number;
-  in_treatment: number;
-  adopted_last_7_days: number;
-  adopted_this_year: number;
-};
+/** The mockup's band holds five logos and the "Your business here?" tile. */
+const FRIENDS_SHOWN = 5;
+
+/** Every section lines up with the header's edges (PublicHeader.tsx). */
+const wrap = "mx-auto w-full max-w-[1440px] px-4 lg:px-8 xl:px-16";
+const eyebrow = "text-sm font-bold uppercase tracking-[0.08em] text-site-accent";
+const sectionHeading = "font-display text-3xl font-bold text-site-ink lg:text-[38px]";
+const textLink =
+  "inline-flex min-h-11 items-center font-bold underline underline-offset-4 hover:text-site-action-hover";
 
 /**
  * Open Graph for the home page: the tagline as the description and the
@@ -105,31 +109,38 @@ async function showsLockedLanding(
   return !user;
 }
 
+/**
+ * The homepage, built on Lanna Care's mockup (docs/design/homepage-desktop.png,
+ * part 2 of the redesign): hero, impact band, Shelter Friends, four ways to
+ * help, then Pet of the week beside Our story. Every section that has no data
+ * behind it — no hero photo, no stats, no published Friend, no featured
+ * resident, no gallery — drops out rather than showing an empty frame.
+ * Deviations from the mockup are in docs/decisions.md (2026-09-26).
+ */
 export default async function WelcomePage() {
   const supabase = await createClient();
   if (await showsLockedLanding(supabase)) return <LockedLanding />;
   const { t, locale } = await getT();
 
-  const [content, pages, photosResult, statsResult, recentWork, friendsResult] = await Promise.all([
+  const [content, pages, photosResult, statsResult, friendsResult] = await Promise.all([
     loadSiteContent(supabase),
     loadSitePages(supabase),
     supabase
       .from("site_content_photos")
       .select("id, drive_file_id, alt")
       .order("sort_order")
+      .limit(3)
       .returns<GalleryPhoto[]>(),
     supabase
       .from("public_shelter_stats")
-      .select("in_care, in_foster, in_treatment, adopted_last_7_days, adopted_this_year")
+      .select(SHELTER_STATS_COLUMNS)
       .limit(1)
       .returns<ShelterStats[]>(),
-    // "What we do": the three newest published project stories (0042).
-    loadPublicProjects(supabase, 3),
-    // The Shelter Friends strip (0076) — the public view only.
+    // The Shelter Friends band (0076) — the public view only.
     loadPublicFriends(supabase),
   ]);
-  // No friends (or a failed query): no strip, rather than an empty thank-you.
-  const friends = friendsResult.friends;
+  // No friends (or a failed query): no band, rather than an empty thank-you.
+  const friends = friendsResult.friends.slice(0, FRIENDS_SHOWN);
 
   const gallery = photosResult.data ?? [];
   const tagline = pairedText(locale, content?.tagline, content?.tagline_th);
@@ -146,347 +157,274 @@ export default async function WelcomePage() {
     const { data } = await supabase
       .from("public_resident_profiles")
       .select(
-        "id, name, species, breed, ready_for_adoption, bio, profile_photo_drive_file_id, translations",
+        "id, name, species, breed, sex, estimated_age_years, age_estimated_on, is_desexed, ready_for_adoption, bio, profile_photo_drive_file_id, translations",
       )
       .eq("id", content.featured_resident_id)
       .limit(1)
       .returns<FeaturedResident[]>();
     featured = data?.[0] ?? null;
   }
-  const featuredIntro = localizedField(locale, featured?.bio, featured?.translations, "bio")
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .find(Boolean);
-  // The strip is a nice-to-have: a failed query drops it rather than the page.
-  const stats = statsResult.data?.[0] ?? null;
-  const statTiles = stats
+  // The mockup's one-line hook: the bio's first paragraph, cut to a line or two.
+  const featuredHook = bodyLead(
+    localizedField(locale, featured?.bio, featured?.translations, "bio"),
+    160,
+  );
+  const featuredFacts = featured
     ? [
-        {
-          value: stats.in_care,
-          label: t.home.stats.inCare,
-          detail: t.home.stats.inCareDetail,
-        },
-        {
-          value: stats.in_foster,
-          label: t.home.stats.inFoster,
-          detail: t.home.stats.inFosterDetail,
-        },
-        {
-          value: stats.adopted_this_year,
-          label: t.home.stats.adoptedThisYear,
-          detail: t.home.stats.adoptedThisYearDetail(stats.adopted_last_7_days),
-        },
-        {
-          value: stats.in_treatment,
-          label: t.home.stats.inVetCare,
-          detail: t.home.stats.inVetCareDetail,
-        },
-      ]
+        sexLabel(t, featured.sex),
+        featured.breed || speciesLabel(t, featured.species),
+        featured.estimated_age_years != null &&
+          formatAge(t, featured.estimated_age_years, featured.age_estimated_on),
+        featured.is_desexed === true && t.home.featured.desexed,
+      ].filter(Boolean)
     : [];
 
-  // "How you can help": one card per way in, each leading with the first
-  // paragraph of its page so the copy is the admin's, not the app's.
-  const helpCards = (
-    [
-      { slug: "foster", href: "/foster", Icon: Home, label: t.adopt.fosterNav },
-      { slug: "volunteer", href: "/volunteer", Icon: HandHeart, label: t.adopt.volunteerNav },
-      { slug: "donate", href: "/donate", Icon: Heart, label: t.adopt.donateNav },
-    ] as const
-  ).map((card) => {
-    const page = pages.get(card.slug);
-    const text = page ? sitePageText(page, locale) : null;
-    return {
-      ...card,
-      title: text?.title || card.label,
-      lead: bodyLead(text?.body, 160),
-    };
-  });
+  // The strip is a nice-to-have: a failed query drops it rather than the page.
+  const stats = impactStats(t, statsResult.data?.[0] ?? null);
+
+  const h = t.home.howToHelp;
+  // "Sponsor a resident" goes to /donate until the sponsor flow exists, as
+  // it does in the header (docs/decisions.md, part 1).
+  const helpCards = [
+    { key: "adopt", href: "/adopt", ...h.adopt },
+    { key: "sponsor", href: "/donate", ...h.sponsor },
+    { key: "foster", href: "/foster", ...h.foster },
+    { key: "volunteer", href: "/volunteer", ...h.volunteer },
+  ];
+  const sf = t.shelterFriends.homeStrip;
 
   return (
-    <main className="flex flex-1 flex-col">
+    <main className="flex flex-1 flex-col font-site text-site-ink">
       <PublicHeader current="home" />
 
-      <section className="relative flex min-h-[26rem] items-end overflow-hidden bg-surface">
-        {content?.hero_drive_file_id && (
-          <Image
-            src={driveImageUrl(content.hero_drive_file_id)}
-            alt={heroAlt || t.header.appName}
-            fill
-            priority
-            className="object-cover"
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
-        <div className="relative flex flex-col gap-4 px-6 py-10 sm:px-12">
-          <h1 className="max-w-2xl text-3xl font-semibold text-white sm:text-4xl">
-            {t.home.welcomeHeading}
+      <section
+        className={`${wrap} grid items-center gap-10 py-12 lg:pb-20 lg:pt-[72px] ${
+          content?.hero_drive_file_id ? "lg:grid-cols-2" : ""
+        }`}
+      >
+        <div className="flex flex-col gap-6">
+          <p className={eyebrow}>{t.home.eyebrow}</p>
+          <h1 className="max-w-2xl font-display text-[40px] font-bold leading-[1.05] text-site-ink sm:text-5xl xl:text-[60px]">
+            {t.home.heroHeading}
           </h1>
-          {tagline && (
-            <p className="max-w-xl text-base text-white/90 sm:text-lg">{tagline}</p>
-          )}
-          <div className="flex flex-wrap gap-3 pt-2">
+          <p className="max-w-xl text-lg leading-relaxed text-site-ink-soft lg:text-xl">
+            {tagline || t.home.heroLead}
+          </p>
+          <div className="flex flex-wrap gap-4 pt-2">
             <Link
               href="/adopt"
-              className="rounded bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
+              className="flex h-14 items-center rounded-full bg-site-ink px-[30px] text-lg font-bold text-site-paper hover:bg-site-ink-soft"
             >
-              {t.home.browseGuest}
+              {t.home.meetAnimals}
             </Link>
+            {/* /donate until the /donate item gives monthly giving a flow of
+                its own (docs/decisions.md, 2026-09-26). */}
             <Link
               href="/donate"
-              className="rounded border border-white/60 bg-black/20 px-5 py-3 text-sm font-semibold text-white backdrop-blur hover:bg-black/40"
+              className="flex h-14 items-center rounded-full border-2 border-site-action px-[30px] text-lg font-bold text-site-action hover:border-site-action-hover hover:text-site-action-hover"
             >
-              {t.adopt.donateNav}
+              {t.home.giveMonthly}
             </Link>
           </div>
         </div>
+        {content?.hero_drive_file_id && (
+          <div className="relative aspect-[4/3] overflow-hidden rounded-[20px] bg-site-sand lg:aspect-auto lg:h-[460px]">
+            <Image
+              src={driveImageUrl(content.hero_drive_file_id)}
+              alt={heroAlt || t.header.appName}
+              fill
+              priority
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              className="object-cover object-[center_40%]"
+            />
+          </div>
+        )}
       </section>
 
-      {statTiles.length > 0 && (
-        <section
-          aria-label={t.home.stats.heading}
-          className="border-b border-border bg-surface"
-        >
-          <div className="mx-auto grid w-full max-w-5xl grid-cols-1 divide-y divide-border px-6 sm:grid-cols-2 sm:px-12 lg:grid-cols-4 lg:divide-x lg:divide-y-0">
-            {statTiles.map((tile) => (
-              <div
-                key={tile.label}
-                className="flex flex-col gap-1 py-5 lg:px-6 lg:first:pl-0 lg:last:pr-0"
-              >
-                <span className="text-3xl font-semibold tabular-nums text-primary">
-                  {tile.value}
-                </span>
-                <span className="text-sm font-medium text-foreground">
-                  {tile.label}
-                </span>
-                <span className="text-xs text-muted">{tile.detail}</span>
+      {stats.length > 0 && (
+        <section aria-labelledby="impact-heading" className={wrap}>
+          <h2 id="impact-heading" className="sr-only">
+            {t.home.stats.heading}
+          </h2>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-8 rounded-[20px] bg-site-accent px-6 py-8 text-site-on-accent sm:px-10 sm:py-9 lg:grid-cols-4">
+            {stats.map((stat) => (
+              <div key={stat.key} className="flex flex-col-reverse gap-1.5">
+                <dt className="text-base leading-snug">{stat.label}</dt>
+                <dd className="font-display text-4xl font-bold tabular-nums lg:text-[44px]">
+                  {stat.value.toLocaleString(locale === "th" ? "th-TH" : "en-GB")}
+                </dd>
               </div>
             ))}
-          </div>
+          </dl>
         </section>
       )}
 
-      <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-12 sm:px-12">
-        <h2 className="text-2xl font-semibold text-foreground">
-          {storyText?.title || t.home.ourStoryFallback}
-        </h2>
-        <SiteBody body={storyText?.body} size="lg" />
-
-        {gallery.length > 0 && (
-          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-            {gallery.map((photo) => (
-              <div
-                key={photo.id}
-                className="relative aspect-square overflow-hidden rounded-lg border border-border bg-surface"
-              >
-                <Image
-                  src={driveImageUrl(photo.drive_file_id)}
-                  alt={photo.alt}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {featured && (
-          <div
-            role="region"
-            aria-labelledby="featured-heading"
-            className="mt-6 flex flex-col gap-4"
-          >
-            <h3
-              id="featured-heading"
-              className="text-sm font-semibold uppercase tracking-wide text-primary"
-            >
-              {t.home.featured.heading}
-            </h3>
-            <Link
-              href={`/adopt/${featured.id}`}
-              className="group flex flex-col overflow-hidden rounded-lg border border-border bg-surface hover:border-primary sm:flex-row"
-            >
-              <div className="relative aspect-[4/3] w-full shrink-0 bg-background sm:aspect-square sm:w-72">
-                {featured.profile_photo_drive_file_id ? (
-                  <Image
-                    src={driveImageUrl(featured.profile_photo_drive_file_id)}
-                    alt={featured.name}
-                    fill
-                    className="object-cover transition group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-sm text-muted">
-                    {t.home.featured.noPhoto}
-                  </div>
-                )}
-                {featured.ready_for_adoption && (
-                  <span className="absolute left-3 top-3 rounded bg-success px-2 py-1 text-xs font-semibold text-success-foreground">
-                    {t.home.featured.availableForAdoption}
-                  </span>
-                )}
-              </div>
-              <div className="flex flex-1 flex-col gap-3 p-6 sm:p-8">
-                <div className="flex flex-col gap-1">
-                  <p className="text-2xl font-semibold text-foreground group-hover:text-primary">
-                    {t.home.featured.meetName(featured.name)}
-                  </p>
-                  <p className="text-sm text-muted">
-                    {[speciesLabel(t, featured.species), featured.breed]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
-                </div>
-                {featuredIntro && (
-                  <p className="text-base leading-relaxed text-muted">
-                    {featuredIntro}
-                  </p>
-                )}
-                <span className="mt-auto pt-2 text-sm font-semibold text-primary">
-                  {t.home.featured.readMore} &rarr;
-                </span>
-              </div>
-            </Link>
-          </div>
-        )}
-
-        {recentWork.projects.length > 0 && (
-          <div
-            role="region"
-            aria-labelledby="what-we-do-heading"
-            className="mt-6 flex flex-col gap-4"
-          >
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex flex-col gap-1">
-                <h3
-                  id="what-we-do-heading"
-                  className="text-sm font-semibold uppercase tracking-wide text-primary"
-                >
-                  {t.home.whatWeDo.heading}
-                </h3>
-                <p className="max-w-xl text-sm text-muted">
-                  {t.home.whatWeDo.subtitle}
-                </p>
-              </div>
-              <Link
-                href="/our-work"
-                className="shrink-0 text-sm font-semibold text-primary hover:underline"
-              >
-                {t.home.whatWeDo.seeAll} &rarr;
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-              {recentWork.projects.map((project) => (
-                <ProjectCard
-                  key={project.id}
-                  project={project}
-                  locale={locale}
-                  t={t}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div
-          role="region"
-          aria-labelledby="how-to-help-heading"
-          className="mt-6 flex flex-col gap-4"
-        >
-          <div className="flex flex-col gap-1">
-            <h3
-              id="how-to-help-heading"
-              className="text-sm font-semibold uppercase tracking-wide text-primary"
-            >
-              {t.home.howToHelp.heading}
-            </h3>
-            <p className="max-w-xl text-sm text-muted">{t.home.howToHelp.subtitle}</p>
-          </div>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-            {helpCards.map(({ slug, href, Icon, title, lead }) => (
-              <Link
-                key={slug}
-                href={href}
-                className="group flex flex-col gap-3 rounded-lg border border-border bg-surface p-6 hover:border-primary"
-              >
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <Icon className="h-5 w-5" aria-hidden />
-                </span>
-                <span className="text-lg font-semibold text-foreground group-hover:text-primary">
-                  {title}
-                </span>
-                {lead && <p className="text-sm leading-relaxed text-muted">{lead}</p>}
-                <span className="mt-auto pt-1 text-sm font-semibold text-primary">
-                  {t.home.howToHelp.readMore} &rarr;
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {friends.length > 0 && (
-          <div
-            role="region"
-            aria-labelledby="shelter-friends-heading"
-            className="mt-6 flex flex-col gap-4"
-          >
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex flex-col gap-1">
-                <h3
+      {friends.length > 0 && (
+        <section aria-labelledby="shelter-friends-heading" className={`${wrap} pt-14`}>
+          <div className="flex flex-col gap-6 rounded-[20px] bg-site-sand p-6 sm:p-10">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
+              <div className="flex flex-col gap-2">
+                <h2
                   id="shelter-friends-heading"
-                  className="text-sm font-semibold uppercase tracking-wide text-primary"
+                  className="font-display text-[28px] font-bold leading-tight text-site-ink lg:text-[32px]"
                 >
-                  {t.shelterFriends.homeStrip.heading}
-                </h3>
-                <p className="max-w-xl text-sm text-muted">
-                  {t.shelterFriends.homeStrip.subtitle}
+                  {sf.heading}
+                </h2>
+                <p className="max-w-2xl text-[17px] leading-normal text-site-ink-soft">
+                  {sf.subtitle}
                 </p>
               </div>
+              {/* No sign-up form yet: the footer's contact details are how a
+                  business gets in touch (docs/decisions.md, 2026-09-26). */}
               <Link
-                href="/friends"
-                className="shrink-0 text-sm font-semibold text-primary hover:underline"
+                href="#contact"
+                className="flex h-[52px] shrink-0 items-center self-start rounded-full bg-site-ink px-[26px] text-[17px] font-bold text-site-paper hover:bg-site-ink-soft lg:self-auto"
               >
-                {t.shelterFriends.homeStrip.seeAll} &rarr;
+                {sf.become}
               </Link>
             </div>
             {/* A logo where there is one, the name where there isn't — each
                 a way into that friend's card on /friends. */}
-            <ul className="flex flex-wrap items-center gap-3">
+            <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
               {friends.map((friend) => (
                 <li key={friend.id}>
                   <Link
                     href={`/friends#${friendAnchor(friend.id)}`}
                     title={friend.name}
-                    className="flex h-16 min-w-16 items-center justify-center rounded-lg border border-border bg-white px-3 hover:border-primary"
+                    className="flex h-24 items-center justify-center rounded-[14px] border border-site-line bg-site-paper p-2 text-center text-sm font-semibold text-site-ink-muted hover:border-site-line-strong"
                   >
                     {friend.logo_drive_file_id ? (
                       <Image
                         src={driveImageUrl(friend.logo_drive_file_id)}
                         alt={friend.name}
-                        width={96}
-                        height={48}
-                        className="h-12 w-auto max-w-24 object-contain"
+                        width={144}
+                        height={72}
+                        className="h-[72px] w-auto max-w-full object-contain"
                       />
                     ) : (
-                      <span className="text-sm font-semibold text-neutral-700">{friend.name}</span>
+                      friend.name
                     )}
                   </Link>
                 </li>
               ))}
+              <li>
+                {/* action-hover, not action: terracotta text on the sand
+                    band is 4.46:1, just under AA (decisions.md, part 1). */}
+                <Link
+                  href="#contact"
+                  className="flex h-24 items-center justify-center rounded-[14px] border-2 border-dashed border-site-action p-2 text-center text-[15px] font-bold text-site-action-hover hover:bg-site-paper"
+                >
+                  {sf.yourBusiness}
+                </Link>
+              </li>
             </ul>
+            <Link href="/friends" className={`${textLink} self-start text-site-action-hover`}>
+              {sf.seeAll} &rarr;
+            </Link>
           </div>
+        </section>
+      )}
+
+      <section
+        aria-labelledby="how-to-help-heading"
+        className={`${wrap} flex flex-col gap-7 pt-16 lg:pt-[72px]`}
+      >
+        <div className="flex flex-col gap-2">
+          <h2 id="how-to-help-heading" className={sectionHeading}>
+            {h.heading}
+          </h2>
+          <p className="text-lg text-site-ink-soft">{h.subtitle}</p>
+        </div>
+        <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {helpCards.map((card) => (
+            <li key={card.key} className="flex">
+              <Link
+                href={card.href}
+                className="group flex flex-1 flex-col gap-2.5 rounded-2xl border border-site-line bg-site-paper p-7 hover:border-site-line-strong"
+              >
+                <span className="font-display text-2xl font-bold text-site-ink">{card.title}</span>
+                <span className="text-base leading-normal text-site-ink-soft">{card.body}</span>
+                <span className="mt-auto pt-1.5 font-bold text-site-action group-hover:text-site-action-hover group-hover:underline">
+                  {card.cta} &rarr;
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section
+        className={`${wrap} grid gap-10 py-16 lg:pb-20 lg:pt-[72px] ${
+          featured ? "lg:grid-cols-2" : ""
+        }`}
+      >
+        {featured && (
+          <Link
+            href={`/adopt/${featured.id}`}
+            aria-labelledby="featured-name"
+            className="group flex flex-col self-start overflow-hidden rounded-[20px] border border-site-line bg-site-paper hover:border-site-line-strong"
+          >
+            <div className="relative aspect-[4/3] w-full bg-site-sand sm:aspect-auto sm:h-[280px]">
+              {featured.profile_photo_drive_file_id ? (
+                <Image
+                  src={driveImageUrl(featured.profile_photo_drive_file_id)}
+                  alt={featured.name}
+                  fill
+                  sizes="(min-width: 1024px) 50vw, 100vw"
+                  className="object-cover object-[center_30%]"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center text-site-ink-muted">
+                  {t.home.featured.noPhoto}
+                </div>
+              )}
+              {featured.ready_for_adoption && (
+                <span className="absolute left-4 top-4 rounded-full bg-site-accent px-3 py-1 text-sm font-bold text-site-on-accent">
+                  {t.home.featured.availableForAdoption}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-col gap-2.5 p-7">
+              <p className={eyebrow}>{t.home.featured.heading}</p>
+              <h2 id="featured-name" className="font-display text-[32px] font-bold leading-tight text-site-ink">
+                {featured.name}
+              </h2>
+              {featuredFacts.length > 0 && (
+                <p className="text-base text-site-ink-soft">{featuredFacts.join(" · ")}</p>
+              )}
+              {featuredHook && (
+                <p className="text-[17px] leading-relaxed text-site-ink">{featuredHook}</p>
+              )}
+              <span className="flex min-h-11 items-center font-bold text-site-action underline underline-offset-4 group-hover:text-site-action-hover">
+                {t.home.featured.readStory(featured.name)} &rarr;
+              </span>
+            </div>
+          </Link>
         )}
 
-        <div className="mt-6 flex flex-col items-start gap-3 rounded-lg border border-border bg-surface p-6 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-foreground">
-              {t.home.readyHeading}
-            </h3>
-            <p className="text-sm text-muted">{t.home.readySubtitle}</p>
-          </div>
-          <Link
-            href="/adopt"
-            className="shrink-0 rounded bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
-          >
-            {t.home.browseResidents}
+        <div className={`flex flex-col gap-6 ${featured ? "" : "max-w-3xl"}`}>
+          <h2 className={sectionHeading}>{storyText?.title || t.home.ourStoryFallback}</h2>
+          <SiteBody body={storyText?.body} size="lg" />
+          {gallery.length > 0 && (
+            <div className="grid grid-cols-3 gap-3">
+              {gallery.map((photo) => (
+                <div
+                  key={photo.id}
+                  className="relative aspect-square overflow-hidden rounded-xl bg-site-sand sm:aspect-auto sm:h-[150px]"
+                >
+                  <Image
+                    src={driveImageUrl(photo.drive_file_id)}
+                    alt={photo.alt}
+                    fill
+                    sizes="(min-width: 1024px) 16vw, 33vw"
+                    className="object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+          <Link href="/our-work" className={`${textLink} self-start text-site-action`}>
+            {t.home.seeOurWork} &rarr;
           </Link>
         </div>
       </section>
