@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Truck } from "lucide-react";
 import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -11,6 +12,7 @@ import {
   editedSince,
   latestPairs,
   planWindow,
+  receivedBetween,
   shelterDate,
   readUsage,
   standsOut,
@@ -18,15 +20,18 @@ import {
   stocktakeSessions,
   type Assignment,
   type CountPair,
+  type Between,
   type CountRow,
+  type IntervalRow,
   type UsageReading,
 } from "@/lib/management/stock-usage";
 
 /**
- * Management → Stock between counts. Each item's count history (0093)
- * against the plan (medication_forecast 0044, diet_forecast 0051) for the
- * same dates. What the comparison can honestly say — and why nothing here
- * is called "actual usage" — is in src/lib/management/stock-usage.ts.
+ * Management → Stock between counts. Each item's count history (0093) and
+ * the deliveries between (stock_count_intervals, 0096) against the plan
+ * (medication_forecast 0044, diet_forecast 0051) for the same dates. What
+ * "used" assumes — every delivery recorded — is in
+ * src/lib/management/stock-usage.ts.
  *
  * Default: each item's latest count against its last count on an earlier
  * day. `?from=<stocktake>&to=<stocktake>` compares two saved sheets
@@ -37,6 +42,7 @@ import {
 type Kind = "medication" | "diet";
 
 type HistoryRow = {
+  id: string;
   stocktake_id: string;
   item_kind: "medication" | "diet_type";
   medication_id: string | null;
@@ -57,6 +63,7 @@ const EXCLUDED: Record<Kind, string[]> = {
 type Line = {
   item: ItemRow;
   pair: CountPair;
+  between: Between | null;
   days: number | null;
   planned: number | null;
   reading: UsageReading;
@@ -75,10 +82,10 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
   };
 
   const supabase = await createClient();
-  const [historyResult, medicationResult, dietResult, stateResult] = await Promise.all([
+  const [historyResult, medicationResult, dietResult, stateResult, intervalsResult, firstReceiptResult] = await Promise.all([
     supabase
       .from("stock_counts")
-      .select("stocktake_id, item_kind, medication_id, diet_type_id, counted_quantity, unit, counted_at")
+      .select("id, stocktake_id, item_kind, medication_id, diet_type_id, counted_quantity, unit, counted_at")
       .order("counted_at")
       .returns<HistoryRow[]>(),
     supabase
@@ -98,13 +105,30 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
       .select("resident_id, current_status, current_placement_id")
       .in("current_status", EXCLUDED.diet)
       .returns<{ resident_id: string; current_status: string; current_placement_id: string | null }[]>(),
+    // The sum itself, done once in the database (0096). One row per count
+    // after an item's first, so shelter-sized.
+    supabase
+      .from("stock_count_intervals")
+      .select("from_count_id, to_count_id, received, receipts, used")
+      .returns<IntervalRow[]>(),
+    // When deliveries started being recorded: before it, "used" assumes
+    // nothing arrived, and the page says so.
+    supabase
+      .from("stock_receipts")
+      .select("received_at")
+      .order("received_at")
+      .limit(1)
+      .returns<{ received_at: string }[]>(),
   ]);
+  const intervals = intervalsResult.error ? null : (intervalsResult.data ?? []);
+  const firstReceipt = firstReceiptResult.data?.[0]?.received_at ?? null;
 
   const history = historyResult.data ?? [];
   const rowsOf = (kind: Kind): CountRow[] =>
     history
       .filter((r) => r.item_kind === (kind === "medication" ? "medication" : "diet_type"))
       .map((r) => ({
+        id: r.id,
         stocktake_id: r.stocktake_id,
         item_id: (kind === "medication" ? r.medication_id : r.diet_type_id) ?? "",
         counted_quantity: Number(r.counted_quantity),
@@ -234,12 +258,14 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
       }
       const w = planWindow(pair);
       const plan = w ? (plans[kind].get(windowKey(w))?.get(item.id) ?? 0) : null;
+      const between = intervals ? receivedBetween(intervals, pair) : null;
       lines.push({
         item,
         pair,
+        between,
         days: w?.days ?? null,
         planned: plan,
-        reading: readUsage(pair, plan ?? 0, item.unit),
+        reading: readUsage(pair, between, plan ?? 0, item.unit),
         departed: w ? departedDuring(assignments[kind], excluded, item.id, w) : 0,
         edited:
           latestAt.get(item.id) === pair.to.counted_at && editedSince(pair, item.stock_counted_at),
@@ -264,25 +290,26 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
         return { text: u.readings.moreThanPlanned(q(r.gap)), why: u.readings.moreThanPlannedWhy };
       case "lessThanPlanned":
         return { text: u.readings.lessThanPlanned(q(r.gap)), why: u.readings.lessThanPlannedWhy };
-      case "fellUnplanned":
-        return { text: u.readings.fellUnplanned(q(r.fall)), why: u.readings.fellUnplannedWhy };
-      case "rose":
-        return { text: u.readings.rose, why: u.readings.roseWhy };
+      case "usedUnplanned":
+        return { text: u.readings.usedUnplanned(q(r.used)), why: u.readings.usedUnplannedWhy };
+      case "unlogged":
+        return { text: u.readings.unlogged(q(r.missing)), why: u.readings.unloggedWhy };
       case "unchangedUnplanned":
         return { text: u.readings.unchangedUnplanned };
       case "unitChanged":
         return { text: u.readings.unitChanged };
       case "sameDay":
         return { text: u.readings.sameDay };
+      case "unknown":
+        return { text: u.readings.unknown };
     }
   };
 
-  const changeText = (kind: Kind, line: Line) => {
-    const { from, to } = line.pair;
-    if (from.unit !== to.unit) return "—";
-    const change = Math.round((to.counted_quantity - from.counted_quantity) * 100) / 100;
-    if (change === 0) return u.held;
-    return change > 0 ? u.rose(qty(kind, change, to.unit)) : u.fell(qty(kind, -change, to.unit));
+  /** Used, from the view; "—" where the reading says nothing can be said. */
+  const usedText = (kind: Kind, line: Line) => {
+    const used = line.between?.used;
+    if (used == null || line.reading.state === "unitChanged" || line.reading.state === "sameDay") return "—";
+    return qty(kind, used, line.pair.to.unit);
   };
 
   const sections = (["medication", "diet"] as const).map((kind) => ({ kind, ...linesOf(kind) }));
@@ -301,13 +328,23 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
       </div>
 
       <div role="note" className="rounded border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-foreground">
-        <span className="font-semibold">{u.cannotSayLead}</span> {u.cannotSay}
+        <span className="font-semibold">{u.assumesLead}</span> {u.assumes}{" "}
+        {firstReceipt ? u.recordedSince(formatDate(firstReceipt, locale)) : u.noneRecorded}{" "}
+        <Link href="/deliveries" className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
+          <Truck aria-hidden="true" className="h-4 w-4" />
+          {u.deliveriesLink}
+        </Link>
       </div>
 
       <LargerScreenNotice>
         {historyResult.error && (
           <p className="text-sm text-danger">
             {u.couldntLoad}: {historyResult.error.message}
+          </p>
+        )}
+        {intervalsResult.error && (
+          <p className="text-sm text-danger">
+            {u.couldntLoadDeliveries}: {intervalsResult.error.message}
           </p>
         )}
         {planError && (
@@ -391,8 +428,9 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
                         <tr>
                           <th className="px-4 py-2 font-medium">{u.table.item}</th>
                           <th className="px-4 py-2 font-medium">{u.table.from}</th>
+                          <th className="px-4 py-2 font-medium">{u.table.received}</th>
                           <th className="px-4 py-2 font-medium">{u.table.to}</th>
-                          <th className="px-4 py-2 font-medium">{u.table.change}</th>
+                          <th className="px-4 py-2 font-medium">{u.table.used}</th>
                           <th className="px-4 py-2 font-medium">{u.table.planned}</th>
                           <th className="px-4 py-2 font-medium">{u.table.reading}</th>
                         </tr>
@@ -416,13 +454,32 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
                                 </span>
                               </td>
                               <td className="whitespace-nowrap px-4 py-2">
+                                {line.between == null ? (
+                                  "—"
+                                ) : (
+                                  <>
+                                    {line.between.receipts === 0
+                                      ? u.noneReceived
+                                      : qty(kind, line.between.received, line.pair.to.unit)}
+                                    {line.between.receipts > 0 && (
+                                      <>
+                                        <br />
+                                        <span className="text-xs text-muted">
+                                          {u.deliveries(line.between.receipts)}
+                                        </span>
+                                      </>
+                                    )}
+                                  </>
+                                )}
+                              </td>
+                              <td className="whitespace-nowrap px-4 py-2">
                                 {qty(kind, line.pair.to.counted_quantity, line.pair.to.unit)}
                                 <br />
                                 <span className="text-xs text-muted">
                                   {formatDate(line.pair.to.counted_at, locale)}
                                 </span>
                               </td>
-                              <td className="whitespace-nowrap px-4 py-2">{changeText(kind, line)}</td>
+                              <td className="whitespace-nowrap px-4 py-2 font-medium text-foreground">{usedText(kind, line)}</td>
                               <td className="whitespace-nowrap px-4 py-2">
                                 {line.planned == null ? (
                                   "—"
