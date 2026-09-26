@@ -42,17 +42,26 @@ export type Release = {
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
-  "The website can now show Facebook Messenger, WhatsApp and X (Twitter) as well as Facebook, Instagram and LINE. An admin adds them under Labels and contact details on the Website page; Messenger and WhatsApp then appear under Contact us in the footer and as chat buttons in the phone menu, and Facebook, Instagram and X appear under Follow us in both. Anything left blank doesn't show.",
-  "A photo or document that is empty, damaged or not really the kind of file its name says is now refused when you upload it, with a message saying so, instead of being saved and showing as a broken picture. And when you replace or remove the website's hero photo, a gallery photo or a Shelter Friend logo, the old file now goes to the shelter's Google Drive trash for 30 days instead of being deleted, so it can be put back.",
-  "While a page is loading, the website now shows a puppy typing on a laptop instead of a blank screen, and the staff app shows a small version beside “Loading…”. It only appears when a page takes more than a moment, and it stays still if your device is set to reduce motion. It also appears on the website photo and Shelter Friend logo upload buttons when an upload is slow.",
-  "Each resident's page on the website has the new look: a large photo, their name with a one-line hook, quick facts, who they get along with, their story and ideal home, how to meet them, and a bar along the bottom with Ask on LINE and Book a visit. Edit resident has two new boxes under Adoption for the hook line and the ideal home; until they are filled in, the page leaves them out.",
-  "New for managers: Management → Stock between counts. It sets how much each medication and food count went down or up between two stocktakes beside what the prescriptions and diets planned for the same dates, and marks the big gaps. It can't show what was actually used, because deliveries aren't recorded yet: a count that went up means stock arrived, and a smaller fall than planned may be a delivery nobody logged. Pick any two stocktakes to compare, or leave it on each item's last two counts.",
-  "New for admins: Settings → System status. A green, amber or red tile each for the database, photo storage, database updates, the running release, release mail, the weekly backup and the Pi, each saying when it was checked and, when something is wrong, why. Below them, how much the app was used over the last 7, 30 or 90 days: people signing in, records added, uploads, assistant requests and website visitors. The privacy page now also says that Cloudflare gives the shelter daily visit totals — numbers only, never who visited.",
-  "The website feels a little more alive: headings, text and cards now rise gently into place with a slight spring as you scroll down to them, and cards and buttons lift a touch when you point at or press them. Each part moves only once, nothing on the page jumps around, and nothing moves at all if your device is set to reduce motion. The staff app is unchanged.",
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.6.1",
+    date: "2026-09-27",
+    title:
+      "More ways to get in touch, a new look for each resident, and System status",
+    major: false,
+    notes: [
+      "The website can now show Facebook Messenger, WhatsApp and X (Twitter) as well as Facebook, Instagram and LINE. An admin adds them under Labels and contact details on the Website page; Messenger and WhatsApp then appear under Contact us in the footer and as chat buttons in the phone menu, and Facebook, Instagram and X appear under Follow us in both. Anything left blank doesn't show.",
+      "A photo or document that is empty, damaged or not really the kind of file its name says is now refused when you upload it, with a message saying so, instead of being saved and showing as a broken picture. And when you replace or remove the website's hero photo, a gallery photo or a Shelter Friend logo, the old file now goes to the shelter's Google Drive trash for 30 days instead of being deleted, so it can be put back.",
+      "While a page is loading, the website now shows a puppy typing on a laptop instead of a blank screen, and the staff app shows a small version beside “Loading…”. It only appears when a page takes more than a moment, and it stays still if your device is set to reduce motion. It also appears on the website photo and Shelter Friend logo upload buttons when an upload is slow.",
+      "Each resident's page on the website has the new look: a large photo, their name with a one-line hook, quick facts, who they get along with, their story and ideal home, how to meet them, and a bar along the bottom with Ask on LINE and Book a visit. Edit resident has two new boxes under Adoption for the hook line and the ideal home; until they are filled in, the page leaves them out.",
+      "New for managers: Management → Stock between counts. It sets how much each medication and food count went down or up between two stocktakes beside what the prescriptions and diets planned for the same dates, and marks the big gaps. It can't show what was actually used, because deliveries aren't recorded yet: a count that went up means stock arrived, and a smaller fall than planned may be a delivery nobody logged. Pick any two stocktakes to compare, or leave it on each item's last two counts.",
+      "New for admins: Settings → System status. A green, amber or red tile each for the database, photo storage, database updates, the running release, release mail, the weekly backup and the Pi, each saying when it was checked and, when something is wrong, why. Below them, how much the app was used over the last 7, 30 or 90 days: people signing in, records added, uploads, assistant requests and website visitors. The privacy page now also says that Cloudflare gives the shelter daily visit totals — numbers only, never who visited.",
+      "The website feels a little more alive: headings, text and cards now rise gently into place with a slight spring as you scroll down to them, and cards and buttons lift a touch when you point at or press them. Each part moves only once, nothing on the page jumps around, and nothing moves at all if your device is set to reduce motion. The staff app is unchanged.",
+    ],
+  },
   {
     version: "0.6.0",
     date: "2026-09-26",
