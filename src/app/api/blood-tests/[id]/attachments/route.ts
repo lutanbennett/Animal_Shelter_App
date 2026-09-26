@@ -8,6 +8,7 @@ import {
   uploadImageToFolder,
 } from "@/lib/google/drive";
 import { dateToYyyymmdd, driveImageUrl } from "@/lib/google/drive-client";
+import { withDriveErrors } from "@/lib/google/drive-errors";
 
 const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
@@ -18,7 +19,7 @@ const ALLOWED_MIME_TYPES = new Set([
   "application/pdf",
 ]);
 
-export async function POST(
+async function handlePost(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -142,3 +143,6 @@ export async function POST(
     fileUrl: driveImageUrl(driveFileId),
   });
 }
+
+// A Drive failure answers in a sentence rather than a bare 500 (drive-errors.ts).
+export const POST = withDriveErrors(handlePost);

@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import { Globe } from "lucide-react";
+import { DriveStatus } from "./DriveStatus";
 import { requireAdminUser } from "@/lib/auth/require-admin";
 import { getT } from "@/lib/i18n/get-t";
 import { SectionTiles, type SectionTile } from "@/components/SectionTiles";
@@ -87,6 +89,10 @@ export default async function AdminPage() {
         </h1>
         <p className="text-sm text-muted">{t.admin.landing.subtitle}</p>
       </div>
+
+      <Suspense fallback={<p className="text-sm text-muted">{t.admin.landing.drive.checking}</p>}>
+        <DriveStatus />
+      </Suspense>
 
       <SectionTiles tiles={tiles} />
     </main>

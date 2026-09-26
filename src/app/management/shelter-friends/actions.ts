@@ -18,6 +18,7 @@ import {
   getDriveClient,
   uploadImageToFolder,
 } from "@/lib/google/drive";
+import { driveErrorMessage } from "@/lib/google/drive-errors";
 
 /**
  * Writes to shelter_friends (0076). Admin and management only, which is
@@ -281,7 +282,7 @@ export async function uploadFriendLogo(
       content: file,
     });
   } catch (err) {
-    return { error: err instanceof Error ? err.message : w.uploadFailed };
+    return { error: await driveErrorMessage(err, w.uploadFailed) };
   }
 
   // .select() so "Logo updated." is only said when the row really changed:
