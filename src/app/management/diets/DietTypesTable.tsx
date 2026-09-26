@@ -14,6 +14,7 @@ import {
 import { DaysOfStockCell, StockOnHandCell } from "@/components/StockCells";
 import {
   deleteDietType,
+  setStandardDietType,
   updateDietType,
   updateDietTypeStock,
   type DietTypeFields,
@@ -22,6 +23,8 @@ import {
 export type DietTypeRow = {
   id: string;
   name: string;
+  /** The shelter's standard diet (0087); at most one row, possibly none. */
+  is_standard: boolean;
   unit: string;
   cost_per_unit: number;
   daily_qty_small: number;
@@ -64,7 +67,14 @@ function fieldsOf(row: DietTypeRow): DietTypeFields {
   };
 }
 
-function DietTypeRowItem({ dietType }: { dietType: DietTypeRow }) {
+function DietTypeRowItem({
+  dietType,
+  standardName,
+}: {
+  dietType: DietTypeRow;
+  /** The current standard's name, for the confirm; null when none is flagged. */
+  standardName: string | null;
+}) {
   const { t, locale } = useI18n();
   const m = t.management.diets;
   const [fields, setFields] = useState<DietTypeFields>(() => fieldsOf(dietType));
@@ -129,6 +139,19 @@ function DietTypeRowItem({ dietType }: { dietType: DietTypeRow }) {
     });
   }
 
+  function handleMakeStandard() {
+    if (!window.confirm(m.standard.confirm(dietType.name, standardName))) return;
+    setMessage(null);
+    startTransition(async () => {
+      try {
+        await setStandardDietType(dietType.id);
+        setMessage({ type: "success", text: t.common.saved });
+      } catch (err) {
+        fail(err, t.common.failedToSave);
+      }
+    });
+  }
+
   function handleDelete() {
     if (!window.confirm(m.deleteConfirm(dietType.name))) return;
     setMessage(null);
@@ -174,7 +197,18 @@ function DietTypeRowItem({ dietType }: { dietType: DietTypeRow }) {
             </div>
           ) : (
             <div className="flex flex-col">
-              <span className="font-medium text-foreground">{dietType.name}</span>
+              <span className="font-medium text-foreground">
+                {dietType.name}
+                {dietType.is_standard && (
+                  <span
+                    title={m.standard.badgeHint}
+                    className="ml-2 inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 align-middle text-xs font-medium text-foreground"
+                  >
+                    <span aria-hidden>★</span>
+                    {m.standard.badge}
+                  </span>
+                )}
+              </span>
               {dietType.notes && <span className="text-xs text-muted">{dietType.notes}</span>}
             </div>
           )}
@@ -284,6 +318,16 @@ function DietTypeRowItem({ dietType }: { dietType: DietTypeRow }) {
                 <button type="button" onClick={openCount} className={smallButton}>
                   {t.management.stock.count}
                 </button>
+                {!dietType.is_standard && (
+                  <button
+                    type="button"
+                    disabled={isPending}
+                    onClick={handleMakeStandard}
+                    className={smallButton}
+                  >
+                    {m.standard.make}
+                  </button>
+                )}
                 <button
                   type="button"
                   disabled={isPending || dietType.diet_count > 0}
@@ -322,6 +366,7 @@ export function DietTypesTable({
 }) {
   const { t, locale } = useI18n();
   const m = t.management.diets;
+  const standardName = dietTypes.find((row) => row.is_standard)?.name ?? null;
   const totals = forecastHeadings.map((_, i) =>
     dietTypes.reduce((sum, row) => sum + (row.forecast[i]?.cost ?? 0), 0),
   );
@@ -348,7 +393,7 @@ export function DietTypesTable({
         </thead>
         <tbody className="divide-y divide-border">
           {dietTypes.map((dietType) => (
-            <DietTypeRowItem key={dietType.id} dietType={dietType} />
+            <DietTypeRowItem key={dietType.id} dietType={dietType} standardName={standardName} />
           ))}
           {dietTypes.length === 0 && (
             <tr>

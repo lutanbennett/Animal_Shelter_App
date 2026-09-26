@@ -990,6 +990,16 @@ const th: Dictionary = {
       },
       deleteConfirm: (name: string) => `ลบอาหาร "${name}"? การกระทำนี้ไม่สามารถย้อนกลับได้`,
       createdDiet: (name: string) => `สร้างอาหาร "${name}" แล้ว`,
+      standard: {
+        badge: "มาตรฐาน",
+        badgeHint: "อาหารที่ให้สัตว์ทุกตัวเว้นแต่จะระบุเป็นอย่างอื่น สัตว์ที่รับเข้าใหม่เริ่มด้วยอาหารนี้ และสัตว์ที่กินอาหารอื่นจะแสดงเป็นอาหารพิเศษบนการ์ดคอก",
+        make: "ตั้งเป็นมาตรฐาน",
+        confirm: (name: string, current: string | null) =>
+          current
+            ? `ตั้ง "${name}" เป็นอาหารมาตรฐานแทน "${current}" หรือไม่? การรับเข้าใหม่จะใช้อาหารนี้เป็นค่าเริ่มต้น และสัตว์ที่กิน "${current}" จะแสดงเป็นอาหารพิเศษ`
+            : `ตั้ง "${name}" เป็นอาหารมาตรฐานหรือไม่? การรับเข้าใหม่จะใช้อาหารนี้เป็นค่าเริ่มต้น`,
+        none: "ยังไม่มีอาหารที่ตั้งเป็นมาตรฐาน การรับเข้าจึงไม่มีค่าเริ่มต้น และจะไม่มีสัตว์ตัวใดแสดงเป็นอาหารพิเศษ เลือกด้วยปุ่มตั้งเป็นมาตรฐาน",
+      },
       errors: {
         nameRequired: "กรุณากรอกชื่อ",
         unitInvalid: "กรุณาเลือกหน่วย",
@@ -1779,8 +1789,8 @@ const th: Dictionary = {
         selectSize: "เลือกขนาดตัว",
         sizeHint: "เล็ก กลาง หรือใหญ่ — ใช้กำหนดปริมาณอาหารต่อมื้อโดยค่าเริ่มต้น",
         startingDiet: "อาหารเริ่มต้น",
-        noStartingDiet: "ยังไม่ระบุ — เพิ่มจากหน้าหลักของสัตว์ภายหลัง",
-        startingDietHint: "ไม่บังคับ — บันทึกอาหารรายการแรกนับจากวันที่รับเข้า ปรับจำนวนมื้อและปริมาณได้ที่หน้าอาหาร",
+        chooseStartingDiet: "เลือกอาหาร",
+        startingDietHint: "จำเป็น — ใช้อาหารมาตรฐานเว้นแต่จะเลือกอย่างอื่น บันทึกนับจากวันที่รับเข้า ปรับจำนวนมื้อและปริมาณได้ที่หน้าอาหาร",
         estimatedAge: "อายุโดยประมาณ (ปี)",
         estimatedAgeHint: "ประมาณการโดยเจ้าหน้าที่ ณ วันรับเข้า",
         bloodTestInterval: "ตรวจเลือดประจำ",
@@ -1816,6 +1826,7 @@ const th: Dictionary = {
         nameRequired: "กรุณากรอกชื่อ",
         intakeDateRequired: "กรุณากรอกวันที่รับเข้า",
         sizeRequired: "กรุณาเลือกขนาดตัวของสัตว์",
+        dietRequired: "กรุณาเลือกอาหารเริ่มต้นของสัตว์",
         ageMustBeNumber: "อายุโดยประมาณต้องเป็นตัวเลข",
         weightPositive: "น้ำหนักต้องมากกว่า 0 กก.",
         bloodTestIntervalInvalid: "ช่วงตรวจเลือดต้องเป็นจำนวนเดือนเต็ม",
@@ -2373,6 +2384,9 @@ const th: Dictionary = {
     openJobs: (n: number) => `ค้าง ${n}`,
     openJobsTitle: (n: number) => (n === 0 ? "ไม่มีงานซ่อมบำรุงค้าง" : `งานซ่อมบำรุงค้าง ${n} งาน`),
     zoneWideJobs: (n: number) => `งานทั้งโซน ${n} งาน`,
+    specialDiets: (n: number) => `อาหารพิเศษ ${n} ตัว`,
+    specialDietsTitle: (names: string) => `กินอาหารพิเศษ: ${names}`,
+    specialDietLabel: "อาหารพิเศษ",
     hasOpenMaintenance: "มีงานซ่อมบำรุงค้าง",
     residentsCount: (n: number) => `สัตว์ ${n} ตัว`,
     occupancy: (count: number, capacity: number) => `${count} / ${capacity}`,
