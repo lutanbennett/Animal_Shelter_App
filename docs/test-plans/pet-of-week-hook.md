@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — run 36267259065 on `6e5d269`: `check`, `migration-numbers` and `test-plan` all passed. Before merging, `sync` brought in #164 (migrations 0099–0100, a check script, docs; nothing under `src/`), and CI ran again on the merge
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -90,7 +90,7 @@ Checked on `http://localhost:3009/` against dev's featured resident, Panda (`853
 
 - [x] The pages nearest the change still work (list the ones checked) — `/` in English and Thai: hero, impact band, Shelter Friends band, How you can help and the Pet of the week card all rendered
 - [ ] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a second, unrelated page — n/a: no shared file touched; `src/lib/releases.ts` gained one string in `unreleased`
-- [x] Nothing merged from `main` during `sync` was broken by this branch — sync was "Already up to date."
+- [x] Nothing merged from `main` during `sync` was broken by this branch — the first sync was "Already up to date."; the second brought in #164, which touches no file this branch does, and CI's `check` covers the merge
 
 ## 7. Documentation
 
