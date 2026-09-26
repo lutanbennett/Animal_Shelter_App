@@ -39,6 +39,9 @@
 // Before all three: /api/releases/* is answered here and never cached or
 // sent to the Pi — only this Worker has the mail binding (release-mail.mjs).
 //
+// Besides requests, a cron trigger: `scheduled` below runs the status
+// alerts every 15 minutes (wrangler.jsonc, src/lib/status/alerts.ts).
+//
 // `x-lanna-served-by` (pi | worker) and `x-lanna-cache` (HIT | MISS | BYPASS)
 // on every response say which path a request took.
 
@@ -187,6 +190,28 @@ const worker = {
       return withHeaders(new Response(toClient, response), { "x-lanna-cache": "MISS" });
     }
     return withHeaders(response, { "x-lanna-cache": "MISS" });
+  },
+
+  // The status alert run (src/lib/status/alerts.ts), on the cron in
+  // wrangler.jsonc. Handed straight to the Next handler in this Worker —
+  // not to the Pi, and not through the edge cache — so the checks run with
+  // this Worker's bindings, including the mail one. Off unless the
+  // environment names its site in STATUS_ALERT_SITE: the links in the mail
+  // point there, and an environment with no site has nothing to alert about.
+  async scheduled(controller, env, ctx) {
+    if (!env.STATUS_ALERT_SITE) {
+      console.log("status-alerts: STATUS_ALERT_SITE is not set; not running.");
+      return;
+    }
+    const request = new Request(`${env.STATUS_ALERT_SITE}/api/status/alerts`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY ?? ""}` },
+    });
+    const response = await openNext.fetch(request, env, ctx);
+    const body = await response.text();
+    // The Worker's logs are where a run that could not remember shows first.
+    const log = response.ok ? console.log : console.error;
+    log(`status-alerts: ${controller.cron} → ${response.status} ${body}`);
   },
 };
 

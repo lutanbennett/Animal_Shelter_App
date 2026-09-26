@@ -326,7 +326,7 @@ const th: Dictionary = {
     status: {
       title: "สถานะระบบ",
       subtitle:
-        "ทุกอย่างทำงานปกติไหม แต่ละช่องจะตรวจสอบเมื่อเปิดหน้านี้และจำผลไว้หนึ่งนาที หน้านี้ไม่เปลี่ยนแปลงข้อมูลใด ๆ",
+        "ทุกอย่างทำงานปกติไหม แต่ละช่องจะตรวจสอบเมื่อเปิดหน้านี้และจำผลไว้หนึ่งนาที นอกจากปุ่มของการแจ้งเตือนแล้ว หน้านี้ไม่เปลี่ยนแปลงข้อมูลใด ๆ",
       checkNow: "ตรวจสอบตอนนี้",
       checking: "กำลังตรวจสอบ…",
       checkedAt: (v: { time: string | number }) =>
@@ -338,6 +338,38 @@ const th: Dictionary = {
       periodDays: (v: { days: string | number }) =>
         `${v.days} วัน`,
       unavailable: "นับไม่ได้ในขณะนี้",
+      alerts: {
+        heading: "การแจ้งเตือน",
+        title: "อีเมลแจ้งเตือนสถานะ",
+        lastRun: (v: { time: string | number }) =>
+          `ตรวจสอบทุก 15 นาที ครั้งล่าสุดเมื่อ ${v.time}`,
+        neverRun: "ตั้งเวลาไว้ที่เว็บไซต์นี้แล้ว แต่ยังไม่เคยทำงาน",
+        offHere: "ไม่ได้ตั้งเวลาที่นี่: มีเพียง Worker (test.lannacare.org และ lannacare.org) ที่ตรวจสอบตามเวลา ปุ่มด้านล่างยังใช้ทดสอบได้",
+        open: (v: { names: string | number }) =>
+          `แจ้งผู้ดูแลแล้วว่าใช้งานไม่ได้ และยังไม่กลับมาปกติ: ${v.names}`,
+        lastMail: (v: { kind: string | number; sent: string | number; skipped: string | number; time: string | number }) =>
+          `อีเมลล่าสุด (${v.kind}) เมื่อ ${v.time}: ส่งถึง ${v.sent} คน ข้าม ${v.skipped} คน`,
+        kindAlert: "แจ้งเตือน",
+        kindTest: "ทดสอบ",
+        how: "เมื่อช่องใดเป็นสีแดงสองครั้งติดกัน ผู้ดูแลระบบทุกคนจะได้รับอีเมลหนึ่งฉบับ และอีกฉบับเมื่อกลับมาปกติ สีเทา (ไม่ได้ใช้งาน) และสีเหลืองไม่มีการแจ้งเตือน",
+        fail: "อ่านสถานะการแจ้งเตือนไม่ได้",
+        runNow: "ตรวจสอบการแจ้งเตือนตอนนี้",
+        sendTest: "ส่งอีเมลทดสอบ",
+        testConfirm: "ส่งอีเมลทดสอบถึงผู้ดูแลระบบทุกคนหรือไม่",
+        runAllClear: "ไม่มีช่องสีแดง",
+        runFailing: (v: { count: string | number }) =>
+          `${v.count} ช่องเป็นสีแดง`,
+        runMailed: (v: { sent: string | number; skipped: string | number }) =>
+          `ส่งอีเมลถึง ${v.sent} คน ข้าม ${v.skipped} คน`,
+        runNoMail: "ไม่มีการเปลี่ยนแปลงที่ต้องแจ้ง จึงไม่ได้ส่งอีเมล",
+        testSent: (v: { sent: string | number; skipped: string | number }) =>
+          `ส่งอีเมลทดสอบถึง ${v.sent} คน ข้าม ${v.skipped} คน`,
+        skippedLine: (v: { address: string | number; reason: string | number }) =>
+          `${v.address}: ${v.reason}`,
+        notRemembered: (v: { note: string | number }) =>
+          `การตรวจสอบบันทึกผลไม่ได้ จึงไม่ได้ส่งอีเมล: ${v.note}`,
+        callFailed: "ติดต่อเซิร์ฟเวอร์ไม่ได้ ลองอีกครั้ง",
+      },
       tiles: {
         database: {
           title: "ฐานข้อมูล",

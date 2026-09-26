@@ -343,7 +343,7 @@ const en = {
     status: {
       title: "System status",
       subtitle:
-        "Is everything working? Each tile is checked when you open this page and remembered for a minute; nothing here changes anything.",
+        "Is everything working? Each tile is checked when you open this page and remembered for a minute. Apart from the alert buttons, nothing here changes anything.",
       checkNow: "Check now",
       checking: "Checking…",
       checkedAt: (v: { time: string | number }) =>
@@ -355,6 +355,38 @@ const en = {
       periodDays: (v: { days: string | number }) =>
         `${v.days} days`,
       unavailable: "Couldn't count this just now.",
+      alerts: {
+        heading: "Alerts",
+        title: "Status alert mail",
+        lastRun: (v: { time: string | number }) =>
+          `Checked every 15 minutes; last run ${v.time}.`,
+        neverRun: "The alert schedule is set up on this site but has never run.",
+        offHere: "Not scheduled here: only the Worker (test.lannacare.org and lannacare.org) runs the alert schedule. The buttons below still test the path.",
+        open: (v: { names: string | number }) =>
+          `Admins have been told these are not working, and they have not recovered yet: ${v.names}.`,
+        lastMail: (v: { kind: string | number; sent: string | number; skipped: string | number; time: string | number }) =>
+          `Last mail (${v.kind}) ${v.time}: reached ${v.sent}, skipped ${v.skipped}.`,
+        kindAlert: "alert",
+        kindTest: "test",
+        how: "When a tile is red on two checks in a row, every admin gets one mail, and another when it recovers. Grey (not in use) and amber tiles never alert.",
+        fail: "Couldn't read the alert state.",
+        runNow: "Run the alert check now",
+        sendTest: "Send a test alert",
+        testConfirm: "Send a test mail to every admin?",
+        runAllClear: "No tile is red.",
+        runFailing: (v: { count: string | number }) =>
+          `${v.count} tile(s) red.`,
+        runMailed: (v: { sent: string | number; skipped: string | number }) =>
+          `Mailed ${v.sent}, skipped ${v.skipped}.`,
+        runNoMail: "Nothing changed that needs telling, so no mail.",
+        testSent: (v: { sent: string | number; skipped: string | number }) =>
+          `Test mail reached ${v.sent}, skipped ${v.skipped}.`,
+        skippedLine: (v: { address: string | number; reason: string | number }) =>
+          `${v.address}: ${v.reason}`,
+        notRemembered: (v: { note: string | number }) =>
+          `The check couldn't record its result, so nothing was mailed: ${v.note}`,
+        callFailed: "Couldn't reach the server. Try again.",
+      },
       tiles: {
         database: {
           title: "Database",
