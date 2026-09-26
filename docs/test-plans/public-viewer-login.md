@@ -50,7 +50,7 @@ At the merge `9b200d5`:
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: run 36207812916 at `9b200d5`'s successor — `check`, `migration-numbers` and `test-plan` all pass
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -179,7 +179,7 @@ Manual verification by: pending: Google sign-in as a public viewer; the header's
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [ ] Checklist pasted into the PR — n/a: the PR description links `docs/test-plans/public-viewer-login.md` and summarises it; the file is the record
 - [ ] Handed to the production release manager — n/a: not yet — handed over at release time
 
 Result: pass
