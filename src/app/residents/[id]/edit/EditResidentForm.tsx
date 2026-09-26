@@ -20,6 +20,7 @@ import {
   type AdoptionProfile,
 } from "@/components/AdoptionProfileFields";
 import { todayIso } from "@/lib/format";
+import { HOOK_LINE_MAX, IDEAL_HOME_MAX } from "@/lib/residents/adoption-profile";
 
 export type HousingState = {
   /** Current enclosure (physical or Lifecycle pseudo-enclosure), if any. */
@@ -50,6 +51,8 @@ export type EditableResident = {
   temperament_notes: string | null;
   past_story_notes: string | null;
   behaviour_notes: string | null;
+  hook_line: string | null;
+  ideal_home: string | null;
   profile_photo_drive_file_id: string | null;
   ready_for_adoption: boolean;
   is_public_visible: boolean;
@@ -428,6 +431,42 @@ export function EditResidentForm({
           </legend>
           <p className="text-sm text-muted">{t.residents.new.adoptionHint}</p>
           <AdoptionProfileFields value={resident} idPrefix="edit-" />
+          {/* The resident page's own prose (0094). maxLength is the limit
+              for typing; the action re-checks it for pasted text. */}
+          <div className="flex flex-col gap-1">
+            <label htmlFor="hookLine" className="text-sm font-medium text-muted">
+              {t.residents.edit.fields.hookLine}
+            </label>
+            <input
+              id="hookLine"
+              name="hookLine"
+              type="text"
+              maxLength={HOOK_LINE_MAX}
+              defaultValue={resident.hook_line ?? ""}
+              aria-describedby="hookLine-hint"
+              className={inputClass}
+            />
+            <p id="hookLine-hint" className="text-xs text-muted">
+              {t.residents.edit.fields.hookLineHint(HOOK_LINE_MAX)}
+            </p>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="idealHome" className="text-sm font-medium text-muted">
+              {t.residents.edit.fields.idealHome}
+            </label>
+            <textarea
+              id="idealHome"
+              name="idealHome"
+              rows={3}
+              maxLength={IDEAL_HOME_MAX}
+              defaultValue={resident.ideal_home ?? ""}
+              aria-describedby="idealHome-hint"
+              className={textareaClass}
+            />
+            <p id="idealHome-hint" className="text-xs text-muted">
+              {t.residents.edit.fields.idealHomeHint(IDEAL_HOME_MAX)}
+            </p>
+          </div>
           <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               type="checkbox"

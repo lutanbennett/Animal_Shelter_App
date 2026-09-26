@@ -44,7 +44,7 @@ export default async function ResidentPage(
     supabase
       .from("residents")
       .select(
-        "id, name, resident_code, thai_name, other_names, species, breed, sex, size, estimated_age_years, age_estimated_on, intake_date, bio, temperament_notes, past_story_notes, behaviour_notes, profile_photo_drive_file_id, ready_for_adoption, is_public_visible, drive_folder_id, deceased_summary_drive_file_id, deceased_index_drive_file_id, deceased_archived_at, colour, is_desexed, good_with_dogs, good_with_cats, good_with_children, energy_level, blood_test_interval_months",
+        "id, name, resident_code, thai_name, other_names, species, breed, sex, size, estimated_age_years, age_estimated_on, intake_date, bio, temperament_notes, past_story_notes, behaviour_notes, hook_line, ideal_home, profile_photo_drive_file_id, ready_for_adoption, is_public_visible, drive_folder_id, deceased_summary_drive_file_id, deceased_index_drive_file_id, deceased_archived_at, colour, is_desexed, good_with_dogs, good_with_cats, good_with_children, energy_level, blood_test_interval_months",
       )
       .eq("id", id)
       .limit(1)

@@ -3,7 +3,7 @@ import type { PublicTranslations } from "@/lib/translations/types";
 import type { ResidentCardRow } from "@/app/adopt/ResidentCard";
 
 /**
- * public_resident_profiles (0025, 0051, 0056, 0060): what a signed-out
+ * public_resident_profiles (0025, 0051, 0056, 0060, 0094): what a signed-out
  * visitor may see of a resident. Read with the anon key on /adopt; the
  * view applies the "public, not adopted, not deceased" rule.
  */
@@ -22,10 +22,12 @@ export type PublicResident = ResidentCardRow & {
   good_with_cats: string | null;
   good_with_children: string | null;
   energy_level: string | null;
+  hook_line: string | null;
+  ideal_home: string | null;
 };
 
 export const PUBLIC_RESIDENT_COLUMNS =
-  "id, name, species, breed, sex, size, ready_for_adoption, bio, temperament_notes, past_story_notes, profile_photo_drive_file_id, estimated_age_years, age_estimated_on, translations, colour, is_desexed, is_vaccinated, good_with_dogs, good_with_cats, good_with_children, energy_level";
+  "id, name, species, breed, sex, size, ready_for_adoption, bio, temperament_notes, past_story_notes, profile_photo_drive_file_id, estimated_age_years, age_estimated_on, translations, colour, is_desexed, is_vaccinated, good_with_dogs, good_with_cats, good_with_children, energy_level, hook_line, ideal_home";
 
 export const CARD_COLUMNS =
   "id, name, species, breed, size, ready_for_adoption, profile_photo_drive_file_id";
