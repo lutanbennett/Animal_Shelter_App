@@ -23,6 +23,8 @@ export type EnclosureSummary = {
   resident_count: number;
   /** Maintenance jobs on this enclosure that aren't Completed. */
   open_jobs: number;
+  /** Names of the residents here on a special diet (src/lib/diets/special.ts). */
+  special_diet_residents: string[];
 };
 
 export type ZoneGroup = {
@@ -44,6 +46,7 @@ function EnclosureCard({
 }) {
   const { t, locale } = useI18n();
   const name = placeName(locale, enclosure.name, enclosure.name_th);
+  const special = enclosure.special_diet_residents;
   // The whole card opens the enclosure, via the name link's ::after
   // stretched over it; the copy button sits above that layer so a
   // batch of QR codes can be programmed straight off this page.
@@ -90,6 +93,25 @@ function EnclosureCard({
         count={enclosure.resident_count}
         capacity={enclosure.capacity}
       />
+      {/* An icon and words, not a colour: the card's colour is capacity.
+          <details> so a tap shows the names as well as a hover; it sits
+          above the stretched link so the tap opens it instead. */}
+      {special.length > 0 && (
+        <details className="relative z-10 self-start text-xs">
+          <summary
+            title={t.enclosures.specialDietsTitle(special.join(", "))}
+            className="flex cursor-pointer list-none items-center gap-1 font-medium text-foreground hover:underline [&::-webkit-details-marker]:hidden"
+          >
+            <ENCLOSURE_ICONS.specialDiet aria-hidden="true" className="h-3.5 w-3.5" />
+            {t.enclosures.specialDiets(special.length)}
+          </summary>
+          <ul className="mt-1 flex flex-col gap-0.5 pl-5 text-muted">
+            {special.map((resident, i) => (
+              <li key={i}>{resident}</li>
+            ))}
+          </ul>
+        </details>
+      )}
     </div>
   );
 }

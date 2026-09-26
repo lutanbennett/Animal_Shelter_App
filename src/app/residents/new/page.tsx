@@ -27,7 +27,7 @@ export default async function NewResidentPage(
       .returns<OriginOption[]>(),
     supabase
       .from("diet_types")
-      .select("id, name")
+      .select("id, name, is_standard")
       .order("name")
       .returns<DietTypeOption[]>(),
   ]);
