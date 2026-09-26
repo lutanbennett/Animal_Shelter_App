@@ -12,7 +12,7 @@ Filled from `docs/test-plan-template.md` (its instructions are there).
 | Backlog item | `docs/backlog.md` → "Stock between counts: CSV download, difference as a percentage, and a floor so tiny items do not shout." |
 | Branch / worktree | `claude/stock-counts-followups` @ `C:\Development\Animal_Shelter_stock-counts-followups` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3008` |
-| PR | opened after this commit |
+| PR | #166 |
 | Tested by / date | Claude (stock-counts-followups session), 2026-09-27 |
 | Carries a migration? | no — reads `0093` / `0096` as before |
 | Tested at SHA | `ef6d1cb` |
@@ -36,7 +36,7 @@ Filled from `docs/test-plan-template.md` (its instructions are there).
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — #166, run 36267902682 on `59ccca1`: `check`, `migration-numbers` and `test-plan` all passed. Before that, a second `sync` brought in the Pet of the week hook (#165); the only conflict was both sides adding a line to `unreleased` in `src/lib/releases.ts`, and I kept both
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -164,7 +164,7 @@ Manual verification by: pending: the four items under Left for manual verificati
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR (#166 description summarises it and links the file)
 - [ ] Handed to the production release manager — n/a: not yet — handed over once the PR is open
 
 Result: pass
