@@ -94,7 +94,8 @@ export default async function RecurringJobsPage() {
       title: o.job.title,
       occursOn: o.occurs_on,
       team: o.team.map((id) => person(id).name),
-      usual: o.job.assignee_ids.map((id) => person(id).name),
+      // Who the cover replaced: the usual team minus anyone still on it.
+      usual: o.job.assignee_ids.filter((id) => !o.team.includes(id)).map((id) => person(id).name),
       note: o.cover?.note ?? null,
     }));
 

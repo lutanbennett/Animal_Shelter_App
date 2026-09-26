@@ -33,6 +33,7 @@ export type CoveredDate = {
   title: string;
   occursOn: string;
   team: string[];
+  /** The usual assignees the cover team replaced for this date. */
   usual: string[];
   note: string | null;
 };
@@ -227,15 +228,19 @@ function JobCard({ summary, onEdit }: { summary: JobSummary; onEdit: () => void 
         </span>
         <span className={`flex items-center gap-1 ${stranded ? "font-medium text-danger" : ""}`}>
           <Users aria-hidden="true" className="h-3 w-3" />
-          {summary.team.length === 0
-            ? rj.unassigned
-            : summary.team.map((member, i) => (
+          {summary.team.length === 0 ? (
+            rj.unassigned
+          ) : (
+            <span>
+              {summary.team.map((member, i) => (
                 <span key={member.id}>
                   {i > 0 && ", "}
                   <span className={member.archived ? "line-through" : undefined}>{member.name}</span>
                   {member.archived && ` (${rj.left})`}
                 </span>
               ))}
+            </span>
+          )}
         </span>
         {summary.dependsOnTitle && (
           <span className="flex items-center gap-1">
