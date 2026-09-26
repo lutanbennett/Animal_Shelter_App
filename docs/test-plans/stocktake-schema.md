@@ -22,7 +22,7 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: the branch was cut from `origin/main` @ `a6e693a` today, and `origin/main` is still at `a6e693a`
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: the branch was cut from `origin/main` @ `a6e693a`. After the PR opened, main gained #141 (public-site-home) and #142 (worktree tooling), and `sync` merged both cleanly. Neither touches `supabase/`, `record_stocktake` or anything this branch changes; CI re-runs the three gates on the merged tree
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`: run at `b0b7a60`, closing lines as printed: `=== gates: build exited 0 after 277s` then `gates: typecheck=0 lint=0 build=0`
 - [x] CI green on the PR (runs the same three): PR #140, run 36214059960 at `ddbf786` — `check` pass (1m25s), `migration-numbers` pass. `test-plan` failed only because this plan was not yet committed; it is added in the next commit
 
@@ -86,7 +86,7 @@
 
 - [x] The pages nearest the change still work (list the ones checked): no page calls `record_stocktake` yet. All of 0088's assertions for admin and management (A–F, H) still hold after 0091, in the same harness run
 - [ ] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a second, unrelated page — by loading that page, not by reading the file — n/a: no shared runtime file touched
-- [x] Nothing merged from `main` during `sync` was broken by this branch: nothing was merged, because `origin/main` has not moved since the branch was cut
+- [x] Nothing merged from `main` during `sync` was broken by this branch: #141 and #142 were merged in after the PR opened. This branch changes no runtime code, and neither of them calls `record_stocktake` or touches `supabase/migrations/`
 
 ## 7. Documentation
 
