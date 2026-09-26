@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "More ways to contact the shelter: Facebook Messenger, WhatsApp and X (Twitter)", "Actual usage from stocktakes, compared with planned usage", "Public site redesign" part 3. None ticked here: each closes with its batch-2 feature branch |
 | Branch / worktree | `claude/schema-public-fields` @ `C:\Development\Animal_Shelter_schema-public-fields` |
 | Dev server | n/a: none started, nothing to render |
-| PR | opened from this commit |
+| PR | #146 |
 | Tested by / date | Claude (automated) / 2026-09-26 |
 | Carries a migration? | yes: `0092_contact_channels.sql`, `0093_stock_counts.sql`, `0094_resident_hook_ideal_home.sql` |
 | Tested at SHA | branch on `main` @ `3c2c9ae`; migrations, harness and gates as committed in this PR's first commit |
@@ -24,7 +24,7 @@
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: merged `3c2c9ae` before any work, no conflicts
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`: closing lines as printed: `=== gates: build exited 0 after 247s` then `gates: typecheck=0 lint=0 build=0`
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): PR #146, run 36230805719 at `2e91df1` — `check` pass (1m16s), `migration-numbers` pass (8s), `test-plan` pass (5s)
 
 ## 3. Schema and data
 
