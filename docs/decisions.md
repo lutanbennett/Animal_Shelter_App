@@ -4471,7 +4471,7 @@ that was waiting on 0.5.0.
   one `set is_standard = (id = <new>)` can fail on whichever row it reaches
   first.
 - **Diet-less residents were backfilled, not listed.** Default taken at
-  planning (2026-09-25), open for Lutan to overrule on the PR. Every living
+  planning (2026-09-25), kept by Lutan on the PR (2026-09-26). Every living
   resident with no *current* diet gets the standard from today, with a note
   saying so. It differs from `0069`'s seed on purpose: "no current diet"
   rather than "no diet at all" (an ended diet leaves the resident just as
