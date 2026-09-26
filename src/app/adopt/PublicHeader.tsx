@@ -5,14 +5,16 @@ import { DEFAULT_SIGNED_IN_PATH } from "@/lib/auth/next-path";
 import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
-import { lineLink, loadSiteContent, visitingHoursLines } from "@/lib/site/content";
+import { lineLink, loadSiteContent, socialLinks, visitingHoursLines } from "@/lib/site/content";
 import { LanguageSwitcher } from "../LanguageSwitcher";
 import { SignOutButton } from "../login/SignOutButton";
 import {
   PublicMobileMenu,
   PublicNavGroup,
+  type PublicFollowLink,
   type PublicNavEntry,
   type PublicNavLink,
+  type PublicTalkLink,
 } from "./PublicNav";
 
 export type PublicSection =
@@ -102,6 +104,33 @@ export async function PublicHeader({ current }: { current?: PublicSection }) {
   const line = lineLink(site?.contact_line);
   const phone = site?.contact_phone?.trim();
   const hours = visitingHoursLines(locale, site);
+  const social = socialLinks(site);
+  const f = t.publicFooter;
+  // The phone menu's "Talk to us" buttons, each only when set: LINE first,
+  // as the shelter's main channel, then Call, Messenger and WhatsApp.
+  const talkLinks: PublicTalkLink[] = [
+    ...(line ? [{ kind: "line" as const, href: line.href, label: n.line }] : []),
+    ...(phone
+      ? [{ kind: "phone" as const, href: `tel:${phone.replace(/\s+/g, "")}`, label: n.call }]
+      : []),
+    ...(social.messenger
+      ? [{ kind: "messenger" as const, href: social.messenger, label: n.messenger }]
+      : []),
+    ...(social.whatsapp
+      ? [{ kind: "whatsapp" as const, href: social.whatsapp, label: n.whatsapp }]
+      : []),
+  ];
+  // Follow us: X sits with Facebook and Instagram — a follow link, not a
+  // way to talk to the shelter.
+  const followLinks: PublicFollowLink[] = [
+    ...(social.facebook
+      ? [{ kind: "facebook" as const, href: social.facebook, label: f.facebook }]
+      : []),
+    ...(social.instagram
+      ? [{ kind: "instagram" as const, href: social.instagram, label: f.instagram }]
+      : []),
+    ...(social.x ? [{ kind: "x" as const, href: social.x, label: f.x }] : []),
+  ];
 
   const brand = (
     <Link href="/" className="flex min-h-11 items-center gap-2.5 text-site-ink lg:gap-3">
@@ -177,9 +206,10 @@ export async function PublicHeader({ current }: { current?: PublicSection }) {
             account={account}
             talk={{
               title: n.talkToUs,
-              line: line ? { href: line.href, label: n.line } : null,
-              phone: phone ? { href: `tel:${phone.replace(/\s+/g, "")}`, label: n.call } : null,
+              links: talkLinks,
               note: hours.length > 0 ? hours.join(" · ") : null,
+              followTitle: n.followUs,
+              follow: followLinks,
             }}
             labels={{
               open: t.nav.openMenu,
