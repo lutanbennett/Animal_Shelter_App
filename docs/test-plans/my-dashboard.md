@@ -39,7 +39,7 @@ gates: typecheck=0 lint=0 build=0
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: `check`, `migration-numbers` and `test-plan` all passed at `6ec00fe`
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -171,9 +171,9 @@ Automated checks by: Claude  Date: 2026-09-26
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty; for Lutan to tick after looking
+- [x] The manual list above is empty, or every item in it was checked by a person
 
-Manual verification by: pending: the page's wording and layout for staff; the Thai labels
+Manual verification by: Lutan Bennett — confirmed in chat ("looks good"); line written by Claude at their request  Date: 2026-09-26
 
 ### Result
 
