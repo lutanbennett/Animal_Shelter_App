@@ -28,6 +28,12 @@
  * the page can say so beside a "more than planned" rather than let it read
  * as loss.
  *
+ * A row is marked when usage is more than GAP_RATIO from the plan AND
+ * further from it than the two counts can get wrong (countMargin: one of a
+ * counted unit, a share of the stock for one read by eye). The second part
+ * is the floor that stops an item planned at two tablets shouting over a
+ * third; it is per item, from its own counts, never one number for all.
+ *
  * Pure: no database, no i18n. `now` is never needed — dates come from the
  * counts. scripts/check-stock-usage.mjs runs the real exports.
  */
@@ -197,6 +203,40 @@ export function receivedBetween(intervals: IntervalRow[], pair: CountPair): Betw
  */
 export const GAP_RATIO = 0.25;
 
+/**
+ * Units a stocktake counts one by one: a count of them is exact to the
+ * piece, bar a half tablet or a miscount of one.
+ */
+export const COUNTED_UNITS: ReadonlySet<string> = new Set([
+  "tablet",
+  "capsule",
+  "sachet",
+  "application",
+  "dose",
+  "can",
+  "portion",
+]);
+
+/**
+ * For every other unit (ml, g, mg, drops, cups…) the count is a reading of
+ * a bottle, bag or tub by eye, so it can be off by a share of what is on
+ * the shelf rather than by one.
+ */
+export const READ_MARGIN = 0.05;
+
+/**
+ * The floor: the smallest gap two counts can tell apart, in the item's own
+ * unit — one of a counted unit, or READ_MARGIN of the larger count for a
+ * read one. A gap no bigger than this is inside what the counts can get
+ * wrong, so it is never marked, however large a share of the plan it is.
+ * There is deliberately no absolute number here (decisions.md 2026-09-26:
+ * units differ per item); the floor comes from the counts themselves.
+ */
+export function countMargin(pair: CountPair): number {
+  if (COUNTED_UNITS.has(pair.to.unit)) return 1;
+  return round2(Math.max(pair.from.counted_quantity, pair.to.counted_quantity, 0) * READ_MARGIN);
+}
+
 export type UsageReading =
   /** The unit changed between the counts, or since: no subtraction. */
   | { state: "unitChanged" }
@@ -208,6 +248,12 @@ export type UsageReading =
   | { state: "unlogged"; missing: number }
   /** Used within GAP_RATIO of the plan. */
   | { state: "asPlanned"; used: number; gap: number }
+  /**
+   * Past GAP_RATIO (or nothing planned, or a little below zero), but no
+   * further from the plan than `margin`, what the two counts can get
+   * wrong. `gap` is used − planned, signed.
+   */
+  | { state: "withinCount"; used: number; gap: number; margin: number }
   /** Used `gap` more than planned. */
   | { state: "moreThanPlanned"; used: number; gap: number }
   /** Used `gap` less than planned, > 0. */
@@ -232,13 +278,19 @@ export function readUsage(
   // Rounded to the column's two places, so 0.1 + 0.2 style noise never
   // makes a held count read as used.
   const used = round2(between.used);
-  if (used < 0) return { state: "unlogged", missing: -used };
+  const margin = countMargin(pair);
+  const inMargin = (n: number) => Math.abs(n) <= margin + 1e-9;
+  // Below zero by more than the counts can get wrong: something arrived
+  // unrecorded. By less, it is a miscount, and reads as nothing used.
+  if (used < 0 && !inMargin(used)) return { state: "unlogged", missing: -used };
 
   if (!(planned > 0)) {
-    return used > 0 ? { state: "usedUnplanned", used } : { state: "unchangedUnplanned" };
+    if (used === 0) return { state: "unchangedUnplanned" };
+    return inMargin(used) ? { state: "withinCount", used, gap: used, margin } : { state: "usedUnplanned", used };
   }
-  const gap = round2(used - planned);
+  const gap = round2(Math.max(used, 0) - planned);
   if (Math.abs(gap) <= planned * GAP_RATIO + 1e-9) return { state: "asPlanned", used, gap };
+  if (inMargin(gap)) return { state: "withinCount", used, gap, margin };
   return gap > 0
     ? { state: "moreThanPlanned", used, gap }
     : { state: "lessThanPlanned", used, gap: -gap };
@@ -252,6 +304,42 @@ export function standsOut(reading: UsageReading): boolean {
     reading.state === "usedUnplanned" ||
     reading.state === "unlogged"
   );
+}
+
+/**
+ * Used against the plan: the signed quantity (+ is more than planned) and
+ * the same as a whole percentage of the plan. Null when there is nothing to
+ * compare (unit change, same day, deliveries unknown, or unrecorded
+ * deliveries that leave usage unknown). `percent` is null when nothing was
+ * planned — a share of zero is not a number, and a dash says so better
+ * than "∞%".
+ */
+export function difference(
+  reading: UsageReading,
+  planned: number | null,
+): { quantity: number; percent: number | null } | null {
+  let quantity: number;
+  switch (reading.state) {
+    case "asPlanned":
+    case "withinCount":
+    case "moreThanPlanned":
+      quantity = reading.gap;
+      break;
+    case "lessThanPlanned":
+      quantity = -reading.gap;
+      break;
+    case "usedUnplanned":
+      quantity = reading.used;
+      break;
+    case "unchangedUnplanned":
+      quantity = 0;
+      break;
+    default:
+      return null;
+  }
+  const percent = planned != null && planned > 0 ? Math.round((quantity / planned) * 100) : null;
+  // -0 would print as "-0%".
+  return { quantity: round2(quantity) || 0, percent: percent === 0 ? 0 : percent };
 }
 
 function round2(n: number): number {

@@ -1019,6 +1019,11 @@ const en = {
       from: (supplier: string) => `from ${supplier}`,
       donated: "donated",
       by: (name: string) => `recorded by ${name}`,
+      side: {
+        before: "Before that day's stocktake",
+        after: "After that day's stocktake",
+        between: "Between that day's stocktakes",
+      },
       deleteConfirm: (name: string) => `Delete this delivery of ${name}? Record it again if it was typed wrong.`,
       deleting: "Deleting…",
       note: (n: number) =>
@@ -1291,6 +1296,7 @@ const en = {
         to: "Later count",
         used: "Used",
         planned: "Planned for these dates",
+        difference: "Difference",
         reading: "Against the plan",
       },
       days: (n: number) => `over ${n} day${n === 1 ? "" : "s"}`,
@@ -1298,6 +1304,8 @@ const en = {
       deliveries: (n: number) => `${n} deliver${n === 1 ? "y" : "ies"}`,
       readings: {
         asPlanned: "About as planned",
+        withinCountWhy: (gap: string, margin: string) =>
+          `Off by ${gap}, but two counts of this item can differ by ${margin} on their own, so it isn't marked.`,
         moreThanPlanned: (quantity: string) => `Used ${quantity} more than planned`,
         moreThanPlannedWhy:
           "Worth checking the counts, doses given without a prescription, spillage and waste — and that no delivery was recorded twice or too large.",
@@ -1325,8 +1333,30 @@ const en = {
       couldntLoad: "Couldn't load the stock counts",
       couldntLoadPlan: "Couldn't load the plan",
       couldntLoadDeliveries: "Couldn't load the deliveries",
+      csv: {
+        download: "Download CSV",
+        yes: "yes",
+        columns: {
+          section: "Section",
+          item: "Item",
+          unit: "Unit",
+          fromDate: "Earlier count date",
+          from: "Earlier count",
+          received: "Deliveries recorded",
+          deliveries: "Number of deliveries",
+          toDate: "Later count date",
+          to: "Later count",
+          used: "Used",
+          planned: "Planned",
+          days: "Days",
+          difference: "Difference",
+          differencePercent: "Difference %",
+          reading: "Against the plan",
+          marked: "Marked",
+        },
+      },
       note:
-        "Planned is what the prescriptions and diets in the app say would be used from the day of the earlier count up to the day before the later one. A row is marked when usage is more than a quarter away from the plan. A delivery counts towards the stocktake it was on the shelf for. Only stocktakes are compared; a count changed by hand on the Medications or Diets page is not.",
+        "Planned is what the prescriptions and diets in the app say would be used from the day of the earlier count up to the day before the later one. Difference is used minus planned, and as a percentage of the plan (a dash when nothing was planned). A row is marked when usage is more than a quarter away from the plan and further from it than two counts of that item can differ by — one tablet, capsule, can or sachet, or a twentieth of what was on the shelf for things measured by eye, like ml or g — so small items don't stand out over a miscount. A delivery counts towards the stocktake it was on the shelf for. Only stocktakes are compared; a count changed by hand on the Medications or Diets page is not.",
     },
     forecastWindow: {
       from: "From",

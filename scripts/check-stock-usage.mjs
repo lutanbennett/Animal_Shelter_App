@@ -23,7 +23,7 @@ register(
       }`),
 );
 const lib = await import(pathToFileURL(join(process.cwd(), "src/lib/management/stock-usage.ts")).href);
-const { latestPairs, stocktakePairs, stocktakeSessions, planWindow, receivedBetween, readUsage, standsOut, editedSince, departedDuring } = lib;
+const { latestPairs, stocktakePairs, stocktakeSessions, planWindow, receivedBetween, readUsage, standsOut, countMargin, difference, editedSince, departedDuring } = lib;
 
 let fails = 0;
 const eq = (name, got, want) => {
@@ -99,7 +99,39 @@ eq("unit changed since the count", readUsage(ab, got(40), 10, "ml"), { state: "u
 eq("a receipt in another unit (view used null)", readUsage(ab, got(null, 30), 10, "tablet"), { state: "unitChanged" });
 eq("same day", readUsage({ from: rows[1], to: rows[2] }, got(2), 10, "tablet"), { state: "sameDay" });
 eq("view not loaded -> unknown", readUsage(ab, null, 10, "tablet"), { state: "unknown" });
-eq("standsOut", ["asPlanned", "moreThanPlanned", "lessThanPlanned", "usedUnplanned", "unlogged", "unknown"].map((s) => standsOut({ state: s })), [false, true, true, true, true, false]);
+eq("standsOut", ["asPlanned", "withinCount", "moreThanPlanned", "lessThanPlanned", "usedUnplanned", "unlogged", "unknown"].map((s) => standsOut({ state: s })), [false, false, true, true, true, true, false]);
+
+// --- the floor: a gap the two counts can't tell apart is never marked ---
+const small = { from: row("A", "rare", 10, s1), to: row("B", "rare", 7, s2) };
+eq("margin: a counted unit is one", countMargin(small), 1);
+eq("margin: read by eye, 5% of the larger count", countMargin({ from: row("A", "syrup", 400, s1, "ml"), to: row("B", "syrup", 250, s2, "ml") }), 20);
+eq("margin: every counted unit", ["tablet", "capsule", "sachet", "application", "dose", "can", "portion"].map((u) => countMargin({ from: row("A", "x", 500, s1, u), to: row("B", "x", 400, s2, u) })), [1, 1, 1, 1, 1, 1, 1]);
+eq("margin: read units scale with the stock", ["ml", "g", "mg", "drop", "cup", "IU", "mcg"].map((u) => countMargin({ from: row("A", "x", 200, s1, u), to: row("B", "x", 100, s2, u) })), [10, 10, 10, 10, 10, 10, 10]);
+eq("tiny: planned 2, used 3 (+50%) is within one tablet", readUsage(small, got(3), 2, "tablet"), { state: "withinCount", used: 3, gap: 1, margin: 1 });
+eq("tiny: planned 2, used 4 is past the floor", readUsage(small, got(4), 2, "tablet").state, "moreThanPlanned");
+eq("tiny: planned 2, used 1 (-50%) is within one tablet", readUsage(small, got(1), 2, "tablet").state, "withinCount");
+eq("tiny: nothing planned, one used", readUsage(small, got(1), 0, "tablet"), { state: "withinCount", used: 1, gap: 1, margin: 1 });
+eq("tiny: nothing planned, two used is marked", readUsage(small, got(2), 0, "tablet").state, "usedUnplanned");
+eq("tiny: one below zero is a miscount, not an unrecorded delivery", readUsage(small, got(-1), 0, "tablet").state, "withinCount");
+eq("tiny: two below zero is an unrecorded delivery", readUsage(small, got(-2), 0, "tablet"), { state: "unlogged", missing: 2 });
+eq("tiny: half below zero with a real plan reads as nothing used", readUsage(small, got(-0.5), 20, "tablet"), { state: "lessThanPlanned", used: -0.5, gap: 20 });
+const bottle = { from: row("A", "syrup", 400, s1, "ml"), to: row("B", "syrup", 380, s2, "ml") };
+eq("read: 20 ml over a 5 ml plan is inside a 400 ml bottle's margin", readUsage(bottle, got(20), 5, "ml").state, "withinCount");
+eq("read: 25 ml over a 5 ml plan is marked", readUsage(bottle, got(30), 5, "ml").state, "moreThanPlanned");
+eq("the ratio still rules big items", readUsage(ab, got(52), 40, "tablet").state, "moreThanPlanned");
+
+// --- difference, with the percentage beside it ---
+eq("diff: more", difference({ state: "moreThanPlanned", used: 70, gap: 30 }, 40), { quantity: 30, percent: 75 });
+eq("diff: less is negative", difference({ state: "lessThanPlanned", used: 40, gap: 40 }, 80), { quantity: -40, percent: -50 });
+eq("diff: as planned", difference({ state: "asPlanned", used: 40, gap: 0 }, 40), { quantity: 0, percent: 0 });
+eq("diff: within the count", difference({ state: "withinCount", used: 3, gap: 1, margin: 1 }, 2), { quantity: 1, percent: 50 });
+eq("diff: nothing planned has no percentage", difference({ state: "usedUnplanned", used: 12 }, 0), { quantity: 12, percent: null });
+eq("diff: nothing planned, nothing used", difference({ state: "unchangedUnplanned" }, 0), { quantity: 0, percent: null });
+eq("diff: plan not loaded (null)", difference({ state: "usedUnplanned", used: 12 }, null), { quantity: 12, percent: null });
+eq("diff: rounds to a whole percent", difference({ state: "moreThanPlanned", used: 4, gap: 1 }, 3), { quantity: 1, percent: 33 });
+eq("diff: none for unrecorded / unit change / same day / unknown",
+  ["unlogged", "unitChanged", "sameDay", "unknown"].map((state) => difference({ state, missing: 3 }, 10)), [null, null, null, null]);
+eq("diff: never -0", Object.is(difference({ state: "asPlanned", used: 10, gap: -0.001 }, 10).quantity, -0), false);
 
 // --- caveats ---
 eq("edited: same instant", editedSince(ab, s2), false);
