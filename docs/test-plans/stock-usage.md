@@ -16,7 +16,7 @@ or `n/a` / `deferred` with the reason.
 | PR | linked from the PR itself |
 | Tested by / date | Claude (stock-usage session), 2026-09-26 |
 | Carries a migration? | no — reads `0093_stock_counts.sql`, merged in #146 and applied to dev |
-| Tested at SHA | `623ff39` |
+| Tested at SHA | `23bab08` |
 
 ## 1. Scope and risk
 
@@ -27,11 +27,11 @@ or `n/a` / `deferred` with the reason.
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (#149 contact-channels, merge commit `623ff39`, no conflicts)
-- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`:
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in twice: first #149 contact-channels (`623ff39`, clean); then, after the PR showed as conflicting, the public-site resident page (`23bab08`), whose only conflict was both branches appending a line to `unreleased` in `src/lib/releases.ts` — both lines kept
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`, rerun after the second sync:
 
 ```
-=== gates: build exited 0 after 301s
+=== gates: build exited 0 after 169s
 
 gates: typecheck=0 lint=0 build=0
 ```
