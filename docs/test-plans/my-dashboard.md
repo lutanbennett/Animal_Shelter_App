@@ -11,7 +11,7 @@
 | PR | opened from this branch; see the PR page |
 | Tested by / date | Claude, 2026-09-26 |
 | Carries a migration? | no |
-| Tested at SHA | `0bcb031` (browser checks, role matrix, gates) |
+| Tested at SHA | `0bcb031` (browser checks, role matrix, gates); `6969a6b` after the home-page change (landing checks, gates) |
 
 ## 1. Scope and risk
 
@@ -27,6 +27,15 @@
 
 ```
 === gates: build exited 0 after 478s
+gates: typecheck=0 lint=0 build=0
+```
+
+  At `6969a6b` (after the home-page change; sync "Already up to date."):
+
+```
+=== gates: typecheck exited 0 after 11s
+=== gates: lint exited 0 after 100s
+=== gates: build exited 0 after 161s
 gates: typecheck=0 lint=0 build=0
 ```
 
