@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Resident operations → "Recurring jobs for staff, feeding My dashboard" (with the 2026-09-26 "reassigning one week" addition) |
 | Branch / worktree | `claude/recurring-jobs` @ `C:\Development\Animal_Shelter_recurring-jobs` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3002` |
-| PR | to be opened from this branch |
+| PR | #160 |
 | Tested by / date | Claude (recurring-jobs session), 2026-09-26, signed in as Lutan (admin) in the browser pane |
 | Carries a migration? | no — builds on `0095` (#155), already applied to dev and production |
 | Tested at SHA | the commit adding this file (browser checks ran on `15dae22` plus the "Next dates" fix in this commit, re-checked after it) |
@@ -33,7 +33,7 @@ gates: typecheck=0 lint=0 build=0
 
 (Re-run after the "Next dates" fix; the first run, straight after the sync, also ended `typecheck=0 lint=0 build=0`.)
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (#160): check, migration-numbers and test-plan all passed on e7e338b
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -171,7 +171,7 @@ Manual verification by: pending: the five items under Left for manual verificati
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR (#160 description)
 - [ ] Handed to the production release manager — n/a: not yet — handed over once the PR is open
 
 Result: pass
