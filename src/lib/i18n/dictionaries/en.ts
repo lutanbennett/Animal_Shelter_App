@@ -27,6 +27,10 @@ const en = {
     failedToDelete: "Failed to delete.",
     failedToRemove: "Failed to remove.",
     failedToReorder: "Failed to reorder.",
+    // A server action's failure nobody planned words for
+    // (src/lib/action-result.ts); the reference finds the logged cause.
+    somethingWentWrong: (ref: string) =>
+      `Something went wrong. Please try again; if it keeps happening, report it with reference ${ref}.`,
     // Any Drive call whose token or client is dead (drive-errors.ts).
     driveNotConnected: "Photo storage is not connected — tell an admin.",
     driveFailed: "Google Drive didn't accept that. Try again in a minute.",
@@ -534,6 +538,11 @@ const en = {
         cantArchiveOwnAccount: "You can't archive your own account.",
         cantResetOwnPassword: "Change your own password from the Change password page instead.",
         adminAccessRequired: "Admin access required.",
+        hasRecords:
+          "This person has records in the system, so they can't be deleted. Archive them instead.",
+        userNotFound: "This login no longer exists. Reload the page.",
+        emailTaken: "There is already a login with that email.",
+        emailInvalid: "That email address doesn't look right.",
       },
       createdUser: (email: string, role: string) => `Created ${email} as ${role}.`,
     },

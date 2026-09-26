@@ -29,6 +29,8 @@ const th: Dictionary = {
     failedToDelete: "ลบไม่สำเร็จ",
     failedToRemove: "ลบไม่สำเร็จ",
     failedToReorder: "จัดลำดับใหม่ไม่สำเร็จ",
+    somethingWentWrong: (ref: string) =>
+      `เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง หากยังเกิดขึ้นอีก โปรดแจ้งพร้อมรหัสอ้างอิง ${ref}`,
     driveNotConnected: "ที่เก็บรูปภาพยังไม่ได้เชื่อมต่อ — โปรดแจ้งผู้ดูแลระบบ",
     driveFailed: "Google Drive ไม่รับไฟล์นี้ ลองใหม่อีกครั้งในอีกสักครู่",
     system: "(ระบบ)",
@@ -520,6 +522,10 @@ const th: Dictionary = {
         cantArchiveOwnAccount: "คุณไม่สามารถเก็บถาวรบัญชีของตัวเองได้",
         cantResetOwnPassword: "เปลี่ยนรหัสผ่านของคุณเองได้จากหน้าเปลี่ยนรหัสผ่าน",
         adminAccessRequired: "ต้องมีสิทธิ์ผู้ดูแลระบบ",
+        hasRecords: "ผู้ใช้นี้มีข้อมูลที่บันทึกไว้ในระบบ จึงลบไม่ได้ ให้เก็บถาวรแทน",
+        userNotFound: "ไม่พบบัญชีนี้แล้ว กรุณาโหลดหน้าใหม่",
+        emailTaken: "มีบัญชีที่ใช้อีเมลนี้อยู่แล้ว",
+        emailInvalid: "รูปแบบอีเมลไม่ถูกต้อง",
       },
       createdUser: (email: string, role: string) =>
         `สร้างผู้ใช้ ${email} เป็น ${role} แล้ว`,

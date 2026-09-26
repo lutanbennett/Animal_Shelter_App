@@ -9,6 +9,7 @@ import {
   updateUserRole,
 } from "./actions";
 import { TemporaryPasswordNotice } from "@/components/TemporaryPasswordNotice";
+import type { ActionResult } from "@/lib/action-result";
 import { formatDateTime as formatDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { roleLabel } from "@/lib/i18n/enum-labels";
@@ -43,94 +44,68 @@ function UserRow({
   const [isPending, startTransition] = useTransition();
   const archived = !!user.archivedAt;
 
+  /**
+   * Runs one of the row's actions and shows its refusal. The actions
+   * return their errors (src/lib/action-result.ts); the catch is only for
+   * the call itself failing — offline, or the server gone — where a thrown
+   * message would read "#441", so it gets the row's own words instead.
+   */
+  function run<R extends object>(
+    action: () => Promise<ActionResult<R>>,
+    fallback: string,
+    onOk?: (result: { ok: true } & R) => void,
+    onError?: () => void,
+  ) {
+    setMessage(null);
+    startTransition(async () => {
+      let result: ActionResult<R>;
+      try {
+        result = await action();
+      } catch {
+        result = { ok: false, error: fallback };
+      }
+      if (result.ok) {
+        onOk?.(result);
+      } else {
+        onError?.();
+        setMessage({ type: "error", text: result.error });
+      }
+    });
+  }
+
   function handleRoleChange(nextRole: string) {
     const previous = role;
     setRole(nextRole);
-    setMessage(null);
-    startTransition(async () => {
-      try {
-        await updateUserRole(user.id, nextRole);
-        setMessage({ type: "success", text: t.admin.security.table.roleUpdated });
-      } catch (err) {
-        setRole(previous);
-        setMessage({
-          type: "error",
-          text:
-            err instanceof Error
-              ? err.message
-              : t.admin.security.table.failedToUpdateRole,
-        });
-      }
-    });
+    run(
+      () => updateUserRole(user.id, nextRole),
+      t.admin.security.table.failedToUpdateRole,
+      () => setMessage({ type: "success", text: t.admin.security.table.roleUpdated }),
+      () => setRole(previous),
+    );
   }
 
   function handleIssuePassword() {
     if (!window.confirm(t.admin.security.table.issueConfirm(user.email))) return;
-    setMessage(null);
     setIssuedPassword(null);
-    startTransition(async () => {
-      try {
-        const password = await issueTemporaryPassword(user.id);
-        setIssuedPassword(password);
-      } catch (err) {
-        setMessage({
-          type: "error",
-          text:
-            err instanceof Error
-              ? err.message
-              : t.admin.security.table.failedToResetPassword,
-        });
-      }
-    });
+    run(
+      () => issueTemporaryPassword(user.id),
+      t.admin.security.table.failedToResetPassword,
+      (result) => setIssuedPassword(result.temporaryPassword),
+    );
   }
 
   function handleArchive() {
     if (!window.confirm(t.admin.security.table.archiveConfirm(user.email))) return;
-    setMessage(null);
-    startTransition(async () => {
-      try {
-        await archiveUser(user.id);
-      } catch (err) {
-        setMessage({
-          type: "error",
-          text:
-            err instanceof Error ? err.message : t.admin.security.table.failedToArchiveUser,
-        });
-      }
-    });
+    run(() => archiveUser(user.id), t.admin.security.table.failedToArchiveUser);
   }
 
   function handleRestore() {
-    setMessage(null);
-    startTransition(async () => {
-      try {
-        await restoreUser(user.id);
-      } catch (err) {
-        setMessage({
-          type: "error",
-          text:
-            err instanceof Error ? err.message : t.admin.security.table.failedToRestoreUser,
-        });
-      }
-    });
+    run(() => restoreUser(user.id), t.admin.security.table.failedToRestoreUser);
   }
 
   function handleDelete() {
     if (!window.confirm(t.admin.security.table.deleteConfirm(user.email))) return;
-    setMessage(null);
-    startTransition(async () => {
-      try {
-        await deleteUser(user.id);
-      } catch (err) {
-        setMessage({
-          type: "error",
-          text:
-            err instanceof Error
-              ? err.message
-              : t.admin.security.table.failedToDeleteUser,
-        });
-      }
-    });
+    run(() => deleteUser(user.id), t.admin.security.table.failedToDeleteUser);
   }
 
   return (

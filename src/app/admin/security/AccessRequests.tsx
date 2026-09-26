@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { approveAccessRequest, deleteUser } from "./actions";
+import type { ActionResult } from "@/lib/action-result";
 import { formatDateTime } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { roleLabel } from "@/lib/i18n/enum-labels";
@@ -31,24 +32,27 @@ function RequestRow({ request }: { request: AccessRequest }) {
       setError(r.chooseRole);
       return;
     }
-    setError(null);
-    startTransition(async () => {
-      try {
-        await approveAccessRequest(request.id, role);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : t.admin.security.table.failedToUpdateRole);
-      }
-    });
+    run(() => approveAccessRequest(request.id, role), t.admin.security.table.failedToUpdateRole);
   }
 
   function deny() {
     if (!window.confirm(r.denyConfirm(request.email))) return;
+    run(() => deleteUser(request.id), t.admin.security.table.failedToDeleteUser);
+  }
+
+  /**
+   * The actions return their refusals (src/lib/action-result.ts); the
+   * catch is only for the call itself failing, whose thrown message would
+   * read "#441".
+   */
+  function run(action: () => Promise<ActionResult>, fallback: string) {
     setError(null);
     startTransition(async () => {
       try {
-        await deleteUser(request.id);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : t.admin.security.table.failedToDeleteUser);
+        const result = await action();
+        if (!result.ok) setError(result.error);
+      } catch {
+        setError(fallback);
       }
     });
   }

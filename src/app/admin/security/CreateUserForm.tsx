@@ -60,11 +60,11 @@ export function CreateUserForm() {
       >
         {pending ? t.common.creating : t.admin.security.createForm.createButton}
       </button>
-      {state && "error" in state && (
+      {state && !state.ok && (
         <p className="w-full text-sm text-danger">{state.error}</p>
       )}
       <p className="w-full text-xs text-muted">{t.admin.security.createForm.tempPasswordNote}</p>
-      {state && "success" in state && (
+      {state?.ok && (
         <>
           <p className="w-full text-sm text-success">{state.success}</p>
           <TemporaryPasswordNotice email={state.email} password={state.temporaryPassword} />
