@@ -74,11 +74,10 @@ const PUBLIC = new Set([...PUBLIC_VIEWS, ...PUBLIC_TABLES]);
 // for a harmless call. The public views call the shelter_* ones (EXECUTE is
 // checked as the caller even inside a view), the site_* policies call
 // current_user_role, and the photo proxy calls is_public_drive_file (0084).
-// is_known_drive_file is still granted to anon from when the proxy called it
-// for everyone; nothing anon-facing calls it now (docs/backlog.md).
+// is_known_drive_file was on this list until 0089 took it back; it answers
+// yes for internal files too, so it must now be refused like the rest.
 const PUBLIC_FUNCTIONS = {
   current_user_role: {},
-  is_known_drive_file: { p_drive_file_id: "check-public-views-no-such-file" },
   is_public_drive_file: { p_drive_file_id: "check-public-views-no-such-file" },
   shelter_date: { p_at: new Date().toISOString() },
   shelter_time_zone: {},
