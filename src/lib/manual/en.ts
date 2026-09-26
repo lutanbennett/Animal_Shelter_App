@@ -59,7 +59,7 @@ const manual: Manual = {
           title: "Signing in",
           path: "Home page → Staff & Volunteer Login",
           steps: [
-            "Open the app's address in your browser and tap Staff & Volunteer Login (or go straight to /login).",
+            "Open the app's address in your browser and tap Staff & Volunteer Login — or, once the website is open to the public, Staff login at the very bottom of any public page (or go straight to /login).",
             "Enter your email and password and tap Sign in — or tap Continue with Google if your account was set up with Google.",
             "You land on the Residents list. Sign out any time with the Sign out button at the top right.",
             "Forgotten your password? Tap Forgot password? under the Sign in button, enter your email, and follow the link in the message to choose a new one — it's valid for an hour. If you were given a temporary password and it's lost, ask an admin to issue another instead.",
@@ -946,8 +946,8 @@ const manual: Manual = {
           path: "Settings → Website",
           steps: [
             "Hero photo: the big photo at the top of the welcome page.",
-            "Labels and contact details: the tagline, hero photo description and visiting hours in English and Thai side by side, plus the email, phone, LINE id, address and map link shown in the footer of every public page and on each resident's profile.",
-            "Facebook page and Instagram: paste the shelter's links (they must start with https:// and be on facebook.com or instagram.com — the form says so if not). Each shows as a small icon in the footer; Facebook also sits at the top of every public page on a computer. Leave a box empty and its icon doesn't appear.",
+            "Labels and contact details: the tagline, hero photo description and visiting hours in English and Thai side by side, plus the email, phone, LINE id, address and map link shown in the footer of every public page and on each resident's profile. On a phone, the LINE id and phone number are also the LINE and Call buttons under Talk to us at the foot of the website's menu; with neither set, that panel isn't shown.",
+            "Facebook page and Instagram: paste the shelter's links (they must start with https:// and be on facebook.com or instagram.com — the form says so if not). Each shows under Follow us in the footer of every public page. Leave a box empty and its link doesn't appear.",
             "Pages: the wording of Our story, How adoption works, Foster, Volunteer and Donate. Separate paragraphs with a blank line; start a line with ## for a sub-heading or - for a bullet. The other language's version is written or approved in the translation panel under each field.",
             "Photo gallery: the strip of photos in the Our story section, in order.",
             "Pet of the week: one resident to spotlight, chosen from those on the public adoption page.",
