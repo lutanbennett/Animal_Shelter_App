@@ -22,7 +22,7 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly; second sync after the PR opened took in `0090_standard_diet_functions.sql` and docs (no overlap), merge `ecac178`, `decisions.md` merged by union
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly; second sync after the PR opened took in `0090_standard_diet_functions.sql` and docs (no overlap), merge `ecac178`, `decisions.md` merged by union; third sync before merge took in the standard-diet feature (19 files, no overlap), merge `1cc60ba`, gates re-run `typecheck=0 lint=0 build=0`
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — first at `2ce0999`, again on the second sync's merge `ecac178`:
 
 ```
