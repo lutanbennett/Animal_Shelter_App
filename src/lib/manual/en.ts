@@ -296,6 +296,7 @@ const manual: Manual = {
             "Link for this resident's RFID card: the address to program into the card by the kennel. Tap Copy link, or select it by hand; the residents list has the same copy icon on every row. Someone who scans the card while signed in lands on this hub; a visitor sees a public card for the resident — photo, name, age, sex, temperament and bio — with a link to the adoption profile when the resident is shown on the public site (Edit resident details).",
             "Housing & Status: current enclosure (or hospital / carer) and the actions that apply right now — Move enclosure, Send to hospital, Foster / adopt, and so on.",
             "Photos: the Google Drive gallery for this resident.",
+            "Adoption updates: news from the adopter — how many updates there are and the latest. It appears on any resident who has been adopted, including one since returned to the shelter. See Adoption updates below.",
             "Medical cards: Immunizations, Vet Appointments, Prescriptions, Weight, Procedures and Blood Tests. Each shows the latest state (for example \"2 missing\" mandatory vaccines, or the next vet visit) and a quick link to add a record.",
             "On a phone the hub is split into two tabs — Overview and Medical.",
           ],
@@ -304,6 +305,36 @@ const manual: Manual = {
             alt: "A resident hub with the details card, housing card and medical cards",
             caption: "A resident hub. Green, orange and red card colours mean fine, needs attention soon, and overdue or missing.",
           },
+        },
+        {
+          id: "adoption-updates",
+          title: "Adoption updates",
+          roles: ["admin", "management", "staff"],
+          path: "Resident hub → Adoption updates",
+          intro:
+            "When an adopter sends news — a message on LINE or Facebook, an email, or on a visit — record it on the animal's hub so it stays on their record, photos and all.",
+          steps: [
+            "Find the resident: on the Residents list choose Everywhere, as adopted residents are in neither On-site nor Off-site, and search for their name.",
+            "On the hub, tap Add update on the Adoption updates card.",
+            "Date received: the day the news arrived. Sent by: the adopter from their adoption is already chosen — change it if a partner or someone else in the family sent it, or choose Not recorded.",
+            "Came in by: LINE, Facebook, Email or Visit. What they said: the message, in your words or theirs — optional when there are only photos.",
+            "Photos: choose any photos they sent — several at once is fine. Tap Save update. The update is saved first, then each photo uploads with a progress bar, and you're taken to the list of updates.",
+            "Each update lists its date, how it came in, who sent it, the note and its photos. Edit / add photos corrects any of it or adds more photos; Delete removes the update and says how many photos go with it.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "Every photo an adopter sent stays labelled with who sent it, when and how — on the update, and on the resident's Photos page too. In Drive they are kept apart from the shelter's own, under Adoption updates in the resident's folder.",
+            },
+            {
+              kind: "tip",
+              text: "If a photo doesn't upload, the update itself is already saved: the form stays open and Save again retries just the photos that failed.",
+            },
+            {
+              kind: "note",
+              text: "A resident returned to the shelter keeps the updates from their time away, and the card stays on their hub. Volunteers and vets can read updates but not add them.",
+            },
+          ],
         },
         {
           id: "edit",
@@ -607,6 +638,7 @@ const manual: Manual = {
             "Choose the Drive folder the batch belongs in and, optionally, the date taken.",
             "Drop photos on the upload area or tap it to choose from your phone. You can select several at once.",
             "The first photo ever uploaded becomes the profile photo. To change it, hover or tap a photo and choose Set as profile photo, or pick one on the Edit page.",
+            "Photos an adopter sent carry a coloured label with who sent them, the date and how they came in, and opening one links back to its update. Once a resident has both kinds, the buttons above the gallery show just the shelter's photos or just the adopters'. Adopters' photos are added from Adoption updates, not here.",
           ],
           screenshot: {
             src: "/manual/resident-photos.png",

@@ -2,6 +2,11 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
+import Link from "next/link";
+import { formatDate } from "@/lib/format";
+import type { PhotoProvenance } from "@/lib/adoption-updates/options";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import type { Locale } from "@/lib/i18n/locales";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { deletePhoto, setProfilePhoto } from "@/app/residents/[id]/photos/actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -20,7 +25,31 @@ export type PhotoRow = {
   file_name: string | null;
   sub_folder: string | null;
   date_taken: string | null;
+  /**
+   * Set when an adopter sent the photo (attachments.adoption_update_id,
+   * 0097): who, when and how. Read with RESIDENT_PHOTO_SELECT so every list
+   * of resident photos carries it.
+   */
+  adoption_update?: PhotoProvenance | null;
 };
+
+type PhotoFilter = "all" | "shelter" | "adopters";
+
+/** The one-line provenance of an adopter's photo, or null for the shelter's own. */
+export function provenanceLine(
+  t: Dictionary,
+  locale: Locale,
+  update: PhotoProvenance | null | undefined,
+): string | null {
+  if (!update) return null;
+  const channel =
+    (t.adoptionUpdates.channels as Record<string, string>)[update.channel] ?? update.channel;
+  return t.adoptionUpdates.provenance(
+    update.sender?.name ?? null,
+    formatDate(update.received_on, locale),
+    channel,
+  );
+}
 
 export function PhotoGallery({
   residentId,
@@ -39,9 +68,10 @@ export function PhotoGallery({
    */
   readOnly?: boolean;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [openPhoto, setOpenPhoto] = useState<PhotoRow | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const [filter, setFilter] = useState<PhotoFilter>("all");
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -87,13 +117,49 @@ export function PhotoGallery({
     );
   }
 
-  const visiblePhotos = showAll ? photos : photos.slice(0, INITIAL_TILE_COUNT);
+  // The shelter's own photos and the ones adopters sent can be told apart
+  // and filtered (0097); the chips only appear once there is something to
+  // tell apart — both kinds, so never inside one update's own gallery.
+  const adopterCount = photos.filter((p) => p.adoption_update).length;
+  const showFilter = adopterCount > 0 && adopterCount < photos.length;
+  const filtered =
+    filter === "all"
+      ? photos
+      : photos.filter((p) => (filter === "adopters") === Boolean(p.adoption_update));
+  const visiblePhotos = showAll ? filtered : filtered.slice(0, INITIAL_TILE_COUNT);
+  const openProvenance = provenanceLine(t, locale, openPhoto?.adoption_update);
 
   return (
     <>
+      {showFilter && (
+        <div role="group" aria-label={t.photos.filter.label} className="mb-3 flex flex-wrap gap-2">
+          {(
+            [
+              ["all", t.photos.filter.all(photos.length)],
+              ["shelter", t.photos.filter.shelter(photos.length - adopterCount)],
+              ["adopters", t.photos.filter.adopters(adopterCount)],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              aria-pressed={filter === key}
+              onClick={() => setFilter(key)}
+              className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                filter === key
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border text-muted hover:text-foreground"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
         {visiblePhotos.map((photo) => {
           const isProfile = photo.drive_file_id === profilePhotoDriveFileId;
+          const provenance = provenanceLine(t, locale, photo.adoption_update);
           return (
             <button
               key={photo.id}
@@ -115,24 +181,33 @@ export function PhotoGallery({
                   {t.photos.profileBadge}
                 </span>
               )}
-              {(photo.sub_folder || photo.date_taken) && (
-                <span className="absolute inset-x-0 bottom-0 truncate bg-black/60 px-1.5 py-1 text-[10px] text-white">
-                  {[photo.sub_folder, photo.date_taken].filter(Boolean).join(" · ")}
+              {provenance ? (
+                <span
+                  title={provenance}
+                  className="absolute inset-x-0 bottom-0 truncate bg-primary/85 px-1.5 py-1 text-[10px] text-primary-foreground"
+                >
+                  {provenance}
                 </span>
+              ) : (
+                (photo.sub_folder || photo.date_taken) && (
+                  <span className="absolute inset-x-0 bottom-0 truncate bg-black/60 px-1.5 py-1 text-[10px] text-white">
+                    {[photo.sub_folder, photo.date_taken].filter(Boolean).join(" · ")}
+                  </span>
+                )
               )}
             </button>
           );
         })}
       </div>
 
-      {photos.length > INITIAL_TILE_COUNT && (
+      {filtered.length > INITIAL_TILE_COUNT && (
         <button
           type="button"
           onClick={() => setShowAll((v) => !v)}
           aria-expanded={showAll}
           className="mt-3 w-full rounded border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
         >
-          {showAll ? t.photos.showFewer : t.photos.showAll(photos.length)}
+          {showAll ? t.photos.showFewer : t.photos.showAll(filtered.length)}
         </button>
       )}
 
@@ -151,10 +226,22 @@ export function PhotoGallery({
                   <h2 className="truncate text-lg font-semibold text-foreground">
                     {openPhoto.file_name ?? t.photos.photoFallback}
                   </h2>
-                  {(openPhoto.sub_folder || openPhoto.date_taken) && (
+                  {openProvenance && openPhoto.adoption_update ? (
                     <p className="text-xs text-muted">
-                      {[openPhoto.sub_folder, openPhoto.date_taken].filter(Boolean).join(" · ")}
+                      {openProvenance} ·{" "}
+                      <Link
+                        href={`/residents/${residentId}/adoption-updates#update-${openPhoto.adoption_update.id}`}
+                        className="font-medium text-primary hover:underline"
+                      >
+                        {t.adoptionUpdates.seeUpdate}
+                      </Link>
                     </p>
+                  ) : (
+                    (openPhoto.sub_folder || openPhoto.date_taken) && (
+                      <p className="text-xs text-muted">
+                        {[openPhoto.sub_folder, openPhoto.date_taken].filter(Boolean).join(" · ")}
+                      </p>
+                    )
                   )}
                 </div>
                 <button

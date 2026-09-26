@@ -25,6 +25,8 @@
  * GOOGLE_OAUTH_REFRESH_TOKEN. See .env.example.
  */
 
+import { ADOPTION_UPDATES_FOLDER } from "@/lib/adoption-updates/options";
+
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const DRIVE_API = "https://www.googleapis.com/drive/v3";
 const DRIVE_UPLOAD_API = "https://www.googleapis.com/upload/drive/v3";
@@ -569,6 +571,25 @@ export async function ensureResidentBloodTestFolder(
 
   const bloodTestsFolderId = await findOrCreateFolder(drive, residentFolderId, "Blood Tests");
   const uploadFolderId = await findOrCreateFolder(drive, bloodTestsFolderId, yyyymmdd);
+
+  return { residentFolderId, uploadFolderId, isNewResidentFolder };
+}
+
+/**
+ * Ensures Residents/<Name> (<ID>)/Adoption updates/<YYYYMMDD>/ exists for a
+ * resident: photos an adopter sent, one folder per date the news arrived,
+ * beside Photos/ rather than inside it so the shelter's own photos and the
+ * adopter's never share a folder (0097).
+ */
+export async function ensureResidentAdoptionUpdateFolder(
+  drive: DriveClient,
+  resident: { name: string; resident_code: string; drive_folder_id: string | null },
+  yyyymmdd: string,
+): Promise<{ residentFolderId: string; uploadFolderId: string; isNewResidentFolder: boolean }> {
+  const { residentFolderId, isNewResidentFolder } = await ensureResidentFolder(drive, resident);
+
+  const updatesFolderId = await findOrCreateFolder(drive, residentFolderId, ADOPTION_UPDATES_FOLDER);
+  const uploadFolderId = await findOrCreateFolder(drive, updatesFolderId, yyyymmdd);
 
   return { residentFolderId, uploadFolderId, isNewResidentFolder };
 }
