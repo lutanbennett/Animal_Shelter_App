@@ -56,6 +56,7 @@ const th: Dictionary = {
   },
 
   nav: {
+    my: "งานของฉัน",
     residents: "สัตว์ในความดูแล",
     settings: "การตั้งค่า",
     management: "การจัดการ",
@@ -2402,6 +2403,30 @@ const th: Dictionary = {
       maintenanceViewAll: "ดูทั้งหมด",
       maintenanceLog: "บันทึกงานซ่อม",
     },
+  },
+
+  my: {
+    pageTitle: "งานของฉัน",
+    pageSubtitle: "งานที่มอบหมายให้คุณ เรียงจากเร่งด่วนที่สุด",
+    empty: "ตอนนี้ยังไม่มีงานที่มอบหมายให้คุณ",
+    couldntLoad: (source: string) => `โหลด${source}ไม่ได้`,
+    sources: {
+      maintenance: "งานซ่อมบำรุง",
+    },
+    openFullList: {
+      maintenance: "เปิดบอร์ด",
+    },
+    buckets: {
+      overdue: "เลยกำหนด",
+      today: "ครบกำหนดวันนี้",
+      later: "กำลังจะถึง",
+      none: "ไม่มีกำหนดส่ง",
+    },
+    withOthers: (names: string) => `ร่วมกับ ${names}`,
+    statusFor: (title: string) => `สถานะของ ${title}`,
+    markedDone: (title: string) => `ทำเครื่องหมาย “${title}” ว่าเสร็จสิ้นแล้ว`,
+    undo: "เลิกทำ",
+    navBadge: (n: number) => `ครบกำหนดวันนี้หรือเลยกำหนด ${n} งาน`,
   },
 
   maintenance: {

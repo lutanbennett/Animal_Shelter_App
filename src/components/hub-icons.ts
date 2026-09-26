@@ -17,6 +17,7 @@ import {
   House,
   Info,
   KeyRound,
+  ListTodo,
   Mail,
   MapPin,
   MessageCircle,
@@ -142,6 +143,7 @@ export const VET_ICONS = {
  * children use.
  */
 export const NAV_ICONS = {
+  my: ListTodo,
   residents: CONTACT_ICONS.residents,
   enclosures: ENCLOSURE_ICONS.enclosure,
   maintenance: ENCLOSURE_ICONS.maintenance,

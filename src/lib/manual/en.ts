@@ -7,6 +7,7 @@ import {
   Globe,
   HeartPulse,
   House,
+  ListTodo,
   PawPrint,
   Settings,
   Users,
@@ -93,7 +94,7 @@ const manual: Manual = {
           id: "navigation",
           title: "Finding your way around",
           steps: [
-            "On a computer the menu is always visible down the left, each link with its own icon: Residents, Enclosures and Maintenance first, then Vets, Contacts and Projects — and, depending on your role, Management and Settings. Those two open a front page of tiles, one for each page inside them; the same icons are used on the tiles and in the menu.",
+            "On a computer the menu is always visible down the left, each link with its own icon: My tasks at the top, then Residents, Enclosures and Maintenance, then Vets, Contacts and Projects — and, depending on your role, Management and Settings. Those two open a front page of tiles, one for each page inside them; the same icons are used on the tiles and in the menu.",
             "Under a dividing line at the very bottom of the menu sit the things you only need now and then, so they are always in the same place: this manual, Release notes, Change password and — for admins — Security, where accounts and roles are managed.",
             "On a phone tap the ☰ button at the top left to open the same menu; tap outside it to close. The same links are the last entries in it, below the same line.",
             "The LCA logo and your email are in the header, with the Assistant button, the language switch and Sign out. Tap the logo to see the public website as a visitor does — it opens in a new tab so you don't lose your place.",
@@ -160,6 +161,35 @@ const manual: Manual = {
           title: "Roles — who can do what",
           intro:
             "Every account has one role. The app hides buttons you can't use, and the database refuses the change even if a button is reached another way. Sections below say which roles can do each task.",
+        },
+      ],
+    },
+
+    // ------------------------------------------------------------------
+    {
+      id: "my-tasks",
+      title: "My tasks",
+      icon: ListTodo,
+      intro:
+        "What you need to do today: the work assigned to you, in one place. For now that is your maintenance jobs; other kinds of work will appear here as further sections as they are added.",
+      topics: [
+        {
+          id: "my-tasks-page",
+          title: "Seeing what's assigned to you",
+          path: "My tasks (first in the menu)",
+          steps: [
+            "Tap My tasks at the top of the menu. Every maintenance job you are on that isn't Completed is listed, grouped as Overdue, Due today, Coming up and No due date — most urgent first.",
+            "Each job shows its place, its due date and, when it went to a team, who else is on it. Tap the title to open the job with its photos and details.",
+            "Change a job's status with the buttons beside it: Not started, In progress, Blocked or Completed. A job marked Completed leaves the list, with Undo in case you tapped the wrong one.",
+            "The number beside My tasks in the menu is how many of your jobs are due today or overdue. It disappears when there are none.",
+            "Open the board takes you to the maintenance board showing only your jobs.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "Volunteers see the jobs they are on and their status, but can't change the status — ask a staff member, as on the board. Vets aren't given maintenance jobs, so for now their list is empty.",
+            },
+          ],
         },
       ],
     },

@@ -66,10 +66,11 @@ const JOB_COLUMNS =
  */
 export async function loadMaintenanceJobs(
   supabase: SupabaseClient,
-  filter: { enclosureId?: string; zoneId?: string; id?: string } = {},
+  filter: { enclosureId?: string; zoneId?: string; id?: string; ids?: string[] } = {},
 ): Promise<{ jobs: MaintenanceJob[]; error: string | null }> {
   let query = supabase.from("maintenance").select(JOB_COLUMNS);
   if (filter.id) query = query.eq("id", filter.id);
+  if (filter.ids) query = query.in("id", filter.ids);
   if (filter.enclosureId) query = query.eq("enclosure_id", filter.enclosureId);
   if (filter.zoneId) query = query.eq("zone_id", filter.zoneId);
 

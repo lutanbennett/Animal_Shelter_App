@@ -596,6 +596,10 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
 - `src/lib/maintenance/` — the enclosure maintenance feature's shared
   pieces: status vocabulary and colours, the job loader, and the
   after-change Drive folder sync used by the server actions.
+- `src/lib/my-tasks/` — `/my`, "My tasks": the common `MyTask` shape every
+  source returns (`types.ts`) and one loader per source — maintenance so
+  far — plus the count behind the menu badge. A new source is a loader
+  beside `maintenance.ts`; see `docs/decisions.md`, 2026-09-26.
 - `src/lib/projects/` — the project folder browser's shared pieces: the
   category list, folder/photo loaders, and the Drive sync that keeps
   `Projects/<Category>/<folder>/…` matching the tree after renames and

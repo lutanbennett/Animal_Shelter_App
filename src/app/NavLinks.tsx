@@ -13,6 +13,8 @@ type NavItem = {
   icon: LucideIcon;
   /** Small pill after the label, e.g. "Demo". */
   badge?: string;
+  /** What the pill means, for a pill that is only a number. */
+  badgeTitle?: string;
 };
 
 /**
@@ -31,10 +33,13 @@ function activeHref(pathname: string, items: NavItem[]): string | undefined {
 export function NavLinks({
   isAdmin,
   canManage,
+  urgentCount,
 }: {
   isAdmin: boolean;
   /** Admin or management: shows the Management link. */
   canManage: boolean;
+  /** My tasks due today or overdue, shown on the My tasks link when > 0. */
+  urgentCount: number;
 }) {
   const pathname = usePathname();
   const { t } = useI18n();
@@ -48,6 +53,14 @@ export function NavLinks({
   // those children under chevrons.
   const groups: NavItem[][] = [
     [
+      // First for every role: "what do I need to do today" (my-dashboard).
+      {
+        href: "/my",
+        label: t.nav.my,
+        icon: NAV_ICONS.my,
+        badge: urgentCount > 0 ? String(urgentCount) : undefined,
+        badgeTitle: urgentCount > 0 ? t.my.navBadge(urgentCount) : undefined,
+      },
       { href: "/residents", label: t.nav.residents, icon: NAV_ICONS.residents },
       {
         href: "/enclosures",
@@ -135,7 +148,10 @@ export function NavLinks({
           <span className="min-w-0">
             {item.label}
             {item.badge && (
-              <span className="ml-2 rounded-full border border-current px-1.5 py-px align-middle text-[10px] font-semibold uppercase tracking-wide">
+              <span
+                title={item.badgeTitle}
+                className="ml-2 rounded-full border border-current px-1.5 py-px align-middle text-[10px] font-semibold uppercase tracking-wide"
+              >
                 {item.badge}
               </span>
             )}
