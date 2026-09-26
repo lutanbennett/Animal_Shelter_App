@@ -89,43 +89,56 @@ const en = {
   },
 
   home: {
-    browseGuest: "Browse Our Available Residents",
-    welcomeHeading: "Welcome to Lanna Care for Animals",
+    /** The line above the hero heading. */
+    eyebrow: "Rescue foundation · Mae Wang, Chiang Mai",
+    heroHeading: "Every street dog and cat deserves a second chance.",
+    /** The hero paragraph when /admin/website has no tagline. */
+    heroLead:
+      "We rescue, treat and care for dogs and cats at our shelter in Mae Wang — and find loving homes for as many as we can. The rest stay with us, safe and cared for, for life.",
+    meetAnimals: "Meet the animals",
+    giveMonthly: "Give monthly",
     ourStoryFallback: "Our story",
-    readyHeading: "Ready to meet everyone?",
-    readySubtitle:
-      "Browse our current and adoptable residents — no account needed.",
-    browseResidents: "Browse Our Available Residents",
+    seeOurWork: "See our work in the community",
     footerOrgName: "Lanna Care for Animals Foundation",
+    /** The impact band under the hero — each label reads after its number. */
     stats: {
-      heading: "The shelter at a glance",
-      inCare: "Residents in our care",
-      inCareDetail: "At the shelter, in hospital or with foster carers right now",
-      adoptedThisYear: "Adopted this year",
-      adoptedThisYearDetail: (lastWeek: number) =>
-        lastWeek === 1 ? "1 in the last week" : `${lastWeek} in the last week`,
-      inVetCare: "In vet care",
-      inVetCareDetail: "On medication or in hospital right now",
-      inFoster: "In foster care",
-      inFosterDetail: "Living with a foster family while they wait",
+      heading: "Our impact",
+      inCare: "dogs and cats in our care today",
+      adoptedThisYear: "adopted into new homes this year",
+      inFoster: "living with foster families",
+      inVetCare: "in vet care right now",
     },
     featured: {
       heading: "Pet of the week",
-      meetName: (name: string) => `Meet ${name}`,
       noPhoto: "No photo yet",
       availableForAdoption: "Available for adoption",
-      readMore: "Read their story",
-    },
-    whatWeDo: {
-      heading: "What we do",
-      subtitle:
-        "Sterilisation drives, rescues, community outreach and the projects that keep the shelter running.",
-      seeAll: "See all our work",
+      desexed: "Desexed",
+      readStory: (name: string) => `Read ${name}'s story`,
     },
     howToHelp: {
       heading: "How you can help",
-      subtitle: "Foster, volunteer or donate — every one of them changes an animal's life.",
-      readMore: "Find out more",
+      subtitle:
+        "Whatever you can give — a home, an afternoon or a few hundred baht — changes an animal's life.",
+      adopt: {
+        title: "Adopt",
+        body: "Give a rescued dog or cat a forever home. Every animal leaves vaccinated and sterilised.",
+        cta: "Meet the animals",
+      },
+      sponsor: {
+        title: "Sponsor a resident",
+        body: "Many of our animals will live here for life. A monthly gift helps pay for their food and care.",
+        cta: "Find out how",
+      },
+      foster: {
+        title: "Foster",
+        body: "Offer a quiet home to an animal recovering from surgery, or puppies too young for the shelter.",
+        cta: "Become a foster",
+      },
+      volunteer: {
+        title: "Volunteer",
+        body: "Walk dogs, socialise cats, help on sterilisation days, or lend your photography skills.",
+        cta: "Plan a visit",
+      },
     },
     /** Open Graph description when no tagline is set. */
     shareFallback: "A non-profit rescue shelter for dogs and cats in Mae Wang, Chiang Mai.",
@@ -2996,8 +3009,11 @@ const en = {
     shareFallback: "The local businesses that help Lanna Care for Animals — thank you.",
     homeStrip: {
       heading: "Thank you to our Shelter Friends",
-      subtitle: "Local businesses that help us care for the animals.",
-      seeAll: "Meet our friends",
+      subtitle:
+        "Local businesses who help feed, treat and care for our animals. Shop with them — many offer discounts to our supporters.",
+      seeAll: "Meet all our Shelter Friends and their offers",
+      become: "Become a Shelter Friend",
+      yourBusiness: "Your business here?",
     },
     donateMention: {
       heading: "Give in kind",

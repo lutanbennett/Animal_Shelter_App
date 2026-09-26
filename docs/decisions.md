@@ -4774,3 +4774,94 @@ navigation. The homepage, resident page and sponsor/stats are parts 2–4.
 - **A second schema PR for one feature**, as with the standard diet: the
   feature brief said "add no migration", but the access change can only be
   made in the database, and the schema-first rule puts it in its own PR.
+## 2026-09-26 — A failed rename is not a session: `worktree.mjs done` retries the probe and says when nobody holds the folder
+
+- **Diagnosis.** `held()` renames the folder to a sibling and back; Windows
+  refuses while anything has it open. On 2026-09-25 it flipped
+  false/true/false within one run of `done`, milliseconds apart, with
+  nothing in the folder, and `done` refused five merged, clean worktrees
+  that `list` had just called `free`. The likeliest holder is git
+  validating `.git/worktrees/<name>` from the main checkout, or an
+  indexer/antivirus handle. Not reproduced on demand, so it was modelled with
+  a holder that takes the folder for 300 ms and drops it for 300 ms.
+- **The message was the real defect, not the flakiness.**
+  `describeHolders()` fell back to "a process that cannot be identified —
+  usually a Claude session or terminal" whenever nothing could be named, so a
+  probe with no holder at all read exactly like a live session. The operator
+  closes unrelated sessions and then reaches for `--force`. Now the unnamed
+  case says what is actually known: *Windows refused to rename or delete the
+  folder, but no Claude session or dev server could be found in it; usually
+  transient; `list` may show it free; re-run, `--force` is not the fix;* and
+  what to look for if it keeps refusing (a plain terminal or editor, or a
+  session file this script cannot read). The named case is unchanged and
+  still refuses: that is the check working.
+- **Retry, then refuse — never downgrade to a warning.** `held()` tries
+  four times over ~450 ms; `done` gives an unnamed refusal six more tries
+  over ~2 s. A session or terminal holds a folder for minutes, so the delay
+  costs nothing when the refusal is real and absorbs a transient handle when
+  it is not. `list` uses the same retrying probe, so the two agree more often
+  too.
+- **`done` does not reuse `list`'s `held` value** (option (d) in the
+  backlog item). `list` is a snapshot from another process, possibly minutes
+  old, and a session may have attached since; trusting it would reopen the
+  race the probe exists to close. The message names the disagreement instead.
+- **The rename back is retried** for ~2 s. The same handle that can refuse
+  the first rename can refuse the second, and a worktree stranded under
+  `<dir>.__worktree-probe` is worse than a slow probe.
+- **Measured, not reasoned:** under the flickering holder the old script
+  refused 3/3 at the probe with the old message; the new one got past the
+  probe 3/3. The deletion then failed, because that holder keeps grabbing the
+  folder for a minute (far longer than a real transient handle), and `done`
+  said so, left the branch, and a re-run with the holder gone cleared all
+  three.
+## 2026-09-26 — Public site redesign, part 2: the homepage
+
+Part 2 of 4 (`src/app/page.tsx`), built on part 1's `--site-*` tokens,
+header and footer, against `docs/design/homepage-desktop.png`.
+
+- **The impact band shows real counts, not the mockup's figures** (Lutan,
+  2026-09-26). The mockup's "rehomed since [YEAR]", "sterilisations in local
+  villages" and "temple and community dogs supported" have no data behind
+  them. Rather than placeholders or no band, it shows the four counts
+  `public_shelter_stats` already has: in care today (the mockup's first
+  figure), adopted this year, in foster, in vet care. Lutan wants the
+  mockup's three kept as the target, so the band is a list
+  (`src/lib/site/impact.ts`): a figure is one entry there plus a column on
+  the view. Getting those figures is on the backlog.
+- **"Give monthly" goes to `/donate`** (Lutan, 2026-09-26), like part 1's
+  "Sponsor a resident", until the `/donate` item gives monthly giving a flow.
+  The label stays as designed. The Sponsor card's "[PRICE] baht a month"
+  becomes "A monthly gift helps pay for their food and care", and its
+  "Choose a resident →" becomes "Find out how →", because it lands on
+  `/donate`, not on a resident.
+- **"Become a Shelter Friend" and "Your business here?" go to `#contact`**,
+  the footer's contact details. There is no sign-up flow and this part adds
+  none. The band shows only once someone is published, as the old strip did,
+  since a thank-you band with no one in it reads as a gap. It shows the
+  first five Friends in staff order, then the tile, as the mockup's row does.
+- **Terracotta text on the sand band uses `action-hover`** (6.6:1). Part 1
+  measured plain `action` there at 4.46:1. That covers the "Your business
+  here?" tile and "Meet all our Shelter Friends" link. The dashed border stays
+  `action`, because it is decoration, not text.
+- **The hero heading is fixed copy; the paragraph is the admin's tagline**,
+  falling back to the mockup's paragraph without its hard-coded "more than
+  300". The live count is in the band just below, so the paragraph does not
+  need a number to go stale. With no hero photo, the text takes the full
+  width instead of sitting beside an empty frame.
+- **The four help cards use the mockup's short copy from the dictionary**,
+  not the first paragraph of each `site_pages` body as the old cards did.
+  Those bodies are pages long, and the mockup's cards are one line. The
+  pages themselves are unchanged.
+- **Pet of the week:** the facts line is sex · breed (or species) · age ·
+  Desexed, each only when known; "Desexed" appears only when it is true. The
+  mockup's hook is the first paragraph of the bio, cut at 160 characters,
+  until part 3 decides whether a hook needs its own field.
+- **Dropped from the old home page:** the "What we do" row of three recent
+  project stories and the closing "Ready to meet everyone?" panel. The mockup
+  has neither. Our work is reached from "See our work in the community →"
+  and the header. The panel's "browse the residents" is the hero's Meet the
+  animals button and the Adopt card's link.
+  The gallery shows its first three photos, the mockup's row, instead of all.
+- **Not changed:** "About & contact" in the header still goes to `#contact`.
+  Pointing it at Our story would mean editing `PublicHeader.tsx`, which
+  belongs to part 1.
