@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **Recurring jobs for staff, feeding My dashboard** (not ticked here: the item closes when the feature half, `claude/recurring-jobs`, lands) |
 | Branch / worktree | `claude/recurring-jobs-schema` @ `C:\Development\Animal_Shelter_recurring-jobs-schema` |
 | Dev server | not started: this change ships no runtime code |
-| PR | see the PR this plan is committed on |
+| PR | #152 (merged as `3b11402`) |
 | Tested by / date | Claude (automated) / 2026-09-26 |
 | Carries a migration? | yes: `0095_recurring_jobs.sql` |
 | Tested at SHA | `e69d353` (branch on `main` @ `e22d289`); the migration, harness, `decisions.md` entry and this plan are the only changes |
@@ -31,7 +31,7 @@
   gates: typecheck=0 lint=0 build=0
   ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): PR #152, run 36237951087 at `7236c32` — `check` pass (1m36s), `migration-numbers` pass, `test-plan` pass
 
 ## 3. Schema and data
 
@@ -138,7 +138,7 @@ Also covered: `public_viewer`, archived and role-less logins read nothing and ar
 ### Migration ordering
 
 - [x] **Does this PR contain both a migration and code that reads it?** No, but the follow-on `claude/recurring-jobs` feature will read these tables, so production must have `0095` before that feature deploys (see §3)
-- [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — deferred: Lutan (production reads are refused from feature worktrees)
+- [x] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean: from the main checkout at `3b11402`, `dry-run 0095_recurring_jobs.sql … ok` (with 0092–0094, also pending on production). Then applied at Lutan's request, 2026-09-26: `applying 0095_recurring_jobs.sql … ok`, and `--status` reads `95 applied, 0 pending`
 - [ ] For a **destructive or rewriting** migration only: a production backup exists and is fresh — n/a: additive; no existing object altered
 - [x] Apply plan stated: which file, which project, and whether it runs before or after the deploy (see §3)
 
