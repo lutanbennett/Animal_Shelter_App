@@ -15,6 +15,7 @@ export function CreateUserForm() {
     { value: "management", label: t.admin.security.roles.management },
     { value: "vet", label: t.admin.security.roles.vet },
     { value: "volunteer", label: t.admin.security.roles.volunteer },
+    { value: "public_viewer", label: t.admin.security.roles.public_viewer },
   ];
 
   return (

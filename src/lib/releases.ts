@@ -42,6 +42,8 @@ export type Release = {
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
+  "A new Public viewer account type, for testing the website as a visitor while the testing sites are closed: it signs in, sees every public page, and never opens the app. Admins give it under Settings → Security.",
+  "Archived accounts, and accounts that were never given a role, can no longer sign in with a password — they are turned away as Google sign-in already turned them away.",
 ];
 
 /** Newest first. */

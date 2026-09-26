@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { LogIn } from "lucide-react";
+import { sessionHasAppAccess } from "@/lib/auth/app-access";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
@@ -15,7 +16,7 @@ import { ResidentCard } from "@/app/adopt/ResidentCard";
 /**
  * The address on an enclosure's QR code (src/lib/tags/links.ts), shaped
  * like /r/ so a kennel's code and a resident's card behave alike
- * (docs/decisions.md, 2026-09-24): a signed-in user is sent on to the
+ * (docs/decisions.md, 2026-09-24): a signed-in staff member is sent on to the
  * enclosure page; a visitor stays here and sees the enclosure's name, its
  * zone and everyone living in it, each card linking to their /r/ page.
  *
@@ -53,10 +54,8 @@ export default async function EnclosureTagPage(props: PageProps<"/e/[id]">) {
   if (!isUuid(id)) notFound();
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (user) redirect(`/enclosures/${id}`);
+  // Staff go on to the enclosure page; a public viewer sees the card.
+  if (await sessionHasAppAccess(supabase)) redirect(`/enclosures/${id}`);
 
   const [enclosure, { t, locale }] = await Promise.all([
     loadPublicEnclosure(supabase, id),

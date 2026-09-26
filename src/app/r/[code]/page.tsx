@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { LogIn } from "lucide-react";
+import { hasAppAccess, loadCurrentRole } from "@/lib/auth/app-access";
 import { createClient } from "@/lib/supabase/server";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { getT } from "@/lib/i18n/get-t";
@@ -26,7 +27,7 @@ import { PublicFooter } from "@/app/adopt/PublicFooter";
  * accepted too for an older link.
  *
  * Who scanned decides what they get (docs/decisions.md, 2026-09-22): a
- * signed-in user is sent on to the hub; a visitor stays here and sees
+ * signed-in staff member is sent on to the hub; a visitor stays here and sees
  * the resident's public card — photo, name, age, sex, temperament and
  * the rest of public_resident_cards (0068) — for *any* resident, so a
  * card never dead-ends on a sign-in page. The route is therefore public
@@ -68,7 +69,8 @@ export default async function ResidentCardPage(props: PageProps<"/r/[code]">) {
   ] = await Promise.all([supabase.auth.getUser(), loadResidentCard(supabase, code), getT()]);
 
   if (!resident) notFound();
-  if (user) redirect(`/residents/${resident.id}`);
+  // Staff go on to the hub; a public viewer sees the card.
+  if (user && hasAppAccess(await loadCurrentRole(supabase))) redirect(`/residents/${resident.id}`);
 
   const c = t.residentCard;
   const d = t.adopt.details;

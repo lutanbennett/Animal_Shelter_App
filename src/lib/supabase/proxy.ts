@@ -5,7 +5,8 @@ import {
   mustChangePassword,
   signedInWithPassword,
 } from "@/lib/auth/password-change";
-import { DEFAULT_SIGNED_IN_PATH, safeNextPath } from "@/lib/auth/next-path";
+import { hasAppAccess, loadCurrentRole, signedInLandingPath } from "@/lib/auth/app-access";
+import { safeNextPath } from "@/lib/auth/next-path";
 import { isPublicPath as isPublicPathname } from "@/lib/public-paths";
 import { isPublicSiteLocked } from "@/lib/public-site";
 
@@ -62,9 +63,16 @@ export async function updateSession(request: NextRequest) {
   // "/" is the public home page for everyone — a signed-in staff member
   // sees it as a visitor does, with "Open the app" in its header.
   if (user && request.nextUrl.pathname === "/login") {
+    const role = await loadCurrentRole(supabase);
+    // A session that opens nothing (archived since it signed in, or never
+    // given a role) is ended here, so /login offers a fresh sign-in.
+    if (!role) {
+      await supabase.auth.signOut();
+      return noindex(response, locked);
+    }
     const next = safeNextPath(request.nextUrl.searchParams.get("next"));
     return noindex(
-      NextResponse.redirect(new URL(next ?? DEFAULT_SIGNED_IN_PATH, request.nextUrl.origin)),
+      NextResponse.redirect(new URL(signedInLandingPath(role, next), request.nextUrl.origin)),
       locked,
     );
   }
@@ -92,7 +100,44 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
+  // The app itself is for staff roles only (src/lib/auth/app-access.ts).
+  // A public viewer is sent to the home page — it is signed in, so the
+  // public site is open to it even while locked. A session with no role at
+  // all (archived after it signed in; sign-in refuses one without) is
+  // signed out and told why. The change-password page stays reachable to
+  // anyone on a temporary password. One role lookup per app request; the
+  // public pages, where visitors and public viewers are, skip it.
+  if (
+    user &&
+    !isPublicPathname(request.nextUrl.pathname) &&
+    request.nextUrl.pathname !== PASSWORD_CHANGE_PATH
+  ) {
+    const role = await loadCurrentRole(supabase);
+    if (!hasAppAccess(role)) {
+      const url = request.nextUrl.clone();
+      url.search = "";
+      if (role) {
+        url.pathname = "/";
+      } else {
+        await supabase.auth.signOut();
+        url.pathname = "/login";
+        url.searchParams.set("error", "no_role");
+      }
+      return noindex(withCookies(NextResponse.redirect(url), response), locked);
+    }
+  }
+
   return noindex(response, locked);
+}
+
+/**
+ * A redirect built after the Supabase client has set cookies (a refreshed
+ * token, or the cleared ones from signOut) must carry them, or the browser
+ * keeps the old session.
+ */
+function withCookies(redirect: NextResponse, from: NextResponse): NextResponse {
+  for (const cookie of from.cookies.getAll()) redirect.cookies.set(cookie);
+  return redirect;
 }
 
 /**
