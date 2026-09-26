@@ -16,7 +16,7 @@ or `n/a` with the reason.
 | PR | linked from the PR itself |
 | Tested by / date | Claude (worktree-done-fix session), 2026-09-26 |
 | Carries a migration? | no |
-| Tested at SHA | `10d969f` |
+| Tested at SHA | `10d969f` (script behaviour); gates re-run at `aeb2b3a` after syncing `main` |
 
 ## 1. Scope and risk
 
@@ -27,11 +27,11 @@ or `n/a` with the reason.
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly ("Already up to date." at `a6e693a`), and pushed
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: "Already up to date." at `a6e693a` before the PR, then the public-site-home merge (`aeb2b3a`, conflict-free) after it, pushed both times
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Closing lines as printed:
 
 ```
-=== gates: build exited 0 after 279s
+=== gates: build exited 0 after 124s
 
 gates: typecheck=0 lint=0 build=0
 ```
