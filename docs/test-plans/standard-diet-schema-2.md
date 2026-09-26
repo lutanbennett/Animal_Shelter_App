@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **Standard diet: flag it, make a diet mandatory at intake, and show special diets on enclosure cards** (not ticked: it closes with `claude/standard-diet`) |
 | Branch / worktree | `claude/standard-diet-schema-2` @ `C:\Development\Animal_Shelter_standard-diet-schema-2` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3007`, not used: no UI |
-| PR | opened from this commit |
+| PR | #136 |
 | Tested by / date | Claude (automated) / 2026-09-26 |
 | Carries a migration? | yes: `0090_standard_diet_functions.sql` |
 | Tested at SHA | `29e994e` (branch on `main` @ `172eeeb`): the migration and its harness. The later commit adds only this plan and `decisions.md` |
@@ -30,7 +30,7 @@
 
   gates: typecheck=0 lint=0 build=0
   ```
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): PR #136, run 36209552745 — `check` pass (1m8s), `migration-numbers` pass, `test-plan` pass
 
 ## 3. Schema and data
 
