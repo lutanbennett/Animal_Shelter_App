@@ -904,7 +904,7 @@ const manual: Manual = {
           intro:
             "One sheet for counting every medication and diet, built to be used on a phone while you walk the shelves. Nothing is saved until you tap Save at the end, and everything saved together gets the same time.",
           steps: [
-            "Open Stocktake from the menu (managers can also use the link at the top of Management → Medications or → Diets). Switch between Medications and Diets with the tabs at the top; counts you have typed on one tab are kept while you look at the other.",
+            "Open Stocktake from the menu (managers can also use the link at the top of Management → Medications or → Diets). Switch between Medications and Food with the tabs at the top; counts you have typed on one tab are kept while you look at the other.",
             "Each row shows the item, its unit and the last count with how long ago it was taken. Type what is on the shelf now, in that unit, and press Enter (Next on a phone keyboard) to move to the next row. Use the search box to jump to an item.",
             "Leave a row blank if you didn't count it. A blank row is left exactly as it was — it does not become Not counted. This is different from the Count cell on the Management tables, where clearing the figure means not counted.",
             "If the figure hasn't changed, tap Same as last time instead of retyping it. That records a fresh count of the same figure. Typing a number turns the tick off, and tapping the tick clears what you typed, so a row is always one or the other.",

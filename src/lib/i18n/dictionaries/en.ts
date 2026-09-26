@@ -774,7 +774,7 @@ const en = {
     subtitle:
       "Count every medication and diet in one go, then save once. Every count saved together gets the same time.",
     couldntLoad: "Couldn't load the stock list",
-    tabs: { medication: "Medications", diet: "Diets" },
+    tabs: { medication: "Medications", diet: "Food" },
     searchLabel: "Search the list",
     searchPlaceholder: "Search by name",
     blankHint:
