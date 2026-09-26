@@ -58,6 +58,8 @@ export type Resident = {
   bio: string | null;
   temperament_notes: string | null;
   past_story_notes: string | null;
+  hook_line: string | null;
+  ideal_home: string | null;
   behaviour_notes: string | null;
   profile_photo_drive_file_id: string | null;
   ready_for_adoption: boolean;
@@ -349,14 +351,16 @@ export function ResidentHub({
   const latestProcedure = procedures[0];
   const latestBloodTest = bloodTests[0];
 
-  // The first three are public (on /adopt) and carry a translation row;
-  // behaviour notes are staff-only and don't.
+  // All but behaviour notes are public (on /adopt) and carry a translation
+  // row; behaviour notes are staff-only and don't.
   const translationFor = (column: string) =>
     translations.find((row) => row.column_name === column) ?? null;
   const bioFields = [
+    { label: t.residents.hub.bioLabels.hookLine, value: resident.hook_line, translation: translationFor("hook_line") },
     { label: t.residents.hub.bioLabels.bio, value: resident.bio, translation: translationFor("bio") },
     { label: t.residents.hub.bioLabels.temperament, value: resident.temperament_notes, translation: translationFor("temperament_notes") },
     { label: t.residents.hub.bioLabels.pastStory, value: resident.past_story_notes, translation: translationFor("past_story_notes") },
+    { label: t.residents.hub.bioLabels.idealHome, value: resident.ideal_home, translation: translationFor("ideal_home") },
     { label: t.residents.hub.bioLabels.behaviour, value: resident.behaviour_notes, translation: null },
   ].filter((f) => f.value);
 

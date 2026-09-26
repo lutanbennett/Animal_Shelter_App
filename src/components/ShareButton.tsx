@@ -13,10 +13,13 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 export function ShareButton({
   title,
   text,
+  variant = "app",
   className = "",
 }: {
   title: string;
   text?: string;
+  /** "site": the public redesign's 44px outlined pill (docs/design/). */
+  variant?: "app" | "site";
   className?: string;
 }) {
   const { t } = useI18n();
@@ -52,7 +55,11 @@ export function ShareButton({
     <button
       type="button"
       onClick={share}
-      className={`inline-flex items-center gap-2 rounded border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-hover ${className}`}
+      className={`inline-flex items-center gap-2 ${
+        variant === "site"
+          ? "h-11 rounded-full border border-site-line-strong/60 px-3.5 text-[15px] font-semibold text-site-ink hover:bg-site-sand"
+          : "rounded border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
+      } ${className}`}
     >
       {copied ? (
         <Check className="h-4 w-4 text-success" aria-hidden />

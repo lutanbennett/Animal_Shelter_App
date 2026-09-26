@@ -1966,7 +1966,7 @@ const en = {
         },
       },
       adoptionHint:
-        "What a family needs to know before they visit. Shown on the public profile as \"Is {name} right for you?\" — leave anything unknown blank.",
+        "What a family needs to know before they visit. Shown on the public profile in the quick facts and under \"Gets along with\" — leave anything unknown blank.",
       fields: {
         name: "Name",
         thaiName: "Thai name",
@@ -2104,9 +2104,11 @@ const en = {
       adoptionProfile: "For adopters",
       noAdoptionProfile: "Nothing recorded yet — colour, desexed, good with dogs / cats / children and energy level are set on the edit form.",
       bioLabels: {
+        hookLine: "Hook line",
         bio: "Bio",
         temperament: "Temperament",
         pastStory: "Past story",
+        idealHome: "Ideal home",
         behaviour: "Behaviour",
       },
       medicalHeading: "Medical",
@@ -2499,6 +2501,12 @@ const en = {
         estimatedAgeNow: "Estimated age now (years)",
         estimatedAgeNowHint:
           "The age as of today. Change it only when you have a better estimate; the record keeps aging from the date you set it.",
+        hookLine: "Hook line",
+        hookLineHint: (max: number) =>
+          `One sentence that sells them, shown under their name on the public adoption page — e.g. "A gentle little lap dog who follows his carers everywhere." Up to ${max} characters.`,
+        idealHome: "Ideal home",
+        idealHomeHint: (max: number) =>
+          `A short paragraph on the home they would thrive in — e.g. a quiet house with a garden, someone home most of the day. Shown on the public adoption page. Up to ${max} characters.`,
       },
       photo: {
         hint: "Tap a photo to make it the profile photo.",
@@ -2513,6 +2521,8 @@ const en = {
         nameRequired: "Name is required.",
         ageMustBeNumber: "Estimated age must be a number.",
         notFound: "This resident no longer exists.",
+        hookLineTooLong: (max: number) => `Keep the hook line to ${max} characters — one sentence.`,
+        idealHomeTooLong: (max: number) => `Keep the ideal home to ${max} characters — a short paragraph.`,
       },
     },
     sections: {
@@ -2945,6 +2955,8 @@ const en = {
       "residents.bio": "Bio",
       "residents.temperament_notes": "Temperament",
       "residents.past_story_notes": "Past story",
+      "residents.hook_line": "Hook line",
+      "residents.ideal_home": "Ideal home",
       "project_folders.summary": "Project story",
       "attachments.caption": "Photo caption",
       "maintenance.title": "Job title",
@@ -2987,10 +2999,8 @@ const en = {
     noPhoto: "No photo yet",
     availableForAdoption: "Available for Adoption",
     detailsComingSoon: "Details coming soon",
-    backToAll: "← Back to all residents",
     about: (name: string) => `About ${name}`,
     temperament: "Temperament",
-    theirStory: "Their story",
     details: {
       species: "Species",
       breed: "Breed",
@@ -3030,19 +3040,34 @@ const en = {
       energyLevel: "Energy level",
       note: "Our best assessment from how they've been with us — every animal is an individual, so come and meet them.",
     },
-    /** "Where to meet {name}" — modelled on RSPCA ACT's profile footer. */
-    meet: {
-      heading: (name: string) => `Where to meet ${name}`,
-      intro: (name: string) =>
-        `The best way to know if ${name} is the one is to visit. Drop in during visiting hours, or get in touch first and we'll have them ready to meet you.`,
-      where: "Find us",
-      when: "Visiting hours",
-      email: "Email",
-      emailSubject: (name: string) => `Enquiry about ${name}`,
-      message: "Message or call",
-      honestNote:
-        "Please note: residents are adopted by the first suitable family they meet, and we can't hold an animal over the phone or by message — so someone you've seen here may already have found a home by the time you visit. We'll always help you find another friend.",
-      processLink: "How adoption works →",
+    /**
+     * The resident page, /adopt/[id] (redesign part 3,
+     * docs/design/resident-profile-mobile.png).
+     */
+    profile: {
+      allAnimals: "All animals",
+      quickFacts: "Quick facts",
+      health: "Health",
+      energy: "Energy",
+      getsAlongWith: "Gets along with",
+      dogs: (value: string) => `Dogs: ${value}`,
+      cats: (value: string) => `Cats: ${value}`,
+      children: (value: string) => `Children: ${value}`,
+      story: (name: string) => `${name}'s story`,
+      idealHome: (name: string, sex: string | null) =>
+        sex === "Male" ? "His ideal home" : sex === "Female" ? "Her ideal home" : `${name}'s ideal home`,
+      howToMeet: (name: string) => `How to meet ${name}`,
+      howToMeetBody:
+        "Message or call us to book a visit. Animals are adopted by the first suitable family they meet, so we can't hold them.",
+      findUs: "Find us",
+      visitingHours: "Visiting hours",
+      howAdoptionWorks: "How adoption works",
+      sponsorHeading: (name: string) => `Can't adopt? You can still help ${name}`,
+      sponsorLink: "Give monthly towards their food and care",
+      actions: (name: string) => `Get in touch about ${name}`,
+      askOnLine: "Ask on LINE",
+      bookVisit: "Book a visit",
+      emailSubject: (name: string) => `Visiting ${name}`,
     },
     happyEndings: {
       heading: "Happy endings",
