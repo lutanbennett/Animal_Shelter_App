@@ -78,11 +78,19 @@ export default async function RecurringJobsPage() {
     if (o.occurs_on < today) overdue.set(o.job.id, (overdue.get(o.job.id) ?? 0) + 1);
   }
 
+  // "Next" leaves out dates already marked done or skipped (today's, or one
+  // skipped ahead). Within the open window a date is still to do only if it
+  // is open; beyond it nothing has been acted on often enough to matter.
+  const openKeys = new Set(openResult.open.map((o) => `${o.job.id}:${o.occurs_on}`));
+  const openUntil = addDaysIso(today, COVER_DAYS_AHEAD);
+
   const summaries: JobSummary[] = jobs.map((job) => ({
     job,
     team: job.assignee_ids.map(person).sort((a, b) => a.name.localeCompare(b.name)),
     liveAssignees: staffing.get(job.id)?.live_assignees ?? 0,
-    nextDates: (nextResult.dates.get(job.id) ?? []).slice(0, 3),
+    nextDates: (nextResult.dates.get(job.id) ?? [])
+      .filter((date) => date > openUntil || openKeys.has(`${job.id}:${date}`))
+      .slice(0, 3),
     overdueCount: overdue.get(job.id) ?? 0,
     dependsOnTitle: job.depends_on_job_id ? (titles.get(job.depends_on_job_id) ?? null) : null,
   }));
