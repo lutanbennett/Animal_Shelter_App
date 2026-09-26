@@ -69,13 +69,15 @@ export async function SitePageView({
           {text?.title || t.header.appName}
         </h1>
         {text?.body ? (
-          <SiteBody body={text.body} size="lg" />
+          <div data-reveal>
+            <SiteBody body={text.body} size="lg" />
+          </div>
         ) : (
           <p className="text-sm text-muted">{t.sitePages.comingSoon}</p>
         )}
 
         {(content?.contact_email || line) && (
-          <div className="mt-4 flex flex-col gap-3 rounded-lg border border-border bg-surface p-6">
+          <div data-reveal className="mt-4 flex flex-col gap-3 rounded-lg border border-border bg-surface p-6">
             <h2 className="text-lg font-semibold text-foreground">
               {t.sitePages.getInTouch}
             </h2>
@@ -84,7 +86,7 @@ export async function SitePageView({
               {content?.contact_email && (
                 <a
                   href={`mailto:${content.contact_email}`}
-                  className="rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
+                  className="spring-lift rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
                 >
                   {t.sitePages.emailUs}
                 </a>
@@ -94,7 +96,7 @@ export async function SitePageView({
                   href={line.href}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-hover"
+                  className="spring-lift rounded border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-hover"
                 >
                   {t.sitePages.lineUs(line.label)}
                 </a>
@@ -104,7 +106,7 @@ export async function SitePageView({
         )}
 
         {showFriends && (
-          <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-6">
+          <div data-reveal className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-6">
             <h2 className="text-lg font-semibold text-foreground">
               {t.shelterFriends.donateMention.heading}
             </h2>

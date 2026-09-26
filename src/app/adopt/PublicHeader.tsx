@@ -16,6 +16,7 @@ import {
   type PublicNavLink,
   type PublicTalkLink,
 } from "./PublicNav";
+import { SpringMotion } from "./SpringMotion";
 
 export type PublicSection =
   | "home"
@@ -156,6 +157,7 @@ export async function PublicHeader({ current }: { current?: PublicSection }) {
   return (
     <header data-public-site className="border-b border-site-line bg-site-paper font-site text-site-ink">
       <div className="mx-auto flex h-[68px] w-full max-w-[1440px] items-center justify-between gap-4 px-4 lg:h-[88px] lg:px-8 xl:px-16">
+        <SpringMotion />
         {brand}
 
         <nav aria-label={n.label} className="hidden items-center gap-6 text-[17px] font-semibold lg:flex xl:gap-8">
