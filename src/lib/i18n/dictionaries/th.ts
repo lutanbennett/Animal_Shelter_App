@@ -65,6 +65,7 @@ const th: Dictionary = {
     security: "ความปลอดภัย",
     enclosures: "กรง",
     maintenance: "งานซ่อมบำรุง",
+    stocktake: "ตรวจนับสต็อก",
     projects: "โครงการ",
     zones: "โซน",
     immunizationTypes: "ประเภทวัคซีน",
@@ -753,6 +754,57 @@ const th: Dictionary = {
     },
   },
 
+  stocktake: {
+    title: "ตรวจนับสต็อก",
+    subtitle:
+      "นับยาและอาหารทุกรายการในครั้งเดียว แล้วบันทึกครั้งเดียว ทุกรายการที่บันทึกพร้อมกันจะได้เวลาเดียวกัน",
+    couldntLoad: "โหลดรายการสต็อกไม่ได้",
+    tabs: { medication: "ยา", diet: "อาหาร" },
+    searchLabel: "ค้นหาในรายการ",
+    searchPlaceholder: "ค้นหาตามชื่อ",
+    blankHint:
+      "ถ้าไม่ได้นับรายการไหน ให้เว้นว่างไว้ — จะคงค่าเดิม ถ้าจำนวนไม่เปลี่ยน ให้แตะ เท่าครั้งก่อน",
+    noItems: {
+      medication: "ยังไม่มียา ฝ่ายบริหารเพิ่มได้ที่ การจัดการ → ยา",
+      diet: "ยังไม่มีอาหาร ฝ่ายบริหารเพิ่มได้ที่ การจัดการ → อาหาร",
+    },
+    noMatches: (query: string) => `ไม่พบรายการที่ตรงกับ “${query}”`,
+    notCounted: "ยังไม่เคยนับ",
+    lastCount: (quantity: string, unit: string) => `นับครั้งล่าสุด ${quantity} ${unit}`,
+    countLabel: (name: string, unit: string) => `จำนวนที่นับวันนี้ของ ${name} หน่วย ${unit}`,
+    countPlaceholder: (unit: string) => `จำนวน (${unit})`,
+    same: "เท่าครั้งก่อน",
+    samePlaceholder: (quantity: string, unit: string) => `${quantity} ${unit} เท่าครั้งก่อน`,
+    sameUnavailable: "ยังไม่เคยนับ จึงไม่มีค่าให้ยืนยัน กรุณาพิมพ์จำนวน",
+    invalid: "กรอกตัวเลข 0 ขึ้นไป — หรือลบออกเพื่อคงค่าเดิมของรายการนี้",
+    change: (from: string, to: string, unit: string) => `${from} → ${to} ${unit}`,
+    firstCount: (quantity: string, unit: string) => `นับครั้งแรก: ${quantity} ${unit}`,
+    bigChange: "เปลี่ยนมาก — ตรวจสอบอีกครั้ง",
+    confirmedLine: (quantity: string, unit: string) => `${quantity} ${unit} เท่าครั้งก่อน`,
+    footerNone: "ยังไม่ได้นับรายการใด",
+    footer: (counted: number, confirmed: number) =>
+      [counted > 0 ? `นับแล้ว ${counted}` : null, confirmed > 0 ? `เท่าครั้งก่อน ${confirmed}` : null]
+        .filter(Boolean)
+        .join(" · "),
+    review: "ตรวจทานและบันทึก",
+    fixFirst: (n: number) => `มี ${n} รายการที่ไม่ใช่ตัวเลข กรุณาแก้ไขหรือลบออกก่อน`,
+    reviewTitle: "ตรวจทานก่อนบันทึก",
+    reviewBody: (n: number) => `${n} รายการนี้จะถูกบันทึกว่านับเมื่อสักครู่`,
+    reviewBig: (n: number) => `${n} รายการเปลี่ยนไปตั้งแต่ครึ่งหนึ่งขึ้นไป — ควรตรวจสอบอีกครั้ง`,
+    reviewUntouched: (n: number) => `${n} รายการไม่ได้นับครั้งนี้ — คงค่าเดิม`,
+    back: "กลับไปนับต่อ",
+    save: (n: number) => `บันทึก ${n} รายการ`,
+    saved: (n: number, when: string) => `บันทึก ${n} รายการแล้ว นับเมื่อ ${when}`,
+    leaveWarning: "มีจำนวนที่ยังไม่ได้บันทึก ออกจากหน้านี้และทิ้งข้อมูลหรือไม่",
+    errors: {
+      notAuthorized: "บทบาทของคุณบันทึกการตรวจนับสต็อกไม่ได้ กรุณาติดต่อผู้จัดการ",
+      stale:
+        "ไม่ได้บันทึกอะไรเลย: มีรายการในหน้านี้ถูกลบไปหลังจากเปิดหน้า กรุณาโหลดหน้าใหม่ — ต้องกรอกจำนวนอีกครั้ง",
+      countInvalid: "ไม่ได้บันทึกอะไรเลย: ทุกจำนวนต้องเป็นตัวเลข 0 ขึ้นไป",
+      nothingToSave: "ยังไม่มีอะไรให้บันทึก — พิมพ์จำนวนหรือแตะ เท่าครั้งก่อน อย่างน้อยหนึ่งรายการ",
+      failed: "ไม่ได้บันทึกอะไรเลย",
+    },
+  },
   management: {
     landing: {
       title: "การจัดการ",
@@ -781,6 +833,7 @@ const th: Dictionary = {
       managementAccessRequired: "ต้องมีสิทธิ์ระดับผู้บริหาร",
     },
     stock: {
+      stocktakeLink: "ตรวจนับสต็อก: นับทุกรายการในครั้งเดียว",
       stockHeading: "คงคลัง",
       daysHeading: "ใช้ได้อีก (วัน)",
       notCounted: "ยังไม่ได้นับ",

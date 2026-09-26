@@ -868,7 +868,7 @@ const manual: Manual = {
             "Merge a duplicate into the one to keep — its prescriptions move across. Only medications with the same unit can be merged.",
             "Next N days shows how much of each medication current prescriptions will need. For any other period — next month's order, say — enter From and To dates above the table and tap Show window; a column for that period is added beside the fixed ones.",
             "The \"how often\" choices a prescription picks from are under Settings → Frequencies, and only an admin can change them (see Frequencies).",
-            "After a stocktake, tap Count on the row and enter what is in the cupboard, in the medication's own unit (tablets, ml…). In stock shows that figure and how long ago it was counted; saving the same figure again records a fresh count. Leave it blank for an item nobody has counted — it reads Not counted, which is different from 0, Out of stock.",
+            "To count everything at once, use the Stocktake link at the top of the page (see Doing a stocktake). To correct one item, tap Count on the row and enter what is in the cupboard, in the medication's own unit (tablets, ml…). In stock shows that figure and how long ago it was counted; saving the same figure again records a fresh count. Leave it blank for an item nobody has counted — it reads Not counted, which is different from 0, Out of stock.",
             "Days of stock is worked out from the last count and the Next 30 days figure: what has probably been used since the count is taken off, and what is left is divided by the daily rate. An item with nothing due in the next 30 days doesn't run out. Probably used up since the count means the forecast has used the whole count — count it again.",
             "To be warned in time, tap Edit and enter the supplier's reorder lead time in days. When the days of stock falls to that figure or below, the row is flagged Reorder. Leave it blank and the item is never flagged.",
           ],
@@ -887,7 +887,7 @@ const manual: Manual = {
             "Edit any of those in place — a price rise or a corrected portion flows straight through to the forecast. A diet on any resident's record can't be deleted.",
             "One diet is the shelter's standard, marked Standard beside its name: what residents are fed unless someone says otherwise. Intake starts every new resident on it, and a resident on anything else shows as a special diet on the enclosure cards. To change which diet is the standard, tap Make standard on its row and confirm — the old one stops being the standard at the same moment. If no diet is marked, a note above the table says so.",
             "Next N days shows how much of each diet the residents living at the shelter will eat and what it costs, with a total across all diets. Fostered, adopted and deceased residents aren't counted; a resident with no size set counts as Medium. For any other period enter From and To dates above the table and tap Show window.",
-            "After a stocktake, tap Count on the row and enter what is in the cupboard, in the diet's own unit (g, cans…). In stock shows that figure and how long ago it was counted; saving the same figure again records a fresh count. Leave it blank for an item nobody has counted — it reads Not counted, which is different from 0, Out of stock.",
+            "To count everything at once, use the Stocktake link at the top of the page (see Doing a stocktake). To correct one item, tap Count on the row and enter what is in the cupboard, in the diet's own unit (g, cans…). In stock shows that figure and how long ago it was counted; saving the same figure again records a fresh count. Leave it blank for an item nobody has counted — it reads Not counted, which is different from 0, Out of stock.",
             "Days of stock is worked out from the last count and the Next 30 days figure: what has probably been used since the count is taken off, and what is left is divided by the daily rate. An item with nothing due in the next 30 days doesn't run out. Probably used up since the count means the forecast has used the whole count — count it again.",
             "To be warned in time, tap Edit and enter the supplier's reorder lead time in days. When the days of stock falls to that figure or below, the row is flagged Reorder. Leave it blank and the item is never flagged.",
           ],
@@ -895,6 +895,28 @@ const manual: Manual = {
             src: "/manual/management-diets.png",
             alt: "The diets management page with the forecast and cost columns",
           },
+        },
+        {
+          id: "stocktake",
+          title: "Doing a stocktake",
+          roles: ["admin", "management", "staff", "volunteer"],
+          path: "Stocktake",
+          intro:
+            "One sheet for counting every medication and diet, built to be used on a phone while you walk the shelves. Nothing is saved until you tap Save at the end, and everything saved together gets the same time.",
+          steps: [
+            "Open Stocktake from the menu (managers can also use the link at the top of Management → Medications or → Diets). Switch between Medications and Food with the tabs at the top; counts you have typed on one tab are kept while you look at the other.",
+            "Each row shows the item, its unit and the last count with how long ago it was taken. Type what is on the shelf now, in that unit, and press Enter (Next on a phone keyboard) to move to the next row. Use the search box to jump to an item.",
+            "Leave a row blank if you didn't count it. A blank row is left exactly as it was — it does not become Not counted. This is different from the Count cell on the Management tables, where clearing the figure means not counted.",
+            "If the figure hasn't changed, tap Same as last time instead of retyping it. That records a fresh count of the same figure. Typing a number turns the tick off, and tapping the tick clears what you typed, so a row is always one or the other.",
+            "Tap Review and save. The summary lists every item you counted, old → new, with changes of half or more marked Big change and shown first — check those before saving. Tap Save to save the whole sheet in one go: either every count is saved or none is.",
+            "If you try to leave the page with counts that aren't saved, you are asked first.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "Counts are in each item's own unit: tablets or ml for a medication, g, cans or cups for a diet. 0 means out of stock; a blank row means not counted this time.",
+            },
+          ],
         },
         {
           id: "cashflow",
