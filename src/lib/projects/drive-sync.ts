@@ -8,6 +8,7 @@ import {
   type DriveClient,
   type ProjectFolderChain,
 } from "@/lib/google/drive";
+import { driveErrorMessage } from "@/lib/google/drive-errors";
 
 type ChainRow = {
   id: string;
@@ -103,7 +104,7 @@ export async function syncProjectFolderRename(
     await renameProjectDriveFolder(getDriveClient(), row.drive_folder_id, row.name);
     return null;
   } catch (error) {
-    return error instanceof Error ? error.message : "Could not rename the Drive folder.";
+    return driveErrorMessage(error, "Could not rename the Drive folder.");
   }
 }
 
@@ -131,7 +132,7 @@ export async function syncProjectFolderMove(
     await moveProjectDriveFolder(drive, row.drive_folder_id, parentDriveId);
     return null;
   } catch (error) {
-    return error instanceof Error ? error.message : "Could not move the Drive folder.";
+    return driveErrorMessage(error, "Could not move the Drive folder.");
   }
 }
 
@@ -147,6 +148,6 @@ export async function deleteProjectDriveFolder(driveFolderId: string | null): Pr
     return null;
   } catch (error) {
     if (error instanceof DriveApiError && error.status === 404) return null;
-    return error instanceof Error ? error.message : "Could not delete the Drive folder.";
+    return driveErrorMessage(error, "Could not delete the Drive folder.");
   }
 }

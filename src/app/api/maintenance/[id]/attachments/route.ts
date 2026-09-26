@@ -8,6 +8,7 @@ import {
   uploadImageToFolder,
 } from "@/lib/google/drive";
 import { driveImageUrl } from "@/lib/google/drive-client";
+import { withDriveErrors } from "@/lib/google/drive-errors";
 import type { MaintenancePhase } from "@/lib/maintenance/queries";
 
 const ALLOWED_MIME_TYPES = new Set([
@@ -43,7 +44,7 @@ type JobRow = {
  * policies on `attachments` (0001), which is the intended split: a
  * volunteer can't log a job but can add a photo to one.
  */
-export async function POST(
+async function handlePost(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -161,3 +162,6 @@ export async function POST(
     phase,
   });
 }
+
+// A Drive failure answers in a sentence rather than a bare 500 (drive-errors.ts).
+export const POST = withDriveErrors(handlePost);

@@ -544,7 +544,7 @@ const manual: Manual = {
       title: "Photos",
       icon: Camera,
       intro:
-        "Photos live in the shelter's Google Drive, in a folder per resident — the app shows them and uploads into the right place. Everyone who can sign in can add photos.",
+        "Photos live in the shelter's Google Drive, in a folder per resident — the app shows them and uploads into the right place. Everyone who can sign in can add photos. If an upload says photo storage is not connected, nothing is wrong with the photo: the app has lost its link to Drive, so tell an admin.",
       topics: [
         {
           id: "resident-photos",
@@ -917,7 +917,8 @@ const manual: Manual = {
       id: "admin",
       title: "Settings",
       icon: Settings,
-      intro: "Admin-only setup: accounts, the public website, and the shelter's structure.",
+      intro:
+        "Admin-only setup: accounts, the public website, and the shelter's structure. The top of the Settings page says whether photo storage (Google Drive) is connected. If it is not, every upload fails until Drive is reconnected, and the small print under the warning gives Google's reason.",
       topics: [
         {
           id: "security",

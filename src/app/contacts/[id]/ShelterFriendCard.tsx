@@ -90,39 +90,48 @@ export function ShelterFriendCard({
   const f = t.shelterFriends;
   const c = f.card;
   const [isPending, startTransition] = useTransition();
-  const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(
-    null,
-  );
+  // `at: "logo"` puts the message under the logo row. It used to show only
+  // below Save, a screen away on a phone, so a failed upload (2026-09-25)
+  // looked like nothing happened, or like the form had gone wrong.
+  const [message, setMessage] = useState<{
+    type: "error" | "success";
+    text: string;
+    at?: "logo";
+  } | null>(null);
   const [editing, setEditing] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [draft, setDraft] = useState<FriendFields | null>(null);
   const logoInput = useRef<HTMLInputElement>(null);
 
-  function run(action: () => Promise<FriendActionResult>, after?: () => void) {
+  function run(action: () => Promise<FriendActionResult>, after?: () => void, at?: "logo") {
     setMessage(null);
     startTransition(async () => {
       try {
         const result = await action();
         if ("error" in result) {
-          setMessage({ type: "error", text: result.error });
+          setMessage({ type: "error", text: result.error, at });
         } else {
-          setMessage({ type: "success", text: result.success });
+          setMessage({ type: "success", text: result.success, at });
           after?.();
         }
       } catch (err) {
         setMessage({
           type: "error",
           text: err instanceof Error ? err.message : t.common.failedToSave,
+          at,
         });
       }
     });
   }
 
-  const feedback = message && (
-    <p className={`text-sm ${message.type === "error" ? "text-danger" : "text-success"}`}>
-      {message.text}
-    </p>
-  );
+  const feedbackFor = (at?: "logo") =>
+    message &&
+    message.at === at && (
+      <p role="status" className={`text-sm ${message.type === "error" ? "text-danger" : "text-success"}`}>
+        {message.text}
+      </p>
+    );
+  const feedback = feedbackFor();
 
   // --- Not a Friend yet: a manager may make one, where the gate allows.
   if (!friend) {
@@ -392,7 +401,9 @@ export function ShelterFriendCard({
                   type="button"
                   disabled={isPending}
                   onClick={() => {
-                    if (window.confirm(c.removeLogoConfirm)) run(() => removeFriendLogo(friend.id));
+                    if (window.confirm(c.removeLogoConfirm)) {
+                      run(() => removeFriendLogo(friend.id), undefined, "logo");
+                    }
                   }}
                   className="rounded border border-danger/40 px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
                 >
@@ -410,14 +421,18 @@ export function ShelterFriendCard({
                   if (!file) return;
                   const formData = new FormData();
                   formData.append("file", file);
-                  run(() =>
-                    runUploadAction(file, t.admin.website.errors, () =>
-                      uploadFriendLogo(friend.id, formData),
-                    ),
+                  run(
+                    () =>
+                      runUploadAction(file, t.admin.website.errors, () =>
+                        uploadFriendLogo(friend.id, formData),
+                      ),
+                    undefined,
+                    "logo",
                   );
                 }}
               />
             </div>
+            {feedbackFor("logo")}
           </div>
 
           <label className="flex flex-col gap-1">

@@ -45,7 +45,34 @@ export class DriveApiError extends Error {
   }
 }
 
-async function readErrorMessage(res: Response, fallback: string): Promise<string> {
+/**
+ * Drive can't be reached as the shelter's account at all: the refresh
+ * token was expired or revoked, the OAuth client is gone, or the env vars
+ * are missing. Nothing a staff member can do and nothing a retry fixes —
+ * an admin has to mint a new token — and every upload on the environment
+ * fails the same way until then. So callers say "photo storage is not
+ * connected" (drive-errors.ts) instead of Google's text, which is what the
+ * Shelter Friend card showed on 2026-09-25.
+ */
+export class DriveNotConnectedError extends DriveApiError {
+  constructor(message: string, status: number) {
+    super(message, status);
+    this.name = "DriveNotConnectedError";
+  }
+}
+
+/**
+ * The token endpoint's error codes that mean the credentials themselves are
+ * bad, not that Google is having a moment. invalid_grant is what the
+ * expired Testing-mode token gave on 2026-09-25; invalid_client what a
+ * deleted OAuth client gave on 2026-09-24.
+ */
+const NOT_CONNECTED_CODES = new Set(["invalid_grant", "invalid_client", "unauthorized_client"]);
+
+async function readError(
+  res: Response,
+  fallback: string,
+): Promise<{ message: string; code: string | null }> {
   try {
     const body = (await res.json()) as {
       error?: string | { message?: string };
@@ -53,13 +80,16 @@ async function readErrorMessage(res: Response, fallback: string): Promise<string
     };
     if (typeof body.error === "string") {
       // OAuth token endpoint shape: { error, error_description }.
-      return body.error_description ? `${body.error}: ${body.error_description}` : body.error;
+      return {
+        message: body.error_description ? `${body.error}: ${body.error_description}` : body.error,
+        code: body.error,
+      };
     }
-    if (body.error?.message) return body.error.message;
+    if (body.error?.message) return { message: body.error.message, code: null };
   } catch {
     // Non-JSON error body — fall through.
   }
-  return fallback;
+  return { message: fallback, code: null };
 }
 
 // ---------------------------------------------------------------------------
@@ -83,7 +113,7 @@ const TOKEN_EXPIRY_MARGIN_MS = 60 * 1000;
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
-    throw new Error(`${name} is not configured.`);
+    throw new DriveNotConnectedError(`${name} is not configured.`, 500);
   }
   return value;
 }
@@ -101,10 +131,9 @@ async function fetchAccessToken(): Promise<string> {
   });
 
   if (!res.ok) {
-    throw new DriveApiError(
-      `Google OAuth token refresh failed: ${await readErrorMessage(res, res.statusText)}`,
-      res.status,
-    );
+    const { message, code } = await readError(res, res.statusText);
+    const ErrorClass = code && NOT_CONNECTED_CODES.has(code) ? DriveNotConnectedError : DriveApiError;
+    throw new ErrorClass(`Google OAuth token refresh failed: ${message}`, res.status);
   }
 
   const data = (await res.json()) as { access_token?: string; expires_in?: number };
@@ -163,7 +192,7 @@ export class DriveClient {
     const res = await fetch(url, { ...init, headers });
     if (!res.ok) {
       throw new DriveApiError(
-        `Drive API ${init.method ?? "GET"} ${new URL(url).pathname} failed: ${await readErrorMessage(res, res.statusText)}`,
+        `Drive API ${init.method ?? "GET"} ${new URL(url).pathname} failed: ${(await readError(res, res.statusText)).message}`,
         res.status,
       );
     }
@@ -367,6 +396,39 @@ export class DriveClient {
 
 export function getDriveClient(): DriveClient {
   return new DriveClient();
+}
+
+export type DriveConnectionCheck =
+  | { ok: true }
+  | { ok: false; notConnected: boolean; detail: string };
+
+/**
+ * Can the app act as the shelter's Drive account right now? For the
+ * Settings page, so an expired token is seen before a user hits it
+ * (scripts/check-drive-token.mjs asks the same of an env file). Mints a
+ * fresh access token rather than trusting the cache, which can outlive a
+ * revoked refresh token by up to an hour, then reads the root folder, so
+ * a missing or trashed GOOGLE_DRIVE_ROOT_FOLDER_ID shows up too.
+ */
+export async function checkDriveConnection(): Promise<DriveConnectionCheck> {
+  try {
+    await fetchAccessToken();
+    const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+    if (!rootId) {
+      return { ok: false, notConnected: true, detail: "GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured." };
+    }
+    const root = (await getDriveClient().getFile(rootId, "id, trashed")) as { trashed?: boolean };
+    if (root.trashed) {
+      return { ok: false, notConnected: true, detail: "The Drive root folder is in the trash." };
+    }
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      notConnected: err instanceof DriveNotConnectedError,
+      detail: err instanceof Error ? err.message : String(err),
+    };
+  }
 }
 
 // ---------------------------------------------------------------------------

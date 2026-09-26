@@ -4,6 +4,7 @@ import { MAX_UPLOAD_BYTES } from "@/lib/uploads/limits";
 import { assertPhotoWriteAccess } from "@/lib/auth/require-role";
 import { getDriveClient, uploadImageToFolder } from "@/lib/google/drive";
 import { driveImageUrl } from "@/lib/google/drive-client";
+import { withDriveErrors } from "@/lib/google/drive-errors";
 import { ensureProjectDriveFolder } from "@/lib/projects/drive-sync";
 
 const ALLOWED_MIME_TYPES = new Set([
@@ -27,7 +28,7 @@ const ALLOWED_MIME_TYPES = new Set([
  * (volunteer_rw_attachments, 0001) even though they can't create folders —
  * that's the intended split.
  */
-export async function POST(
+async function handlePost(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -119,3 +120,6 @@ export async function POST(
     fileUrl: driveImageUrl(driveFileId),
   });
 }
+
+// A Drive failure answers in a sentence rather than a bare 500 (drive-errors.ts).
+export const POST = withDriveErrors(handlePost);

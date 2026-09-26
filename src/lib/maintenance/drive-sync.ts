@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getDriveClient, syncMaintenanceJobFolder } from "@/lib/google/drive";
+import { driveErrorMessage } from "@/lib/google/drive-errors";
 
 type SyncRow = {
   id: string;
@@ -48,6 +49,6 @@ export async function syncJobFolderAfterChange(
     });
     return null;
   } catch (error) {
-    return error instanceof Error ? error.message : "Could not move the Drive folder.";
+    return driveErrorMessage(error, "Could not move the Drive folder.");
   }
 }
