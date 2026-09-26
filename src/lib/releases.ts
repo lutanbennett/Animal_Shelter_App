@@ -42,6 +42,7 @@ export type Release = {
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
+  "While a page is loading, the website now shows a puppy typing on a laptop instead of a blank screen, and the staff app shows a small version beside “Loading…”. It only appears when a page takes more than a moment, and it stays still if your device is set to reduce motion. It also appears on the website photo and Shelter Friend logo upload buttons when an upload is slow.",
 ];
 
 /** Newest first. */

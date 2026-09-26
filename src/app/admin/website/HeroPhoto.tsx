@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRef, useState, useTransition } from "react";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { PendingPuppy } from "@/components/PuppyLoader";
 import { runUploadAction } from "@/lib/uploads/run-upload-action";
 import { removeHeroPhoto, uploadHeroPhoto } from "./actions";
 
@@ -80,8 +81,9 @@ export function HeroPhoto({
           type="button"
           disabled={isPending}
           onClick={() => inputRef.current?.click()}
-          className="rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-50"
         >
+          {isPending && <PendingPuppy />}
           {isPending ? t.common.uploading : t.admin.website.hero.replace}
         </button>
         {heroDriveFileId && (

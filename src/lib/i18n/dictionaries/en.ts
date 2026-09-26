@@ -16,6 +16,7 @@ const en = {
     scrollForward: "Scroll forward",
     creating: "Creating...",
     uploading: "Uploading...",
+    loading: "Loading…",
     add: "Add",
     addMore: "+ Add more",
     change: "Change",

@@ -18,6 +18,7 @@ const th: Dictionary = {
     scrollForward: "เลื่อนไปข้างหน้า",
     creating: "กำลังสร้าง...",
     uploading: "กำลังอัปโหลด...",
+    loading: "กำลังโหลด…",
     add: "เพิ่ม",
     addMore: "+ เพิ่มเติม",
     change: "เปลี่ยน",
