@@ -31,12 +31,15 @@ export function FriendCard({
   t,
   locale,
   mapSrc,
+  reveal = false,
 }: {
   friend: PublicFriend;
   t: Dictionary;
   locale: Locale;
   /** Embed URL for map_location, resolved on the server; null draws no map. */
   mapSrc: string | null;
+  /** Spring into view on the public /friends page (src/app/adopt/SpringMotion.tsx). */
+  reveal?: boolean;
 }) {
   const f = t.shelterFriends;
   const { blurb, helpKind, discountNote } = publicFriendText(friend, locale);
@@ -52,6 +55,7 @@ export function FriendCard({
   return (
     <article
       id={friendAnchor(friend.id)}
+      data-reveal={reveal || undefined}
       className="flex scroll-mt-6 flex-col gap-4 rounded-lg border border-border bg-surface p-5"
     >
       <div className="flex items-start gap-4">

@@ -118,6 +118,7 @@ export default async function FriendsPage() {
               t={t}
               locale={locale}
               mapSrc={maps.get(friend.id) ?? null}
+              reveal
             />
           ))}
         </div>
