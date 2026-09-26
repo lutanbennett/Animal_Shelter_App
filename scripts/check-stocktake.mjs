@@ -1,5 +1,6 @@
-// Rollback harness for 0088_record_stocktake.sql against DEV only.
-// One transaction: the migration (twice), harness logins, calls to
+// Rollback harness for 0088_record_stocktake.sql and
+// 0091_record_stocktake_staff.sql against DEV only.
+// One transaction: both migrations (0091 twice), harness logins, calls to
 // record_stocktake() as each of them, then a deliberate `raise exception`
 // carrying the evidence — so nothing can commit.
 //
@@ -16,10 +17,15 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-const migration = readFileSync(join(root, "supabase/migrations/0088_record_stocktake.sql"), "utf8");
+const read = (file) => readFileSync(join(root, "supabase/migrations", file), "utf8");
+// 0091 replaces 0088's definition, so the harness runs 0088 first to start
+// from the state 0091 is applied on.
+const migration0088 = read("0088_record_stocktake.sql");
+const migration = read("0091_record_stocktake_staff.sql");
 
 const sql = `
 begin;
+${migration0088}
 ${migration}
 -- a second run of the whole file must be harmless
 ${migration}
@@ -27,13 +33,14 @@ ${migration}
 create temp table who (who text primary key, uid uuid);
 insert into who values
   ('management', gen_random_uuid()), ('admin', gen_random_uuid()),
-  ('staff', gen_random_uuid()), ('roleless', gen_random_uuid()), ('anon', null);
+  ('staff', gen_random_uuid()), ('volunteer', gen_random_uuid()), ('vet', gen_random_uuid()),
+  ('public_viewer', gen_random_uuid()), ('roleless', gen_random_uuid()), ('anon', null);
 insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
-       'harness-0088-' || who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
+       'harness-0091-' || who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
   from who where uid is not null;
 insert into user_roles (user_id, role)
-select uid, who::app_role from who where who in ('management', 'admin', 'staff');
+select uid, who::app_role from who where who in ('management', 'admin', 'staff', 'volunteer', 'vet', 'public_viewer');
 grant select on who to authenticated, anon;
 
 -- Call record_stocktake as a login (null = anon). Returns the result as
@@ -62,7 +69,7 @@ end $f$;
 do $h$
 declare
   m1 uuid; m2 uuid; m3 uuid; d1 uuid;
-  v text; v_n int;
+  v text; v_n int; v_direct int; v_who text;
   v_old_stock numeric; v_old_at timestamptz;
   v_report text := '';
   list jsonb;
@@ -135,14 +142,51 @@ begin
                         jsonb_build_array(jsonb_build_object('id', d1, 'count', 1), jsonb_build_object('id', upper(d1::text), 'count', 2)));
   if v <> 'ERR P0001 The same diet type is listed twice.' then raise exception 'FAIL F: diet duplicate (case-insensitive id): %', v; end if;
 
-  -- G. who is refused: staff and role-less by the function's own guard, anon by the grant
-  v := pg_temp.as_login('staff', jsonb_build_array(jsonb_build_object('id', m1, 'count', 1)), null);
-  if v <> 'ERR P0001 Not authorized to record a stocktake.' then raise exception 'FAIL G staff: %', v; end if;
-  v := pg_temp.as_login('roleless', jsonb_build_array(jsonb_build_object('id', m1, 'count', 1)), null);
-  if v <> 'ERR P0001 Not authorized to record a stocktake.' then raise exception 'FAIL G roleless: %', v; end if;
+  -- G. who is refused: vet, public_viewer and role-less by the function's
+  -- own guard (0091: it is the whole access rule now), anon by the grant
+  foreach v_who in array array['vet', 'public_viewer', 'roleless'] loop
+    v := pg_temp.as_login(v_who, jsonb_build_array(jsonb_build_object('id', m1, 'count', 1)), null);
+    if v <> 'ERR P0001 Not authorized to record a stocktake.' then raise exception 'FAIL G %: %', v_who, v; end if;
+  end loop;
   v := pg_temp.as_login('anon', jsonb_build_array(jsonb_build_object('id', m1, 'count', 1)), null);
   if v not like 'ERR 42501 permission denied for function record_stocktake%' then raise exception 'FAIL G anon: %', v; end if;
   if (select stock_on_hand from medication where id = m1) <> 12.5 then raise exception 'FAIL G: a refused caller wrote m1'; end if;
+
+  -- I. staff and volunteers may save a stocktake (0091) — through the
+  -- definer function, both tables, same stamp as any other caller
+  foreach v_who in array array['staff', 'volunteer'] loop
+    v := pg_temp.as_login(v_who, jsonb_build_array(jsonb_build_object('id', m1, 'count', 7)),
+                          jsonb_build_array(jsonb_build_object('id', d1, 'count', 5)));
+    if v not like '{"medication_updated":1,"diet_types_updated":1,"counted_at":%' then raise exception 'FAIL I %: %', v_who, v; end if;
+    if (select stock_on_hand from medication where id = m1) <> 7
+       or (select stock_on_hand from diet_types where id = d1) <> 5
+       or (select stock_counted_at from medication where id = m1) <> now() then
+      raise exception 'FAIL I %: counts not written and stamped', v_who;
+    end if;
+    v_report := v_report || ' | ' || v_who || ' ok';
+  end loop;
+  -- and still a refusal before anything is written
+  v := pg_temp.as_login('volunteer', jsonb_build_array(jsonb_build_object('id', m1, 'count', 99), jsonb_build_object('id', m2, 'count', -1)), null);
+  if v <> 'ERR P0001 A stock count cannot be negative.' or (select stock_on_hand from medication where id = m1) <> 7 then
+    raise exception 'FAIL I volunteer refusal: %', v;
+  end if;
+
+  -- J. the function is the only door: staff still cannot write the tables
+  -- directly (no UPDATE policy — renaming or repricing stays management's)
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'staff'), 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  update medication set name = name || ' (harness)', stock_on_hand = 1 where id = m1;
+  get diagnostics v_n = row_count;
+  update diet_types set cost_per_unit = cost_per_unit + 1 where id = d1;
+  get diagnostics v_direct = row_count;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if v_n <> 0 or v_direct <> 0 then raise exception 'FAIL J: staff wrote % medication / % diet rows directly', v_n, v_direct; end if;
+  if not (select prosecdef from pg_proc where oid = 'record_stocktake(jsonb, jsonb)'::regprocedure)
+     or not exists (select 1 from pg_proc where oid = 'record_stocktake(jsonb, jsonb)'::regprocedure
+                     and 'search_path=public' = any(proconfig)) then
+    raise exception 'FAIL J: record_stocktake is not security definer with search_path=public';
+  end if;
 
   -- H. grants as written
   if has_function_privilege('anon', 'record_stocktake(jsonb, jsonb)', 'execute')
@@ -151,7 +195,7 @@ begin
     raise exception 'FAIL H: grants not anon-no / authenticated-yes / service_role-yes';
   end if;
 
-  raise exception 'HARNESS-OK file ran twice | A 2 meds + 1 diet in one call, all stamped now() | B same figure restamps | C zero is a count | D unlisted row untouched | E admin ok, null and [] lists ok | F refused, nothing written:% | bad diet list stops the meds | G staff and role-less refused by the guard, anon by the grant | H grants', v_report;
+  raise exception 'HARNESS-OK 0088 then 0091 twice | A 2 meds + 1 diet in one call, all stamped now() | B same figure restamps | C zero is a count | D unlisted row untouched | E admin ok, null and [] lists ok | F refused, nothing written:% | bad diet list stops the meds | G vet, public_viewer and role-less refused by the guard, anon by the grant | I staff and volunteer save both tables; still refused before writing | J staff cannot update either table directly; definer + search_path | H grants', v_report;
 end;
 $h$;
 rollback;
