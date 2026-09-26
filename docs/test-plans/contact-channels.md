@@ -36,7 +36,7 @@ or `n/a` / `deferred` with the reason.
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — all 3 checks passed on #149 at `3166c5e` (mergeStateStatus CLEAN), seen before merging
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -164,7 +164,7 @@ Manual verification by: pending: Left for manual verification items 1–4 (admin
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above — both found were fixed
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR — the PR description links `docs/test-plans/contact-channels.md`, which is in its diff
 - [ ] Handed to the production release manager — n/a: not yet — handed over with the PR
 
 Result: pass
