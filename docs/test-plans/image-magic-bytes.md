@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Refuse an "image" upload that isn't a real image |
 | Branch / worktree | `claude/image-magic-bytes` @ `C:\Development\Animal_Shelter_image-magic-bytes` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3012` |
-| PR | opened after this commit |
+| PR | #147 |
 | Tested by / date | Claude, 2026-09-26 |
 | Carries a migration? | no |
 | Tested at SHA | `737e643` (code `d56d943`, merged with `origin/main`) |
@@ -34,7 +34,7 @@ Run in the feature worktree, after `node scripts/worktree.mjs sync`, with
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three). — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three). — check, migration-numbers and test-plan all passed on PR #147 (run 36231331417), after syncing main
 
 ## 3. Schema and data — *skip if no migration*
 
