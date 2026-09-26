@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { canWriteMaintenance, loadMaintenanceJobs } from "@/lib/maintenance/queries";
 import { getTagOrigin } from "@/lib/tags/origin";
+import { loadSpecialDiets } from "@/lib/diets/special";
 import {
   EnclosureHub,
   type Enclosure,
@@ -47,15 +48,21 @@ export default async function EnclosurePage(
   if (!row) notFound();
 
   const residentIds = (occupantsResult.data ?? []).map((r) => r.resident_id);
-  const residentsResult =
+  const [residentsResult, specialDiets] = await Promise.all([
     residentIds.length > 0
-      ? await supabase
+      ? supabase
           .from("residents")
           .select("id, name, thai_name, resident_code, profile_photo_drive_file_id")
           .in("id", residentIds)
           .order("name")
-          .returns<EnclosureResident[]>()
-      : null;
+          .returns<Omit<EnclosureResident, "special_diets">[]>()
+      : null,
+    loadSpecialDiets(supabase, residentIds),
+  ]);
+  const residents: EnclosureResident[] = (residentsResult?.data ?? []).map((resident) => ({
+    ...resident,
+    special_diets: specialDiets.get(resident.id) ?? [],
+  }));
 
   const enclosure: Enclosure = {
     id: row.id,
@@ -73,7 +80,7 @@ export default async function EnclosurePage(
   return (
     <EnclosureHub
       enclosure={enclosure}
-      residents={residentsResult?.data ?? []}
+      residents={residents}
       isAdmin={roleResult.data === "admin"}
       canWriteMaintenance={canWriteMaintenance(roleResult.data)}
       maintenanceJobs={maintenanceResult.jobs}

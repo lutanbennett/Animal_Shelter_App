@@ -10,6 +10,7 @@ import {
 } from "@/lib/enclosures/place";
 import { getTagOrigin } from "@/lib/tags/origin";
 import { canReadMaintenance } from "@/lib/maintenance/queries";
+import { loadSpecialDiets } from "@/lib/diets/special";
 import { EnclosureFilters } from "./EnclosureFilters";
 import {
   EnclosureGrid,
@@ -65,7 +66,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   // Resident counts come from resident_list_view rather than a dedicated
   // occupancy view so no migration is needed; the shelter's headcount is
   // small enough that pulling one row per resident is cheap.
-  const [zonesResult, enclosuresResult, residentsResult, jobsResult, tagOrigin, roleResult] = await Promise.all([
+  const [zonesResult, enclosuresResult, residentsResult, jobsResult, tagOrigin, roleResult, specialDiets] = await Promise.all([
     supabase.from("zones").select("id, name, name_th, internal").order("name"),
     supabase
       .from("enclosures")
@@ -74,9 +75,10 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       .returns<EnclosureRow[]>(),
     supabase
       .from("resident_list_view")
-      .select("enclosure_id")
+      .select("enclosure_id, resident_id, name")
       .not("enclosure_id", "is", null)
-      .returns<{ enclosure_id: string }[]>(),
+      .order("name")
+      .returns<{ enclosure_id: string; resident_id: string; name: string }[]>(),
     // Open maintenance per enclosure, and per zone for zone-wide jobs
     // (enclosure_id null). A vet can't read maintenance (0001) and simply
     // gets zeros — no error, RLS filters.
@@ -87,6 +89,8 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       .returns<{ enclosure_id: string | null; zone_id: string }[]>(),
     getTagOrigin(),
     supabase.rpc("current_user_role"),
+    // Who is on a special diet, for the marker on each card (0087).
+    loadSpecialDiets(supabase),
   ]);
 
   // The open-maintenance filter is hidden from vets, and a ?maint=open link
@@ -95,8 +99,15 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   const maintOpen = canFilterMaintenance && searchParams.maint === "open";
 
   const counts = new Map<string, number>();
+  const specialByEnclosure = new Map<string, string[]>();
   for (const row of residentsResult.data ?? []) {
     counts.set(row.enclosure_id, (counts.get(row.enclosure_id) ?? 0) + 1);
+    if (specialDiets.has(row.resident_id)) {
+      specialByEnclosure.set(row.enclosure_id, [
+        ...(specialByEnclosure.get(row.enclosure_id) ?? []),
+        row.name,
+      ]);
+    }
   }
   const openJobs = new Map<string, number>();
   const zoneWideJobs = new Map<string, number>();
@@ -135,6 +146,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       is_system: row.zones?.name === SYSTEM_ZONE,
       resident_count: counts.get(row.id) ?? 0,
       open_jobs: openJobs.get(row.id) ?? 0,
+      special_diet_residents: specialByEnclosure.get(row.id) ?? [],
     }))
     .filter((e) => !e.is_system || PINNED_STATUSES.includes(e.name))
     // On-site / Off-site leaves the Lifecycle cards out, as ?maint=open does.
