@@ -22,11 +22,17 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly ("Already up to date.")
-- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`:
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly; second sync after the PR opened took in `0090_standard_diet_functions.sql` and docs (no overlap), merge `ecac178`, `decisions.md` merged by union
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — first at `2ce0999`, again on the second sync's merge `ecac178`:
 
 ```
 === gates: build exited 0 after 483s
+
+gates: typecheck=0 lint=0 build=0
+```
+
+```
+=== gates: build exited 0 after 147s
 
 gates: typecheck=0 lint=0 build=0
 ```
@@ -81,7 +87,7 @@ gates: typecheck=0 lint=0 build=0
 
 - [x] The pages nearest the change still work: /, /adopt, /foster, /our-work render with the new header and footer; /login (not a public-site page) stays on the dark app theme (`body` `rgb(14, 22, 21)`, `--primary` `#2dd4bf`)
 - [x] Shared file checked from a second page by loading it: `globals.css`, the shared `LanguageSwitcher` (default `app` tone) and dev tokens checked on /login, where the tokens are unchanged
-- [x] Nothing merged from `main` during `sync` was broken — sync was already up to date
+- [x] Nothing merged from `main` during `sync` was broken — the second sync brought only a migration, a script and docs; gates re-run green on it
 
 ## 7. Documentation
 
