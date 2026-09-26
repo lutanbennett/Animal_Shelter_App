@@ -11,7 +11,7 @@
 | PR | opened from this branch |
 | Tested by / date | Claude, 2026-09-26 |
 | Carries a migration? | no |
-| Tested at SHA | `e4929de` (feature `179f2d1` + `origin/main` merged) |
+| Tested at SHA | `6dcbff3` (feature + `origin/main` merged twice; browser checks at `e4929de`, gates rerun at `6dcbff3`) |
 
 ## 1. Scope and risk
 
@@ -31,13 +31,22 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (merge `e4929de`, brought in `0093`/`0094` migrations from other streams, no conflicts)
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged twice. The first merge (`e4929de`) brought in `0093`/`0094` from other streams with no conflicts. The second (`6dcbff3`) brought in `image-magic-bytes`; it conflicted only in `unreleased`, where both lines were kept
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`, run after the sync:
 
 ```
 === gates: typecheck exited 0 after 29s
 === gates: lint exited 0 after 88s
 === gates: build exited 0 after 118s
+gates: typecheck=0 lint=0 build=0
+```
+
+Rerun after the second sync, at `6dcbff3`:
+
+```
+=== gates: typecheck exited 0 after 31s
+=== gates: lint exited 0 after 65s
+=== gates: build exited 0 after 97s
 gates: typecheck=0 lint=0 build=0
 ```
 
