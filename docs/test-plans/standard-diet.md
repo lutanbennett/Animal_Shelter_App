@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **Standard diet: flag it, make a diet mandatory at intake, and show special diets on enclosure cards** (ticked here) |
 | Branch / worktree | `claude/standard-diet` @ `C:\Development\Animal_Shelter_standard-diet` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3005` |
-| PR | opened from this commit |
+| PR | #139 |
 | Tested by / date | Claude (automated, browser driven signed in as Lutan's admin account) / 2026-09-26 |
 | Carries a migration? | no. It depends on `0087` (#134) and `0090` (#136), both merged and applied to dev |
 | Tested at SHA | `ed9174a` (`c76c42f` synced onto `main` @ `ab4859a`). The later commit adds only this plan |
@@ -30,7 +30,7 @@
 
   gates: typecheck=0 lint=0 build=0
   ```
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): PR #139, run 36210723702 — `check` pass (1m27s), `migration-numbers` pass, `test-plan` pass
 
 ## 3. Schema and data
 
@@ -150,9 +150,9 @@ Automated checks by: Claude  Date: 2026-09-26
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — waiting for Lutan to look at the four items above
+- [x] The manual list above is empty, or every item in it was checked by a person: Lutan checked all four items
 
-Manual verification by: n/a: not yet signed — only the person who looks signs this
+Manual verification by: Lutan Bennett (checked items 1–4 and asked in chat on 2026-09-26 for this line to be signed on their behalf; entered by Claude)  Date: 2026-09-26
 
 ### Result
 
