@@ -27,7 +27,7 @@ or `n/a` / `deferred` with the reason.
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in twice: first #149 contact-channels (`623ff39`, clean); then, after the PR showed as conflicting, the public-site resident page (`23bab08`), whose only conflict was both branches appending a line to `unreleased` in `src/lib/releases.ts` — both lines kept
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in twice: first #149 contact-channels (`623ff39`, clean); then, after the PR showed as conflicting, the public-site resident page (`23bab08`), whose only conflict was both branches appending a line to `unreleased` in `src/lib/releases.ts` — both lines kept; then the day's backlog merge (`522b487`), which touched only `docs/backlog.md` and conflicted beside this item's tick — tick kept, the new "Record stock deliveries" item kept after it. The code was unchanged by that third merge, so the gates run below still stands
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`, rerun after the second sync:
 
 ```
