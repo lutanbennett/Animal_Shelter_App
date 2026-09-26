@@ -2806,6 +2806,9 @@ const en = {
     removeFile: "Remove",
     uploading: (done: number, total: number) => `Uploading files… ${done} of ${total}`,
     uploadsFailed: "Some files didn't upload. Retry them, or continue without them.",
+    /** The file's bytes are not any accepted format (src/lib/uploads/file-signature.ts). */
+    notReadable: (name: string, formats: string) =>
+      `"${name}" can't be opened as ${formats}: the file looks empty or damaged, or isn't the kind of file its name says. Nothing was uploaded.`,
   },
 
   photos: {

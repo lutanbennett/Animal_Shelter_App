@@ -171,6 +171,8 @@ export type DriveFile = {
   createdTime?: string;
   parents?: string[];
   thumbnailLink?: string;
+  /** Bytes, as a decimal string (Drive's int64). */
+  size?: string;
 };
 
 export type DriveDownload = {
@@ -384,6 +386,20 @@ export class DriveClient {
       contentType: res.headers.get("content-type") || "application/octet-stream",
       body: await res.arrayBuffer(),
     };
+  }
+
+  /**
+   * `files.update` with `trashed: true` — Drive's trash, restorable from
+   * drive.google.com for 30 days. Used where a file is replaced or removed
+   * from the Website page, so a bad replacement can be undone
+   * (docs/decisions.md, 2026-09-26).
+   */
+  async trashFile(fileId: string): Promise<void> {
+    await this.request(`${DRIVE_API}/files/${encodeURIComponent(fileId)}?fields=id`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json; charset=UTF-8" },
+      body: JSON.stringify({ trashed: true }),
+    });
   }
 
   /** `files.delete` — permanent, skips the trash. */
@@ -620,6 +636,24 @@ export async function uploadImageToFolder(
   }
 
   return created.id;
+}
+
+/**
+ * Does Drive hold the whole of a file just uploaded? Read back before the
+ * file it replaces is trashed, so a replace never leaves the page pointing
+ * at nothing and the old copy gone. Throws when it does not match.
+ */
+export async function confirmUploaded(
+  drive: DriveClient,
+  fileId: string,
+  expectedBytes: number,
+): Promise<void> {
+  const { size } = await drive.getFile(fileId, "id, size");
+  if (Number(size) !== expectedBytes) {
+    throw new Error(
+      `Drive holds ${size ?? "no"} bytes of ${fileId}; ${expectedBytes} were sent.`,
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------

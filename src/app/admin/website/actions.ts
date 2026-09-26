@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { assertAdminRole } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits";
+import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { getT } from "@/lib/i18n/get-t";
 import { isSitePageSlug, type SitePageSlug } from "@/lib/site/pages";
 import { parseBahtAmount } from "@/lib/format";
@@ -15,6 +16,7 @@ import {
   linkErrorText,
 } from "@/lib/links/validate";
 import {
+  confirmUploaded,
   findOrCreateFolder,
   getDriveClient,
   uploadImageToFolder,
@@ -261,22 +263,43 @@ async function uploadToWebsiteFolder(file: File) {
   if (file.size > MAX_UPLOAD_BYTES) {
     throw new Error(t.admin.website.errors.fileTooLarge);
   }
+  // The type above is the browser's guess from the name; the bytes decide.
+  // A zero-filled "mid3.jpg" became the hero on 2026-09-25 (file-signature.ts).
+  const mimeType = await checkFileSignature(file, WEBSITE_IMAGE_MIME_TYPES);
+  if (!mimeType) {
+    throw new Error(t.uploads.notReadable(file.name, formatNames(WEBSITE_IMAGE_MIME_TYPES)));
+  }
 
   const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
   if (!rootId) throw new Error(t.admin.website.errors.driveNotConfigured);
 
   const drive = getDriveClient();
   const folderId = await findOrCreateFolder(drive, rootId, "Website");
-  return uploadImageToFolder(drive, folderId, {
+  const fileId = await uploadImageToFolder(drive, folderId, {
     name: file.name,
-    mimeType: file.type,
+    mimeType,
     content: file,
   });
+  // Read it back before anything points at it or the old photo is trashed.
+  try {
+    await confirmUploaded(drive, fileId, file.size);
+  } catch (err) {
+    console.error("Website upload did not land whole:", err);
+    await trashInDrive(fileId);
+    throw new Error(t.admin.website.errors.uploadFailed);
+  }
+  return fileId;
 }
 
-async function deleteFromDrive(fileId: string) {
+/**
+ * Moves a replaced or removed Website photo to Drive's trash, not a
+ * permanent delete: replacing the hero on 2026-09-25 deleted the only copy
+ * of the real photo, so a bad replacement could not be undone. The trash
+ * keeps it for 30 days (docs/decisions.md, 2026-09-26).
+ */
+async function trashInDrive(fileId: string) {
   try {
-    await getDriveClient().deleteFile(fileId);
+    await getDriveClient().trashFile(fileId);
   } catch {
     // Best-effort — an orphaned Drive file is a minor cleanup issue, not
     // worth failing the user-facing action over (same call this project
@@ -318,7 +341,7 @@ export async function uploadHeroPhoto(
   if (error) return { error: error.message };
 
   const previousFileId = current?.[0]?.hero_drive_file_id;
-  if (previousFileId) await deleteFromDrive(previousFileId);
+  if (previousFileId) await trashInDrive(previousFileId);
 
   revalidateWebsitePages();
   return { success: t.admin.website.hero.updated };
@@ -343,7 +366,7 @@ export async function removeHeroPhoto() {
   if (error) throw new Error(error.message);
 
   const previousFileId = current?.[0]?.hero_drive_file_id;
-  if (previousFileId) await deleteFromDrive(previousFileId);
+  if (previousFileId) await trashInDrive(previousFileId);
 
   revalidateWebsitePages();
 }
@@ -411,7 +434,7 @@ export async function deleteGalleryPhoto(photoId: string) {
   if (error) throw new Error(error.message);
 
   const driveFileId = photo?.[0]?.drive_file_id;
-  if (driveFileId) await deleteFromDrive(driveFileId);
+  if (driveFileId) await trashInDrive(driveFileId);
 
   revalidateWebsitePages();
 }
