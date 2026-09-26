@@ -11,6 +11,9 @@ import {
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
 import { FacebookIcon } from "@/components/FacebookIcon";
 import { InstagramIcon } from "@/components/InstagramIcon";
+import { MessengerIcon } from "@/components/MessengerIcon";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
+import { XIcon } from "@/components/XIcon";
 
 const heading = "text-base font-bold text-site-on-footer";
 const footerLink =
@@ -39,7 +42,21 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
   const social = socialLinks(site);
   const phone = site?.contact_phone?.trim();
   const f = t.publicFooter;
-  const hasContact = Boolean(phone || line || site?.contact_email || hours.length > 0);
+  const hasContact = Boolean(
+    phone ||
+      line ||
+      social.messenger ||
+      social.whatsapp ||
+      site?.contact_email ||
+      hours.length > 0,
+  );
+  // Follow us: places to follow the shelter. Messenger and WhatsApp are
+  // ways to talk to it, so they sit under Contact us beside LINE instead.
+  const follow = [
+    { key: "facebook", href: social.facebook, label: f.facebook, name: "Facebook", Icon: FacebookIcon },
+    { key: "instagram", href: social.instagram, label: f.instagram, name: "Instagram", Icon: InstagramIcon },
+    { key: "x", href: social.x, label: f.x, name: "X", Icon: XIcon },
+  ].filter((link): link is typeof link & { href: string } => Boolean(link.href));
 
   return (
     <footer
@@ -79,6 +96,30 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
                 LINE: {line.label}
               </a>
             )}
+            {social.messenger && (
+              <a
+                href={social.messenger}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={f.messenger}
+                className={`${footerLink} gap-2`}
+              >
+                <MessengerIcon aria-hidden="true" className="h-5 w-5" />
+                Messenger
+              </a>
+            )}
+            {social.whatsapp && (
+              <a
+                href={social.whatsapp}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={f.whatsapp}
+                className={`${footerLink} gap-2`}
+              >
+                <WhatsAppIcon aria-hidden="true" className="h-5 w-5" />
+                WhatsApp
+              </a>
+            )}
             {site?.contact_email && (
               <a href={`mailto:${site.contact_email}`} className={`${footerLink} break-all`}>
                 {site.contact_email}
@@ -107,33 +148,22 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
         </div>
 
         <div className="flex flex-col">
-          {(social.facebook || social.instagram) && (
+          {follow.length > 0 && (
             <>
               <span className={`${heading} pb-1`}>{f.followUs}</span>
-              {social.facebook && (
+              {follow.map(({ key, href, label, name, Icon }) => (
                 <a
-                  href={social.facebook}
+                  key={key}
+                  href={href}
                   target="_blank"
                   rel="noreferrer"
-                  aria-label={f.facebook}
+                  aria-label={label}
                   className={`${footerLink} gap-2`}
                 >
-                  <FacebookIcon aria-hidden="true" className="h-5 w-5" />
-                  Facebook
+                  <Icon aria-hidden="true" className="h-5 w-5" />
+                  {name}
                 </a>
-              )}
-              {social.instagram && (
-                <a
-                  href={social.instagram}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={f.instagram}
-                  className={`${footerLink} gap-2`}
-                >
-                  <InstagramIcon aria-hidden="true" className="h-5 w-5" />
-                  Instagram
-                </a>
-              )}
+              ))}
             </>
           )}
           <div className="flex flex-wrap gap-x-4 pt-4 lg:mt-auto">
