@@ -47,6 +47,14 @@ gates: typecheck=0 lint=0 build=0
 === gates: build exited 0 after 293s
 gates: typecheck=0 lint=0 build=0
 ```
+  Fourth sync, after #137 (public-site-shell) merged while this PR was being merged: conflicts in `src/app/adopt/PublicHeader.tsx` (#137 rewrote the header) and `src/lib/manual/en.ts` (both edited the sign-in step). The header takes #137's version, with its new Open the app link pointed at `DEFAULT_SIGNED_IN_PATH`; the manual step combines both sentences. Rechecked on the merged tree: Open the app on `/adopt` has `href="/my"` and opens My tasks, and `/manual` shows both sentences with no error overlay. Gates at `8df82d5`:
+
+```
+=== gates: typecheck exited 0 after 9s
+=== gates: lint exited 0 after 75s
+=== gates: build exited 0 after 145s
+gates: typecheck=0 lint=0 build=0
+```
 - [x] CI green on the PR: `check`, `migration-numbers` and `test-plan` all passed at `6ec00fe`
 
 ## 3. Schema and data — *skip if no migration*
@@ -111,7 +119,7 @@ Admin and management: the `mydash-staff` login's `user_roles.role` switched on d
 
 - [x] The pages nearest the change still work: `/maintenance?assignee=me` (Open the board), `/maintenance/[id]` (title link), `/manual`
 - [x] Shared files checked from a second, unrelated page by loading it: the menu (`NavLinks.tsx`, `NavPane.tsx`) on `/manual` with all its other entries and the footer group; `maintenance/queries.ts`'s new `ids` filter is additive, and `/maintenance` loaded the board as before
-- [x] Nothing merged from `main` during `sync` was broken by this branch: the first two syncs were "Already up to date." or docs-only. The third brought #139 (standard diet), and gates plus `/my` passed on the merged tree
+- [x] Nothing merged from `main` during `sync` was broken by this branch: the first two syncs were "Already up to date." or docs-only. The third brought #139 (standard diet) and the fourth #137 (public-site-shell); gates and the pages above passed on each merged tree
 
 ## 7. Documentation
 
