@@ -33,6 +33,7 @@ type FeaturedResident = {
   is_desexed: boolean | null;
   ready_for_adoption: boolean;
   bio: string | null;
+  hook_line: string | null;
   profile_photo_drive_file_id: string | null;
   translations: PublicTranslations;
 };
@@ -157,18 +158,19 @@ export default async function WelcomePage() {
     const { data } = await supabase
       .from("public_resident_profiles")
       .select(
-        "id, name, species, breed, sex, estimated_age_years, age_estimated_on, is_desexed, ready_for_adoption, bio, profile_photo_drive_file_id, translations",
+        "id, name, species, breed, sex, estimated_age_years, age_estimated_on, is_desexed, ready_for_adoption, bio, hook_line, profile_photo_drive_file_id, translations",
       )
       .eq("id", content.featured_resident_id)
       .limit(1)
       .returns<FeaturedResident[]>();
     featured = data?.[0] ?? null;
   }
-  // The mockup's one-line hook: the bio's first paragraph, cut to a line or two.
-  const featuredHook = bodyLead(
-    localizedField(locale, featured?.bio, featured?.translations, "bio"),
-    160,
-  );
+  // The mockup's one-line hook: the hook line staff write on Edit resident
+  // (0094), as the resident page shows it. While that is blank, which is
+  // most residents, the bio's first paragraph, cut to a line or two.
+  const featuredHook =
+    localizedField(locale, featured?.hook_line, featured?.translations, "hook_line") ||
+    bodyLead(localizedField(locale, featured?.bio, featured?.translations, "bio"), 160);
   const featuredFacts = featured
     ? [
         sexLabel(t, featured.sex),
