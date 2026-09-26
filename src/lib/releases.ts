@@ -42,19 +42,28 @@ export type Release = {
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
-  "The public website has a new look — cream pages, warmer type and a new menu: Adopt, Get involved (Foster, Volunteer, Sponsor a resident, Shelter Friends), Our work, and About & contact, with the language switch and Donate beside it. On a phone the menu fills the screen and ends with LINE and Call buttons. The footer now has four columns, with Staff login at the very bottom.",
-  "The website's home page is redesigned to match: a new welcome with Meet the animals and Give monthly, the shelter's live numbers on a green band, a thank-you band for Shelter Friends with room for the next business, four ways to help, and the Pet of the week beside Our story. The home page now shows the first three gallery photos, and recent Our work stories are reached from the link under Our story.",
-  "When photo storage is not connected, uploads now say so in plain words (“Photo storage is not connected — tell an admin”) instead of Google’s error text, and Settings shows whether photo storage is connected, so an admin sees it before anyone’s upload fails.",
-  "A Shelter Friend logo’s upload message now appears next to the logo instead of below the Save button.",
-  "A new Public viewer account type, for testing the website as a visitor while the testing sites are closed: it signs in, sees every public page, and never opens the app. Admins give it under Settings → Security.",
-  "Archived accounts, and accounts that were never given a role, can no longer sign in with a password — they are turned away as Google sign-in already turned them away.",
-  "A new resident now always gets a starting diet: intake picks the standard diet for you, and you change it only if they need something else. Enclosure cards show how many residents there are on a special diet (tap to see who), the enclosure page shows each one's diet under their photo, and Management → Diets marks which diet is the standard and lets management choose a different one.",
-  "New: My tasks, at the top of the menu, lists the maintenance jobs assigned to you that aren't finished — overdue, due today, coming up and undated — with who else is on each job and buttons to change its status there and then. The number beside it in the menu is how many are due today or overdue. It is now the app's home page: signing in, or tapping Open the app on the public website, takes you there instead of the Residents list.",
-  "New: Stocktake, in the menu for staff, volunteers and management. Count every medication and diet on one sheet — built for a phone, so you can walk the shelves and press Enter to move down the list — then check a summary of what changed (big differences are highlighted) and save it all at once. Leave a row blank if you didn't count it and it stays as it was; tap Same as last time to confirm an unchanged figure.",
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.6.0",
+    date: "2026-09-26",
+    title:
+      "A new public website, My tasks as your home page, and Stocktake",
+    major: true,
+    notes: [
+      "The public website has a new look — cream pages, warmer type and a new menu: Adopt, Get involved (Foster, Volunteer, Sponsor a resident, Shelter Friends), Our work, and About & contact, with the language switch and Donate beside it. On a phone the menu fills the screen and ends with LINE and Call buttons. The footer now has four columns, with Staff login at the very bottom.",
+      "The website's home page is redesigned to match: a new welcome with Meet the animals and Give monthly, the shelter's live numbers on a green band, a thank-you band for Shelter Friends with room for the next business, four ways to help, and the Pet of the week beside Our story. The home page now shows the first three gallery photos, and recent Our work stories are reached from the link under Our story.",
+      "When photo storage is not connected, uploads now say so in plain words (“Photo storage is not connected — tell an admin”) instead of Google’s error text, and Settings shows whether photo storage is connected, so an admin sees it before anyone’s upload fails.",
+      "A Shelter Friend logo’s upload message now appears next to the logo instead of below the Save button.",
+      "A new Public viewer account type, for testing the website as a visitor while the testing sites are closed: it signs in, sees every public page, and never opens the app. Admins give it under Settings → Security.",
+      "Archived accounts, and accounts that were never given a role, can no longer sign in with a password — they are turned away as Google sign-in already turned them away.",
+      "A new resident now always gets a starting diet: intake picks the standard diet for you, and you change it only if they need something else. Enclosure cards show how many residents there are on a special diet (tap to see who), the enclosure page shows each one's diet under their photo, and Management → Diets marks which diet is the standard and lets management choose a different one.",
+      "New: My tasks, at the top of the menu, lists the maintenance jobs assigned to you that aren't finished — overdue, due today, coming up and undated — with who else is on each job and buttons to change its status there and then. The number beside it in the menu is how many are due today or overdue. It is now the app's home page: signing in, or tapping Open the app on the public website, takes you there instead of the Residents list.",
+      "New: Stocktake, in the menu for staff, volunteers and management. Count every medication and diet on one sheet — built for a phone, so you can walk the shelves and press Enter to move down the list — then check a summary of what changed (big differences are highlighted) and save it all at once. Leave a row blank if you didn't count it and it stays as it was; tap Same as last time to confirm an unchanged figure.",
+    ],
+  },
   {
     version: "0.5.0",
     date: "2026-09-25",
