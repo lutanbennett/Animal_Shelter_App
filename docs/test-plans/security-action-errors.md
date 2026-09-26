@@ -11,7 +11,7 @@
 | PR | opened from this branch |
 | Tested by / date | Claude / 2026-09-26 |
 | Carries a migration? | no |
-| Tested at SHA | `6ea0af5` (the fix); synced to `d306147` |
+| Tested at SHA | `6ea0af5` (the fix); synced to `76d7636` |
 
 ## 1. Scope and risk
 
@@ -22,13 +22,13 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly at `d306147` (brought only a release-date correction and two docs files)
-- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Run on the synced tree:
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly twice: at `d306147` (a release-date correction and docs), then at `76d7636` after the schema PR landed (0096/0097 migrations, their check scripts, decisions.md by union — no app code)
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Run on the tree synced at `76d7636`:
 
 ```
-=== gates: typecheck exited 0 after 12s
-=== gates: lint exited 0 after 80s
-=== gates: build exited 0 after 160s
+=== gates: typecheck exited 0 after 13s
+=== gates: lint exited 0 after 73s
+=== gates: build exited 0 after 138s
 gates: typecheck=0 lint=0 build=0
 ```
 
