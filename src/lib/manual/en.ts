@@ -171,7 +171,7 @@ const manual: Manual = {
       title: "My tasks",
       icon: ListTodo,
       intro:
-        "What you need to do today: the work assigned to you, in one place. For now that is your maintenance jobs; other kinds of work will appear here as further sections as they are added.",
+        "What you need to do today: the work assigned to you, in one place. For now that is your recurring jobs (the routine that comes round every week or month, like the Monday stocktake) and your maintenance jobs; other kinds of work will appear here as further sections as they are added.",
       topics: [
         {
           id: "my-tasks-page",
@@ -187,7 +187,28 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "Volunteers see the jobs they are on and their status, but can't change the status — ask a staff member, as on the board. Vets aren't given maintenance jobs, so for now their list is empty.",
+              text: "Volunteers see the jobs they are on and their status, but can't change the status — ask a staff member, as on the board. Vets aren't given maintenance jobs.",
+            },
+          ],
+        },
+        {
+          id: "my-recurring-jobs",
+          title: "Doing your recurring jobs",
+          path: "My tasks → Recurring jobs",
+          intro:
+            "Recurring jobs are the routine management has set to come round on a calendar — the Monday stocktake, ordering medication after it, the monthly worming. Each date appears on your list for its day, whoever you are: staff, vets and volunteers can all be given one.",
+          steps: [
+            "Recurring jobs are listed first on My tasks, grouped like the rest: Overdue, Due today and Coming up (the next seven days). Each shows its time of day (morning, afternoon, evening or any time), its date, and who else is on it.",
+            "When the job is done on a particular screen, tap its title to go there — a stocktake job opens the Stocktake page, on the right tab.",
+            "Tap Done when you have done it, or Skip when it isn't happening this time (for example the shelter is closed). To leave a note with it — what was short, why it was skipped — tap Add a note first. Either way the row leaves the list, with Undo in case it was the wrong one.",
+            "A job that is waiting for another one shows “Waiting for …”, for example ordering medication waiting for the stocktake the same morning. It goes away as soon as that job is marked done or skipped. You can still mark it done if you have done it anyway.",
+            "A date nobody marked stays on the list as overdue, with how many days late it is, until someone marks it done or skipped. Dates ahead can be skipped but not marked done before their day.",
+            "If a date was handed to you because someone is off, it says “handed to you”, with the reason. It is only that date; the job goes back to its usual person afterwards.",
+          ],
+          callouts: [
+            {
+              kind: "tip",
+              text: "When a job is with a team, any one of you can mark it done — it then leaves everyone's list, and the record says who did it.",
             },
           ],
         },
@@ -937,6 +958,35 @@ const manual: Manual = {
             {
               kind: "warning",
               text: "Deliveries aren't recorded in the app, so a gap is a reason to look, not proof of anything. A miscount, a dose given but not on a prescription, spillage, or a diet that no longer matches what an animal eats will all show up here.",
+            },
+          ],
+        },
+        {
+          id: "recurring-jobs",
+          title: "Setting up recurring jobs",
+          roles: ["admin", "management"],
+          path: "Management → Recurring jobs",
+          intro:
+            "A recurring job is a rule — “stocktake of on-hand medication, every Monday morning, Anna” — that puts the job on the assignee's My tasks on every date it falls on. Nothing is created ahead: each date is worked out from the rule, and only what happened (done or skipped, by whom, when, and any note) is kept.",
+          steps: [
+            "Tap New recurring job. Say what to do, the time of day, and optionally instructions and the screen it is done on (for a stocktake, Stocktake — Medications or — Diets; Other page… takes any page of this app, starting with /).",
+            "Choose how it repeats: weekly on the days you tick (every 2 weeks for fortnightly), monthly on a day of the month, or monthly on a weekday such as the first Monday or the last Friday. Every 3 months makes it quarterly. Set the start date and, if it stops, an end date.",
+            "Check Next dates under the rule before saving. It is worked out by the same rule My tasks uses, so if the first date isn't the one you expect, the rule needs changing. Fortnightly counts from the week the job starts in: a fortnightly Monday job starting on a Wednesday first falls twelve days later, not five.",
+            "Tick who does it. Several people make a team: all of them see it, and any one can mark it done. Only people who can still sign in are offered.",
+            "To make one job follow another the same day — order medication after the stocktake — choose the first under Do after. On a day both fall, the second shows “Waiting for …” until the first is done or skipped.",
+            "Each job in the list shows its rule, who it is with, its next three dates, and how many missed dates are still open. Pause stops it showing anywhere, missed dates included; Resume starts again from today, so the paused weeks don't come back as missed. Changing when it repeats also starts the missed-dates count again from today.",
+            "Someone off sick or on leave: under Hand over, choose them, These dates only, the dates, who covers, and a reason. Every one of their dates in that range goes to the cover (anyone else on the job stays on it), and the jobs themselves don't change, so the week after goes back to normal. Handed-over dates are listed under Handed to someone else, where Give back undoes one.",
+            "Someone who has left: a job whose only people have left is marked in red at the top of the page. Edit it and tick someone else, or use Hand over with From now on to move all of that person's jobs at once.",
+            "Recently done lists the latest dates marked done or skipped, with who marked them, when, and their note — the record that the stocktake happened.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "A job that has ever been marked done or skipped can't be deleted, so its record stays. Pause it, or give it an end date, instead. A job nobody has marked yet can be deleted.",
+            },
+            {
+              kind: "tip",
+              text: "A date that has already been marked done or skipped can't be handed over — it's history. Any date not yet marked can be, including ones ahead.",
             },
           ],
         },
