@@ -1005,6 +1005,16 @@ const en = {
       },
       deleteConfirm: (name: string) => `Delete diet "${name}"? This can't be undone.`,
       createdDiet: (name: string) => `Created diet "${name}".`,
+      standard: {
+        badge: "Standard",
+        badgeHint: "What residents are fed unless someone says otherwise. New residents start on it; anyone on another diet shows as a special diet on the enclosure cards.",
+        make: "Make standard",
+        confirm: (name: string, current: string | null) =>
+          current
+            ? `Make "${name}" the standard diet instead of "${current}"? New intakes will default to it, and residents on "${current}" will show as special diets.`
+            : `Make "${name}" the standard diet? New intakes will default to it.`,
+        none: "No diet is marked as the standard. Intake has nothing to preselect, and no resident is shown as on a special diet. Choose one with Make standard.",
+      },
       errors: {
         nameRequired: "Name is required.",
         unitInvalid: "Choose a unit.",
@@ -1806,8 +1816,8 @@ const en = {
         selectSize: "Select size",
         sizeHint: "Small, medium or large — sets the default meal size for their diet.",
         startingDiet: "Starting diet",
-        noStartingDiet: "None yet — add from the hub later",
-        startingDietHint: "Optional — records their first diet from the intake date. Meals and quantity can be adjusted on the Diet page.",
+        chooseStartingDiet: "Choose a diet",
+        startingDietHint: "Required — starts on the standard diet unless you pick another. Recorded from the intake date; meals and quantity can be adjusted on the Diet page.",
         estimatedAge: "Estimated age (years)",
         estimatedAgeHint: "Staff estimate at intake",
         bloodTestInterval: "Routine blood test",
@@ -1844,6 +1854,7 @@ const en = {
         nameRequired: "Name is required.",
         intakeDateRequired: "Intake date is required.",
         sizeRequired: "Select the resident's size.",
+        dietRequired: "Choose the resident's starting diet.",
         ageMustBeNumber: "Estimated age must be a number.",
         weightPositive: "Weight must be more than 0 kg.",
         bloodTestIntervalInvalid: "Blood test interval must be a whole number of months.",
@@ -2416,6 +2427,9 @@ const en = {
     openJobsTitle: (n: number) =>
       n === 0 ? "No open maintenance jobs" : `${n} open maintenance job${n === 1 ? "" : "s"}`,
     zoneWideJobs: (n: number) => `${n} zone-wide job${n === 1 ? "" : "s"}`,
+    specialDiets: (n: number) => `${n} special diet${n === 1 ? "" : "s"}`,
+    specialDietsTitle: (names: string) => `On a special diet: ${names}`,
+    specialDietLabel: "Special diet",
     hasOpenMaintenance: "Has open maintenance",
     residentsCount: (n: number) => `${n} resident${n === 1 ? "" : "s"}`,
     occupancy: (count: number, capacity: number) => `${count} / ${capacity}`,

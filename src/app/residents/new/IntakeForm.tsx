@@ -26,7 +26,7 @@ import {
   type ReviewGroup,
 } from "./WizardChrome";
 
-export type DietTypeOption = { id: string; name: string };
+export type DietTypeOption = { id: string; name: string; is_standard: boolean };
 export type OriginOption = { id: string; name: string };
 
 const inputClass =
@@ -202,6 +202,8 @@ export function IntakeForm({
   const [review, setReview] = useState<ReviewGroup[] | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const standardDietId = dietTypes.find((type) => type.is_standard)?.id;
 
   const w = t.residents.new.wizard;
   const stepTitles = INTAKE_STEPS.map((id) => w.steps[id]);
@@ -566,13 +568,21 @@ export function IntakeForm({
               <label htmlFor="dietTypeId" className="text-sm font-medium text-muted">
                 {t.residents.new.fields.startingDiet}
               </label>
+              {/* Mandatory, preselected with the standard (0087). With no
+                  standard flagged the placeholder shows and `required`
+                  forces a choice. */}
               <select
                 id="dietTypeId"
                 name="dietTypeId"
-                defaultValue=""
+                defaultValue={standardDietId ?? ""}
+                required
                 className={inputClass}
               >
-                <option value="">{t.residents.new.fields.noStartingDiet}</option>
+                {!standardDietId && (
+                  <option value="" disabled>
+                    {t.residents.new.fields.chooseStartingDiet}
+                  </option>
+                )}
                 {dietTypes.map((type) => (
                   <option key={type.id} value={type.id}>
                     {type.name}

@@ -54,6 +54,13 @@ export async function recordIntake(
     return { error: t.residents.new.errors.sizeRequired };
   }
 
+  // A diet is mandatory (the form preselects the standard); record_intake
+  // refuses a missing one too (0090).
+  const dietTypeId = str(formData, "dietTypeId");
+  if (!dietTypeId) {
+    return { error: t.residents.new.errors.dietRequired };
+  }
+
   const weightKgRaw = str(formData, "weightKg");
   const weightKg = weightKgRaw !== null ? Number(weightKgRaw) : null;
   if (weightKg !== null && (!Number.isFinite(weightKg) || weightKg <= 0)) {
@@ -93,7 +100,7 @@ export async function recordIntake(
     p_new_origin_name: str(formData, "newOriginName"),
     p_weight_kg: weightKg,
     p_size: size,
-    p_diet_type_id: str(formData, "dietTypeId"),
+    p_diet_type_id: dietTypeId,
     p_blood_test_interval_months: bloodTestIntervalMonths,
     ...prefixed(readAdoptionProfile(formData)),
   });

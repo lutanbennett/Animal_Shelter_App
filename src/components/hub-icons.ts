@@ -98,6 +98,8 @@ export const ENCLOSURE_ICONS = {
   residents: Users,
   maintenance: Wrench,
   move: PLACEMENT_ICONS.move,
+  /** A resident on something other than the standard diet (0087). */
+  specialDiet: SECTION_ICONS.diet,
 } satisfies Record<string, LucideIcon>;
 
 /**

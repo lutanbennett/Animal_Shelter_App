@@ -45,7 +45,7 @@ export default async function DietsManagementPage(props: PageProps<"/management/
     supabase
       .from("diet_types")
       .select(
-        "id, name, unit, cost_per_unit, daily_qty_small, daily_qty_medium, daily_qty_large, notes, stock_on_hand, stock_counted_at, reorder_lead_days",
+        "id, name, unit, cost_per_unit, daily_qty_small, daily_qty_medium, daily_qty_large, notes, stock_on_hand, stock_counted_at, reorder_lead_days, is_standard",
       )
       .order("name")
       .returns<DietTypeQueryRow[]>(),
@@ -89,6 +89,7 @@ export default async function DietsManagementPage(props: PageProps<"/management/
     return {
       id: type.id,
       name: type.name,
+      is_standard: type.is_standard,
       unit: type.unit,
       notes: type.notes,
       cost_per_unit: Number(type.cost_per_unit),
@@ -138,6 +139,11 @@ export default async function DietsManagementPage(props: PageProps<"/management/
         )}
 
         <section className="flex flex-col gap-4">
+          {typesResult.data && !dietTypes.some((type) => type.is_standard) && (
+            <p className="rounded border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-foreground">
+              {m.standard.none}
+            </p>
+          )}
           <CreateDietTypeForm />
           <ForecastWindowPicker
             from={custom && "window" in custom ? custom.window.from : ""}

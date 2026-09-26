@@ -36,6 +36,8 @@ export type EnclosureResident = {
   thai_name: string | null;
   resident_code: string;
   profile_photo_drive_file_id: string | null;
+  /** Their current non-standard diets, by name; empty when on the standard (0087). */
+  special_diets: string[];
 };
 
 function ResidentThumbnail({ resident }: { resident: EnclosureResident }) {
@@ -65,6 +67,18 @@ function ResidentThumbnail({ resident }: { resident: EnclosureResident }) {
           {displayName}
         </span>
         <span className="text-xs text-muted">{resident.resident_code}</span>
+        {resident.special_diets.length > 0 && (
+          <span
+            title={t.enclosures.specialDietLabel}
+            className="flex items-start gap-1 text-xs font-medium text-foreground"
+          >
+            <ENCLOSURE_ICONS.specialDiet aria-hidden="true" className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>
+              <span className="sr-only">{t.enclosures.specialDietLabel}: </span>
+              {resident.special_diets.join(", ")}
+            </span>
+          </span>
+        )}
       </div>
     </Link>
   );

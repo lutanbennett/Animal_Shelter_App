@@ -170,6 +170,23 @@ export async function updateDietTypeStock(id: string, count: string) {
   revalidateDietPages();
 }
 
+/**
+ * Makes this diet type the standard. set_standard_diet (0090) clears the
+ * old row and sets the new one in one transaction — the partial unique
+ * index is checked row by row, so it has to be two statements in that
+ * order, and supabase-js can't wrap two updates in a transaction.
+ */
+export async function setStandardDietType(id: string) {
+  await assertManagementRole();
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_standard_diet", { p_diet_type_id: id });
+  if (error) throw new Error(error.message);
+  revalidateDietPages();
+  // Special-diet markers on the enclosure cards read the flag.
+  revalidatePath("/enclosures", "layout");
+}
+
 export async function deleteDietType(id: string) {
   await assertManagementRole();
   const { t } = await getT();
