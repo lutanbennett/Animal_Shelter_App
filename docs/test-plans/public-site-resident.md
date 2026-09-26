@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "Public site redesign — build the "Lanna Care for Animals" mockups" (part 3; **not ticked**, part 4 remains) |
 | Branch / worktree | `claude/public-site-resident` @ `C:\Development\Animal_Shelter_public-site-resident` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3015` |
-| PR | to be opened from this branch |
+| PR | #150 |
 | Tested by / date | Claude, 2026-09-26 |
 | Carries a migration? | no (reads `0094`, already on `main` and applied to dev) |
 | Tested at SHA | `5b30386` (merge of `origin/main` at #149 into `66fc84a`) |
@@ -40,7 +40,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on PR #150: `check`, `migration-numbers` and `test-plan` all pass (run 36234980225)
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -166,6 +166,8 @@ gates: typecheck=0 lint=0 build=0
 | 5 | The manual's updated passages read correctly (The public pages → Adopt; Editing a resident's details; Translating public text) | `/manual`, signed in |
 | 6 | The sticky bar and the tel:/LINE links on a real phone | test.lannacare.org on a phone |
 
+All six were checked by Lutan, 2026-09-26: "checked all six, looks fine" (confirmed in chat; recorded by Claude at their request).
+
 ## Sign-off
 
 ### Automated and scripted checks
@@ -177,14 +179,14 @@ Automated checks by: Claude  Date: 2026-09-26
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — six items await Lutan
+- [x] The manual list above is empty, or every item in it was checked by a person — all six looked at by Lutan, 2026-09-26
 
-Manual verification by: pending: the six items under Left for manual verification
+Manual verification by: Lutan — confirmed in chat; line written by Claude at their request  Date: 2026-09-26
 
 ### Result
 
-- [ ] Open defects are either fixed or explicitly accepted above — n/a: not yet — defect 2 is recorded as accepted by Claude as pre-existing; Lutan to confirm
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Open defects are either fixed or explicitly accepted above — defect 1 fixed; defect 2 accepted as pre-existing form behaviour
+- [x] Checklist linked from the PR description (`docs/test-plans/public-site-resident.md`)
 - [ ] Handed to the production release manager — n/a: not yet — after merge
 
 Result: pass with accepted defects
