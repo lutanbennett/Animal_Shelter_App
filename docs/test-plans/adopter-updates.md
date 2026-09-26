@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "Record updates from adopters on an adopted resident" (Lutan, 2026-09-26, with the "keep each photo tagged with its update" addition) |
 | Branch / worktree | `claude/adopter-updates` @ `C:\Development\Animal_Shelter_adopter-updates` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3005` |
-| PR | PR_NUMBER |
+| PR | #162 |
 | Tested by / date | Claude (adopter-updates session), 2026-09-27, signed in as the dev test user (admin) in the browser pane |
 | Carries a migration? | no — builds on `0097` (#158), applied to dev |
 | Tested at SHA | browser checks ran on the tree committed as `d736e66` (which includes the "saved" hint fix); gates ran on `9824601`, that plus the merge of `main` |
@@ -164,7 +164,7 @@ Manual verification by: pending: the three items in Left for manual verification
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR (#162 description)
 - [ ] Handed to the production release manager — n/a: not yet — handed over once the PR is open
 
 Result: pass with accepted defects
