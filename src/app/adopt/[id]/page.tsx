@@ -205,7 +205,10 @@ export default async function PublicResidentPage(
           />
         </div>
 
-        <div className="mx-auto grid w-full max-w-6xl lg:grid-cols-2 lg:items-start lg:gap-12 lg:px-8">
+        {/* grid-cols-1, not the implicit column: a resident with dozens of
+            photos has a thumbnail strip thousands of pixels wide, and an
+            auto track would grow to it instead of letting the strip scroll. */}
+        <div className="mx-auto grid w-full max-w-6xl grid-cols-1 lg:grid-cols-2 lg:items-start lg:gap-12 lg:px-8">
           <PhotoGallery residentName={resident.name} photoIds={photoIds} />
 
           <div className="flex flex-col gap-5 px-5 pt-5 lg:px-0 lg:pt-0">
