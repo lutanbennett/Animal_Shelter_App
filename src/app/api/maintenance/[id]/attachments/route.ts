@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES } from "@/lib/uploads/limits";
+import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
+import { getT } from "@/lib/i18n/get-t";
 import { assertPhotoWriteAccess } from "@/lib/auth/require-role";
 import {
   getDriveClient,
@@ -80,6 +82,16 @@ async function handlePost(
     );
   }
 
+  // The browser's type is a guess from the name; the bytes decide (file-signature.ts).
+  const mimeType = await checkFileSignature(file, ALLOWED_MIME_TYPES);
+  if (!mimeType) {
+    const { t } = await getT();
+    return NextResponse.json(
+      { error: t.uploads.notReadable(file.name, formatNames(ALLOWED_MIME_TYPES)) },
+      { status: 400 },
+    );
+  }
+
   const supabase = await createClient();
   const { data: jobs, error: jobError } = await supabase
     .from("maintenance")
@@ -115,7 +127,7 @@ async function handlePost(
 
   const driveFileId = await uploadImageToFolder(drive, folderId, {
     name: file.name,
-    mimeType: file.type,
+    mimeType,
     content: file,
   });
 
@@ -157,7 +169,7 @@ async function handlePost(
     attachmentId: row.id,
     driveFileId,
     fileName: file.name,
-    mimeType: file.type,
+    mimeType,
     fileUrl: driveImageUrl(driveFileId),
     phase,
   });
