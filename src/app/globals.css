@@ -253,3 +253,58 @@ body {
   .puppy-delay { animation-duration: 1ms; }
   .puppy-art .puppy-bar { transform: scaleX(0.65); }
 }
+
+/* Spring motion on the public pages (src/app/adopt/SpringMotion.tsx,
+   docs/decisions.md 2026-09-26). Both curves are a damped spring sampled
+   into linear(): --spring-reveal overshoots ~9% (Lutan's "B"), --spring-lift
+   ~13% over a 3 px distance, which reads as a soft settle (his "A" hover).
+
+   Nothing here hides anything on its own. A block is only held back once
+   the script has marked it data-reveal-state="pending", which it does only
+   for blocks that start below the fold, with JS running and motion
+   allowed — so the server's HTML, a crawler's render and a no-JS visit are
+   all the finished page. Only opacity and transform move: no layout shift. */
+:root {
+  --spring-reveal: linear(0, 0.0368, 0.1298, 0.2563, 0.3975, 0.5394, 0.6719, 0.7885, 0.8858, 0.9626, 1.0196, 1.0586, 1.0821, 1.093, 1.0943, 1.0886, 1.0785, 1.0658, 1.0523, 1.039, 1.027, 1.0165, 1.008, 1.0014, 0.9966, 0.9935, 0.9917, 0.991, 0.9912, 0.9919, 0.993, 0.9942, 0.9955, 0.9967, 0.9978, 0.9987, 0.9995, 1, 1.0004, 1.0007, 1);
+  --spring-lift: linear(0, 0.0437, 0.1537, 0.3016, 0.464, 0.6233, 0.7673, 0.8884, 0.9834, 1.052, 1.0963, 1.1197, 1.1263, 1.1206, 1.1066, 1.0878, 1.0673, 1.0472, 1.0291, 1.0138, 1.0019, 0.9933, 0.9878, 0.9848, 0.984, 0.9848, 0.9866, 0.989, 0.9916, 0.9941, 0.9964, 0.9983, 0.9998, 1.0009, 1.0016, 1.0019, 1.002, 1.0019, 1.0017, 1.0014, 1);
+}
+
+[data-reveal][data-reveal-state="pending"] {
+  opacity: 0;
+  transform: translateY(20px);
+}
+[data-reveal][data-reveal-state="in"] {
+  transition:
+    opacity 320ms ease-out var(--reveal-delay, 0ms),
+    transform 600ms var(--spring-reveal) var(--reveal-delay, 0ms);
+}
+
+/* Hover and press on interactive cards and buttons: a 3 px lift that
+   settles, and a slight sink on press. Border and colour changes keep
+   their own quick transition. */
+.spring-lift {
+  transition:
+    transform 450ms var(--spring-lift),
+    box-shadow 300ms ease-out,
+    border-color 150ms ease-out,
+    background-color 150ms ease-out,
+    color 150ms ease-out;
+}
+.spring-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgb(42 33 24 / 0.07);
+}
+.spring-lift:active {
+  transform: translateY(-1px) scale(0.985);
+  transition-duration: 120ms;
+}
+
+/* Reduced motion: no movement at all. The script never marks anything
+   pending, and the lift is switched off here. */
+@media (prefers-reduced-motion: reduce) {
+  .spring-lift,
+  .spring-lift:hover,
+  .spring-lift:active {
+    transform: none;
+  }
+}

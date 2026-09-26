@@ -230,7 +230,7 @@ export default async function AdoptPage(props: PageProps<"/adopt">) {
         )}
 
         {recent.length > 0 && (
-          <section aria-labelledby="happy-endings-heading" className="flex flex-col gap-4 pt-6">
+          <section data-reveal aria-labelledby="happy-endings-heading" className="flex flex-col gap-4 pt-6">
             <div className="flex flex-col gap-1">
               <h2 id="happy-endings-heading" className="text-lg font-semibold text-foreground">
                 {t.adopt.happyEndings.heading}
@@ -267,6 +267,7 @@ export default async function AdoptPage(props: PageProps<"/adopt">) {
         {howToText?.body && (
           <section
             id="how-to-adopt"
+            data-reveal
             aria-labelledby="how-to-adopt-heading"
             className="flex scroll-mt-6 flex-col gap-4 rounded-lg border border-border bg-surface p-6 sm:p-8"
           >

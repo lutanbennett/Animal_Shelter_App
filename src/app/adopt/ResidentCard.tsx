@@ -32,7 +32,8 @@ export function ResidentCard({
   return (
     <Link
       href={href}
-      className="group flex flex-col overflow-hidden rounded-lg border border-border bg-surface hover:border-primary"
+      data-reveal
+      className="spring-lift group flex flex-col overflow-hidden rounded-lg border border-border bg-surface hover:border-primary"
     >
       <div className="relative aspect-[4/3] w-full bg-background">
         {resident.profile_photo_drive_file_id ? (

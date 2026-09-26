@@ -262,7 +262,7 @@ export default async function PublicResidentPage(
 
         <div className={`${column} flex flex-col gap-7 pb-10 pt-7 lg:pt-12`}>
           {story.length > 0 && (
-            <section aria-labelledby="story-heading" className="flex flex-col gap-3">
+            <section data-reveal aria-labelledby="story-heading" className="flex flex-col gap-3">
               <h2 id="story-heading" className={storyHeading}>
                 {p.story(resident.name)}
               </h2>
@@ -275,7 +275,7 @@ export default async function PublicResidentPage(
           )}
 
           {idealHome && (
-            <section aria-labelledby="ideal-home-heading" className="flex flex-col gap-3">
+            <section data-reveal aria-labelledby="ideal-home-heading" className="flex flex-col gap-3">
               <h2 id="ideal-home-heading" className={storyHeading}>
                 {p.idealHome(resident.name, resident.sex)}
               </h2>
@@ -285,6 +285,7 @@ export default async function PublicResidentPage(
 
           <section
             id="how-to-meet"
+            data-reveal
             aria-labelledby="how-to-meet-heading"
             className="flex flex-col gap-2 rounded-2xl bg-site-sand p-[18px]"
           >
@@ -332,7 +333,7 @@ export default async function PublicResidentPage(
 
           {/* No sponsor flow yet: /donate, as the header's "Sponsor a
               resident" and the homepage card do (docs/decisions.md). */}
-          <section aria-labelledby="sponsor-heading" className="flex flex-col gap-1">
+          <section data-reveal aria-labelledby="sponsor-heading" className="flex flex-col gap-1">
             <h2 id="sponsor-heading" className="font-site! text-lg font-bold text-site-ink">
               {p.sponsorHeading(resident.name)}
             </h2>
@@ -347,7 +348,7 @@ export default async function PublicResidentPage(
             aria-labelledby="similar-heading"
             className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-5 pb-12 lg:px-8"
           >
-            <h2 id="similar-heading" className={storyHeading}>
+            <h2 id="similar-heading" data-reveal className={storyHeading}>
               {t.adopt.similar(resident.name)}
             </h2>
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
