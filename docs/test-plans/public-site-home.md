@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "Public site redesign — build the "Lanna Care for Animals" mockups" (part 2; **not ticked**, parts 3–4 remain) |
 | Branch / worktree | `claude/public-site-home` @ `C:\Development\Animal_Shelter_public-site-home` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3008` |
-| PR | to be opened from this branch |
+| PR | #141 |
 | Tested by / date | Claude, 2026-09-26 |
 | Carries a migration? | no |
 | Tested at SHA | `52d419a` |
@@ -35,7 +35,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on PR #141: `check`, `migration-numbers` and `test-plan` all pass (run 36214393785)
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -154,7 +154,7 @@ gates: typecheck=0 lint=0 build=0
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
-| 1 | low | The Thai hero heading breaks "ครั้งที่สอง" across lines at 60px (Thai has no spaces, so the browser picks the break) | accepted pending Lutan's Thai read (manual item 3) |
+| 1 | low | The Thai hero heading breaks "ครั้งที่สอง" across lines at 60px (Thai has no spaces, so the browser picks the break) | accepted: Lutan read the Thai, 2026-09-26, "looks fine" |
 
 ## Left for manual verification
 
@@ -165,6 +165,8 @@ gates: typecheck=0 lint=0 build=0
 | 3 | Thai wording of the new home copy, and whether the hero heading's line break reads well | `/` in ไทย |
 | 4 | The page on a real phone | test.lannacare.org on a phone |
 | 5 | The manual's updated passages read correctly (The public pages → Home; Settings → Website; Shelter Friends) | `/manual`, signed in |
+
+All five were checked by Lutan, 2026-09-26: "checked all five, looks fine" (confirmed in chat; recorded by Claude at their request).
 
 ## Sign-off
 
@@ -177,13 +179,13 @@ Automated checks by: Claude  Date: 2026-09-26
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — five items await Lutan
+- [x] The manual list above is empty, or every item in it was checked by a person — all five looked at by Lutan, 2026-09-26
 
-Manual verification by: pending: Lutan to look at the five items above
+Manual verification by: Lutan — confirmed in chat; line written by Claude at their request  Date: 2026-09-26
 
 ### Result
 
-- [ ] Open defects are either fixed or explicitly accepted above — n/a: not yet — defect 1 waits on manual item 3
+- [x] Open defects are either fixed or explicitly accepted above
 - [x] Checklist linked from the PR description (`docs/test-plans/public-site-home.md`)
 - [ ] Handed to the production release manager — n/a: not yet — after merge
 
