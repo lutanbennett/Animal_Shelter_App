@@ -39,6 +39,14 @@ gates: typecheck=0 lint=0 build=0
 gates: typecheck=0 lint=0 build=0
 ```
 
+  Third sync, after #139 (standard-diet) merged: one conflict in `src/lib/releases.ts`, both sides appending to `unreleased`. Resolved by keeping both lines. Gates at `6c8b0b0`, then `/my` and the menu loaded with a clean console:
+
+```
+=== gates: typecheck exited 0 after 17s
+=== gates: lint exited 0 after 95s
+=== gates: build exited 0 after 293s
+gates: typecheck=0 lint=0 build=0
+```
 - [x] CI green on the PR: `check`, `migration-numbers` and `test-plan` all passed at `6ec00fe`
 
 ## 3. Schema and data — *skip if no migration*
@@ -103,7 +111,7 @@ Admin and management: the `mydash-staff` login's `user_roles.role` switched on d
 
 - [x] The pages nearest the change still work: `/maintenance?assignee=me` (Open the board), `/maintenance/[id]` (title link), `/manual`
 - [x] Shared files checked from a second, unrelated page by loading it: the menu (`NavLinks.tsx`, `NavPane.tsx`) on `/manual` with all its other entries and the footer group; `maintenance/queries.ts`'s new `ids` filter is additive, and `/maintenance` loaded the board as before
-- [x] Nothing merged from `main` during `sync` was broken by this branch — the sync was "Already up to date."
+- [x] Nothing merged from `main` during `sync` was broken by this branch: the first two syncs were "Already up to date." or docs-only. The third brought #139 (standard diet), and gates plus `/my` passed on the merged tree
 
 ## 7. Documentation
 
