@@ -22,7 +22,7 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: `Already up to date.` at 3fffb91 for the first run; after the PR opened, `main` had moved (the Drive upload-errors PR), and the second sync conflicted only in `docs/backlog.md` (both items ticked, both kept) and `src/lib/releases.ts` (both PRs' `unreleased` lines, all four kept). Merge `147d589`
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: `Already up to date.` at 3fffb91 for the first run; after the PR opened, `main` had moved (the Drive upload-errors PR), and the second sync conflicted only in `docs/backlog.md` (both items ticked, both kept) and `src/lib/releases.ts` (both PRs' `unreleased` lines, all four kept). Merge `147d589`. A third sync brought #134 (migrations `0087`–`0089`, scripts, docs; no app code) and merged cleanly: `9b200d5`
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. At `a40384a`:
 
 ```
@@ -38,6 +38,15 @@ At the merge `147d589`:
 === gates: typecheck exited 0 after 25s
 === gates: lint exited 0 after 56s
 === gates: build exited 0 after 136s
+gates: typecheck=0 lint=0 build=0
+```
+
+At the merge `9b200d5`:
+
+```
+=== gates: typecheck exited 0 after 9s
+=== gates: lint exited 0 after 62s
+=== gates: build exited 0 after 70s
 gates: typecheck=0 lint=0 build=0
 ```
 
