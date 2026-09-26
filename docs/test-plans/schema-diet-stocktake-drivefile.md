@@ -23,7 +23,13 @@
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: `Already up to date.`
-- [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them — n/a: filled in the next commit, once the run on this commit's tree has finished
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Run at `1a9d4ee`; closing lines as printed:
+
+  ```
+  === gates: build exited 0 after 185s
+
+  gates: typecheck=0 lint=0 build=0
+  ```
 - [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data
