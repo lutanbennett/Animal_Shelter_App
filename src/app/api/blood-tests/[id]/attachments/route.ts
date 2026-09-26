@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES } from "@/lib/uploads/limits";
+import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
+import { getT } from "@/lib/i18n/get-t";
 import { assertPhotoWriteAccess } from "@/lib/auth/require-role";
 import {
   ensureResidentBloodTestFolder,
@@ -48,6 +50,16 @@ async function handlePost(
   if (file.size > MAX_UPLOAD_BYTES) {
     return NextResponse.json(
       { error: "File is larger than 15MB." },
+      { status: 400 },
+    );
+  }
+
+  // The browser's type is a guess from the name; the bytes decide (file-signature.ts).
+  const mimeType = await checkFileSignature(file, ALLOWED_MIME_TYPES);
+  if (!mimeType) {
+    const { t } = await getT();
+    return NextResponse.json(
+      { error: t.uploads.notReadable(file.name, formatNames(ALLOWED_MIME_TYPES)) },
       { status: 400 },
     );
   }
@@ -114,7 +126,7 @@ async function handlePost(
 
   const driveFileId = await uploadImageToFolder(drive, uploadFolderId, {
     name: file.name,
-    mimeType: file.type,
+    mimeType,
     content: file,
   });
 
@@ -139,7 +151,7 @@ async function handlePost(
     attachmentId: row.attachment.id,
     driveFileId,
     fileName: file.name,
-    mimeType: file.type,
+    mimeType,
     fileUrl: driveImageUrl(driveFileId),
   });
 }

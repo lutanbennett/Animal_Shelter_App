@@ -4,6 +4,7 @@ import { refresh, revalidatePath } from "next/cache";
 import { assertManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits";
+import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { ContactType } from "@/lib/contacts/contacts";
@@ -14,6 +15,7 @@ import {
   type FriendOptIn,
 } from "@/lib/shelter-friends/friends";
 import {
+  confirmUploaded,
   findOrCreateFolder,
   getDriveClient,
   uploadImageToFolder,
@@ -241,9 +243,10 @@ export async function moveFriend(id: string, direction: "up" | "down") {
   revalidateFriendPages();
 }
 
-async function deleteFromDrive(fileId: string) {
+/** To Drive's trash, restorable for 30 days — as for the Website page's photos. */
+async function trashInDrive(fileId: string) {
   try {
-    await getDriveClient().deleteFile(fileId);
+    await getDriveClient().trashFile(fileId);
   } catch {
     // Best-effort, as for the Website page's photos: an orphaned Drive
     // file is a cleanup chore, not a reason to fail the user's action.
@@ -263,6 +266,11 @@ export async function uploadFriendLogo(
   if (!(file instanceof File) || file.size === 0) return { error: w.noFile };
   if (!WEBSITE_IMAGE_MIME_TYPES.has(file.type)) return { error: w.unsupportedFileType(file.type || "unknown") };
   if (file.size > MAX_UPLOAD_BYTES) return { error: w.fileTooLarge };
+  // The bytes decide, not the browser's guess from the name (file-signature.ts).
+  const mimeType = await checkFileSignature(file, WEBSITE_IMAGE_MIME_TYPES);
+  if (!mimeType) {
+    return { error: t.uploads.notReadable(file.name, formatNames(WEBSITE_IMAGE_MIME_TYPES)) };
+  }
 
   const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
   if (!rootId) return { error: w.driveNotConfigured };
@@ -278,11 +286,19 @@ export async function uploadFriendLogo(
     const folderId = await findOrCreateFolder(drive, website, "Shelter Friends");
     driveFileId = await uploadImageToFolder(drive, folderId, {
       name: file.name,
-      mimeType: file.type,
+      mimeType,
       content: file,
     });
   } catch (err) {
     return { error: await driveErrorMessage(err, w.uploadFailed) };
+  }
+  // Read it back before the profile points at it or the old logo is trashed.
+  try {
+    await confirmUploaded(getDriveClient(), driveFileId, file.size);
+  } catch (err) {
+    console.error("Logo upload did not land whole:", err);
+    await trashInDrive(driveFileId);
+    return { error: w.uploadFailed };
   }
 
   // .select() so "Logo updated." is only said when the row really changed:
@@ -295,11 +311,11 @@ export async function uploadFriendLogo(
     .select("logo_drive_file_id")
     .returns<{ logo_drive_file_id: string | null }[]>();
   if (error || saved?.[0]?.logo_drive_file_id !== driveFileId) {
-    await deleteFromDrive(driveFileId);
+    await trashInDrive(driveFileId);
     return { error: error?.message ?? t.shelterFriends.errors.notFound };
   }
 
-  if (current.logo_drive_file_id) await deleteFromDrive(current.logo_drive_file_id);
+  if (current.logo_drive_file_id) await trashInDrive(current.logo_drive_file_id);
   revalidateFriendPages(current.contact_id);
   return { success: t.shelterFriends.card.logoUpdated };
 }
@@ -318,7 +334,7 @@ export async function removeFriendLogo(id: string): Promise<FriendActionResult> 
     .eq("id", id);
   if (error) return { error: error.message };
 
-  if (current.logo_drive_file_id) await deleteFromDrive(current.logo_drive_file_id);
+  if (current.logo_drive_file_id) await trashInDrive(current.logo_drive_file_id);
   revalidateFriendPages(current.contact_id);
   return { success: t.common.saved };
 }
@@ -339,7 +355,7 @@ export async function deleteFriend(id: string): Promise<FriendActionResult> {
   const { error } = await supabase.from("shelter_friends").delete().eq("id", id);
   if (error) return { error: error.message };
 
-  if (current.logo_drive_file_id) await deleteFromDrive(current.logo_drive_file_id);
+  if (current.logo_drive_file_id) await trashInDrive(current.logo_drive_file_id);
   revalidateFriendPages(current.contact_id);
   return { success: t.shelterFriends.card.removed };
 }

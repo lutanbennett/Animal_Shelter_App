@@ -2749,6 +2749,8 @@ const th: Dictionary = {
     removeFile: "เอาออก",
     uploading: (done: number, total: number) => `กำลังอัปโหลดไฟล์… ${done} จาก ${total}`,
     uploadsFailed: "บางไฟล์อัปโหลดไม่สำเร็จ ลองใหม่ หรือไปต่อโดยไม่มีไฟล์เหล่านั้น",
+    notReadable: (name: string, formats: string) =>
+      `เปิด "${name}" เป็นไฟล์ ${formats} ไม่ได้ ไฟล์อาจว่างเปล่าหรือเสียหาย หรือไม่ใช่ไฟล์ชนิดที่ชื่อไฟล์บอก ยังไม่ได้อัปโหลดอะไร`,
   },
 
   photos: {
