@@ -145,7 +145,9 @@ export default async function PublicProjectPage(
         {paragraphs.length > 0 && (
           <div className="flex flex-col gap-4 text-base leading-relaxed text-foreground sm:text-lg">
             {paragraphs.map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
+              <p key={index} data-reveal>
+                {paragraph}
+              </p>
             ))}
           </div>
         )}
@@ -159,6 +161,7 @@ export default async function PublicProjectPage(
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-6 py-10 sm:px-12">
             <h2
               id="more-stories-heading"
+              data-reveal
               className="text-lg font-semibold text-foreground"
             >
               {t.ourWork.moreStories}

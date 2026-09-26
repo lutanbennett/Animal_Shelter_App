@@ -50,7 +50,7 @@ export default async function Page() {
         <p className="text-lg text-foreground">{p.intro}</p>
 
         {p.sections.map((section, i) => (
-          <section key={section.heading} className="flex flex-col gap-3">
+          <section key={section.heading} data-reveal className="flex flex-col gap-3">
             <h2 className="text-xl font-semibold text-foreground">{section.heading}</h2>
             {section.paragraphs.map((text) => (
               <p key={text} className="text-foreground">
