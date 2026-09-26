@@ -4523,6 +4523,14 @@ that was waiting on 0.5.0.
   rather than "no diet at all" (an ended diet leaves the resident just as
   unfed today), dated today rather than from intake, and cut off the day
   before a diet that is already booked to start. Dev had four.
+  **Addendum, 2026-09-26:** on **production** the backfill touched nobody — a
+  read-only count found 0 backfilled rows and 0 living residents without a
+  current diet, because all 69 already carried the `0069` seed and there have
+  been no intakes since 2024-01-01. The release note describing it was
+  therefore dropped from `unreleased` rather than shipped: it described a change
+  no shelter user would see. The migration was still right to write — it is the
+  guard that makes "every living resident has a diet" true going forward, and it
+  did do work on dev.
 - **`record_intake` still accepts a null diet.** The intake form still offers
   "None yet" and passes null, so the database cannot refuse it yet. The
   feature half changes form, action and RPC together.
