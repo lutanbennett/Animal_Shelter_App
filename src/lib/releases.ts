@@ -47,7 +47,7 @@ export const unreleased: string[] = [
   "A Shelter Friend logo’s upload message now appears next to the logo instead of below the Save button.",
   "A new Public viewer account type, for testing the website as a visitor while the testing sites are closed: it signs in, sees every public page, and never opens the app. Admins give it under Settings → Security.",
   "Archived accounts, and accounts that were never given a role, can no longer sign in with a password — they are turned away as Google sign-in already turned them away.",
-  "New: My tasks, at the top of the menu, lists the maintenance jobs assigned to you that aren't finished — overdue, due today, coming up and undated — with who else is on each job and buttons to change its status there and then. The number beside it in the menu is how many are due today or overdue.",
+  "New: My tasks, at the top of the menu, lists the maintenance jobs assigned to you that aren't finished — overdue, due today, coming up and undated — with who else is on each job and buttons to change its status there and then. The number beside it in the menu is how many are due today or overdue. It is now the app's home page: signing in, or tapping Open the app on the public website, takes you there instead of the Residents list.",
 ];
 
 /** Newest first. */

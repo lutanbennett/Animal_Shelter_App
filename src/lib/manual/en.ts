@@ -60,9 +60,9 @@ const manual: Manual = {
           title: "Signing in",
           path: "Home page → Staff & Volunteer Login",
           steps: [
-            "Open the app's address in your browser and tap Staff & Volunteer Login (or go straight to /login).",
+            "Open the app's address in your browser and tap Staff & Volunteer Login (or go straight to /login). Already signed in? The public pages have Open the app at the top instead, which takes you to the same place.",
             "Enter your email and password and tap Sign in — or tap Continue with Google if your account was set up with Google.",
-            "You land on the Residents list. Sign out any time with the Sign out button at the top right.",
+            "You land on My tasks, the app's home page: what's assigned to you today. Sign out any time with the Sign out button at the top right.",
             "Forgotten your password? Tap Forgot password? under the Sign in button, enter your email, and follow the link in the message to choose a new one — it's valid for an hour. If you were given a temporary password and it's lost, ask an admin to issue another instead.",
             "To change your password at any time, pick Change password from the bottom of the menu.",
           ],
@@ -178,7 +178,7 @@ const manual: Manual = {
           title: "Seeing what's assigned to you",
           path: "My tasks (first in the menu)",
           steps: [
-            "Tap My tasks at the top of the menu. Every maintenance job you are on that isn't Completed is listed, grouped as Overdue, Due today, Coming up and No due date — most urgent first.",
+            "My tasks is the page you land on when you sign in or tap Open the app on the public website; get back to it any time from the top of the menu. Every maintenance job you are on that isn't Completed is listed, grouped as Overdue, Due today, Coming up and No due date — most urgent first.",
             "Each job shows its place, its due date and, when it went to a team, who else is on it. Tap the title to open the job with its photos and details.",
             "Change a job's status with the buttons beside it: Not started, In progress, Blocked or Completed. A job marked Completed leaves the list, with Undo in case you tapped the wrong one.",
             "The number beside My tasks in the menu is how many of your jobs are due today or overdue. It disappears when there are none.",

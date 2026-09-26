@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { hasAppAccess, loadCurrentRole } from "@/lib/auth/app-access";
+import { DEFAULT_SIGNED_IN_PATH } from "@/lib/auth/next-path";
 import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
@@ -115,7 +116,7 @@ export async function PublicHeader({ current }: { current?: PublicSection }) {
           <SignOutButton />
         ) : (
           <Link
-            href={staff ? "/residents" : "/login"}
+            href={staff ? DEFAULT_SIGNED_IN_PATH : "/login"}
             className="whitespace-nowrap rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
           >
             {staff ? t.adopt.openApp : t.adopt.staffLogin}

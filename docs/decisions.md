@@ -4639,9 +4639,14 @@ written down here for the stream that builds the next one.
   A badge that is never zero stops being read. It is one head-only count
   query in `NavPane` (`countMyUrgentMaintenance`), not the page's loader,
   because it runs on every page. A later source adds its own count there.
-- **Landing after sign-in was not changed.** Whether staff should land on
-  `/my` rather than `/` is Lutan's call and interacts with the public
-  viewer's landing (#135); raised on the PR, not decided here.
+- **`/my` is the app's home page (Lutan, 2026-09-26, on #138).** `/` stays
+  the public home for everyone; a staff sign-in with no `?next=` lands on
+  `/my` instead of `/residents`, and so do "Open the app" in the public
+  header and "continue" after a forced password change. All three read
+  `DEFAULT_SIGNED_IN_PATH` (`src/lib/auth/next-path.ts`), so moving the
+  home again is one line. A `?next=` still wins, and a public viewer still
+  lands on `/` (#135) — `signedInLandingPath()` is unchanged apart from
+  the constant.
 ## 2026-09-26 — Moving the standard diet is an RPC; `record_intake` refuses a missing diet (`0090`)
 
 - **A second schema PR for one feature.** The feature brief said "add no

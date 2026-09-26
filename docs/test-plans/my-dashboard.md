@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| Feature | My tasks (`/my`): the signed-in person's open maintenance jobs, grouped overdue / due today / coming up / no date, with the team, quick status changes through the existing action, and a menu badge; built on a common `MyTask` shape so later sources plug in |
+| Feature | My tasks (`/my`): the signed-in person's open maintenance jobs, grouped overdue / due today / coming up / no date, with the team, quick status changes through the existing action, and a menu badge, as the app's home page after sign-in and from "Open the app"; built on a common `MyTask` shape so later sources plug in |
 | Backlog item | `docs/backlog.md` → My dashboard — "what I need to do today", starting with my maintenance jobs |
 | Branch / worktree | `claude/my-dashboard` @ `C:\Development\Animal_Shelter_my-dashboard` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3006` |
@@ -16,9 +16,9 @@
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence, and it matches what the backlog item asked for: a `/my` page, first in the menu for every role, listing every maintenance job the reader is on that isn't Completed, grouped by due date, with status, place, team and a link to `/maintenance/[id]`, quick status changes through `setMaintenanceStatus` (no new write path), an empty state, and the common task shape for later sources
-- [x] Files/areas touched listed: new `src/app/my/{page.tsx,MyTaskList.tsx}`, new `src/lib/my-tasks/{types.ts,maintenance.ts}`; `src/app/NavLinks.tsx` (one entry + badge title), `src/app/NavPane.tsx` (badge count), `src/components/hub-icons.ts` (icon), `src/lib/maintenance/queries.ts` (`ids` filter on the loader), `src/lib/i18n/dictionaries/{en,th}.ts`, `src/lib/manual/en.ts`, `src/lib/releases.ts`, `README.md`, `docs/decisions.md`, `docs/backlog.md`. No `worker/`, no `supabase/migrations/`
+- [x] Files/areas touched listed: new `src/app/my/{page.tsx,MyTaskList.tsx}`, new `src/lib/my-tasks/{types.ts,maintenance.ts}`; `src/app/NavLinks.tsx` (one entry + badge title), `src/app/NavPane.tsx` (badge count), `src/components/hub-icons.ts` (icon), `src/lib/maintenance/queries.ts` (`ids` filter on the loader), `src/lib/auth/next-path.ts` + `app-access.ts` (landing: `/my`), `src/app/adopt/PublicHeader.tsx` (Open the app), `src/app/account/password/actions.ts` (continue after a forced change), `src/lib/i18n/dictionaries/{en,th}.ts`, `src/lib/manual/en.ts`, `src/lib/releases.ts`, `README.md`, `docs/decisions.md`, `docs/backlog.md`. No `worker/`, no `supabase/migrations/`
 - [x] Roles affected identified: admin, management, staff (see and change their jobs); volunteer (sees their jobs, read-only); vet (menu entry and empty state — no maintenance access); public viewer and signed out (refused by the existing proxy)
-- [x] Anything explicitly **out of scope** written down: the other sources (vet trips, medications, stock orders) and their assignees; recurring jobs (separate backlog item); landing on `/my` after sign-in — raised for Lutan on the PR, not changed. `src/lib/manual/th.ts` does not exist (the manual is English only), so there is no Thai manual topic to add
+- [x] Anything explicitly **out of scope** written down: the other sources (vet trips, medications, stock orders) and their assignees; recurring jobs (separate backlog item); landing was raised on the PR and Lutan decided it (2026-09-26): `/my` is the app's home, `/` stays the public home — done in this PR. `src/lib/manual/th.ts` does not exist (the manual is English only), so there is no Thai manual topic to add
 
 ## 2. Automated gates
 
@@ -50,6 +50,7 @@ All in the built-in browser against `next dev` on :3006, dev database. Throwaway
 
 - [x] Happy path works end to end: as staff, `/my` showed Maintenance (4) in four groups — Overdue, Due today, Coming up, No due date — each row with its code, zone › enclosure (or Zone-wide), due date, "With Mydash Volunteer" on the team jobs, and the four status buttons with the current one highlighted. The Completed job and the volunteer-only job were not listed. The title links to `/maintenance/[id]`; Open the board goes to `/maintenance?assignee=me`
 - [x] Data persists — the overdue job set to In progress was still In progress after the refresh; the due-today job marked Completed left the list and stayed gone after navigating back to `/my`; Undo put it back to In progress, and it was there after reload
+- [x] Landing (Lutan's decision on the PR): signed in as staff, "Open the app" on `/adopt` has `href="/my"` and clicking it opened My tasks; signed out, then a password sign-in at `/login` (no `?next=`) as the dev test admin landed on `/my` with the empty state. Not driven: `?next=` still winning and the forced-password "continue" — both only swap the constant, `signedInLandingPath()`'s `next ?? DEFAULT_SIGNED_IN_PATH` is unchanged
 - [x] Create / edit / delete all exercised (whichever the feature has): the only write is the status change, through the existing `setMaintenanceStatus` — driven for In progress, Completed, and Undo back to In progress. The badge went 2 → 1 → 2 with them
 - [x] Empty state renders sensibly: `mydash-empty` (staff, no jobs) sees "Nothing is assigned to you right now." and no badge on the menu entry
 - [ ] Invalid input is rejected with a readable message, not a crash — n/a: no free input; the only input is a status button, whose value is one of the four statuses, and the action validates it as before
