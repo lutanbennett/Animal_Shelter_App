@@ -1,6 +1,7 @@
-// Rollback harness for 0088_record_stocktake.sql and
-// 0091_record_stocktake_staff.sql against DEV only.
-// One transaction: both migrations (0091 twice), harness logins, calls to
+// Rollback harness for 0088_record_stocktake.sql,
+// 0091_record_stocktake_staff.sql and 0093_stock_counts.sql against DEV only.
+// One transaction: the migrations in order (0091 and 0093 twice), harness
+// logins, calls to
 // record_stocktake() as each of them, then a deliberate `raise exception`
 // carrying the evidence — so nothing can commit.
 //
@@ -18,10 +19,11 @@ const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
 const read = (file) => readFileSync(join(root, "supabase/migrations", file), "utf8");
-// 0091 replaces 0088's definition, so the harness runs 0088 first to start
-// from the state 0091 is applied on.
+// Each file replaces the previous definition, so the harness runs them in
+// order to start from the state each is applied on.
 const migration0088 = read("0088_record_stocktake.sql");
 const migration = read("0091_record_stocktake_staff.sql");
+const migration0093 = read("0093_stock_counts.sql");
 
 const sql = `
 begin;
@@ -29,6 +31,10 @@ ${migration0088}
 ${migration}
 -- a second run of the whole file must be harmless
 ${migration}
+${migration0093}
+create temp table hist_first_run as select count(*) as n from stock_counts;
+-- and 0093 again: the back-fill must add nothing the second time
+${migration0093}
 
 create temp table who (who text primary key, uid uuid);
 insert into who values
@@ -73,7 +79,19 @@ declare
   v_old_stock numeric; v_old_at timestamptz;
   v_report text := '';
   list jsonb;
+  v_hist int; v_a_stocktake uuid; v_tmp uuid;
 begin
+  -- K0. 0093's back-fill: one history row per counted item, and none added
+  -- by the second run
+  if (select count(*) from stock_counts) <> (select n from hist_first_run) then
+    raise exception 'FAIL K0: second run of 0093 added % history rows', (select count(*) from stock_counts) - (select n from hist_first_run);
+  end if;
+  if (select count(*) from stock_counts where counted_by is null)
+     <> (select count(*) from medication where stock_on_hand is not null and stock_counted_at is not null)
+      + (select count(*) from diet_types where stock_on_hand is not null and stock_counted_at is not null) then
+    raise exception 'FAIL K0: back-fill does not match the counted items';
+  end if;
+
   select id into m1 from medication order by name limit 1;
   select id into m2 from medication order by name offset 1 limit 1;
   select id into m3 from medication order by name offset 2 limit 1;
@@ -91,6 +109,7 @@ begin
   list := jsonb_build_array(jsonb_build_object('id', m1, 'count', 12.5), jsonb_build_object('id', m2, 'count', 40));
 
   -- A. management saves two medications and a diet type in one call
+  select count(*) into v_hist from stock_counts;
   v := pg_temp.as_login('management', list, jsonb_build_array(jsonb_build_object('id', d1, 'count', 0)));
   if v not like '{"medication_updated":2,"diet_types_updated":1,"counted_at":%' then raise exception 'FAIL A: %', v; end if;
   v_report := v_report || ' | management: ' || v;
@@ -108,11 +127,39 @@ begin
   select stock_on_hand, stock_counted_at into v_old_stock, v_old_at from medication where id = m3;
   if v_old_stock <> 40 or v_old_at <> '2000-01-01' then raise exception 'FAIL D: unlisted medication changed to % at %', v_old_stock, v_old_at; end if;
 
+  -- K1. history (0093): A wrote one row per listed item — three, one
+  -- stocktake id, the item's stored figure and unit, the item's own stamp,
+  -- and the caller — and nothing for the unlisted m3
+  if (select count(*) from stock_counts) <> v_hist + 3 then
+    raise exception 'FAIL K1: A wrote % history rows, not 3', (select count(*) from stock_counts) - v_hist;
+  end if;
+  select min(stocktake_id::text)::uuid into v_a_stocktake from stock_counts
+   where counted_by = (select uid from who where who = 'management');
+  if (select count(*) from stock_counts where stocktake_id = v_a_stocktake) <> 3 then
+    raise exception 'FAIL K1: A''s three rows do not share one stocktake id';
+  end if;
+  if exists (
+    select 1 from stock_counts s
+      left join medication m on m.id = s.medication_id
+      left join diet_types d on d.id = s.diet_type_id
+     where s.stocktake_id = v_a_stocktake
+       and (s.counted_at <> now()
+            or s.counted_at <> coalesce(m.stock_counted_at, d.stock_counted_at)
+            or s.counted_quantity <> coalesce(m.stock_on_hand, d.stock_on_hand)
+            or s.unit is distinct from coalesce(m.dose_unit, d.unit))
+  ) or (select count(*) from stock_counts where stocktake_id = v_a_stocktake and item_kind = 'diet_type' and diet_type_id = d1) <> 1
+    or exists (select 1 from stock_counts where stocktake_id = v_a_stocktake and medication_id = m3) then
+    raise exception 'FAIL K1: A''s history rows do not match what was stored';
+  end if;
+  select count(*) into v_hist from stock_counts;
+
   -- E. admin may too; one list may be null
   v := pg_temp.as_login('admin', null, jsonb_build_array(jsonb_build_object('id', d1, 'count', 3)));
   if v not like '{"medication_updated":0,"diet_types_updated":1,%' then raise exception 'FAIL E admin: %', v; end if;
   v := pg_temp.as_login('admin', '[]', null);
   if v not like '{"medication_updated":0,"diet_types_updated":0,%' then raise exception 'FAIL E empty: %', v; end if;
+  if (select count(*) from stock_counts) <> v_hist + 1 then raise exception 'FAIL K1: E wrote % history rows, not 1', (select count(*) from stock_counts) - v_hist; end if;
+  select count(*) into v_hist from stock_counts;
 
   -- F. refusals — each must leave m1 as it was (12.5), even when a valid row came first
   foreach list in array array[
@@ -151,6 +198,10 @@ begin
   v := pg_temp.as_login('anon', jsonb_build_array(jsonb_build_object('id', m1, 'count', 1)), null);
   if v not like 'ERR 42501 permission denied for function record_stocktake%' then raise exception 'FAIL G anon: %', v; end if;
   if (select stock_on_hand from medication where id = m1) <> 12.5 then raise exception 'FAIL G: a refused caller wrote m1'; end if;
+  -- K2. nothing refused in F or G left a history row
+  if (select count(*) from stock_counts) <> v_hist then
+    raise exception 'FAIL K2: refused calls wrote % history rows', (select count(*) from stock_counts) - v_hist;
+  end if;
 
   -- I. staff and volunteers may save a stocktake (0091) — through the
   -- definer function, both tables, same stamp as any other caller
@@ -163,13 +214,68 @@ begin
        or (select stock_counted_at from medication where id = m1) <> now() then
       raise exception 'FAIL I %: counts not written and stamped', v_who;
     end if;
+    -- K3. each call is its own stocktake, attributed to its caller
+    select min(stocktake_id::text)::uuid into v_tmp from stock_counts
+     where counted_by = (select uid from who where who = v_who);
+    if (select count(*) from stock_counts where stocktake_id = v_tmp) <> 2
+       or (select count(*) from stock_counts where counted_by = (select uid from who where who = v_who)) <> 2
+       or v_tmp = v_a_stocktake then
+      raise exception 'FAIL K3 %: history not one new stocktake of 2 rows by the caller', v_who;
+    end if;
     v_report := v_report || ' | ' || v_who || ' ok';
   end loop;
+  select count(*) into v_hist from stock_counts;
   -- and still a refusal before anything is written
   v := pg_temp.as_login('volunteer', jsonb_build_array(jsonb_build_object('id', m1, 'count', 99), jsonb_build_object('id', m2, 'count', -1)), null);
   if v <> 'ERR P0001 A stock count cannot be negative.' or (select stock_on_hand from medication where id = m1) <> 7 then
     raise exception 'FAIL I volunteer refusal: %', v;
   end if;
+  if (select count(*) from stock_counts) <> v_hist then raise exception 'FAIL K2: the volunteer refusal wrote history'; end if;
+
+  -- K4. the table has no door but the function: staff can read the history
+  -- but not insert (so not back-date), update or delete it; a vet reads
+  -- nothing; anon is refused outright
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'staff'), 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  if (select count(*) from stock_counts) <> v_hist then raise exception 'FAIL K4: staff cannot read the history'; end if;
+  begin
+    insert into stock_counts (stocktake_id, item_kind, medication_id, counted_quantity, counted_at)
+    values (gen_random_uuid(), 'medication', m1, 1, '2000-01-01');
+    raise exception 'FAIL K4: staff inserted a history row';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    update stock_counts set counted_at = '2000-01-01';
+    raise exception 'FAIL K4: staff updated the history';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    delete from stock_counts;
+    raise exception 'FAIL K4: staff deleted the history';
+  exception when insufficient_privilege then null;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'vet'), 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  v_n := (select count(*) from stock_counts);
+  reset role;
+  if v_n <> 0 then raise exception 'FAIL K4: a vet read % history rows', v_n; end if;
+  perform set_config('request.jwt.claims', json_build_object('role', 'anon')::text, true);
+  set local role anon;
+  begin
+    perform 1 from stock_counts;
+    raise exception 'FAIL K4: anon read the history';
+  exception when insufficient_privilege then null;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+
+  -- K5. deleting a counted item still works, and takes its history with it
+  insert into medication (name) values ('harness-0093 throwaway') returning id into v_tmp;
+  v := pg_temp.as_login('staff', jsonb_build_array(jsonb_build_object('id', v_tmp, 'count', 3)), null);
+  if (select count(*) from stock_counts where medication_id = v_tmp) <> 1 then raise exception 'FAIL K5: throwaway not counted: %', v; end if;
+  delete from medication where id = v_tmp;
+  if exists (select 1 from stock_counts where medication_id = v_tmp) then raise exception 'FAIL K5: history outlived its item'; end if;
 
   -- J. the function is the only door: staff still cannot write the tables
   -- directly (no UPDATE policy — renaming or repricing stays management's)
@@ -195,7 +301,7 @@ begin
     raise exception 'FAIL H: grants not anon-no / authenticated-yes / service_role-yes';
   end if;
 
-  raise exception 'HARNESS-OK 0088 then 0091 twice | A 2 meds + 1 diet in one call, all stamped now() | B same figure restamps | C zero is a count | D unlisted row untouched | E admin ok, null and [] lists ok | F refused, nothing written:% | bad diet list stops the meds | G vet, public_viewer and role-less refused by the guard, anon by the grant | I staff and volunteer save both tables; still refused before writing | J staff cannot update either table directly; definer + search_path | H grants', v_report;
+  raise exception 'HARNESS-OK 0088, 0091 twice, 0093 twice | K0 back-fill one row per counted item, none on re-run | K1 one history row per listed item: one stocktake id, stored figure, unit, same stamp, caller; none for the unlisted row | K2 refusals write no history | K3 each call its own stocktake id, attributed | K4 staff read-only, vet sees none, anon refused | K5 delete cascades | A 2 meds + 1 diet in one call, all stamped now() | B same figure restamps | C zero is a count | D unlisted row untouched | E admin ok, null and [] lists ok | F refused, nothing written:% | bad diet list stops the meds | G vet, public_viewer and role-less refused by the guard, anon by the grant | I staff and volunteer save both tables; still refused before writing | J staff cannot update either table directly; definer + search_path | H grants', v_report;
 end;
 $h$;
 rollback;
