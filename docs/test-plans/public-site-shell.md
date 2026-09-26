@@ -37,7 +37,7 @@ gates: typecheck=0 lint=0 build=0
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on PR #137 — `check`, `migration-numbers` and `test-plan` all pass at `622f4ed` (run 36211213749)
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -143,8 +143,8 @@ gates: typecheck=0 lint=0 build=0
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | The shell looks like the mockups to the person who designed them (type, colour, spacing, header and footer) | :3004 or test.lannacare.org vs `docs/design/*.png` — Lutan, 2026-09-26: the layout still looks like the old one. Explained that page bodies (hero, stats band, cards) are parts 2–4, not this PR; still open for a look at the shell itself |
-| 2 | Signed in as staff: header shows "Open the app"; as a public viewer: "Sign out" only | any public page, signed in |
+| 1 | The shell looks like the mockups to the person who designed them (type, colour, spacing, header and footer) | :3004 or test.lannacare.org vs `docs/design/*.png` — Lutan, 2026-09-26: the layout still looks like the old one. Explained that page bodies (hero, stats band, cards) are parts 2–4, not this PR. Lutan went on to approve the merge with that understood: the shell is accepted, and the page bodies are the next workstreams (confirmed in chat; recorded by Claude at their request) |
+| 2 | Signed in as staff: header shows "Open the app"; as a public viewer: "Sign out" only | any public page, signed in — **checked by Lutan 2026-09-26: "signed-in header checked, fine"** (confirmed in chat; recorded by Claude at their request) |
 | 3 | Phone menu on a real phone (iOS Safari and Android Chrome): opens, scrolls if tall, LINE opens the LINE app, Call dials | test.lannacare.org on a phone — **checked by Lutan 2026-09-26: "looks ok"** (confirmed in chat; recorded by Claude at their request) |
 | 4 | Thai wording of the new labels (Get involved มีส่วนร่วม, Sponsor a resident อุปถัมภ์สัตว์ในศูนย์, About & contact เกี่ยวกับเราและติดต่อ, Talk to us คุยกับเรา) | header, menu and footer in ไทย — **checked by Lutan 2026-09-26: "wording looks fine"** (confirmed in chat; recorded by Claude at their request) |
 
@@ -159,14 +159,14 @@ Automated checks by: Claude  Date: 2026-09-26
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet; the list has four items for Lutan
+- [x] The manual list above is empty, or every item in it was checked by a person — all four looked at by Lutan, 2026-09-26, as recorded in the table
 
-Manual verification by: pending: items 1 (shell vs mockups) and 2 (signed-in header); items 3 and 4 checked by Lutan 2026-09-26, confirmed in chat, recorded by Claude at their request
+Manual verification by: Lutan — confirmed in chat; line written by Claude at their request  Date: 2026-09-26
 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist linked from the PR description (`docs/test-plans/public-site-shell.md`)
 - [ ] Handed to the production release manager — n/a: not yet — after merge
 
 Result: pass with accepted defects
