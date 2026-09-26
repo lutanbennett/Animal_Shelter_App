@@ -26,6 +26,9 @@ const en = {
     failedToDelete: "Failed to delete.",
     failedToRemove: "Failed to remove.",
     failedToReorder: "Failed to reorder.",
+    // Any Drive call whose token or client is dead (drive-errors.ts).
+    driveNotConnected: "Photo storage is not connected — tell an admin.",
+    driveFailed: "Google Drive didn't accept that. Try again in a minute.",
     system: "(system)",
     name: "Name",
     notes: "Notes",
@@ -262,6 +265,13 @@ const en = {
   admin: {
     landing: {
       title: "Settings",
+      drive: {
+        checking: "Checking photo storage…",
+        ok: "Photo storage (Google Drive) is connected.",
+        notConnected:
+          "Photo storage (Google Drive) is not connected — every upload will fail until a new token is set.",
+        failed: "Google Drive did not answer the check. Uploads may still work; look again in a minute.",
+      },
       subtitle:
         "System configuration: the public website, the places residents live, and the type lists the rest of the app picks from.",
       tiles: {

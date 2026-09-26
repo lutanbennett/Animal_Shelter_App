@@ -52,6 +52,7 @@ Read the output; do not assume it.
 - [ ] One resident hub opens and its tabs load — info, medical, placement
 - [ ] `/management/dashboard` renders its figures
 - [ ] `/admin` opens for an admin and its sub-pages are reachable
+- [ ] `/admin` says **Photo storage (Google Drive) is connected.** A red line there means every upload is failing; its small print is Google’s reason (an `invalid_grant` means the refresh token has expired or been revoked)
 - [ ] Nav shows the right entries for the signed-in role, and no link 404s
 - [ ] Browser console clean on the pages visited — no errors
 

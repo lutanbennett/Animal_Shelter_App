@@ -49,7 +49,9 @@ A person who leaves is **archived** from `/admin/security` rather than deleted (
    Copy `.env.example` to `.env.local` and fill in:
    - A Supabase project's URL/keys (create one free at supabase.com)
    - Google OAuth client credentials + refresh token for the shelter's
-     Drive account (see `src/lib/google/drive.ts` for how this is used)
+     Drive account (see `src/lib/google/drive.ts` for how this is used).
+     `node --env-file=.env.local scripts/check-drive-token.mjs` says whether
+     they still work; on a deployed site the top of Settings (`/admin`) does
 
 3. **Apply the database schema**
 
