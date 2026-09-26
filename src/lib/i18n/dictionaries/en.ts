@@ -78,6 +78,7 @@ const en = {
     medications: "Medications",
     diets: "Diets",
     cashflow: "Cashflow",
+    stockUsage: "Stock between counts",
     translations: "Translations",
     contacts: "Contacts",
     shelterFriends: "Shelter Friends",
@@ -863,6 +864,8 @@ const en = {
           "What the shelter is about to spend, in one place: food, medication, vaccinations, vet visits and maintenance.",
         translations:
           "Public-facing text whose other-language version still has to be written or checked.",
+        stockUsage:
+          "How each count moved between two stocktakes, beside what the prescriptions and diets planned.",
         shelterFriends:
           "The businesses thanked on the public website — their order, and which are live.",
       },
@@ -897,6 +900,70 @@ const en = {
         leadDaysInvalid:
           "Lead time must be a whole number of days, 1 to 365. Leave it blank for no reorder flag.",
       },
+    },
+    stockUsage: {
+      title: "Stock between counts",
+      subtitle:
+        "How each medication and food count moved between two stocktakes, beside what the prescriptions and diets planned for the same dates.",
+      link: "Stock between counts: compare stocktakes with the plan",
+      cannotSayLead: "This is not what was actually used.",
+      cannotSay:
+        "Deliveries aren't recorded, so the app knows the two counts and the plan — not what arrived in between. A fall is the least that left the cupboard: more, if anything arrived. A rise means stock arrived that nobody logged. A big gap is a reason to look, not proof of anything — a miscount, a dose given but not prescribed, or a diet that no longer fits will all show up here.",
+      picker: {
+        latest: "Each item's last two counts",
+        from: "Earlier stocktake",
+        to: "Later stocktake",
+        show: "Compare",
+        clear: "Back to last two counts",
+        session: (date: string, items: number) =>
+          `${date} — ${items} item${items === 1 ? "" : "s"}`,
+        sameSession: "Pick two different stocktakes.",
+        showing: (from: string, to: string) => `Comparing the stocktakes of ${from} and ${to}.`,
+      },
+      sections: {
+        medication: "Medications",
+        diet: "Food",
+      },
+      table: {
+        item: "Item",
+        from: "Earlier count",
+        to: "Later count",
+        change: "Change",
+        planned: "Planned for these dates",
+        reading: "Against the plan",
+      },
+      days: (n: number) => `over ${n} day${n === 1 ? "" : "s"}`,
+      fell: (quantity: string) => `down ${quantity}`,
+      rose: (quantity: string) => `up ${quantity}`,
+      held: "no change",
+      readings: {
+        asPlanned: "About as planned",
+        moreThanPlanned: (quantity: string) => `At least ${quantity} more went than planned`,
+        moreThanPlannedWhy:
+          "Even if nothing arrived in between. Worth checking the counts, doses given without a prescription, spillage and waste.",
+        lessThanPlanned: (quantity: string) => `Fell ${quantity} less than planned`,
+        lessThanPlannedWhy:
+          "Either not everything planned was given or eaten, or a delivery nobody logged filled the gap — the counts can't tell which.",
+        fellUnplanned: (quantity: string) => `Fell ${quantity} with nothing planned`,
+        fellUnplannedWhy: "No prescription or diet in the app used it over these dates.",
+        rose: "Stock arrived that wasn't logged",
+        roseWhy: "How much was used over these dates can't be worked out from the counts.",
+        unchangedUnplanned: "Nothing planned, no change",
+        unitChanged: "The unit was changed — not compared",
+        sameDay: "Both counts on the same day — nothing to compare",
+      },
+      departed: (n: number) =>
+        `The plan leaves out ${n} resident${n === 1 ? "" : "s"} who ${n === 1 ? "was" : "were"} on this during these dates but ${n === 1 ? "has" : "have"} since left the shelter or died, so it reads low.`,
+      editedSince: (date: string) =>
+        `Changed by hand on ${date}, after this count. Only stocktakes are compared here.`,
+      notCompared: (names: string) => `Not compared — not counted on two different days: ${names}.`,
+      notInBoth: (names: string) => `Not counted in both stocktakes: ${names}.`,
+      empty:
+        "Nothing to compare yet. Once an item has been counted in stocktakes on two different days, it appears here.",
+      couldntLoad: "Couldn't load the stock counts",
+      couldntLoadPlan: "Couldn't load the plan",
+      note:
+        "Planned is what the prescriptions and diets in the app say would be used from the day of the earlier count up to the day before the later one. A row is marked when the fall is more than a quarter away from the plan. Only stocktakes are recorded; a count changed by hand on the Medications or Diets page is not.",
     },
     forecastWindow: {
       from: "From",

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ClipboardCheck } from "lucide-react";
+import { ClipboardCheck, Scale } from "lucide-react";
 import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -130,6 +130,13 @@ export default async function MedicationsAdminPage(props: PageProps<"/management
         >
           <ClipboardCheck aria-hidden="true" className="h-4 w-4" />
           {t.management.stock.stocktakeLink}
+        </Link>
+        <Link
+          href="/management/stock-usage"
+          className="mt-2 ml-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+        >
+          <Scale aria-hidden="true" className="h-4 w-4" />
+          {t.management.stockUsage.link}
         </Link>
       </div>
 

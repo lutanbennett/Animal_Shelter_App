@@ -1,4 +1,4 @@
-import { Coins, HeartHandshake, LayoutDashboard, Languages } from "lucide-react";
+import { Coins, HeartHandshake, LayoutDashboard, Languages, Scale } from "lucide-react";
 import { requireManagementUser } from "@/lib/auth/require-management";
 import { getT } from "@/lib/i18n/get-t";
 import { SectionTiles, type SectionTile } from "@/components/SectionTiles";
@@ -56,6 +56,13 @@ export default async function ManagementPage() {
       label: t.nav.diets,
       description: t.management.landing.tiles.diets,
       icon: SECTION_ICONS.diet,
+      phoneNote: t.largerScreen.tileLabel,
+    },
+    {
+      href: "/management/stock-usage",
+      label: t.nav.stockUsage,
+      description: t.management.landing.tiles.stockUsage,
+      icon: Scale,
       phoneNote: t.largerScreen.tileLabel,
     },
     {
