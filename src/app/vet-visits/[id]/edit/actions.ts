@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { loadVetScope, scopeAllowsVet } from "@/lib/vets/scope";
 
 export type VetVisitEditState = { error: string } | undefined;
 
@@ -54,6 +55,20 @@ export async function updateVetVisit(
   }
 
   const supabase = await createClient();
+  // Same rule as the page (src/lib/vets/scope.ts): a vet may keep the
+  // visit's current clinic or choose their own, nothing else.
+  const scope = await loadVetScope(supabase);
+  if (scope.kind === "unlinked") return { error: t.vetVisits.noClinicForAccount };
+  if (scope.kind === "clinic" && vetId !== scope.vetId) {
+    const { data: current } = await supabase
+      .from("vet_appointments")
+      .select("vet_id")
+      .eq("id", visitId)
+      .limit(1)
+      .returns<{ vet_id: string | null }[]>();
+    if (!scopeAllowsVet(scope, vetId, current?.[0]?.vet_id)) return { error: e.notYourClinic };
+  }
+
   const { data, error } = await supabase
     .from("vet_appointments")
     .update({

@@ -42,6 +42,7 @@ export type Release = {
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
+  "A vet booking or editing a vet visit now records it for their own clinic, shown by name, instead of choosing from every clinic the shelter uses. An admin sets which clinic a vet account belongs to under Security, where a Clinic choice now appears under the role of every vet account; until it is set, the vet-visit form tells the vet to ask for it. The Status choices on the vet-visit forms also say what they mean — Scheduled is a visit not yet confirmed as done, which is why a past one shows as overdue.",
 ];
 
 /** Newest first. */

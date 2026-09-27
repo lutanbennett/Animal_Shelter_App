@@ -17,17 +17,26 @@ export default async function SecurityPage() {
 
   const admin = createAdminClient();
 
-  const [authUsersResult, rolesResult] = await Promise.all([
+  const [authUsersResult, rolesResult, vetsResult] = await Promise.all([
     admin.auth.admin.listUsers({ perPage: 200 }),
-    admin.from("user_roles").select("user_id, role, archived_at"),
+    admin.from("user_roles").select("user_id, role, archived_at, vet_id"),
+    admin.from("vets").select("id, name, clinic_name").order("name"),
   ]);
 
   const roleByUserId = new Map(
     (rolesResult.data ?? []).map((r) => [
       r.user_id,
-      { role: r.role as string, archivedAt: (r.archived_at as string | null) ?? null },
+      {
+        role: r.role as string,
+        archivedAt: (r.archived_at as string | null) ?? null,
+        vetId: (r.vet_id as string | null) ?? null,
+      },
     ]),
   );
+  const clinics = (vetsResult.data ?? []).map((v) => ({
+    id: v.id as string,
+    label: v.clinic_name ? `${v.name} — ${v.clinic_name}` : (v.name as string),
+  }));
 
   const authUsers = authUsersResult.data?.users ?? [];
 
@@ -69,6 +78,7 @@ export default async function SecurityPage() {
       email: u.email ?? "(no email)",
       role: roleByUserId.get(u.id)?.role ?? null,
       archivedAt: roleByUserId.get(u.id)?.archivedAt ?? null,
+      vetId: roleByUserId.get(u.id)?.vetId ?? null,
       createdAt: u.created_at,
       lastSignInAt: u.last_sign_in_at ?? null,
       mustChangePassword: mustChangePassword(u),
@@ -102,7 +112,7 @@ export default async function SecurityPage() {
 
       <AccessRequests requests={requests} />
       <CreateUserForm />
-      <UsersTable users={users} currentUserId={currentUser.id} />
+      <UsersTable users={users} clinics={clinics} currentUserId={currentUser.id} />
     </main>
   );
 }
