@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "Recurring jobs: only offer people who can actually do the job" (Lutan, 2026-09-27, Pass 1) |
 | Branch / worktree | `claude/recurring-jobs-eligible-assignees` @ `C:\Development\Animal_Shelter_recurring-jobs-eligible-assignees` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3012` |
-| PR | opened from this branch; number in the PR itself |
+| PR | #181 |
 | Tested by / date | Claude (recurring-jobs-eligible-assignees session), 2026-09-27, signed in as the dev test user (admin) in the browser pane |
 | Carries a migration? | no |
 | Tested at SHA | the commit "Vets are never given a recurring job" (re-tested after Lutan's ruling, on top of `8e41c7c`); `sync` found `main` already merged |
@@ -32,7 +32,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three). — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three). — #181 at `68d6330` (after merging `main`): check, test-plan and migration-numbers all SUCCESS
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -157,7 +157,7 @@ Manual verification by: pending: the vet's My tasks view of the flagged stocktak
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above — the one defect is fixed
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR — in #181’s description
 - [ ] Handed to the production release manager — n/a: not yet — handed over when a release is cut
 
 Result: pass
