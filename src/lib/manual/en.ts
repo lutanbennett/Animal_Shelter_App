@@ -640,7 +640,7 @@ const manual: Manual = {
             "Choose the Drive folder the batch belongs in and, optionally, the date taken. A vet's photos always go in Medical, so a vet sees no folder choice.",
             "Medical photos never appear on the website — use Medical for operations, teeth, wounds and anything else that should stay inside the shelter. Photos in the other folders show on the resident's public page once they are on the website.",
             "Drop photos on the upload area or tap it to choose from your phone. You can select several at once.",
-            "The first photo ever uploaded becomes the profile photo. To change it, hover or tap a photo and choose Set as profile photo, or pick one on the Edit page. A Medical photo can't be chosen as the profile photo, because the profile photo is what the website shows.",
+            "The first photo ever uploaded becomes the profile photo. To change it, hover or tap a photo and choose Set as profile photo, or pick one on the Edit page. A Medical photo can't be chosen as the profile photo, because the profile photo is what the website shows. If the first photo was a Medical one, it stays the profile photo inside the app but the website shows no photo — choose one from another folder to give the resident a picture there.",
             "Photos an adopter sent carry a coloured label with who sent them, the date and how they came in, and opening one links back to its update. Once a resident has both kinds, the buttons above the gallery show just the shelter's photos or just the adopters'. Adopters' photos are added from Adoption updates, not here.",
           ],
           screenshot: {
