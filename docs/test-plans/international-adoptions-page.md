@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "Hide the Pet relocation page, and give International adoptions a page instead" |
 | Branch / worktree | `claude/international-adoptions-page` @ `C:\Development\Animal_Shelter_international-adoptions-page` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3001` |
-| PR | opened from this commit |
+| PR | #186 |
 | Tested by / date | Claude, 2026-09-27 |
 | Carries a migration? | no — its schema half, `0104`, merged in #180 and is applied to dev |
 | Tested at SHA | `d3a8401` (the code; this plan follows it) |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three). — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — #186, 3/3 checks passing on `ba04285`'s successor (the gates re-run commit); the merge commit re-runs them
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -159,7 +159,7 @@ Manual verification by: pending: the Website editor and translation queue for th
 ### Result
 
 - [ ] Open defects are either fixed or explicitly accepted above — n/a: the one defect is accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — pasted when the PR is opened from this commit
+- [ ] Checklist pasted into the PR — n/a: #186's description summarises it and links this file, which is the record
 - [ ] Handed to the production release manager — n/a: not yet — handed over when a release is cut
 
 Result: pass with accepted defects
