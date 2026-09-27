@@ -21,6 +21,7 @@ import {
   MAINTENANCE_STATUSES,
   maintenanceStatusLabel,
 } from "@/lib/maintenance/status";
+import { OptionalDateInput } from "@/components/OptionalDateInput";
 
 const inputClass =
   "rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40 disabled:opacity-50";
@@ -291,10 +292,10 @@ export function MaintenanceForm({
           <label htmlFor="dueDate" className="text-sm font-medium text-muted">
             {f.dueDate}
           </label>
-          <input
+          <OptionalDateInput
             id="dueDate"
             name="dueDate"
-            type="date"
+            label={f.dueDate}
             defaultValue={initial?.due_date ?? ""}
             className={inputClass}
           />

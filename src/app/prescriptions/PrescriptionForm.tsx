@@ -16,6 +16,7 @@ import type {
   MedicationOption,
   VetAppointmentOption,
 } from "@/lib/prescriptions/options";
+import { OptionalDateInput } from "@/components/OptionalDateInput";
 
 export type { FrequencyOption, MedicationOption, VetAppointmentOption };
 
@@ -304,13 +305,13 @@ export function PrescriptionForm({
           <label htmlFor="endDate" className="text-sm font-medium text-muted">
             {t.prescriptions.endDate}
           </label>
-          <input
+          <OptionalDateInput
             id="endDate"
             name="endDate"
-            type="date"
+            label={t.prescriptions.endDate}
             value={endDate}
             min={startDate || undefined}
-            onChange={(e) => setEndDate(e.target.value)}
+            onValueChange={setEndDate}
             className={inputClass}
           />
           <p className="text-xs text-muted">{t.prescriptions.endDateHint}</p>

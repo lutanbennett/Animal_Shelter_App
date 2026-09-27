@@ -32,6 +32,7 @@ import {
   type FriendActionResult,
   type FriendFields,
 } from "@/app/management/shelter-friends/actions";
+import { OptionalDateInput } from "@/components/OptionalDateInput";
 
 const inputClass =
   "w-full rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary";
@@ -493,12 +494,12 @@ export function ShelterFriendCard({
               {facebookError && <span className="text-xs text-danger">{facebookError}</span>}
             </label>
           </div>
-          <label className="flex flex-col gap-1 sm:w-56">
+          <label className="flex flex-col gap-1 sm:w-72">
             <span className="text-sm font-medium text-muted">{c.friendSince}</span>
-            <input
-              type="date"
+            <OptionalDateInput
+              label={c.friendSince}
               value={fields.friendSince}
-              onChange={(e) => set("friendSince", e.target.value)}
+              onValueChange={(v) => set("friendSince", v)}
               className={inputClass}
             />
           </label>
