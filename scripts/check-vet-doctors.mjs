@@ -1,0 +1,278 @@
+// Rollback harness for 0102_vet_doctors_and_vet_accounts.sql against DEV only.
+// One transaction: the migration (twice), assertions against real rows, then
+// a deliberate `raise exception` carrying the evidence — so nothing commits.
+//
+//   node scripts/check-vet-doctors.mjs     (from the repo root; dev only)
+//
+// Exits 0 when every assertion held. Writes nothing even on success.
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+
+const root = process.cwd();
+const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
+const env = loadEnv("test");
+const ref = projectRef(env);
+if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
+
+const migration = readFileSync(join(root, "supabase/migrations/0102_vet_doctors_and_vet_accounts.sql"), "utf8");
+
+const sql = `
+begin;
+${migration}
+-- a second run of the whole file must be harmless
+${migration}
+
+do $h$
+declare
+  v_res uuid; v_dead uuid; v_vet uuid; v_vet2 uuid;
+  v_staff uuid; v_vetuser uuid;
+  v_a uuid; v_b uuid; v_c uuid; v_d1 uuid; v_d2 uuid; v_d3 uuid;
+  v_got text; v_n int; v_unlinked int; v_rejected boolean;
+  v_evidence text := '';
+begin
+  -- A. backfill: every named visit with a clinic is linked, and its name is the list's
+  select count(*) into v_unlinked from vet_appointments
+   where doctor_name is not null and vet_id is not null and doctor_id is null;
+  if v_unlinked <> 0 then raise exception 'FAIL A % named visits left unlinked', v_unlinked; end if;
+  select count(*) into v_n from vet_appointments a join vet_doctors d on d.id = a.doctor_id
+   where a.doctor_name is distinct from d.name or a.vet_id <> d.vet_id;
+  if v_n <> 0 then raise exception 'FAIL A % linked visits disagree with the list', v_n; end if;
+  select count(*) into v_n from vet_doctors;
+  v_evidence := v_evidence || format('backfill: %s doctor(s), 0 unlinked; ', v_n);
+
+  select s.resident_id into v_res from resident_current_state s
+   where s.current_status in ('Resident', 'Unassigned') limit 1;
+  select r.id into v_dead from residents r where resident_is_deceased(r.id) limit 1;
+  select id into v_vet from vets order by name limit 1;
+  select id into v_vet2 from vets where id <> v_vet order by name limit 1;
+  -- dev may hold no live staff account; revive an archived one (rolled back)
+  select user_id into v_staff from user_roles where role = 'staff' order by archived_at nulls first limit 1;
+  update user_roles set archived_at = null where user_id = v_staff;
+  select user_id into v_vetuser from user_roles where role = 'vet' and archived_at is null limit 1;
+  if v_res is null or v_vet2 is null or v_staff is null or v_vetuser is null then
+    raise exception 'FAIL setup: res % vet2 % staff % vetuser %', v_res, v_vet2, v_staff, v_vetuser;
+  end if;
+
+  -- B. a typed name adds a doctor; another spelling of it links to the same one
+  insert into vet_appointments (resident_id, vet_id, appointment_date, doctor_name)
+    values (v_res, v_vet, now(), '  Dr Harness Somchai ') returning id, doctor_id, doctor_name into v_a, v_d1, v_got;
+  if v_d1 is null or v_got is distinct from 'Dr Harness Somchai' then raise exception 'FAIL B first: % [%]', v_d1, v_got; end if;
+  insert into vet_appointments (resident_id, vet_id, appointment_date, doctor_name)
+    values (v_res, v_vet, now(), E'dr  harness\\tsomchai') returning id, doctor_id, doctor_name into v_b, v_d2, v_got;
+  if v_d2 is distinct from v_d1 or v_got is distinct from 'Dr Harness Somchai' then
+    raise exception 'FAIL B variant: % vs % [%]', v_d2, v_d1, v_got; end if;
+  select count(*) into v_n from vet_doctors where vet_id = v_vet and vet_doctor_key(name) = 'dr harness somchai';
+  if v_n <> 1 then raise exception 'FAIL B % list rows for one doctor', v_n; end if;
+
+  -- C. choosing by id fills the name; a doctor from another clinic is refused
+  insert into vet_appointments (resident_id, vet_id, appointment_date, doctor_id)
+    values (v_res, v_vet, now(), v_d1) returning doctor_name into v_got;
+  if v_got is distinct from 'Dr Harness Somchai' then raise exception 'FAIL C by id: [%]', v_got; end if;
+  v_rejected := false;
+  begin
+    insert into vet_appointments (resident_id, vet_id, appointment_date, doctor_id) values (v_res, v_vet2, now(), v_d1);
+  exception when foreign_key_violation then v_rejected := true;
+  end;
+  if not v_rejected then raise exception 'FAIL C another clinic''s doctor was accepted'; end if;
+
+  -- D. no clinic: free text, no link. Blank: no doctor.
+  insert into vet_appointments (resident_id, vet_id, appointment_date, doctor_name)
+    values (v_res, null, now(), ' Dr Nowhere ') returning doctor_id, doctor_name into v_d3, v_got;
+  if v_d3 is not null or v_got is distinct from 'Dr Nowhere' then raise exception 'FAIL D no clinic: % [%]', v_d3, v_got; end if;
+  update vet_appointments set doctor_name = '  ' where id = v_b returning doctor_id, doctor_name into v_d3, v_got;
+  if v_d3 is not null or v_got is not null then raise exception 'FAIL D cleared: % [%]', v_d3, v_got; end if;
+
+  -- E. moving a visit to another clinic relinks the name there; other edits leave it alone
+  update vet_appointments set notes = 'harness 0102' where id = v_a returning doctor_id into v_d3;
+  if v_d3 is distinct from v_d1 then raise exception 'FAIL E other-column edit changed the doctor'; end if;
+  update vet_appointments set vet_id = v_vet2 where id = v_a returning doctor_id into v_d2;
+  if v_d2 is null or v_d2 = v_d1 or (select vet_id from vet_doctors where id = v_d2) <> v_vet2 then
+    raise exception 'FAIL E relink: %', v_d2; end if;
+  update vet_appointments set vet_id = v_vet where id = v_a;  -- back, for F
+
+  -- F. a rename reaches every linked visit, a deceased resident's too
+  if v_dead is not null then
+    perform set_config('app.deceased_lock_bypass', 'on', true);
+    insert into vet_appointments (resident_id, vet_id, appointment_date, doctor_id)
+      values (v_dead, v_vet, now(), v_d1) returning id into v_c;
+    perform set_config('app.deceased_lock_bypass', '', true);
+  end if;
+  update vet_doctors set name = 'Dr Harness Somchai K.' where id = v_d1;
+  select count(*) into v_n from vet_appointments where doctor_id = v_d1 and doctor_name <> 'Dr Harness Somchai K.';
+  if v_n <> 0 then raise exception 'FAIL F % visits kept the old name', v_n; end if;
+  if coalesce(current_setting('app.deceased_lock_bypass', true), '') <> '' then
+    raise exception 'FAIL F the bypass leaked past the rename'; end if;
+  select active into v_rejected from vet_doctors where id = v_d1;
+  if not v_rejected then raise exception 'FAIL F rename changed active'; end if;
+  -- a rename onto another doctor's spelling is refused
+  insert into vet_doctors (vet_id, name) values (v_vet, 'Somchai Harness') returning id into v_d2;
+  v_rejected := false;
+  begin
+    update vet_doctors set name = 'dr harness somchai k.' where id = v_d2;
+  exception when unique_violation then v_rejected := true;
+  end;
+  if not v_rejected then raise exception 'FAIL F duplicate rename accepted'; end if;
+  v_evidence := v_evidence || format('rename reached %s visits (deceased included: %s); ',
+    (select count(*) from vet_appointments where doctor_id = v_d1), v_dead is not null);
+
+  -- G. merge: visits move and take the survivor's spelling; the other row goes
+  update vet_appointments set doctor_id = v_d2 where id = v_a;
+  -- merge checks current_user_role(), so act as an admin
+  perform set_config('request.jwt.claims', json_build_object('sub',
+    (select user_id from user_roles where role = 'admin' and archived_at is null limit 1), 'role', 'authenticated')::text, true);
+  perform merge_vet_doctors(v_d1, v_d2);
+  if exists (select 1 from vet_doctors where id = v_d1) then raise exception 'FAIL G merged doctor still listed'; end if;
+  select count(*) into v_n from vet_appointments where doctor_id = v_d2 and doctor_name <> 'Somchai Harness';
+  if v_n <> 0 then raise exception 'FAIL G % merged visits kept another name', v_n; end if;
+  if coalesce(current_setting('app.deceased_lock_bypass', true), '') <> '' then
+    raise exception 'FAIL G the bypass leaked past the merge'; end if;
+  insert into vet_doctors (vet_id, name) values (v_vet2, 'Dr Elsewhere') returning id into v_d3;
+  v_rejected := false;
+  begin perform merge_vet_doctors(v_d3, v_d2);
+  exception when check_violation then v_rejected := true;
+  end;
+  if not v_rejected then raise exception 'FAIL G cross-clinic merge accepted'; end if;
+  v_rejected := false;
+  begin delete from vet_doctors where id = v_d2;
+  exception when foreign_key_violation then v_rejected := true;
+  end;
+  if not v_rejected then raise exception 'FAIL G a doctor with visits was deleted'; end if;
+
+  -- H. booking in one call: the doctor is set and linked; the old call shape still works
+  select count(*), min(doctor_name) into v_n, v_got
+    from schedule_bulk_appointments(array[v_res, v_res], v_vet, now(), 'harness', null, 'scheduled', ' somchai HARNESS ');
+  if v_n <> 2 or v_got is distinct from 'Somchai Harness' then raise exception 'FAIL H rpc: % rows [%]', v_n, v_got; end if;
+  select count(*) into v_n from vet_appointments where reason = 'harness' and doctor_id = v_d2;
+  if v_n <> 2 then raise exception 'FAIL H rpc rows not linked: %', v_n; end if;
+  select count(*) into v_n from schedule_bulk_appointments(p_resident_ids => array[v_res], p_vet_id => v_vet,
+    p_appointment_date => now(), p_reason => 'harness old shape', p_notes => null, p_status => 'scheduled');
+  if v_n <> 1 then raise exception 'FAIL H old call shape'; end if;
+
+  -- I. vet account -> clinic
+  update user_roles set vet_id = v_vet where user_id = v_staff returning vet_id into v_d3;
+  if v_d3 is not null then raise exception 'FAIL I a staff account kept a clinic'; end if;
+  update user_roles set vet_id = v_vet where user_id = v_vetuser returning vet_id into v_d3;
+  if v_d3 is distinct from v_vet then raise exception 'FAIL I vet account clinic not stored'; end if;
+  alter table user_roles disable trigger user_roles_clear_vet_id;
+  v_rejected := false;
+  begin update user_roles set vet_id = v_vet where user_id = v_staff;
+  exception when check_violation then v_rejected := true;
+  end;
+  alter table user_roles enable trigger user_roles_clear_vet_id;
+  if not v_rejected then raise exception 'FAIL I constraint accepted a clinic on a staff account'; end if;
+
+  perform set_config('request.jwt.claims', json_build_object('sub', v_vetuser, 'role', 'authenticated')::text, true);
+  if current_user_vet_id() is distinct from v_vet then raise exception 'FAIL I current_user_vet_id for the vet: %', current_user_vet_id(); end if;
+  perform set_config('request.jwt.claims', json_build_object('sub', v_staff, 'role', 'authenticated')::text, true);
+  if current_user_vet_id() is not null then raise exception 'FAIL I current_user_vet_id for staff'; end if;
+  perform set_config('request.jwt.claims', '{}', true);
+
+  update user_roles set role = 'staff' where user_id = v_vetuser returning vet_id into v_d3;
+  if v_d3 is not null then raise exception 'FAIL I role change kept the clinic'; end if;
+  update user_roles set role = 'vet' where user_id = v_vetuser;
+
+  raise exception 'HARNESS-OK %| typed name adds, variant spelling links to the same doctor, one list row | by id fills name, other clinic refused | no clinic stays free text, blank clears | vet change relinks, other edits keep | rename reaches visits, bypass restored, duplicate rename refused | merge moves visits, cross-clinic refused, used doctor undeletable | rpc links both rows, old call shape works | clinic only on vet accounts (trigger and constraint), role change clears, current_user_vet_id | file ran twice', v_evidence;
+end;
+$h$;
+rollback;
+`;
+
+// RLS, as each role, in its own rolled-back transaction: the policies are
+// what the app actually meets.
+const rls = `
+begin;
+${migration}
+do $h$
+declare v_vet uuid; v_res uuid; v_staff uuid; v_vol uuid; v_id uuid; v_n int; v_rejected boolean := false;
+begin
+  select id into v_vet from vets order by name limit 1;
+  select s.resident_id into v_res from resident_current_state s where s.current_status in ('Resident', 'Unassigned') limit 1;
+  -- dev may hold no live staff or volunteer account: revive archived staff
+  -- accounts, one of them as a volunteer (all rolled back)
+  select user_id into v_staff from user_roles where role = 'staff' order by archived_at nulls first limit 1;
+  update user_roles set archived_at = null where user_id = v_staff;
+  select user_id into v_vol from user_roles where role = 'volunteer' and archived_at is null limit 1;
+  if v_vol is null then
+    select user_id into v_vol from user_roles where role in ('staff', 'management') and user_id <> v_staff and archived_at is not null limit 1;
+    update user_roles set role = 'volunteer', archived_at = null where user_id = v_vol;
+  end if;
+  perform set_config('harness.vet', v_vet::text, true);
+  perform set_config('harness.res', v_res::text, true);
+  perform set_config('harness.staff', v_staff::text, true);
+  perform set_config('harness.vol', coalesce(v_vol::text, ''), true);
+end;
+$h$;
+
+select set_config('request.jwt.claims', json_build_object('sub', current_setting('harness.staff'), 'role', 'authenticated')::text, true);
+set local role authenticated;
+do $h$
+declare v_id uuid; v_got text;
+begin
+  insert into vet_appointments (resident_id, vet_id, appointment_date, doctor_name)
+    values (current_setting('harness.res')::uuid, current_setting('harness.vet')::uuid, now(), 'Dr Staff Harness')
+    returning doctor_id, doctor_name into v_id, v_got;
+  if v_id is null then raise exception 'FAIL RLS staff booking did not add the doctor'; end if;
+  update vet_doctors set name = 'Dr Staff Harness Two' where id = v_id;
+  select doctor_name into v_got from vet_appointments where doctor_id = v_id limit 1;
+  if v_got <> 'Dr Staff Harness Two' then raise exception 'FAIL RLS staff rename: [%]', v_got; end if;
+end;
+$h$;
+reset role;
+
+do $h$
+begin
+  if current_setting('harness.vol') = '' then return; end if;
+  perform set_config('request.jwt.claims', json_build_object('sub', current_setting('harness.vol'), 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform 1 from vet_doctors limit 1;
+  begin
+    insert into vet_doctors (vet_id, name) values (current_setting('harness.vet')::uuid, 'Dr Volunteer');
+    raise exception 'FAIL RLS a volunteer added a doctor';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform merge_vet_doctors(gen_random_uuid(), gen_random_uuid());
+    raise exception 'FAIL RLS a volunteer could merge';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$h$;
+reset role;
+
+set local role anon;
+do $h$
+begin
+  begin
+    perform 1 from vet_doctors;
+    raise exception 'FAIL RLS anon read vet_doctors';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform current_user_vet_id();
+    raise exception 'FAIL RLS anon could call current_user_vet_id';
+  exception when insufficient_privilege then null;
+  end;
+  raise exception 'HARNESS-OK rls: staff booking adds and renames a doctor | volunteer (%) reads, cannot add or merge | anon cannot read the list or call current_user_vet_id',
+    case when current_setting('harness.vol') = '' then 'no volunteer on dev, skipped' else 'checked' end;
+end;
+$h$;
+rollback;
+`;
+
+let ok = true;
+for (const [label, query] of [["behaviour", sql], ["rls", rls]]) {
+  const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${env.SUPABASE_ACCESS_TOKEN}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ query }),
+  });
+  const text = await res.text();
+  let msg = text;
+  try { msg = JSON.parse(text).message ?? text; } catch {}
+  console.log(`${label}: status ${res.status}`);
+  console.log(msg);
+  if (!/HARNESS-OK/.test(msg)) ok = false;
+}
+// exitCode, not exit(): exiting straight after fetch trips a libuv assertion on Windows.
+process.exitCode = ok ? 0 : 1;
