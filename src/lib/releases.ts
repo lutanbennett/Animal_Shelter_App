@@ -42,6 +42,7 @@ export type Release = {
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
+  "Admins now get an email when something behind the app stops working — the database, photo storage, backups and the other System status tiles — and another when it is working again, so nobody has to open the page to find out. Settings → System status has a new Alerts tile showing that the checks are running and who the last mail reached, with a button to send yourself a test.",
   "Settings → Security now says what went wrong when an action on a login fails, instead of showing an error code. Deleting someone who has records in the system is refused with a note to archive them instead.",
   "New: recurring jobs. Managers set up the routine that comes round every week or month — the Monday stocktake, ordering medication after it, the monthly worming — under Management → Recurring jobs, with who does it and a preview of the next dates. Each date then appears on that person's My tasks with Done and Skip buttons, stays there as overdue (with how many days late) until someone marks it, and can link straight to the screen it's done on. When someone is off, their dates can be handed to someone else for just those days; when someone leaves, their jobs can be moved in one go. The page also keeps the record of who did each one and when.",
 ];
