@@ -8,10 +8,10 @@
 | Backlog item | `docs/backlog.md` → Public website → A "Become a Shelter Friend" page for businesses that want to help |
 | Branch / worktree | `claude/shelter-friend-signup-page` @ `C:\Development\Animal_Shelter_shelter-friend-signup-page` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3004` |
-| PR | opened after this commit |
+| PR | #175 |
 | Tested by / date | Claude, 2026-09-27 |
 | Carries a migration? | no — the slug and its row ("Become a Shelter Friend", empty body) are 0099 (#164), already on `main` and applied to dev |
-| Tested at SHA | `9709007` (browser checks at `ccb8a06` plus the `tel:` fix; gates at `9709007`) |
+| Tested at SHA | `9709007` (browser checks at `ccb8a06` plus the `tel:` fix; gates at `9709007`, and again at `ce2b3c3` after the second sync) |
 
 ## 1. Scope and risk
 
@@ -22,13 +22,22 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in: "Already up to date."
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in: "Already up to date." at first; after the PR was opened, a second sync merged #173 (public-site guard) and #174 (status alerts) with no conflicts
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`:
 
 ```
 === gates: typecheck exited 0 after 15s
 === gates: lint exited 0 after 101s
 === gates: build exited 0 after 181s
+gates: typecheck=0 lint=0 build=0
+```
+
+Again at `ce2b3c3`, after the second sync:
+
+```
+=== gates: typecheck exited 0 after 24s
+=== gates: lint exited 0 after 31s
+=== gates: build exited 0 after 106s
 gates: typecheck=0 lint=0 build=0
 ```
 
@@ -83,7 +92,7 @@ gates: typecheck=0 lint=0 build=0
 
 - [x] The pages nearest the change still work: `/` (Shelter Friends band renders, both tiles go to `/friends/join`, no `#contact` left in the band), `/friends` (cards render, join line added), `/donate` (fetched: Meet our Shelter Friends and the new join link both present)
 - [x] Shared file touched checked from a second page by loading it: the header and footer (and both dictionaries) loaded on `/friends` in English and `/friends/join` in Thai — menu, footer and Thai strings as intended
-- [x] Nothing merged from `main` during `sync` was broken by this branch: the sync merged nothing ("Already up to date")
+- [x] Nothing merged from `main` during `sync` was broken by this branch: the second sync brought #173 (`worker/index.mjs`, `wrangler.jsonc`, deploy scripts) and #174 (`/admin/status`, alerts) — no file this branch changed except `releases.ts`, which merged without conflict and keeps both lines; gates passed after it
 
 ## 7. Documentation
 
