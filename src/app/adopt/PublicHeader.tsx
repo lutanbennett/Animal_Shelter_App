@@ -25,11 +25,13 @@ export type PublicSection =
   | "foster"
   | "volunteer"
   | "donate"
-  | "friends";
+  | "friends"
+  | "relocation";
 
 /**
- * Header for the public pages (docs/design/, part 1 of the redesign). Four
- * entries — Adopt · Get involved ▾ · Our work · About & contact — then the
+ * Header for the public pages (docs/design/, part 1 of the redesign). Five
+ * entries — Adopt · Get involved ▾ · Services ▾ · Our work · About & contact
+ * — then the
  * language toggle and Donate, the one thing every page of a shelter site
  * asks for. Below a laptop's width the entries move into a full-screen
  * menu (PublicNav.tsx) and only Donate stays beside the menu button.
@@ -80,6 +82,14 @@ export async function PublicHeader({ current }: { current?: PublicSection }) {
           ? [link("friends", "/friends", t.shelterFriends.navLabel)]
           : []),
       ],
+    },
+    // What the shelter offers the public, as opposed to ways to help it
+    // (Lutan, 2026-09-27): Pet relocation now, desexing drives to come.
+    {
+      kind: "group",
+      key: "services",
+      label: n.services,
+      links: [link("relocation", "/relocation", t.adopt.relocationNav)],
     },
     { kind: "link", link: link("our-work", "/our-work", t.adopt.ourWorkNav) },
     // No About page yet: the footer is where the shelter's address and
@@ -146,8 +156,10 @@ export async function PublicHeader({ current }: { current?: PublicSection }) {
         />
       </span>
       <span className="font-display text-[17px] font-bold leading-tight xl:text-[22px]">
-        <span className="sm:hidden">{n.shortName}</span>
-        <span className="hidden sm:inline">{t.header.appName}</span>
+        {/* The short name on a phone, and on a small laptop where the five
+            menu entries leave the full one wrapping onto three lines. */}
+        <span className="whitespace-nowrap sm:hidden lg:inline xl:hidden">{n.shortName}</span>
+        <span className="hidden sm:inline lg:hidden xl:inline">{t.header.appName}</span>
       </span>
     </Link>
   );

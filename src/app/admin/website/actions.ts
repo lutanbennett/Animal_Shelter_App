@@ -40,6 +40,7 @@ function revalidateWebsitePages() {
   revalidatePath("/foster");
   revalidatePath("/volunteer");
   revalidatePath("/donate");
+  revalidatePath("/relocation");
 }
 
 /**

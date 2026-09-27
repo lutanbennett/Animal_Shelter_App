@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { bodyLead } from "@/lib/site/body";
 import { lineLink, loadSiteContent } from "@/lib/site/content";
@@ -16,7 +18,28 @@ import { PublicFooter } from "./PublicFooter";
  * site_pages row: the admin's title and body in the visitor's language,
  * then a "get in touch" card with the shelter's email and LINE. Each
  * route is a two-line file so the header can mark the right section.
+ *
+ * /relocation is the same again, with the flying puppy beside its heading
+ * (`hero`) and starter text until an admin saves a body of its own.
  */
+
+/**
+ * The text a page shows while its row has no body yet. Only /relocation
+ * has one: it went live before the Director wrote hers, so it carries a
+ * generic description instead of "coming soon" (docs/decisions.md,
+ * 2026-09-27). The other pages keep "coming soon".
+ */
+export function sitePageStarter(t: Dictionary, slug: SitePageSlug) {
+  return slug === "relocation" ? t.sitePages.relocationStarter : null;
+}
+
+function pageText(t: Dictionary, slug: SitePageSlug, text: { title: string; body: string } | null) {
+  const starter = sitePageStarter(t, slug);
+  return {
+    title: text?.title || starter?.title || "",
+    body: text?.body || starter?.body || "",
+  };
+}
 export async function sitePageMetadata(slug: SitePageSlug): Promise<Metadata> {
   const [supabase, { t, locale }, origin] = await Promise.all([
     createClient(),
@@ -24,9 +47,9 @@ export async function sitePageMetadata(slug: SitePageSlug): Promise<Metadata> {
     getSiteOrigin(),
   ]);
   const page = await loadSitePage(supabase, slug);
-  const text = page ? sitePageText(page, locale) : null;
-  const title = `${text?.title || t.header.appName} · ${t.header.appName}`;
-  const description = bodyLead(text?.body) || t.home.shareFallback;
+  const text = pageText(t, slug, page ? sitePageText(page, locale) : null);
+  const title = `${text.title || t.header.appName} · ${t.header.appName}`;
+  const description = bodyLead(text.body) || t.home.shareFallback;
   return {
     title,
     description,
@@ -45,9 +68,12 @@ export async function sitePageMetadata(slug: SitePageSlug): Promise<Metadata> {
 export async function SitePageView({
   slug,
   section,
+  hero,
 }: {
   slug: SitePageSlug;
   section: PublicSection;
+  /** A picture beside the heading, stacked above it on a phone. */
+  hero?: ReactNode;
 }) {
   const supabase = await createClient();
   const { t, locale } = await getT();
@@ -57,7 +83,7 @@ export async function SitePageView({
     // /donate points at the Shelter Friends — only once there are some.
     slug === "donate" ? hasPublicFriends() : false,
   ]);
-  const text = page ? sitePageText(page, locale) : null;
+  const text = pageText(t, slug, page ? sitePageText(page, locale) : null);
   const line = lineLink(content?.contact_line);
 
   return (
@@ -65,10 +91,19 @@ export async function SitePageView({
       <PublicHeader current={section} />
 
       <article className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10 sm:px-12">
-        <h1 className="text-3xl font-semibold text-foreground">
-          {text?.title || t.header.appName}
-        </h1>
-        {text?.body ? (
+        {hero ? (
+          <div className="flex flex-col-reverse items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">
+              {text.title || t.header.appName}
+            </h1>
+            <div className="w-56 shrink-0 self-center sm:w-64">{hero}</div>
+          </div>
+        ) : (
+          <h1 className="text-3xl font-semibold text-foreground">
+            {text.title || t.header.appName}
+          </h1>
+        )}
+        {text.body ? (
           <div data-reveal>
             <SiteBody body={text.body} size="lg" />
           </div>

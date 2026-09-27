@@ -44,6 +44,7 @@ export type Release = {
 export const unreleased: string[] = [
   "Photos filed under Medical when they were added to an animal no longer appear on the public adoption page, and their links no longer open for someone who is not signed in. A Medical photo chosen as an animal's main photo still shows for now; that is being fixed next.",
   "Settings → Security now asks admins for a 6-digit code from an authenticator app on their phone (2-step verification), once per sign-in. The first visit walks you through setting the app up. The rest of the app signs in as before. A lost phone is reset by another admin from Security.",
+  "New on the website: a Pet relocation page, under a new Services menu and in the footer, saying the shelter can help move a dog or cat within Thailand or abroad — with a flying puppy in a cape at the top. The adoption listing now points adopters from abroad to it. It starts with standard text in English and Thai; admins can rewrite it under Settings → Website, where it is already filled in to edit.",
 ];
 
 /** Newest first. */

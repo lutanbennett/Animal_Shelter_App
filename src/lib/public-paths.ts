@@ -12,7 +12,7 @@
  * 307-redirect every <img> request to /login. /adopt reads
  * public_resident_profiles (Section 6 "Public/Anonymous" RBAC tier),
  * /our-work the public_projects views (0042), /foster, /volunteer,
- * /donate site_pages / site_content (0059), /friends public_shelter_friends
+ * /donate, /relocation site_pages / site_content (0059, 0099), /friends public_shelter_friends
  * (0076), and /privacy is static text
  * (the notice Google's consent screen links to). /r/ is the address on a
  * resident's RFID card: a visitor sees the resident's public card there
@@ -32,6 +32,7 @@ export const PUBLIC_PATH_PREFIXES = [
   "/foster",
   "/volunteer",
   "/donate",
+  "/relocation",
   "/friends",
   "/privacy",
   "/r/",
@@ -70,7 +71,7 @@ export function isPublicPath(pathname: string, locked = false): boolean {
 export function isPublicPage(pathname: string): boolean {
   return (
     pathname === "/" ||
-    ["/adopt", "/our-work", "/foster", "/volunteer", "/donate", "/friends", "/privacy", "/r", "/e"].some(
+    ["/adopt", "/our-work", "/foster", "/volunteer", "/donate", "/relocation", "/friends", "/privacy", "/r", "/e"].some(
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`) ,
     )
   );

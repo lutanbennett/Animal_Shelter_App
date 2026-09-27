@@ -14,6 +14,8 @@ export const SITE_PAGE_SLUGS = [
   "foster",
   "volunteer",
   "donate",
+  // 0099; the Services menu and the footer link to it.
+  "relocation",
 ] as const;
 export type SitePageSlug = (typeof SITE_PAGE_SLUGS)[number];
 
