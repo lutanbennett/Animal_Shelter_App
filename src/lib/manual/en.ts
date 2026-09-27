@@ -41,7 +41,7 @@ const manual: Manual = {
       "Everything staff can do, plus the Management section: the reporting dashboard, the contact, vet, medication and diet lists, and the translations of public text.",
     staff:
       "Day-to-day resident work: intake, moves, hospital, foster and adoption, photos, maintenance, projects. Can read medical records.",
-    vet: "Vet visits, procedures, blood tests, prescriptions and immunizations. Can read resident details.",
+    vet: "Vet visits, procedures, blood tests, prescriptions and immunizations. Can read resident details. The menu is My tasks and Residents only — the shelter's enclosures, maintenance, projects, contacts and vet list are not part of a vet's access.",
     volunteer:
       "Can see everything; can add photos and move residents between enclosures.",
   },
@@ -94,7 +94,7 @@ const manual: Manual = {
           id: "navigation",
           title: "Finding your way around",
           steps: [
-            "On a computer the menu is always visible down the left, each link with its own icon: My tasks at the top, then Residents, Enclosures and Maintenance, then Vets, Contacts and Projects — and, depending on your role, Management and Settings. Those two open a front page of tiles, one for each page inside them; the same icons are used on the tiles and in the menu.",
+            "On a computer the menu is always visible down the left, each link with its own icon: My tasks at the top, then Residents, Enclosures and Maintenance, then Vets, Contacts and Projects — and, depending on your role, Management and Settings. A vet's menu is just My tasks and Residents. Those two open a front page of tiles, one for each page inside them; the same icons are used on the tiles and in the menu.",
             "Under a dividing line at the very bottom of the menu sit the things you only need now and then, so they are always in the same place: this manual, Release notes, Change password and — for admins — Security, where accounts and roles are managed.",
             "On a phone tap the ☰ button at the top left to open the same menu; tap outside it to close. The same links are the last entries in it, below the same line.",
             "The LCA logo and your email are in the header, with the Assistant button, the language switch and Sign out. Tap the logo to see the public website as a visitor does — it opens in a new tab so you don't lose your place.",
@@ -662,12 +662,13 @@ const manual: Manual = {
         {
           id: "browse-enclosures",
           title: "Browsing by zone and enclosure",
+          roles: ["admin", "management", "staff", "volunteer"],
           path: "Enclosures",
           steps: [
             "Open Enclosures. Tap a zone chip to show only that zone, search by enclosure name, or sort by zone, name or Fullest first.",
             "Choose On-site or Off-site at the top to see only the enclosures at the shelter, or only those away from it; Everywhere shows both. The zone chips then list just that place's zones. You can pick more than one zone — tap a chip to add it and tap it again to take it off; All zones clears them. Switching between On-site and Off-site clears the zones you had picked, since they belong to the other place. Hospital, Unassigned and Fostered are statuses rather than places, so they only show under Everywhere.",
             "Each card shows how many residents are in the enclosure against its capacity — green for space available, orange for nearly full or full, red for over capacity.",
-            "Tick Has open maintenance to show only enclosures with a job that isn't Completed; it works alongside the zone chips, search and sort, and the address keeps it, so a filtered view can be bookmarked or shared. It counts jobs logged on the enclosure itself — a zone-wide job doesn't put every enclosure in that zone on the list; it stays as the zone-wide count beside the zone's name. Hospital, Unassigned and Fostered are hidden while it's ticked. Vets don't see this option, as maintenance isn't part of their access.",
+            "Tick Has open maintenance to show only enclosures with a job that isn't Completed; it works alongside the zone chips, search and sort, and the address keeps it, so a filtered view can be bookmarked or shared. It counts jobs logged on the enclosure itself — a zone-wide job doesn't put every enclosure in that zone on the list; it stays as the zone-wide count beside the zone's name. Hospital, Unassigned and Fostered are hidden while it's ticked.",
             "A card with residents on a special diet — any current diet other than the shelter's standard one — shows a bowl-and-cutlery icon with how many, such as \"2 special diets\". Tap it (or hover on a computer) to see who. The card's colour is left to capacity.",
             "Tap a card to open the enclosure: its notes, every resident in it with a thumbnail, and its open maintenance jobs. A resident on a special diet has the diet's name under their thumbnail.",
           ],
@@ -679,6 +680,7 @@ const manual: Manual = {
         {
           id: "enclosure-hub",
           title: "The enclosure page",
+          roles: ["admin", "management", "staff", "volunteer"],
           path: "Enclosures → (an enclosure)",
           steps: [
             "The occupancy bar and notes are at the top; tap a resident to jump to their hub.",
@@ -738,7 +740,7 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "Volunteers and vets can view jobs and add photos, but not create or move them.",
+              text: "Volunteers can view jobs and add photos, but not create or move them.",
             },
           ],
         },
@@ -756,6 +758,7 @@ const manual: Manual = {
         {
           id: "browse-projects",
           title: "Browsing and adding photos",
+          roles: ["admin", "management", "staff", "volunteer"],
           path: "Projects",
           steps: [
             "Open Projects and tap a category, then a folder. Search folders by name from any level, and sort by name, newest or project date.",
@@ -797,6 +800,7 @@ const manual: Manual = {
         {
           id: "vets",
           title: "Vets",
+          roles: ["admin", "management", "staff", "volunteer"],
           path: "Vets",
           steps: [
             "Open Vets to see every vet and clinic with their visit count, residents seen, last visit and what's upcoming or overdue.",
@@ -810,6 +814,7 @@ const manual: Manual = {
         {
           id: "contacts",
           title: "Contacts",
+          roles: ["admin", "management", "staff", "volunteer"],
           path: "Contacts",
           steps: [
             "Open Contacts to find carers, volunteers and suppliers. Search by name, phone, email or chat ID, and filter by type.",

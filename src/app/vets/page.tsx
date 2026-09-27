@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { canManage } from "@/lib/auth/require-management";
-import { createClient } from "@/lib/supabase/server";
+import { isShelterRole } from "@/lib/auth/app-access";
+import { requireRole } from "@/lib/auth/require-role";
 import { getT } from "@/lib/i18n/get-t";
 import {
   lastVisit,
@@ -21,7 +22,7 @@ type VisitRow = VetVisit & { vet_id: string };
 
 export default async function VetsPage() {
   const { t } = await getT();
-  const supabase = await createClient();
+  const { supabase } = await requireRole(isShelterRole);
 
   // Every visit is loaded once and bucketed per vet here — the same rows
   // the hub reads, so the numbers on the cards match the numbers inside.

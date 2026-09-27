@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { isShelterRole } from "@/lib/auth/app-access";
+import { requireRole } from "@/lib/auth/require-role";
 import { getT } from "@/lib/i18n/get-t";
 import { loadEnclosureOptions } from "@/lib/enclosures/options";
 import { loadAssignableUsers } from "@/lib/auth/app-users";
@@ -12,7 +13,7 @@ export default async function EditMaintenancePage(
 ) {
   const { id } = await props.params;
   const { t } = await getT();
-  const supabase = await createClient();
+  const { supabase } = await requireRole(isShelterRole);
 
   const [{ data: role }, job, options, assignees] = await Promise.all([
     supabase.rpc("current_user_role"),

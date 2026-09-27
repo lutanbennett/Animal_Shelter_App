@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { canManage } from "@/lib/auth/require-management";
-import { createClient } from "@/lib/supabase/server";
+import { isShelterRole } from "@/lib/auth/app-access";
+import { requireRole } from "@/lib/auth/require-role";
 import {
   VetHub,
   type LinkedRecord,
@@ -10,7 +11,7 @@ import {
 
 export default async function VetPage(props: PageProps<"/vets/[id]">) {
   const { id } = await props.params;
-  const supabase = await createClient();
+  const { supabase } = await requireRole(isShelterRole);
 
   // Records logged against this vet's visits are counted on the hub. Each
   // is fetched through its vet_appointment_id with an inner join filtered

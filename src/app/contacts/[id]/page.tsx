@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { canManage } from "@/lib/auth/require-management";
-import { createClient } from "@/lib/supabase/server";
+import { isShelterRole } from "@/lib/auth/app-access";
+import { requireRole } from "@/lib/auth/require-role";
 import { CONTACT_COLUMNS, type Contact } from "@/lib/contacts/contacts";
 import { addressMapEmbedSrc } from "@/lib/contacts/map-preview";
 import { SHELTER_FRIEND_COLUMNS, type ShelterFriend } from "@/lib/shelter-friends/friends";
@@ -9,7 +10,7 @@ import { ContactHub, type CarerPlacement } from "./ContactHub";
 
 export default async function ContactPage(props: PageProps<"/contacts/[id]">) {
   const { id } = await props.params;
-  const supabase = await createClient();
+  const { supabase } = await requireRole(isShelterRole);
 
   // Every placement that named this contact as carer, newest first. The
   // open ones (end_date null) are the residents living with them now; the

@@ -33,12 +33,18 @@ function activeHref(pathname: string, items: NavItem[]): string | undefined {
 export function NavLinks({
   isAdmin,
   canManage,
+  isShelter,
   canStocktake,
   urgentCount,
 }: {
   isAdmin: boolean;
   /** Admin or management: shows the Management link. */
   canManage: boolean;
+  /**
+   * Everyone but a vet (isShelterRole): shows Enclosures, Maintenance, Vets,
+   * Contacts and Projects. A vet's menu is My tasks and Residents.
+   */
+  isShelter: boolean;
   /** Admin, management, staff, volunteer: shows Stocktake (0091). */
   canStocktake: boolean;
   /** My tasks due today or overdue, shown on the My tasks link when > 0. */
@@ -65,27 +71,35 @@ export function NavLinks({
         badgeTitle: urgentCount > 0 ? t.my.navBadge(urgentCount) : undefined,
       },
       { href: "/residents", label: t.nav.residents, icon: NAV_ICONS.residents },
-      {
-        href: "/enclosures",
-        label: t.nav.enclosures,
-        icon: NAV_ICONS.enclosures,
-      },
-      {
-        href: "/maintenance",
-        label: t.nav.maintenance,
-        icon: NAV_ICONS.maintenance,
-      },
+      ...(isShelter
+        ? [
+            {
+              href: "/enclosures",
+              label: t.nav.enclosures,
+              icon: NAV_ICONS.enclosures,
+            },
+            {
+              href: "/maintenance",
+              label: t.nav.maintenance,
+              icon: NAV_ICONS.maintenance,
+            },
+          ]
+        : []),
       // A field job, done walking the shelves — with the daily pages, not
       // under Management, because staff and volunteers do it (0091).
       ...(canStocktake
         ? [{ href: "/stocktake", label: t.nav.stocktake, icon: NAV_ICONS.stocktake }]
         : []),
     ],
-    [
-      { href: "/vets", label: t.nav.vets, icon: NAV_ICONS.vets },
-      { href: "/contacts", label: t.nav.contacts, icon: NAV_ICONS.contacts },
-      { href: "/projects", label: t.nav.projects, icon: NAV_ICONS.projects },
-    ],
+    // The shelter's reference lists — not a vet's, who is an outside clinic
+    // and should not browse the other clinics the shelter uses (2026-09-27).
+    isShelter
+      ? [
+          { href: "/vets", label: t.nav.vets, icon: NAV_ICONS.vets },
+          { href: "/contacts", label: t.nav.contacts, icon: NAV_ICONS.contacts },
+          { href: "/projects", label: t.nav.projects, icon: NAV_ICONS.projects },
+        ]
+      : [],
     // No Assistant entry: the header button opens it on every screen, and
     // its slide-over links through to the full /assistant page
     // (docs/decisions.md, 2026-09-25).

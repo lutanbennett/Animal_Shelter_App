@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { hasAppAccess } from "@/lib/auth/app-access";
+import { hasAppAccess, isShelterRole } from "@/lib/auth/app-access";
 import { canManage } from "@/lib/auth/require-management";
 import { canStocktake } from "@/lib/management/stocktake";
 import { todayIso } from "@/lib/format";
@@ -35,6 +35,7 @@ export async function NavPane() {
     <NavLinks
       isAdmin={role === "admin"}
       canManage={canManage(role)}
+      isShelter={isShelterRole(role)}
       canStocktake={canStocktake(role)}
       urgentCount={urgentCount}
     />
