@@ -41,6 +41,7 @@ function revalidateWebsitePages() {
   revalidatePath("/volunteer");
   revalidatePath("/donate");
   revalidatePath("/relocation");
+  revalidatePath("/friends/join");
 }
 
 /**

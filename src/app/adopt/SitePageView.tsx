@@ -6,8 +6,8 @@ import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { bodyLead } from "@/lib/site/body";
-import { lineLink, loadSiteContent } from "@/lib/site/content";
-import { loadSitePage, sitePageText, type SitePageSlug } from "@/lib/site/pages";
+import { lineLink, lineMessageLink, loadSiteContent } from "@/lib/site/content";
+import { loadSitePage, SITE_PAGE_PATHS, sitePageText, type SitePageSlug } from "@/lib/site/pages";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
 import { SiteBody } from "@/components/SiteBody";
 import { PublicHeader, type PublicSection } from "./PublicHeader";
@@ -21,16 +21,22 @@ import { PublicFooter } from "./PublicFooter";
  *
  * /relocation is the same again, with the flying puppy beside its heading
  * (`hero`) and starter text until an admin saves a body of its own.
+ *
+ * /friends/join (shelter-friends-join) is the same again, with starter
+ * text and a contact card made for a business asking to join: a Call
+ * button beside email and LINE, and the message already started.
  */
 
 /**
- * The text a page shows while its row has no body yet. Only /relocation
- * has one: it went live before the Director wrote hers, so it carries a
- * generic description instead of "coming soon" (docs/decisions.md,
- * 2026-09-27). The other pages keep "coming soon".
+ * The text a page shows while its row has no body yet. /relocation and
+ * /friends/join have one: each went live before the Director wrote hers,
+ * so it carries a generic description instead of "coming soon"
+ * (docs/decisions.md, 2026-09-27). The other pages keep "coming soon".
  */
 export function sitePageStarter(t: Dictionary, slug: SitePageSlug) {
-  return slug === "relocation" ? t.sitePages.relocationStarter : null;
+  if (slug === "relocation") return t.sitePages.relocationStarter;
+  if (slug === "shelter-friends-join") return t.sitePages.friendsJoinStarter;
+  return null;
 }
 
 function pageText(t: Dictionary, slug: SitePageSlug, text: { title: string; body: string } | null) {
@@ -58,7 +64,7 @@ export async function sitePageMetadata(slug: SitePageSlug): Promise<Metadata> {
       type: "website",
       title,
       description,
-      url: `/${slug}`,
+      url: SITE_PAGE_PATHS[slug],
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
     },
@@ -84,7 +90,19 @@ export async function SitePageView({
     slug === "donate" ? hasPublicFriends() : false,
   ]);
   const text = pageText(t, slug, page ? sitePageText(page, locale) : null);
-  const line = lineLink(content?.contact_line);
+  // A business asking to join gets the message already started, in email
+  // and (where LINE allows it) in LINE, and a Call button: a shop owner is
+  // as likely to ring as to write.
+  const join = slug === "shelter-friends-join" ? t.sitePages.friendsJoin : null;
+  const line = join
+    ? lineMessageLink(content?.contact_line, join.message)
+    : lineLink(content?.contact_line);
+  const phone = join ? content?.contact_phone?.trim() : null;
+  const mailto = content?.contact_email
+    ? join
+      ? `mailto:${content.contact_email}?subject=${encodeURIComponent(join.subject)}&body=${encodeURIComponent(join.message)}`
+      : `mailto:${content.contact_email}`
+    : null;
 
   return (
     <main className="flex flex-1 flex-col">
@@ -111,16 +129,16 @@ export async function SitePageView({
           <p className="text-sm text-muted">{t.sitePages.comingSoon}</p>
         )}
 
-        {(content?.contact_email || line) && (
+        {(mailto || line || phone) && (
           <div data-reveal className="mt-4 flex flex-col gap-3 rounded-lg border border-border bg-surface p-6">
             <h2 className="text-lg font-semibold text-foreground">
               {t.sitePages.getInTouch}
             </h2>
-            <p className="text-sm text-muted">{t.sitePages.getInTouchHint}</p>
+            <p className="text-sm text-muted">{join?.hint ?? t.sitePages.getInTouchHint}</p>
             <div className="flex flex-wrap gap-3">
-              {content?.contact_email && (
+              {mailto && (
                 <a
-                  href={`mailto:${content.contact_email}`}
+                  href={mailto}
                   className="spring-lift rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
                 >
                   {t.sitePages.emailUs}
@@ -136,6 +154,14 @@ export async function SitePageView({
                   {t.sitePages.lineUs(line.label)}
                 </a>
               )}
+              {phone && (
+                <a
+                  href={`tel:${phone.replace(/\s+/g, "")}`}
+                  className="spring-lift rounded border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-hover"
+                >
+                  {t.sitePages.callUs(phone)}
+                </a>
+              )}
             </div>
           </div>
         )}
@@ -146,18 +172,29 @@ export async function SitePageView({
               {t.shelterFriends.donateMention.heading}
             </h2>
             <p className="text-sm text-muted">{t.shelterFriends.donateMention.body}</p>
-            <Link
-              href="/friends"
-              className="self-start text-sm font-semibold text-primary hover:underline"
-            >
-              {t.shelterFriends.donateMention.link} &rarr;
-            </Link>
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+              <Link href="/friends" className="text-sm font-semibold text-primary hover:underline">
+                {t.shelterFriends.donateMention.link} &rarr;
+              </Link>
+              {/* A business reading this can be one of them. */}
+              <Link href="/friends/join" className="text-sm font-semibold text-primary hover:underline">
+                {t.shelterFriends.donateMention.join} &rarr;
+              </Link>
+            </div>
           </div>
         )}
 
         {slug !== "donate" && (
           <p className="text-sm text-muted">
             {t.sitePages.alsoSee}{" "}
+            {join && (
+              <>
+                <Link href="/friends" className="font-medium text-primary hover:underline">
+                  {t.shelterFriends.navLabel}
+                </Link>
+                {" · "}
+              </>
+            )}
             <Link href="/adopt" className="font-medium text-primary hover:underline">
               {t.adopt.adoptNav}
             </Link>

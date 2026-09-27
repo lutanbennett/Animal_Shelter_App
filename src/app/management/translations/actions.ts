@@ -28,7 +28,7 @@ function revalidateFor(row: TranslationRow, recordPathHint?: string | null) {
   if (row.table_name === "site_pages") {
     // A page's text shows on its own route and, for the story and the
     // how-to-adopt section, on / and /adopt; the admin editor shows its status.
-    for (const path of ["/admin/website", "/foster", "/volunteer", "/donate", "/relocation"]) {
+    for (const path of ["/admin/website", "/foster", "/volunteer", "/donate", "/relocation", "/friends/join"]) {
       revalidatePath(path);
     }
   }

@@ -2,7 +2,7 @@ import { requireAdminUser } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { loadSiteContent, loadVetVisitEstimate } from "@/lib/site/content";
-import { SITE_PAGE_SLUGS, type SitePageSlug } from "@/lib/site/pages";
+import { SITE_PAGE_PATHS, SITE_PAGE_SLUGS } from "@/lib/site/pages";
 import en from "@/lib/i18n/dictionaries/en";
 import { sitePageStarter } from "../../adopt/SitePageView";
 import { loadTranslations, translationKey } from "@/lib/translations/queries";
@@ -20,16 +20,6 @@ type PublicResidentRow = {
   species: string | null;
   breed: string | null;
   profile_photo_drive_file_id: string | null;
-};
-
-/** Where each page shows on the site, for the "View on site" link. */
-const PUBLIC_PATHS: Record<SitePageSlug, string> = {
-  "our-story": "/",
-  "how-to-adopt": "/adopt#how-to-adopt",
-  foster: "/foster",
-  volunteer: "/volunteer",
-  donate: "/donate",
-  relocation: "/relocation",
 };
 
 export default async function WebsitePage() {
@@ -153,7 +143,7 @@ export default async function WebsitePage() {
                 }}
                 // Admin is a superset of management, so always.
                 canManageTranslations
-                publicPath={PUBLIC_PATHS[page.slug]}
+                publicPath={SITE_PAGE_PATHS[page.slug]}
                 // In English whatever language the admin reads the app in:
                 // pages are written in English and translated through the queue.
                 starterBody={sitePageStarter(en, page.slug)?.body}

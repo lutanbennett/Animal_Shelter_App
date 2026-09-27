@@ -16,8 +16,27 @@ export const SITE_PAGE_SLUGS = [
   "donate",
   // 0099; the Services menu and the footer link to it.
   "relocation",
+  // 0099; at /friends/join, from the homepage Shelter Friends band,
+  // /friends, /donate and Get involved in the menu.
+  "shelter-friends-join",
 ] as const;
 export type SitePageSlug = (typeof SITE_PAGE_SLUGS)[number];
+
+/**
+ * Where each page shows on the site: its own route, or the section of
+ * another page it is part of. The Website admin's "View on site" link and
+ * each page's Open Graph url both read this, so a page whose route is not
+ * its slug (shelter-friends-join) only has to be told once.
+ */
+export const SITE_PAGE_PATHS: Record<SitePageSlug, string> = {
+  "our-story": "/",
+  "how-to-adopt": "/adopt#how-to-adopt",
+  foster: "/foster",
+  volunteer: "/volunteer",
+  donate: "/donate",
+  relocation: "/relocation",
+  "shelter-friends-join": "/friends/join",
+};
 
 export function isSitePageSlug(value: string): value is SitePageSlug {
   return (SITE_PAGE_SLUGS as readonly string[]).includes(value);

@@ -82,6 +82,25 @@ export function lineLink(contactLine: string | null | undefined): {
 }
 
 /**
+ * lineLink, but opening a chat with `text` already typed — when LINE can
+ * do that. Only a LINE Official Account (an id typed with its "@") takes a
+ * prefilled message, through the oaMessage link; a personal id or a pasted
+ * URL has no such link, so it gets the plain one and the visitor types.
+ */
+export function lineMessageLink(
+  contactLine: string | null | undefined,
+  text: string,
+): { href: string; label: string } | null {
+  const plain = lineLink(contactLine);
+  const value = contactLine?.trim();
+  if (!plain || !value?.startsWith("@")) return plain;
+  return {
+    href: `https://line.me/R/oaMessage/${encodeURIComponent(value)}/?${encodeURIComponent(text)}`,
+    label: value,
+  };
+}
+
+/**
  * The shelter's social links as the public pages show them: each only
  * when set *and* passing the same check the Website form applies. The
  * form already refuses anything else, but the database check is looser
