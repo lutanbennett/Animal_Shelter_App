@@ -11,7 +11,7 @@
 | PR | #171 |
 | Tested by / date | Claude, 2026-09-27 |
 | Carries a migration? | no — the slug and its empty row are 0099 (#164), already on `main` and applied to dev |
-| Tested at SHA | `f8a83cc` (after `worktree.mjs sync`) |
+| Tested at SHA | `f8a83cc` (browser checks, after the first sync); gates rerun at `57a6a8b` after a second sync brought in #172 |
 
 ## 1. Scope and risk
 
@@ -22,13 +22,22 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (docs-only changes came in)
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in; the first sync brought only docs, the second (#172, 2-step verification) one conflict in `src/lib/releases.ts`, resolved by keeping both `unreleased` lines
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`:
 
 ```
 === gates: typecheck exited 0 after 11s
 === gates: lint exited 0 after 77s
 === gates: build exited 0 after 97s
+gates: typecheck=0 lint=0 build=0
+```
+
+Again at `57a6a8b`, after the second sync:
+
+```
+=== gates: typecheck exited 0 after 42s
+=== gates: lint exited 0 after 103s
+=== gates: build exited 0 after 155s
 gates: typecheck=0 lint=0 build=0
 ```
 
@@ -82,7 +91,7 @@ gates: typecheck=0 lint=0 build=0
 
 - [x] The pages nearest the change still work: `/adopt` (listing, How adoption works, and the new line) and `/relocation` loaded on dev; the header and footer changes render on both
 - [x] Shared file touched checked from a second page by loading it: `PublicHeader.tsx` / `PublicFooter.tsx` / dictionaries loaded on `/adopt` in Thai at 1024 px — menu, footer and short name as intended
-- [x] Nothing merged from `main` during `sync` was broken by this branch: the merge brought only docs, and gates ran after it
+- [x] Nothing merged from `main` during `sync` was broken by this branch: #172 touches `/admin/security` and login, nothing this branch changed except the `unreleased` list, and the gates passed after it
 
 ## 7. Documentation
 
