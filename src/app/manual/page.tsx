@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { AlertTriangle, Info, Lightbulb } from "lucide-react";
 import manual from "@/lib/manual/en";
+import { asManualRole, isForRole } from "@/lib/manual/filter";
+import { createClient } from "@/lib/supabase/server";
+import { loadCurrentRole } from "@/lib/auth/app-access";
 import screenshotSizes from "@/lib/manual/screenshot-sizes.json";
 import { TocScroller } from "./TocScroller";
+import { UntilFound } from "./UntilFound";
 import type {
   ManualCallout,
   ManualRole,
   ManualScreenshot,
+  ManualSection,
   ManualTopic,
 } from "@/lib/manual/types";
 
@@ -44,8 +50,31 @@ const CALLOUT_STYLES: Record<
  * contents are measured against the viewport: top-6 plus an equal gap at
  * the bottom is 100dvh - 3rem. The heading stays put and the list below it
  * scrolls in its own box.
+ *
+ * It opens filtered to the reader's role: a topic tagged with other roles
+ * is tucked away (hidden until found — Find on page and #anchors still
+ * reach it, greyed), and a section left with none of the reader's topics
+ * goes with its intro, since the intro describes the whole section. An
+ * untagged topic is everyone's and always shows. ?view=all shows the lot,
+ * greying what isn't the reader's, because "can I do this?" deserves a
+ * greyed answer rather than none (backlog, "A role-based manual").
  */
-export default function ManualPage() {
+export default async function ManualPage({ searchParams }: PageProps<"/manual">) {
+  const [{ view }, role] = await Promise.all([
+    searchParams,
+    createClient().then(loadCurrentRole).then(asManualRole),
+  ]);
+  const showAll = view === "all";
+  const sections: ViewSection[] = manual.sections.map((section) => ({
+    section,
+    topics: section.topics.map((topic) => ({ topic, mine: isForRole(topic.roles, role) })),
+  }));
+  const myTopicCount = sections.reduce(
+    (n, { topics }) => n + topics.filter((t) => t.mine).length,
+    0,
+  );
+  const roleName = role ? manual.roleNames[role] : null;
+
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-6">
       <header className="flex flex-col gap-2">
@@ -61,7 +90,7 @@ export default function ManualPage() {
             Contents
           </summary>
           <div className="border-t border-border px-4 py-3">
-            <Toc />
+            <Toc sections={sections} showAll={showAll} />
           </div>
         </details>
 
@@ -71,18 +100,24 @@ export default function ManualPage() {
             Contents
           </h2>
           <TocScroller>
-            <Toc />
+            <Toc sections={sections} showAll={showAll} />
           </TocScroller>
         </aside>
 
         <div className="flex min-w-0 max-w-3xl flex-1 flex-col gap-12">
-          <RolesTable />
-          {manual.sections.map((section) => {
+          {roleName && (
+            <FilterBar roleName={roleName} showAll={showAll} count={myTopicCount} />
+          )}
+          <RolesTable role={role} />
+          {sections.map(({ section, topics }) => {
             const Icon = section.icon;
+            const tucked = !showAll && !topics.some((t) => t.mine);
             return (
               <section
                 key={section.id}
                 id={section.id}
+                hidden={tucked}
+                data-until-found={tucked || undefined}
                 className="flex scroll-mt-6 flex-col gap-6"
               >
                 <div className="flex flex-col gap-2 border-b border-border pb-4">
@@ -92,65 +127,119 @@ export default function ManualPage() {
                   </h2>
                   <p className="text-sm text-muted">{section.intro}</p>
                 </div>
-                {section.topics.map((topic) => (
-                  <Topic key={topic.id} topic={topic} />
+                {topics.map(({ topic, mine }) => (
+                  <Topic
+                    key={topic.id}
+                    topic={topic}
+                    notMine={mine ? null : roleName}
+                    tucked={!showAll && !mine}
+                  />
                 ))}
               </section>
             );
           })}
         </div>
       </div>
+      <UntilFound />
     </main>
   );
 }
 
-function Toc() {
+type ViewSection = {
+  section: ManualSection;
+  /** `mine`: for the reader's role, or for everyone. */
+  topics: { topic: ManualTopic; mine: boolean }[];
+};
+
+function FilterBar({
+  roleName,
+  showAll,
+  count,
+}: {
+  roleName: string;
+  showAll: boolean;
+  count: number;
+}) {
+  return (
+    <div className="flex flex-col gap-1 rounded-lg border border-border bg-surface px-4 py-3 text-sm">
+      <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-foreground">
+        <span>
+          {showAll
+            ? manual.filter.showingEverything(roleName)
+            : manual.filter.showingRole(roleName, count)}
+        </span>
+        <Link
+          href={showAll ? "/manual" : "/manual?view=all"}
+          className="font-medium text-primary underline-offset-2 hover:underline"
+        >
+          {showAll ? manual.filter.showOnlyRole(roleName) : manual.filter.showEverything}
+        </Link>
+      </p>
+      {!showAll && <p className="text-xs text-muted">{manual.filter.findHint}</p>}
+    </div>
+  );
+}
+
+function Toc({ sections, showAll }: { sections: ViewSection[]; showAll: boolean }) {
   return (
     <nav aria-label="Manual contents" className="flex flex-col gap-1 text-sm">
       <a href="#roles-table" className="rounded px-2 py-1 text-muted hover:bg-surface-hover hover:text-foreground aria-[current=location]:bg-surface-hover aria-[current=location]:text-foreground">
         Roles at a glance
       </a>
-      {manual.sections.map((section) => (
-        <div key={section.id} className="flex flex-col">
-          <a
-            href={`#${section.id}`}
-            className="rounded px-2 py-1 font-medium text-foreground hover:bg-surface-hover aria-[current=location]:bg-surface-hover"
-          >
-            {section.title}
-          </a>
-          <div className="ml-2 flex flex-col border-l border-border pl-2">
-            {section.topics.map((topic) => (
-              <a
-                key={topic.id}
-                href={`#${topic.id}`}
-                className="rounded px-2 py-1 text-xs text-muted hover:bg-surface-hover hover:text-foreground aria-[current=location]:bg-surface-hover aria-[current=location]:text-foreground"
-              >
-                {topic.title}
-              </a>
-            ))}
+      {sections.map(({ section, topics }) => {
+        const shown = showAll ? topics : topics.filter((t) => t.mine);
+        if (shown.length === 0) return null;
+        return (
+          <div key={section.id} className="flex flex-col">
+            <a
+              href={`#${section.id}`}
+              className="rounded px-2 py-1 font-medium text-foreground hover:bg-surface-hover aria-[current=location]:bg-surface-hover"
+            >
+              {section.title}
+            </a>
+            <div className="ml-2 flex flex-col border-l border-border pl-2">
+              {shown.map(({ topic, mine }) => (
+                <a
+                  key={topic.id}
+                  href={`#${topic.id}`}
+                  className={`rounded px-2 py-1 text-xs text-muted hover:bg-surface-hover hover:text-foreground aria-[current=location]:bg-surface-hover aria-[current=location]:text-foreground ${
+                    mine ? "" : "opacity-60"
+                  }`}
+                >
+                  {topic.title}
+                </a>
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </nav>
   );
 }
 
-function RolesTable() {
+function RolesTable({ role }: { role: ManualRole | null }) {
   return (
     <section id="roles-table" className="flex scroll-mt-6 flex-col gap-3">
       <h2 className="text-lg font-semibold text-foreground">Roles at a glance</h2>
       <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
           <tbody>
-            {ROLE_ORDER.map((role) => (
-              <tr key={role} className="border-b border-border last:border-b-0">
+            {ROLE_ORDER.map((r) => (
+              <tr key={r} className="border-b border-border last:border-b-0">
                 <th
                   scope="row"
                   className="w-32 bg-surface px-3 py-2 text-left align-top font-medium text-foreground"
                 >
-                  <RoleBadge role={role} />
+                  <RoleBadge role={r} />
+                  {r === role && (
+                    <span className="mt-1 block text-xs font-normal text-muted">
+                      {manual.filter.you}
+                    </span>
+                  )}
                 </th>
-                <td className="px-3 py-2 text-muted">{manual.roleSummary[role]}</td>
+                <td className={`px-3 py-2 ${r === role ? "text-foreground" : "text-muted"}`}>
+                  {manual.roleSummary[r]}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -168,9 +257,26 @@ function RoleBadge({ role }: { role: ManualRole }) {
   );
 }
 
-function Topic({ topic }: { topic: ManualTopic }) {
+/**
+ * `notMine` is the reader's role name when the topic isn't for it: the
+ * topic is greyed and says so. `tucked` hides it until found.
+ */
+function Topic({
+  topic,
+  notMine,
+  tucked,
+}: {
+  topic: ManualTopic;
+  notMine: string | null;
+  tucked: boolean;
+}) {
   return (
-    <article id={topic.id} className="flex scroll-mt-6 flex-col gap-3">
+    <article
+      id={topic.id}
+      hidden={tucked}
+      data-until-found={tucked || undefined}
+      className={`flex scroll-mt-6 flex-col gap-3 ${notMine ? "opacity-60" : ""}`}
+    >
       <div className="flex flex-col gap-1">
         <h3 className="text-base font-semibold text-foreground">{topic.title}</h3>
         {topic.path && (
@@ -183,6 +289,9 @@ function Topic({ topic }: { topic: ManualTopic }) {
               <RoleBadge key={role} role={role} />
             ))}
           </p>
+        )}
+        {notMine && (
+          <p className="text-xs font-medium text-muted">{manual.filter.notForRole(notMine)}</p>
         )}
       </div>
 
