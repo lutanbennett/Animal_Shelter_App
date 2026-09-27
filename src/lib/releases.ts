@@ -42,6 +42,7 @@ export type Release = {
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
+  "Photos filed under Medical when they were added to an animal no longer appear on the public adoption page, and their links no longer open for someone who is not signed in. A Medical photo chosen as an animal's main photo still shows for now; that is being fixed next.",
 ];
 
 /** Newest first. */
