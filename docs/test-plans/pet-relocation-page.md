@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Public website → A "Pet relocation" information page on the public site |
 | Branch / worktree | `claude/pet-relocation-page` @ `C:\Development\Animal_Shelter_pet-relocation-page` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3003` |
-| PR | opened after this commit |
+| PR | #171 |
 | Tested by / date | Claude, 2026-09-27 |
 | Carries a migration? | no — the slug and its empty row are 0099 (#164), already on `main` and applied to dev |
 | Tested at SHA | `f8a83cc` (after `worktree.mjs sync`) |
@@ -32,7 +32,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: `check`, `migration-numbers` and `test-plan` all passed on #171 at `508a92b`
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -160,7 +160,7 @@ Manual verification by: pending: the puppy's look, the admin editor's starter pr
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above — one fixed, one accepted
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [ ] Checklist pasted into the PR — n/a: the PR description summarises it and links `docs/test-plans/pet-relocation-page.md`, which is in the PR itself
 - [ ] Handed to the production release manager — n/a: not yet — the PR does not exist at this commit
 
 Result: pass with accepted defects
