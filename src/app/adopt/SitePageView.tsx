@@ -19,8 +19,9 @@ import { PublicFooter } from "./PublicFooter";
  * then a "get in touch" card with the shelter's email and LINE. Each
  * route is a two-line file so the header can mark the right section.
  *
- * /relocation is the same again, with the flying puppy beside its heading
- * (`hero`) and starter text until an admin saves a body of its own.
+ * /adopt/international is the same again, with the puppy flying over the
+ * globe beside its heading (`hero`) and starter text until an admin saves a
+ * body of its own.
  *
  * /friends/join (shelter-friends-join) is the same again, with starter
  * text and a contact card made for a business asking to join: a Call
@@ -28,13 +29,13 @@ import { PublicFooter } from "./PublicFooter";
  */
 
 /**
- * The text a page shows while its row has no body yet. /relocation and
- * /friends/join have one: each went live before the Director wrote hers,
+ * The text a page shows while its row has no body yet. /adopt/international
+ * and /friends/join have one: each went live before the Director wrote hers,
  * so it carries a generic description instead of "coming soon"
  * (docs/decisions.md, 2026-09-27). The other pages keep "coming soon".
  */
 export function sitePageStarter(t: Dictionary, slug: SitePageSlug) {
-  if (slug === "relocation") return t.sitePages.relocationStarter;
+  if (slug === "international-adoption") return t.sitePages.internationalStarter;
   if (slug === "shelter-friends-join") return t.sitePages.friendsJoinStarter;
   return null;
 }
