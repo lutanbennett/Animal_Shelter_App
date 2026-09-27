@@ -22,7 +22,7 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in: `Already up to date.` at `e84a9fc`
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in: `Already up to date.` at `e84a9fc`; after the PR opened, a second sync merged #184 (`schema-vets-readonly`) cleanly — `0105` (a vet reads `vets` but no longer writes it, which is all these forms need), its check script and docs, no app code, so the gates run above still covers every file the build compiles
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — run at `e84a9fc`, which printed:
 
 ```
@@ -81,7 +81,7 @@ gates: typecheck=0 lint=0 build=0
 
 - [x] The pages nearest the change still work (list the ones checked) — `/vet-visits/new`, `/vet-visits/<id>/edit` and its save, `/residents/<id>/vet-appointments`
 - [x] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a second, unrelated page — `/manual` loaded and rendered the changed topics alongside the rest; the dictionaries were exercised by the menu and forms in both languages
-- [x] Nothing merged from `main` during `sync` was broken by this branch — sync brought nothing in (`Already up to date.`)
+- [x] Nothing merged from `main` during `sync` was broken by this branch — the second sync brought in `0105` only; `vet_read_vets` keeps the select a vet's forms run (Security reads with the service role)
 
 ## 7. Documentation
 
