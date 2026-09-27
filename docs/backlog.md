@@ -24,6 +24,21 @@ what. Record is `docs/uat/2026-09-27.md`; the script is `docs/role-walkthrough.m
 | 11 | A role-based manual | Documentation | Pairs with 3: as the vet's menu shrinks, a manual still explaining Enclosures is actively wrong |
 | 12 | File-type icon for non-images; release notes by role | Quick wins, Documentation | Nice to haves. Last |
 
+**Fold the schema into one PR first, or the migration rule will be the bottleneck.**
+Four of the twelve want a migration — 2 (a `vet_doctors` table, and the link from a
+vet *account* to a clinic that does not exist today), 4 (the RLS policies that scope
+residents to a clinic, which need that same link), 7 (a unique index behind one
+weight per visit) and 6 (a check against the appointment date). CLAUDE.md allows
+**only one in-flight branch carrying a migration at a time**, and says that where two
+streams both need schema their migrations go in one PR. Done separately these four
+serialise behind each other no matter how many worktrees are open; done as a single
+additive schema PR up front, every feature half that follows can run in parallel.
+2 and 4 need the same link anyway, so they are not really two decisions.
+
+**Item 4 is gated on a decision, not on throughput.** It is the one thing here that
+should not be picked up by a session and built: the rule for what a vet may see
+wants settling with Lutan first, because a scope that hides a resident from the vet
+about to treat them is worse than the current one that shows too much.
 Not on this list and not forgotten: **Cloudflare 1102 on the test site**, expected
 to clear when the Pi becomes the origin (see Deployment). It is the environment,
 not a defect in the app.
