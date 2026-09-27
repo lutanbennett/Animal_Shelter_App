@@ -179,6 +179,8 @@ const en = {
     /** The shelter's services to the public: Pet relocation, later desexing drives. */
     services: "Services",
     sponsor: "Sponsor a resident",
+    /** Get involved → /friends/join, for a business that wants to help. */
+    becomeFriend: "Become a Shelter Friend",
     about: "About & contact",
     language: "Language",
     talkToUs: "Talk to us",
@@ -197,6 +199,40 @@ const en = {
     emailUs: "Email us",
     lineUs: (id: string) => `LINE ${id}`,
     alsoSee: "See also:",
+    callUs: (phone: string) => `Call ${phone}`,
+    /**
+     * /friends/join's contact card: the hint, and the email subject and
+     * message (also the LINE message, where LINE can prefill one) a
+     * business starts from.
+     */
+    friendsJoin: {
+      hint: "Tell us about your business and how you'd like to help — by LINE, phone or email — and we'll get back to you.",
+      subject: "Becoming a Shelter Friend",
+      message:
+        "Hello Lanna Care for Animals,\n\nI'd like my business to become a Shelter Friend.\n\nBusiness name:\nWhat we do:\nHow we'd like to help:\nBest way to reach me:\n\nThank you!",
+    },
+    /**
+     * /friends/join's starter text, shown until an admin saves a body of
+     * their own on Settings → Website (which also offers it to edit).
+     * From the Shelter Friends item's own description (docs/backlog.md);
+     * no promises only the Director can make — fees, terms, how long a
+     * profile stays up.
+     */
+    friendsJoinStarter: {
+      title: "Become a Shelter Friend",
+      body: [
+        "## What is a Shelter Friend?",
+        "Shelter Friends are local businesses that help us care for the animals at Lanna Care for Animals. Every Friend helps in the way that suits their business, and we thank them in public — so our supporters know who to give their custom to.",
+        "## Ways to help",
+        "- Donating goods we use every day: dog and cat food, litter, medicine, or building materials for kennels and fences\n- Giving our supporters a discount — for example, money off for adopters who show their adoption card\n- Offering a service, whatever your trade: vet care, grooming, transport, printing, repairs\n- Sponsoring something specific, such as a month's food",
+        "## What your business gets",
+        "- A profile on our Shelter Friends page, with your logo: who you are, what you do for the shelter, any offer for our supporters, and links to your website and Facebook page\n- Your logo in the Shelter Friends band on our home page\n- Our thanks, in public, and supporters who are asked to shop with you",
+        "## Your contact details, your choice",
+        "Your phone number, email, LINE, address and map are each shown on your profile only if you agree to that one. We ask you which to show before anything goes on the website, and nothing is published until you are happy with it.",
+        "## How to join",
+        "Get in touch by LINE, phone or email and tell us a little about your business and how you would like to help. We will put your profile together with you.",
+      ].join("\n\n"),
+    },
     /**
      * /relocation's starter text, shown until an admin saves a body of
      * their own on Settings → Website (which also offers it to edit).
@@ -907,6 +943,7 @@ const en = {
           volunteer: "Volunteer",
           donate: "Donate",
           relocation: "Pet relocation",
+          "shelter-friends-join": "Become a Shelter Friend",
         } as Record<string, string>,
         where: {
           "our-story": "The story section on the welcome page, under the photo strip.",
@@ -915,9 +952,10 @@ const en = {
           volunteer: "The Volunteer page, linked from the header and the \"How you can help\" strip.",
           donate: "The Donate page, linked from the Donate button on every public page.",
           relocation: "The Pet relocation page, linked from Services in the header, the footer, and the adoption listing for adopters abroad.",
+          "shelter-friends-join": "The Become a Shelter Friend page (/friends/join), linked from Get involved in the header and footer, the Shelter Friends band on the home page, the Shelter Friends page and the Donate page.",
         } as Record<string, string>,
         starterNote:
-          "Nothing saved yet, so the page shows the standard text below. Change it and save to make it yours — and add your licence details and anything else only you can say.",
+          "Nothing saved yet, so the page shows the standard text below. Change it and save to make it yours — and add anything only you can say, such as licence details or who to ask for.",
       },
       gallery: {
         heading: "Photo gallery",
@@ -3727,6 +3765,9 @@ const en = {
       "Local businesses that help us care for the animals — with food, supplies, services, or a discount for our supporters. Thank you. Give them your custom, and tell them Lanna Care for Animals sent you.",
     couldntLoad: "Couldn't load our friends",
     noneYet: "We're just getting started on thanking the businesses that help us — check back soon.",
+    /** The line under /friends' subtitle, to /friends/join. */
+    joinLine: "Run a business and want to help?",
+    joinLink: "Become a Shelter Friend",
     /** Signed-in staff only, on /friends: why a profile they saved isn't here. */
     staffDrafts: {
       label: "Only signed-in staff see this",
@@ -3766,6 +3807,7 @@ const en = {
       heading: "Give in kind",
       body: "Our Shelter Friends donate supplies and give discounts to people who support us — buying from them goes further.",
       link: "Meet our Shelter Friends",
+      join: "Run a business? Become a Shelter Friend",
     },
 
     // --- staff: the contact hub, the contact lists, Management

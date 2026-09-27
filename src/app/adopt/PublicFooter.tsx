@@ -144,6 +144,7 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
           {showFriends && (
             <Link href="/friends" className={footerLink}>{t.shelterFriends.navLabel}</Link>
           )}
+          <Link href="/friends/join" className={footerLink}>{t.publicNav.becomeFriend}</Link>
           <Link href="/donate" className={footerLink}>{t.adopt.donateNav}</Link>
           <span className={`${heading} pb-1 pt-5`}>{f.services}</span>
           <Link href="/relocation" className={footerLink}>{t.adopt.relocationNav}</Link>

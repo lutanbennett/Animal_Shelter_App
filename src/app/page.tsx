@@ -276,10 +276,11 @@ export default async function WelcomePage() {
                   {sf.subtitle}
                 </p>
               </div>
-              {/* No sign-up form yet: the footer's contact details are how a
-                  business gets in touch (docs/decisions.md, 2026-09-26). */}
+              {/* What being a Friend means and how to join; still no sign-up
+                  form — the page's contact card is how a business gets in
+                  touch (docs/decisions.md, 2026-09-26 and 2026-09-27). */}
               <Link
-                href="#contact"
+                href="/friends/join"
                 className="spring-lift flex h-[52px] shrink-0 items-center self-start rounded-full bg-site-ink px-[26px] text-[17px] font-bold text-site-paper hover:bg-site-ink-soft lg:self-auto"
               >
                 {sf.become}
@@ -313,7 +314,7 @@ export default async function WelcomePage() {
                 {/* action-hover, not action: terracotta text on the sand
                     band is 4.46:1, just under AA (decisions.md, part 1). */}
                 <Link
-                  href="#contact"
+                  href="/friends/join"
                   className="spring-lift flex h-24 items-center justify-center rounded-[14px] border-2 border-dashed border-site-action p-2 text-center text-[15px] font-bold text-site-action-hover hover:bg-site-paper"
                 >
                   {sf.yourBusiness}

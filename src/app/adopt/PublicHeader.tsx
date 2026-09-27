@@ -26,6 +26,7 @@ export type PublicSection =
   | "volunteer"
   | "donate"
   | "friends"
+  | "friends-join"
   | "relocation";
 
 /**
@@ -81,6 +82,10 @@ export async function PublicHeader({ current }: { current?: PublicSection }) {
         ...(showFriends || current === "friends"
           ? [link("friends", "/friends", t.shelterFriends.navLabel)]
           : []),
+        // A way for a business to help, so here rather than under Services
+        // (Lutan, 2026-09-27) — and always, since it is how the first
+        // Friend arrives.
+        link("friends-join", "/friends/join", n.becomeFriend),
       ],
     },
     // What the shelter offers the public, as opposed to ways to help it
