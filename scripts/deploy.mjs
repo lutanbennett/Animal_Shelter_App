@@ -27,6 +27,7 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { readFileSync } from "node:fs";
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
+import { lockedPublicSiteProblem, readWranglerConfig } from "./lib/wrangler.mjs";
 // TypeScript, loaded through Node's type stripping: the same file the app
 // renders, so the page, the tag and the email can't disagree.
 import { latestRelease, majorReleasesSince, unreleased } from "../src/lib/releases.ts";
@@ -111,6 +112,20 @@ function wrangler(args, opts = {}) {
   }
 }
 const git = (args) => spawnSync(`git ${args}`, { shell: true, encoding: "utf8" }).stdout.trim();
+
+// The cutover moves the production block off lannacare.org and must drop its
+// PUBLIC_SITE lock on the way (README, "What the cutover changes here"). Until
+// then production serves UAT's host and the lock is right, so this stays
+// silent; see lockedPublicSiteProblem() for the whole condition. First of the
+// guards because it needs only wrangler.jsonc, no environment's secrets.
+// There is deliberately no flag past it (docs/decisions.md, 2026-09-27).
+{
+  const problem = lockedPublicSiteProblem(readWranglerConfig(), envName, new URL(SITE_ORIGINS.uat).hostname);
+  if (problem) {
+    console.error(`deploy: ${problem}`);
+    process.exit(2);
+  }
+}
 
 const env = loadEnv(envName);
 for (const key of [...BUILD_VARS, ...(pushSecrets ? RUNTIME_SECRETS : [])]) {
