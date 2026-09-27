@@ -209,6 +209,20 @@ Anything above that Claude could not honestly verify, listed here so it is a
 short, concrete handover rather than a vague "please check it". Empty is a valid
 answer when the change has no surface a person needs to look at.
 
+**Do not repeat a section 8 deploy-time check here.** Applying a migration,
+reading the deploy output, smoke-testing the deployed build and running
+`--drift production` all have their own state in section 8 — `deferred: <owner>` —
+which passes the checker and names who picks it up. Listing them again in this
+table gives them a second home that nothing ever closes: the check gets done at
+deploy time, section 8 is satisfied, and this row stays open for good. Five
+release-cut plans accumulated permanently-open rows exactly that way before it
+was noticed (2026-09-27).
+
+The test for whether something belongs here: **would a person have to go and look
+at it, separately from deploying?** A vet's view of a page, a real phone, whether
+wording reads well — yes. Anything the deploy itself performs — no, that is
+section 8's.
+
 | # | What to check | Where |
 |---|---|---|
 | | | |

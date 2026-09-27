@@ -210,9 +210,9 @@ Automated checks by: Claude  Date: 2026-09-25
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — item 1 needs the main checkout after merge
+- [x] The manual list above is empty, or every item in it was checked by a person — item 1 is done. Lutan has run `--drift production` from the main checkout on several releases since this merged: 2026-09-25 against `origin/main 7bf0e9c` (82 files, 82 applied, no drift) and 2026-09-26 against `8cc4880` (91 files, 90 applied, `0091` named as the one missing). The second is the stronger evidence, because it found real drift and the number it reported corrected a release plan that had asserted five pending migrations when one was
 
-Manual verification by: pending: `--drift production` from the main checkout
+Manual verification by: Lutan Bennett — he ran `--drift production` from the main checkout and pasted the output; line written by Claude at his request, 2026-09-27  Date: 2026-09-26
 
 ### Result
 
