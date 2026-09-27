@@ -98,6 +98,7 @@ const manual: Manual = {
             "Under a dividing line at the very bottom of the menu sit the things you only need now and then, so they are always in the same place: this manual, Release notes, Change password and — for admins — Security, where accounts and roles are managed.",
             "On a phone tap the ☰ button at the top left to open the same menu; tap outside it to close. The same links are the last entries in it, below the same line.",
             "The LCA logo and your email are in the header, with the Assistant button, the language switch and Sign out. Tap the logo to see the public website as a visitor does — it opens in a new tab so you don't lose your place.",
+            "Open a page your role doesn't include — a link someone sent you, or a job that points at Stocktake — and you see You don't have access to this page, still inside the app, with a Go to My tasks button. If you need that page for your work, ask a manager or an admin.",
           ],
           screenshot: {
             src: "/manual/nav-mobile.png",
@@ -521,7 +522,7 @@ const manual: Manual = {
             "Choose one or more residents and the vet or clinic (vets are set up under Management → Vets). If you know which doctor will see them, type their name in Doctor — it is optional. Names already recorded for that vet are offered as you type, so pick one rather than spelling it a new way.",
             "Enter the date and time. Use a past date to record a visit that already happened, including emergencies.",
             "Give the reason, set the status — Scheduled (upcoming) or Completed (already happened) — and add notes.",
-            "Tap Book vet visit.",
+            "Tap Book vet visit. With one resident you go straight to their Vet Appointments page, where the new visit is listed; with several, back to the Residents list.",
             "On the resident's Vet Appointments page each visit has quick links to log a blood test, prescription, weight or procedure against that visit, and to send the resident to hospital.",
             "After the visit, tap Edit on its row to mark it Completed (or Cancelled), fix the date or vet, add the doctor who saw them, and enter the cost from the invoice. The vet's hub totals those costs for the period shown.",
           ],

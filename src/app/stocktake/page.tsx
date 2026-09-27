@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { Truck } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { requireRole } from "@/lib/auth/require-role";
 import { getT } from "@/lib/i18n/get-t";
 import { dietUnitLabel, doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { canStocktake, type StocktakeItem, type StocktakeKind } from "@/lib/management/stocktake";
@@ -28,13 +27,7 @@ type StockRow = {
  * shelter can describe it.
  */
 export default async function StocktakePage(props: PageProps<"/stocktake">) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-  const { data: role } = await supabase.rpc("current_user_role");
-  if (!canStocktake(role)) redirect("/");
+  const { supabase, role } = await requireRole(canStocktake);
 
   const { t } = await getT();
   const searchParams = await props.searchParams;

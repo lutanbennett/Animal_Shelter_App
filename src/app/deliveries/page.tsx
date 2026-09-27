@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { Scale } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { requireRole } from "@/lib/auth/require-role";
 import { getT } from "@/lib/i18n/get-t";
 import { dietUnitLabel, doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { formatBahtPrice, formatDateTime, todayIso } from "@/lib/format";
@@ -47,13 +46,7 @@ type ReceiptRow = {
 const RECENT = 50;
 
 export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-  const { data: role } = await supabase.rpc("current_user_role");
-  if (!canRecordDelivery(role)) redirect("/");
+  const { supabase, role } = await requireRole(canRecordDelivery);
 
   const { t, locale } = await getT();
   const d = t.deliveries;
