@@ -166,9 +166,15 @@ Checked across the release rather than in this PR:
 |---|---|---|
 | 1 | The six notes **and the title**, read as a shelter user would. `major: true` means these exact words are emailed to admins. **The title is mine and nobody has reviewed it** | `src/lib/releases.ts`, the `0.7.0` entry |
 | 2 | That mailing admins is intended. Chosen in chat 2026-09-27 with the consequence stated | `src/lib/releases.ts`, `major: true` |
-| 3 | **Production schema before the deploy** — `--drift production`, then apply what it names. `0096` and `0097` before the deploy or two features are broken | main checkout, Lutan's terminal |
-| 4 | **The release-mail line in the deploy output.** This release is the only thing that can answer whether the shelter admin address was ever verified — open since `0.5.0` | `deploy.log` |
-| 5 | **Eight feature plans with `manual: pending`** — the standing gap, now the largest it has been | `docs/test-plans/` |
+| 3 | **The release-mail line in the deploy output.** This release is the only thing that can answer whether the shelter admin address was ever verified — open since `0.5.0` | `deploy.log` |
+| 4 | **Eight feature plans with `manual: pending`** — the standing gap, now the largest it has been | `docs/test-plans/` |
+
+**`--drift production` is deliberately not a row here**, though it is a hard
+prerequisite for this release. It is a deploy-time check and lives in section 8
+as `deferred: Lutan`, which is the state that passes and names an owner. Giving
+it a row here as well is what left five earlier release-cut plans with a
+permanently-open item: the check gets run at deploy time, section 8 is satisfied,
+and the row is never closed. The template now says so (2026-09-27).
 
 ## Sign-off
 
@@ -181,9 +187,9 @@ Automated checks by: Claude (release manager session)  Date: 2026-09-27
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — item 2 was answered in chat; items 1, 3, 4 and 5 are open and need a person
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — item 2 was answered in chat; items 1, 3 and 4 are open and need a person
 
-Manual verification by: pending: Lutan to read the six notes and the title (item 1), run `--drift production` and apply before deploying (item 3), and read the release-mail line (item 4)
+Manual verification by: pending: Lutan to read the six notes and the title (item 1) and read the release-mail line in the deploy output (item 3). The schema apply is section 8's, not this list's
 
 ### Result
 
