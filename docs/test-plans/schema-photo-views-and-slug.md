@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **Public views show no profile photo when it is in Medical (schema)** (ticked here); **Hide the Pet relocation page, and give International adoptions a page instead** (schema half only, not ticked) |
 | Branch / worktree | `claude/schema-photo-views-and-slug` @ `C:\Development\Animal_Shelter_schema-photo-views-and-slug` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3010` |
-| PR | to be opened from this commit |
+| PR | #180 |
 | Tested by / date | Claude (automated) / 2026-09-27 |
 | Carries a migration? | yes: `0103_public_profile_photo_exclude_medical.sql`, `0104_site_pages_international_adoption.sql` |
 | Tested at SHA | `23c852d` on `main` @ `8720ea9`; later commits add only this plan |
@@ -30,7 +30,7 @@
 
   gates: typecheck=0 lint=0 build=0
   ```
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — `check`, `migration-numbers` and `test-plan` all pass on #180 (run 36301937823)
 
 ## 3. Schema and data
 
@@ -162,7 +162,7 @@ Manual verification by: pending: `/manual` wording (item 1)
 ### Result
 
 - [ ] Open defects are either fixed or explicitly accepted above — n/a: none found
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR (as a comment on #180)
 - [ ] Handed to the production release manager — n/a: not yet — happens at the next production release, after merge
 
 Result: pass
