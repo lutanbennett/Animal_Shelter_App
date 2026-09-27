@@ -49,7 +49,7 @@
 
   (`status 400` is by design: the harness ends in a `raise` so it cannot commit; the script exits 0 only on `HARNESS-OK`.) `service_role` and `postgres` have `rolbypassrls = true` on dev, `authenticated` false — checked in `pg_roles`
 - [ ] Down-migration written, or the reason one is not needed is stated — n/a: `0100` is undone by dropping its three policies, and nothing depends on them; `0099`'s rows are unused until the feature halves ship, and narrowing the constraint back means deleting them first
-- [x] Production apply plan stated for the release manager (which file, which project, when) — `0099` and `0100` to production `dbkodyyxxhtygxcxmfcu` by Lutan from the main checkout after merge (`--env production --dry-run`, then without). Order-independent of any deploy: no code reads either yet. `0100` must be on production **before** the 2-step feature deploys
+- [x] Production apply plan stated for the release manager (which file, which project, when) — `0099` and `0100` to production `dbkodyyxxhtygxcxmfcu` from the main checkout after merge (`--env production --dry-run`, then without) — **done 2026-09-27**, see §8. Order-independent of any deploy: no code reads either yet. `0100` must be on production **before** the 2-step feature deploys
 
 ## 4. Functional checks
 
@@ -123,7 +123,28 @@
 ### Migration ordering
 
 - [x] **Does this PR contain both a migration and code that reads it?** — no; the batch-4 features will, so production needs `0099`/`0100` before they deploy
-- [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — deferred: Lutan (production reads are refused from feature worktrees)
+- [x] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — 2026-09-27, from the main checkout at `8bc9fc4`, at Lutan's request in chat. Production also had `0098_status_alerts.sql` pending, and the runner applies in order, so it went too (two service-role-only tables, merged on `main`). Output, unedited:
+
+  ```
+  Environment: production — project dbkodyyxxhtygxcxmfcu
+  This checkout: 97 applied, 3 pending.
+  dry-run 0098_status_alerts.sql … ok
+  dry-run 0099_site_pages_relocation_friends_join.sql … ok
+  dry-run 0100_user_roles_require_aal2.sql … ok
+  Dry run only — nothing was applied.
+  ```
+
+  Then applied, and `--drift production` afterwards (their `Environment:` / `This checkout:` headers, identical to the dry-run's, left out; Node's module-type warning filtered from all three runs):
+
+  ```
+  applying 0098_status_alerts.sql … ok
+  applying 0099_site_pages_relocation_friends_join.sql … ok
+  applying 0100_user_roles_require_aal2.sql … ok
+  Against origin/main 8bc9fc4: 100 file(s), 100 applied row(s).
+    On origin/main, not applied here: 0
+    Applied here, no file on origin/main: 0
+  No drift: production matches origin/main.
+  ```
 - [ ] For a **destructive or rewriting** migration only: a production backup exists and is fresh — n/a: additive — a widened check, two inserted rows, three new policies
 - [x] Apply plan stated: which file, which project, and whether it runs before or after the deploy — see §3
 
