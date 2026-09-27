@@ -22,16 +22,16 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (`Already up to date.` at `8720ea9`)
-- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`:
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in. First run `Already up to date.` at `8720ea9`; the second, before merge, brought in recurring-jobs eligibility and `0103`/`0104` and conflicted only in `src/lib/releases.ts`, where both sides added an `unreleased` line — both kept (`cb0b314`). Nothing it brought in adds a page under the five guarded trees
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — run before the PR and again on the merged tree `cb0b314`, which printed:
 
 ```
-=== gates: build exited 0 after 286s
+=== gates: build exited 0 after 144s
 
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — #182, 3/3 checks passing on `4c87472`; the merge commit re-runs them
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -83,7 +83,7 @@ All against `next dev` on :3011 and the dev database, signed in through the loca
 
 - [x] The pages nearest the change still work — `/my`, `/residents`, `/no-access`, `/e/[id]`, `/r/[code]`, and all twelve guarded pages as admin
 - [x] Any shared file touched checked from a second, unrelated page — `NavLinks.tsx` via the menu on `/my` as both roles; `app-access.ts` via `/residents` and `/my` loading as a vet (the app-access gate still lets a vet in)
-- [x] Nothing merged from `main` during `sync` was broken by this branch — sync merged nothing (already up to date)
+- [x] Nothing merged from `main` during `sync` was broken by this branch — gates pass on the merged tree; the only overlap was the release-notes list
 
 ## 7. Documentation
 
@@ -160,7 +160,7 @@ Manual verification by: pending: a vet's menu and the five refused trees, the ke
 ### Result
 
 - [ ] Open defects are either fixed or explicitly accepted above — n/a: defect 1 is deferred to its own backlog item and defect 2 is accepted, both recorded above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR — in #182's description
 - [ ] Handed to the production release manager — n/a: not yet — handed over when a release is cut
 
 Result: pass with accepted defects
