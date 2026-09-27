@@ -42,6 +42,7 @@ export type Release = {
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
+  "The Pet relocation page is gone from the website — moving pets is not a service the shelter offers — and an International adoption page has taken its place, for people abroad who would like to adopt one of the animals. It is under Adopt in the menu and the footer (Adopt now opens to Meet our residents and International adoption), with a caped puppy flying over the globe at the top, and the adoption listing's line for adopters abroad now points to it. Anyone following an old link to the relocation page lands on the new one. The Services menu is hidden while it has nothing in it. The page starts with standard text in English and Thai; admins can rewrite it under Settings → Website, where it is already filled in to edit.",
 ];
 
 /** Newest first. */

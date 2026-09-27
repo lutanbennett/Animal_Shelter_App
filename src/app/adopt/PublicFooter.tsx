@@ -139,6 +139,7 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
         <div className="flex flex-col">
           <span className={`${heading} pb-1`}>{f.help}</span>
           <Link href="/adopt" className={footerLink}>{t.adopt.adoptNav}</Link>
+          <Link href="/adopt/international" className={footerLink}>{t.adopt.internationalNav}</Link>
           <Link href="/foster" className={footerLink}>{t.adopt.fosterNav}</Link>
           <Link href="/volunteer" className={footerLink}>{t.adopt.volunteerNav}</Link>
           {showFriends && (
@@ -146,8 +147,8 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
           )}
           <Link href="/friends/join" className={footerLink}>{t.publicNav.becomeFriend}</Link>
           <Link href="/donate" className={footerLink}>{t.adopt.donateNav}</Link>
-          <span className={`${heading} pb-1 pt-5`}>{f.services}</span>
-          <Link href="/relocation" className={footerLink}>{t.adopt.relocationNav}</Link>
+          {/* Services (f.services) comes back with its first entry — desexing
+              drives; it went empty when Pet relocation came off the site. */}
         </div>
 
         <div className="flex flex-col">
