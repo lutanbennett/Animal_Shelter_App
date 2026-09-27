@@ -22,13 +22,13 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in: `Already up to date.` at `5fb3b42`
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in: `Already up to date.` at `5fb3b42`; before merge, a second sync brought in #187 (`0106` one weight per visit and per day: the migration, its check script and docs, no app code) cleanly
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — run at `5fb3b42`, which printed:
 
 ```
 gates: typecheck=0 lint=0 build=0
 ```
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — #189, 3/3 passing (check, migration-numbers, test-plan) on `54b8d77`; the sync commit re-runs them
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -159,7 +159,7 @@ Manual verification by: pending: Find on page in a real browser, and a vet's rea
 ### Result
 
 - [ ] Open defects are either fixed or explicitly accepted above — n/a: not yet — result follows manual verification
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR — summarised in #189 with a link to this file
 - [ ] Handed to the production release manager — n/a: not yet — after merge
 
 Result: pass
