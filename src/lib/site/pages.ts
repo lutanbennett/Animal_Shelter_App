@@ -14,8 +14,9 @@ export const SITE_PAGE_SLUGS = [
   "foster",
   "volunteer",
   "donate",
-  // 0099; the Services menu and the footer link to it.
-  "relocation",
+  // 0099 as relocation, renamed by 0104; at /adopt/international, under
+  // Adopt in the menu and the footer and from the adoption listing.
+  "international-adoption",
   // 0099; at /friends/join, from the homepage Shelter Friends band,
   // /friends, /donate and Get involved in the menu.
   "shelter-friends-join",
@@ -34,7 +35,7 @@ export const SITE_PAGE_PATHS: Record<SitePageSlug, string> = {
   foster: "/foster",
   volunteer: "/volunteer",
   donate: "/donate",
-  relocation: "/relocation",
+  "international-adoption": "/adopt/international",
   "shelter-friends-join": "/friends/join",
 };
 

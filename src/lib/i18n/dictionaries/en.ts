@@ -176,8 +176,13 @@ const en = {
     /** The name beside the logo on a phone, where the full one doesn't fit. */
     shortName: "Lanna Care",
     getInvolved: "Get involved",
-    /** The shelter's services to the public: Pet relocation, later desexing drives. */
+    /**
+     * The shelter's services to the public. No entries since Pet relocation
+     * came off the site, so the menu leaves it out until desexing drives.
+     */
     services: "Services",
+    /** Adopt → /adopt, the listing, beside International adoption. */
+    meetResidents: "Meet our residents",
     sponsor: "Sponsor a resident",
     /** Get involved → /friends/join, for a business that wants to help. */
     becomeFriend: "Become a Shelter Friend",
@@ -234,26 +239,30 @@ const en = {
       ].join("\n\n"),
     },
     /**
-     * /relocation's starter text, shown until an admin saves a body of
-     * their own on Settings → Website (which also offers it to edit).
-     * Generic on purpose (docs/decisions.md, 2026-09-27): what a move
-     * involves, in our own words — no licence claim, no timelines, no
-     * prices, which only the Director can state.
+     * /adopt/international's starter text, shown until an admin saves a body
+     * of their own on Settings → Website (which also offers it to edit).
+     * Generic on purpose (docs/decisions.md, 2026-09-27): what an adoption
+     * from abroad involves, in outline and our own words — no fees,
+     * timelines, countries served, partner names or licence claims, which
+     * only the shelter can state.
      */
-    relocationStarter: {
-      title: "Pet relocation",
+    internationalStarter: {
+      title: "International adoption",
       body: [
-        "## Moving with your pet",
-        "Whether you are moving to another province or to another country, we can help your dog or cat make the journey safely. We take care of the practical steps so you can get on with your own move, and we keep you posted along the way.",
-        "## Moves within Thailand",
-        "- Door-to-door road transport between provinces, with regular stops for water, food and a stretch\n- Help with the health certificate and movement paperwork a trip may need\n- A travel plan that suits your pet's age, size and temperament",
-        "## Moves to and from other countries",
-        "Every country sets its own rules for animals coming in, and they change. We work through them with you:",
-        "- Checking what the destination country asks for\n- Microchip, vaccinations and any blood tests the destination needs, done with a vet\n- Export and import permits, and the health certificates that go with them\n- A travel crate the airline accepts, and time for your pet to get used to it before the trip\n- Booking a flight with an airline that carries animals safely\n- Customs and quarantine checks when your pet leaves and when they arrive\n- Collection at the airport and delivery to your new home, where that can be arranged",
-        "## Adopters and pet owners",
-        "If you are adopting one of our residents from abroad, we can arrange the journey to you. If you are moving with a pet of your own, ask us too.",
+        "## Adopting from abroad",
+        "You don't have to live in Thailand to give one of our dogs or cats a home. If you live in another country and one of our residents has caught your eye, we would love to hear from you.",
+        "## Getting to know the animal",
+        "An adoption starts with the animal, wherever you live. We will tell you what we know about their personality, health and history, and answer your questions. If you are able to visit us and meet them in person, so much the better.",
+        "## Paperwork and health requirements",
+        "Every country has its own rules for bringing an animal in, and they change from time to time. An overseas home usually needs some of the following, done with a vet before the animal travels:",
+        "- A microchip\n- Vaccinations, including rabies\n- Blood tests, where the destination country asks for them\n- Health certificates, and the export and import permits that go with them",
+        "We work through what your country asks for with you, one step at a time.",
+        "## The journey",
+        "The journey is arranged together with you: how the animal will travel, a crate they can travel in safely, and who meets them when they arrive. We help them get used to their crate before the day, so the trip is as calm as it can be.",
+        "## Still an adoption",
+        "Adopting from abroad is still an adoption: we ask every home the same questions, and put the same care into the match. The costs of the paperwork and the journey are something we talk through with you before anything is arranged.",
         "## Getting started",
-        "Get in touch and tell us where your pet is going, roughly when you hope to travel, and a little about your pet. Every move is different, so we talk it through with you before anything is booked.",
+        "Get in touch and tell us which animal you are interested in, where you live, and a little about your home. We will talk it through with you before anything is decided.",
       ].join("\n\n"),
     },
   },
@@ -980,7 +989,7 @@ const en = {
           foster: "Foster",
           volunteer: "Volunteer",
           donate: "Donate",
-          relocation: "Pet relocation",
+          "international-adoption": "International adoption",
           "shelter-friends-join": "Become a Shelter Friend",
         } as Record<string, string>,
         where: {
@@ -989,7 +998,7 @@ const en = {
           foster: "The Foster page, linked from the header and the \"How you can help\" strip.",
           volunteer: "The Volunteer page, linked from the header and the \"How you can help\" strip.",
           donate: "The Donate page, linked from the Donate button on every public page.",
-          relocation: "The Pet relocation page, linked from Services in the header, the footer, and the adoption listing for adopters abroad.",
+          "international-adoption": "The International adoption page (/adopt/international), linked from Adopt in the header and footer, and from the adoption listing for adopters abroad.",
           "shelter-friends-join": "The Become a Shelter Friend page (/friends/join), linked from Get involved in the header and footer, the Shelter Friends band on the home page, the Shelter Friends page and the Donate page.",
         } as Record<string, string>,
         starterNote:
@@ -3666,10 +3675,10 @@ const en = {
     fosterNav: "Foster",
     volunteerNav: "Volunteer",
     donateNav: "Donate",
-    relocationNav: "Pet relocation",
+    internationalNav: "International adoption",
     /** The line under the listing for someone adopting from another country. */
     fromAbroad: "Adopting from abroad?",
-    fromAbroadLink: "We can arrange the journey",
+    fromAbroadLink: "How international adoption works",
     openApp: "Open the app",
     pageTitle: "Meet Our Residents",
     pageSubtitle:

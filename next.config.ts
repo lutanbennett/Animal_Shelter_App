@@ -23,6 +23,16 @@ const nextConfig: NextConfig = {
   // octet. Ignored in production builds.
   allowedDevOrigins: ["192.168.1.*"],
 
+  // The Pet relocation page went live in 0.8.0 and was then taken off the
+  // site (relocation is not a shelter service); its row became the
+  // International adoption page (0104). Anyone with the old link lands on
+  // the new page rather than a 404. Here rather than a route file: redirects
+  // run before proxy.ts, so /relocation needs no place on the public-path
+  // lists to work signed out.
+  async redirects() {
+    return [{ source: "/relocation", destination: "/adopt/international", permanent: true }];
+  },
+
   typescript: {
     // `next build` (and `next typegen`) type-check with tsconfig.build.json,
     // which excludes `.next/dev` — the types a running `next dev` keeps

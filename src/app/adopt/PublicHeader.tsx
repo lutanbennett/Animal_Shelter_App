@@ -27,14 +27,13 @@ export type PublicSection =
   | "donate"
   | "friends"
   | "friends-join"
-  | "relocation";
+  | "adopt-international";
 
 /**
- * Header for the public pages (docs/design/, part 1 of the redesign). Five
- * entries — Adopt · Get involved ▾ · Services ▾ · Our work · About & contact
- * — then the
- * language toggle and Donate, the one thing every page of a shelter site
- * asks for. Below a laptop's width the entries move into a full-screen
+ * Header for the public pages (docs/design/, part 1 of the redesign). Four
+ * entries — Adopt ▾ · Get involved ▾ · Our work · About & contact (and
+ * Services ▾ once it has something in it) — then the language toggle and
+ * Donate, the one thing every page of a shelter site asks for. Below a laptop's width the entries move into a full-screen
  * menu (PublicNav.tsx) and only Donate stays beside the menu button.
  *
  * It also carries data-public-site, which is what switches the page to the
@@ -64,8 +63,18 @@ export async function PublicHeader({ current }: { current?: PublicSection }) {
     label,
     current: key === current,
   });
-  const entries: PublicNavEntry[] = [
-    { kind: "link", link: link("adopt", "/adopt", t.adopt.adoptNav) },
+  const allEntries: PublicNavEntry[] = [
+    // The animals, and adopting one from abroad (Lutan, 2026-09-27): an
+    // international adoption is adoption, not a service.
+    {
+      kind: "group",
+      key: "adopt",
+      label: t.adopt.adoptNav,
+      links: [
+        link("adopt", "/adopt", n.meetResidents),
+        link("adopt-international", "/adopt/international", t.adopt.internationalNav),
+      ],
+    },
     {
       kind: "group",
       key: "get-involved",
@@ -89,12 +98,14 @@ export async function PublicHeader({ current }: { current?: PublicSection }) {
       ],
     },
     // What the shelter offers the public, as opposed to ways to help it
-    // (Lutan, 2026-09-27): Pet relocation now, desexing drives to come.
+    // (Lutan, 2026-09-27). Empty since Pet relocation came off the site —
+    // relocation is not a shelter service — so hidden below until desexing
+    // drives give it an entry.
     {
       kind: "group",
       key: "services",
       label: n.services,
-      links: [link("relocation", "/relocation", t.adopt.relocationNav)],
+      links: [],
     },
     { kind: "link", link: link("our-work", "/our-work", t.adopt.ourWorkNav) },
     // No About page yet: the footer is where the shelter's address and
@@ -102,6 +113,8 @@ export async function PublicHeader({ current }: { current?: PublicSection }) {
     // this at its story instead.
     { kind: "link", link: { key: "about", href: "#contact", label: n.about, current: false } },
   ];
+  // A group with nothing in it is left out rather than shown as an empty menu.
+  const entries = allEntries.filter((entry) => entry.kind === "link" || entry.links.length > 0);
   const donate = link("donate", "/donate", t.adopt.donateNav);
 
   const account = user ? (
