@@ -171,7 +171,7 @@ Automated checks by: Claude (release manager session)  Date: 2026-09-25
 
 - [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — item 2 was answered in chat; items 1, 3 and 4 are open and need a person
 
-Manual verification by: pending: Lutan to read the six notes and the title (item 1), run `--drift production` and apply `0085`/`0086` (item 3), and decide what to do about the seven pending feature plans (item 4)
+Manual verification by: pending: Lutan to read the six notes and the title (item 1) and decide what to do about the seven pending feature plans (item 4). **Item 3 is done** — he ran `--drift production`, applied `0085` and `0086` together as the plan required, and reported no drift before deploying (recorded by Claude at his request, 2026-09-27)
 
 ### Result
 
