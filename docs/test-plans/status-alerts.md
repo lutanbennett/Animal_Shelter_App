@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **System status: alert me when a tile goes red** (ticked on this branch) |
 | Branch / worktree | `claude/status-alerts` @ `C:\Development\Animal_Shelter_status-alerts` |
 | Dev server | `localhost:3006` (`next dev`); the Worker path under `wrangler dev --env test --test-scheduled` on the OpenNext build |
-| PR | opened from this commit |
+| PR | [#174](https://github.com/lutanbennett/Animal_Shelter_App/pull/174) |
 | Tested by / date | Claude (automated) / 2026-09-27 |
 | Carries a migration? | no — reads and writes `0098_status_alerts.sql`, which lands first in its own PR (#161) |
 | Tested at SHA | `9081d1b` (the merge of `origin/main` at `96ba160`; later commits touch only this plan) |
