@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "A date field cannot be cleared once it has been set, on mobile." |
 | Branch / worktree | `claude/mobile-date-clear` @ `C:\Development\Animal_Shelter_mobile-date-clear` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3007` |
-| PR | opened after this commit |
+| PR | #188 |
 | Tested by / date | Claude, 2026-09-27 |
 | Carries a migration? | no |
 | Tested at SHA | `30d60d9` (feature commit; `sync` found `origin/main` already merged) |
@@ -30,7 +30,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — all three checks passed on #188 at the test-plan commit. A second `sync` then merged #187 (weight schema: a migration, a script, docs — nothing under `src/`); typecheck and lint re-run on the merged tree exited 0, build not re-run since the merge touched no built code
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -163,7 +163,7 @@ Manual verification by: pending: items 1–3 above — a real phone's picker wit
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR — in the body of #188
 - [ ] Handed to the production release manager — n/a: not yet — after manual verification
 
 Result: pass
