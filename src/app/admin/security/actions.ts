@@ -175,6 +175,48 @@ export async function updateUserRole(userId: string, role: string): Promise<Acti
 }
 
 /**
+ * Which clinic a vet account belongs to (user_roles.vet_id, 0102), or none.
+ * The vet-visit forms offer that clinic only, and refuse a vet account with
+ * none set (src/lib/vets/scope.ts). The database refuses a clinic on any
+ * other role (user_roles_vet_id_only_for_vets), and the update is filtered
+ * to vet rows so that refusal is never the answer an admin sees.
+ */
+export async function updateVetClinic(userId: string, vetId: string | null): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.admin.security.errors;
+  return runAction("security.updateVetClinic", t.common.somethingWentWrong, async () => {
+    const denied = await refuseUnlessAdmin(t);
+    if (denied) return denied;
+
+    const admin = createAdminClient();
+    if (vetId) {
+      const { data: vet, error: vetError } = await admin
+        .from("vets")
+        .select("id")
+        .eq("id", vetId)
+        .maybeSingle();
+      if (vetError) {
+        return unexpectedFailure("security.updateVetClinic", vetError, t.common.somethingWentWrong);
+      }
+      if (!vet) return refuse(e.clinicNotFound);
+    }
+
+    const { data, error } = await admin
+      .from("user_roles")
+      .update({ vet_id: vetId })
+      .eq("user_id", userId)
+      .eq("role", "vet")
+      .select("user_id");
+    if (error) {
+      return unexpectedFailure("security.updateVetClinic", error, t.common.somethingWentWrong);
+    }
+    if (!data?.length) return refuse(e.clinicOnlyForVets);
+    revalidateSecurity();
+    return { ok: true };
+  });
+}
+
+/**
  * The admin's "reset password": a fresh temporary password, returned once,
  * and the must-change flag set again so the person picks their own at the
  * next sign-in. An admin can't issue one for themselves — they change

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { loadVetScope, scopeAllowsVet } from "@/lib/vets/scope";
 
 export type VetVisitState = { error: string } | undefined;
 
@@ -40,6 +41,12 @@ export async function bookVetVisit(
   }
 
   const supabase = await createClient();
+  // The page shows a vet only their own clinic; this is the check a posted
+  // form can't get round (src/lib/vets/scope.ts).
+  const scope = await loadVetScope(supabase);
+  if (scope.kind === "unlinked") return { error: t.vetVisits.noClinicForAccount };
+  if (!scopeAllowsVet(scope, vetId)) return { error: t.vetVisits.errors.notYourClinic };
+
   const { data: booked, error } = await supabase.rpc("schedule_bulk_appointments", {
     p_resident_ids: residentIds,
     p_vet_id: vetId,

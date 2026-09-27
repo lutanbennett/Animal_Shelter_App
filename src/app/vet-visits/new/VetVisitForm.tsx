@@ -15,14 +15,24 @@ export type VetOption = {
   clinic_name: string | null;
 };
 
+export function vetOptionLabel(v: VetOption) {
+  return v.clinic_name ? `${v.name} — ${v.clinic_name}` : v.name;
+}
+
+/**
+ * `fixedVet` is a vet account's own clinic (src/lib/vets/scope.ts): shown
+ * as the clinic the visit is for rather than a dropdown with one entry.
+ */
 export function VetVisitForm({
   residents,
   vets,
+  fixedVet,
   doctorNamesByVet,
   preselectedResidentIds,
 }: {
   residents: ResidentOption[];
   vets: VetOption[];
+  fixedVet: VetOption | null;
   doctorNamesByVet: DoctorNamesByVet;
   preselectedResidentIds: string[];
 }) {
@@ -31,7 +41,7 @@ export function VetVisitForm({
   const [selectedIds, setSelectedIds] = useState<string[]>(
     preselectedResidentIds,
   );
-  const [vetId, setVetId] = useState("");
+  const [vetId, setVetId] = useState(fixedVet?.id ?? "");
   const [statusTouched, setStatusTouched] = useState(false);
   const [status, setStatus] = useState<"scheduled" | "completed">(
     "scheduled",
@@ -64,6 +74,15 @@ export function VetVisitForm({
           <label htmlFor="vetId" className="text-sm font-medium text-muted">
             {t.vetVisits.vetClinic}
           </label>
+          {fixedVet ? (
+            <>
+              <input type="hidden" name="vetId" value={fixedVet.id} />
+              <p id="vetId" className="py-2 text-sm text-foreground">
+                {vetOptionLabel(fixedVet)}
+              </p>
+              <p className="text-xs text-muted">{t.vetVisits.ownClinicHint}</p>
+            </>
+          ) : (
           <select
             id="vetId"
             name="vetId"
@@ -77,10 +96,11 @@ export function VetVisitForm({
             </option>
             {vets.map((v) => (
               <option key={v.id} value={v.id}>
-                {v.clinic_name ? `${v.name} — ${v.clinic_name}` : v.name}
+                {vetOptionLabel(v)}
               </option>
             ))}
           </select>
+          )}
         </div>
 
         <DoctorNameField
@@ -137,6 +157,7 @@ export function VetVisitForm({
             <option value="scheduled">{t.vetVisits.statusScheduled}</option>
             <option value="completed">{t.vetVisits.statusCompleted}</option>
           </select>
+          <p className="text-xs text-muted">{t.vetVisits.statusHint}</p>
         </div>
       </div>
 

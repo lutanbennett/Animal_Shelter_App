@@ -522,7 +522,7 @@ const manual: Manual = {
           steps: [
             "Choose one or more residents and the vet or clinic (vets are set up under Management → Vets). If you know which doctor will see them, type their name in Doctor — it is optional. Names already recorded for that vet are offered as you type, so pick one rather than spelling it a new way.",
             "Enter the date and time. Use a past date to record a visit that already happened, including emergencies.",
-            "Give the reason, set the status — Scheduled (upcoming) or Completed (already happened) — and add notes.",
+            "Give the reason, set the status and add notes. The status follows the date you enter — a past date sets Completed, a future one Scheduled — but it is yours to change: choose Scheduled for a past visit you can't yet confirm took place.",
             "Tap Book vet visit. With one resident you go straight to their Vet Appointments page, where the new visit is listed; with several, back to the Residents list.",
             "On the resident's Vet Appointments page each visit has quick links to log a blood test, prescription, weight or procedure against that visit, and to send the resident to hospital.",
             "After the visit, tap Edit on its row to mark it Completed (or Cancelled), fix the date or vet, add the doctor who saw them, and enter the cost from the invoice. The vet's hub totals those costs for the period shown.",
@@ -534,7 +534,11 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "A visit whose date has passed but is still Scheduled shows as overdue on the hub and the Vets pages until its status is updated.",
+              text: "A visit whose date has passed but is still Scheduled shows as overdue on the hub and the Vets pages until its status is updated. That is why the status is a choice and not worked out from the date: Scheduled means nobody has confirmed the visit happened, Completed that it did, and Cancelled that it didn't.",
+            },
+            {
+              kind: "note",
+              text: "Signed in as a vet, the form is for your own clinic: it is shown by name instead of the list of clinics. If your account hasn't been linked to a clinic yet the form says so — ask a shelter admin to set it (Accounts and roles).",
             },
           ],
         },
@@ -1123,6 +1127,7 @@ const manual: Manual = {
             "Create a user with an email and a role. A temporary password is generated and shown once — copy it and pass it on (LINE is fine; it only works until they've signed in). The first time they sign in with it they must choose their own password before anything else opens. Someone who will only use Google sign-in can ignore the temporary password.",
             "Someone signing in with Google for the first time is turned away with \"hasn't been given access yet\" and appears under Access requests at the top of the page. Choose a role and tap Approve, then ask them to try again — or Deny to remove the account. If their Google email matches a login you created, the two are linked automatically.",
             "Change a role from the dropdown in the table. Issue temporary password does what it says — their old password stops working and they choose a new one at their next sign-in. You can't change your own role, reset your own password here or delete yourself; change your own password from Change password at the bottom of the menu.",
+            "A vet account also needs its clinic: choose it from the Clinic dropdown that appears under the role. The vet-visit forms then offer that clinic only, and a vet account with no clinic set can't record visits until one is chosen, so it's outlined as a reminder. Changing the role away from vet clears the clinic.",
             "Public viewer is for testing the website as a visitor while the testing sites are closed to the public: it signs in, sees every public page exactly as a stranger will once the site is open, and never sees the app — any app address sends it to the home page, and the public header offers only Sign out. Give it to testers, never to staff.",
             "When someone leaves, Archive them rather than delete: they can no longer sign in, they disappear from the maintenance Assigned to list, and their name stays on the jobs they did. Archived accounts sit at the bottom of the table with Restore beside them. Delete is for accounts made by mistake — it removes them from past jobs too.",
           ],

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { NOT_DECEASED } from "@/lib/residents/status";
 import { loadDoctorNamesByVet } from "@/lib/vets/doctors";
+import { loadVetScope } from "@/lib/vets/scope";
 import { VetVisitForm, type ResidentOption, type VetOption } from "./VetVisitForm";
 
 export default async function NewVetVisitPage(
@@ -24,6 +25,20 @@ export default async function NewVetVisitPage(
   }
 
   const supabase = await createClient();
+  const scope = await loadVetScope(supabase);
+
+  if (scope.kind === "unlinked") {
+    return (
+      <main className="flex flex-1 flex-col gap-4 p-6">
+        <h1 className="text-2xl font-semibold text-foreground">{t.vetVisits.pageTitle}</h1>
+        <p className="max-w-2xl text-sm text-muted">{t.vetVisits.noClinicForAccount}</p>
+      </main>
+    );
+  }
+
+  // A vet account books against its own clinic only (src/lib/vets/scope.ts).
+  let vetsQuery = supabase.from("vets").select("id, name, clinic_name").order("name");
+  if (scope.kind === "clinic") vetsQuery = vetsQuery.eq("id", scope.vetId);
 
   const [residentsResult, vetsResult, doctorNamesByVet] = await Promise.all([
     supabase
@@ -31,7 +46,7 @@ export default async function NewVetVisitPage(
       .select("resident_id, name, thai_name, current_status")
       .or(NOT_DECEASED)
       .order("name"),
-    supabase.from("vets").select("id, name, clinic_name").order("name"),
+    vetsQuery,
     loadDoctorNamesByVet(supabase),
   ]);
 
@@ -69,6 +84,7 @@ export default async function NewVetVisitPage(
       <VetVisitForm
         residents={residents}
         vets={vets}
+        fixedVet={scope.kind === "clinic" ? (vets[0] ?? null) : null}
         doctorNamesByVet={doctorNamesByVet}
         preselectedResidentIds={[...preselectedIds]}
       />
