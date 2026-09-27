@@ -46,6 +46,19 @@ const manual: Manual = {
       "Can see everything; can add photos and move residents between enclosures.",
   },
 
+  filter: {
+    showingRole: (role, count) =>
+      `Showing the ${count} topics for the ${role} role.`,
+    showEverything: "Show everything",
+    findHint:
+      "The rest are tucked away, not gone: Find on page (Ctrl+F) still finds them, greyed, to answer \"can I do this?\".",
+    showingEverything: (role) =>
+      `Showing everything. Topics outside the ${role} role are greyed.`,
+    showOnlyRole: (role) => `Show only the ${role} role`,
+    notForRole: (role) => `Not part of the ${role} role`,
+    you: "You",
+  },
+
   sections: [
     // ------------------------------------------------------------------
     {
@@ -161,7 +174,7 @@ const manual: Manual = {
           id: "roles",
           title: "Roles — who can do what",
           intro:
-            "Every account has one role. The app hides buttons you can't use, and the database refuses the change even if a button is reached another way. Sections below say which roles can do each task.",
+            "Every account has one role. The app hides buttons you can't use, and the database refuses the change even if a button is reached another way. Sections below say which roles can do each task. The manual opens on the topics for your own role; Show everything, above Roles at a glance, brings back the rest, greyed where they aren't part of your role.",
         },
       ],
     },
@@ -175,8 +188,17 @@ const manual: Manual = {
         "What you need to do today: the work assigned to you, in one place. For now that is your recurring jobs (the routine that comes round every week or month, like the Monday stocktake) and your maintenance jobs; other kinds of work will appear here as further sections as they are added.",
       topics: [
         {
+          id: "my-tasks-vet",
+          title: "My tasks for a vet",
+          roles: ["vet"],
+          path: "My tasks (first in the menu)",
+          intro:
+            "My tasks is the page you land on when you sign in, and you can get back to it from the top of the menu. Nothing is assigned to a vet through it yet: vets aren't given maintenance jobs or recurring jobs, so it says nothing is assigned to you. Your work is the vet visits booked for your clinic — each resident's Vet Appointments page lists theirs (see Medical records).",
+        },
+        {
           id: "my-tasks-page",
           title: "Seeing what's assigned to you",
+          roles: ["admin", "management", "staff", "volunteer"],
           path: "My tasks (first in the menu)",
           steps: [
             "My tasks is the page you land on when you sign in or tap Open the app on the public website; get back to it any time from the top of the menu. Every maintenance job you are on that isn't Completed is listed, grouped as Overdue, Due today, Coming up and No due date — most urgent first.",
@@ -195,6 +217,7 @@ const manual: Manual = {
         {
           id: "my-recurring-jobs",
           title: "Doing your recurring jobs",
+          roles: ["admin", "management", "staff", "volunteer"],
           path: "My tasks → Recurring jobs",
           intro:
             "Recurring jobs are the routine management has set to come round on a calendar — the Monday stocktake, ordering medication after it, the monthly worming. Each date appears on your list for its day: staff and volunteers can be given one as well as management. Vets are not given recurring jobs — a vet's work comes from their vet appointments.",
@@ -242,7 +265,7 @@ const manual: Manual = {
           screenshot: {
             src: "/manual/residents-list.png",
             alt: "The residents list with search, zone and enclosure filters",
-            caption: "The residents list on a computer. Phones show just the ID and name — browse by enclosure instead (see Enclosures).",
+            caption: "The residents list on a computer. Phones show just the ID and name — staff and volunteers can browse by enclosure instead (see Enclosures).",
           },
           callouts: [
             {
@@ -731,7 +754,7 @@ const manual: Manual = {
         {
           id: "maintenance-board",
           title: "Tracking jobs on the board",
-          roles: ["admin", "management", "staff"],
+          roles: ["admin", "management", "staff", "volunteer"],
           path: "Maintenance",
           steps: [
             "Staff and volunteers open on the jobs assigned to them; switch Assigned to from Me to Everyone to see the whole board (management and admin start there). Filter by zone or enclosure. Completed jobs from the last 30 days are shown; tick Show all completed jobs for older ones.",
@@ -848,7 +871,7 @@ const manual: Manual = {
       title: "Management",
       icon: ClipboardList,
       intro:
-        "For the management and admin roles: the monthly reporting dashboard and the reference lists the rest of the app picks from.",
+        "Mostly for the management and admin roles: the monthly reporting dashboard and the reference lists the rest of the app picks from. Stocktake is here too for staff and volunteers, and staff record deliveries.",
       topics: [
         {
           id: "dashboard",

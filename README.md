@@ -676,7 +676,8 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
   its reverse for a death withdrawn as recorded in error.
 - `src/lib/manual/` — the in-app user manual's content (`en.ts`, English
   only so far), rendered by `src/app/manual/page.tsx` at `/manual` for
-  every signed-in role. Its screenshots live in `public/manual/` and are
+  every signed-in role, filtered to the reader's role by each topic's
+  `roles` (`filter.ts`; `?view=all` shows the rest, greyed). Its screenshots live in `public/manual/` and are
   regenerated, not edited: `node scripts/manual-screenshots.mjs` opens the
   machine's Edge/Chrome on the running dev server, waits for you to sign
   in as an admin, and captures every screen the manual references. It
