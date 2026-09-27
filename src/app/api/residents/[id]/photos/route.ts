@@ -6,11 +6,18 @@ import { getT } from "@/lib/i18n/get-t";
 import { assertPhotoWriteAccess } from "@/lib/auth/require-role";
 import { refreshDeceasedArchiveIfNeeded } from "@/lib/archive/refresh-deceased-archive";
 import {
+  ensureResidentAdoptionUpdateFolder,
   ensureResidentPhotosFolder,
   getDriveClient,
   uploadImageToFolder,
 } from "@/lib/google/drive";
-import { PHOTO_CATEGORIES, dateToYymm, driveImageUrl, type PhotoCategory } from "@/lib/google/drive-client";
+import {
+  PHOTO_CATEGORIES,
+  dateToYymm,
+  dateToYyyymmdd,
+  driveImageUrl,
+  type PhotoCategory,
+} from "@/lib/google/drive-client";
 import { withDriveErrors } from "@/lib/google/drive-errors";
 
 const ALLOWED_MIME_TYPES = new Set([
@@ -64,8 +71,19 @@ async function handlePost(
     );
   }
 
+  // A photo an adopter sent is tagged with its update (0097) and filed
+  // under Adoption updates/<YYYYMMDD>/ instead of a Photos category, so it
+  // posts no category. Everything else about the upload is the same.
+  const adoptionUpdateId = formData.get("adoptionUpdateId");
+  if (adoptionUpdateId !== null && (typeof adoptionUpdateId !== "string" || !adoptionUpdateId)) {
+    return NextResponse.json({ error: "Invalid adoption update." }, { status: 400 });
+  }
+
   const category = formData.get("category");
-  if (typeof category !== "string" || !PHOTO_CATEGORIES.includes(category as PhotoCategory)) {
+  if (
+    !adoptionUpdateId &&
+    (typeof category !== "string" || !PHOTO_CATEGORIES.includes(category as PhotoCategory))
+  ) {
     return NextResponse.json(
       { error: `Folder must be one of: ${PHOTO_CATEGORIES.join(", ")}.` },
       { status: 400 },
@@ -84,6 +102,7 @@ async function handlePost(
   const [
     { data: resident, error: residentError },
     { data: state },
+    { data: update },
   ] = await Promise.all([
     supabase
       .from("residents")
@@ -99,6 +118,15 @@ async function handlePost(
       .eq("resident_id", id)
       .limit(1)
       .returns<{ is_deceased: boolean }[]>(),
+    typeof adoptionUpdateId === "string"
+      ? supabase
+          .from("adoption_updates")
+          .select("id, received_on")
+          .eq("id", adoptionUpdateId)
+          .eq("resident_id", id)
+          .limit(1)
+          .returns<{ id: string; received_on: string }[]>()
+      : { data: null },
   ]);
 
   const residentRow = resident?.[0];
@@ -111,10 +139,24 @@ async function handlePost(
   // summary are regenerated below so they list it.
   const isDeceased = state?.[0]?.is_deceased ?? false;
 
+  // record_attachment refuses an update about another resident too; this
+  // answers before anything is written to Drive.
+  const updateRow = update?.[0];
+  if (adoptionUpdateId && !updateRow) {
+    const { t } = await getT();
+    return NextResponse.json({ error: t.adoptionUpdates.errors.notFound }, { status: 404 });
+  }
+
   const drive = getDriveClient();
-  const yymm = dateToYymm(dateTaken);
-  const { residentFolderId, uploadFolderId, isNewResidentFolder } =
-    await ensureResidentPhotosFolder(drive, residentRow, category, yymm);
+  // sub_folder is the folder under the resident's own: a Photos category,
+  // or for an adopter's photo the update's <YYYYMMDD> under Adoption
+  // updates/ (the archive index rebuilds the path from it).
+  const subFolder = updateRow
+    ? dateToYyyymmdd(updateRow.received_on)
+    : (category as PhotoCategory);
+  const { residentFolderId, uploadFolderId, isNewResidentFolder } = updateRow
+    ? await ensureResidentAdoptionUpdateFolder(drive, residentRow, subFolder)
+    : await ensureResidentPhotosFolder(drive, residentRow, subFolder, dateToYymm(dateTaken));
 
   if (isNewResidentFolder) {
     await supabase
@@ -136,8 +178,9 @@ async function handlePost(
       p_owner_id: id,
       p_drive_file_id: driveFileId,
       p_file_name: file.name,
-      p_sub_folder: category,
+      p_sub_folder: subFolder,
       p_date_taken: dateTaken,
+      p_adoption_update_id: updateRow?.id ?? null,
     },
   );
 

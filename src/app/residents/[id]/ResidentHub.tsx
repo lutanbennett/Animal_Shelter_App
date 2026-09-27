@@ -120,6 +120,16 @@ export type ProcedureRow = {
 };
 export type BloodTestRow = { id: string; date: string };
 
+/** The hub's Adoption updates card (0097). */
+export type AdoptionUpdatesSummary = {
+  count: number;
+  latest: { received_on: string; channel: string } | null;
+  /** Has had an Adopt placement, now or before a return to the shelter. */
+  everAdopted: boolean;
+  /** Admin, management or staff, on a resident who has been adopted. */
+  canAdd: boolean;
+};
+
 const STATUS_TONE: Record<string, StatCardTone> = {
   Hospitalised: "warning",
   Deceased: "neutral",
@@ -169,6 +179,7 @@ export function ResidentHub({
   procedures,
   bloodTests,
   photoCount,
+  adoptionUpdates,
   now,
   tagOrigin,
 }: {
@@ -205,6 +216,7 @@ export function ResidentHub({
   procedures: ProcedureRow[];
   bloodTests: BloodTestRow[];
   photoCount: number;
+  adoptionUpdates: AdoptionUpdatesSummary;
   /** Server-computed timestamp (ISO string) — avoids calling Date.now() during render. */
   now: string;
   /** Origin for the RFID-card link (src/lib/tags/origin.ts). */
@@ -553,6 +565,33 @@ export function ResidentHub({
               tone="neutral"
               href={`${base}/photos`}
             />
+            {/* Any resident ever adopted keeps the card, returned or not —
+                the news from their time away stays on the record
+                (docs/decisions.md, 2026-09-27). */}
+            {(adoptionUpdates.everAdopted || adoptionUpdates.count > 0) && (
+              <StatCard
+                title={t.adoptionUpdates.title}
+                icon={SECTION_ICONS["adoption-updates"]}
+                value={`${adoptionUpdates.count}`}
+                detail={
+                  adoptionUpdates.latest
+                    ? t.adoptionUpdates.latest(
+                        formatDate(adoptionUpdates.latest.received_on, locale),
+                        (t.adoptionUpdates.channels as Record<string, string>)[
+                          adoptionUpdates.latest.channel
+                        ] ?? adoptionUpdates.latest.channel,
+                      )
+                    : t.adoptionUpdates.noneYet
+                }
+                tone={adoptionUpdates.count > 0 ? "success" : "neutral"}
+                href={`${base}/adoption-updates`}
+                actions={
+                  adoptionUpdates.canAdd
+                    ? [{ href: `${base}/adoption-updates/new`, label: t.adoptionUpdates.addUpdate }]
+                    : []
+                }
+              />
+            )}
             <StatCard
               title={t.residents.hub.diet}
               icon={SECTION_ICONS.diet}

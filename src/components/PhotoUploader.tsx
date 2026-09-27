@@ -27,10 +27,16 @@ type QueueItem = {
 // reuses the folder the first one just created/cached.
 const CONCURRENCY = 1;
 
-function uploadFile(
+/**
+ * Sends one photo to the resident photo route. `fields` is the rest of the
+ * form: dateTaken plus either a category or, for a photo an adopter sent,
+ * adoptionUpdateId (AdoptionUpdateForm) — one route for both.
+ */
+export function uploadResidentPhoto(
   t: Dictionary,
   residentId: string,
-  item: Pick<QueueItem, "file" | "dateTaken" | "category">,
+  file: File,
+  fields: Record<string, string>,
   onProgress: (percent: number) => void,
 ): Promise<{ error?: string }> {
   return new Promise((resolve) => {
@@ -57,9 +63,8 @@ function uploadFile(
     xhr.onerror = () => resolve({ error: t.photos.uploader.networkError });
 
     const formData = new FormData();
-    formData.append("file", item.file);
-    formData.append("dateTaken", item.dateTaken);
-    formData.append("category", item.category);
+    formData.append("file", file);
+    for (const [key, value] of Object.entries(fields)) formData.append(key, value);
     xhr.send(formData);
   });
 }
@@ -92,8 +97,12 @@ export function PhotoUploader({ residentId }: { residentId: string }) {
           const item = items[index];
           index += 1;
           updateItem(item.key, { status: "uploading" });
-          const result = await uploadFile(t, residentId, item, (progress) =>
-            updateItem(item.key, { progress }),
+          const result = await uploadResidentPhoto(
+            t,
+            residentId,
+            item.file,
+            { dateTaken: item.dateTaken, category: item.category },
+            (progress) => updateItem(item.key, { progress }),
           );
           if (result.error) {
             updateItem(item.key, { status: "error", error: result.error });

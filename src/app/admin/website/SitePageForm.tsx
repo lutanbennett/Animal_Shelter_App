@@ -35,12 +35,19 @@ export function SitePageForm({
   translations,
   canManageTranslations,
   publicPath,
+  starterBody,
 }: {
   page: SitePageRow;
   translations: { title?: TranslationRow; body?: TranslationRow };
   canManageTranslations: boolean;
   /** Where the page shows on the site — a route, or a section anchor. */
   publicPath: string;
+  /**
+   * The standard text the public page shows while the body is empty
+   * (sitePageStarter), put in the box so the admin edits it rather than
+   * starting from nothing. It is saved only when they save.
+   */
+  starterBody?: string;
 }) {
   const [state, formAction, pending] = useActionState(
     updateSitePage.bind(null, page.slug),
@@ -50,6 +57,8 @@ export function SitePageForm({
   const p = t.admin.website.pages;
   const label = p.slugs[page.slug];
   const formId = `page-${page.slug}-form`;
+  const showStarter = !page.body && Boolean(starterBody);
+  const body = showStarter ? starterBody! : page.body;
 
   return (
     <section
@@ -98,12 +107,13 @@ export function SitePageForm({
           {p.body}
         </label>
         <p className="text-xs text-muted">{p.bodyHint}</p>
+        {showStarter && <p className="text-xs font-medium text-warning">{p.starterNote}</p>}
         <textarea
           id={`${page.slug}-body`}
           name="body"
           form={formId}
-          rows={Math.min(24, Math.max(8, page.body.split("\n").length + 2))}
-          defaultValue={page.body}
+          rows={Math.min(24, Math.max(8, body.split("\n").length + 2))}
+          defaultValue={body}
           className={inputClass}
         />
         {translations.body && (

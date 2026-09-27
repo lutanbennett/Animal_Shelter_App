@@ -22,6 +22,7 @@ import {
   Mail,
   MapPin,
   MessageCircle,
+  MessageCircleHeart,
   MessageCircleMore,
   MessageSquare,
   Navigation,
@@ -60,6 +61,7 @@ export const SECTION_ICONS = {
   procedures: Scissors,
   "blood-tests": Droplet,
   diet: Utensils,
+  "adoption-updates": MessageCircleHeart,
 } satisfies Record<string, LucideIcon>;
 
 export type HubSection = keyof typeof SECTION_ICONS;

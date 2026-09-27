@@ -1,3 +1,4 @@
+import { toCsv } from "@/lib/csv";
 import { isoDatePlus, parseCustomWindow, type ForecastWindow, type ForecastWindowParams } from "./forecast-window";
 
 /**
@@ -230,11 +231,6 @@ export function notPricedTarget(
   };
 }
 
-/** Quotes one CSV field only when it has to (RFC 4180). */
-function csvField(value: string): string {
-  return /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
-}
-
 /**
  * The month-by-category table as CSV, for the monthly report. Same months
  * and the same switched-on categories as the table on screen.
@@ -270,5 +266,5 @@ export function cashflowCsv(
       round(monthTotal(month, shown)),
     ]);
   }
-  return lines.map((row) => row.map(csvField).join(",")).join("\r\n") + "\r\n";
+  return toCsv(lines);
 }

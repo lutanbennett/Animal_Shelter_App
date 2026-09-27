@@ -177,7 +177,7 @@ Automated checks by: Claude (release manager session)  Date: 2026-09-27
 
 - [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — all four items are open and need a person
 
-Manual verification by: pending: Lutan to read the seven notes and the title (item 1) and run `--drift production` before deploying (item 2)
+Manual verification by: pending: Lutan to read the seven notes and the title (item 1), plus items 3 and 4. **Item 2 is done** — he ran `--drift production`, confirmed no drift with everything applied, and deployed (recorded by Claude at his request, 2026-09-27)
 
 ### Result
 

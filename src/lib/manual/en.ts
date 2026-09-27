@@ -296,6 +296,7 @@ const manual: Manual = {
             "Link for this resident's RFID card: the address to program into the card by the kennel. Tap Copy link, or select it by hand; the residents list has the same copy icon on every row. Someone who scans the card while signed in lands on this hub; a visitor sees a public card for the resident — photo, name, age, sex, temperament and bio — with a link to the adoption profile when the resident is shown on the public site (Edit resident details).",
             "Housing & Status: current enclosure (or hospital / carer) and the actions that apply right now — Move enclosure, Send to hospital, Foster / adopt, and so on.",
             "Photos: the Google Drive gallery for this resident.",
+            "Adoption updates: news from the adopter — how many updates there are and the latest. It appears on any resident who has been adopted, including one since returned to the shelter. See Adoption updates below.",
             "Medical cards: Immunizations, Vet Appointments, Prescriptions, Weight, Procedures and Blood Tests. Each shows the latest state (for example \"2 missing\" mandatory vaccines, or the next vet visit) and a quick link to add a record.",
             "On a phone the hub is split into two tabs — Overview and Medical.",
           ],
@@ -304,6 +305,36 @@ const manual: Manual = {
             alt: "A resident hub with the details card, housing card and medical cards",
             caption: "A resident hub. Green, orange and red card colours mean fine, needs attention soon, and overdue or missing.",
           },
+        },
+        {
+          id: "adoption-updates",
+          title: "Adoption updates",
+          roles: ["admin", "management", "staff"],
+          path: "Resident hub → Adoption updates",
+          intro:
+            "When an adopter sends news — a message on LINE or Facebook, an email, or on a visit — record it on the animal's hub so it stays on their record, photos and all.",
+          steps: [
+            "Find the resident: on the Residents list choose Everywhere, as adopted residents are in neither On-site nor Off-site, and search for their name.",
+            "On the hub, tap Add update on the Adoption updates card.",
+            "Date received: the day the news arrived. Sent by: the adopter from their adoption is already chosen — change it if a partner or someone else in the family sent it, or choose Not recorded.",
+            "Came in by: LINE, Facebook, Email or Visit. What they said: the message, in your words or theirs — optional when there are only photos.",
+            "Photos: choose any photos they sent — several at once is fine. Tap Save update. The update is saved first, then each photo uploads with a progress bar, and you're taken to the list of updates.",
+            "Each update lists its date, how it came in, who sent it, the note and its photos. Edit / add photos corrects any of it or adds more photos; Delete removes the update and says how many photos go with it.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "Every photo an adopter sent stays labelled with who sent it, when and how — on the update, and on the resident's Photos page too. In Drive they are kept apart from the shelter's own, under Adoption updates in the resident's folder.",
+            },
+            {
+              kind: "tip",
+              text: "If a photo doesn't upload, the update itself is already saved: the form stays open and Save again retries just the photos that failed.",
+            },
+            {
+              kind: "note",
+              text: "A resident returned to the shelter keeps the updates from their time away, and the card stays on their hub. Volunteers and vets can read updates but not add them.",
+            },
+          ],
         },
         {
           id: "edit",
@@ -607,6 +638,7 @@ const manual: Manual = {
             "Choose the Drive folder the batch belongs in and, optionally, the date taken.",
             "Drop photos on the upload area or tap it to choose from your phone. You can select several at once.",
             "The first photo ever uploaded becomes the profile photo. To change it, hover or tap a photo and choose Set as profile photo, or pick one on the Edit page.",
+            "Photos an adopter sent carry a coloured label with who sent them, the date and how they came in, and opening one links back to its update. Once a resident has both kinds, the buttons above the gallery show just the shelter's photos or just the adopters'. Adopters' photos are added from Adoption updates, not here.",
           ],
           screenshot: {
             src: "/manual/resident-photos.png",
@@ -893,6 +925,7 @@ const manual: Manual = {
             "To count everything at once, use the Stocktake link at the top of the page (see Doing a stocktake). To correct one item, tap Count on the row and enter what is in the cupboard, in the medication's own unit (tablets, ml…). In stock shows that figure and how long ago it was counted; saving the same figure again records a fresh count. Leave it blank for an item nobody has counted — it reads Not counted, which is different from 0, Out of stock.",
             "Days of stock is worked out from the last count and the Next 30 days figure: what has probably been used since the count is taken off, and what is left is divided by the daily rate. An item with nothing due in the next 30 days doesn't run out. Probably used up since the count means the forecast has used the whole count — count it again.",
             "To be warned in time, tap Edit and enter the supplier's reorder lead time in days. When the days of stock falls to that figure or below, the row is flagged Reorder. Leave it blank and the item is never flagged.",
+            "When stock arrives, use the Record a delivery link at the top of the page (see Recording a delivery). A delivery doesn't change In stock — the next count does.",
           ],
           screenshot: {
             src: "/manual/management-medications.png",
@@ -912,6 +945,7 @@ const manual: Manual = {
             "To count everything at once, use the Stocktake link at the top of the page (see Doing a stocktake). To correct one item, tap Count on the row and enter what is in the cupboard, in the diet's own unit (g, cans…). In stock shows that figure and how long ago it was counted; saving the same figure again records a fresh count. Leave it blank for an item nobody has counted — it reads Not counted, which is different from 0, Out of stock.",
             "Days of stock is worked out from the last count and the Next 30 days figure: what has probably been used since the count is taken off, and what is left is divided by the daily rate. An item with nothing due in the next 30 days doesn't run out. Probably used up since the count means the forecast has used the whole count — count it again.",
             "To be warned in time, tap Edit and enter the supplier's reorder lead time in days. When the days of stock falls to that figure or below, the row is flagged Reorder. Leave it blank and the item is never flagged.",
+            "When stock arrives, use the Record a delivery link at the top of the page (see Recording a delivery). A delivery doesn't change In stock — the next count does.",
           ],
           screenshot: {
             src: "/manual/management-diets.png",
@@ -932,6 +966,7 @@ const manual: Manual = {
             "If the figure hasn't changed, tap Same as last time instead of retyping it. That records a fresh count of the same figure. Typing a number turns the tick off, and tapping the tick clears what you typed, so a row is always one or the other.",
             "Tap Review and save. The summary lists every item you counted, old → new, with changes of half or more marked Big change and shown first — check those before saving. Tap Save to save the whole sheet in one go: either every count is saved or none is.",
             "If you try to leave the page with counts that aren't saved, you are asked first.",
+            "Staff and managers also see Record a delivery at the top of the page, for stock that has just arrived (see Recording a delivery).",
           ],
           callouts: [
             {
@@ -946,18 +981,42 @@ const manual: Manual = {
           roles: ["admin", "management"],
           path: "Management → Stock between counts",
           intro:
-            "Sets how much each count went down or up between two stocktakes beside what the prescriptions and diets planned for the same dates, so that big gaps stand out. It is not a record of what was actually used — see the warning below.",
+            "Shows what each medication and food was used between two stocktakes, beside what the prescriptions and diets planned for the same dates, so that big gaps stand out. Used is the earlier count, plus the deliveries recorded in between, minus the later count — so it is only as good as the delivery records (see the warning below).",
           steps: [
             "Open it from the Management page, or from the link at the top of Management → Medications or → Diets. It needs an item to have been counted in stocktakes on two different days; until then the item isn't shown.",
             "By default each item's latest count is compared with its last count on an earlier day. A recount on the same day replaces the earlier one rather than being compared with it. To compare two particular stocktakes instead, pick them under Earlier stocktake and Later stocktake and tap Compare; Back to last two counts returns to the default.",
+            "Deliveries recorded is what was recorded under Deliveries between the two counts, and how many deliveries that was. A delivery on the day of a stocktake counts towards the stocktake it was on the shelf for — the delivery form asks which.",
             "Planned for these dates is what the prescriptions and diets in the app say would be used from the day of the earlier count up to the day before the later one — the same figures as the forecast columns, worked out for those past dates.",
-            "Rows whose fall is more than a quarter away from the plan are marked and listed first. At least N more went than planned means that much more left the cupboard than the plan accounts for, even if nothing arrived. Fell N less than planned means either not everything planned was given or eaten, or stock arrived that nobody logged — the counts can't tell which. A count that went up means stock arrived; how much was used over those dates can't be worked out.",
+            "Difference is Used minus Planned, with the same as a percentage of the plan underneath (+40% is 40% more than planned). When nothing was planned there is no percentage, just a dash.",
+            "Rows where Used is more than a quarter away from the plan are marked and listed first — unless the gap is so small that two counts of that item could be off by that much on their own: one tablet, capsule, can or sachet, or a twentieth of what was on the shelf for things read by eye, like ml of syrup or g of food. So an item planned at two tablets isn't marked for a third; the row says About as planned and gives the gap. Used N more than planned: check the counts, doses given without a prescription, spillage and waste — and that no delivery was recorded twice or too large. Used N less than planned: either not everything planned was given or eaten, or a delivery arrived that nobody recorded. At least N arrived that wasn't recorded means the later count is higher than the earlier count plus every delivery recorded — record the missing delivery or check the counts.",
             "A row can carry a note. The plan leaves out residents who have since left means an animal adopted, fostered or who died since was on this item during those dates, so the plan reads low and a \"more than planned\" may be them. Changed by hand means the count was edited on the Medications or Diets page after the stocktake; only stocktakes are compared.",
+            "Download CSV saves the table as shown — both medications and food, for the stocktakes picked — to open in a spreadsheet. Quantities are plain numbers with the unit in its own column; a blank is a figure the page shows as a dash, and the Against the plan column says why.",
           ],
           callouts: [
             {
               kind: "warning",
-              text: "Deliveries aren't recorded in the app, so a gap is a reason to look, not proof of anything. A miscount, a dose given but not on a prescription, spillage, or a diet that no longer matches what an animal eats will all show up here.",
+              text: "Used assumes every delivery was recorded. A delivery nobody recorded makes usage look lower than it really was, so a \"less than planned\" may just be a missing delivery. The box at the top of the page says since when deliveries have been recorded; before that date every figure assumes nothing arrived. A gap is a reason to look, not proof of anything.",
+            },
+          ],
+        },
+        {
+          id: "deliveries",
+          title: "Recording a delivery",
+          roles: ["admin", "management", "staff"],
+          path: "Deliveries",
+          intro:
+            "Record each medication or food as it arrives, so Stock between counts can work out what was actually used. Recording a delivery doesn't change the stock count — the next stocktake does.",
+          steps: [
+            "Open it from the Record a delivery link at the top of the Stocktake page, Management → Medications or → Diets, or Stock between counts.",
+            "Pick Medication or Food, then the item. Enter the quantity in the item's own unit — tablets, ml, g — not boxes or bags. If it came in packs, fill in Came in packs? (2 × 50, say) and the quantity is worked out for you.",
+            "Arrived on is today unless you change it; a delivery can't be dated in the future. If the item was counted in a stocktake that day, you are asked whether the delivery was already on the shelf when it was counted, so it is set against the right stocktake.",
+            "Supplier (a Vendor from Contacts), the total cost in baht (0 for a donation) and a note are optional. Tap Record delivery. The day and supplier stay filled in, so the rest of the same delivery can be entered one item after another.",
+            "Recent deliveries lists the latest ones with who recorded them. A delivery on a day its item was counted is tagged Before or After that day's stocktake, since the time shown can be the same minute as the count. A delivery typed wrong is deleted and recorded again.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "Volunteers can do a stocktake but can't record deliveries.",
             },
           ],
         },
@@ -1064,6 +1123,26 @@ const manual: Manual = {
           },
         },
         {
+          id: "two-step",
+          title: "2-step verification for Security",
+          roles: ["admin"],
+          path: "Security (bottom of the menu)",
+          intro:
+            "Security decides who can get into the app, so it asks for a second step: a 6-digit code from an authenticator app on your phone. It works the same whether you signed in with a password or with Google. Nothing else in the app asks for it.",
+          steps: [
+            "Setting it up, once: install an authenticator app on your phone (Google Authenticator, Microsoft Authenticator or similar — any of them). Open Security and tap Start. Scan the QR code with the app — or, without a camera, choose \"enter a setup key\" in the app and type the key shown beside it. Type the 6-digit code the app then shows and tap Confirm and continue.",
+            "Every time after that: the first time you open Security after signing in, it asks for the code. Open the app, type the 6 digits for Lanna Animal Care and tap Continue. That lasts until you sign out. Codes change every 30 seconds, so type the one showing now; if a correct-looking code keeps failing, check the phone's clock is set automatically.",
+            "The 2-step column in the users table shows who has set it up. Reset removes someone's authenticator app — for a lost or replaced phone — and they set it up again the next time they open Security. You can reset your own to move to a new phone; Security asks you to set it up again within the hour.",
+            "Lost your phone? There are no backup codes. Ask another admin to reset your 2-step verification from Security, then set it up on the new phone. If no admin can get in — the only admin lost their phone — the developer can reset it from outside the app.",
+          ],
+          callouts: [
+            {
+              kind: "tip",
+              text: "Keep at least two admins with 2-step set up, so one can always reset the other.",
+            },
+          ],
+        },
+        {
           id: "website",
           title: "The public website",
           roles: ["admin"],
@@ -1073,7 +1152,8 @@ const manual: Manual = {
             "Labels and contact details: the tagline (the paragraph under the home page's heading; left empty, a standard line about the shelter shows instead), hero photo description and visiting hours in English and Thai side by side, plus the email, phone, LINE id, address and map link shown in the footer of every public page and on each resident's profile. On a phone, the LINE id and phone number are also the LINE and Call buttons under Talk to us at the foot of the website's menu; with neither set, that panel isn't shown.",
             "Facebook page, Instagram and X (Twitter): paste the shelter's links (they must start with https:// and be on facebook.com, instagram.com, or x.com / twitter.com — the form says so if not). Each shows under Follow us in the footer of every public page and as an icon in the phone menu. Leave a box empty and its link doesn't appear.",
             "Facebook Messenger and WhatsApp: ways for visitors to message the shelter. Messenger is a link, usually https://m.me/ followed by the Facebook page's username (it can differ from the page's name, so copy it from the page's Send message button). WhatsApp is the phone number with its country code — +66 81 234 5678 is fine, spaces and dashes included; a number starting with 0 is refused because WhatsApp can't open it. Both show under Contact us in the footer and as chat buttons beside LINE and Call in the phone menu. Leave a box empty and it doesn't appear.",
-            "Pages: the wording of Our story, How adoption works, Foster, Volunteer and Donate. Separate paragraphs with a blank line; start a line with ## for a sub-heading or - for a bullet. The other language's version is written or approved in the translation panel under each field.",
+            "Pages: the wording of Our story, How adoption works, Foster, Volunteer, Donate and Pet relocation. Separate paragraphs with a blank line; start a line with ## for a sub-heading or - for a bullet. The other language's version is written or approved in the translation panel under each field.",
+            "Pet relocation starts with standard text — what a move within Thailand or abroad involves — which the public page shows, in English and Thai, until something is saved. The box is filled with it and a note says so: change it and save to make it the shelter's own. It deliberately says nothing about licences, timelines or prices; add those yourself if you want them on the page.",
             "Photo gallery: the photos under Our story on the home page, in order. The home page shows the first three.",
             "Pet of the week: one resident to spotlight, chosen from those on the public adoption page.",
             "Our work — published stories: everything on the public Our work page, with Remove from website. Stories are published from their folder under Projects.",
@@ -1196,6 +1276,7 @@ const manual: Manual = {
             "Adopt: every resident with Ready for adoption ticked, except those adopted or deceased, with species / size / ready filters. Each profile shows their photos, their hook line under the name, quick facts (age, sex, breed, size, desexed and vaccinated — vaccinated comes from the immunization history — and energy level), who they get along with, their story (past story, bio and temperament), their ideal home, how to meet them, a line asking those who can't adopt to give monthly (it opens the Donate page for now), and similar residents. A bar along the bottom of the screen has Ask on LINE (the LINE contact from Settings → Website) and Book a visit, which phones the shelter, or emails it if no phone number is set. Anything not filled in is left out rather than shown empty. Recent adoptions show as Happy endings, and How adoption works sits at the foot of the listing.",
             "Our work: project folders marked Show on website, by category, with their story and photos.",
             "Foster, Volunteer and Donate: the pages written under Settings → Website, each with the shelter's email and LINE.",
+            "Pet relocation: the shelter's pet-moving service, under Services in the menu and in the footer, with the flying puppy at the top and the shelter's email and LINE at the foot. The adoption listing ends with a line pointing adopters abroad to it. Written under Settings → Website like the pages above.",
             "Shelter Friends: a card for each published friend of the shelter, with only the contact details they agreed to show (see Shelter Friends under Management). It is linked from the menu once there is at least one.",
             "Tags on the kennels: scanning a resident's RFID card shows that resident's public card, and scanning an enclosure's QR code shows the enclosure and who lives there (see The enclosure page). Neither is linked from the menu — they are reached by scanning.",
           ],

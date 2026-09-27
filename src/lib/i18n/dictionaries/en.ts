@@ -158,6 +158,7 @@ const en = {
     visitingHours: "Visiting hours",
     contact: "Contact us",
     help: "Get involved",
+    services: "Services",
     followUs: "Follow us",
     openMap: "Open in Google Maps",
     staffLogin: "Staff login",
@@ -175,6 +176,8 @@ const en = {
     /** The name beside the logo on a phone, where the full one doesn't fit. */
     shortName: "Lanna Care",
     getInvolved: "Get involved",
+    /** The shelter's services to the public: Pet relocation, later desexing drives. */
+    services: "Services",
     sponsor: "Sponsor a resident",
     about: "About & contact",
     language: "Language",
@@ -194,6 +197,29 @@ const en = {
     emailUs: "Email us",
     lineUs: (id: string) => `LINE ${id}`,
     alsoSee: "See also:",
+    /**
+     * /relocation's starter text, shown until an admin saves a body of
+     * their own on Settings → Website (which also offers it to edit).
+     * Generic on purpose (docs/decisions.md, 2026-09-27): what a move
+     * involves, in our own words — no licence claim, no timelines, no
+     * prices, which only the Director can state.
+     */
+    relocationStarter: {
+      title: "Pet relocation",
+      body: [
+        "## Moving with your pet",
+        "Whether you are moving to another province or to another country, we can help your dog or cat make the journey safely. We take care of the practical steps so you can get on with your own move, and we keep you posted along the way.",
+        "## Moves within Thailand",
+        "- Door-to-door road transport between provinces, with regular stops for water, food and a stretch\n- Help with the health certificate and movement paperwork a trip may need\n- A travel plan that suits your pet's age, size and temperament",
+        "## Moves to and from other countries",
+        "Every country sets its own rules for animals coming in, and they change. We work through them with you:",
+        "- Checking what the destination country asks for\n- Microchip, vaccinations and any blood tests the destination needs, done with a vet\n- Export and import permits, and the health certificates that go with them\n- A travel crate the airline accepts, and time for your pet to get used to it before the trip\n- Booking a flight with an airline that carries animals safely\n- Customs and quarantine checks when your pet leaves and when they arrive\n- Collection at the airport and delivery to your new home, where that can be arranged",
+        "## Adopters and pet owners",
+        "If you are adopting one of our residents from abroad, we can arrange the journey to you. If you are moving with a pet of your own, ask us too.",
+        "## Getting started",
+        "Get in touch and tell us where your pet is going, roughly when you hope to travel, and a little about your pet. Every move is different, so we talk it through with you before anything is booked.",
+      ].join("\n\n"),
+    },
   },
 
   /**
@@ -335,7 +361,7 @@ const en = {
         frequencies:
           "The \"how often\" choices a prescription picks from, and the schedule the medication forecast counts for each.",
         security:
-          "Sign-in accounts, roles and access requests. Also pinned to the bottom of the menu.",
+          "Sign-in accounts, roles and access requests. Needs your authenticator app (2-step verification). Also pinned to the bottom of the menu.",
         systemStatus:
           "Whether the database, photo storage, migrations, release mail, backups and the Pi are healthy, and how much the app is being used.",
       },
@@ -559,6 +585,16 @@ const en = {
           `Archive ${email}? They can no longer sign in and won't be offered for new maintenance jobs; their name stays on past ones. Restore undoes this.`,
         failedToArchiveUser: "Failed to archive user.",
         failedToRestoreUser: "Failed to restore user.",
+        twoStep: "2-step",
+        twoStepOn: "On",
+        twoStepOff: "Not set up",
+        resetTwoStep: "Reset",
+        resetTwoStepConfirm: (email: string) =>
+          `Reset 2-step verification for ${email}? Their authenticator app stops working here, and they set it up again the next time they open Security. Do this for a lost or replaced phone.`,
+        resetTwoStepSelfConfirm:
+          "Reset your own 2-step verification? Your authenticator app stops working here, and within the hour Security asks you to set up an app again — have the new phone ready.",
+        twoStepReset: "2-step verification reset.",
+        failedToResetTwoStep: "Failed to reset 2-step verification.",
       },
       errors: {
         emailRequired: "Email is required.",
@@ -575,6 +611,46 @@ const en = {
         userNotFound: "This login no longer exists. Reload the page.",
         emailTaken: "There is already a login with that email.",
         emailInvalid: "That email address doesn't look right.",
+        twoStepRequired:
+          "This needs your authenticator app. Reload the page, enter the code from the app, then try again.",
+        noTwoStep: "This login has no authenticator app set up. Reload the page.",
+      },
+      twoStep: {
+        setupTitle: "Set up 2-step verification",
+        setupSubtitle:
+          "Security decides who can get into the app, so it asks for a second step: a 6-digit code from an authenticator app on your phone. You set it up once; after that, Security asks for a code once each time you sign in. The rest of the app doesn't change.",
+        codeTitle: "Enter your code",
+        codeSubtitle:
+          "Security needs the second step. Open the authenticator app on your phone and enter the 6-digit code it shows for Lanna Animal Care.",
+        stepInstall:
+          "Install an authenticator app on your phone if you don't have one: Google Authenticator, Microsoft Authenticator or similar — any of them works.",
+        stepScan: "Tap Start below and scan the QR code with the app.",
+        stepCode: "Type the 6-digit code the app shows to confirm it.",
+        start: "Start",
+        starting: "Starting…",
+        qrAlt: "QR code to scan with your authenticator app",
+        scanThis: "Scan this with your authenticator app.",
+        orTypeKey: "No camera? Choose \"enter a setup key\" in the app and type this key:",
+        codeLabel: "6-digit code",
+        confirm: "Continue",
+        confirmSetup: "Confirm and continue",
+        checking: "Checking…",
+        noRecoveryCodes:
+          "There are no backup codes. If you lose this phone, another admin can reset your 2-step verification from Security, and you set it up again on the new one.",
+        lostPhone:
+          "Lost or replaced your phone? Ask another admin to reset your 2-step verification from Security. If no admin can get in, the developer can reset it.",
+        backToSettings: "Back to Settings",
+        errors: {
+          alreadySetUp:
+            "An authenticator app is already set up for your login. Reload the page and enter its code.",
+          couldntStart: "Couldn't start the setup. Check your connection and try again.",
+          codeFormat: "Enter the 6 digits the app shows.",
+          noFactor: "This QR code has expired. Reload the page and start the setup again.",
+          wrongCode:
+            "That code didn't match. Codes change every 30 seconds — enter the one showing now. If it keeps failing, check the phone's clock is set automatically.",
+          expired: "That took too long. Enter the code showing now.",
+          tooMany: "Too many tries. Wait a minute, then enter the code showing now.",
+        },
       },
       createdUser: (email: string, role: string) => `Created ${email} as ${role}.`,
     },
@@ -862,6 +938,7 @@ const en = {
           foster: "Foster",
           volunteer: "Volunteer",
           donate: "Donate",
+          relocation: "Pet relocation",
         } as Record<string, string>,
         where: {
           "our-story": "The story section on the welcome page, under the photo strip.",
@@ -869,7 +946,10 @@ const en = {
           foster: "The Foster page, linked from the header and the \"How you can help\" strip.",
           volunteer: "The Volunteer page, linked from the header and the \"How you can help\" strip.",
           donate: "The Donate page, linked from the Donate button on every public page.",
+          relocation: "The Pet relocation page, linked from Services in the header, the footer, and the adoption listing for adopters abroad.",
         } as Record<string, string>,
+        starterNote:
+          "Nothing saved yet, so the page shows the standard text below. Change it and save to make it yours — and add your licence details and anything else only you can say.",
       },
       gallery: {
         heading: "Photo gallery",
@@ -999,6 +1079,77 @@ const en = {
         "Nothing was saved: an item on the sheet has been deleted since the page opened. Reload the page — your counts will need entering again.",
       countInvalid: "Nothing was saved: every count must be a number, 0 or more.",
       nothingToSave: "Nothing to save yet — type a count or tap Same as last time on at least one row.",
+      failed: "Nothing was saved",
+    },
+    deliveriesLink: "Record a delivery",
+  },
+
+  deliveries: {
+    title: "Deliveries",
+    subtitle:
+      "Record each medication or food as it arrives, one item at a time, in the item's own unit. Recording a delivery doesn't change the stock count — the next stocktake does — but it lets Stock between counts work out what was used.",
+    couldntLoad: "Couldn't load the deliveries",
+    kinds: { medication: "Medication", diet: "Food" },
+    noItems: {
+      medication: "No medications yet",
+      diet: "No diets yet",
+    },
+    form: {
+      kind: "What arrived",
+      item: "Item",
+      itemPlaceholder: "Choose…",
+      quantity: "Quantity",
+      quantityIn: (unit: string) => `Quantity, in ${unit}`,
+      quantityHint: "In the item's own unit — tablets, ml, g — not boxes or bags.",
+      packs: "Came in packs?",
+      packsCount: "Number of packs",
+      perPack: "Amount in each pack",
+      perPackIn: (unit: string) => `Amount in each pack, in ${unit}`,
+      packsHint: "2 boxes of 50 fills in 100.",
+      date: "Arrived on",
+      timing: {
+        question: "This item was counted in a stocktake that day. Was the delivery on the shelf when it was counted?",
+        before: "Yes — it arrived before the count",
+        after: "No — it arrived after the count",
+        why: "So the delivery is set against the right stocktake.",
+      },
+      supplier: "Supplier (optional)",
+      supplierNone: "Not recorded",
+      supplierNoVendors: "No suppliers — add one as a Vendor in Contacts",
+      cost: "Cost ฿ (optional)",
+      costHint: "Total paid for this delivery. 0 = donated.",
+      note: "Note (optional)",
+      notePlaceholder: "e.g. batch number, expiry date",
+      save: "Record delivery",
+      notACount: "Doesn't change the stock count.",
+    },
+    saved: (name: string, quantity: string, unit: string) => `Recorded ${quantity} ${unit} of ${name}.`,
+    recent: {
+      title: "Recent deliveries",
+      empty: "No deliveries recorded yet.",
+      line: (name: string, quantity: string, unit: string) => `${name} — ${quantity} ${unit}`,
+      from: (supplier: string) => `from ${supplier}`,
+      donated: "donated",
+      by: (name: string) => `recorded by ${name}`,
+      side: {
+        before: "Before that day's stocktake",
+        after: "After that day's stocktake",
+        between: "Between that day's stocktakes",
+      },
+      deleteConfirm: (name: string) => `Delete this delivery of ${name}? Record it again if it was typed wrong.`,
+      deleting: "Deleting…",
+      note: (n: number) =>
+        `The latest ${n}. A delivery typed wrong is deleted and recorded again.`,
+    },
+    errors: {
+      notAuthorized: "Your role can't record deliveries. Ask a member of staff or a manager.",
+      itemRequired: "Choose what arrived.",
+      quantityInvalid: "Enter the quantity, a number above 0, in the item's own unit.",
+      costInvalid: "Cost must be a number, 0 or more — or leave it blank.",
+      dateInvalid: "Choose the day it arrived.",
+      future: "A delivery can't be recorded before it arrives — choose today or an earlier day.",
+      needsTiming: "Say whether the delivery arrived before or after that day's stocktake.",
+      gone: "That delivery has already been deleted.",
       failed: "Nothing was saved",
     },
   },
@@ -1196,6 +1347,7 @@ const en = {
     },
     stock: {
       stocktakeLink: "Stocktake: count everything in one go",
+      deliveriesLink: "Record a delivery",
       stockHeading: "In stock",
       daysHeading: "Days of stock",
       notCounted: "Not counted",
@@ -1225,11 +1377,15 @@ const en = {
     stockUsage: {
       title: "Stock between counts",
       subtitle:
-        "How each medication and food count moved between two stocktakes, beside what the prescriptions and diets planned for the same dates.",
+        "What each medication and food used between two stocktakes, beside what the prescriptions and diets planned for the same dates.",
       link: "Stock between counts: compare stocktakes with the plan",
-      cannotSayLead: "This is not what was actually used.",
-      cannotSay:
-        "Deliveries aren't recorded, so the app knows the two counts and the plan — not what arrived in between. A fall is the least that left the cupboard: more, if anything arrived. A rise means stock arrived that nobody logged. A big gap is a reason to look, not proof of anything — a miscount, a dose given but not prescribed, or a diet that no longer fits will all show up here.",
+      assumesLead: "Used is only as good as the delivery records.",
+      assumes:
+        "Used = the earlier count + the deliveries recorded in between − the later count. A delivery nobody recorded makes usage look lower than it was; one recorded twice or too large makes it look higher. A big gap is a reason to look, not proof of anything — a miscount, a dose given but not prescribed, or a diet that no longer fits will all show up here.",
+      recordedSince: (date: string) =>
+        `Deliveries have been recorded since ${date}; before that, every figure assumes nothing arrived.`,
+      noneRecorded: "No deliveries have been recorded yet, so every figure here assumes nothing arrived.",
+      deliveriesLink: "Record a delivery",
       picker: {
         latest: "Each item's last two counts",
         from: "Earlier stocktake",
@@ -1248,28 +1404,34 @@ const en = {
       table: {
         item: "Item",
         from: "Earlier count",
+        received: "Deliveries recorded",
         to: "Later count",
-        change: "Change",
+        used: "Used",
         planned: "Planned for these dates",
+        difference: "Difference",
         reading: "Against the plan",
       },
       days: (n: number) => `over ${n} day${n === 1 ? "" : "s"}`,
-      fell: (quantity: string) => `down ${quantity}`,
-      rose: (quantity: string) => `up ${quantity}`,
-      held: "no change",
+      noneReceived: "none",
+      deliveries: (n: number) => `${n} deliver${n === 1 ? "y" : "ies"}`,
       readings: {
         asPlanned: "About as planned",
-        moreThanPlanned: (quantity: string) => `At least ${quantity} more went than planned`,
+        withinCountUnplanned: "Nothing planned, and too little used to tell from a miscount",
+        withinCountWhy: (gap: string, margin: string) =>
+          `Off by ${gap}, but two counts of this item can differ by ${margin} on their own, so it isn't marked.`,
+        moreThanPlanned: (quantity: string) => `Used ${quantity} more than planned`,
         moreThanPlannedWhy:
-          "Even if nothing arrived in between. Worth checking the counts, doses given without a prescription, spillage and waste.",
-        lessThanPlanned: (quantity: string) => `Fell ${quantity} less than planned`,
+          "Worth checking the counts, doses given without a prescription, spillage and waste — and that no delivery was recorded twice or too large.",
+        lessThanPlanned: (quantity: string) => `Used ${quantity} less than planned`,
         lessThanPlannedWhy:
-          "Either not everything planned was given or eaten, or a delivery nobody logged filled the gap — the counts can't tell which.",
-        fellUnplanned: (quantity: string) => `Fell ${quantity} with nothing planned`,
-        fellUnplannedWhy: "No prescription or diet in the app used it over these dates.",
-        rose: "Stock arrived that wasn't logged",
-        roseWhy: "How much was used over these dates can't be worked out from the counts.",
-        unchangedUnplanned: "Nothing planned, no change",
+          "Either not everything planned was given or eaten, or a delivery arrived that nobody recorded — check the deliveries for these dates.",
+        usedUnplanned: (quantity: string) => `Used ${quantity} with nothing planned`,
+        usedUnplannedWhy: "No prescription or diet in the app used it over these dates.",
+        unlogged: (quantity: string) => `At least ${quantity} arrived that wasn't recorded`,
+        unloggedWhy:
+          "The later count is more than the earlier count plus the deliveries recorded. Record the missing delivery, or check the counts — what was used can't be worked out until then.",
+        unchangedUnplanned: "Nothing planned, nothing used",
+        unknown: "Deliveries couldn't be loaded — not compared",
         unitChanged: "The unit was changed — not compared",
         sameDay: "Both counts on the same day — nothing to compare",
       },
@@ -1283,8 +1445,32 @@ const en = {
         "Nothing to compare yet. Once an item has been counted in stocktakes on two different days, it appears here.",
       couldntLoad: "Couldn't load the stock counts",
       couldntLoadPlan: "Couldn't load the plan",
+      couldntLoadDeliveries: "Couldn't load the deliveries",
+      csv: {
+        download: "Download CSV",
+        yes: "yes",
+        columns: {
+          section: "Section",
+          item: "Item",
+          unit: "Unit",
+          fromDate: "Earlier count date",
+          from: "Earlier count",
+          received: "Deliveries recorded",
+          deliveries: "Number of deliveries",
+          toDate: "Later count date",
+          to: "Later count",
+          used: "Used",
+          planned: "Planned",
+          days: "Days",
+          difference: "Difference",
+          differencePercent: "Difference %",
+          reading: "Against the plan",
+          marked: "Marked",
+          notes: "Notes",
+        },
+      },
       note:
-        "Planned is what the prescriptions and diets in the app say would be used from the day of the earlier count up to the day before the later one. A row is marked when the fall is more than a quarter away from the plan. Only stocktakes are recorded; a count changed by hand on the Medications or Diets page is not.",
+        "Planned is what the prescriptions and diets in the app say would be used from the day of the earlier count up to the day before the later one. Difference is used minus planned, and as a percentage of the plan (a dash when nothing was planned). A row is marked when usage is more than a quarter away from the plan and further from it than two counts of that item can differ by — one tablet, capsule, can or sachet, or a twentieth of what was on the shelf for things measured by eye, like ml or g — so small items don't stand out over a miscount. A delivery counts towards the stocktake it was on the shelf for. Only stocktakes are compared; a count changed by hand on the Medications or Diets page is not.",
     },
     forecastWindow: {
       from: "From",
@@ -2857,6 +3043,7 @@ const en = {
         procedures: "Procedures",
         "blood-tests": "Blood Tests",
         diet: "Diet",
+        "adoption-updates": "Adoption updates",
       },
       backTo: (name: string) => `← Back to ${name}`,
       empty: {
@@ -3270,6 +3457,84 @@ const en = {
     errors: {
       notAuthorized: "Not authorized to manage attachments.",
     },
+    filter: {
+      label: "Show photos",
+      all: (n: number) => `All (${n})`,
+      shelter: (n: number) => `Taken by the shelter (${n})`,
+      adopters: (n: number) => `Sent by adopters (${n})`,
+    },
+  },
+
+  adoptionUpdates: {
+    title: "Adoption updates",
+    addUpdate: "Add update",
+    noneYet: "No news from the adopter yet",
+    latest: (date: string, channel: string) => `Latest ${date} · ${channel}`,
+    channels: {
+      line: "LINE",
+      facebook: "Facebook",
+      email: "Email",
+      visit: "Visit",
+    },
+    /** Under every photo an adopter sent, wherever it is shown. */
+    provenance: (sender: string | null, date: string, channel: string) =>
+      `Sent by ${sender ?? "the adopter"} · ${date} · ${channel}`,
+    seeUpdate: "See the update",
+    sentBy: (name: string) => `Sent by ${name}`,
+    senderUnknown: "Sender not recorded",
+    empty: "No updates yet. When the adopter sends news or photos, add it here so it stays on the record.",
+    neverAdoptedEmpty: "Updates can be added once this resident has been adopted.",
+    notAdoptedNow:
+      "This resident is not with an adopter now. These updates are from their time away and stay on the record.",
+    backToUpdates: (name: string) => `← Back to ${name}'s adoption updates`,
+    newTitle: (name: string) => `Add an update about ${name}`,
+    editTitle: (name: string) => `Update about ${name}`,
+    formSubtitle:
+      "News from the adopter: when it came, who sent it, how, and any photos. Photos are saved to the resident's Adoption updates folder in Drive and always show who sent them.",
+    editOrAddPhotos: "Edit / add photos",
+    deleteConfirm: (photos: number) =>
+      photos === 0
+        ? "Delete this update?"
+        : photos === 1
+          ? "Delete this update and its photo?"
+          : `Delete this update and its ${photos} photos?`,
+    confirmDelete: "Delete",
+    deleting: "Deleting…",
+    form: {
+      receivedOn: "Date received",
+      sender: "Sent by",
+      noSender: "Not recorded",
+      adoptersGroup: "Adopted by",
+      otherContactsGroup: "Other contacts",
+      archivedSender: "(archived contact)",
+      senderHint: "The adopter is chosen for you. Change it if someone else in the family sent it.",
+      channel: "Came in by",
+      note: "What they said",
+      notePlaceholder: "Settling in well, sleeps on the sofa, has a new friend next door…",
+      photos: "Photos",
+      addMorePhotos: "Add more photos",
+      photosHint: "Optional. You can pick several at once; each is tagged with this update.",
+      fileTooLarge: "Larger than 15 MB — choose a smaller copy.",
+      photosFailed: (n: number) =>
+        n === 1
+          ? "The update is saved, but one photo did not upload. Save again to retry it."
+          : `The update is saved, but ${n} photos did not upload. Save again to retry them.`,
+      savedRetryHint: "The update is saved. Saving again retries any photos that did not upload.",
+      save: "Save update",
+      saveChanges: "Save changes",
+      saving: "Saving…",
+      done: "Done",
+    },
+    errors: {
+      notAuthorized: "Only admin, management and staff can add or change adoption updates.",
+      neverAdopted: "This resident has never been adopted, so there is no adopter to hear from.",
+      dateRequired: "Enter the date the update was received.",
+      dateInFuture: "The date received can't be in the future.",
+      channelRequired: "Choose how the update came in.",
+      notFound: "That update no longer exists — it may have been deleted.",
+      saveFailed: "Couldn't reach the server, so nothing was saved. Check the connection and try again.",
+      deleteFailed: "Couldn't reach the server, so nothing was deleted. Check the connection and try again.",
+    },
   },
 
   translations: {
@@ -3327,6 +3592,10 @@ const en = {
     fosterNav: "Foster",
     volunteerNav: "Volunteer",
     donateNav: "Donate",
+    relocationNav: "Pet relocation",
+    /** The line under the listing for someone adopting from another country. */
+    fromAbroad: "Adopting from abroad?",
+    fromAbroadLink: "We can arrange the journey",
     openApp: "Open the app",
     pageTitle: "Meet Our Residents",
     pageSubtitle:

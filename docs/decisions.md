@@ -5066,6 +5066,12 @@ may carry migrations at a time. No code reads any of it yet.
 
 ## 2026-09-26 — Stock between counts shows count-to-count change, not "actual usage"
 
+> **Superseded 2026-09-27** by "Stock between counts reads usage from recorded
+> deliveries" below: deliveries are now recorded, the page shows *used*, and
+> the "fall is a lower bound" / "a rise is an unlogged delivery" readings no
+> longer apply. The plan-window, pairing, threshold, departed-residents and
+> unit-change points here still hold.
+
 The backlog item asked for actual usage between two stocktakes
 (`used = previous count + received − new count`) beside the plan. `0093` gave
 the count history; nothing records **received**. The page
@@ -5691,3 +5697,364 @@ The backlog item's three open questions, settled.
 - **No secret in a mail:** every error was already scrubbed by
   `runCheck`, and the mail and the skipped reasons go through
   `redactSecrets` again on the way out.
+## 2026-09-27 — Adoption updates: the feature (hub card, section, photo provenance)
+
+The feature half of "Record updates from adopters", built on `0097` without
+another migration. What `0097` left to the feature:
+
+- **Where the section shows: any resident who has ever had an Adopt
+  placement, whatever their status now.** A resident returned to the
+  shelter keeps the card and the list, with a line saying these are from
+  their time away; news can also arrive after the return, so Add update
+  stays offered. A resident never adopted gets no card, and the add page
+  and `saveAdoptionUpdate` both refuse ("never been adopted") rather than
+  offering a form with nobody to hear from. Deceased residents are not
+  treated specially: `0097` adds no lock, and photos stay open after death
+  (0052), so a family's last news can still be recorded.
+- **The sender is preselected from the newest Adopt placement's carer and
+  picked from every active contact**, adopters first in their own group,
+  with "Not recorded" for an Adopt placement with no carer. Any contact,
+  not only type Carer: the point of storing `sender_contact_id` (0097) is
+  that a partner or grown child sends the photos.
+- **Photos go through the existing resident photo route**, which now takes
+  an optional `adoptionUpdateId` in place of a category. The route checks
+  the update belongs to the resident before touching Drive, files the photo
+  under `Residents/<Name> (<ID>)/Adoption updates/<YYYYMMDD>/` (the date
+  received, one folder per day, as Blood Tests do) and passes
+  `p_adoption_update_id` to `record_attachment`, so the photo is tagged in
+  the insert that records it. `sub_folder` holds that `<YYYYMMDD>`; the
+  archive rebuilds the path from it. Same magic-byte check, same size
+  limit. The form saves the update first (it needs an id to tag with),
+  then sends photos one at a time; if any fail the update is already
+  saved, the form stays on it, and Save retries only the failed photos —
+  never a second update.
+- **Provenance on the Photos tab comes from one shared select**,
+  `RESIDENT_PHOTO_SELECT`, which embeds the update through the composite
+  foreign key. Every list of resident photos uses it — the Photos tab, the
+  Edit page's profile-photo picker, each update's own gallery, and the
+  deceased archive — so a photo cannot carry its provenance on one page and
+  lose it on another. An adopter's photo gets a coloured caption, "Sent by
+  <sender> · <date> · <channel>" (or "the adopter" when no sender is
+  recorded, or for vets, who cannot read contacts), in place of the
+  category; the full-size view adds a link back to the update. Once a
+  resident has both kinds, chips filter the gallery to the shelter's photos
+  or the adopters'. The archive's offline index says "Sent by … on … via …"
+  under the tile and gives the Adoption updates folder in its file table.
+  The public "Happy endings" card is still the follow-on to ask about;
+  anon has no access to `adoption_updates`.
+- **Delete takes the photos with it, and says so.** The foreign key refuses
+  to delete an update that still has photos, and untagging them would pass
+  an adopter's photos off as the shelter's, so `deleteAdoptionUpdate`
+  deletes each photo (`delete_resident_photo`, then Drive) and then the
+  update, and the confirm reads "Delete this update and its 2 photos?".
+- Both actions return `ActionResult` (2026-09-26) through `runAction`.
+## 2026-09-27 — Stock between counts reads usage from recorded deliveries
+
+Feature half of "Record stock deliveries, so Stock between counts can state
+usage" (schema: `0096`, entry above). Supersedes the 2026-09-26
+count-to-count entry on what the page may call *used*.
+
+- **What the page now states.** Each row shows the deliveries recorded
+  between the two counts and **Used = earlier count + recorded − later
+  count**, against the plan. The standing warning is replaced by what the
+  figure *assumes*: every delivery was recorded. The page names the date
+  deliveries were first recorded (before it, every figure assumes nothing
+  arrived), or says none have been.
+- **What it still cannot state, and which way it errs.** An unrecorded
+  delivery makes usage read **low**, not high — so the backlog's "forgotten
+  ones still look like overuse" was the wrong way round. The "check
+  deliveries" line therefore sits on **less than planned** ("or a delivery
+  arrived that nobody recorded"); **more than planned** instead asks to
+  check that no delivery was recorded twice or too large. A negative used is
+  the one case the data proves something is missing: it reads "at least N
+  arrived that wasn't recorded" and is marked, rather than being shown as
+  negative usage. Hand edits of the count and the forecast's status-today
+  gap are unchanged caveats.
+- **The page reads the view, never re-derives it.** Latest-mode pairs skip
+  same-day recounts and picked stocktakes can have others between them, so
+  a pair is usually not one `stock_count_intervals` row. `receivedBetween`
+  walks the view's rows from the earlier count's id to the later one's and
+  adds their `received` and `used` (the sum telescopes, as `0096`
+  asserts); any null `used` on the way means a unit change and nothing is
+  subtracted. If the view can't be read, rows say so instead of falling back
+  to count-to-count.
+- **The "before or after the stocktake?" question is asked on any day the
+  item was counted, today included** — a narrowing of `0096`'s "only for a
+  back-dated delivery". A delivery unpacked at 08:00 and typed in at 15:00,
+  after a 10:00 stocktake, would otherwise be stamped `now()` and land in
+  the next interval. Before = the day's earliest count's own instant (the
+  closed end, so inside the interval it ends); after = a second past the
+  day's latest count, or `now()` if later. A back-dated day with no count
+  is stamped midday Bangkok time, which is on the same side of every count.
+  `scripts/check-stock-deliveries.mjs` pins these.
+- **Where it lives: `/deliveries`, outside `/management`,** like
+  `/stocktake` and for the same reason: the people at the door are staff,
+  and `0096` lets staff write. Volunteers are sent away (they count, they
+  don't record deliveries or costs). No nav entry — it is reached from
+  Record a delivery on Management → Medications / Diets, the Stocktake page
+  (staff and up) and Stock between counts, which keeps `NavLinks.tsx` out
+  of this PR.
+- **Correction is delete and re-record.** The table allows updates, but a
+  one-row edit form was not worth its weight at shelter volumes; the recent
+  list (latest 50, with who recorded each) has Delete. A delivery never
+  touches `stock_on_hand`, and the form offers no "and set the count" —
+  that is a stocktake's job.
+- **Split out, not done here:** the CSV download, a difference-as-percentage
+  column and a minimum-quantity floor carried on the backlog item. They are
+  a follow-up item on `backlog`; the 2026-09-26 entry's reasoning against
+  a single absolute floor (units differ per item) still stands.
+## 2026-09-27 — Status alerts: the schema (`0098_status_alerts.sql`)
+
+- **The alert run remembers in the database, in two tables.** A Worker
+  cron has no memory between runs; the Cache API is per data centre and a
+  cron runs wherever Cloudflare puts it; KV would be a namespace created by
+  hand per environment. The database is per environment by construction
+  and already reached by every check. `status_alert_checks` holds one row
+  per check (last state, scrubbed error, consecutive red runs, when the
+  open outage was mailed); `status_alert_runs` one row per run, which is
+  both the heartbeat the Alerts tile reads and the record of who was sent
+  what and who was skipped. 30 days of runs are kept.
+- **`check_key` is free text, not a CHECK list,** so a new tile is
+  remembered without a migration.
+- **Service role only**: RLS on, no policies, every grant revoked. The run
+  and the admin page both read through the service-role client.
+- The one thing this cannot do is remember through its own outage; the
+  feature entry says what the run does when the database is the red tile.
+## 2026-09-27 — Stock between counts: the floor comes from the counts, not a number
+
+Follow-up to "Stock between counts reads usage from recorded deliveries"
+(above): the CSV, the percentage and the "tiny items don't shout" floor.
+
+- **The floor is what two counts can get wrong, per item.** The 2026-09-26
+  entry ruled out one absolute floor (units differ per item), and the
+  backlog offered per-unit, per-item or a minimum on the planned figure. A
+  minimum on the plan still needs a number in some unit, and a per-item
+  setting needs a column and someone to fill it in for every item. What
+  actually makes a small item shout is counting noise: two tablets planned
+  and three used is +50% and one miscount. So `countMargin`
+  (`src/lib/management/stock-usage.ts`) is the smallest gap the item's own
+  counts can tell apart: **one** for a unit counted piece by piece (tablet,
+  capsule, sachet, application, dose, can, portion), and **5% of the larger
+  of the two counts** for one read by eye (ml, g, mg, mcg, IU, drop, cup) —
+  a 400 ml bottle read by eye is good to about 20 ml, a 5 kg sack to about
+  250 g. A row is marked only when it is past the 25% ratio **and** past
+  this margin. No absolute number was reintroduced: the margin is in the
+  item's own unit and scales with its own stock. The 5% is a judgement,
+  like the 25%; move it in one place if stocktakes turn out finer or coarser.
+- **The floor also applies below zero and with nothing planned.** Used a
+  little below zero (within the margin) is a miscount, not "at least N
+  arrived unrecorded"; one tablet used with nothing planned is not marked.
+  Both read "About as planned" with the gap and the margin given, as the
+  new `withinCount` reading, so nothing is hidden, only not marked.
+- **Difference is its own column**: used − planned, signed, with the
+  percentage of the plan underneath. **No plan, no percentage** — a dash,
+  never ∞% or 0%. Where usage can't be stated (unit change, same day,
+  unrecorded deliveries, deliveries not loaded) the whole column is a dash,
+  as Used is.
+- **The CSV is built on the server, downloaded in the browser.** The page
+  is a server component and the table is small, so it renders the CSV text
+  once and a small client button (`CsvDownloadButton`) saves it. Cashflow's
+  field quoting and BOM download moved to `src/lib/csv.ts` and both pages
+  use it, rather than a second exporter. Plain numbers, the unit in its own
+  column, a blank cell where the page shows "—", and the reading text in
+  the last columns, so the file says what the page says.
+- **Deliveries on a stocktake day are tagged Before / After that day's
+  stocktake** in the recent list (`sideOfCount`), read from the stored
+  instant exactly as `receivedAtFor` wrote it, so the tag can't disagree
+  with the interval the delivery landed in. "Between" appears only when an
+  item was counted twice that day and the delivery sits between them.
+## 2026-09-27 — Two page slugs and `aal2` on `user_roles` (`0099`, `0100`)
+
+One schema PR for three batch-4 features, because only one stream may carry
+a migration at a time.
+
+- **`0099`: slugs `relocation` and `shelter-friends-join`.** The pet
+  relocation page and the "Become a Shelter Friend" page are `site_pages`
+  rows like `/foster`, so `site_pages_slug_check` is widened to seven slugs
+  and both rows are seeded with a title ("Pet relocation", "Become a Shelter
+  Friend") and an empty body. The feature halves add each slug to
+  `SITE_PAGE_SLUGS` in `src/lib/site/pages.ts`; until then `/admin/website`
+  filters the rows out and no route reads them. Whether the join page is
+  `/friends/join` or a section of `/friends` is the feature half's call — the
+  slug does not depend on it. The seed titles went through the insert
+  trigger, so each has a Thai title waiting in the translation queue (one
+  entry each, on dev as of this apply).
+- **`0100`: restrictive policies require `auth.jwt()->>'aal' = 'aal2'` for
+  insert, update and delete on `user_roles`.** Restrictive, so they AND with
+  `admin_all_user_roles` — aal2 is an extra requirement, never a grant (a
+  staff login at aal2 still cannot write). Reads are untouched, and
+  `current_user_role()` is security definer, so every other policy resolves
+  roles exactly as before.
+- **Why it is safe to merge before 2-step verification exists, unconditionally
+  rather than "only once a factor is enrolled":** nothing in the app writes
+  `user_roles` with a user's JWT. Every write in
+  `src/app/admin/security/actions.ts` (create a login, approve a request,
+  change a role, archive, restore) uses `createAdminClient()`, the service
+  role; the auth callback and login only read; no function or trigger writes
+  it. `service_role` and `postgres` have `BYPASSRLS` (checked on dev), so the
+  policies never apply to them. What they close today is exactly one path:
+  an admin's aal1 access token used straight against the Data API to grant a
+  role — which no one does legitimately, and which is what a stolen password
+  would be used for. A conditional form ("aal2 once enrolled") would leave
+  every never-enrolled admin open at aal1, i.e. the whole shelter until the
+  feature ships and possibly after. `scripts/check-user-roles-aal2.mjs` is the
+  proof, run on dev after the apply: an admin at aal1 still resolves as admin
+  and reads every role row; the same admin at aal1 (or with no `aal` claim)
+  is refused insert and touches 0 rows on update/delete; at aal2 the same
+  writes succeed; staff at aal2 are still refused; the service role inserts,
+  upserts, archives, restores and deletes as before.
+- **So the policy is defence in depth, not the enforcement.** Because
+  `/admin/security` writes with the service role, the policy does nothing to
+  an aal1 session using the page. The feature half must check aal2 in each
+  server action itself (the backlog item says so); do not read this policy as
+  having done that.
+- **Recovery is unchanged, and has a gap the feature half must fill.**
+  `scripts/bootstrap-admin.mjs` writes with the service role and is
+  unaffected by the policy. But it refuses to run once any `user_roles` row
+  exists — it creates the *first* admin, it does not rescue an existing one.
+  The backlog item's "bootstrap-admin can remove a factor as the last
+  resort" is therefore new work for the feature half (a flag that deletes an
+  `auth.mfa_factors` row for one user with the service role), not something
+  this PR already provides. Until 2-step exists nobody can be locked out by a
+  lost phone, because no action requires aal2 yet.
+- **Rollback:** drop the three `user_roles_*_requires_aal2` policies. Nothing
+  depends on them.
+
+## 2026-09-27 — Pet relocation: starter text in code, a Services menu, and the caped puppy
+
+- **The generic copy lives in the dictionaries, not in the database.** The
+  item says to ship generic text now and let the Director rewrite it. The
+  row (0099) was seeded with an empty body, and this stream had no
+  migration slot, so the text could not be seeded; typing it into dev and
+  production by hand would be two unrecorded writes and the Thai version
+  would sit unapproved in the queue. Instead `sitePageStarter()`
+  (`SitePageView.tsx`) returns `sitePages.relocationStarter` from the
+  visitor's dictionary whenever the row's body is empty — so the page
+  reads properly in English and Thai on day one, in every environment,
+  with no data step. Settings → Website puts the English starter in the
+  empty box with a note saying so, so the Director edits it rather than
+  starting blank; nothing is written until she saves, and from then on her
+  text (and its queued Thai) replaces the starter entirely. Only
+  `relocation` has a starter: the other pages keep "coming soon", which is
+  what their items asked for.
+- **What the starter does not say.** No licence (number, issuing body,
+  required wording), no timelines, no prices: those are claims about a real
+  person's service that only she can make. It describes what a move
+  involves, in our own words — not Boonma's, which the item cites only as an
+  example of scope. Who it is for is phrased as an invitation ("if you are
+  moving with a pet of your own, ask us too"), not as a promise.
+- **Services is its own menu group** (Lutan, 2026-09-27), not an entry
+  under Get involved or About & contact: relocation is something the
+  shelter offers the public, not a way to help it, and desexing drives will
+  join it. Five top-level entries left the full name "Lanna Care for
+  Animals" wrapping onto three lines between 1024 and 1280 px (seen in
+  Thai), so the header shows the short name there as it already does on a
+  phone.
+- **The caped puppy is sketch B, with its pyjamas** (Lutan picked it from
+  three: straight flight, carrying a crate, over the globe). Cape and
+  collar use `--site-action` / `--site-accent` rather than fixed colours,
+  like the loader's laptop, so it is terracotta and forest green on
+  production and follows the dev recolour (teal cape) on the test site. No
+  emblem, no Superman colours — our character in a generic cape.
+## 2026-09-27 — Medical photos leave the public gallery in the view (`0101_public_photos_exclude_medical.sql`)
+
+- **Filtered in `public_resident_photos`, not in `/adopt/[id]`.** The view is
+  also one of the objects `is_public_drive_file()` (0084) asks, so one `where`
+  line takes a Medical photo out of the gallery *and* makes the photo proxy
+  answer 404 to a signed-out visitor who has its link. A page-level filter
+  would have left the proxy serving it. Measured on dev after the apply:
+  Markey's gallery-only Medical photo went from served to `404` signed out.
+- **A deny-list on `Medical`, not an allow-list of the other three.** Resident
+  photos' `sub_folder` also holds an adoption update's `YYYYMMDD` (0097), and
+  the AppSheet import wrote the sheet's own value (blank became `Shelter`). An
+  allow-list of Shelter / Foster / Adoption would have silently hidden the
+  adopter photos. Dev counts, 2026-09-27: Foster 46, Medical 44, Shelter 22,
+  a date 2, Adoption 1, no nulls. The comparison ignores case and surrounding
+  spaces; a null folder stays public, since it is not a Medical filing. It
+  cannot catch a medical photo filed under the wrong folder — refiling is
+  staff's, and a "Move to folder" action is in the backlog item.
+- **The status subquery names `private.resident_current_state`.** Re-creating
+  the view from 0025's text would bind to 0086's gated public view, which
+  answers nothing to anon, so every status would coalesce to `Resident` and
+  adopted and deceased residents' photos would return. `check-medical-photos.mjs`
+  asserts the new view equals the old one minus Medical on real rows.
+- **Profile photos are not covered by this file.** A Medical photo chosen as
+  the profile photo still reaches `/adopt`, the home cards, recent adoptions,
+  `/r/<code>` and the proxy through `profile_photo_drive_file_id` (8 residents
+  on dev, one of them public). That decision — block the choice or fall back
+  to no photo — is the feature half's (`claude/medical-photos-profile`).
+## 2026-09-27 — Settings → Security requires 2-step verification (the feature)
+
+The feature half of the item whose schema half was `0100`. Security and the
+eight actions behind it (create a login, approve or change a role, issue a
+temporary password, archive, restore, delete, and the new reset) need a
+session that has passed Supabase Auth's authenticator-app (TOTP) factor.
+Nothing else in the app asks for it.
+
+- **Measured on dev before building** (`scripts/check-two-step-session.mjs`,
+  a throwaway admin, real GoTrue tokens): a password sign-in is `aal1`
+  (`amr` password); after verifying a TOTP code the **same session**
+  (same `session_id`) is `aal2`, `amr` totp+password; a refresh-token grant
+  keeps `aal2` and the session; a new sign-in of the enrolled account starts
+  at `aal1` with `nextLevel` `aal2`. Every Google (`oauth`) session on dev is
+  `aal1` — so Google's own 2-step, whether on or off, is invisible to us, as
+  the item said. The dev project has TOTP enroll/verify on, `jwt_exp` 3600,
+  no session timebox and no inactivity timeout, so **`aal2` lasts until
+  sign-out**: one code per sign-in, not per visit. The same run showed 0100
+  holding with real tokens: that admin's own JWT updated 0 `user_roles` rows
+  at `aal1` and 1 at `aal2`.
+- **The step-up survives the proxy's refresh — checked in the browser too.**
+  With the session cookie's `expires_at` pushed into the past, the next
+  request through `src/proxy.ts` refreshed it: new `iat`, same
+  `session_id`, still `aal2`, and Security stayed open.
+- **The page redirects; the actions enforce.** `/admin/security` sends an
+  `aal1` session to `/admin/security/verify`, but a server action can be
+  posted without the page ever rendering, and these actions write with the
+  service role, which bypasses 0100. So `refuseUnlessAdmin()` in
+  `actions.ts` now checks `aal2` too, and all eight actions go through it.
+  Tested by posting each action's id straight at the server from an `aal1`
+  admin session: all eight returned the "needs your authenticator app"
+  refusal, and the target login was afterwards still there, not archived
+  and not on a temporary password.
+- **The `aal` claim is believed only after GoTrue has checked the token.**
+  `getAssuranceLevel()` passes the access token to
+  `getAuthenticatorAssuranceLevel(jwt)`, which calls `getUser(jwt)` before
+  decoding. Decoding the cookie alone would accept a hand-edited `aal2`
+  (the cookie is the browser's). A forged token was tried: the proxy's own
+  `getUser()` rejected it first and sent the request to `/login`.
+- **The two verify actions are the only ones here without the `aal2` check**
+  — they are how a session gets it. Neither can change anyone's access:
+  setup adds a factor to your own login, a code raises only your own
+  session. They still require an admin. A factor id from the form is used
+  only if it is one of the signed-in login's own.
+- **No recovery codes.** auth-js 2.116 has an MFA recovery-codes API, but
+  behind `experimental.recoveryCodes` and not documented as available on
+  hosted projects; not worth building on for four admins. The page says
+  plainly there are none, and recovery is two routes instead:
+  1. **Another admin at `aal2` presses Reset** in the new 2-step column. It
+     deletes the login's TOTP factors with the service role
+     (`auth.admin.mfa.deleteFactor`). Measured: the person's open `aal2`
+     session drops to `aal1` at its next refresh — so within the hour the
+     access token lives, not instantly. Resetting your own is allowed (to
+     move phones while the old one still works; you proved you hold it).
+  2. **Last resort, no admin can pass 2-step:**
+     `node scripts/bootstrap-admin.mjs --env production --reset-2step <email>`.
+     Before this, the script refused to run once any role existed, so this
+     route did not exist (0100's entry flagged the gap). Tested on dev
+     against an enrolled login: removed 1, and a second run says there is
+     nothing to reset.
+  Keep at least two admins enrolled so route 1 is always there.
+- **`listUsers()` does not return factors** (measured: `undefined`, while
+  `getUserById()` has them), so the Security page asks
+  `auth.admin.mfa.listFactors` per login with a role, in parallel. Fine for
+  a shelter's dozen logins; revisit if it ever lists hundreds.
+- **Setup is a button, not something the page does on load**, so a reload
+  or a prefetch never mints a new key. Starting setup first deletes any
+  unconfirmed factor left by an abandoned attempt — GoTrue wants friendly
+  names unique per login, and the QR code on screen should be the one that
+  counts. The authenticator shows "Lanna Animal Care", with "(test)" or
+  "(UAT)" on those databases, since an admin may have both on one phone.
+- **Production:** TOTP enroll/verify is on by default on Supabase projects
+  and was on for dev; production's setting was not read from this session
+  (production reads are off-limits here). Check it before the deploy, or
+  Security will refuse every admin with "couldn't start the setup".

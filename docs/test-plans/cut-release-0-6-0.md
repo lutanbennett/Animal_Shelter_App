@@ -182,7 +182,7 @@ Automated checks by: Claude (release manager session)  Date: 2026-09-26
 
 - [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — item 2 was answered in chat; items 1, 3, 4 and 5 are open and need a person
 
-Manual verification by: pending: Lutan to read the nine notes and the title (item 1), run `--drift production` and apply `0087`–`0091` before deploying (item 3), and check the Email Routing verification (item 4)
+Manual verification by: pending: Lutan to read the nine notes and the title (item 1), check the Email Routing verification (item 4) and the two feature plans (item 5). **Item 3 is done** — he ran `--drift production` on 2026-09-26 against `8cc4880`: 91 files, 90 applied, `0091` the only one missing, then applied it before deploying. That run also corrected this plan, which had asserted five pending migrations (recorded by Claude at his request, 2026-09-27)
 
 ### Result
 

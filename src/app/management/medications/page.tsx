@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ClipboardCheck, Scale } from "lucide-react";
+import { ClipboardCheck, Scale, Truck } from "lucide-react";
 import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -137,6 +137,13 @@ export default async function MedicationsAdminPage(props: PageProps<"/management
         >
           <Scale aria-hidden="true" className="h-4 w-4" />
           {t.management.stockUsage.link}
+        </Link>
+        <Link
+          href="/deliveries"
+          className="mt-2 ml-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+        >
+          <Truck aria-hidden="true" className="h-4 w-4" />
+          {t.management.stock.deliveriesLink}
         </Link>
       </div>
 

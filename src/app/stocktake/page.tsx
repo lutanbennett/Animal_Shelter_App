@@ -1,8 +1,11 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Truck } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { dietUnitLabel, doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { canStocktake, type StocktakeItem, type StocktakeKind } from "@/lib/management/stocktake";
+import { canRecordDelivery } from "@/lib/management/stock-receipts";
 import { StocktakeSheet } from "./StocktakeSheet";
 
 type StockRow = {
@@ -68,6 +71,16 @@ export default async function StocktakePage(props: PageProps<"/stocktake">) {
       <div>
         <h1 className="text-2xl font-semibold text-foreground">{s.title}</h1>
         <p className="text-sm text-muted">{s.subtitle}</p>
+        {/* Volunteers count but don't record deliveries (0096). */}
+        {canRecordDelivery(role) && (
+          <Link
+            href={initialTab === "diet" ? "/deliveries?tab=diets" : "/deliveries"}
+            className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+          >
+            <Truck aria-hidden="true" className="h-4 w-4" />
+            {s.deliveriesLink}
+          </Link>
+        )}
       </div>
 
       {loadError && (

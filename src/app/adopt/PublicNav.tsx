@@ -21,7 +21,7 @@ import { XIcon } from "@/components/XIcon";
 /** One link in the public navigation; `current` marks the page the visitor is on. */
 export type PublicNavLink = { key: string; href: string; label: string; current: boolean };
 
-/** The four top-level entries: a link, or a group ("Get involved") that opens. */
+/** The top-level entries: a link, or a group ("Get involved", "Services") that opens. */
 export type PublicNavEntry =
   | { kind: "link"; link: PublicNavLink }
   | { kind: "group"; key: string; label: string; links: PublicNavLink[] };
@@ -150,7 +150,7 @@ export function PublicNavGroup({
 
 /**
  * The phone's menu: a button in the header that opens the whole screen —
- * the four entries with Get involved laid open, the language toggle, and a
+ * the entries with Get involved and Services laid open, the language toggle, and a
  * "Talk to us" panel at the foot — LINE, Call, Messenger and WhatsApp as
  * buttons, whichever are set, since on a phone those are how people
  * actually reach the shelter — then "Follow us" with Facebook, Instagram

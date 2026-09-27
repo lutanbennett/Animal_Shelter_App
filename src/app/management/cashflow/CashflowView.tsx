@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Coins, CalendarRange, CircleHelp, Download } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
+import { downloadCsv } from "@/lib/csv";
 import { formatBaht, formatMonth } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import {
@@ -75,22 +76,14 @@ export function CashflowView({
     [totals, shown],
   );
 
-  function downloadCsv() {
+  function downloadTable() {
     const csv = cashflowCsv(months, shown, {
       month: c.table.month,
       total: c.table.total,
       notPriced: c.csv.notPricedColumn,
       categories: c.categories,
     });
-    // The BOM is what makes Excel read the file as UTF-8, so Thai headings
-    // survive being double-clicked open.
-    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `cashflow-${from}-to-${to}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadCsv(`cashflow-${from}-to-${to}.csv`, csv);
   }
 
   function toggle(category: CashflowCategory) {
@@ -212,7 +205,7 @@ export function CashflowView({
           <h2 className="text-sm font-semibold text-foreground">{c.table.heading}</h2>
           <button
             type="button"
-            onClick={downloadCsv}
+            onClick={downloadTable}
             disabled={columns.length === 0}
             className="inline-flex items-center gap-1.5 rounded border border-border px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-surface-hover disabled:opacity-50"
           >

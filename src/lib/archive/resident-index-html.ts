@@ -101,7 +101,7 @@ function table(columns: string[], rows: string[][], empty: string): string {
  */
 function photoTile(file: ArchiveFile): string {
   const caption = join([
-    file.category,
+    file.provenance ?? file.category,
     file.dateTaken ? day(file.dateTaken) : null,
     file.isProfilePhoto ? "profile photo" : null,
   ]);
@@ -501,7 +501,13 @@ export function renderResidentIndexHtml(
             : []),
           ...record.photos.map((photo) => [
             fileLink(photo),
-            escOrDash(photo.category ? `Photos/${photo.category}` : null),
+            escOrDash(
+              photo.provenance
+                ? (photo.relativePath?.split("/").slice(0, -1).join("/") ?? "Adoption updates")
+                : photo.category
+                  ? `Photos/${photo.category}`
+                  : null,
+            ),
             esc(day(photo.dateTaken)),
           ]),
           ...bloodTestFiles.map(({ test, file }) => [

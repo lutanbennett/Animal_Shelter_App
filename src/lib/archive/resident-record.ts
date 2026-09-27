@@ -2,6 +2,11 @@ import "server-only";
 import { defaultDailyQuantity, formatQuantity } from "@/lib/diets/options";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { dateToYymm, dateToYyyymmdd } from "@/lib/google/drive-client";
+import {
+  ADOPTION_UPDATES_FOLDER,
+  RESIDENT_PHOTO_SELECT,
+  type PhotoProvenance,
+} from "@/lib/adoption-updates/options";
 
 /**
  * Everything the shelter holds on one resident, in one object.
@@ -26,6 +31,11 @@ export type ArchiveFile = {
   category: string | null;
   dateTaken: string | null;
   isProfilePhoto: boolean;
+  /**
+   * For a photo an adopter sent (0097): "Sent by … on … via …", so the
+   * archive says where it came from like every other view of it does.
+   */
+  provenance?: string | null;
 };
 
 export type ArchivePlacement = {
@@ -155,6 +165,26 @@ function photoRelativePath(
 ): string | null {
   if (!category || !dateTaken || !fileName) return null;
   return `Photos/${category}/${dateToYymm(dateTaken)}/${fileName}`;
+}
+
+/**
+ * Residents/<Name> (<ID>)/Adoption updates/<YYYYMMDD>/<file> — an adopter's
+ * photo; sub_folder is the <YYYYMMDD> the photo route filed it under.
+ */
+function adoptionUpdatePhotoRelativePath(
+  subFolder: string | null,
+  fileName: string | null,
+): string | null {
+  if (!subFolder || !fileName) return null;
+  return `${ADOPTION_UPDATES_FOLDER}/${subFolder}/${fileName}`;
+}
+
+/** The archive is written in English (resident-index-html.ts). */
+function provenanceText(update: PhotoProvenance): string {
+  const channel =
+    { line: "LINE", facebook: "Facebook", email: "email", visit: "a visit" }[update.channel] ??
+    update.channel;
+  return `Sent by ${update.sender?.name ?? "the adopter"} on ${update.received_on} via ${channel}`;
 }
 
 /**
@@ -398,11 +428,11 @@ export async function loadResidentArchiveRecord(
       .returns<BloodTestRow[]>(),
     supabase
       .from("attachments")
-      .select("id, owner_type, owner_id, drive_file_id, file_name, sub_folder, date_taken")
+      .select(`owner_type, owner_id, ${RESIDENT_PHOTO_SELECT}`)
       .eq("owner_type", "resident")
       .eq("owner_id", residentId)
       .order("date_taken", { ascending: true })
-      .returns<AttachmentRow[]>(),
+      .returns<(AttachmentRow & { adoption_update: PhotoProvenance | null })[]>(),
   ]);
 
   for (const result of [
@@ -571,10 +601,13 @@ export async function loadResidentArchiveRecord(
     photos: (photosResult.data ?? []).map((row) => ({
       driveFileId: row.drive_file_id,
       fileName: row.file_name,
-      relativePath: photoRelativePath(row.sub_folder, row.date_taken, row.file_name),
-      category: row.sub_folder,
+      relativePath: row.adoption_update
+        ? adoptionUpdatePhotoRelativePath(row.sub_folder, row.file_name)
+        : photoRelativePath(row.sub_folder, row.date_taken, row.file_name),
+      category: row.adoption_update ? null : row.sub_folder,
       dateTaken: row.date_taken,
       isProfilePhoto: row.drive_file_id === profilePhotoId,
+      provenance: row.adoption_update ? provenanceText(row.adoption_update) : null,
     })),
     generatedAt: new Date().toISOString(),
   };

@@ -161,7 +161,7 @@ Automated checks by: Claude (release manager session)  Date: 2026-09-25
 
 - [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — all three items are open. Item 2 was answered in chat, but items 1 and 3 need a person: nobody has read the five notes and the title as a body of text, and nobody has measured production's schema
 
-Manual verification by: pending: Lutan to read the five notes and the title (item 1) and run `--drift production` (item 3)
+Manual verification by: pending: Lutan to read the five notes and the title (item 1). **Item 3 is done** — he ran `--drift production` on 2026-09-25: 82 files, 82 applied, no drift, which settled defect 1 (recorded by Claude at his request, 2026-09-27)
 
 ### Result
 

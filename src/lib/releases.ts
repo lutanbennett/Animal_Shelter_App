@@ -43,12 +43,28 @@ export type Release = {
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
   "Admins now get an email when something behind the app stops working — the database, photo storage, backups and the other System status tiles — and another when it is working again, so nobody has to open the page to find out. Settings → System status has a new Alerts tile showing that the checks are running and who the last mail reached, with a button to send yourself a test.",
-  "Settings → Security now says what went wrong when an action on a login fails, instead of showing an error code. Deleting someone who has records in the system is refused with a note to archive them instead.",
-  "New: recurring jobs. Managers set up the routine that comes round every week or month — the Monday stocktake, ordering medication after it, the monthly worming — under Management → Recurring jobs, with who does it and a preview of the next dates. Each date then appears on that person's My tasks with Done and Skip buttons, stays there as overdue (with how many days late) until someone marks it, and can link straight to the screen it's done on. When someone is off, their dates can be handed to someone else for just those days; when someone leaves, their jobs can be moved in one go. The page also keeps the record of who did each one and when.",
+  "Photos filed under Medical when they were added to an animal no longer appear on the public adoption page, and their links no longer open for someone who is not signed in. A Medical photo chosen as an animal's main photo still shows for now; that is being fixed next.",
+  "Settings → Security now asks admins for a 6-digit code from an authenticator app on their phone (2-step verification), once per sign-in. The first visit walks you through setting the app up. The rest of the app signs in as before. A lost phone is reset by another admin from Security.",
+  "New on the website: a Pet relocation page, under a new Services menu and in the footer, saying the shelter can help move a dog or cat within Thailand or abroad — with a flying puppy in a cape at the top. The adoption listing now points adopters from abroad to it. It starts with standard text in English and Thai; admins can rewrite it under Settings → Website, where it is already filled in to edit.",
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.7.0",
+    date: "2026-09-27",
+    title:
+      "Adoption updates, recurring jobs, and recording deliveries",
+    major: true,
+    notes: [
+      "New: adoption updates. When an adopter sends news about an animal — on LINE, Facebook, by email or on a visit — add it from the Adoption updates card on the animal's page: the date, who sent it (the adopter is filled in for you), how it came in, what they said, and their photos. Those photos always say who sent them, when and how, on the Photos page too, where you can now show just the shelter's photos or just the adopters'. An animal returned to the shelter keeps the updates from their time away.",
+      "Settings → Security now says what went wrong when an action on a login fails, instead of showing an error code. Deleting someone who has records in the system is refused with a note to archive them instead.",
+      "New: recurring jobs. Managers set up the routine that comes round every week or month — the Monday stocktake, ordering medication after it, the monthly worming — under Management → Recurring jobs, with who does it and a preview of the next dates. Each date then appears on that person's My tasks with Done and Skip buttons, stays there as overdue (with how many days late) until someone marks it, and can link straight to the screen it's done on. When someone is off, their dates can be handed to someone else for just those days; when someone leaves, their jobs can be moved in one go. The page also keeps the record of who did each one and when.",
+      "New: record deliveries. Staff and managers can record each medication or food as it arrives — quantity, supplier, cost and a note — from Record a delivery on the Stocktake page or Management → Medications / Diets. Management → Stock between counts now uses them to show what was actually used between two stocktakes, instead of only how the count changed. It is only as good as the delivery records: a delivery nobody recorded makes usage look lower than it was, and the page says so.",
+      "Management → Stock between counts: a Difference column shows how far each item's use was from the plan, also as a percentage, and Download CSV saves the table for a spreadsheet. Small items no longer stand out over a miscount — a row is only marked when the gap is bigger than two counts of that item could be off by. On Deliveries, a delivery on a stocktake day now says whether it came before or after that day's count.",
+      "The Pet of the week card on the home page now shows the animal's hook line — the one-line introduction written on Edit resident, in Thai too once its translation is approved. An animal without one still shows the start of their bio, as before.",
+    ],
+  },
   {
     version: "0.6.1",
     date: "2026-09-26",
