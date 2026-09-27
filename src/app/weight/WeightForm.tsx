@@ -1,47 +1,79 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
-import { createWeight } from "./actions";
+import { createWeight, saveWeightEdit } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { formatDate, todayIso, weightUnit } from "@/lib/format";
+import { formatDate, formatWeightKg, todayIso, weightUnit } from "@/lib/format";
+import { visitDate, type LinkableVisit } from "@/lib/vets/linkable";
 
-export type VetAppointmentOption = {
+export type VetAppointmentOption = LinkableVisit;
+
+/** Another reading of this resident's, for the one-weight-per-day notice. */
+export type ExistingReading = { id: string; date: string; weight_kg: number };
+
+export type WeightInitial = {
   id: string;
-  appointment_date: string;
-  reason: string | null;
+  date: string;
+  weight_kg: number;
+  vet_appointment_id: string | null;
+  notes: string | null;
 };
 
+/**
+ * Log a weight (/weight/new), or correct one (/weight/[id]/edit) when
+ * `initial` is given.
+ *
+ * A resident has one weight per day (0106). Choosing a day that already has
+ * a reading says so as soon as the date is picked: logging turns into a
+ * correction of that reading, and an edit is stopped from moving onto it.
+ * The database refuses the second row either way; this is so nobody finds
+ * out only after pressing Save.
+ */
 export function WeightForm({
   residentId,
   residentDisplayName,
   vetAppointments,
-  preselectedVetAppointmentId,
-  previousReading,
+  preselectedVetAppointmentId = null,
+  previousReading = null,
+  readings,
+  initial = null,
 }: {
   residentId: string;
   residentDisplayName: string;
+  /** Already filtered to visits this reading may link to (loadLinkableVisits). */
   vetAppointments: VetAppointmentOption[];
-  preselectedVetAppointmentId: string | null;
+  preselectedVetAppointmentId?: string | null;
   /** "Last reading: 12.4 kg on 3 Sep 2026", already localised; null when none. */
-  previousReading: string | null;
+  previousReading?: string | null;
+  /** The resident's other readings — never the one being edited. */
+  readings: ExistingReading[];
+  initial?: WeightInitial | null;
 }) {
-  const [state, formAction, pending] = useActionState(createWeight, undefined);
+  const editing = initial !== null;
+  const [state, formAction, pending] = useActionState(
+    editing ? saveWeightEdit : createWeight,
+    undefined,
+  );
   const { t, locale } = useI18n();
   // Linking a vet visit defaults the date to the visit's date until the user
   // has typed a date themselves — same behaviour as the blood-test form.
-  const [dateTouched, setDateTouched] = useState(false);
+  const [dateTouched, setDateTouched] = useState(editing);
   const [date, setDate] = useState(() => {
+    if (initial) return initial.date;
     if (preselectedVetAppointmentId) {
       const match = vetAppointments.find((a) => a.id === preselectedVetAppointmentId);
-      if (match) return match.appointment_date.slice(0, 10);
+      if (match) return visitDate(match);
     }
     return todayIso();
   });
 
+  const sameDay = readings.find((r) => r.date === date) ?? null;
+
   function handleVetAppointmentChange(id: string) {
     if (dateTouched || !id) return;
     const match = vetAppointments.find((a) => a.id === id);
-    if (match) setDate(match.appointment_date.slice(0, 10));
+    if (match) setDate(visitDate(match));
   }
 
   const inputClass =
@@ -50,6 +82,10 @@ export function WeightForm({
   return (
     <form action={formAction} className="flex max-w-2xl flex-col gap-6">
       <input type="hidden" name="residentId" value={residentId} />
+      {initial && <input type="hidden" name="weightId" value={initial.id} />}
+      {!editing && sameDay && (
+        <input type="hidden" name="replaceWeightId" value={sameDay.id} />
+      )}
 
       <div className="flex flex-col gap-1">
         <p className="text-sm text-muted">{t.weight.forResident(residentDisplayName)}</p>
@@ -73,6 +109,7 @@ export function WeightForm({
               min="0.01"
               step="0.01"
               placeholder="0.00"
+              defaultValue={initial?.weight_kg ?? undefined}
               autoFocus
               className={`${inputClass} w-full pr-10`}
             />
@@ -104,6 +141,26 @@ export function WeightForm({
           />
         </div>
 
+        {sameDay && (
+          <div
+            role="status"
+            className="flex flex-col gap-1 rounded border border-info/40 bg-info/10 px-3 py-2 text-sm text-foreground sm:col-span-2"
+          >
+            <p>
+              {(editing ? t.weight.sameDay.taken : t.weight.sameDay.replace)(
+                formatWeightKg(sameDay.weight_kg, locale),
+                formatDate(sameDay.date, locale),
+              )}
+            </p>
+            <Link
+              href={`/weight/${sameDay.id}/edit`}
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              {t.weight.sameDay.editThat}
+            </Link>
+          </div>
+        )}
+
         <div className="flex flex-col gap-1 sm:col-span-2">
           <label htmlFor="vetAppointmentId" className="text-sm font-medium text-muted">
             {t.weight.linkedVisit}
@@ -111,7 +168,7 @@ export function WeightForm({
           <select
             id="vetAppointmentId"
             name="vetAppointmentId"
-            defaultValue={preselectedVetAppointmentId ?? ""}
+            defaultValue={initial?.vet_appointment_id ?? preselectedVetAppointmentId ?? ""}
             onChange={(e) => handleVetAppointmentChange(e.target.value)}
             className={inputClass}
           >
@@ -136,6 +193,7 @@ export function WeightForm({
           name="notes"
           rows={3}
           placeholder={t.weight.notesPlaceholder}
+          defaultValue={initial?.notes ?? ""}
           className={inputClass}
         />
       </div>
@@ -145,10 +203,16 @@ export function WeightForm({
       <div>
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || (editing && !!sameDay)}
           className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
         >
-          {pending ? t.weight.saving : t.weight.saveButton}
+          {pending
+            ? t.weight.saving
+            : editing
+              ? t.weight.saveChanges
+              : sameDay
+                ? t.weight.sameDay.replaceButton
+                : t.weight.saveButton}
         </button>
       </div>
     </form>

@@ -395,6 +395,29 @@ const weights = keepIfResident(src.Weight, "RID", "Weight")
   }))
   .filter((w) => (w.date && w.kg > 0) || (note("dropped", `Weight ${w.id}: date "${w.date}" / weight ${w.kg}`), false));
 
+// One weight per resident per day and one per visit (0106's unique
+// indexes), applied here as the migration does, so a snapshot that breaks
+// them loads with a note instead of failing the whole import. The later row
+// in the sheet wins — AppSheet appends, so that is the later entry. The
+// 2026-09-22 snapshot has neither.
+{
+  const lastOnDay = new Map(weights.map((w, i) => [`${w.residentId}|${w.date}`, i]));
+  for (let i = weights.length - 1; i >= 0; i--) {
+    const w = weights[i];
+    if (lastOnDay.get(`${w.residentId}|${w.date}`) !== i) {
+      note("dropped", `Weight ${w.id}: a second reading for its resident on ${w.date} — one weight per day; the later one kept`);
+      weights.splice(i, 1);
+    }
+  }
+  const lastOnVisit = new Map(weights.filter((w) => w.appointmentId).map((w) => [w.appointmentId, w]));
+  for (const w of weights) {
+    if (w.appointmentId && lastOnVisit.get(w.appointmentId) !== w) {
+      note("orphan-rows", `Weight ${w.id} on ${w.date}: its visit already has a later weight → unlinked`);
+      w.appointmentId = null;
+    }
+  }
+}
+
 const PROCEDURE_RENAMES = { "X-Ray": "X-ray", "Teeth Clean": "Teeth cleaning" };
 const procedures = keepIfResident(src.Procedures, "RID", "Procedures")
   .map((p) => ({

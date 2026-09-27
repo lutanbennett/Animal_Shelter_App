@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { formatDate, formatWeightKg } from "@/lib/format";
-import { WeightForm, type VetAppointmentOption } from "./WeightForm";
+import { loadLinkableVisits } from "@/lib/vets/linkable";
+import { WeightForm, type ExistingReading } from "../WeightForm";
 
 export default async function NewWeightPage(props: PageProps<"/weight/new">) {
   const searchParams = await props.searchParams;
@@ -30,7 +32,20 @@ export default async function NewWeightPage(props: PageProps<"/weight/new">) {
 
   const supabase = await createClient();
 
-  const [residentResult, vetAppointmentsResult, stateResult, latestResult] =
+  // "Log weight" on a visit that already has its reading goes to that
+  // reading instead: one weight per visit (0106), so the only thing to do
+  // there is correct it.
+  if (typeof vetAppointmentId === "string" && vetAppointmentId) {
+    const { data: onVisit } = await supabase
+      .from("weight")
+      .select("id")
+      .eq("vet_appointment_id", vetAppointmentId)
+      .limit(1)
+      .returns<{ id: string }[]>();
+    if (onVisit?.[0]) redirect(`/weight/${onVisit[0].id}/edit`);
+  }
+
+  const [residentResult, vetAppointmentsResult, stateResult, readingsResult] =
     await Promise.all([
       supabase
         .from("residents")
@@ -38,12 +53,7 @@ export default async function NewWeightPage(props: PageProps<"/weight/new">) {
         .eq("id", residentId)
         .limit(1)
         .returns<{ id: string; name: string; thai_name: string | null }[]>(),
-      supabase
-        .from("vet_appointments")
-        .select("id, appointment_date, reason")
-        .eq("resident_id", residentId)
-        .order("appointment_date", { ascending: false })
-        .returns<VetAppointmentOption[]>(),
+      loadLinkableVisits(supabase, residentId, { onePerVisit: "weight", notInFuture: true }),
       supabase
         .from("resident_current_state")
         .select("is_deceased")
@@ -52,11 +62,10 @@ export default async function NewWeightPage(props: PageProps<"/weight/new">) {
         .returns<{ is_deceased: boolean }[]>(),
       supabase
         .from("weight")
-        .select("date, weight_kg")
+        .select("id, date, weight_kg")
         .eq("resident_id", residentId)
         .order("date", { ascending: false })
-        .limit(1)
-        .returns<{ date: string; weight_kg: number }[]>(),
+        .returns<ExistingReading[]>(),
     ]);
 
   const resident = residentResult.data?.[0];
@@ -95,7 +104,8 @@ export default async function NewWeightPage(props: PageProps<"/weight/new">) {
     );
   }
 
-  const latest = latestResult.data?.[0];
+  const readings = readingsResult.data ?? [];
+  const latest = readings[0];
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
@@ -114,14 +124,15 @@ export default async function NewWeightPage(props: PageProps<"/weight/new">) {
 
       {vetAppointmentsResult.error && (
         <p className="text-sm text-danger">
-          {t.weight.couldntLoadVetAppointments}: {vetAppointmentsResult.error.message}
+          {t.weight.couldntLoadVetAppointments}: {vetAppointmentsResult.error}
         </p>
       )}
 
       <WeightForm
         residentId={residentId}
         residentDisplayName={displayName}
-        vetAppointments={vetAppointmentsResult.data ?? []}
+        vetAppointments={vetAppointmentsResult.visits}
+        readings={readings}
         preselectedVetAppointmentId={
           typeof vetAppointmentId === "string" && vetAppointmentId
             ? vetAppointmentId

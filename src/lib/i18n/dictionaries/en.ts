@@ -2315,11 +2315,24 @@ const en = {
     linkedVisit: "Linked vet visit",
     noLinkedVisit: "No linked visit — weighed at the shelter",
     linkedVisitHint:
-      "Weighing is standard at a vet visit; linking it keeps the reading with that visit's record.",
+      "Weighing is standard at a vet visit; linking it keeps the reading with that visit's record. A visit carries one weight, so visits that already have one — and visits still to come — aren't listed.",
     notes: "Notes",
     notesPlaceholder: "Optional — e.g. before or after feeding, scales used, body condition.",
     saving: "Saving...",
     saveButton: "Save weight",
+    editPageTitle: "Edit Weight",
+    editPageSubtitle:
+      "Correct this reading. A resident has one weight per day and a vet visit one weight, so a correction changes this reading rather than adding another.",
+    readingNotFound: "Weight reading not found.",
+    saveChanges: "Save changes",
+    sameDay: {
+      replace: (weight: string, date: string) =>
+        `${weight} is already recorded for ${date}. There is one weight per day, so saving corrects that reading instead of adding a second. Notes and a linked visit left blank are kept from it.`,
+      taken: (weight: string, date: string) =>
+        `${weight} is already recorded for ${date}, and there is one weight per day. Choose another date, or correct that reading instead.`,
+      editThat: "Edit that reading",
+      replaceButton: "Correct the day's weight",
+    },
     stats: {
       latest: "Latest",
       sincePrevious: "Since previous",
@@ -2337,6 +2350,12 @@ const en = {
       dateInFuture: "Date weighed can't be in the future.",
       enterWeight: "Enter the weight.",
       weightPositive: "Weight must be more than 0 kg.",
+      alreadyOnDay:
+        "A weight is already recorded for this resident on that day. There is one weight per day — correct that reading on the Weight tab instead.",
+      alreadyOnVisit:
+        "That vet visit already has a weight. Correct that reading instead, or link this one to another visit.",
+      readingGone:
+        "That reading was changed or removed in the meantime. Reload the page and try again.",
     },
   },
 
@@ -3142,6 +3161,7 @@ const en = {
       startsOn: (date: string) => `Starts ${date}`,
       linkedVisit: (date: string) => `Vet visit ${date}`,
       logWeight: "Log weight",
+      editWeight: "Edit weight",
       logProcedure: "Log procedure",
       addDiet: "Add diet",
       currentDiets: "Current",

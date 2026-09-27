@@ -584,8 +584,10 @@ const manual: Manual = {
           path: "Resident hub → Weight → Log weight",
           steps: [
             "Enter the weight in kg and the date weighed. The last reading is shown for comparison.",
-            "If the weighing happened at a vet visit, link it so the reading stays with that visit.",
+            "If the weighing happened at a vet visit, link it so the reading stays with that visit. A visit holds one weight, so visits that already have one aren't offered, and nor are visits still to come.",
             "Tap Save weight. The Weight page charts every reading and shows the change since the previous and first readings.",
+            "A resident has one weight per day. If the day you pick already has a reading, the form says so and saving corrects that reading instead of adding a second — this is how a vet's weight on an animal's intake day replaces the intake weight and links it to the visit. Blank notes and visit keep the reading's own.",
+            "To fix a mistyped reading, tap Edit on it on the Weight page (or Edit weight on its vet visit). Corrections always change the reading itself.",
           ],
           screenshot: {
             src: "/manual/weight-history.png",
