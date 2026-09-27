@@ -6260,3 +6260,59 @@ Medical as a destination and both touch the same upload path.
   photo is in Medical, marks the ones on the website and says whether a
   photo in another folder exists for staff to choose. On dev only White has
   one; the view fallback covers the rest without touching anybody's photo.
+
+## 2026-09-27 — Who can do a recurring job is derived from its link, not stored
+
+Backlog, "Recurring jobs: only offer people who can actually do the job"
+(Pass 1 of the role walkthrough: a stocktake given to a vet bounced them).
+The item left open how a job says which capability it needs — a field on
+the job, or derived from its target path. **Derived from the path**, in
+`src/lib/recurring-jobs/eligibility.ts`:
+
+- **The link is what fails.** A vet was not refused by an abstract
+  "stocktake capability"; they were refused by `/stocktake`. A separate
+  capability field could disagree with the link (capability "stocktake",
+  link `/maintenance`) and then protect nothing. Deriving it means the
+  one thing that can go wrong is the one thing checked.
+- **The rules borrow each page's own predicate** — `canStocktake`,
+  `canRecordDelivery`, `canWriteMaintenance` — so a page guard and the
+  picker can only drift if someone edits one and not the other. `canManage`
+  is restated (admin, management) because `require-management.ts` imports
+  server-only code and the form is a client component. Longest prefix wins;
+  query and fragment are ignored (`/stocktake?tab=diets` is `/stocktake`).
+  A path no rule names — no link, `/residents`, `/my` — is open to every
+  role with app access, as 0095 has it.
+- **Maintenance means writing it**, as the item says: volunteers can open
+  the board and add photos but cannot move a job on. Other pages mean
+  "can open it".
+- **`/enclosures`, `/projects`, `/contacts`, `/vets` exclude vets** now,
+  per Lutan's Pass 1 ruling, although on `main` today a vet can still open
+  them: `claude/vet-scope-navigation` is adding those guards in parallel.
+  Stating the ruling here rather than waiting means no job is handed to a
+  vet in the gap. **When that stream lands, its route rules and this table
+  should become one shared helper** — noted in the PR as a follow-up rather
+  than both streams inventing one at once.
+- **No migration**, and none needed: 0095 checks only that an assignee is
+  live staff, and this is a check on top of that, in the actions. That also
+  means a write straight to the table skips it; the display half below is
+  what catches that.
+
+Jobs already assigned are handled three ways, because a filter on the form
+does not fix a row saved before it:
+
+- **On save**: `saveRecurringJob` refuses a team containing anyone who
+  can sign in but can't do the job — checked *before* the row is written,
+  so changing the link to a page someone on the team can't open is refused
+  whole, not saved half-way. The form keeps such a person listed, struck
+  through, so they can be unticked. Hand over (both modes) refuses per date
+  or per job, with the reason, and carries on with the rest.
+- **On the Management page**: a red banner and a line on the card, next to
+  the existing "stranded" warning; a cover team with such a person is
+  flagged under Handed to someone else. Archived people stay the stranded
+  warning's business, not this one's.
+- **On the person's My tasks**: the job stays (it is still theirs to skip or
+  pass back) but its title no longer links to a page that would only refuse
+  them, and it says to ask management to reassign it.
+
+Dev had one such row on 2026-09-27 — "Stocktake of medication" (`/stocktake`)
+with a vet — left in place as the fixture for the display half.

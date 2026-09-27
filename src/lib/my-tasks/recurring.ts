@@ -9,6 +9,7 @@ import {
   type OpenOccurrence,
 } from "@/lib/recurring-jobs/queries";
 import { timeOfDayRank } from "@/lib/recurring-jobs/rule";
+import { canDoJob } from "@/lib/recurring-jobs/eligibility";
 import type { MyTask, MyTaskSection } from "./types";
 
 /**
@@ -55,6 +56,7 @@ async function loadMine(
 export async function loadMyRecurringTasks(
   supabase: SupabaseClient,
   userId: string,
+  role: string | null,
   t: Dictionary,
   today: string,
 ): Promise<MyTaskSection> {
@@ -69,6 +71,10 @@ export async function loadMyRecurringTasks(
   );
   const r = t.my.recurring;
 
+  // A job whose page the reader's role can't open (given it before the picker
+  // filtered by role, or the link changed since) keeps its place on the list,
+  // since it is still theirs to get done or pass back, but loses the link that
+  // would only refuse them, and says so instead.
   const tasks: MyTask[] = open
     .sort(
       (a, b) =>
@@ -83,11 +89,12 @@ export async function loadMyRecurringTasks(
       about: [
         t.management.recurringJobs.timesOfDay[o.job.time_of_day],
         o.cover ? (o.cover.note ? r.handedToYouBecause(o.cover.note) : r.handedToYou) : null,
+        canDoJob(role, o.job.link_path) ? null : r.cannotOpen,
       ]
         .filter(Boolean)
         .join(" · "),
       due: o.occurs_on,
-      href: o.job.link_path,
+      href: canDoJob(role, o.job.link_path) ? o.job.link_path : null,
       others: o.team
         .filter((id) => id !== userId)
         .map((id) => appUserLabel(users.get(id)))

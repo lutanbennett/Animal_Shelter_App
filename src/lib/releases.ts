@@ -42,6 +42,7 @@ export type Release = {
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
+  "Recurring jobs now only offer people who can actually do the job: a stocktake job no longer lists vets, a maintenance job lists admin, management and staff, and a job on a Management or Settings page lists only those who can open it. A job already given to someone who can't open its page is marked in red on Management → Recurring jobs until it is reassigned, and on that person's My tasks it says so instead of linking to a page that would turn them away.",
   "Booking a vet visit now takes you back to the resident's Vet Appointments page (or the Residents list, when you booked for several) instead of the public website. And opening a page your role doesn't include — Stocktake, Deliveries, Management or Settings — now says You don't have access to this page, inside the app with a button back to My tasks, instead of dropping you on the public website.",
   "Admins now get an email when something behind the app stops working — the database, photo storage, backups and the other System status tiles — and another when it is working again, so nobody has to open the page to find out. Settings → System status has a new Alerts tile showing that the checks are running and who the last mail reached, with a button to send yourself a test.",
   "Photos filed under Medical when they were added to an animal no longer appear on the public adoption page, and their links no longer open for someone who is not signed in.",
