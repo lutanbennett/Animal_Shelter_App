@@ -193,7 +193,9 @@ why. To look at it locally, put `PUBLIC_SITE=locked` in
 the `lannacare.org` routes move from the `production` block of
 `wrangler.jsonc` to `uat`, and production gets the new domain,
 `RELEASE_MAIL_ENV` `Production` and a From on that domain, and loses
-`"PUBLIC_SITE": "locked"`, or the live site opens on a sign-in page;
+`"PUBLIC_SITE": "locked"`, or the live site opens on a sign-in page
+(`scripts/deploy.mjs` refuses `--env production` while the block is off
+`lannacare.org` and still locked);
 `SITE_ORIGINS.production` in `scripts/deploy.mjs` and `HOST=` in
 `scripts/pi/deploy-pi.sh` follow. Outside the repo: today's
 `.env.deploy.production` becomes `.env.deploy.uat`, a new
