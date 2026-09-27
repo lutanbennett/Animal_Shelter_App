@@ -1,6 +1,6 @@
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { requireRole } from "./require-role";
 
 /**
  * The roles that see the Management section (dashboard, contact
@@ -12,18 +12,9 @@ export function canManage(role: string | null | undefined): boolean {
   return role != null && MANAGEMENT_ROLES.has(role);
 }
 
-/** Redirects everyone but admin/management away from Management pages. */
+/** Sends everyone but admin/management to the no-access page (require-role.ts). */
 export async function requireManagementUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
-
-  const { data: role } = await supabase.rpc("current_user_role");
-  if (!canManage(role)) redirect("/");
-
+  const { user } = await requireRole(canManage);
   return user;
 }
 

@@ -3190,6 +3190,13 @@ const en = {
     },
   },
 
+  /** /no-access: where a page's role check sends a signed-in app user it refuses. */
+  noAccess: {
+    pageTitle: "You don't have access to this page",
+    body: "Your role doesn't include it. If you need it for your work, ask a manager or an admin.",
+    goToMy: "Go to My tasks",
+  },
+
   my: {
     pageTitle: "My tasks",
     pageSubtitle: "What's assigned to you, most urgent first.",
