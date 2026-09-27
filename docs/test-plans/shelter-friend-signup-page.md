@@ -41,7 +41,7 @@ Again at `ce2b3c3`, after the second sync:
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: `check`, `migration-numbers` and `test-plan` all passed on #175 at `4cf330c`
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -171,7 +171,7 @@ Manual verification by: pending: the admin editor's starter prefill, the starter
 
 - [x] Open defects are either fixed or explicitly accepted above — one fixed, one accepted
 - [ ] Checklist pasted into the PR — n/a: the PR description summarises it and links `docs/test-plans/shelter-friend-signup-page.md`, which is in the PR itself
-- [ ] Handed to the production release manager — n/a: not yet — the PR does not exist at this commit
+- [x] Handed to the production release manager — via #175 and this plan, merged on Lutan's go (2026-09-27)
 
 Result: pass with accepted defects
 
