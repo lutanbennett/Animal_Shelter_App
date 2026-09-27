@@ -32,7 +32,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: #170, run 36288255556 — `check` pass (1m38s), `migration-numbers` pass (10s), `test-plan` pass (6s)
 
 ## 3. Schema and data
 
@@ -190,7 +190,7 @@ Manual verification by: pending: production sub_folder count and review of publi
 ### Result
 
 - [ ] Open defects are either fixed or explicitly accepted above — n/a: defect 1 is deferred to the feature half by design, recorded above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR: #170's description
 - [ ] Handed to the production release manager — n/a: not yet — after merge
 
 Result: pass with accepted defects
