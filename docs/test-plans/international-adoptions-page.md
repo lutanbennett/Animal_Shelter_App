@@ -22,11 +22,11 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in: `Already up to date.` at `d3a8401`
-- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — on `d3a8401`, which printed:
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in: `Already up to date.` at `d3a8401`; run again after opening the PR, it brought in the `0105` vets-readonly schema PR (migration, script, docs) and merged cleanly as `ba04285`
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — on `d3a8401` and again on the merged tree `ba04285`, which printed:
 
 ```
-=== gates: build exited 0 after 215s
+=== gates: build exited 0 after 72s
 
 gates: typecheck=0 lint=0 build=0
 ```
@@ -81,7 +81,7 @@ gates: typecheck=0 lint=0 build=0
 
 - [x] The pages nearest the change still work — `/adopt` (listing, and its line for adopters abroad now reads "รับเลี้ยงจากต่างประเทศใช่ไหม? ดูขั้นตอนการรับเลี้ยงจากต่างประเทศ →" in Thai, linking `/adopt/international`) and `/` both load
 - [x] Any shared file touched checked from a second, unrelated page — `PublicHeader.tsx` / `PublicFooter.tsx` / the dictionaries via `/` and `/adopt` loading with the new Adopt group; `public-paths.ts` via `/adopt` loading signed out
-- [x] Nothing merged from `main` during `sync` was broken by this branch — the sync brought nothing in
+- [x] Nothing merged from `main` during `sync` was broken by this branch — the second sync brought in only `0105` and its docs and script, none of which touches the public site; gates pass on the merged tree
 
 ## 7. Documentation
 
