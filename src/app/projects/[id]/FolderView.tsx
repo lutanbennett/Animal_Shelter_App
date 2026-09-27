@@ -31,6 +31,7 @@ import {
 import { FolderGrid, folderDisplayName } from "../FolderGrid";
 import { MoveFolderDialog } from "./MoveFolderDialog";
 import { PhotoSection } from "./PhotoSection";
+import { OptionalDateInput } from "@/components/OptionalDateInput";
 
 const inputClass =
   "rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
@@ -261,7 +262,7 @@ export function FolderView({
                   </label>
                   <label className="flex flex-col gap-1 text-xs font-medium text-muted">
                     {info.date}
-                    <input type="date" name="projectDate" defaultValue={folder.project_date ?? ""} className={inputClass} />
+                    <OptionalDateInput name="projectDate" label={info.date} defaultValue={folder.project_date ?? ""} className={inputClass} />
                   </label>
                   <label className="flex flex-col gap-1 text-xs font-medium text-muted">
                     {info.location}

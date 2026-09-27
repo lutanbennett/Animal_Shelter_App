@@ -22,6 +22,8 @@ const th: Dictionary = {
     add: "เพิ่ม",
     addMore: "+ เพิ่มเติม",
     change: "เปลี่ยน",
+    clearDate: "ล้าง",
+    clearDateLabel: (field: string) => `ล้าง${field}`,
     done: "เสร็จสิ้น",
     dash: "—",
     saved: "บันทึกแล้ว",
