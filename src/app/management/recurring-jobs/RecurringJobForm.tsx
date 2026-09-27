@@ -116,11 +116,11 @@ export function RecurringJobForm({
   const linkPath =
     linkChoice === "none" ? "" : linkChoice === "other" ? linkOther : LINK_PRESETS[linkChoice as keyof typeof LINK_PRESETS];
 
-  // Everyone whose role can do the work on the job's page (eligibility.ts),
-  // so a vet is never offered a stocktake. Anyone already on the job who
-  // can't — given it before this filter, or the link has just changed — or
-  // who has since left stays listed and flagged, so they can be taken off
-  // rather than silently kept. Saving refuses the first kind.
+  // Everyone whose role can do the work on the job's page (eligibility.ts):
+  // never a vet, and a volunteer is not offered maintenance. Anyone already
+  // on the job who can't — given it before this filter, or the link has just
+  // changed — or who has since left stays listed and flagged, so they can be
+  // taken off rather than silently kept. Saving refuses the first kind.
   const eligible = (role: string | null | undefined) => canDoJob(role, linkPath);
   type Option = TeamMember & { cannotDo: boolean };
   const options: Option[] = [
@@ -134,7 +134,11 @@ export function RecurringJobForm({
       })),
     ...team
       .filter((m) => !people.some((p) => p.id === m.id))
-      .map((m) => ({ ...m, archived: true, cannotDo: false })),
+      .map((m) => ({
+        ...m,
+        name: !m.archived && m.role ? `${m.name} — ${roleLabel(t, m.role)}` : m.name,
+        cannotDo: !m.archived && !eligible(m.role),
+      })),
   ];
   const restricted = jobIsRestricted(linkPath);
 
@@ -396,6 +400,7 @@ export function RecurringJobForm({
         <fieldset className="flex flex-col gap-1">
           <legend className="text-sm font-medium text-foreground">{f.assignees}</legend>
           <span className={hintClass}>{f.assigneesHint}</span>
+          <span className={hintClass}>{f.assigneesNoVets}</span>
           {restricted && (
             <span className={hintClass}>
               {f.assigneesRestricted(rolesForJob(linkPath).map((role) => roleLabel(t, role)).join(", "))}

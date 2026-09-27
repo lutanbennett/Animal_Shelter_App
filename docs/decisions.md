@@ -6281,19 +6281,26 @@ the job, or derived from its target path. **Derived from the path**, in
   server-only code and the form is a client component. Longest prefix wins;
   query and fragment are ignored (`/stocktake?tab=diets` is `/stocktake`).
   A path no rule names — no link, `/residents`, `/my` — is open to every
-  role with app access, as 0095 has it.
+  assignable role.
 - **Maintenance means writing it**, as the item says: volunteers can open
   the board and add photos but cannot move a job on. Other pages mean
   "can open it".
-- **`/enclosures`, `/projects`, `/contacts`, `/vets` exclude vets** now,
-  per Lutan's Pass 1 ruling, although on `main` today a vet can still open
-  them: `claude/vet-scope-navigation` is adding those guards in parallel.
-  Stating the ruling here rather than waiting means no job is handed to a
-  vet in the gap. **When that stream lands, its route rules and this table
-  should become one shared helper** — noted in the PR as a follow-up rather
-  than both streams inventing one at once.
-- **No migration**, and none needed: 0095 checks only that an assignee is
-  live staff, and this is a check on top of that, in the actions. That also
+- **Vets are never assignable, whatever the link** (Lutan, 2026-09-27, in
+  this stream's session): a vet's work comes from their vet appointments —
+  adding a vaccination for the resident they saw, say — not from the
+  shelter's routine. So even a job with no link, or one on `/residents`,
+  does not go to a vet. This is broader than the page rules and sits above
+  them (`ASSIGNABLE_ROLES` is the app-access roles minus `vet`), so it
+  does not wait on `claude/vet-scope-navigation`'s route guards. Taking
+  recurring jobs out of a vet's menu altogether, and shaping the vet's world
+  around appointments, is its own backlog item. **When vet-scope lands, its
+  route rules and this table should still become one shared helper** —
+  noted in the PR rather than both streams inventing one at once.
+- **0095 is left as it is.** It still lets a vet read the rules and be an
+  assignee at the table level; narrowing that is schema work for its own
+  PR, and nothing here needs it.
+- **No migration**: 0095 checks only that an assignee is live staff, and
+  this is a check on top of that, in the actions. That also
   means a write straight to the table skips it; the display half below is
   what catches that.
 
@@ -6314,5 +6321,7 @@ does not fix a row saved before it:
   pass back) but its title no longer links to a page that would only refuse
   them, and it says to ask management to reassign it.
 
-Dev had one such row on 2026-09-27 — "Stocktake of medication" (`/stocktake`)
-with a vet — left in place as the fixture for the display half.
+Dev had two such rows on 2026-09-27, both with the same vet: "Stocktake of
+medication" (`/stocktake`, the Pass 0 case) and "Order medicine for the
+week" (no link), flagged once vets stopped being assignable at all. Both
+are left in place as fixtures for the display half.

@@ -9,7 +9,7 @@ import {
   loadRecurringJobs,
   type OccurrenceRow,
 } from "@/lib/recurring-jobs/queries";
-import { canDoJob } from "@/lib/recurring-jobs/eligibility";
+import { ASSIGNABLE_ROLES, canDoJob } from "@/lib/recurring-jobs/eligibility";
 import { RecurringJobsView, type JobSummary, type PersonOption, type CoveredDate, type RecordEntry } from "./RecurringJobsView";
 import type { TeamMember } from "./RecurringJobForm";
 
@@ -37,7 +37,7 @@ export default async function RecurringJobsPage() {
     supabase
       .from("app_users")
       .select("id, email, display_name, role, archived_at")
-      .in("role", ["admin", "management", "staff", "vet", "volunteer"])
+      .in("role", [...ASSIGNABLE_ROLES])
       .is("archived_at", null)
       .returns<AppUser[]>(),
     supabase

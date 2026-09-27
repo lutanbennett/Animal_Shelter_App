@@ -11,14 +11,14 @@
 | PR | opened from this branch; number in the PR itself |
 | Tested by / date | Claude (recurring-jobs-eligible-assignees session), 2026-09-27, signed in as the dev test user (admin) in the browser pane |
 | Carries a migration? | no |
-| Tested at SHA | `8e41c7c` (after `sync`, which found `main` already merged); later commits on the branch are this plan only |
+| Tested at SHA | the commit "Vets are never given a recurring job" (re-tested after Lutan's ruling, on top of `8e41c7c`); `sync` found `main` already merged |
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence, and it matches what the backlog item asked for — a recurring job's assignees are limited to roles that can do the work on the page it links to; the picker filters, save and Hand over refuse, and jobs already with such a person are flagged on Management → Recurring jobs and lose their link on that person's My tasks
+- [x] Change is described in one sentence, and it matches what the backlog item asked for — vets are never given a recurring job (Lutan's ruling in the session: a vet's work comes from vet appointments), and other roles only jobs on pages they can do the work on; the picker filters, save and Hand over refuse, and jobs already with such a person are flagged on Management → Recurring jobs and lose their link on that person's My tasks
 - [x] Files/areas touched listed — new `src/lib/recurring-jobs/eligibility.ts` and `scripts/check-recurring-job-eligibility.mjs`; `src/app/management/recurring-jobs/` (actions, page, form, view); `src/lib/my-tasks/recurring.ts` and `src/app/my/page.tsx`; `src/lib/recurring-jobs/rule.ts` (a type only); en/th dictionaries; `src/lib/manual/en.ts`; `src/lib/releases.ts`; `docs/decisions.md`, `docs/backlog.md`. No `worker/`, no migration
-- [x] Roles affected identified — admin and management (the Recurring jobs page, the only writers); every assignee role on My tasks, vets most, since a vet is the role most pages exclude
-- [x] Anything explicitly **out of scope** written down — the route guards for `/enclosures`, `/projects`, `/contacts`, `/vets` (the vet-scope-navigation stream; this table already excludes vets from jobs there, per Lutan's ruling); a shared capability helper for both streams (follow-up, named in the PR); a database-level check (0095 is unchanged, so a direct table write skips the check — the display half is what catches that)
+- [x] Roles affected identified — admin and management (the Recurring jobs page, the only writers); vets, no longer assignable at all; staff and volunteers, narrowed by page
+- [x] Anything explicitly **out of scope** written down — taking recurring jobs out of a vet's menu and shaping the vet's world around appointments (its own backlog item, with a draft user story); route guards (the vet-scope-navigation stream); a shared capability helper for both streams (follow-up, named in the PR); a database-level check (0095 is unchanged, so a direct table write skips the check — the display half is what catches that)
 
 ## 2. Automated gates
 
@@ -26,8 +26,9 @@
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
 
 ```
-=== gates: build exited 0 after 241s
-
+=== gates: typecheck exited 0 after 25s
+=== gates: lint exited 0 after 68s
+=== gates: build exited 0 after 139s
 gates: typecheck=0 lint=0 build=0
 ```
 
@@ -40,19 +41,19 @@ gates: typecheck=0 lint=0 build=0
 - [ ] `node scripts/apply-migrations.mjs --dry-run` reviewed — n/a: no migration
 - [ ] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations` — n/a: no migration
 - [ ] File is re-runnable (`if not exists` / `or replace` / `drop … if exists`) — n/a: no migration
-- [x] Existing rows still read correctly after the change (checked against real dev data) — dev queried read-only first: nine assignee rows across five jobs; one is the Pass 0 case ("Stocktake of medication", `/stocktake`, a vet), and it is the one flagged on the page. The vet on "Order medicine for the week" (no link) is correctly *not* flagged
+- [x] Existing rows still read correctly after the change (checked against real dev data) — dev queried read-only first: nine assignee rows across five jobs; two active jobs are with a vet — "Stocktake of medication" (`/stocktake`, the Pass 0 case) and "Order medicine for the week" (no link) — and both are flagged ("2 jobs are with someone whose role can't be given them…"); no other job is
 - [ ] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness — n/a: no schema, constraint or default changed
 - [ ] Down-migration written, or the reason one is not needed is stated — n/a: no migration
 - [ ] Production apply plan stated for the release manager — n/a: no migration
 
 ## 4. Functional checks
 
-- [x] Happy path works end to end — the form lists only eligible roles for the chosen screen and updates as the screen changes: Stocktake lists Admin, Management, Staff, Volunteer; Maintenance lists Admin, Management, Staff; no screen lists everyone, vets included (`medphotos-vet` appears and disappears accordingly)
+- [x] Happy path works end to end — the form lists only eligible roles for the chosen screen and updates as the screen changes: Maintenance narrows to Admin, Management, Staff with a line saying so. No vet is listed for any screen, including none: `medphotos-vet` is absent from the picker and from Hand over's To list, and the form says "Vets aren't listed: their work comes from their vet appointments…"
 - [x] Data persists — reload the page and the change is still there — the Hand over cover appeared under Handed to someone else after the action's refresh, and Give back removed it; the page reloaded with the flag still on the untouched job
-- [x] Create / edit / delete all exercised (whichever the feature has) — edit: saving the Pass 0 job with the vet still ticked is refused ("Lutan Bennett can't open /stocktake, where this job is done. Choose people whose role can, or change the link."), nothing written; Hand over (dates) exercised both ways; create uses the same form and filter; delete is unchanged by this PR
+- [x] Create / edit / delete all exercised (whichever the feature has) — edit: saving "Order medicine for the week" (no link) with the vet still ticked is refused ("Lutan Bennett can't be given this job: vets aren't given recurring jobs, and other roles only jobs on pages they can open. Choose someone else, or change the link."), nothing written, the vet listed as "Lutan Bennett — Vet (can't be given this job — untick to take them off)"; the Pass 0 job was refused the same way before the ruling; Hand over (dates) exercised both ways; create uses the same form and filter; delete is unchanged by this PR
 - [x] Empty state renders sensibly (no rows yet) — with no screen chosen the "only roles that…" line is hidden and everyone is listed (observed). The banner's absent state was not seen, because dev keeps the one misassigned job as the fixture; it renders only on `misassigned > 0`, beside the unchanged stranded banner
-- [x] Invalid input is rejected with a readable message, not a crash — the save refusal above, and Hand over's per-item "Some couldn't be handed over: Stocktake of medication, 2026-09-27: medphotos-vet@example.test can't open /stocktake, where this job is done. …" while the other date went through ("Handed over 1 date.")
-- [x] Boundary cases checked — `scripts/check-recurring-job-eligibility.mjs`, 23 cases on the real exported functions: query string (`/stocktake?tab=diets`), fragment, trailing slash, a detail page under a prefix (`/maintenance/<id>`), longest prefix (`/management/…`), a lookalike prefix (`/stocktakes` is not `/stocktake`), no link, empty link, no role, `public_viewer`, an unknown role. Output: `Every case held.`
+- [x] Invalid input is rejected with a readable message, not a crash — the save refusal above, and Hand over's per-item "Some couldn't be handed over: Stocktake of medication, 2026-09-27: medphotos-vet@example.test can't open /stocktake, where this job is done. …" while the other date went through ("Handed over 1 date.") — before the ruling, then given back. After it a vet can't be chosen in To at all; the server check is the same call
+- [x] Boundary cases checked — `scripts/check-recurring-job-eligibility.mjs`, 28 cases on the real exported functions: a vet on stocktake, no link, `/residents` and a vaccination form (all refused); query string (`/stocktake?tab=diets`), fragment, trailing slash, a detail page under a prefix (`/maintenance/<id>`), longest prefix (`/management/…`), a lookalike prefix (`/stocktakes` is not `/stocktake`), no link, empty link, no role, `public_viewer`, an unknown role. Output: `Every case held.`
 
 ### Role access matrix
 
@@ -61,7 +62,7 @@ gates: typecheck=0 lint=0 build=0
 | admin | Management → Recurring jobs; can be given any job | sees the flags, the filtered picker, the refusals | as expected — driven as the dev test user (admin) |
 | management | same page as admin | same as admin | not signed in as; the page and actions use the same `requireManagementUser` / `assertManagementRole` as before, unchanged. Left for manual verification |
 | staff | My tasks; offered for everything but `/management`, `/admin` | as stated | not signed in as; offered/refused per `rolesForJob`, proved by the script (E1–E16) |
-| vet | My tasks; not offered for stocktake, deliveries, maintenance, management, admin, enclosures, projects, contacts, vets | an already-assigned stocktake shows without a link and says to ask management | offering proved in the browser (the vet is struck through and refused on `/stocktake`, listed with no link); the vet's own My tasks view **not** seen — no vet credentials. Left for manual verification |
+| vet | My tasks; never offered a recurring job | an already-assigned job shows without a link and says to ask management | offering proved in the browser (neither vet listed; the one already on two jobs flagged and refused on save); the vet's own My tasks view **not** seen — no vet credentials. Left for manual verification |
 | volunteer | My tasks; offered for stocktake, not maintenance | as stated | not signed in as; script E1, E3 |
 | signed out | nothing new | redirected to `/login` as before | as expected — `/management/recurring-jobs` signed out went to `/login?next=…` |
 
@@ -71,7 +72,7 @@ gates: typecheck=0 lint=0 build=0
 ## 5. Cross-cutting
 
 - [ ] Nav entry correct (`src/app/NavLinks.tsx`) — n/a: no nav change
-- [x] Manual updated (`src/lib/manual/en.ts`) and the topic reads correctly at `/manual` — three sentences: who is offered (Setting up recurring jobs), the red flag and how to clear it (same topic), and what the flagged job looks like on My tasks (Doing your recurring jobs); all three found in the page text at `/manual`
+- [x] Manual updated (`src/lib/manual/en.ts`) and the topic reads correctly at `/manual` — who is offered, never vets (Setting up recurring jobs); the red flag and how to clear it (same topic); vets aren't given recurring jobs, and what a mis-given job looks like on My tasks (Doing your recurring jobs). Found at `/manual` before the ruling; the rewording since is text only and the build passed
 - [ ] Translatable strings go through the translation path, checked at `/management/translations` — n/a: that page queues database content (0056); the new strings are dictionary entries, added to both `en.ts` and `th.ts`, and the Thai banner was seen rendering on the page
 - [x] Mobile viewport (375px) — no overflow, controls reachable — banner and flagged card at 375×812; `scrollWidth <= innerWidth` true
 - [x] Browser console clean — no errors or React warnings — no console errors across the recurring-jobs page, `/my` and `/manual`
@@ -135,7 +136,7 @@ gates: typecheck=0 lint=0 build=0
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | Signed in as the vet who has "Stocktake of medication" on dev: the job shows on My tasks with "your role can't open this job's page — ask management to reassign it", its title is not a link, and Skip still works | `/my` as `lutan.bennett1@…` (vet) on :3012 or `test.lannacare.org` |
+| 1 | Signed in as the vet who has two recurring jobs on dev: both of their jobs show on My tasks with "your role isn't given this job — ask management to reassign it", titles not links, and Skip still works | `/my` as `lutan.bennett1@…` (vet) on :3012 or `test.lannacare.org` |
 | 2 | The Thai wording of the new sentences reads naturally (banner, card line, form hint and flag, save refusal, My tasks note) | Management → Recurring jobs and My tasks in ไทย |
 
 ## Sign-off

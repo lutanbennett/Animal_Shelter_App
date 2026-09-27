@@ -198,7 +198,7 @@ async function cannotDoProblem(
   if (error) return error;
   if (names.length === 0) return null;
   const { t } = await getT();
-  return t.management.recurringJobs.errors.assigneeCannotDo(names.join(", "), linkPath ?? "");
+  return t.management.recurringJobs.errors.assigneeCannotDo(names.join(", "));
 }
 
 /** Friendlier words for the database's own refusals. */

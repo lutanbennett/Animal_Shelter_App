@@ -15,27 +15,28 @@ import { canStocktake } from "@/lib/management/stocktake";
  * Each rule borrows the predicate the target page itself uses, where that
  * predicate is client-safe, so a page's guard and this list can only drift
  * if someone changes one and not the other in the same file. A path no rule
- * matches — no link at all, /residents, /my — can be done by any role that
- * opens the app.
+ * matches — no link at all, /residents, /my — can be done by any assignable
+ * role.
+ *
+ * Vets are not assignable at all (Lutan, 2026-09-27): a vet's work comes
+ * from their vet appointments and the residents on them, not from the
+ * shelter's routine, so no recurring job goes to one whatever it links to.
  *
  * Pure and client-safe: the form filters its picker with it as the link
  * changes, and scripts/check-recurring-job-eligibility.mjs runs it.
  */
 
-/** The roles that can be given a recurring job at all (0095: anyone with app access). */
-export const ASSIGNABLE_ROLES = APP_ACCESS_ROLES;
+/**
+ * The roles that can be given a recurring job at all: everyone with app
+ * access but vets. 0095 lets any app role be an assignee (and read the
+ * rules); this is narrower, and the actions enforce it.
+ */
+export const ASSIGNABLE_ROLES = APP_ACCESS_ROLES.filter((role) => role !== "vet");
 
 type Rule = { prefix: string; allows: (role: string) => boolean };
 
 /** canManage (require-management.ts), which lives beside server-only code. */
 const isManager = (role: string) => role === "admin" || role === "management";
-
-/**
- * Shelter operations a vet does not see (Lutan, 2026-09-27, Pass 1 of the
- * role walkthrough). The vet-scope-navigation stream puts the page guards on
- * these; this is the same ruling, stated for jobs.
- */
-const notVet = (role: string) => role !== "vet";
 
 /** Longest prefix wins, so /management/… is decided by /management, not by nothing. */
 const RULES: Rule[] = [
@@ -46,10 +47,6 @@ const RULES: Rule[] = [
   // The work on the board is logging and updating jobs; a volunteer reads it
   // and adds photos, but cannot move a job on.
   { prefix: "/maintenance", allows: canWriteMaintenance },
-  { prefix: "/enclosures", allows: notVet },
-  { prefix: "/projects", allows: notVet },
-  { prefix: "/contacts", allows: notVet },
-  { prefix: "/vets", allows: notVet },
 ];
 
 /** The path part of a link: no query, no fragment, no trailing slash. */
@@ -82,7 +79,7 @@ export function rolesForJob(linkPath: string | null | undefined): string[] {
   return ASSIGNABLE_ROLES.filter((role) => canDoJob(role, linkPath));
 }
 
-/** True when the link narrows who can do the job below everyone with app access. */
+/** True when the link narrows who can do the job below every assignable role. */
 export function jobIsRestricted(linkPath: string | null | undefined): boolean {
   return rolesForJob(linkPath).length < ASSIGNABLE_ROLES.length;
 }

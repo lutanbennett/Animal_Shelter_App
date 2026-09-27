@@ -71,10 +71,11 @@ export async function loadMyRecurringTasks(
   );
   const r = t.my.recurring;
 
-  // A job whose page the reader's role can't open (given it before the picker
+  // A job the reader's role isn't given (a vet on any recurring job, or a
+  // job on a page their role can't open — assigned before the picker
   // filtered by role, or the link changed since) keeps its place on the list,
-  // since it is still theirs to get done or pass back, but loses the link that
-  // would only refuse them, and says so instead.
+  // since it is still theirs to skip or pass back, but loses its link and
+  // says to ask management to reassign it.
   const tasks: MyTask[] = open
     .sort(
       (a, b) =>
@@ -89,7 +90,7 @@ export async function loadMyRecurringTasks(
       about: [
         t.management.recurringJobs.timesOfDay[o.job.time_of_day],
         o.cover ? (o.cover.note ? r.handedToYouBecause(o.cover.note) : r.handedToYou) : null,
-        canDoJob(role, o.job.link_path) ? null : r.cannotOpen,
+        canDoJob(role, o.job.link_path) ? null : r.cannotDo,
       ]
         .filter(Boolean)
         .join(" · "),

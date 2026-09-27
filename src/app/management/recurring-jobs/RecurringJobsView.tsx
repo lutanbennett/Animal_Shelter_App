@@ -277,7 +277,7 @@ function JobCard({ summary, onEdit }: { summary: JobSummary; onEdit: () => void 
       {stranded && <p className="text-xs font-medium text-danger">{rj.stranded}</p>}
       {summary.cannotDo.length > 0 && (
         <p className="text-xs font-medium text-danger">
-          {rj.cannotDo(summary.cannotDo.join(", "), job.link_path ?? "")}
+          {rj.cannotDo(summary.cannotDo.join(", "))}
         </p>
       )}
 
