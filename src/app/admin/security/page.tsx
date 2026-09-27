@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { requireAdminUser } from "@/lib/auth/require-admin";
+import { TWO_STEP_PATH, hasTwoStep, isVerifiedTotp } from "@/lib/auth/two-step";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getT } from "@/lib/i18n/get-t";
 import { mustChangePassword } from "@/lib/auth/password-change";
@@ -8,6 +10,9 @@ import { UsersTable, type SecurityUser } from "./UsersTable";
 
 export default async function SecurityPage() {
   const currentUser = await requireAdminUser();
+  // Not signed in with the authenticator app yet this session: the
+  // step-up first (src/lib/auth/two-step.ts). The actions check again.
+  if (!(await hasTwoStep())) redirect(TWO_STEP_PATH);
   const { t } = await getT();
 
   const admin = createAdminClient();
@@ -25,6 +30,20 @@ export default async function SecurityPage() {
   );
 
   const authUsers = authUsersResult.data?.users ?? [];
+
+  // Who has an authenticator app set up. listUsers() leaves factors out
+  // (getUserById() has them), so ask per login — a shelter's handful, in
+  // parallel. A failed lookup shows as not set up; Reset re-checks.
+  const twoStepByUserId = new Map(
+    await Promise.all(
+      authUsers
+        .filter((u) => roleByUserId.has(u.id))
+        .map(async (u) => {
+          const { data } = await admin.auth.admin.mfa.listFactors({ userId: u.id });
+          return [u.id, (data?.factors ?? []).some(isVerifiedTotp)] as const;
+        }),
+    ),
+  );
 
   // No role = can't get in. Those are the access requests; everyone else
   // is the users table.
@@ -53,6 +72,7 @@ export default async function SecurityPage() {
       createdAt: u.created_at,
       lastSignInAt: u.last_sign_in_at ?? null,
       mustChangePassword: mustChangePassword(u),
+      twoStep: twoStepByUserId.get(u.id) ?? false,
     }))
     // People who have left (0063) sit under the current team.
     .sort(
