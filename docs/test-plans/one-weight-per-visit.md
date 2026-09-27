@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "One weight per vet visit: hide visits that already have one." (ticked on this branch) |
 | Branch / worktree | `claude/one-weight-per-visit` @ `C:\Development\Animal_Shelter_one-weight-per-visit` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3004` |
-| PR | opened from this branch (number in the PR itself); schema half is #187 |
+| PR | #190; schema half #187 (merged, `e6391f9`) |
 | Tested by / date | Claude, 2026-09-27/28 |
 | Carries a migration? | no — `0106` is #187, applied to dev, which this was tested against |
 | Tested at SHA | `387a479` (the change) |
@@ -22,7 +22,7 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: nothing new on `origin/main` (`0700a9e`)
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: first nothing new (`0700a9e`); after #187 merged, a second sync brought in `e6391f9` (`0106`, its harness, plan and decisions entry) with no conflict, and `--status` then read `Against origin/main e6391f9: 106 file(s), 106 applied row(s)`, 0 either way
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed:
 
 ```
@@ -32,7 +32,16 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+  Re-run on the merged tree (`e63d5bf`, after #187):
+
+```
+=== gates: typecheck exited 0 after 28s
+=== gates: lint exited 0 after 129s
+=== gates: build exited 0 after 163s
+gates: typecheck=0 lint=0 build=0
+```
+
+- [x] CI green on the PR: #190 before the sync — `check` pass (1m41s), `migration-numbers` pass, `test-plan` pass
 
 ## 3. Schema and data
 
@@ -168,7 +177,7 @@ Manual verification by: pending: rows 1 and 2 — a vet's own session through th
 ### Result
 
 - [ ] Open defects are either fixed or explicitly accepted above — n/a: none found
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR (#190 body)
 - [ ] Handed to the production release manager — n/a: not yet — after merge
 
 Result: pass
