@@ -1238,16 +1238,22 @@ const manual: Manual = {
           roles: ["admin"],
           path: "Settings → System status",
           intro:
-            "One page that says whether everything behind the app is working, and how much it is being used. It only looks; nothing on it changes anything.",
+            "One page that says whether everything behind the app is working, and how much it is being used — and the alert mail that tells admins when something breaks, so nobody has to keep looking. Apart from the two alert buttons, nothing on it changes anything.",
           steps: [
             "Health: a tile each for the database, photo storage (Google Drive), database migrations, the running release and when it was deployed, release mail, the weekly backup and the Pi. Green is working, amber means look at it (slow, out of date, or out of step), red is broken, and grey is something deliberately not in use here — release mail on the test site, or the Pi before it is switched on. A red or amber tile shows the reason in small print underneath; it names settings but never shows a password or key.",
             "Each tile says when it was checked. Results are kept for a minute so the page stays quick; tap Check now to ask again straight away.",
+            "Alerts: every 15 minutes the same health checks run on their own. When a tile is red on two checks in a row, every admin gets one email saying which and why; when it works again, one more saying so. Nothing in between, however long it lasts. Amber and grey tiles never send mail.",
+            "The Status alert mail tile says when the checks last ran and who the last mail reached. It turns red if the checks have stopped running or the last mail reached nobody, and amber if some admins were skipped — the reason is shown beside each address. Run the alert check now does one round straight away; Send a test alert mails every admin a test, so you can see it arrive.",
             "Usage: pick 7, 30 or 90 days to see how many people signed in, how many residents, vet visits, weights and maintenance jobs were added, how many photos and documents were uploaded, how many requests went to the assistant, and how many people visited the website. The visitor figure is Cloudflare's own daily total — no cookies, nothing that follows a visitor — and stays grey until the Cloudflare analytics token is set up.",
           ],
           callouts: [
             {
               kind: "tip",
               text: "If photo storage is red, uploads are failing for everyone right now. The small print gives Google's reason; an expired token is the usual one.",
+            },
+            {
+              kind: "note",
+              text: "Alert mail can only reach addresses verified in Cloudflare (Email Routing → Destination addresses). An admin whose address isn't verified is skipped, and the Status alert mail tile says so. If the database itself is down, no alert can be sent — the alerts remember what they have told you in the database.",
             },
           ],
         },
