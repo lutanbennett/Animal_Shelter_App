@@ -156,7 +156,7 @@ export async function SitePageView({
               )}
               {phone && (
                 <a
-                  href={`tel:${phone.replace(/s+/g, "")}`}
+                  href={`tel:${phone.replace(/\s+/g, "")}`}
                   className="spring-lift rounded border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-hover"
                 >
                   {t.sitePages.callUs(phone)}
