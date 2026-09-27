@@ -13,6 +13,7 @@ import {
   sizeLabel,
 } from "@/lib/i18n/enum-labels";
 import { PhotoUploader } from "@/components/PhotoUploader";
+import { photoCategoriesForRole } from "@/lib/google/drive-client";
 import { PhotoGallery, type PhotoRow } from "@/components/PhotoGallery";
 import {
   ADOPTION_UPDATE_ROLES,
@@ -227,18 +228,21 @@ export default async function ResidentSectionPage(
       break;
     }
     case "photos": {
-      const { data: photos } = await supabase
-        .from("attachments")
-        .select(RESIDENT_PHOTO_SELECT)
-        .eq("owner_type", "resident")
-        .eq("owner_id", id)
-        .order("uploaded_at", { ascending: true })
-        .returns<PhotoRow[]>();
+      const [{ data: photos }, { data: role }] = await Promise.all([
+        supabase
+          .from("attachments")
+          .select(RESIDENT_PHOTO_SELECT)
+          .eq("owner_type", "resident")
+          .eq("owner_id", id)
+          .order("uploaded_at", { ascending: true })
+          .returns<PhotoRow[]>(),
+        supabase.rpc("current_user_role"),
+      ]);
       body = (
         <div className="flex flex-col gap-6">
           {/* Photos stay open after death (0052); the archive is refreshed
               by the upload route and the photo actions. */}
-          <PhotoUploader residentId={id} />
+          <PhotoUploader residentId={id} categories={photoCategoriesForRole(role)} />
           <PhotoGallery
             residentId={id}
             photos={photos ?? []}

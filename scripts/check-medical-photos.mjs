@@ -12,6 +12,14 @@
 // binds to 0086's gated public.resident_current_state instead of
 // private.resident_current_state.
 //
+// Then, read-only, it lists the residents whose PROFILE photo is filed under
+// Medical (claude/medical-photos-profile). The app no longer lets anyone
+// choose one, but record_attachment still makes a first upload the profile
+// photo whatever its folder, and delete_resident_photo falls back to the
+// oldest — so this list is what the public views' fallback (the follow-up)
+// has to cover, and what staff can fix by hand where the resident has a
+// photo in another folder. Listed, not asserted: it does not change the exit.
+//
 // Exits 0 when every assertion held. Writes nothing even on success.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -138,5 +146,38 @@ let msg = text;
 try { msg = JSON.parse(text).message ?? text; } catch {}
 console.log(`status ${res.status}`);
 console.log(msg);
+
+const profiles = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
+  method: "POST",
+  headers: { Authorization: `Bearer ${env.SUPABASE_ACCESS_TOKEN}`, "Content-Type": "application/json" },
+  body: JSON.stringify({
+    query: `
+      select r.resident_code, r.name, r.is_public_visible,
+             count(o.id) filter (where lower(btrim(coalesce(o.sub_folder, ''))) <> 'medical') as other_folders
+        from residents r
+        join attachments a on a.owner_type = 'resident' and a.owner_id = r.id
+                          and a.drive_file_id = r.profile_photo_drive_file_id
+        left join attachments o on o.owner_type = 'resident' and o.owner_id = r.id
+       where lower(btrim(coalesce(a.sub_folder, ''))) = 'medical'
+       group by r.id
+       order by r.is_public_visible desc, r.resident_code`,
+  }),
+}).then((r) => r.json());
+if (Array.isArray(profiles)) {
+  console.log(`
+Residents whose profile photo is in Medical: ${profiles.length}`);
+  for (const p of profiles) {
+    console.log(
+      `  ${p.resident_code} ${p.name}${p.is_public_visible ? " (ON THE WEBSITE)" : ""} — ` +
+        (Number(p.other_folders) > 0
+          ? `${p.other_folders} photo(s) in other folders; staff can choose one`
+          : "no photo in another folder"),
+    );
+  }
+} else {
+  console.log(`
+profile-photo listing failed: ${JSON.stringify(profiles)}`);
+}
+
 // exitCode, not exit(): exiting straight after fetch trips a libuv assertion on Windows.
 process.exitCode = /HARNESS-OK/.test(msg) ? 0 : 1;

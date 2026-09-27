@@ -9,8 +9,10 @@ import { hasAppAccess, loadCurrentRole, signedInLandingPath } from "./app-access
  * call, not just before the eventual DB insert. Shared by the resident
  * photos route and the blood test attachment route (both go through
  * record_attachment(), whose own role check matches this one).
+ * Returns the role, for callers that also limit what it may do (a vet's
+ * resident photos go to Medical only).
  */
-export async function assertPhotoWriteAccess() {
+export async function assertPhotoWriteAccess(): Promise<string> {
   const supabase = await createClient();
   const { data: role } = await supabase.rpc("current_user_role");
   if (
@@ -23,6 +25,7 @@ export async function assertPhotoWriteAccess() {
     const { t } = await getT();
     throw new Error(t.photos.errors.notAuthorized);
   }
+  return role;
 }
 
 /**

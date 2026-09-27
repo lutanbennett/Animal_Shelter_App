@@ -3397,10 +3397,14 @@ const th: Dictionary = {
     residentPhotoAlt: "รูปภาพสัตว์",
     showAll: (n: number) => `แสดงทั้งหมด (${n})`,
     showFewer: "แสดงน้อยลง",
+    medicalNotProfile:
+      "รูปภาพในโฟลเดอร์ Medical จะไม่แสดงบนเว็บไซต์ จึงตั้งเป็นรูปโปรไฟล์ไม่ได้",
+    medicalTile: "Medical",
     uploader: {
       dateTaken: "วันที่ถ่าย",
       folder: "โฟลเดอร์",
       selectFolder: "เลือกโฟลเดอร์…",
+      goesIn: (folder: string) => `รูปภาพที่คุณเพิ่มจะเก็บในโฟลเดอร์ ${folder}`,
       folderHint: "ใช้กับทุกรูปภาพในชุดนี้",
       dropHere: "ลากรูปภาพมาวางที่นี่หรือแตะเพื่ออัปโหลด",
       selectFolderFirst: "เลือกโฟลเดอร์ด้านบนก่อนเพื่อเปิดใช้งานการอัปโหลด",
@@ -3412,6 +3416,9 @@ const th: Dictionary = {
     },
     errors: {
       notAuthorized: "ไม่มีสิทธิ์จัดการไฟล์แนบ",
+      medicalProfile:
+        "รูปภาพในโฟลเดอร์ Medical ตั้งเป็นรูปโปรไฟล์ไม่ได้ เพราะจะไม่แสดงบนเว็บไซต์ กรุณาเลือกรูปจากโฟลเดอร์อื่น",
+      onlyFolder: (folder: string) => `รูปภาพของคุณเก็บได้เฉพาะในโฟลเดอร์ ${folder}`,
     },
     filter: {
       label: "แสดงรูปภาพ",

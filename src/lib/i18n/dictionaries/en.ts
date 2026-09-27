@@ -3486,10 +3486,14 @@ const en = {
     residentPhotoAlt: "Resident photo",
     showAll: (n: number) => `Show all (${n})`,
     showFewer: "Show fewer",
+    medicalNotProfile:
+      "Medical photos never appear on the website, so one can't be the profile photo.",
+    medicalTile: "Medical",
     uploader: {
       dateTaken: "Date taken",
       folder: "Folder",
       selectFolder: "Select a folder…",
+      goesIn: (folder: string) => `Photos you add go in the ${folder} folder.`,
       folderHint: "Applies to every photo in this batch.",
       dropHere: "Drop photos here or tap to upload",
       selectFolderFirst: "Select a folder above to enable uploads",
@@ -3501,6 +3505,9 @@ const en = {
     },
     errors: {
       notAuthorized: "Not authorized to manage attachments.",
+      medicalProfile:
+        "A Medical photo can't be the profile photo — Medical photos never appear on the website. Choose a photo from another folder.",
+      onlyFolder: (folder: string) => `Your photos can only go in the ${folder} folder.`,
     },
     filter: {
       label: "Show photos",
