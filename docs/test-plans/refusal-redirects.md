@@ -173,9 +173,9 @@ Automated checks by: Claude  Date: 2026-09-27
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: two items are outstanding; see the pending line below
+- [x] The manual list above is empty, or every item in it was checked by a person — Lutan checked items 1 and 2 after the merge and said so in chat
 
-Manual verification by: pending: booking lands on the resident or the list, and the no-access page as a vet in a browser (Left for manual verification 1 and 2)
+Manual verification by: Lutan Bennett — confirmed in chat; line written by Claude at their request  Date: 2026-09-27
 
 ### Result
 
