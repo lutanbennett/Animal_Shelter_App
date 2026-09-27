@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { isShelterRole } from "@/lib/auth/app-access";
+import { requireRole } from "@/lib/auth/require-role";
 import { canWriteMaintenance, loadMaintenanceJobs } from "@/lib/maintenance/queries";
 import { getTagOrigin } from "@/lib/tags/origin";
 import { loadSpecialDiets } from "@/lib/diets/special";
@@ -23,7 +24,7 @@ export default async function EnclosurePage(
   props: PageProps<"/enclosures/[id]">,
 ) {
   const { id } = await props.params;
-  const supabase = await createClient();
+  const { supabase } = await requireRole(isShelterRole);
 
   const [enclosureResult, occupantsResult, roleResult, maintenanceResult, tagOrigin] = await Promise.all([
     supabase

@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
+import { isShelterRole } from "@/lib/auth/app-access";
+import { requireRole } from "@/lib/auth/require-role";
 import { getT } from "@/lib/i18n/get-t";
 import { occupancyLevel } from "@/lib/enclosures/occupancy";
 import { parseEnclosureSort } from "@/lib/enclosures/sort";
@@ -61,7 +62,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   const place = parseEnclosurePlace(searchParams.place);
   const sort = parseEnclosureSort(searchParams.sort);
 
-  const supabase = await createClient();
+  const { supabase } = await requireRole(isShelterRole);
 
   // Resident counts come from resident_list_view rather than a dedicated
   // occupancy view so no migration is needed; the shelter's headcount is

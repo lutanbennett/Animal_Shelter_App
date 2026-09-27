@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { isShelterRole } from "@/lib/auth/app-access";
+import { requireRole } from "@/lib/auth/require-role";
 import { canWriteMaintenance, loadMaintenanceJob } from "@/lib/maintenance/queries";
 import { canManage } from "@/lib/auth/require-management";
 import { loadTranslations } from "@/lib/translations/queries";
@@ -14,7 +15,7 @@ import { MaintenanceJobView } from "./MaintenanceJobView";
  */
 export default async function MaintenanceJobPage(props: PageProps<"/maintenance/[id]">) {
   const { id } = await props.params;
-  const supabase = await createClient();
+  const { supabase } = await requireRole(isShelterRole);
 
   const [{ data: role }, job, translations] = await Promise.all([
     supabase.rpc("current_user_role"),

@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
+import { isShelterRole } from "@/lib/auth/app-access";
+import { requireRole } from "@/lib/auth/require-role";
 import { getT } from "@/lib/i18n/get-t";
 import {
   canWriteProjects,
@@ -18,7 +19,7 @@ export default async function ProjectsPage(props: PageProps<"/projects">) {
   const searchParams = await props.searchParams;
   const q = typeof searchParams.q === "string" ? searchParams.q.trim() : "";
   const { t } = await getT();
-  const supabase = await createClient();
+  const { supabase } = await requireRole(isShelterRole);
 
   const [{ data: role }, categories, all] = await Promise.all([
     supabase.rpc("current_user_role"),

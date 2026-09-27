@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { LogIn } from "lucide-react";
-import { sessionHasAppAccess } from "@/lib/auth/app-access";
+import { isShelterRole, loadCurrentRole } from "@/lib/auth/app-access";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
@@ -29,6 +29,11 @@ import { ResidentCard } from "@/app/adopt/ResidentCard";
  * Lifecycle enclosure is still an enclosure page to staff. The redirect is
  * temporary — browsers cache 308s, which would pin a printed code to
  * today's page layout, and to whoever was signed in.
+ *
+ * A vet is signed in but is not sent on: the enclosure pages are the
+ * shelter's, not a visiting clinic's (isShelterRole), so a vet who scans a
+ * kennel gets this card — who lives here, each opening their resident page —
+ * rather than a refusal. The sign-in hint is for the signed out only.
  */
 export async function generateMetadata(
   props: PageProps<"/e/[id]">,
@@ -54,8 +59,11 @@ export default async function EnclosureTagPage(props: PageProps<"/e/[id]">) {
   if (!isUuid(id)) notFound();
 
   const supabase = await createClient();
-  // Staff go on to the enclosure page; a public viewer sees the card.
-  if (await sessionHasAppAccess(supabase)) redirect(`/enclosures/${id}`);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  // Staff go on to the enclosure page; a vet or a public viewer sees the card.
+  if (user && isShelterRole(await loadCurrentRole(supabase))) redirect(`/enclosures/${id}`);
 
   const [enclosure, { t, locale }] = await Promise.all([
     loadPublicEnclosure(supabase, id),
@@ -106,13 +114,15 @@ export default async function EnclosureTagPage(props: PageProps<"/e/[id]">) {
         </section>
 
         {/* Staff who scanned while signed out: sign in and come straight back. */}
-        <p className="flex flex-wrap items-center gap-2 border-t border-border pt-6 text-sm text-muted">
-          <LogIn className="h-4 w-4" aria-hidden />
-          {t.residentCard.staffHint}
-          <Link href={signInHref} className="font-medium text-foreground underline hover:text-primary">
-            {c.staffSignIn}
-          </Link>
-        </p>
+        {!user && (
+          <p className="flex flex-wrap items-center gap-2 border-t border-border pt-6 text-sm text-muted">
+            <LogIn className="h-4 w-4" aria-hidden />
+            {t.residentCard.staffHint}
+            <Link href={signInHref} className="font-medium text-foreground underline hover:text-primary">
+              {c.staffSignIn}
+            </Link>
+          </p>
+        )}
       </div>
 
       <PublicFooter />

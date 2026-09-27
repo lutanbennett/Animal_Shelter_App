@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { canManage } from "@/lib/auth/require-management";
-import { createClient } from "@/lib/supabase/server";
+import { isShelterRole } from "@/lib/auth/app-access";
+import { requireRole } from "@/lib/auth/require-role";
 import { getT } from "@/lib/i18n/get-t";
 import { CONTACT_COLUMNS, type Contact } from "@/lib/contacts/contacts";
 import { ContactList, type ContactSummary } from "./ContactList";
@@ -10,7 +11,7 @@ export default async function ContactsPage(props: PageProps<"/contacts">) {
   // Archived contacts are loaded either way — a search still finds them —
   // and ContactList hides them unless this is set.
   const showArchived = (await props.searchParams).archived === "1";
-  const supabase = await createClient();
+  const { supabase } = await requireRole(isShelterRole);
 
   // Every signed-in role can read contacts and placement_history (0001),
   // so the list is open to all — a volunteer doing a foster pick-up needs

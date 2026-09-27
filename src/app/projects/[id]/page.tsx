@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { isShelterRole } from "@/lib/auth/app-access";
+import { requireRole } from "@/lib/auth/require-role";
 import { getT } from "@/lib/i18n/get-t";
 import {
   canWriteProjects,
@@ -22,7 +23,7 @@ import { FolderView } from "./FolderView";
 export default async function ProjectFolderPage(props: PageProps<"/projects/[id]">) {
   const { id } = await props.params;
   const { t } = await getT();
-  const supabase = await createClient();
+  const { supabase } = await requireRole(isShelterRole);
 
   const folder = await loadProjectFolder(supabase, id);
   if (!folder) notFound();
