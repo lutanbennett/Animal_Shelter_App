@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, CalendarClock, Clock, Hourglass, Link2, Plus, Users } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { roleLabel } from "@/lib/i18n/enum-labels";
 import { addDaysIso, formatDate, formatDateTime } from "@/lib/format";
 import { describeRule, describeSpan, isoWeekday } from "@/lib/recurring-jobs/rule";
 import type { RecurringJob } from "@/lib/recurring-jobs/queries";
@@ -23,6 +24,8 @@ export type JobSummary = {
   team: TeamMember[];
   /** recurring_job_staffing (0095): 0 on an active job = stranded. */
   liveAssignees: number;
+  /** People on the usual team who can sign in but whose role can't open the job's page (eligibility.ts). */
+  cannotDo: string[];
   nextDates: string[];
   overdueCount: number;
   dependsOnTitle: string | null;
@@ -35,6 +38,8 @@ export type CoveredDate = {
   team: string[];
   /** The usual assignees the cover team replaced for this date. */
   usual: string[];
+  /** People on the cover team whose role can't open the job's page. */
+  cannotDo: string[];
   note: string | null;
 };
 
@@ -73,6 +78,9 @@ export function RecurringJobsView({
   const [message, setMessage] = useState<string | null>(null);
 
   const stranded = jobs.filter((s) => s.job.active && s.liveAssignees === 0);
+  const misassigned =
+    jobs.filter((s) => s.job.active && s.cannotDo.length > 0).length +
+    covered.filter((c) => c.cannotDo.length > 0).length;
   const close = (text: string | null) => {
     setEditing(null);
     setMessage(text);
@@ -87,6 +95,15 @@ export function RecurringJobsView({
         >
           <AlertTriangle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-danger" />
           {rj.strandedBanner(stranded.length)}
+        </p>
+      )}
+      {misassigned > 0 && (
+        <p
+          role="alert"
+          className="flex items-start gap-2 rounded-lg border border-danger/40 bg-danger/10 p-3 text-sm text-foreground"
+        >
+          <AlertTriangle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-danger" />
+          {rj.cannotDoBanner(misassigned)}
         </p>
       )}
 
@@ -166,6 +183,7 @@ function JobCard({ summary, onEdit }: { summary: JobSummary; onEdit: () => void 
   const [error, setError] = useState<string | null>(null);
   const { job } = summary;
   const stranded = job.active && summary.liveAssignees === 0;
+  const misassigned = job.active && summary.cannotDo.length > 0;
 
   function run(action: () => Promise<{ error?: string }>) {
     setError(null);
@@ -179,7 +197,7 @@ function JobCard({ summary, onEdit }: { summary: JobSummary; onEdit: () => void 
   return (
     <article
       className={`flex flex-col gap-2 rounded-lg border border-l-4 bg-surface p-3 text-sm ${
-        stranded ? "border-danger/60 border-l-danger" : job.active ? "border-border border-l-primary" : "border-border border-l-transparent opacity-75"
+        stranded || misassigned ? "border-danger/60 border-l-danger" : job.active ? "border-border border-l-primary" : "border-border border-l-transparent opacity-75"
       }`}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -257,6 +275,11 @@ function JobCard({ summary, onEdit }: { summary: JobSummary; onEdit: () => void 
       </div>
 
       {stranded && <p className="text-xs font-medium text-danger">{rj.stranded}</p>}
+      {summary.cannotDo.length > 0 && (
+        <p className="text-xs font-medium text-danger">
+          {rj.cannotDo(summary.cannotDo.join(", "))}
+        </p>
+      )}
 
       {job.active && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
@@ -351,7 +374,7 @@ function HandOver({ people, from, today }: { people: PersonOption[]; from: TeamM
               {from.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
-                  {p.archived ? ` (${t.management.recurringJobs.left})` : ""}
+                  {p.archived ? ` (${t.management.recurringJobs.left})` : p.role ? ` — ${roleLabel(t, p.role)}` : ""}
                 </option>
               ))}
             </select>
@@ -426,7 +449,7 @@ function HandOver({ people, from, today }: { people: PersonOption[]; from: TeamM
                       })
                     }
                   />
-                  {p.name}
+                  {p.name} — {roleLabel(t, p.role)}
                 </label>
               ))}
           </div>
@@ -484,6 +507,11 @@ function Covered({ covered }: { covered: CoveredDate[] }) {
                   {row.usual.length > 0 && c.instead(row.usual.join(", "))}
                   {row.note && ` · ${row.note}`}
                 </span>
+                {row.cannotDo.length > 0 && (
+                  <span className="block text-xs font-medium text-danger">
+                    {c.cannotDo(row.cannotDo.join(", "))}
+                  </span>
+                )}
               </span>
               <button
                 type="button"

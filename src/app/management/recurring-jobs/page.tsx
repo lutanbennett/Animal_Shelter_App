@@ -9,7 +9,9 @@ import {
   loadRecurringJobs,
   type OccurrenceRow,
 } from "@/lib/recurring-jobs/queries";
+import { ASSIGNABLE_ROLES, canDoJob } from "@/lib/recurring-jobs/eligibility";
 import { RecurringJobsView, type JobSummary, type PersonOption, type CoveredDate, type RecordEntry } from "./RecurringJobsView";
+import type { TeamMember } from "./RecurringJobForm";
 
 /** How far ahead the list looks for each job's next dates: far enough for a yearly job. */
 const NEXT_DATES_DAYS = 400;
@@ -35,7 +37,7 @@ export default async function RecurringJobsPage() {
     supabase
       .from("app_users")
       .select("id, email, display_name, role, archived_at")
-      .in("role", ["admin", "management", "staff", "vet", "volunteer"])
+      .in("role", [...ASSIGNABLE_ROLES])
       .is("archived_at", null)
       .returns<AppUser[]>(),
     supabase
@@ -68,7 +70,16 @@ export default async function RecurringJobsPage() {
     id,
     name: appUserLabel(users.get(id)),
     archived: !!users.get(id)?.archived_at || !users.get(id),
+    role: users.get(id)?.role ?? null,
   });
+  // Someone who can still sign in but whose role cannot open the job's page:
+  // given it before the picker filtered, or the link changed since. Shown as a
+  // problem here rather than left to fail on their My tasks.
+  const cannotDo = (ids: string[], linkPath: string | null) =>
+    ids.filter((id) => {
+      const user = users.get(id);
+      return !!user && !user.archived_at && !canDoJob(user.role, linkPath);
+    });
 
   const staffing = new Map((staffingResult.data ?? []).map((row) => [row.job_id, row]));
   const titles = new Map(jobs.map((job) => [job.id, job.title]));
@@ -88,6 +99,7 @@ export default async function RecurringJobsPage() {
     job,
     team: job.assignee_ids.map(person).sort((a, b) => a.name.localeCompare(b.name)),
     liveAssignees: staffing.get(job.id)?.live_assignees ?? 0,
+    cannotDo: cannotDo(job.assignee_ids, job.link_path).map((id) => person(id).name),
     nextDates: (nextResult.dates.get(job.id) ?? [])
       .filter((date) => date > openUntil || openKeys.has(`${job.id}:${date}`))
       .slice(0, 3),
@@ -104,6 +116,7 @@ export default async function RecurringJobsPage() {
       team: o.team.map((id) => person(id).name),
       // Who the cover replaced: the usual team minus anyone still on it.
       usual: o.job.assignee_ids.filter((id) => !o.team.includes(id)).map((id) => person(id).name),
+      cannotDo: cannotDo(o.team, o.job.link_path).map((id) => person(id).name),
       note: o.cover?.note ?? null,
     }));
 
@@ -121,7 +134,7 @@ export default async function RecurringJobsPage() {
     .map((user) => ({ id: user.id, name: appUserLabel(user), role: user.role }))
     .sort((a, b) => a.name.localeCompare(b.name));
   // Anyone on a job's usual team, archived or not, can be handed over *from*.
-  const onJobs = new Map<string, { id: string; name: string; archived: boolean }>();
+  const onJobs = new Map<string, TeamMember>();
   for (const job of jobs) for (const id of job.assignee_ids) onJobs.set(id, person(id));
   const handOverFrom = [...onJobs.values()].sort((a, b) => a.name.localeCompare(b.name));
 

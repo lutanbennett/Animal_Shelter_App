@@ -13,6 +13,8 @@ import {
   type RecurrenceRule,
   type TimeOfDay,
 } from "@/lib/recurring-jobs/rule";
+import { ASSIGNABLE_ROLES, canDoJob } from "@/lib/recurring-jobs/eligibility";
+import { appUserLabel, type AppUser } from "@/lib/auth/app-users";
 import {
   MAX_SPAN_DAYS,
   loadOpenOccurrences,
@@ -22,9 +24,6 @@ import {
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
 export type ActionResult = { error?: string };
-
-/** The roles 0095 lets do a job — the only logins a job can be given to. */
-const ASSIGNABLE_ROLES = ["admin", "management", "staff", "vet", "volunteer"];
 
 function revalidateRecurring() {
   revalidatePath("/management/recurring-jobs");
@@ -139,7 +138,7 @@ async function setAssignees(supabase: Supabase, jobId: string, userIds: string[]
       .from("app_users")
       .select("id")
       .in("id", add)
-      .in("role", ASSIGNABLE_ROLES)
+      .in("role", [...ASSIGNABLE_ROLES])
       .is("archived_at", null)
       .returns<{ id: string }[]>();
     if (error) return error.message;
@@ -161,6 +160,45 @@ async function setAssignees(supabase: Supabase, jobId: string, userIds: string[]
     if (error) return error.message;
   }
   return null;
+}
+
+/**
+ * The people in `userIds` who can still sign in but whose role cannot do a
+ * job linking to `linkPath` (eligibility.ts) — a vet on a stocktake. The
+ * database would take them (0095 checks only that a login is live staff),
+ * so this is the check, run before anything is written. Archived logins
+ * are the stranded warning's business.
+ */
+async function whoCannotDo(
+  supabase: Supabase,
+  linkPath: string | null,
+  userIds: string[],
+): Promise<{ names: string[]; error: string | null }> {
+  if (userIds.length === 0) return { names: [], error: null };
+  const { data, error } = await supabase
+    .from("app_users")
+    .select("id, email, display_name, role, archived_at")
+    .in("id", userIds)
+    .is("archived_at", null)
+    .returns<AppUser[]>();
+  if (error) return { names: [], error: error.message };
+  return {
+    names: (data ?? []).filter((user) => !canDoJob(user.role, linkPath)).map((user) => appUserLabel(user)),
+    error: null,
+  };
+}
+
+/** whoCannotDo's answer as a refusal: its error, or who can't and why; null when everyone can. */
+async function cannotDoProblem(
+  supabase: Supabase,
+  linkPath: string | null,
+  userIds: string[],
+): Promise<string | null> {
+  const { names, error } = await whoCannotDo(supabase, linkPath, userIds);
+  if (error) return error;
+  if (names.length === 0) return null;
+  const { t } = await getT();
+  return t.management.recurringJobs.errors.assigneeCannotDo(names.join(", "));
 }
 
 /** Friendlier words for the database's own refusals. */
@@ -205,6 +243,12 @@ export async function saveRecurringJob(
   };
 
   const supabase = await createClient();
+  // Before the row is written, so pointing the link at a page someone on the
+  // team cannot open is refused whole rather than saved half-way.
+  const assigneeIds = [...new Set(fields.assigneeIds)];
+  const cannotDo = await cannotDoProblem(supabase, linkPath, assigneeIds);
+  if (cannotDo) return { error: cannotDo };
+
   let jobId = id;
   if (id) {
     const { error } = await supabase.from("recurring_jobs").update(row).eq("id", id);
@@ -219,7 +263,7 @@ export async function saveRecurringJob(
     jobId = data.id;
   }
 
-  const assigneeError = await setAssignees(supabase, jobId!, [...new Set(fields.assigneeIds)]);
+  const assigneeError = await setAssignees(supabase, jobId!, assigneeIds);
   revalidateRecurring();
   if (assigneeError) return { error: assigneeError, id: jobId! };
   return { id: jobId! };
@@ -306,7 +350,8 @@ export async function handOverRecurringJobs(input: HandOverInput): Promise<HandO
     const failed: string[] = [];
     for (const job of jobs.filter((j) => j.assignee_ids.includes(input.fromUserId))) {
       const team = [...new Set([...job.assignee_ids.filter((id) => id !== input.fromUserId), ...toIds])];
-      const problem = await setAssignees(supabase, job.id, team);
+      const problem =
+        (await cannotDoProblem(supabase, job.link_path, team)) ?? (await setAssignees(supabase, job.id, team));
       if (problem) failed.push(`${job.title}: ${problem}`);
       else changed += 1;
     }
@@ -338,6 +383,13 @@ export async function handOverRecurringJobs(input: HandOverInput): Promise<HandO
     if (o.occurs_on < input.startDate || o.occurs_on > input.endDate) continue;
     if (!o.team.includes(input.fromUserId)) continue;
     const team = [...new Set([...o.team.filter((id) => id !== input.fromUserId), ...toIds])];
+    // reassign_recurring_job() takes any live staff login; whether they can
+    // open the job's page is checked here.
+    const cannotDo = await cannotDoProblem(supabase, o.job.link_path, team);
+    if (cannotDo) {
+      failed.push(`${o.job.title}, ${o.occurs_on}: ${cannotDo}`);
+      continue;
+    }
     const { error: reassignError } = await supabase.rpc("reassign_recurring_job", {
       p_job_id: o.job.id,
       p_occurs_on: o.occurs_on,

@@ -47,6 +47,13 @@ export function timeOfDayRank(value: TimeOfDay): number {
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
+type RecurringJobErrors = Dictionary["management"]["recurringJobs"]["errors"];
+
+/** The keys of the plain-text messages; the ones that take names are not a rule's. */
+type RuleProblem = {
+  [K in keyof RecurringJobErrors]: RecurringJobErrors[K] extends string ? K : never;
+}[keyof RecurringJobErrors];
+
 /**
  * Checks a rule against what recurring_jobs_rule (0095) will accept, so the
  * form can say what is wrong in words instead of surfacing a CHECK name.
@@ -54,7 +61,7 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
  */
 export function ruleProblem(
   rule: RecurrenceRule,
-): keyof Dictionary["management"]["recurringJobs"]["errors"] | null {
+): RuleProblem | null {
   if (!Number.isInteger(rule.every) || rule.every < 1 || rule.every > 52) return "everyInvalid";
   if (!ISO_DATE.test(rule.starts_on)) return "startRequired";
   if (rule.ends_on !== null) {
