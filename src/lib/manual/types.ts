@@ -51,5 +51,18 @@ export type Manual = {
   version: string;
   roleNames: Record<ManualRole, string>;
   roleSummary: Record<ManualRole, string>;
+  /**
+   * The page's role filter: the line above the sections and the label on a
+   * topic outside the reader's role. `role` is already the role's name.
+   */
+  filter: {
+    showingRole: (role: string, count: number) => string;
+    showEverything: string;
+    findHint: string;
+    showingEverything: (role: string) => string;
+    showOnlyRole: (role: string) => string;
+    notForRole: (role: string) => string;
+    you: string;
+  };
   sections: ManualSection[];
 };
