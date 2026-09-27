@@ -17,10 +17,11 @@ import {
   type TimeOfDay,
 } from "@/lib/recurring-jobs/rule";
 import type { RecurringJob } from "@/lib/recurring-jobs/queries";
+import { canDoJob, jobIsRestricted, rolesForJob } from "@/lib/recurring-jobs/eligibility";
 import { previewRecurrence, saveRecurringJob } from "./actions";
 
 export type PersonOption = { id: string; name: string; role: string };
-export type TeamMember = { id: string; name: string; archived: boolean };
+export type TeamMember = { id: string; name: string; archived: boolean; role?: string | null };
 
 /** Screens a job is most often done on; anything else goes in "Other page…". */
 const LINK_PRESETS = {
@@ -112,12 +113,34 @@ export function RecurringJobForm({
     JSON.stringify([job.repeat, job.every, job.weekdays, job.month_day, job.week_of_month, job.starts_on]) !==
       JSON.stringify([rule.repeat, rule.every, rule.weekdays, rule.month_day, rule.week_of_month, rule.starts_on]);
 
-  // Everyone who can be given a job, plus anyone already on it who has since
-  // left, so they can be taken off rather than silently kept.
-  const options: TeamMember[] = [
-    ...people.map((p) => ({ id: p.id, name: `${p.name} — ${roleLabel(t, p.role)}`, archived: false })),
-    ...team.filter((m) => !people.some((p) => p.id === m.id)).map((m) => ({ ...m, archived: true })),
+  const linkPath =
+    linkChoice === "none" ? "" : linkChoice === "other" ? linkOther : LINK_PRESETS[linkChoice as keyof typeof LINK_PRESETS];
+
+  // Everyone whose role can do the work on the job's page (eligibility.ts):
+  // never a vet, and a volunteer is not offered maintenance. Anyone already
+  // on the job who can't — given it before this filter, or the link has just
+  // changed — or who has since left stays listed and flagged, so they can be
+  // taken off rather than silently kept. Saving refuses the first kind.
+  const eligible = (role: string | null | undefined) => canDoJob(role, linkPath);
+  type Option = TeamMember & { cannotDo: boolean };
+  const options: Option[] = [
+    ...people
+      .filter((p) => eligible(p.role) || assigneeIds.has(p.id))
+      .map((p) => ({
+        id: p.id,
+        name: `${p.name} — ${roleLabel(t, p.role)}`,
+        archived: false,
+        cannotDo: !eligible(p.role),
+      })),
+    ...team
+      .filter((m) => !people.some((p) => p.id === m.id))
+      .map((m) => ({
+        ...m,
+        name: !m.archived && m.role ? `${m.name} — ${roleLabel(t, m.role)}` : m.name,
+        cannotDo: !m.archived && !eligible(m.role),
+      })),
   ];
+  const restricted = jobIsRestricted(linkPath);
 
   function toggle<T>(set: Set<T>, value: T): Set<T> {
     const next = new Set(set);
@@ -129,8 +152,6 @@ export function RecurringJobForm({
   function submit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
-    const linkPath =
-      linkChoice === "none" ? "" : linkChoice === "other" ? linkOther : LINK_PRESETS[linkChoice as keyof typeof LINK_PRESETS];
     startTransition(async () => {
       const result = await saveRecurringJob(job?.id ?? null, {
         title,
@@ -379,6 +400,12 @@ export function RecurringJobForm({
         <fieldset className="flex flex-col gap-1">
           <legend className="text-sm font-medium text-foreground">{f.assignees}</legend>
           <span className={hintClass}>{f.assigneesHint}</span>
+          <span className={hintClass}>{f.assigneesNoVets}</span>
+          {restricted && (
+            <span className={hintClass}>
+              {f.assigneesRestricted(rolesForJob(linkPath).map((role) => roleLabel(t, role)).join(", "))}
+            </span>
+          )}
           <div className="mt-1 flex max-h-56 flex-col gap-1 overflow-y-auto rounded border border-border p-2">
             {options.map((option) => (
               <label key={option.id} className="flex items-center gap-2 text-sm text-foreground">
@@ -387,8 +414,11 @@ export function RecurringJobForm({
                   checked={assigneeIds.has(option.id)}
                   onChange={() => setAssigneeIds((current) => toggle(current, option.id))}
                 />
-                <span className={option.archived ? "text-muted line-through" : undefined}>{option.name}</span>
+                <span className={option.archived || option.cannotDo ? "text-muted line-through" : undefined}>
+                  {option.name}
+                </span>
                 {option.archived && <span className="text-xs text-danger">{f.archivedMember}</span>}
+                {option.cannotDo && <span className="text-xs text-danger">{f.cannotDoMember}</span>}
               </label>
             ))}
           </div>

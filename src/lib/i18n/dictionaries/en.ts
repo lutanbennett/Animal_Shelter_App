@@ -1245,6 +1245,9 @@ const en = {
       strandedBanner: (n: number) =>
         `${n} active job${n === 1 ? " has" : "s have"} nobody who can do ${n === 1 ? "it" : "them"} — ${n === 1 ? "its" : "their"} only assignees have left, or nobody is assigned. Edit the job, or use Hand over below.`,
       stranded: "Nobody can do this — reassign it",
+      cannotDoBanner: (n: number) =>
+        `${n} job${n === 1 ? " is" : "s are"} with someone whose role can’t be given ${n === 1 ? "it" : "them"} — a vet, or someone who can’t open the page the job is done on. Edit the job, or use Hand over below.`,
+      cannotDo: (names: string) => `${names} can’t be given this job — take them off and choose someone who can`,
       nextDates: "Next",
       noNextDates: "No dates in the next year",
       overdue: (n: number) => `${n} missed date${n === 1 ? "" : "s"} still open`,
@@ -1314,6 +1317,9 @@ const en = {
         assignees: "Assigned to",
         assigneesHint: "Everyone ticked sees each date on their My tasks; any of them can mark it done.",
         archivedMember: "(has left — untick to take them off)",
+        assigneesRestricted: (roles: string) => `Only roles that can do the work on the linked page are listed: ${roles}.`,
+        assigneesNoVets: "Vets aren’t listed: their work comes from their vet appointments, not the shelter’s routine.",
+        cannotDoMember: "(can’t be given this job — untick to take them off)",
         active: "Active",
         activeHint: "A paused job shows nothing on My tasks, missed dates included. Resuming starts again from today.",
         preview: "Next dates",
@@ -1348,6 +1354,7 @@ const en = {
         intro: "Dates covered by someone other than the usual team, from the missed ones to the next two months.",
         empty: "No dates are handed over.",
         instead: (usual: string) => `instead of ${usual}`,
+        cannotDo: (names: string) => `${names} can’t be given this job — hand the date back or to someone else`,
         handBack: "Give back",
       },
       record: {
@@ -1375,6 +1382,8 @@ const en = {
         weekOfMonthRequired: "Choose first, second, third, fourth or last.",
         dependsOnSelf: "A job can't wait for itself.",
         assigneeNotLive: "Someone chosen can no longer sign in. Choose people who still work here.",
+        assigneeCannotDo: (names: string) =>
+          `${names} can’t be given this job: vets aren’t given recurring jobs, and other roles only jobs on pages they can open. Choose someone else, or change the link.`,
         hasHistory:
           "This job has been marked done or skipped before, so it is kept for the record. Pause it, or give it an end date, instead.",
         handOverFromRequired: "Choose whose jobs to hand over.",
@@ -3223,6 +3232,7 @@ const en = {
       handedToYou: "handed to you",
       handedToYouBecause: (note: string) => `handed to you: ${note}`,
       notYet: "Can be marked done on the day",
+      cannotDo: "your role isn’t given this job — ask management to reassign it",
     },
     buckets: {
       overdue: "Overdue",

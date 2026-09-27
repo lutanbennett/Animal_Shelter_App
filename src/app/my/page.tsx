@@ -33,7 +33,7 @@ export default async function MyPage() {
 
   const sections: MyTaskSection[] = userId
     ? await Promise.all([
-        ...(canReadRecurringJobs(role) ? [loadMyRecurringTasks(supabase, userId, t, today)] : []),
+        ...(canReadRecurringJobs(role) ? [loadMyRecurringTasks(supabase, userId, role, t, today)] : []),
         ...(canReadMaintenance(role) ? [loadMyMaintenanceTasks(supabase, userId, role, t, locale)] : []),
       ])
     : [];
