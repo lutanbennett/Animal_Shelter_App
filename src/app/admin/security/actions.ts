@@ -9,6 +9,7 @@ import {
   type ActionResult,
 } from "@/lib/action-result";
 import { hasAdminRole } from "@/lib/auth/require-admin";
+import { hasTwoStep, isVerifiedTotp } from "@/lib/auth/two-step";
 import { MUST_CHANGE_PASSWORD } from "@/lib/auth/password-change";
 import { generateTemporaryPassword } from "@/lib/auth/temp-password";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -37,9 +38,17 @@ type T = Awaited<ReturnType<typeof getT>>["t"];
 
 const refuse = (error: string): ActionRefusal => ({ ok: false, error });
 
-/** Admin only — the same check assertAdminRole() makes, returned instead of thrown. */
+/**
+ * Admin only, and only from a session that has passed the authenticator-app
+ * step (src/lib/auth/two-step.ts). Every action here writes with the
+ * service role, which bypasses RLS, so 0100's aal2 policies on user_roles
+ * never see these writes — this check is the enforcement, not the page's
+ * redirect: an action can be called without the page ever rendering.
+ */
 async function refuseUnlessAdmin(t: T): Promise<ActionRefusal | null> {
-  return (await hasAdminRole()) ? null : refuse(t.admin.security.errors.adminAccessRequired);
+  if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+  if (!(await hasTwoStep())) return refuse(t.admin.security.errors.twoStepRequired);
+  return null;
 }
 
 async function isCurrentUser(userId: string) {
@@ -276,6 +285,45 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
         return refuse(e.hasRecords);
       }
       return unexpectedFailure("security.deleteUser", error, t.common.somethingWentWrong);
+    }
+    revalidateSecurity();
+    return { ok: true };
+  });
+}
+
+/**
+ * Removes a login's authenticator app, for a lost or replaced phone: the
+ * next time they open Security they set one up again. Done by another
+ * admin who has passed 2-step — or by yourself, to move to a new phone
+ * while the old one still works. The last resort, with no admin able to
+ * pass 2-step, is `scripts/bootstrap-admin.mjs --reset-2step`
+ * (docs/decisions.md, 2026-09-27). A session the person already has open
+ * drops to aal1 at its next token refresh, within the hour.
+ */
+export async function resetTwoStep(userId: string): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.admin.security.errors;
+  return runAction("security.resetTwoStep", t.common.somethingWentWrong, async () => {
+    const denied = await refuseUnlessAdmin(t);
+    if (denied) return denied;
+
+    const admin = createAdminClient();
+    const { data, error } = await admin.auth.admin.mfa.listFactors({ userId });
+    if (error) {
+      if (isUserNotFound(error)) return refuse(e.userNotFound);
+      return unexpectedFailure("security.resetTwoStep", error, t.common.somethingWentWrong);
+    }
+    const factors = data.factors.filter((f) => f.factor_type === "totp");
+    if (!factors.some(isVerifiedTotp)) return refuse(e.noTwoStep);
+
+    for (const factor of factors) {
+      const { error: deleteError } = await admin.auth.admin.mfa.deleteFactor({
+        id: factor.id,
+        userId,
+      });
+      if (deleteError) {
+        return unexpectedFailure("security.resetTwoStep", deleteError, t.common.somethingWentWrong);
+      }
     }
     revalidateSecurity();
     return { ok: true };

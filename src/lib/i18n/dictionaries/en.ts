@@ -335,7 +335,7 @@ const en = {
         frequencies:
           "The \"how often\" choices a prescription picks from, and the schedule the medication forecast counts for each.",
         security:
-          "Sign-in accounts, roles and access requests. Also pinned to the bottom of the menu.",
+          "Sign-in accounts, roles and access requests. Needs your authenticator app (2-step verification). Also pinned to the bottom of the menu.",
         systemStatus:
           "Whether the database, photo storage, migrations, release mail, backups and the Pi are healthy, and how much the app is being used.",
       },
@@ -527,6 +527,16 @@ const en = {
           `Archive ${email}? They can no longer sign in and won't be offered for new maintenance jobs; their name stays on past ones. Restore undoes this.`,
         failedToArchiveUser: "Failed to archive user.",
         failedToRestoreUser: "Failed to restore user.",
+        twoStep: "2-step",
+        twoStepOn: "On",
+        twoStepOff: "Not set up",
+        resetTwoStep: "Reset",
+        resetTwoStepConfirm: (email: string) =>
+          `Reset 2-step verification for ${email}? Their authenticator app stops working here, and they set it up again the next time they open Security. Do this for a lost or replaced phone.`,
+        resetTwoStepSelfConfirm:
+          "Reset your own 2-step verification? Your authenticator app stops working here, and within the hour Security asks you to set up an app again — have the new phone ready.",
+        twoStepReset: "2-step verification reset.",
+        failedToResetTwoStep: "Failed to reset 2-step verification.",
       },
       errors: {
         emailRequired: "Email is required.",
@@ -543,6 +553,46 @@ const en = {
         userNotFound: "This login no longer exists. Reload the page.",
         emailTaken: "There is already a login with that email.",
         emailInvalid: "That email address doesn't look right.",
+        twoStepRequired:
+          "This needs your authenticator app. Reload the page, enter the code from the app, then try again.",
+        noTwoStep: "This login has no authenticator app set up. Reload the page.",
+      },
+      twoStep: {
+        setupTitle: "Set up 2-step verification",
+        setupSubtitle:
+          "Security decides who can get into the app, so it asks for a second step: a 6-digit code from an authenticator app on your phone. You set it up once; after that, Security asks for a code once each time you sign in. The rest of the app doesn't change.",
+        codeTitle: "Enter your code",
+        codeSubtitle:
+          "Security needs the second step. Open the authenticator app on your phone and enter the 6-digit code it shows for Lanna Animal Care.",
+        stepInstall:
+          "Install an authenticator app on your phone if you don't have one: Google Authenticator, Microsoft Authenticator or similar — any of them works.",
+        stepScan: "Tap Start below and scan the QR code with the app.",
+        stepCode: "Type the 6-digit code the app shows to confirm it.",
+        start: "Start",
+        starting: "Starting…",
+        qrAlt: "QR code to scan with your authenticator app",
+        scanThis: "Scan this with your authenticator app.",
+        orTypeKey: "No camera? Choose \"enter a setup key\" in the app and type this key:",
+        codeLabel: "6-digit code",
+        confirm: "Continue",
+        confirmSetup: "Confirm and continue",
+        checking: "Checking…",
+        noRecoveryCodes:
+          "There are no backup codes. If you lose this phone, another admin can reset your 2-step verification from Security, and you set it up again on the new one.",
+        lostPhone:
+          "Lost or replaced your phone? Ask another admin to reset your 2-step verification from Security. If no admin can get in, the developer can reset it.",
+        backToSettings: "Back to Settings",
+        errors: {
+          alreadySetUp:
+            "An authenticator app is already set up for your login. Reload the page and enter its code.",
+          couldntStart: "Couldn't start the setup. Check your connection and try again.",
+          codeFormat: "Enter the 6 digits the app shows.",
+          noFactor: "This QR code has expired. Reload the page and start the setup again.",
+          wrongCode:
+            "That code didn't match. Codes change every 30 seconds — enter the one showing now. If it keeps failing, check the phone's clock is set automatically.",
+          expired: "That took too long. Enter the code showing now.",
+          tooMany: "Too many tries. Wait a minute, then enter the code showing now.",
+        },
       },
       createdUser: (email: string, role: string) => `Created ${email} as ${role}.`,
     },

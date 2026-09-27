@@ -42,6 +42,7 @@ export type Release = {
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
+  "Settings → Security now asks admins for a 6-digit code from an authenticator app on their phone (2-step verification), once per sign-in. The first visit walks you through setting the app up. The rest of the app signs in as before. A lost phone is reset by another admin from Security.",
 ];
 
 /** Newest first. */

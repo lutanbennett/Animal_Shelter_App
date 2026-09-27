@@ -1123,6 +1123,26 @@ const manual: Manual = {
           },
         },
         {
+          id: "two-step",
+          title: "2-step verification for Security",
+          roles: ["admin"],
+          path: "Security (bottom of the menu)",
+          intro:
+            "Security decides who can get into the app, so it asks for a second step: a 6-digit code from an authenticator app on your phone. It works the same whether you signed in with a password or with Google. Nothing else in the app asks for it.",
+          steps: [
+            "Setting it up, once: install an authenticator app on your phone (Google Authenticator, Microsoft Authenticator or similar — any of them). Open Security and tap Start. Scan the QR code with the app — or, without a camera, choose \"enter a setup key\" in the app and type the key shown beside it. Type the 6-digit code the app then shows and tap Confirm and continue.",
+            "Every time after that: the first time you open Security after signing in, it asks for the code. Open the app, type the 6 digits for Lanna Animal Care and tap Continue. That lasts until you sign out. Codes change every 30 seconds, so type the one showing now; if a correct-looking code keeps failing, check the phone's clock is set automatically.",
+            "The 2-step column in the users table shows who has set it up. Reset removes someone's authenticator app — for a lost or replaced phone — and they set it up again the next time they open Security. You can reset your own to move to a new phone; Security asks you to set it up again within the hour.",
+            "Lost your phone? There are no backup codes. Ask another admin to reset your 2-step verification from Security, then set it up on the new phone. If no admin can get in — the only admin lost their phone — the developer can reset it from outside the app.",
+          ],
+          callouts: [
+            {
+              kind: "tip",
+              text: "Keep at least two admins with 2-step set up, so one can always reset the other.",
+            },
+          ],
+        },
+        {
           id: "website",
           title: "The public website",
           roles: ["admin"],
