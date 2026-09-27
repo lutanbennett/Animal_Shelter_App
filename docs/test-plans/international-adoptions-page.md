@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [x] CI green on the PR — #186, 3/3 checks passing on `ba04285`'s successor (the gates re-run commit); the merge commit re-runs them
+- [x] CI green on the PR — #186, 3/3 checks passing on `961f624`; the merge commit re-runs them
 
 ## 3. Schema and data — *skip if no migration*
 
