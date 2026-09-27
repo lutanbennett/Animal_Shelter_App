@@ -5,6 +5,7 @@ import {
   archiveUser,
   deleteUser,
   issueTemporaryPassword,
+  resetTwoStep,
   restoreUser,
   updateUserRole,
 } from "./actions";
@@ -24,6 +25,8 @@ export type SecurityUser = {
   lastSignInAt: string | null;
   /** On a temporary password — must choose their own at the next password sign-in. */
   mustChangePassword: boolean;
+  /** Has an authenticator app set up for Settings → Security. */
+  twoStep: boolean;
 };
 
 const ROLES = ["admin", "management", "staff", "vet", "volunteer", "public_viewer"];
@@ -91,6 +94,18 @@ function UserRow({
       () => issueTemporaryPassword(user.id),
       t.admin.security.table.failedToResetPassword,
       (result) => setIssuedPassword(result.temporaryPassword),
+    );
+  }
+
+  function handleResetTwoStep() {
+    const confirmText = isSelf
+      ? t.admin.security.table.resetTwoStepSelfConfirm
+      : t.admin.security.table.resetTwoStepConfirm(user.email);
+    if (!window.confirm(confirmText)) return;
+    run(
+      () => resetTwoStep(user.id),
+      t.admin.security.table.failedToResetTwoStep,
+      () => setMessage({ type: "success", text: t.admin.security.table.twoStepReset }),
     );
   }
 
@@ -168,6 +183,23 @@ function UserRow({
           )}
         </td>
         <td className="px-4 py-2">
+          {user.twoStep ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-foreground">{t.admin.security.table.twoStepOn}</span>
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={handleResetTwoStep}
+                className="rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
+              >
+                {t.admin.security.table.resetTwoStep}
+              </button>
+            </div>
+          ) : (
+            <span className="text-xs text-muted">{t.admin.security.table.twoStepOff}</span>
+          )}
+        </td>
+        <td className="px-4 py-2">
           {!isSelf && (
             <div className="flex flex-wrap gap-2">
               {archived ? (
@@ -203,7 +235,7 @@ function UserRow({
       </tr>
       {issuedPassword && (
         <tr>
-          <td colSpan={6} className="px-4 pb-3">
+          <td colSpan={7} className="px-4 pb-3">
             <TemporaryPasswordNotice email={user.email} password={issuedPassword} />
           </td>
         </tr>
@@ -211,7 +243,7 @@ function UserRow({
       {message && (
         <tr>
           <td
-            colSpan={6}
+            colSpan={7}
             className={`px-4 pb-2 text-xs ${
               message.type === "error" ? "text-danger" : "text-success"
             }`}
@@ -253,6 +285,9 @@ export function UsersTable({
             <th className="px-4 py-2 font-medium">
               {t.admin.security.table.resetPassword}
             </th>
+            <th className="px-4 py-2 font-medium">
+              {t.admin.security.table.twoStep}
+            </th>
             <th className="px-4 py-2 font-medium" />
           </tr>
         </thead>
@@ -266,7 +301,7 @@ export function UsersTable({
           ))}
           {users.length === 0 && (
             <tr>
-              <td colSpan={6} className="px-4 py-6 text-center text-muted">
+              <td colSpan={7} className="px-4 py-6 text-center text-muted">
                 {t.admin.security.table.noUsers}
               </td>
             </tr>

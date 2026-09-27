@@ -37,6 +37,19 @@ Six `app_role` values, enforced by row-level security
 
 A person who leaves is **archived** from `/admin/security` rather than deleted (`user_roles.archived_at`, 0063): `current_user_role()` returns null for them, so every policy and page treats them as having no access, while their name stays on the maintenance jobs they did. Restore reverses it. Archived and role-less logins are refused at sign-in, by password or Google, and a session archived after it signed in is signed out at its next app page.
 
+**Settings → Security needs 2-step verification** (docs/decisions.md, 2026-09-27). The page and every action behind it require a session that has passed Supabase Auth's authenticator-app (TOTP) factor — `aal2` in the JWT (`src/lib/auth/two-step.ts`). The first visit sets up the app at `/admin/security/verify`; after that it asks for a code once per sign-in. The actions check `aal2` themselves, because they write with the service role, which bypasses the `aal2` RLS policies on `user_roles` (0100). Nothing else in the app asks for it. **A lost phone must not lock the shelter out**, and there are no backup codes, so recovery is:
+
+1. **Another admin who has passed 2-step** presses **Reset** in the 2-step column of the users table on Security. The person sets the app up again the next time they open Security.
+2. **Last resort, when no admin can pass 2-step** (the only admin lost their phone): the developer removes the factor with the service role —
+
+   ```bash
+   node scripts/bootstrap-admin.mjs --env production --reset-2step someone@gmail.com
+   ```
+
+   It changes nothing but that login's authenticator app, and runs whatever roles exist.
+
+Keep at least two admins enrolled so route 1 is always available. `scripts/check-two-step-session.mjs` re-measures on dev what the sessions report.
+
 ## Getting started
 
 1. **Install dependencies**
