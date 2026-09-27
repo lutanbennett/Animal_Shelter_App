@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "Keep Medical-folder photos off the public website" (profile half) and "A vet's photo upload should be limited to the Medical folder" |
 | Branch / worktree | `claude/medical-photos-profile` @ `C:\Development\Animal_Shelter_medical-photos-profile` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3009` |
-| PR | (added when opened) |
+| PR | #179 |
 | Tested by / date | Claude, 2026-09-27 |
 | Carries a migration? | no — the public-view fallback is a separate schema follow-up (Lutan, 2026-09-27) |
 | Tested at SHA | `dee2c70` (after `sync`); later commits on the branch are docs only |
@@ -24,7 +24,7 @@
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (brought `0102_vet_doctors_and_vet_accounts.sql`, no overlap with photos)
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — #179 run 36298671573: check, test-plan and migration-numbers all pass
 
 ```
 === gates: typecheck exited 0 after 89s
@@ -158,7 +158,7 @@ Manual verification by: pending: a vet's photos page on a phone, and the Thai wo
 ### Result
 
 - [ ] Open defects are either fixed or explicitly accepted above — n/a: the one defect is deferred to its own backlog item by Lutan's decision, recorded above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR — in #179's description
 - [ ] Handed to the production release manager — n/a: not yet — handed over when a release is cut
 
 Result: pass with accepted defects
