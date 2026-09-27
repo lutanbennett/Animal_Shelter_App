@@ -74,7 +74,7 @@ a minute where finding it mid-Vet-pass dead-ends the pass.
 - [ ] Signed in as admin in profile A; `/admin` opens
 - [ ] `/admin` says **Photo storage (Google Drive) is connected** — if it is red, every photo step below will fail and you want to know now rather than blame the role
 - [ ] Reference lists are non-empty: **Immunization types**, **Procedure types**, **Blood test types**, **Frequencies**, **Zones and enclosures**. An empty one is an Admin-pass finding — note it, populate enough to test with, carry on
-- [ ] **Management → Vets** has at least one vet, and at least one has a doctor name — the Vet pass needs someone to record a visit against
+- [ ] **Management → Vets** has at least one vet — the Vet pass needs a clinic to record a visit against. There is no doctor field on the vet record: the doctor is typed per visit on the vet-visit form, which suggests names already used against that clinic (`src/lib/vets/doctors.ts`). An empty suggestion list on a clinic nobody has recorded a visit for is expected, not a fault
 - [ ] **Management → Medications** and **→ Diets** each have at least one item with a stock figure
 - [ ] Pick a **test resident** and write its name here: `________`. Use the same one through every pass so the medical, placement and photo history builds up in one place and you can read it back at the end
 - [ ] **Management → Recurring jobs**: create a job due **today**, assigned to the **test account**, on a frequency you can see. This is what the Vet, Staff and Volunteer passes each mark done. Note its name: `________`
