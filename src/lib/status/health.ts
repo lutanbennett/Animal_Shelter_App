@@ -261,18 +261,27 @@ export type HealthReport = {
   origin: CheckResult<OriginFacts>;
 };
 
-/** Every health check at once, each on its own clock, cached for a minute. */
+export type HealthCheckKey = keyof HealthReport;
+
+/**
+ * Every health check at once, each on its own clock, fresh. The alert run
+ * (src/lib/status/alerts.ts) calls this: it must see now, not the page's
+ * minute-old copy.
+ */
+export async function runHealthChecks(): Promise<HealthReport> {
+  const [database, drive, migrations, release, releaseMail, backup, origin] = await Promise.all([
+    runCheck(checkDatabase, 5_000),
+    runCheck(checkDrive),
+    runCheck(checkMigrations, 5_000),
+    runCheck(checkRelease),
+    runCheck(checkReleaseMail),
+    runCheck(checkBackup),
+    runCheck(checkOrigin, 6_000),
+  ]);
+  return { database, drive, migrations, release, releaseMail, backup, origin };
+}
+
+/** The page's view: the same checks, cached for a minute. */
 export function getHealthReport(): Promise<HealthReport> {
-  return cached("health", async () => {
-    const [database, drive, migrations, release, releaseMail, backup, origin] = await Promise.all([
-      runCheck(checkDatabase, 5_000),
-      runCheck(checkDrive),
-      runCheck(checkMigrations, 5_000),
-      runCheck(checkRelease),
-      runCheck(checkReleaseMail),
-      runCheck(checkBackup),
-      runCheck(checkOrigin, 6_000),
-    ]);
-    return { database, drive, migrations, release, releaseMail, backup, origin };
-  });
+  return cached("health", runHealthChecks);
 }

@@ -3,10 +3,12 @@ import Link from "next/link";
 import { requireAdminUser } from "@/lib/auth/require-admin";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
+import { checkAlerts } from "@/lib/status/alerts";
 import { getHealthReport } from "@/lib/status/health";
-import type { CheckResult, CheckState } from "@/lib/status/run";
+import { type CheckResult, type CheckState, runCheck } from "@/lib/status/run";
 import { USAGE_PERIODS, getUsageReport, parsePeriod, type UsagePeriod } from "@/lib/status/usage";
 import { checkNow } from "./actions";
+import { AlertActions } from "./AlertActions";
 
 type T = Awaited<ReturnType<typeof getT>>["t"];
 type Locale = Awaited<ReturnType<typeof getT>>["locale"];
@@ -46,6 +48,13 @@ export default async function SystemStatusPage(props: PageProps<"/admin/status">
         <h2 className="text-lg font-semibold text-foreground">{s.healthHeading}</h2>
         <Suspense fallback={<p className="text-sm text-muted">{s.checking}</p>}>
           <Health t={t} locale={locale} />
+        </Suspense>
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold text-foreground">{s.alerts.heading}</h2>
+        <Suspense fallback={<p className="text-sm text-muted">{s.checking}</p>}>
+          <Alerts t={t} locale={locale} />
         </Suspense>
       </section>
 
@@ -222,6 +231,53 @@ async function Health({ t, locale }: { t: T; locale: Locale }) {
               ? x.origin.ok({ host: origin.host })
               : x.origin.fallback({ host: origin.host })}
         </p>
+      </Tile>
+    </div>
+  );
+}
+
+/**
+ * Whether the alerts themselves are working: the schedule is running and
+ * the last mail reached the admins (src/lib/status/alerts.ts). Read fresh,
+ * not from the minute's cache, so a button press shows at once.
+ */
+async function Alerts({ t, locale }: { t: T; locale: Locale }) {
+  const r = await runCheck(checkAlerts, 5_000);
+  const a = t.admin.status.alerts;
+  const f = r.facts;
+  const titles = t.admin.status.tiles;
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <Tile title={a.title} result={r} t={t} locale={locale}>
+        {!f ? (
+          <p>{a.fail}</p>
+        ) : (
+          <>
+            <p>
+              {f.lastCronAt
+                ? a.lastRun({ time: formatDateTime(f.lastCronAt, locale) })
+                : f.scheduledHere
+                  ? a.neverRun
+                  : a.offHere}
+            </p>
+            {f.open.length > 0 && (
+              <p className="text-danger">{a.open({ names: f.open.map((k) => titles[k].title).join(", ") })}</p>
+            )}
+            {f.lastMail && (
+              <p className="text-muted">
+                {a.lastMail({
+                  time: formatDateTime(f.lastMail.at, locale),
+                  kind: f.lastMail.trigger === "test" ? a.kindTest : a.kindAlert,
+                  sent: f.lastMail.sent,
+                  skipped: f.lastMail.skipped.length,
+                })}
+              </p>
+            )}
+            <p className="text-xs text-muted">{a.how}</p>
+          </>
+        )}
+        <AlertActions />
       </Tile>
     </div>
   );

@@ -39,7 +39,22 @@
       // never sends release mail (worker/release-mail.mjs).
       // PUBLIC_SITE "locked": signed-out visitors get the sign-in landing page,
       // not the public website (src/lib/public-site.ts).
-      "vars": { "NODE_ENV": "production", "ORIGIN_HOST": "", "ORIGIN_TIMEOUT_MS": "20000", "RELEASE_MAIL_ENV": "", "PUBLIC_SITE": "locked" }
+      // Status alerts (src/lib/status/alerts.ts) DO run here: the cron below,
+      // their own STATUS_ALERT_MAIL binding (not RELEASE_MAIL, whose guard
+      // stays as it was) and the dev database's admins as recipients. This is
+      // where the alert path is proved before production relies on it.
+      "vars": {
+        "NODE_ENV": "production",
+        "ORIGIN_HOST": "",
+        "ORIGIN_TIMEOUT_MS": "20000",
+        "RELEASE_MAIL_ENV": "",
+        "PUBLIC_SITE": "locked",
+        "STATUS_ALERT_SITE": "https://test.lannacare.org",
+        "STATUS_ALERT_FROM": "alerts@lannacare.org"
+      },
+      "send_email": [{ "name": "STATUS_ALERT_MAIL" }],
+      // Every 15 minutes: ALERT_INTERVAL_MINUTES in src/lib/status/alerts.ts.
+      "triggers": { "crons": ["*/15 * * * *"] }
     },
     // The customer's acceptance testing: the UAT database and the current
     // Google Drive, on lannacare.org for good (docs/decisions.md). Plumbing
@@ -86,9 +101,15 @@
         "ORIGIN_TIMEOUT_MS": "20000",
         "RELEASE_MAIL_ENV": "UAT",
         "RELEASE_MAIL_FROM": "releases@lannacare.org",
-        "PUBLIC_SITE": "locked"
+        "PUBLIC_SITE": "locked",
+        // Status alerts, as on test. The cutover moves this block to
+        // lannacareforanimals.org: STATUS_ALERT_SITE moves with it, and the
+        // uat block takes lannacare.org and a copy of these alert entries.
+        "STATUS_ALERT_SITE": "https://lannacare.org",
+        "STATUS_ALERT_FROM": "alerts@lannacare.org"
       },
-      "send_email": [{ "name": "RELEASE_MAIL" }]
+      "send_email": [{ "name": "RELEASE_MAIL" }, { "name": "STATUS_ALERT_MAIL" }],
+      "triggers": { "crons": ["*/15 * * * *"] }
     }
   }
 }

@@ -580,6 +580,19 @@ the environment's file: `CLOUDFLARE_ANALYTICS_TOKEN` (a Cloudflare API
 token with Zone → Analytics → Read on lannacare.org) and
 `CLOUDFLARE_ZONE_ID`. Without them that tile is grey.
 
+**Status alerts** mail the admins when a health tile goes red and when it
+recovers. A Worker cron trigger (`*/15 * * * *` on the test and production
+Workers, `wrangler.jsonc`) hands `POST /api/status/alerts` straight to the
+Next handler inside the Worker, bearer-authenticated with the service-role
+key; the run is `src/lib/status/alerts.ts` and remembers what it saw in
+`status_alert_checks` / `status_alert_runs` (0098). Mail goes out through
+the `STATUS_ALERT_MAIL` send_email binding from `STATUS_ALERT_FROM`, so,
+like release mail, only to addresses verified under Email Routing →
+Destination addresses. `STATUS_ALERT_SITE` switches it on per environment.
+To prove the path on a dev server, put `STATUS_ALERT_SIMULATE_FAIL=drive`
+in `.env.development.local` (dev database only) and press *Run the alert
+check now* twice; the mail is printed to the server log.
+
 **Restoring** into a Supabase project (a scratch one, or production after a
 disaster) — untested until the backlog's restore rehearsal is done:
 
