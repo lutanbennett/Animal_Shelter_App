@@ -42,6 +42,7 @@ export type Release = {
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
+  "New on the website: a Pet relocation page, under a new Services menu and in the footer, saying the shelter can help move a dog or cat within Thailand or abroad — with a flying puppy in a cape at the top. The adoption listing now points adopters from abroad to it. It starts with standard text in English and Thai; admins can rewrite it under Settings → Website, where it is already filled in to edit.",
 ];
 
 /** Newest first. */

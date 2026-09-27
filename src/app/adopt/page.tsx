@@ -277,6 +277,15 @@ export default async function AdoptPage(props: PageProps<"/adopt">) {
             <SiteBody body={howToText.body} />
           </section>
         )}
+
+        {/* For someone adopting from another country: the shelter can move the
+            animal to them (the Pet relocation page). */}
+        <p data-reveal className="text-sm text-muted">
+          {t.adopt.fromAbroad}{" "}
+          <Link href="/relocation" className="font-medium text-primary hover:underline">
+            {t.adopt.fromAbroadLink} &rarr;
+          </Link>
+        </p>
       </div>
 
       <PublicFooter content={content} />

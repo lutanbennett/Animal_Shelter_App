@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { loadSiteContent, loadVetVisitEstimate } from "@/lib/site/content";
 import { SITE_PAGE_SLUGS, type SitePageSlug } from "@/lib/site/pages";
+import en from "@/lib/i18n/dictionaries/en";
+import { sitePageStarter } from "../../adopt/SitePageView";
 import { loadTranslations, translationKey } from "@/lib/translations/queries";
 import { SiteSettingsForm } from "./SiteSettingsForm";
 import { VetVisitEstimate } from "./VetVisitEstimate";
@@ -27,6 +29,7 @@ const PUBLIC_PATHS: Record<SitePageSlug, string> = {
   foster: "/foster",
   volunteer: "/volunteer",
   donate: "/donate",
+  relocation: "/relocation",
 };
 
 export default async function WebsitePage() {
@@ -151,6 +154,9 @@ export default async function WebsitePage() {
                 // Admin is a superset of management, so always.
                 canManageTranslations
                 publicPath={PUBLIC_PATHS[page.slug]}
+                // In English whatever language the admin reads the app in:
+                // pages are written in English and translated through the queue.
+                starterBody={sitePageStarter(en, page.slug)?.body}
               />
             ))}
           </section>

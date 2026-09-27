@@ -158,6 +158,7 @@ const en = {
     visitingHours: "Visiting hours",
     contact: "Contact us",
     help: "Get involved",
+    services: "Services",
     followUs: "Follow us",
     openMap: "Open in Google Maps",
     staffLogin: "Staff login",
@@ -175,6 +176,8 @@ const en = {
     /** The name beside the logo on a phone, where the full one doesn't fit. */
     shortName: "Lanna Care",
     getInvolved: "Get involved",
+    /** The shelter's services to the public: Pet relocation, later desexing drives. */
+    services: "Services",
     sponsor: "Sponsor a resident",
     about: "About & contact",
     language: "Language",
@@ -194,6 +197,29 @@ const en = {
     emailUs: "Email us",
     lineUs: (id: string) => `LINE ${id}`,
     alsoSee: "See also:",
+    /**
+     * /relocation's starter text, shown until an admin saves a body of
+     * their own on Settings → Website (which also offers it to edit).
+     * Generic on purpose (docs/decisions.md, 2026-09-27): what a move
+     * involves, in our own words — no licence claim, no timelines, no
+     * prices, which only the Director can state.
+     */
+    relocationStarter: {
+      title: "Pet relocation",
+      body: [
+        "## Moving with your pet",
+        "Whether you are moving to another province or to another country, we can help your dog or cat make the journey safely. We take care of the practical steps so you can get on with your own move, and we keep you posted along the way.",
+        "## Moves within Thailand",
+        "- Door-to-door road transport between provinces, with regular stops for water, food and a stretch\n- Help with the health certificate and movement paperwork a trip may need\n- A travel plan that suits your pet's age, size and temperament",
+        "## Moves to and from other countries",
+        "Every country sets its own rules for animals coming in, and they change. We work through them with you:",
+        "- Checking what the destination country asks for\n- Microchip, vaccinations and any blood tests the destination needs, done with a vet\n- Export and import permits, and the health certificates that go with them\n- A travel crate the airline accepts, and time for your pet to get used to it before the trip\n- Booking a flight with an airline that carries animals safely\n- Customs and quarantine checks when your pet leaves and when they arrive\n- Collection at the airport and delivery to your new home, where that can be arranged",
+        "## Adopters and pet owners",
+        "If you are adopting one of our residents from abroad, we can arrange the journey to you. If you are moving with a pet of your own, ask us too.",
+        "## Getting started",
+        "Get in touch and tell us where your pet is going, roughly when you hope to travel, and a little about your pet. Every move is different, so we talk it through with you before anything is booked.",
+      ].join("\n\n"),
+    },
   },
 
   /**
@@ -830,6 +856,7 @@ const en = {
           foster: "Foster",
           volunteer: "Volunteer",
           donate: "Donate",
+          relocation: "Pet relocation",
         } as Record<string, string>,
         where: {
           "our-story": "The story section on the welcome page, under the photo strip.",
@@ -837,7 +864,10 @@ const en = {
           foster: "The Foster page, linked from the header and the \"How you can help\" strip.",
           volunteer: "The Volunteer page, linked from the header and the \"How you can help\" strip.",
           donate: "The Donate page, linked from the Donate button on every public page.",
+          relocation: "The Pet relocation page, linked from Services in the header, the footer, and the adoption listing for adopters abroad.",
         } as Record<string, string>,
+        starterNote:
+          "Nothing saved yet, so the page shows the standard text below. Change it and save to make it yours — and add your licence details and anything else only you can say.",
       },
       gallery: {
         heading: "Photo gallery",
@@ -3480,6 +3510,10 @@ const en = {
     fosterNav: "Foster",
     volunteerNav: "Volunteer",
     donateNav: "Donate",
+    relocationNav: "Pet relocation",
+    /** The line under the listing for someone adopting from another country. */
+    fromAbroad: "Adopting from abroad?",
+    fromAbroadLink: "We can arrange the journey",
     openApp: "Open the app",
     pageTitle: "Meet Our Residents",
     pageSubtitle:
