@@ -1,0 +1,335 @@
+# Role walkthrough
+
+A full pass over the app **one role at a time**: sign in once as a Vet, do
+everything a Vet does end to end, then change role and do the next one. Copy
+this to `docs/uat/<yyyy-mm-dd>.md`, fill it in as you go, and commit it on
+whatever branch is to hand.
+
+It is **not** under `docs/test-plans/`, and must not be moved there. That
+directory is the per-feature gate `scripts/check-test-plan.mjs` enforces, and a
+walkthrough filed there would satisfy a feature PR's gate with no feature
+verified — the same reason `docs/release-smoke-test.md` lives outside it.
+
+## How this differs from the other two lists
+
+| | Covers | Run when |
+|---|---|---|
+| `docs/test-plans/<feature>.md` | One change, in isolation | Every PR |
+| `docs/release-smoke-test.md` | The main paths, on the real build | Every production release, ~10 min |
+| **This** | **Every role's whole job, end to end** | Before a milestone — go-live, a customer demo, after a big batch of merges |
+
+The per-feature plans cannot catch a role seeing something it should not,
+because each is written from inside one feature. The smoke test cannot either,
+because it is run by one person in one role. **Role confusion is the defect
+class this list exists to find**, so each pass has a *Must not be able to*
+section, and those lines matter more than the positive ones.
+
+---
+
+## Before you start
+
+| | |
+|---|---|
+| Site | |
+| Version reported by `/api/releases/current` | |
+| Database | |
+| Test account | |
+| Role-switching account | |
+| Run by | |
+| Date | |
+
+### The role-switching mechanic
+
+One account changes role between passes rather than six accounts existing. That
+works because **the app reads the role fresh on every server render** —
+`current_user_role()` is a database function called per request, not a claim
+baked into the sign-in token. So:
+
+1. **Two browser profiles, side by side.** Profile A signed in as the admin who
+   changes roles. Profile B signed in as the test account, which stays signed in
+   all day.
+2. In A: **Settings → Security**, find the test account, set its role.
+3. In B: **hard refresh** (Ctrl-F5). No sign-out, no re-sign-in. Next.js caches
+   rendered segments client-side, so an ordinary refresh can show you the last
+   role's page.
+4. **Confirm the switch before testing anything** — the menu is the tell. Each
+   pass below opens with what the menu must look like.
+
+Two things to know rather than discover:
+
+- **Never change your own account's role away from `admin`.** Security is
+  admin-only; you would lock yourself out of the page that undoes it. That is
+  why there are two accounts.
+- Writes to `user_roles` need a 2-step-verified session under `0100`, but the
+  Security page writes through the service-role client, which bypasses RLS. Role
+  changes work today. If one is refused, that is a **finding**, not expected
+  behaviour — log it and say so.
+
+### Pass 0 — setup, as admin
+
+Do this first even though the Vet pass is what you want to get to. It seeds the
+things the later passes consume, and finding an empty reference list here costs
+a minute where finding it mid-Vet-pass dead-ends the pass.
+
+- [ ] Signed in as admin in profile A; `/admin` opens
+- [ ] `/admin` says **Photo storage (Google Drive) is connected** — if it is red, every photo step below will fail and you want to know now rather than blame the role
+- [ ] Reference lists are non-empty: **Immunization types**, **Procedure types**, **Blood test types**, **Frequencies**, **Zones and enclosures**. An empty one is an Admin-pass finding — note it, populate enough to test with, carry on
+- [ ] **Management → Vets** has at least one vet, and at least one has a doctor name — the Vet pass needs someone to record a visit against
+- [ ] **Management → Medications** and **→ Diets** each have at least one item with a stock figure
+- [ ] Pick a **test resident** and write its name here: `________`. Use the same one through every pass so the medical, placement and photo history builds up in one place and you can read it back at the end
+- [ ] **Management → Recurring jobs**: create a job due **today**, assigned to the **test account**, on a frequency you can see. This is what the Vet, Staff and Volunteer passes each mark done. Note its name: `________`
+- [ ] Set the test account's role to **vet**
+
+---
+
+## Pass 1 — Vet
+
+The narrowest role, and the only one that is *external* to the shelter. The
+interesting lines are almost all negative: a vet should see the medical record
+and nothing about running the place.
+
+**Menu must show:** My tasks · Residents · Enclosures · Maintenance · Vets ·
+Contacts · Projects · Manual · Release notes · Change password.
+**Menu must NOT show:** Stocktake, Management, Settings, Security.
+**Header must NOT show:** the Assistant button — the vet role is external and
+the assistant is closed to it (`0070`).
+
+- [ ] Menu matches the above, exactly — tick only after reading it item by item
+
+### Can do
+
+- [ ] **My tasks** opens and shows the recurring job from Pass 0, under *Due today*
+- [ ] Mark it **Done** with a note; it leaves the list and **Undo** is offered
+- [ ] Undo puts it back, then mark it Done again for real
+- [ ] `/residents` lists residents; find the test resident by search
+- [ ] Its hub opens; **info**, **medical** and **placement** tabs all load
+- [ ] **Log an immunization** — type, date, vet; it appears in the medical list
+- [ ] **Record a vet visit** — reason, vet, date; it appears with the doctor's name
+- [ ] **Add a prescription** — medication, dose, dates; it appears and reads as current
+- [ ] **Record a diet**
+- [ ] **Log a weight**; the weight history updates
+- [ ] **Log a procedure** — type, date, notes
+- [ ] **Log a blood test**, and **attach a file to it**. This is the one Drive-backed write a vet does; if it fails, check `/admin`'s Drive line before calling it a role problem
+- [ ] **Add a resident photo** — vets can, and it is easy to assume they cannot
+- [ ] `/vets` and `/contacts` open and read
+- [ ] `/enclosures` opens; a zone and an enclosure page load
+- [ ] `/projects` opens and reads
+- [ ] **Manual** opens, and "Roles — who can do what" describes the vet role as you have just experienced it. Topics a vet cannot do should carry the right role badges
+- [ ] **Release notes** opens and lists the current version
+- [ ] **Change password** page loads
+
+### Must not be able to
+
+Reach each by **typing the URL**, not just by looking for a missing button. A
+hidden button with an open route is the bug worth finding.
+
+- [ ] `/stocktake` — refused or redirected
+- [ ] `/management` and `/management/dashboard` — redirected
+- [ ] `/admin` and `/admin/security` — redirected
+- [ ] `/deliveries` — redirected (delivery roles are admin/management/staff)
+- [ ] Resident hub shows **no** New resident / Edit / Move / Hospital / Foster / Adopt / Record a death controls
+- [ ] `/residents/<id>/edit`, `/move`, `/hospital`, `/rehome`, `/deceased` typed directly — all refused
+- [ ] **`/maintenance` — read what it actually says.** A vet has no maintenance policy at all (`0001`, `0039`), so the board comes back **empty rather than forbidden**, and the menu still shows the link. Decide whether an empty board reads as "no jobs" — which is misleading — or as "not for you". **Write down which it is**, because this is a known rough edge rather than a pass/fail: `________`
+- [ ] The Assistant slide-over cannot be opened by any route you can find
+
+**Anything odd:**
+
+---
+
+## Pass 2 — Staff
+
+The widest day-to-day role and the longest pass. Everything the shelter does to
+a resident, minus the reporting and the reference lists.
+
+**Switch:** profile A → Security → test account → **staff**. Hard refresh B.
+**Menu gains:** Stocktake, and the Assistant button in the header.
+**Menu must still NOT show:** Management, Settings, Security.
+
+- [ ] Menu matches
+- [ ] The Pass-0 recurring job is on **My tasks** again if its frequency brings it round; if not, note that it is absent and expected
+
+### Can do
+
+- [ ] **Register a new resident (intake)** end to end — the flagship staff task. Name it something obviously disposable
+- [ ] The intake **capacity warning** behaves, if the enclosure chosen is at or near capacity
+- [ ] **Edit** a resident's details and see the change on the hub
+- [ ] **Move** the new resident between enclosures; **placement history** records it
+- [ ] **Send to hospital**, then bring back; both show in placement history
+- [ ] **Foster**, then **adopt** — or rehome — the disposable resident
+- [ ] **Adoption updates**: add one for the adopted resident, with a photo
+- [ ] **Record a death** on the disposable resident (last, since it ends its story)
+- [ ] The deceased resident **disappears from `/adopt`** on the public site
+- [ ] Medical: staff can do everything the vet pass did — spot-check **one** write (a weight) rather than repeating all seven
+- [ ] **Add resident photos**
+- [ ] **Maintenance**: log a job, put it on the board, change its status through to Completed
+- [ ] A job assigned to the test account appears on **My tasks**, and the urgent badge counts it
+- [ ] **Projects**: add a photo; create a folder and write the story
+- [ ] **Stocktake**: count one medication, tick "same as last time" on another, leave a third blank. Afterwards confirm blank meant *untouched* and the tick meant *counted now*
+- [ ] **Deliveries**: record a delivery of a medication with a cost dated **before** the stocktake you just did, and another **after**. This and the figures it feeds went out in 0.7.0 unverified
+- [ ] **Assistant**: ask it something, and let it **write** — staff have write access. Check the resulting record actually exists
+- [ ] `/contacts`: read a contact and its channels
+
+### Must not be able to
+
+- [ ] `/management/*` — redirected: dashboard, cashflow, stock-usage, recurring-jobs, translations, shelter-friends, medications, diets, vets, contacts
+- [ ] `/admin/*` — redirected
+- [ ] **Withdraw a death recorded in error** — admin only. Control absent, route refused
+- [ ] Cannot create, edit or delete a **recurring job** — staff only do the ones given to them
+
+**Anything odd:**
+
+---
+
+## Pass 3 — Admin
+
+Everything, and the only role that sees Settings. Pass 0 already touched some of
+this; do not re-tick it from memory.
+
+**Switch:** test account → **admin**. Hard refresh.
+**Menu gains:** Management, Settings, and Security in the footer group.
+
+### Can do
+
+- [ ] `/admin` opens and **every tile is reachable** — Security, Website, Zones, Enclosures, Immunization types, Procedure types, Blood test types, Frequencies, Contacts, Vets, System status
+- [ ] **Security**: the user table lists accounts with roles; create a throwaway user and read its temporary password notice
+- [ ] Change that throwaway's role, then archive or remove it
+- [ ] **Access requests** section behaves, if any are pending
+- [ ] **2-step verification** page: read what it says. The UI is in flight, so record the state it is actually in rather than assuming: `________`
+- [ ] **Website**: change something public and see it on the public site
+- [ ] **Zones and enclosures**: add a zone, add an enclosure to it, see it in `/enclosures`
+- [ ] **Immunization / procedure / blood-test types**: add one of each, see it offered in the resident medical forms
+- [ ] **Frequencies**: add one, see it offered when creating a recurring job
+- [ ] **System status** renders, and its figures are not obviously wrong
+- [ ] **Withdraw the death** recorded in Pass 2 — admin-only, and the one thing only this role does. The resident comes back and reappears on `/adopt`
+- [ ] Drive status line still green
+
+### Must not be able to
+
+Admin has no ceiling, so these are about not breaking things:
+
+- [ ] Deleting a reference type that is **in use** is refused or handled, not silently orphaning records
+- [ ] Removing the **last admin** is refused
+
+**Anything odd:**
+
+---
+
+## Pass 4 — Management
+
+Staff's job plus the reporting and the reference lists. The section most likely
+to be wrong in ways only arithmetic shows.
+
+**Switch:** test account → **management**. Hard refresh.
+**Menu:** Management present, **Settings absent**, Security absent.
+
+### Can do
+
+- [ ] `/management` landing page shows its tiles and each is reachable
+- [ ] **Dashboard** renders its figures, and they are plausible against what you know is in the database
+- [ ] **Contacts**: create, edit, archive a contact; an archived contact drops out of the pickers the rest of the app uses
+- [ ] **Shelter Friends**: add one and see it where it surfaces
+- [ ] **Vets**: add a vet with a doctor name; it appears in the vet-visit picker
+- [ ] **Medications**: add one; set a stock count; a blank cell clears the count to "not counted" — the *opposite* of the stocktake sheet's blank. Check both meanings hold
+- [ ] **Diets**: add one; the **food forecast** recalculates
+- [ ] **Stock between counts**: the deliveries from Pass 2 appear, the **Difference** column is arithmetically right, and **CSV** downloads and opens. Untested from 0.7.0 — take the time here
+- [ ] **Recurring jobs**: create one, assign it to a **team**, hand a single date to someone else with a reason, and set one job to **wait for** another. Then check on My tasks that "Waiting for …" shows and clears when the first is marked done
+- [ ] **Cashflow** forecast renders
+- [ ] **Translations**: change a public string and see it on the public site in the other language
+- [ ] Everything from the Staff pass is still available — spot-check intake and a medical write
+
+### Must not be able to
+
+- [ ] `/admin` and `/admin/*` — redirected
+- [ ] `/admin/security` — redirected
+- [ ] Cannot withdraw a death
+
+**Anything odd:**
+
+---
+
+## Pass 5 — Volunteer
+
+Sees nearly everything and may change almost nothing. Short pass, high value:
+this is where an over-permissive write is most likely to be sitting.
+
+**Switch:** test account → **volunteer**. Hard refresh.
+**Menu:** Stocktake present (volunteers walk the shelves), Management and
+Settings absent. Assistant button **present** — but read-only.
+
+### Can do
+
+- [ ] `/residents` reads; a hub opens and its tabs read, including medical
+- [ ] **Move a resident between enclosures** — one of only two things a volunteer writes
+- [ ] **Add a photo** to a resident and to a project — the other one
+- [ ] **Stocktake**: count items and submit
+- [ ] **My tasks** lists the maintenance jobs they are on, and the Pass-0 recurring job
+- [ ] **Mark a recurring job done** — volunteers can, even though they cannot write maintenance status
+- [ ] **Assistant** opens and answers a question
+- [ ] `/enclosures`, `/vets`, `/contacts`, `/projects` all read
+
+### Must not be able to
+
+- [ ] **Change a maintenance job's status** — buttons absent on My tasks *and* on the board, and the action refused if reached. The manual promises "ask a staff member"; check the app agrees
+- [ ] **Log or edit a maintenance job**
+- [ ] **Intake**, edit, hospital, foster, adopt, record a death — controls absent, routes refused
+- [ ] Any **medical write** — immunization, vet visit, prescription, diet, weight, procedure, blood test. All seven refused; volunteers *read* medical records
+- [ ] **Assistant cannot write** — ask it to record something and confirm it refuses rather than writing
+- [ ] `/deliveries` — redirected. Volunteers count stock but do not record deliveries
+- [ ] `/management/*`, `/admin/*` — redirected
+
+**Anything odd:**
+
+---
+
+## Pass 6 — Public viewer
+
+Not a staff role at all: a sign-in that gets past the site lock and then sees
+only the public website. Two minutes, and the one role where a leak is visible
+to people outside the shelter.
+
+**Switch:** test account → **public_viewer**. Hard refresh.
+
+- [ ] **No app menu at all** — the nav does not render
+- [ ] Lands on the public home page, not My tasks
+- [ ] `/my`, `/residents`, `/enclosures`, `/maintenance`, `/stocktake`, `/vets`, `/contacts`, `/projects`, `/deliveries`, `/management`, `/admin` — **every one** redirected or refused, typed directly
+- [ ] Public pages all open: `/`, `/adopt`, one `/adopt/[id]`, `/donate`, `/foster`, `/volunteer`, `/our-work`
+- [ ] A resident QR link (`/r/<code>`) opens the **public** profile, not the internal hub
+- [ ] `/account/password` still opens — the one app-chrome page a public viewer needs
+- [ ] No deceased or adopted animal on `/adopt`
+
+**Anything odd:**
+
+---
+
+## Once, at the end — not per role
+
+- [ ] **Language switch** to Thai on two or three pages, including one with a
+      form, and back. Untranslated strings are findings
+- [ ] **Phone width** — the hamburger drawer opens, the footer group comes last
+      behind its divider, and a resident hub and one form are usable
+- [ ] **Dates are right for Thailand.** Recurring-job dates, "overdue by N days",
+      stocktake dates, delivery before/after. Workers run in UTC, so this is
+      wrong for part of every day and invisible on `next dev`. Worth doing
+      deliberately during Thai evening, when the two dates differ
+- [ ] **Browser console clean** across everything visited — no errors
+- [ ] Set the test account back to its resting role: `________`
+
+## Result
+
+Result: <pass | pass with accepted defects | fail>
+
+Automated checks by: <name or `n/a: <reason>`>
+
+Manual verification by: <**only the person who actually looked**, or `n/a: <reason>`>
+
+### What was found
+
+| # | Role | What | Where | Severity | Raised as |
+|---|---|---|---|---|---|
+| | | | | | |
+
+### Left unchecked
+
+| What | Why | Who picks it up |
+|---|---|---|
+| | | |
