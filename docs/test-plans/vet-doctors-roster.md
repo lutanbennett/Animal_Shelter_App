@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Medical records → **Doctors belong to a vet: investigate a managed list rather than free text** (not ticked here: the roster page is the feature half) |
 | Branch / worktree | `claude/vet-doctors-roster` @ `C:\Development\Animal_Shelter_vet-doctors-roster` |
 | Dev server | not started. No `src/` change; see §6 for why the running app is still covered |
-| PR | opened from this commit |
+| PR | #176 |
 | Tested by / date | Claude (automated) / 2026-09-27 |
 | Carries a migration? | yes: `0102_vet_doctors_and_vet_accounts.sql` |
 | Tested at SHA | branch on `main` @ `aadcd13`; the only changes are the migration, its harness, the `decisions.md` entry and this plan |
@@ -30,7 +30,7 @@
 
   gates: typecheck=0 lint=0 build=0
   ```
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — `check`, `migration-numbers` and `test-plan` all pass on #176 (run 36297613682)
 
 ## 3. Schema and data
 
