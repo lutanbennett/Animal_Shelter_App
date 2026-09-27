@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "One weight per vet visit: hide visits that already have one." (ticked by the feature PR, `claude/one-weight-per-visit`, which carries the form half) |
 | Branch / worktree | `claude/schema-weight-one-per-day` @ `C:\Development\Animal_Shelter_schema-weight-one-per-day` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3008` |
-| PR | opened from this branch (number in the PR itself) |
+| PR | #187 |
 | Tested by / date | Claude, 2026-09-27 |
 | Carries a migration? | yes — `0106_weight_one_per_visit_and_day.sql` |
 | Tested at SHA | the commit adding this plan, on `origin/main` @ `0700a9e` (`sync`: already up to date) |
@@ -32,7 +32,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: #187 at `62579a6` — `check` pass (1m46s), `migration-numbers` pass, `test-plan` pass
 
 ## 3. Schema and data
 
@@ -188,7 +188,7 @@ Manual verification by: n/a: no UI surface — nothing a person could look at ch
 ### Result
 
 - [ ] Open defects are either fixed or explicitly accepted above — n/a: none found
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR (#187 body)
 - [ ] Handed to the production release manager — n/a: not yet — after merge
 
 Result: pass
