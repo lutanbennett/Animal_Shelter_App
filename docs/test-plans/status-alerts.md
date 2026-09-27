@@ -11,7 +11,7 @@
 | PR | opened from this commit |
 | Tested by / date | Claude (automated) / 2026-09-27 |
 | Carries a migration? | no — reads and writes `0098_status_alerts.sql`, which lands first in its own PR (#161) |
-| Tested at SHA | TESTED_SHA |
+| Tested at SHA | `9081d1b` (the merge of `origin/main` at `96ba160`; later commits touch only this plan) |
 
 ## 1. Scope and risk
 
@@ -22,11 +22,13 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly — SYNC_EVIDENCE
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in — `origin/main` at `96ba160` (53 commits, including release 0.7.0, #170, #171, #172); two conflicts, both resolved by hand: `docs/backlog.md` (kept this branch’s tick, dropped main’s interim “built but not finished” note) and `src/lib/releases.ts` (0.7.0 had moved the older lines into its release, so this line joins main’s three new ones)
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
 
   ```
-  GATES_EVIDENCE
+  === gates: build exited 0 after 241s
+
+  gates: typecheck=0 lint=0 build=0
   ```
 - [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
 
@@ -89,7 +91,7 @@
   (The recovery line then said "it was", quoting the last error seen, which for Drive was the real timeout, not the simulated one it was alerted for; reworded to "last error:". Defect 1.)
 - [x] Data persists — reload the page and the change is still there — state survives a dev-server restart (runs 4–5 read the `alerted_at` run 2 wrote)
 - [ ] Create / edit / delete all exercised (whichever the feature has) — n/a: no records are edited by people; the run's upsert, insert and 30-day prune are the writes
-- [x] Empty state renders sensibly (no rows yet) — WORKER_EMPTY
+- [ ] Empty state renders sensibly (no rows yet) — n/a: the only empty state is the Alerts tile before any run, which needs an admin sign-in to see; covered by manual row 1 on a test deploy, where the tile starts empty
 - [x] Invalid input is rejected with a readable message, not a crash — the route without the key: `401 {"error":"Not authorised."}`; the actions refuse a non-admin with a returned `adminAccessRequired` rather than a throw
 - [x] Boundary cases checked (long text, zero, negative, missing optional fields, dates) — exactly 1 red run (no mail) and exactly 2 (mail); red again after mailing (quiet); two checks changing in one run (one mail naming both)
 
@@ -100,7 +102,7 @@
 | admin | `/admin/status`, both alert buttons | tile, buttons, mail | pending: Lutan — the page needs an admin sign-in |
 | management / staff / vet / volunteer | nothing new | page redirects, actions refuse | n/a: unchanged `requireAdminUser` / `hasAdminRole` gates, not driven |
 | signed out | `POST /api/status/alerts` | 401 without the key | 401 (above) |
-| the cron | `POST /api/status/alerts` with the key | a run | WORKER_ROLE |
+| the cron | `POST /api/status/alerts` with the key | a run | not driven locally: the `scheduled` handler needs the OpenNext build under wrangler; the same request it builds was sent by hand (the runs above, and again after the sync: `401` without the key, a GET redirected to `/login`, and `200 {"remembered":true,"failing":[],…}` with it). Proved on deploy: manual row 5 |
 
 - [x] Every role above tested — the non-admin rows rely on the existing gates, unchanged; the admin row is left for manual verification
 - [x] A role that should not have access is blocked server-side (hitting the URL directly fails) — 401 without the bearer key
