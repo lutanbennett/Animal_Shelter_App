@@ -20,6 +20,8 @@ const en = {
     add: "Add",
     addMore: "+ Add more",
     change: "Change",
+    clearDate: "Clear",
+    clearDateLabel: (field: string) => `Clear ${field}`,
     done: "Done",
     dash: "—",
     saved: "Saved.",

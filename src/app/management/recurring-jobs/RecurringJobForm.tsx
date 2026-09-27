@@ -19,6 +19,7 @@ import {
 import type { RecurringJob } from "@/lib/recurring-jobs/queries";
 import { canDoJob, jobIsRestricted, rolesForJob } from "@/lib/recurring-jobs/eligibility";
 import { previewRecurrence, saveRecurringJob } from "./actions";
+import { OptionalDateInput } from "@/components/OptionalDateInput";
 
 export type PersonOption = { id: string; name: string; role: string };
 export type TeamMember = { id: string; name: string; archived: boolean; role?: string | null };
@@ -347,7 +348,7 @@ export function RecurringJobForm({
             />
             <span className={hintClass}>{everyHint}</span>
           </label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid gap-2 sm:grid-cols-2">
             <label className={labelClass}>
               {f.startsOn}
               <input
@@ -360,15 +361,15 @@ export function RecurringJobForm({
             </label>
             <label className={labelClass}>
               {f.endsOn}
-              <input
-                type="date"
+              <OptionalDateInput
+                label={f.endsOn}
                 className={inputClass}
                 value={endsOn}
                 min={startsOn}
-                onChange={(e) => setEndsOn(e.target.value)}
+                onValueChange={setEndsOn}
               />
             </label>
-            <span className={`${hintClass} col-span-2`}>{f.endsOnHint}</span>
+            <span className={`${hintClass} sm:col-span-2`}>{f.endsOnHint}</span>
           </div>
         </div>
 
