@@ -4,7 +4,7 @@ import { useActionState, useRef, useState } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { updateResident } from "./actions";
-import { driveImageUrl } from "@/lib/google/drive-client";
+import { driveImageUrl, isMedicalFolder } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { RESIDENT_SIZES, sizeLabel } from "@/lib/i18n/enum-labels";
 import { BLOOD_TEST_INTERVALS } from "@/lib/residents/blood-test-interval";
@@ -147,21 +147,30 @@ export function EditResidentForm({
         ) : (
           <>
             <p className="text-sm text-muted">{t.residents.edit.photo.hint}</p>
+            {photos.some((photo) => isMedicalFolder(photo.sub_folder)) && (
+              <p className="text-xs text-muted">{t.photos.medicalNotProfile}</p>
+            )}
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
               {photos.map((photo) => {
                 const isSelected = photo.drive_file_id === profilePhotoId;
                 const label = photo.file_name ?? t.photos.photoFallback;
+                // Never on the website, so never offered (the action refuses it too).
+                const isMedical = isMedicalFolder(photo.sub_folder) && !isSelected;
                 return (
                   <button
                     key={photo.id}
                     type="button"
+                    disabled={isMedical}
+                    title={isMedical ? t.photos.medicalNotProfile : undefined}
                     onClick={() => setProfilePhotoId(photo.drive_file_id)}
                     aria-pressed={isSelected}
                     aria-label={t.residents.edit.photo.selectAriaLabel(label)}
                     className={`group relative aspect-square overflow-hidden rounded-lg border bg-surface-hover ${
                       isSelected
                         ? "border-primary ring-2 ring-primary/50"
-                        : "border-border hover:border-primary/60"
+                        : isMedical
+                          ? "cursor-not-allowed border-border opacity-50"
+                          : "border-border hover:border-primary/60"
                     }`}
                   >
                     <img
@@ -173,6 +182,11 @@ export function EditResidentForm({
                       <span className="absolute left-1.5 top-1.5 flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
                         <Check aria-hidden="true" className="h-3 w-3" />
                         {t.residents.edit.photo.selected}
+                      </span>
+                    )}
+                    {isMedical && (
+                      <span className="absolute inset-x-0 bottom-0 truncate bg-black/60 px-1.5 py-1 text-[10px] text-white">
+                        {t.photos.medicalTile}
                       </span>
                     )}
                   </button>

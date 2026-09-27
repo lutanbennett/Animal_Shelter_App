@@ -40,6 +40,26 @@ export function driveFolderUrl(folderId: string): string {
 export const PHOTO_CATEGORIES = ["Shelter", "Medical", "Foster", "Adoption"] as const;
 export type PhotoCategory = (typeof PHOTO_CATEGORIES)[number];
 
+/**
+ * The folders a role may file a resident photo under. A vet adds clinical
+ * photos and nothing else, so theirs go to Medical only (backlog, Pass 1
+ * Vet, 2026-09-27); the form shows no picker when there is one choice, and
+ * the upload route refuses anything else.
+ */
+export function photoCategoriesForRole(role: string | null | undefined): readonly PhotoCategory[] {
+  return role === "vet" ? ["Medical"] : PHOTO_CATEGORIES;
+}
+
+/**
+ * Whether a photo's `attachments.sub_folder` is the Medical folder — the
+ * same test as public_resident_photos (0101): case and surrounding spaces
+ * ignored, a null folder is not Medical. A Medical photo never appears on
+ * the website, so it cannot be chosen as the profile photo.
+ */
+export function isMedicalFolder(subFolder: string | null | undefined): boolean {
+  return (subFolder ?? "").trim().toLowerCase() === "medical";
+}
+
 /** "2026-09-15" -> "2609", the <YYMM> Drive folder segment. */
 export function dateToYymm(isoDate: string): string {
   const [year, month] = isoDate.split("-");

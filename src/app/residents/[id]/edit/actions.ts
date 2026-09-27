@@ -15,6 +15,7 @@ import { parseBloodTestInterval } from "@/lib/residents/blood-test-interval";
 import { estimatedAgeNow, todayIso } from "@/lib/format";
 import { moveResidentToEnclosure } from "@/lib/placements/move";
 import { refreshDeceasedArchiveIfNeeded } from "@/lib/archive/refresh-deceased-archive";
+import { setResidentProfilePhoto } from "@/lib/residents/profile-photo";
 
 export type EditResidentState = { error: string } | undefined;
 
@@ -166,18 +167,15 @@ export async function updateResident(
   if (error) return { error: error.message };
   if (!updated?.[0]) return { error: t.residents.edit.errors.notFound };
 
-  // Profile photo goes through the existing RPC so the "file must belong to
-  // this resident" check stays in one place (0013_resident_photo_attachments).
+  // Profile photo goes through the one helper, so the Medical refusal and
+  // the RPC's "file must belong to this resident" check (0013) stay in one place.
   const profilePhotoDriveFileId = str(formData, "profilePhotoDriveFileId");
   if (
     profilePhotoDriveFileId &&
     profilePhotoDriveFileId !== current.profile_photo_drive_file_id
   ) {
-    const { error: photoError } = await supabase.rpc(
-      "set_resident_profile_photo",
-      { p_resident_id: residentId, p_drive_file_id: profilePhotoDriveFileId },
-    );
-    if (photoError) return { error: photoError.message };
+    const refused = await setResidentProfilePhoto(supabase, t, residentId, profilePhotoDriveFileId);
+    if (refused) return refused;
   }
 
   // A blank enclosure means "leave housing alone" (the picker starts blank
@@ -243,11 +241,8 @@ async function updateDeceasedResident(
 
   const profilePhotoDriveFileId = str(formData, "profilePhotoDriveFileId");
   if (profilePhotoDriveFileId && profilePhotoDriveFileId !== current.profile_photo_drive_file_id) {
-    const { error: photoError } = await supabase.rpc("set_resident_profile_photo", {
-      p_resident_id: residentId,
-      p_drive_file_id: profilePhotoDriveFileId,
-    });
-    if (photoError) return { error: photoError.message };
+    const refused = await setResidentProfilePhoto(supabase, t, residentId, profilePhotoDriveFileId);
+    if (refused) return refused;
   }
 
   // Best effort — the edit is saved; a Drive hiccup leaves the old files

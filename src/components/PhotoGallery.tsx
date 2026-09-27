@@ -7,7 +7,7 @@ import { formatDate } from "@/lib/format";
 import type { PhotoProvenance } from "@/lib/adoption-updates/options";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { Locale } from "@/lib/i18n/locales";
-import { driveImageUrl } from "@/lib/google/drive-client";
+import { driveImageUrl, isMedicalFolder } from "@/lib/google/drive-client";
 import { deletePhoto, setProfilePhoto } from "@/app/residents/[id]/photos/actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
@@ -300,19 +300,29 @@ export function PhotoGallery({
                       </button>
                     )}
                   </div>
-                  <button
-                    type="button"
-                    disabled={
-                      isPending ||
-                      openPhoto.drive_file_id === profilePhotoDriveFileId
-                    }
-                    onClick={handleSetProfile}
-                    className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-60"
-                  >
-                    {openPhoto.drive_file_id === profilePhotoDriveFileId
-                      ? t.photos.currentProfile
-                      : t.photos.setAsProfile}
-                  </button>
+                  {/* A Medical photo is never on the website, so it is not
+                      offered as the profile photo (setResidentProfilePhoto
+                      refuses it too). One already there stays labelled. */}
+                  {isMedicalFolder(openPhoto.sub_folder) &&
+                  openPhoto.drive_file_id !== profilePhotoDriveFileId ? (
+                    <p className="max-w-xs text-right text-xs text-muted">
+                      {t.photos.medicalNotProfile}
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={
+                        isPending ||
+                        openPhoto.drive_file_id === profilePhotoDriveFileId
+                      }
+                      onClick={handleSetProfile}
+                      className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-60"
+                    >
+                      {openPhoto.drive_file_id === profilePhotoDriveFileId
+                        ? t.photos.currentProfile
+                        : t.photos.setAsProfile}
+                    </button>
+                  )}
                 </div>
               )}
             </div>

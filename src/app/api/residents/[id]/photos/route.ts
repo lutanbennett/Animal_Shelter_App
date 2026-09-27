@@ -12,10 +12,10 @@ import {
   uploadImageToFolder,
 } from "@/lib/google/drive";
 import {
-  PHOTO_CATEGORIES,
   dateToYymm,
   dateToYyyymmdd,
   driveImageUrl,
+  photoCategoriesForRole,
   type PhotoCategory,
 } from "@/lib/google/drive-client";
 import { withDriveErrors } from "@/lib/google/drive-errors";
@@ -34,8 +34,9 @@ async function handlePost(
 ) {
   const { id } = await params;
 
+  let role: string;
   try {
-    await assertPhotoWriteAccess();
+    role = await assertPhotoWriteAccess();
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Not authorized." },
@@ -79,13 +80,26 @@ async function handlePost(
     return NextResponse.json({ error: "Invalid adoption update." }, { status: 400 });
   }
 
+  // The route is what refuses, not only the form. A role with one folder
+  // (a vet: Medical) files there and nowhere else — so not an adopter's
+  // photo either, which has no category and a folder of its own; the hub
+  // never offers a vet one.
+  const categories = photoCategoriesForRole(role);
+  const onlyFolder = categories.length === 1 ? categories[0] : null;
   const category = formData.get("category");
   if (
+    onlyFolder &&
+    (adoptionUpdateId || category !== onlyFolder)
+  ) {
+    const { t } = await getT();
+    return NextResponse.json({ error: t.photos.errors.onlyFolder(onlyFolder) }, { status: 403 });
+  }
+  if (
     !adoptionUpdateId &&
-    (typeof category !== "string" || !PHOTO_CATEGORIES.includes(category as PhotoCategory))
+    (typeof category !== "string" || !categories.includes(category as PhotoCategory))
   ) {
     return NextResponse.json(
-      { error: `Folder must be one of: ${PHOTO_CATEGORIES.join(", ")}.` },
+      { error: `Folder must be one of: ${categories.join(", ")}.` },
       { status: 400 },
     );
   }

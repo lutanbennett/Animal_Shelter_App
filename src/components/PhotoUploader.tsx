@@ -69,15 +69,28 @@ export function uploadResidentPhoto(
   });
 }
 
-export function PhotoUploader({ residentId }: { residentId: string }) {
+export function PhotoUploader({
+  residentId,
+  categories = PHOTO_CATEGORIES,
+}: {
+  residentId: string;
+  /**
+   * The folders this user may file into (photoCategoriesForRole). With one
+   * (a vet: Medical) there is no picker — the form says where the photos
+   * go. The upload route refuses any other folder regardless.
+   */
+  categories?: readonly PhotoCategory[];
+}) {
   const router = useRouter();
   const { t } = useI18n();
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const [dateTaken, setDateTaken] = useState(todayIso);
-  // Empty by default, deliberately — a photo dropped in before picking a
-  // folder should be rejected, not silently filed under a guessed default.
-  const [category, setCategory] = useState<PhotoCategory | "">("");
+  const onlyFolder = categories.length === 1 ? categories[0] : null;
+  // Empty by default when there is a choice, deliberately — a photo dropped
+  // in before picking a folder should be rejected, not silently filed under
+  // a guessed default. With one valid folder there is nothing to guess.
+  const [category, setCategory] = useState<PhotoCategory | "">(onlyFolder ?? "");
   const inputRef = useRef<HTMLInputElement>(null);
   const canUpload = category !== "" && dateTaken !== "";
 
@@ -166,6 +179,12 @@ export function PhotoUploader({ residentId }: { residentId: string }) {
             className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
           />
         </div>
+        {onlyFolder ? (
+          <p className="pb-2 text-sm text-foreground">
+            {t.photos.uploader.goesIn(onlyFolder)}
+          </p>
+        ) : (
+        <>
         <div className="flex flex-col gap-1">
           <label htmlFor="photo-category" className="text-sm font-medium text-muted">
             {t.photos.uploader.folder}
@@ -182,7 +201,7 @@ export function PhotoUploader({ residentId }: { residentId: string }) {
             <option value="" disabled>
               {t.photos.uploader.selectFolder}
             </option>
-            {PHOTO_CATEGORIES.map((option) => (
+            {categories.map((option) => (
               <option key={option} value={option}>
                 {option}
               </option>
@@ -190,6 +209,8 @@ export function PhotoUploader({ residentId }: { residentId: string }) {
           </select>
         </div>
         <p className="pb-2 text-xs text-muted">{t.photos.uploader.folderHint}</p>
+        </>
+        )}
       </div>
 
       <div
