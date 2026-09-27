@@ -28,6 +28,7 @@ import { endPrescriptionToday } from "@/app/prescriptions/actions";
 import { endDietToday } from "@/app/diets/actions";
 import { defaultDailyQuantity, formatQuantity } from "@/lib/diets/options";
 import { WeightChart } from "@/components/WeightChart";
+import { visitDate } from "@/lib/vets/linkable";
 import { ActionLink } from "@/components/ActionLink";
 import { ArchivedBadge } from "@/components/ArchivedBadge";
 import {
@@ -473,23 +474,38 @@ export default async function ResidentSectionPage(
       break;
     }
     case "vet-appointments": {
-      const { data } = await supabase
-        .from("vet_appointments")
-        .select("id, appointment_date, status, reason, doctor_name, notes, cost, vets(name)")
-        .eq("resident_id", id)
-        .order("appointment_date", { ascending: false })
-        .returns<
-          {
-            id: string;
-            appointment_date: string;
-            status: string;
-            reason: string | null;
-            doctor_name: string | null;
-            notes: string | null;
-            cost: number | null;
-            vets: { name: string } | null;
-          }[]
-        >();
+      const [{ data }, { data: visitWeights }] = await Promise.all([
+        supabase
+          .from("vet_appointments")
+          .select("id, appointment_date, status, reason, doctor_name, notes, cost, vets(name)")
+          .eq("resident_id", id)
+          .order("appointment_date", { ascending: false })
+          .returns<
+            {
+              id: string;
+              appointment_date: string;
+              status: string;
+              reason: string | null;
+              doctor_name: string | null;
+              notes: string | null;
+              cost: number | null;
+              vets: { name: string } | null;
+            }[]
+          >(),
+        supabase
+          .from("weight")
+          .select("id, vet_appointment_id")
+          .eq("resident_id", id)
+          .not("vet_appointment_id", "is", null)
+          .returns<{ id: string; vet_appointment_id: string }[]>(),
+      ]);
+      // One weight per visit (0106): a visit that has its reading offers to
+      // correct it, and a visit still to come offers nothing, since a
+      // reading can't be dated in the future.
+      const weightByVisit = new Map(
+        (visitWeights ?? []).map((w) => [w.vet_appointment_id, w.id]),
+      );
+      const today = todayIso();
       // A visit can end with the resident admitted; offer that on each record
       // unless they're already in hospital, adopted out, or gone.
       const canSendToHospital = availablePlacementActions(
@@ -552,12 +568,23 @@ export default async function ResidentSectionPage(
                         >
                           {t.residents.sections.addPrescription}
                         </Link>
-                        <Link
-                          href={`/weight/new?residentId=${id}&vetAppointmentId=${row.id}`}
-                          className="text-xs font-medium text-primary hover:underline"
-                        >
-                          {t.residents.sections.logWeight}
-                        </Link>
+                        {weightByVisit.has(row.id) ? (
+                          <Link
+                            href={`/weight/${weightByVisit.get(row.id)}/edit`}
+                            className="text-xs font-medium text-primary hover:underline"
+                          >
+                            {t.residents.sections.editWeight}
+                          </Link>
+                        ) : (
+                          visitDate(row) <= today && (
+                            <Link
+                              href={`/weight/new?residentId=${id}&vetAppointmentId=${row.id}`}
+                              className="text-xs font-medium text-primary hover:underline"
+                            >
+                              {t.residents.sections.logWeight}
+                            </Link>
+                          )
+                        )}
                         <Link
                           href={`/procedures/new?residentId=${id}&vetAppointmentId=${row.id}`}
                           className="text-xs font-medium text-primary hover:underline"
@@ -948,6 +975,14 @@ export default async function ResidentSectionPage(
                   </span>
                 </div>
                 {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
+                {!isDeceased && (
+                  <Link
+                    href={`/weight/${row.id}/edit`}
+                    className="self-end text-xs font-medium text-primary hover:underline"
+                  >
+                    {t.common.edit}
+                  </Link>
+                )}
               </div>
             )}
           />
