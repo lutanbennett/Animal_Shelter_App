@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "A refused page and a booked vet visit both dump you onto the public website." |
 | Branch / worktree | `claude/refusal-redirects` @ `C:\Development\Animal_Shelter_refusal-redirects` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3007` |
-| PR | opened from this branch after this commit |
+| PR | #177 |
 | Tested by / date | Claude, 2026-09-27 |
 | Carries a migration? | no |
 | Tested at SHA | `9f5d96b` (the fix; this plan is the commit after it) |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: `check`, `migration-numbers` and `test-plan` all passed on `2f93b96` (run 36297969682)
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -180,7 +180,7 @@ Manual verification by: pending: booking lands on the resident or the list, and 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above — the one defect is accepted
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR (#177's description)
 - [ ] Handed to the production release manager — n/a: not yet — the PR does not exist at this commit
 
 Result: pass with accepted defects
