@@ -6134,6 +6134,42 @@ entry, and enforced nowhere. `scripts/deploy.mjs` now refuses
   throws, and that stops both scripts. It never reads as "no lock set",
   which here would mean a silently open site or a guard that
   passes.
+
+## 2026-09-27 — Refusing a page: `requireRole`, and `/no-access` rather than `/`
+
+Backlog, "A refused page and a booked vet visit both dump you onto the public
+website" (Pass 1, Vet). `/` has been the public home for everyone since
+2026-09-26, so every guard's `redirect("/")` threw a signed-in user out of
+the app with no explanation.
+
+- **One guard for every role-gated page: `requireRole(allowed)`** in
+  `src/lib/auth/require-role.ts`. Signed out → `/login`; a role `allowed`
+  rejects → `refuse(role)`; otherwise it returns `{ supabase, user, role }`
+  so the page does not look them up again. `requireManagementUser`,
+  `requireAdminUser`, `/stocktake` and `/deliveries` now all go through it.
+  **Later guards (the vet's-world item, recurring jobs) call this — or
+  `refuse(role)` where the page already has the role — and never
+  `redirect("/")`.**
+- **Refused app users go to `/no-access`, a page inside the app**, not to
+  `/my`. A silent bounce to My tasks would look like a broken link — the
+  tester tapped Stocktake and got a to-do list. The page says what happened
+  and offers My tasks. It is a redirect rather than rendering in place,
+  because Next's `forbidden()` (which would keep the URL and send a 403) is
+  still behind the experimental `authInterrupts` flag, and an experimental
+  flag on the OpenNext/Workers build was not worth a small fix.
+- **A non-app role is sent where `signedInLandingPath` sends it** — `/` for
+  a public viewer, which is correct for them and only for them. The request
+  proxy already catches a public viewer before any page guard runs, so this
+  branch is a second line, not the main one.
+- **Server actions keep throwing or returning their refusal**
+  (`assertManagementRole`, `assertAdminRole`). A redirect from inside a form
+  submission is not a refusal anyone reads.
+- **Booking a vet visit** returns to `/residents/<id>/vet-appointments` for
+  one resident (the new visit is listed there, as the edit form already
+  does) and to `/residents` for several — the list a bulk booking starts
+  from. There is no per-visit page to land on.
+- The sweep found one more `redirect("/")`: `requireAdminUser`, which every
+  `/admin/*` page uses. Fixed the same way.
 - **Doctors become a list per clinic that fills itself, and a vet account records its clinic (2026-09-27):**
   `0102_vet_doctors_and_vet_accounts.sql`. This reverses the 2026-09-24 free-text
   entry above, and the reversal is Lutan's decision, made after an investigation.

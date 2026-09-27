@@ -42,6 +42,7 @@ export type Release = {
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: string[] = [
+  "Booking a vet visit now takes you back to the resident's Vet Appointments page (or the Residents list, when you booked for several) instead of the public website. And opening a page your role doesn't include — Stocktake, Deliveries, Management or Settings — now says You don't have access to this page, inside the app with a button back to My tasks, instead of dropping you on the public website.",
   "Admins now get an email when something behind the app stops working — the database, photo storage, backups and the other System status tiles — and another when it is working again, so nobody has to open the page to find out. Settings → System status has a new Alerts tile showing that the checks are running and who the last mail reached, with a button to send yourself a test.",
   "Photos filed under Medical when they were added to an animal no longer appear on the public adoption page, and their links no longer open for someone who is not signed in.",
   "A Medical photo can no longer be chosen as an animal's main photo, since the main photo is what the website shows — the photo viewer and the Edit page say why instead of offering it. A vet adding photos no longer picks a folder: their photos go straight into Medical. One case is still open: when an animal's first photo is a Medical one it becomes the main photo on its own, as the first photo always has; that is being fixed next.",

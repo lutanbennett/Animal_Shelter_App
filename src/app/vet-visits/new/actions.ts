@@ -68,5 +68,9 @@ export async function bookVetVisit(
     }
   }
 
-  redirect("/");
+  // Back to what was booked: one resident's vet visits, or the residents
+  // list a bulk booking was started from. Never "/", the public website.
+  redirect(
+    residentIds.length === 1 ? `/residents/${residentIds[0]}/vet-appointments` : "/residents",
+  );
 }

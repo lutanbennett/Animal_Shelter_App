@@ -1,19 +1,10 @@
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { requireRole } from "./require-role";
 
-/** Redirects non-admins away from admin-only pages. Returns the current user. */
+/** Sends non-admins to the no-access page (require-role.ts). Returns the current user. */
 export async function requireAdminUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
-
-  const { data: role } = await supabase.rpc("current_user_role");
-  if (role !== "admin") redirect("/");
-
+  const { user } = await requireRole((role) => role === "admin");
   return user;
 }
 
