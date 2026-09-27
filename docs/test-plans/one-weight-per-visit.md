@@ -22,13 +22,22 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: first nothing new (`0700a9e`); after #187 merged, a second sync brought in `e6391f9` (`0106`, its harness, plan and decisions entry) with no conflict, then a third brought in #189 (role-based manual, `0210b42`) — also clean, both `unreleased` lines and the weight manual topic intact; `--status` after the second read `Against origin/main e6391f9: 106 file(s), 106 applied row(s)`, 0 either way
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: first nothing new (`0700a9e`); after #187 merged, a second sync brought in `e6391f9` (`0106`, its harness, plan and decisions entry) with no conflict, then a third brought in #189 (role-based manual, `0210b42`) — also clean, both `unreleased` lines and the weight manual topic intact; and a fourth brought in #188 (`mobile-date-clear`, `53e86b0`) — clean; it adds `OptionalDateInput` for optional dates and leaves the weight form's required date alone; `--status` after the second read `Against origin/main e6391f9: 106 file(s), 106 applied row(s)`, 0 either way
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed:
 
 ```
 === gates: typecheck exited 0 after 12s
 === gates: lint exited 0 after 86s
 === gates: build exited 0 after 171s
+gates: typecheck=0 lint=0 build=0
+```
+
+  Re-run on the tree merged with #188 (`57bc206`):
+
+```
+=== gates: typecheck exited 0 after 28s
+=== gates: lint exited 0 after 61s
+=== gates: build exited 0 after 105s
 gates: typecheck=0 lint=0 build=0
 ```
 
