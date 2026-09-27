@@ -22,7 +22,7 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly ("Already up to date.")
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: "Already up to date." before the gates, then again after the PR opened, bringing in the vet-doctors schema PR (migration 0102, `scripts/check-vet-doctors.mjs`, docs — no `src/` change), `decisions.md` merging by union
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`:
 
 ```
@@ -105,7 +105,7 @@ restored admin
 
 - [x] Pages nearest the change still work: `/stocktake`, `/deliveries`, `/management`, `/management/recurring-jobs`, `/admin` all open for admin with their own headings; `/stocktake` for staff, volunteer and management; `/deliveries` for staff and management; `/my`
 - [x] Shared files touched (`require-management.ts`, `require-admin.ts` behind every `/management/*` and `/admin/*` page; `en.ts`/`th.ts`) checked by loading `/management/contacts`, `/management/recurring-jobs`, `/admin/security` and `/my`, not by reading them
-- [x] Nothing merged from `main` during `sync` — it was already up to date
+- [x] Nothing merged from `main` during `sync` was broken by this branch — the second sync brought only a migration file, a check script and docs; nothing this branch touches in `src/`
 
 ## 7. Documentation
 
