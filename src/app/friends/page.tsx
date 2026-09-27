@@ -78,6 +78,12 @@ export default async function FriendsPage() {
         <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-semibold text-foreground">{f.pageTitle}</h1>
           <p className="max-w-2xl text-sm text-muted">{f.pageSubtitle}</p>
+          <p className="max-w-2xl text-sm text-muted">
+            {f.joinLine}{" "}
+            <Link href="/friends/join" className="font-medium text-primary hover:underline">
+              {f.joinLink} &rarr;
+            </Link>
+          </p>
         </div>
 
         {drafts && (
