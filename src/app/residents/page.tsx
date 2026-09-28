@@ -12,6 +12,7 @@ import {
   type EnclosurePlace,
 } from "@/lib/enclosures/place";
 import { getTagOrigin } from "@/lib/tags/origin";
+import { loadVetScope } from "@/lib/vets/scope";
 import { DECEASED, NOT_DECEASED } from "@/lib/residents/status";
 import { STATUSES_IN_PLACE } from "@/lib/residents/place";
 import { PlaceZoneChips } from "@/components/PlaceZoneChips";
@@ -173,8 +174,9 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
     .select("resident_id", { count: "exact", head: true })
     .eq("current_status", DECEASED);
 
-  const [tagOrigin, residentsResult, deceased] = await Promise.all([
+  const [tagOrigin, vetScope, residentsResult, deceased] = await Promise.all([
     getTagOrigin(),
+    loadVetScope(supabase),
     applyFilters(residentsQuery, filters).returns<ResidentRow[]>(),
     countDeceased
       ? applyFilters(
@@ -183,6 +185,15 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
         )
       : Promise.resolve({ count: 0 }),
   ]);
+
+  // RLS already limits a vet to their clinic's residents (0108); this only
+  // names the clinic, so the list says whose it is.
+  const vetClinicName =
+    vetScope.kind === "clinic"
+      ? ((
+          await supabase.from("vets").select("name").eq("id", vetScope.vetId).maybeSingle()
+        ).data?.name ?? null)
+      : null;
 
   const { data: residents, error } = residentsResult;
   const shown = residents?.length ?? 0;
@@ -228,6 +239,14 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
                 )}
               </>
             )}
+          </p>
+        )}
+        {vetScope.kind === "clinic" && vetClinicName && (
+          <p className="text-sm text-muted">{t.residents.list.vetScope(vetClinicName)}</p>
+        )}
+        {vetScope.kind === "unlinked" && (
+          <p className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground">
+            {t.residents.list.vetScopeNoClinic}
           </p>
         )}
       </div>
