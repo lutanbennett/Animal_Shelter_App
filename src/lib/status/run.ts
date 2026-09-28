@@ -107,6 +107,11 @@ export function cached<T>(key: string, compute: () => Promise<T>): Promise<T> {
   return value;
 }
 
+/** The next read of this one key runs fresh: its answer just changed. */
+export function forgetCached(key: string): void {
+  cache.delete(key);
+}
+
 /** "Check now": the next read of every key runs fresh. */
 export function clearStatusCache(): void {
   cache.clear();

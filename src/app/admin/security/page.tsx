@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { LIST_USERS_PER_PAGE, accessRequestsAmong } from "@/lib/auth/access-requests";
 import { requireAdminUser } from "@/lib/auth/require-admin";
 import { TWO_STEP_PATH, hasTwoStep, isVerifiedTotp } from "@/lib/auth/two-step";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -18,7 +19,7 @@ export default async function SecurityPage() {
   const admin = createAdminClient();
 
   const [authUsersResult, rolesResult, vetsResult] = await Promise.all([
-    admin.auth.admin.listUsers({ perPage: 200 }),
+    admin.auth.admin.listUsers({ perPage: LIST_USERS_PER_PAGE }),
     admin.from("user_roles").select("user_id, role, archived_at, vet_id"),
     admin.from("vets").select("id, name, clinic_name").order("name"),
   ]);
@@ -54,10 +55,9 @@ export default async function SecurityPage() {
     ),
   );
 
-  // No role = can't get in. Those are the access requests; everyone else
-  // is the users table.
-  const requests: AccessRequest[] = authUsers
-    .filter((u) => !roleByUserId.has(u.id))
+  // No role = can't get in. Those are the access requests (the same
+  // definition System status counts); everyone else is the users table.
+  const requests: AccessRequest[] = accessRequestsAmong(authUsers, roleByUserId)
     .map((u) => ({
       id: u.id,
       email: u.email ?? "(no email)",

@@ -216,6 +216,18 @@ const manual: Manual = {
           ],
         },
         {
+          id: "my-access-requests",
+          title: "Access requests on My tasks",
+          roles: ["admin"],
+          path: "My tasks → Access requests",
+          intro:
+            "While anyone who has signed in is waiting for a role, every admin has one Review access requests task at the top of My tasks. It says how many are waiting, is dated the day the oldest one arrived, and counts towards the number beside My tasks in the menu. It names nobody: who is asking is shown only on Settings → Security, after your authenticator app.",
+          steps: [
+            "Tap the title to go to Settings → Security. Sign in with your authenticator app when asked, then give each person a role or leave them waiting.",
+            "The task has no Done button. It goes from every admin's list on its own once nobody is waiting, whichever admin dealt with them.",
+          ],
+        },
+        {
           id: "my-recurring-jobs",
           title: "Doing your recurring jobs",
           roles: ["admin", "management", "staff", "volunteer"],
@@ -1308,6 +1320,7 @@ const manual: Manual = {
             "One page that says whether everything behind the app is working, and how much it is being used — and the alert mail that tells admins when something breaks, so nobody has to keep looking. Apart from the two alert buttons, nothing on it changes anything.",
           steps: [
             "Health: a tile each for the database, photo storage (Google Drive), database migrations, the running release and when it was deployed, release mail, the weekly backup and the Pi. Green is working, amber means look at it (slow, out of date, or out of step), red is broken, and grey is something deliberately not in use here — release mail on the test site, or the Pi before it is switched on. A red or amber tile shows the reason in small print underneath; it names settings but never shows a password or key.",
+            "Access requests: how many people have signed in and are waiting for a role, and how long the oldest has waited — amber while anyone waits, green when nobody does. It never says who: names and email addresses are only on Settings → Security, which the card links to and which asks for your authenticator app first. No mail is sent for a request; every admin gets a Review access requests task on My tasks instead.",
             "Each tile says when it was checked. Results are kept for a minute so the page stays quick; tap Check now to ask again straight away.",
             "Alerts: every 15 minutes the same health checks run on their own. When a tile is red on two checks in a row, every admin gets one email saying which and why; when it works again, one more saying so. Nothing in between, however long it lasts. Amber and grey tiles never send mail.",
             "The Status alert mail tile says when the checks last ran and who the last mail reached. It turns red if the checks have stopped running or the last mail reached nobody, and amber if some admins were skipped — the reason is shown beside each address. Run the alert check now does one round straight away; Send a test alert mails every admin a test, so you can see it arrive.",

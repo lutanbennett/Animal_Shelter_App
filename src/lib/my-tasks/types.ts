@@ -14,7 +14,7 @@ import type { MaintenanceStatus } from "@/lib/maintenance/status";
  * page is a server component and re-renders on a language switch), so the
  * list never needs to know where a title came from.
  */
-export type MyTaskSource = "maintenance" | "recurring";
+export type MyTaskSource = "accessRequests" | "maintenance" | "recurring";
 
 /**
  * What the row's buttons do. Always an existing server action — /my has no
