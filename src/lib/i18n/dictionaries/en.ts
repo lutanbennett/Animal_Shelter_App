@@ -428,6 +428,19 @@ const en = {
       periodDays: (v: { days: string | number }) =>
         `${v.days} days`,
       unavailable: "Couldn't count this just now.",
+      accessRequests: {
+        heading: "Access requests",
+        title: "Waiting for access",
+        none: "Nobody is waiting for access.",
+        waiting: (v: { count: number; age: string }) =>
+          `${v.count} access request${v.count === 1 ? "" : "s"} waiting, ${v.age}.`,
+        oldestToday: "the oldest from today",
+        oldestDays: (v: { days: number }) =>
+          `the oldest ${v.days} day${v.days === 1 ? "" : "s"}`,
+        review: "Review them on Settings → Security",
+        how: "Who is asking is shown only on Security, after your authenticator app. Every admin also has a Review access requests task on My tasks until they are dealt with. No mail is sent.",
+        fail: "Couldn't count access requests.",
+      },
       alerts: {
         heading: "Alerts",
         title: "Status alert mail",
@@ -3335,15 +3348,21 @@ const en = {
     empty: "Nothing is assigned to you right now.",
     couldntLoad: (source: string) => `Couldn't load ${source.toLowerCase()}`,
     sources: {
+      accessRequests: "Access requests",
       maintenance: "Maintenance",
       recurring: "Recurring jobs",
     },
     openFullList: {
+      accessRequests: "Open Security",
       maintenance: "Open the board",
       recurring: "Manage recurring jobs",
     },
     daysLate: (n: number) => `${n} day${n === 1 ? "" : "s"} late`,
     waitingFor: (title: string) => `Waiting for ${title}`,
+    accessRequests: {
+      title: "Review access requests",
+      about: (n: number) => `${n} waiting for a role — every admin sees this until they are dealt with`,
+    },
     recurring: {
       done: "Done",
       skip: "Skip",

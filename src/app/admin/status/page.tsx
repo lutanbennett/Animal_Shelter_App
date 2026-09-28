@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireAdminUser } from "@/lib/auth/require-admin";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
+import { getWaitingAccessRequests } from "@/lib/status/access-requests";
 import { checkAlerts } from "@/lib/status/alerts";
 import { getHealthReport } from "@/lib/status/health";
 import { type CheckResult, type CheckState, runCheck } from "@/lib/status/run";
@@ -43,6 +44,13 @@ export default async function SystemStatusPage(props: PageProps<"/admin/status">
           </button>
         </form>
       </div>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold text-foreground">{s.accessRequests.heading}</h2>
+        <Suspense fallback={<p className="text-sm text-muted">{s.checking}</p>}>
+          <AccessRequests t={t} locale={locale} />
+        </Suspense>
+      </section>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-foreground">{s.healthHeading}</h2>
@@ -231,6 +239,37 @@ async function Health({ t, locale }: { t: T; locale: Locale }) {
               ? x.origin.ok({ host: origin.host })
               : x.origin.fallback({ host: origin.host })}
         </p>
+      </Tile>
+    </div>
+  );
+}
+
+/**
+ * Who is waiting for access, as a number and an age only: this page opens
+ * at a normal sign-in, and names and email addresses stay behind the 2-step
+ * step-up on Settings → Security (src/lib/auth/access-requests.ts). The link
+ * goes there and the step-up comes first as usual.
+ */
+async function AccessRequests({ t, locale }: { t: T; locale: Locale }) {
+  const r = await getWaitingAccessRequests();
+  const a = t.admin.status.accessRequests;
+  const f = r.facts;
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <Tile title={a.title} result={r} t={t} locale={locale}>
+        {!f ? (
+          <p>{a.fail}</p>
+        ) : f.count === 0 ? (
+          <p>{a.none}</p>
+        ) : (
+          <>
+            <p>{a.waiting({ count: f.count, age: f.oldestDays < 1 ? a.oldestToday : a.oldestDays({ days: f.oldestDays }) })}</p>
+            <Link href="/admin/security" className="font-medium text-primary hover:underline">
+              {a.review}
+            </Link>
+            <p className="text-xs text-muted">{a.how}</p>
+          </>
+        )}
       </Tile>
     </div>
   );

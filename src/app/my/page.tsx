@@ -4,6 +4,7 @@ import { todayIso } from "@/lib/format";
 import { canManage } from "@/lib/auth/require-management";
 import { canReadMaintenance } from "@/lib/maintenance/queries";
 import { canReadRecurringJobs } from "@/lib/recurring-jobs/access";
+import { loadMyAccessRequestTasks } from "@/lib/my-tasks/access-requests";
 import { loadMyMaintenanceTasks } from "@/lib/my-tasks/maintenance";
 import { loadMyRecurringTasks } from "@/lib/my-tasks/recurring";
 import type { MyTaskSection } from "@/lib/my-tasks/types";
@@ -12,8 +13,9 @@ import { MyTaskList } from "./MyTaskList";
 /**
  * /my — "what I need to do today": the work assigned to the signed-in
  * person, one section per source, each grouped overdue / today / later /
- * no date. Recurring jobs (0095) come first — they are the day's routine —
- * then maintenance. The others (vet trips, medication rounds, stock orders)
+ * no date. Waiting access requests come first for admins — someone is
+ * locked out until they are dealt with — then recurring jobs (0095), the
+ * day's routine, then maintenance. The others (vet trips, medication rounds, stock orders)
  * plug in as further loaders returning the same MyTask shape
  * (src/lib/my-tasks/types.ts).
  *
@@ -33,6 +35,7 @@ export default async function MyPage() {
 
   const sections: MyTaskSection[] = userId
     ? await Promise.all([
+        ...(role === "admin" ? [loadMyAccessRequestTasks(t)] : []),
         ...(canReadRecurringJobs(role) ? [loadMyRecurringTasks(supabase, userId, role, t, today)] : []),
         ...(canReadMaintenance(role) ? [loadMyMaintenanceTasks(supabase, userId, role, t, locale)] : []),
       ])

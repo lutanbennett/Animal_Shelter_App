@@ -385,6 +385,19 @@ const th: Dictionary = {
       periodDays: (v: { days: string | number }) =>
         `${v.days} วัน`,
       unavailable: "นับไม่ได้ในขณะนี้",
+      accessRequests: {
+        heading: "คำขอเข้าใช้งาน",
+        title: "รอการอนุมัติเข้าใช้งาน",
+        none: "ไม่มีใครรอการอนุมัติเข้าใช้งาน",
+        waiting: (v: { count: number; age: string }) =>
+          `มีคำขอเข้าใช้งานรออยู่ ${v.count} รายการ ${v.age}`,
+        oldestToday: "รายการเก่าที่สุดมาจากวันนี้",
+        oldestDays: (v: { days: number }) =>
+          `รายการเก่าที่สุดรอมา ${v.days} วัน`,
+        review: "ตรวจสอบที่ การตั้งค่า → ความปลอดภัย",
+        how: "ชื่อผู้ขอจะแสดงเฉพาะในหน้าความปลอดภัย หลังยืนยันด้วยแอปยืนยันตัวตน ผู้ดูแลระบบทุกคนจะมีงาน \"ตรวจสอบคำขอเข้าใช้งาน\" ในงานของฉันจนกว่าจะดำเนินการเสร็จ ไม่มีการส่งอีเมล",
+        fail: "นับคำขอเข้าใช้งานไม่ได้",
+      },
       alerts: {
         heading: "การแจ้งเตือน",
         title: "อีเมลแจ้งเตือนสถานะ",
@@ -3241,15 +3254,21 @@ const th: Dictionary = {
     empty: "ตอนนี้ยังไม่มีงานที่มอบหมายให้คุณ",
     couldntLoad: (source: string) => `โหลด${source}ไม่ได้`,
     sources: {
+      accessRequests: "คำขอเข้าใช้งาน",
       maintenance: "งานซ่อมบำรุง",
       recurring: "งานประจำ",
     },
     openFullList: {
+      accessRequests: "เปิดหน้าความปลอดภัย",
       maintenance: "เปิดบอร์ด",
       recurring: "จัดการงานประจำ",
     },
     daysLate: (n: number) => `ช้าไป ${n} วัน`,
     waitingFor: (title: string) => `รอ ${title} ก่อน`,
+    accessRequests: {
+      title: "ตรวจสอบคำขอเข้าใช้งาน",
+      about: (n: number) => `มี ${n} คนรอการกำหนดบทบาท — ผู้ดูแลระบบทุกคนจะเห็นงานนี้จนกว่าจะดำเนินการเสร็จ`,
+    },
     recurring: {
       done: "เสร็จแล้ว",
       skip: "ข้าม",
