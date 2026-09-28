@@ -30,9 +30,13 @@ export type Vet = {
 };
 
 export type VetHubVisit = VetVisit & {
+  doctor_id: string | null;
   doctor_name: string | null;
   residents: { name: string; thai_name: string | null; resident_code: string } | null;
 };
+
+/** A doctor on the clinic's list (vet_doctors). */
+export type HubDoctor = { id: string; name: string; active: boolean };
 
 /** A medical record linked to one of this vet's visits. */
 export type LinkedRecord = { id: string; vet_appointment_id: string };
@@ -49,12 +53,14 @@ export function VetHub({
   vet,
   visits,
   linked,
+  doctors,
   canManage,
   now,
 }: {
   vet: Vet;
   visits: VetHubVisit[];
   linked: LinkedRecords;
+  doctors: HubDoctor[];
   canManage: boolean;
   /** Server-computed timestamp (ISO string) — avoids calling Date.now() during render. */
   now: string;
@@ -139,6 +145,29 @@ export function VetHub({
   );
 
   const periodLabel = t.vets.hub.periods[period ?? "all"];
+
+  // Visits per doctor over the chosen period, so the list reads as "who
+  // does this clinic's work", busiest first. Doctors who have left are only
+  // counted, not listed.
+  const doctorVisits = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const v of inPeriod) {
+      if (v.doctor_id) counts.set(v.doctor_id, (counts.get(v.doctor_id) ?? 0) + 1);
+    }
+    return counts;
+  }, [inPeriod]);
+  const activeDoctors = useMemo(
+    () =>
+      doctors
+        .filter((d) => d.active)
+        .sort(
+          (a, b) =>
+            (doctorVisits.get(b.id) ?? 0) - (doctorVisits.get(a.id) ?? 0) ||
+            a.name.localeCompare(b.name),
+        ),
+    [doctors, doctorVisits],
+  );
+  const leftDoctors = doctors.length - activeDoctors.length;
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
@@ -288,6 +317,43 @@ export function VetHub({
           <p className="py-6 text-center text-sm text-muted">
             {t.vets.hub.chart.empty}
           </p>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-sm font-medium text-foreground">
+            {t.vets.hub.doctors.heading}{" "}
+            <span className="text-muted">({activeDoctors.length})</span>
+          </h2>
+          {canManage && (
+            <Link
+              href={`/management/vets/${vet.id}/doctors`}
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              {t.vets.manageDoctors}
+            </Link>
+          )}
+        </div>
+        {activeDoctors.length > 0 ? (
+          <ul className="flex flex-wrap gap-2">
+            {activeDoctors.map((doctor) => (
+              <li
+                key={doctor.id}
+                className="rounded-full border border-border bg-background px-3 py-1 text-sm text-foreground"
+              >
+                {doctor.name}
+                <span className="ml-1.5 text-xs text-muted">
+                  {t.vets.hub.doctors.visits(doctorVisits.get(doctor.id) ?? 0)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted">{t.vets.hub.doctors.none}</p>
+        )}
+        {leftDoctors > 0 && (
+          <p className="text-xs text-muted">{t.vets.hub.doctors.left(leftDoctors)}</p>
         )}
       </section>
 

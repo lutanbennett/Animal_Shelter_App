@@ -13,6 +13,8 @@ export type VetRow = {
   notes: string | null;
   /** Logged visits, all statuses — a vet with any can't be deleted. */
   visit_count: number;
+  /** Doctors on the clinic's list (vet_doctors), active or not. */
+  doctor_count: number;
 };
 
 const inputClass =
@@ -133,6 +135,16 @@ function VetRowItem({ vet }: { vet: VetRow }) {
           </Link>
         </td>
         <td className="px-4 py-2">
+          <Link
+            href={`/management/vets/${vet.id}/doctors`}
+            className="whitespace-nowrap text-primary hover:underline"
+          >
+            {vet.doctor_count > 0
+              ? t.management.vets.table.doctorCount(vet.doctor_count)
+              : t.management.vets.table.noDoctors}
+          </Link>
+        </td>
+        <td className="px-4 py-2">
           <div className="flex items-center gap-2">
             {editing ? (
               <>
@@ -184,7 +196,7 @@ function VetRowItem({ vet }: { vet: VetRow }) {
       {message && (
         <tr>
           <td
-            colSpan={6}
+            colSpan={7}
             className={`px-4 pb-2 text-xs ${
               message.type === "error" ? "text-danger" : "text-success"
             }`}
@@ -210,6 +222,7 @@ export function VetsTable({ vets }: { vets: VetRow[] }) {
             <th className="px-4 py-2 font-medium">{t.management.vets.table.contact}</th>
             <th className="px-4 py-2 font-medium">{t.management.vets.table.notes}</th>
             <th className="px-4 py-2 font-medium">{t.management.vets.table.visits}</th>
+            <th className="px-4 py-2 font-medium">{t.management.vets.table.doctors}</th>
             <th className="px-4 py-2 font-medium" />
           </tr>
         </thead>
@@ -219,7 +232,7 @@ export function VetsTable({ vets }: { vets: VetRow[] }) {
           ))}
           {vets.length === 0 && (
             <tr>
-              <td colSpan={6} className="px-4 py-6 text-center text-muted">
+              <td colSpan={7} className="px-4 py-6 text-center text-muted">
                 {t.management.vets.table.noVets}
               </td>
             </tr>

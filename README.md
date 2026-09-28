@@ -617,7 +617,10 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
   the project folder path that mirrors the project tree).
 - `src/lib/vets/` — the vet hub's statistics: period filtering, monthly
   buckets and per-resident roll-ups over a vet's appointment rows, shared
-  by the `/vets` list and `/vets/[id]`.
+  by the `/vets` list and `/vets/[id]`; which clinic a vet account may book
+  against (`scope.ts`); and each clinic's doctor list (`doctors.ts`: the
+  visit forms' suggestions, and the look-alike spellings
+  `/management/vets/[id]/doctors` offers to merge).
 - `src/lib/contacts/` — the contacts vocabulary (`contact_type`), the
   one-tap link builders (`tel:`, LINE, Messenger, WhatsApp, `mailto:`, maps) used by the
   `/contacts` list and hub, and the Carer-only loader behind the resident
