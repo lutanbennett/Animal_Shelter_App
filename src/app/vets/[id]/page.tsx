@@ -4,6 +4,7 @@ import { isShelterRole } from "@/lib/auth/app-access";
 import { requireRole } from "@/lib/auth/require-role";
 import {
   VetHub,
+  type HubDoctor,
   type LinkedRecord,
   type Vet,
   type VetHubVisit,
@@ -18,7 +19,15 @@ export default async function VetPage(props: PageProps<"/vets/[id]">) {
   // on the vet, so one round-trip per table and no id list in the URL.
   const linkedSelect = "id, vet_appointment_id, vet_appointments!inner(vet_id)";
 
-  const [vetResult, visitsResult, proceduresResult, bloodTestsResult, prescriptionsResult, roleResult] =
+  const [
+    vetResult,
+    visitsResult,
+    proceduresResult,
+    bloodTestsResult,
+    prescriptionsResult,
+    roleResult,
+    doctorsResult,
+  ] =
     await Promise.all([
       supabase
         .from("vets")
@@ -29,7 +38,7 @@ export default async function VetPage(props: PageProps<"/vets/[id]">) {
       supabase
         .from("vet_appointments")
         .select(
-          "id, resident_id, appointment_date, status, reason, doctor_name, cost, residents(name, thai_name, resident_code)",
+          "id, resident_id, appointment_date, status, reason, doctor_id, doctor_name, cost, residents(name, thai_name, resident_code)",
         )
         .eq("vet_id", id)
         .order("appointment_date", { ascending: false })
@@ -50,6 +59,14 @@ export default async function VetPage(props: PageProps<"/vets/[id]">) {
         .eq("vet_appointments.vet_id", id)
         .returns<LinkedRecord[]>(),
       supabase.rpc("current_user_role"),
+      // The clinic's doctor list (0102). Read-only here; corrected under
+      // Management → Vets → Doctors.
+      supabase
+        .from("vet_doctors")
+        .select("id, name, active")
+        .eq("vet_id", id)
+        .order("name")
+        .returns<HubDoctor[]>(),
     ]);
 
   // A query error must not look like a missing vet — surface it, not a 404.
@@ -67,6 +84,7 @@ export default async function VetPage(props: PageProps<"/vets/[id]">) {
         bloodTests: bloodTestsResult.data ?? [],
         prescriptions: prescriptionsResult.data ?? [],
       }}
+      doctors={doctorsResult.data ?? []}
       canManage={canManage(roleResult.data)}
       now={new Date().toISOString()}
     />

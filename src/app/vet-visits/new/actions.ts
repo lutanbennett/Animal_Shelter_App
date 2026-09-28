@@ -47,32 +47,20 @@ export async function bookVetVisit(
   if (scope.kind === "unlinked") return { error: t.vetVisits.noClinicForAccount };
   if (!scopeAllowsVet(scope, vetId)) return { error: t.vetVisits.errors.notYourClinic };
 
-  const { data: booked, error } = await supabase.rpc("schedule_bulk_appointments", {
+  const { error } = await supabase.rpc("schedule_bulk_appointments", {
     p_resident_ids: residentIds,
     p_vet_id: vetId,
     p_appointment_date: appointmentDate.toISOString(),
     p_reason: typeof reason === "string" && reason ? reason : null,
     p_notes: typeof notes === "string" && notes ? notes : null,
     p_status: typeof status === "string" && status ? status : "scheduled",
+    // One call, one transaction (0102): the database links the name to the
+    // clinic's doctor list, adding it if it is new.
+    p_doctor_name: doctorName,
   });
 
   if (error) {
     return { error: error.message };
-  }
-
-  // The RPC has no doctor parameter and this feature carries no migration,
-  // so the name is set on the rows it just returned. Staff can update what
-  // they can insert (0030). If this half fails the visits exist already —
-  // say so, so nobody books them twice.
-  if (doctorName) {
-    const ids = ((booked ?? []) as { id: string }[]).map((row) => row.id);
-    const { error: doctorError } = await supabase
-      .from("vet_appointments")
-      .update({ doctor_name: doctorName })
-      .in("id", ids);
-    if (doctorError) {
-      return { error: t.vetVisits.errors.doctorNotSaved(doctorError.message) };
-    }
   }
 
   // Back to what was booked: one resident's vet visits, or the residents

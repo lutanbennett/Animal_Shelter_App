@@ -543,7 +543,7 @@ const manual: Manual = {
           roles: ["admin", "management", "staff", "vet"],
           path: "Resident hub → Vet Appointments → Book vet visit",
           steps: [
-            "Choose one or more residents and the vet or clinic (vets are set up under Management → Vets). If you know which doctor will see them, type their name in Doctor — it is optional. Names already recorded for that vet are offered as you type, so pick one rather than spelling it a new way.",
+            "Choose one or more residents and the vet or clinic (vets are set up under Management → Vets). If you know which doctor will see them, type their name in Doctor — it is optional. The doctors on that clinic's list are offered as you type, so pick one rather than spelling it a new way. A name that isn't offered is added to the clinic's list when you book.",
             "Enter the date and time. Use a past date to record a visit that already happened, including emergencies.",
             "Give the reason, set the status and add notes. The status follows the date you enter — a past date sets Completed, a future one Scheduled — but it is yours to change: choose Scheduled for a past visit you can't yet confirm took place.",
             "Tap Book vet visit. With one resident you go straight to their Vet Appointments page, where the new visit is listed; with several, back to the Residents list.",
@@ -833,7 +833,7 @@ const manual: Manual = {
           path: "Vets",
           steps: [
             "Open Vets to see every vet and clinic with their visit count, residents seen, last visit and what's upcoming or overdue.",
-            "Tap a vet for their hub: contact details and notes, visits per month, the residents they've seen, spend on visits with a recorded cost, and the procedures, blood tests and prescriptions logged against their visits. Change the period (3, 6, 12 months or all time) at the top.",
+            "Tap a vet for their hub: contact details and notes, visits per month, the clinic's doctors with how many visits each saw, the residents they've seen, spend on visits with a recorded cost, and the procedures, blood tests and prescriptions logged against their visits. Change the period (3, 6, 12 months or all time) at the top.",
           ],
           screenshot: {
             src: "/manual/vet-hub.png",
@@ -948,6 +948,28 @@ const manual: Manual = {
             src: "/manual/management-vets.png",
             alt: "The vets management table",
           },
+        },
+        {
+          id: "vet-doctors",
+          title: "A clinic's doctors",
+          roles: ["admin", "management"],
+          path: "Management → Vets → Doctors",
+          intro:
+            "Each vet or clinic has a list of its doctors, which the visit forms suggest from. Nobody has to type the list in: every doctor's name typed on a visit is added to that clinic's list, and \"dr ploy\" or \"Dr  Ploy\" find the \"Dr Ploy\" already there. What it can't tell is that \"Somchai\" and \"Dr Somchai\" are the same person — that is what this page is for.",
+          steps: [
+            "In Management → Vets, the Doctors column shows how many doctors each clinic has; tap it to open the clinic's list. From a vet's hub, Manage the doctor list goes to the same page.",
+            "Each doctor shows how many visits they are on and the date of the latest. Names that look like one person written two ways — the same name with and without \"Dr\", \"หมอ\", \"น.สพ.\" or \"สพ.ญ.\", or different punctuation — are marked \"Possibly the same person as …\". That is only a hint; you decide.",
+            "Merge… folds one spelling into another: choose the name to keep, and every visit recorded with the other one now shows the kept name, past visits included. The other spelling leaves the list. Use it on the spelling you want to drop. It can't be undone.",
+            "Rename fixes a doctor's spelling. The new name is written onto every visit linked to that doctor, past ones included, so the page says how many visits will change and asks before saving. If the new name is already on the list, it is refused: that is a merge, not a rename.",
+            "Mark as left, for a doctor who no longer works there, stops them being suggested on the visit forms. Their visits keep their name, and they move to No longer at the clinic at the bottom of the list. Back at the clinic undoes it. If someone types a left doctor's name on a new visit, it is still linked to them.",
+            "Add a doctor is only needed for someone nobody has recorded a visit with yet, so they are suggested from the first booking. Delete is only for a doctor with no visits — a mistaken entry; anyone on a visit is merged or marked as left instead.",
+          ],
+          callouts: [
+            {
+              kind: "warning",
+              text: "Rename and merge change the doctor shown on past visits, including those of residents who have died, on the resident's pages and the archive record. That is the point — it corrects the record — but check you have the right two names before you merge.",
+            },
+          ],
         },
         {
           id: "manage-medications",
