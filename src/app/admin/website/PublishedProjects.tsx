@@ -37,7 +37,7 @@ export function PublishedProjects({ projects }: { projects: PublishedProjectRow[
     setMessage(null);
     startTransition(async () => {
       const result = await unpublishProject(project.id);
-      if (result && "error" in result) setMessage(result.error);
+      if (!result.ok) setMessage(result.error);
     });
   }
 

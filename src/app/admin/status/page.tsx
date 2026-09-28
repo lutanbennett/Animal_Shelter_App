@@ -35,7 +35,12 @@ export default async function SystemStatusPage(props: PageProps<"/admin/status">
           <h1 className="text-2xl font-semibold text-foreground">{s.title}</h1>
           <p className="text-sm text-muted">{s.subtitle}</p>
         </div>
-        <form action={checkNow}>
+        <form
+          action={async () => {
+            "use server";
+            await checkNow();
+          }}
+        >
           <button
             type="submit"
             className="rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"

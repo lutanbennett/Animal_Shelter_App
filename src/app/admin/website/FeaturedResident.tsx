@@ -41,9 +41,9 @@ export function FeaturedResident({
     setMessage(null);
     startTransition(async () => {
       const result = await setFeaturedResident(residentId);
-      if (result && "error" in result) {
+      if (!result.ok) {
         setMessage({ type: "error", text: result.error });
-      } else if (result && "success" in result) {
+      } else {
         setMessage({ type: "success", text: result.success });
       }
     });

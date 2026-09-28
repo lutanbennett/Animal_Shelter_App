@@ -134,10 +134,10 @@ export function SitePageForm({
         >
           {pending ? t.common.saving : t.common.saveChanges}
         </button>
-        {state && "error" in state && (
+        {state && !state.ok && (
           <p className="text-sm text-danger">{state.error}</p>
         )}
-        {state && "success" in state && (
+        {state && state.ok && (
           <p className="text-sm text-success">{state.success}</p>
         )}
       </form>

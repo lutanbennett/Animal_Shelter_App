@@ -47,13 +47,6 @@ function FrequencyRowItem({
     setMode("view");
   }
 
-  function fail(err: unknown, fallback: string) {
-    setMessage({
-      type: "error",
-      text: err instanceof Error ? err.message : fallback,
-    });
-  }
-
   function describe(row: FrequencyRow) {
     return describeSchedule(t, row);
   }
@@ -61,13 +54,13 @@ function FrequencyRowItem({
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
-      try {
-        await updateFrequency(frequency.id, { label, schedule });
-        setMode("view");
-        setMessage({ type: "success", text: t.common.saved });
-      } catch (err) {
-        fail(err, t.common.failedToSave);
+      const result = await updateFrequency(frequency.id, { label, schedule });
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
+        return;
       }
+      setMode("view");
+      setMessage({ type: "success", text: t.common.saved });
     });
   }
 
@@ -75,10 +68,9 @@ function FrequencyRowItem({
     if (!window.confirm(f.deleteConfirm(frequency.label))) return;
     setMessage(null);
     startTransition(async () => {
-      try {
-        await deleteFrequency(frequency.id);
-      } catch (err) {
-        fail(err, t.common.failedToDelete);
+      const result = await deleteFrequency(frequency.id);
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
       }
     });
   }
@@ -100,10 +92,9 @@ function FrequencyRowItem({
     }
     setMessage(null);
     startTransition(async () => {
-      try {
-        await mergeFrequency(frequency.id, target.id);
-      } catch (err) {
-        fail(err, f.errors.mergeFailed);
+      const result = await mergeFrequency(frequency.id, target.id);
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
       }
     });
   }

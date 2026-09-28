@@ -44,23 +44,16 @@ function ProcedureTypeRowItem({
     setMode("view");
   }
 
-  function fail(err: unknown, fallback: string) {
-    setMessage({
-      type: "error",
-      text: err instanceof Error ? err.message : fallback,
-    });
-  }
-
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
-      try {
-        await updateProcedureType(procedureType.id, { name });
-        setMode("view");
-        setMessage({ type: "success", text: t.common.saved });
-      } catch (err) {
-        fail(err, t.common.failedToSave);
+      const result = await updateProcedureType(procedureType.id, { name });
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
+        return;
       }
+      setMode("view");
+      setMessage({ type: "success", text: t.common.saved });
     });
   }
 
@@ -68,10 +61,9 @@ function ProcedureTypeRowItem({
     if (!window.confirm(p.deleteConfirm(procedureType.name))) return;
     setMessage(null);
     startTransition(async () => {
-      try {
-        await deleteProcedureType(procedureType.id);
-      } catch (err) {
-        fail(err, t.common.failedToDelete);
+      const result = await deleteProcedureType(procedureType.id);
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
       }
     });
   }
@@ -92,10 +84,9 @@ function ProcedureTypeRowItem({
     }
     setMessage(null);
     startTransition(async () => {
-      try {
-        await mergeProcedureType(procedureType.id, target.id);
-      } catch (err) {
-        fail(err, p.errors.mergeFailed);
+      const result = await mergeProcedureType(procedureType.id, target.id);
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
       }
     });
   }

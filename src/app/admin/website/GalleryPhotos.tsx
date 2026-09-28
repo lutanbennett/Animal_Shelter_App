@@ -33,22 +33,16 @@ export function GalleryPhotos({ photos }: { photos: GalleryPhotoRow[] }) {
     if (!window.confirm(t.admin.website.gallery.removeConfirm)) return;
     setMessage(null);
     startTransition(async () => {
-      try {
-        await deleteGalleryPhoto(photoId);
-      } catch (err) {
-        setMessage(err instanceof Error ? err.message : t.common.failedToRemove);
-      }
+      const result = await deleteGalleryPhoto(photoId);
+      if (!result.ok) setMessage(result.error);
     });
   }
 
   function handleMove(photoId: string, direction: "up" | "down") {
     setMessage(null);
     startTransition(async () => {
-      try {
-        await moveGalleryPhoto(photoId, direction);
-      } catch (err) {
-        setMessage(err instanceof Error ? err.message : t.common.failedToReorder);
-      }
+      const result = await moveGalleryPhoto(photoId, direction);
+      if (!result.ok) setMessage(result.error);
     });
   }
 

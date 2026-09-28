@@ -1,14 +1,18 @@
 "use server";
 
 import { refresh, revalidatePath } from "next/cache";
-import { assertAdminRole } from "@/lib/auth/require-admin";
+import {
+  runAction,
+  type ActionRefusal,
+  type ActionResult,
+} from "@/lib/action-result";
+import { hasAdminRole } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 
-export type BloodTestTypeFormState =
-  | { error: string }
-  | { success: string }
-  | undefined;
+export type BloodTestTypeFormState = ActionResult<{ success: string }> | undefined;
+
+const refuse = (error: string): ActionRefusal => ({ ok: false, error });
 
 function revalidateBloodTestTypePages() {
   revalidatePath("/admin/blood-test-types");
@@ -36,78 +40,94 @@ export async function createBloodTestType(
   _state: BloodTestTypeFormState,
   formData: FormData,
 ): Promise<BloodTestTypeFormState> {
-  await assertAdminRole();
   const { t } = await getT();
+  return runAction("bloodTestTypes.createBloodTestType", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
 
-  const name = (formData.get("name") as string | null)?.trim();
-  if (!name) return { error: t.admin.bloodTestTypes.errors.nameRequired };
+    const name = (formData.get("name") as string | null)?.trim();
+    if (!name) return refuse(t.admin.bloodTestTypes.errors.nameRequired);
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("blood_test_types").insert({ name });
+    const supabase = await createClient();
+    const { error } = await supabase.from("blood_test_types").insert({ name });
 
-  if (error) return { error: error.message };
+    if (error) return refuse(error.message);
 
-  revalidateBloodTestTypePages();
-  return { success: t.admin.bloodTestTypes.createdType(name) };
+    revalidateBloodTestTypePages();
+    return { ok: true, success: t.admin.bloodTestTypes.createdType(name) };
+  });
 }
 
-export async function updateBloodTestType(id: string, fields: { name: string }) {
-  await assertAdminRole();
+export async function updateBloodTestType(
+  id: string,
+  fields: { name: string },
+): Promise<ActionResult> {
   const { t } = await getT();
+  return runAction("bloodTestTypes.updateBloodTestType", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
 
-  const name = fields.name.trim();
-  if (!name) throw new Error(t.admin.bloodTestTypes.errors.nameRequired);
+    const name = fields.name.trim();
+    if (!name) return refuse(t.admin.bloodTestTypes.errors.nameRequired);
 
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("blood_test_types")
-    .update({ name })
-    .eq("id", id);
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("blood_test_types")
+      .update({ name })
+      .eq("id", id);
 
-  if (error) throw new Error(error.message);
-  revalidateBloodTestTypePages();
+    if (error) return refuse(error.message);
+    revalidateBloodTestTypePages();
+    return { ok: true };
+  });
 }
 
-export async function deleteBloodTestType(id: string) {
-  await assertAdminRole();
+export async function deleteBloodTestType(id: string): Promise<ActionResult> {
   const { t } = await getT();
+  return runAction("bloodTestTypes.deleteBloodTestType", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
 
-  // blood_tests.blood_test_type_id has no cascade: a type that has ever been
-  // logged is part of a resident's medical record. Say so instead of
-  // surfacing the foreign-key error.
-  const count = await countBloodTests(id);
-  if (count > 0) {
-    throw new Error(t.admin.bloodTestTypes.errors.hasBloodTests(count));
-  }
+    // blood_tests.blood_test_type_id has no cascade: a type that has ever been
+    // logged is part of a resident's medical record. Say so instead of
+    // surfacing the foreign-key error.
+    const count = await countBloodTests(id);
+    if (count > 0) {
+      return refuse(t.admin.bloodTestTypes.errors.hasBloodTests(count));
+    }
 
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("blood_test_types")
-    .delete()
-    .eq("id", id);
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("blood_test_types")
+      .delete()
+      .eq("id", id);
 
-  if (error) throw new Error(error.message);
-  revalidateBloodTestTypePages();
+    if (error) return refuse(error.message);
+    revalidateBloodTestTypePages();
+    return { ok: true };
+  });
 }
 
 /**
  * Moves every blood test from `fromId` onto `intoId` and deletes `fromId`,
  * in one transaction (0050). Returns how many blood tests moved.
  */
-export async function mergeBloodTestType(fromId: string, intoId: string) {
-  await assertAdminRole();
+export async function mergeBloodTestType(
+  fromId: string,
+  intoId: string,
+): Promise<ActionResult<{ count: number }>> {
   const { t } = await getT();
-  if (fromId === intoId) {
-    throw new Error(t.admin.bloodTestTypes.errors.mergeSelf);
-  }
+  return runAction("bloodTestTypes.mergeBloodTestType", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (fromId === intoId) {
+      return refuse(t.admin.bloodTestTypes.errors.mergeSelf);
+    }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("merge_blood_test_type", {
-    p_from: fromId,
-    p_into: intoId,
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("merge_blood_test_type", {
+      p_from: fromId,
+      p_into: intoId,
+    });
+    if (error) return refuse(error.message);
+
+    revalidateBloodTestTypePages();
+    return { ok: true, count: (data as number | null) ?? 0 };
   });
-  if (error) throw new Error(error.message);
-
-  revalidateBloodTestTypePages();
-  return (data as number | null) ?? 0;
 }
