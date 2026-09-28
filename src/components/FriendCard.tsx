@@ -59,7 +59,7 @@ export function FriendCard({
       className="flex scroll-mt-6 flex-col gap-4 rounded-lg border border-border bg-surface p-5"
     >
       <div className="flex items-start gap-4">
-        <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-white">
+        <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-hover">
           {friend.logo_drive_file_id ? (
             <Image
               src={driveImageUrl(friend.logo_drive_file_id)}
