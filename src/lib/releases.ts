@@ -49,6 +49,7 @@ export const unreleased: string[] = [
   "A date you don't have to fill in can now be emptied again once it has been set: a Clear button appears beside it. On a phone, tapping the date could fill it in with no way back to blank, so an optional date became one you had to keep. It is on a diet's and a medication's end date, a maintenance job's due date, a recurring job's end date, a shelter friend's Friend since and a project folder's date.",
   "The user manual now opens on what your own role does: a vet sees sign-in, residents, medical records and photos rather than intake, stocktake and Settings. Show everything, at the top of the manual, brings back the rest, greyed where it isn't part of your role — and Find on page still finds a topic that is tucked away, so you can check whether something is yours to do.",
   "A prescription can only be linked to a vet visit that has already happened. The linked-visit list on the prescription form leaves out visits still to come, a visit still to come no longer has an Add prescription link on the Vet Appointments page, and a visit that has prescriptions linked to it can no longer be moved to a later day than today. A prescription already linked to a visit keeps its link when it is edited.",
+  "A blood test or procedure logged from a vet visit between midnight and 7 in the morning now takes that visit's date. It used to fill in the day before. Sending a resident to hospital from such a visit also starts on the visit's own day.",
 ];
 
 /** Newest first. */
