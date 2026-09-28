@@ -1,7 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { assertAdminRole } from "@/lib/auth/require-admin";
+import {
+  runAction,
+  type ActionRefusal,
+  type ActionResult,
+} from "@/lib/action-result";
+import { hasAdminRole } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import {
@@ -10,15 +15,14 @@ import {
   type ScheduleFields,
 } from "@/lib/prescriptions/frequency";
 
-export type FrequencyFormState =
-  | { error: string }
-  | { success: string }
-  | undefined;
+export type FrequencyFormState = ActionResult<{ success: string }> | undefined;
 
 export type FrequencyFields = {
   label: string;
   schedule: ScheduleFields;
 };
+
+const refuse = (error: string): ActionRefusal => ({ ok: false, error });
 
 function optional(value: FormDataEntryValue | string | null | undefined) {
   const trimmed = typeof value === "string" ? value.trim() : "";
@@ -63,80 +67,96 @@ export async function createFrequency(
   _state: FrequencyFormState,
   formData: FormData,
 ): Promise<FrequencyFormState> {
-  await assertAdminRole();
   const { t } = await getT();
+  return runAction("frequencies.createFrequency", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
 
-  const label = optional(formData.get("label"));
-  if (!label) return { error: t.admin.frequencies.errors.labelRequired };
-  const parsed = parseSchedule(scheduleFromForm(formData));
-  if ("error" in parsed) return { error: await scheduleErrorMessage(parsed.error) };
+    const label = optional(formData.get("label"));
+    if (!label) return refuse(t.admin.frequencies.errors.labelRequired);
+    const parsed = parseSchedule(scheduleFromForm(formData));
+    if ("error" in parsed) return refuse(await scheduleErrorMessage(parsed.error));
 
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("frequency")
-    .insert({ label, ...parsed.schedule });
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("frequency")
+      .insert({ label, ...parsed.schedule });
 
-  if (error) return { error: error.message };
+    if (error) return refuse(error.message);
 
-  revalidateFrequencyPages();
-  return { success: t.admin.frequencies.createdFrequency(label) };
+    revalidateFrequencyPages();
+    return { ok: true, success: t.admin.frequencies.createdFrequency(label) };
+  });
 }
 
-export async function updateFrequency(id: string, fields: FrequencyFields) {
-  await assertAdminRole();
+export async function updateFrequency(
+  id: string,
+  fields: FrequencyFields,
+): Promise<ActionResult> {
   const { t } = await getT();
+  return runAction("frequencies.updateFrequency", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
 
-  const label = optional(fields.label);
-  if (!label) throw new Error(t.admin.frequencies.errors.labelRequired);
-  const parsed = parseSchedule(fields.schedule);
-  if ("error" in parsed) throw new Error(await scheduleErrorMessage(parsed.error));
+    const label = optional(fields.label);
+    if (!label) return refuse(t.admin.frequencies.errors.labelRequired);
+    const parsed = parseSchedule(fields.schedule);
+    if ("error" in parsed) return refuse(await scheduleErrorMessage(parsed.error));
 
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("frequency")
-    .update({ label, ...parsed.schedule })
-    .eq("id", id);
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("frequency")
+      .update({ label, ...parsed.schedule })
+      .eq("id", id);
 
-  if (error) throw new Error(error.message);
-  revalidateFrequencyPages();
+    if (error) return refuse(error.message);
+    revalidateFrequencyPages();
+    return { ok: true };
+  });
 }
 
-export async function deleteFrequency(id: string) {
-  await assertAdminRole();
+export async function deleteFrequency(id: string): Promise<ActionResult> {
   const { t } = await getT();
+  return runAction("frequencies.deleteFrequency", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
 
-  // prescriptions.frequency_id has no cascade: a prescription is part of the
-  // resident's medical record. Say so instead of surfacing the FK error.
-  const count = await countPrescriptions(id);
-  if (count > 0) {
-    throw new Error(t.admin.frequencies.errors.hasPrescriptions(count));
-  }
+    // prescriptions.frequency_id has no cascade: a prescription is part of the
+    // resident's medical record. Say so instead of surfacing the FK error.
+    const count = await countPrescriptions(id);
+    if (count > 0) {
+      return refuse(t.admin.frequencies.errors.hasPrescriptions(count));
+    }
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("frequency").delete().eq("id", id);
+    const supabase = await createClient();
+    const { error } = await supabase.from("frequency").delete().eq("id", id);
 
-  if (error) throw new Error(error.message);
-  revalidateFrequencyPages();
+    if (error) return refuse(error.message);
+    revalidateFrequencyPages();
+    return { ok: true };
+  });
 }
 
 /**
  * Moves every prescription from `fromId` onto `intoId` and deletes `fromId`,
  * in one transaction (0043). Returns how many prescriptions moved.
  */
-export async function mergeFrequency(fromId: string, intoId: string) {
-  await assertAdminRole();
+export async function mergeFrequency(
+  fromId: string,
+  intoId: string,
+): Promise<ActionResult<{ count: number }>> {
   const { t } = await getT();
-  if (fromId === intoId) {
-    throw new Error(t.admin.frequencies.errors.mergeSelf);
-  }
+  return runAction("frequencies.mergeFrequency", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (fromId === intoId) {
+      return refuse(t.admin.frequencies.errors.mergeSelf);
+    }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("merge_frequency", {
-    p_from: fromId,
-    p_into: intoId,
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("merge_frequency", {
+      p_from: fromId,
+      p_into: intoId,
+    });
+    if (error) return refuse(error.message);
+
+    revalidateFrequencyPages();
+    return { ok: true, count: (data as number | null) ?? 0 };
   });
-  if (error) throw new Error(error.message);
-
-  revalidateFrequencyPages();
-  return (data as number | null) ?? 0;
 }

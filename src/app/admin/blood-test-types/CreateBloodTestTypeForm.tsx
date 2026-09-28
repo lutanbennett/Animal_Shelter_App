@@ -37,10 +37,10 @@ export function CreateBloodTestTypeForm() {
           ? t.common.creating
           : t.admin.bloodTestTypes.createForm.addButton}
       </button>
-      {state && "error" in state && (
+      {state && !state.ok && (
         <p className="w-full text-sm text-danger">{state.error}</p>
       )}
-      {state && "success" in state && (
+      {state && state.ok && (
         <p className="w-full text-sm text-success">{state.success}</p>
       )}
     </form>

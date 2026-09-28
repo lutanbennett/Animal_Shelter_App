@@ -22,16 +22,13 @@ function ZoneRowItem({ zone }: { zone: ZoneRow }) {
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
-      try {
-        await updateZone(zone.id, name, nameTh || null, internal);
-        setEditing(false);
-        setMessage({ type: "success", text: t.common.saved });
-      } catch (err) {
-        setMessage({
-          type: "error",
-          text: err instanceof Error ? err.message : t.common.failedToSave,
-        });
+      const result = await updateZone(zone.id, name, nameTh || null, internal);
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
+        return;
       }
+      setEditing(false);
+      setMessage({ type: "success", text: t.common.saved });
     });
   }
 
@@ -39,13 +36,9 @@ function ZoneRowItem({ zone }: { zone: ZoneRow }) {
     if (!window.confirm(t.admin.zones.deleteConfirm(zone.name))) return;
     setMessage(null);
     startTransition(async () => {
-      try {
-        await deleteZone(zone.id);
-      } catch (err) {
-        setMessage({
-          type: "error",
-          text: err instanceof Error ? err.message : t.common.failedToDelete,
-        });
+      const result = await deleteZone(zone.id);
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
       }
     });
   }
