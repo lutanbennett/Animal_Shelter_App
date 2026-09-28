@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "System status: a card showing access requests awaiting approval." |
 | Branch / worktree | `claude/access-requests-status-card` @ `C:\Development\Animal_Shelter_access-requests-status-card` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3016` |
-| PR | opened from this branch |
+| PR | lutanbennett/Animal_Shelter_App#200 |
 | Tested by / date | Claude / 2026-09-28 |
 | Carries a migration? | no |
 | Tested at SHA | `bee1afb` (feature `3d8a50a` + `origin/main` merged) |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — lutanbennett/Animal_Shelter_App#200, 3 of 3 passing at `a6d760e`
 
 ## 3. Schema and data — *skip if no migration*
 
