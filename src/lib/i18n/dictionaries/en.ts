@@ -3648,6 +3648,8 @@ const en = {
     medicalNotProfile:
       "Medical photos never appear on the website, so one can't be the profile photo.",
     medicalTile: "Medical",
+    moveToFolder: "Move to folder",
+    moveButton: (folder: string) => `Move to ${folder}`,
     uploader: {
       dateTaken: "Date taken",
       folder: "Folder",
@@ -3667,6 +3669,13 @@ const en = {
       medicalProfile:
         "A Medical photo can't be the profile photo — Medical photos never appear on the website. Choose a photo from another folder.",
       onlyFolder: (folder: string) => `Your photos can only go in the ${folder} folder.`,
+      notFound: "Photo not found.",
+      notMovable: "This photo can't be moved between folders.",
+      medicalProfileMove:
+        "This is the profile photo. Choose a different profile photo before moving it to Medical.",
+      moveFailed: "Couldn't move the photo in Google Drive. Try again.",
+      moveIncomplete:
+        "The photo moved in Google Drive, but saving its new folder failed — Drive and the record now disagree. Try moving it again, or tell an admin.",
     },
     filter: {
       label: "Show photos",

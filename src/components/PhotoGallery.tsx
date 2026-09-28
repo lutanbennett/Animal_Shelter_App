@@ -7,8 +7,8 @@ import { formatDate } from "@/lib/format";
 import type { PhotoProvenance } from "@/lib/adoption-updates/options";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { Locale } from "@/lib/i18n/locales";
-import { driveImageUrl, isMedicalFolder } from "@/lib/google/drive-client";
-import { deletePhoto, setProfilePhoto } from "@/app/residents/[id]/photos/actions";
+import { PHOTO_CATEGORIES, driveImageUrl, isMedicalFolder, type PhotoCategory } from "@/lib/google/drive-client";
+import { deletePhoto, movePhotoToFolder, setProfilePhoto } from "@/app/residents/[id]/photos/actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
 /**
@@ -55,11 +55,19 @@ export function PhotoGallery({
   residentId,
   photos,
   profilePhotoDriveFileId,
+  moveCategories = PHOTO_CATEGORIES,
   readOnly = false,
 }: {
   residentId: string;
   photos: PhotoRow[];
   profilePhotoDriveFileId: string | null;
+  /**
+   * The folders this user may move a photo INTO (photoCategoriesForRole).
+   * A role with one folder (a vet: Medical) can move a photo into it but
+   * never out of it — the "Move to folder" picker only ever offers folders
+   * in this list, and the server action refuses the rest regardless.
+   */
+  moveCategories?: readonly PhotoCategory[];
   /**
    * Viewing a closed record (a deceased resident): photos still open full
    * size, but nothing can be removed or promoted to profile photo. The
@@ -73,6 +81,7 @@ export function PhotoGallery({
   const [showAll, setShowAll] = useState(false);
   const [filter, setFilter] = useState<PhotoFilter>("all");
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [moveTarget, setMoveTarget] = useState<PhotoCategory | "">("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -85,9 +94,17 @@ export function PhotoGallery({
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [openPhoto]);
 
+  function open(photo: PhotoRow) {
+    setOpenPhoto(photo);
+    setConfirmingDelete(false);
+    setMoveTarget("");
+    setError(null);
+  }
+
   function close() {
     setOpenPhoto(null);
     setConfirmingDelete(false);
+    setMoveTarget("");
     setError(null);
   }
 
@@ -104,6 +121,15 @@ export function PhotoGallery({
     if (!openPhoto) return;
     startTransition(async () => {
       const result = await deletePhoto(residentId, openPhoto.id);
+      if (result?.error) setError(result.error);
+      else close();
+    });
+  }
+
+  function handleMove() {
+    if (!openPhoto || !moveTarget) return;
+    startTransition(async () => {
+      const result = await movePhotoToFolder(residentId, openPhoto.id, moveTarget);
       if (result?.error) setError(result.error);
       else close();
     });
@@ -128,6 +154,13 @@ export function PhotoGallery({
       : photos.filter((p) => (filter === "adopters") === Boolean(p.adoption_update));
   const visiblePhotos = showAll ? filtered : filtered.slice(0, INITIAL_TILE_COUNT);
   const openProvenance = provenanceLine(t, locale, openPhoto?.adoption_update);
+  // A photo an adopter sent, or one whose folder isn't a Photos category at
+  // all (legacy data), can't be refiled — moveCategories only ever offers
+  // folders this role may move photos INTO (photoCategoriesForRole).
+  const moveOptions =
+    openPhoto && !openPhoto.adoption_update && PHOTO_CATEGORIES.includes(openPhoto.sub_folder as PhotoCategory)
+      ? moveCategories.filter((c) => c !== openPhoto.sub_folder)
+      : [];
 
   return (
     <>
@@ -164,7 +197,7 @@ export function PhotoGallery({
             <button
               key={photo.id}
               type="button"
-              onClick={() => setOpenPhoto(photo)}
+              onClick={() => open(photo)}
               className={`group relative aspect-square overflow-hidden rounded-lg border bg-surface-hover ${
                 isProfile ? "border-primary ring-2 ring-primary/50" : "border-border"
               }`}
@@ -323,6 +356,34 @@ export function PhotoGallery({
                         : t.photos.setAsProfile}
                     </button>
                   )}
+                </div>
+              )}
+
+              {!readOnly && moveOptions.length > 0 && (
+                <div className="flex items-center justify-end gap-2">
+                  <select
+                    aria-label={t.photos.moveToFolder}
+                    value={moveTarget}
+                    onChange={(e) => setMoveTarget(e.target.value as PhotoCategory)}
+                    className="rounded border border-border bg-surface px-2 py-1.5 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+                  >
+                    <option value="" disabled>
+                      {t.photos.moveToFolder}
+                    </option>
+                    {moveOptions.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    disabled={isPending || moveTarget === ""}
+                    onClick={handleMove}
+                    className="rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-60"
+                  >
+                    {moveTarget === "" ? t.photos.moveToFolder : t.photos.moveButton(moveTarget)}
+                  </button>
                 </div>
               )}
             </div>
