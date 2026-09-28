@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "Show a file-type icon for attachments that are not images" |
 | Branch / worktree | `claude/file-type-icon` @ `C:\Development\Animal_Shelter_file-type-icon` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3011` |
-| PR | opened from this commit |
+| PR | #196 |
 | Tested by / date | Claude (file-type-icon session), 2026-09-28, signed in as the dev test user (admin) in the browser pane |
 | Carries a migration? | no |
 | Tested at SHA | `745c439` (the code; this plan and the docs commit follow it) |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — #196 at `b1a87f7`: `check`, `migration-numbers` and `test-plan` all pass
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -160,7 +160,7 @@ Manual verification by: pending: the three items under Left for manual verificat
 ### Result
 
 - [ ] Open defects are either fixed or explicitly accepted above — n/a: not yet — defect 2 is deferred to the backlog, awaiting Lutan's acceptance
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR is opened from this commit
+- [x] Checklist pasted into the PR — in #196's description
 - [ ] Handed to the production release manager — n/a: not yet — after merge
 
 Result: pass with accepted defects
