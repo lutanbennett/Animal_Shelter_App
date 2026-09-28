@@ -3,7 +3,7 @@
 import { useMemo, useOptimistic, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CalendarClock, Check, Clock, Hourglass, MessageSquarePlus, SkipForward, Users } from "lucide-react";
+import { CalendarClock, Check, Clock, Hourglass, MessageSquarePlus, SkipForward, UserPlus, Users } from "lucide-react";
 import { ENCLOSURE_ICONS, NAV_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate } from "@/lib/format";
@@ -40,6 +40,11 @@ const SOURCE_META: Record<
   MyTaskSource,
   { icon: typeof NAV_ICONS.maintenance; aboutIcon: typeof NAV_ICONS.maintenance; href: string; managersOnly?: boolean }
 > = {
+  accessRequests: {
+    icon: NAV_ICONS.security,
+    aboutIcon: UserPlus,
+    href: "/admin/security",
+  },
   maintenance: { icon: NAV_ICONS.maintenance, aboutIcon: ENCLOSURE_ICONS.zone, href: "/maintenance?assignee=me" },
   recurring: {
     icon: NAV_ICONS.recurringJobs,

@@ -12,6 +12,7 @@ import { hasAdminRole } from "@/lib/auth/require-admin";
 import { hasTwoStep, isVerifiedTotp } from "@/lib/auth/two-step";
 import { MUST_CHANGE_PASSWORD } from "@/lib/auth/password-change";
 import { generateTemporaryPassword } from "@/lib/auth/temp-password";
+import { forgetWaitingAccessRequests } from "@/lib/status/access-requests";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -30,6 +31,9 @@ import { getT } from "@/lib/i18n/get-t";
  * admin is on so the row shows the change at once.
  */
 function revalidateSecurity() {
+  // Approving, creating or deleting a login changes who is waiting; the
+  // status card and the admins' My tasks row shouldn't lag a minute behind.
+  forgetWaitingAccessRequests();
   revalidatePath("/admin/security");
   refresh();
 }
