@@ -31,6 +31,14 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
+Re-run after a second sync brought in #199 (merge `210fcf6`; `unreleased` conflict resolved by keeping both lines):
+
+```
+=== gates: build exited 0 after 288s
+
+gates: typecheck=0 lint=0 build=0
+```
+
 - [x] CI green on the PR (runs the same three) — lutanbennett/Animal_Shelter_App#200, 3 of 3 passing at `a6d760e`
 
 ## 3. Schema and data — *skip if no migration*
