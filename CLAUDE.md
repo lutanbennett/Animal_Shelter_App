@@ -77,13 +77,21 @@ two or three at once; more than that and merging becomes the bottleneck.
    if CI has actually gone red, and then in a clause, not a question of
    its own.
 
-   **Wait by being notified, never by polling.** Once the PR is open,
-   bind it with the `ccd_pr` tools and let the CI monitor wake you.
-   Never schedule your own check-in for CI and never poll
-   `gh pr checks` in a loop. On 2026-09-28 #201 scheduled its own
-   wakeup, the wakeup never delivered, and three green checks sat
-   unmerged for an hour while the session looked from the outside
-   exactly like one that was still working.
+   **Never end a turn believing a notification will arrive.** Bind the
+   PR with the `ccd_pr` tools, but treat the CI monitor as a nudge, not
+   a guarantee: before you stop, either merge, or say plainly that you
+   are waiting and what Lutan should ask you next. Then, when you are
+   next prompted, **re-read `get_status` first** rather than assuming
+   you are still mid-wait.
+
+   This is not hypothetical. On 2026-09-28 #201 bound its PR, its
+   `get_status` call succeeded, and it was still never woken when all
+   three checks went green — they sat merged-ready for an hour while
+   the session looked exactly like one that was still working. The
+   background-command and Monitor waits used up to 2026-09-27 did
+   complete reliably; the harness that ships with the desktop app now
+   forbids them and points here instead, so this is the mechanism we
+   have, and it needs the belt-and-braces above.
 
    **Do not hand the bulk of a task to a long background agent.** Work
    in short foreground batches instead. A foreground command that fails
