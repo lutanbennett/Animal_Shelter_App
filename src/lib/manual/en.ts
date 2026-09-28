@@ -547,7 +547,7 @@ const manual: Manual = {
             "Enter the date and time. Use a past date to record a visit that already happened, including emergencies.",
             "Give the reason, set the status and add notes. The status follows the date you enter — a past date sets Completed, a future one Scheduled — but it is yours to change: choose Scheduled for a past visit you can't yet confirm took place.",
             "Tap Book vet visit. With one resident you go straight to their Vet Appointments page, where the new visit is listed; with several, back to the Residents list.",
-            "On the resident's Vet Appointments page each visit has quick links to log a blood test, prescription, weight or procedure against that visit, and to send the resident to hospital.",
+            "On the resident's Vet Appointments page each visit has quick links to log a blood test, prescription, weight or procedure against that visit, and to send the resident to hospital. A visit still to come has no prescription or weight link — those are recorded once the visit has happened.",
             "After the visit, tap Edit on its row to mark it Completed (or Cancelled), fix the date or vet, add the doctor who saw them, and enter the cost from the invoice. The vet's hub totals those costs for the period shown.",
           ],
           screenshot: {
@@ -574,7 +574,7 @@ const manual: Manual = {
             "Pick the medication from the list (or add a new one, giving what one unit is — tablet, ml, drop…). Management keeps this list tidy under Management → Medications.",
             "Enter the dose per administration and pick a frequency, e.g. Twice daily or Every 8 hours. New frequencies can be added inline too.",
             "Set the start date, and an end date if it's a course; leave the end blank if ongoing.",
-            "Optionally link the vet visit that prescribed it and add notes such as \"give with food\".",
+            "Optionally link the vet visit that prescribed it and add notes such as \"give with food\". Only visits up to today are offered: a prescription belongs to a visit that has happened, and one still to come can be linked once it has.",
             "Tap Save prescription. The resident's Prescriptions page separates Current from Expired.",
             "To change one later, tap Edit on its row — same form, prefilled. To stop a course early, tap End today on a current row; it sets the end date to today and the medication drops out of the forecast from tomorrow.",
           ],

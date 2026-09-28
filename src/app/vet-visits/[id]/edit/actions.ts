@@ -85,6 +85,10 @@ export async function updateVetVisit(
     .eq("resident_id", residentId)
     .select("id")
     .returns<{ id: string }[]>();
+  // 0107: a visit with prescriptions linked cannot move past today.
+  if (error?.code === "23514" && error.message.includes("prescriptions_visit_not_in_future")) {
+    return { error: e.prescriptionsBlockFuture };
+  }
   if (error) return { error: error.message };
   if (!data || data.length === 0) return { error: e.notAuthorized };
 

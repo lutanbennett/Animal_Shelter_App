@@ -2097,6 +2097,8 @@ const en = {
       notFound: "Vet visit not found.",
       notAuthorized: "You don't have permission to change vet visits.",
       notYourClinic: "You can only record visits for your own clinic.",
+      prescriptionsBlockFuture:
+        "This visit has prescriptions linked to it, so it can't be moved to a day after today. Unlink them from the prescriptions first, or keep the visit on the day it happened.",
       doctorNotSaved: (message: string) =>
         `The visit was booked, but the doctor's name wasn't saved (${message}). Add it with Edit on the resident's Vet Appointments tab — don't book again.`,
     },
@@ -2470,6 +2472,8 @@ const en = {
       invalidEndDate: "Invalid end date.",
       endBeforeStart: "End date can't be before the start date.",
       saveFailed: "Failed to save the prescription.",
+      visitInFuture:
+        "That vet visit hasn't happened yet, so a prescription can't be linked to it. Link it to a visit on or before today, or leave it unlinked.",
     },
   },
 
