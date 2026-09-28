@@ -10,7 +10,9 @@ import { TranslationPanel } from "@/components/TranslationPanel";
 import { localizedFromRow } from "@/lib/translations/localize";
 import type { TranslationRow } from "@/lib/translations/types";
 import { driveImageUrl } from "@/lib/google/drive-client";
+import { FileTypeIcon } from "@/components/FileTypeIcon";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { fileKind } from "@/lib/uploads/file-kind";
 import { placeName } from "@/lib/enclosures/names";
 import { formatBaht, formatDate } from "@/lib/format";
 import type {
@@ -31,12 +33,6 @@ import {
   deleteMaintenanceJob,
   setMaintenanceStatus,
 } from "../actions";
-
-const IMAGE_EXTENSIONS = /\.(jpe?g|png|webp|heic|heif|gif)$/i;
-
-function isLikelyImage(fileName: string | null) {
-  return !!fileName && IMAGE_EXTENSIONS.test(fileName);
-}
 
 export function MaintenanceJobView({
   job,
@@ -377,14 +373,14 @@ function PhotoSection({
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
           {attachments.map((attachment) => {
             const url = driveImageUrl(attachment.drive_file_id);
-            const image = isLikelyImage(attachment.file_name);
+            const kind = fileKind(attachment.file_name);
             return (
               <div
                 key={attachment.id}
                 className="group relative overflow-hidden rounded border border-border bg-surface-hover"
               >
                 <a href={url} target="_blank" rel="noreferrer">
-                  {image ? (
+                  {kind === "image" ? (
                     <img
                       src={url}
                       alt={attachment.file_name ?? t.maintenance.detail.fileFallback}
@@ -392,7 +388,7 @@ function PhotoSection({
                     />
                   ) : (
                     <span className="flex aspect-square w-full flex-col items-center justify-center gap-1 p-2 text-center text-xs text-muted">
-                      <span aria-hidden>📄</span>
+                      <FileTypeIcon kind={kind} />
                       <span className="line-clamp-2 break-all">
                         {attachment.file_name ?? t.maintenance.detail.fileFallback}
                       </span>

@@ -3496,6 +3496,12 @@ const th: Dictionary = {
 
   uploads: {
     removeFile: "เอาออก",
+    fileKind: {
+      image: "รูปภาพ",
+      pdf: "เอกสาร PDF",
+      document: "เอกสาร",
+      other: "ไฟล์",
+    },
     uploading: (done: number, total: number) => `กำลังอัปโหลดไฟล์… ${done} จาก ${total}`,
     uploadsFailed: "บางไฟล์อัปโหลดไม่สำเร็จ ลองใหม่ หรือไปต่อโดยไม่มีไฟล์เหล่านั้น",
     notReadable: (name: string, formats: string) =>
