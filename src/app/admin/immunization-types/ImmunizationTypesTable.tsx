@@ -56,21 +56,18 @@ function ImmunizationTypeRowItem({
       return;
     }
     startTransition(async () => {
-      try {
-        await updateImmunizationType(immunizationType.id, {
-          name,
-          isMandatory,
-          intervalMonths: parsedInterval,
-          cost: parsedCost.value,
-        });
-        setEditing(false);
-        setMessage({ type: "success", text: t.common.saved });
-      } catch (err) {
-        setMessage({
-          type: "error",
-          text: err instanceof Error ? err.message : t.common.failedToSave,
-        });
+      const result = await updateImmunizationType(immunizationType.id, {
+        name,
+        isMandatory,
+        intervalMonths: parsedInterval,
+        cost: parsedCost.value,
+      });
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
+        return;
       }
+      setEditing(false);
+      setMessage({ type: "success", text: t.common.saved });
     });
   }
 
@@ -79,13 +76,9 @@ function ImmunizationTypeRowItem({
       return;
     setMessage(null);
     startTransition(async () => {
-      try {
-        await deleteImmunizationType(immunizationType.id);
-      } catch (err) {
-        setMessage({
-          type: "error",
-          text: err instanceof Error ? err.message : t.common.failedToDelete,
-        });
+      const result = await deleteImmunizationType(immunizationType.id);
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
       }
     });
   }

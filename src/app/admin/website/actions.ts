@@ -1,7 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { assertAdminRole } from "@/lib/auth/require-admin";
+import {
+  runAction,
+  type ActionRefusal,
+  type ActionResult,
+} from "@/lib/action-result";
+import { hasAdminRole } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
@@ -28,7 +33,9 @@ import {
 } from "@/lib/google/drive";
 import { driveErrorMessage } from "@/lib/google/drive-errors";
 
-export type SiteContentFormState = { error: string } | { success: string } | undefined;
+export type SiteContentFormState = ActionResult<{ success: string }> | undefined;
+
+const refuse = (error: string): ActionRefusal => ({ ok: false, error });
 
 /** Every public page reads site_content (the footer), so all of them. */
 function revalidateWebsitePages() {
@@ -53,88 +60,92 @@ function revalidateWebsitePages() {
  */
 export async function unpublishProject(
   folderId: string,
-): Promise<SiteContentFormState> {
-  await assertAdminRole();
+): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
+  return runAction("website.unpublishProject", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("project_folders")
-    .update({ is_public: false })
-    .eq("id", folderId)
-    .select("id")
-    .returns<{ id: string }[]>();
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("project_folders")
+      .update({ is_public: false })
+      .eq("id", folderId)
+      .select("id")
+      .returns<{ id: string }[]>();
 
-  if (error) return { error: error.message };
-  if (!data?.length) return { error: t.admin.website.published.notFound };
+    if (error) return refuse(error.message);
+    if (!data?.length) return refuse(t.admin.website.published.notFound);
 
-  revalidateWebsitePages();
-  revalidatePath("/our-work");
-  revalidatePath(`/our-work/${folderId}`);
-  revalidatePath(`/projects/${folderId}`);
-  return { success: t.admin.website.published.removed };
+    revalidateWebsitePages();
+    revalidatePath("/our-work");
+    revalidatePath(`/our-work/${folderId}`);
+    revalidatePath(`/projects/${folderId}`);
+    return { ok: true, success: t.admin.website.published.removed };
+  });
 }
 
 export async function updateSiteContent(
   _state: SiteContentFormState,
   formData: FormData,
 ): Promise<SiteContentFormState> {
-  await assertAdminRole();
   const { t } = await getT();
+  return runAction("website.updateSiteContent", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
 
-  const text = (name: string) => (formData.get(name) as string | null)?.trim() ?? "";
-  const optional = (name: string) => text(name) || null;
+    const text = (name: string) => (formData.get(name) as string | null)?.trim() ?? "";
+    const optional = (name: string) => text(name) || null;
 
-  // The form checks these as they are typed; this is the same rule again
-  // for a request that skipped the form. The database's own check (0080)
-  // is looser on purpose — see src/lib/links/validate.ts. The WhatsApp
-  // check also turns "+66 81 234 5678" into the digits 0092 stores.
-  const s = t.admin.website.settings;
-  const links = [
-    ["facebook_url", s.facebookUrl, checkFacebookUrl, FACEBOOK_HOSTS],
-    ["instagram_url", s.instagramUrl, checkInstagramUrl, INSTAGRAM_HOSTS],
-    ["x_url", s.xUrl, checkXUrl, X_HOSTS],
-    ["messenger_url", s.messengerUrl, checkMessengerUrl, MESSENGER_HOSTS],
-  ] as const;
-  const checked: Record<string, string | null> = {};
-  for (const [name, label, check, hosts] of links) {
-    const result = check(text(name));
-    if (!result.ok) return { error: `${label}: ${linkErrorText(t.linkErrors, result, hosts)}` };
-    checked[name] = result.url;
-  }
-  const whatsapp = checkWhatsAppNumber(text("whatsapp_number"));
-  if (!whatsapp.ok) return { error: `${s.whatsappNumber}: ${t.linkErrors.whatsappNumber}` };
+    // The form checks these as they are typed; this is the same rule again
+    // for a request that skipped the form. The database's own check (0080)
+    // is looser on purpose — see src/lib/links/validate.ts. The WhatsApp
+    // check also turns "+66 81 234 5678" into the digits 0092 stores.
+    const s = t.admin.website.settings;
+    const links = [
+      ["facebook_url", s.facebookUrl, checkFacebookUrl, FACEBOOK_HOSTS],
+      ["instagram_url", s.instagramUrl, checkInstagramUrl, INSTAGRAM_HOSTS],
+      ["x_url", s.xUrl, checkXUrl, X_HOSTS],
+      ["messenger_url", s.messengerUrl, checkMessengerUrl, MESSENGER_HOSTS],
+    ] as const;
+    const checked: Record<string, string | null> = {};
+    for (const [name, label, check, hosts] of links) {
+      const result = check(text(name));
+      if (!result.ok) return refuse(`${label}: ${linkErrorText(t.linkErrors, result, hosts)}`);
+      checked[name] = result.url;
+    }
+    const whatsapp = checkWhatsAppNumber(text("whatsapp_number"));
+    if (!whatsapp.ok) return refuse(`${s.whatsappNumber}: ${t.linkErrors.whatsappNumber}`);
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  const { error } = await supabase
-    .from("site_content")
-    .update({
-      tagline: text("tagline"),
-      tagline_th: optional("tagline_th"),
-      hero_alt: text("hero_alt"),
-      hero_alt_th: optional("hero_alt_th"),
-      visiting_hours: optional("visiting_hours"),
-      visiting_hours_th: optional("visiting_hours_th"),
-      contact_email: optional("contact_email"),
-      contact_address: optional("contact_address"),
-      contact_phone: optional("contact_phone"),
-      contact_line: optional("contact_line"),
-      contact_map_url: optional("contact_map_url"),
-      ...checked,
-      whatsapp_number: whatsapp.number,
-      updated_at: new Date().toISOString(),
-      updated_by: user?.id ?? null,
-    })
-    .eq("id", true);
+    const { error } = await supabase
+      .from("site_content")
+      .update({
+        tagline: text("tagline"),
+        tagline_th: optional("tagline_th"),
+        hero_alt: text("hero_alt"),
+        hero_alt_th: optional("hero_alt_th"),
+        visiting_hours: optional("visiting_hours"),
+        visiting_hours_th: optional("visiting_hours_th"),
+        contact_email: optional("contact_email"),
+        contact_address: optional("contact_address"),
+        contact_phone: optional("contact_phone"),
+        contact_line: optional("contact_line"),
+        contact_map_url: optional("contact_map_url"),
+        ...checked,
+        whatsapp_number: whatsapp.number,
+        updated_at: new Date().toISOString(),
+        updated_by: user?.id ?? null,
+      })
+      .eq("id", true);
 
-  if (error) return { error: error.message };
+    if (error) return refuse(error.message);
 
-  revalidateWebsitePages();
-  return { success: t.common.saved };
+    revalidateWebsitePages();
+    return { ok: true, success: t.common.saved };
+  });
 }
 
 /**
@@ -151,33 +162,35 @@ export async function updateVetVisitEstimate(
   _state: SiteContentFormState,
   formData: FormData,
 ): Promise<SiteContentFormState> {
-  await assertAdminRole();
   const { t } = await getT();
+  return runAction("website.updateVetVisitEstimate", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
 
-  const estimate = parseBahtAmount(formData.get("vetVisitEstimate") as string | null);
-  if (!estimate.ok) return { error: t.admin.website.vetVisit.invalid };
+    const estimate = parseBahtAmount(formData.get("vetVisitEstimate") as string | null);
+    if (!estimate.ok) return refuse(t.admin.website.vetVisit.invalid);
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  const { error } = await supabase
-    .from("site_content")
-    .update({
-      vet_visit_estimate: estimate.value,
-      updated_at: new Date().toISOString(),
-      updated_by: user?.id ?? null,
-    })
-    .eq("id", true);
+    const { error } = await supabase
+      .from("site_content")
+      .update({
+        vet_visit_estimate: estimate.value,
+        updated_at: new Date().toISOString(),
+        updated_by: user?.id ?? null,
+      })
+      .eq("id", true);
 
-  if (error) return { error: error.message };
+    if (error) return refuse(error.message);
 
-  revalidatePath("/admin/website");
-  // The forecast page reads this figure (next branch); it is not on any
-  // public page, so revalidateWebsitePages() is deliberately not called.
-  revalidatePath("/management/cashflow");
-  return { success: t.common.saved };
+    revalidatePath("/admin/website");
+    // The forecast page reads this figure (next branch); it is not on any
+    // public page, so revalidateWebsitePages() is deliberately not called.
+    revalidatePath("/management/cashflow");
+    return { ok: true, success: t.common.saved };
+  });
 }
 
 /**
@@ -190,33 +203,35 @@ export async function updateSitePage(
   _state: SiteContentFormState,
   formData: FormData,
 ): Promise<SiteContentFormState> {
-  await assertAdminRole();
   const { t } = await getT();
-  if (!isSitePageSlug(slug)) return { error: t.admin.website.pages.unknownPage };
+  return runAction("website.updateSitePage", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!isSitePageSlug(slug)) return refuse(t.admin.website.pages.unknownPage);
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  const title = (formData.get("title") as string | null)?.trim() ?? "";
-  if (!title) return { error: t.admin.website.pages.titleRequired };
+    const title = (formData.get("title") as string | null)?.trim() ?? "";
+    if (!title) return refuse(t.admin.website.pages.titleRequired);
 
-  const { error } = await supabase
-    .from("site_pages")
-    .update({
-      title,
-      body: (formData.get("body") as string | null)?.trim() ?? "",
-      updated_at: new Date().toISOString(),
-      updated_by: user?.id ?? null,
-    })
-    .eq("slug", slug);
+    const { error } = await supabase
+      .from("site_pages")
+      .update({
+        title,
+        body: (formData.get("body") as string | null)?.trim() ?? "",
+        updated_at: new Date().toISOString(),
+        updated_by: user?.id ?? null,
+      })
+      .eq("slug", slug);
 
-  if (error) return { error: error.message };
+    if (error) return refuse(error.message);
 
-  revalidateWebsitePages();
-  revalidatePath("/management/translations");
-  return { success: t.common.saved };
+    revalidateWebsitePages();
+    revalidatePath("/management/translations");
+    return { ok: true, success: t.common.saved };
+  });
 }
 
 /**
@@ -227,44 +242,47 @@ export async function updateSitePage(
  */
 export async function setFeaturedResident(
   residentId: string | null,
-): Promise<SiteContentFormState> {
-  await assertAdminRole();
+): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
+  return runAction("website.setFeaturedResident", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
 
-  const supabase = await createClient();
+    const supabase = await createClient();
 
-  if (residentId) {
-    const { data: visible, error: lookupError } = await supabase
-      .from("public_resident_profiles")
-      .select("id")
-      .eq("id", residentId)
-      .limit(1)
-      .returns<{ id: string }[]>();
-    if (lookupError) return { error: lookupError.message };
-    if (!visible?.length) return { error: t.admin.website.featured.notPublic };
-  }
+    if (residentId) {
+      const { data: visible, error: lookupError } = await supabase
+        .from("public_resident_profiles")
+        .select("id")
+        .eq("id", residentId)
+        .limit(1)
+        .returns<{ id: string }[]>();
+      if (lookupError) return refuse(lookupError.message);
+      if (!visible?.length) return refuse(t.admin.website.featured.notPublic);
+    }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  const { error } = await supabase
-    .from("site_content")
-    .update({
-      featured_resident_id: residentId,
-      updated_at: new Date().toISOString(),
-      updated_by: user?.id ?? null,
-    })
-    .eq("id", true);
+    const { error } = await supabase
+      .from("site_content")
+      .update({
+        featured_resident_id: residentId,
+        updated_at: new Date().toISOString(),
+        updated_by: user?.id ?? null,
+      })
+      .eq("id", true);
 
-  if (error) return { error: error.message };
+    if (error) return refuse(error.message);
 
-  revalidateWebsitePages();
-  return {
-    success: residentId
-      ? t.admin.website.featured.updated
-      : t.admin.website.featured.cleared,
-  };
+    revalidateWebsitePages();
+    return {
+      ok: true,
+      success: residentId
+        ? t.admin.website.featured.updated
+        : t.admin.website.featured.cleared,
+    };
+  });
 }
 
 async function uploadToWebsiteFolder(file: File) {
@@ -321,175 +339,186 @@ async function trashInDrive(fileId: string) {
   }
 }
 
-export async function uploadHeroPhoto(
-  formData: FormData,
-): Promise<SiteContentFormState> {
-  await assertAdminRole();
+export async function uploadHeroPhoto(formData: FormData): Promise<SiteContentFormState> {
   const { t } = await getT();
+  return runAction("website.uploadHeroPhoto", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
 
-  const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) {
-    return { error: t.admin.website.errors.noFile };
-  }
+    const file = formData.get("file");
+    if (!(file instanceof File) || file.size === 0) {
+      return refuse(t.admin.website.errors.noFile);
+    }
 
-  let driveFileId: string;
-  try {
-    driveFileId = await uploadToWebsiteFolder(file);
-  } catch (err) {
-    return { error: await driveErrorMessage(err, t.admin.website.errors.uploadFailed) };
-  }
+    let driveFileId: string;
+    try {
+      driveFileId = await uploadToWebsiteFolder(file);
+    } catch (err) {
+      return refuse(await driveErrorMessage(err, t.admin.website.errors.uploadFailed));
+    }
 
-  const supabase = await createClient();
-  const { data: current } = await supabase
-    .from("site_content")
-    .select("hero_drive_file_id")
-    .eq("id", true)
-    .limit(1)
-    .returns<{ hero_drive_file_id: string | null }[]>();
+    const supabase = await createClient();
+    const { data: current } = await supabase
+      .from("site_content")
+      .select("hero_drive_file_id")
+      .eq("id", true)
+      .limit(1)
+      .returns<{ hero_drive_file_id: string | null }[]>();
 
-  const { error } = await supabase
-    .from("site_content")
-    .update({ hero_drive_file_id: driveFileId })
-    .eq("id", true);
+    const { error } = await supabase
+      .from("site_content")
+      .update({ hero_drive_file_id: driveFileId })
+      .eq("id", true);
 
-  if (error) return { error: error.message };
+    if (error) return refuse(error.message);
 
-  const previousFileId = current?.[0]?.hero_drive_file_id;
-  if (previousFileId) await trashInDrive(previousFileId);
+    const previousFileId = current?.[0]?.hero_drive_file_id;
+    if (previousFileId) await trashInDrive(previousFileId);
 
-  revalidateWebsitePages();
-  return { success: t.admin.website.hero.updated };
-}
-
-export async function removeHeroPhoto() {
-  await assertAdminRole();
-
-  const supabase = await createClient();
-  const { data: current } = await supabase
-    .from("site_content")
-    .select("hero_drive_file_id")
-    .eq("id", true)
-    .limit(1)
-    .returns<{ hero_drive_file_id: string | null }[]>();
-
-  const { error } = await supabase
-    .from("site_content")
-    .update({ hero_drive_file_id: null })
-    .eq("id", true);
-
-  if (error) throw new Error(error.message);
-
-  const previousFileId = current?.[0]?.hero_drive_file_id;
-  if (previousFileId) await trashInDrive(previousFileId);
-
-  revalidateWebsitePages();
-}
-
-export async function uploadGalleryPhoto(
-  formData: FormData,
-): Promise<SiteContentFormState> {
-  await assertAdminRole();
-  const { t } = await getT();
-
-  const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) {
-    return { error: t.admin.website.errors.noFile };
-  }
-
-  let driveFileId: string;
-  try {
-    driveFileId = await uploadToWebsiteFolder(file);
-  } catch (err) {
-    return { error: await driveErrorMessage(err, t.admin.website.errors.uploadFailed) };
-  }
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: maxRow } = await supabase
-    .from("site_content_photos")
-    .select("sort_order")
-    .order("sort_order", { ascending: false })
-    .limit(1)
-    .returns<{ sort_order: number }[]>();
-
-  const nextSortOrder = (maxRow?.[0]?.sort_order ?? -1) + 1;
-
-  const { error } = await supabase.from("site_content_photos").insert({
-    drive_file_id: driveFileId,
-    sort_order: nextSortOrder,
-    created_by: user?.id ?? null,
+    revalidateWebsitePages();
+    return { ok: true, success: t.admin.website.hero.updated };
   });
-
-  if (error) return { error: error.message };
-
-  revalidateWebsitePages();
-  return { success: t.admin.website.gallery.photoAdded };
 }
 
-export async function deleteGalleryPhoto(photoId: string) {
-  await assertAdminRole();
+export async function removeHeroPhoto(): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("website.removeHeroPhoto", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
 
-  const supabase = await createClient();
-  const { data: photo } = await supabase
-    .from("site_content_photos")
-    .select("drive_file_id")
-    .eq("id", photoId)
-    .limit(1)
-    .returns<{ drive_file_id: string }[]>();
+    const supabase = await createClient();
+    const { data: current } = await supabase
+      .from("site_content")
+      .select("hero_drive_file_id")
+      .eq("id", true)
+      .limit(1)
+      .returns<{ hero_drive_file_id: string | null }[]>();
 
-  const { error } = await supabase
-    .from("site_content_photos")
-    .delete()
-    .eq("id", photoId);
+    const { error } = await supabase
+      .from("site_content")
+      .update({ hero_drive_file_id: null })
+      .eq("id", true);
 
-  if (error) throw new Error(error.message);
+    if (error) return refuse(error.message);
 
-  const driveFileId = photo?.[0]?.drive_file_id;
-  if (driveFileId) await trashInDrive(driveFileId);
+    const previousFileId = current?.[0]?.hero_drive_file_id;
+    if (previousFileId) await trashInDrive(previousFileId);
 
-  revalidateWebsitePages();
+    revalidateWebsitePages();
+    return { ok: true };
+  });
+}
+
+export async function uploadGalleryPhoto(formData: FormData): Promise<SiteContentFormState> {
+  const { t } = await getT();
+  return runAction("website.uploadGalleryPhoto", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+
+    const file = formData.get("file");
+    if (!(file instanceof File) || file.size === 0) {
+      return refuse(t.admin.website.errors.noFile);
+    }
+
+    let driveFileId: string;
+    try {
+      driveFileId = await uploadToWebsiteFolder(file);
+    } catch (err) {
+      return refuse(await driveErrorMessage(err, t.admin.website.errors.uploadFailed));
+    }
+
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const { data: maxRow } = await supabase
+      .from("site_content_photos")
+      .select("sort_order")
+      .order("sort_order", { ascending: false })
+      .limit(1)
+      .returns<{ sort_order: number }[]>();
+
+    const nextSortOrder = (maxRow?.[0]?.sort_order ?? -1) + 1;
+
+    const { error } = await supabase.from("site_content_photos").insert({
+      drive_file_id: driveFileId,
+      sort_order: nextSortOrder,
+      created_by: user?.id ?? null,
+    });
+
+    if (error) return refuse(error.message);
+
+    revalidateWebsitePages();
+    return { ok: true, success: t.admin.website.gallery.photoAdded };
+  });
+}
+
+export async function deleteGalleryPhoto(photoId: string): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("website.deleteGalleryPhoto", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+
+    const supabase = await createClient();
+    const { data: photo } = await supabase
+      .from("site_content_photos")
+      .select("drive_file_id")
+      .eq("id", photoId)
+      .limit(1)
+      .returns<{ drive_file_id: string }[]>();
+
+    const { error } = await supabase
+      .from("site_content_photos")
+      .delete()
+      .eq("id", photoId);
+
+    if (error) return refuse(error.message);
+
+    const driveFileId = photo?.[0]?.drive_file_id;
+    if (driveFileId) await trashInDrive(driveFileId);
+
+    revalidateWebsitePages();
+    return { ok: true };
+  });
 }
 
 export async function moveGalleryPhoto(
   photoId: string,
   direction: "up" | "down",
-) {
-  await assertAdminRole();
+): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("website.moveGalleryPhoto", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
 
-  const supabase = await createClient();
-  const { data: photos } = await supabase
-    .from("site_content_photos")
-    .select("id, sort_order")
-    .order("sort_order", { ascending: true })
-    .returns<{ id: string; sort_order: number }[]>();
-
-  if (!photos) return;
-
-  const index = photos.findIndex((p) => p.id === photoId);
-  const swapWith = direction === "up" ? index - 1 : index + 1;
-  if (index === -1 || swapWith < 0 || swapWith >= photos.length) return;
-
-  const a = photos[index];
-  const b = photos[swapWith];
-
-  const [{ error: errorA }, { error: errorB }] = await Promise.all([
-    supabase
+    const supabase = await createClient();
+    const { data: photos } = await supabase
       .from("site_content_photos")
-      .update({ sort_order: b.sort_order })
-      .eq("id", a.id),
-    supabase
-      .from("site_content_photos")
-      .update({ sort_order: a.sort_order })
-      .eq("id", b.id),
-  ]);
+      .select("id, sort_order")
+      .order("sort_order", { ascending: true })
+      .returns<{ id: string; sort_order: number }[]>();
 
-  if (errorA || errorB) {
-    const { t } = await getT();
-    throw new Error(errorA?.message ?? errorB?.message ?? t.common.failedToReorder);
-  }
+    if (!photos) return { ok: true };
 
-  revalidateWebsitePages();
+    const index = photos.findIndex((p) => p.id === photoId);
+    const swapWith = direction === "up" ? index - 1 : index + 1;
+    if (index === -1 || swapWith < 0 || swapWith >= photos.length) return { ok: true };
+
+    const a = photos[index];
+    const b = photos[swapWith];
+
+    const [{ error: errorA }, { error: errorB }] = await Promise.all([
+      supabase
+        .from("site_content_photos")
+        .update({ sort_order: b.sort_order })
+        .eq("id", a.id),
+      supabase
+        .from("site_content_photos")
+        .update({ sort_order: a.sort_order })
+        .eq("id", b.id),
+    ]);
+
+    if (errorA || errorB) {
+      return refuse(errorA?.message ?? errorB?.message ?? t.common.failedToReorder);
+    }
+
+    revalidateWebsitePages();
+    return { ok: true };
+  });
 }

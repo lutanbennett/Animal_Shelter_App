@@ -61,10 +61,10 @@ export function VetVisitEstimate({ estimate }: { estimate: number | null }) {
 
       <p className="text-xs text-muted">{v.hint}</p>
 
-      {state && "error" in state && (
+      {state && !state.ok && (
         <p className="text-sm text-danger">{state.error}</p>
       )}
-      {state && "success" in state && (
+      {state && state.ok && (
         <p className="text-sm text-success">{state.success}</p>
       )}
     </form>

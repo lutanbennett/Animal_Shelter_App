@@ -44,23 +44,16 @@ function BloodTestTypeRowItem({
     setMode("view");
   }
 
-  function fail(err: unknown, fallback: string) {
-    setMessage({
-      type: "error",
-      text: err instanceof Error ? err.message : fallback,
-    });
-  }
-
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
-      try {
-        await updateBloodTestType(bloodTestType.id, { name });
-        setMode("view");
-        setMessage({ type: "success", text: t.common.saved });
-      } catch (err) {
-        fail(err, t.common.failedToSave);
+      const result = await updateBloodTestType(bloodTestType.id, { name });
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
+        return;
       }
+      setMode("view");
+      setMessage({ type: "success", text: t.common.saved });
     });
   }
 
@@ -68,10 +61,9 @@ function BloodTestTypeRowItem({
     if (!window.confirm(p.deleteConfirm(bloodTestType.name))) return;
     setMessage(null);
     startTransition(async () => {
-      try {
-        await deleteBloodTestType(bloodTestType.id);
-      } catch (err) {
-        fail(err, t.common.failedToDelete);
+      const result = await deleteBloodTestType(bloodTestType.id);
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
       }
     });
   }
@@ -92,10 +84,9 @@ function BloodTestTypeRowItem({
     }
     setMessage(null);
     startTransition(async () => {
-      try {
-        await mergeBloodTestType(bloodTestType.id, target.id);
-      } catch (err) {
-        fail(err, p.errors.mergeFailed);
+      const result = await mergeBloodTestType(bloodTestType.id, target.id);
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
       }
     });
   }

@@ -20,7 +20,7 @@ export function CreateFrequencyForm() {
   const [clearedFor, setClearedFor] = useState(state);
   if (state !== clearedFor) {
     setClearedFor(state);
-    if (state && "success" in state) setSchedule(EMPTY_SCHEDULE_FIELDS);
+    if (state && state.ok) setSchedule(EMPTY_SCHEDULE_FIELDS);
   }
 
   return (
@@ -52,10 +52,10 @@ export function CreateFrequencyForm() {
       >
         {pending ? t.common.creating : f.createForm.addButton}
       </button>
-      {state && "error" in state && (
+      {state && !state.ok && (
         <p className="w-full text-sm text-danger">{state.error}</p>
       )}
-      {state && "success" in state && (
+      {state && state.ok && (
         <p className="w-full text-sm text-success">{state.success}</p>
       )}
     </form>

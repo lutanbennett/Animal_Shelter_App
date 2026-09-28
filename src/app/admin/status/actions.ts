@@ -3,16 +3,28 @@
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { type ActionResult, runAction } from "@/lib/action-result";
-import { assertAdminRole, hasAdminRole } from "@/lib/auth/require-admin";
+import { hasAdminRole } from "@/lib/auth/require-admin";
 import { getT } from "@/lib/i18n/get-t";
 import { runStatusAlerts, sendTestAlert, type Skipped } from "@/lib/status/alerts";
 import { clearStatusCache } from "@/lib/status/run";
 
-/** "Check now": forget the minute's cached results and render again. */
-export async function checkNow() {
-  await assertAdminRole();
-  clearStatusCache();
-  revalidatePath("/admin/status");
+/**
+ * "Check now": forget the minute's cached results and render again. Called
+ * as a raw `<form action={checkNow}>` on page.tsx (a server component)
+ * with no `useActionState` reading its result — it still returns
+ * ActionResult rather than throwing, for the same #441 reason as every
+ * other admin action, even though nothing reads the return value today.
+ */
+export async function checkNow(): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("status.checkNow", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) {
+      return { ok: false, error: t.admin.security.errors.adminAccessRequired };
+    }
+    clearStatusCache();
+    revalidatePath("/admin/status");
+    return { ok: true };
+  });
 }
 
 /** This site's origin, for the link in the mail. */
