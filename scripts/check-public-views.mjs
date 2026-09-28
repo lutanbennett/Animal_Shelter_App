@@ -204,5 +204,31 @@ if (internalFile) {
   console.log("skip  is_public_drive_file(): no blood-test or procedure file to ask about");
 }
 
+// A PDF (or any non-image) filed in a public project folder (0109): neither
+// the gallery view nor the proxy should show it, only the images beside it.
+// attachments.owner_id is polymorphic (no FK PostgREST can embed through),
+// so the public folder ids are fetched first.
+const serviceHeaders = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` };
+const publicFolderIds = await fetch(
+  `${url}/rest/v1/project_folders?select=id&is_public=eq.true&parent_folder_id=not.is.null&limit=1000`,
+  { headers: serviceHeaders },
+).then((r) => (r.ok ? r.json() : []));
+const publicNonImage = publicFolderIds.length
+  ? await fetch(
+      `${url}/rest/v1/attachments?select=drive_file_id&owner_type=eq.project` +
+        `&owner_id=in.(${publicFolderIds.map((f) => f.id).join(",")})` +
+        `&file_name=not.imatch.*\\.(jpe?g|png|webp|heic|heif|gif)$&limit=1`,
+      { headers: serviceHeaders },
+    )
+      .then((r) => (r.ok ? r.json() : []))
+      .then((rows) => rows[0]?.drive_file_id)
+  : undefined;
+if (publicNonImage) {
+  const answer = await anonIsPublic(publicNonImage);
+  report(answer === false, "is_public_drive_file(): no for a non-image attachment in a public project folder", String(answer));
+} else {
+  console.log("skip  is_public_drive_file(): no non-image attachment in a public project folder to ask about");
+}
+
 console.log(`\nProject: ${new URL(url).hostname}`);
 process.exit(failed ? 1 : 0);
