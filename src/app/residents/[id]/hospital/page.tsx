@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { placeName } from "@/lib/enclosures/names";
 import { formatDate, todayIso } from "@/lib/format";
+import { visitDate } from "@/lib/vets/linkable";
 import { HOSPITAL_ROLES } from "@/lib/placements/hospital";
 import { PLACEMENT_ICONS } from "@/components/hub-icons";
 import { SendToHospitalForm } from "./SendToHospitalForm";
@@ -91,8 +92,8 @@ export default async function SendToHospitalPage(
 
   const visit = visitResult.data?.[0] ?? null;
   const today = todayIso();
-  const visitDate = visit?.appointment_date.slice(0, 10) ?? null;
-  const defaultDate = visitDate && visitDate <= today ? visitDate : today;
+  const visitDay = visit ? visitDate(visit) : null;
+  const defaultDate = visitDay && visitDay <= today ? visitDay : today;
   const defaultNotes = visit
     ? t.residents.hospital.visitNote(
         formatDate(visit.appointment_date, locale),
