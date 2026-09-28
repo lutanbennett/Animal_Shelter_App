@@ -1700,6 +1700,9 @@ const en = {
         visits: "Visits",
         visitCount: (n: number) => `${n} visit${n === 1 ? "" : "s"}`,
         noVets: "No vets yet.",
+        doctors: "Doctors",
+        doctorCount: (n: number) => `${n} doctor${n === 1 ? "" : "s"}`,
+        noDoctors: "None yet",
       },
       deleteConfirm: (name: string) => `Delete vet "${name}"? This can't be undone.`,
       createdVet: (name: string) => `Created vet "${name}".`,
@@ -1707,6 +1710,65 @@ const en = {
         nameRequired: "Name is required.",
         hasVisits: (n: number) =>
           `This vet has ${n} logged visit${n === 1 ? "" : "s"} and can't be deleted — the visits are part of the residents' medical records.`,
+      },
+    },
+    vetDoctors: {
+      back: "← Back to vets",
+      title: (vet: string) => `Doctors at ${vet}`,
+      subtitle:
+        "This list fills itself: every doctor's name typed on a visit with this vet is added here, and the visit forms suggest the names on it. Use this page to put it right — rename a misspelling, merge two spellings of one person, and mark a doctor who has left so they are no longer suggested.",
+      viewHub: "View this vet's visits →",
+      couldntLoad: "Couldn't load the doctors",
+      couldntLoadVisits: "Couldn't load visit counts",
+      addForm: {
+        name: "Add a doctor",
+        namePlaceholder: "e.g. Dr Ploy",
+        addButton: "Add doctor",
+        hint: "Only needed for a doctor nobody has recorded a visit with yet — anyone typed on a visit is added automatically.",
+      },
+      added: (name: string) => `Added "${name}".`,
+      table: {
+        name: "Doctor",
+        visits: "Visits",
+        visitCount: (n: number) => `${n} visit${n === 1 ? "" : "s"}`,
+        lastVisit: (date: string) => `Last: ${date}`,
+        noDoctors:
+          "No doctors yet. They appear here when a doctor's name is recorded on a visit with this vet, or add one above.",
+        leftHeading: (n: number) => `No longer at the clinic (${n})`,
+      },
+      leftBadge: "Left",
+      rename: "Rename",
+      renameReach: (n: number, name: string) =>
+        `Saving changes the doctor on ${n} recorded visit${n === 1 ? "" : "s"} to "${name}", past visits included.`,
+      renameConfirm: (from: string, to: string, n: number) =>
+        `Rename "${from}" to "${to}"?\n\nThe doctor's name changes on ${n === 1 ? "the visit" : `all ${n} visits`} linked to them, past ones included, everywhere the visit is shown.\n\nIf "${to}" is someone already on the list, cancel and use Merge… instead.`,
+      markLeft: "Mark as left",
+      markLeftHint: "Stops suggesting them on the visit forms. Their visits keep their name.",
+      markActive: "Back at the clinic",
+      possibleDuplicate: (names: string) => `Possibly the same person as ${names}`,
+      duplicatesNote: (n: number) =>
+        `${n} names below may be one doctor written more than one way — each is marked. If so, use Merge… on the spelling to drop.`,
+      merge: {
+        open: "Merge…",
+        into: "Merge into",
+        pickTarget: "Merge into…",
+        leftOption: (name: string) => `${name} (left)`,
+        button: "Merge",
+        hint: (name: string, n: number) =>
+          `Choose the spelling to keep. ${n === 0 ? `"${name}" has no visits` : `${n === 1 ? "The visit" : `The ${n} visits`} recorded with "${name}" will show the kept name`}, and "${name}" leaves the list.`,
+      },
+      mergeConfirm: (from: string, into: string, n: number) =>
+        `Merge "${from}" into "${into}"?\n\n${n === 0 ? `"${from}" has no visits.` : `${n === 1 ? "The visit" : `The ${n} visits`} recorded with "${from}" will show "${into}" instead, past ones included.`} "${from}" is removed from the list.\n\nThis can't be undone.`,
+      deleteConfirm: (name: string) => `Remove "${name}" from the list? This can't be undone.`,
+      errors: {
+        nameRequired: "Enter the doctor's name.",
+        alreadyListed: (name: string) => `"${name}" is already on this vet's list.`,
+        renameClash: (name: string) =>
+          `"${name}" is already on this vet's list. If it is the same person, use Merge… instead of renaming.`,
+        hasVisits: (n: number) =>
+          `This doctor is on ${n} recorded visit${n === 1 ? "" : "s"}, so they can't be removed — merge them into another spelling, or mark them as left.`,
+        mergeSelf: "Choose a different doctor to merge into.",
+        mergeFailed: "Merge failed.",
       },
     },
     diets: {
@@ -2099,8 +2161,6 @@ const en = {
       notYourClinic: "You can only record visits for your own clinic.",
       prescriptionsBlockFuture:
         "This visit has prescriptions linked to it, so it can't be moved to a day after today. Unlink them from the prescriptions first, or keep the visit on the day it happened.",
-      doctorNotSaved: (message: string) =>
-        `The visit was booked, but the doctor's name wasn't saved (${message}). Add it with Edit on the resident's Vet Appointments tab — don't book again.`,
     },
   },
 
@@ -2111,6 +2171,7 @@ const en = {
     couldntLoadVets: "Couldn't load vets",
     couldntLoadVisits: "Couldn't load vet visits",
     manageInAdmin: "Edit vet details in Management",
+    manageDoctors: "Manage the doctor list",
     list: {
       visits: "Visits",
       residents: "Residents",
@@ -2176,6 +2237,12 @@ const en = {
       visitsHeading: "Visits",
       showingOf: (shown: number, total: number) => `(latest ${shown} of ${total})`,
       noVisitsInPeriod: "No visits with this vet in this period.",
+      doctors: {
+        heading: "Doctors",
+        visits: (n: number) => `${n} visit${n === 1 ? "" : "s"}`,
+        none: "No doctors recorded yet. A doctor's name typed on a visit with this vet is added here.",
+        left: (n: number) => `+ ${n} no longer at the clinic`,
+      },
       unknownResident: "Unknown resident",
     },
   },
