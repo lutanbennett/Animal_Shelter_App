@@ -483,6 +483,22 @@ const prescriptions = keepIfResident(src.Prescriptions, "RID", "Prescriptions")
     return false;
   });
 
+// No prescription on a visit after today (0107's trigger), applied here as
+// the database does, so a snapshot that breaks it loads the prescription
+// unlinked with a note instead of failing the whole import. Visits load at
+// 09:00 Bangkok on their date, so the date is the shelter day. The
+// 2026-09-21 snapshot has none (its latest visit is 2020-12-11).
+{
+  const shelterToday = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok" }).format(new Date());
+  const visitDay = new Map(appointments.map((a) => [a.id, a.date]));
+  for (const p of prescriptions) {
+    if (p.appointmentId && visitDay.get(p.appointmentId) > shelterToday) {
+      note("orphan-rows", `Prescription ${p.appsheetId}: its visit on ${visitDay.get(p.appointmentId)} is after today → unlinked`);
+      p.appointmentId = null;
+    }
+  }
+}
+
 const immunizations = keepIfResident(src["Immunization History"], "RID", "Immunization History")
   .map((i) => ({
     id: uuid("immunization_records", i.ID),
