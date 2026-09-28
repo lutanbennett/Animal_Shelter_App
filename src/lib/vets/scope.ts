@@ -9,8 +9,9 @@ import { loadCurrentRole } from "@/lib/auth/app-access";
  * than shown every clinic: Lutan's call, 2026-09-27 (docs/decisions.md).
  *
  * This is the forms' and actions' rule, not RLS: the database still lets a
- * vet write a visit for any clinic. Holding it in policies belongs with the
- * resident-level scope item, where a vet's database access is being decided.
+ * vet write a visit for any clinic, on a resident they can see. Which
+ * residents they can see is RLS (0108, current_vet_resident_ids()), and
+ * /residents uses this scope only to say whose list it is.
  */
 export type VetScope =
   | { kind: "any" }

@@ -41,7 +41,7 @@ const manual: Manual = {
       "Everything staff can do, plus the Management section: the reporting dashboard, the contact, vet, medication and diet lists, and the translations of public text.",
     staff:
       "Day-to-day resident work: intake, moves, hospital, foster and adoption, photos, maintenance, projects. Can read medical records.",
-    vet: "Vet visits, procedures, blood tests, prescriptions and immunizations. Can read resident details. The menu is My tasks and Residents only — the shelter's enclosures, maintenance, projects, contacts and vet list are not part of a vet's access.",
+    vet: "Vet visits, procedures, blood tests, prescriptions and immunizations, for the residents their own clinic treats — any resident the clinic has a visit, prescription, procedure or blood test for, with that resident's whole history. Other residents are not shown at all. The menu is My tasks and Residents only — the shelter's enclosures, maintenance, projects, contacts and vet list are not part of a vet's access.",
     volunteer:
       "Can see everything; can add photos and move residents between enclosures.",
   },
@@ -288,6 +288,10 @@ const manual: Manual = {
             {
               kind: "tip",
               text: "Searching for an animal who has died still finds them: the count line says \"1 deceased resident matches — show\", and show adds them to the list.",
+            },
+            {
+              kind: "note",
+              text: "Signed in as a vet, the list is your clinic's: every resident your clinic has a vet visit, prescription, procedure or blood test for — a cancelled visit included — and no one else. The line under the heading names the clinic. A resident appears once the shelter books them a visit with you, and their hub shows all of their history, other clinics' visits included. A vet account with no clinic set sees no residents until an admin sets one (Accounts and roles).",
             },
           ],
         },
@@ -1187,7 +1191,7 @@ const manual: Manual = {
             "Create a user with an email and a role. A temporary password is generated and shown once — copy it and pass it on (LINE is fine; it only works until they've signed in). The first time they sign in with it they must choose their own password before anything else opens. Someone who will only use Google sign-in can ignore the temporary password.",
             "Someone signing in with Google for the first time is turned away with \"hasn't been given access yet\" and appears under Access requests at the top of the page. Choose a role and tap Approve, then ask them to try again — or Deny to remove the account. If their Google email matches a login you created, the two are linked automatically.",
             "Change a role from the dropdown in the table. Issue temporary password does what it says — their old password stops working and they choose a new one at their next sign-in. You can't change your own role, reset your own password here or delete yourself; change your own password from Change password at the bottom of the menu.",
-            "A vet account also needs its clinic: choose it from the Clinic dropdown that appears under the role. The vet-visit forms then offer that clinic only, and a vet account with no clinic set can't record visits until one is chosen, so it's outlined as a reminder. Changing the role away from vet clears the clinic.",
+            "A vet account also needs its clinic: choose it from the Clinic dropdown that appears under the role. The vet-visit forms then offer that clinic only, and the account sees only the residents that clinic has a visit, prescription, procedure or blood test for. A vet account with no clinic set sees no residents and can't record visits until one is chosen, so it's outlined as a reminder. Changing the role away from vet clears the clinic.",
             "Public viewer is for testing the website as a visitor while the testing sites are closed to the public: it signs in, sees every public page exactly as a stranger will once the site is open, and never sees the app — any app address sends it to the home page, and the public header offers only Sign out. Give it to testers, never to staff.",
             "When someone leaves, Archive them rather than delete: they can no longer sign in, they disappear from the maintenance Assigned to list, and their name stays on the jobs they did. Archived accounts sit at the bottom of the table with Restore beside them. Delete is for accounts made by mistake — it removes them from past jobs too.",
           ],

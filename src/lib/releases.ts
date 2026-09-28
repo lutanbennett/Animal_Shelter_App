@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "A vet now sees only the residents their own clinic treats: any resident the clinic has a vet visit, prescription, procedure or blood test for, with that resident's whole history, other clinics' visits included. Other residents no longer appear anywhere a vet can look, including by typing a resident's address. The Residents list names the clinic, and a vet account with no clinic set sees no residents until an admin sets one under Security.", roles: ["vet", "admin"] },
   { text: "Admins can now see whether anyone is waiting for access without signing in with the authenticator app. Settings → System status has an Access requests card saying how many are waiting and how long the oldest has waited, and while anyone waits every admin has a Review access requests task at the top of My tasks. Neither says who is asking — names and email addresses are still only on Settings → Security, which both link to.", roles: ["admin"] },
 ];
 

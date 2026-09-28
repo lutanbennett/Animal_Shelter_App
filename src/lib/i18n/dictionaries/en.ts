@@ -2739,6 +2739,15 @@ const en = {
       showAllDeceased: "Show all",
       hideDeceased: "Hide deceased",
       couldntLoad: "Couldn't load residents",
+      /**
+       * A vet's list is scoped by the database to their clinic (0108), so it
+       * says whose list it is — otherwise a short list reads as missing
+       * residents.
+       */
+      vetScope: (clinic: string) =>
+        `Showing the residents ${clinic} has a vet visit, prescription, procedure or blood test for. A resident appears here once the shelter books them a visit with your clinic.`,
+      vetScopeNoClinic:
+        "Your account isn't linked to a clinic yet, so no residents are shown. Ask a shelter admin to set your clinic in Settings → Security.",
       selectedCount: (n: number) => `${n} selected`,
       selectPrompt: "Select residents to act on several at once.",
       logImmunizations: "Log immunizations",
