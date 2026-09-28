@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "Five more places take a UTC day for a shelter day." |
 | Branch / worktree | `claude/shelter-day-sweep` @ `C:\Development\Animal_Shelter_shelter-day-sweep` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3015` |
-| PR | opened from this commit |
+| PR | #198 |
 | Tested by / date | Claude (shelter-day-sweep session), 2026-09-28. **Not signed in** in the browser pane: reading the dev test user's credentials was refused this session, so every check below is scripted against real dev rows and the real exported helper, and the browser checks are in *Left for manual verification* |
 | Carries a migration? | no |
 | Tested at SHA | `e7d2f31` (fix `ad44891` + sync with `origin/main` at `ac8a722`); this plan is the commit after it |
@@ -33,7 +33,15 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+Re-run after a second sync, which brought #199 (vet resident scope) and a second `releases.ts` conflict (both lines kept), at `6b39a52`:
+
+```
+=== gates: build exited 0 after 287s
+
+gates: typecheck=0 lint=0 build=0
+```
+
+- [x] CI green on the PR (#198): `check`, `test-plan` and `migration-numbers` all passed at `dd31ef2`, before #199 made the PR conflict; re-run on the merge commit before merging
 
 ## 3. Schema and data — *skip if no migration*
 
