@@ -29,6 +29,15 @@
 === gates: build exited 0 after 376s
 gates: typecheck=0 lint=0 build=0
 ```
+
+  After syncing `utc-visit-date` (#194) (a `releases.ts` conflict, both `unreleased` lines kept, `8545111`), a run printed `gates: typecheck=0 lint=0 build=1`. Its build output was not kept; next dev had been running in this folder against the same `.next` and was stopped by the app during that run. CI's build passed at the same SHA. After the next sync (#196, clean) the run was repeated with the dev server stopped, at `c55cb9e`:
+
+```
+=== gates: typecheck exited 0 after 40s
+=== gates: lint exited 0 after 60s
+=== gates: build exited 0 after 117s
+gates: typecheck=0 lint=0 build=0
+```
 - [x] CI green on the PR (runs the same three) — #195 at `fca16d4`: check, migration-numbers and test-plan all pass (run 36371005475)
 
 ## 3. Schema and data — *skip if no migration*
@@ -81,7 +90,7 @@ All in the built-in browser against `next dev` on :3012 and the dev database, si
 
 - [x] The pages nearest the change still work (list the ones checked) — `/manual` as a vet (still "Showing the 19 topics for the Vet role", the #189 count); the release mail, by running `buildReleaseMail` under Node type stripping with a plain and a tagged note: both lines in the text and HTML, the tagged one escaped (`&#38;`), no `[object Object]`, and 0.8.0 still yields its 9 lines
 - [x] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a second, unrelated page — `manual/en.ts` by loading `/manual` (above); `releases.ts` by loading `/releases` and running the mail builder that imports it; `check-test-plan.mjs` by running it on this branch (section 7)
-- [x] Nothing merged from `main` during `sync` was broken by this branch — nothing was merged: sync reported already up to date
+- [x] Nothing merged from `main` during `sync` was broken by this branch — the first sync was already up to date; two later syncs brought in `utc-visit-date` (#194, `unreleased` conflict resolved by keeping both lines; its blood-test line is untagged, so everyone sees it) and #196 (clean). Gates and CI green on the result, `c55cb9e`
 
 ## 7. Documentation
 
