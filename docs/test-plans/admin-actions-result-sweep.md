@@ -11,7 +11,7 @@
 | PR | opened from this branch |
 | Tested by / date | Claude / 2026-09-28 |
 | Carries a migration? | no |
-| Tested at SHA | `4ec7842` (the code fix); docs/test plan follow in a later commit on the same branch |
+| Tested at SHA | `d75b3f9` (after `node scripts/worktree.mjs sync` merged in `origin/main`, which had moved to `42ac098` — #201/#202 and the "no Auto-fix" CLAUDE.md rule) |
 
 ## 1. Scope and risk
 
@@ -22,28 +22,16 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — n/a for this run: this worktree was set up for today's batch 4 and had no `origin/main` commits to merge in beyond what it was created from; `git status -sb` shows the branch even with `origin/claude/admin-actions-result-sweep` throughout, no merge was needed
-- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`:
+- [x] `node scripts/worktree.mjs sync` — run after the docs commit: `origin/main` had moved to `42ac098` (#201 `0109_public_project_photos_exclude_non_images.sql`, #202, and the new "no Auto-fix" CLAUDE.md rule) while this branch was in progress. Merged clean (`Auto-merging docs/backlog.md`, `Auto-merging docs/decisions.md`, no conflicts), pushed; `git status -sb` shows even with `origin/claude/admin-actions-result-sweep` afterwards
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`, run again after the sync above so it reflects the merged tree:
 
 ```
-=== gates: build exited 0 after 189s
-
-Route (app)
-┌ ƒ /
-├ ƒ /admin
-├ ƒ /admin/blood-test-types
-├ ƒ /admin/enclosures
-├ ƒ /admin/frequencies
-├ ƒ /admin/immunization-types
-├ ƒ /admin/procedure-types
-├ ƒ /admin/security
-├ ƒ /admin/status
-├ ƒ /admin/website
-├ ƒ /admin/zones
-… (63 routes total)
+=== gates: build exited 0 after 126s
 
 gates: typecheck=0 lint=0 build=0
 ```
+
+(An earlier run before the sync, at `4ec7842`+docs, also ended `gates: typecheck=0 lint=0 build=0` with all eight converted `/admin` routes present in the route list.)
 
 - [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
 
