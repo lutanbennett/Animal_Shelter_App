@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "A prescription should not be attachable to a future vet visit." (ticked by the feature PR, `claude/prescription-no-future-visit`, which carries the form half) |
 | Branch / worktree | `claude/schema-prescription-no-future-visit` @ `C:\Development\Animal_Shelter_schema-prescription-no-future-visit` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3011` |
-| PR | opened with this plan |
+| PR | #191 |
 | Tested by / date | Claude, 2026-09-28 |
 | Carries a migration? | yes — `0107_prescriptions_visit_not_in_future.sql` |
 | Tested at SHA | `61e8fd4` on `origin/main` @ `531e199` (`sync`: already up to date) |
@@ -32,7 +32,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: #191 at `8375119` — `check` pass (1m21s), `migration-numbers` pass, `test-plan` pass
 
 ## 3. Schema and data
 
@@ -188,7 +188,7 @@ Manual verification by: n/a: no UI surface — nothing a person could look at ch
 ### Result
 
 - [ ] Open defects are either fixed or explicitly accepted above — n/a: none found
-- [x] Checklist pasted into the PR (PR body)
+- [x] Checklist pasted into the PR (#191 body)
 - [ ] Handed to the production release manager — n/a: not yet — after merge
 
 Result: pass
