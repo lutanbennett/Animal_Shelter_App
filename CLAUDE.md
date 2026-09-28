@@ -76,6 +76,28 @@ two or three at once; more than that and merging becomes the bottleneck.
    turns it on from the PR bar himself if he wants it. Mention it only
    if CI has actually gone red, and then in a clause, not a question of
    its own.
+
+   **Wait by being notified, never by polling.** Once the PR is open,
+   bind it with the `ccd_pr` tools and let the CI monitor wake you.
+   Never schedule your own check-in for CI and never poll
+   `gh pr checks` in a loop. On 2026-09-28 #201 scheduled its own
+   wakeup, the wakeup never delivered, and three green checks sat
+   unmerged for an hour while the session looked from the outside
+   exactly like one that was still working.
+
+   **Do not hand the bulk of a task to a long background agent.** Work
+   in short foreground batches instead. A foreground command that fails
+   gives you an error; a background agent that dies gives you silence,
+   and silence is indistinguishable from progress. The same day, the
+   `admin-actions-result-sweep` stream delegated eleven files to one
+   background agent, which produced a 0-byte output file and no edits —
+   the session then sat idle waiting for a notification that was never
+   coming.
+
+   **Commit before you wait or delegate.** Both failures above were
+   recoverable only because little had been done; the sweep still had
+   an hour of elapsed time against one uncommitted file. A commit is
+   the only checkpoint that survives a session stalling.
 5. **Stale streams.** `node scripts/worktree.mjs list` shows each
    worktree's dirty files, how far it is beyond `main`, unpushed
    commits, and `held`: whether any process has the folder open, with the
