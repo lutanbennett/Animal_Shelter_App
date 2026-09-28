@@ -67,6 +67,15 @@ two or three at once; more than that and merging becomes the bottleneck.
    serial: after each one, every other live workstream runs `sync` so the
    next PR is already integrated. A branch that outlives its PR is how
    work gets stacked and lost.
+
+   **Do not offer Auto-fix.** The desktop app's PR bar has an Auto-fix
+   switch, and the harness prompts every session to offer it once the PR
+   is open. Leave it off and say nothing about it: with three streams a
+   batch that is one approval card per PR, and across 2026-09-23 to
+   2026-09-28 not one of them ever had a red check to act on. Lutan
+   turns it on from the PR bar himself if he wants it. Mention it only
+   if CI has actually gone red, and then in a clause, not a question of
+   its own.
 5. **Stale streams.** `node scripts/worktree.mjs list` shows each
    worktree's dirty files, how far it is beyond `main`, unpushed
    commits, and `held`: whether any process has the folder open, with the
