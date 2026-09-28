@@ -23,6 +23,7 @@ import {
   formatDate,
   formatWeightDelta,
   formatWeightKg,
+  todayIso,
 } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -323,7 +324,7 @@ export function ResidentHub({
       : t.residents.hub.vetTotalVisits(vetAppointments.length);
 
   // Prescriptions
-  const today = now.slice(0, 10);
+  const today = todayIso(new Date(now));
   const activePrescriptions = prescriptions.filter(
     (p) => !p.end_date || p.end_date >= today,
   );

@@ -71,6 +71,7 @@ export const unreleased: ReleaseNote[] = [
   "A prescription can only be linked to a vet visit that has already happened. The linked-visit list on the prescription form leaves out visits still to come, a visit still to come no longer has an Add prescription link on the Vet Appointments page, and a visit that has prescriptions linked to it can no longer be moved to a later day than today. A prescription already linked to a visit keeps its link when it is edited.",
   "Release notes now open on what changed for your own role, like the manual: a vet no longer reads about stocktake or the website. Every release stays in the list with its number, and one with nothing for you says so. Show everything, at the top of the page, brings back the rest, greyed where it isn't for your role. Changes from before this release are shown to everyone, as they always were.",
   "A blood test or procedure logged from a vet visit between midnight and 7 in the morning now takes that visit's date. It used to fill in the day before. Sending a resident to hospital from such a visit also starts on the visit's own day.",
+  "A prescription or diet that ended yesterday no longer shows as current on a resident's page between midnight and 7 in the morning. It used to stay listed as current until 7. The date on Return from hospital, Rehome and Return to shelter also no longer offers the day before a move made in those hours, which the save then refused.",
 ];
 
 /** Newest first. */

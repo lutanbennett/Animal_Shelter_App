@@ -4,7 +4,7 @@ import { useActionState, useRef, useState } from "react";
 import Link from "next/link";
 import { returnToShelter } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { formatDate } from "@/lib/format";
+import { formatDate, todayIso } from "@/lib/format";
 import type { EnclosureOption, ZoneOption } from "@/lib/enclosures/options";
 import {
   EnclosurePicker,
@@ -134,7 +134,7 @@ export function ReturnToShelterForm({
                 name="date"
                 type="date"
                 required
-                min={leftOn?.slice(0, 10)}
+                min={leftOn ? todayIso(new Date(leftOn)) : undefined}
                 max={today}
                 defaultValue={today}
                 className={inputClass}
