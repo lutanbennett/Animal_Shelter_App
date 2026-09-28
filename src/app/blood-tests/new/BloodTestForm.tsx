@@ -12,6 +12,7 @@ import {
 } from "@/components/DeferredUploads";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate, todayIso } from "@/lib/format";
+import { visitDate } from "@/lib/vets/linkable";
 
 export type BloodTestTypeOption = { id: string; name: string };
 export type VetAppointmentOption = {
@@ -64,7 +65,7 @@ export function BloodTestForm({
   const [date, setDate] = useState(() => {
     if (preselectedVetAppointmentId) {
       const match = vetAppointments.find((a) => a.id === preselectedVetAppointmentId);
-      if (match) return match.appointment_date.slice(0, 10);
+      if (match) return visitDate(match);
     }
     return todayIso();
   });
@@ -74,7 +75,7 @@ export function BloodTestForm({
   function handleVetAppointmentChange(id: string) {
     if (dateTouched || !id) return;
     const match = vetAppointments.find((a) => a.id === id);
-    if (match) setDate(match.appointment_date.slice(0, 10));
+    if (match) setDate(visitDate(match));
   }
 
   async function uploadPending(bloodTestId: string, items?: PendingFile[]) {
