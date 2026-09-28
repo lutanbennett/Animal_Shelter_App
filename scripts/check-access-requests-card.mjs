@@ -50,6 +50,7 @@ const adminEmail = `harness-access-admin-${tag}@example.invalid`;
 const adminPassword = randomBytes(18).toString("base64url");
 const requesterEmail = `harness-access-request-${tag}@example.invalid`;
 const requesterName = `Harness Requester ${tag}`;
+const staffEmail = `harness-access-staff-${tag}@example.invalid`;
 
 /** The session cookies the app's own SSR client would set, for a password sign-in. */
 async function signInCookies(email, password) {
@@ -123,6 +124,28 @@ try {
   expect(my.html.includes("Review access requests"), "My tasks has Review access requests");
   expect(my.html.includes(`${baseline + 1} waiting for a role`), `the task says ${baseline + 1} waiting`);
   expect(leaks(my.html).length === 0, `no name or email on /my (${leaks(my.html).join(", ") || "none"})`);
+  // A fresh admin has nothing else assigned, so the badge is this task alone.
+  expect(my.html.includes("1 due today or overdue"), "the My tasks badge counts it");
+
+  // Staff: no card, no task — the page is admin-only and the source is too.
+  const { data: s, error: sErr } = await service.auth.admin.createUser({
+    email: staffEmail,
+    password: adminPassword,
+    email_confirm: true,
+  });
+  if (sErr) throw sErr;
+  made.push(s.user.id);
+  const { error: sRoleErr } = await service.from("user_roles").insert({ user_id: s.user.id, role: "staff" });
+  if (sRoleErr) throw sRoleErr;
+  const staffCookie = await signInCookies(staffEmail, adminPassword);
+  const staffStatus = await page("/admin/status", staffCookie);
+  expect(
+    !/access requests? waiting|Waiting for access/.test(staffStatus.html),
+    `staff get no card on /admin/status (${staffStatus.status}${staffStatus.location ? ` → ${staffStatus.location}` : ""})`,
+  );
+  const staffMy = await page("/my", staffCookie);
+  expect(staffMy.status === 200 && !staffMy.html.includes("Review access requests"), "staff have no Review access requests task");
+  expect(leaks(staffStatus.html + staffMy.html).length === 0, "no name or email for staff either");
 
   const security = await page("/admin/security", cookie);
   // A 3xx before anything streams; once loading.tsx has started the stream,
