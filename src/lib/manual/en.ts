@@ -688,6 +688,7 @@ const manual: Manual = {
             "Drop photos on the upload area or tap it to choose from your phone. You can select several at once.",
             "The first photo ever uploaded becomes the profile photo. To change it, hover or tap a photo and choose Set as profile photo, or pick one on the Edit page. A Medical photo can't be chosen as the profile photo, because the profile photo is what the website shows. If the first photo was a Medical one, it stays the profile photo inside the app but the website shows no photo — choose one from another folder to give the resident a picture there.",
             "Photos an adopter sent carry a coloured label with who sent them, the date and how they came in, and opening one links back to its update. Once a resident has both kinds, the buttons above the gallery show just the shelter's photos or just the adopters'. Adopters' photos are added from Adoption updates, not here.",
+            "Filed a photo under the wrong folder — a Medical photo recorded as Shelter, say? Open it and use Move to folder to refile it, in Drive and in the app together, without losing its date taken or caption. A vet can only move a photo into Medical, not out of it. Moving the profile photo into Medical is refused — choose a different profile photo first.",
           ],
           screenshot: {
             src: "/manual/resident-photos.png",

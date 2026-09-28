@@ -248,6 +248,7 @@ export default async function ResidentSectionPage(
             residentId={id}
             photos={photos ?? []}
             profilePhotoDriveFileId={resident.profile_photo_drive_file_id}
+            moveCategories={photoCategoriesForRole(role)}
           />
         </div>
       );

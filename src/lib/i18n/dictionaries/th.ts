@@ -3547,6 +3547,8 @@ const th: Dictionary = {
     medicalNotProfile:
       "รูปภาพในโฟลเดอร์ Medical จะไม่แสดงบนเว็บไซต์ จึงตั้งเป็นรูปโปรไฟล์ไม่ได้",
     medicalTile: "Medical",
+    moveToFolder: "ย้ายไปโฟลเดอร์",
+    moveButton: (folder: string) => `ย้ายไป ${folder}`,
     uploader: {
       dateTaken: "วันที่ถ่าย",
       folder: "โฟลเดอร์",
@@ -3566,6 +3568,13 @@ const th: Dictionary = {
       medicalProfile:
         "รูปภาพในโฟลเดอร์ Medical ตั้งเป็นรูปโปรไฟล์ไม่ได้ เพราะจะไม่แสดงบนเว็บไซต์ กรุณาเลือกรูปจากโฟลเดอร์อื่น",
       onlyFolder: (folder: string) => `รูปภาพของคุณเก็บได้เฉพาะในโฟลเดอร์ ${folder}`,
+      notFound: "ไม่พบรูปภาพนี้",
+      notMovable: "รูปภาพนี้ย้ายโฟลเดอร์ไม่ได้",
+      medicalProfileMove:
+        "นี่คือรูปโปรไฟล์ กรุณาเลือกรูปโปรไฟล์อื่นก่อนย้ายรูปนี้ไปโฟลเดอร์ Medical",
+      moveFailed: "ย้ายรูปภาพใน Google Drive ไม่สำเร็จ กรุณาลองใหม่",
+      moveIncomplete:
+        "รูปภาพถูกย้ายใน Google Drive แล้ว แต่บันทึกโฟลเดอร์ใหม่ไม่สำเร็จ — Drive กับข้อมูลในระบบไม่ตรงกันแล้ว กรุณาลองย้ายอีกครั้ง หรือแจ้งผู้ดูแลระบบ",
     },
     filter: {
       label: "แสดงรูปภาพ",
