@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Medical records → **Doctors belong to a vet: investigate a managed list rather than free text** (ticked here: this is the feature half) |
 | Branch / worktree | `claude/vet-doctors-roster-screen` @ `C:\Development\Animal_Shelter_vet-doctors-roster-screen` |
 | Dev server | `next dev` on `http://localhost:3010`, dev database |
-| PR | opened from this branch; number in the PR itself |
+| PR | #192 |
 | Tested by / date | Claude (automated) / 2026-09-28 |
 | Carries a migration? | no — uses `0102` (#176), already on `main` and applied to dev |
 | Tested at SHA | `4129e16` (feature commit, on `main` @ `531e199`) |
@@ -22,16 +22,16 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in: `Already up to date.` at `531e199`
-- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Closing lines as printed:
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in. First run `Already up to date.` at `531e199`; the second, before merge, brought in #191 (`0107` prescriptions schema, its harness and plan, a release record, `import-appsheet.mjs`) cleanly as `5cdf132`, touching nothing this branch changed
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — run before the PR and again on the merged tree `5cdf132`, which printed:
 
 ```
-=== gates: build exited 0 after 325s
+=== gates: build exited 0 after 185s
 
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — #192, 3/3 checks passing (`check`, `migration-numbers`, `test-plan`) on `2c39ccd`; the sync commit re-runs them
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -108,7 +108,7 @@ signed out /management/vets                   307 -> /login?next=%2Fmanagement%2
 
 - [x] The pages nearest the change still work (list the ones checked): Management → Vets (table and its new column, existing clinics), `/vets/<id>` hub (stats, chart, residents and visits lists unchanged; visits show the corrected doctor names), Book vet visit (booking two residents with a doctor), Residents list (where a bulk booking lands)
 - [x] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a second, unrelated page — by loading that page: the dictionaries are read by every page, and the Residents list and Management → Vets were loaded after the change, in English and (the roster page) in Thai
-- [x] Nothing merged from `main` during `sync` was broken by this branch — nothing was merged (`Already up to date.`)
+- [x] Nothing merged from `main` during `sync` was broken by this branch — the second sync brought in #191, schema and scripts only, no `src/`; gates re-run green on the merged tree
 
 ## 7. Documentation
 
@@ -186,7 +186,7 @@ Manual verification by: pending: the look-alike hints on a real clinic's names, 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR — in #192's description
 - [ ] Handed to the production release manager — n/a: not yet — handed over when a release is cut
 
 Result: pass
