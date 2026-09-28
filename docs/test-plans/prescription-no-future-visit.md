@@ -11,7 +11,7 @@
 | PR | #193; schema half #191 (merged, `78fb918`) |
 | Tested by / date | Claude, 2026-09-28 |
 | Carries a migration? | no — `0107` is #191, applied to dev, which this was tested against |
-| Tested at SHA | `885be3d` (the change `4b513e3`, synced with `main` @ `78fb918`) |
+| Tested at SHA | `885be3d` (the change `4b513e3`, synced with `main` @ `78fb918`); re-synced @ `c07e243` for #192 |
 
 ## 1. Scope and risk
 
@@ -22,7 +22,7 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: merged #191 (`78fb918`), bringing `0107`, its harness and the importer guard; no conflicts
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: merged #191 (`78fb918`), bringing `0107`, its harness and the importer guard; no conflicts. Second sync after #192 (doctor roster, `c07e243`) merged while this PR was open: one conflict in each dictionary, at `vetVisits.errors`, where #192 removed `doctorNotSaved` beside this PR's `prescriptionsBlockFuture` — kept the new line and dropped the removed one (`git grep doctorNotSaved origin/main -- src` finds no use); `releases.ts` and `manual/en.ts` auto-merged with both sides present
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`:
 
 ```
@@ -32,7 +32,16 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [x] CI green on the PR: #193 at `c0e6930` — `check` pass (1m53s), `migration-numbers` pass, `test-plan` pass
+Re-run on the merged tree after the second sync:
+
+```
+=== gates: typecheck exited 0 after 35s
+=== gates: lint exited 0 after 79s
+=== gates: build exited 0 after 163s
+gates: typecheck=0 lint=0 build=0
+```
+
+- [x] CI green on the PR: #193 at `c0e6930` — `check` pass (1m53s), `migration-numbers` pass, `test-plan` pass; the merged tree is re-checked by the run on this commit before merging
 
 ## 3. Schema and data
 
