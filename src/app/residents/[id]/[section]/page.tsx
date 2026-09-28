@@ -562,12 +562,14 @@ export default async function ResidentSectionPage(
                         >
                           {t.residents.sections.logBloodTest}
                         </Link>
-                        <Link
-                          href={`/prescriptions/new?residentId=${id}&vetAppointmentId=${row.id}`}
-                          className="text-xs font-medium text-primary hover:underline"
-                        >
-                          {t.residents.sections.addPrescription}
-                        </Link>
+                        {visitDate(row) <= today && (
+                          <Link
+                            href={`/prescriptions/new?residentId=${id}&vetAppointmentId=${row.id}`}
+                            className="text-xs font-medium text-primary hover:underline"
+                          >
+                            {t.residents.sections.addPrescription}
+                          </Link>
+                        )}
                         {weightByVisit.has(row.id) ? (
                           <Link
                             href={`/weight/${weightByVisit.get(row.id)}/edit`}

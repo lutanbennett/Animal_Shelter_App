@@ -28,6 +28,18 @@ function revalidateResidentPages(residentId: string) {
   revalidatePath(`/residents/${residentId}/vet-appointments`);
 }
 
+/**
+ * A prescription on a vet visit that has not happened yet (0107). The form
+ * only lists visits on or before today, but a second tab or a stale page
+ * still reaches the trigger — this turns its refusal into a sentence.
+ */
+function writeError(t: Dictionary, error: { code?: string; message: string }): { error: string } {
+  if (error.code === "23514" && error.message.includes("prescriptions_visit_not_in_future")) {
+    return { error: t.prescriptions.errors.visitInFuture };
+  }
+  return { error: error.message };
+}
+
 type ParsedPrescription = {
   startDate: string;
   endDate: string | null;
@@ -189,7 +201,7 @@ export async function createPrescription(
     end_date: fields.endDate,
     notes: fields.notes,
   });
-  if (error) return { error: error.message };
+  if (error) return writeError(t, error);
 
   revalidateResidentPages(residentId);
   redirect(`/residents/${residentId}/prescriptions`);
@@ -235,7 +247,7 @@ export async function updatePrescription(
     .eq("resident_id", residentId)
     .select("id")
     .returns<{ id: string }[]>();
-  if (error) return { error: error.message };
+  if (error) return writeError(t, error);
   // RLS filters rather than rejects: a volunteer's update matches no rows.
   if (!data || data.length === 0) return { error: t.prescriptions.errors.saveFailed };
 

@@ -44,7 +44,7 @@ export default async function EditPrescriptionPage(
       .eq("resident_id", residentId)
       .limit(1)
       .returns<{ is_deceased: boolean }[]>(),
-    loadPrescriptionOptions(supabase, residentId),
+    loadPrescriptionOptions(supabase, residentId, prescription.vet_appointment_id),
   ]);
   const { medications, frequencies, vetAppointments } = options;
 

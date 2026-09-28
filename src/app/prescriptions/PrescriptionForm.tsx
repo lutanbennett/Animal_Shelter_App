@@ -17,6 +17,7 @@ import type {
   VetAppointmentOption,
 } from "@/lib/prescriptions/options";
 import { OptionalDateInput } from "@/components/OptionalDateInput";
+import { visitDate } from "@/lib/vets/linkable";
 
 export type { FrequencyOption, MedicationOption, VetAppointmentOption };
 
@@ -66,6 +67,10 @@ export function PrescriptionForm({
     undefined,
   );
   const { t, locale } = useI18n();
+  // A visit passed in the URL that the list does not offer (one after today)
+  // is not preselected: the form starts unlinked rather than on a hidden value.
+  const preselectedVisit =
+    vetAppointments.find((a) => a.id === preselectedVetAppointmentId) ?? null;
 
   // Medication / frequency each switch between "pick one" and "add a new
   // one" the way the intake form's origin field does; whichever set of
@@ -89,10 +94,7 @@ export function PrescriptionForm({
   const [startTouched, setStartTouched] = useState(false);
   const [startDate, setStartDate] = useState(() => {
     if (initial) return initial.start_date;
-    if (preselectedVetAppointmentId) {
-      const match = vetAppointments.find((a) => a.id === preselectedVetAppointmentId);
-      if (match) return match.appointment_date.slice(0, 10);
-    }
+    if (preselectedVisit) return visitDate(preselectedVisit);
     return todayIso();
   });
   const [endDate, setEndDate] = useState(initial?.end_date ?? "");
@@ -100,7 +102,7 @@ export function PrescriptionForm({
   function handleVetAppointmentChange(id: string) {
     if (startTouched || mode === "edit" || !id) return;
     const match = vetAppointments.find((a) => a.id === id);
-    if (match) setStartDate(match.appointment_date.slice(0, 10));
+    if (match) setStartDate(visitDate(match));
   }
 
   return (
@@ -325,7 +327,7 @@ export function PrescriptionForm({
         <select
           id="vetAppointmentId"
           name="vetAppointmentId"
-          defaultValue={initial?.vet_appointment_id ?? preselectedVetAppointmentId ?? ""}
+          defaultValue={initial?.vet_appointment_id ?? preselectedVisit?.id ?? ""}
           onChange={(e) => handleVetAppointmentChange(e.target.value)}
           className={inputClass}
         >
