@@ -6,14 +6,10 @@ import { Paperclip } from "lucide-react";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { deleteBloodTestAttachment } from "@/app/residents/[id]/blood-tests/actions";
 import { AttachmentUploader } from "@/components/AttachmentUploader";
+import { FileTypeIcon } from "@/components/FileTypeIcon";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { fileKind } from "@/lib/uploads/file-kind";
 import { formatDate } from "@/lib/format";
-
-const IMAGE_EXTENSIONS = /\.(jpe?g|png|webp|heic|heif|gif)$/i;
-
-function isLikelyImage(fileName: string | null) {
-  return !!fileName && IMAGE_EXTENSIONS.test(fileName);
-}
 
 export type BloodTestAttachmentRow = {
   id: string;
@@ -101,14 +97,14 @@ export function BloodTestList({
               <div className="flex flex-wrap gap-2">
                 {test.attachments.map((attachment) => {
                   const url = driveImageUrl(attachment.drive_file_id);
-                  const image = isLikelyImage(attachment.file_name);
+                  const kind = fileKind(attachment.file_name);
                   return (
                     <div
                       key={attachment.id}
                       className="group relative overflow-hidden rounded border border-border bg-surface-hover"
                     >
                       <a href={url} target="_blank" rel="noreferrer">
-                        {image ? (
+                        {kind === "image" ? (
                           <img
                             src={url}
                             alt={attachment.file_name ?? t.bloodTests.fileFallback}
@@ -116,8 +112,8 @@ export function BloodTestList({
                           />
                         ) : (
                           <span className="flex h-24 w-24 flex-col items-center justify-center gap-1 p-2 text-center text-xs text-muted">
-                            <span aria-hidden>📄</span>
-                            <span className="truncate">
+                            <FileTypeIcon kind={kind} />
+                            <span className="max-w-full truncate">
                               {attachment.file_name ?? t.bloodTests.fileFallback}
                             </span>
                           </span>
