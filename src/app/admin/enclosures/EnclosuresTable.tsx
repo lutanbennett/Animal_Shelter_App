@@ -53,22 +53,19 @@ function EnclosureRowItem({
       return;
     }
     startTransition(async () => {
-      try {
-        await updateEnclosure(enclosure.id, {
-          name,
-          nameTh: nameTh || null,
-          zoneId,
-          capacity: parsedCapacity,
-          notes: notes || null,
-        });
-        setEditing(false);
-        setMessage({ type: "success", text: t.common.saved });
-      } catch (err) {
-        setMessage({
-          type: "error",
-          text: err instanceof Error ? err.message : t.common.failedToSave,
-        });
+      const result = await updateEnclosure(enclosure.id, {
+        name,
+        nameTh: nameTh || null,
+        zoneId,
+        capacity: parsedCapacity,
+        notes: notes || null,
+      });
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
+        return;
       }
+      setEditing(false);
+      setMessage({ type: "success", text: t.common.saved });
     });
   }
 
@@ -76,13 +73,9 @@ function EnclosureRowItem({
     if (!window.confirm(t.admin.enclosures.deleteConfirm(enclosure.name))) return;
     setMessage(null);
     startTransition(async () => {
-      try {
-        await deleteEnclosure(enclosure.id);
-      } catch (err) {
-        setMessage({
-          type: "error",
-          text: err instanceof Error ? err.message : t.common.failedToDelete,
-        });
+      const result = await deleteEnclosure(enclosure.id);
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
       }
     });
   }

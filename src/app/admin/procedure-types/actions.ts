@@ -1,14 +1,18 @@
 "use server";
 
 import { refresh, revalidatePath } from "next/cache";
-import { assertAdminRole } from "@/lib/auth/require-admin";
+import {
+  runAction,
+  type ActionRefusal,
+  type ActionResult,
+} from "@/lib/action-result";
+import { hasAdminRole } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 
-export type ProcedureTypeFormState =
-  | { error: string }
-  | { success: string }
-  | undefined;
+export type ProcedureTypeFormState = ActionResult<{ success: string }> | undefined;
+
+const refuse = (error: string): ActionRefusal => ({ ok: false, error });
 
 function revalidateProcedureTypePages() {
   revalidatePath("/admin/procedure-types");
@@ -36,78 +40,94 @@ export async function createProcedureType(
   _state: ProcedureTypeFormState,
   formData: FormData,
 ): Promise<ProcedureTypeFormState> {
-  await assertAdminRole();
   const { t } = await getT();
+  return runAction("procedureTypes.createProcedureType", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
 
-  const name = (formData.get("name") as string | null)?.trim();
-  if (!name) return { error: t.admin.procedureTypes.errors.nameRequired };
+    const name = (formData.get("name") as string | null)?.trim();
+    if (!name) return refuse(t.admin.procedureTypes.errors.nameRequired);
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("procedure_types").insert({ name });
+    const supabase = await createClient();
+    const { error } = await supabase.from("procedure_types").insert({ name });
 
-  if (error) return { error: error.message };
+    if (error) return refuse(error.message);
 
-  revalidateProcedureTypePages();
-  return { success: t.admin.procedureTypes.createdType(name) };
+    revalidateProcedureTypePages();
+    return { ok: true, success: t.admin.procedureTypes.createdType(name) };
+  });
 }
 
-export async function updateProcedureType(id: string, fields: { name: string }) {
-  await assertAdminRole();
+export async function updateProcedureType(
+  id: string,
+  fields: { name: string },
+): Promise<ActionResult> {
   const { t } = await getT();
+  return runAction("procedureTypes.updateProcedureType", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
 
-  const name = fields.name.trim();
-  if (!name) throw new Error(t.admin.procedureTypes.errors.nameRequired);
+    const name = fields.name.trim();
+    if (!name) return refuse(t.admin.procedureTypes.errors.nameRequired);
 
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("procedure_types")
-    .update({ name })
-    .eq("id", id);
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("procedure_types")
+      .update({ name })
+      .eq("id", id);
 
-  if (error) throw new Error(error.message);
-  revalidateProcedureTypePages();
+    if (error) return refuse(error.message);
+    revalidateProcedureTypePages();
+    return { ok: true };
+  });
 }
 
-export async function deleteProcedureType(id: string) {
-  await assertAdminRole();
+export async function deleteProcedureType(id: string): Promise<ActionResult> {
   const { t } = await getT();
+  return runAction("procedureTypes.deleteProcedureType", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
 
-  // procedures.procedure_type_id has no cascade: a type that has ever been
-  // logged is part of a resident's medical record. Say so instead of
-  // surfacing the foreign-key error.
-  const count = await countProcedures(id);
-  if (count > 0) {
-    throw new Error(t.admin.procedureTypes.errors.hasProcedures(count));
-  }
+    // procedures.procedure_type_id has no cascade: a type that has ever been
+    // logged is part of a resident's medical record. Say so instead of
+    // surfacing the foreign-key error.
+    const count = await countProcedures(id);
+    if (count > 0) {
+      return refuse(t.admin.procedureTypes.errors.hasProcedures(count));
+    }
 
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("procedure_types")
-    .delete()
-    .eq("id", id);
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("procedure_types")
+      .delete()
+      .eq("id", id);
 
-  if (error) throw new Error(error.message);
-  revalidateProcedureTypePages();
+    if (error) return refuse(error.message);
+    revalidateProcedureTypePages();
+    return { ok: true };
+  });
 }
 
 /**
  * Moves every procedure from `fromId` onto `intoId` and deletes `fromId`,
  * in one transaction (0047). Returns how many procedures moved.
  */
-export async function mergeProcedureType(fromId: string, intoId: string) {
-  await assertAdminRole();
+export async function mergeProcedureType(
+  fromId: string,
+  intoId: string,
+): Promise<ActionResult<{ count: number }>> {
   const { t } = await getT();
-  if (fromId === intoId) {
-    throw new Error(t.admin.procedureTypes.errors.mergeSelf);
-  }
+  return runAction("procedureTypes.mergeProcedureType", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (fromId === intoId) {
+      return refuse(t.admin.procedureTypes.errors.mergeSelf);
+    }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("merge_procedure_type", {
-    p_from: fromId,
-    p_into: intoId,
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("merge_procedure_type", {
+      p_from: fromId,
+      p_into: intoId,
+    });
+    if (error) return refuse(error.message);
+
+    revalidateProcedureTypePages();
+    return { ok: true, count: (data as number | null) ?? 0 };
   });
-  if (error) throw new Error(error.message);
-
-  revalidateProcedureTypePages();
-  return (data as number | null) ?? 0;
 }

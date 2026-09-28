@@ -1,67 +1,65 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { assertAdminRole } from "@/lib/auth/require-admin";
+import {
+  runAction,
+  type ActionRefusal,
+  type ActionResult,
+} from "@/lib/action-result";
+import { hasAdminRole } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { parseBahtAmount } from "@/lib/format";
 
-export type ImmunizationTypeFormState =
-  | { error: string }
-  | { success: string }
-  | undefined;
+export type ImmunizationTypeFormState = ActionResult<{ success: string }> | undefined;
 
-function parseIntervalMonths(t: Dictionary, raw: string | null): number | null {
-  if (!raw) return null;
+const refuse = (error: string): ActionRefusal => ({ ok: false, error });
+
+type IntervalResult = { ok: true; value: number | null } | { ok: false };
+
+function parseIntervalMonths(raw: string | null): IntervalResult {
+  if (!raw) return { ok: true, value: null };
   const value = Number(raw);
   if (!Number.isFinite(value) || value <= 0) {
-    throw new Error(t.admin.immunizationTypes.errors.intervalPositive);
+    return { ok: false };
   }
-  return value;
+  return { ok: true, value };
 }
 
 export async function createImmunizationType(
   _state: ImmunizationTypeFormState,
   formData: FormData,
 ): Promise<ImmunizationTypeFormState> {
-  await assertAdminRole();
   const { t } = await getT();
+  return runAction("immunizationTypes.createImmunizationType", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
 
-  const name = (formData.get("name") as string | null)?.trim();
-  const isMandatory = formData.get("isMandatory") === "on";
-  const intervalRaw = formData.get("intervalMonths") as string | null;
+    const name = (formData.get("name") as string | null)?.trim();
+    const isMandatory = formData.get("isMandatory") === "on";
+    const intervalRaw = formData.get("intervalMonths") as string | null;
 
-  if (!name) return { error: t.admin.immunizationTypes.errors.nameRequired };
+    if (!name) return refuse(t.admin.immunizationTypes.errors.nameRequired);
 
-  let intervalMonths: number | null;
-  try {
-    intervalMonths = parseIntervalMonths(t, intervalRaw);
-  } catch (err) {
-    return {
-      error:
-        err instanceof Error
-          ? err.message
-          : t.admin.immunizationTypes.errors.invalidInterval,
-    };
-  }
+    const interval = parseIntervalMonths(intervalRaw);
+    if (!interval.ok) return refuse(t.admin.immunizationTypes.errors.intervalPositive);
 
-  // Optional: a vaccine can be listed before anyone knows what it costs.
-  const cost = parseBahtAmount(formData.get("cost") as string | null);
-  if (!cost.ok) return { error: t.admin.immunizationTypes.errors.costInvalid };
+    // Optional: a vaccine can be listed before anyone knows what it costs.
+    const cost = parseBahtAmount(formData.get("cost") as string | null);
+    if (!cost.ok) return refuse(t.admin.immunizationTypes.errors.costInvalid);
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("immunization_types").insert({
-    name,
-    is_mandatory: isMandatory,
-    interval_months: intervalMonths,
-    cost: cost.value,
+    const supabase = await createClient();
+    const { error } = await supabase.from("immunization_types").insert({
+      name,
+      is_mandatory: isMandatory,
+      interval_months: interval.value,
+      cost: cost.value,
+    });
+
+    if (error) return refuse(error.message);
+
+    revalidatePath("/admin/immunization-types");
+    return { ok: true, success: t.admin.immunizationTypes.createdType(name) };
   });
-
-  if (error) return { error: error.message };
-
-  revalidatePath("/admin/immunization-types");
-  return { success: t.admin.immunizationTypes.createdType(name) };
 }
 
 export async function updateImmunizationType(
@@ -73,44 +71,51 @@ export async function updateImmunizationType(
     /** Baht per dose, or null for "not priced yet" (0071). */
     cost: number | null;
   },
-) {
-  await assertAdminRole();
+): Promise<ActionResult> {
   const { t } = await getT();
-  if (!fields.name.trim()) {
-    throw new Error(t.admin.immunizationTypes.errors.nameRequired);
-  }
-  if (fields.intervalMonths != null && fields.intervalMonths <= 0) {
-    throw new Error(t.admin.immunizationTypes.errors.intervalPositive);
-  }
-  // Re-checked here, not only in the table: null clears the price back to
-  // "not priced yet", but a bad number must not become one.
-  const cost = parseBahtAmount(fields.cost?.toString() ?? null);
-  if (!cost.ok) throw new Error(t.admin.immunizationTypes.errors.costInvalid);
+  return runAction("immunizationTypes.updateImmunizationType", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!fields.name.trim()) {
+      return refuse(t.admin.immunizationTypes.errors.nameRequired);
+    }
+    if (fields.intervalMonths != null && fields.intervalMonths <= 0) {
+      return refuse(t.admin.immunizationTypes.errors.intervalPositive);
+    }
+    // Re-checked here, not only in the table: null clears the price back to
+    // "not priced yet", but a bad number must not become one.
+    const cost = parseBahtAmount(fields.cost?.toString() ?? null);
+    if (!cost.ok) return refuse(t.admin.immunizationTypes.errors.costInvalid);
 
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("immunization_types")
-    .update({
-      name: fields.name.trim(),
-      is_mandatory: fields.isMandatory,
-      interval_months: fields.intervalMonths,
-      cost: cost.value,
-    })
-    .eq("id", id);
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("immunization_types")
+      .update({
+        name: fields.name.trim(),
+        is_mandatory: fields.isMandatory,
+        interval_months: fields.intervalMonths,
+        cost: cost.value,
+      })
+      .eq("id", id);
 
-  if (error) throw new Error(error.message);
-  revalidatePath("/admin/immunization-types");
+    if (error) return refuse(error.message);
+    revalidatePath("/admin/immunization-types");
+    return { ok: true };
+  });
 }
 
-export async function deleteImmunizationType(id: string) {
-  await assertAdminRole();
+export async function deleteImmunizationType(id: string): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("immunizationTypes.deleteImmunizationType", t.common.somethingWentWrong, async () => {
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
 
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("immunization_types")
-    .delete()
-    .eq("id", id);
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("immunization_types")
+      .delete()
+      .eq("id", id);
 
-  if (error) throw new Error(error.message);
-  revalidatePath("/admin/immunization-types");
+    if (error) return refuse(error.message);
+    revalidatePath("/admin/immunization-types");
+    return { ok: true };
+  });
 }

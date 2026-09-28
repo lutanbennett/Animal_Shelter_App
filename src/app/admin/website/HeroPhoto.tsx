@@ -41,13 +41,9 @@ export function HeroPhoto({
     if (!window.confirm(t.admin.website.hero.removeConfirm)) return;
     setMessage(null);
     startTransition(async () => {
-      try {
-        await removeHeroPhoto();
-      } catch (err) {
-        setMessage({
-          type: "error",
-          text: err instanceof Error ? err.message : t.common.failedToRemove,
-        });
+      const result = await removeHeroPhoto();
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
       }
     });
   }
