@@ -41,7 +41,7 @@
 
 - [ ] Migration number is one above the highest on `main` — n/a: no migration in this PR
 - [ ] `--status` reviewed before applying — n/a: no migration in this PR. **Not establishable from this session** for the production database: `--env production` reads are refused here
-- [ ] `--dry-run` reviewed — n/a: no migration in this PR; owed for the release
+- [x] `--dry-run` reviewed — **run for the release on 2026-09-29**, after merge: `dry-run 0108_vet_resident_scope.sql … ok`, `dry-run 0109_public_project_photos_exclude_non_images.sql … ok` against `dbkodyyxxhtygxcxmfcu`. No dependency trap between the two, so the per-file-transaction caveat did not bite
 - [ ] Applied to **dev** and recorded in `schema_migrations` — n/a: no migration in this PR. Dev is current through `0109`: `--status` reports `109 applied, 0 pending` and no drift against `origin/main cbec985`
 - [ ] File is re-runnable — n/a: no migration in this PR
 - [ ] Existing rows still read correctly after the change — n/a: this PR reads no database
@@ -115,23 +115,27 @@
 
 ### On the deployed build
 
-- [ ] Deployed to test: `npm run deploy:test` — deferred: this session, immediately after merge. Test is on `0.8.1`, confirmed from `/api/releases/current`
-- [ ] Smoke-tested on `test.lannacare.org` — deferred: this session, after the test deploy
+- [x] Deployed to test: `npm run deploy:test` — **done 2026-09-29**, from `main` at `812d830`. `deploy: test → Supabase project qxkmhwybjggxvsfxsxbd (812d830)`, `Uploaded lanna-animal-care-test`, Worker version `0a84ec9c-61eb-4cf4-9776-60221da45440`. `test.lannacare.org/api/releases/current` now returns `{"version":"0.9.0"}`; production still returns `{"version":"0.8.1"}`, which is the intended pre-deploy state
+- [ ] Smoke-tested on `test.lannacare.org` — deferred: Lutan, for the signed-in paths. What this session could check without signing in was checked: the Staff testing site lock page renders, the browser console is clean, and the version endpoint reports `0.9.0`. **The signed-in pass is not something this session should do** — entering credentials is confined to local development hosts, and `test.lannacare.org` is not one
 - [ ] Timezone-sensitive behaviour checked on test — deferred: production release manager. **Directly relevant**: note 3 is a Thailand-clock fix for prescriptions and diets that ended yesterday, in the midnight-to-7am window that is wrong for part of every day and invisible on `next dev`
 - [ ] Public pages re-checked after a cache purge or a 10-minute wait — deferred: production release manager. `0109` changes what `/our-work/[id]` may show, and anonymous GETs are edge-cached per data centre
-- [ ] **`check-public-views.mjs --env production` and `check-app-access-gate.mjs`, appended to the log** — deferred: production release manager. Named explicitly because `0108` rewrites the residents access policies and `0109` redefines a public view; the `0.8.0` record had to report both checks as never run
+- [x] **`check-public-views.mjs --env production` and `check-app-access-gate.mjs`, appended to the log** — both run 2026-09-29 after the apply, and **this line was wrong about the second one**. `check-public-views.mjs --env production`: **125 ok, 2 skip, 0 fail**, exit 0. The second skip is new and expected — `is_public_drive_file(): no non-image attachment in a public project folder to ask about`, the case `0109` added, with no row on production to ask about (dev has none either). `check-app-access-gate.mjs` is **dev-only by design** — its own header says so twice; it is a one-transaction rollback harness for the `app_access_gate` migrations and has no `--env`. So "run it against production" was never possible, and the `0.8.0` record's complaint that it had not been is a complaint about the wrong thing. Run where it belongs, against dev: `HARNESS-OK 0086_app_access_gate.sql`, exit 0, every assertion held and nothing committed
 
 ### Deploy safety
 
 - [ ] `deploy: production → Supabase project <ref>` line read and the ref matches production — deferred: production release manager
 - [ ] `strip-baked-env: removed N env var(s) from the Worker bundle` seen — deferred: production release manager. Use `>>`
 - [x] Any new secret/env var exists in the production Cloudflare environment — none added by this PR
-- [x] **Release mail — this is the one to watch, and the test deploy cannot prove it.** `major: true` and `majorReleasesSince("0.8.1")` is `["0.9.0"]`, so the production deploy will look up every unarchived admin, read their email from the Auth admin API and POST the built mail to `/api/releases/mail`. **The test environment has no `RELEASE_MAIL` binding and `RELEASE_MAIL_ENV` is `""`** (`wrangler.jsonc`, the `test` env), so the dev database never sends release mail by design — a test deploy of this release mails nobody, and therefore proves the recipient lookup and the relay not at all. The evidence that the path works is `0.7.0` and `0.8.0`, each `sent 1, skipped 1` from production. What is genuinely new here is the note *shape*, and that was proved offline in §4
+- [x] **Release mail — this is the one to watch, and the test deploy cannot prove it.** `major: true` and `majorReleasesSince("0.8.1")` is `["0.9.0"]`, so the production deploy will look up every unarchived admin, read their email from the Auth admin API and POST the built mail to `/api/releases/mail`. **The test environment has no `RELEASE_MAIL` binding and `RELEASE_MAIL_ENV` is `""`** (`wrangler.jsonc`, the `test` env), so the dev database never sends release mail by design — a test deploy of this release mails nobody.
+
+  **The test deploy proved more of this than expected, and the pessimism here was wrong.** Its last line was `deploy: release mail for 0.9.0 [off]: sent 0, skipped 4`. So the whole path ran on real data: `majorReleasesSince` returned the release, the admin lookup went to `user_roles` and the Auth admin API and **found four addresses**, the built mail was POSTed to `/api/releases/mail`, and the Worker's own guard refused to send all four because the environment is `off`. Everything except the send is therefore exercised end to end, against object-shaped notes, one release before it matters. The remaining unknown is only the relay itself, whose evidence stays `0.7.0` and `0.8.0` at `sent 1, skipped 1` each.
+
+  **Worth carrying into the production deploy:** four admins were skipped on the dev database. Production's admin list is its own, and the count in *that* deploy's line is what says how many people were actually written to
 
 ### Migration ordering — *skip if no migration*
 
 - [x] Does this PR contain both a migration and code that reads it? — no migration in this PR. For the release, **both** `0108` and `0109` are read by code already on `main`, so both must be applied **before** the deploy, not after. `0108` is the one where the wrong order is actively wrong rather than merely degraded — see §3
-- [ ] `--env production --dry-run` run and clean — deferred: Lutan
+- [x] `--env production --dry-run` run and clean — **run 2026-09-29**: both files `ok`, then applied. `--drift production` before the apply read `109 file(s), 107 applied row(s)` with `0108` and `0109` pending; after it read `No drift: production matches origin/main`. **Both applied before the deploy, which is the order §3 requires**
 - [ ] For a **destructive or rewriting** migration only: a production backup exists and is fresh — deferred: Lutan. Neither file rewrites data — `0108` replaces policies and views, `0109` one view — so this is the ordinary pre-release backup check rather than a specific worry, unlike `0.8.1`'s `0106`
 - [x] Apply plan stated — §3
 
@@ -156,7 +160,7 @@ Checked across the release rather than in this PR:
 |---|---|---|
 | 1 | The six notes **and the title**, read as a shelter user would. Higher stakes than `0.8.1`: `major: true` means these exact words are emailed to every admin, and the title becomes the subject line. **The title is mine and nobody has reviewed it** | `src/lib/releases.ts`, the `0.9.0` entry |
 | 2 | **The `major: true` call itself, once the notes are read together.** Confirmed in chat on the strength of the lead note; worth one look at the set before the mail goes out | `src/lib/releases.ts`, the `0.9.0` entry |
-| 3 | **The lead note's instruction to admins is complete enough to act on.** It says a vet with no clinic set sees no residents and that an admin sets it under Security. If any vet account is currently unset, that is work the mail is asking someone to do, and nobody has counted them | Settings → Security, on the deployed build |
+| 3 | ~~**The lead note's instruction to admins is complete enough to act on.**~~ **Answered 2026-09-29, and nothing is owed:** production has **no vet accounts at all** — 0 unarchived `user_roles` rows with `role = 'vet'`, so 0 with a clinic set and 0 without. The lead note's instruction is forward-looking rather than work anyone has to do on the day, and applying `0108` early stranded nobody | answered against production; no longer needs a person |
 | 4 | The role tags on the three tagged notes, read as a set. A wrong tag hides a line from the people it is for | `src/lib/releases.ts`, the `0.9.0` entry |
 
 `--drift production` is deliberately **not** a row here: it is a deploy-time check and lives in section 8 as `deferred:`, per the template rule added 2026-09-27.
@@ -174,7 +178,7 @@ Automated checks by: Claude (release manager session)  Date: 2026-09-28
 
 - [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — all four items are open and need a person. Items 1 and 2 matter more than usual because this release mails
 
-Manual verification by: pending: Lutan to read the six notes and the title (item 1), confirm `major: true` against the set (item 2), check for vet accounts with no clinic (item 3) and the role tags (item 4)
+Manual verification by: pending: Lutan to read the six notes and the title (item 1), confirm `major: true` against the set (item 2) and the role tags (item 4). Item 3 was answered against production on 2026-09-29 and needs nobody; the signed-in smoke test on `test.lannacare.org` is also his, per §8
 
 ### Result
 
