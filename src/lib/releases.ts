@@ -37,18 +37,39 @@ export type Release = {
    */
   major: boolean;
   /** What changed, one plain-language line each. */
-  notes: string[];
+  notes: ReleaseNote[];
 };
 
+/** The signed-in roles, as the manual names them (src/lib/manual/types.ts). */
+export type ReleaseRole = "admin" | "management" | "staff" | "vet" | "volunteer";
+
+/**
+ * One line of a release. A plain string is for everyone; `roles` narrows
+ * it to the people who will notice it, and /releases opens on the reader's
+ * role (docs/decisions.md, "Release notes by role"). Tag a line only when it
+ * is plainly not for some role — a vet has no use for a stocktake line —
+ * since an untagged line is never filtered out, and a wrong tag hides it
+ * from the people it is for. Lines released before tagging existed stay
+ * untagged: they are history, and untagged reads as everyone.
+ */
+export type ReleaseNote = string | { text: string; roles: ReleaseRole[] };
+
+export const noteText = (note: ReleaseNote): string =>
+  typeof note === "string" ? note : note.text;
+
+export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
+  typeof note === "string" ? undefined : note.roles;
+
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: string[] = [
+export const unreleased: ReleaseNote[] = [
   "Each vet or clinic now has a list of its doctors, which you can see and correct. It fills itself from the doctors' names typed on visits, and the visit forms suggest from it. Under Management → Vets, a new Doctors column opens a clinic's list, where you can rename a misspelt doctor, merge two spellings of one person (\"Somchai\" and \"Dr Somchai\" — the page points out names that look alike), and mark a doctor who has left so they are no longer suggested. A rename or merge also corrects the name on that doctor's past visits, and the page says how many before it does. A vet's hub now shows the clinic's doctors with how many visits each saw.",
-  "A vet booking or editing a vet visit now records it for their own clinic, shown by name, instead of choosing from every clinic the shelter uses. An admin sets which clinic a vet account belongs to under Security, where a Clinic choice now appears under the role of every vet account; until it is set, the vet-visit form tells the vet to ask for it. The Status choices on the vet-visit forms also say what they mean — Scheduled is a visit not yet confirmed as done, which is why a past one shows as overdue.",
+  { text: "A vet booking or editing a vet visit now records it for their own clinic, shown by name, instead of choosing from every clinic the shelter uses. An admin sets which clinic a vet account belongs to under Security, where a Clinic choice now appears under the role of every vet account; until it is set, the vet-visit form tells the vet to ask for it. The Status choices on the vet-visit forms also say what they mean — Scheduled is a visit not yet confirmed as done, which is why a past one shows as overdue.", roles: ["admin", "vet"] },
   "A vet visit now holds one weight, and a resident one weight per day. When logging a weight, the linked-visit list leaves out visits that already have one (and visits still to come), and choosing a day that already has a reading turns the save into a correction of that reading — so a vet weighing an animal on its intake day updates the intake weight rather than adding a second. Any reading can now be corrected with Edit on the Weight page, or Edit weight on its vet visit.",
-  "The Pet relocation page is gone from the website — moving pets is not a service the shelter offers — and an International adoption page has taken its place, for people abroad who would like to adopt one of the animals. It is under Adopt in the menu and the footer (Adopt now opens to Meet our residents and International adoption), with a caped puppy flying over the globe at the top, and the adoption listing's line for adopters abroad now points to it. Anyone following an old link to the relocation page lands on the new one. The Services menu is hidden while it has nothing in it. The page starts with standard text in English and Thai; admins can rewrite it under Settings → Website, where it is already filled in to edit.",
-  "A date you don't have to fill in can now be emptied again once it has been set: a Clear button appears beside it. On a phone, tapping the date could fill it in with no way back to blank, so an optional date became one you had to keep. It is on a diet's and a medication's end date, a maintenance job's due date, a recurring job's end date, a shelter friend's Friend since and a project folder's date.",
+  { text: "The Pet relocation page is gone from the website — moving pets is not a service the shelter offers — and an International adoption page has taken its place, for people abroad who would like to adopt one of the animals. It is under Adopt in the menu and the footer (Adopt now opens to Meet our residents and International adoption), with a caped puppy flying over the globe at the top, and the adoption listing's line for adopters abroad now points to it. Anyone following an old link to the relocation page lands on the new one. The Services menu is hidden while it has nothing in it. The page starts with standard text in English and Thai; admins can rewrite it under Settings → Website, where it is already filled in to edit.", roles: ["admin", "management", "staff", "volunteer"] },
+  { text: "A date you don't have to fill in can now be emptied again once it has been set: a Clear button appears beside it. On a phone, tapping the date could fill it in with no way back to blank, so an optional date became one you had to keep. It is on a diet's and a medication's end date, a maintenance job's due date, a recurring job's end date, a shelter friend's Friend since and a project folder's date.", roles: ["admin", "management", "staff", "volunteer"] },
   "The user manual now opens on what your own role does: a vet sees sign-in, residents, medical records and photos rather than intake, stocktake and Settings. Show everything, at the top of the manual, brings back the rest, greyed where it isn't part of your role — and Find on page still finds a topic that is tucked away, so you can check whether something is yours to do.",
   "A prescription can only be linked to a vet visit that has already happened. The linked-visit list on the prescription form leaves out visits still to come, a visit still to come no longer has an Add prescription link on the Vet Appointments page, and a visit that has prescriptions linked to it can no longer be moved to a later day than today. A prescription already linked to a visit keeps its link when it is edited.",
+  "Release notes now open on what changed for your own role, like the manual: a vet no longer reads about stocktake or the website. Every release stays in the list with its number, and one with nothing for you says so. Show everything, at the top of the page, brings back the rest, greyed where it isn't for your role. Changes from before this release are shown to everyone, as they always were.",
   "A blood test or procedure logged from a vet visit between midnight and 7 in the morning now takes that visit's date. It used to fill in the day before. Sending a resident to hospital from such a visit also starts on the visit's own day.",
 ];
 

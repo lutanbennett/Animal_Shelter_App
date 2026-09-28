@@ -114,10 +114,12 @@ const RESULTS = ["pass", "pass with accepted defects", "fail"];
 // The lines in `unreleased`, read as text rather than imported, because the base
 // side only exists as a blob. Strings are pulled out of the array literal; a
 // file without the declaration (none at the base, or renamed) reads as empty.
+// A tagged line is `{ text: "…", roles: ["vet"] }`: its roles are dropped
+// first, so tagging a line doesn't read as adding lines called "vet".
 const unreleasedLines = (src) => {
   const block = src.match(/export const unreleased\b[^=]*=\s*\[([\s\S]*?)\];/);
   if (!block) return [];
-  return [...block[1].matchAll(/"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|`((?:[^`\\]|\\.)*)`/g)].map(
+  return [...block[1].replace(/\broles\s*:\s*\[[^\]]*\]/g, "").matchAll(/"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|`((?:[^`\\]|\\.)*)`/g)].map(
     (m) => m[1] ?? m[2] ?? m[3],
   );
 };
