@@ -126,7 +126,7 @@ export function MaintenanceBoard({
         if (
           !filters.allCompleted &&
           job.status === "Completed" &&
-          (job.date_completed ?? job.updated_at.slice(0, 10)) < recentCutoff
+          (job.date_completed ?? todayIso(new Date(job.updated_at))) < recentCutoff
         ) {
           return false;
         }
