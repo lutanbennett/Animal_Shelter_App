@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "Blood test, procedure and hospital forms default a visit's date from its UTC day." |
 | Branch / worktree | `claude/utc-visit-date` @ `C:\Development\Animal_Shelter_utc-visit-date` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3013` |
-| PR | opened from this commit |
+| PR | #194 |
 | Tested by / date | Claude (utc-visit-date session), 2026-09-28, signed in as the dev test user (admin) in the browser pane |
 | Carries a migration? | no |
 | Tested at SHA | `2792614` (the fix); this plan is the commit after it |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (#194): `check` (typecheck, lint, build), `migration-numbers` and `test-plan` all passed at `7b4750d`
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -186,7 +186,7 @@ Manual verification by: n/a: nothing for a person to look at; the list is empty 
 ### Result
 
 - [ ] Open defects are either fixed or explicitly accepted above — n/a: the one defect is out of scope and deferred to the backlog
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR (#194 body)
 - [ ] Handed to the production release manager — n/a: not yet — after merge
 
 Result: pass
