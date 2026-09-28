@@ -8,10 +8,10 @@
 | Backlog item | `docs/backlog.md` → "A deliberate delay on the way to the available dogs, to show off the puppy loader." |
 | Branch / worktree | `claude/puppy-loader-delay` @ `C:\Development\Animal_Shelter_puppy-loader-delay` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3004` |
-| PR | |
+| PR | #204 |
 | Tested by / date | Claude, 2026-09-28 |
 | Carries a migration? | no |
-| Tested at SHA | |
+| Tested at SHA | ab840a3 (post-sync merge of origin/main) |
 
 ## 1. Scope and risk
 
@@ -29,7 +29,7 @@
 
   gates: typecheck=0 lint=0 build=0
   ```
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (#204): check, migration-numbers and test-plan all passed
 
 ## 3. Schema and data — *skip if no migration*
 
