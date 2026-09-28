@@ -4,7 +4,9 @@ import { useCallback, useRef, useState, type ReactNode, type RefObject } from "r
 import Link from "next/link";
 import { Camera, X } from "lucide-react";
 import { uploadAttachmentFile } from "@/components/AttachmentUploader";
+import { FileTypeIcon } from "@/components/FileTypeIcon";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { fileKind } from "@/lib/uploads/file-kind";
 
 export type PendingFile = {
   key: string;
@@ -186,7 +188,7 @@ export function PendingFileList({
             />
           ) : (
             <span className="flex aspect-square w-full flex-col items-center justify-center gap-1 p-2 text-center text-xs text-muted">
-              <span aria-hidden>📄</span>
+              <FileTypeIcon kind={fileKind(item.file.name)} />
               <span className="line-clamp-2 break-all">{item.file.name}</span>
             </span>
           )}

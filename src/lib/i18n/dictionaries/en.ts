@@ -3590,6 +3590,13 @@ const en = {
   /** Files picked on a form and uploaded once the record is saved. */
   uploads: {
     removeFile: "Remove",
+    /** Accessible name of the icon shown in place of a thumbnail (FileTypeIcon.tsx). */
+    fileKind: {
+      image: "Image",
+      pdf: "PDF document",
+      document: "Document",
+      other: "File",
+    },
     uploading: (done: number, total: number) => `Uploading files… ${done} of ${total}`,
     uploadsFailed: "Some files didn't upload. Retry them, or continue without them.",
     /** The file's bytes are not any accepted format (src/lib/uploads/file-signature.ts). */

@@ -9,15 +9,11 @@ import { TranslationPanel } from "@/components/TranslationPanel";
 import { localizedFromRow } from "@/lib/translations/localize";
 import type { TranslationRow } from "@/lib/translations/types";
 import { driveImageUrl } from "@/lib/google/drive-client";
+import { FileTypeIcon } from "@/components/FileTypeIcon";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { fileKind } from "@/lib/uploads/file-kind";
 import type { ProjectFolder, ProjectPhoto } from "@/lib/projects/queries";
 import { deleteProjectPhoto, setProjectCoverPhoto, updateProjectPhotoCaption } from "../actions";
-
-const IMAGE_EXTENSIONS = /\.(jpe?g|png|webp|heic|heif|gif)$/i;
-
-function isLikelyImage(fileName: string | null) {
-  return !!fileName && IMAGE_EXTENSIONS.test(fileName);
-}
 
 const inputClass =
   "w-full rounded border border-border bg-background px-2 py-1 text-xs text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
@@ -94,7 +90,7 @@ export function PhotoSection({
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {photos.map((photo) => {
             const url = driveImageUrl(photo.drive_file_id);
-            const image = isLikelyImage(photo.file_name);
+            const kind = fileKind(photo.file_name);
             const isCover = folder.cover_attachment_id === photo.id;
             const captionTranslation = translations.find((row) => row.row_id === photo.id) ?? null;
             const caption = localizedFromRow(locale, photo.caption, captionTranslation) || null;
@@ -105,7 +101,7 @@ export function PhotoSection({
               >
                 <div className="relative">
                   <a href={url} target="_blank" rel="noreferrer">
-                    {image ? (
+                    {kind === "image" ? (
                       <img
                         src={url}
                         alt={caption ?? photo.file_name ?? p.fileFallback}
@@ -114,7 +110,7 @@ export function PhotoSection({
                       />
                     ) : (
                       <span className="flex aspect-square w-full flex-col items-center justify-center gap-1 p-2 text-center text-xs text-muted">
-                        <span aria-hidden>📄</span>
+                        <FileTypeIcon kind={kind} />
                         <span className="line-clamp-2 break-all">
                           {photo.file_name ?? p.fileFallback}
                         </span>
@@ -203,7 +199,7 @@ export function PhotoSection({
                               {p.editCaption}
                             </button>
                           )}
-                          {image && (
+                          {kind === "image" && (
                             <button
                               type="button"
                               disabled={isPending}
