@@ -1,4 +1,4 @@
-import type { Release } from "./releases";
+import type { Release, ReleaseNote } from "./releases";
 
 /**
  * The email that tells admins about a major release. Built by
@@ -13,6 +13,14 @@ export type ReleaseMail = { subject: string; text: string; html: string };
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
+/**
+ * Every line, whatever roles it is tagged with: the mail goes to admins,
+ * who run the whole system, and is the release's record in their inbox, so
+ * it is not filtered by role the way /releases is. (releases.ts's
+ * `noteText`, repeated here because this file may only import types.)
+ */
+const lineOf = (note: ReleaseNote) => (typeof note === "string" ? note : note.text);
+
 export function buildReleaseMail(list: Release[], siteOrigin: string): ReleaseMail {
   const pageUrl = `${siteOrigin}/releases`;
   const newest = list[0];
@@ -24,7 +32,7 @@ export function buildReleaseMail(list: Release[], siteOrigin: string): ReleaseMa
   const text = [
     ...list.flatMap((r) => [
       `${r.version} — ${r.title} (${r.date})`,
-      ...r.notes.map((n) => `  • ${n}`),
+      ...r.notes.map((n) => `  • ${lineOf(n)}`),
       "",
     ]),
     `All release notes: ${pageUrl}`,
@@ -38,7 +46,7 @@ export function buildReleaseMail(list: Release[], siteOrigin: string): ReleaseMa
       (r) =>
         `<h2 style="font-size:17px;margin:20px 0 4px">${escapeHtml(r.version)} — ${escapeHtml(r.title)}</h2>` +
         `<p style="margin:0 0 8px;color:#666;font-size:13px">${escapeHtml(r.date)}</p>` +
-        `<ul style="margin:0;padding-left:20px">${r.notes.map((n) => `<li>${escapeHtml(n)}</li>`).join("")}</ul>`,
+        `<ul style="margin:0;padding-left:20px">${r.notes.map((n) => `<li>${escapeHtml(lineOf(n))}</li>`).join("")}</ul>`,
     ),
     `<p style="margin-top:24px"><a href="${escapeHtml(pageUrl)}">All release notes</a></p>`,
     `<p style="color:#888;font-size:12px">You get this because you are an admin in Lanna Care for Animals.</p>`,

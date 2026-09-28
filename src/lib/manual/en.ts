@@ -125,11 +125,12 @@ const manual: Manual = {
           title: "What changed: release notes",
           path: "Release notes (bottom of the menu)",
           intro:
-            "Every update to the system is listed on the Release notes page, newest at the top, in plain words: what you will notice, not how it was built. Everyone who can sign in can read it.",
+            "Every update to the system is listed on the Release notes page, newest at the top, in plain words: what you will notice, not how it was built. Everyone who can sign in can read it, and it opens on the changes for your own role.",
           steps: [
             "Open Release notes from the bottom of the menu.",
             "Each release shows its number, the date it was prepared and the environment you are looking at. A Major badge marks a release worth reading before you carry on working.",
             "Click a release to see what changed in it, and click it again to fold it away. The newest release is already open.",
+            "The page lists the changes for your role and the ones for everyone. Every release stays in the list, so the numbers run in order; one with nothing for your role carries a badge saying so — Nothing for Vet, for a vet — and opening it says its changes are for other roles. Show everything, at the top, lists every change, greyed where it isn't for your role.",
             "Admins also get each major release by email. The subject starts with [UAT] or [Production], so a test release is never mistaken for a live one.",
           ],
           callouts: [
