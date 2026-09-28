@@ -250,7 +250,7 @@ export default async function WelcomePage() {
           </h2>
           <dl data-reveal className="grid grid-cols-2 gap-x-6 gap-y-8 rounded-[20px] bg-site-accent px-6 py-8 text-site-on-accent sm:px-10 sm:py-9 lg:grid-cols-4">
             {stats.map((stat) => (
-              <div key={stat.key} className="flex flex-col-reverse gap-1.5">
+              <div key={stat.key} className="flex flex-col-reverse items-center gap-1.5 text-center">
                 <dt className="text-base leading-snug">{stat.label}</dt>
                 <dd className="font-display text-4xl font-bold tabular-nums lg:text-[44px]">
                   {stat.value.toLocaleString(locale === "th" ? "th-TH" : "en-GB")}
@@ -286,26 +286,37 @@ export default async function WelcomePage() {
                 {sf.become}
               </Link>
             </div>
-            {/* A logo where there is one, the name where there isn't — each
-                a way into that friend's card on /friends. */}
+            {/* A logo (and its name underneath) where there's a logo, just
+                the name where there isn't — each a way into that friend's
+                card on /friends. Soft tile, no border: a shade darker than
+                the sand band instead of a paper box on top of it (docs/decisions.md,
+                2026-09-28) — chosen over no-tile / logo-as-tile / round-badge
+                after a side-by-side. */}
             <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
               {friends.map((friend) => (
                 <li key={friend.id}>
                   <Link
                     href={`/friends#${friendAnchor(friend.id)}`}
                     title={friend.name}
-                    className="spring-lift flex h-24 items-center justify-center rounded-[14px] border border-site-line bg-site-paper p-2 text-center text-sm font-semibold text-site-ink-muted hover:border-site-line-strong"
+                    className="spring-lift flex h-28 flex-col items-center justify-center gap-1.5 rounded-[14px] bg-site-line p-3 text-center"
                   >
                     {friend.logo_drive_file_id ? (
-                      <Image
-                        src={driveImageUrl(friend.logo_drive_file_id)}
-                        alt={friend.name}
-                        width={144}
-                        height={72}
-                        className="h-[72px] w-auto max-w-full object-contain"
-                      />
+                      <>
+                        <Image
+                          src={driveImageUrl(friend.logo_drive_file_id)}
+                          alt=""
+                          width={144}
+                          height={56}
+                          className="h-14 w-auto max-w-full object-contain"
+                        />
+                        <span className="w-full truncate text-xs font-semibold text-site-ink-muted">
+                          {friend.name}
+                        </span>
+                      </>
                     ) : (
-                      friend.name
+                      <span className="line-clamp-3 text-sm font-semibold text-site-ink-muted">
+                        {friend.name}
+                      </span>
                     )}
                   </Link>
                 </li>
@@ -315,7 +326,7 @@ export default async function WelcomePage() {
                     band is 4.46:1, just under AA (decisions.md, part 1). */}
                 <Link
                   href="/friends/join"
-                  className="spring-lift flex h-24 items-center justify-center rounded-[14px] border-2 border-dashed border-site-action p-2 text-center text-[15px] font-bold text-site-action-hover hover:bg-site-paper"
+                  className="spring-lift flex h-28 items-center justify-center rounded-[14px] border-2 border-dashed border-site-action p-2 text-center text-[15px] font-bold text-site-action-hover hover:bg-site-paper"
                 >
                   {sf.yourBusiness}
                 </Link>

@@ -76,6 +76,36 @@ two or three at once; more than that and merging becomes the bottleneck.
    turns it on from the PR bar himself if he wants it. Mention it only
    if CI has actually gone red, and then in a clause, not a question of
    its own.
+
+   **Never end a turn believing a notification will arrive.** Bind the
+   PR with the `ccd_pr` tools, but treat the CI monitor as a nudge, not
+   a guarantee: before you stop, either merge, or say plainly that you
+   are waiting and what Lutan should ask you next. Then, when you are
+   next prompted, **re-read `get_status` first** rather than assuming
+   you are still mid-wait.
+
+   This is not hypothetical. On 2026-09-28 #201 bound its PR, its
+   `get_status` call succeeded, and it was still never woken when all
+   three checks went green — they sat merged-ready for an hour while
+   the session looked exactly like one that was still working. The
+   background-command and Monitor waits used up to 2026-09-27 did
+   complete reliably; the harness that ships with the desktop app now
+   forbids them and points here instead, so this is the mechanism we
+   have, and it needs the belt-and-braces above.
+
+   **Do not hand the bulk of a task to a long background agent.** Work
+   in short foreground batches instead. A foreground command that fails
+   gives you an error; a background agent that dies gives you silence,
+   and silence is indistinguishable from progress. The same day, the
+   `admin-actions-result-sweep` stream delegated eleven files to one
+   background agent, which produced a 0-byte output file and no edits —
+   the session then sat idle waiting for a notification that was never
+   coming.
+
+   **Commit before you wait or delegate.** Both failures above were
+   recoverable only because little had been done; the sweep still had
+   an hour of elapsed time against one uncommitted file. A commit is
+   the only checkpoint that survives a session stalling.
 5. **Stale streams.** `node scripts/worktree.mjs list` shows each
    worktree's dirty files, how far it is beyond `main`, unpushed
    commits, and `held`: whether any process has the folder open, with the
