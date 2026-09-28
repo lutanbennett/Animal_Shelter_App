@@ -9,6 +9,7 @@ import { RESIDENT_SIZES, sizeLabel, speciesLabel } from "@/lib/i18n/enum-labels"
 import { CARD_COLUMNS } from "@/lib/residents/public";
 import { loadSiteContent } from "@/lib/site/content";
 import { loadSitePage, sitePageText } from "@/lib/site/pages";
+import { showcaseAdoptPause } from "@/lib/adopt/showcase-pause";
 import { SiteBody } from "@/components/SiteBody";
 import { PublicHeader } from "./PublicHeader";
 import { PublicFooter } from "./PublicFooter";
@@ -54,6 +55,7 @@ function param(value: string | string[] | undefined): string | null {
  */
 export default async function AdoptPage(props: PageProps<"/adopt">) {
   const searchParams = await props.searchParams;
+  await showcaseAdoptPause(searchParams);
   const supabase = await createClient();
   const { t, locale } = await getT();
 

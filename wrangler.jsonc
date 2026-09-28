@@ -50,7 +50,10 @@
         "RELEASE_MAIL_ENV": "",
         "PUBLIC_SITE": "locked",
         "STATUS_ALERT_SITE": "https://test.lannacare.org",
-        "STATUS_ALERT_FROM": "alerts@lannacare.org"
+        "STATUS_ALERT_FROM": "alerts@lannacare.org",
+        // The puppy loader showcase pause on /adopt's first load
+        // (docs/decisions.md, 2026-09-28). Clamped to 3000ms regardless.
+        "SHOWCASE_LOADER_MS": "1800"
       },
       "send_email": [{ "name": "STATUS_ALERT_MAIL" }],
       // Every 15 minutes: ALERT_INTERVAL_MINUTES in src/lib/status/alerts.ts.
@@ -73,7 +76,10 @@
         "RELEASE_MAIL_ENV": "UAT",
         "RELEASE_MAIL_FROM": "releases@lannacare.org",
         // UAT is never the public website (src/lib/public-site.ts).
-        "PUBLIC_SITE": "locked"
+        "PUBLIC_SITE": "locked",
+        // The puppy loader showcase pause on /adopt's first load
+        // (docs/decisions.md, 2026-09-28). Clamped to 3000ms regardless.
+        "SHOWCASE_LOADER_MS": "1800"
       },
       "send_email": [{ "name": "RELEASE_MAIL" }]
     },
@@ -106,7 +112,11 @@
         // lannacareforanimals.org: STATUS_ALERT_SITE moves with it, and the
         // uat block takes lannacare.org and a copy of these alert entries.
         "STATUS_ALERT_SITE": "https://lannacare.org",
-        "STATUS_ALERT_FROM": "alerts@lannacare.org"
+        "STATUS_ALERT_FROM": "alerts@lannacare.org",
+        // The puppy loader showcase pause on /adopt's first load — Lutan
+        // chose to keep it live for real visitors too (docs/decisions.md,
+        // 2026-09-28). Clamped to 3000ms regardless.
+        "SHOWCASE_LOADER_MS": "1800"
       },
       "send_email": [{ "name": "RELEASE_MAIL" }, { "name": "STATUS_ALERT_MAIL" }],
       "triggers": { "crons": ["*/15 * * * *"] }
