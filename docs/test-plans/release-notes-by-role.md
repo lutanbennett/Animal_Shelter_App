@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Release notes segmented by role |
 | Branch / worktree | `claude/release-notes-by-role` @ `C:\Development\Animal_Shelter_release-notes-by-role` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3012` |
-| PR | opened after this commit |
+| PR | #195 |
 | Tested by / date | Claude, 2026-09-28 |
 | Carries a migration? | no |
 | Tested at SHA | `24bd859` |
@@ -29,7 +29,7 @@
 === gates: build exited 0 after 376s
 gates: typecheck=0 lint=0 build=0
 ```
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — #195 at `fca16d4`: check, migration-numbers and test-plan all pass (run 36371005475)
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -156,7 +156,7 @@ Manual verification by: pending: a vet's read-through of `/releases` and agreeme
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above — the one defect is fixed on this branch
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR — linked from the PR description (`docs/test-plans/release-notes-by-role.md`), with its outcome summarised there
 - [ ] Handed to the production release manager — n/a: not yet — after merge
 
 Result: pass
