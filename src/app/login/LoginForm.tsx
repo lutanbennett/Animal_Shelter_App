@@ -79,11 +79,14 @@ export function LoginForm({
         {next && <input type="hidden" name="next" value={next} />}
         <GoogleButton label={t.login.continueWithGoogle} />
       </form>
+      <Link href="/login/request" className="text-center text-sm font-medium text-primary hover:underline">
+        {t.login.requestAccess}
+      </Link>
     </div>
   );
 }
 
-function GoogleButton({ label }: { label: string }) {
+export function GoogleButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
   return (
     <button
