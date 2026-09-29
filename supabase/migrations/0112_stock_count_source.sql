@@ -161,4 +161,8 @@ select k.item_kind,
 comment on view stock_count_intervals is
   'Consecutive counts (source count or backfill, not correction) of one item, with the deliveries between them (previous.counted_at < received_at <= next.counted_at) and used = from_quantity + received − to_quantity. used is null and unit_changed true when the counts and receipts do not share one unit. A negative used means an unlogged delivery (0096, 0112).';
 
+revoke all on stock_count_intervals from public, anon, authenticated;
+grant select on stock_count_intervals to authenticated;
+grant all on stock_count_intervals to service_role;
+
 notify pgrst, 'reload schema';
