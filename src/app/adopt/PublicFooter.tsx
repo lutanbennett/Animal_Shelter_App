@@ -1,13 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import {
-  lineLink,
-  loadSiteContent,
-  socialLinks,
-  visitingHoursLines,
-  type SiteContent,
-} from "@/lib/site/content";
+import { preferredChannels, talkChannels } from "@/lib/site/channels";
+import { loadSiteContent, socialLinks, visitingHoursLines, type SiteContent } from "@/lib/site/content";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
 import { FacebookIcon } from "@/components/FacebookIcon";
 import { InstagramIcon } from "@/components/InstagramIcon";
@@ -16,6 +11,12 @@ import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import { XIcon } from "@/components/XIcon";
 
 const heading = "text-base font-bold text-site-on-footer";
+const CHANNEL_ICONS = {
+  messenger: MessengerIcon,
+  whatsapp: WhatsAppIcon,
+  instagram: InstagramIcon,
+} as const;
+
 const footerLink =
   "flex min-h-11 items-center text-site-on-footer underline-offset-4 hover:text-site-footer-link hover:underline";
 const smallLink =
@@ -38,18 +39,12 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
     hasPublicFriends(),
   ]);
   const hours = visitingHoursLines(locale, site);
-  const line = lineLink(site?.contact_line);
   const social = socialLinks(site);
-  const phone = site?.contact_phone?.trim();
+  // Contact us in the shelter's order (LINE first unless they chose
+  // otherwise); Instagram is a follow link below unless they chose it.
+  const contact = talkChannels(preferredChannels(site), { email: true });
   const f = t.publicFooter;
-  const hasContact = Boolean(
-    phone ||
-      line ||
-      social.messenger ||
-      social.whatsapp ||
-      site?.contact_email ||
-      hours.length > 0,
-  );
+  const hasContact = contact.length > 0 || hours.length > 0;
   // Follow us: places to follow the shelter. Messenger and WhatsApp are
   // ways to talk to it, so they sit under Contact us beside LINE instead.
   const follow = [
@@ -86,45 +81,44 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
         {hasContact && (
           <div className="flex flex-col">
             <span className={`${heading} pb-1`}>{f.contact}</span>
-            {phone && (
-              <a href={`tel:${phone.replace(/\s+/g, "")}`} className={footerLink}>
-                {phone}
-              </a>
-            )}
-            {line && (
-              <a href={line.href} target="_blank" rel="noreferrer" className={footerLink}>
-                LINE: {line.label}
-              </a>
-            )}
-            {social.messenger && (
-              <a
-                href={social.messenger}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={f.messenger}
-                className={`${footerLink} gap-2`}
-              >
-                <MessengerIcon aria-hidden="true" className="h-5 w-5" />
-                Messenger
-              </a>
-            )}
-            {social.whatsapp && (
-              <a
-                href={social.whatsapp}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={f.whatsapp}
-                className={`${footerLink} gap-2`}
-              >
-                <WhatsAppIcon aria-hidden="true" className="h-5 w-5" />
-                WhatsApp
-              </a>
-            )}
-            {site?.contact_email && (
-              <a href={`mailto:${site.contact_email}`} className={`${footerLink} break-all`}>
-                {site.contact_email}
-              </a>
-            )}
+            {contact.map((c) => {
+              const external = c.external ? { target: "_blank", rel: "noreferrer" } : {};
+              switch (c.channel) {
+                case "phone":
+                  return (
+                    <a key={c.channel} href={c.href} className={footerLink}>
+                      {c.value}
+                    </a>
+                  );
+                case "email":
+                  return (
+                    <a key={c.channel} href={c.href} className={`${footerLink} break-all`}>
+                      {c.value}
+                    </a>
+                  );
+                case "line":
+                  return (
+                    <a key={c.channel} href={c.href} {...external} className={footerLink}>
+                      LINE: {c.value}
+                    </a>
+                  );
+                default: {
+                  const Icon = CHANNEL_ICONS[c.channel];
+                  return (
+                    <a
+                      key={c.channel}
+                      href={c.href}
+                      {...external}
+                      aria-label={f[c.channel]}
+                      className={`${footerLink} gap-2`}
+                    >
+                      <Icon aria-hidden="true" className="h-5 w-5" />
+                      {t.contactChannels.name[c.channel]}
+                    </a>
+                  );
+                }
+              }
+            })}
             {hours.length > 0 && (
               <div className="flex flex-col pt-2 leading-relaxed text-site-on-footer-soft">
                 <span className="sr-only">{f.visitingHours}</span>

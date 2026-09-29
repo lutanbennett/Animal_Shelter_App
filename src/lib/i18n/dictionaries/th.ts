@@ -183,6 +183,35 @@ const th: Dictionary = {
     followUs: "ติดตามเรา",
   },
 
+  /** The public site's contact channels (0111, src/lib/site/channels.ts). */
+  contactChannels: {
+    name: {
+      line: "LINE",
+      messenger: "Messenger",
+      whatsapp: "WhatsApp",
+      instagram: "Instagram",
+      phone: "โทรศัพท์",
+      email: "อีเมล",
+    },
+    ask: {
+      line: "สอบถามทาง LINE",
+      messenger: "สอบถามทาง Messenger",
+      whatsapp: "สอบถามทาง WhatsApp",
+      instagram: "สอบถามทาง Instagram",
+      phone: "โทรหาเรา",
+      email: "ส่งอีเมลถึงเรา",
+    },
+    us: {
+      line: (value: string | null) => `LINE ${value ?? ""}`.trim(),
+      messenger: (_value: string | null) => "ทักเราทาง Messenger",
+      whatsapp: (_value: string | null) => "ทักเราทาง WhatsApp",
+      instagram: (_value: string | null) => "ติดตามเราบน Instagram",
+      phone: (value: string | null) => `โทร ${value ?? ""}`.trim(),
+      email: (_value: string | null) => "ส่งอีเมลถึงเรา",
+    },
+    getInTouchHint: (list: string) => `ติดต่อเราทาง ${list} แล้วเราจะติดต่อกลับ`,
+  },
+
   sitePages: {
     comingSoon: "หน้านี้กำลังจัดทำ — โปรดกลับมาใหม่ภายหลัง",
     getInTouch: "ติดต่อเรา",

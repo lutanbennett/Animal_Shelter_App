@@ -202,6 +202,38 @@ const en = {
     followUs: "Follow us",
   },
 
+  /** The public site's contact channels (0111, src/lib/site/channels.ts). */
+  contactChannels: {
+    name: {
+      line: "LINE",
+      messenger: "Messenger",
+      whatsapp: "WhatsApp",
+      instagram: "Instagram",
+      phone: "Phone",
+      email: "Email",
+    },
+    /** The label on a profile's sticky button. */
+    ask: {
+      line: "Ask on LINE",
+      messenger: "Ask on Messenger",
+      whatsapp: "Ask on WhatsApp",
+      instagram: "Ask on Instagram",
+      phone: "Call us",
+      email: "Email us",
+    },
+    /** The label on a get-in-touch card button; `value` is the LINE id, number or address. */
+    us: {
+      line: (value: string | null) => `LINE ${value ?? ""}`.trim(),
+      messenger: (_value: string | null) => "Message us on Messenger",
+      whatsapp: (_value: string | null) => "Message us on WhatsApp",
+      instagram: (_value: string | null) => "Find us on Instagram",
+      phone: (value: string | null) => `Call ${value ?? ""}`.trim(),
+      email: (_value: string | null) => "Email us",
+    },
+    /** `list` is the channel names joined with "or": "LINE, Messenger or Phone". */
+    getInTouchHint: (list: string) => `Reach us on ${list} and we'll get back to you.`,
+  },
+
   /** /foster, /volunteer, /donate and the how-to-adopt section (0059). */
   sitePages: {
     comingSoon: "This page is being written — check back soon.",
