@@ -101,6 +101,9 @@ create policy management_all_fixed_outgoings on fixed_outgoings
 -- RLS already gives anon nothing (no policy names it); take the default
 -- table grants away too.
 revoke all on fixed_outgoings from anon;
+-- Data API grant (check-migration-grants.mjs wants it in the creating file).
+-- authenticated only reaches admin and management: those are the only policies.
+grant select, insert, update, delete on fixed_outgoings to authenticated, service_role;
 revoke execute on function fixed_outgoings_cap() from public, anon, authenticated;
 
 notify pgrst, 'reload schema';
