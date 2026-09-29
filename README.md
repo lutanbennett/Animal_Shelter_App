@@ -4,7 +4,7 @@ Custom web app for Lanna Care for Animals, a not-for-profit animal shelter,
 replacing their current AppSheet/Google Sheets system.
 
 Full requirements: [`docs/requirements/lanna-care-rebuild-requirements.md`](docs/requirements/lanna-care-rebuild-requirements.md).
-Decisions and open questions: [`docs/decisions.md`](docs/decisions.md).
+Decisions and open questions: [`docs/decisions/`](docs/decisions/) (one file per decision, from 2026-09-24) and the earlier record in [`docs/decisions.md`](docs/decisions.md).
 
 ## Stack
 
