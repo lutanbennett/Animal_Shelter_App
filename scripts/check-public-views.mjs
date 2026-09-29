@@ -181,6 +181,22 @@ for (const name of ["residents", ...PUBLIC]) {
   }
 }
 
+// Fixed outgoings (0114) are admin/management only. They are their own table
+// precisely because site_content is world-readable. Anon must be refused the
+// table outright, for a read and for a write.
+for (const [method, body] of [["GET"], ["POST", {}], ["PATCH", {}]]) {
+  const call = await fetch(`${url}/rest/v1/fixed_outgoings${method === "GET" ? "?select=label,monthly_amount&limit=1" : ""}`, {
+    method,
+    headers: { ...headers, "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  report(!call.ok, `fixed_outgoings: anon ${method} is refused`, `HTTP ${call.status}`);
+}
+for (const name of PUBLIC) {
+  const read = await fetch(`${url}/rest/v1/${name}?select=monthly_amount&limit=1`, { headers });
+  report(!read.ok, `${name}.monthly_amount: no public object carries an amount column`, `HTTP ${read.status}`);
+}
+
 // is_public_drive_file must tell the two kinds of file apart when anon asks:
 // yes for a photo the public site shows, no for an internal attachment the
 // photo proxy also knows (a blood-test or procedure file). Skipped, not
