@@ -7190,3 +7190,7 @@ commit. Its header says "against DEV only" twice and it takes no `--env`.
   trusting a rollback for the cleanup. The dev run is the check; production's
   equivalent evidence is `check-public-views.mjs`.
 
+
+## 2026-09-29 — Manual: the last topic gets a minimum height so it can reach the top
+
+`/manual#getting-help` (and any deep link to the last topic) stopped short of the top because the page was already at maximum scroll. `scroll-margin-top` was already on every topic and cannot help there. Chose visible blank space, but the least of it: only the last topic *on show* (it follows the role filter) gets `min-height: calc(100dvh - 3rem)` — window height minus the `scroll-mt-6` and the page's bottom padding — so the gap under it is that topic's own shortfall and no other topic changes. Rejected a flat screenful of padding (a conspicuous gap on every visit). Sizing is reasoned from the CSS, not yet measured in a browser: the page needs a signed-in look. A last topic revealed only by Find on page (hidden-until-found) does not get the height; accepted.
