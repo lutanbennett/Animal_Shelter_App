@@ -89,6 +89,8 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
     supabase
       .from("stock_counts")
       .select("id, stocktake_id, item_kind, medication_id, diet_type_id, counted_quantity, unit, counted_at")
+      // Typed corrections (0112) are history, not counts: they are not paired.
+      .neq("source", "correction")
       .order("counted_at")
       .returns<HistoryRow[]>(),
     supabase
