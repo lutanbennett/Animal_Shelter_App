@@ -134,10 +134,13 @@ export async function updateMedicationStock(id: string, count: string) {
   if (!parsed.ok) throw new Error(t.management.stock.errors.countInvalid);
 
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("medication")
-    .update({ stock_on_hand: parsed.value })
-    .eq("id", id);
+  // One way in (0112): the function sets the figure and writes the history
+  // row, marked as a correction so usage maths does not treat it as a count.
+  const { error } = await supabase.rpc("record_stock_correction", {
+    p_kind: "medication",
+    p_id: id,
+    p_count: parsed.value,
+  });
 
   if (error) throw new Error(error.message);
   revalidatePath("/management/medications");
