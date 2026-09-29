@@ -214,9 +214,9 @@ Automated checks by: Claude  Date: 2026-09-29
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the plan may tick this** and write `n/a: <reason>` on the signature below — there is nothing for a person to look at, so nothing is being signed for. If the list is not empty, only the person who looked may tick it — n/a: the list is not empty, so it is left for the person who looks
+- [x] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the plan may tick this** and write `n/a: <reason>` on the signature below — there is nothing for a person to look at, so nothing is being signed for. If the list is not empty, only the person who looked may tick it
 
-Manual verification by: pending: a vet signing in and using /appointments (rows 1-3 above), including the mark-done-while-writing-up case
+Manual verification by: Lutan Bennett — confirmed in chat; line written by Claude at their request  Date: 2026-09-29
 
 ### Result
 
