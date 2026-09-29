@@ -51,7 +51,13 @@ two or three at once; more than that and merging becomes the bottleneck.
    every UI feature touches — `src/lib/manual/en.ts`, `src/app/NavLinks.tsx`,
    `docs/backlog.md`, `docs/decisions.md` — will conflict trivially; two
    streams both adding nav entries or rewriting the same manual topic will
-   conflict badly. `docs/decisions.md` merges by union, so just append.
+   conflict badly. `docs/decisions.md` merges by union **locally only**
+   (`.gitattributes`): append, but GitHub's mergeability check ignores merge
+   drivers, so if `main` also appended since you branched, the PR page reads
+   CONFLICTING/DIRTY on a clean local merge and CI never runs. Run
+   `worktree.mjs sync` and push *before* `gh pr create`, so GitHub is handed a
+   tree that already contains `main`; and if a pushed PR goes CONFLICTING with
+   a clean local merge, this is why — sync and push again.
 4. **Finish: the merge train.** When a feature is done and verified:
    `node scripts/worktree.mjs sync` (merges `origin/main` in), then
    `node scripts/gates.mjs` (typecheck, lint, build; prints each exit code), then open the PR
