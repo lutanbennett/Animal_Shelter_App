@@ -86,7 +86,7 @@ export async function retryDeceasedArchive(
 ): Promise<RetryArchiveState> {
   void state;
   const { t } = await getT();
-  return runAction<{}>("residents.retryDeceasedArchive", t.common.somethingWentWrong, async () => {
+  return runAction("residents.retryDeceasedArchive", t.common.somethingWentWrong, async () => {
     const supabase = await createClient();
 
     const { data: role } = await supabase.rpc("current_user_role");
@@ -145,7 +145,7 @@ export async function retryDeceasedRestore(
 ): Promise<RetryRestoreState> {
   void state;
   const { t } = await getT();
-  return runAction<{}>("residents.retryDeceasedRestore", t.common.somethingWentWrong, async () => {
+  return runAction("residents.retryDeceasedRestore", t.common.somethingWentWrong, async () => {
     const supabase = await createClient();
 
     const { data: role } = await supabase.rpc("current_user_role");

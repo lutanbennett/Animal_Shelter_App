@@ -29,7 +29,7 @@ export async function setProfilePhoto(
   driveFileId: string,
 ): Promise<PhotoActionState> {
   const { t } = await getT();
-  return runAction<{}>("residents.setProfilePhoto", t.common.somethingWentWrong, async () => {
+  return runAction("residents.setProfilePhoto", t.common.somethingWentWrong, async () => {
     const supabase = await createClient();
     const refused = await setResidentProfilePhoto(supabase, t, residentId, driveFileId);
     if (refused) return { ok: false, error: refused.error };
@@ -46,7 +46,7 @@ export async function deletePhoto(
   attachmentId: string,
 ): Promise<PhotoActionState> {
   const { t } = await getT();
-  return runAction<{}>("residents.deletePhoto", t.common.somethingWentWrong, async () => {
+  return runAction("residents.deletePhoto", t.common.somethingWentWrong, async () => {
     const supabase = await createClient();
     const { data: driveFileId, error } = await supabase.rpc(
       "delete_resident_photo",
@@ -93,7 +93,7 @@ export async function movePhotoToFolder(
   targetCategory: PhotoCategory,
 ): Promise<PhotoActionState> {
   const { t } = await getT();
-  return runAction<{}>("residents.movePhotoToFolder", t.common.somethingWentWrong, async () => {
+  return runAction("residents.movePhotoToFolder", t.common.somethingWentWrong, async () => {
     const supabase = await createClient();
 
     let role: string;

@@ -13,7 +13,7 @@ export async function deleteBloodTestAttachment(
   attachmentId: string,
 ): Promise<BloodTestActionState> {
   const { t } = await getT();
-  return runAction<{}>("residents.deleteBloodTestAttachment", t.common.somethingWentWrong, async () => {
+  return runAction("residents.deleteBloodTestAttachment", t.common.somethingWentWrong, async () => {
     const supabase = await createClient();
 
     const { data: attachment, error: selectError } = await supabase

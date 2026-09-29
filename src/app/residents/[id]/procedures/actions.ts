@@ -13,7 +13,7 @@ export async function deleteProcedureAttachment(
   attachmentId: string,
 ): Promise<ProcedureActionState> {
   const { t } = await getT();
-  return runAction<{}>("residents.deleteProcedureAttachment", t.common.somethingWentWrong, async () => {
+  return runAction("residents.deleteProcedureAttachment", t.common.somethingWentWrong, async () => {
     const supabase = await createClient();
 
     const { data: attachment, error: selectError } = await supabase
