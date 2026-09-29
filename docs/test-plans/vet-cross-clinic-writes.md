@@ -149,7 +149,7 @@ Automated checks by: Claude  Date: 2026-09-29
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: item 1 above
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — item 1 is outstanding and recorded as pending on the signature line below
 
 Manual verification by: pending: a person opening Edit on another clinic's visit as a vet account
 
