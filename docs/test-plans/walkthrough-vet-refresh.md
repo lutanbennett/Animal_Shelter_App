@@ -39,7 +39,15 @@ because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
 - [ ] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly — n/a: documentation only — one test script rewritten, no code, schema or UI
-- [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — n/a: not yet run at this commit; closing lines pasted once run
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`, at `0476292`:
+
+```
+=== gates: build exited 0 after 358s
+
+gates: typecheck=0 lint=0 build=0
+```
+
+(a first run reported build=1, "Another next build process is already running": a stale `.next/lock`, removed; the rerun above is clean)
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
