@@ -49,9 +49,14 @@ two or three at once; more than that and merging becomes the bottleneck.
 3. **Pick non-overlapping work.** Streams should touch different areas
    (a `/admin` page, a resident-hub tab, the `worker/`). The files nearly
    every UI feature touches — `src/lib/manual/en.ts`, `src/app/NavLinks.tsx`,
-   `docs/backlog.md`, `docs/decisions.md` — will conflict trivially; two
+   `docs/backlog.md` — will conflict trivially; two
    streams both adding nav entries or rewriting the same manual topic will
-   conflict badly. `docs/decisions.md` merges by union, so just append.
+   conflict badly. Decisions are the exception by design: each is its own
+   file in `docs/decisions/` (`<date>-<slug>.md`), so two streams never touch
+   the same path. Add a file; never append to `docs/decisions.md` (frozen
+   baseline). This replaced a `merge=union` append-only file, which git
+   merged cleanly but GitHub's mergeability check (it ignores merge drivers)
+   read as CONFLICTING/DIRTY, so CI never ran on the second PR opened.
 4. **Finish: the merge train.** When a feature is done and verified:
    `node scripts/worktree.mjs sync` (merges `origin/main` in), then
    `node scripts/gates.mjs` (typecheck, lint, build; prints each exit code), then open the PR
@@ -271,5 +276,5 @@ dev server running, none of it matters.
 
 Tick the item in `docs/backlog.md` (follow-ups you notice go on the
 `backlog` branch, not the PR), record non-obvious design
-choices in `docs/decisions.md` (dated), and keep `README.md` accurate.
+choices as a new file in `docs/decisions/` (`<date>-<slug>.md`), and keep `README.md` accurate.
 Commit messages say why, not just what.
