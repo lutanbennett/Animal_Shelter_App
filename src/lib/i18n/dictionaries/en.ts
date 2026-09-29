@@ -2167,6 +2167,8 @@ const en = {
     ownClinicHint: "Your account belongs to this clinic, so visits you record are for it.",
     noClinicForAccount:
       "Your account isn't linked to a clinic yet, so you can't record vet visits. Ask a shelter admin to set your clinic in Settings → Security.",
+    otherClinicReadOnly:
+      "This visit was recorded by another clinic, so you can read it but not change it.",
     notes: "Notes",
     notesPlaceholder: "Any additional detail for this visit",
     editPageTitle: "Edit Vet Visit",

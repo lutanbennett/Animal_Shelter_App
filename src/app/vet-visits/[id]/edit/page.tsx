@@ -33,12 +33,19 @@ export default async function EditVetVisitPage(props: PageProps<"/vet-visits/[id
     );
   }
 
-  // A vet account moves a visit only to its own clinic, and a visit already
-  // at another clinic keeps that one on offer so saving doesn't move it.
-  let vetsQuery = supabase.from("vets").select("id, name, clinic_name").order("name");
-  if (scope.kind === "clinic") {
-    vetsQuery = vetsQuery.in("id", visit.vet_id ? [scope.vetId, visit.vet_id] : [scope.vetId]);
+  // Another clinic's visit is read-only to a vet (0110): the database would
+  // refuse the save, so say so rather than show a form that can only fail.
+  if (scope.kind === "clinic" && visit.vet_id !== scope.vetId) {
+    return (
+      <main className="flex flex-1 flex-col gap-4 p-6">
+        <h1 className="text-2xl font-semibold text-foreground">{t.vetVisits.editPageTitle}</h1>
+        <p className="max-w-2xl text-sm text-muted">{t.vetVisits.otherClinicReadOnly}</p>
+      </main>
+    );
   }
+
+  let vetsQuery = supabase.from("vets").select("id, name, clinic_name").order("name");
+  if (scope.kind === "clinic") vetsQuery = vetsQuery.eq("id", scope.vetId);
 
   const [residentResult, stateResult, vetsResult, doctorNamesByVet] = await Promise.all([
     supabase
