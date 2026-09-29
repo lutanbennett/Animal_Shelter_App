@@ -28,7 +28,7 @@ or `n/a` with the reason.
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (brought in 0116 and the microchip decision and plan), and pushed
-- [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` (verbatim, after the sync)
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` (verbatim, after the sync)
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
@@ -150,9 +150,9 @@ Automated checks by: Claude (fixed-outgoings-cashflow session)  Date: 2026-09-29
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty, and no person has looked yet
+- [x] The manual list above is empty, or every item in it was checked by a person: Lutan reported in chat that manual verification is done
 
-Manual verification by: pending: items 1 to 5 above need someone signed in as management and as staff
+Manual verification by: Lutan — confirmed in chat; line written by Claude on that report, so the per-item results are not itemised here  Date: 2026-09-29
 
 ### Result
 
