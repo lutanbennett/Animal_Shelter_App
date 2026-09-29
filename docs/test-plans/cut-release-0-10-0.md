@@ -39,7 +39,7 @@ The counter-argument, recorded because it is reasonable: nothing *breaks* if nob
 - [x] Newest release version matches `package.json` — both `0.10.0`
 - [x] `unreleased` is empty — emptied by this PR; it held exactly 5 entries and the cut refused any other count
 - [x] **`majorReleasesSince("0.9.1")` returns `["0.10.0"]`** — the check that makes the deploy mail admins, verified rather than inferred from `major: true`. **This is the check the version boundary below could have broken silently**
-- [x] **The date was read from the system clock and compared back to it** — `date +%Y-%m-%d` gave `2026-09-29`, the entry says `2026-09-29`, and the register was re-loaded and asserted equal to today
+- [x] **The date was read from the system clock and compared back to it** — `date +%Y-%m-%d` gave `2026-09-29` at the moment of the cut, the entry says `2026-09-29`, and the register was re-loaded and asserted equal to it. **The clock then rolled over to 2026-09-30 while the gates were running**, so the entry now records the day it was cut rather than "today". That is deliberate and matches `0.9.0`, which is dated `2026-09-28` in the register and was deployed on the 29th — a release entry dates the cut, and `docs/releases/<deploy date>.md` dates the deploy. If this ships on the 30th its record therefore goes in `2026-09-30.md` while the entry reads `2026-09-29`, exactly as `0.9.0`'s did. Flagged to Lutan rather than silently re-dated, because changing it after merge is worse than deciding it now
 - [x] The register parses the way `deploy.mjs` loads it — `latestRelease` is `0.10.0` / `2026-09-29` / `major: true` / 5 notes
 
 ### The first double-digit version component, checked deliberately
