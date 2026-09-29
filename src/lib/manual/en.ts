@@ -1148,7 +1148,7 @@ const manual: Manual = {
           roles: ["admin", "management"],
           path: "Management → Cashflow",
           intro:
-            "Food, medication, vaccinations, vet visits and maintenance are each forecast on their own page in their own unit. This is the one page where they add up, in baht.",
+            "Food, medication, vaccinations, vet visits and maintenance are each forecast on their own page in their own unit. This is the one page where they add up, in baht — together with the shelter's fixed monthly costs (rent, electricity, salaries and the like).",
           steps: [
             "Pick a window: Next 30 days or Next 90 days, or enter From and To dates for any period up to a year.",
             "The three cards are the window's total, the average month, and how many items still have no price. Below them, a stacked column — one column per month, one colour per category — and the table it is drawn from.",
@@ -1156,12 +1156,18 @@ const manual: Manual = {
             "A category with items but no prices reads “not priced yet” rather than ฿0, and the “Not priced yet” row links straight to the page where that price is entered. A figure with a small orange +3 beside it means three more items that month have no price, so the real cost is higher.",
             "The “Not priced yet” card is a shortcut to the same fix. If every missing price is in one category, it opens that category's page; if they are spread across several, it jumps down to the “Not priced yet” row so you can pick one.",
             "Download CSV saves the table as a spreadsheet for the monthly report — the same months and the same categories that are switched on. Amounts are plain numbers so the spreadsheet can add them up, and each category has a second column counting what is not priced yet, so a 0 there never hides a gap.",
+            "Fixed outgoings is the sixth category: the named monthly costs someone has listed. Tap Edit fixed outgoings under the table (or open Management → Cashflow → Fixed outgoings) to add a line — a name such as Rent, an amount in baht per month, and optionally the first and last month it applies. When an amount changes, end the old line and add a new one from the next month; the past months keep the old figure. Switch a line off to keep it on record without counting it. The list holds at most 24 lines, and the page tells you when it is full.",
+            "Fixed outgoings are counted by the day, the same way everything else on this page is: a window that covers only half of a month carries half of that month's amount, so a 30-day window carries about one month of rent rather than two. A window that covers a whole calendar month carries exactly one.",
             "Under each category name is where its figure came from: priced (a price someone entered, times what the records imply), estimated (a stand-in — a maintenance job's estimated cost, or the typical vet visit) or invoiced (every visit that month already has its real cost).",
           ],
           callouts: [
             {
               kind: "warning",
-              text: "This is not a budget. It is only what the shelter's own records imply it is committed to spending — no donations or other income, no salaries, no rent, no utilities. Treat it as a floor under the month, not the whole picture.",
+              text: "This is not a budget. It is only what the shelter's own records imply it is committed to spending — no donations or other income, and only those fixed costs someone has listed. Treat it as a floor under the month, not the whole picture.",
+            },
+            {
+              kind: "note",
+              text: "Fixed outgoings are not payroll. Enter salaries as one total line for the whole staff, never one line per person; nothing on this page records who is paid what, and the list stops at 24 lines on purpose.",
             },
             {
               kind: "note",
