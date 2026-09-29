@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Menu, MessageCircle, Phone, X } from "lucide-react";
+import { ChevronDown, Mail, Menu, MessageCircle, Phone, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -28,7 +28,7 @@ export type PublicNavEntry =
 
 /** A way to talk to the shelter in the phone menu, as a big button. */
 export type PublicTalkLink = {
-  kind: "line" | "phone" | "messenger" | "whatsapp";
+  kind: "line" | "phone" | "messenger" | "whatsapp" | "instagram" | "email";
   href: string;
   label: string;
 };
@@ -46,6 +46,8 @@ const TALK_ICONS = {
   phone: Phone,
   messenger: MessengerIcon,
   whatsapp: WhatsAppIcon,
+  instagram: InstagramIcon,
+  email: Mail,
 } as const;
 
 const FOLLOW_ICONS = { facebook: FacebookIcon, instagram: InstagramIcon, x: XIcon } as const;
@@ -151,7 +153,7 @@ export function PublicNavGroup({
 /**
  * The phone's menu: a button in the header that opens the whole screen —
  * the entries with Get involved and Services laid open, the language toggle, and a
- * "Talk to us" panel at the foot — LINE, Call, Messenger and WhatsApp as
+ * "Talk to us" panel at the foot — the shelter's channels (LINE first by default) as
  * buttons, whichever are set, since on a phone those are how people
  * actually reach the shelter — then "Follow us" with Facebook, Instagram
  * and X as icons. A modal dialog: focus
@@ -335,7 +337,7 @@ export function PublicMobileMenu({
                         <a
                           key={link.kind}
                           href={link.href}
-                          {...(link.kind === "phone" ? {} : { target: "_blank", rel: "noreferrer" })}
+                          {...(link.kind === "phone" || link.kind === "email" ? {} : { target: "_blank", rel: "noreferrer" })}
                           className={`flex h-[52px] items-center justify-center gap-2 rounded-xl text-base font-bold ${
                             i === 0
                               ? "bg-site-accent text-site-on-accent"

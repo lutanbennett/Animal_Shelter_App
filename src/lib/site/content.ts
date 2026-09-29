@@ -34,10 +34,12 @@ export type SiteContent = {
   visiting_hours: string | null;
   visiting_hours_th: string | null;
   featured_resident_id: string | null;
+  /** Ordered contact channels, first = preferred (0111); see channels.ts. */
+  preferred_channels: string[];
 };
 
 export const SITE_CONTENT_COLUMNS =
-  "hero_drive_file_id, hero_alt, hero_alt_th, tagline, tagline_th, contact_email, contact_address, contact_phone, contact_line, contact_map_url, facebook_url, instagram_url, messenger_url, whatsapp_number, x_url, visiting_hours, visiting_hours_th, featured_resident_id";
+  "hero_drive_file_id, hero_alt, hero_alt_th, tagline, tagline_th, contact_email, contact_address, contact_phone, contact_line, contact_map_url, facebook_url, instagram_url, messenger_url, whatsapp_number, x_url, visiting_hours, visiting_hours_th, featured_resident_id, preferred_channels";
 
 export async function loadSiteContent(
   supabase: SupabaseClient,

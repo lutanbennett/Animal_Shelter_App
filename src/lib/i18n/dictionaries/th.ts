@@ -183,14 +183,39 @@ const th: Dictionary = {
     followUs: "ติดตามเรา",
   },
 
+  /** The public site's contact channels (0111, src/lib/site/channels.ts). */
+  contactChannels: {
+    name: {
+      line: "LINE",
+      messenger: "Messenger",
+      whatsapp: "WhatsApp",
+      instagram: "Instagram",
+      phone: "โทรศัพท์",
+      email: "อีเมล",
+    },
+    ask: {
+      line: "สอบถามทาง LINE",
+      messenger: "สอบถามทาง Messenger",
+      whatsapp: "สอบถามทาง WhatsApp",
+      instagram: "สอบถามทาง Instagram",
+      phone: "โทรหาเรา",
+      email: "ส่งอีเมลถึงเรา",
+    },
+    us: {
+      line: (value: string | null) => `LINE ${value ?? ""}`.trim(),
+      messenger: (_value: string | null) => "ทักเราทาง Messenger",
+      whatsapp: (_value: string | null) => "ทักเราทาง WhatsApp",
+      instagram: (_value: string | null) => "ติดตามเราบน Instagram",
+      phone: (value: string | null) => `โทร ${value ?? ""}`.trim(),
+      email: (_value: string | null) => "ส่งอีเมลถึงเรา",
+    },
+    getInTouchHint: (list: string) => `ติดต่อเราทาง ${list} แล้วเราจะติดต่อกลับ`,
+  },
+
   sitePages: {
     comingSoon: "หน้านี้กำลังจัดทำ — โปรดกลับมาใหม่ภายหลัง",
     getInTouch: "ติดต่อเรา",
-    getInTouchHint: "ส่งอีเมลหรือทักไลน์ถึงเรา แล้วเราจะติดต่อกลับ",
-    emailUs: "ส่งอีเมลถึงเรา",
-    lineUs: (id: string) => `LINE ${id}`,
     alsoSee: "ดูเพิ่มเติม:",
-    callUs: (phone: string) => `โทร ${phone}`,
     friendsJoin: {
       hint: "เล่าให้เราฟังเกี่ยวกับธุรกิจของคุณและวิธีที่คุณอยากช่วย — ทางไลน์ โทรศัพท์ หรืออีเมล — แล้วเราจะติดต่อกลับ",
       subject: "สนใจเป็นเพื่อนของศูนย์พักพิง",
@@ -946,6 +971,13 @@ const th: Dictionary = {
         whatsappNumber: "หมายเลข WhatsApp",
         whatsappNumberHint:
           "ใส่รหัสประเทศด้วย เช่น +66 81 234 5678 — มีช่องว่างหรือขีดได้ ผู้เยี่ยมชมจะเห็นปุ่มที่เปิดแชท WhatsApp เว้นว่างเพื่อซ่อน",
+        preferredHeading: "ช่องทางติดต่อที่ต้องการให้ใช้",
+        preferredHint:
+          "ช่องทางแรกคือปุ่มหลักบนเว็บไซต์ (แถบท้ายหน้าโปรไฟล์สัตว์ การ์ดติดต่อ ท้ายเว็บ และเมนูบนมือถือ) ที่เหลือเรียงตามลำดับ แสดงเฉพาะช่องทางที่กรอกไว้ด้านบน หากช่องทางแรกถูกลบ เว็บไซต์จะใช้ช่องทางถัดไป",
+        preferredNone: "กรอกช่องทางติดต่ออย่างน้อยหนึ่งช่องด้านบนก่อน แล้วจึงเลือกลำดับได้",
+        preferredFirst: "ช่องทางหลัก",
+        moveUp: (name: string) => `ย้าย ${name} ขึ้น`,
+        moveDown: (name: string) => `ย้าย ${name} ลง`,
       },
       vetVisit: {
         heading: "ค่าพบสัตวแพทย์โดยทั่วไป",
@@ -3791,7 +3823,6 @@ const th: Dictionary = {
       sponsorHeading: (name: string) => `รับเลี้ยงไม่ได้? คุณยังช่วย ${name} ได้`,
       sponsorLink: "บริจาครายเดือนเพื่อค่าอาหารและการดูแล",
       actions: (name: string) => `ติดต่อเราเรื่อง ${name}`,
-      askOnLine: "สอบถามทาง LINE",
       bookVisit: "นัดเยี่ยมชม",
       emailSubject: (name: string) => `ขอนัดเยี่ยม ${name}`,
     },

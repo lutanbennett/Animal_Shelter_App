@@ -19,7 +19,8 @@ import {
   loadPublicResident,
   loadSimilarResidents,
 } from "@/lib/residents/public";
-import { lineLink, loadSiteContent, visitingHoursLines } from "@/lib/site/content";
+import { preferredChannels } from "@/lib/site/channels";
+import { loadSiteContent, visitingHoursLines } from "@/lib/site/content";
 import { ShareButton } from "@/components/ShareButton";
 import { BackLink } from "../BackLink";
 import { PublicHeader } from "../PublicHeader";
@@ -172,14 +173,20 @@ export default async function PublicResidentPage(
   ].filter(Boolean) as string[];
 
   const hours = visitingHoursLines(locale, content);
-  const line = lineLink(content?.contact_line);
   const phone = content?.contact_phone?.replace(/\s+/g, "");
   const email = content?.contact_email ?? "lannacareforanimals@gmail.com";
+  const emailSubject = p.emailSubject(resident.name);
   // "Book a visit" rings the shelter, as the mockup's "Message us on LINE
   // or call" has it; with no phone number on file it becomes an email.
   const bookHref = phone
     ? `tel:${phone}`
-    : `mailto:${email}?subject=${encodeURIComponent(p.emailSubject(resident.name))}`;
+    : `mailto:${email}?subject=${encodeURIComponent(emailSubject)}`;
+  // The button beside it is the shelter's preferred channel (LINE unless
+  // they chose otherwise), the message started where the channel can. Not
+  // shown when that channel is the one Book a visit already uses.
+  const first = preferredChannels(content, { message: emailSubject })[0];
+  const ask =
+    first && first.channel !== "phone" && !(first.channel === "email" && !phone) ? first : null;
 
   return (
     <main className="flex flex-1 flex-col font-site text-site-ink">
@@ -366,14 +373,13 @@ export default async function PublicResidentPage(
           className="sticky bottom-0 z-20 mt-auto border-t border-site-line bg-site-paper px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3"
         >
           <div className="mx-auto flex max-w-6xl gap-2.5 sm:justify-end lg:px-4">
-            {line && (
+            {ask && (
               <a
-                href={line.href}
-                target="_blank"
-                rel="noreferrer"
+                href={ask.href}
+                {...(ask.external ? { target: "_blank", rel: "noreferrer" } : {})}
                 className="flex h-[52px] flex-1 items-center justify-center rounded-full bg-site-accent px-6 text-base font-bold text-site-on-accent hover:opacity-90 sm:flex-none sm:basis-56"
               >
-                {p.askOnLine}
+                {t.contactChannels.ask[ask.channel]}
               </a>
             )}
             <a
