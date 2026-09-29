@@ -121,7 +121,7 @@ gates: typecheck=0 lint=0 build=0
 
 ### Rollback
 
-- [ ] Rollback position stated — `npx wrangler rollback --env production` reverts the Worker; no schema is involved, so nothing is left behind
+- [x] Rollback position stated — `npx wrangler rollback --env production` reverts the Worker; no schema is involved, so nothing is left behind
 
 ## Defects found
 
