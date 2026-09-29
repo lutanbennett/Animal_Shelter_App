@@ -170,6 +170,17 @@ if (!root.ok) {
   }
 }
 
+// The microchip number (0113) is staff-only. Refused twice over: the base
+// table refuses anon outright, and no public object may even have the column
+// (PostgREST answers 400 for a column that does not exist, and 401/403 for a
+// grant that is missing; either way anon gets nothing, a 2xx is the leak).
+for (const name of ["residents", ...PUBLIC]) {
+  for (const column of ["microchip_number", "microchip_implanted_on"]) {
+    const read = await fetch(`${url}/rest/v1/${name}?select=${column}&limit=1`, { headers });
+    report(!read.ok, `${name}.${column}: anon SELECT is refused`, `HTTP ${read.status}`);
+  }
+}
+
 // is_public_drive_file must tell the two kinds of file apart when anon asks:
 // yes for a photo the public site shows, no for an internal attachment the
 // photo proxy also knows (a blood-test or procedure file). Skipped, not
