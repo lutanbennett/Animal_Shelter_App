@@ -238,11 +238,7 @@ const en = {
   sitePages: {
     comingSoon: "This page is being written — check back soon.",
     getInTouch: "Get in touch",
-    getInTouchHint: "Email us or message us on LINE and we'll get back to you.",
-    emailUs: "Email us",
-    lineUs: (id: string) => `LINE ${id}`,
     alsoSee: "See also:",
-    callUs: (phone: string) => `Call ${phone}`,
     /**
      * /friends/join's contact card: the hint, and the email subject and
      * message (also the LINE message, where LINE can prefill one) a
@@ -1028,6 +1024,13 @@ const en = {
         whatsappNumber: "WhatsApp number",
         whatsappNumberHint:
           "With the country code, e.g. +66 81 234 5678 — spaces and dashes are fine. Visitors get a button that opens a WhatsApp chat. Leave blank to hide.",
+        preferredHeading: "Preferred way to contact us",
+        preferredHint:
+          "The first channel is the main button on the public site (the bar on an animal's page, the get-in-touch card, the footer and the phone menu); the rest follow in this order. Only channels filled in above are listed. If the first one is later cleared, the site uses the next.",
+        preferredNone: "Fill in at least one way to contact you above, then choose the order here.",
+        preferredFirst: "Preferred",
+        moveUp: (name: string) => `Move ${name} up`,
+        moveDown: (name: string) => `Move ${name} down`,
       },
       vetVisit: {
         heading: "Typical vet visit",
@@ -3945,7 +3948,6 @@ const en = {
       sponsorHeading: (name: string) => `Can't adopt? You can still help ${name}`,
       sponsorLink: "Give monthly towards their food and care",
       actions: (name: string) => `Get in touch about ${name}`,
-      askOnLine: "Ask on LINE",
       bookVisit: "Book a visit",
       emailSubject: (name: string) => `Visiting ${name}`,
     },
