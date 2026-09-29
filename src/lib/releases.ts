@@ -67,7 +67,7 @@ export const unreleased: ReleaseNote[] = [];
 export const releases: Release[] = [
   {
     version: "0.10.0",
-    date: "2026-09-29",
+    date: "2026-09-30",
     title:
       "Microchip numbers, an Appointments page for vets, fixed monthly costs in the forecast, and a printable manual",
     major: true,
