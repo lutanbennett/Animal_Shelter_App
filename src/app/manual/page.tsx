@@ -185,6 +185,20 @@ function FilterBar({
         </Link>
       </p>
       {!showAll && <p className="text-xs text-muted">{manual.filter.findHint}</p>}
+      <p className="flex flex-wrap gap-x-3 text-xs">
+        <a
+          href={showAll ? "/manual/pdf?view=all" : "/manual/pdf"}
+          className="font-medium text-primary underline-offset-2 hover:underline"
+        >
+          Print this as a PDF
+        </a>
+        <a
+          href={showAll ? "/manual/pdf?view=all&images=0" : "/manual/pdf?images=0"}
+          className="text-muted underline-offset-2 hover:underline"
+        >
+          Without screenshots
+        </a>
+      </p>
     </div>
   );
 }
