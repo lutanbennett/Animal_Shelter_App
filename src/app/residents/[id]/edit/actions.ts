@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { runAction, type ActionRefusal } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { RESIDENT_SIZES, type ResidentSize } from "@/lib/i18n/enum-labels";
@@ -17,7 +18,7 @@ import { moveResidentToEnclosure } from "@/lib/placements/move";
 import { refreshDeceasedArchiveIfNeeded } from "@/lib/archive/refresh-deceased-archive";
 import { setResidentProfilePhoto } from "@/lib/residents/profile-photo";
 
-export type EditResidentState = { error: string } | undefined;
+export type EditResidentState = ActionRefusal | undefined;
 
 function str(formData: FormData, key: string): string | null {
   const value = formData.get(key);
@@ -39,170 +40,172 @@ export async function updateResident(
   formData: FormData,
 ): Promise<EditResidentState> {
   const { t } = await getT();
-  const supabase = await createClient();
+  return runAction<never>("residents.updateResident", t.common.somethingWentWrong, async () => {
+    const supabase = await createClient();
 
-  // RLS would silently match zero rows for a volunteer/vet rather than
-  // error, so check the role up front and give a real message.
-  const { data: role } = await supabase.rpc("current_user_role");
-  if (role !== "admin" && role !== "management" && role !== "staff") {
-    return { error: t.residents.edit.notAuthorized };
-  }
+    // RLS would silently match zero rows for a volunteer/vet rather than
+    // error, so check the role up front and give a real message.
+    const { data: role } = await supabase.rpc("current_user_role");
+    if (role !== "admin" && role !== "management" && role !== "staff") {
+      return { ok: false, error: t.residents.edit.notAuthorized };
+    }
 
-  // A deceased resident's record is closed except for the bio and photos
-  // (0026, 0052): the form only shows those sections, and this writes only
-  // those columns — anything else would trip the lock.
-  const { data: state } = await supabase
-    .from("resident_current_state")
-    .select("is_deceased")
-    .eq("resident_id", residentId)
-    .limit(1)
-    .returns<{ is_deceased: boolean }[]>();
-  if (state?.[0]?.is_deceased) {
-    return updateDeceasedResident(supabase, t, residentId, formData);
-  }
-
-  const name = str(formData, "name");
-  if (!name) return { error: t.residents.edit.errors.nameRequired };
-
-  const estimatedAgeYearsRaw = str(formData, "estimatedAgeYears");
-  const estimatedAgeYears =
-    estimatedAgeYearsRaw !== null ? Number(estimatedAgeYearsRaw) : null;
-  if (estimatedAgeYears !== null && Number.isNaN(estimatedAgeYears)) {
-    return { error: t.residents.edit.errors.ageMustBeNumber };
-  }
-
-  const [{ data: currentRows }, { data: placementRows }] = await Promise.all([
-    supabase
-      .from("residents")
-      .select("estimated_age_years, age_estimated_on, profile_photo_drive_file_id")
-      .eq("id", residentId)
-      .limit(1)
-      .returns<
-        {
-          estimated_age_years: number | null;
-          age_estimated_on: string | null;
-          profile_photo_drive_file_id: string | null;
-        }[]
-      >(),
-    supabase
-      .from("placement_history")
-      .select("enclosure_id")
+    // A deceased resident's record is closed except for the bio and photos
+    // (0026, 0052): the form only shows those sections, and this writes only
+    // those columns — anything else would trip the lock.
+    const { data: state } = await supabase
+      .from("resident_current_state")
+      .select("is_deceased")
       .eq("resident_id", residentId)
-      .is("end_date", null)
       .limit(1)
-      .returns<{ enclosure_id: string | null }[]>(),
-  ]);
-  const current = currentRows?.[0];
-  if (!current) return { error: t.residents.edit.errors.notFound };
-  const currentEnclosureId = placementRows?.[0]?.enclosure_id ?? null;
+      .returns<{ is_deceased: boolean }[]>();
+    if (state?.[0]?.is_deceased) {
+      return updateDeceasedResident(supabase, t, residentId, formData);
+    }
 
-  // The form shows the age as it reads *today*. Only if that number was
-  // changed do we store a new estimate anchored to today; otherwise the
-  // stored estimate and its date are left alone so the resident doesn't get
-  // younger every time someone fixes a typo elsewhere on the form.
-  const ageNow = estimatedAgeNow(current.estimated_age_years, current.age_estimated_on);
-  const ageChanged = estimatedAgeYears !== ageNow;
-  const ageFields = ageChanged
-    ? {
-        estimated_age_years: estimatedAgeYears,
-        age_estimated_on:
-          estimatedAgeYears === null ? null : todayIso(),
-      }
-    : {};
+    const name = str(formData, "name");
+    if (!name) return { ok: false, error: t.residents.edit.errors.nameRequired };
 
-  // Ready for adoption and public visibility are the same decision, as at
-  // intake — there's no separate "public but not adoptable" state today.
-  const readyForAdoption = formData.get("readyForAdoption") === "on";
+    const estimatedAgeYearsRaw = str(formData, "estimatedAgeYears");
+    const estimatedAgeYears =
+      estimatedAgeYearsRaw !== null ? Number(estimatedAgeYearsRaw) : null;
+    if (estimatedAgeYears !== null && Number.isNaN(estimatedAgeYears)) {
+      return { ok: false, error: t.residents.edit.errors.ageMustBeNumber };
+    }
 
-  // Required on every save (0051), so a resident intaken before the size
-  // field existed picks one up the first time their details are edited.
-  const size = str(formData, "size");
-  if (!size || !RESIDENT_SIZES.includes(size as ResidentSize)) {
-    return { error: t.residents.new.errors.sizeRequired };
-  }
+    const [{ data: currentRows }, { data: placementRows }] = await Promise.all([
+      supabase
+        .from("residents")
+        .select("estimated_age_years, age_estimated_on, profile_photo_drive_file_id")
+        .eq("id", residentId)
+        .limit(1)
+        .returns<
+          {
+            estimated_age_years: number | null;
+            age_estimated_on: string | null;
+            profile_photo_drive_file_id: string | null;
+          }[]
+        >(),
+      supabase
+        .from("placement_history")
+        .select("enclosure_id")
+        .eq("resident_id", residentId)
+        .is("end_date", null)
+        .limit(1)
+        .returns<{ enclosure_id: string | null }[]>(),
+    ]);
+    const current = currentRows?.[0];
+    if (!current) return { ok: false, error: t.residents.edit.errors.notFound };
+    const currentEnclosureId = placementRows?.[0]?.enclosure_id ?? null;
 
-  const adoptionCopy = readAdoptionCopy(formData);
-  if ("tooLong" in adoptionCopy) {
-    return {
-      error:
-        adoptionCopy.tooLong === "hookLine"
-          ? t.residents.edit.errors.hookLineTooLong(HOOK_LINE_MAX)
-          : t.residents.edit.errors.idealHomeTooLong(IDEAL_HOME_MAX),
-    };
-  }
+    // The form shows the age as it reads *today*. Only if that number was
+    // changed do we store a new estimate anchored to today; otherwise the
+    // stored estimate and its date are left alone so the resident doesn't get
+    // younger every time someone fixes a typo elsewhere on the form.
+    const ageNow = estimatedAgeNow(current.estimated_age_years, current.age_estimated_on);
+    const ageChanged = estimatedAgeYears !== ageNow;
+    const ageFields = ageChanged
+      ? {
+          estimated_age_years: estimatedAgeYears,
+          age_estimated_on:
+            estimatedAgeYears === null ? null : todayIso(),
+        }
+      : {};
 
-  const bloodTestIntervalMonths = parseBloodTestInterval(
-    str(formData, "bloodTestIntervalMonths"),
-  );
-  if (bloodTestIntervalMonths === null) {
-    return { error: t.residents.new.errors.bloodTestIntervalInvalid };
-  }
+    // Ready for adoption and public visibility are the same decision, as at
+    // intake — there's no separate "public but not adoptable" state today.
+    const readyForAdoption = formData.get("readyForAdoption") === "on";
 
-  const { data: updated, error } = await supabase
-    .from("residents")
-    // resident_code is system-assigned at intake and deliberately not here.
-    .update({
-      name,
-      thai_name: str(formData, "thaiName"),
-      other_names: str(formData, "otherNames"),
-      species: str(formData, "species"),
-      breed: str(formData, "breed"),
-      sex: str(formData, "sex"),
-      size,
-      ...ageFields,
-      bio: str(formData, "bio"),
-      temperament_notes: str(formData, "temperamentNotes"),
-      past_story_notes: str(formData, "pastStoryNotes"),
-      behaviour_notes: str(formData, "behaviourNotes"),
-      ready_for_adoption: readyForAdoption,
-      is_public_visible: readyForAdoption,
-      blood_test_interval_months: bloodTestIntervalMonths,
-      ...readAdoptionProfile(formData),
-      ...adoptionCopy,
-    })
-    .eq("id", residentId)
-    .select("id")
-    .returns<{ id: string }[]>();
+    // Required on every save (0051), so a resident intaken before the size
+    // field existed picks one up the first time their details are edited.
+    const size = str(formData, "size");
+    if (!size || !RESIDENT_SIZES.includes(size as ResidentSize)) {
+      return { ok: false, error: t.residents.new.errors.sizeRequired };
+    }
 
-  if (error) return { error: error.message };
-  if (!updated?.[0]) return { error: t.residents.edit.errors.notFound };
+    const adoptionCopy = readAdoptionCopy(formData);
+    if ("tooLong" in adoptionCopy) {
+      return {
+        error:
+          adoptionCopy.tooLong === "hookLine"
+            ? t.residents.edit.errors.hookLineTooLong(HOOK_LINE_MAX)
+            : t.residents.edit.errors.idealHomeTooLong(IDEAL_HOME_MAX),
+      };
+    }
 
-  // Profile photo goes through the one helper, so the Medical refusal and
-  // the RPC's "file must belong to this resident" check (0013) stay in one place.
-  const profilePhotoDriveFileId = str(formData, "profilePhotoDriveFileId");
-  if (
-    profilePhotoDriveFileId &&
-    profilePhotoDriveFileId !== current.profile_photo_drive_file_id
-  ) {
-    const refused = await setResidentProfilePhoto(supabase, t, residentId, profilePhotoDriveFileId);
-    if (refused) return refused;
-  }
+    const bloodTestIntervalMonths = parseBloodTestInterval(
+      str(formData, "bloodTestIntervalMonths"),
+    );
+    if (bloodTestIntervalMonths === null) {
+      return { ok: false, error: t.residents.new.errors.bloodTestIntervalInvalid };
+    }
 
-  // A blank enclosure means "leave housing alone" (the picker starts blank
-  // when the resident is in a Lifecycle pseudo-enclosure); the current
-  // enclosure re-submitted unchanged is the same thing. Runs after the
-  // resident update, so an error here leaves those fields saved and only
-  // the move to retry.
-  const enclosureId = str(formData, "enclosureId");
-  if (enclosureId && enclosureId !== currentEnclosureId) {
-    const moved = await moveResidentToEnclosure(supabase, t, {
-      residentId,
-      enclosureId,
-      moveDate: str(formData, "moveDate") ?? "",
-      notes: str(formData, "moveNotes"),
-    });
-    if ("error" in moved) return moved;
-    revalidatePath(`/residents/${residentId}/housing`);
-    revalidatePath("/enclosures", "layout");
-  }
+    const { data: updated, error } = await supabase
+      .from("residents")
+      // resident_code is system-assigned at intake and deliberately not here.
+      .update({
+        name,
+        thai_name: str(formData, "thaiName"),
+        other_names: str(formData, "otherNames"),
+        species: str(formData, "species"),
+        breed: str(formData, "breed"),
+        sex: str(formData, "sex"),
+        size,
+        ...ageFields,
+        bio: str(formData, "bio"),
+        temperament_notes: str(formData, "temperamentNotes"),
+        past_story_notes: str(formData, "pastStoryNotes"),
+        behaviour_notes: str(formData, "behaviourNotes"),
+        ready_for_adoption: readyForAdoption,
+        is_public_visible: readyForAdoption,
+        blood_test_interval_months: bloodTestIntervalMonths,
+        ...readAdoptionProfile(formData),
+        ...adoptionCopy,
+      })
+      .eq("id", residentId)
+      .select("id")
+      .returns<{ id: string }[]>();
 
-  revalidatePath("/residents");
-  revalidatePath(`/residents/${residentId}`);
-  revalidatePath(`/residents/${residentId}/photos`);
-  // Name/visibility changes show up on the public adoption pages too.
-  revalidatePath("/adopt");
-  revalidatePath(`/adopt/${residentId}`);
-  redirect(`/residents/${residentId}`);
+    if (error) return { ok: false, error: error.message };
+    if (!updated?.[0]) return { ok: false, error: t.residents.edit.errors.notFound };
+
+    // Profile photo goes through the one helper, so the Medical refusal and
+    // the RPC's "file must belong to this resident" check (0013) stay in one place.
+    const profilePhotoDriveFileId = str(formData, "profilePhotoDriveFileId");
+    if (
+      profilePhotoDriveFileId &&
+      profilePhotoDriveFileId !== current.profile_photo_drive_file_id
+    ) {
+      const refused = await setResidentProfilePhoto(supabase, t, residentId, profilePhotoDriveFileId);
+      if (refused) return { ok: false, error: refused.error };
+    }
+
+    // A blank enclosure means "leave housing alone" (the picker starts blank
+    // when the resident is in a Lifecycle pseudo-enclosure); the current
+    // enclosure re-submitted unchanged is the same thing. Runs after the
+    // resident update, so an error here leaves those fields saved and only
+    // the move to retry.
+    const enclosureId = str(formData, "enclosureId");
+    if (enclosureId && enclosureId !== currentEnclosureId) {
+      const moved = await moveResidentToEnclosure(supabase, t, {
+        residentId,
+        enclosureId,
+        moveDate: str(formData, "moveDate") ?? "",
+        notes: str(formData, "moveNotes"),
+      });
+      if ("error" in moved) return { ok: false, error: moved.error };
+      revalidatePath(`/residents/${residentId}/housing`);
+      revalidatePath("/enclosures", "layout");
+    }
+
+    revalidatePath("/residents");
+    revalidatePath(`/residents/${residentId}`);
+    revalidatePath(`/residents/${residentId}/photos`);
+    // Name/visibility changes show up on the public adoption pages too.
+    revalidatePath("/adopt");
+    revalidatePath(`/adopt/${residentId}`);
+    redirect(`/residents/${residentId}`);
+  });
 }
 
 /**
@@ -215,7 +218,7 @@ async function updateDeceasedResident(
   t: Awaited<ReturnType<typeof getT>>["t"],
   residentId: string,
   formData: FormData,
-): Promise<EditResidentState> {
+): Promise<ActionRefusal> {
   const { data: currentRows } = await supabase
     .from("residents")
     .select("profile_photo_drive_file_id")
@@ -223,7 +226,7 @@ async function updateDeceasedResident(
     .limit(1)
     .returns<{ profile_photo_drive_file_id: string | null }[]>();
   const current = currentRows?.[0];
-  if (!current) return { error: t.residents.edit.errors.notFound };
+  if (!current) return { ok: false, error: t.residents.edit.errors.notFound };
 
   const { data: updated, error } = await supabase
     .from("residents")
@@ -236,13 +239,13 @@ async function updateDeceasedResident(
     .eq("id", residentId)
     .select("id")
     .returns<{ id: string }[]>();
-  if (error) return { error: error.message };
-  if (!updated?.[0]) return { error: t.residents.edit.errors.notFound };
+  if (error) return { ok: false, error: error.message };
+  if (!updated?.[0]) return { ok: false, error: t.residents.edit.errors.notFound };
 
   const profilePhotoDriveFileId = str(formData, "profilePhotoDriveFileId");
   if (profilePhotoDriveFileId && profilePhotoDriveFileId !== current.profile_photo_drive_file_id) {
     const refused = await setResidentProfilePhoto(supabase, t, residentId, profilePhotoDriveFileId);
-    if (refused) return refused;
+    if (refused) return { ok: false, error: refused.error };
   }
 
   // Best effort — the edit is saved; a Drive hiccup leaves the old files
