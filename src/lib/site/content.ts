@@ -79,8 +79,10 @@ export function lineLink(contactLine: string | null | undefined): {
   const value = contactLine?.trim();
   if (!value) return null;
   if (/^https?:\/\//i.test(value)) return { href: value, label: value };
-  const id = value.replace(/^@/, "");
-  return { href: `https://line.me/R/ti/p/~${encodeURIComponent(id)}`, label: value };
+  // LINE has two add-friend forms: "@id" for an Official Account, "~id" for
+  // a personal id. The @ the admin typed says which one they have.
+  const prefix = value.startsWith("@") ? "" : "~";
+  return { href: `https://line.me/R/ti/p/${prefix}${encodeURIComponent(value)}`, label: value };
 }
 
 /**
