@@ -156,7 +156,7 @@ Automated checks by: Claude (request-access-link session)  Date: 2026-09-29
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: a person to run the three rows above
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty and nobody has looked yet; see the pending signature below
 
 Manual verification by: pending: a person to run the three rows above
 
