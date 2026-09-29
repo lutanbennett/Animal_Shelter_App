@@ -150,6 +150,7 @@ export const VET_ICONS = {
  */
 export const NAV_ICONS = {
   my: ListTodo,
+  appointments: VET_ICONS.upcoming,
   residents: CONTACT_ICONS.residents,
   enclosures: ENCLOSURE_ICONS.enclosure,
   maintenance: ENCLOSURE_ICONS.maintenance,

@@ -65,6 +65,7 @@ const en = {
 
   nav: {
     my: "My tasks",
+    appointments: "Appointments",
     residents: "Residents",
     settings: "Settings",
     management: "Management",
@@ -3409,6 +3410,23 @@ const en = {
     pageTitle: "You don't have access to this page",
     body: "Your role doesn't include it. If you need it for your work, ask a manager or an admin.",
     goToMy: "Go to My tasks",
+    goToAppointments: "Go to Appointments",
+  },
+
+  vetAppointments: {
+    pageTitle: "Appointments",
+    pageSubtitle: "Visits booked with your clinic.",
+    unlinked: "Your account is not linked to a clinic yet, so there are no appointments to show. Ask an admin to set it.",
+    couldntLoad: "Couldn’t load appointments",
+    unknownResident: "Unknown resident",
+    toWriteUp: "To write up",
+    toWriteUpHint: "Visits that have happened and are not marked done.",
+    emptyToWriteUp: "Nothing waiting to be written up.",
+    upcoming: "Upcoming",
+    emptyUpcoming: "No upcoming appointments.",
+    recentlyDone: "Recently done",
+    recentlyDoneHint: "Marked done in the last 30 days. You can still add records to them.",
+    emptyRecentlyDone: "Nothing marked done recently.",
   },
 
   my: {
