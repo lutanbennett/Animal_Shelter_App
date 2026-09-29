@@ -107,7 +107,23 @@ export async function SitePageView({
 
   return (
     <main className="flex flex-1 flex-col">
-      <PublicHeader current={section} />
+      <PublicHeader
+        current={section}
+        trail={(() => {
+          const gi = t.publicNav.getInvolved;
+          const title = text.title || t.header.appName;
+          switch (slug) {
+            case "foster":
+            case "volunteer":
+            case "shelter-friends-join":
+              return [{ label: gi }, { label: title }];
+            case "international-adoption":
+              return [{ label: t.adopt.adoptNav, href: "/adopt" }, { label: title }];
+            default:
+              return [{ label: title }];
+          }
+        })()}
+      />
 
       <article className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10 sm:px-12">
         {hero ? (

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { getT } from "@/lib/i18n/get-t";
@@ -22,6 +21,7 @@ import {
 } from "@/lib/residents/public";
 import { lineLink, loadSiteContent, visitingHoursLines } from "@/lib/site/content";
 import { ShareButton } from "@/components/ShareButton";
+import { BackLink } from "../BackLink";
 import { PublicHeader } from "../PublicHeader";
 import { PublicFooter } from "../PublicFooter";
 import { ResidentCard } from "../ResidentCard";
@@ -183,7 +183,10 @@ export default async function PublicResidentPage(
 
   return (
     <main className="flex flex-1 flex-col font-site text-site-ink">
-      <PublicHeader current="adopt" />
+      <PublicHeader
+        current="adopt"
+        trail={[{ label: t.adopt.adoptNav, href: "/adopt" }, { label: resident.name }]}
+      />
 
       {/* The sticky bar is the last child of this wrapper, so it rides the
           bottom of the screen while the profile scrolls and comes to rest
@@ -191,13 +194,12 @@ export default async function PublicResidentPage(
           at the end (the mockup's bar covers it). */}
       <div className="flex flex-1 flex-col">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-3 py-2 lg:px-8 lg:py-4">
-          <Link
+          <BackLink
             href="/adopt"
             className="flex min-h-11 items-center gap-1.5 rounded-full px-1 text-base font-semibold text-site-ink hover:text-site-action-hover"
           >
-            <ChevronLeft className="h-[18px] w-[18px]" strokeWidth={2.2} aria-hidden />
             {p.allAnimals}
-          </Link>
+          </BackLink>
           <ShareButton
             variant="site"
             title={`${resident.name} · ${t.header.appName}`}

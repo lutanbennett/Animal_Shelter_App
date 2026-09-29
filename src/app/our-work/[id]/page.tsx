@@ -17,6 +17,7 @@ import {
   summaryParagraphs,
 } from "@/lib/projects/public";
 import { localizedField } from "@/lib/translations/localize";
+import { BackLink } from "../../adopt/BackLink";
 import { PublicHeader } from "../../adopt/PublicHeader";
 import { PublicFooter } from "../../adopt/PublicFooter";
 import { ProjectCard } from "../ProjectCard";
@@ -102,15 +103,18 @@ export default async function PublicProjectPage(
 
   return (
     <main className="flex flex-1 flex-col">
-      <PublicHeader current="our-work" />
+      <PublicHeader
+        current="our-work"
+        trail={[{ label: t.adopt.ourWorkNav, href: "/our-work" }, { label: title }]}
+      />
 
       <article className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-10 sm:px-12">
-        <Link
+        <BackLink
           href="/our-work"
-          className="text-sm font-medium text-muted hover:text-foreground"
+          className="-ml-1 flex min-h-11 w-fit items-center gap-1.5 text-base font-semibold text-muted hover:text-foreground"
         >
           {t.ourWork.backToAll}
-        </Link>
+        </BackLink>
 
         <header className="flex flex-col gap-3">
           <Link
