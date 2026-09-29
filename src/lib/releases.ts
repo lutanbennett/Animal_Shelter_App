@@ -63,14 +63,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   "The sign-in page now has a Request access link that explains how to ask for an account: continue with Google, and an administrator will see the request and approve it. The message a new Google account gets afterwards now says it has been told, instead of sounding like a dead end, and people with no Google account are pointed to the shelter's email.",
-  { text: "A vet now sees only the residents their own clinic treats: any resident the clinic has a vet visit, prescription, procedure or blood test for, with that resident's whole history, other clinics' visits included. Other residents no longer appear anywhere a vet can look, including by typing a resident's address. The Residents list names the clinic, and a vet account with no clinic set sees no residents until an admin sets one under Security.", roles: ["vet", "admin"] },
-  { text: "Admins can now see whether anyone is waiting for access without signing in with the authenticator app. Settings → System status has an Access requests card saying how many are waiting and how long the oldest has waited, and while anyone waits every admin has a Review access requests task at the top of My tasks. Neither says who is asking — names and email addresses are still only on Settings → Security, which both link to.", roles: ["admin"] },
-  "A prescription or diet that ended yesterday no longer shows as current on a resident's page between midnight and 7 in the morning. It used to stay listed as current until 7. The date on Return from hospital, Rehome and Return to shelter also no longer offers the day before a move made in those hours, which the save then refused.",
-  { text: "Admin pages (Zones, Enclosures, Frequencies, Immunization types, Procedure types, Blood test types, Website, System status) now show the real reason an action was refused, instead of a generic error.", roles: ["admin"] },
-  "Going from the home page to the dogs up for adoption now shows our puppy-at-a-laptop loading animation for a moment before the list appears. Changing a filter or the ready-only toggle on that page stays instant.",
-  "A resident photo filed under the wrong folder can now be refiled without deleting and re-uploading it — open it in the photo viewer and choose Move to folder. Its date taken and caption stay; only its folder, in Drive and in the app, changes. A vet can move a photo into Medical but not out of it, and a photo can't be moved into Medical while it's the resident's profile photo.",
 ];
-export const unreleased: ReleaseNote[] = [];
 
 /** Newest first. */
 export const releases: Release[] = [
