@@ -32,7 +32,7 @@ export async function createFixedOutgoing(
 ): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
   const m = t.management.fixedOutgoings;
-  return runAction("fixedOutgoings.create", t.common.somethingWentWrong, async () => {
+  return runAction<{ success: string }>("fixedOutgoings.create", t.common.somethingWentWrong, async () => {
     if (!(await hasManagementRole())) {
       return { ok: false, error: t.management.errors.managementAccessRequired };
     }
@@ -69,7 +69,7 @@ export async function updateFixedOutgoing(
 ): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
   const m = t.management.fixedOutgoings;
-  return runAction("fixedOutgoings.update", t.common.somethingWentWrong, async () => {
+  return runAction<{ success: string }>("fixedOutgoings.update", t.common.somethingWentWrong, async () => {
     if (!(await hasManagementRole())) {
       return { ok: false, error: t.management.errors.managementAccessRequired };
     }
@@ -92,7 +92,7 @@ export async function updateFixedOutgoing(
 export async function deleteFixedOutgoing(id: string): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
   const m = t.management.fixedOutgoings;
-  return runAction("fixedOutgoings.delete", t.common.somethingWentWrong, async () => {
+  return runAction<{ success: string }>("fixedOutgoings.delete", t.common.somethingWentWrong, async () => {
     if (!(await hasManagementRole())) {
       return { ok: false, error: t.management.errors.managementAccessRequired };
     }
