@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "Vets now land on a new Appointments page instead of My tasks. It lists every visit booked with your clinic — ones still to write up, upcoming ones, and those finished in the last 30 days — and each one opens the resident and offers the procedure, blood test, prescription and weight forms already linked to that visit. Vets no longer have a My tasks page.", roles: ["vet"] },
   { text: "Residents can now have a microchip number. Enter it (15 digits, spaces and dashes are fine) under Edit resident or on the Health step of intake; it shows under the name on the resident's page, and a resident marked ready for adoption with no chip gets a gentle reminder. On the Residents page, the new Scan a chip box takes a reader's 15 digits and opens that resident straight away; an unknown chip offers a new resident with the number filled in. The number is never shown on the public website.", roles: ["admin", "management", "staff"] },
   { text: "A Shelter Friend's profile now says what went wrong instead of showing a numbered code. Making a contact a Friend, saving, publishing or unpublishing a profile, moving one up or down the order, changing or removing its logo, and removing a profile all give a plain message, with a short reference to quote if it is something unexpected.", roles: ["admin", "management"] },
 ];

@@ -1,5 +1,6 @@
 import {
   BookOpen,
+  CalendarClock,
   Camera,
   ClipboardList,
   Fence,
@@ -41,7 +42,7 @@ const manual: Manual = {
       "Everything staff can do, plus the Management section: the reporting dashboard, the contact, vet, medication and diet lists, and the translations of public text.",
     staff:
       "Day-to-day resident work: intake, moves, hospital, foster and adoption, photos, maintenance, projects. Can read medical records.",
-    vet: "Vet visits, procedures, blood tests, prescriptions and immunizations, for the residents their own clinic treats — any resident the clinic has a visit, prescription, procedure or blood test for, with that resident's whole history. Other residents are not shown at all. The menu is My tasks and Residents only — the shelter's enclosures, maintenance, projects, contacts and vet list are not part of a vet's access.",
+    vet: "Vet visits, procedures, blood tests, prescriptions and immunizations, for the residents their own clinic treats — any resident the clinic has a visit, prescription, procedure or blood test for, with that resident's whole history. Other residents are not shown at all. The menu is Appointments and Residents only — the shelter's enclosures, maintenance, projects, contacts and vet list are not part of a vet's access.",
     volunteer:
       "Can see everything; can add photos and move residents between enclosures.",
   },
@@ -75,7 +76,7 @@ const manual: Manual = {
           steps: [
             "Open the app's address in your browser and tap Staff & Volunteer Login — or, once the website is open to the public, Staff login at the very bottom of any public page (or go straight to /login). Already signed in? The public pages have Open the app at the top instead, which takes you to the same place.",
             "Enter your email and password and tap Sign in — or tap Continue with Google if your account was set up with Google.",
-            "You land on My tasks, the app's home page: what's assigned to you today. Sign out any time with the Sign out button at the top right.",
+            "You land on My tasks, the app's home page: what's assigned to you today (a vet lands on Appointments instead). Sign out any time with the Sign out button at the top right.",
             "Forgotten your password? Tap Forgot password? under the Sign in button, enter your email, and follow the link in the message to choose a new one — it's valid for an hour. If you were given a temporary password and it's lost, ask an admin to issue another instead.",
             "To change your password at any time, pick Change password from the bottom of the menu.",
             "New here and don't have an account? Tap Request access under Continue with Google, then Continue with Google and choose the Google account you want to use. You'll be told you don't have access yet — that is the request being sent. An administrator sees it under Access requests and approves you; try signing in again later. Without a Google account, the same page gives the shelter's email: email and password logins are created by an administrator, not requested.",
@@ -108,7 +109,7 @@ const manual: Manual = {
           id: "navigation",
           title: "Finding your way around",
           steps: [
-            "On a computer the menu is always visible down the left, each link with its own icon: My tasks at the top, then Residents, Enclosures and Maintenance, then Vets, Contacts and Projects — and, depending on your role, Management and Settings. A vet's menu is just My tasks and Residents. Those two open a front page of tiles, one for each page inside them; the same icons are used on the tiles and in the menu.",
+            "On a computer the menu is always visible down the left, each link with its own icon: My tasks at the top, then Residents, Enclosures and Maintenance, then Vets, Contacts and Projects — and, depending on your role, Management and Settings. A vet's menu is just Appointments and Residents. Residents opens a front page of tiles, one for each page inside it; the same icons are used on the tiles and in the menu.",
             "Under a dividing line at the very bottom of the menu sit the things you only need now and then, so they are always in the same place: this manual, Release notes, Change password and — for admins — Security, where accounts and roles are managed.",
             "On a phone tap the ☰ button at the top left to open the same menu; tap outside it to close. The same links are the last entries in it, below the same line.",
             "The LCA logo and your email are in the header, with the Assistant button, the language switch and Sign out. Tap the logo to see the public website as a visitor does — it opens in a new tab so you don't lose your place.",
@@ -183,20 +184,31 @@ const manual: Manual = {
 
     // ------------------------------------------------------------------
     {
+      id: "appointments",
+      title: "Appointments",
+      icon: CalendarClock,
+      intro:
+        "A vet's home page: the visits booked with your clinic. It replaces My tasks for a vet — tasks are the shelter's own routine work, and a vet has none.",
+      topics: [
+        {
+          id: "appointments-vet",
+          title: "Your clinic's appointments",
+          roles: ["vet"],
+          path: "Appointments (first in the menu)",
+          intro:
+            "Appointments is the page you land on when you sign in. It lists every visit booked with your clinic — not just your own patients' — in three groups: To write up (the visit date has passed and it is not marked done), Upcoming (today or later) and Recently done (marked done in the last 30 days). Each row names the resident, which opens their page, and offers Log procedure, Log blood test, Add prescription, Log weight and Edit, all already linked to that visit; prescription and weight appear once the visit has started. Marking a visit done does not lock it: you can still add records to it, and anything you were typing when someone marked it done is saved as normal. A cancelled visit is not listed. If the page says your account is not linked to a clinic, ask an admin to set it (Accounts and roles).",
+        },
+      ],
+    },
+
+    // ------------------------------------------------------------------
+    {
       id: "my-tasks",
       title: "My tasks",
       icon: ListTodo,
       intro:
         "What you need to do today: the work assigned to you, in one place. For now that is your recurring jobs (the routine that comes round every week or month, like the Monday stocktake) and your maintenance jobs; other kinds of work will appear here as further sections as they are added.",
       topics: [
-        {
-          id: "my-tasks-vet",
-          title: "My tasks for a vet",
-          roles: ["vet"],
-          path: "My tasks (first in the menu)",
-          intro:
-            "My tasks is the page you land on when you sign in, and you can get back to it from the top of the menu. Nothing is assigned to a vet through it yet: vets aren't given maintenance jobs or recurring jobs, so it says nothing is assigned to you. Your work is the vet visits booked for your clinic — each resident's Vet Appointments page lists theirs (see Medical records).",
-        },
         {
           id: "my-tasks-page",
           title: "Seeing what's assigned to you",
