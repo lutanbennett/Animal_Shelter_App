@@ -31,7 +31,7 @@ export async function login(
   if (!role) {
     await supabase.auth.signOut();
     const { t } = await getT();
-    return { error: t.login.errors.noRole };
+    return { error: t.login.errors.noRolePassword };
   }
 
   // Back to the page that sent them to sign in, if any (the form carries
