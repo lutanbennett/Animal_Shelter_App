@@ -65,6 +65,7 @@ const en = {
 
   nav: {
     my: "My tasks",
+    appointments: "Appointments",
     residents: "Residents",
     settings: "Settings",
     management: "Management",
@@ -1616,10 +1617,14 @@ const en = {
     cashflow: {
       title: "Cashflow forecast",
       subtitle:
-        "What the shelter is committed to spending over the window, added up from the records: food, medication, vaccinations falling due, booked vet visits and open maintenance jobs.",
+        "What the shelter is committed to spending over the window, added up from the records: food, medication, vaccinations falling due, booked vet visits and open maintenance jobs, plus the fixed monthly costs listed under Fixed outgoings.",
       notABudgetLead: "This is not a budget.",
       notABudget:
-        "It is the outgoings the shelter's own records imply, and nothing else — no donations or other income, no salaries, no rent, no utilities, nothing the database does not hold. Treat it as a floor under what the month will cost, not as the whole picture.",
+        "It is the outgoings the shelter's own records imply, plus the fixed monthly costs someone has listed — no donations or other income, and no cost that is neither recorded nor listed. Treat it as a floor under what the month will cost, not as the whole picture.",
+      fixedOutgoingsLink: "Edit fixed outgoings",
+      fixedNote: (amount: string) =>
+        `Fixed outgoings (${amount} a month while active) are counted by the day: a window covering half a month carries half of each line.`,
+      fixedNoteNone: "No fixed outgoings are listed yet, so rent, utilities and salaries are not in these figures.",
       couldntLoad: "Couldn't load the forecast",
       empty: "Nothing falls in this window.",
       window: {
@@ -1631,6 +1636,7 @@ const en = {
         immunization: "Vaccinations",
         vet: "Vet visits",
         maintenance: "Maintenance",
+        fixed: "Fixed outgoings",
       },
       basis: {
         priced: "priced",
@@ -1677,6 +1683,54 @@ const en = {
       vetNoteUnset:
         "No typical vet visit figure has been set, so booked visits without an invoice are not costed at all.",
       vetNoteLink: "Change it on the website settings",
+    },
+    fixedOutgoings: {
+      title: "Fixed outgoings",
+      subtitle:
+        "The regular monthly costs the cashflow forecast adds to what the records imply — rent, electricity, internet, and salaries as one total.",
+      backToCashflow: "Back to Cashflow",
+      notPayrollLead: "This is not payroll.",
+      notPayroll:
+        "A line is a named cost, not a person. Salaries is one total for the whole staff — do not list anyone individually, and nothing here records who is paid what. The list holds at most 24 lines.",
+      couldntLoad: "Couldn't load the fixed outgoings",
+      empty: "No fixed outgoings yet. Add the first one — for example Rent.",
+      count: (n: number, max: number) => `${n} of ${max} lines`,
+      activeTotal: (amount: string) => `${amount} a month while active`,
+      capReached: (max: number) =>
+        `The list is full (${max} lines). Delete or merge a line to add another — it is meant for a few shelter costs, not one line per person.`,
+      inactive: "switched off",
+      perMonth: (amount: string) => `${amount} / month`,
+      periodAlways: "Every month",
+      periodFrom: (from: string) => `From ${from}`,
+      periodUntil: (to: string) => `Until ${to}`,
+      periodRange: (from: string, to: string) => `${from} – ${to}`,
+      confirmDelete: (label: string) => `Delete ${label}? Switch it off instead to keep it on record.`,
+      created: (label: string) => `Added ${label}.`,
+      saved: (label: string) => `Saved ${label}.`,
+      deleted: "Deleted.",
+      form: {
+        addLine: "Add a line",
+        add: "Add line",
+        label: "Cost",
+        labelPlaceholder: "Rent, Electricity, Salaries…",
+        labelHint: "A cost, never a person's name.",
+        amount: "Baht per month",
+        starts: "From month (optional)",
+        ends: "Until month (optional)",
+        rangeHint:
+          "Leave both blank for a cost that applies every month. When an amount changes, end this line and add a new one starting the next month — the old figure stays in the past months.",
+        note: "Note (optional)",
+        active: "Counts in the forecast",
+      },
+      errors: {
+        labelRequired: "Give the cost a name.",
+        amountInvalid: "Enter the monthly amount in baht — zero or more.",
+        monthInvalid: "Choose the months from the pickers, or leave them blank.",
+        rangeReversed: "The last month can't be before the first.",
+        duplicateLabel: (label: string) => `There is already a line called ${label}.`,
+        capReached: (max: number) =>
+          `The list is full (${max} lines). Delete or merge a line to add another.`,
+      },
     },
     dashboard: {
       title: "Management dashboard",
@@ -3409,6 +3463,23 @@ const en = {
     pageTitle: "You don't have access to this page",
     body: "Your role doesn't include it. If you need it for your work, ask a manager or an admin.",
     goToMy: "Go to My tasks",
+    goToAppointments: "Go to Appointments",
+  },
+
+  vetAppointments: {
+    pageTitle: "Appointments",
+    pageSubtitle: "Visits booked with your clinic.",
+    unlinked: "Your account is not linked to a clinic yet, so there are no appointments to show. Ask an admin to set it.",
+    couldntLoad: "Couldn’t load appointments",
+    unknownResident: "Unknown resident",
+    toWriteUp: "To write up",
+    toWriteUpHint: "Visits that have happened and are not marked done.",
+    emptyToWriteUp: "Nothing waiting to be written up.",
+    upcoming: "Upcoming",
+    emptyUpcoming: "No upcoming appointments.",
+    recentlyDone: "Recently done",
+    recentlyDoneHint: "Marked done in the last 30 days. You can still add records to them.",
+    emptyRecentlyDone: "Nothing marked done recently.",
   },
 
   my: {

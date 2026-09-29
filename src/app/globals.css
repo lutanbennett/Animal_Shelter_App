@@ -41,6 +41,11 @@
   --series-immunization: #199e70;
   --series-vet: #c98500;
   --series-maintenance: #d55181;
+  /* Sixth, added with fixed outgoings: a neutral slate rather than another
+     hue, so it reads as "the standing costs" beside the five that come from
+     records. Not yet run through the colour-blind check the other five had
+     (it is the last stack position, adjacent only to maintenance). */
+  --series-fixed: #7f8c9b;
 }
 
 /* Dev and Test (the dev database) wear teal instead of the production

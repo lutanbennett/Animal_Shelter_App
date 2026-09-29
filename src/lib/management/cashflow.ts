@@ -12,7 +12,7 @@ import { isoDatePlus, parseCustomWindow, type ForecastWindow, type ForecastWindo
  */
 
 /**
- * The five categories, in stack order (bottom of the column first). This
+ * The categories, in stack order (bottom of the column first). This
  * order is also the order the series colours were colour-blind checked in,
  * so changing it means re-running that check — see the --series-* tokens in
  * globals.css.
@@ -23,6 +23,10 @@ export const CASHFLOW_CATEGORIES = [
   "immunization",
   "vet",
   "maintenance",
+  // Not from cashflow_forecast: the page folds fixed_outgoings (0114) in as
+  // rows of this category (fixedOutgoingRows). Last, so the five original
+  // series keep the adjacency their colours were checked in.
+  "fixed",
 ] as const;
 
 export type CashflowCategory = (typeof CASHFLOW_CATEGORIES)[number];
@@ -37,6 +41,7 @@ export const CATEGORY_FILL: Record<CashflowCategory, string> = {
   immunization: "var(--series-immunization)",
   vet: "var(--series-vet)",
   maintenance: "var(--series-maintenance)",
+  fixed: "var(--series-fixed)",
 };
 
 /**
@@ -52,6 +57,9 @@ export const CATEGORY_PRICE_PATH: Record<CashflowCategory, string> = {
   // other site settings rather than per visit.
   vet: "/admin/website",
   maintenance: "/maintenance",
+  // A fixed line always has an amount, so this never shows as a gap; the
+  // path is where the lines are edited.
+  fixed: "/management/cashflow/fixed-outgoings",
 };
 
 /**

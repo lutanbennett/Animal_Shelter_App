@@ -42,7 +42,7 @@ export function NavLinks({
   canManage: boolean;
   /**
    * Everyone but a vet (isShelterRole): shows Enclosures, Maintenance, Vets,
-   * Contacts and Projects. A vet's menu is My tasks and Residents.
+   * Contacts and Projects. A vet's menu is Appointments and Residents.
    */
   isShelter: boolean;
   /** Admin, management, staff, volunteer: shows Stocktake (0091). */
@@ -63,13 +63,21 @@ export function NavLinks({
   const groups: NavItem[][] = [
     [
       // First for every role: "what do I need to do today" (my-dashboard).
-      {
-        href: "/my",
-        label: t.nav.my,
-        icon: NAV_ICONS.my,
-        badge: urgentCount > 0 ? String(urgentCount) : undefined,
-        badgeTitle: urgentCount > 0 ? t.my.navBadge(urgentCount) : undefined,
-      },
+      // A vet has no tasks: theirs is the clinic's appointments (Lutan,
+      // 2026-09-29).
+      isShelter
+        ? {
+            href: "/my",
+            label: t.nav.my,
+            icon: NAV_ICONS.my,
+            badge: urgentCount > 0 ? String(urgentCount) : undefined,
+            badgeTitle: urgentCount > 0 ? t.my.navBadge(urgentCount) : undefined,
+          }
+        : {
+            href: "/appointments",
+            label: t.nav.appointments,
+            icon: NAV_ICONS.appointments,
+          },
       { href: "/residents", label: t.nav.residents, icon: NAV_ICONS.residents },
       ...(isShelter
         ? [
