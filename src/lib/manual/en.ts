@@ -105,6 +105,22 @@ const manual: Manual = {
           ],
         },
         {
+          id: "print-manual",
+          title: "Printing this manual",
+          path: "Manual → Print this as a PDF",
+          steps: [
+            "Open the Manual and tap Print this as a PDF, just under the line about your role. The PDF opens in a new page of your browser; use its Save or Print button to keep a paper or file copy.",
+            "The PDF holds the same topics you are looking at: your own role's, or the whole manual if you chose Show everything first. Without screenshots gives a much smaller, text-only file that prints quickly.",
+            "The copy is a snapshot of today's manual. Print it again after the manual changes.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "You need to be signed in to get the PDF, like the manual itself. To give a volunteer who has no login a paper copy, print one for them.",
+            },
+          ],
+        },
+        {
           id: "navigation",
           title: "Finding your way around",
           steps: [
