@@ -159,6 +159,7 @@ export function PublicNavGroup({
  */
 export function PublicMobileMenu({
   entries,
+  home,
   brand,
   donate,
   languageLabel,
@@ -168,6 +169,8 @@ export function PublicMobileMenu({
   labels,
 }: {
   entries: PublicNavEntry[];
+  /** Home, first in the list: the logo goes there too, but nobody tries it. */
+  home: PublicNavLink;
   /** The logo and short name, as the header shows them. */
   brand: ReactNode;
   donate: PublicNavLink;
@@ -294,6 +297,7 @@ export function PublicMobileMenu({
           </div>
 
           <nav aria-label={labels.nav} className="flex flex-col px-5 py-3">
+            {entryLink(home, "flex min-h-14 items-center border-b border-site-sand text-[22px] font-bold")}
             {entries.map((entry) =>
               entry.kind === "link" ? (
                 entryLink(

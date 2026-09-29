@@ -40,7 +40,7 @@ export default async function Page() {
 
   return (
     <main className="flex flex-1 flex-col">
-      <PublicHeader />
+      <PublicHeader trail={[{ label: p.nav }]} />
 
       <article className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10 sm:px-12">
         <header className="flex flex-col gap-1">

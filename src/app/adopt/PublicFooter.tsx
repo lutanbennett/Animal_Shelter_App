@@ -138,6 +138,7 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
 
         <div className="flex flex-col">
           <span className={`${heading} pb-1`}>{f.help}</span>
+          <Link href="/" className={footerLink}>{t.publicNav.home}</Link>
           <Link href="/adopt" className={footerLink}>{t.adopt.adoptNav}</Link>
           <Link href="/adopt/international" className={footerLink}>{t.adopt.internationalNav}</Link>
           <Link href="/foster" className={footerLink}>{t.adopt.fosterNav}</Link>

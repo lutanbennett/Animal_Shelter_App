@@ -165,6 +165,8 @@ const th: Dictionary = {
 
   publicNav: {
     label: "เมนูหลัก",
+    home: "หน้าแรก",
+    breadcrumb: "เส้นทางหน้า",
     shortName: "Lanna Care",
     getInvolved: "มีส่วนร่วม",
     services: "บริการ",
@@ -3770,7 +3772,7 @@ const th: Dictionary = {
       note: "เป็นการประเมินจากพฤติกรรมขณะอยู่กับเรา — สัตว์แต่ละตัวไม่เหมือนกัน มาพบกันด้วยตัวเองดีที่สุด",
     },
     profile: {
-      allAnimals: "สัตว์ทั้งหมด",
+      allAnimals: "สุนัขและแมวทั้งหมด",
       quickFacts: "ข้อมูลโดยย่อ",
       health: "สุขภาพ",
       energy: "ระดับพลังงาน",
@@ -3842,7 +3844,7 @@ const th: Dictionary = {
     noneInCategory: "ยังไม่มีเรื่องราวในหมวดนี้",
     filterLabel: "กรองตามหมวดหมู่",
     allCategories: "ทั้งหมด",
-    backToAll: "← กลับไปดูผลงานทั้งหมด",
+    backToAll: "ผลงานทั้งหมด",
     noPhoto: "ยังไม่มีรูปภาพ",
     photoCount: (n: number) => `${n} รูป`,
     gallery: "รูปภาพ",

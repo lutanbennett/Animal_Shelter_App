@@ -44,7 +44,7 @@ export default async function OurWorkPage(props: PageProps<"/our-work">) {
 
   return (
     <main className="flex flex-1 flex-col">
-      <PublicHeader current="our-work" />
+      <PublicHeader current="our-work" trail={[{ label: t.adopt.ourWorkNav }]} />
 
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10 sm:px-12">
         <div className="flex flex-col gap-2">

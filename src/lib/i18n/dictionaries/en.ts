@@ -175,6 +175,10 @@ const en = {
   /** The public header's navigation, desktop and the phone's full-screen menu. */
   publicNav: {
     label: "Main",
+    /** The first entry of the phone menu, and the footer, back to the front page. */
+    home: "Home",
+    /** aria-label of the trail under the header: Home › Adopt › Panda. */
+    breadcrumb: "Breadcrumb",
     /** The name beside the logo on a phone, where the full one doesn't fit. */
     shortName: "Lanna Care",
     getInvolved: "Get involved",
@@ -3889,7 +3893,7 @@ const en = {
      * docs/design/resident-profile-mobile.png).
      */
     profile: {
-      allAnimals: "All animals",
+      allAnimals: "All dogs and cats",
       quickFacts: "Quick facts",
       health: "Health",
       energy: "Energy",
@@ -3965,7 +3969,7 @@ const en = {
     noneInCategory: "No stories in this category yet.",
     filterLabel: "Filter by category",
     allCategories: "All",
-    backToAll: "← Back to all our work",
+    backToAll: "All our work",
     noPhoto: "No photo yet",
     photoCount: (n: number) => (n === 1 ? "1 photo" : `${n} photos`),
     gallery: "Photos",

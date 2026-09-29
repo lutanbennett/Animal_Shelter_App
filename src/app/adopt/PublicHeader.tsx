@@ -3,6 +3,7 @@ import Link from "next/link";
 import { hasAppAccess, loadCurrentRole } from "@/lib/auth/app-access";
 import { DEFAULT_SIGNED_IN_PATH } from "@/lib/auth/next-path";
 import { getT } from "@/lib/i18n/get-t";
+import { getSiteOrigin } from "@/lib/site-origin";
 import { createClient } from "@/lib/supabase/server";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
 import { lineLink, loadSiteContent, socialLinks, visitingHoursLines } from "@/lib/site/content";
@@ -16,6 +17,7 @@ import {
   type PublicNavLink,
   type PublicTalkLink,
 } from "./PublicNav";
+import { NavTrail } from "./BackLink";
 import { SpringMotion } from "./SpringMotion";
 
 export type PublicSection =
@@ -30,6 +32,12 @@ export type PublicSection =
   | "adopt-international";
 
 /**
+ * One step of the trail under the header. No `href` on the last (the page the
+ * visitor is on) or on a step that is only a heading, like Get involved.
+ */
+export type PublicCrumb = { label: string; href?: string };
+
+/**
  * Header for the public pages (docs/design/, part 1 of the redesign). Four
  * entries — Adopt ▾ · Get involved ▾ · Our work · About & contact (and
  * Services ▾ once it has something in it) — then the language toggle and
@@ -41,9 +49,24 @@ export type PublicSection =
  *
  * `current` marks the section the visitor is in, so its link reads as
  * where they are rather than a way out.
+ *
+ * `trail` is the breadcrumb under the bar, without Home, which is always the
+ * first step: [{ label: "Adopt", href: "/adopt" }, { label: "Panda" }]. It is
+ * shown from a tablet up; on a phone the menu's Home entry and a detail
+ * page's back link do that job. Pages with no trail (the home page) show none.
  */
-export async function PublicHeader({ current }: { current?: PublicSection }) {
-  const [{ t, locale }, supabase] = await Promise.all([getT(), createClient()]);
+export async function PublicHeader({
+  current,
+  trail,
+}: {
+  current?: PublicSection;
+  trail?: PublicCrumb[];
+}) {
+  const [{ t, locale }, supabase, origin] = await Promise.all([
+    getT(),
+    createClient(),
+    trail ? getSiteOrigin() : null,
+  ]);
   const [
     {
       data: { user },
@@ -116,6 +139,7 @@ export async function PublicHeader({ current }: { current?: PublicSection }) {
   // A group with nothing in it is left out rather than shown as an empty menu.
   const entries = allEntries.filter((entry) => entry.kind === "link" || entry.links.length > 0);
   const donate = link("donate", "/donate", t.adopt.donateNav);
+  const home: PublicNavLink = { key: "home", href: "/", label: n.home, current: current === "home" };
 
   const account = user ? (
     staff ? (
@@ -188,6 +212,7 @@ export async function PublicHeader({ current }: { current?: PublicSection }) {
     <header data-public-site className="border-b border-site-line bg-site-paper font-site text-site-ink">
       <div className="mx-auto flex h-[68px] w-full max-w-[1440px] items-center justify-between gap-4 px-4 lg:h-[88px] lg:px-8 xl:px-16">
         <SpringMotion />
+        <NavTrail />
         {brand}
 
         <nav aria-label={n.label} className="hidden items-center gap-6 text-[17px] font-semibold lg:flex xl:gap-8">
@@ -231,6 +256,7 @@ export async function PublicHeader({ current }: { current?: PublicSection }) {
           </Link>
           <PublicMobileMenu
             entries={entries}
+            home={home}
             brand={brand}
             donate={donate}
             languageLabel={n.language}
@@ -252,6 +278,71 @@ export async function PublicHeader({ current }: { current?: PublicSection }) {
           />
         </div>
       </div>
+
+      {trail && trail.length > 0 && (
+        <Breadcrumb trail={[{ label: n.home, href: "/" }, ...trail]} label={n.breadcrumb} origin={origin} />
+      )}
     </header>
+  );
+}
+
+/**
+ * Home › Adopt › Panda: each step a link, the last plain text marked
+ * aria-current="page". Search engines get the same path as schema.org
+ * BreadcrumbList data; a step with no link (a heading such as Get involved)
+ * is left out of it, since a list item needs a URL.
+ */
+function Breadcrumb({
+  trail,
+  label,
+  origin,
+}: {
+  trail: PublicCrumb[];
+  label: string;
+  origin: URL | null;
+}) {
+  const last = trail.length - 1;
+  const linked = trail.filter((crumb, i) => i === last || crumb.href);
+  const data =
+    origin &&
+    JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: linked.map((crumb, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: crumb.label,
+        // The current page has no href here; its address is the page's own.
+        ...(crumb.href ? { item: new URL(crumb.href, origin).href } : {}),
+      })),
+    }).replace(/</g, "\u003c");
+  return (
+    <nav
+      aria-label={label}
+      className="mx-auto hidden w-full max-w-[1440px] px-4 pb-2 text-[15px] text-site-ink-muted sm:block lg:px-8 xl:px-16"
+    >
+      <ol className="flex flex-wrap items-center gap-x-2">
+        {trail.map((crumb, i) => (
+          <li key={i} className="flex items-center gap-x-2">
+            {i > 0 && <span aria-hidden="true">›</span>}
+            {i === last ? (
+              <span aria-current="page" className="font-semibold text-site-ink">
+                {crumb.label}
+              </span>
+            ) : crumb.href ? (
+              <Link
+                href={crumb.href}
+                className="flex min-h-9 items-center underline-offset-4 hover:text-site-action hover:underline"
+              >
+                {crumb.label}
+              </Link>
+            ) : (
+              <span>{crumb.label}</span>
+            )}
+          </li>
+        ))}
+      </ol>
+      {data && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: data }} />}
+    </nav>
   );
 }
