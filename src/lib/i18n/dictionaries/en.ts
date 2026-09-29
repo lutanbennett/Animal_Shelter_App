@@ -202,15 +202,43 @@ const en = {
     followUs: "Follow us",
   },
 
+  /** The public site's contact channels (0111, src/lib/site/channels.ts). */
+  contactChannels: {
+    name: {
+      line: "LINE",
+      messenger: "Messenger",
+      whatsapp: "WhatsApp",
+      instagram: "Instagram",
+      phone: "Phone",
+      email: "Email",
+    },
+    /** The label on a profile's sticky button. */
+    ask: {
+      line: "Ask on LINE",
+      messenger: "Ask on Messenger",
+      whatsapp: "Ask on WhatsApp",
+      instagram: "Ask on Instagram",
+      phone: "Call us",
+      email: "Email us",
+    },
+    /** The label on a get-in-touch card button; `value` is the LINE id, number or address. */
+    us: {
+      line: (value: string | null) => `LINE ${value ?? ""}`.trim(),
+      messenger: (_value: string | null) => "Message us on Messenger",
+      whatsapp: (_value: string | null) => "Message us on WhatsApp",
+      instagram: (_value: string | null) => "Find us on Instagram",
+      phone: (value: string | null) => `Call ${value ?? ""}`.trim(),
+      email: (_value: string | null) => "Email us",
+    },
+    /** `list` is the channel names joined with "or": "LINE, Messenger or Phone". */
+    getInTouchHint: (list: string) => `Reach us on ${list} and we'll get back to you.`,
+  },
+
   /** /foster, /volunteer, /donate and the how-to-adopt section (0059). */
   sitePages: {
     comingSoon: "This page is being written — check back soon.",
     getInTouch: "Get in touch",
-    getInTouchHint: "Email us or message us on LINE and we'll get back to you.",
-    emailUs: "Email us",
-    lineUs: (id: string) => `LINE ${id}`,
     alsoSee: "See also:",
-    callUs: (phone: string) => `Call ${phone}`,
     /**
      * /friends/join's contact card: the hint, and the email subject and
      * message (also the LINE message, where LINE can prefill one) a
@@ -996,6 +1024,13 @@ const en = {
         whatsappNumber: "WhatsApp number",
         whatsappNumberHint:
           "With the country code, e.g. +66 81 234 5678 — spaces and dashes are fine. Visitors get a button that opens a WhatsApp chat. Leave blank to hide.",
+        preferredHeading: "Preferred way to contact us",
+        preferredHint:
+          "The first channel is the main button on the public site (the bar on an animal's page, the get-in-touch card, the footer and the phone menu); the rest follow in this order. Only channels filled in above are listed. If the first one is later cleared, the site uses the next.",
+        preferredNone: "Fill in at least one way to contact you above, then choose the order here.",
+        preferredFirst: "Preferred",
+        moveUp: (name: string) => `Move ${name} up`,
+        moveDown: (name: string) => `Move ${name} down`,
       },
       vetVisit: {
         heading: "Typical vet visit",
@@ -3913,7 +3948,6 @@ const en = {
       sponsorHeading: (name: string) => `Can't adopt? You can still help ${name}`,
       sponsorLink: "Give monthly towards their food and care",
       actions: (name: string) => `Get in touch about ${name}`,
-      askOnLine: "Ask on LINE",
       bookVisit: "Book a visit",
       emailSubject: (name: string) => `Visiting ${name}`,
     },

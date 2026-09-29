@@ -6,7 +6,8 @@ import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { bodyLead } from "@/lib/site/body";
-import { lineLink, lineMessageLink, loadSiteContent } from "@/lib/site/content";
+import { preferredChannels } from "@/lib/site/channels";
+import { loadSiteContent } from "@/lib/site/content";
 import { loadSitePage, SITE_PAGE_PATHS, sitePageText, type SitePageSlug } from "@/lib/site/pages";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
 import { SiteBody } from "@/components/SiteBody";
@@ -91,19 +92,17 @@ export async function SitePageView({
     slug === "donate" ? hasPublicFriends() : false,
   ]);
   const text = pageText(t, slug, page ? sitePageText(page, locale) : null);
-  // A business asking to join gets the message already started, in email
-  // and (where LINE allows it) in LINE, and a Call button: a shop owner is
-  // as likely to ring as to write.
+  // A business asking to join gets the message already started, where the
+  // channel can take one (email, LINE, WhatsApp). The channels come in the
+  // shelter's order, and the card offers the first three.
   const join = slug === "shelter-friends-join" ? t.sitePages.friendsJoin : null;
-  const line = join
-    ? lineMessageLink(content?.contact_line, join.message)
-    : lineLink(content?.contact_line);
-  const phone = join ? content?.contact_phone?.trim() : null;
-  const mailto = content?.contact_email
-    ? join
-      ? `mailto:${content.contact_email}?subject=${encodeURIComponent(join.subject)}&body=${encodeURIComponent(join.message)}`
-      : `mailto:${content.contact_email}`
-    : null;
+  const channels = preferredChannels(
+    content,
+    join ? { subject: join.subject, message: join.message } : undefined,
+  ).slice(0, 3);
+  const channelNames = new Intl.ListFormat(locale, { type: "disjunction" }).format(
+    channels.map((c) => t.contactChannels.name[c.channel]),
+  );
 
   return (
     <main className="flex flex-1 flex-col">
@@ -146,39 +145,29 @@ export async function SitePageView({
           <p className="text-sm text-muted">{t.sitePages.comingSoon}</p>
         )}
 
-        {(mailto || line || phone) && (
+        {channels.length > 0 && (
           <div data-reveal className="mt-4 flex flex-col gap-3 rounded-lg border border-border bg-surface p-6">
             <h2 className="text-lg font-semibold text-foreground">
               {t.sitePages.getInTouch}
             </h2>
-            <p className="text-sm text-muted">{join?.hint ?? t.sitePages.getInTouchHint}</p>
+            <p className="text-sm text-muted">
+              {join?.hint ?? t.contactChannels.getInTouchHint(channelNames)}
+            </p>
             <div className="flex flex-wrap gap-3">
-              {mailto && (
+              {channels.map((c, i) => (
                 <a
-                  href={mailto}
-                  className="spring-lift rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
+                  key={c.channel}
+                  href={c.href}
+                  {...(c.external ? { target: "_blank", rel: "noreferrer" } : {})}
+                  className={
+                    i === 0
+                      ? "spring-lift rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
+                      : "spring-lift rounded border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-hover"
+                  }
                 >
-                  {t.sitePages.emailUs}
+                  {t.contactChannels.us[c.channel](c.value)}
                 </a>
-              )}
-              {line && (
-                <a
-                  href={line.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="spring-lift rounded border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-hover"
-                >
-                  {t.sitePages.lineUs(line.label)}
-                </a>
-              )}
-              {phone && (
-                <a
-                  href={`tel:${phone.replace(/\s+/g, "")}`}
-                  className="spring-lift rounded border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-hover"
-                >
-                  {t.sitePages.callUs(phone)}
-                </a>
-              )}
+              ))}
             </div>
           </div>
         )}

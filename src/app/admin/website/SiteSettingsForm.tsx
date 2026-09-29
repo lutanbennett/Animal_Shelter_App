@@ -15,6 +15,7 @@ import {
   MESSENGER_HOSTS,
   X_HOSTS,
 } from "@/lib/links/validate";
+import { ContactChannelPicker } from "./ContactChannelPicker";
 import { updateSiteContent } from "./actions";
 
 const inputClass =
@@ -55,6 +56,10 @@ export function SiteSettingsForm({ content }: { content: SiteContent }) {
     content.whatsapp_number ? `+${content.whatsapp_number}` : "",
   );
   const whatsappError = checkWhatsAppNumber(whatsapp).ok ? null : t.linkErrors.whatsappNumber;
+  // The picker below lists only the ways to get in touch that have a value.
+  const [contactEmail, setContactEmail] = useState(content.contact_email ?? "");
+  const [contactPhone, setContactPhone] = useState(content.contact_phone ?? "");
+  const [contactLine, setContactLine] = useState(content.contact_line ?? "");
   const anyError = Boolean(
     facebookError || instagramError || xError || messengerError || whatsappError,
   );
@@ -158,7 +163,8 @@ export function SiteSettingsForm({ content }: { content: SiteContent }) {
           <input
             name="contact_email"
             type="email"
-            defaultValue={content.contact_email ?? ""}
+            value={contactEmail}
+            onChange={(e) => setContactEmail(e.target.value)}
             className={inputClass}
           />
         </label>
@@ -167,7 +173,8 @@ export function SiteSettingsForm({ content }: { content: SiteContent }) {
           <input
             name="contact_phone"
             type="tel"
-            defaultValue={content.contact_phone ?? ""}
+            value={contactPhone}
+            onChange={(e) => setContactPhone(e.target.value)}
             className={inputClass}
           />
         </label>
@@ -175,7 +182,8 @@ export function SiteSettingsForm({ content }: { content: SiteContent }) {
           {s.contactLine}
           <input
             name="contact_line"
-            defaultValue={content.contact_line ?? ""}
+            value={contactLine}
+            onChange={(e) => setContactLine(e.target.value)}
             placeholder="@lannacare"
             className={inputClass}
           />
@@ -257,6 +265,18 @@ export function SiteSettingsForm({ content }: { content: SiteContent }) {
           </span>
         </label>
       </div>
+
+      <ContactChannelPicker
+        stored={content.preferred_channels}
+        available={{
+          line: Boolean(contactLine.trim()),
+          messenger: Boolean(messengerUrl.trim()) && !messengerError,
+          whatsapp: !whatsappError && Boolean(whatsapp.trim()),
+          instagram: Boolean(instagramUrl.trim()) && !instagramError,
+          phone: Boolean(contactPhone.trim()),
+          email: Boolean(contactEmail.trim()),
+        }}
+      />
 
       <div className="flex items-center gap-3">
         <button

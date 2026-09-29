@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { getT } from "@/lib/i18n/get-t";
+import { isContactChannel } from "@/lib/site/channels";
 import { isSitePageSlug, type SitePageSlug } from "@/lib/site/pages";
 import { parseBahtAmount } from "@/lib/format";
 import {
@@ -115,6 +116,13 @@ export async function updateSiteContent(
     const whatsapp = checkWhatsAppNumber(text("whatsapp_number"));
     if (!whatsapp.ok) return refuse(`${s.whatsappNumber}: ${t.linkErrors.whatsappNumber}`);
 
+    // The picker's whole order, comma-separated. Unknown names are dropped
+    // and repeats collapsed; whether a channel has a value is not checked
+    // here, so clearing a link never makes this save fail (0111).
+    const preferred = [
+      ...new Set(text("preferred_channels").split(",").map((c) => c.trim()).filter(isContactChannel)),
+    ];
+
     const supabase = await createClient();
     const {
       data: { user },
@@ -134,6 +142,7 @@ export async function updateSiteContent(
         contact_phone: optional("contact_phone"),
         contact_line: optional("contact_line"),
         contact_map_url: optional("contact_map_url"),
+        preferred_channels: preferred,
         ...checked,
         whatsapp_number: whatsapp.number,
         updated_at: new Date().toISOString(),

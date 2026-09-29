@@ -6,7 +6,8 @@ import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { createClient } from "@/lib/supabase/server";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
-import { lineLink, loadSiteContent, socialLinks, visitingHoursLines } from "@/lib/site/content";
+import { preferredChannels, talkChannels } from "@/lib/site/channels";
+import { loadSiteContent, socialLinks, visitingHoursLines } from "@/lib/site/content";
 import { LanguageSwitcher } from "../LanguageSwitcher";
 import { SignOutButton } from "../login/SignOutButton";
 import {
@@ -154,25 +155,22 @@ export async function PublicHeader({
     )
   ) : null;
 
-  const line = lineLink(site?.contact_line);
-  const phone = site?.contact_phone?.trim();
   const hours = visitingHoursLines(locale, site);
   const social = socialLinks(site);
   const f = t.publicFooter;
-  // The phone menu's "Talk to us" buttons, each only when set: LINE first,
-  // as the shelter's main channel, then Call, Messenger and WhatsApp.
-  const talkLinks: PublicTalkLink[] = [
-    ...(line ? [{ kind: "line" as const, href: line.href, label: n.line }] : []),
-    ...(phone
-      ? [{ kind: "phone" as const, href: `tel:${phone.replace(/\s+/g, "")}`, label: n.call }]
-      : []),
-    ...(social.messenger
-      ? [{ kind: "messenger" as const, href: social.messenger, label: n.messenger }]
-      : []),
-    ...(social.whatsapp
-      ? [{ kind: "whatsapp" as const, href: social.whatsapp, label: n.whatsapp }]
-      : []),
-  ];
+  // The phone menu's "Talk to us" buttons, in the shelter's order (LINE
+  // first unless they chose otherwise); only channels with a value appear.
+  const talkLabels = {
+    line: n.line,
+    phone: n.call,
+    messenger: n.messenger,
+    whatsapp: n.whatsapp,
+    instagram: t.contactChannels.name.instagram,
+    email: t.contactChannels.name.email,
+  };
+  const talkLinks: PublicTalkLink[] = talkChannels(preferredChannels(site), { email: false }).map(
+    (c) => ({ kind: c.channel, href: c.href, label: talkLabels[c.channel] }),
+  );
   // Follow us: X sits with Facebook and Instagram — a follow link, not a
   // way to talk to the shelter.
   const followLinks: PublicFollowLink[] = [
