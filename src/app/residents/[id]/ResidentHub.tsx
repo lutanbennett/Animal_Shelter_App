@@ -55,6 +55,8 @@ export type Resident = {
   estimated_age_years: number | null;
   age_estimated_on: string | null;
   blood_test_interval_months: number;
+  microchip_number: string | null;
+  microchip_implanted_on: string | null;
   intake_date: string | null;
   bio: string | null;
   temperament_notes: string | null;

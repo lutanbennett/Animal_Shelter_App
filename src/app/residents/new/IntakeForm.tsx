@@ -186,12 +186,14 @@ export function IntakeForm({
   origins,
   dietTypes,
   initialStep = 0,
+  chip = null,
 }: {
   zones: ZoneOption[];
   enclosures: EnclosureOption[];
   origins: OriginOption[];
   dietTypes: DietTypeOption[];
   initialStep?: number;
+  chip?: string | null;
 }) {
   const [state, formAction, pending] = useActionState(recordIntake, undefined);
   const { t, locale } = useI18n();
@@ -567,7 +569,7 @@ export function IntakeForm({
               </p>
             </div>
             <div className="sm:col-span-2">
-              <MicrochipFields />
+              <MicrochipFields number={chip} />
             </div>
             <div className="flex flex-col gap-1">
               <label htmlFor="dietTypeId" className="text-sm font-medium text-muted">

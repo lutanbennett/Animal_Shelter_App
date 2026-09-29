@@ -6,6 +6,7 @@ import {
   type DietTypeOption,
   type OriginOption,
 } from "./IntakeForm";
+import { isValidMicrochip, stripToDigits } from "@/lib/residents/microchip";
 import { parseStepParam } from "./steps";
 
 export default async function NewResidentPage(
@@ -13,7 +14,11 @@ export default async function NewResidentPage(
 ) {
   const supabase = await createClient();
   const { t } = await getT();
-  const initialStep = parseStepParam((await props.searchParams).step);
+  const searchParams = await props.searchParams;
+  const initialStep = parseStepParam(searchParams.step);
+  // From the scan box on /residents: an unknown chip, prefilled.
+  const rawChip = typeof searchParams.chip === "string" ? stripToDigits(searchParams.chip) : "";
+  const chip = isValidMicrochip(rawChip) ? rawChip : null;
 
   // Zones and enclosures come from the same loader as Move, with each
   // enclosure's headcount, so intake's capacity warning can't disagree
@@ -60,6 +65,7 @@ export default async function NewResidentPage(
         origins={origins}
         dietTypes={dietTypesResult.data ?? []}
         initialStep={initialStep}
+        chip={chip}
       />
     </main>
   );
