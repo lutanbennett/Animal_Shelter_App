@@ -49,7 +49,7 @@ export function ProcedureList({
   function removeAttachment(attachmentId: string) {
     startTransition(async () => {
       const result = await deleteProcedureAttachment(residentId, attachmentId);
-      if (!result?.error) router.refresh();
+      if (result.ok) router.refresh();
     });
   }
 

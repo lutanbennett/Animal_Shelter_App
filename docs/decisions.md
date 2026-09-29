@@ -7267,3 +7267,33 @@ Schema half of "let the shelter choose its preferred contact channel" (migration
 - **Default `{line}` is today's behaviour.** The picker's helper treats any channel missing from the list as trailing in the built-in order (LINE, Messenger, WhatsApp, Instagram, phone, email), so `{line}` alone changes nothing, and merging this PR is invisible: no code reads the column.
 - **Not checked in SQL:** whether a listed channel actually has a value. That is the helper's job at read time, so clearing a channel's link never makes a save fail.
 - **Follow-on:** `contact-channel-picker` (batch 8) builds the Settings → Website picker, `preferredChannels(content)` and the public pages against this shape.
+## 2026-09-29 — Server Actions return a result, not a throw (part 2: `/residents`)
+
+Part 2 of #441, the `src/app/residents/**` area only (the other areas keep
+their own streams; the backlog item stays unticked with a note).
+
+- **Smaller than `/admin` because residents mostly returned `{ error }`
+  already.** Twelve `"use server"` files; `adoption-updates` was already
+  on `runAction`. The other eleven returned `{ error }` for ordinary
+  refusals, so the visible #441 came from what they did *not* catch: a
+  Supabase or Drive failure thrown out of an action. Each is now wrapped in
+  `runAction()` (`residents.<action>` in the log, the shared
+  `somethingWentWrong` words with a reference), and refusals are
+  `{ ok: false, error }`.
+- **Form actions that end in `redirect()` type as `ActionRefusal | undefined`**
+  (`runAction<never>`), so their forms keep reading `state?.error` — they
+  can never return `ok: true`, the success path leaves the page.
+  `runAction` passes the redirect through (`unstable_rethrow`).
+  Photo, blood-test and procedure deletes return plain `ActionResult`; their
+  callers (`PhotoGallery`, `BloodTestList`, `ProcedureList`) read `.ok`.
+- **Shared helpers keep `{ error }`.** `moveResidentToEnclosure`,
+  `rehomeResident`, `recordResidentDeath`, `archiveDeceasedResident`,
+  `setResidentProfilePhoto` and friends are also used by the assistant
+  actions, outside this area; the residents actions translate their result
+  at the boundary rather than change a shared contract from inside one area.
+- **No near-duplicate type to fold in residents.** The four named in the
+  item belong to contacts, projects, maintenance and translations.
+- **Not changed:** `BloodTestList` and `ProcedureList` still do nothing
+  visible when a delete is refused (they only refresh on success). Now the
+  refusal is a clean value rather than a throw, showing it is a small
+  follow-up, not part of this sweep.
