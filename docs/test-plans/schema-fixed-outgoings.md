@@ -16,7 +16,7 @@ or `n/a` with the reason.
 | PR | linked from the PR itself |
 | Tested by / date | Claude (schema-fixed-outgoings session), 2026-09-29 |
 | Carries a migration? | yes, `0114_fixed_outgoings.sql` and `0115_fixed_outgoings_grants.sql` |
-| Tested at SHA | `d83a88c` (gates and harness); later commits are this plan only |
+| Tested at SHA | `2243e98` (gates and harness re-run on this content) |
 
 ## 1. Scope and risk
 
