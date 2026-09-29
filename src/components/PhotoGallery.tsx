@@ -112,7 +112,7 @@ export function PhotoGallery({
     if (!openPhoto) return;
     startTransition(async () => {
       const result = await setProfilePhoto(residentId, openPhoto.drive_file_id);
-      if (result?.error) setError(result.error);
+      if (!result.ok) setError(result.error);
       else close();
     });
   }
@@ -121,7 +121,7 @@ export function PhotoGallery({
     if (!openPhoto) return;
     startTransition(async () => {
       const result = await deletePhoto(residentId, openPhoto.id);
-      if (result?.error) setError(result.error);
+      if (!result.ok) setError(result.error);
       else close();
     });
   }
@@ -130,7 +130,7 @@ export function PhotoGallery({
     if (!openPhoto || !moveTarget) return;
     startTransition(async () => {
       const result = await movePhotoToFolder(residentId, openPhoto.id, moveTarget);
-      if (result?.error) setError(result.error);
+      if (!result.ok) setError(result.error);
       else close();
     });
   }

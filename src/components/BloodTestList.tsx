@@ -49,7 +49,7 @@ export function BloodTestList({
   function removeAttachment(attachmentId: string) {
     startTransition(async () => {
       const result = await deleteBloodTestAttachment(residentId, attachmentId);
-      if (!result?.error) router.refresh();
+      if (result.ok) router.refresh();
     });
   }
 

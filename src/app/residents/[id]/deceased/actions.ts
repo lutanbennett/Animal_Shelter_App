@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { runAction, type ActionRefusal, type ActionResult } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import {
@@ -13,10 +14,10 @@ import {
 import { archiveDeceasedResident } from "@/lib/archive/archive-deceased-resident";
 import { restoreDeceasedResident } from "@/lib/archive/restore-deceased-resident";
 
-export type RecordDeathState = { error: string } | undefined;
-export type RetryArchiveState = { error: string } | { ok: true } | undefined;
-export type UndoDeathState = { error: string } | undefined;
-export type RetryRestoreState = { error: string } | { ok: true } | undefined;
+export type RecordDeathState = ActionRefusal | undefined;
+export type RetryArchiveState = ActionResult | undefined;
+export type UndoDeathState = ActionRefusal | undefined;
+export type RetryRestoreState = ActionResult | undefined;
 
 function str(formData: FormData, key: string): string | null {
   const value = formData.get(key);
@@ -55,20 +56,22 @@ export async function recordDeath(
   formData: FormData,
 ): Promise<RecordDeathState> {
   const { t } = await getT();
-  const supabase = await createClient();
+  return runAction<never>("residents.recordDeath", t.common.somethingWentWrong, async () => {
+    const supabase = await createClient();
 
-  const result = await recordResidentDeath(supabase, t, {
-    residentId,
-    date: str(formData, "date") ?? "",
-    causeOfDeath: str(formData, "causeOfDeath"),
-    notes: str(formData, "notes"),
+    const result = await recordResidentDeath(supabase, t, {
+      residentId,
+      date: str(formData, "date") ?? "",
+      causeOfDeath: str(formData, "causeOfDeath"),
+      notes: str(formData, "notes"),
+    });
+    if ("error" in result) return { ok: false, error: result.error };
+
+    await archiveDeceasedResident(supabase, residentId);
+
+    revalidateResident(residentId);
+    redirect(`/residents/${residentId}`);
   });
-  if ("error" in result) return result;
-
-  await archiveDeceasedResident(supabase, residentId);
-
-  revalidateResident(residentId);
-  redirect(`/residents/${residentId}`);
 }
 
 /**
@@ -83,18 +86,20 @@ export async function retryDeceasedArchive(
 ): Promise<RetryArchiveState> {
   void state;
   const { t } = await getT();
-  const supabase = await createClient();
+  return runAction("residents.retryDeceasedArchive", t.common.somethingWentWrong, async () => {
+    const supabase = await createClient();
 
-  const { data: role } = await supabase.rpc("current_user_role");
-  if (typeof role !== "string" || !DECEASED_ROLES.has(role)) {
-    return { error: t.residents.deceased.notAuthorized };
-  }
+    const { data: role } = await supabase.rpc("current_user_role");
+    if (typeof role !== "string" || !DECEASED_ROLES.has(role)) {
+      return { ok: false, error: t.residents.deceased.notAuthorized };
+    }
 
-  const result = await archiveDeceasedResident(supabase, residentId);
-  if ("error" in result) return result;
+    const result = await archiveDeceasedResident(supabase, residentId);
+    if ("error" in result) return { ok: false, error: result.error };
 
-  revalidatePath(`/residents/${residentId}`, "layout");
-  return { ok: true };
+    revalidatePath(`/residents/${residentId}`, "layout");
+    return { ok: true };
+  });
 }
 
 /**
@@ -113,18 +118,20 @@ export async function undoDeath(
   formData: FormData,
 ): Promise<UndoDeathState> {
   const { t } = await getT();
-  const supabase = await createClient();
+  return runAction<never>("residents.undoDeath", t.common.somethingWentWrong, async () => {
+    const supabase = await createClient();
 
-  const result = await undoResidentDeath(supabase, t, {
-    residentId,
-    reason: str(formData, "reason"),
+    const result = await undoResidentDeath(supabase, t, {
+      residentId,
+      reason: str(formData, "reason"),
+    });
+    if ("error" in result) return { ok: false, error: result.error };
+
+    await restoreDeceasedResident(supabase, residentId);
+
+    revalidateResident(residentId);
+    redirect(`/residents/${residentId}`);
   });
-  if ("error" in result) return result;
-
-  await restoreDeceasedResident(supabase, residentId);
-
-  revalidateResident(residentId);
-  redirect(`/residents/${residentId}`);
 }
 
 /**
@@ -138,16 +145,18 @@ export async function retryDeceasedRestore(
 ): Promise<RetryRestoreState> {
   void state;
   const { t } = await getT();
-  const supabase = await createClient();
+  return runAction("residents.retryDeceasedRestore", t.common.somethingWentWrong, async () => {
+    const supabase = await createClient();
 
-  const { data: role } = await supabase.rpc("current_user_role");
-  if (typeof role !== "string" || !UNDO_DECEASED_ROLES.has(role)) {
-    return { error: t.residents.deceased.undo.notAuthorized };
-  }
+    const { data: role } = await supabase.rpc("current_user_role");
+    if (typeof role !== "string" || !UNDO_DECEASED_ROLES.has(role)) {
+      return { ok: false, error: t.residents.deceased.undo.notAuthorized };
+    }
 
-  const result = await restoreDeceasedResident(supabase, residentId);
-  if ("error" in result) return result;
+    const result = await restoreDeceasedResident(supabase, residentId);
+    if ("error" in result) return { ok: false, error: result.error };
 
-  revalidatePath(`/residents/${residentId}`, "layout");
-  return { ok: true };
+    revalidatePath(`/residents/${residentId}`, "layout");
+    return { ok: true };
+  });
 }
