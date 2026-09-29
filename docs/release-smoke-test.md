@@ -33,7 +33,7 @@ does **not** revert migrations.
 ## Before the deploy
 
 - [ ] `main` is green and the SHA about to ship is known
-- [ ] Every PR in this release has a completed `docs/test-plans/<feature>.md`. **Check this by hand** — `test-plan` reports red without blocking the merge, so an unchecked feature can reach `main`
+- [ ] Every PR in this release has a completed `docs/test-plans/<feature>.md`. **List the PRs with `node scripts/release-prs.mjs <previous release's deployed SHA> <SHA to ship>`, then check each plan by hand** — `test-plan` reports red without blocking the merge, so an unchecked feature can reach `main`. **Never build the list from `git log --first-parent`**: a PR that reached `main` through an `origin/main` merge, squash or rebase has no merge commit there and is silently missed (#213 in `0.9.1`). If the script **exits non-zero** it names migrations/test plans that belong to no listed PR — a PR is missing. Find it on GitHub, add it to the list and the release record, and say so; do not tick this item against the list as printed
 - [ ] If any migration ships: `node scripts/apply-migrations.mjs --env production --dry-run` clean, and applied **before** the deploy if code in this release reads it
 
 ## During the deploy
