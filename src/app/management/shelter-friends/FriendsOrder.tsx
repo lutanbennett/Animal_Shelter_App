@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { FriendBadge } from "@/components/FriendBadge";
 import { driveImageUrl } from "@/lib/google/drive-client";
+import type { ActionResult } from "@/lib/action-result";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { moveFriend, setFriendPublished } from "./actions";
 
@@ -34,14 +35,12 @@ export function FriendsOrder({ friends }: { friends: FriendOrderRow[] }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  function run(action: () => Promise<unknown>) {
+  function run(action: () => Promise<ActionResult>) {
     setError(null);
     startTransition(async () => {
       try {
         const result = await action();
-        if (result && typeof result === "object" && "error" in result) {
-          setError(String((result as { error: string }).error));
-        }
+        if (!result.ok) setError(result.error);
       } catch (err) {
         setError(err instanceof Error ? err.message : t.common.failedToSave);
       }
