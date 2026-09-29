@@ -29,9 +29,9 @@ import {
   setFriendPublished,
   updateFriend,
   uploadFriendLogo,
-  type FriendActionResult,
   type FriendFields,
 } from "@/app/management/shelter-friends/actions";
+import type { ActionResult } from "@/lib/action-result";
 import { OptionalDateInput } from "@/components/OptionalDateInput";
 
 const inputClass =
@@ -105,12 +105,12 @@ export function ShelterFriendCard({
   const [draft, setDraft] = useState<FriendFields | null>(null);
   const logoInput = useRef<HTMLInputElement>(null);
 
-  function run(action: () => Promise<FriendActionResult>, after?: () => void, at?: "logo") {
+  function run(action: () => Promise<ActionResult<{ success: string }>>, after?: () => void, at?: "logo") {
     setMessage(null);
     startTransition(async () => {
       try {
         const result = await action();
-        if ("error" in result) {
+        if (!result.ok) {
           setMessage({ type: "error", text: result.error, at });
         } else {
           setMessage({ type: "success", text: result.success, at });
@@ -366,8 +366,8 @@ export function ShelterFriendCard({
             run(
               async () => {
                 const result = await updateFriend(friend.id, fields);
-                return "success" in result && !friend.published
-                  ? { success: c.savedDraft }
+                return result.ok && !friend.published
+                  ? { ok: true as const, success: c.savedDraft }
                   : result;
               },
               () => setEditing(false),

@@ -61,7 +61,9 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  { text: "A Shelter Friend's profile now says what went wrong instead of showing a numbered code. Making a contact a Friend, saving, publishing or unpublishing a profile, moving one up or down the order, changing or removing its logo, and removing a profile all give a plain message, with a short reference to quote if it is something unexpected.", roles: ["admin", "management"] },
+];
 
 /** Newest first. */
 export const releases: Release[] = [

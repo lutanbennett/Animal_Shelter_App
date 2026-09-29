@@ -1,7 +1,8 @@
 "use server";
 
 import { refresh, revalidatePath } from "next/cache";
-import { assertManagementRole } from "@/lib/auth/require-management";
+import { runAction, type ActionRefusal, type ActionResult } from "@/lib/action-result";
+import { hasManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
@@ -28,7 +29,7 @@ import { driveErrorMessage } from "@/lib/google/drive-errors";
  * Friend is a contact's public profile.
  */
 
-export type FriendActionResult = { error: string } | { success: string };
+const refuse = (error: string): ActionRefusal => ({ ok: false, error });
 
 /** The editable part of a profile, as the contact hub's card sends it. */
 export type FriendFields = {
@@ -86,115 +87,121 @@ async function friendContactId(
  * opted out (the table's defaults), placed last in the public order.
  * Offered only where canBecomeFriend() says — the one gate.
  */
-export async function createFriend(contactId: string): Promise<FriendActionResult> {
-  await assertManagementRole();
+export async function createFriend(contactId: string): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
-  const e = t.shelterFriends.errors;
-  const supabase = await createClient();
+  return runAction("shelterFriends.createFriend", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const e = t.shelterFriends.errors;
+    const supabase = await createClient();
 
-  const { data: contacts, error: contactError } = await supabase
-    .from("contacts")
-    .select("id, type")
-    .eq("id", contactId)
-    .limit(1)
-    .returns<{ id: string; type: ContactType }[]>();
-  if (contactError) return { error: contactError.message };
-  const contact = contacts?.[0];
-  if (!contact || !canBecomeFriend(contact)) return { error: e.notOffered };
+    const { data: contacts, error: contactError } = await supabase
+      .from("contacts")
+      .select("id, type")
+      .eq("id", contactId)
+      .limit(1)
+      .returns<{ id: string; type: ContactType }[]>();
+    if (contactError) return refuse(contactError.message);
+    const contact = contacts?.[0];
+    if (!contact || !canBecomeFriend(contact)) return refuse(e.notOffered);
 
-  const { data: last } = await supabase
-    .from("shelter_friends")
-    .select("sort_order")
-    .order("sort_order", { ascending: false })
-    .limit(1)
-    .returns<{ sort_order: number }[]>();
+    const { data: last } = await supabase
+      .from("shelter_friends")
+      .select("sort_order")
+      .order("sort_order", { ascending: false })
+      .limit(1)
+      .returns<{ sort_order: number }[]>();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  const { error } = await supabase.from("shelter_friends").insert({
-    contact_id: contactId,
-    sort_order: (last?.[0]?.sort_order ?? -1) + 1,
-    updated_by: user?.id ?? null,
+    const { error } = await supabase.from("shelter_friends").insert({
+      contact_id: contactId,
+      sort_order: (last?.[0]?.sort_order ?? -1) + 1,
+      updated_by: user?.id ?? null,
+    });
+    // contact_id is unique: a second tab's click lands here.
+    if (error) return refuse(error.code === "23505" ? e.alreadyFriend : error.message);
+
+    revalidateFriendPages(contactId);
+    return { ok: true, success: t.shelterFriends.card.created };
   });
-  // contact_id is unique: a second tab's click lands here.
-  if (error) return { error: error.code === "23505" ? e.alreadyFriend : error.message };
-
-  revalidateFriendPages(contactId);
-  return { success: t.shelterFriends.card.created };
 }
 
 export async function updateFriend(
   id: string,
   fields: FriendFields,
-): Promise<FriendActionResult> {
-  await assertManagementRole();
+): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
+  return runAction("shelterFriends.updateFriend", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
 
-  const website = checkHttpsUrl(fields.websiteUrl);
-  const facebook = checkFacebookUrl(fields.facebookUrl);
-  const bad = linkError(t, website) ?? linkError(t, facebook, FACEBOOK_HOSTS);
-  if (bad || !website.ok || !facebook.ok) return { error: bad ?? t.common.failedToSave };
+    const website = checkHttpsUrl(fields.websiteUrl);
+    const facebook = checkFacebookUrl(fields.facebookUrl);
+    const bad = linkError(t, website) ?? linkError(t, facebook, FACEBOOK_HOSTS);
+    if (bad || !website.ok || !facebook.ok) return refuse(bad ?? t.common.failedToSave);
 
-  const friendSince = optional(fields.friendSince);
-  if (friendSince && !/^\d{4}-\d{2}-\d{2}$/.test(friendSince)) {
-    return { error: t.shelterFriends.errors.invalidDate };
-  }
+    const friendSince = optional(fields.friendSince);
+    if (friendSince && !/^\d{4}-\d{2}-\d{2}$/.test(friendSince)) {
+      return refuse(t.shelterFriends.errors.invalidDate);
+    }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  const optIns = Object.fromEntries(
-    FRIEND_OPT_INS.map((key) => [key, fields[key] === true]),
-  ) as Record<FriendOptIn, boolean>;
+    const optIns = Object.fromEntries(
+      FRIEND_OPT_INS.map((key) => [key, fields[key] === true]),
+    ) as Record<FriendOptIn, boolean>;
 
-  const { data, error } = await supabase
-    .from("shelter_friends")
-    .update({
-      blurb: optional(fields.blurb),
-      help_kind: optional(fields.helpKind),
-      discount_note: optional(fields.discountNote),
-      website_url: website.url,
-      facebook_url: facebook.url,
-      friend_since: friendSince,
-      ...optIns,
-      updated_at: new Date().toISOString(),
-      updated_by: user?.id ?? null,
-    })
-    .eq("id", id)
-    .select("contact_id")
-    .returns<{ contact_id: string }[]>();
+    const { data, error } = await supabase
+      .from("shelter_friends")
+      .update({
+        blurb: optional(fields.blurb),
+        help_kind: optional(fields.helpKind),
+        discount_note: optional(fields.discountNote),
+        website_url: website.url,
+        facebook_url: facebook.url,
+        friend_since: friendSince,
+        ...optIns,
+        updated_at: new Date().toISOString(),
+        updated_by: user?.id ?? null,
+      })
+      .eq("id", id)
+      .select("contact_id")
+      .returns<{ contact_id: string }[]>();
 
-  if (error) return { error: error.message };
-  if (!data?.length) return { error: t.shelterFriends.errors.notFound };
+    if (error) return refuse(error.message);
+    if (!data?.length) return refuse(t.shelterFriends.errors.notFound);
 
-  revalidateFriendPages(data[0].contact_id);
-  return { success: t.common.saved };
+    revalidateFriendPages(data[0].contact_id);
+    return { ok: true, success: t.common.saved };
+  });
 }
 
 export async function setFriendPublished(
   id: string,
   published: boolean,
-): Promise<FriendActionResult> {
-  await assertManagementRole();
+): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
-  const supabase = await createClient();
+  return runAction("shelterFriends.setFriendPublished", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("shelter_friends")
-    .update({ published, updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .select("contact_id")
-    .returns<{ contact_id: string }[]>();
+    const { data, error } = await supabase
+      .from("shelter_friends")
+      .update({ published, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select("contact_id")
+      .returns<{ contact_id: string }[]>();
 
-  if (error) return { error: error.message };
-  if (!data?.length) return { error: t.shelterFriends.errors.notFound };
+    if (error) return refuse(error.message);
+    if (!data?.length) return refuse(t.shelterFriends.errors.notFound);
 
-  revalidateFriendPages(data[0].contact_id);
-  return { success: published ? t.shelterFriends.card.published : t.shelterFriends.card.unpublished };
+    revalidateFriendPages(data[0].contact_id);
+    return { ok: true, success: published ? t.shelterFriends.card.published : t.shelterFriends.card.unpublished };
+  });
 }
 
 /**
@@ -203,44 +210,45 @@ export async function setFriendPublished(
  * created with the same sort_order (or reordered by hand in the database)
  * still move by exactly one place. A handful of rows at shelter scale.
  */
-export async function moveFriend(id: string, direction: "up" | "down") {
-  await assertManagementRole();
-  const supabase = await createClient();
+export async function moveFriend(id: string, direction: "up" | "down"): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("shelterFriends.moveFriend", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const supabase = await createClient();
 
-  const { data: rows, error: loadError } = await supabase
-    .from("shelter_friends")
-    .select("id, sort_order, contacts(name)")
-    .order("sort_order")
-    .returns<{ id: string; sort_order: number; contacts: { name: string } | null }[]>();
-  if (loadError) throw new Error(loadError.message);
-  if (!rows) return;
+    const { data: rows, error: loadError } = await supabase
+      .from("shelter_friends")
+      .select("id, sort_order, contacts(name)")
+      .order("sort_order")
+      .returns<{ id: string; sort_order: number; contacts: { name: string } | null }[]>();
+    if (loadError) return refuse(loadError.message);
+    if (!rows) return { ok: true };
 
-  // The order /friends shows: sort_order, then name.
-  const ordered = [...rows].sort(
-    (a, b) =>
-      a.sort_order - b.sort_order ||
-      (a.contacts?.name ?? "").localeCompare(b.contacts?.name ?? ""),
-  );
-  const index = ordered.findIndex((r) => r.id === id);
-  const target = direction === "up" ? index - 1 : index + 1;
-  if (index === -1 || target < 0 || target >= ordered.length) return;
-  [ordered[index], ordered[target]] = [ordered[target], ordered[index]];
+    // The order /friends shows: sort_order, then name.
+    const ordered = [...rows].sort(
+      (a, b) =>
+        a.sort_order - b.sort_order ||
+        (a.contacts?.name ?? "").localeCompare(b.contacts?.name ?? ""),
+    );
+    const index = ordered.findIndex((r) => r.id === id);
+    const target = direction === "up" ? index - 1 : index + 1;
+    if (index === -1 || target < 0 || target >= ordered.length) return { ok: true };
+    [ordered[index], ordered[target]] = [ordered[target], ordered[index]];
 
-  const changed = ordered
-    .map((row, position) => ({ row, position }))
-    .filter(({ row, position }) => row.sort_order !== position);
-  const results = await Promise.all(
-    changed.map(({ row, position }) =>
-      supabase.from("shelter_friends").update({ sort_order: position }).eq("id", row.id),
-    ),
-  );
-  const failed = results.find((r) => r.error);
-  if (failed?.error) {
-    const { t } = await getT();
-    throw new Error(failed.error.message ?? t.common.failedToReorder);
-  }
+    const changed = ordered
+      .map((row, position) => ({ row, position }))
+      .filter(({ row, position }) => row.sort_order !== position);
+    const results = await Promise.all(
+      changed.map(({ row, position }) =>
+        supabase.from("shelter_friends").update({ sort_order: position }).eq("id", row.id),
+      ),
+    );
+    const failed = results.find((r) => r.error);
+    if (failed?.error) return refuse(failed.error.message ?? t.common.failedToReorder);
 
-  revalidateFriendPages();
+    revalidateFriendPages();
+    return { ok: true };
+  });
 }
 
 /** To Drive's trash, restorable for 30 days — as for the Website page's photos. */
@@ -257,86 +265,90 @@ async function trashInDrive(fileId: string) {
 export async function uploadFriendLogo(
   id: string,
   formData: FormData,
-): Promise<FriendActionResult> {
-  await assertManagementRole();
+): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
-  const w = t.admin.website.errors;
+  return runAction("shelterFriends.uploadFriendLogo", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const w = t.admin.website.errors;
 
-  const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) return { error: w.noFile };
-  if (!WEBSITE_IMAGE_MIME_TYPES.has(file.type)) return { error: w.unsupportedFileType(file.type || "unknown") };
-  if (file.size > MAX_UPLOAD_BYTES) return { error: w.fileTooLarge };
-  // The bytes decide, not the browser's guess from the name (file-signature.ts).
-  const mimeType = await checkFileSignature(file, WEBSITE_IMAGE_MIME_TYPES);
-  if (!mimeType) {
-    return { error: t.uploads.notReadable(file.name, formatNames(WEBSITE_IMAGE_MIME_TYPES)) };
-  }
+    const file = formData.get("file");
+    if (!(file instanceof File) || file.size === 0) return refuse(w.noFile);
+    if (!WEBSITE_IMAGE_MIME_TYPES.has(file.type)) return refuse(w.unsupportedFileType(file.type || "unknown"));
+    if (file.size > MAX_UPLOAD_BYTES) return refuse(w.fileTooLarge);
+    // The bytes decide, not the browser's guess from the name (file-signature.ts).
+    const mimeType = await checkFileSignature(file, WEBSITE_IMAGE_MIME_TYPES);
+    if (!mimeType) {
+      return refuse(t.uploads.notReadable(file.name, formatNames(WEBSITE_IMAGE_MIME_TYPES)));
+    }
 
-  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
-  if (!rootId) return { error: w.driveNotConfigured };
+    const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+    if (!rootId) return refuse(w.driveNotConfigured);
 
-  const supabase = await createClient();
-  const current = await friendContactId(supabase, id);
-  if (!current) return { error: t.shelterFriends.errors.notFound };
+    const supabase = await createClient();
+    const current = await friendContactId(supabase, id);
+    if (!current) return refuse(t.shelterFriends.errors.notFound);
 
-  let driveFileId: string;
-  try {
-    const drive = getDriveClient();
-    const website = await findOrCreateFolder(drive, rootId, "Website");
-    const folderId = await findOrCreateFolder(drive, website, "Shelter Friends");
-    driveFileId = await uploadImageToFolder(drive, folderId, {
-      name: file.name,
-      mimeType,
-      content: file,
-    });
-  } catch (err) {
-    return { error: await driveErrorMessage(err, w.uploadFailed) };
-  }
-  // Read it back before the profile points at it or the old logo is trashed.
-  try {
-    await confirmUploaded(getDriveClient(), driveFileId, file.size);
-  } catch (err) {
-    console.error("Logo upload did not land whole:", err);
-    await trashInDrive(driveFileId);
-    return { error: w.uploadFailed };
-  }
+    let driveFileId: string;
+    try {
+      const drive = getDriveClient();
+      const website = await findOrCreateFolder(drive, rootId, "Website");
+      const folderId = await findOrCreateFolder(drive, website, "Shelter Friends");
+      driveFileId = await uploadImageToFolder(drive, folderId, {
+        name: file.name,
+        mimeType,
+        content: file,
+      });
+    } catch (err) {
+      return refuse(await driveErrorMessage(err, w.uploadFailed));
+    }
+    // Read it back before the profile points at it or the old logo is trashed.
+    try {
+      await confirmUploaded(getDriveClient(), driveFileId, file.size);
+    } catch (err) {
+      console.error("Logo upload did not land whole:", err);
+      await trashInDrive(driveFileId);
+      return refuse(w.uploadFailed);
+    }
 
-  // .select() so "Logo updated." is only said when the row really changed:
-  // an update that matches nothing (a profile removed meanwhile, or RLS)
-  // is not an error to PostgREST, just zero rows.
-  const { data: saved, error } = await supabase
-    .from("shelter_friends")
-    .update({ logo_drive_file_id: driveFileId, updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .select("logo_drive_file_id")
-    .returns<{ logo_drive_file_id: string | null }[]>();
-  if (error || saved?.[0]?.logo_drive_file_id !== driveFileId) {
-    await trashInDrive(driveFileId);
-    return { error: error?.message ?? t.shelterFriends.errors.notFound };
-  }
+    // .select() so "Logo updated." is only said when the row really changed:
+    // an update that matches nothing (a profile removed meanwhile, or RLS)
+    // is not an error to PostgREST, just zero rows.
+    const { data: saved, error } = await supabase
+      .from("shelter_friends")
+      .update({ logo_drive_file_id: driveFileId, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select("logo_drive_file_id")
+      .returns<{ logo_drive_file_id: string | null }[]>();
+    if (error || saved?.[0]?.logo_drive_file_id !== driveFileId) {
+      await trashInDrive(driveFileId);
+      return refuse(error?.message ?? t.shelterFriends.errors.notFound);
+    }
 
-  if (current.logo_drive_file_id) await trashInDrive(current.logo_drive_file_id);
-  revalidateFriendPages(current.contact_id);
-  return { success: t.shelterFriends.card.logoUpdated };
+    if (current.logo_drive_file_id) await trashInDrive(current.logo_drive_file_id);
+    revalidateFriendPages(current.contact_id);
+    return { ok: true, success: t.shelterFriends.card.logoUpdated };
+  });
 }
 
-export async function removeFriendLogo(id: string): Promise<FriendActionResult> {
-  await assertManagementRole();
+export async function removeFriendLogo(id: string): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
-  const supabase = await createClient();
+  return runAction("shelterFriends.removeFriendLogo", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const supabase = await createClient();
 
-  const current = await friendContactId(supabase, id);
-  if (!current) return { error: t.shelterFriends.errors.notFound };
+    const current = await friendContactId(supabase, id);
+    if (!current) return refuse(t.shelterFriends.errors.notFound);
 
-  const { error } = await supabase
-    .from("shelter_friends")
-    .update({ logo_drive_file_id: null, updated_at: new Date().toISOString() })
-    .eq("id", id);
-  if (error) return { error: error.message };
+    const { error } = await supabase
+      .from("shelter_friends")
+      .update({ logo_drive_file_id: null, updated_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) return refuse(error.message);
 
-  if (current.logo_drive_file_id) await trashInDrive(current.logo_drive_file_id);
-  revalidateFriendPages(current.contact_id);
-  return { success: t.common.saved };
+    if (current.logo_drive_file_id) await trashInDrive(current.logo_drive_file_id);
+    revalidateFriendPages(current.contact_id);
+    return { ok: true, success: t.common.saved };
+  });
 }
 
 /**
@@ -344,18 +356,20 @@ export async function removeFriendLogo(id: string): Promise<FriendActionResult> 
  * its prose and translations go with it (0076's drop_translations
  * trigger). The contact, and anything else pointing at it, stays.
  */
-export async function deleteFriend(id: string): Promise<FriendActionResult> {
-  await assertManagementRole();
+export async function deleteFriend(id: string): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
-  const supabase = await createClient();
+  return runAction("shelterFriends.deleteFriend", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const supabase = await createClient();
 
-  const current = await friendContactId(supabase, id);
-  if (!current) return { error: t.shelterFriends.errors.notFound };
+    const current = await friendContactId(supabase, id);
+    if (!current) return refuse(t.shelterFriends.errors.notFound);
 
-  const { error } = await supabase.from("shelter_friends").delete().eq("id", id);
-  if (error) return { error: error.message };
+    const { error } = await supabase.from("shelter_friends").delete().eq("id", id);
+    if (error) return refuse(error.message);
 
-  if (current.logo_drive_file_id) await trashInDrive(current.logo_drive_file_id);
-  revalidateFriendPages(current.contact_id);
-  return { success: t.shelterFriends.card.removed };
+    if (current.logo_drive_file_id) await trashInDrive(current.logo_drive_file_id);
+    revalidateFriendPages(current.contact_id);
+    return { ok: true, success: t.shelterFriends.card.removed };
+  });
 }

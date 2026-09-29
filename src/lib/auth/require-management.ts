@@ -18,11 +18,19 @@ export async function requireManagementUser() {
   return user;
 }
 
-/** Same check for use inside a server action, where redirect() can't be used. */
-export async function assertManagementRole() {
+/**
+ * Whether the signed-in user is admin or management, for a server action
+ * that returns its refusal rather than throwing (src/lib/action-result.ts).
+ */
+export async function hasManagementRole() {
   const supabase = await createClient();
   const { data: role } = await supabase.rpc("current_user_role");
-  if (!canManage(role)) {
+  return canManage(role);
+}
+
+/** Same check for use inside a server action, where redirect() can't be used. */
+export async function assertManagementRole() {
+  if (!(await hasManagementRole())) {
     const { t } = await getT();
     throw new Error(t.management.errors.managementAccessRequired);
   }
