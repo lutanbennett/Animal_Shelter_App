@@ -59,6 +59,7 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
     supabase
       .from("stock_counts")
       .select("medication_id, diet_type_id, counted_at")
+      .neq("source", "correction")
       .returns<{ medication_id: string | null; diet_type_id: string | null; counted_at: string }[]>(),
     // Every vendor, archived too: an old delivery still names its supplier.
     // The form offers only the live ones.
