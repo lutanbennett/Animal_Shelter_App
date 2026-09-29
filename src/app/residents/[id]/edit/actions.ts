@@ -126,6 +126,7 @@ export async function updateResident(
     const adoptionCopy = readAdoptionCopy(formData);
     if ("tooLong" in adoptionCopy) {
       return {
+        ok: false,
         error:
           adoptionCopy.tooLong === "hookLine"
             ? t.residents.edit.errors.hookLineTooLong(HOOK_LINE_MAX)
