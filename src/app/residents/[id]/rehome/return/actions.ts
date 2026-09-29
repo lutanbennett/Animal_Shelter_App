@@ -2,11 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { runAction, type ActionRefusal } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { returnResidentToShelter } from "@/lib/placements/rehome";
 
-export type ReturnToShelterState = { error: string } | undefined;
+export type ReturnToShelterState = ActionRefusal | undefined;
 
 function str(formData: FormData, key: string): string | null {
   const value = formData.get(key);
@@ -26,20 +27,22 @@ export async function returnToShelter(
   formData: FormData,
 ): Promise<ReturnToShelterState> {
   const { t } = await getT();
-  const supabase = await createClient();
+  return runAction<never>("residents.returnToShelter", t.common.somethingWentWrong, async () => {
+    const supabase = await createClient();
 
-  const result = await returnResidentToShelter(supabase, t, {
-    residentId,
-    enclosureId: str(formData, "enclosureId") ?? "",
-    date: str(formData, "date") ?? "",
-    notes: str(formData, "notes"),
+    const result = await returnResidentToShelter(supabase, t, {
+      residentId,
+      enclosureId: str(formData, "enclosureId") ?? "",
+      date: str(formData, "date") ?? "",
+      notes: str(formData, "notes"),
+    });
+    if ("error" in result) return { ok: false, error: result.error };
+
+    revalidatePath("/residents");
+    revalidatePath(`/residents/${residentId}`);
+    revalidatePath(`/residents/${residentId}/housing`);
+    // Occupancy on the enclosure browser and both enclosure hubs changes too.
+    revalidatePath("/enclosures", "layout");
+    redirect(`/residents/${residentId}`);
   });
-  if ("error" in result) return result;
-
-  revalidatePath("/residents");
-  revalidatePath(`/residents/${residentId}`);
-  revalidatePath(`/residents/${residentId}/housing`);
-  // Occupancy on the enclosure browser and both enclosure hubs changes too.
-  revalidatePath("/enclosures", "layout");
-  redirect(`/residents/${residentId}`);
 }
