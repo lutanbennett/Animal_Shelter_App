@@ -74,23 +74,27 @@ a minute where finding it mid-Vet-pass dead-ends the pass.
 - [ ] Signed in as admin in profile A; `/admin` opens
 - [ ] `/admin` says **Photo storage (Google Drive) is connected** — if it is red, every photo step below will fail and you want to know now rather than blame the role
 - [ ] Reference lists are non-empty: **Immunization types**, **Procedure types**, **Blood test types**, **Frequencies**, **Zones and enclosures**. An empty one is an Admin-pass finding — note it, populate enough to test with, carry on
-- [ ] **Management → Vets** has at least one vet — the Vet pass needs a clinic to record a visit against. There is no doctor field on the vet record: the doctor is typed per visit on the vet-visit form, which suggests names already used against that clinic (`src/lib/vets/doctors.ts`). An empty suggestion list on a clinic nobody has recorded a visit for is expected, not a fault
+- [ ] **Management → Vets** has at least **two** clinics — the Vet pass records against the test account's own clinic and needs a second one to prove other clinics' records are read-only. Write the two names: own `________`, other `________`. Each clinic has a managed **doctors** list (`0102`); on the own clinic, add at least one doctor at **Management → Vets → Doctors** so the visit form has someone to offer
 - [ ] **Management → Medications** and **→ Diets** each have at least one item with a stock figure
 - [ ] Pick a **test resident** and write its name here: `________`. Use the same one through every pass so the medical, placement and photo history builds up in one place and you can read it back at the end
-- [ ] **Management → Recurring jobs**: create a job due **today**, assigned to the **test account**, on a frequency you can see. This is what the Vet, Staff and Volunteer passes each mark done. Note its name: `________`
-- [ ] Set the test account's role to **vet**
+- [ ] **Give the test resident history from *both* clinics.** A vet sees a resident only if it has a vet visit, prescription, procedure or blood test from their clinic (`0108`). Record, as admin, one vet visit at the **own** clinic (so the resident is in scope) and one visit — plus, if you can, a prescription — at the **other** clinic (so there is a foreign record to find read-only)
+- [ ] Set the test account's role to **staff**, then **Management → Recurring jobs**: create a job due **today**, assigned to the **test account**, on a frequency you can see. This seeds the **Staff** and **Volunteer** passes — it is the job each marks done. Note its name: `________`
+- [ ] **A vet cannot be given a job.** The assignee picker offers shelter roles only (`claude/recurring-jobs-eligible-assignees`), so once the role is **vet** (next step) open the job form and confirm the test account is **not** in the picker. Before this fix the seed could be done for a vet, which exposed 2026-09-27 findings 5 and 6; that setup is impossible by design now
+- [ ] Set the test account's role to **vet**, then check the picker as above
+- [ ] **Set the test account's clinic** at **Settings → Security**: on the test account's row, choose the **own** clinic (`user_roles.vet_id`, `0102`). It only takes for an account whose role is `vet`, hence this step comes after the role change. **Without a clinic the vet sees no residents at all** (0.9.0's lead note), and Pass 1 dead-ends on its first line
 
 ---
 
 ## Pass 1 — Vet
 
-The narrowest role, and the only one that is *external* to the shelter. The
-interesting lines are almost all negative: a vet should see the medical record
-and nothing about running the place.
+The narrowest role, and the only one that is *external* to the shelter. A vet
+sees **their own clinic's residents** and the medical record, and nothing about
+running the place. The interesting lines are almost all negative.
 
-**Menu must show:** My tasks · Residents · Enclosures · Maintenance · Vets ·
-Contacts · Projects · Manual · Release notes · Change password.
-**Menu must NOT show:** Stocktake, Management, Settings, Security.
+**Menu must show:** **My tasks** and **Residents**, then the footer group —
+Manual · Release notes · Change password. Nothing else (`src/app/NavLinks.tsx`).
+**Menu must NOT show:** Enclosures, Maintenance, Vets, Contacts, Projects,
+Stocktake, Management, Settings, Security.
 **Header must NOT show:** the Assistant button — the vet role is external and
 the assistant is closed to it (`0070`).
 
@@ -98,41 +102,94 @@ the assistant is closed to it (`0070`).
 
 ### Can do
 
-- [ ] **My tasks** opens and shows the recurring job from Pass 0, under *Due today*
-- [ ] Mark it **Done** with a note; it leaves the list and **Undo** is offered
-- [ ] Undo puts it back, then mark it Done again for real
-- [ ] `/residents` lists residents; find the test resident by search
+- [ ] **My tasks** opens. A vet has **no** recurring job (they are not assignable), so it is empty or shows only what genuinely belongs to a vet — read what it says and note it: `________`
+- [ ] `/residents` **names the clinic** at the top and lists **only that clinic's residents**; the test resident is there. Find it by search
+- [ ] **Clinic scoping, negative half:** a resident with no record from this clinic is **absent** from the list, and typing its URL is refused
 - [ ] Its hub opens; **info**, **medical** and **placement** tabs all load
 - [ ] **Log an immunization** — type, date, vet; it appears in the medical list
-- [ ] **Record a vet visit** — reason, vet, date; it appears with the doctor's name
-- [ ] **Add a prescription** — medication, dose, dates; it appears and reads as current
-- [ ] **Record a diet**
-- [ ] **Log a weight**; the weight history updates
+- [ ] **Record a vet visit.** The clinic choice offers **only the vet's own clinic**, and the doctor is **chosen from the clinic's roster**, not typed free-hand (`0102`, `claude/vet-visit-form-scoping`). It appears with the doctor's name
+- [ ] **Add a prescription** — medication, dose, dates; it appears and reads as current. Try to link it to a visit **in the future**: refused (`0107`)
+- [ ] **Record a diet.** Then clear the **end date** on a phone-width window (or a real phone): the date can be emptied and the save keeps it empty (`mobile-date-clear`)
+- [ ] **Log a weight**; the weight history updates. Attach it to a visit that **already has a weight**: refused (`0106`). One weight per visit
 - [ ] **Log a procedure** — type, date, notes
-- [ ] **Log a blood test**, and **attach a file to it**. This is the one Drive-backed write a vet does; if it fails, check `/admin`'s Drive line before calling it a role problem
-- [ ] **Add a resident photo** — vets can, and it is easy to assume they cannot
-- [ ] `/vets` and `/contacts` open and read
-- [ ] `/enclosures` opens; a zone and an enclosure page load
-- [ ] `/projects` opens and reads
-- [ ] **Manual** opens, and "Roles — who can do what" describes the vet role as you have just experienced it. Topics a vet cannot do should carry the right role badges
-- [ ] **Release notes** opens and lists the current version
+- [ ] **Log a blood test**, and **attach a file to it**. This is the one Drive-backed write a vet does; if it fails, check `/admin`'s Drive line before calling it a role problem. A PDF shows a file-type icon rather than a broken thumbnail
+- [ ] **Add a resident photo** — vets can, and it is easy to assume they cannot. There is **no folder picker**: it files under **Medical** and nowhere else
+- [ ] **Manual** opens on the **vet's** view of the roles topic ("Roles — who can do what"), and topics a vet cannot do carry the right role badges
+- [ ] **Release notes** opens showing what a vet is affected by, and lists the current version
 - [ ] **Change password** page loads
+
+### Other clinics' records are read-only
+
+On the test resident's medical tab, the **other** clinic's records still show
+(visits, prescriptions, procedures, blood tests) — a vet may read the whole
+history. But they are not theirs to change (`0110`):
+
+- [ ] The other clinic's **vet visit**, **prescription**, **procedure** and **blood test** each show, with no working edit or delete
+- [ ] Opening **Edit** on one (by button, or by typing the URL) says it is **read-only** rather than opening a form
+- [ ] The **own** clinic's records from the Can-do list above are editable
+- [ ] In the visit form, the other clinic is **not** offered
 
 ### Must not be able to
 
 Reach each by **typing the URL**, not just by looking for a missing button. A
 hidden button with an open route is the bug worth finding.
 
-- [ ] `/stocktake` — refused or redirected
-- [ ] `/management` and `/management/dashboard` — redirected
-- [ ] `/admin` and `/admin/security` — redirected
-- [ ] `/deliveries` — redirected (delivery roles are admin/management/staff)
+**Every refusal below should land on `/no-access`, inside the app** — the page
+that says the role is not permitted, with the app's header and menu around it.
+This is the test for 2026-09-27 finding 6 (a refusal used to render the public
+home page, which is also what tipped the test site into Cloudflare 1102) and it
+is the single thing the last run most wants confirmed. Write what you actually
+saw for the first one: `________`
+
+- [ ] `/vets` and a clinic page `/vets/<id>` — refused → `/no-access`
+- [ ] `/contacts` — refused → `/no-access`
+- [ ] `/enclosures`, and a zone and an enclosure page — refused → `/no-access`
+- [ ] `/projects` — refused → `/no-access`
+- [ ] `/maintenance` — refused → `/no-access`, like everything else. (It is gated by `requireRole(isShelterRole)`; an earlier version of this script asked whether an empty board read as "no jobs" — that question is gone, the vet no longer gets a board at all)
+- [ ] `/stocktake` — refused → `/no-access`
+- [ ] `/management` and `/management/dashboard` — refused → `/no-access`
+- [ ] `/management/vets/<id>/doctors` — the **Doctors roster screen** is management and admin only; a vet may not open it, and cannot rename, merge or retire doctors
+- [ ] `/admin` and `/admin/security` — refused → `/no-access`
+- [ ] `/deliveries` — refused → `/no-access` (delivery roles are admin/management/staff)
 - [ ] Resident hub shows **no** New resident / Edit / Move / Hospital / Foster / Adopt / Record a death controls
 - [ ] `/residents/<id>/edit`, `/move`, `/hospital`, `/rehome`, `/deceased` typed directly — all refused
-- [ ] **`/maintenance` — read what it actually says.** A vet has no maintenance policy at all (`0001`, `0039`), so the board comes back **empty rather than forbidden**, and the menu still shows the link. Decide whether an empty board reads as "no jobs" — which is misleading — or as "not for you". **Write down which it is**, because this is a known rough edge rather than a pass/fail: `________`
+- [ ] A resident **outside the clinic's scope** typed by URL — refused, not shown
+- [ ] **Photo upload to any folder but Medical** — the route answers **403**. With no folder picker there is nothing to click, so this needs the browser's network tools or a `fetch` from the console; if you cannot do that, write "not run" rather than tick it
 - [ ] The Assistant slide-over cannot be opened by any route you can find
+- [ ] The vet is **not** offered when a recurring job is assigned (checked in Pass 0; look again from the admin profile if the picker was touched)
 
 **Anything odd:**
+
+### What a completed Vet pass lets someone sign
+
+Every vet fix's test plan reads `Manual verification by: pending`, and pending on
+precisely the lines above. When this pass has been run and every line ticked or
+written up, **Lutan** can sign *Manual verification by* on these plans — the line
+names who looked; nobody signs for them, and a plan whose line here failed or
+was not run stays pending.
+
+| Test plan (`docs/test-plans/`) | Covered by |
+|---|---|
+| `vet-scope-navigation` | Menu, and every `/no-access` refusal |
+| `vet-clinic-resident-scope` | Residents list names the clinic; scoping both halves |
+| `vet-cross-clinic-writes` | Other clinics' records are read-only |
+| `vet-visit-form-scoping` | Visit form: own clinic, doctor from roster |
+| `vet-doctors-roster-screen` | Roster screen refused to a vet (the roster itself is an Admin/Management pass line) |
+| `recurring-jobs-eligible-assignees` | Pass 0: vet absent from the picker |
+| `prescription-no-future-visit` | Prescription, future-visit refusal |
+| `one-weight-per-visit` | Weight, second-weight refusal |
+| `role-based-manual` | Manual opens on the vet's view |
+| `release-notes-by-role` | Release notes opens on the vet's view |
+| `medical-photos-profile` | Photo: Medical only, no folder picker, 403 |
+| `mobile-date-clear` | Diet end date cleared on mobile |
+| `file-type-icon` | Blood-test attachment shows a file-type icon |
+
+**Known risk to the run itself:** Cloudflare **1102** on the test site (finding
+17) is unresolved — `ORIGIN_HOST` is still empty in `wrangler.jsonc`. Finding
+6's fix lightens the CPU path but does not remove the mechanism, so the run may
+be cut short. If it is, record where and mark the rest "not run"; do not read a
+`curl` from another machine as evidence either way (`docs/uat/2026-09-27.md`
+says why).
 
 ---
 
