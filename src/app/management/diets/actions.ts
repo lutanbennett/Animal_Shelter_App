@@ -162,10 +162,12 @@ export async function updateDietTypeStock(id: string, count: string) {
   if (!parsed.ok) throw new Error(t.management.stock.errors.countInvalid);
 
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("diet_types")
-    .update({ stock_on_hand: parsed.value })
-    .eq("id", id);
+  // One way in (0112): see updateMedicationStock.
+  const { error } = await supabase.rpc("record_stock_correction", {
+    p_kind: "diet_type",
+    p_id: id,
+    p_count: parsed.value,
+  });
   if (error) throw new Error(error.message);
   revalidateDietPages();
 }

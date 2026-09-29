@@ -62,6 +62,7 @@ export async function recordDelivery(input: DeliveryInput): Promise<DeliveryResu
   const { data: counts, error: countsError } = await supabase
     .from("stock_counts")
     .select("counted_at")
+    .neq("source", "correction")
     .eq(idColumn, input.itemId)
     .returns<{ counted_at: string }[]>();
   if (countsError) return { ok: false, error: `${e.failed}: ${countsError.message}` };
