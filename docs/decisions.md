@@ -7304,3 +7304,14 @@ their own streams; the backlog item stays unticked with a note).
   visible when a delete is refused (they only refresh on success). Now the
   refusal is a clean value rather than a throw, showing it is a small
   follow-up, not part of this sweep.
+
+## 2026-09-29 — Contact channel picker: one helper, fallback by walking the list
+
+Feature half of "preferred contact channel" (schema was `0111`). `preferredChannels(content, message?)` in `src/lib/site/channels.ts` is the only place that decides order; the profile's sticky bar, the get-in-touch card, the footer and the phone menu all take their buttons from it.
+
+- **Fallback is the ordering itself.** The result is the shelter's list first, then every other channel in the built-in order (LINE, Messenger, WhatsApp, Instagram, phone, email), with channels that have no value skipped. So clearing LINE promotes the next set channel and phone/email close the list; there is no separate "fallback" code path to forget on one surface. The database does not check that a listed channel has a value (see the schema entry), so this read-time skip is what stops a dead button.
+- **Instagram and email are quieter by default.** Instagram is a follow link and the phone menu never had an email button, so `talkChannels` shows them in the footer's Contact us and the phone menu only when the shelter *chose* them (they are in the stored list). Email always stays in the footer. Default `{line}` therefore renders as before, apart from the Instagram/email carve-out being explicit.
+- **Sticky bar pairs with Book a visit, which is a phone call.** If the first channel is phone (or email with no phone number, when Book a visit already falls back to email) the "ask" button is dropped rather than duplicated; the preference is still honoured because Book a visit is that channel.
+- **Message prefilled where the channel can.** LINE official accounts (`oaMessage`), WhatsApp (`?text=`) and email (subject) get the text; Messenger has no reliable prefill and Instagram none, so they open the chat or profile.
+- **The picker keeps the whole order**, including channels with no value, and submits it; unset channels are hidden, not forgotten, so retyping a cleared link brings it back where it was.
+- **The manual has no Thai dictionary** (`src/lib/manual/` is English only), so only the site strings, which are in both languages, needed a Thai version.
