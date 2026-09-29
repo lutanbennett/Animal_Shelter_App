@@ -1005,7 +1005,7 @@ const en = {
         contactEmail: "Contact email",
         contactPhone: "Phone",
         contactLine: "LINE",
-        contactLineHint: "A LINE id (with or without the @) or a full add-friend link.",
+        contactLineHint: "Type the id exactly as LINE shows it: with the @ for an Official Account (@lannacare), without it for a personal id (lannacare). Or paste a full add-friend link.",
         contactAddress: "Address",
         contactMapUrl: "Map link",
         contactMapUrlHint: "A Google Maps link; the address in the footer opens it.",

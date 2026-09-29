@@ -952,7 +952,7 @@ const th: Dictionary = {
         contactEmail: "อีเมลติดต่อ",
         contactPhone: "โทรศัพท์",
         contactLine: "LINE",
-        contactLineHint: "ไอดี LINE (ใส่หรือไม่ใส่ @ ก็ได้) หรือลิงก์เพิ่มเพื่อนแบบเต็ม",
+        contactLineHint: "พิมพ์ไอดีตามที่ LINE แสดง: มี @ สำหรับบัญชีทางการ (@lannacare) ไม่มี @ สำหรับไอดีส่วนตัว (lannacare) หรือวางลิงก์เพิ่มเพื่อนแบบเต็ม",
         contactAddress: "ที่อยู่",
         contactMapUrl: "ลิงก์แผนที่",
         contactMapUrlHint: "ลิงก์ Google Maps — ที่อยู่ในส่วนท้ายจะเปิดลิงก์นี้",
