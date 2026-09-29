@@ -63,16 +63,25 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   { text: "A vet can now change only their own clinic's records. Another clinic's vet visits, prescriptions, procedures, blood tests and their files stay visible on a resident's page but are read-only, and a vet can no longer record a visit for a clinic other than their own. Opening Edit on another clinic's visit now says it is read-only.", roles: ["vet", "admin"] },
-  { text: "A vet now sees only the residents their own clinic treats: any resident the clinic has a vet visit, prescription, procedure or blood test for, with that resident's whole history, other clinics' visits included. Other residents no longer appear anywhere a vet can look, including by typing a resident's address. The Residents list names the clinic, and a vet account with no clinic set sees no residents until an admin sets one under Security.", roles: ["vet", "admin"] },
-  { text: "Admins can now see whether anyone is waiting for access without signing in with the authenticator app. Settings → System status has an Access requests card saying how many are waiting and how long the oldest has waited, and while anyone waits every admin has a Review access requests task at the top of My tasks. Neither says who is asking — names and email addresses are still only on Settings → Security, which both link to.", roles: ["admin"] },
-  "A prescription or diet that ended yesterday no longer shows as current on a resident's page between midnight and 7 in the morning. It used to stay listed as current until 7. The date on Return from hospital, Rehome and Return to shelter also no longer offers the day before a move made in those hours, which the save then refused.",
-  { text: "Admin pages (Zones, Enclosures, Frequencies, Immunization types, Procedure types, Blood test types, Website, System status) now show the real reason an action was refused, instead of a generic error.", roles: ["admin"] },
-  "Going from the home page to the dogs up for adoption now shows our puppy-at-a-laptop loading animation for a moment before the list appears. Changing a filter or the ready-only toggle on that page stays instant.",
-  "A resident photo filed under the wrong folder can now be refiled without deleting and re-uploading it — open it in the photo viewer and choose Move to folder. Its date taken and caption stay; only its folder, in Drive and in the app, changes. A vet can move a photo into Medical but not out of it, and a photo can't be moved into Medical while it's the resident's profile photo.",
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.9.0",
+    date: "2026-09-28",
+    title:
+      "Vets see only their own clinic's residents, access requests at a glance, and refiling photos",
+    major: true,
+    notes: [
+      { text: "A vet now sees only the residents their own clinic treats: any resident the clinic has a vet visit, prescription, procedure or blood test for, with that resident's whole history, other clinics' visits included. Other residents no longer appear anywhere a vet can look, including by typing a resident's address. The Residents list names the clinic, and a vet account with no clinic set sees no residents until an admin sets one under Security.", roles: ["vet", "admin"] },
+      { text: "Admins can now see whether anyone is waiting for access without signing in with the authenticator app. Settings → System status has an Access requests card saying how many are waiting and how long the oldest has waited, and while anyone waits every admin has a Review access requests task at the top of My tasks. Neither says who is asking — names and email addresses are still only on Settings → Security, which both link to.", roles: ["admin"] },
+      "A prescription or diet that ended yesterday no longer shows as current on a resident's page between midnight and 7 in the morning. It used to stay listed as current until 7. The date on Return from hospital, Rehome and Return to shelter also no longer offers the day before a move made in those hours, which the save then refused.",
+      { text: "Admin pages (Zones, Enclosures, Frequencies, Immunization types, Procedure types, Blood test types, Website, System status) now show the real reason an action was refused, instead of a generic error.", roles: ["admin"] },
+      "Going from the home page to the dogs up for adoption now shows our puppy-at-a-laptop loading animation for a moment before the list appears. Changing a filter or the ready-only toggle on that page stays instant.",
+      "A resident photo filed under the wrong folder can now be refiled without deleting and re-uploading it — open it in the photo viewer and choose Move to folder. Its date taken and caption stay; only its folder, in Drive and in the app, changes. A vet can move a photo into Medical but not out of it, and a photo can't be moved into Medical while it's the resident's profile photo.",
+    ],
+  },
   {
     version: "0.8.1",
     date: "2026-09-28",
