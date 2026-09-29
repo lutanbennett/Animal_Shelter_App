@@ -10,6 +10,7 @@ import {
   resolveCashflowWindow,
   type CashflowRow,
 } from "@/lib/management/cashflow";
+import { fixedOutgoingRows, type FixedOutgoing } from "@/lib/management/fixed-outgoings";
 import { CashflowView } from "./CashflowView";
 
 /**
@@ -37,14 +38,27 @@ export default async function CashflowPage(props: PageProps<"/management/cashflo
   const customTo = window.days == null ? window.to : "";
 
   const supabase = await createClient();
-  const [forecast, vetEstimate] = await Promise.all([
+  const [forecast, vetEstimate, fixed] = await Promise.all([
     supabase.rpc("cashflow_forecast", { p_from: window.from, p_to: window.to }),
     // Shown under the table so it is obvious which figure the vet row used
     // and where to change it.
     loadVetVisitEstimate(supabase),
+    // The named monthly costs (0114), folded in below as one more category.
+    supabase
+      .from("fixed_outgoings")
+      .select("id, label, monthly_amount, note, active, starts_on, ends_on")
+      .returns<FixedOutgoing[]>(),
   ]);
 
-  const rows = (forecast.data ?? []) as CashflowRow[];
+  // Counted by the day, like every other category (fixedOutgoingRows).
+  const fixedLines = fixed.data ?? [];
+  const rows = [
+    ...((forecast.data ?? []) as CashflowRow[]),
+    ...fixedOutgoingRows(fixedLines, window.from, window.to),
+  ];
+  const fixedMonthly = fixedLines
+    .filter((l) => l.active)
+    .reduce((sum, l) => sum + Number(l.monthly_amount), 0);
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
@@ -89,12 +103,18 @@ export default async function CashflowPage(props: PageProps<"/management/cashflo
         <ForecastWindowPicker from={customFrom} to={customTo} invalid={invalid} />
       </section>
 
-      {forecast.error ? (
+      {forecast.error || fixed.error ? (
         <p className="text-sm text-danger">
-          {c.couldntLoad}: {forecast.error.message}
+          {c.couldntLoad}: {(forecast.error ?? fixed.error)?.message}
         </p>
       ) : (
-        <CashflowView rows={rows} vetEstimate={vetEstimate} from={window.from} to={window.to} />
+        <CashflowView
+          rows={rows}
+          vetEstimate={vetEstimate}
+          fixedMonthly={fixedLines.some((l) => l.active) ? fixedMonthly : null}
+          from={window.from}
+          to={window.to}
+        />
       )}
     </main>
   );

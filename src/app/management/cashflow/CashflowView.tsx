@@ -42,6 +42,7 @@ const NOT_PRICED_ANCHOR = "not-priced";
 export function CashflowView({
   rows,
   vetEstimate,
+  fixedMonthly,
   from,
   to,
 }: {
@@ -51,6 +52,8 @@ export function CashflowView({
   to: string;
   /** The typical-vet-visit figure from site_content, or null if unset. */
   vetEstimate: number | null;
+  /** Active fixed outgoings per month (0114), or null when none are listed. */
+  fixedMonthly: number | null;
 }) {
   const { t, locale } = useI18n();
   const c = t.management.cashflow;
@@ -315,6 +318,13 @@ export function CashflowView({
                 .
               </>
             ))}
+        </p>
+        <p className="text-xs text-muted">
+          {fixedMonthly == null ? c.fixedNoteNone : c.fixedNote(formatBaht(fixedMonthly, locale))}{" "}
+          <Link href="/management/cashflow/fixed-outgoings" className="text-primary hover:underline">
+            {c.fixedOutgoingsLink}
+          </Link>
+          .
         </p>
         <p className="text-xs text-muted">{c.table.basisNote}</p>
       </section>
