@@ -1,6 +1,8 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { todayIso } from "@/lib/format";
+import { VET_HOME_PATH } from "@/lib/auth/next-path";
 import { canManage } from "@/lib/auth/require-management";
 import { canReadMaintenance } from "@/lib/maintenance/queries";
 import { canReadRecurringJobs } from "@/lib/recurring-jobs/access";
@@ -31,6 +33,8 @@ export default async function MyPage() {
     supabase.rpc("current_user_role"),
     supabase.auth.getUser(),
   ]);
+  // Tasks are shelter operations; a vet's home is their appointments.
+  if (role === "vet") redirect(VET_HOME_PATH);
   const userId = auth.user?.id;
 
   const sections: MyTaskSection[] = userId

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isPublicPath } from "@/lib/public-paths";
-import { DEFAULT_SIGNED_IN_PATH } from "./next-path";
+import { DEFAULT_SIGNED_IN_PATH, VET_HOME_PATH } from "./next-path";
 
 /**
  * The roles that open the app. Everything else a session can be — signed
@@ -59,7 +59,7 @@ export async function sessionHasAppAccess(supabase: SupabaseClient): Promise<boo
  * after sign-in.
  */
 export function signedInLandingPath(role: string | null, next: string | null): string {
-  if (hasAppAccess(role)) return next ?? DEFAULT_SIGNED_IN_PATH;
+  if (hasAppAccess(role)) return next ?? (role === "vet" ? VET_HOME_PATH : DEFAULT_SIGNED_IN_PATH);
   if (next && isPublicPath(new URL(next, "http://x").pathname)) return next;
   return "/";
 }

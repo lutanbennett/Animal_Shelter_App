@@ -20,3 +20,6 @@ export function safeNextPath(next: string | null | undefined): string | null {
  * public home for everyone, and "/my" is the home of the app.
  */
 export const DEFAULT_SIGNED_IN_PATH = "/my";
+
+/** A vet's home: /my sends them here, since they have no tasks (2026-09-29). */
+export const VET_HOME_PATH = "/appointments";
