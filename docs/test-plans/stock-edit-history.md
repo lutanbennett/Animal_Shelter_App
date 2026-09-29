@@ -147,7 +147,7 @@ Automated checks by: Claude  Date: 2026-09-29
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: nobody has yet typed a stock figure on the Management page and looked at the result
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — rows 1–2 wait for someone to type a figure on the Management page and look
 
 Manual verification by: pending: the two rows above, on dev
 
