@@ -26,7 +26,7 @@ async function loadImage(src: string, origin: string): Promise<Uint8Array | null
   let res: Response;
   try {
     // On the Worker the ASSETS binding serves public/ without a public round trip.
-    const assets = (getCloudflareContext().env as { ASSETS?: Fetcher }).ASSETS;
+    const assets = (getCloudflareContext().env as { ASSETS?: { fetch(input: URL): Promise<Response> } }).ASSETS;
     res = await (assets ? assets.fetch(url) : fetch(url));
   } catch {
     res = await fetch(url).catch(() => new Response(null, { status: 500 }));

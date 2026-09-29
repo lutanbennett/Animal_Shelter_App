@@ -11,7 +11,7 @@
 | PR | not yet opened |
 | Tested by / date | Claude, 2026-09-29 |
 | Carries a migration? | no |
-| Tested at SHA | see the branch tip |
+| Tested at SHA | branch tip after the gates commit |
 
 ## 1. Scope and risk
 
@@ -22,8 +22,13 @@
 
 ## 2. Automated gates
 
-- [ ] `node scripts/worktree.mjs sync` — n/a: not yet run at this commit
-- [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (brought in 0116 and the microchip-vet files)
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Closing line as printed:
+
+```
+gates: typecheck=0 lint=0 build=0
+```
+
 - [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
