@@ -455,6 +455,19 @@ export function ResidentHub({
             {!resident.size && !isDeceased && (
               <p className="text-xs text-warning">{t.residents.hub.sizeNotSet}</p>
             )}
+            {resident.microchip_number ? (
+              <p className="text-sm text-muted">
+                {t.residents.hub.microchip}:{" "}
+                <span className="font-mono text-foreground">{resident.microchip_number}</span>
+                {resident.microchip_implanted_on &&
+                  ` · ${t.residents.hub.microchipImplanted(formatDate(resident.microchip_implanted_on, locale))}`}
+              </p>
+            ) : (
+              resident.ready_for_adoption &&
+              !isDeceased && (
+                <p className="text-xs text-warning">{t.residents.hub.microchipNudge}</p>
+              )
+            )}
             <p className="text-sm text-muted">
               {formatAge(t, resident.estimated_age_years, resident.age_estimated_on)}
               {resident.intake_date &&

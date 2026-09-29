@@ -11,6 +11,7 @@ import {
 } from "@/components/EnclosurePicker";
 import { CapacityWarningDialog } from "@/components/CapacityWarningDialog";
 import { RESIDENT_SIZES, sizeLabel } from "@/lib/i18n/enum-labels";
+import { MicrochipFields } from "@/components/MicrochipFields";
 import { AdoptionProfileFields } from "@/components/AdoptionProfileFields";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { Locale } from "@/lib/i18n/locales";
@@ -141,6 +142,7 @@ function buildReview(
         { label: f.estimatedAge, value: v("estimatedAgeYears") },
         { label: f.weightKg, value: v("weightKg") },
         { label: f.bloodTestInterval, value: v("bloodTestIntervalMonths") },
+        { label: f.microchipNumber, value: v("microchipNumber") },
         { label: f.startingDiet, value: v("dietTypeId") },
       ],
     },
@@ -563,6 +565,9 @@ export function IntakeForm({
               <p className="text-xs text-muted">
                 {t.residents.new.fields.bloodTestIntervalHint}
               </p>
+            </div>
+            <div className="sm:col-span-2">
+              <MicrochipFields />
             </div>
             <div className="flex flex-col gap-1">
               <label htmlFor="dietTypeId" className="text-sm font-medium text-muted">

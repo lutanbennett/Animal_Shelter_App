@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { RESIDENT_SIZES, type ResidentSize } from "@/lib/i18n/enum-labels";
 import { readAdoptionProfile } from "@/lib/residents/adoption-profile";
+import { isDuplicateChipError, readMicrochip } from "@/lib/residents/microchip";
 import { parseBloodTestInterval } from "@/lib/residents/blood-test-interval";
 
 export type IntakeState = ActionRefusal | undefined;
@@ -78,7 +79,25 @@ export async function recordIntake(
       return { ok: false, error: t.residents.new.errors.bloodTestIntervalInvalid };
     }
 
+    // record_intake predates the chip columns, so the chip is written right
+    // after it. Check it first so a bad or duplicate number is refused
+    // before a resident exists, not after.
+    const chip = readMicrochip(formData);
+    if ("invalid" in chip) {
+      return { ok: false, error: t.residents.new.errors.microchipInvalid };
+    }
+
     const supabase = await createClient();
+    if (chip.microchip_number) {
+      const { data: taken } = await supabase
+        .from("residents")
+        .select("id")
+        .eq("microchip_number", chip.microchip_number)
+        .limit(1);
+      if (taken?.length) {
+        return { ok: false, error: t.residents.new.errors.microchipDuplicate };
+      }
+    }
     const { data, error } = await supabase.rpc("record_intake", {
       p_name: name,
       p_intake_date: intakeDate,
@@ -114,6 +133,18 @@ export async function recordIntake(
     // record_intake returns the new `residents` row (not a setof), so
     // PostgREST hands it back as a single object, not an array.
     const resident = data as unknown as { id: string };
+    if (chip.microchip_number || chip.microchip_implanted_on) {
+      const { error: chipError } = await supabase
+        .from("residents")
+        .update(chip)
+        .eq("id", resident.id);
+      // The resident exists; a failure here (say a race on a duplicate)
+      // sends them to the edit page to fix the chip rather than losing the intake.
+      if (chipError) {
+        console.error("residents.recordIntake chip", isDuplicateChipError(chipError), chipError.message);
+        redirect(`/residents/${resident.id}/edit`);
+      }
+    }
     redirect(`/residents/${resident.id}`);
   });
 }

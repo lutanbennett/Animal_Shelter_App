@@ -12,6 +12,7 @@ import {
   readAdoptionCopy,
   readAdoptionProfile,
 } from "@/lib/residents/adoption-profile";
+import { isDuplicateChipError, readMicrochip } from "@/lib/residents/microchip";
 import { parseBloodTestInterval } from "@/lib/residents/blood-test-interval";
 import { estimatedAgeNow, todayIso } from "@/lib/format";
 import { moveResidentToEnclosure } from "@/lib/placements/move";
@@ -141,6 +142,11 @@ export async function updateResident(
       return { ok: false, error: t.residents.new.errors.bloodTestIntervalInvalid };
     }
 
+    const chip = readMicrochip(formData);
+    if ("invalid" in chip) {
+      return { ok: false, error: t.residents.new.errors.microchipInvalid };
+    }
+
     const { data: updated, error } = await supabase
       .from("residents")
       // resident_code is system-assigned at intake and deliberately not here.
@@ -162,12 +168,18 @@ export async function updateResident(
         blood_test_interval_months: bloodTestIntervalMonths,
         ...readAdoptionProfile(formData),
         ...adoptionCopy,
+        ...chip,
       })
       .eq("id", residentId)
       .select("id")
       .returns<{ id: string }[]>();
 
-    if (error) return { ok: false, error: error.message };
+    if (error) {
+      return {
+        ok: false,
+        error: isDuplicateChipError(error) ? t.residents.new.errors.microchipDuplicate : error.message,
+      };
+    }
     if (!updated?.[0]) return { ok: false, error: t.residents.edit.errors.notFound };
 
     // Profile photo goes through the one helper, so the Medical refusal and

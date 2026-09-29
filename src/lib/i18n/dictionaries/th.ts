@@ -2636,6 +2636,9 @@ const th: Dictionary = {
         colourHint: "เช่น ดำน้ำตาล",
         desexed: "ทำหมันแล้ว",
         desexedUnknown: "ไม่ทราบ",
+        microchipNumber: "หมายเลขไมโครชิป",
+        microchipNumberHint: "15 หลักจากชิปหรือเอกสาร เว้นวรรคหรือขีดได้ ปล่อยว่างถ้าไม่ได้ฝังชิป",
+        microchipImplantedOn: "วันที่ฝังชิป",
         goodWithDogs: "เข้ากับสุนัขได้",
         goodWithCats: "เข้ากับแมวได้",
         goodWithChildren: "เข้ากับเด็กได้",
@@ -2687,6 +2690,8 @@ const th: Dictionary = {
         ageMustBeNumber: "อายุโดยประมาณต้องเป็นตัวเลข",
         weightPositive: "น้ำหนักต้องมากกว่า 0 กก.",
         bloodTestIntervalInvalid: "ช่วงตรวจเลือดต้องเป็นจำนวนเดือนเต็ม",
+        microchipInvalid: "หมายเลขไมโครชิปต้องมี 15 หลักพอดี (ไม่นับช่องว่างและขีด)",
+        microchipDuplicate: "มีสัตว์ตัวอื่นใช้หมายเลขไมโครชิปนี้แล้ว",
       },
     },
     list: {
@@ -2731,6 +2736,9 @@ const th: Dictionary = {
     },
     hub: {
       backToResidents: "← กลับไปหน้าสัตว์ในความดูแล",
+      microchip: "ไมโครชิป",
+      microchipImplanted: (date: string) => `ฝังชิปเมื่อ ${date}`,
+      microchipNudge: "พร้อมหาบ้านแล้วแต่ยังไม่มีหมายเลขไมโครชิป ผู้รับเลี้ยงต่างประเทศจะต้องใช้",
       editResident: "แก้ไขข้อมูลสัตว์",
       noPhoto: "ยังไม่มีรูปภาพ",
       speciesUnknown: "ยังไม่มีข้อมูลชนิด/สายพันธุ์",

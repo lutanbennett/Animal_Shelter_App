@@ -2716,6 +2716,9 @@ const en = {
         colourHint: "e.g. Black and tan",
         desexed: "Desexed (spayed / neutered)",
         desexedUnknown: "Not known",
+        microchipNumber: "Microchip number",
+        microchipNumberHint: "15 digits from the chip or its paperwork. Spaces and dashes are fine. Leave blank if not chipped.",
+        microchipImplantedOn: "Chip implanted on",
         goodWithDogs: "Good with dogs",
         goodWithCats: "Good with cats",
         goodWithChildren: "Good with children",
@@ -2768,6 +2771,8 @@ const en = {
         ageMustBeNumber: "Estimated age must be a number.",
         weightPositive: "Weight must be more than 0 kg.",
         bloodTestIntervalInvalid: "Blood test interval must be a whole number of months.",
+        microchipInvalid: "A microchip number is exactly 15 digits (spaces and dashes are ignored).",
+        microchipDuplicate: "Another resident already has that microchip number.",
       },
     },
     list: {
@@ -2826,6 +2831,9 @@ const en = {
     },
     hub: {
       backToResidents: "← Back to residents",
+      microchip: "Microchip",
+      microchipImplanted: (date: string) => `implanted ${date}`,
+      microchipNudge: "Ready for adoption but no microchip number recorded. Overseas adopters will need one.",
       editResident: "Edit resident details",
       noPhoto: "No photo yet",
       speciesUnknown: "Species/breed not recorded",
