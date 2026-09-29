@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { isValidMicrochip, stripToDigits } from "@/lib/residents/microchip";
+import { ScanChipBox } from "./ScanChipBox";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { placeName } from "@/lib/enclosures/names";
@@ -85,6 +88,24 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   const place = parseEnclosurePlace(searchParams.place);
 
   const supabase = await createClient();
+
+  // A chip scanner types 15 digits and presses Enter. An exact match goes
+  // straight to that resident whatever the place, zone or deceased filters
+  // say (RLS still limits a vet to their clinic's residents); an unknown
+  // chip offers a new resident. Anything else is the usual name search.
+  const chipDigits = /^[ds-]+$/.test(q) ? stripToDigits(q) : "";
+  const chipQuery = isValidMicrochip(chipDigits) ? chipDigits : null;
+  if (chipQuery) {
+    const { data: hit } = await supabase
+      .from("residents")
+      .select("id")
+      .eq("microchip_number", chipQuery)
+      .limit(1)
+      .returns<{ id: string }[]>();
+    if (hit?.[0]) redirect(`/residents/${hit[0].id}`);
+  }
+  const { data: role } = chipQuery ? await supabase.rpc("current_user_role") : { data: null };
+  const canRegister = role === "admin" || role === "management" || role === "staff";
 
   // Zones and enclosures come first: which ?zone= and ?enclosure= ids are
   // honoured depends on the place, and the list query needs the survivors.
@@ -250,6 +271,21 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
           </p>
         )}
       </div>
+
+      <ScanChipBox />
+      {chipQuery && (
+        <p className="flex flex-wrap items-center gap-3 rounded border border-border bg-surface px-3 py-2 text-sm text-foreground">
+          {t.residents.list.chipNotFound(chipQuery)}
+          {canRegister && (
+            <Link
+              href={`/residents/new?chip=${chipQuery}`}
+              className="font-medium text-primary hover:underline"
+            >
+              {t.residents.list.chipNewResident}
+            </Link>
+          )}
+        </p>
+      )}
 
       <div className="flex flex-col gap-3">
         <PlaceZoneChips

@@ -275,6 +275,8 @@ const manual: Manual = {
             "Show all and Hide deceased are offered under Everywhere only. Under On-site or Off-site, a name search that matches a resident who has died still says so, with a link that shows them under Everywhere.",
             "On a computer you can also narrow the list to one Enclosure. Tap Clear to see everyone again.",
             "Tap a resident's name to open their hub.",
+            "Scanning a microchip: a USB or Bluetooth chip reader types the 15 digits and presses Enter, so click the Scan a chip box (it is already selected when the page opens) and scan. A known chip opens that resident straight away, whatever the place, zone or deceased filters say. An unknown chip says so and, for staff, offers New resident with this chip, which starts intake with the number filled in. Typing the 15 digits works just as well, spaces and dashes included. Phones cannot read the usual 134.2 kHz chips, so use a reader.",
+            "The microchip number is entered under Edit resident, or on the Health step of intake, and shows under the resident's name on their hub. It is exactly 15 digits and no two residents can share one. It is for staff and vets only and is never shown on the public website.",
           ],
           screenshot: {
             src: "/manual/residents-list.png",

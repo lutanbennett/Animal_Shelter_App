@@ -19,6 +19,7 @@ import {
   AdoptionProfileFields,
   type AdoptionProfile,
 } from "@/components/AdoptionProfileFields";
+import { MicrochipFields } from "@/components/MicrochipFields";
 import { todayIso } from "@/lib/format";
 import { HOOK_LINE_MAX, IDEAL_HOME_MAX } from "@/lib/residents/adoption-profile";
 
@@ -47,6 +48,8 @@ export type EditableResident = {
   estimated_age_years: number | null;
   age_estimated_on: string | null;
   blood_test_interval_months: number;
+  microchip_number: string | null;
+  microchip_implanted_on: string | null;
   bio: string | null;
   temperament_notes: string | null;
   past_story_notes: string | null;
@@ -445,6 +448,11 @@ export function EditResidentForm({
           </legend>
           <p className="text-sm text-muted">{t.residents.new.adoptionHint}</p>
           <AdoptionProfileFields value={resident} idPrefix="edit-" />
+          <MicrochipFields
+            number={resident.microchip_number}
+            implantedOn={resident.microchip_implanted_on}
+            idPrefix="edit-"
+          />
           {/* The resident page's own prose (0094). maxLength is the limit
               for typing; the action re-checks it for pasted text. */}
           <div className="flex flex-col gap-1">
