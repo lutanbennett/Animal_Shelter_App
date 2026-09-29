@@ -78,6 +78,7 @@ const manual: Manual = {
             "You land on My tasks, the app's home page: what's assigned to you today. Sign out any time with the Sign out button at the top right.",
             "Forgotten your password? Tap Forgot password? under the Sign in button, enter your email, and follow the link in the message to choose a new one — it's valid for an hour. If you were given a temporary password and it's lost, ask an admin to issue another instead.",
             "To change your password at any time, pick Change password from the bottom of the menu.",
+            "New here and don't have an account? Tap Request access under Continue with Google, then Continue with Google and choose the Google account you want to use. You'll be told you don't have access yet — that is the request being sent. An administrator sees it under Access requests and approves you; try signing in again later. Without a Google account, the same page gives the shelter's email: email and password logins are created by an administrator, not requested.",
           ],
           screenshot: {
             src: "/manual/login.png",
@@ -87,7 +88,7 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "If sign-in says your account doesn't have access, an admin needs to give you a role under Settings → Security first. An archived account is turned away the same way, with a password or with Google.",
+              text: "If sign-in says your account doesn't have access, an admin needs to give you a role under Settings → Security first. With Google, a new account saying so has also just sent an access request; with an email and password it hasn't, because admins create those logins. An archived account is turned away the same way, with a password or with Google.",
             },
             {
               kind: "note",

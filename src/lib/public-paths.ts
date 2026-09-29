@@ -23,7 +23,7 @@
  * the enclosure page (src/app/e/[id]/page.tsx). /robots.txt is
  * src/app/robots.ts, which a crawler fetches signed out.
  */
-export const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/auth/callback", "/robots.txt"];
+export const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt"];
 
 export const PUBLIC_PATH_PREFIXES = [
   "/api/photos/",
@@ -49,7 +49,7 @@ export const PUBLIC_PATH_PREFIXES = [
  * carry the session cookie. No /r/ or /e/ either: a scanned card or QR
  * code lands on /login with ?next= and goes back there after sign-in.
  */
-export const LOCKED_PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/auth/callback", "/robots.txt"];
+export const LOCKED_PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt"];
 
 export const LOCKED_PUBLIC_PATH_PREFIXES = ["/privacy"];
 

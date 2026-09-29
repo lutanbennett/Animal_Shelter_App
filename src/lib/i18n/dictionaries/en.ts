@@ -359,6 +359,18 @@ const en = {
     continueWithGoogle: "Continue with Google",
     forgotPassword: "Forgot password?",
     backToHome: "Back to home page",
+    requestAccess: "Request access",
+    /** /login/request: how someone new asks for an account. */
+    request: {
+      title: "Request access",
+      intro: "Only people the shelter has approved can sign in. To ask for access:",
+      step1: "Tap Continue with Google below and choose the Google account you want to use.",
+      step2: "You will be told you don’t have access yet — that is expected. Your request has now been sent.",
+      step3: "An administrator will see it and approve you. Try signing in again later.",
+      noGoogle: "No Google account? Sign-in by email and password can’t be set up here — an administrator creates those. Contact the shelter and ask for one",
+      contactEmail: "Email the shelter",
+      backToLogin: "Back to sign in",
+    },
     /** The landing page a signed-out visitor sees while the public site is locked. */
     locked: {
       title: "Staff testing site",
@@ -375,7 +387,11 @@ const en = {
       errors: { emailRequired: "Enter your email address." },
     },
     errors: {
+      /** Google: refused at the callback, which is also how a request is made. */
       noRole:
+        "This account doesn’t have access yet. If you’re new, an administrator has been told and will approve you — try signing in again later.",
+      /** Email and password: no request exists (admins create these logins). */
+      noRolePassword:
         "This account doesn’t have access. Ask an administrator to assign you a role, then try again.",
       google: "Google sign-in didn’t complete. Please try again.",
     },

@@ -74,6 +74,14 @@ export default async function ManualPage({ searchParams }: PageProps<"/manual">)
     0,
   );
   const roleName = role ? manual.roleNames[role] : null;
+  // The last topic on show cannot reach the top of the window unless the page
+  // runs on below it, so it alone gets a minimum height: the empty space is
+  // only what that topic is short of a screen, not a flat screenful.
+  const lastShownId =
+    sections
+      .flatMap(({ topics }) => topics)
+      .filter((t) => showAll || t.mine)
+      .at(-1)?.topic.id ?? null;
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-6">
@@ -133,6 +141,7 @@ export default async function ManualPage({ searchParams }: PageProps<"/manual">)
                     topic={topic}
                     notMine={mine ? null : roleName}
                     tucked={!showAll && !mine}
+                    last={topic.id === lastShownId}
                   />
                 ))}
               </section>
@@ -258,6 +267,7 @@ function RoleBadge({ role }: { role: ManualRole }) {
 }
 
 /**
+ * `last` is the final topic on show: see lastShownId.
  * `notMine` is the reader's role name when the topic isn't for it: the
  * topic is greyed and says so. `tucked` hides it until found.
  */
@@ -265,17 +275,21 @@ function Topic({
   topic,
   notMine,
   tucked,
+  last,
 }: {
   topic: ManualTopic;
   notMine: string | null;
   tucked: boolean;
+  last: boolean;
 }) {
   return (
     <article
       id={topic.id}
       hidden={tucked}
       data-until-found={tucked || undefined}
-      className={`flex scroll-mt-6 flex-col gap-3 ${notMine ? "opacity-60" : ""}`}
+      className={`flex scroll-mt-6 flex-col gap-3 ${notMine ? "opacity-60" : ""} ${
+        last ? "min-h-[calc(100dvh-3rem)]" : ""
+      }`}
     >
       <div className="flex flex-col gap-1">
         <h3 className="text-base font-semibold text-foreground">{topic.title}</h3>

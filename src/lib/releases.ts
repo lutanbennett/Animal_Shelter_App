@@ -63,6 +63,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   { text: "A vet can now change only their own clinic's records. Another clinic's vet visits, prescriptions, procedures, blood tests and their files stay visible on a resident's page but are read-only, and a vet can no longer record a visit for a clinic other than their own. Opening Edit on another clinic's visit now says it is read-only.", roles: ["vet", "admin"] },
+  "The sign-in page now has a Request access link that explains how to ask for an account: continue with Google, and an administrator will see the request and approve it. The message a new Google account gets afterwards now says it has been told, instead of sounding like a dead end, and people with no Google account are pointed to the shelter's email.",
 ];
 
 /** Newest first. */
