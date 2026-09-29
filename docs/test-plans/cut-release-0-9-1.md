@@ -41,7 +41,7 @@
 
 - [ ] Migration number is one above the highest on `main` — n/a: no migration in this PR
 - [ ] `--status` reviewed before applying — n/a: no migration in this PR. Not establishable from this session for the UAT database: `--env production` reads were refused here on 2026-09-29
-- [ ] `--dry-run` reviewed — n/a: no migration in this PR; owed for the release, on all three files
+- [x] `--dry-run` reviewed — **run for the release on 2026-09-29**, on all three: `dry-run 0110_vet_own_clinic_writes.sql … ok`, `dry-run 0111_site_content_preferred_channels.sql … ok`, `dry-run 0112_stock_count_source.sql … ok`, exit 0. No dependency trap between them, so the per-file-transaction caveat did not bite — `0110`'s only dependency, `current_vet_resident_ids()`, was already applied with `0108`
 - [ ] Applied to **dev** and recorded in `schema_migrations` — n/a: no migration in this PR. Dev is current through `0112`: `--status` reports `112 applied, 0 pending` and no drift against `origin/main dec9ec6`
 - [ ] File is re-runnable — n/a: no migration in this PR
 - [ ] Existing rows still read correctly after the change — n/a: this PR reads no database
@@ -120,7 +120,7 @@
 - [ ] Smoke-tested on `test.lannacare.org` — deferred: Lutan, for the signed-in paths. What this session could check without signing in was checked on `0.9.1`: the Staff testing site lock page renders, the browser console is clean, and the version endpoint reports `0.9.1`. **The signed-in pass is not something this session should do** — entering credentials is confined to local development hosts, and `test.lannacare.org` is not one. The two screens worth the most attention are Settings → Website (the new contact-channel picker, which is what `0111` feeds) and a resident page (#212's real error messages)
 - [ ] Timezone-sensitive behaviour checked on test — deferred: release manager. Lower relevance than the last two releases — no note here is a date fix — but the midnight-to-7am window is wrong for part of every day and invisible on `next dev`, so it stays on the list
 - [ ] Public pages re-checked after a cache purge or a 10-minute wait — deferred: release manager. **Directly relevant**: #211 changes the public site's phone menu and footer, and #215 changes which contact channel appears first. Anonymous GETs are edge-cached per data centre
-- [ ] **`check-public-views.mjs --env production`, appended to the log** — deferred: release manager. `check-app-access-gate.mjs` is deliberately **not** named alongside it any more; see §3
+- [x] **`check-public-views.mjs --env production`, appended to the log** — **run 2026-09-29 after the apply**: **128 ok, 2 skip, 0 fail**, exit 0. Up from 125 at `0.9.0`, the three new checks coming with this release's files. Both skips are the familiar "no row to ask about" pair — a public resident photo and a non-image attachment in a public project folder — neither a failure. `check-app-access-gate.mjs` is deliberately **not** named alongside it any more; see §3
 
 ### Deploy safety
 
@@ -133,7 +133,7 @@
 ### Migration ordering — *skip if no migration*
 
 - [x] Does this PR contain both a migration and code that reads it? — no migration in this PR. For the release, all three of `0110`–`0112` are read by code already on `main`, so all three go **before** the deploy. `0111` is the one where the wrong order is an outright error rather than a degradation — see §3
-- [ ] `--env production --dry-run` run and clean — deferred: release manager, on all three files
+- [x] `--env production --dry-run` run and clean — **run and then applied, 2026-09-29, on Lutan's instruction**, all before any deploy. `--drift production` beforehand read `112 file(s), 109 applied row(s)` with exactly `0110`, `0111`, `0112` pending; all three `applying … ok`; `--drift` afterwards read `No drift: production matches origin/main`. **The two new columns were then confirmed on production directly, not inferred from the runner's `ok`**: `site_content.preferred_channels` returns `["line"]` — so the default preserves the existing LINE-first behaviour until someone changes it, which is what makes `0111` safe to apply ahead of anyone using the picker — and `stock_counts.source` is readable (the table is empty on production, so `0112`'s back-fill question is moot there)
 - [ ] For a **destructive or rewriting** migration only: a production backup exists and is fresh — deferred: Lutan. None of the three rewrites data: `0110` replaces policies, `0111` adds a column, `0112` adds a column with a default
 - [x] Apply plan stated — §3
 
