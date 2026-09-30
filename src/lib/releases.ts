@@ -61,7 +61,12 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  {
+    text: "On the Management pages (vets and their doctors, diets, medications, contacts, recurring jobs and translations), a refused save or delete now tells you why, in words, instead of showing a numbered error code.",
+    roles: ["admin", "management"],
+  },
+];
 
 /** Newest first. */
 export const releases: Release[] = [

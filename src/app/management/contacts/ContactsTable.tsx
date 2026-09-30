@@ -78,26 +78,23 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
-      try {
-        await updateContact(contact.id, {
-          name,
-          type,
-          phone,
-          email,
-          lineId,
-          messengerId,
-          whatsapp,
-          address,
-          notes,
-        });
-        setEditing(false);
-        setMessage({ type: "success", text: t.common.saved });
-      } catch (err) {
-        setMessage({
-          type: "error",
-          text: err instanceof Error ? err.message : t.common.failedToSave,
-        });
+      const result = await updateContact(contact.id, {
+        name,
+        type,
+        phone,
+        email,
+        lineId,
+        messengerId,
+        whatsapp,
+        address,
+        notes,
+      });
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
+        return;
       }
+      setEditing(false);
+      setMessage({ type: "success", text: t.common.saved });
     });
   }
 
@@ -105,14 +102,8 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
     if (!window.confirm(c.deleteConfirm(contact.name))) return;
     setMessage(null);
     startTransition(async () => {
-      try {
-        await deleteContact(contact.id);
-      } catch (err) {
-        setMessage({
-          type: "error",
-          text: err instanceof Error ? err.message : t.common.failedToDelete,
-        });
-      }
+      const result = await deleteContact(contact.id);
+      if (!result.ok) setMessage({ type: "error", text: result.error });
     });
   }
 

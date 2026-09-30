@@ -1,22 +1,14 @@
 "use server";
 
 import { refresh, revalidatePath } from "next/cache";
-import { assertManagementRole } from "@/lib/auth/require-management";
+import { runAction, type ActionResult } from "@/lib/action-result";
+import { hasManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 
-/**
- * What the row buttons get back: an error to show, or nothing. Returned
- * rather than thrown, as Next's error-handling guide asks for expected
- * errors, so a production build cannot swap the message (the rename
- * clash's "use Merge instead") for a generic one.
- */
-export type DoctorActionResult = { error: string } | undefined;
+const refuse = (error: string) => ({ ok: false as const, error });
 
-export type DoctorFormState =
-  | { error: string }
-  | { success: string }
-  | undefined;
+export type DoctorFormState = ActionResult<{ success: string }> | undefined;
 
 // vet_doctors_vet_key_idx: one row per spelling (ignoring case and spacing)
 // per clinic.
@@ -44,21 +36,23 @@ export async function addDoctor(
   _state: DoctorFormState,
   formData: FormData,
 ): Promise<DoctorFormState> {
-  await assertManagementRole();
   const { t } = await getT();
-  const d = t.management.vetDoctors;
+  return runAction("vetDoctors.addDoctor", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const d = t.management.vetDoctors;
 
-  const name = tidy(formData.get("name") as string | null);
-  if (!name) return { error: d.errors.nameRequired };
+    const name = tidy(formData.get("name") as string | null);
+    if (!name) return refuse(d.errors.nameRequired);
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("vet_doctors").insert({ vet_id: vetId, name });
-  if (error) {
-    return { error: error.code === UNIQUE_VIOLATION ? d.errors.alreadyListed(name) : error.message };
-  }
+    const supabase = await createClient();
+    const { error } = await supabase.from("vet_doctors").insert({ vet_id: vetId, name });
+    if (error) {
+      return refuse(error.code === UNIQUE_VIOLATION ? d.errors.alreadyListed(name) : error.message);
+    }
 
-  revalidateDoctorPages(vetId);
-  return { success: d.added(name) };
+    revalidateDoctorPages(vetId);
+    return { ok: true, success: d.added(name) };
+  });
 }
 
 /**
@@ -70,41 +64,47 @@ export async function renameDoctor(
   vetId: string,
   id: string,
   rawName: string,
-): Promise<DoctorActionResult> {
-  await assertManagementRole();
+): Promise<ActionResult> {
   const { t } = await getT();
-  const d = t.management.vetDoctors;
+  return runAction("vetDoctors.renameDoctor", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const d = t.management.vetDoctors;
 
-  const name = tidy(rawName);
-  if (!name) return { error: d.errors.nameRequired };
+    const name = tidy(rawName);
+    if (!name) return refuse(d.errors.nameRequired);
 
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("vet_doctors")
-    .update({ name })
-    .eq("id", id)
-    .eq("vet_id", vetId);
-  if (error) {
-    return { error: error.code === UNIQUE_VIOLATION ? d.errors.renameClash(name) : error.message };
-  }
-  revalidateDoctorPages(vetId);
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("vet_doctors")
+      .update({ name })
+      .eq("id", id)
+      .eq("vet_id", vetId);
+    if (error) {
+      return refuse(error.code === UNIQUE_VIOLATION ? d.errors.renameClash(name) : error.message);
+    }
+    revalidateDoctorPages(vetId);
+    return { ok: true };
+  });
 }
 
 export async function setDoctorActive(
   vetId: string,
   id: string,
   active: boolean,
-): Promise<DoctorActionResult> {
-  await assertManagementRole();
-
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("vet_doctors")
-    .update({ active })
-    .eq("id", id)
-    .eq("vet_id", vetId);
-  if (error) return { error: error.message };
-  revalidateDoctorPages(vetId);
+): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("vetDoctors.setDoctorActive", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("vet_doctors")
+      .update({ active })
+      .eq("id", id)
+      .eq("vet_id", vetId);
+    if (error) return refuse(error.message);
+    revalidateDoctorPages(vetId);
+    return { ok: true };
+  });
 }
 
 /**
@@ -116,39 +116,44 @@ export async function mergeDoctors(
   vetId: string,
   fromId: string,
   intoId: string,
-): Promise<DoctorActionResult> {
-  await assertManagementRole();
+): Promise<ActionResult> {
   const { t } = await getT();
-  if (fromId === intoId) return { error: t.management.vetDoctors.errors.mergeSelf };
+  return runAction("vetDoctors.mergeDoctors", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (fromId === intoId) return refuse(t.management.vetDoctors.errors.mergeSelf);
 
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("merge_vet_doctors", {
-    p_from: fromId,
-    p_into: intoId,
+    const supabase = await createClient();
+    const { error } = await supabase.rpc("merge_vet_doctors", {
+      p_from: fromId,
+      p_into: intoId,
+    });
+    if (error) return refuse(error.message);
+    revalidateDoctorPages(vetId);
+    return { ok: true };
   });
-  if (error) return { error: error.message };
-  revalidateDoctorPages(vetId);
 }
 
-export async function deleteDoctor(vetId: string, id: string): Promise<DoctorActionResult> {
-  await assertManagementRole();
+export async function deleteDoctor(vetId: string, id: string): Promise<ActionResult> {
   const { t } = await getT();
+  return runAction("vetDoctors.deleteDoctor", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    // vet_appointments' foreign key has no cascade: a doctor on any visit is
+    // part of a medical record. Say so rather than surface the key error.
+    const supabase = await createClient();
+    const { count, error: countError } = await supabase
+      .from("vet_appointments")
+      .select("id", { count: "exact", head: true })
+      .eq("doctor_id", id);
+    if (countError) return refuse(countError.message);
+    if (count && count > 0) return refuse(t.management.vetDoctors.errors.hasVisits(count));
 
-  // vet_appointments' foreign key has no cascade: a doctor on any visit is
-  // part of a medical record. Say so rather than surface the key error.
-  const supabase = await createClient();
-  const { count, error: countError } = await supabase
-    .from("vet_appointments")
-    .select("id", { count: "exact", head: true })
-    .eq("doctor_id", id);
-  if (countError) return { error: countError.message };
-  if (count && count > 0) return { error: t.management.vetDoctors.errors.hasVisits(count) };
-
-  const { error } = await supabase
-    .from("vet_doctors")
-    .delete()
-    .eq("id", id)
-    .eq("vet_id", vetId);
-  if (error) return { error: error.message };
-  revalidateDoctorPages(vetId);
+    const { error } = await supabase
+      .from("vet_doctors")
+      .delete()
+      .eq("id", id)
+      .eq("vet_id", vetId);
+    if (error) return refuse(error.message);
+    revalidateDoctorPages(vetId);
+    return { ok: true };
+  });
 }

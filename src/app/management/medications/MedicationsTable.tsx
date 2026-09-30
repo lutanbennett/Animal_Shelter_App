@@ -82,13 +82,6 @@ function MedicationRowItem({
     setMode("view");
   }
 
-  function fail(err: unknown, fallback: string) {
-    setMessage({
-      type: "error",
-      text: err instanceof Error ? err.message : fallback,
-    });
-  }
-
   function handleSave() {
     // Blank is a real answer (not priced yet); a bad number is not, and
     // must never reach the forecast as a zero.
@@ -116,18 +109,18 @@ function MedicationRowItem({
     }
     setMessage(null);
     startTransition(async () => {
-      try {
-        await updateMedication(medication.id, {
-          name,
-          doseUnit,
-          costPerUnit: parsedCost.value,
-          reorderLeadDays: leadDays,
-        });
-        setMode("view");
-        setMessage({ type: "success", text: t.common.saved });
-      } catch (err) {
-        fail(err, t.common.failedToSave);
+      const result = await updateMedication(medication.id, {
+        name,
+        doseUnit,
+        costPerUnit: parsedCost.value,
+        reorderLeadDays: leadDays,
+      });
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
+        return;
       }
+      setMode("view");
+      setMessage({ type: "success", text: t.common.saved });
     });
   }
 
@@ -146,13 +139,13 @@ function MedicationRowItem({
     }
     setMessage(null);
     startTransition(async () => {
-      try {
-        await updateMedicationStock(medication.id, count);
-        setMode("view");
-        setMessage({ type: "success", text: t.common.saved });
-      } catch (err) {
-        fail(err, t.common.failedToSave);
+      const result = await updateMedicationStock(medication.id, count);
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
+        return;
       }
+      setMode("view");
+      setMessage({ type: "success", text: t.common.saved });
     });
   }
 
@@ -160,11 +153,8 @@ function MedicationRowItem({
     if (!window.confirm(m.deleteConfirm(medication.name))) return;
     setMessage(null);
     startTransition(async () => {
-      try {
-        await deleteMedication(medication.id);
-      } catch (err) {
-        fail(err, t.common.failedToDelete);
-      }
+      const result = await deleteMedication(medication.id);
+      if (!result.ok) setMessage({ type: "error", text: result.error });
     });
   }
 
@@ -180,12 +170,9 @@ function MedicationRowItem({
     }
     setMessage(null);
     startTransition(async () => {
-      try {
-        await mergeMedication(medication.id, target.id);
-        // This row disappears on revalidation; nothing to reset.
-      } catch (err) {
-        fail(err, m.errors.mergeFailed);
-      }
+      const result = await mergeMedication(medication.id, target.id);
+      // This row disappears on revalidation; nothing to reset.
+      if (!result.ok) setMessage({ type: "error", text: result.error });
     });
   }
 
