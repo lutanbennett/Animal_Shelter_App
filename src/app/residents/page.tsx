@@ -16,7 +16,7 @@ import {
 } from "@/lib/enclosures/place";
 import { getTagOrigin } from "@/lib/tags/origin";
 import { loadVetScope } from "@/lib/vets/scope";
-import { DECEASED, NOT_DECEASED } from "@/lib/residents/status";
+import { ADOPTED, DECEASED, NOT_DECEASED } from "@/lib/residents/status";
 import { STATUSES_IN_PLACE } from "@/lib/residents/place";
 import { PlaceZoneChips } from "@/components/PlaceZoneChips";
 import { ResidentsTable, type ResidentRow } from "./ResidentsTable";
@@ -38,6 +38,12 @@ type Filters = {
    * their ids are read first and excluded rather than the reverse.
    */
   chippedIds: string[] | null;
+  /**
+   * The Adopted chip: only adopted residents. They sit in the Lifecycle
+   * pseudo-zone and in no place, so place, zone and enclosure are not
+   * applied — the chip is offered only where none of them is set.
+   */
+  adopted: boolean;
 };
 
 function applyFilters<
@@ -47,17 +53,20 @@ function applyFilters<
     in(column: string, values: readonly string[]): Q;
     not(column: string, operator: string, value: string): Q;
   },
->(query: Q, { q, place, zoneIds, enclosureId, chippedIds }: Filters): Q {
+>(query: Q, { q, place, zoneIds, enclosureId, chippedIds, adopted }: Filters): Q {
   let next = query;
   if (q) {
     const term = q.replace(/[,()%]/g, "");
     next = next.or(
-      `name.ilike.%${term}%,thai_name.ilike.%${term}%,other_names.ilike.%${term}%`,
+      `name.ilike.%${term}%,thai_name.ilike.%${term}%,other_names.ilike.%${term}%,resident_code.ilike.%${term}%`,
     );
   }
   // By status rather than zone: Unassigned is on site and Hospital /
   // Fostered are off it, though all three sit in the Lifecycle pseudo-zone
   // (src/lib/residents/place.ts).
+  if (adopted) {
+    next = next.eq("current_status", ADOPTED);
+  }
   if (place !== "all") {
     next = next.in("current_status", STATUSES_IN_PLACE[place]);
   }
@@ -80,6 +89,7 @@ function buildHref(params: {
   enclosure: string;
   all: boolean;
   noChip: boolean;
+  adopted: boolean;
 }) {
   const search = new URLSearchParams();
   if (params.place !== "all") search.set("place", params.place);
@@ -88,6 +98,7 @@ function buildHref(params: {
   if (params.enclosure) search.set("enclosure", params.enclosure);
   if (params.all) search.set("all", "1");
   if (params.noChip) search.set("nochip", "1");
+  if (params.adopted) search.set("adopted", "1");
   // Commas read better than %2C in a shared link, and parse the same.
   const qs = search.toString().replace(/%2C/gi, ",");
   return qs ? `/residents?${qs}` : "/residents";
@@ -162,6 +173,14 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   // "No microchip" (the encouraging-chipping nudge): kept across every
   // other filter, like the search.
   const noChip = searchParams.nochip === "1";
+  // The Adopted chip belongs to Everywhere with no zone or enclosure picked,
+  // like Show all: adopted animals are in no place and in the Lifecycle
+  // zone, so any of those would empty the list.
+  const adopted =
+    place === "all" &&
+    zoneIds.length === 0 &&
+    !enclosureId &&
+    searchParams.adopted === "1";
   const chippedIds = noChip
     ? ((
         await supabase
@@ -171,7 +190,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
           .returns<{ id: string }[]>()
       ).data ?? []).map((row) => row.id)
     : null;
-  const filters: Filters = { q, place, zoneIds, enclosureId, chippedIds };
+  const filters: Filters = { q, place, zoneIds, enclosureId, chippedIds, adopted };
 
   /**
    * The list with a different place or zone set, everything else kept that
@@ -189,6 +208,8 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
         : "",
       all: showAll && nextPlace === "all",
       noChip,
+      // Dropped with a place or zone: they would contradict it.
+      adopted: false,
     });
   }
   const placeHrefs = Object.fromEntries(
@@ -197,12 +218,25 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
 
   /** The same list with the deceased toggle flipped, other filters kept. */
   function toggleHref(all: boolean) {
-    return buildHref({ place, zones: zoneIds, q, enclosure: enclosureId, all, noChip });
+    return buildHref({ place, zones: zoneIds, q, enclosure: enclosureId, all, noChip, adopted });
   }
 
   /** The same list with "No microchip" flipped, other filters kept. */
   function noChipHref(next: boolean) {
-    return buildHref({ place, zones: zoneIds, q, enclosure: enclosureId, all: showAll, noChip: next });
+    return buildHref({ place, zones: zoneIds, q, enclosure: enclosureId, all: showAll, noChip: next, adopted });
+  }
+
+  /** The Adopted chip flipped; on, it clears place, zone and enclosure. */
+  function adoptedHref(next: boolean) {
+    return buildHref({
+      place: "all",
+      zones: [],
+      q,
+      enclosure: "",
+      all: showAll,
+      noChip,
+      adopted: next,
+    });
   }
 
   let residentsQuery = supabase
@@ -220,20 +254,39 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   // the dead are never in the list, so only a name search counts them —
   // matching the name alone, since "not on site" is exactly what they are.
   const countDeceased = place === "all" || Boolean(q);
+  // Adopted animals matching a search are in no place, so an On-site /
+  // Off-site, zone or enclosure filter hides them without a word — the
+  // same silent miss the deceased count guards against. Counted ignoring
+  // those filters, and only when one of them is hiding them.
+  const adoptedHidden = Boolean(q) && !adopted && (place !== "all" || zoneIds.length > 0 || Boolean(enclosureId));
+  const adoptedCountQuery = supabase
+    .from("resident_list_view")
+    .select("resident_id", { count: "exact", head: true })
+    .eq("current_status", ADOPTED);
   const deceasedCountQuery = supabase
     .from("resident_list_view")
     .select("resident_id", { count: "exact", head: true })
     .eq("current_status", DECEASED);
 
-  const [tagOrigin, vetScope, residentsResult, deceased] = await Promise.all([
+  const [tagOrigin, vetScope, residentsResult, deceased, adoptedMatch] = await Promise.all([
     getTagOrigin(),
     loadVetScope(supabase),
     applyFilters(residentsQuery, filters).returns<ResidentRow[]>(),
     countDeceased
       ? applyFilters(
           deceasedCountQuery,
-          place === "all" ? filters : { q, place: "all", zoneIds: [], enclosureId: "", chippedIds },
+          place === "all" ? filters : { q, place: "all", zoneIds: [], enclosureId: "", chippedIds, adopted: false },
         )
+      : Promise.resolve({ count: 0 }),
+    adoptedHidden
+      ? applyFilters(adoptedCountQuery, {
+          q,
+          place: "all",
+          zoneIds: [],
+          enclosureId: "",
+          chippedIds,
+          adopted: false,
+        })
       : Promise.resolve({ count: 0 }),
   ]);
 
@@ -255,7 +308,8 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   const deceasedMatchesHref =
     place === "all"
       ? toggleHref(true)
-      : buildHref({ place: "all", zones: [], q, enclosure: "", all: true, noChip });
+      : buildHref({ place: "all", zones: [], q, enclosure: "", all: true, noChip, adopted: false });
+  const adoptedCount = adoptedMatch.count ?? 0;
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
@@ -291,6 +345,21 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
               </>
             )}
           </p>
+        )}
+        {adoptedCount > 0 && (
+          <p className="text-sm text-muted">
+            {t.residents.list.adoptedMatches(adoptedCount)}
+            {" — "}
+            <Link
+              href={adoptedHref(true)}
+              className="font-medium text-primary hover:underline"
+            >
+              {t.residents.list.deceasedMatchesShow}
+            </Link>
+          </p>
+        )}
+        {adopted && (
+          <p className="text-sm text-muted">{t.residents.list.adoptedOnly}</p>
         )}
         {vetScope.kind === "clinic" && vetClinicName && (
           <p className="text-sm text-muted">{t.residents.list.vetScope(vetClinicName)}</p>
@@ -339,7 +408,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
         {/* Keyed on the filters so a chip or Clear, which navigate on the
             client, remount the inputs instead of leaving their old values. */}
         <form
-          key={`${place}|${zoneIds.join(",")}|${q}|${enclosureId}|${showAll}|${noChip}`}
+          key={`${place}|${zoneIds.join(",")}|${q}|${enclosureId}|${showAll}|${noChip}|${adopted}`}
           className="flex flex-wrap items-end gap-3"
           method="get"
         >
@@ -351,6 +420,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
           )}
           {showAll && <input type="hidden" name="all" value="1" />}
           {noChip && <input type="hidden" name="nochip" value="1" />}
+          {adopted && <input type="hidden" name="adopted" value="1" />}
           <div className="flex min-w-0 flex-1 flex-col gap-1 md:flex-none">
             <label htmlFor="q" className="text-sm font-medium text-muted">
               {t.residents.list.search}
@@ -411,6 +481,18 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
                 : t.residents.list.showAllDeceased}
             </Link>
           )}
+          {place === "all" && zoneIds.length === 0 && !enclosureId && (
+            <Link
+              href={adoptedHref(!adopted)}
+              className={`rounded-full border px-3 py-2 text-sm font-medium ${
+                adopted
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-surface text-muted hover:text-foreground"
+              }`}
+            >
+              {t.residents.list.adoptedFilter}
+            </Link>
+          )}
           <Link
             href={noChipHref(!noChip)}
             className={`rounded-full border px-3 py-2 text-sm font-medium ${
@@ -421,7 +503,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
           >
             {t.residents.list.noMicrochip}
           </Link>
-          {(q || place !== "all" || zoneIds.length > 0 || enclosureId || noChip) && (
+          {(q || place !== "all" || zoneIds.length > 0 || enclosureId || noChip || adopted) && (
             <Link
               href="/residents"
               className="text-sm font-medium text-muted hover:text-foreground"

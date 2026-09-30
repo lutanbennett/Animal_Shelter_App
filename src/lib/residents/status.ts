@@ -12,3 +12,6 @@ export const NOT_DECEASED =
 
 /** The status value itself, for the matching "only the dead" filter. */
 export const DECEASED = "Deceased";
+
+/** Adopted: history like Deceased, so no On-site / Off-site place holds them. */
+export const ADOPTED = "Adopted";
