@@ -1694,6 +1694,8 @@ const th: Dictionary = {
           `นัดที่ผ่านมาแล้วแต่ยังเป็นสถานะนัดหมาย ${n} รายการ`,
         openMaintenance: "งานซ่อมบำรุงที่ยังไม่เสร็จ",
         openMaintenanceDetail: (blocked: number) => `ติดขัด ${blocked} งาน`,
+        noMicrochip: "ในความดูแล ยังไม่มีไมโครชิป",
+        noMicrochipDetail: (chipped: number) => `ฝังชิปแล้ว ${chipped} ตัว`,
       },
       month: {
         heading: (month: string) => `ภาพรวม${month}`,

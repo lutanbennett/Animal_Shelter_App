@@ -25,7 +25,7 @@ export async function setResidentMicrochip(
 ): Promise<ActionResult<{ cleared: boolean }>> {
   const { t } = await getT();
   const e = t.residents.hub.chipForm.errors;
-  return runAction("residents.setResidentMicrochip", t.common.somethingWentWrong, async () => {
+  return runAction<{ cleared: boolean }>("residents.setResidentMicrochip", t.common.somethingWentWrong, async () => {
     const chip = readMicrochip(formData);
     if ("invalid" in chip) return { ok: false, error: e.invalid };
     if (chip.microchip_implanted_on && chip.microchip_implanted_on > todayIso()) {

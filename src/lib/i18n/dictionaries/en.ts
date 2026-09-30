@@ -1761,6 +1761,8 @@ const en = {
         openMaintenance: "Open maintenance jobs",
         openMaintenanceDetail: (blocked: number) =>
           blocked === 1 ? "1 blocked" : `${blocked} blocked`,
+        noMicrochip: "In care, no microchip",
+        noMicrochipDetail: (chipped: number) => `${chipped} in care are chipped`,
       },
       month: {
         heading: (month: string) => `${month} at a glance`,
