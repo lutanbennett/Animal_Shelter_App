@@ -984,6 +984,16 @@ const en = {
       subtitle:
         "Everything on the public website that isn't a resident or a project story: photos, the wording of each page in both languages, and how to reach the shelter. Changes go live immediately.",
       couldntLoad: "Couldn't load website content",
+      tabs: {
+        aria: "Website sections",
+        labels: {
+          home: "Home page",
+          contact: "Contact & settings",
+          pages: "Pages",
+          gallery: "Gallery",
+          projects: "Projects",
+        },
+      },
       hero: {
         heading: "Hero photo",
         subtitle: "The big photo at the top of the welcome page.",
@@ -1048,6 +1058,8 @@ const en = {
         heading: "Pages",
         subtitle:
           "The wording of each public page as you write it. The other language's version is written or approved beneath each field — the same translation panel a manager sees on Management → Translations.",
+        thaiMissing: "Thai missing",
+        lastEdited: (date: string) => `Edited ${date}`,
         title: "Heading",
         body: "Text",
         bodyHint:

@@ -12,6 +12,8 @@ import { SitePageForm, type SitePageRow } from "./SitePageForm";
 import { HeroPhoto } from "./HeroPhoto";
 import { GalleryPhotos, type GalleryPhotoRow } from "./GalleryPhotos";
 import { FeaturedResident, type FeaturedResidentOption } from "./FeaturedResident";
+import { WebsiteTabs } from "./WebsiteTabs";
+import { PagesAccordion } from "./PagesAccordion";
 import { PublishedProjects, type PublishedProjectRow } from "./PublishedProjects";
 
 type PublicResidentRow = {
@@ -22,8 +24,13 @@ type PublicResidentRow = {
   profile_photo_drive_file_id: string | null;
 };
 
-export default async function WebsitePage() {
+export default async function WebsitePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   await requireAdminUser();
+  const { tab } = await searchParams;
   const { t } = await getT();
 
   const supabase = await createClient();
@@ -43,7 +50,7 @@ export default async function WebsitePage() {
       loadVetVisitEstimate(supabase),
       supabase
         .from("site_pages")
-        .select("id, slug, title, body")
+        .select("id, slug, title, body, updated_at")
         .returns<SitePageRow[]>(),
       supabase
         .from("site_content_photos")
@@ -117,43 +124,66 @@ export default async function WebsitePage() {
       )}
 
       {content && (
-        <>
-          <HeroPhoto heroDriveFileId={content.hero_drive_file_id} />
-          <FeaturedResident
-            featuredResidentId={content.featured_resident_id}
-            residents={publicResidents}
-          />
-          <SiteSettingsForm content={content} />
-          <VetVisitEstimate estimate={vetVisitEstimate} />
-
-          <section className="flex flex-col gap-4">
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">
-                {t.admin.website.pages.heading}
-              </h2>
-              <p className="text-sm text-muted">{t.admin.website.pages.subtitle}</p>
-            </div>
-            {pages.map((page) => (
-              <SitePageForm
-                key={page.id}
-                page={page}
-                translations={{
-                  title: translations.get(translationKey(page.id, "title")),
-                  body: translations.get(translationKey(page.id, "body")),
-                }}
-                // Admin is a superset of management, so always.
-                canManageTranslations
-                publicPath={SITE_PAGE_PATHS[page.slug]}
-                // In English whatever language the admin reads the app in:
-                // pages are written in English and translated through the queue.
-                starterBody={sitePageStarter(en, page.slug)?.body}
-              />
-            ))}
-          </section>
-
-          <GalleryPhotos photos={photosResult.data ?? []} />
-          <PublishedProjects projects={publishedResult.data ?? []} />
-        </>
+        <WebsiteTabs
+          initial={tab}
+          ariaLabel={t.admin.website.tabs.aria}
+          labels={t.admin.website.tabs.labels}
+          panels={{
+            home: (
+              <>
+                <HeroPhoto heroDriveFileId={content.hero_drive_file_id} />
+                <FeaturedResident
+                  featuredResidentId={content.featured_resident_id}
+                  residents={publicResidents}
+                />
+              </>
+            ),
+            contact: (
+              <>
+                <SiteSettingsForm content={content} />
+                <VetVisitEstimate estimate={vetVisitEstimate} />
+              </>
+            ),
+            pages: (
+              <section className="flex flex-col gap-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">
+                    {t.admin.website.pages.heading}
+                  </h2>
+                  <p className="text-sm text-muted">{t.admin.website.pages.subtitle}</p>
+                </div>
+                <PagesAccordion
+                  items={pages.map((page) => {
+                    const tr = [
+                      translations.get(translationKey(page.id, "title")),
+                      translations.get(translationKey(page.id, "body")),
+                    ];
+                    return {
+                      slug: page.slug,
+                      label: t.admin.website.pages.slugs[page.slug],
+                      publicPath: SITE_PAGE_PATHS[page.slug],
+                      updatedAt: page.updated_at,
+                      thaiMissing: tr.some((r) => r && !r.text?.trim()),
+                      editor: (
+                        <SitePageForm
+                          page={page}
+                          translations={{ title: tr[0], body: tr[1] }}
+                          // Admin is a superset of management, so always.
+                          canManageTranslations
+                          // In English whatever language the admin reads the app in:
+                          // pages are written in English and translated through the queue.
+                          starterBody={sitePageStarter(en, page.slug)?.body}
+                        />
+                      ),
+                    };
+                  })}
+                />
+              </section>
+            ),
+            gallery: <GalleryPhotos photos={photosResult.data ?? []} />,
+            projects: <PublishedProjects projects={publishedResult.data ?? []} />,
+          }}
+        />
       )}
     </main>
   );
