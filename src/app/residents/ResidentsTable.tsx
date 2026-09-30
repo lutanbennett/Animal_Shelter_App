@@ -125,8 +125,10 @@ export function ResidentsTable({
         </div>
       </div>
 
-      {/* Phones show only ID and name. The multi-select checkboxes and the
-          enclosure/zone/status/location columns are desktop-only: on a phone
+      {/* Phones show only the name (the R-code is on the resident's hub, and
+          it would push a long bilingual name into wrapping). The multi-select
+          checkboxes and the ID/enclosure/zone/status/location columns are
+          desktop-only: on a phone
           several residents are picked from the forms themselves, and the
           enclosure browser at /enclosures covers the rest. */}
       <div className="overflow-x-auto rounded border border-border">
@@ -134,7 +136,9 @@ export function ResidentsTable({
           <thead className="bg-surface text-muted">
             <tr>
               <th className="hidden w-10 px-4 py-2 md:table-cell" />
-              <th className="px-4 py-2 font-medium">{t.residents.list.table.id}</th>
+              <th className="hidden px-4 py-2 font-medium md:table-cell">
+                {t.residents.list.table.id}
+              </th>
               <th className="px-4 py-2 font-medium">
                 {t.residents.list.table.resident}
               </th>
@@ -178,7 +182,9 @@ export function ResidentsTable({
                     )}
                   />
                 </td>
-                <td className="px-4 py-2 text-muted">{resident.resident_code}</td>
+                <td className="hidden px-4 py-2 text-muted md:table-cell">
+                  {resident.resident_code}
+                </td>
                 <td className="px-4 py-2 text-foreground">
                   <Link
                     href={`/residents/${resident.resident_id}`}

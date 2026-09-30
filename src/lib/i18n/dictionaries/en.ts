@@ -984,6 +984,16 @@ const en = {
       subtitle:
         "Everything on the public website that isn't a resident or a project story: photos, the wording of each page in both languages, and how to reach the shelter. Changes go live immediately.",
       couldntLoad: "Couldn't load website content",
+      tabs: {
+        aria: "Website sections",
+        labels: {
+          home: "Home page",
+          contact: "Contact & settings",
+          pages: "Pages",
+          gallery: "Gallery",
+          projects: "Projects",
+        },
+      },
       hero: {
         heading: "Hero photo",
         subtitle: "The big photo at the top of the welcome page.",
@@ -1048,6 +1058,8 @@ const en = {
         heading: "Pages",
         subtitle:
           "The wording of each public page as you write it. The other language's version is written or approved beneath each field — the same translation panel a manager sees on Management → Translations.",
+        thaiMissing: "Thai missing",
+        lastEdited: (date: string) => `Edited ${date}`,
         title: "Heading",
         body: "Text",
         bodyHint:
@@ -2834,7 +2846,7 @@ const en = {
     list: {
       pageTitle: "Residents",
       search: "Search",
-      searchPlaceholder: "Name, Thai name, or other name",
+      searchPlaceholder: "Name, Thai name, other name or ID",
       scanChip: "Scan a chip",
       scanChipPlaceholder: "Scan or type 15 digits",
       chipNotFound: (digits: string) => `No resident has microchip ${digits}.`,
@@ -2858,6 +2870,10 @@ const en = {
           ? "1 deceased resident matches"
           : `${n} deceased residents match`,
       deceasedMatchesShow: "show",
+      adoptedMatches: (n: number) =>
+        n === 1 ? "1 adopted resident matches" : `${n} adopted residents match`,
+      adoptedFilter: "Adopted",
+      adoptedOnly: "Showing adopted residents only",
       showAllDeceased: "Show all",
       noMicrochip: "No microchip",
       hideDeceased: "Hide deceased",
