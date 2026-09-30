@@ -180,6 +180,18 @@ for (const name of ["residents", ...PUBLIC]) {
     report(!read.ok, `${name}.${column}: anon SELECT is refused`, `HTTP ${read.status}`);
   }
 }
+// What the public may know is that a chip exists (0117): a boolean on the
+// profile view, for "Microchipped: yes" on /adopt/[id]. It must be a boolean,
+// so a later view change cannot slip the number in under that name.
+{
+  const read = await fetch(`${url}/rest/v1/public_resident_profiles?select=is_microchipped&limit=20`, { headers });
+  const rows = read.ok ? await read.json() : [];
+  report(
+    read.ok && rows.every((row) => typeof row.is_microchipped === "boolean"),
+    "public_resident_profiles.is_microchipped: anon reads a boolean",
+    `HTTP ${read.status}, ${rows.length} row(s)`,
+  );
+}
 
 // Fixed outgoings (0114) are admin/management only. They are their own table
 // precisely because site_content is world-readable. Anon must be refused the
