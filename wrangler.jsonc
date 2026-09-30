@@ -103,7 +103,7 @@
       // site opens on a sign-in page.
       "vars": {
         "NODE_ENV": "production",
-        "ORIGIN_HOST": "",
+        "ORIGIN_HOST": "pi.lannacare.org",
         "ORIGIN_TIMEOUT_MS": "20000",
         "RELEASE_MAIL_ENV": "UAT",
         "RELEASE_MAIL_FROM": "releases@lannacare.org",

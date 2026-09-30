@@ -61,21 +61,29 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [
-  { text: "Settings → Website is now split into tabs — Home page, Contact & settings, Pages, Gallery and Our work — instead of one long page. Under Pages, each information page is a row you open to edit, with when it was last edited and a Thai missing tag. Nothing has moved between sections or changed how it saves.", roles: ["admin"] },
-  { text: "On a phone the Residents list now shows just the name, so long names (with Thai and other names) no longer wrap; the ID is still on the resident's page and on the computer list. The list search also finds a resident by their ID (for example R0042), and there is a new Adopted filter. If a search has adopted residents that On-site, Off-site, a zone or an enclosure is hiding, the list now says how many and links to them.", roles: ["admin", "management", "staff", "volunteer", "vet"] },
-  { text: "Vets can now record or correct a resident's microchip themselves: tap Record chip (or Correct) under the name on the resident's page, or at the top of their Vet appointments and Procedures pages and a visit's Edit page, where the chip is now shown. After logging a Microchipping procedure you are asked for the chip number straight away. Staff and admins can use the same form.", roles: ["vet", "staff", "admin"] },
-  "The public adoption page now says Microchipped for an animal with a chip on file, beside Desexed and Vaccinated. The number itself is never shown on the website.",
-  { text: "The Residents list has a No microchip filter, and the management dashboard counts the residents in care with no microchip; tap it to see who they are.", roles: ["admin", "management", "staff", "vet"] },
-  { text: "The summary PDF and offline index filed when a resident dies now include their microchip number and implant date.", roles: ["admin", "management", "staff"] },
-  {
-    text: "On the Management pages (vets and their doctors, diets, medications, contacts, recurring jobs and translations), a refused save or delete now tells you why, in words, instead of showing a numbered error code.",
-    roles: ["admin", "management"],
-  },
-];
+export const unreleased: ReleaseNote[] = [];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.10.1",
+    date: "2026-09-30",
+    title:
+      "Website settings in tabs, a tidier Residents list, vets can record microchips, and clearer Management messages",
+    major: false,
+    notes: [
+      { text: "Settings → Website is now split into tabs — Home page, Contact & settings, Pages, Gallery and Our work — instead of one long page. Under Pages, each information page is a row you open to edit, with when it was last edited and a Thai missing tag. Nothing has moved between sections or changed how it saves.", roles: ["admin"] },
+      { text: "On a phone the Residents list now shows just the name, so long names (with Thai and other names) no longer wrap; the ID is still on the resident's page and on the computer list. The list search also finds a resident by their ID (for example R0042), and there is a new Adopted filter. If a search has adopted residents that On-site, Off-site, a zone or an enclosure is hiding, the list now says how many and links to them.", roles: ["admin", "management", "staff", "volunteer", "vet"] },
+      { text: "Vets can now record or correct a resident's microchip themselves: tap Record chip (or Correct) under the name on the resident's page, or at the top of their Vet appointments and Procedures pages and a visit's Edit page, where the chip is now shown. After logging a Microchipping procedure you are asked for the chip number straight away. Staff and admins can use the same form.", roles: ["vet", "staff", "admin"] },
+      "The public adoption page now says Microchipped for an animal with a chip on file, beside Desexed and Vaccinated. The number itself is never shown on the website.",
+      { text: "The Residents list has a No microchip filter, and the management dashboard counts the residents in care with no microchip; tap it to see who they are.", roles: ["admin", "management", "staff", "vet"] },
+      { text: "The summary PDF and offline index filed when a resident dies now include their microchip number and implant date.", roles: ["admin", "management", "staff"] },
+      {
+        text: "On the Management pages (vets and their doctors, diets, medications, contacts, recurring jobs and translations), a refused save or delete now tells you why, in words, instead of showing a numbered error code.",
+        roles: ["admin", "management"],
+      },
+    ],
+  },
   {
     version: "0.10.0",
     date: "2026-09-30",
