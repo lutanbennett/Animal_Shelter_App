@@ -7,6 +7,9 @@
 //   node scripts/backup.mjs --env production --keep 8
 //   node scripts/backup.mjs --env production --local C:\backups
 //       # write the dump into that folder and skip Drive entirely
+//   node scripts/backup.mjs --env production --local-copy ~/backups/lannacare
+//       # upload to Drive AND keep a copy there; the newest --keep copies
+//       # stay and each older one removed is named in the output
 //
 // What it does, in order, printing the target first:
 //   1. `pg_dump -Fc` of the `public` and `auth` schemas — every record the
@@ -17,6 +20,10 @@
 //      GOOGLE_DRIVE_ROOT_FOLDER_ID, creating the Backups folder if needed.
 //   3. Moves older dumps for the same environment beyond the newest --keep
 //      (default 12) to the Drive trash, which empties itself after 30 days.
+//   4. With --local-copy only: removes local copies beyond the newest --keep
+//      from that folder, after the upload is confirmed, printing each one.
+//      The folder is created 0700 and each dump 0600 (no effect on Windows),
+//      and must be outside the repo so nothing the app serves can reach it.
 //
 // It needs two things the migration runner does not:
 //   - pg_dump 17 or newer (the projects run Postgres 17; pg_dump refuses
@@ -34,9 +41,10 @@
 // result" (scripts/backup-schedule.ps1) is honest.
 
 import { spawnSync } from "node:child_process";
-import { createReadStream, existsSync, mkdirSync, readdirSync, statSync, unlinkSync } from "node:fs";
+import { chmodSync, createReadStream, existsSync, mkdirSync, readdirSync, statSync, unlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { google } from "googleapis";
 import { envFile, loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
 
@@ -49,7 +57,16 @@ const projectRef = refOf(env);
 
 const keep = intArg("--keep", 12);
 const localDir = stringArg("--local");
+const copyDir = stringArg("--local-copy");
 if (keep < 1) fail("--keep must be at least 1.");
+if (localDir && copyDir) fail("--local (dump only, no upload) and --local-copy (upload and keep a copy) are alternatives.");
+if (copyDir) {
+  // A dump is the whole database; it must not sit anywhere the app could serve.
+  const repoRoot = resolve(fileURLToPath(import.meta.url), "..", "..");
+  const rel = relative(repoRoot, resolve(copyDir));
+  if (rel === "" || (!rel.startsWith("..") && !rel.includes(":"))) fail(`--local-copy must be outside the repo (${repoRoot}).`);
+}
+const keepDir = localDir ?? copyDir;
 
 console.log(`Environment: ${envName}  (Supabase project ${projectRef})`);
 
@@ -57,8 +74,9 @@ console.log(`Environment: ${envName}  (Supabase project ${projectRef})`);
 
 const pgDump = findPgDump();
 const dumpName = `lannacare-${envName}-${timestamp()}.dump`;
-const outDir = localDir ?? join(tmpdir(), "lannacare-backup");
-mkdirSync(outDir, { recursive: true });
+const outDir = keepDir ?? join(tmpdir(), "lannacare-backup");
+mkdirSync(outDir, { recursive: true, mode: 0o700 });
+if (copyDir) chmodSync(outDir, 0o700);
 const dumpPath = join(outDir, dumpName);
 
 const { dbUrl, password } = await connectionDetails();
@@ -81,6 +99,7 @@ if (dump.status !== 0) {
   cleanupTemp();
   fail(`pg_dump exited with status ${dump.status ?? dump.signal}.`);
 }
+if (copyDir) chmodSync(dumpPath, 0o600);
 const size = statSync(dumpPath).size;
 console.log(`Wrote ${dumpName} (${(size / 1024 / 1024).toFixed(2)} MB)`);
 
@@ -121,6 +140,21 @@ for (const old of dumps.slice(keep)) {
 }
 console.log(`Backups kept for ${envName}: ${Math.min(dumps.length, keep)} (newest ${dumps[0]?.name}).`);
 
+// --- 4. Prune the local copies (--local-copy) -------------------------------
+// Only reached once the upload is confirmed above, so a failed run never
+// removes the copies it might still need. Each removal is printed.
+
+if (copyDir) {
+  const local = readdirSync(copyDir)
+    .filter((n) => n.startsWith(prefix) && n.endsWith(".dump"))
+    .sort((a, b) => b.localeCompare(a));
+  for (const old of local.slice(keep)) {
+    unlinkSync(join(copyDir, old));
+    console.log(`Removed old local copy ${old} (keeping the newest ${keep} in ${copyDir})`);
+  }
+  console.log(`Local copies kept in ${copyDir}: ${Math.min(local.length, keep)} (newest ${local[0]}).`);
+}
+
 // --- helpers ---------------------------------------------------------------
 
 function fail(message) {
@@ -149,7 +183,7 @@ function timestamp() {
 }
 
 function cleanupTemp() {
-  if (!localDir && existsSync(dumpPath)) unlinkSync(dumpPath);
+  if (!keepDir && existsSync(dumpPath)) unlinkSync(dumpPath);
 }
 
 /**

@@ -530,14 +530,36 @@ node scripts/backup.mjs --env production
 ```
 
 `--keep N` changes the retention; `--local <dir>` writes the dump there
-instead of uploading (for a restore rehearsal). It prints the environment
-and project ref first, like every other script, and exits non-zero if any
-step fails.
+instead of uploading (for a restore rehearsal); `--local-copy <dir>` uploads
+*and* keeps a copy there, removing local copies beyond the newest `--keep`
+after the upload is confirmed and printing each one it removes. The folder
+must be outside the repo; it is created `0700` and each dump `0600`. It
+prints the environment and project ref first, like every other script, and
+exits non-zero if any step fails.
+
+**Where it runs: the Raspberry Pi.** Since 2026-09-30 the weekly run is the
+Pi's cron job (Sundays 03:00 Thailand time), the same box that hosts the site
+(`docs/pi-hosting.md`):
+
+```bash
+0 3 * * 0 cd $HOME/Animal_Shelter_App && node scripts/backup.mjs --env production --local-copy $HOME/backups/lannacare >> $HOME/backups/backup.log 2>&1
+```
+
+Drive stays the off-site copy: the Pi is in the same house as the origin it
+protects, so its own copies guard against a bad Drive upload or a revoked
+token, not against the house. The dumps live in `~/backups/lannacare`, readable
+only by the Pi's user and nowhere under the repo. `~/backups/backup.log` is
+the run history; `ls -l ~/backups/lannacare` shows the newest dump and its date.
+The steps below describe the setup on any machine; the Pi's own are in
+`docs/pi-hosting.md`.
 
 One-time setup on the machine that runs it:
 
 1. **PostgreSQL 17 command-line tools** — the projects run Postgres 17 and
    `pg_dump` must not be older than the server. No local server is needed.
+   **On the Pi (Debian 13):** `sudo apt-get install postgresql-client-17`;
+   trixie's own package is 17, so no extra repo is needed (Debian 12's is 15
+   and would refuse a 17 server).
    The dev machine has the "binaries" zip from
    <https://www.enterprisedb.com/download-postgresql-binaries> (the
    `winget` installer kept failing with a 403 from EDB's CDN) unpacked so
@@ -554,7 +576,9 @@ One-time setup on the machine that runs it:
    goes over Supabase's session pooler on port 5432 (the direct
    `db.<ref>.supabase.co` host is IPv6-only), whose host and user the
    script reads from the Management API with `SUPABASE_ACCESS_TOKEN`.
-3. **The weekly schedule** — `scripts/backup-schedule.ps1` registers a
+3. **The weekly schedule** — on the Pi, the cron line above. The Windows
+   laptop's task is being retired once the Pi's first scheduled Sunday run is
+   confirmed; until then `scripts/backup-schedule.ps1` registers a
    Task Scheduler job, "Lanna Care production backup", for Sundays at
    03:00 (run as soon as the machine is next awake if it missed the time),
    appending to `backup.log` in the repo:

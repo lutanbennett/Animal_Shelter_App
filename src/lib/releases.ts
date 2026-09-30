@@ -61,7 +61,9 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  "The website and the app are now prepared by a Raspberry Pi at the shelter instead of by Cloudflare's own servers, which should stop the \"Error 1102: Worker exceeded resource limits\" page that some heavier pages showed now and then. If a page ever does fail, the app falls back to the old way by itself, so you keep working. The weekly database backup also now runs on the Pi.",
+];
 
 /** Newest first. */
 export const releases: Release[] = [
