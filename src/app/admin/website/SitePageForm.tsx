@@ -1,8 +1,6 @@
 "use client";
 
 import { useActionState } from "react";
-import Link from "next/link";
-import { ExternalLink } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { TranslationPanel } from "@/components/TranslationPanel";
 import type { SitePageSlug } from "@/lib/site/pages";
@@ -14,6 +12,7 @@ export type SitePageRow = {
   slug: SitePageSlug;
   title: string;
   body: string;
+  updated_at: string;
 };
 
 const inputClass =
@@ -34,14 +33,11 @@ export function SitePageForm({
   page,
   translations,
   canManageTranslations,
-  publicPath,
   starterBody,
 }: {
   page: SitePageRow;
   translations: { title?: TranslationRow; body?: TranslationRow };
   canManageTranslations: boolean;
-  /** Where the page shows on the site — a route, or a section anchor. */
-  publicPath: string;
   /**
    * The standard text the public page shows while the body is empty
    * (sitePageStarter), put in the box so the admin edits it rather than
@@ -55,30 +51,13 @@ export function SitePageForm({
   );
   const { t } = useI18n();
   const p = t.admin.website.pages;
-  const label = p.slugs[page.slug];
   const formId = `page-${page.slug}-form`;
   const showStarter = !page.body && Boolean(starterBody);
   const body = showStarter ? starterBody! : page.body;
 
   return (
-    <section
-      id={`page-${page.slug}`}
-      className="flex scroll-mt-4 flex-col gap-4 rounded border border-border bg-surface p-4"
-    >
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <h3 className="text-base font-semibold text-foreground">{label}</h3>
-          <p className="text-xs text-muted">{p.where[page.slug]}</p>
-        </div>
-        <Link
-          href={publicPath}
-          target="_blank"
-          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-        >
-          {t.admin.website.published.view}
-          <ExternalLink className="h-3 w-3" aria-hidden />
-        </Link>
-      </div>
+    <div className="flex flex-col gap-4">
+      <p className="text-xs text-muted">{p.where[page.slug]}</p>
 
       <div className="flex flex-col gap-1">
         <label htmlFor={`${page.slug}-title`} className="text-sm font-medium text-muted">
@@ -141,6 +120,6 @@ export function SitePageForm({
           <p className="text-sm text-success">{state.success}</p>
         )}
       </form>
-    </section>
+    </div>
   );
 }

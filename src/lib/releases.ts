@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "Settings → Website is now split into tabs — Home page, Contact & settings, Pages, Gallery and Our work — instead of one long page. Under Pages, each information page is a row you open to edit, with when it was last edited and a Thai missing tag. Nothing has moved between sections or changed how it saves.", roles: ["admin"] },
   { text: "Vets can now record or correct a resident's microchip themselves: tap Record chip (or Correct) under the name on the resident's page, or at the top of their Vet appointments and Procedures pages and a visit's Edit page, where the chip is now shown. After logging a Microchipping procedure you are asked for the chip number straight away. Staff and admins can use the same form.", roles: ["vet", "staff", "admin"] },
   "The public adoption page now says Microchipped for an animal with a chip on file, beside Desexed and Vaccinated. The number itself is never shown on the website.",
   { text: "The Residents list has a No microchip filter, and the management dashboard counts the residents in care with no microchip; tap it to see who they are.", roles: ["admin", "management", "staff", "vet"] },
