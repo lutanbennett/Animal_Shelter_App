@@ -42,7 +42,7 @@ indistinguishable from one that passed.
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in; one conflict in `src/lib/releases.ts` (both sides added `unreleased` lines), resolved by keeping both
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — re-run after the final sync; closing line below
-- [ ] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so leave it `n/a: not yet — the PR does not exist at this commit` on the first push and tick it in a follow-up commit once the run is actually green. Every PR hits this; the first push is red on `test-plan` by construction. Do not pre-tick it — a green you have not seen is the exact failure this checklist exists to prevent — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (#234: check, migration-numbers, test-plan all pass)
 
 ## 3. Schema and data — *skip if no migration*
 
