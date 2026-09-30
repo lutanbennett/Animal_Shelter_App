@@ -75,6 +75,16 @@ async function canSeeInternalFile(supabase: Supabase, fileId: string) {
   return results.some(({ data }) => (data?.length ?? 0) > 0);
 }
 
+/**
+ * Only raster images and PDFs are shown in the browser; anything else Drive
+ * reports (HTML, SVG, text) is downloaded instead, so an uploaded file can't
+ * run as a page on our origin when its URL is opened directly.
+ */
+function safeToRenderInline(contentType: string) {
+  const type = contentType.split(";")[0].trim().toLowerCase();
+  return (type.startsWith("image/") && type !== "image/svg+xml") || type === "application/pdf";
+}
+
 function notFound() {
   return NextResponse.json(
     { error: "Photo not found." },
@@ -127,6 +137,10 @@ export async function GET(
     status: 200,
     headers: {
       "Content-Type": contentType,
+      // Drive decides the type; never let a browser second-guess it, and
+      // never render a proxied file as a page on our origin.
+      "X-Content-Type-Options": "nosniff",
+      "Content-Disposition": safeToRenderInline(contentType) ? "inline" : "attachment",
       "Cache-Control": isPublic
         ? `public, max-age=${CACHE_SECONDS}, s-maxage=${CACHE_SECONDS}, immutable`
         : "private, no-store",
