@@ -4,13 +4,24 @@
  * visitor to /login, the login form and the Google OAuth leg pass it
  * along, and /auth/callback or the password action redirect to it.
  *
- * Only a same-origin path is honoured — never an absolute URL or a
- * protocol-relative `//host` — so a crafted link can't send someone
- * off-site after they sign in.
+ * Only a same-origin path is honoured, so a crafted link can't send someone
+ * off-site right after a genuine sign-in. Rather than listing bad prefixes
+ * (`//` was caught; `/\`, which browsers read as `//`, was not), the value
+ * is parsed the way a browser would and kept only if it stays on our
+ * origin; what comes back is the parsed `pathname + search`, never the raw
+ * input, so a fragment or rebuilt absolute URL can't survive. Backslashes
+ * and control characters have no legitimate use in a path here and are
+ * refused outright (URL parsers silently drop tab and newline, so
+ * `/<tab>/evil.com` would otherwise become `//evil.com`).
  */
 export function safeNextPath(next: string | null | undefined): string | null {
-  if (!next || !next.startsWith("/") || next.startsWith("//")) return null;
-  return next;
+  if (!next || !next.startsWith("/") || /[\\\u0000-\u001f\u007f]/.test(next)) return null;
+  try {
+    const url = new URL(next, "http://x");
+    return url.origin === "http://x" ? url.pathname + url.search : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
