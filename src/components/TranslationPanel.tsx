@@ -68,8 +68,8 @@ export function TranslationPanel({
     setError(null);
     startTransition(async () => {
       const result = await approveTranslation(current.id, text, recordPath);
-      if (result.error || !result.row) {
-        setError(result.error ?? t.common.failedToSave);
+      if (!result.ok) {
+        setError(result.error);
         return;
       }
       setCurrent(result.row);
@@ -84,8 +84,8 @@ export function TranslationPanel({
     startTransition(async () => {
       const result = await clearTranslation(current.id, recordPath);
       setConfirmClear(false);
-      if (result.error || !result.row) {
-        setError(result.error ?? t.common.failedToRemove);
+      if (!result.ok) {
+        setError(result.error);
         return;
       }
       setCurrent(result.row);

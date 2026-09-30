@@ -1,12 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { assertManagementRole } from "@/lib/auth/require-management";
+import { runAction, type ActionResult } from "@/lib/action-result";
+import { hasManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { ROW_COLUMNS, type TranslationRow } from "@/lib/translations/types";
 
-export type TranslationActionResult = { error?: string; row?: TranslationRow };
+const refuse = (error: string) => ({ ok: false as const, error });
 
 /**
  * The pages whose output the row feeds: the record's own page (or the
@@ -51,47 +52,48 @@ export async function approveTranslation(
   id: string,
   text: string,
   recordPathHint?: string | null,
-): Promise<TranslationActionResult> {
-  await assertManagementRole();
+): Promise<ActionResult<{ row: TranslationRow }>> {
   const { t } = await getT();
+  return runAction("translations.approveTranslation", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const trimmed = text.trim();
+    if (!trimmed) return refuse(t.translations.errors.textRequired);
 
-  const trimmed = text.trim();
-  if (!trimmed) return { error: t.translations.errors.textRequired };
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    const { data: current } = await supabase
+      .from("translations")
+      .select("source_text")
+      .eq("id", id)
+      .limit(1)
+      .returns<{ source_text: string }[]>();
+    if (!current?.[0]) return refuse(t.translations.errors.notFound);
 
-  const { data: current } = await supabase
-    .from("translations")
-    .select("source_text")
-    .eq("id", id)
-    .limit(1)
-    .returns<{ source_text: string }[]>();
-  if (!current?.[0]) return { error: t.translations.errors.notFound };
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+      .from("translations")
+      .update({
+        text: trimmed,
+        status: "approved",
+        reviewed_source_text: current[0].source_text,
+        engine: "human",
+        reviewed_by: user?.id ?? null,
+        reviewed_at: now,
+        updated_at: now,
+      })
+      .eq("id", id)
+      .select(ROW_COLUMNS)
+      .returns<TranslationRow[]>();
 
-  const now = new Date().toISOString();
-  const { data, error } = await supabase
-    .from("translations")
-    .update({
-      text: trimmed,
-      status: "approved",
-      reviewed_source_text: current[0].source_text,
-      engine: "human",
-      reviewed_by: user?.id ?? null,
-      reviewed_at: now,
-      updated_at: now,
-    })
-    .eq("id", id)
-    .select(ROW_COLUMNS)
-    .returns<TranslationRow[]>();
-
-  if (error) return { error: error.message };
-  const row = data?.[0];
-  if (!row) return { error: t.translations.errors.notFound };
-  revalidateFor(row, recordPathHint);
-  return { row };
+    if (error) return refuse(error.message);
+    const row = data?.[0];
+    if (!row) return refuse(t.translations.errors.notFound);
+    revalidateFor(row, recordPathHint);
+    return { ok: true, row };
+  });
 }
 
 /**
@@ -101,29 +103,30 @@ export async function approveTranslation(
 export async function clearTranslation(
   id: string,
   recordPathHint?: string | null,
-): Promise<TranslationActionResult> {
-  await assertManagementRole();
+): Promise<ActionResult<{ row: TranslationRow }>> {
   const { t } = await getT();
+  return runAction("translations.clearTranslation", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("translations")
+      .update({
+        text: null,
+        status: "pending",
+        reviewed_source_text: null,
+        engine: null,
+        reviewed_by: null,
+        reviewed_at: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .select(ROW_COLUMNS)
+      .returns<TranslationRow[]>();
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("translations")
-    .update({
-      text: null,
-      status: "pending",
-      reviewed_source_text: null,
-      engine: null,
-      reviewed_by: null,
-      reviewed_at: null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .select(ROW_COLUMNS)
-    .returns<TranslationRow[]>();
-
-  if (error) return { error: error.message };
-  const row = data?.[0];
-  if (!row) return { error: t.translations.errors.notFound };
-  revalidateFor(row, recordPathHint);
-  return { row };
+    if (error) return refuse(error.message);
+    const row = data?.[0];
+    if (!row) return refuse(t.translations.errors.notFound);
+    revalidateFor(row, recordPathHint);
+    return { ok: true, row };
+  });
 }
