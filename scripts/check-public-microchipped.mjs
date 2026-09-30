@@ -44,7 +44,7 @@ check(
   "spaces and dashes stripped; a blank date is sent as an explicit null",
 );
 const cleared = chip.readMicrochip(form({ microchipNumber: "  ", microchipImplantedOn: "2026-09-01" }));
-check(cleared.microchip_number === null && cleared.microchip_implanted_on === "2026-09-01", "a blank number clears the chip, the date is still sent");
+check(cleared.microchip_number === null && cleared.microchip_implanted_on === "2026-09-01", "readMicrochip: a blank number reads as null (the hub action then sends a null date with it)");
 check("invalid" in chip.readMicrochip(form({ microchipNumber: "98511234567890" })), "14 digits refused before the database");
 
 // --- Database side ----------------------------------------------------------
