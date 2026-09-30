@@ -5,6 +5,8 @@ import { getT } from "@/lib/i18n/get-t";
 import { loadDoctorNamesByVet } from "@/lib/vets/doctors";
 import { loadVetScope } from "@/lib/vets/scope";
 import type { VetOption } from "@/app/vet-visits/new/VetVisitForm";
+import { MicrochipLine } from "@/components/MicrochipForm";
+import { MICROCHIP_WRITE_ROLES } from "@/lib/residents/microchip";
 import { VetVisitEditForm, type VetVisitInitial } from "./VetVisitEditForm";
 
 /** Reached from a row's Edit link on the resident's Vet Appointments tab. */
@@ -47,13 +49,21 @@ export default async function EditVetVisitPage(props: PageProps<"/vet-visits/[id
   let vetsQuery = supabase.from("vets").select("id, name, clinic_name").order("name");
   if (scope.kind === "clinic") vetsQuery = vetsQuery.eq("id", scope.vetId);
 
-  const [residentResult, stateResult, vetsResult, doctorNamesByVet] = await Promise.all([
+  const [residentResult, stateResult, vetsResult, doctorNamesByVet, roleResult] = await Promise.all([
     supabase
       .from("residents")
-      .select("id, name, thai_name")
+      .select("id, name, thai_name, microchip_number, microchip_implanted_on")
       .eq("id", visit.resident_id)
       .limit(1)
-      .returns<{ id: string; name: string; thai_name: string | null }[]>(),
+      .returns<
+        {
+          id: string;
+          name: string;
+          thai_name: string | null;
+          microchip_number: string | null;
+          microchip_implanted_on: string | null;
+        }[]
+      >(),
     supabase
       .from("resident_current_state")
       .select("is_deceased")
@@ -62,6 +72,7 @@ export default async function EditVetVisitPage(props: PageProps<"/vet-visits/[id
       .returns<{ is_deceased: boolean }[]>(),
     vetsQuery.returns<VetOption[]>(),
     loadDoctorNamesByVet(supabase),
+    supabase.rpc("current_user_role"),
   ]);
   const resident = residentResult.data?.[0];
   if (!resident) notFound();
@@ -91,6 +102,14 @@ export default async function EditVetVisitPage(props: PageProps<"/vet-visits/[id
         <h1 className="text-2xl font-semibold text-foreground">{t.vetVisits.editPageTitle}</h1>
         <p className="text-sm text-muted">{t.vetVisits.editPageSubtitle}</p>
       </div>
+
+      {/* The chip beside the visit it was checked or implanted at (0116). */}
+      <MicrochipLine
+        residentId={visit.resident_id}
+        number={resident.microchip_number}
+        implantedOn={resident.microchip_implanted_on}
+        canEdit={MICROCHIP_WRITE_ROLES.has(roleResult.data ?? "")}
+      />
 
       {vetsResult.error && (
         <p className="text-sm text-danger">

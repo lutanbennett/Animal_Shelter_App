@@ -2857,6 +2857,7 @@ const en = {
           : `${n} deceased residents match`,
       deceasedMatchesShow: "show",
       showAllDeceased: "Show all",
+      noMicrochip: "No microchip",
       hideDeceased: "Hide deceased",
       couldntLoad: "Couldn't load residents",
       /**
@@ -4017,6 +4018,7 @@ const en = {
       heading: "Health",
       desexed: "Desexed",
       vaccinated: "Vaccinated",
+      microchipped: "Microchipped",
     },
     /** "Is {name} right for you?" — the adoption recommendation block (0060). */
     recommendation: {

@@ -3,7 +3,7 @@ import type { PublicTranslations } from "@/lib/translations/types";
 import type { ResidentCardRow } from "@/app/adopt/ResidentCard";
 
 /**
- * public_resident_profiles (0025, 0051, 0056, 0060, 0094): what a signed-out
+ * public_resident_profiles (0025, 0051, 0056, 0060, 0094, 0117): what a signed-out
  * visitor may see of a resident. Read with the anon key on /adopt; the
  * view applies the "public, not adopted, not deceased" rule.
  */
@@ -18,6 +18,8 @@ export type PublicResident = ResidentCardRow & {
   colour: string | null;
   is_desexed: boolean | null;
   is_vaccinated: boolean;
+  /** 0117: that a chip is on file. The number itself is never public. */
+  is_microchipped: boolean;
   good_with_dogs: string | null;
   good_with_cats: string | null;
   good_with_children: string | null;
@@ -27,7 +29,7 @@ export type PublicResident = ResidentCardRow & {
 };
 
 export const PUBLIC_RESIDENT_COLUMNS =
-  "id, name, species, breed, sex, size, ready_for_adoption, bio, temperament_notes, past_story_notes, profile_photo_drive_file_id, estimated_age_years, age_estimated_on, translations, colour, is_desexed, is_vaccinated, good_with_dogs, good_with_cats, good_with_children, energy_level, hook_line, ideal_home";
+  "id, name, species, breed, sex, size, ready_for_adoption, bio, temperament_notes, past_story_notes, profile_photo_drive_file_id, estimated_age_years, age_estimated_on, translations, colour, is_desexed, is_vaccinated, is_microchipped, good_with_dogs, good_with_cats, good_with_children, energy_level, hook_line, ideal_home";
 
 export const CARD_COLUMNS =
   "id, name, species, breed, size, ready_for_adoption, profile_photo_drive_file_id";

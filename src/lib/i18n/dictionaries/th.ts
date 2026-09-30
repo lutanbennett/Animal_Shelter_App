@@ -2767,6 +2767,7 @@ const th: Dictionary = {
         `พบสัตว์ที่เสียชีวิตแล้วตรงกับคำค้น ${n} ตัว`,
       deceasedMatchesShow: "แสดง",
       showAllDeceased: "แสดงทั้งหมด",
+      noMicrochip: "ไม่มีไมโครชิป",
       hideDeceased: "ซ่อนที่เสียชีวิตแล้ว",
       couldntLoad: "โหลดข้อมูลสัตว์ไม่สำเร็จ",
       vetScope: (clinic: string) =>
@@ -3898,6 +3899,7 @@ const th: Dictionary = {
       heading: "สุขภาพ",
       desexed: "ทำหมันแล้ว",
       vaccinated: "ฉีดวัคซีนแล้ว",
+      microchipped: "ฝังไมโครชิปแล้ว",
     },
     recommendation: {
       heading: (name: string) => `${name} เหมาะกับคุณไหม?`,
