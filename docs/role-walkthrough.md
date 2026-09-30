@@ -91,9 +91,10 @@ The narrowest role, and the only one that is *external* to the shelter. A vet
 sees **their own clinic's residents** and the medical record, and nothing about
 running the place. The interesting lines are almost all negative.
 
-**Menu must show:** **My tasks** and **Residents**, then the footer group —
+**Menu must show:** **Appointments** and **Residents**, then the footer group —
 Manual · Release notes · Change password. Nothing else (`src/app/NavLinks.tsx`).
-**Menu must NOT show:** Enclosures, Maintenance, Vets, Contacts, Projects,
+A vet's home is Appointments, not My tasks (#227, `docs/decisions/2026-09-29-vet-appointments-page.md`).
+**Menu must NOT show:** My tasks, Enclosures, Maintenance, Vets, Contacts, Projects,
 Stocktake, Management, Settings, Security.
 **Header must NOT show:** the Assistant button — the vet role is external and
 the assistant is closed to it (`0070`).
@@ -102,7 +103,10 @@ the assistant is closed to it (`0070`).
 
 ### Can do
 
-- [ ] **My tasks** opens. A vet has **no** recurring job (they are not assignable), so it is empty or shows only what genuinely belongs to a vet — read what it says and note it: `________`
+- [ ] **Signing in lands on Appointments** (`/appointments`), not My tasks. Typing `/my` redirects there too
+- [ ] **Appointments** shows the clinic's visits in three groups — **To write up** (date passed, not marked done), **Upcoming**, **Recently done** (last 30 days) — each with a count. A clinic with no visits reads as empty, not broken. Write what it shows: `________`
+- [ ] A row's resident name opens that resident; its links log a procedure, blood test, prescription or weight (the last two only once the visit has started) or edit the visit, and the record saved is **linked to that visit**
+- [ ] Only **this clinic's** appointments are listed, whichever doctor they are booked with. (A vet account with no clinic set sees an explanation instead — check from Admin → Security if you want to see it)
 - [ ] `/residents` **names the clinic** at the top and lists **only that clinic's residents**; the test resident is there. Find it by search
 - [ ] **Clinic scoping, negative half:** a resident with no record from this clinic is **absent** from the list, and typing its URL is refused
 - [ ] Its hub opens; **info**, **medical** and **placement** tabs all load
@@ -117,6 +121,10 @@ the assistant is closed to it (`0070`).
 - [ ] **Manual** opens on the **vet's** view of the roles topic ("Roles — who can do what"), and topics a vet cannot do carry the right role badges
 - [ ] **Release notes** opens showing what a vet is affected by, and lists the current version
 - [ ] **Change password** page loads
+
+> **Not in this pass yet:** recording a microchip number as a vet
+> (`microchip-vet-feature`, `0116`) is not merged. Do not score its absence as a
+> failure; it gets a line here when it ships.
 
 ### Other clinics' records are read-only
 
@@ -141,6 +149,7 @@ home page, which is also what tipped the test site into Cloudflare 1102) and it
 is the single thing the last run most wants confirmed. Write what you actually
 saw for the first one: `________`
 
+- [ ] `/my` — redirects to `/appointments` (not refused; a vet has no My tasks)
 - [ ] `/vets` and a clinic page `/vets/<id>` — refused → `/no-access`
 - [ ] `/contacts` — refused → `/no-access`
 - [ ] `/enclosures`, and a zone and an enclosure page — refused → `/no-access`
