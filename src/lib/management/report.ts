@@ -19,6 +19,8 @@ export type ResidentRow = {
   species: string | null;
   ready_for_adoption: boolean;
   is_public_visible: boolean;
+  /** That a chip is on file (0113); the number is not needed to count it. */
+  has_microchip: boolean;
 };
 
 export type StateRow = { resident_id: string; current_status: string | null };
@@ -267,6 +269,9 @@ export type Snapshot = {
   outreach: number;
   readyForAdoption: number;
   publicVisible: number;
+  /** In-care residents with and without a microchip on file. */
+  microchipped: number;
+  notMicrochipped: number;
   /** Scheduled visits in the next seven days. */
   vetVisitsDue: number;
   /** Scheduled visits whose date has passed. */
@@ -289,6 +294,7 @@ export function snapshot(
   const species = new Map<string | null, number>();
   let readyForAdoption = 0;
   let publicVisible = 0;
+  let microchipped = 0;
 
   for (const r of data.residents) {
     const status = statusOf.get(r.id) ?? "Resident";
@@ -296,6 +302,7 @@ export function snapshot(
     if (IN_CARE_STATUSES.has(status)) {
       const key = r.species?.trim() || null;
       species.set(key, (species.get(key) ?? 0) + 1);
+      if (r.has_microchip) microchipped += 1;
     }
     if (status === "Deceased" || status === "Adopted") continue;
     if (r.ready_for_adoption) readyForAdoption += 1;
@@ -321,8 +328,9 @@ export function snapshot(
     if (job.status === "Blocked") blockedMaintenance += 1;
   }
 
+  const inCare = counts.Resident + counts.Unassigned + counts.Hospitalised + counts.Fostered;
   return {
-    inCare: counts.Resident + counts.Unassigned + counts.Hospitalised + counts.Fostered,
+    inCare,
     bySpecies: [...species.entries()]
       .map(([s, count]) => ({ species: s, count }))
       .sort((a, b) => b.count - a.count),
@@ -333,6 +341,8 @@ export function snapshot(
     outreach: counts.Outreach,
     readyForAdoption,
     publicVisible,
+    microchipped,
+    notMicrochipped: inCare - microchipped,
     vetVisitsDue,
     vetVisitsOverdue,
     openMaintenance,

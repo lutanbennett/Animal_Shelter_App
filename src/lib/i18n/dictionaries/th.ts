@@ -1694,6 +1694,8 @@ const th: Dictionary = {
           `นัดที่ผ่านมาแล้วแต่ยังเป็นสถานะนัดหมาย ${n} รายการ`,
         openMaintenance: "งานซ่อมบำรุงที่ยังไม่เสร็จ",
         openMaintenanceDetail: (blocked: number) => `ติดขัด ${blocked} งาน`,
+        noMicrochip: "ในความดูแล ยังไม่มีไมโครชิป",
+        noMicrochipDetail: (chipped: number) => `ฝังชิปแล้ว ${chipped} ตัว`,
       },
       month: {
         heading: (month: string) => `ภาพรวม${month}`,
@@ -2767,6 +2769,7 @@ const th: Dictionary = {
         `พบสัตว์ที่เสียชีวิตแล้วตรงกับคำค้น ${n} ตัว`,
       deceasedMatchesShow: "แสดง",
       showAllDeceased: "แสดงทั้งหมด",
+      noMicrochip: "ไม่มีไมโครชิป",
       hideDeceased: "ซ่อนที่เสียชีวิตแล้ว",
       couldntLoad: "โหลดข้อมูลสัตว์ไม่สำเร็จ",
       vetScope: (clinic: string) =>
@@ -2797,6 +2800,27 @@ const th: Dictionary = {
       microchip: "ไมโครชิป",
       microchipImplanted: (date: string) => `ฝังชิปเมื่อ ${date}`,
       microchipNudge: "พร้อมหาบ้านแล้วแต่ยังไม่มีหมายเลขไมโครชิป ผู้รับเลี้ยงต่างประเทศจะต้องใช้",
+      chipForm: {
+        noChip: "ยังไม่ได้บันทึกไมโครชิป",
+        record: "บันทึกชิป",
+        correct: "แก้ไข",
+        save: "บันทึกชิป",
+        saving: "กำลังบันทึก…",
+        cancel: "ยกเลิก",
+        clearHint: "หากบันทึกชิปผิด ให้ลบหมายเลขออกแล้วกดบันทึก",
+        promptHeading: "บันทึกหมายเลขชิปเลยไหม?",
+        promptBody: (name: string) =>
+          `คุณเพิ่งบันทึกการฝังไมโครชิปให้ ${name} สแกนหรือพิมพ์หมายเลขชิปตอนนี้ เพื่อให้เครื่องอ่านค้นหาได้ในภายหลัง`,
+        promptSkip: "ไว้ทีหลัง",
+        errors: {
+          invalid: "หมายเลขไมโครชิปต้องมี 15 หลักพอดี (ไม่นับช่องว่างและขีด)",
+          implantedInFuture: "วันที่ฝังชิปต้องไม่เป็นวันในอนาคต",
+          duplicate: "มีสัตว์ตัวอื่นใช้หมายเลขไมโครชิปนี้แล้ว ตรวจสอบหมายเลขอีกครั้ง หรือแก้ไขข้อมูลของสัตว์ตัวนั้นก่อน",
+          deceased: "สัตว์ตัวนี้เสียชีวิตแล้ว ประวัติจึงถูกปิดและไม่สามารถแก้ไขชิปได้อีก",
+          notInScope: "คุณบันทึกชิปได้เฉพาะสัตว์ที่คลินิกของคุณดูแลเท่านั้น",
+          notFound: "ไม่พบสัตว์ตัวนี้แล้ว",
+        },
+      },
       editResident: "แก้ไขข้อมูลสัตว์",
       noPhoto: "ยังไม่มีรูปภาพ",
       speciesUnknown: "ยังไม่มีข้อมูลชนิด/สายพันธุ์",
@@ -3877,6 +3901,7 @@ const th: Dictionary = {
       heading: "สุขภาพ",
       desexed: "ทำหมันแล้ว",
       vaccinated: "ฉีดวัคซีนแล้ว",
+      microchipped: "ฝังไมโครชิปแล้ว",
     },
     recommendation: {
       heading: (name: string) => `${name} เหมาะกับคุณไหม?`,

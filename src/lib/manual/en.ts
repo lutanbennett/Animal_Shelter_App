@@ -303,8 +303,7 @@ const manual: Manual = {
             "Show all and Hide deceased are offered under Everywhere only. Under On-site or Off-site, a name search that matches a resident who has died still says so, with a link that shows them under Everywhere.",
             "On a computer you can also narrow the list to one Enclosure. Tap Clear to see everyone again.",
             "Tap a resident's name to open their hub.",
-            "Scanning a microchip: a USB or Bluetooth chip reader types the 15 digits and presses Enter, so click the Scan a chip box (it is already selected when the page opens) and scan. A known chip opens that resident straight away, whatever the place, zone or deceased filters say. An unknown chip says so and, for staff, offers New resident with this chip, which starts intake with the number filled in. Typing the 15 digits works just as well, spaces and dashes included. Phones cannot read the usual 134.2 kHz chips, so use a reader.",
-            "The microchip number is entered under Edit resident, or on the Health step of intake, and shows under the resident's name on their hub. It is exactly 15 digits and no two residents can share one. It is for staff and vets only and is never shown on the public website.",
+            "Tap No microchip to list only residents with no chip number recorded; tap it again to show everyone. It works alongside the search and the other filters. To find one animal by their chip, see Scanning a microchip.",
           ],
           screenshot: {
             src: "/manual/residents-list.png",
@@ -323,6 +322,35 @@ const manual: Manual = {
             {
               kind: "note",
               text: "Signed in as a vet, the list is your clinic's: every resident your clinic has a vet visit, prescription, procedure or blood test for — a cancelled visit included — and no one else. The line under the heading names the clinic. A resident appears once the shelter books them a visit with you, and their hub shows all of their history, other clinics' visits included. A vet account with no clinic set sees no residents until an admin sets one (Accounts and roles).",
+            },
+          ],
+        },
+        {
+          id: "microchip",
+          title: "Scanning a microchip",
+          roles: ["admin", "management", "staff", "vet"],
+          path: "Residents → Scan a chip, or a resident's hub",
+          intro:
+            "A microchip number is exactly 15 digits, and no two residents can share one. It is for staff and vets only: the public website says only whether an animal is microchipped, never the number.",
+          steps: [
+            "To find an animal by their chip, open Residents. A USB or Bluetooth chip reader types the 15 digits and presses Enter, so click the Scan a chip box (it is already selected when the page opens) and scan. A known chip opens that resident straight away, whatever the place, zone or deceased filters say. An unknown chip says so and, for staff, offers New resident with this chip, which starts intake with the number filled in. Typing the 15 digits works just as well, spaces and dashes included. Phones cannot read the usual 134.2 kHz chips, so use a reader.",
+            "The chip shows under the resident's name on their hub, and at the top of their Vet appointments and Procedures pages and a visit's Edit page, so it is in front of a vet wherever they work. It is also in the summary PDF and offline index filed when a resident dies.",
+            "To record or correct a chip, tap Record chip (or Correct, beside a number already recorded), scan or type the number, add the date it was implanted if you know it, and tap Save chip. Admins, staff and vets can do this; a vet can for any resident their clinic treats. Staff can also enter it under Edit resident or on the Health step of intake.",
+            "After you log a Microchipping procedure, you are asked Record the chip number? straight away, with the implant date set to the procedure's date. Scan the chip and tap Save chip, or tap Not now to do it later from the hub.",
+            "To remove a number recorded in error, open the form, clear the number and tap Save chip. The implant date is removed with it.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "Saving the chip always saves the implant date shown in the form too, so if you correct only the number, check the date is still right before you save.",
+            },
+            {
+              kind: "note",
+              text: "A chip already recorded on another resident is refused, since one of the two numbers must be wrong: check the number, or correct the other resident's record first. A resident who has died cannot have their chip changed, since their record is closed.",
+            },
+            {
+              kind: "tip",
+              text: "Management's dashboard counts the residents in care with no microchip, and tapping it opens the Residents list with No microchip on.",
             },
           ],
         },

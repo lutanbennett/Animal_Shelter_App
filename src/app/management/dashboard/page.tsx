@@ -88,8 +88,8 @@ export default async function ManagementDashboardPage(
   ] = await Promise.all([
     supabase
       .from("residents")
-      .select("id, name, species, ready_for_adoption, is_public_visible")
-      .returns<ResidentRow[]>(),
+      .select("id, name, species, ready_for_adoption, is_public_visible, microchip_number")
+      .returns<(Omit<ResidentRow, "has_microchip"> & { microchip_number: string | null })[]>(),
     supabase
       .from("resident_current_state")
       .select("resident_id, current_status")
@@ -162,7 +162,10 @@ export default async function ManagementDashboardPage(
           .returns<AppointmentRow[]>()
       : { data: [], error: null };
 
-  const residents = residentsResult.data ?? [];
+  // Only whether a chip is on file travels further than this line.
+  const residents: ResidentRow[] = (residentsResult.data ?? []).map(
+    ({ microchip_number, ...row }) => ({ ...row, has_microchip: microchip_number !== null }),
+  );
   const index = residentIndex(residents);
   const placements = placementsResult.data ?? [];
 
@@ -244,6 +247,13 @@ export default async function ManagementDashboardPage(
             title={d.now.outreach}
             value={String(current.outreach)}
             detail={d.now.outreachDetail}
+          />
+          {/* Encouraging chipping: a nudge, not a target. */}
+          <StatCard
+            href="/residents?nochip=1"
+            title={d.now.noMicrochip}
+            value={String(current.notMicrochipped)}
+            detail={d.now.noMicrochipDetail(current.microchipped)}
           />
           <StatCard
             href="/vets"

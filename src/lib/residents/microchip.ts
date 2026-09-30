@@ -37,7 +37,38 @@ export function readMicrochip(
   };
 }
 
+/**
+ * What set_resident_microchip() (0116) refused, from the SQLSTATE PostgREST
+ * reports. Each is a different thing for the person to do, so each gets its
+ * own words rather than the raw database message.
+ */
+export type MicrochipRefusal =
+  | "deceased" // restrict_violation: the 0026 lock
+  | "notInScope" // insufficient_privilege: a vet outside their clinic, or a role that may not
+  | "invalid" // check_violation: residents_microchip_number_iso
+  | "duplicate" // unique_violation: residents_microchip_number_key
+  | "notFound"; // no_data_found: the resident is gone
+
+const REFUSAL_BY_SQLSTATE: Record<string, MicrochipRefusal> = {
+  "23001": "deceased",
+  "42501": "notInScope",
+  "23514": "invalid",
+  "23505": "duplicate",
+  P0002: "notFound",
+};
+
+export function microchipRefusal(error: { code?: string }): MicrochipRefusal | null {
+  return (error.code && REFUSAL_BY_SQLSTATE[error.code]) || null;
+}
+
 /** Postgres unique_violation, as PostgREST reports it. */
 export function isDuplicateChipError(error: { code?: string; message?: string }): boolean {
   return error.code === "23505" && /microchip/i.test(error.message ?? "");
 }
+
+/**
+ * The roles set_resident_microchip() (0116) lets through: admin, staff, and
+ * a vet whose clinic holds the resident. Management may not. The function
+ * checks scope itself; this only decides who is offered the form.
+ */
+export const MICROCHIP_WRITE_ROLES: ReadonlySet<string> = new Set(["admin", "staff", "vet"]);

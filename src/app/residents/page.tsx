@@ -32,6 +32,12 @@ type Filters = {
   place: EnclosurePlace;
   zoneIds: string[];
   enclosureId: string;
+  /**
+   * "No microchip": the residents that DO have a chip, left out. The list
+   * view does not carry the column, and chipped residents are the few, so
+   * their ids are read first and excluded rather than the reverse.
+   */
+  chippedIds: string[] | null;
 };
 
 function applyFilters<
@@ -39,8 +45,9 @@ function applyFilters<
     or(filters: string): Q;
     eq(column: string, value: string): Q;
     in(column: string, values: readonly string[]): Q;
+    not(column: string, operator: string, value: string): Q;
   },
->(query: Q, { q, place, zoneIds, enclosureId }: Filters): Q {
+>(query: Q, { q, place, zoneIds, enclosureId, chippedIds }: Filters): Q {
   let next = query;
   if (q) {
     const term = q.replace(/[,()%]/g, "");
@@ -60,6 +67,9 @@ function applyFilters<
   if (enclosureId) {
     next = next.eq("enclosure_id", enclosureId);
   }
+  if (chippedIds?.length) {
+    next = next.not("resident_id", "in", `(${chippedIds.join(",")})`);
+  }
   return next;
 }
 
@@ -69,6 +79,7 @@ function buildHref(params: {
   q: string;
   enclosure: string;
   all: boolean;
+  noChip: boolean;
 }) {
   const search = new URLSearchParams();
   if (params.place !== "all") search.set("place", params.place);
@@ -76,6 +87,7 @@ function buildHref(params: {
   if (params.q) search.set("q", params.q);
   if (params.enclosure) search.set("enclosure", params.enclosure);
   if (params.all) search.set("all", "1");
+  if (params.noChip) search.set("nochip", "1");
   // Commas read better than %2C in a shared link, and parse the same.
   const qs = search.toString().replace(/%2C/gi, ",");
   return qs ? `/residents?${qs}` : "/residents";
@@ -147,7 +159,19 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   // belongs to Everywhere: the dead are in neither place, so under On-site
   // or Off-site it would change nothing, and ?all=1 there is ignored.
   const showAll = place === "all" && searchParams.all === "1";
-  const filters: Filters = { q, place, zoneIds, enclosureId };
+  // "No microchip" (the encouraging-chipping nudge): kept across every
+  // other filter, like the search.
+  const noChip = searchParams.nochip === "1";
+  const chippedIds = noChip
+    ? ((
+        await supabase
+          .from("residents")
+          .select("id")
+          .not("microchip_number", "is", null)
+          .returns<{ id: string }[]>()
+      ).data ?? []).map((row) => row.id)
+    : null;
+  const filters: Filters = { q, place, zoneIds, enclosureId, chippedIds };
 
   /**
    * The list with a different place or zone set, everything else kept that
@@ -164,6 +188,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
         ? enclosureId
         : "",
       all: showAll && nextPlace === "all",
+      noChip,
     });
   }
   const placeHrefs = Object.fromEntries(
@@ -172,7 +197,12 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
 
   /** The same list with the deceased toggle flipped, other filters kept. */
   function toggleHref(all: boolean) {
-    return buildHref({ place, zones: zoneIds, q, enclosure: enclosureId, all });
+    return buildHref({ place, zones: zoneIds, q, enclosure: enclosureId, all, noChip });
+  }
+
+  /** The same list with "No microchip" flipped, other filters kept. */
+  function noChipHref(next: boolean) {
+    return buildHref({ place, zones: zoneIds, q, enclosure: enclosureId, all: showAll, noChip: next });
   }
 
   let residentsQuery = supabase
@@ -202,7 +232,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
     countDeceased
       ? applyFilters(
           deceasedCountQuery,
-          place === "all" ? filters : { q, place: "all", zoneIds: [], enclosureId: "" },
+          place === "all" ? filters : { q, place: "all", zoneIds: [], enclosureId: "", chippedIds },
         )
       : Promise.resolve({ count: 0 }),
   ]);
@@ -225,7 +255,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   const deceasedMatchesHref =
     place === "all"
       ? toggleHref(true)
-      : buildHref({ place: "all", zones: [], q, enclosure: "", all: true });
+      : buildHref({ place: "all", zones: [], q, enclosure: "", all: true, noChip });
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
@@ -309,7 +339,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
         {/* Keyed on the filters so a chip or Clear, which navigate on the
             client, remount the inputs instead of leaving their old values. */}
         <form
-          key={`${place}|${zoneIds.join(",")}|${q}|${enclosureId}|${showAll}`}
+          key={`${place}|${zoneIds.join(",")}|${q}|${enclosureId}|${showAll}|${noChip}`}
           className="flex flex-wrap items-end gap-3"
           method="get"
         >
@@ -320,6 +350,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
             <input type="hidden" name="zone" value={zoneIds.join(",")} />
           )}
           {showAll && <input type="hidden" name="all" value="1" />}
+          {noChip && <input type="hidden" name="nochip" value="1" />}
           <div className="flex min-w-0 flex-1 flex-col gap-1 md:flex-none">
             <label htmlFor="q" className="text-sm font-medium text-muted">
               {t.residents.list.search}
@@ -380,7 +411,17 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
                 : t.residents.list.showAllDeceased}
             </Link>
           )}
-          {(q || place !== "all" || zoneIds.length > 0 || enclosureId) && (
+          <Link
+            href={noChipHref(!noChip)}
+            className={`rounded-full border px-3 py-2 text-sm font-medium ${
+              noChip
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border bg-surface text-muted hover:text-foreground"
+            }`}
+          >
+            {t.residents.list.noMicrochip}
+          </Link>
+          {(q || place !== "all" || zoneIds.length > 0 || enclosureId || noChip) && (
             <Link
               href="/residents"
               className="text-sm font-medium text-muted hover:text-foreground"

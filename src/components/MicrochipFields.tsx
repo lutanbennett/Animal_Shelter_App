@@ -15,10 +15,13 @@ export function MicrochipFields({
   number,
   implantedOn,
   idPrefix = "",
+  autoFocus = false,
 }: {
   number?: string | null;
   implantedOn?: string | null;
   idPrefix?: string;
+  /** A chip reader types into whatever has focus, so a chip-only form starts there. */
+  autoFocus?: boolean;
 }) {
   const { t } = useI18n();
   const f = t.residents.new.fields;
@@ -34,6 +37,9 @@ export function MicrochipFields({
           type="text"
           inputMode="numeric"
           autoComplete="off"
+          autoFocus={autoFocus}
+          // A correction scans over the old number rather than onto its end.
+          onFocus={autoFocus ? (e) => e.currentTarget.select() : undefined}
           maxLength={MICROCHIP_LENGTH + 6}
           defaultValue={number ?? ""}
           aria-describedby={`${idPrefix}microchipNumber-hint`}

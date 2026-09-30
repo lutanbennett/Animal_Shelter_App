@@ -30,6 +30,8 @@ import { defaultDailyQuantity, formatQuantity } from "@/lib/diets/options";
 import { WeightChart } from "@/components/WeightChart";
 import { visitDate } from "@/lib/vets/linkable";
 import { ActionLink } from "@/components/ActionLink";
+import { MicrochipLine } from "@/components/MicrochipForm";
+import { MICROCHIP_WRITE_ROLES } from "@/lib/residents/microchip";
 import { ArchivedBadge } from "@/components/ArchivedBadge";
 import {
   PLACEMENT_ICONS,
@@ -83,10 +85,10 @@ export default async function ResidentSectionPage(
 
   const supabase = await createClient();
 
-  const [residentResult, residentStateResult] = await Promise.all([
+  const [residentResult, residentStateResult, roleResult] = await Promise.all([
     supabase
       .from("residents")
-      .select("id, name, thai_name, size, profile_photo_drive_file_id")
+      .select("id, name, thai_name, size, profile_photo_drive_file_id, microchip_number, microchip_implanted_on")
       .eq("id", id)
       .limit(1)
       .returns<
@@ -96,6 +98,8 @@ export default async function ResidentSectionPage(
           thai_name: string | null;
           size: string | null;
           profile_photo_drive_file_id: string | null;
+          microchip_number: string | null;
+          microchip_implanted_on: string | null;
         }[]
       >(),
     supabase
@@ -104,6 +108,7 @@ export default async function ResidentSectionPage(
       .eq("resident_id", id)
       .limit(1)
       .returns<{ current_status: string | null; is_deceased: boolean }[]>(),
+    supabase.rpc("current_user_role"),
   ]);
 
   const resident = residentResult.data?.[0];
@@ -1143,6 +1148,16 @@ export default async function ResidentSectionPage(
         )}
         {title}
       </h1>
+      {/* The vet-visit and procedure views are where a vet reads a chip
+          against a scanner, or finds it missing and records it (0116). */}
+      {(section === "vet-appointments" || section === "procedures") && (
+        <MicrochipLine
+          residentId={id}
+          number={resident.microchip_number}
+          implantedOn={resident.microchip_implanted_on}
+          canEdit={!isDeceased && MICROCHIP_WRITE_ROLES.has(roleResult.data ?? "")}
+        />
+      )}
       {body}
     </main>
   );

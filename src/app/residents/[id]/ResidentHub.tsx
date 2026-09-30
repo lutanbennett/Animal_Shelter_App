@@ -37,6 +37,7 @@ import {
 } from "@/lib/i18n/enum-labels";
 import type { AdoptionProfile } from "@/components/AdoptionProfileFields";
 import { CopyTagLink } from "@/components/CopyTagLink";
+import { MicrochipLine } from "@/components/MicrochipForm";
 import { TranslationPanel } from "@/components/TranslationPanel";
 import { placeName } from "@/lib/enclosures/names";
 import { residentTagPath } from "@/lib/tags/links";
@@ -168,6 +169,7 @@ export function ResidentHub({
   canRecordDeath,
   canUndoDeath,
   canManageTranslations,
+  canSetMicrochip,
   translations,
   currentPlacementSince,
   carerName,
@@ -203,6 +205,8 @@ export function ResidentHub({
   canUndoDeath: boolean;
   /** Admin/management: may write and approve the other-language text. */
   canManageTranslations: boolean;
+  /** Admin, staff or a vet (in scope, or they could not see the hub): may record the chip (0116). */
+  canSetMicrochip: boolean;
   /** The resident's rows in `translations` (bio, temperament, past story). */
   translations: TranslationRow[];
   currentPlacementSince: string | null;
@@ -457,18 +461,18 @@ export function ResidentHub({
             {!resident.size && !isDeceased && (
               <p className="text-xs text-warning">{t.residents.hub.sizeNotSet}</p>
             )}
-            {resident.microchip_number ? (
-              <p className="text-sm text-muted">
-                {t.residents.hub.microchip}:{" "}
-                <span className="font-mono text-foreground">{resident.microchip_number}</span>
-                {resident.microchip_implanted_on &&
-                  ` · ${t.residents.hub.microchipImplanted(formatDate(resident.microchip_implanted_on, locale))}`}
-              </p>
-            ) : (
-              resident.ready_for_adoption &&
-              !isDeceased && (
-                <p className="text-xs text-warning">{t.residents.hub.microchipNudge}</p>
-              )
+            {/* A deceased record is closed (0026), so no pencil; the
+                function would refuse it anyway. */}
+            {(resident.microchip_number || resident.ready_for_adoption || canSetMicrochip) && (
+              <MicrochipLine
+                residentId={resident.id}
+                number={resident.microchip_number}
+                implantedOn={resident.microchip_implanted_on}
+                canEdit={canSetMicrochip && !isDeceased}
+                nudge={
+                  resident.ready_for_adoption && !isDeceased ? t.residents.hub.microchipNudge : null
+                }
+              />
             )}
             <p className="text-sm text-muted">
               {formatAge(t, resident.estimated_age_years, resident.age_estimated_on)}

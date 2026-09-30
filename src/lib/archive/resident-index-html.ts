@@ -328,6 +328,16 @@ export function renderResidentIndexHtml(
         )}
         ${fieldRow("Intake date", day(resident.intakeDate))}
         ${fieldRow(
+          "Microchip",
+          join(
+            [
+              resident.microchipNumber,
+              resident.microchipImplantedOn ? `implanted ${day(resident.microchipImplantedOn)}` : null,
+            ],
+            " — ",
+          ),
+        )}
+        ${fieldRow(
           "Origin",
           join([resident.originName, resident.originDate ? day(resident.originDate) : null], " — "),
         )}

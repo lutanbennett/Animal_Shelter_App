@@ -149,6 +149,7 @@ export default async function PublicResidentPage(
   const health = [
     resident.is_desexed === true && t.adopt.health.desexed,
     resident.is_vaccinated && t.adopt.health.vaccinated,
+    resident.is_microchipped && t.adopt.health.microchipped,
   ].filter(Boolean);
   const facts = [
     resident.estimated_age_years != null && {

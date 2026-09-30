@@ -369,6 +369,16 @@ function ResidentSummaryDocument({
             />
             <Field label="Intake date" value={day(resident.intakeDate)} />
             <Field
+              label="Microchip"
+              value={join(
+                [
+                  resident.microchipNumber,
+                  resident.microchipImplantedOn ? `implanted ${day(resident.microchipImplantedOn)}` : null,
+                ],
+                " — ",
+              )}
+            />
+            <Field
               label="Origin"
               value={join([resident.originName, day(resident.originDate)], " — ")}
             />
