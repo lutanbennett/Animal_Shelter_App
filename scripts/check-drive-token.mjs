@@ -7,6 +7,10 @@
 // (/admin, src/app/admin/DriveStatus.tsx). This one is for the local env
 // files, and for a freshly minted token before it is set as a secret.
 //
+// Also prints (informational, never a failure) the OAuth client's Cloud
+// project number and the Drive account the token acts as: the two facts
+// docs/google-cloud-inventory.md is built on, checkable rather than recalled.
+//
 // Read-only: nothing is created in Drive. Plain fetch, like
 // src/lib/google/drive.ts, rather than googleapis.
 //
@@ -57,6 +61,22 @@ async function main() {
     return 1;
   }
   console.log("OK: refresh token mints an access token.");
+
+  // Which project and account this token belongs to, so "which client is
+  // this?" is answered by the token, not by memory. A client ID starts with
+  // its Cloud project NUMBER (not the project id; the console shows both on
+  // the project dashboard). The Drive account is whoever the token acts as.
+  const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
+  console.log(`INFO: OAuth client ${clientId.slice(0, 12)}…, Cloud project number ${clientId.split("-")[0]}.`);
+  const aboutRes = await fetch("https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)", {
+    headers: { Authorization: `Bearer ${token.access_token}` },
+  });
+  const about = await aboutRes.json().catch(() => ({}));
+  console.log(
+    aboutRes.ok && about.user
+      ? `INFO: Drive account this token acts as: ${about.user.emailAddress}.`
+      : `INFO: could not read the Drive account (${aboutRes.status}).`,
+  );
 
   const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
   const rootRes = await fetch(
