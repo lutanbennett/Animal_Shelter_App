@@ -40,8 +40,8 @@ export function AddDoctorForm({ vetId }: { vetId: string }) {
         {pending ? t.common.creating : d.addForm.addButton}
       </button>
       <p className="w-full text-xs text-muted">{d.addForm.hint}</p>
-      {state && "error" in state && <p className="w-full text-sm text-danger">{state.error}</p>}
-      {state && "success" in state && (
+      {state && !state.ok && <p className="w-full text-sm text-danger">{state.error}</p>}
+      {state?.ok && (
         <p className="w-full text-sm text-success">{state.success}</p>
       )}
     </form>

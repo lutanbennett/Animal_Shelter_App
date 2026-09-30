@@ -102,8 +102,8 @@ export function CreateDietTypeForm() {
         </button>
       </div>
 
-      {state && "error" in state && <p className="text-sm text-danger">{state.error}</p>}
-      {state && "success" in state && <p className="text-sm text-success">{state.success}</p>}
+      {state && !state.ok && <p className="text-sm text-danger">{state.error}</p>}
+      {state?.ok && <p className="text-sm text-success">{state.success}</p>}
     </form>
   );
 }

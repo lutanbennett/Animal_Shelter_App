@@ -1,17 +1,17 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { assertManagementRole } from "@/lib/auth/require-management";
+import { runAction, type ActionResult } from "@/lib/action-result";
+import { hasManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { DOSE_UNITS, type DoseUnit } from "@/lib/i18n/enum-labels";
 import { parseBahtAmount } from "@/lib/format";
 import { parseLeadDays, parseStockCount } from "@/lib/management/stock";
 
-export type MedicationFormState =
-  | { error: string }
-  | { success: string }
-  | undefined;
+const refuse = (error: string) => ({ ok: false as const, error });
+
+export type MedicationFormState = ActionResult<{ success: string }> | undefined;
 
 export type MedicationFields = {
   name: string;
@@ -57,29 +57,30 @@ export async function createMedication(
   _state: MedicationFormState,
   formData: FormData,
 ): Promise<MedicationFormState> {
-  await assertManagementRole();
   const { t } = await getT();
+  return runAction("medications.createMedication", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const name = optional(formData.get("name"));
+    if (!name) return refuse(t.management.medications.errors.nameRequired);
+    const doseUnit = optional(formData.get("doseUnit"));
+    if (!isDoseUnit(doseUnit)) {
+      return refuse(t.management.medications.errors.unitInvalid);
+    }
 
-  const name = optional(formData.get("name"));
-  if (!name) return { error: t.management.medications.errors.nameRequired };
-  const doseUnit = optional(formData.get("doseUnit"));
-  if (!isDoseUnit(doseUnit)) {
-    return { error: t.management.medications.errors.unitInvalid };
-  }
+    // Optional: a medication can be added before anyone knows the price.
+    const cost = parseBahtAmount(formData.get("costPerUnit") as string | null);
+    if (!cost.ok) return refuse(t.management.medications.errors.costInvalid);
 
-  // Optional: a medication can be added before anyone knows the price.
-  const cost = parseBahtAmount(formData.get("costPerUnit") as string | null);
-  if (!cost.ok) return { error: t.management.medications.errors.costInvalid };
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("medication")
+      .insert({ name, dose_unit: doseUnit, cost_per_unit: cost.value });
 
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("medication")
-    .insert({ name, dose_unit: doseUnit, cost_per_unit: cost.value });
+    if (error) return refuse(error.message);
 
-  if (error) return { error: error.message };
-
-  revalidateMedicationPages();
-  return { success: t.management.medications.createdMedication(name) };
+    revalidateMedicationPages();
+    return { ok: true, success: t.management.medications.createdMedication(name) };
+  });
 }
 
 /**
@@ -87,38 +88,40 @@ export async function createMedication(
  * prescription written against this medication (the unit lives on the
  * product, 0027), so the table asks for confirmation first when any exist.
  */
-export async function updateMedication(id: string, fields: MedicationFields) {
-  await assertManagementRole();
+export async function updateMedication(id: string, fields: MedicationFields): Promise<ActionResult> {
   const { t } = await getT();
+  return runAction("medications.updateMedication", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const name = optional(fields.name);
+    if (!name) return refuse(t.management.medications.errors.nameRequired);
+    const doseUnit = optional(fields.doseUnit);
+    if (!isDoseUnit(doseUnit)) {
+      return refuse(t.management.medications.errors.unitInvalid);
+    }
+    // Re-checked here, not only in the table: null clears the price back to
+    // "not priced yet", but a bad number must not become one.
+    const cost = parseBahtAmount(fields.costPerUnit?.toString() ?? null);
+    if (!cost.ok) return refuse(t.management.medications.errors.costInvalid);
+    const leadDays = parseLeadDays(fields.reorderLeadDays);
+    if (!leadDays.ok) return refuse(t.management.stock.errors.leadDaysInvalid);
 
-  const name = optional(fields.name);
-  if (!name) throw new Error(t.management.medications.errors.nameRequired);
-  const doseUnit = optional(fields.doseUnit);
-  if (!isDoseUnit(doseUnit)) {
-    throw new Error(t.management.medications.errors.unitInvalid);
-  }
-  // Re-checked here, not only in the table: null clears the price back to
-  // "not priced yet", but a bad number must not become one.
-  const cost = parseBahtAmount(fields.costPerUnit?.toString() ?? null);
-  if (!cost.ok) throw new Error(t.management.medications.errors.costInvalid);
-  const leadDays = parseLeadDays(fields.reorderLeadDays);
-  if (!leadDays.ok) throw new Error(t.management.stock.errors.leadDaysInvalid);
+    // stock_on_hand is deliberately not in this write: naming it restamps
+    // stock_counted_at (0083), and a rename is not a stocktake.
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("medication")
+      .update({
+        name,
+        dose_unit: doseUnit,
+        cost_per_unit: cost.value,
+        reorder_lead_days: leadDays.value,
+      })
+      .eq("id", id);
 
-  // stock_on_hand is deliberately not in this write: naming it restamps
-  // stock_counted_at (0083), and a rename is not a stocktake.
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("medication")
-    .update({
-      name,
-      dose_unit: doseUnit,
-      cost_per_unit: cost.value,
-      reorder_lead_days: leadDays.value,
-    })
-    .eq("id", id);
-
-  if (error) throw new Error(error.message);
-  revalidateMedicationPages();
+    if (error) return refuse(error.message);
+    revalidateMedicationPages();
+    return { ok: true };
+  });
 }
 
 /**
@@ -126,43 +129,47 @@ export async function updateMedication(id: string, fields: MedicationFields) {
  * the count as taken now — re-saving the same figure is a count that
  * confirmed it (0083). Blank clears it back to "not counted".
  */
-export async function updateMedicationStock(id: string, count: string) {
-  await assertManagementRole();
+export async function updateMedicationStock(id: string, count: string): Promise<ActionResult> {
   const { t } = await getT();
+  return runAction("medications.updateMedicationStock", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const parsed = parseStockCount(count);
+    if (!parsed.ok) return refuse(t.management.stock.errors.countInvalid);
 
-  const parsed = parseStockCount(count);
-  if (!parsed.ok) throw new Error(t.management.stock.errors.countInvalid);
+    const supabase = await createClient();
+    // One way in (0112): the function sets the figure and writes the history
+    // row, marked as a correction so usage maths does not treat it as a count.
+    const { error } = await supabase.rpc("record_stock_correction", {
+      p_kind: "medication",
+      p_id: id,
+      p_count: parsed.value,
+    });
 
-  const supabase = await createClient();
-  // One way in (0112): the function sets the figure and writes the history
-  // row, marked as a correction so usage maths does not treat it as a count.
-  const { error } = await supabase.rpc("record_stock_correction", {
-    p_kind: "medication",
-    p_id: id,
-    p_count: parsed.value,
+    if (error) return refuse(error.message);
+    revalidatePath("/management/medications");
+    return { ok: true };
   });
-
-  if (error) throw new Error(error.message);
-  revalidatePath("/management/medications");
 }
 
-export async function deleteMedication(id: string) {
-  await assertManagementRole();
+export async function deleteMedication(id: string): Promise<ActionResult> {
   const { t } = await getT();
+  return runAction("medications.deleteMedication", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    // prescriptions.medication_id has no cascade: a medication that has ever
+    // been prescribed is part of a resident's medical record. Say so instead
+    // of surfacing the foreign-key error.
+    const count = await countPrescriptions(id);
+    if (count > 0) {
+      return refuse(t.management.medications.errors.hasPrescriptions(count));
+    }
 
-  // prescriptions.medication_id has no cascade: a medication that has ever
-  // been prescribed is part of a resident's medical record. Say so instead
-  // of surfacing the foreign-key error.
-  const count = await countPrescriptions(id);
-  if (count > 0) {
-    throw new Error(t.management.medications.errors.hasPrescriptions(count));
-  }
+    const supabase = await createClient();
+    const { error } = await supabase.from("medication").delete().eq("id", id);
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("medication").delete().eq("id", id);
-
-  if (error) throw new Error(error.message);
-  revalidateMedicationPages();
+    if (error) return refuse(error.message);
+    revalidateMedicationPages();
+    return { ok: true };
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -175,33 +182,38 @@ export async function deleteMedication(id: string) {
  * must keep their meaning; the function enforces it too. Returns how many
  * prescriptions moved.
  */
-export async function mergeMedication(fromId: string, intoId: string) {
-  await assertManagementRole();
+export async function mergeMedication(
+  fromId: string,
+  intoId: string,
+): Promise<ActionResult<{ count: number }>> {
   const { t } = await getT();
-  if (fromId === intoId) {
-    throw new Error(t.management.medications.errors.mergeSelf);
-  }
+  return runAction("medications.mergeMedication", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (fromId === intoId) {
+      return refuse(t.management.medications.errors.mergeSelf);
+    }
 
-  const supabase = await createClient();
-  const { data: pair, error: pairError } = await supabase
-    .from("medication")
-    .select("id, dose_unit")
-    .in("id", [fromId, intoId])
-    .returns<{ id: string; dose_unit: string }[]>();
-  if (pairError) throw new Error(pairError.message);
-  if (!pair || pair.length !== 2) {
-    throw new Error(t.management.medications.errors.notFound);
-  }
-  if (pair[0].dose_unit !== pair[1].dose_unit) {
-    throw new Error(t.management.medications.errors.mergeUnitMismatch);
-  }
+    const supabase = await createClient();
+    const { data: pair, error: pairError } = await supabase
+      .from("medication")
+      .select("id, dose_unit")
+      .in("id", [fromId, intoId])
+      .returns<{ id: string; dose_unit: string }[]>();
+    if (pairError) return refuse(pairError.message);
+    if (!pair || pair.length !== 2) {
+      return refuse(t.management.medications.errors.notFound);
+    }
+    if (pair[0].dose_unit !== pair[1].dose_unit) {
+      return refuse(t.management.medications.errors.mergeUnitMismatch);
+    }
 
-  const { data, error } = await supabase.rpc("merge_medication", {
-    p_from: fromId,
-    p_into: intoId,
+    const { data, error } = await supabase.rpc("merge_medication", {
+      p_from: fromId,
+      p_into: intoId,
+    });
+    if (error) return refuse(error.message);
+
+    revalidateMedicationPages();
+    return { ok: true, count: (data as number | null) ?? 0 };
   });
-  if (error) throw new Error(error.message);
-
-  revalidateMedicationPages();
-  return (data as number | null) ?? 0;
 }

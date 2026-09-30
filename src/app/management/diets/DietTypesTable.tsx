@@ -93,10 +93,6 @@ function DietTypeRowItem({
     setCounting(false);
   }
 
-  function fail(err: unknown, fallback: string) {
-    setMessage({ type: "error", text: err instanceof Error ? err.message : fallback });
-  }
-
   function handleSave() {
     if (!parseLeadDays(fields.reorderLeadDays).ok) {
       setMessage({ type: "error", text: t.management.stock.errors.leadDaysInvalid });
@@ -104,13 +100,13 @@ function DietTypeRowItem({
     }
     setMessage(null);
     startTransition(async () => {
-      try {
-        await updateDietType(dietType.id, fields);
-        setEditing(false);
-        setMessage({ type: "success", text: t.common.saved });
-      } catch (err) {
-        fail(err, t.common.failedToSave);
+      const result = await updateDietType(dietType.id, fields);
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
+        return;
       }
+      setEditing(false);
+      setMessage({ type: "success", text: t.common.saved });
     });
   }
 
@@ -129,13 +125,13 @@ function DietTypeRowItem({
     }
     setMessage(null);
     startTransition(async () => {
-      try {
-        await updateDietTypeStock(dietType.id, count);
-        setCounting(false);
-        setMessage({ type: "success", text: t.common.saved });
-      } catch (err) {
-        fail(err, t.common.failedToSave);
+      const result = await updateDietTypeStock(dietType.id, count);
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
+        return;
       }
+      setCounting(false);
+      setMessage({ type: "success", text: t.common.saved });
     });
   }
 
@@ -143,12 +139,12 @@ function DietTypeRowItem({
     if (!window.confirm(m.standard.confirm(dietType.name, standardName))) return;
     setMessage(null);
     startTransition(async () => {
-      try {
-        await setStandardDietType(dietType.id);
-        setMessage({ type: "success", text: t.common.saved });
-      } catch (err) {
-        fail(err, t.common.failedToSave);
+      const result = await setStandardDietType(dietType.id);
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
+        return;
       }
+      setMessage({ type: "success", text: t.common.saved });
     });
   }
 
@@ -156,11 +152,8 @@ function DietTypeRowItem({
     if (!window.confirm(m.deleteConfirm(dietType.name))) return;
     setMessage(null);
     startTransition(async () => {
-      try {
-        await deleteDietType(dietType.id);
-      } catch (err) {
-        fail(err, t.common.failedToDelete);
-      }
+      const result = await deleteDietType(dietType.id);
+      if (!result.ok) setMessage({ type: "error", text: result.error });
     });
   }
 
