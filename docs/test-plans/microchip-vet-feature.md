@@ -31,7 +31,7 @@ Filled from `docs/test-plan-template.md`.
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: run 36699244932 on `6c7de95` — `check` pass (1m53s), `migration-numbers` pass, `test-plan` pass
 
 ## 3. Schema and data
 
@@ -158,7 +158,7 @@ Manual verification by: pending: vet-role view, management view and a regenerate
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above (both fixed in `3669739`)
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [ ] Checklist pasted into the PR — n/a: the PR description links the plan, which lives on the branch
 - [ ] Handed to the production release manager — n/a: not yet — after manual verification
 
 Result: pass
