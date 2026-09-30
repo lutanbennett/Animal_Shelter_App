@@ -1,6 +1,6 @@
 # Google Cloud: which project holds what, and how to consolidate it
 
-Written 2026-09-30 by the `google-cloud-one-account` stream. Companion to the
+Written 2026-09-30 by the `google-cloud-one-account` stream. Scope narrowed by Lutan on 2026-09-30 to **Test and UAT** (production is separate and later). Companion to the
 decision record `docs/decisions/2026-09-30-google-cloud-one-account.md` and the
 backlog item "Put the Google Cloud setup under one account".
 
@@ -100,110 +100,103 @@ file: compare the number with the console's project dashboard and the email with
 the tables above. It cannot tell you the project *id*, the owning account or the
 consent-screen state; those need the console.
 
-## 2. Recommendation
+## 2. Decision (Lutan, 2026-09-30)
 
-Reasoning is in the decision record. In short:
+**Scope: Test and UAT only. Production is out of scope** and is dealt with
+separately when `lannacareforanimals.org` is available (the cutover and "Give
+production its own Drive tree" items). Test and UAT both stay on `lannacare.org`
+hosts (`test.lannacare.org`, `lannacare.org`).
 
-1. **Owner: the shelter's own account, `lannacareforanimals@gmail.com`**, for the
-   Cloud project and the Drive files. Nothing in the estate should depend on a
-   developer's personal Google account.
-2. **One new project there holding all three clients** (Drive desktop client, dev
-   sign-in web client, production sign-in web client), consent screen published
-   on day one. Retire `LCA App` and `Lanna Care - Dev` afterwards.
-3. **Order: do this *with* "Give production its own Drive tree", not before or
-   after.** The move creates a new Drive client; that item mints a new refresh
-   token for the shelter account anyway. Minting once, not twice, is the saving.
-4. **Sign-in moves at the domain cutover**, because the cutover already rewrites
-   the client's redirect URIs (new Supabase project, new domain) and the consent
-   screen's domains. Editing that client twice, on two accounts, is the other
-   waste. If the cutover is far off, the Drive half can still go first (steps
-   4-14) and the sign-in clients wait.
-5. **The gate: the account must exist and be under the shelter's control.** It is
-   called "once available" in the backlog; [CONFIRM] whether it exists. If not,
-   nothing below starts. Do not substitute a personal account: moving twice is
-   the cost being avoided.
+**Target: every API token and client for Test and UAT lives in the existing
+project `Lanna Care - Dev` (`lanna-care-dev`), owned by
+`lannaanimalfoundationbwm@gmail.com`.** No new project is needed. The Drive client
+already lives there; the only thing to move is the one sign-in client that sits in
+`LCA App` in Lutan's account. After the move, `LCA App` holds nothing the shelter
+uses and can be retired.
 
-## 3. Runbook (one sitting, once the gate is met)
+What moves, and what does not:
 
-Steps marked **Lutan** are console actions or secrets and are his alone.
-Nothing here needs credentials shared with anyone.
+| Item | Today | After |
+|---|---|---|
+| Drive client (`Lanna Care Drive Access`) | lanna-care-dev | unchanged |
+| Dev/Test sign-in client (`LCA Application`) | lanna-care-dev | unchanged |
+| **UAT sign-in client** (Supabase `dbkodyyxxhtygxcxmfcu`, today's production DB, which the cutover demotes to UAT) | **LCA App, Lutan's account** | **lanna-care-dev, new web client** |
+| Consent screen | two, one per project | lanna-care-dev's only, already published |
+| `LCA App` project | live | idle, then deleted |
+
+Consequence to be aware of: **until the cutover, `lannacare.org` is served by the
+production block against `dbkodyyxxhtygxcxmfcu`**, so moving that database's sign-in
+client moves what the live site's staff use to sign in. Production's *later*
+sign-in client (new Supabase project, `lannacareforanimals.org`) is not part of
+this; when that time comes the shelter account can hold it in a project of its own.
+
+## 3. Runbook (one sitting)
+
+Steps marked **Lutan** are console actions or secrets and are his alone. Nothing
+here needs credentials shared with anyone. Do it when staff are not signing in:
+between steps 5 and 6 nobody can sign in with Google on `lannacare.org`.
 
 **Before starting**
-1. Confirm the gate: sign in as `lannacareforanimals@gmail.com` and open
-   console.cloud.google.com.
-2. Take today's numbers: run `node --env-file=<file> scripts/check-drive-token.mjs`
-   for `.env.local`, `.env.deploy.uat` and `.env.deploy.production`, and write
-   each project number and Drive account into the tables above. That settles
-   every Drive **[CONFIRM]** in three commands.
-3. **Lutan**, one look at each existing project: IAM & Admin, Settings, for the
-   project number; and note anything else living there (other APIs, other
-   clients, a billing account). Do not delete either project yet.
+1. Sign in to the console as `lannaanimalfoundationbwm@gmail.com`, open
+   `lanna-care-dev`, and confirm it is the project in the tables above. Note the
+   project number (should be `1036347359893`).
+2. Run `node --env-file=.env.local scripts/check-drive-token.mjs` (dev), and the same
+   with `.env.deploy.uat` / `.env.deploy.production` if they exist, and write the
+   answers into the Drive table above. This settles the Drive [CONFIRM]s.
+3. **Consent screen check (in `lanna-care-dev`): Audience must say *In production*.**
+   Published 2026-09-25 [recorded], but check, because a project left in Testing
+   expires every refresh token after seven days. Confirm nothing has reverted it.
+4. Consent screen, Branding: **authorised domains** need `lannacare.org` [recorded]
+   **and the UAT Supabase host `dbkodyyxxhtygxcxmfcu.supabase.co`** (add it; not
+   listed today [CONFIRM]). Do not add a logo: a logo forces verification.
 
-**Build the new project** (**Lutan**, signed in as the shelter account)
+**Move the UAT sign-in client**
 
-4. Create a project (suggested name `Lanna Care`). Enable the **Google Drive API**.
-5. **Auth Platform, Branding:** app name `Lanna Care for Animals`; **no logo** (a
-   logo forces verification); homepage and privacy URLs on the live domain;
-   authorised domains for every domain that hosts them (`lannacareforanimals.org`
-   after cutover; keep `lannacare.org` while UAT signs in with Google) and the
-   Supabase hosts.
-6. **Auth Platform, Data access:** `openid`, `email`, `profile` for sign-in, plus
-   whichever Drive scope `scripts/google-oauth-setup.mjs` requests ([CONFIRM] by
-   reading it) for the Drive client.
-7. **Audience, Publish app: **In production**. Do this before minting any token,
-   and check the page says *In production*, not *Testing*.** Left in Testing,
-   every refresh token expires seven days after it is minted and every Drive
-   upload fails; this already happened on 2026-09-25.
-8. Create three clients: **Drive** (Desktop app), **dev sign-in** (Web; redirect
-   URI `https://qxkmhwybjggxvsfxsxbd.supabase.co/auth/v1/callback`) and
-   **production sign-in** (Web; redirect URI
-   `https://<production-ref>.supabase.co/auth/v1/callback`, and origins as the
-   cutover item step 5 lists). Keep the secrets where the current ones live,
-   never in chat or the repo.
+5. **Lutan**, in `lanna-care-dev`, Clients, Create client: type **Web application**,
+   name e.g. `LCA UAT sign-in`. Authorised redirect URI:
+   `https://dbkodyyxxhtygxcxmfcu.supabase.co/auth/v1/callback`. (Origins are not
+   needed for the Supabase flow. Copy any that the old client in `LCA App` lists,
+   which you can read side by side.) Note the new client ID and secret. Do not use
+   the existing `LCA Application` client: it is dev's, and sharing one secret
+   between dev and UAT means rotating it breaks both. [Option, not recommended:
+   reuse it by adding the UAT redirect URI.]
+6. **Lutan**, Supabase project `dbkodyyxxhtygxcxmfcu`, Authentication, Providers,
+   Google: replace the client ID and secret with the new ones. Save.
+7. Put the new ID and secret in `.env.deploy.production` as `GOOGLE_SIGNIN_*`
+   (kept there only for re-applying to Supabase; the app does not read them).
+8. Sign in with Google on `https://lannacare.org` as an admin, in a private window
+   so an old session does not hide a failure. Check the consent screen says
+   "Lanna Care for Animals" rather than the Supabase host. **If it shows the host,
+   brand verification did not carry over:** it depended on `lannacare.org` being
+   verified in Search Console under Lutan's account. Add the lanna account as a
+   verified owner of that Domain property (the TXT record on the apex in
+   Cloudflare DNS stays; **do not delete it**) or re-verify from the lanna account.
+9. Repeat on `https://test.lannacare.org` to prove dev sign-in still works (it
+   should be unchanged; this catches a consent-screen mistake from step 4).
 
-**Drive** (joint with "Give production its own Drive tree")
-
-9. Mint a refresh token *for the shelter account* against the new Drive client:
-   `node --env-file=<file> scripts/google-oauth-setup.mjs` (**Lutan** approves
-   the consent in the browser). Immediately run `check-drive-token.mjs` on it: it
-   should print the shelter's email and the new project number.
-10. Copy the tree into that account and record the new
-    `GOOGLE_DRIVE_ROOT_FOLDER_ID`, as that backlog item describes. Rehearse the
-    import against dev first (its note about renamed resident folders applies).
-
-**Re-point checklist** (**Lutan** for every secret)
-
-11. `.env.deploy.production`: all four `GOOGLE_*` Drive variables.
-12. `.env.deploy.uat`, `.env.local`, `.dev.vars` stay on the old client and tree by
-    the 2026-09-23 decision, so they are unchanged until the old project is
-    retired. **Decide first** whether UAT/dev/test also move to a client in the
-    new project (their tree can stay in the lanna account; only the token is
-    re-minted against the new client). If yes, update those three files; only
-    then can `Lanna Care - Dev` be retired. **This is the one open design choice
-    in the runbook.**
-13. `node scripts/deploy.mjs --env production --secrets`, plus `--env test` and
-    `--env uat` if step 12 said yes. Confirm Drive shows healthy on each site.
-14. Pi env files, when the Pi exists (`scripts/pi/write-env.mjs`): the same four.
-15. Supabase, Authentication, Providers, Google: paste the new sign-in client ID
-    and secret into **production**, and the dev one into **dev**. Site URL and
-    redirect URLs stay as they are.
-16. Sign in with Google on each site to prove it end to end, and run
-    `node scripts/backup.mjs --env production` once so the `Backups` folder exists
-    in the new tree.
+**Drive: nothing to move.** UAT, dev and test already use the Lanna Care Drive
+Access client under the lanna account [repo: README]. Step 2 confirms it, and
+`Settings` shows Drive healthy on both sites.
 
 **Close-out**
 
-17. Leave `LCA App` and `Lanna Care - Dev` alone for a week with sign-in and Drive
-    working, then delete them (Google keeps a deleted project recoverable for 30
-    days).
-18. Update the inventory, tick the backlog item, and, if the 90-day expiry turned
-    up along the way, tick that item too.
+10. Leave `LCA App` alone for a week with sign-in working on both sites, then delete
+    it (Google keeps a deleted project recoverable for 30 days). Also remove
+    `lannacare.org`'s Search Console ownership from Lutan's account only after the
+    lanna account is added there (step 8).
+11. **Look for the 90-day expiry while in `lanna-care-dev`** (Auth Platform settings)
+    and, if convenient, Supabase Authentication, Sessions and Account, Access Tokens,
+    and Cloudflare, API Tokens. If found, tick that backlog item.
+12. Update the inventory tables, and tick the backlog item.
+
+**Later, separately (production).** New Supabase project and
+`lannacareforanimals.org`: a sign-in client and a Drive client on
+`lannacareforanimals@gmail.com`, per the cutover and Drive-tree items. Nothing above
+blocks or is undone by that.
 
 ## 4. What this document does not know
 
-- Whether `lannacareforanimals@gmail.com` exists, who holds its recovery options,
-  and whether a second person should be an owner of the new project (a sole owner
-  is the same single point of failure this item exists to remove).
+- Whether the UAT Supabase host is already an authorised domain on `lanna-care-dev`'s consent screen, and whether brand verification (Search Console) covers that project.
 - Whether either project holds anything beyond what is listed.
 - What `.env.deploy.uat` and `.env.deploy.production` hold for the Drive client.
 - The name and ID of the production sign-in client.

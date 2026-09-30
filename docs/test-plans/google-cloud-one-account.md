@@ -19,7 +19,7 @@ Filled from `docs/test-plan-template.md`.
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence, and it matches what the backlog item asked for: an inventory of the Google Cloud projects, clients and consuming variables, a consolidation runbook, a decision record, and a project/account readout added to `check-drive-token.mjs`
+- [x] Change is described in one sentence, and it matches what the backlog item asked for: an inventory of the Google Cloud projects (scope narrowed to Test and UAT on lannaanimalfoundationbwm), clients and consuming variables, a consolidation runbook, a decision record, and a project/account readout added to `check-drive-token.mjs`
 - [x] Files/areas touched listed (routes, `worker/`, `supabase/migrations/`, shared libs): `docs/google-cloud-inventory.md`, `docs/decisions/2026-09-30-google-cloud-one-account.md`, `docs/backlog.md` (progress note), `scripts/check-drive-token.mjs`. No `src/`, `worker/` or migration
 - [x] Roles affected identified: admin / staff / vet / volunteer / resident / signed-out public: none; nothing a signed-in or public user reaches
 - [x] Anything explicitly **out of scope** written down, so the release manager is not surprised: no Google console was touched and no client, consent screen, Supabase provider or Worker secret was changed; the account moves are Lutan's and are the whole of what remains
