@@ -5,6 +5,7 @@ import { canManage } from "@/lib/auth/require-management";
 import { getTagOrigin } from "@/lib/tags/origin";
 import { loadTranslations } from "@/lib/translations/queries";
 import { ADOPTION_UPDATE_ROLES } from "@/lib/adoption-updates/options";
+import { MICROCHIP_WRITE_ROLES } from "@/lib/residents/microchip";
 import {
   ResidentHub,
   type BloodTestRow,
@@ -209,6 +210,7 @@ export default async function ResidentPage(
       canRecordDeath={DECEASED_ROLES.has(roleResult.data ?? "")}
       canUndoDeath={UNDO_DECEASED_ROLES.has(roleResult.data ?? "")}
       canManageTranslations={canManage(roleResult.data)}
+      canSetMicrochip={MICROCHIP_WRITE_ROLES.has(roleResult.data ?? "")}
       translations={Array.from(translations.values())}
       currentPlacementSince={currentPlacementResult.data?.[0]?.start_date ?? null}
       carerName={carerResult?.data?.[0]?.name ?? null}

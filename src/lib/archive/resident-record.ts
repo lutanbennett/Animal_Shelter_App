@@ -126,6 +126,9 @@ export type ResidentArchiveRecord = {
     estimatedAgeYears: number | null;
     ageEstimatedOn: string | null;
     intakeDate: string | null;
+    /** Staff-only (0113); the archive is an internal record, never public. */
+    microchipNumber: string | null;
+    microchipImplantedOn: string | null;
     bio: string | null;
     temperamentNotes: string | null;
     pastStoryNotes: string | null;
@@ -233,6 +236,8 @@ type ResidentRow = {
   estimated_age_years: number | null;
   age_estimated_on: string | null;
   intake_date: string | null;
+  microchip_number: string | null;
+  microchip_implanted_on: string | null;
   bio: string | null;
   temperament_notes: string | null;
   past_story_notes: string | null;
@@ -365,7 +370,7 @@ export async function loadResidentArchiveRecord(
     supabase
       .from("residents")
       .select(
-        "id, name, thai_name, other_names, resident_code, species, size, breed, sex, estimated_age_years, age_estimated_on, intake_date, bio, temperament_notes, past_story_notes, behaviour_notes, profile_photo_drive_file_id, group_origins(name, date)",
+        "id, name, thai_name, other_names, resident_code, species, size, breed, sex, estimated_age_years, age_estimated_on, intake_date, microchip_number, microchip_implanted_on, bio, temperament_notes, past_story_notes, behaviour_notes, profile_photo_drive_file_id, group_origins(name, date)",
       )
       .eq("id", residentId)
       .limit(1)
@@ -491,6 +496,8 @@ export async function loadResidentArchiveRecord(
       estimatedAgeYears: residentRow.estimated_age_years,
       ageEstimatedOn: residentRow.age_estimated_on,
       intakeDate: residentRow.intake_date,
+      microchipNumber: residentRow.microchip_number,
+      microchipImplantedOn: residentRow.microchip_implanted_on,
       bio: residentRow.bio,
       temperamentNotes: residentRow.temperament_notes,
       pastStoryNotes: residentRow.past_story_notes,

@@ -13,6 +13,10 @@ import {
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate, todayIso } from "@/lib/format";
 import { visitDate } from "@/lib/vets/linkable";
+import { MicrochipForm } from "@/components/MicrochipForm";
+
+/** The 0031 seed type is "Microchipping"; a shelter-added "Microchip implant" counts too. */
+const isMicrochipping = (typeName: string) => /microchip/i.test(typeName);
 
 export type ProcedureTypeOption = { id: string; name: string };
 export type VetAppointmentOption = {
@@ -33,12 +37,18 @@ const inputClass =
 export function ProcedureForm({
   residentId,
   residentDisplayName,
+  microchip,
   procedureTypes,
   vetAppointments,
   preselectedVetAppointmentId,
 }: {
   residentId: string;
   residentDisplayName: string;
+  /**
+   * The current chip, when the person may set it (admin, staff, vet). After a
+   * Microchipping is saved they are asked for the number before leaving.
+   */
+  microchip: { number: string | null; implantedOn: string | null } | null;
   procedureTypes: ProcedureTypeOption[];
   vetAppointments: VetAppointmentOption[];
   preselectedVetAppointmentId: string | null;
@@ -71,6 +81,14 @@ export function ProcedureForm({
   });
   const uploads = useDeferredUploads();
   const tabHref = `/residents/${residentId}/procedures`;
+  const [askForChip, setAskForChip] = useState(false);
+
+  // Where a save ends: the Procedures tab, or first the chip prompt when a
+  // Microchipping was just logged by someone who may record the number.
+  function finish(typeName: string) {
+    if (microchip && isMicrochipping(typeName)) setAskForChip(true);
+    else router.push(tabHref);
+  }
 
   function handleVetAppointmentChange(id: string) {
     if (dateTouched || !id) return;
@@ -78,12 +96,12 @@ export function ProcedureForm({
     if (match) setDate(visitDate(match));
   }
 
-  async function uploadPending(procedureId: string, items?: PendingFile[]) {
+  async function uploadPending(procedureId: string, typeName: string, items?: PendingFile[]) {
     const { failed } = await uploads.upload(
       `/api/procedures/${procedureId}/attachments`,
       items,
     );
-    if (!failed) router.push(tabHref);
+    if (!failed) finish(typeName);
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -102,11 +120,35 @@ export function ProcedureForm({
         date: result.date,
       });
       if (uploads.queued.length === 0) {
-        router.push(tabHref);
+        finish(result.typeName);
         return;
       }
-      await uploadPending(result.procedureId);
+      await uploadPending(result.procedureId, result.typeName);
     });
+  }
+
+  if (saved && askForChip && microchip) {
+    const c = t.residents.hub.chipForm;
+    return (
+      <section className="flex max-w-2xl flex-col gap-4 rounded-lg border border-border bg-surface p-5">
+        <p className="text-sm text-success">
+          {t.procedures.savedHeading(saved.typeName, residentDisplayName, formatDate(saved.date, locale))}
+        </p>
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">{c.promptHeading}</h2>
+          <p className="text-sm text-muted">{c.promptBody(residentDisplayName)}</p>
+        </div>
+        <MicrochipForm
+          residentId={residentId}
+          number={microchip.number}
+          // The chip went in on the day of the procedure, unless one was
+          // already on file with its own date.
+          implantedOn={microchip.number ? microchip.implantedOn : saved.date}
+          onDone={() => router.push(tabHref)}
+          cancelLabel={c.promptSkip}
+        />
+      </section>
+    );
   }
 
   if (saved && uploads.files.length > 0) {
@@ -118,7 +160,7 @@ export function ProcedureForm({
           formatDate(saved.date, locale),
         )}
         uploads={uploads}
-        onRetry={(item) => void uploadPending(saved.procedureId, [item])}
+        onRetry={(item) => void uploadPending(saved.procedureId, saved.typeName, [item])}
         continueHref={tabHref}
         continueLabel={t.procedures.done}
       />

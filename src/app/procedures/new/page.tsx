@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { MICROCHIP_WRITE_ROLES } from "@/lib/residents/microchip";
 import {
   ProcedureForm,
   type ProcedureTypeOption,
@@ -38,14 +39,22 @@ export default async function NewProcedurePage(props: PageProps<"/procedures/new
 
   const supabase = await createClient();
 
-  const [residentResult, typesResult, vetAppointmentsResult, stateResult] =
+  const [residentResult, typesResult, vetAppointmentsResult, stateResult, roleResult] =
     await Promise.all([
       supabase
         .from("residents")
-        .select("id, name, thai_name")
+        .select("id, name, thai_name, microchip_number, microchip_implanted_on")
         .eq("id", residentId)
         .limit(1)
-        .returns<{ id: string; name: string; thai_name: string | null }[]>(),
+        .returns<
+          {
+            id: string;
+            name: string;
+            thai_name: string | null;
+            microchip_number: string | null;
+            microchip_implanted_on: string | null;
+          }[]
+        >(),
       supabase
         .from("procedure_types")
         .select("id, name")
@@ -63,6 +72,8 @@ export default async function NewProcedurePage(props: PageProps<"/procedures/new
         .eq("resident_id", residentId)
         .limit(1)
         .returns<{ is_deceased: boolean }[]>(),
+      // Who is offered "Record the chip number?" after a Microchipping.
+      supabase.rpc("current_user_role"),
     ]);
 
   const resident = residentResult.data?.[0];
@@ -130,6 +141,11 @@ export default async function NewProcedurePage(props: PageProps<"/procedures/new
       <ProcedureForm
         residentId={residentId}
         residentDisplayName={displayName}
+        microchip={
+          MICROCHIP_WRITE_ROLES.has(roleResult.data ?? "")
+            ? { number: resident.microchip_number, implantedOn: resident.microchip_implanted_on }
+            : null
+        }
         procedureTypes={typesResult.data ?? []}
         vetAppointments={vetAppointmentsResult.data ?? []}
         preselectedVetAppointmentId={
