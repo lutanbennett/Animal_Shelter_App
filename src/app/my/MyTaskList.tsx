@@ -129,7 +129,7 @@ export function MyTaskList({
     startTransition(async () => {
       if (outcome) setOptimistic({ key: task.key, hidden: true });
       const result = await recordRecurringJob(jobId, occursOn, outcome, note);
-      if (result.error) {
+      if (!result.ok) {
         setError(result.error);
         setUndoable(null);
       }
