@@ -2765,7 +2765,7 @@ const th: Dictionary = {
     list: {
       pageTitle: "สัตว์ในความดูแล",
       search: "ค้นหา",
-      searchPlaceholder: "ชื่อ ชื่อไทย หรือชื่ออื่น",
+      searchPlaceholder: "ชื่อ ชื่อไทย ชื่ออื่น หรือรหัส",
       scanChip: "สแกนไมโครชิป",
       scanChipPlaceholder: "สแกนหรือพิมพ์ 15 หลัก",
       chipNotFound: (digits: string) => `ไม่มีสัตว์ตัวใดใช้ไมโครชิป ${digits}`,
@@ -2780,6 +2780,10 @@ const th: Dictionary = {
       deceasedMatches: (n: number) =>
         `พบสัตว์ที่เสียชีวิตแล้วตรงกับคำค้น ${n} ตัว`,
       deceasedMatchesShow: "แสดง",
+      adoptedMatches: (n: number) =>
+        `พบสัตว์ที่มีผู้รับเลี้ยงแล้วตรงกับคำค้น ${n} ตัว`,
+      adoptedFilter: "มีผู้รับเลี้ยงแล้ว",
+      adoptedOnly: "แสดงเฉพาะสัตว์ที่มีผู้รับเลี้ยงแล้ว",
       showAllDeceased: "แสดงทั้งหมด",
       noMicrochip: "ไม่มีไมโครชิป",
       hideDeceased: "ซ่อนที่เสียชีวิตแล้ว",
