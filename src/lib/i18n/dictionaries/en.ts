@@ -2834,7 +2834,7 @@ const en = {
     list: {
       pageTitle: "Residents",
       search: "Search",
-      searchPlaceholder: "Name, Thai name, or other name",
+      searchPlaceholder: "Name, Thai name, other name or ID",
       scanChip: "Scan a chip",
       scanChipPlaceholder: "Scan or type 15 digits",
       chipNotFound: (digits: string) => `No resident has microchip ${digits}.`,
@@ -2858,6 +2858,10 @@ const en = {
           ? "1 deceased resident matches"
           : `${n} deceased residents match`,
       deceasedMatchesShow: "show",
+      adoptedMatches: (n: number) =>
+        n === 1 ? "1 adopted resident matches" : `${n} adopted residents match`,
+      adoptedFilter: "Adopted",
+      adoptedOnly: "Showing adopted residents only",
       showAllDeceased: "Show all",
       noMicrochip: "No microchip",
       hideDeceased: "Hide deceased",

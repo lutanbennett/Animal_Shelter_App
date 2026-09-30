@@ -308,7 +308,7 @@ const manual: Manual = {
           screenshot: {
             src: "/manual/residents-list.png",
             alt: "The residents list with search, zone and enclosure filters",
-            caption: "The residents list on a computer. Phones show just the ID and name — staff and volunteers can browse by enclosure instead (see Enclosures).",
+            caption: "The residents list on a computer. Phones show just the name — staff and volunteers can browse by enclosure instead (see Enclosures).",
           },
           callouts: [
             {
