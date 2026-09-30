@@ -337,7 +337,7 @@ const manual: Manual = {
             "The chip shows under the resident's name on their hub, and at the top of their Vet appointments and Procedures pages and a visit's Edit page, so it is in front of a vet wherever they work. It is also in the summary PDF and offline index filed when a resident dies.",
             "To record or correct a chip, tap Record chip (or Correct, beside a number already recorded), scan or type the number, add the date it was implanted if you know it, and tap Save chip. Admins, staff and vets can do this; a vet can for any resident their clinic treats. Staff can also enter it under Edit resident or on the Health step of intake.",
             "After you log a Microchipping procedure, you are asked Record the chip number? straight away, with the implant date set to the procedure's date. Scan the chip and tap Save chip, or tap Not now to do it later from the hub.",
-            "To remove a number recorded in error, open the form, clear the number and tap Save chip.",
+            "To remove a number recorded in error, open the form, clear the number and tap Save chip. The implant date is removed with it.",
           ],
           callouts: [
             {

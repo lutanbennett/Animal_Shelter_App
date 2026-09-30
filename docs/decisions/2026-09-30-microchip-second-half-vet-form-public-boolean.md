@@ -16,7 +16,13 @@ Closes the microchip work begun in
   overwrites the date with what it is given. `readMicrochip()` removes every
   non-digit and returns an explicit `null` date for a blank field, so a number
   correction with the date field cleared really clears it, and one with the
-  date left in place re-sends it. The manual says so in a callout.
+  date left in place re-sends it. The manual says so in a callout. Clearing
+  the number sends a null date too, whatever the date field holds: a date left
+  on a resident with no chip describes nothing and would come back prefilled
+  the next time a chip is recorded.
+- **The number field is focused and its contents selected** when the form
+  opens: a reader types into whatever has focus, and a correction should scan
+  over the old number, not onto its end.
 - **Each refusal has its own words**, keyed on the SQLSTATE PostgREST
   returns: `23001` restrict_violation (deceased), `42501`
   insufficient_privilege (a vet out of scope), `23514` check_violation

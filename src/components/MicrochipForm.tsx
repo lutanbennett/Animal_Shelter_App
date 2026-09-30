@@ -54,7 +54,7 @@ export function MicrochipForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <MicrochipFields number={number} implantedOn={implantedOn} idPrefix={idPrefix} />
+      <MicrochipFields number={number} implantedOn={implantedOn} idPrefix={idPrefix} autoFocus />
       {number && <p className="text-xs text-muted">{f.clearHint}</p>}
       {error && (
         <p role="alert" className="text-sm text-danger">

@@ -36,7 +36,9 @@ export async function setResidentMicrochip(
     const { error } = await supabase.rpc("set_resident_microchip", {
       p_resident_id: residentId,
       p_number: chip.microchip_number,
-      p_implanted_on: chip.microchip_implanted_on,
+      // Clearing the number removes the chip, date and all: a date left
+      // behind would describe no chip, and come back prefilled next time.
+      p_implanted_on: chip.microchip_number === null ? null : chip.microchip_implanted_on,
     });
     if (error) {
       const refusal = microchipRefusal(error);
