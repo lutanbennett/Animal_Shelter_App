@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-time setup of a Raspberry Pi (Debian 12 "bookworm", 64-bit) as the
+# One-time setup of a Raspberry Pi (Debian 12 "bookworm" or 13 "trixie", 64-bit) as the
 # app's origin behind a Cloudflare Tunnel. docs/pi-hosting.md walks through
 # the parts that happen in the Cloudflare dashboard; this does the box.
 #
@@ -35,7 +35,7 @@ echo "== 2. cloudflared (Cloudflare's apt repo, arm64)"
 if ! command -v cloudflared >/dev/null; then
   sudo mkdir -p --mode=0755 /usr/share/keyrings
   curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
-  echo "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared $(. /etc/os-release && echo "$VERSION_CODENAME") main" \
+  echo "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main" \
     | sudo tee /etc/apt/sources.list.d/cloudflared.list >/dev/null
   sudo apt-get update && sudo apt-get install -y cloudflared
 fi
