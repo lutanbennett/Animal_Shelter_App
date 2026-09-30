@@ -2,11 +2,23 @@
 // Drive. Free-tier Supabase projects have no backups of their own (README
 // "Backups"), so this is production's only safety net.
 //
-//   node scripts/backup.mjs --env production      # dump, upload, prune
+// EVERY backup is encrypted with age public-key encryption before it is
+// uploaded or written anywhere, and there is no plaintext mode. The machine
+// running this holds only the recipient's PUBLIC key (BACKUP_AGE_RECIPIENT or
+// --age-recipient, an age1... string); the private key is in the
+// administrator's password manager and is needed only to restore
+// (scripts/decrypt-backup.mjs, or `age -d`). The dump goes from pg_dump
+// straight into memory and out as ciphertext, so no plaintext file ever
+// exists on disk.
+//
+//   node scripts/backup.mjs --env production      # dump, encrypt, upload, prune
 //   node scripts/backup.mjs                       # the same against dev/test
 //   node scripts/backup.mjs --env production --keep 8
+//   node scripts/backup.mjs --env production --age-recipient age1...
+//       # (BACKUP_AGE_RECIPIENT in the env file does the same; several keys
+//       # may be given, comma-separated, and any one of them can decrypt)
 //   node scripts/backup.mjs --env production --local C:\backups
-//       # write the dump into that folder and skip Drive entirely
+//       # write the encrypted dump into that folder and skip Drive entirely
 //   node scripts/backup.mjs --env production --local-copy ~/backups/lannacare
 //       # upload to Drive AND keep a copy there; the newest --keep copies
 //       # stay and each older one removed is named in the output
@@ -15,11 +27,20 @@
 //   1. `pg_dump -Fc` of the `public` and `auth` schemas — every record the
 //      app owns plus the accounts that can sign in — over the Supabase
 //      session pooler (the direct db.<ref>.supabase.co host is IPv6-only,
-//      which this machine's network is not).
-//   2. Uploads the file as Backups/lannacare-<env>-<timestamp>.dump under
+//      which this machine's network is not). Live sessions and one-time
+//      tokens (auth.refresh_tokens, sessions, mfa_*, one_time_tokens,
+//      flow_state) are left out: restoring them would hand whoever holds a
+//      stolen backup signed-in sessions, and leaving them out costs nothing
+//      on restore. (mfa_* holds the TOTP secrets, so everyone re-enrols their
+//      authenticator app after a restore.) Then encrypts it with age.
+//   2. Uploads the file as Backups/lannacare-<env>-<timestamp>.dump.age under
 //      GOOGLE_DRIVE_ROOT_FOLDER_ID, creating the Backups folder if needed.
+//      The Drive link is deliberately not printed: the output goes to
+//      backup.log, and a log of live links is its own exposure.
 //   3. Moves older dumps for the same environment beyond the newest --keep
 //      (default 12) to the Drive trash, which empties itself after 30 days.
+//      Plaintext .dump files from before encryption are neither counted nor
+//      removed; they are named so they can be deleted by hand.
 //   4. With --local-copy only: removes local copies beyond the newest --keep
 //      from that folder, after the upload is confirmed, printing each one.
 //      The folder is created 0700 and each dump 0600 (no effect on Windows),
@@ -41,11 +62,12 @@
 // result" (scripts/backup-schedule.ps1) is honest.
 
 import { spawnSync } from "node:child_process";
-import { chmodSync, createReadStream, existsSync, mkdirSync, readdirSync, statSync, unlinkSync } from "node:fs";
+import { chmodSync, createReadStream, existsSync, mkdirSync, readdirSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { google } from "googleapis";
+import { ENCRYPTED_SUFFIX, encryptBackup, excludeArgs, parseRecipients } from "./lib/backup-crypto.mjs";
 import { envFile, loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
 
 const MIN_PG_MAJOR = 17;
@@ -68,40 +90,54 @@ if (copyDir) {
 }
 const keepDir = localDir ?? copyDir;
 
+// Fail before touching the database: an unencrypted backup is not an option.
+let recipients;
+try {
+  recipients = parseRecipients(stringArg("--age-recipient") ?? env.BACKUP_AGE_RECIPIENT);
+} catch (e) {
+  fail(
+    `Backups are always encrypted, and ${e.message}\n` +
+      `Set BACKUP_AGE_RECIPIENT in ${envFile(envName)} (or pass --age-recipient) to the administrator's age PUBLIC key. README "Backups" says how it is made.`,
+  );
+}
+
 console.log(`Environment: ${envName}  (Supabase project ${projectRef})`);
 
-// --- 1. pg_dump -----------------------------------------------------------
+// --- 1. pg_dump, then encrypt ---------------------------------------------
 
 const pgDump = findPgDump();
-const dumpName = `lannacare-${envName}-${timestamp()}.dump`;
+const dumpName = `lannacare-${envName}-${timestamp()}${ENCRYPTED_SUFFIX}`;
 const outDir = keepDir ?? join(tmpdir(), "lannacare-backup");
 mkdirSync(outDir, { recursive: true, mode: 0o700 });
 if (copyDir) chmodSync(outDir, 0o700);
 const dumpPath = join(outDir, dumpName);
 
 const { dbUrl, password } = await connectionDetails();
-console.log(`Dumping schemas ${SCHEMAS.join(", ")} with ${pgDump} ...`);
+console.log(`Dumping schemas ${SCHEMAS.join(", ")} with ${pgDump} (session tables excluded) ...`);
+// No --file: the plaintext dump is captured in memory and never written out.
 const dump = spawnSync(
   pgDump,
   [
     "--format=custom",
     "--no-password",
     ...SCHEMAS.flatMap((s) => ["--schema", s]),
-    `--file=${dumpPath}`,
+    ...excludeArgs(),
     `--dbname=${dbUrl}`,
   ],
   {
-    stdio: ["ignore", "inherit", "inherit"],
+    stdio: ["ignore", "pipe", "inherit"],
+    maxBuffer: 2 * 1024 ** 3,
     env: { ...process.env, PGPASSWORD: password, PGSSLMODE: "require" },
   },
 );
-if (dump.status !== 0) {
-  cleanupTemp();
-  fail(`pg_dump exited with status ${dump.status ?? dump.signal}.`);
-}
+if (dump.status !== 0) fail(`pg_dump exited with status ${dump.status ?? dump.signal ?? dump.error?.message}.`);
+if (!dump.stdout.subarray(0, 5).equals(Buffer.from("PGDMP"))) fail("pg_dump output is not a custom-format archive; not encrypting it.");
+
+const encrypted = Buffer.from(await encryptBackup(dump.stdout, recipients));
+writeFileSync(dumpPath, encrypted, { mode: 0o600 });
 if (copyDir) chmodSync(dumpPath, 0o600);
 const size = statSync(dumpPath).size;
-console.log(`Wrote ${dumpName} (${(size / 1024 / 1024).toFixed(2)} MB)`);
+console.log(`Wrote ${dumpName}, encrypted for ${recipients.length} recipient(s) (${(size / 1024 / 1024).toFixed(2)} MB)`);
 
 if (localDir) {
   console.log(`Kept locally in ${localDir}; not uploaded (--local).`);
@@ -115,12 +151,12 @@ const backupsFolderId = await ensureBackupsFolder(drive);
 const uploaded = await drive.files.create({
   requestBody: { name: dumpName, parents: [backupsFolderId] },
   media: { mimeType: "application/octet-stream", body: createReadStream(dumpPath) },
-  fields: "id, name, size, webViewLink",
+  fields: "id, name, size", // no webViewLink: it must never reach backup.log
 });
 if (Number(uploaded.data.size) !== size) {
   fail(`Drive reports ${uploaded.data.size} bytes for ${dumpName}, local file is ${size}. Not pruning.`);
 }
-console.log(`Uploaded to Drive: ${uploaded.data.webViewLink}`);
+console.log(`Uploaded to Drive as ${uploaded.data.name} (link not logged).`);
 cleanupTemp();
 
 // --- 3. Prune --------------------------------------------------------------
@@ -131,28 +167,30 @@ const listed = await drive.files.list({
   fields: "files(id, name)",
   pageSize: 1000,
 });
-const dumps = (listed.data.files ?? [])
-  .filter((f) => f.name.startsWith(prefix) && f.name.endsWith(".dump"))
+const inDrive = (listed.data.files ?? []).filter((f) => f.name.startsWith(prefix));
+const dumps = inDrive
+  .filter((f) => f.name.endsWith(ENCRYPTED_SUFFIX))
   .sort((a, b) => b.name.localeCompare(a.name)); // timestamps sort newest first
 for (const old of dumps.slice(keep)) {
   await drive.files.update({ fileId: old.id, requestBody: { trashed: true } });
   console.log(`Trashed old backup ${old.name}`);
 }
 console.log(`Backups kept for ${envName}: ${Math.min(dumps.length, keep)} (newest ${dumps[0]?.name}).`);
+warnPlaintext("Drive's Backups folder", inDrive.map((f) => f.name));
 
 // --- 4. Prune the local copies (--local-copy) -------------------------------
 // Only reached once the upload is confirmed above, so a failed run never
 // removes the copies it might still need. Each removal is printed.
 
 if (copyDir) {
-  const local = readdirSync(copyDir)
-    .filter((n) => n.startsWith(prefix) && n.endsWith(".dump"))
-    .sort((a, b) => b.localeCompare(a));
+  const names = readdirSync(copyDir).filter((n) => n.startsWith(prefix));
+  const local = names.filter((n) => n.endsWith(ENCRYPTED_SUFFIX)).sort((a, b) => b.localeCompare(a));
   for (const old of local.slice(keep)) {
     unlinkSync(join(copyDir, old));
     console.log(`Removed old local copy ${old} (keeping the newest ${keep} in ${copyDir})`);
   }
   console.log(`Local copies kept in ${copyDir}: ${Math.min(local.length, keep)} (newest ${local[0]}).`);
+  warnPlaintext(copyDir, names);
 }
 
 // --- helpers ---------------------------------------------------------------
@@ -160,6 +198,13 @@ if (copyDir) {
 function fail(message) {
   console.error(message);
   process.exit(1);
+}
+
+/** Name any plaintext dump left over from before encryption; never delete one unasked. */
+function warnPlaintext(where, names) {
+  const plain = names.filter((n) => n.endsWith(".dump"));
+  if (plain.length === 0) return;
+  console.warn(`WARNING: ${plain.length} UNENCRYPTED dump(s) still in ${where}; delete them by hand: ${plain.join(", ")}`);
 }
 
 function intArg(flag, fallback) {
