@@ -33,12 +33,15 @@ export function WebsiteTabs({
   labels,
   panels,
   ariaLabel,
+  initial,
 }: {
+  /** ?tab= as the server saw it, so the right panel is in the first paint. */
+  initial?: string;
   labels: Record<WebsiteTab, string>;
   panels: Record<WebsiteTab, ReactNode>;
   ariaLabel: string;
 }) {
-  const [active, setActive] = useState<WebsiteTab>("home");
+  const [active, setActive] = useState<WebsiteTab>(isTab(initial ?? null) ? (initial as WebsiteTab) : "home");
 
   useEffect(() => {
     const sync = () => setActive(tabFromLocation());

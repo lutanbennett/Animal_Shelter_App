@@ -24,8 +24,13 @@ type PublicResidentRow = {
   profile_photo_drive_file_id: string | null;
 };
 
-export default async function WebsitePage() {
+export default async function WebsitePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   await requireAdminUser();
+  const { tab } = await searchParams;
   const { t } = await getT();
 
   const supabase = await createClient();
@@ -120,6 +125,7 @@ export default async function WebsitePage() {
 
       {content && (
         <WebsiteTabs
+          initial={tab}
           ariaLabel={t.admin.website.tabs.aria}
           labels={t.admin.website.tabs.labels}
           panels={{
