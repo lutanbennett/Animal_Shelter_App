@@ -66,6 +66,10 @@ export const unreleased: ReleaseNote[] = [
   "The public adoption page now says Microchipped for an animal with a chip on file, beside Desexed and Vaccinated. The number itself is never shown on the website.",
   { text: "The Residents list has a No microchip filter, and the management dashboard counts the residents in care with no microchip; tap it to see who they are.", roles: ["admin", "management", "staff", "vet"] },
   { text: "The summary PDF and offline index filed when a resident dies now include their microchip number and implant date.", roles: ["admin", "management", "staff"] },
+  {
+    text: "On the Management pages (vets and their doctors, diets, medications, contacts, recurring jobs and translations), a refused save or delete now tells you why, in words, instead of showing a numbered error code.",
+    roles: ["admin", "management"],
+  },
 ];
 
 /** Newest first. */

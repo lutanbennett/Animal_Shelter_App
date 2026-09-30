@@ -1,17 +1,17 @@
 "use server";
 
 import { refresh, revalidatePath } from "next/cache";
-import { assertManagementRole } from "@/lib/auth/require-management";
+import { runAction, type ActionResult } from "@/lib/action-result";
+import { hasManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { DIET_UNITS, type DietUnit } from "@/lib/i18n/enum-labels";
 import { parseLeadDays, parseStockCount } from "@/lib/management/stock";
 
-export type DietTypeFormState =
-  | { error: string }
-  | { success: string }
-  | undefined;
+const refuse = (error: string) => ({ ok: false as const, error });
+
+export type DietTypeFormState = ActionResult<{ success: string }> | undefined;
 
 /** The editable columns of a diet type, as strings from a form or a row editor. */
 export type DietTypeFields = {
@@ -114,18 +114,19 @@ export async function createDietType(
   _state: DietTypeFormState,
   formData: FormData,
 ): Promise<DietTypeFormState> {
-  await assertManagementRole();
   const { t } = await getT();
+  return runAction("diets.createDietType", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const parsed = parseFields(fieldsFromForm(formData), t);
+    if (parsed.error !== undefined) return refuse(parsed.error);
 
-  const parsed = parseFields(fieldsFromForm(formData), t);
-  if (parsed.error !== undefined) return { error: parsed.error };
+    const supabase = await createClient();
+    const { error } = await supabase.from("diet_types").insert(parsed.row);
+    if (error) return refuse(error.message);
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("diet_types").insert(parsed.row);
-  if (error) return { error: error.message };
-
-  revalidateDietPages();
-  return { success: t.management.diets.createdDiet(parsed.row.name) };
+    revalidateDietPages();
+    return { ok: true, success: t.management.diets.createdDiet(parsed.row.name) };
+  });
 }
 
 /**
@@ -134,19 +135,21 @@ export async function createDietType(
  * unit, and the size default is read live), which is the point: a price
  * rise or a corrected portion should flow through to the forecast.
  */
-export async function updateDietType(id: string, fields: DietTypeFields) {
-  await assertManagementRole();
+export async function updateDietType(id: string, fields: DietTypeFields): Promise<ActionResult> {
   const { t } = await getT();
+  return runAction("diets.updateDietType", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const parsed = parseFields(fields, t);
+    if (parsed.error !== undefined) return refuse(parsed.error);
 
-  const parsed = parseFields(fields, t);
-  if (parsed.error !== undefined) throw new Error(parsed.error);
-
-  // stock_on_hand is deliberately not in this write: naming it restamps
-  // stock_counted_at (0083), and a price change is not a stocktake.
-  const supabase = await createClient();
-  const { error } = await supabase.from("diet_types").update(parsed.row).eq("id", id);
-  if (error) throw new Error(error.message);
-  revalidateDietPages();
+    // stock_on_hand is deliberately not in this write: naming it restamps
+    // stock_counted_at (0083), and a price change is not a stocktake.
+    const supabase = await createClient();
+    const { error } = await supabase.from("diet_types").update(parsed.row).eq("id", id);
+    if (error) return refuse(error.message);
+    revalidateDietPages();
+    return { ok: true };
+  });
 }
 
 /**
@@ -154,22 +157,24 @@ export async function updateDietType(id: string, fields: DietTypeFields) {
  * the count as taken now — re-saving the same figure is a count that
  * confirmed it (0083). Blank clears it back to "not counted".
  */
-export async function updateDietTypeStock(id: string, count: string) {
-  await assertManagementRole();
+export async function updateDietTypeStock(id: string, count: string): Promise<ActionResult> {
   const { t } = await getT();
+  return runAction("diets.updateDietTypeStock", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const parsed = parseStockCount(count);
+    if (!parsed.ok) return refuse(t.management.stock.errors.countInvalid);
 
-  const parsed = parseStockCount(count);
-  if (!parsed.ok) throw new Error(t.management.stock.errors.countInvalid);
-
-  const supabase = await createClient();
-  // One way in (0112): see updateMedicationStock.
-  const { error } = await supabase.rpc("record_stock_correction", {
-    p_kind: "diet_type",
-    p_id: id,
-    p_count: parsed.value,
+    const supabase = await createClient();
+    // One way in (0112): see updateMedicationStock.
+    const { error } = await supabase.rpc("record_stock_correction", {
+      p_kind: "diet_type",
+      p_id: id,
+      p_count: parsed.value,
+    });
+    if (error) return refuse(error.message);
+    revalidateDietPages();
+    return { ok: true };
   });
-  if (error) throw new Error(error.message);
-  revalidateDietPages();
 }
 
 /**
@@ -178,35 +183,40 @@ export async function updateDietTypeStock(id: string, count: string) {
  * index is checked row by row, so it has to be two statements in that
  * order, and supabase-js can't wrap two updates in a transaction.
  */
-export async function setStandardDietType(id: string) {
-  await assertManagementRole();
-
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("set_standard_diet", { p_diet_type_id: id });
-  if (error) throw new Error(error.message);
-  revalidateDietPages();
-  // Special-diet markers on the enclosure cards read the flag.
-  revalidatePath("/enclosures", "layout");
+export async function setStandardDietType(id: string): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("diets.setStandardDietType", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const supabase = await createClient();
+    const { error } = await supabase.rpc("set_standard_diet", { p_diet_type_id: id });
+    if (error) return refuse(error.message);
+    revalidateDietPages();
+    // Special-diet markers on the enclosure cards read the flag.
+    revalidatePath("/enclosures", "layout");
+    return { ok: true };
+  });
 }
 
-export async function deleteDietType(id: string) {
-  await assertManagementRole();
+export async function deleteDietType(id: string): Promise<ActionResult> {
   const { t } = await getT();
+  return runAction("diets.deleteDietType", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    // resident_diets.diet_type_id has no cascade: a diet that has ever been
+    // recorded is part of a resident's history. Say so instead of surfacing
+    // the foreign-key error.
+    const supabase = await createClient();
+    const { count, error: countError } = await supabase
+      .from("resident_diets")
+      .select("id", { count: "exact", head: true })
+      .eq("diet_type_id", id);
+    if (countError) return refuse(countError.message);
+    if ((count ?? 0) > 0) {
+      return refuse(t.management.diets.errors.hasDiets(count ?? 0));
+    }
 
-  // resident_diets.diet_type_id has no cascade: a diet that has ever been
-  // recorded is part of a resident's history. Say so instead of surfacing
-  // the foreign-key error.
-  const supabase = await createClient();
-  const { count, error: countError } = await supabase
-    .from("resident_diets")
-    .select("id", { count: "exact", head: true })
-    .eq("diet_type_id", id);
-  if (countError) throw new Error(countError.message);
-  if ((count ?? 0) > 0) {
-    throw new Error(t.management.diets.errors.hasDiets(count ?? 0));
-  }
-
-  const { error } = await supabase.from("diet_types").delete().eq("id", id);
-  if (error) throw new Error(error.message);
-  revalidateDietPages();
+    const { error } = await supabase.from("diet_types").delete().eq("id", id);
+    if (error) return refuse(error.message);
+    revalidateDietPages();
+    return { ok: true };
+  });
 }

@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { assertManagementRole } from "@/lib/auth/require-management";
+import { runAction, type ActionResult } from "@/lib/action-result";
+import { hasManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { addDaysIso, todayIso } from "@/lib/format";
@@ -23,8 +24,6 @@ import {
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
-export type ActionResult = { error?: string };
-
 function revalidateRecurring() {
   revalidatePath("/management/recurring-jobs");
   revalidatePath("/my");
@@ -41,23 +40,24 @@ export async function recordRecurringJob(
   outcome: "done" | "skipped" | null,
   note: string | null,
 ): Promise<ActionResult> {
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("record_recurring_job", {
-    p_job_id: jobId,
-    p_occurs_on: occursOn,
-    p_outcome: outcome,
-    p_note: note,
+  const { t } = await getT();
+  return runAction("recurringJobs.recordRecurringJob", t.common.somethingWentWrong, async () => {
+    const supabase = await createClient();
+    const { error } = await supabase.rpc("record_recurring_job", {
+      p_job_id: jobId,
+      p_occurs_on: occursOn,
+      p_outcome: outcome,
+      p_note: note,
+    });
+    if (error) return refuse(error.message);
+    revalidateRecurring();
+    return { ok: true };
   });
-  if (error) return { error: error.message };
-  revalidateRecurring();
-  return {};
 }
 
 // ---------------------------------------------------------------------------
 // The preview — the next few dates of a rule that may not be saved yet.
 // ---------------------------------------------------------------------------
-
-export type PreviewResult = { dates: string[]; error?: string };
 
 /**
  * The first `count` dates `rule` falls on from today (or its start, if
@@ -65,41 +65,48 @@ export type PreviewResult = { dates: string[]; error?: string };
  * the same SQL function as the saved jobs, so the preview can't disagree
  * with what /my will show.
  */
-export async function previewRecurrence(rule: RecurrenceRule, count = 6): Promise<PreviewResult> {
-  await assertManagementRole();
+export async function previewRecurrence(
+  rule: RecurrenceRule,
+  count = 6,
+): Promise<ActionResult<{ dates: string[] }>> {
   const { t } = await getT();
-  const normalized = normalizeRule(rule);
-  const problem = ruleProblem(normalized);
-  if (problem) return { dates: [], error: t.management.recurringJobs.errors[problem] };
+  return runAction("recurringJobs.previewRecurrence", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const normalized = normalizeRule(rule);
+    const problem = ruleProblem(normalized);
+    if (problem) return refuse(t.management.recurringJobs.errors[problem]);
 
-  const today = todayIso();
-  const from = normalized.starts_on > today ? normalized.starts_on : today;
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .rpc("recurrence_dates", {
-      p_repeat: normalized.repeat,
-      p_every: normalized.every,
-      p_weekdays: normalized.weekdays,
-      p_month_day: normalized.month_day,
-      p_week_of_month: normalized.week_of_month,
-      p_starts_on: normalized.starts_on,
-      p_ends_on: normalized.ends_on,
-      p_from: from,
-      p_to: addDaysIso(from, MAX_SPAN_DAYS - 1),
-    })
-    .limit(count);
-  if (error) return { dates: [], error: error.message };
-  // A set-returning scalar function comes back as bare values; tolerate the
-  // one-key-object shape too, which PostgREST has used for them.
-  const dates = ((data ?? []) as unknown[]).map((value) =>
-    typeof value === "string" ? value : String(Object.values(value as Record<string, unknown>)[0]),
-  );
-  return { dates };
+    const today = todayIso();
+    const from = normalized.starts_on > today ? normalized.starts_on : today;
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .rpc("recurrence_dates", {
+        p_repeat: normalized.repeat,
+        p_every: normalized.every,
+        p_weekdays: normalized.weekdays,
+        p_month_day: normalized.month_day,
+        p_week_of_month: normalized.week_of_month,
+        p_starts_on: normalized.starts_on,
+        p_ends_on: normalized.ends_on,
+        p_from: from,
+        p_to: addDaysIso(from, MAX_SPAN_DAYS - 1),
+      })
+      .limit(count);
+    if (error) return refuse(error.message);
+    // A set-returning scalar function comes back as bare values; tolerate the
+    // one-key-object shape too, which PostgREST has used for them.
+    const dates = ((data ?? []) as unknown[]).map((value) =>
+      typeof value === "string" ? value : String(Object.values(value as Record<string, unknown>)[0]),
+    );
+    return { ok: true, dates };
+  });
 }
 
 // ---------------------------------------------------------------------------
 // Templates
 // ---------------------------------------------------------------------------
+
+const refuse = (error: string) => ({ ok: false as const, error });
 
 export type RecurringJobFields = {
   title: string;
@@ -210,83 +217,97 @@ async function explain(message: string): Promise<string> {
   return message;
 }
 
+/**
+ * A refusal can still carry the id: the job was saved but its team was not,
+ * so a new job's form refreshes to show the row that now exists.
+ */
+export type SaveResult = ActionResult<{ id: string }> | { ok: false; error: string; id: string };
+
 export async function saveRecurringJob(
   id: string | null,
   fields: RecurringJobFields,
-): Promise<{ error?: string; id?: string }> {
-  await assertManagementRole();
+): Promise<SaveResult> {
   const { t } = await getT();
-  const e = t.management.recurringJobs.errors;
+  return runAction("recurringJobs.saveRecurringJob", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const e = t.management.recurringJobs.errors;
 
-  const title = fields.title.trim();
-  if (!title) return { error: e.titleRequired };
-  if (title.length > 200) return { error: e.titleTooLong };
-  const description = fields.description.trim() || null;
-  if (description && description.length > 4000) return { error: e.descriptionTooLong };
-  if (!isTimeOfDay(fields.timeOfDay)) return { error: e.timeOfDayInvalid };
-  const linkPath = fields.linkPath.trim() || null;
-  if (linkPath && (!/^\/([^/\\]|$)/.test(linkPath) || linkPath.length > 500)) return { error: e.linkInvalid };
-  if (!isRepeat(fields.rule.repeat)) return { error: e.repeatInvalid };
-  const rule = normalizeRule({ ...fields.rule, ends_on: fields.rule.ends_on || null });
-  const problem = ruleProblem(rule);
-  if (problem) return { error: e[problem] };
-  if (id && fields.dependsOnJobId === id) return { error: e.dependsOnSelf };
+    const title = fields.title.trim();
+    if (!title) return refuse(e.titleRequired);
+    if (title.length > 200) return refuse(e.titleTooLong);
+    const description = fields.description.trim() || null;
+    if (description && description.length > 4000) return refuse(e.descriptionTooLong);
+    if (!isTimeOfDay(fields.timeOfDay)) return refuse(e.timeOfDayInvalid);
+    const linkPath = fields.linkPath.trim() || null;
+    if (linkPath && (!/^\/([^/\\]|$)/.test(linkPath) || linkPath.length > 500)) return refuse(e.linkInvalid);
+    if (!isRepeat(fields.rule.repeat)) return refuse(e.repeatInvalid);
+    const rule = normalizeRule({ ...fields.rule, ends_on: fields.rule.ends_on || null });
+    const problem = ruleProblem(rule);
+    if (problem) return refuse(e[problem]);
+    if (id && fields.dependsOnJobId === id) return refuse(e.dependsOnSelf);
 
-  const row = {
-    title,
-    description,
-    time_of_day: fields.timeOfDay,
-    link_path: linkPath,
-    ...rule,
-    depends_on_job_id: fields.dependsOnJobId || null,
-    active: fields.active,
-  };
+    const row = {
+      title,
+      description,
+      time_of_day: fields.timeOfDay,
+      link_path: linkPath,
+      ...rule,
+      depends_on_job_id: fields.dependsOnJobId || null,
+      active: fields.active,
+    };
 
-  const supabase = await createClient();
-  // Before the row is written, so pointing the link at a page someone on the
-  // team cannot open is refused whole rather than saved half-way.
-  const assigneeIds = [...new Set(fields.assigneeIds)];
-  const cannotDo = await cannotDoProblem(supabase, linkPath, assigneeIds);
-  if (cannotDo) return { error: cannotDo };
+    const supabase = await createClient();
+    // Before the row is written, so pointing the link at a page someone on the
+    // team cannot open is refused whole rather than saved half-way.
+    const assigneeIds = [...new Set(fields.assigneeIds)];
+    const cannotDo = await cannotDoProblem(supabase, linkPath, assigneeIds);
+    if (cannotDo) return refuse(cannotDo);
 
-  let jobId = id;
-  if (id) {
-    const { error } = await supabase.from("recurring_jobs").update(row).eq("id", id);
-    if (error) return { error: await explain(error.message) };
-  } else {
-    const { data, error } = await supabase
-      .from("recurring_jobs")
-      .insert(row)
-      .select("id")
-      .single<{ id: string }>();
-    if (error) return { error: await explain(error.message) };
-    jobId = data.id;
-  }
+    let jobId = id;
+    if (id) {
+      const { error } = await supabase.from("recurring_jobs").update(row).eq("id", id);
+      if (error) return refuse(await explain(error.message));
+    } else {
+      const { data, error } = await supabase
+        .from("recurring_jobs")
+        .insert(row)
+        .select("id")
+        .single<{ id: string }>();
+      if (error) return refuse(await explain(error.message));
+      jobId = data.id;
+    }
 
-  const assigneeError = await setAssignees(supabase, jobId!, assigneeIds);
-  revalidateRecurring();
-  if (assigneeError) return { error: assigneeError, id: jobId! };
-  return { id: jobId! };
+    const assigneeError = await setAssignees(supabase, jobId!, assigneeIds);
+    revalidateRecurring();
+    if (assigneeError) return { ok: false, error: assigneeError, id: jobId! };
+    return { ok: true, id: jobId! };
+  });
 }
 
 /** Pause (nothing shows, overdue included) or resume (overdue restarts today — the 0095 trigger). */
 export async function setRecurringJobActive(id: string, active: boolean): Promise<ActionResult> {
-  await assertManagementRole();
-  const supabase = await createClient();
-  const { error } = await supabase.from("recurring_jobs").update({ active }).eq("id", id);
-  if (error) return { error: error.message };
-  revalidateRecurring();
-  return {};
+  const { t } = await getT();
+  return runAction("recurringJobs.setRecurringJobActive", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const supabase = await createClient();
+    const { error } = await supabase.from("recurring_jobs").update({ active }).eq("id", id);
+    if (error) return refuse(error.message);
+    revalidateRecurring();
+    return { ok: true };
+  });
 }
 
 /** Only a job nobody has ever acted on can go; one with history is paused or ended instead (0095). */
 export async function deleteRecurringJob(id: string): Promise<ActionResult> {
-  await assertManagementRole();
-  const supabase = await createClient();
-  const { error } = await supabase.from("recurring_jobs").delete().eq("id", id);
-  if (error) return { error: await explain(error.message) };
-  revalidateRecurring();
-  return {};
+  const { t } = await getT();
+  return runAction("recurringJobs.deleteRecurringJob", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const supabase = await createClient();
+    const { error } = await supabase.from("recurring_jobs").delete().eq("id", id);
+    if (error) return refuse(await explain(error.message));
+    revalidateRecurring();
+    return { ok: true };
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -295,17 +316,20 @@ export async function deleteRecurringJob(id: string): Promise<ActionResult> {
 
 /** Gives one date back to the job's usual team. */
 export async function handBackRecurringJob(jobId: string, occursOn: string): Promise<ActionResult> {
-  await assertManagementRole();
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("reassign_recurring_job", {
-    p_job_id: jobId,
-    p_occurs_on: occursOn,
-    p_user_ids: [],
-    p_note: null,
+  const { t } = await getT();
+  return runAction("recurringJobs.handBackRecurringJob", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const supabase = await createClient();
+    const { error } = await supabase.rpc("reassign_recurring_job", {
+      p_job_id: jobId,
+      p_occurs_on: occursOn,
+      p_user_ids: [],
+      p_note: null,
+    });
+    if (error) return refuse(error.message);
+    revalidateRecurring();
+    return { ok: true };
   });
-  if (error) return { error: error.message };
-  revalidateRecurring();
-  return {};
 }
 
 export type HandOverInput = {
@@ -317,8 +341,6 @@ export type HandOverInput = {
   endDate: string;
   note: string;
 };
-
-export type HandOverResult = { error?: string; changed?: number; failed?: string[] };
 
 /**
  * "All of Anna's jobs, 5–9 Oct → Ben" (0095 leaves the form to the feature).
@@ -333,72 +355,74 @@ export type HandOverResult = { error?: string; changed?: number; failed?: string
  * permanent: the person is swapped out of every job's usual team. The way to
  * clear jobs stranded by an archived login.
  */
-export async function handOverRecurringJobs(input: HandOverInput): Promise<HandOverResult> {
-  await assertManagementRole();
+export async function handOverRecurringJobs(input: HandOverInput): Promise<ActionResult<{ changed: number; failed: string[] }>> {
   const { t } = await getT();
-  const e = t.management.recurringJobs.errors;
-  const toIds = [...new Set(input.toUserIds)].filter((id) => id !== input.fromUserId);
-  if (!input.fromUserId) return { error: e.handOverFromRequired };
-  if (toIds.length === 0) return { error: e.handOverToRequired };
+  return runAction("recurringJobs.handOverRecurringJobs", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const e = t.management.recurringJobs.errors;
+    const toIds = [...new Set(input.toUserIds)].filter((id) => id !== input.fromUserId);
+    if (!input.fromUserId) return refuse(e.handOverFromRequired);
+    if (toIds.length === 0) return refuse(e.handOverToRequired);
 
-  const supabase = await createClient();
-  const { jobs, error } = await loadRecurringJobs(supabase);
-  if (error) return { error };
+    const supabase = await createClient();
+    const { jobs, error } = await loadRecurringJobs(supabase);
+    if (error) return refuse(error);
 
-  if (input.mode === "permanent") {
+    if (input.mode === "permanent") {
+      let changed = 0;
+      const failed: string[] = [];
+      for (const job of jobs.filter((j) => j.assignee_ids.includes(input.fromUserId))) {
+        const team = [...new Set([...job.assignee_ids.filter((id) => id !== input.fromUserId), ...toIds])];
+        const problem =
+          (await cannotDoProblem(supabase, job.link_path, team)) ?? (await setAssignees(supabase, job.id, team));
+        if (problem) failed.push(`${job.title}: ${problem}`);
+        else changed += 1;
+      }
+      revalidateRecurring();
+      return { ok: true, changed, failed };
+    }
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(input.startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(input.endDate)) {
+      return refuse(e.handOverDatesRequired);
+    }
+    if (input.endDate < input.startDate) return refuse(e.endBeforeStart);
+    if (input.endDate > addDaysIso(input.startDate, 365)) return refuse(e.handOverTooLong);
+
+    // Open occurrences only: a date already done or skipped is history (0095
+    // refuses to reassign it), and a paused job has nothing to cover.
+    const today = todayIso();
+    const { open, error: openError } = await loadOpenOccurrences(
+      supabase,
+      jobs,
+      new Set(jobs.map((j) => j.id)),
+      today,
+      input.endDate,
+    );
+    if (openError) return refuse(openError);
+
     let changed = 0;
     const failed: string[] = [];
-    for (const job of jobs.filter((j) => j.assignee_ids.includes(input.fromUserId))) {
-      const team = [...new Set([...job.assignee_ids.filter((id) => id !== input.fromUserId), ...toIds])];
-      const problem =
-        (await cannotDoProblem(supabase, job.link_path, team)) ?? (await setAssignees(supabase, job.id, team));
-      if (problem) failed.push(`${job.title}: ${problem}`);
+    for (const o of open) {
+      if (o.occurs_on < input.startDate || o.occurs_on > input.endDate) continue;
+      if (!o.team.includes(input.fromUserId)) continue;
+      const team = [...new Set([...o.team.filter((id) => id !== input.fromUserId), ...toIds])];
+      // reassign_recurring_job() takes any live staff login; whether they can
+      // open the job's page is checked here.
+      const cannotDo = await cannotDoProblem(supabase, o.job.link_path, team);
+      if (cannotDo) {
+        failed.push(`${o.job.title}, ${o.occurs_on}: ${cannotDo}`);
+        continue;
+      }
+      const { error: reassignError } = await supabase.rpc("reassign_recurring_job", {
+        p_job_id: o.job.id,
+        p_occurs_on: o.occurs_on,
+        p_user_ids: team,
+        p_note: input.note.trim() || null,
+      });
+      if (reassignError) failed.push(`${o.job.title}, ${o.occurs_on}: ${reassignError.message}`);
       else changed += 1;
     }
     revalidateRecurring();
-    return { changed, failed };
-  }
-
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(input.endDate)) {
-    return { error: e.handOverDatesRequired };
-  }
-  if (input.endDate < input.startDate) return { error: e.endBeforeStart };
-  if (input.endDate > addDaysIso(input.startDate, 365)) return { error: e.handOverTooLong };
-
-  // Open occurrences only: a date already done or skipped is history (0095
-  // refuses to reassign it), and a paused job has nothing to cover.
-  const today = todayIso();
-  const { open, error: openError } = await loadOpenOccurrences(
-    supabase,
-    jobs,
-    new Set(jobs.map((j) => j.id)),
-    today,
-    input.endDate,
-  );
-  if (openError) return { error: openError };
-
-  let changed = 0;
-  const failed: string[] = [];
-  for (const o of open) {
-    if (o.occurs_on < input.startDate || o.occurs_on > input.endDate) continue;
-    if (!o.team.includes(input.fromUserId)) continue;
-    const team = [...new Set([...o.team.filter((id) => id !== input.fromUserId), ...toIds])];
-    // reassign_recurring_job() takes any live staff login; whether they can
-    // open the job's page is checked here.
-    const cannotDo = await cannotDoProblem(supabase, o.job.link_path, team);
-    if (cannotDo) {
-      failed.push(`${o.job.title}, ${o.occurs_on}: ${cannotDo}`);
-      continue;
-    }
-    const { error: reassignError } = await supabase.rpc("reassign_recurring_job", {
-      p_job_id: o.job.id,
-      p_occurs_on: o.occurs_on,
-      p_user_ids: team,
-      p_note: input.note.trim() || null,
-    });
-    if (reassignError) failed.push(`${o.job.title}, ${o.occurs_on}: ${reassignError.message}`);
-    else changed += 1;
-  }
-  revalidateRecurring();
-  return { changed, failed };
+    return { ok: true, changed, failed };
+  });
 }

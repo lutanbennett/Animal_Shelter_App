@@ -42,16 +42,13 @@ function VetRowItem({ vet }: { vet: VetRow }) {
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
-      try {
-        await updateVet(vet.id, { name, clinicName, contactInfo, notes });
-        setEditing(false);
-        setMessage({ type: "success", text: t.common.saved });
-      } catch (err) {
-        setMessage({
-          type: "error",
-          text: err instanceof Error ? err.message : t.common.failedToSave,
-        });
+      const result = await updateVet(vet.id, { name, clinicName, contactInfo, notes });
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
+        return;
       }
+      setEditing(false);
+      setMessage({ type: "success", text: t.common.saved });
     });
   }
 
@@ -59,14 +56,8 @@ function VetRowItem({ vet }: { vet: VetRow }) {
     if (!window.confirm(t.management.vets.deleteConfirm(vet.name))) return;
     setMessage(null);
     startTransition(async () => {
-      try {
-        await deleteVet(vet.id);
-      } catch (err) {
-        setMessage({
-          type: "error",
-          text: err instanceof Error ? err.message : t.common.failedToDelete,
-        });
-      }
+      const result = await deleteVet(vet.id);
+      if (!result.ok) setMessage({ type: "error", text: result.error });
     });
   }
 

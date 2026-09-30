@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, CalendarClock, Clock, Hourglass, Link2, Plus, Users } from "lucide-react";
+import type { ActionResult } from "@/lib/action-result";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { roleLabel } from "@/lib/i18n/enum-labels";
 import { addDaysIso, formatDate, formatDateTime } from "@/lib/format";
@@ -185,11 +186,11 @@ function JobCard({ summary, onEdit }: { summary: JobSummary; onEdit: () => void 
   const stranded = job.active && summary.liveAssignees === 0;
   const misassigned = job.active && summary.cannotDo.length > 0;
 
-  function run(action: () => Promise<{ error?: string }>) {
+  function run(action: () => Promise<ActionResult>) {
     setError(null);
     startTransition(async () => {
       const result = await action();
-      if (result.error) setError(result.error);
+      if (!result.ok) setError(result.error);
       router.refresh();
     });
   }
@@ -335,12 +336,12 @@ function HandOver({ people, from, today }: { people: PersonOption[]; from: TeamM
         endDate,
         note,
       });
-      if (outcome.error) {
+      if (!outcome.ok) {
         setResult({ error: outcome.error });
         return;
       }
       setResult({
-        ok: mode === "dates" ? h.done(outcome.changed ?? 0) : h.donePermanent(outcome.changed ?? 0),
+        ok: mode === "dates" ? h.done(outcome.changed) : h.donePermanent(outcome.changed),
         failed: outcome.failed,
       });
       router.refresh();
@@ -521,7 +522,7 @@ function Covered({ covered }: { covered: CoveredDate[] }) {
                   startTransition(async () => {
                     setError(null);
                     const result = await handBackRecurringJob(row.jobId, row.occursOn);
-                    if (result.error) setError(result.error);
+                    if (!result.ok) setError(result.error);
                     router.refresh();
                   })
                 }

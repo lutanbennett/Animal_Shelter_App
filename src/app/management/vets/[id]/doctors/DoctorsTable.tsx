@@ -3,13 +3,13 @@
 import { Fragment, useMemo, useState, useTransition } from "react";
 import { formatDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import type { ActionResult } from "@/lib/action-result";
 import { likelyDuplicates } from "@/lib/vets/doctors";
 import {
   deleteDoctor,
   mergeDoctors,
   renameDoctor,
   setDoctorActive,
-  type DoctorActionResult,
 } from "./actions";
 
 export type DoctorRow = {
@@ -61,20 +61,16 @@ function DoctorRowItem({
     setMessage(null);
   }
 
-  function run(action: () => Promise<DoctorActionResult>, fallback: string, success?: string) {
+  function run(action: () => Promise<ActionResult>, success?: string) {
     setMessage(null);
     startTransition(async () => {
-      try {
-        const result = await action();
-        if (result?.error) {
-          setMessage({ type: "error", text: result.error });
-          return;
-        }
-        setMode("view");
-        if (success) setMessage({ type: "success", text: success });
-      } catch (err) {
-        setMessage({ type: "error", text: err instanceof Error ? err.message : fallback });
+      const result = await action();
+      if (!result.ok) {
+        setMessage({ type: "error", text: result.error });
+        return;
       }
+      setMode("view");
+      if (success) setMessage({ type: "success", text: success });
     });
   }
 
@@ -89,7 +85,7 @@ function DoctorRowItem({
     if (doctor.visit_count > 0 && !window.confirm(d.renameConfirm(doctor.name, next, doctor.visit_count))) {
       return;
     }
-    run(() => renameDoctor(vetId, doctor.id, next), t.common.failedToSave, t.common.saved);
+    run(() => renameDoctor(vetId, doctor.id, next), t.common.saved);
   }
 
   function openMerge() {
@@ -102,12 +98,12 @@ function DoctorRowItem({
     const target = mergeTargets.find((row) => row.id === mergeInto);
     if (!target) return;
     if (!window.confirm(d.mergeConfirm(doctor.name, target.name, doctor.visit_count))) return;
-    run(() => mergeDoctors(vetId, doctor.id, target.id), d.errors.mergeFailed);
+    run(() => mergeDoctors(vetId, doctor.id, target.id));
   }
 
   function handleDelete() {
     if (!window.confirm(d.deleteConfirm(doctor.name))) return;
-    run(() => deleteDoctor(vetId, doctor.id), t.common.failedToDelete);
+    run(() => deleteDoctor(vetId, doctor.id));
   }
 
   const renamedPreview = name.trim().replace(/\s+/g, " ");
@@ -213,10 +209,7 @@ function DoctorRowItem({
                   type="button"
                   disabled={isPending}
                   onClick={() =>
-                    run(
-                      () => setDoctorActive(vetId, doctor.id, !doctor.active),
-                      t.common.failedToSave,
-                    )
+                    run(() => setDoctorActive(vetId, doctor.id, !doctor.active))
                   }
                   title={doctor.active ? d.markLeftHint : undefined}
                   className={smallButton}

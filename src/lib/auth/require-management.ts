@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { getT } from "@/lib/i18n/get-t";
 import { requireRole } from "./require-role";
 
 /**
@@ -26,12 +25,4 @@ export async function hasManagementRole() {
   const supabase = await createClient();
   const { data: role } = await supabase.rpc("current_user_role");
   return canManage(role);
-}
-
-/** Same check for use inside a server action, where redirect() can't be used. */
-export async function assertManagementRole() {
-  if (!(await hasManagementRole())) {
-    const { t } = await getT();
-    throw new Error(t.management.errors.managementAccessRequired);
-  }
 }

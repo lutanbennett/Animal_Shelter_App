@@ -101,7 +101,13 @@ export function RecurringJobForm({
     let cancelled = false;
     const timer = setTimeout(async () => {
       const result = await previewRecurrence(JSON.parse(ruleKey) as RecurrenceRule);
-      if (!cancelled) setPreview({ key: ruleKey, ...result });
+      if (!cancelled) {
+        setPreview(
+          result.ok
+            ? { key: ruleKey, dates: result.dates }
+            : { key: ruleKey, dates: [], error: result.error },
+        );
+      }
     }, 300);
     return () => {
       cancelled = true;
@@ -164,9 +170,9 @@ export function RecurringJobForm({
         assigneeIds: [...assigneeIds],
         active,
       });
-      if (result.error) {
+      if (!result.ok) {
         setError(result.error);
-        if (result.id && !job) router.refresh();
+        if ("id" in result && !job) router.refresh();
         return;
       }
       router.refresh();

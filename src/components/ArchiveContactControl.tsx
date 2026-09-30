@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { archiveContact, restoreContact } from "@/app/management/contacts/actions";
+import type { ActionResult } from "@/lib/action-result";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { isArchived } from "@/lib/contacts/contacts";
 
@@ -38,16 +39,16 @@ export function ArchiveContactControl({
   const blocker =
     residentsInCare.length > 0 ? a.errors.hasResidentsInCare(residentsInCare.length) : null;
 
-  function run(action: () => Promise<void>) {
+  function run(action: () => Promise<ActionResult>) {
     setError(null);
     startTransition(async () => {
-      try {
-        await action();
-        setOpen(false);
-        setReason("");
-      } catch (err) {
-        setError(err instanceof Error ? err.message : t.common.failedToSave);
+      const result = await action();
+      if (!result.ok) {
+        setError(result.error);
+        return;
       }
+      setOpen(false);
+      setReason("");
     });
   }
 

@@ -1,14 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { assertManagementRole } from "@/lib/auth/require-management";
+import { runAction, type ActionResult } from "@/lib/action-result";
+import { hasManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 
-export type VetFormState =
-  | { error: string }
-  | { success: string }
-  | undefined;
+const refuse = (error: string) => ({ ok: false as const, error });
+
+export type VetFormState = ActionResult<{ success: string }> | undefined;
 
 export type VetFields = {
   name: string;
@@ -32,68 +32,73 @@ export async function createVet(
   _state: VetFormState,
   formData: FormData,
 ): Promise<VetFormState> {
-  await assertManagementRole();
   const { t } = await getT();
+  return runAction("vets.createVet", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const name = optional(formData.get("name"));
+    if (!name) return refuse(t.management.vets.errors.nameRequired);
 
-  const name = optional(formData.get("name"));
-  if (!name) return { error: t.management.vets.errors.nameRequired };
-
-  const supabase = await createClient();
-  const { error } = await supabase.from("vets").insert({
-    name,
-    clinic_name: optional(formData.get("clinicName")),
-    contact_info: optional(formData.get("contactInfo")),
-    notes: optional(formData.get("notes")),
-  });
-
-  if (error) return { error: error.message };
-
-  revalidateVetPages();
-  return { success: t.management.vets.createdVet(name) };
-}
-
-export async function updateVet(id: string, fields: VetFields) {
-  await assertManagementRole();
-  const { t } = await getT();
-
-  const name = optional(fields.name);
-  if (!name) throw new Error(t.management.vets.errors.nameRequired);
-
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("vets")
-    .update({
+    const supabase = await createClient();
+    const { error } = await supabase.from("vets").insert({
       name,
-      clinic_name: optional(fields.clinicName),
-      contact_info: optional(fields.contactInfo),
-      notes: optional(fields.notes),
-    })
-    .eq("id", id);
+      clinic_name: optional(formData.get("clinicName")),
+      contact_info: optional(formData.get("contactInfo")),
+      notes: optional(formData.get("notes")),
+    });
 
-  if (error) throw new Error(error.message);
-  revalidateVetPages(id);
+    if (error) return refuse(error.message);
+
+    revalidateVetPages();
+    return { ok: true, success: t.management.vets.createdVet(name) };
+  });
 }
 
-export async function deleteVet(id: string) {
-  await assertManagementRole();
+export async function updateVet(id: string, fields: VetFields): Promise<ActionResult> {
   const { t } = await getT();
+  return runAction("vets.updateVet", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const name = optional(fields.name);
+    if (!name) return refuse(t.management.vets.errors.nameRequired);
 
-  const supabase = await createClient();
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("vets")
+      .update({
+        name,
+        clinic_name: optional(fields.clinicName),
+        contact_info: optional(fields.contactInfo),
+        notes: optional(fields.notes),
+      })
+      .eq("id", id);
 
-  // vet_appointments.vet_id has no cascade, so a vet with history can't go:
-  // the visits are the resident's medical record. Say so up front instead
-  // of surfacing the foreign-key error.
-  const { count, error: countError } = await supabase
-    .from("vet_appointments")
-    .select("id", { count: "exact", head: true })
-    .eq("vet_id", id);
-  if (countError) throw new Error(countError.message);
-  if (count && count > 0) {
-    throw new Error(t.management.vets.errors.hasVisits(count));
-  }
+    if (error) return refuse(error.message);
+    revalidateVetPages(id);
+    return { ok: true };
+  });
+}
 
-  const { error } = await supabase.from("vets").delete().eq("id", id);
+export async function deleteVet(id: string): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("vets.deleteVet", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const supabase = await createClient();
 
-  if (error) throw new Error(error.message);
-  revalidateVetPages(id);
+    // vet_appointments.vet_id has no cascade, so a vet with history can't go:
+    // the visits are the resident's medical record. Say so up front instead
+    // of surfacing the foreign-key error.
+    const { count, error: countError } = await supabase
+      .from("vet_appointments")
+      .select("id", { count: "exact", head: true })
+      .eq("vet_id", id);
+    if (countError) return refuse(countError.message);
+    if (count && count > 0) {
+      return refuse(t.management.vets.errors.hasVisits(count));
+    }
+
+    const { error } = await supabase.from("vets").delete().eq("id", id);
+
+    if (error) return refuse(error.message);
+    revalidateVetPages(id);
+    return { ok: true };
+  });
 }
