@@ -67,7 +67,7 @@ export const unreleased: ReleaseNote[] = [];
 export const releases: Release[] = [
   {
     version: "0.12.1",
-    date: "2026-10-01",
+    date: "2026-10-02",
     title:
       "A printable manual with its pictures back, safer confirmations, and a note when a stock figure was typed by hand",
     major: false,
