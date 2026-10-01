@@ -36,7 +36,7 @@ or `n/a` with the reason.
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: `check`, `migration-numbers` and `test-plan` all passed on #241
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -164,7 +164,7 @@ Manual verification by: n/a: no UI change, covered by tests
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR: the PR body links to this file
 - [ ] Handed to the production release manager — n/a: not yet — the PR does not exist at this commit
 
 Result: pass
