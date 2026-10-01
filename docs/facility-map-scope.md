@@ -1,6 +1,6 @@
 # Facility map — scope and recommendation
 
-Status: **awaiting Lutan's decision** (backlog item, 2026-09-28; not yet built).
+Status: **scope agreed in part, 2026-10-01** — Lutan confirmed staff-only, the Map / List toggle on `/enclosures`, and on-site zones only on the overview. The drawings are still to come; nothing is built.
 Written 2026-10-01 on `claude/facility-map-scope`. Prototype: `/enclosures/map-prototype`
 (dev only, hidden in production builds). This is a recommendation, not a choice made;
 a `docs/decisions/` entry follows when one is picked.
@@ -114,5 +114,5 @@ select, and an Open button.
 ## Still open
 
 1. Who photographs the drawings, and can they be flat and well lit (a phone scan app is fine)?
-2. Does the overview also want an On-site / Off-site cue, or on-site zones only? (Recommended: on-site only.)
-3. OK with staff-only, and the Map / List toggle on `/enclosures`?
+2. ~~On-site zones only on the overview?~~ Yes (Lutan, 2026-10-01).
+3. ~~Staff-only, Map / List toggle on `/enclosures`?~~ Yes (Lutan, 2026-10-01).
