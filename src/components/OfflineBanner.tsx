@@ -7,6 +7,15 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 const PROBE_URL = "/lca-logo.jpg";
 const PROBE_EVERY_MS = 10_000;
 
+function isOwnOrigin(input: RequestInfo | URL): boolean {
+  try {
+    const url = input instanceof Request ? input.url : String(input);
+    return new URL(url, location.href).origin === location.origin;
+  } catch {
+    return true;
+  }
+}
+
 /**
  * "You're offline, changes will not save."
  *
@@ -35,8 +44,10 @@ export function OfflineBanner() {
         goOnline();
         return response;
       } catch (error) {
-        // An aborted request is the caller's doing, not the network's.
-        if (!(error instanceof DOMException && error.name === "AbortError")) goOffline();
+        // An aborted request is the caller's doing, and a failed third-party
+        // host says nothing about our own connection.
+        const aborted = error instanceof DOMException && error.name === "AbortError";
+        if (!aborted && isOwnOrigin(args[0])) goOffline();
         throw error;
       }
     };
