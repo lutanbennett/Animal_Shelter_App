@@ -432,6 +432,8 @@ const en = {
       noRolePassword:
         "This account doesn’t have access. Ask an administrator to assign you a role, then try again.",
       google: "Google sign-in didn’t complete. Please try again.",
+      /** The session ended (long inactivity, or signed out elsewhere). */
+      expired: "You were signed out because you haven’t used the app for a while. Sign in again and you’ll go back to where you were.",
     },
   },
 
