@@ -29,6 +29,7 @@ const en = {
     failedToDelete: "Failed to delete.",
     failedToRemove: "Failed to remove.",
     failedToReorder: "Failed to reorder.",
+    notAllowedToDeleteFile: "You don't have permission to delete this file.",
     // A server action's failure nobody planned words for
     // (src/lib/action-result.ts); the reference finds the logged cause.
     somethingWentWrong: (ref: string) =>

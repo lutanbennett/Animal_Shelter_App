@@ -338,14 +338,18 @@ export async function deleteProjectPhoto(
 
     // cover_attachment_id is `on delete set null` (0034), so a deleted cover
     // simply falls back to the newest photo in the summary view.
-    const { error: deleteError } = await supabase
+    // A refused delete under RLS matches no row without an error; only the
+    // row count proves it went, so don't touch Drive without it.
+    const { data: deletedRows, error: deleteError } = await supabase
       .from("attachments")
       .delete()
-      .eq("id", attachmentId);
+      .eq("id", attachmentId)
+      .select("id");
     if (deleteError) return refuse(deleteError.message);
+    if (deletedRows?.length !== 1) return refuse(t.common.notAllowedToDeleteFile);
 
     try {
-      await getDriveClient().deleteFile(photo.drive_file_id);
+      await getDriveClient().trashFile(photo.drive_file_id);
     } catch {
       // The row is gone; an orphaned Drive file is a minor cleanup, not a
       // failed action (same tradeoff as deleteMaintenanceAttachment).

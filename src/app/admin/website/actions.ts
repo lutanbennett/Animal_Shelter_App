@@ -473,12 +473,16 @@ export async function deleteGalleryPhoto(photoId: string): Promise<ActionResult>
       .limit(1)
       .returns<{ drive_file_id: string }[]>();
 
-    const { error } = await supabase
+    // A refused delete under RLS matches no row without an error; don't trash
+    // the Drive file unless the row really went.
+    const { data: deletedRows, error } = await supabase
       .from("site_content_photos")
       .delete()
-      .eq("id", photoId);
+      .eq("id", photoId)
+      .select("id");
 
     if (error) return refuse(error.message);
+    if (deletedRows?.length !== 1) return refuse(t.common.notAllowedToDeleteFile);
 
     const driveFileId = photo?.[0]?.drive_file_id;
     if (driveFileId) await trashInDrive(driveFileId);
