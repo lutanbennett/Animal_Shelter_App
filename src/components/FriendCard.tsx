@@ -62,7 +62,7 @@ export function FriendCard({
         <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-hover">
           {friend.logo_drive_file_id ? (
             <Image
-              src={driveImageUrl(friend.logo_drive_file_id)}
+              src={driveImageUrl(friend.logo_drive_file_id, 160)}
               alt={f.logoAlt(friend.name)}
               fill
               sizes="64px"

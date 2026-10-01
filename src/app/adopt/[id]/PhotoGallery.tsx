@@ -38,7 +38,7 @@ export function PhotoGallery({
       <div className={frame}>
         <Image
           key={photoIds[selected]}
-          src={driveImageUrl(photoIds[selected])}
+          src={driveImageUrl(photoIds[selected], 1200)}
           alt={residentName}
           fill
           priority
@@ -50,7 +50,7 @@ export function PhotoGallery({
       {photoIds.length > 1 && (
         <div className="px-4 lg:px-0">
           <ThumbnailStrip
-            thumbnails={photoIds.map((fileId) => ({ key: fileId, src: driveImageUrl(fileId) }))}
+            thumbnails={photoIds.map((fileId) => ({ key: fileId, src: driveImageUrl(fileId, 160) }))}
             selected={selected}
             onSelect={setSelected}
             thumbLabel={t.adopt.showPhoto}

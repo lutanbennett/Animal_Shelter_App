@@ -150,7 +150,7 @@ export default async function ResidentCardPage(props: PageProps<"/r/[code]">) {
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
           {resident.profile_photo_drive_file_id ? (
             <img
-              src={driveImageUrl(resident.profile_photo_drive_file_id)}
+              src={driveImageUrl(resident.profile_photo_drive_file_id, 1200)}
               alt={resident.name}
               className="aspect-square w-full rounded-lg border border-border object-cover"
             />

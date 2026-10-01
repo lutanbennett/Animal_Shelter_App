@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getDriveClient } from "@/lib/google/drive";
+import { PHOTO_WIDTHS, type PhotoWidth } from "@/lib/google/drive-client";
+import { readCachedPhoto, writeCachedPhoto } from "@/lib/photo-cache";
 
 /**
  * Image proxy for Drive-backed photos. Fetches a file once via the
@@ -40,6 +42,14 @@ import { getDriveClient } from "@/lib/google/drive";
  *    CDN/proxy that respects it) also avoid re-requesting unchanged photos.
  *    This layer works everywhere, including local dev.
  *
+ * Sizes (docs/decisions/2026-10-01-public-photo-sizing.md): `?w=` takes one of
+ * PHOTO_WIDTHS and serves Drive's own rendition of that size instead of the
+ * phone-camera original. Each size is its own edge-cache entry. On the Pi
+ * (PHOTO_CACHE_DIR set) a public photo's sizes are also kept on disk, read
+ * only after the database has said the file is still public. With no
+ * rendition yet the original is served, briefly cached, and nothing is
+ * written to disk. Without `?w=` nothing changes: the original, as before.
+ *
  * No cache is invalidated when a photo is deleted or stops being public
  * (a resident hidden, a project unpublished) — the entry simply expires with
  * the TTL below, as any browser's copy does. Deleted photos are no longer
@@ -50,6 +60,8 @@ const FILE_ID_PATTERN = /^[A-Za-z0-9_-]{10,100}$/;
 const CACHE_SECONDS = 60 * 60 * 24; // 24h — well under Drive's throttle window either way.
 // Bump the version to orphan every entry the edge cache holds.
 const EDGE_CACHE_NAMESPACE = "public-v2";
+// An original served because Drive had no rendition yet: look again soon.
+const FALLBACK_CACHE_SECONDS = 60 * 5;
 
 function getEdgeCache(): Cache | null {
   const c = (globalThis as { caches?: CacheStorage }).caches;
@@ -101,9 +113,19 @@ export async function GET(
     return NextResponse.json({ error: "Invalid photo id." }, { status: 400 });
   }
 
+  const widthParam = request.nextUrl.searchParams.get("w");
+  let width: PhotoWidth | null = null;
+  if (widthParam !== null) {
+    width = PHOTO_WIDTHS.find((w) => String(w) === widthParam) ?? null;
+    if (!width) return NextResponse.json({ error: "Invalid photo size." }, { status: 400 });
+  }
+
   const cache = getEdgeCache();
   const cacheKey = new Request(
-    new URL(`/api/photos/${fileId}?edge=${EDGE_CACHE_NAMESPACE}`, request.url),
+    new URL(
+      `/api/photos/${fileId}?edge=${EDGE_CACHE_NAMESPACE}${width ? `&w=${width}` : ""}`,
+      request.url,
+    ),
     { method: "GET" },
   );
 
@@ -123,10 +145,45 @@ export async function GET(
     if (!(await canSeeInternalFile(supabase, fileId))) return notFound();
   }
 
+  const publicHeaders = (seconds: number) =>
+    `public, max-age=${seconds}, s-maxage=${seconds}, immutable`;
+
+  // The disk copy, if this Pi has one. Only after the checks above, so a
+  // photo that has stopped being public is not served from disk.
+  if (width && isPublic) {
+    const onDisk = await readCachedPhoto(fileId, width);
+    if (onDisk) {
+      const response = new NextResponse(new Uint8Array(onDisk.body), {
+        status: 200,
+        headers: {
+          "Content-Type": onDisk.contentType,
+          "X-Content-Type-Options": "nosniff",
+          "Content-Disposition": "inline",
+          "Cache-Control": publicHeaders(CACHE_SECONDS),
+        },
+      });
+      if (cache) await cache.put(cacheKey, response.clone());
+      return response;
+    }
+  }
+
   let contentType: string;
   let body: ArrayBuffer;
+  let cacheSeconds = CACHE_SECONDS;
   try {
-    ({ contentType, body } = await getDriveClient().downloadFile(fileId));
+    const drive = getDriveClient();
+    // A failed or missing rendition is not a failed request: fall back to
+    // the original, which is what every photo was before sizes existed.
+    const rendition = width
+      ? await drive.downloadThumbnail(fileId, width).catch(() => null)
+      : null;
+    if (rendition && width) {
+      ({ contentType, body } = rendition);
+      if (isPublic) await writeCachedPhoto(fileId, width, contentType, body);
+    } else {
+      ({ contentType, body } = await drive.downloadFile(fileId));
+      if (width) cacheSeconds = FALLBACK_CACHE_SECONDS;
+    }
   } catch {
     // Drive itself may be unavailable (including, ironically, a throttled
     // file) — surface a clean error rather than caching a failure.
@@ -141,9 +198,7 @@ export async function GET(
       // never render a proxied file as a page on our origin.
       "X-Content-Type-Options": "nosniff",
       "Content-Disposition": safeToRenderInline(contentType) ? "inline" : "attachment",
-      "Cache-Control": isPublic
-        ? `public, max-age=${CACHE_SECONDS}, s-maxage=${CACHE_SECONDS}, immutable`
-        : "private, no-store",
+      "Cache-Control": isPublic ? publicHeaders(cacheSeconds) : "private, no-store",
     },
   });
 

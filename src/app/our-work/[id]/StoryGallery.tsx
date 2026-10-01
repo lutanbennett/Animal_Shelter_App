@@ -37,7 +37,7 @@ export function StoryGallery({
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-border bg-surface">
         <Image
           key={current.id}
-          src={driveImageUrl(current.drive_file_id)}
+          src={driveImageUrl(current.drive_file_id, 1200)}
           alt={current.caption || title}
           fill
           priority
@@ -54,7 +54,7 @@ export function StoryGallery({
         <ThumbnailStrip
           thumbnails={photos.map((photo) => ({
             key: photo.id,
-            src: driveImageUrl(photo.drive_file_id),
+            src: driveImageUrl(photo.drive_file_id, 160),
           }))}
           selected={selected}
           onSelect={setSelected}

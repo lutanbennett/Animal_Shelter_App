@@ -12,9 +12,18 @@
  * per-file abuse-throttling quota that a handful of pageviews in quick
  * succession can trip, taking the photo offline for everyone for ~24h.
  */
-export function driveImageUrl(fileId: string): string {
-  return `/api/photos/${fileId}`;
+export function driveImageUrl(fileId: string, width?: PhotoWidth): string {
+  return width ? `/api/photos/${fileId}?w=${width}` : `/api/photos/${fileId}`;
 }
+
+/**
+ * The only widths the photo route will resize to, so the caches can't be
+ * flooded with sizes: thumbnails (160), cards (400) and the large view
+ * (1200). Anything else is refused. Drive scales the longer side to this
+ * many pixels. Public pages ask for a width; staff views stay on the original.
+ */
+export const PHOTO_WIDTHS = [160, 400, 1200] as const;
+export type PhotoWidth = (typeof PHOTO_WIDTHS)[number];
 
 /**
  * Link straight to a file in Google Drive's own viewer. Used for the

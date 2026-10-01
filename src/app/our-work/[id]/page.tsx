@@ -45,7 +45,7 @@ export async function generateMetadata(
   const description = summary ? summaryLead(summary, 200) : t.ourWork.shareFallback;
   const fullTitle = `${title} · ${t.header.appName}`;
   const image = project.cover_drive_file_id
-    ? driveImageUrl(project.cover_drive_file_id)
+    ? driveImageUrl(project.cover_drive_file_id, 1200)
     : undefined;
 
   return {

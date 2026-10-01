@@ -62,7 +62,7 @@ export async function generateMetadata(
   const description = hook || bioLead(bio) || t.adopt.shareFallback(resident.name);
   const title = `${resident.name} · ${t.header.appName}`;
   const image = resident.profile_photo_drive_file_id
-    ? driveImageUrl(resident.profile_photo_drive_file_id)
+    ? driveImageUrl(resident.profile_photo_drive_file_id, 1200)
     : undefined;
 
   return {
