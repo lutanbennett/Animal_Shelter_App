@@ -4,6 +4,7 @@ import { requireRole } from "@/lib/auth/require-role";
 import { getT } from "@/lib/i18n/get-t";
 import { dietUnitLabel, doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { canStocktake, type StocktakeItem, type StocktakeKind } from "@/lib/management/stocktake";
+import { CONVERSION_COLUMNS, groupConversions, type ConversionRow } from "@/lib/units";
 import { canRecordDelivery } from "@/lib/management/stock-receipts";
 import { StocktakeSheet } from "./StocktakeSheet";
 
@@ -33,7 +34,7 @@ export default async function StocktakePage(props: PageProps<"/stocktake">) {
   const searchParams = await props.searchParams;
   const initialTab: StocktakeKind = searchParams.tab === "diets" ? "diet" : "medication";
 
-  const [medicationResult, dietResult] = await Promise.all([
+  const [medicationResult, dietResult, conversionsResult] = await Promise.all([
     supabase
       .from("medication")
       .select("id, name, unit:dose_unit, stock_on_hand, stock_counted_at")
@@ -44,7 +45,9 @@ export default async function StocktakePage(props: PageProps<"/stocktake">) {
       .select("id, name, unit, stock_on_hand, stock_counted_at")
       .order("name")
       .returns<StockRow[]>(),
+    supabase.from("item_unit_conversions").select(CONVERSION_COLUMNS).returns<ConversionRow[]>(),
   ]);
+  const conversions = groupConversions(conversionsResult.data ?? []);
 
   const toItem =
     (unitLabel: (unit: string) => string) =>
@@ -54,10 +57,11 @@ export default async function StocktakePage(props: PageProps<"/stocktake">) {
       unit: unitLabel(row.unit),
       lastCount: row.stock_on_hand == null ? null : Number(row.stock_on_hand),
       lastCountedAt: row.stock_counted_at,
+      conversions: conversions[row.id] ?? [],
     });
 
   const s = t.stocktake;
-  const loadError = medicationResult.error ?? dietResult.error;
+  const loadError = medicationResult.error ?? dietResult.error ?? conversionsResult.error;
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-4 p-4 sm:p-6">

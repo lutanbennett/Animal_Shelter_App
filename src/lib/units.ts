@@ -149,6 +149,11 @@ export function defaultUnit(conversions: UnitConversion[], use: "purchase" | "co
   return conversions.find((c) => (use === "purchase" ? c.isPurchase : c.isCount)) ?? null;
 }
 
+/** A base-unit figure in one conversion's unit, to 2 places: 480 cups at 200 per bag → 2.4. */
+export function inUnit(base: number, conversion: UnitConversion): number {
+  return Math.round((base / conversion.basePer) * 100) / 100;
+}
+
 /** A base-unit figure in the purchase unit: 480 cups at 200 per bag → 2.4 bags. Null with no purchase unit. */
 export function inPurchaseUnit(
   base: number | null,
