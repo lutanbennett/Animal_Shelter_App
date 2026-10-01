@@ -21,6 +21,7 @@ import {
   type CashflowCell,
   type CashflowRow,
 } from "@/lib/management/cashflow";
+import type { VetForecastBasis } from "@/lib/management/vet-forecast";
 import { CashflowChart } from "./CashflowChart";
 
 /**
@@ -41,7 +42,7 @@ const NOT_PRICED_ANCHOR = "not-priced";
 
 export function CashflowView({
   rows,
-  vetEstimate,
+  vetBasis,
   fixedMonthly,
   from,
   to,
@@ -50,8 +51,8 @@ export function CashflowView({
   /** The window, ISO — only used to name the CSV file. */
   from: string;
   to: string;
-  /** The typical-vet-visit figure from site_content, or null if unset. */
-  vetEstimate: number | null;
+  /** How the vet line was worked out, for the explanation under the table. */
+  vetBasis: VetForecastBasis;
   /** Active fixed outgoings per month (0114), or null when none are listed. */
   fixedMonthly: number | null;
 }) {
@@ -300,24 +301,25 @@ export function CashflowView({
         </div>
 
         <p className="text-xs text-muted">
-          {shown.has("vet") &&
-            (vetEstimate == null ? (
-              <>
-                {c.vetNoteUnset}{" "}
-                <Link href="/admin/website" className="text-primary hover:underline">
-                  {c.vetNoteLink}
-                </Link>
-                .
-              </>
-            ) : (
-              <>
-                {c.vetNote(formatBaht(vetEstimate, locale))}{" "}
-                <Link href="/admin/website" className="text-primary hover:underline">
-                  {c.vetNoteLink}
-                </Link>
-                .
-              </>
-            ))}
+          {shown.has("vet") && (
+            <>
+              {vetBasis.historyVisits === 0
+                ? c.vetNoHistory
+                : c.vetNote(
+                    (Math.round(vetBasis.perWeek * 10) / 10).toLocaleString(locale),
+                    vetBasis.historyVisits,
+                  )}{" "}
+              {vetBasis.unitCost == null
+                ? c.vetCostUnset
+                : vetBasis.unitCostSource === "actual"
+                  ? c.vetCostActual(formatBaht(vetBasis.unitCost, locale), vetBasis.costedVisits)
+                  : c.vetCostEstimate(formatBaht(vetBasis.unitCost, locale))}{" "}
+              <Link href="/admin/website" className="text-primary hover:underline">
+                {c.vetNoteLink}
+              </Link>
+              .
+            </>
+          )}
         </p>
         <p className="text-xs text-muted">
           {fixedMonthly == null ? c.fixedNoteNone : c.fixedNote(formatBaht(fixedMonthly, locale))}{" "}

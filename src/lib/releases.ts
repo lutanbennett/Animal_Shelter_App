@@ -61,7 +61,12 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  {
+    text: "The vet line on the Cashflow page now follows how often the shelter really goes. Each week it counts the larger of the typical number of visits (the last 90 days' completed visits, averaged) and the visits actually booked that week, so a quiet week still carries the usual cost and a busy one is not understated. A booked visit with its real cost recorded uses that cost; the rest use the average of recorded costs, or the typical-visit figure until enough are recorded. A line under the table says exactly which numbers were used.",
+    roles: ["admin", "management"],
+  },
+];
 
 /** Newest first. */
 export const releases: Release[] = [
