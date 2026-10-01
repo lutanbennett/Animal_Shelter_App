@@ -267,7 +267,7 @@ function UserRow({
                   {t.admin.security.table.twoStepSetupOpenUntil(formatDate(user.twoStepSetupUntil, locale))}
                 </span>
               )}
-              {!isSelf && !archived && (
+              {user.role === "admin" && !isSelf && !archived && (
                 <button
                   type="button"
                   disabled={isPending}

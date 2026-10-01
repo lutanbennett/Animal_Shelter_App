@@ -34,10 +34,9 @@ export default async function TwoStepPage() {
         <TwoStepForm enrolled={level.enrolled} />
       ) : (
         // A password alone can't bind a first app: an admin opens set-up (two-step.ts).
-        <div className="max-w-prose rounded-lg border border-border bg-surface p-4">
-          <p className="font-medium text-foreground">{s.setupClosedTitle}</p>
-          <p className="mt-1 text-sm text-muted">{s.setupClosed}</p>
-        </div>
+        <p className="max-w-prose rounded-lg border border-border bg-surface p-4 text-sm text-foreground">
+          {s.setupClosed}
+        </p>
       )}
 
       <p className="max-w-prose text-xs text-muted">{s.lostPhone}</p>
