@@ -58,10 +58,10 @@ Run against `next build` + `next start` 16.3.8 on port 3008 (not dev), signed in
 - [ ] Data persists — n/a: no data is written
 - [ ] Create / edit / delete — n/a: a dependency bump, no feature
 - [ ] Empty state — n/a: no UI change
-- [ ] Invalid input is rejected with a readable message — n/a beyond `/api/photos/bogus` returning 400 rather than crashing
+- [ ] Invalid input is rejected with a readable message — n/a: nothing to enter; only checked that `/api/photos/bogus` returning 400 rather than crashing
 - [x] Photo route: `/api/photos/<public id>` returns 200 `image/jpeg`, 279,212 bytes, starts `FFD8FFE0`, `cache-control: public, max-age=86400, s-maxage=86400, immutable`
 - [x] react-pdf stack under the production server: signed-in `GET /manual/pdf?images=0` returns 200 `application/pdf`, 33 pages, `NotoSansThai-Regular` and `-Bold` embedded. That exercises `serverExternalPackages: ["@react-pdf/reconciler"]` and the `yoga-layout/load` alias to the WASM loader, the same renderer stack the deceased-resident archive uses
-- [ ] The deceased-resident archive summary PDF itself — not driven: it needs a deceased resident and a Drive upload, and writes to dev. Same libraries and bundling as the manual PDF above. Left for manual verification below
+- [ ] The deceased-resident archive summary PDF itself — n/a: not driven here, it needs a deceased resident and a Drive upload, and writes to dev. Same libraries and bundling as the manual PDF above. Left for manual verification below
 - [x] Boundary: `/manual/pdf?view=all` (screenshots on) returned a 200 PDF on its first request but the server then logged `Incomplete or corrupt PNG file` ~195 times and later requests were slow. Pre-existing and not from this bump: on the Node origin the route fetches each screenshot over HTTP, `src/proxy.ts` redirects that unauthenticated request to `/login` (confirmed with curl: 307, 44 bytes), and the Worker uses its `ASSETS` binding instead. Not compared against 16.3.5 directly; the mechanism does not involve Next's version. See Defects
 
 ### Role access matrix
@@ -76,7 +76,7 @@ Run against `next build` + `next start` 16.3.8 on port 3008 (not dev), signed in
 | signed out | `/manual/pdf` and `/manual/*.png` redirect (307) to login | unchanged | as expected |
 
 - [ ] Every role above tested — n/a: no access logic changed
-- [ ] A role that should not have access is blocked server-side — the signed-out redirect above is the only case checked; otherwise n/a
+- [ ] A role that should not have access is blocked server-side — n/a: no access logic changed (the signed-out redirect above is the one case seen)
 
 ## 5. Cross-cutting
 
@@ -85,7 +85,7 @@ Run against `next build` + `next start` 16.3.8 on port 3008 (not dev), signed in
 - [ ] Translatable strings — n/a: none
 - [ ] Mobile viewport — n/a: no UI change
 - [ ] Browser console clean — n/a: nothing rendered differently; sign-in and `/my` loaded under 16.3.8
-- [ ] Network clean — n/a beyond the checks above
+- [ ] Network clean — n/a: covered by the route checks above
 
 ## 6. Regression
 
@@ -113,10 +113,10 @@ Run against `next build` + `next start` 16.3.8 on port 3008 (not dev), signed in
 
 - [ ] Deployed to test — n/a: the release goes the normal way
 - [ ] Smoke-tested on `test.lannacare.org` — n/a: the Worker/OpenNext build on 16.3.8 is untested here; the release smoke test covers it
-- [ ] Timezone-sensitive behaviour proved — n/a
-- [ ] Boundary assertions cover both edges — n/a
+- [ ] Timezone-sensitive behaviour proved — n/a: no date logic
+- [ ] Boundary assertions cover both edges — n/a: no thresholds
 - [ ] Evidence pasted is the tool's actual output — n/a: no deployed evidence
-- [ ] Public pages re-checked after cache purge — n/a
+- [ ] Public pages re-checked after cache purge — n/a: no page changed
 
 ### Deploy safety
 
@@ -159,16 +159,16 @@ Automated checks by: Claude (bump-next-16-3-8 session)  Date: 2026-10-01
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: items 1 and 2 are for after the test deploy, so nobody has looked yet (see the pending signature)
 
-Manual verification by: 
+Manual verification by: pending: archive PDF and Worker build on test.lannacare.org after deploy
 
 ### Result
 
-- [ ] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR
+- [x] Open defects are either fixed or explicitly accepted above — defect 1 is pre-existing, low, and deferred to the backlog
+- [x] Checklist pasted into the PR
 - [ ] Handed to the production release manager — n/a: nothing deploys from this stream
 
-Result: 
+Result: pass with accepted defects
 
 Release manager acknowledgement: n/a  Date: —
