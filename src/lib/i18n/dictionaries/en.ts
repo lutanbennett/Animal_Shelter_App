@@ -1160,6 +1160,67 @@ const en = {
     },
   },
 
+  units: {
+    title: "Units of measure",
+    intro:
+      "An item keeps one base unit — the one it is fed or dosed in. Add the other units it is bought and counted in, and how many base units one of them holds. Deliveries and the stocktake then take a quantity in those units and save the base-unit amount.",
+    approxNote:
+      "A factor can be approximate — a cup of kibble varies a little with the brand and how it is scooped. Use your usual measure; the figures that come from it are estimates to the same degree.",
+    historyNote:
+      "Correcting a factor is safe: every delivery and count already saved keeps the amount it was saved with, so past figures don't move.",
+    none: "No other units yet. Everything is in the base unit.",
+    baseUnit: (unit: string) => `Base unit: ${unit}`,
+    summary: (count: number) => (count === 0 ? "no other units" : `${count} other ${count === 1 ? "unit" : "units"}`),
+    oneIs: (unit: string, factor: string, base: string) => `1 ${unit} = ${factor} ${base}`,
+    purchaseBadge: "Bought in",
+    countBadge: "Counted in",
+    add: "Add a unit",
+    edit: "Edit",
+    delete: "Delete",
+    deleteConfirm: (unit: string) => `Delete the unit “${unit}”? Deliveries and counts already saved keep their amounts.`,
+    save: "Save unit",
+    saving: "Saving…",
+    saved: "Saved",
+    cancel: "Cancel",
+    unit: "Unit name",
+    unitPlaceholder: "e.g. bag (20 kg)",
+    factor: (base: string) => `How many ${base} in one`,
+    note: "Note (optional)",
+    notePlaceholder: "e.g. level scoop of the green cup",
+    isPurchase: "The unit it is bought in",
+    isCount: "The unit it is counted in",
+    price: {
+      title: "Price per purchase unit",
+      label: (unit: string) => `Price per ${unit} (฿)`,
+      hint: (base: string) => `Saved as a cost per ${base}, which the forecasts and Cashflow use.`,
+      now: (price: string, unit: string, perBase: string, base: string) =>
+        `Now ${price} per ${unit} (฿${perBase} per ${base}).`,
+      set: "Set price",
+    },
+    entry: {
+      unit: "Unit",
+      equals: (quantity: string, unit: string) => `= ${quantity} ${unit}`,
+      approx: "≈ (approximate factor)",
+      recent: (quantity: string, unit: string, base: string, baseUnit: string) =>
+        `${quantity} ${unit} (${base} ${baseUnit})`,
+    },
+    onHand: (quantity: string, unit: string) => `≈ ${quantity} ${unit}`,
+    errors: {
+      notAuthorized: "Only management can change units of measure.",
+      unitRequired: "Give the unit a name.",
+      factorInvalid: "How many base units it holds must be a number above 0.",
+      sameAsBase: (base: string) => `“${base}” is already this item's base unit. Name a different unit.`,
+      duplicate: "This item already has a unit with that name.",
+      unknownUnit: "That unit isn't one of this item's units any more. Reload the page and choose again.",
+      priceInvalid: "The price must be a number, 0 or more.",
+      noPurchaseUnit: "Mark one unit as the one it is bought in first.",
+      tooCoarse:
+        "That price works out to too small an amount per base unit to keep to 2 decimal places. Nothing was changed.",
+      gone: "That item or unit has been deleted. Reload the page.",
+      failed: "Nothing was saved",
+    },
+  },
+
   stocktake: {
     title: "Stocktake",
     subtitle:
@@ -1236,7 +1297,7 @@ const en = {
       itemPlaceholder: "Choose…",
       quantity: "Quantity",
       quantityIn: (unit: string) => `Quantity, in ${unit}`,
-      quantityHint: "In the item's own unit — tablets, ml, g — not boxes or bags.",
+      quantityHint: "In the unit shown beside it. If the item has other units set up, pick one — bags, boxes — and the amount in its own unit is worked out for you.",
       packs: "Came in packs?",
       packsCount: "Number of packs",
       perPack: "Amount in each pack",

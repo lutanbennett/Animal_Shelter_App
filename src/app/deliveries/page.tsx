@@ -13,6 +13,7 @@ import {
   sideOfCount,
   type DeliveryKind,
 } from "@/lib/management/stock-receipts";
+import { CONVERSION_COLUMNS, groupConversions, type ConversionRow, type EnteredLine } from "@/lib/units";
 import { RecordDeliveryForm, type DeliveryFormItem } from "./RecordDeliveryForm";
 import { DeleteDeliveryButton } from "./DeleteDeliveryButton";
 
@@ -40,6 +41,8 @@ type ReceiptRow = {
   cost: number | string | null;
   note: string | null;
   recorded_by: string | null;
+  /** What was typed and the factor stamped then (0118); null = entered in the base unit. */
+  entered: EnteredLine[] | null;
 };
 
 /** How many recent deliveries the list shows. */
@@ -53,7 +56,7 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
   const searchParams = await props.searchParams;
   const initialKind: DeliveryKind = searchParams.tab === "diets" ? "diet" : "medication";
 
-  const [medicationResult, dietResult, countsResult, suppliersResult, receiptsResult] = await Promise.all([
+  const [medicationResult, dietResult, countsResult, suppliersResult, receiptsResult, conversionsResult] = await Promise.all([
     supabase.from("medication").select("id, name, unit:dose_unit").order("name").returns<ItemRow[]>(),
     supabase.from("diet_types").select("id, name, unit").order("name").returns<ItemRow[]>(),
     supabase
@@ -72,18 +75,25 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
     supabase
       .from("stock_receipts")
       .select(
-        "id, item_kind, medication_id, diet_type_id, quantity, unit, received_at, supplier_contact_id, cost, note, recorded_by",
+        "id, item_kind, medication_id, diet_type_id, quantity, unit, received_at, supplier_contact_id, cost, note, recorded_by, entered",
       )
       .order("received_at", { ascending: false })
       .limit(RECENT)
       .returns<ReceiptRow[]>(),
+    supabase.from("item_unit_conversions").select(CONVERSION_COLUMNS).returns<ConversionRow[]>(),
   ]);
 
+  const conversions = groupConversions(conversionsResult.data ?? []);
   const medications = medicationResult.data ?? [];
   const diets = dietResult.data ?? [];
   const toItem =
     (unitLabel: (unit: string) => string) =>
-    (row: ItemRow): DeliveryFormItem => ({ id: row.id, name: row.name, unit: unitLabel(row.unit) });
+    (row: ItemRow): DeliveryFormItem => ({
+      id: row.id,
+      name: row.name,
+      unit: unitLabel(row.unit),
+      conversions: conversions[row.id] ?? [],
+    });
 
   const counts = countsResult.data ?? [];
   const countDays = {
@@ -115,7 +125,7 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
   );
 
   const loadError =
-    medicationResult.error ?? dietResult.error ?? countsResult.error ?? suppliersResult.error;
+    medicationResult.error ?? dietResult.error ?? countsResult.error ?? suppliersResult.error ?? conversionsResult.error;
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
@@ -176,6 +186,21 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
                     <span className="font-medium text-foreground">
                       {d.recent.line(itemName.get(id) ?? "—", formatQuantity(Number(r.quantity)), unit)}
                     </span>
+                    {/* The amounts stored on the row, never a live conversion. */}
+                    {r.entered && (
+                      <span className="text-xs text-muted">
+                        {r.entered
+                          .map((line) =>
+                            t.units.entry.recent(
+                              formatQuantity(line.quantity),
+                              line.unit,
+                              formatQuantity(Number(r.quantity)),
+                              unit,
+                            ),
+                          )
+                          .join(" + ")}
+                      </span>
+                    )}
                     <span className="text-xs text-muted">
                       {[
                         formatDateTime(r.received_at, locale),

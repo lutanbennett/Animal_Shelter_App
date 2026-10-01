@@ -36,6 +36,8 @@ export type MedicationRow = {
   stock: StockFigures;
   /** Days-of-stock, computed on the server from the 30-day forecast. */
   stockReading: StockReading;
+  /** Stock on hand in the purchase unit (0118); null without one. */
+  purchaseUnit: { quantity: number; unit: string } | null;
 };
 
 /** Columns besides the forecast windows: name, unit, cost, stock, days, prescriptions, actions. */
@@ -261,6 +263,7 @@ function MedicationRowItem({
           counting={mode === "count"}
           countValue={count}
           onCountChange={setCount}
+          inPurchaseUnit={medication.purchaseUnit}
         />
         <DaysOfStockCell
           figures={medication.stock}

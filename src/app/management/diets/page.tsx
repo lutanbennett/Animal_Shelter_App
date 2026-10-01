@@ -10,6 +10,10 @@ import { formatDate } from "@/lib/format";
 import { forecastWindows, parseCustomWindow } from "@/lib/management/forecast-window";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { STOCK_RATE_DAYS, readStock, stockFiguresOf } from "@/lib/management/stock";
+import { UnitsPanel } from "@/components/UnitsPanel";
+import { dietUnitLabel } from "@/lib/i18n/enum-labels";
+import { inPurchaseUnit } from "@/lib/units";
+import { loadConversions } from "@/lib/units-server";
 
 type DietTypeQueryRow = Omit<DietTypeRow, "diet_count" | "forecast" | "stock" | "stockReading"> & {
   stock_on_hand: number | string | null;
@@ -78,6 +82,8 @@ export default async function DietsManagementPage(props: PageProps<"/management/
   // so it means the same thing whatever the picker shows.
   const rateWindow = windows.findIndex((window) => window.days === STOCK_RATE_DAYS);
 
+  const conversions = await loadConversions(supabase, "diet");
+
   const dietTypes: DietTypeRow[] = (typesResult.data ?? []).map((type) => {
     const forecast = forecasts.map((byType) => {
       const row = byType.get(type.id);
@@ -102,6 +108,7 @@ export default async function DietsManagementPage(props: PageProps<"/management/
       forecast,
       stock,
       stockReading: readStock(stock, forecast[rateWindow]?.quantity ?? 0),
+      purchaseUnit: inPurchaseUnit(stock.stock_on_hand, conversions.data[type.id] ?? []),
     };
   });
 
@@ -178,6 +185,22 @@ export default async function DietsManagementPage(props: PageProps<"/management/
           <p className="text-xs text-muted">{m.table.forecastNote}</p>
           <p className="text-xs text-muted">{t.management.stock.note}</p>
         </section>
+
+        {conversions.error && (
+          <p className="text-sm text-danger">
+            {t.units.title}: {conversions.error}
+          </p>
+        )}
+        <UnitsPanel
+          kind="diet"
+          items={dietTypes.map((type) => ({
+            id: type.id,
+            name: type.name,
+            baseUnit: dietUnitLabel(t, type.unit),
+            conversions: conversions.data[type.id] ?? [],
+            costPerBase: type.cost_per_unit,
+          }))}
+        />
       </LargerScreenNotice>
     </main>
   );
