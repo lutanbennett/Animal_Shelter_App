@@ -151,9 +151,9 @@ Automated checks by: Claude (session-inactivity-timeout session)  Date: 2026-10-
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — items 1–3 are Lutan’s to do
 
-Manual verification by:
+Manual verification by: pending: the three items under Left for manual verification
 
 ### Result
 
