@@ -24,6 +24,7 @@ export default async function ResidentPage(
   props: PageProps<"/residents/[id]">,
 ) {
   const { id } = await props.params;
+  const { archive: archiveFlag } = await props.searchParams;
   const supabase = await createClient();
 
   const [
@@ -206,6 +207,8 @@ export default async function ResidentPage(
         summaryDriveFileId: resident.deceased_summary_drive_file_id,
         indexDriveFileId: resident.deceased_index_drive_file_id,
         driveFolderId: resident.drive_folder_id,
+        // Set by the after-death edit when Drive could not be refreshed.
+        notRefreshed: archiveFlag === "stale",
       }}
       canRecordDeath={DECEASED_ROLES.has(roleResult.data ?? "")}
       canUndoDeath={UNDO_DECEASED_ROLES.has(roleResult.data ?? "")}

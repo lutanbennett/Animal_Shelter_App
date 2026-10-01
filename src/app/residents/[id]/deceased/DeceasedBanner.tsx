@@ -14,6 +14,8 @@ export type DeceasedArchive = {
   summaryDriveFileId: string | null;
   indexDriveFileId: string | null;
   driveFolderId: string | null;
+  /** The edit just saved could not be copied to Drive (arrives as ?archive=stale). */
+  notRefreshed?: boolean;
 };
 
 const linkClass =
@@ -108,12 +110,33 @@ export function DeceasedBanner({
       </div>
 
       {archived ? (
-        <p className="text-xs text-muted">
-          {d.banner.archivedAt(formatDate(archive.archivedAt, locale))}
-        </p>
+        <form action={formAction} className="flex flex-wrap items-center gap-3">
+          <p className="text-xs text-muted">
+            {d.banner.archivedAt(formatDate(archive.archivedAt, locale))}
+          </p>
+          {canRetryArchive && (
+            <button
+              type="submit"
+              disabled={pending}
+              className="rounded border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-surface-hover disabled:opacity-50"
+            >
+              {pending ? d.banner.archiving : d.banner.refreshArchive}
+            </button>
+          )}
+          {state && "error" in state && (
+            <span className="text-xs text-danger">{state.error}</span>
+          )}
+          {archive.notRefreshed && (
+            <p role="alert" className="basis-full text-xs text-danger">
+              {d.banner.archiveNotRefreshed}
+            </p>
+          )}
+          <p className="basis-full text-xs text-muted">{d.banner.refreshHint}</p>
+        </form>
       ) : (
         <form action={formAction} className="flex flex-wrap items-center gap-3">
           <p className="text-xs text-danger">{d.banner.archiveIncomplete}</p>
+          <p className="basis-full text-xs text-muted">{d.banner.notArchivedYet}</p>
           {canRetryArchive && (
             <button
               type="submit"

@@ -3181,6 +3181,13 @@ const en = {
           "The Drive archive didn't finish — the folder move, summary PDF or index page is missing.",
         retryArchive: "Retry archiving",
         archiving: "Archiving...",
+        refreshArchive: "Refresh archive",
+        refreshHint:
+          "Photos and the bio can still change after a death; the PDF and index above are refreshed automatically. If a change shows a warning that the archive wasn't refreshed, use this to try again.",
+        archiveNotRefreshed:
+          "Saved — but the Drive archive couldn't be refreshed, so the summary PDF and index page are out of date. Open the resident's page and use \"Refresh archive\" to try again.",
+        notArchivedYet:
+          "The first archive never finished, so edits are not copied to Drive yet. Use \"Retry archiving\" to produce it; it will include everything saved so far.",
       },
       undo: {
         pageTitle: (name: string) => `Withdraw ${name}'s recorded death`,
