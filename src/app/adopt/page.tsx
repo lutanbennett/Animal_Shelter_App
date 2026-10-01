@@ -245,7 +245,7 @@ export default async function AdoptPage(props: PageProps<"/adopt">) {
                   <div className="relative aspect-square w-full overflow-hidden rounded-full border border-border bg-surface">
                     {a.profile_photo_drive_file_id ? (
                       <Image
-                        src={driveImageUrl(a.profile_photo_drive_file_id)}
+                        src={driveImageUrl(a.profile_photo_drive_file_id, 400)}
                         alt={a.name}
                         fill
                         className="object-cover"

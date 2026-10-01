@@ -26,6 +26,7 @@
  */
 
 import { ADOPTION_UPDATES_FOLDER } from "@/lib/adoption-updates/options";
+import { purgeCachedPhoto } from "@/lib/photo-cache";
 
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const DRIVE_API = "https://www.googleapis.com/drive/v3";
@@ -372,7 +373,7 @@ export class DriveClient {
   async downloadThumbnail(fileId: string, size: number): Promise<DriveDownload | null> {
     const { thumbnailLink } = await this.getFile(fileId, "thumbnailLink");
     if (!thumbnailLink) return null;
-    const url = thumbnailLink.replace(/=sd+$/, `=s${size}`);
+    const url = thumbnailLink.replace(/=s\d+$/, `=s${size}`);
     // Without an Accept header googleusercontent may answer with WebP,
     // which the PDF renderer can't embed.
     const accept = { Accept: "image/jpeg,image/png" };
@@ -402,6 +403,7 @@ export class DriveClient {
       headers: { "Content-Type": "application/json; charset=UTF-8" },
       body: JSON.stringify({ trashed: true }),
     });
+    await purgeCachedPhoto(fileId);
   }
 
   /** `files.delete` — permanent, skips the trash. */
@@ -409,6 +411,7 @@ export class DriveClient {
     await this.request(`${DRIVE_API}/files/${encodeURIComponent(fileId)}`, {
       method: "DELETE",
     });
+    await purgeCachedPhoto(fileId);
   }
 }
 

@@ -10,6 +10,8 @@
 //   node scripts/pi/write-env.mjs [--env production|uat|test]
 
 import { writeFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { loadEnv, parseEnvArg, projectRef } from "../lib/env.mjs";
 import { readWranglerConfig } from "../lib/wrangler.mjs";
 
@@ -66,6 +68,10 @@ const lines = [
   ...KEYS.map((k) => `${k}=${env[k]}`),
   ...RUNTIME_VARS.filter((k) => vars[k]).map((k) => `${k}=${vars[k]}`),
   `NEXT_PUBLIC_SITE_URL=https://${publicHost}`,
+  // The sized-photo disk cache (src/lib/photo-cache.ts). Only a Pi has this
+  // line, so the Worker fallback and `next dev` stay diskless. Disposable and
+  // capped (PHOTO_CACHE_MAX_MB, default 1024), kept outside ~/backups.
+  `PHOTO_CACHE_DIR=${join(homedir(), "photo-cache")}`,
 ];
 writeFileSync(".env.production.local", lines.join("\n") + "\n", { mode: 0o600 });
 console.log(`write-env: .env.production.local → ${name} (Supabase ${projectRef(env)}, site https://${publicHost})`);

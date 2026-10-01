@@ -69,7 +69,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const description =
     pairedText(locale, content?.tagline, content?.tagline_th) || t.home.shareFallback;
   const image = content?.hero_drive_file_id
-    ? driveImageUrl(content.hero_drive_file_id)
+    ? driveImageUrl(content.hero_drive_file_id, 1200)
     : undefined;
   const title = t.header.appName;
 
@@ -232,7 +232,7 @@ export default async function WelcomePage() {
         {content?.hero_drive_file_id && (
           <div className="relative aspect-[4/3] overflow-hidden rounded-[20px] bg-site-sand lg:aspect-auto lg:h-[460px]">
             <Image
-              src={driveImageUrl(content.hero_drive_file_id)}
+              src={driveImageUrl(content.hero_drive_file_id, 1200)}
               alt={heroAlt || t.header.appName}
               fill
               priority
@@ -303,7 +303,7 @@ export default async function WelcomePage() {
                     {friend.logo_drive_file_id ? (
                       <>
                         <Image
-                          src={driveImageUrl(friend.logo_drive_file_id)}
+                          src={driveImageUrl(friend.logo_drive_file_id, 400)}
                           alt=""
                           width={144}
                           height={56}
@@ -383,7 +383,7 @@ export default async function WelcomePage() {
             <div className="relative aspect-[4/3] w-full bg-site-sand sm:aspect-auto sm:h-[280px]">
               {featured.profile_photo_drive_file_id ? (
                 <Image
-                  src={driveImageUrl(featured.profile_photo_drive_file_id)}
+                  src={driveImageUrl(featured.profile_photo_drive_file_id, 1200)}
                   alt={featured.name}
                   fill
                   sizes="(min-width: 1024px) 50vw, 100vw"
@@ -433,7 +433,7 @@ export default async function WelcomePage() {
                   className="relative aspect-square overflow-hidden rounded-xl bg-site-sand sm:aspect-auto sm:h-[150px]"
                 >
                   <Image
-                    src={driveImageUrl(photo.drive_file_id)}
+                    src={driveImageUrl(photo.drive_file_id, 400)}
                     alt={photo.alt}
                     fill
                     sizes="(min-width: 1024px) 16vw, 33vw"

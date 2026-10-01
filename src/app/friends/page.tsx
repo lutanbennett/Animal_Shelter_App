@@ -26,7 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = `${f.pageTitle} · ${t.header.appName}`;
   const description = f.shareFallback;
   const logo = friends.find((friend) => friend.logo_drive_file_id)?.logo_drive_file_id;
-  const image = logo ? driveImageUrl(logo) : undefined;
+  const image = logo ? driveImageUrl(logo, 1200) : undefined;
 
   return {
     title,

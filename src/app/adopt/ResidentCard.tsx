@@ -38,7 +38,7 @@ export function ResidentCard({
       <div className="relative aspect-[4/3] w-full bg-background">
         {resident.profile_photo_drive_file_id ? (
           <Image
-            src={driveImageUrl(resident.profile_photo_drive_file_id)}
+            src={driveImageUrl(resident.profile_photo_drive_file_id, 400)}
             alt={resident.name}
             fill
             className="object-cover transition group-hover:scale-105"

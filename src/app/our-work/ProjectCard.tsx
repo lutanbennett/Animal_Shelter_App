@@ -37,7 +37,7 @@ export function ProjectCard({
       <div className="relative aspect-[4/3] w-full bg-background">
         {project.cover_drive_file_id ? (
           <Image
-            src={driveImageUrl(project.cover_drive_file_id)}
+            src={driveImageUrl(project.cover_drive_file_id, 400)}
             alt={title}
             fill
             className="object-cover transition group-hover:scale-105"

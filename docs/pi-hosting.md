@@ -173,6 +173,17 @@ one that stops answering. Put it somewhere with different power and
 internet — the shelter itself is the obvious place — and run
 `deploy-pi.sh` on both after each merge.
 
+## Photo cache on the Pi
+
+`/api/photos/<id>?w=160|400|1200` serves Drive's own sized copy of a public photo
+(`docs/decisions/2026-10-01-public-photo-sizing.md`). On the Pi each size is also kept
+in `~/photo-cache/<fileId>/<w>.jpg` (`PHOTO_CACHE_DIR`, written into
+`.env.production.local` by `write-env.mjs` on every `deploy-pi.sh`), capped at 1 GiB
+(`PHOTO_CACHE_MAX_MB`) with oldest-first eviction. It is disposable: not in the
+backups, and `rm -rf ~/photo-cache` is always safe. The Worker fallback has no disk
+and goes to Drive. To see it working: request a size twice; the second is served
+from the folder with no Drive call.
+
 ## Edge cache notes
 
 The Worker caches anonymous GETs of `/`, `/adopt…`, `/our-work…`,
