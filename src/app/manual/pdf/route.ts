@@ -10,7 +10,9 @@ import { loadCurrentRole } from "@/lib/auth/app-access";
  * GET /manual/pdf — the manual as a printable PDF.
  *
  * Signed-in only, like /manual itself: proxy.ts turns a signed-out request
- * away, and nothing here widens that (the manual describes the staff app;
+ * away, and this route checks again rather than trusting that it still does
+ * (a matcher or public-path edit would silently open it). Nothing here widens
+ * it (the manual describes the staff app;
  * making it public would be a scope change, see docs/decisions/). A
  * volunteer without a login gets a copy from someone who has one.
  *
@@ -38,7 +40,13 @@ export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
   const asked = params.get("view") === "all";
   const withImages = params.get("images") !== "0";
-  const role = asManualRole(await createClient().then(loadCurrentRole));
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return new NextResponse("Sign in to view the manual.", { status: 401 });
+
+  const role = asManualRole(await loadCurrentRole(supabase));
   const all = asked || !role;
 
   const images: ManualImages = new Map();

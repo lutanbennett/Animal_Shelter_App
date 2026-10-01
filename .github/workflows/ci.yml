@@ -29,8 +29,8 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: placeholder
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -47,10 +47,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
       # Red means the plan is missing, incomplete or self-contradictory — always
@@ -81,10 +81,32 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
       - run: node scripts/check-migration-numbers.mjs --base origin/${{ github.base_ref }}
+
+  # Known-vulnerable production dependencies, reported, not enforced. Red on
+  # this job would learn to be ignored: npm audit routinely reports things
+  # nobody can act on today (an advisory with no fixed release, a chain that
+  # only a major bump clears), and a check that is red for a week before
+  # anyone can do anything is one people stop reading. So `continue-on-error`
+  # is right HERE — the opposite of test-plan above, where the same flag hid a
+  # genuinely broken plan behind green. The difference: test-plan's failures
+  # are always someone's mistake to fix, this one's are not. Read the log on
+  # the PR; act on a high or critical with a fix available.
+  audit:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm audit --omit=dev --audit-level=high
