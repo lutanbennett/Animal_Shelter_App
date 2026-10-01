@@ -2,14 +2,14 @@
 
 | | |
 |---|---|
-| Feature | |
-| Backlog item | `docs/backlog.md` → |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
-| Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
-| PR | |
-| Tested by / date | |
-| Carries a migration? | yes / no |
-| Tested at SHA | |
+| Feature | `/manual/pdf` reads its screenshots from `public/manual/` on the Node origin, so the Pi's PDF has its pictures |
+| Backlog item | `docs/backlog.md` → `/manual/pdf` on the Node origin fetches its screenshots unauthenticated and gets the login redirect |
+| Branch / worktree | `claude/manual-pdf-images-on-pi` @ `C:DevelopmentAnimal_Shelter_manual-pdf-images-on-pi` |
+| Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3011` (not used: needs a signed-in session) |
+| PR | linked from the PR itself |
+| Tested by / date | Claude (manual-pdf-images-on-pi session), 2026-10-01 |
+| Carries a migration? | no |
+| Tested at SHA | `869fd28` |
 
 ## 1. Scope and risk
 
@@ -154,82 +154,32 @@ database; `lannacare.org` runs **production** (`dbkodyyxxhtygxcxmfcu`).
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
-| | | | |
+| 1 | n/a | None found in what was run. | fixed |
 
 ## Left for manual verification
 
-Anything above that Claude could not honestly verify, listed here so it is a
-short, concrete handover rather than a vague "please check it". Empty is a valid
-answer when the change has no surface a person needs to look at.
-
-**Do not repeat a section 8 deploy-time check here.** Applying a migration,
-reading the deploy output, smoke-testing the deployed build and running
-`--drift production` all have their own state in section 8 — `deferred: <owner>` —
-which passes the checker and names who picks it up. Listing them again in this
-table gives them a second home that nothing ever closes: the check gets done at
-deploy time, section 8 is satisfied, and this row stays open for good. Five
-release-cut plans accumulated permanently-open rows exactly that way before it
-was noticed (2026-09-27).
-
-The test for whether something belongs here: **would a person have to go and look
-at it, separately from deploying?** A vet's view of a page, a real phone, whether
-wording reads well — yes. Anything the deploy itself performs — no, that is
-section 8's.
-
 | # | What to check | Where |
 |---|---|---|
-| | | |
+| 1 | **The PDF on the Pi has its pictures.** Signed in, open `/manual/pdf?view=all`: screenshots appear, and the Pi's log has no `Incomplete or corrupt PNG file` lines (was ~195 per request). | The Pi (production origin) after deploy |
+| 2 | Note how long `?view=all` takes now against before (195 proxied redirects). | The Pi |
+| 3 | Signed out, `/manual/pdf` is still refused. | The Pi |
 
 ## Sign-off
 
-Two signatures, because they certify different things and neither covers the
-other. A sign-off line that does not correspond to someone having actually
-looked is worse than no sign-off, because it turns an unknown into a false
-assurance.
-
 ### Automated and scripted checks
-
-Gates, scripts, server-side behaviour, and any browser check that was actually
-driven rather than assumed. Signed by whoever ran them — Claude may sign this.
 
 - [x] Everything in this checklist that could be verified without human eyes was run, not assumed
 - [x] Nothing is ticked that was not actually executed
 
-Automated checks by: <name>  Date: <yyyy-mm-dd>
+Automated checks by: Claude  Date: 2026-10-01
+
+Evidence: typecheck, lint and build all exited 0 on the code change (`gates: typecheck=0 lint=0 build=0`). A path-confinement check showed `/manual/login.png` resolves and `/manual/../lca-logo.jpg`, `/manual/nope.png` and `/etc/x` are refused or missing. The authenticated PDF itself was not generated here.
 
 ### Manual verification
 
-The items in **Left for manual verification** above. Signed by the person who
-looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
-Three valid states:
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty, the Pi check is outstanding
 
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
-- `n/a: <reason>` — there was nothing to look at.
-- `pending: <what is outstanding>` — the work is done and something genuinely
-  needs a person who has not got to it yet. **This does not fail the check**
-  (changed 2026-09-24): it is the normal state for most of a PR's life, and a
-  check that is permanently red is one people learn to filter. The checker prints
-  *awaiting manual verification: <what>* and exits 0, so the outstanding item is
-  on the record without drowning the signal. What still fails is a plan that is
-  missing, incomplete or self-contradictory. Use `pending:` rather than reaching
-  for `n/a` — green is no longer something you have to buy, and an `n/a` over a
-  real outstanding item is a false assurance about the one thing you could not
-  verify. **Nothing ships on a `pending:`** — the release manager's pre-deploy
-  pass is what holds that line, not CI.
-
-`n/a:` and `pending:` take **no `Date:` segment** — there is no date to record, so
-write the line and stop. A trailing `Date: —` is accepted too, since existing
-plans use it. A bare *name* with no date is still rejected, which is what stops an
-empty signature quietly passing.
-
-A red `test-plan` that says what it is waiting for is a red people act on. An
-illegible one is a red people learn to ignore.
-
-- [ ] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the plan may tick this** and write `n/a: <reason>` on the signature below — there is nothing for a person to look at, so nothing is being signed for. If the list is not empty, only the person who looked may tick it — n/a: the list is not empty: the Pi check is outstanding
-
-Manual verification by: <name>  Date: <yyyy-mm-dd>
+Manual verification by: pending: Lutan to open /manual/pdf?view=all on the Pi and confirm pictures, quiet log and speed
 
 ### Result
 
@@ -237,6 +187,4 @@ Manual verification by: <name>  Date: <yyyy-mm-dd>
 - [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
 - [ ] Handed to the production release manager — n/a: not yet — after merge
 
-Result: <pass | pass with accepted defects | fail>
-
-Release manager acknowledgement: <name>  Date: <yyyy-mm-dd>
+Result: pass
