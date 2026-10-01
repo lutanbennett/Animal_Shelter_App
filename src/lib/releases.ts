@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Signing in on lannacare.org works again, and so does every other form on the site. Since the evening of 30 September, trying to sign in — or to save, add or change anything at all — answered \"A server error occurred\" and nothing was saved. Pages you were only reading were not affected.",
   "When you change the bio or photos of a resident who has died, and the copy in Google Drive couldn't be refreshed, you are now told straight away instead of it staying out of date silently. The resident's page has a Refresh archive button to try again.",
   "If something goes wrong while saving, renaming, moving or deleting a project folder or photo, the Projects pages now say so with a short reference you can quote, instead of showing a numbered error code.",
   "Food and medicines can now be bought, delivered and counted in a different unit from the one they are fed or dosed in. Under Management → Diets or → Medications, Units of measure lets you say that a bag (20 kg) is 200 cups, say, and which unit the item is bought and counted in. Record a delivery and the stocktake then let you pick that unit, show what it comes to in cups, and save the cups; In stock also shows it in bags. Enter the price per bag and the cost per cup is worked out for the forecasts. Correcting a bag's size later never changes deliveries and counts already saved.",

@@ -109,7 +109,22 @@ const nextConfig: NextConfig = {
     // checks. proxy.ts clones request bodies up to 10 MB by default and
     // truncates the rest — the same problem for the upload routes. Both
     // follow the app's one limit (src/lib/uploads/limits.ts).
-    serverActions: { bodySizeLimit: MAX_UPLOAD_BODY_BYTES },
+    serverActions: {
+      bodySizeLimit: MAX_UPLOAD_BODY_BYTES,
+      // Production is rendered by the Pi (ORIGIN_HOST=pi.lannacare.org),
+      // reached through cloudflared — which sets `x-forwarded-host` to its
+      // own ingress hostname, overwriting the public host the Worker put
+      // there (worker/index.mjs). Next compares the browser's `Origin`
+      // against that header, so from 2026-09-30 every action on
+      // lannacare.org was aborted: "`x-forwarded-host` ... `pi.lannacare.org`
+      // does not match `origin` ... `www.lannacare.org`". Not only sign-in —
+      // every one of the app's "use server" files. cloudflared's
+      // httpHostHeader rewrites `Host` alone, which is why that is not enough.
+      // These are the hosts in the visitor's address bar, which is what the
+      // docs say to list; the apex needs its own entry because `*` matches
+      // exactly one label and never the bare name.
+      allowedOrigins: ["lannacare.org", "*.lannacare.org"],
+    },
     proxyClientMaxBodySize: MAX_UPLOAD_BODY_BYTES,
   },
 };
