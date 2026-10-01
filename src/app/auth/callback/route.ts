@@ -3,6 +3,7 @@ import { signedInLandingPath } from "@/lib/auth/app-access";
 import { safeNextPath } from "@/lib/auth/next-path";
 import { PASSWORD_CHANGE_PATH } from "@/lib/auth/password-change";
 import { createClient } from "@/lib/supabase/server";
+import { getSiteOrigin } from "@/lib/site-origin";
 
 /**
  * OAuth return leg for "Continue with Google" (see signInWithGoogle in
@@ -20,7 +21,15 @@ import { createClient } from "@/lib/supabase/server";
  * path is honoured, so the parameter can't send anyone off-site.
  */
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = request.nextUrl;
+  const { searchParams } = request.nextUrl;
+  // Not request.nextUrl.origin: on the Pi that is http://localhost:3000,
+  // because cloudflared forwards to 127.0.0.1 and these redirects are built
+  // as strings, so Next emits them verbatim instead of normalising them to a
+  // same-origin relative Location. A signed-in visitor was sent to
+  // https://localhost:3000/my and went nowhere. getSiteOrigin() reads
+  // NEXT_PUBLIC_SITE_URL, which scripts/pi/write-env.mjs pins to the Worker's
+  // own route for the environment.
+  const origin = (await getSiteOrigin())?.origin ?? request.nextUrl.origin;
   const code = searchParams.get("code");
 
   if (!code || searchParams.get("error")) {
