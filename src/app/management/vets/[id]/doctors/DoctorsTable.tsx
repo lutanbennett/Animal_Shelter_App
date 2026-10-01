@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useMemo, useState, useTransition } from "react";
 import { formatDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -45,6 +46,7 @@ function DoctorRowItem({
   duplicates: DoctorRow[];
 }) {
   const { t, locale } = useI18n();
+  const confirm = useConfirm();
   const d = t.management.vetDoctors;
   const [name, setName] = useState(doctor.name);
   const [mode, setMode] = useState<"view" | "edit" | "merge">("view");
@@ -74,7 +76,7 @@ function DoctorRowItem({
     });
   }
 
-  function handleRename() {
+  async function handleRename() {
     const next = name.trim().replace(/\s+/g, " ");
     if (next === doctor.name) {
       reset();
@@ -82,7 +84,7 @@ function DoctorRowItem({
     }
     // A rename rewrites the name on every linked visit, past ones included.
     // Say how many before doing it.
-    if (doctor.visit_count > 0 && !window.confirm(d.renameConfirm(doctor.name, next, doctor.visit_count))) {
+    if (doctor.visit_count > 0 && !await confirm({ body: d.renameConfirm(doctor.name, next, doctor.visit_count) })) {
       return;
     }
     run(() => renameDoctor(vetId, doctor.id, next), t.common.saved);
@@ -94,15 +96,15 @@ function DoctorRowItem({
     setMode("merge");
   }
 
-  function handleMerge() {
+  async function handleMerge() {
     const target = mergeTargets.find((row) => row.id === mergeInto);
     if (!target) return;
-    if (!window.confirm(d.mergeConfirm(doctor.name, target.name, doctor.visit_count))) return;
+    if (!await confirm({ body: d.mergeConfirm(doctor.name, target.name, doctor.visit_count) })) return;
     run(() => mergeDoctors(vetId, doctor.id, target.id));
   }
 
-  function handleDelete() {
-    if (!window.confirm(d.deleteConfirm(doctor.name))) return;
+  async function handleDelete() {
+    if (!await confirm({ body: d.deleteConfirm(doctor.name), confirmLabel: t.common.delete })) return;
     run(() => deleteDoctor(vetId, doctor.id));
   }
 

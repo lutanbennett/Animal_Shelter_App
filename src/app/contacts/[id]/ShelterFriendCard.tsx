@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
@@ -89,6 +90,7 @@ export function ShelterFriendCard({
   translations: Partial<Record<"blurb" | "help_kind" | "discount_note", TranslationRow>>;
 }) {
   const { t, locale } = useI18n();
+  const confirm = useConfirm();
   const f = t.shelterFriends;
   const c = f.card;
   const [isPending, startTransition] = useTransition();
@@ -289,8 +291,8 @@ export function ShelterFriendCard({
           <button
             type="button"
             disabled={isPending}
-            onClick={() => {
-              if (window.confirm(c.removeConfirm(contact.name))) {
+            onClick={async () => {
+              if (await confirm({ body: c.removeConfirm(contact.name) })) {
                 run(() => deleteFriend(friend.id), () => setDraft(null));
               }
             }}
@@ -403,8 +405,8 @@ export function ShelterFriendCard({
                 <button
                   type="button"
                   disabled={isPending}
-                  onClick={() => {
-                    if (window.confirm(c.removeLogoConfirm)) {
+                  onClick={async () => {
+                    if (await confirm({ body: c.removeLogoConfirm })) {
                       run(() => removeFriendLogo(friend.id), undefined, "logo");
                     }
                   }}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -178,6 +179,7 @@ export function RecurringJobsView({
 
 function JobCard({ summary, onEdit }: { summary: JobSummary; onEdit: () => void }) {
   const { t, locale } = useI18n();
+  const confirm = useConfirm();
   const rj = t.management.recurringJobs;
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -231,8 +233,8 @@ function JobCard({ summary, onEdit }: { summary: JobSummary; onEdit: () => void 
             type="button"
             className={`${smallButton} hover:border-danger hover:text-danger`}
             disabled={isPending}
-            onClick={() => {
-              if (window.confirm(rj.confirmDelete(job.title))) run(() => deleteRecurringJob(job.id));
+            onClick={async () => {
+              if (await confirm({ body: rj.confirmDelete(job.title), confirmLabel: t.common.delete })) run(async () => deleteRecurringJob(job.id));
             }}
           >
             {rj.delete}

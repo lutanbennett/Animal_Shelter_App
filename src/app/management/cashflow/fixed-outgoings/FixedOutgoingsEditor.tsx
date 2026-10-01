@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { useState, useTransition } from "react";
 import { formatBaht, formatMonth } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -37,6 +38,7 @@ type Outcome = { ok: true; success: string } | { ok: false; error: string };
  */
 export function FixedOutgoingsEditor({ lines, max }: { lines: FixedOutgoing[]; max: number }) {
   const { t, locale } = useI18n();
+  const confirm = useConfirm();
   const m = t.management.fixedOutgoings;
   const [editing, setEditing] = useState<string | null>(null);
   const [fields, setFields] = useState<FixedOutgoingFields>(BLANK);
@@ -84,8 +86,8 @@ export function FixedOutgoingsEditor({ lines, max }: { lines: FixedOutgoing[]; m
     }
   }
 
-  function remove(line: FixedOutgoing) {
-    if (!window.confirm(m.confirmDelete(line.label))) return;
+  async function remove(line: FixedOutgoing) {
+    if (!await confirm({ body: m.confirmDelete(line.label), confirmLabel: t.common.delete })) return;
     run(() => deleteFixedOutgoing(line.id));
   }
 

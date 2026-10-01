@@ -6,6 +6,8 @@ import { MobileNavProvider } from "./MobileNavContext";
 import { PublicPathGate } from "./PublicPathGate";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getAppEnv } from "@/lib/app-env";
+import { ConfirmProvider } from "@/components/ConfirmProvider";
+import { OfflineBanner } from "@/components/OfflineBanner";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
 import "./globals.css";
 
@@ -60,6 +62,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <I18nProvider locale={locale}>
+          <ConfirmProvider>
+          <OfflineBanner />
           <MobileNavProvider>
             <PublicPathGate>
               <AppHeader />
@@ -77,6 +81,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
               {children}
             </div>
           </MobileNavProvider>
+          </ConfirmProvider>
         </I18nProvider>
       </body>
     </html>

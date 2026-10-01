@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -49,6 +50,7 @@ export function MaintenanceJobView({
   translations: TranslationRow[];
 }) {
   const { t, locale } = useI18n();
+  const confirm = useConfirm();
   // The reader's language when a manager has approved it, else as written.
   const titleTranslation = translations.find((row) => row.column_name === "title") ?? null;
   const descriptionTranslation =
@@ -66,8 +68,8 @@ export function MaintenanceJobView({
   const status = optimisticStatus ?? job.status;
 
   const [deleting, setDeleting] = useState(false);
-  function removeJob() {
-    if (!window.confirm(d.deleteConfirm(job.title))) return;
+  async function removeJob() {
+    if (!await confirm({ body: d.deleteConfirm(job.title), confirmLabel: t.common.delete })) return;
     setError(null);
     setDeleting(true);
     startTransition(async () => {

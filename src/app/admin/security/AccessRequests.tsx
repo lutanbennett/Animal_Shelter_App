@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { useState, useTransition } from "react";
 import { approveAccessRequest, deleteUser } from "./actions";
 import type { ActionResult } from "@/lib/action-result";
@@ -22,6 +23,7 @@ const ROLES = ["staff", "volunteer", "vet", "management", "admin", "public_viewe
 
 function RequestRow({ request }: { request: AccessRequest }) {
   const { t, locale } = useI18n();
+  const confirm = useConfirm();
   const r = t.admin.security.requests;
   const [role, setRole] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -35,8 +37,8 @@ function RequestRow({ request }: { request: AccessRequest }) {
     run(() => approveAccessRequest(request.id, role), t.admin.security.table.failedToUpdateRole);
   }
 
-  function deny() {
-    if (!window.confirm(r.denyConfirm(request.email))) return;
+  async function deny() {
+    if (!await confirm({ body: r.denyConfirm(request.email) })) return;
     run(() => deleteUser(request.id), t.admin.security.table.failedToDeleteUser);
   }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { deleteDelivery } from "./actions";
@@ -7,6 +8,7 @@ import { deleteDelivery } from "./actions";
 /** A delivery typed wrong is deleted and recorded again. */
 export function DeleteDeliveryButton({ id, label }: { id: string; label: string }) {
   const { t } = useI18n();
+  const confirm = useConfirm();
   const d = t.deliveries;
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -16,8 +18,8 @@ export function DeleteDeliveryButton({ id, label }: { id: string; label: string 
       <button
         type="button"
         disabled={pending}
-        onClick={() => {
-          if (!window.confirm(d.recent.deleteConfirm(label))) return;
+        onClick={async () => {
+          if (!await confirm({ body: d.recent.deleteConfirm(label), confirmLabel: t.common.delete })) return;
           setError(null);
           startTransition(async () => {
             const result = await deleteDelivery(id);

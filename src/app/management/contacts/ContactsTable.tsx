@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useState, useTransition } from "react";
 import Link from "next/link";
 import { deleteContact, updateContact } from "./actions";
@@ -33,6 +34,7 @@ const inputClass =
 
 function ContactRowItem({ contact }: { contact: ContactRow }) {
   const { t, locale } = useI18n();
+  const confirm = useConfirm();
   const c = t.management.contacts;
   const a = t.contacts.archive;
   const archived = isArchived(contact);
@@ -98,8 +100,8 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
     });
   }
 
-  function handleDelete() {
-    if (!window.confirm(c.deleteConfirm(contact.name))) return;
+  async function handleDelete() {
+    if (!await confirm({ body: c.deleteConfirm(contact.name), confirmLabel: t.common.delete })) return;
     setMessage(null);
     startTransition(async () => {
       const result = await deleteContact(contact.id);

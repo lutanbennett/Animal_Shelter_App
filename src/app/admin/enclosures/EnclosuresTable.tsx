@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useState, useTransition } from "react";
 import { deleteEnclosure, updateEnclosure } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -24,6 +25,7 @@ function EnclosureRowItem({
   zones: ZoneOption[];
 }) {
   const { t } = useI18n();
+  const confirm = useConfirm();
   const isSystem = enclosure.zones?.name === "Lifecycle";
 
   const [name, setName] = useState(enclosure.name);
@@ -69,8 +71,8 @@ function EnclosureRowItem({
     });
   }
 
-  function handleDelete() {
-    if (!window.confirm(t.admin.enclosures.deleteConfirm(enclosure.name))) return;
+  async function handleDelete() {
+    if (!await confirm({ body: t.admin.enclosures.deleteConfirm(enclosure.name), confirmLabel: t.common.delete })) return;
     setMessage(null);
     startTransition(async () => {
       const result = await deleteEnclosure(enclosure.id);
@@ -169,7 +171,7 @@ function EnclosureRowItem({
                     type="button"
                     disabled={isPending}
                     onClick={handleSave}
-                    className="rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
+                    className="min-h-11 rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
                   >
                     {t.common.save}
                   </button>
@@ -184,7 +186,7 @@ function EnclosureRowItem({
                       setCapacity(enclosure.capacity?.toString() ?? "");
                       setNotes(enclosure.notes ?? "");
                     }}
-                    className="rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover"
+                    className="min-h-11 rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover"
                   >
                     {t.common.cancel}
                   </button>
@@ -193,7 +195,7 @@ function EnclosureRowItem({
                 <button
                   type="button"
                   onClick={() => setEditing(true)}
-                  className="rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground"
+                  className="min-h-11 rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground"
                 >
                   {t.common.edit}
                 </button>
@@ -202,7 +204,7 @@ function EnclosureRowItem({
                 type="button"
                 disabled={isPending}
                 onClick={handleDelete}
-                className="rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
+                className="min-h-11 rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
               >
                 {t.common.delete}
               </button>

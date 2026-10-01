@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { DOSE_UNITS, doseUnitLabel } from "@/lib/i18n/enum-labels";
@@ -58,6 +59,7 @@ function MedicationRowItem({
   mergeTargets: MedicationRow[];
 }) {
   const { t, locale } = useI18n();
+  const confirm = useConfirm();
   const m = t.management.medications;
   const [name, setName] = useState(medication.name);
   const [doseUnit, setDoseUnit] = useState(medication.dose_unit);
@@ -84,7 +86,7 @@ function MedicationRowItem({
     setMode("view");
   }
 
-  function handleSave() {
+  async function handleSave() {
     // Blank is a real answer (not priced yet); a bad number is not, and
     // must never reach the forecast as a zero.
     const parsedCost = parseBahtAmount(costPerUnit);
@@ -99,14 +101,12 @@ function MedicationRowItem({
     // The unit is what every prescription's dose is measured in, so
     // changing it rewrites their meaning (0027). Make that explicit.
     if (doseUnit !== medication.dose_unit && medication.prescription_count > 0) {
-      const ok = window.confirm(
-        m.unitChangeConfirm(
+      const ok = await confirm({ body: m.unitChangeConfirm(
           medication.name,
           medication.prescription_count,
           doseUnitLabel(t, medication.dose_unit),
           doseUnitLabel(t, doseUnit),
-        ),
-      );
+        ) });
       if (!ok) return;
     }
     setMessage(null);
@@ -151,8 +151,8 @@ function MedicationRowItem({
     });
   }
 
-  function handleDelete() {
-    if (!window.confirm(m.deleteConfirm(medication.name))) return;
+  async function handleDelete() {
+    if (!await confirm({ body: m.deleteConfirm(medication.name), confirmLabel: t.common.delete })) return;
     setMessage(null);
     startTransition(async () => {
       const result = await deleteMedication(medication.id);
@@ -160,13 +160,11 @@ function MedicationRowItem({
     });
   }
 
-  function handleMerge() {
+  async function handleMerge() {
     const target = mergeTargets.find((row) => row.id === mergeInto);
     if (!target) return;
     if (
-      !window.confirm(
-        m.mergeConfirm(medication.name, target.name, medication.prescription_count),
-      )
+      !await confirm({ body: m.mergeConfirm(medication.name, target.name, medication.prescription_count) })
     ) {
       return;
     }

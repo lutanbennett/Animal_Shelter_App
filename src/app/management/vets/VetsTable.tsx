@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useState, useTransition } from "react";
 import Link from "next/link";
 import { deleteVet, updateVet } from "./actions";
@@ -22,6 +23,7 @@ const inputClass =
 
 function VetRowItem({ vet }: { vet: VetRow }) {
   const { t } = useI18n();
+  const confirm = useConfirm();
   const [name, setName] = useState(vet.name);
   const [clinicName, setClinicName] = useState(vet.clinic_name ?? "");
   const [contactInfo, setContactInfo] = useState(vet.contact_info ?? "");
@@ -52,8 +54,8 @@ function VetRowItem({ vet }: { vet: VetRow }) {
     });
   }
 
-  function handleDelete() {
-    if (!window.confirm(t.management.vets.deleteConfirm(vet.name))) return;
+  async function handleDelete() {
+    if (!await confirm({ body: t.management.vets.deleteConfirm(vet.name), confirmLabel: t.common.delete })) return;
     setMessage(null);
     startTransition(async () => {
       const result = await deleteVet(vet.id);

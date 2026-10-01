@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useState, useTransition } from "react";
 import { deleteZone, updateZone } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -8,6 +9,7 @@ export type ZoneRow = { id: string; name: string; name_th: string | null; intern
 
 function ZoneRowItem({ zone }: { zone: ZoneRow }) {
   const { t } = useI18n();
+  const confirm = useConfirm();
   const isSystem = zone.name === "Lifecycle";
 
   const [name, setName] = useState(zone.name);
@@ -32,8 +34,8 @@ function ZoneRowItem({ zone }: { zone: ZoneRow }) {
     });
   }
 
-  function handleDelete() {
-    if (!window.confirm(t.admin.zones.deleteConfirm(zone.name))) return;
+  async function handleDelete() {
+    if (!await confirm({ body: t.admin.zones.deleteConfirm(zone.name), confirmLabel: t.common.delete })) return;
     setMessage(null);
     startTransition(async () => {
       const result = await deleteZone(zone.id);
@@ -106,7 +108,7 @@ function ZoneRowItem({ zone }: { zone: ZoneRow }) {
                     type="button"
                     disabled={isPending}
                     onClick={handleSave}
-                    className="rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
+                    className="min-h-11 rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
                   >
                     {t.common.save}
                   </button>
@@ -119,7 +121,7 @@ function ZoneRowItem({ zone }: { zone: ZoneRow }) {
                       setNameTh(zone.name_th ?? "");
                       setInternal(zone.internal);
                     }}
-                    className="rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover"
+                    className="min-h-11 rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover"
                   >
                     {t.common.cancel}
                   </button>
@@ -128,7 +130,7 @@ function ZoneRowItem({ zone }: { zone: ZoneRow }) {
                 <button
                   type="button"
                   onClick={() => setEditing(true)}
-                  className="rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground"
+                  className="min-h-11 rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground"
                 >
                   {t.common.edit}
                 </button>
@@ -137,7 +139,7 @@ function ZoneRowItem({ zone }: { zone: ZoneRow }) {
                 type="button"
                 disabled={isPending}
                 onClick={handleDelete}
-                className="rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
+                className="min-h-11 rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
               >
                 {t.common.delete}
               </button>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatBahtPrice } from "@/lib/format";
@@ -55,6 +56,7 @@ export function UnitsPanel({ kind, items }: { kind: ItemKind; items: UnitsPanelI
 
 function ItemUnits({ kind, item }: { kind: ItemKind; item: UnitsPanelItem }) {
   const { t, locale } = useI18n();
+  const confirm = useConfirm();
   const u = t.units;
   const [editingId, setEditingId] = useState<string | "new" | null>(null);
   const [fields, setFields] = useState<ConversionFields>(EMPTY);
@@ -137,8 +139,8 @@ function ItemUnits({ kind, item }: { kind: ItemKind; item: UnitsPanelItem }) {
                   <button
                     type="button"
                     disabled={pending}
-                    onClick={() => {
-                      if (!window.confirm(u.deleteConfirm(c.unit))) return;
+                    onClick={async () => {
+                      if (!await confirm({ body: u.deleteConfirm(c.unit), confirmLabel: t.common.delete })) return;
                       run(() => deleteConversion(c.id));
                     }}
                     className={smallButton}

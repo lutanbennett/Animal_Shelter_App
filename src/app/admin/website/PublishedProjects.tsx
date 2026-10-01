@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useTransition } from "react";
@@ -28,12 +29,13 @@ export type PublishedProjectRow = {
  */
 export function PublishedProjects({ projects }: { projects: PublishedProjectRow[] }) {
   const { t, locale } = useI18n();
+  const confirm = useConfirm();
   const p = t.admin.website.published;
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
 
-  function handleRemove(project: PublishedProjectRow) {
-    if (!window.confirm(p.removeConfirm(project.name))) return;
+  async function handleRemove(project: PublishedProjectRow) {
+    if (!await confirm({ body: p.removeConfirm(project.name) })) return;
     setMessage(null);
     startTransition(async () => {
       const result = await unpublishProject(project.id);
