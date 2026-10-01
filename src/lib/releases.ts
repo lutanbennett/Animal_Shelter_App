@@ -61,16 +61,24 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [
-  "Signing in on lannacare.org works again, and so does every other form on the site. Since the evening of 30 September, trying to sign in — or to save, add or change anything at all — answered \"A server error occurred\" and nothing was saved. Pages you were only reading were not affected.",
-  "When you change the bio or photos of a resident who has died, and the copy in Google Drive couldn't be refreshed, you are now told straight away instead of it staying out of date silently. The resident's page has a Refresh archive button to try again.",
-  "If something goes wrong while saving, renaming, moving or deleting a project folder or photo, the Projects pages now say so with a short reference you can quote, instead of showing a numbered error code.",
-  "Food and medicines can now be bought, delivered and counted in a different unit from the one they are fed or dosed in. Under Management → Diets or → Medications, Units of measure lets you say that a bag (20 kg) is 200 cups, say, and which unit the item is bought and counted in. Record a delivery and the stocktake then let you pick that unit, show what it comes to in cups, and save the cups; In stock also shows it in bags. Enter the price per bag and the cost per cup is worked out for the forecasts. Correcting a bag's size later never changes deliveries and counts already saved.",
-  "The website and the app are now prepared by a Raspberry Pi at the shelter instead of by Cloudflare's own servers, which should stop the \"Error 1102: Worker exceeded resource limits\" page that some heavier pages showed now and then. If a page ever does fail, the app falls back to the old way by itself, so you keep working. The weekly database backup also now runs on the Pi.",
-];
+export const unreleased: ReleaseNote[] = [];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.11.0",
+    date: "2026-10-01",
+    title:
+      "Sign-in and saving fixed, units of measure, and the website now runs on a Pi at the shelter",
+    major: true,
+    notes: [
+      "Signing in on lannacare.org works again, and so does every other form on the site. Since the evening of 30 September, trying to sign in — or to save, add or change anything at all — answered \"A server error occurred\" and nothing was saved. Pages you were only reading were not affected.",
+      "When you change the bio or photos of a resident who has died, and the copy in Google Drive couldn't be refreshed, you are now told straight away instead of it staying out of date silently. The resident's page has a Refresh archive button to try again.",
+      "If something goes wrong while saving, renaming, moving or deleting a project folder or photo, the Projects pages now say so with a short reference you can quote, instead of showing a numbered error code.",
+      "Food and medicines can now be bought, delivered and counted in a different unit from the one they are fed or dosed in. Under Management → Diets or → Medications, Units of measure lets you say that a bag (20 kg) is 200 cups, say, and which unit the item is bought and counted in. Record a delivery and the stocktake then let you pick that unit, show what it comes to in cups, and save the cups; In stock also shows it in bags. Enter the price per bag and the cost per cup is worked out for the forecasts. Correcting a bag's size later never changes deliveries and counts already saved.",
+      "The website and the app are now prepared by a Raspberry Pi at the shelter instead of by Cloudflare's own servers, which should stop the \"Error 1102: Worker exceeded resource limits\" page that some heavier pages showed now and then. If a page ever does fail, the app falls back to the old way by itself, so you keep working. The weekly database backup also now runs on the Pi.",
+    ],
+  },
   {
     version: "0.10.1",
     date: "2026-09-30",
