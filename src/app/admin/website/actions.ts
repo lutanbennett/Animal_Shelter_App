@@ -16,6 +16,7 @@ import { isSitePageSlug, type SitePageSlug } from "@/lib/site/pages";
 import { parseBahtAmount } from "@/lib/format";
 import {
   checkFacebookUrl,
+  checkHttpsUrl,
   checkInstagramUrl,
   checkMessengerUrl,
   checkWhatsAppNumber,
@@ -106,6 +107,8 @@ export async function updateSiteContent(
       ["instagram_url", s.instagramUrl, checkInstagramUrl, INSTAGRAM_HOSTS],
       ["x_url", s.xUrl, checkXUrl, X_HOSTS],
       ["messenger_url", s.messengerUrl, checkMessengerUrl, MESSENGER_HOSTS],
+      // Any https host: maps.app.goo.gl and google.com/maps both appear.
+      ["contact_map_url", s.contactMapUrl, (v: string) => checkHttpsUrl(v), undefined],
     ] as const;
     const checked: Record<string, string | null> = {};
     for (const [name, label, check, hosts] of links) {
@@ -141,7 +144,6 @@ export async function updateSiteContent(
         contact_address: optional("contact_address"),
         contact_phone: optional("contact_phone"),
         contact_line: optional("contact_line"),
-        contact_map_url: optional("contact_map_url"),
         preferred_channels: preferred,
         ...checked,
         whatsapp_number: whatsapp.number,

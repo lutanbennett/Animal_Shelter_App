@@ -33,6 +33,9 @@ const th: Dictionary = {
     failedToReorder: "จัดลำดับใหม่ไม่สำเร็จ",
     somethingWentWrong: (ref: string) =>
       `เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง หากยังเกิดขึ้นอีก โปรดแจ้งพร้อมรหัสอ้างอิง ${ref}`,
+    alreadyExists: "มีรายการนี้อยู่แล้ว",
+    notAllowed: "คุณไม่มีสิทธิ์ทำสิ่งนี้",
+    notAccepted: "ฐานข้อมูลไม่รับค่าเหล่านั้น ตรวจสอบแบบฟอร์มแล้วลองใหม่",
     driveNotConnected: "ที่เก็บรูปภาพยังไม่ได้เชื่อมต่อ — โปรดแจ้งผู้ดูแลระบบ",
     driveFailed: "Google Drive ไม่รับไฟล์นี้ ลองใหม่อีกครั้งในอีกสักครู่",
     system: "(ระบบ)",
@@ -578,7 +581,7 @@ const th: Dictionary = {
       createForm: {
         email: "อีเมล",
         password: "รหัสผ่าน",
-        passwordPlaceholder: "อย่างน้อย 8 ตัวอักษร",
+        passwordPlaceholder: "อย่างน้อย 12 ตัวอักษร",
         role: "สิทธิ์การใช้งาน",
         createButton: "สร้างผู้ใช้",
         tempPasswordNote:
@@ -636,7 +639,7 @@ const th: Dictionary = {
         passwordUpdated: "อัปเดตรหัสผ่านแล้ว",
         deleteConfirm: (email: string) =>
           `ลบ ${email}? การกระทำนี้ไม่สามารถย้อนกลับได้`,
-        passwordTooShort: "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร",
+        passwordTooShort: "รหัสผ่านต้องมีอย่างน้อย 12 ตัวอักษร",
         failedToUpdateRole: "อัปเดตสิทธิ์ไม่สำเร็จ",
         failedToUpdateClinic: "อัปเดตคลินิกไม่สำเร็จ",
         failedToResetPassword: "ตั้งรหัสผ่านใหม่ไม่สำเร็จ",
@@ -661,7 +664,7 @@ const th: Dictionary = {
       },
       errors: {
         emailRequired: "กรุณากรอกอีเมล",
-        passwordTooShort: "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร",
+        passwordTooShort: "รหัสผ่านต้องมีอย่างน้อย 12 ตัวอักษร",
         selectValidRole: "กรุณาเลือกสิทธิ์ที่ถูกต้อง",
         invalidRole: "สิทธิ์ไม่ถูกต้อง",
         cantChangeOwnRole: "คุณไม่สามารถเปลี่ยนสิทธิ์ของตัวเองได้",

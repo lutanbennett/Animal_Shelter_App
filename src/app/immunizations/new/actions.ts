@@ -1,5 +1,6 @@
 "use server";
 
+import { databaseFailure } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 
@@ -88,9 +89,7 @@ export async function recordImmunizations(
     p_notes: typeof notes === "string" && notes ? notes : null,
   });
 
-  if (error) {
-    return { error: error.message };
-  }
+  if (error) return databaseFailure("immunizations.record", error, t.common);
 
   const rows = (data ?? []) as FanoutRow[];
   if (rows.length === 0) {

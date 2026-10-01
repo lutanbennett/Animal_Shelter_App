@@ -24,8 +24,8 @@ export type SniffedType =
 
 /**
  * How much of the file is read. Images carry their signature at offset 0;
- * a PDF's `%PDF-` may legally sit anywhere in the first 1024 bytes (some
- * scanners write a preamble first).
+ * a PDF's `%PDF-` must be the first non-whitespace bytes within that
+ * window — a file that merely mentions %PDF- later on is not a PDF.
  */
 const HEAD_BYTES = 1024;
 
@@ -71,7 +71,7 @@ export function sniffBytes(bytes: Uint8Array): SniffedType | null {
   }
   if (bytes.length >= 6 && /^GIF8[79]a$/.test(ascii(bytes, 0, 6))) return "image/gif";
   if (isHeif(bytes)) return "image/heic";
-  if (ascii(bytes, 0, bytes.length).includes("%PDF-")) return "application/pdf";
+  if (/^[\t\n\f\r ]*%PDF-/.test(ascii(bytes, 0, bytes.length))) return "application/pdf";
   return null;
 }
 

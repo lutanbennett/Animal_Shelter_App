@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { databaseFailure } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { loadVetScope, scopeAllowsVet } from "@/lib/vets/scope";
@@ -59,9 +60,7 @@ export async function bookVetVisit(
     p_doctor_name: doctorName,
   });
 
-  if (error) {
-    return { error: error.message };
-  }
+  if (error) return databaseFailure("vetVisits.create", error, t.common);
 
   // Back to what was booked: one resident's vet visits, or the residents
   // list a bulk booking was started from. Never "/", the public website.

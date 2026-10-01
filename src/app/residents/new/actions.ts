@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { runAction, type ActionRefusal } from "@/lib/action-result";
+import { databaseFailure, runAction, type ActionRefusal } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { RESIDENT_SIZES, type ResidentSize } from "@/lib/i18n/enum-labels";
@@ -126,9 +126,7 @@ export async function recordIntake(
       ...prefixed(readAdoptionProfile(formData)),
     });
 
-    if (error) {
-      return { ok: false, error: error.message };
-    }
+    if (error) return databaseFailure("residents.create", error, t.common);
 
     // record_intake returns the new `residents` row (not a setof), so
     // PostgREST hands it back as a single object, not an array.
