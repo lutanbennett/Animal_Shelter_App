@@ -1745,16 +1745,22 @@ const en = {
         partialTitle: (n: number) =>
           `${n} more item${n === 1 ? "" : "s"} in this month have no price, so they are not in this figure.`,
         basisNote:
-          "“Priced” multiplies a price someone entered by what the records imply. “Estimated” uses a stand-in figure — a maintenance job's estimated cost, or the typical vet visit below. “Invoiced” means every visit that month already has its real cost.",
+          "“Priced” multiplies a price someone entered by what the records imply. “Estimated” uses a stand-in figure — a maintenance job's estimated cost, or the vet visits worked out from recent frequency (see the note below). “Invoiced” means every visit that month is booked and already has its real cost.",
       },
       csv: {
         download: "Download CSV",
         notPricedColumn: (category: string) => `${category} not priced`,
       },
-      vetNote: (amount: string) =>
-        `Vet visits are costed at ${amount} a visit, except where the invoice has already been recorded against the visit.`,
-      vetNoteUnset:
-        "No typical vet visit figure has been set, so booked visits without an invoice are not costed at all.",
+      vetNote: (perWeek: string, visits: number) =>
+        `Vet visits: about ${perWeek} a week, from ${visits} completed in the last 90 days. Each week counts the larger of that and the visits actually booked, so a busy week is not understated.`,
+      vetNoHistory:
+        "Vet visits: no completed visit in the last 90 days, so there is no typical rate to forecast from — only visits already booked are counted, and an empty month here means nothing is booked, not that no visits are expected.",
+      vetCostActual: (amount: string, n: number) =>
+        `Costed at ${amount} a visit, the average of ${n} invoiced visits; a booked visit with its own cost uses that instead.`,
+      vetCostEstimate: (amount: string) =>
+        `Costed at ${amount} a visit (the typical figure; too few invoices are recorded to average); a booked visit with its own cost uses that instead.`,
+      vetCostUnset:
+        "No typical vet visit figure is set and too few invoices are recorded to average, so visits without their own cost are not costed.",
       vetNoteLink: "Change it on the website settings",
     },
     fixedOutgoings: {

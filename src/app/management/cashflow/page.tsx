@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { formatDate } from "@/lib/format";
+import { addDaysIso, formatDate, todayIso } from "@/lib/format";
 import { loadVetVisitEstimate } from "@/lib/site/content";
 import { ForecastWindowPicker } from "@/components/ForecastWindowPicker";
 import {
@@ -11,7 +11,10 @@ import {
   type CashflowRow,
 } from "@/lib/management/cashflow";
 import { fixedOutgoingRows, type FixedOutgoing } from "@/lib/management/fixed-outgoings";
+import { VET_HISTORY_DAYS, vetForecast, type VetVisit } from "@/lib/management/vet-forecast";
 import { CashflowView } from "./CashflowView";
+
+type VetRow = { appointment_date: string; cost: number | string | null };
 
 /**
  * Management → Cashflow: every outgoing the database can see, in baht,
@@ -38,11 +41,30 @@ export default async function CashflowPage(props: PageProps<"/management/cashflo
   const customTo = window.days == null ? window.to : "";
 
   const supabase = await createClient();
-  const [forecast, vetEstimate, fixed] = await Promise.all([
+  const today = todayIso();
+  const [forecast, vetEstimate, vetBooked, vetHistory, fixed] = await Promise.all([
     supabase.rpc("cashflow_forecast", { p_from: window.from, p_to: window.to }),
     // Shown under the table so it is obvious which figure the vet row used
     // and where to change it.
     loadVetVisitEstimate(supabase),
+    // The vet line is computed here, not by the RPC (vet-forecast.ts): the
+    // visits still booked inside the window, and the completed ones of the
+    // last quarter that give the typical rate and cost. A day either side
+    // of each range is fetched loosely and trimmed on shelter dates below.
+    supabase
+      .from("vet_appointments")
+      .select("appointment_date, cost")
+      .eq("status", "scheduled")
+      .gte("appointment_date", `${addDaysIso(window.from, -1)}T00:00:00Z`)
+      .lte("appointment_date", `${addDaysIso(window.to, 2)}T00:00:00Z`)
+      .returns<VetRow[]>(),
+    supabase
+      .from("vet_appointments")
+      .select("appointment_date, cost")
+      .eq("status", "completed")
+      .gte("appointment_date", `${addDaysIso(today, -VET_HISTORY_DAYS - 1)}T00:00:00Z`)
+      .lte("appointment_date", `${addDaysIso(today, 2)}T00:00:00Z`)
+      .returns<VetRow[]>(),
     // The named monthly costs (0114), folded in below as one more category.
     supabase
       .from("fixed_outgoings")
@@ -52,8 +74,26 @@ export default async function CashflowPage(props: PageProps<"/management/cashflo
 
   // Counted by the day, like every other category (fixedOutgoingRows).
   const fixedLines = fixed.data ?? [];
+  const toVisits = (data: VetRow[] | null): VetVisit[] =>
+    (data ?? []).map((r) => ({
+      date: todayIso(new Date(r.appointment_date)),
+      cost: r.cost == null ? null : Number(r.cost),
+    }));
+  const vet = vetForecast({
+    from: window.from,
+    to: window.to,
+    today,
+    booked: toVisits(vetBooked.data),
+    history: toVisits(vetHistory.data).filter(
+      (v) => v.date > addDaysIso(today, -VET_HISTORY_DAYS) && v.date <= today,
+    ),
+    estimate: vetEstimate,
+  });
   const rows = [
-    ...((forecast.data ?? []) as CashflowRow[]),
+    // The RPC's own vet rows (booked visits at the flat figure) are
+    // superseded by vet.rows.
+    ...((forecast.data ?? []) as CashflowRow[]).filter((r) => r.category !== "vet"),
+    ...vet.rows,
     ...fixedOutgoingRows(fixedLines, window.from, window.to),
   ];
   const fixedMonthly = fixedLines
@@ -103,14 +143,14 @@ export default async function CashflowPage(props: PageProps<"/management/cashflo
         <ForecastWindowPicker from={customFrom} to={customTo} invalid={invalid} />
       </section>
 
-      {forecast.error || fixed.error ? (
+      {forecast.error || fixed.error || vetBooked.error || vetHistory.error ? (
         <p className="text-sm text-danger">
-          {c.couldntLoad}: {(forecast.error ?? fixed.error)?.message}
+          {c.couldntLoad}: {(forecast.error ?? fixed.error ?? vetBooked.error ?? vetHistory.error)?.message}
         </p>
       ) : (
         <CashflowView
           rows={rows}
-          vetEstimate={vetEstimate}
+          vetBasis={vet.basis}
           fixedMonthly={fixedLines.some((l) => l.active) ? fixedMonthly : null}
           from={window.from}
           to={window.to}
