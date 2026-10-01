@@ -109,7 +109,12 @@ select, and an Open button.
   is what makes small kennels usable, so zoom is not optional.
 - The recommendation's weak point: a dense kennel block at 1× will have shapes under 44 px.
   Mitigations already in scope: zoom, two-step select, and falling back to the list.
-- Not verified in a signed-in browser by Claude this session (see the test plan).
+- **Driven at 375×812 in the signed-in dev pane (2026-10-01):** tapping inside a shape selects it
+  and shows the card (name, 0 / 4 residents); Open navigated to `/enclosures/<id>`; console clean.
+  Measured shapes were 55×55, 82×55 and 109×55 px. A tap about 2 px outside the edge of the
+  55 px shape selected nothing, so at 1× small shapes leave **no slack for a fat finger**. That
+  reinforces zoom, and suggests padding the hit area (an invisible wider stroke) in the build.
+  Pinch and pan were not testable with a mouse; they are part of the build and need a real phone.
 
 ## Still open
 
