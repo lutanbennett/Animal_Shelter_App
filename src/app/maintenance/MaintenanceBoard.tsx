@@ -155,8 +155,8 @@ export function MaintenanceBoard({
     startTransition(async () => {
       moveOptimistically({ jobId, status });
       const result = await setMaintenanceStatus(jobId, status);
-      if (result.error) setError(result.error);
-      if (result.driveWarning) setDriveWarning(result.driveWarning);
+      if (!result.ok) setError(result.error);
+      else if (result.driveWarning) setDriveWarning(result.driveWarning);
       router.refresh();
     });
   }

@@ -71,10 +71,10 @@ export function MaintenanceJobView({
     setError(null);
     setDeleting(true);
     startTransition(async () => {
-      // Redirects to the board on success; only an error comes back.
+      // Redirects to the board on success; only a refusal comes back.
       const result = await deleteMaintenanceJob(job.id);
       setDeleting(false);
-      if (result?.error) setError(result.error);
+      if (!result.ok) setError(result.error);
     });
   }
 
@@ -86,8 +86,8 @@ export function MaintenanceJobView({
     startTransition(async () => {
       const result = await setMaintenanceStatus(job.id, next);
       setOptimisticStatus(null);
-      if (result.error) setError(result.error);
-      if (result.driveWarning) setDriveWarning(result.driveWarning);
+      if (!result.ok) setError(result.error);
+      else if (result.driveWarning) setDriveWarning(result.driveWarning);
       router.refresh();
     });
   }
@@ -96,7 +96,7 @@ export function MaintenanceJobView({
     setError(null);
     startTransition(async () => {
       const result = await deleteMaintenanceAttachment(job.id, attachmentId);
-      if (result.error) setError(result.error);
+      if (!result.ok) setError(result.error);
       router.refresh();
     });
   }
