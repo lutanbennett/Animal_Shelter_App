@@ -15,6 +15,15 @@ import { join } from "node:path";
 import { loadEnv, parseEnvArg, projectRef } from "../lib/env.mjs";
 import { readWranglerConfig } from "../lib/wrangler.mjs";
 
+// Pi only. On a dev machine this file is read by every `next build`, deploy:test
+// included, and bakes this environment's host into the bundle without a trace
+// (docs/decisions/2026-10-01-deploy-pins-site-url.md). The Pi is Linux, the dev
+// machine is not; there is deliberately no flag past it.
+if (process.platform !== "linux") {
+  console.error(`write-env: this writes .env.production.local for the Pi and refuses to run on ${process.platform}.`);
+  process.exit(2);
+}
+
 const { name } = parseEnvArg(process.argv.slice(2));
 const env = loadEnv(name);
 
