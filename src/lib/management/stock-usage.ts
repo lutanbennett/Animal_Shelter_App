@@ -347,15 +347,69 @@ function round2(n: number): number {
 }
 
 /**
- * The item's stock_on_hand was written after the pair's latest count
- * without a history row — the single-cell edit on Management →
- * Medications / Diets (0093 records only stocktakes). Only meaningful when
- * `to` is the item's newest history row. A second's slack: a stocktake
- * stamps both with the same now(), but they travel as different strings.
+ * The item's stock_on_hand was written after the pair's latest *count* —
+ * the single-cell edit on Management → Medications / Diets. Only
+ * meaningful when `to` is the item's newest count. A second's slack: a
+ * stocktake stamps both with the same now(), but they travel as different
+ * strings.
+ *
+ * It reads the timestamp rather than the history because it predates
+ * `0112`: before that, a cell edit wrote nothing at all. Since `0112` such
+ * an edit writes a `source = 'correction'` row, so it *is* in the history —
+ * it is simply never paired into an interval. This function and
+ * `correctionsBetween` therefore report the same kind of event on either
+ * side of the pair's end, and cannot double-report: a correction at or
+ * before `to.counted_at` belongs to the interval, a later one is what this
+ * returns. Deriving this from a correction row would be more direct but
+ * would miss edits made before `0112` shipped, which have no row
+ * (docs/decisions/2026-10-01-corrections-on-stock-between-counts.md).
  */
 export function editedSince(pair: CountPair, stockCountedAt: string | null): boolean {
   if (!stockCountedAt) return false;
   return Date.parse(stockCountedAt) - Date.parse(pair.to.counted_at) > 1000;
+}
+
+/**
+ * A typed correction (`stock_counts.source = 'correction'`, 0112): a figure
+ * entered in a cell on Management → Medications / Diets rather than counted
+ * in a stocktake.
+ */
+export type CorrectionRow = {
+  item_id: string;
+  counted_quantity: number;
+  unit: string;
+  counted_at: string;
+};
+
+/**
+ * The corrections inside a pair's interval, oldest first.
+ *
+ * Why this is worth showing: `stock_count_intervals` (0096, narrowed by
+ * `0112`) pairs counts and back-fills but *not* corrections, so a figure
+ * typed between two stocktakes changes `stock_on_hand` and then leaves the
+ * interval reading exactly as though nothing had happened. That is the
+ * right arithmetic — a typo must not read as usage — but it means the page
+ * can show a gap it is unable to explain while the explanation sits in the
+ * history. This changes no figure; it only lets the row say so.
+ *
+ * The window matches the one the view uses for receipts — later than the
+ * earlier count, up to and including the later one — so a correction and a
+ * delivery stamped at the same instant as a stocktake are attributed to the
+ * same interval rather than to different ones.
+ */
+export function correctionsBetween(
+  corrections: CorrectionRow[],
+  pair: CountPair,
+): CorrectionRow[] {
+  const from = Date.parse(pair.from.counted_at);
+  const to = Date.parse(pair.to.counted_at);
+  return corrections
+    .filter((c) => {
+      if (c.item_id !== pair.from.item_id) return false;
+      const at = Date.parse(c.counted_at);
+      return at > from && at <= to;
+    })
+    .sort((a, b) => Date.parse(a.counted_at) - Date.parse(b.counted_at));
 }
 
 /** A resident on a prescription / diet for this item. */
