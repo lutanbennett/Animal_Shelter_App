@@ -13,6 +13,7 @@
     "deploy:test": "node scripts/deploy.mjs --env test",
     "deploy:uat": "node scripts/deploy.mjs --env uat",
     "deploy:prod": "node scripts/deploy.mjs --env production",
+    "audit:prod": "npm audit --omit=dev --audit-level=high",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {

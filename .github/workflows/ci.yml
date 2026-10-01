@@ -97,7 +97,8 @@ jobs:
   # is right HERE — the opposite of test-plan above, where the same flag hid a
   # genuinely broken plan behind green. The difference: test-plan's failures
   # are always someone's mistake to fix, this one's are not. Read the log on
-  # the PR; act on a high or critical with a fix available.
+  # the PR; act on a high or critical with a fix available. A daily run in
+  # advisories.yml covers the days with no PR, and fails on purpose.
   audit:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -109,7 +110,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm audit --omit=dev --audit-level=high
+      - run: npm run audit:prod
 
   # The public tier of the test database must read the public_* views and
   # nothing else: no write through them, no other table, view or function

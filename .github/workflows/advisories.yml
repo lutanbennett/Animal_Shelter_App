@@ -1,0 +1,41 @@
+# Daily scan for newly published advisories against production dependencies.
+#
+# ci.yml's `audit` job only runs on pull requests, so an advisory published on
+# a quiet day was invisible until someone happened to open one (the Next RCE,
+# GHSA-vcvr-r3jv-pc5j, was found that way). This closes the gap.
+#
+# THE TWO PATHS DELIBERATELY DISAGREE about failing. On a PR, `audit` is
+# `continue-on-error: true`: red there would be ignored, and it would stand on
+# a change that did not cause it. Here there is no PR to stand on, and a
+# non-blocking scheduled run would report to nobody — the status quo with
+# extra steps. So this run is allowed to FAIL: GitHub emails the person who
+# last edited the cron line, which is the one notification that reaches a
+# human without a PR. It cannot turn any PR red. Do not "tidy" the two to
+# match; see docs/decisions/2026-10-02-scheduled-audit-fails-on-purpose.md.
+#
+# Daily, not hourly: a failure that repeats until someone can act is emailed
+# once a day, which is readable; every push would be filtered (the test-plan
+# history in CLAUDE.md). Same command as ci.yml via `npm run audit:prod`, so a
+# dev-only chain behaves identically on both paths.
+
+name: Advisories
+
+on:
+  schedule:
+    - cron: "17 6 * * *" # 06:17 UTC; off the hour, when GitHub's queue is busy
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm run audit:prod
