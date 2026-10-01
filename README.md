@@ -475,7 +475,9 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    `/projects/[id]` ("Show on website"). Open Graph previews take the page's
    own host for the image URL, so nothing needs configuring — set
    `NEXT_PUBLIC_SITE_URL` only if the site ever sits behind a proxy that
-   rewrites the host.
+   rewrites the host. (`scripts/deploy.mjs` sets it to the environment's own
+   origin for every Worker build and refuses a leftover env file naming another
+   environment; `write-env.mjs` is Pi-only.)
 
 6. **Auth on a new Supabase project.** Logins are admin-provisioned, so a
    fresh database has nobody who can sign in; seed the first admin, then

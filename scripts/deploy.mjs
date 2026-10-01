@@ -11,8 +11,8 @@
 // Why a script rather than `opennextjs-cloudflare deploy --env`: the Supabase
 // URL and anon key are inlined by `next build`, so each environment needs its
 // own build with its own values in the shell (shell beats .env.local for
-// Next), and the env-file snapshot OpenNext bakes into the bundle has to be
-// emptied before upload (scripts/strip-baked-env.mjs). UAT and production also
+// Next; NEXT_PUBLIC_SITE_URL goes there too, so no env file can leak a host),
+// and the env-file snapshot OpenNext bakes into the bundle has to be emptied before upload (scripts/strip-baked-env.mjs). UAT and production also
 // get a guard: the checkout must be a clean, pushed `main`, so what the
 // customer tests and what is live are always commits GitHub has. And every
 // environment's build must wear its own badge (src/lib/app-env.ts), so a
@@ -28,6 +28,7 @@ import { dirname, join } from "node:path";
 import { readFileSync } from "node:fs";
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
 import { appliedMigrations, deployedMigrations, missingFromDatabase } from "./lib/deploy-schema.mjs";
+import { strayEnvFiles } from "./lib/env-leak.mjs";
 import { lockedPublicSiteProblem, readWranglerConfig } from "./lib/wrangler.mjs";
 // TypeScript, loaded through Node's type stripping: the same file the app
 // renders, so the page, the tag and the email can't disagree.
@@ -148,6 +149,26 @@ for (const key of [...BUILD_VARS, ...(pushSecrets ? RUNTIME_SECRETS : [])]) {
   }
 }
 
+// A leftover env file for another environment (belt; the build below pins
+// NEXT_PUBLIC_SITE_URL itself, so it can no longer leak the host). Guarded for
+// test too: unlike a missing migration, no environment ever wants one.
+// docs/decisions/2026-10-01-deploy-pins-site-url.md
+{
+  const stray = strayEnvFiles(envName, {
+    siteOrigin: SITE_ORIGINS[envName],
+    expectedAppEnv: EXPECTED_APP_ENV[envName],
+    appEnvForSupabaseUrl,
+  });
+  if (stray.length) {
+    console.error(
+      `deploy: ${envName} would build with an env file that names another environment:\n  - ` +
+        stray.map((s) => `${s.file}: ${s.why}`).join("\n  - ") +
+        `\nMove it out of the checkout (mv ${stray[0].file} ..) and deploy again.`,
+    );
+    process.exit(2);
+  }
+}
+
 if (GUARDED) {
   git("fetch origin main --quiet");
   const branch = git("rev-parse --abbrev-ref HEAD");
@@ -225,6 +246,9 @@ console.log(`deploy: ${envName} → Supabase project ${projectRef(env)} (${git("
 if (!skipBuild) {
   const buildEnv = { ...process.env };
   for (const key of BUILD_VARS) buildEnv[key] = env[key];
+  // Pinned, not inherited: the shell beats every env file, so none can leak a
+  // host into the bundle, and the Worker's host no longer rides on a file.
+  buildEnv.NEXT_PUBLIC_SITE_URL = SITE_ORIGINS[envName];
   run("npm run opennext:build", { env: buildEnv });
   run("node scripts/strip-baked-env.mjs");
 }
