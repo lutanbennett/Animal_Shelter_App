@@ -338,7 +338,7 @@ const sql = [];
 // Deleting a wrong Deceased row — or any row of a resident the database
 // still reads as dead — trips the read-only lock (0026). Same bypass the
 // import uses: transaction-local, with the resulting state asserted below.
-sql.push(`select set_config('app.deceased_lock_bypass', 'on', true);`);
+sql.push(`select set_config('app.deceased_lock_bypass', 'on', true), set_config('app.placement_close', 'on', true);`);
 
 if (doomed.length) {
   sql.push(
@@ -376,7 +376,7 @@ if (rewriteFoster) {
   sql.push(`update placement_history set end_date = ${q(foster.start_utc)} where id = ${q(intake.id)};`);
 }
 
-sql.push(`select set_config('app.deceased_lock_bypass', 'off', true);`);
+sql.push(`select set_config('app.deceased_lock_bypass', 'off', true), set_config('app.placement_close', 'off', true);`);
 
 // Assertions — a failure here aborts the whole transaction.
 sql.push(`do $$
