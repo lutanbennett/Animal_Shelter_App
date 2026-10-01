@@ -127,7 +127,7 @@ export default async function WelcomePage() {
     loadSiteContent(supabase),
     loadSitePages(supabase),
     supabase
-      .from("site_content_photos")
+      .from("public_site_content_photos")
       .select("id, drive_file_id, alt")
       .order("sort_order")
       .limit(3)

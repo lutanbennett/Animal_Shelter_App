@@ -22,18 +22,42 @@ import { loadCurrentRole } from "@/lib/auth/app-access";
  */
 export const dynamic = "force-dynamic";
 
-/** One screenshot's bytes from the static assets, or null if it is missing. */
+/**
+ * One screenshot's bytes, or null if it is missing.
+ *
+ * On the Worker the ASSETS binding serves public/. The Node origin (the Pi,
+ * `next start`) has no binding, and fetching its own URL goes through
+ * proxy.ts, which redirects an unauthenticated request to /login — react-pdf
+ * then got HTML and logged "Incomplete or corrupt PNG file" per image. So
+ * there it reads public/ from disk, which is all the binding does anyway.
+ */
 async function loadImage(src: string, origin: string): Promise<Uint8Array | null> {
   const url = new URL(src, origin);
-  let res: Response;
-  try {
-    // On the Worker the ASSETS binding serves public/ without a public round trip.
-    const assets = (getCloudflareContext().env as { ASSETS?: { fetch(input: URL): Promise<Response> } }).ASSETS;
-    res = await (assets ? assets.fetch(url) : fetch(url));
-  } catch {
-    res = await fetch(url).catch(() => new Response(null, { status: 500 }));
+  const assets = (() => {
+    try {
+      return (getCloudflareContext().env as { ASSETS?: { fetch(input: URL): Promise<Response> } }).ASSETS;
+    } catch {
+      return undefined; // not on the Worker
+    }
+  })();
+  if (assets) {
+    const res = await assets.fetch(url).catch(() => null);
+    return res?.ok ? new Uint8Array(await res.arrayBuffer()) : null;
   }
-  return res.ok ? new Uint8Array(await res.arrayBuffer()) : null;
+  return readPublicFile(src);
+}
+
+/** A file under public/, or null. Only paths inside public/manual/ are read. */
+async function readPublicFile(src: string): Promise<Uint8Array | null> {
+  // Dynamic imports keep node:fs out of the Worker's path.
+  const [{ readFile }, path] = await Promise.all([import("node:fs/promises"), import("node:path")]);
+  const root = path.resolve(process.cwd(), "public", "manual");
+  const file = path.resolve(process.cwd(), "public", "." + src);
+  if (!src.startsWith("/manual/") || !file.startsWith(root + path.sep)) return null;
+  return readFile(file).then(
+    (b) => new Uint8Array(b),
+    () => null,
+  );
 }
 
 export async function GET(request: NextRequest) {

@@ -45,7 +45,7 @@ export async function loadSiteContent(
   supabase: SupabaseClient,
 ): Promise<SiteContent | null> {
   const { data } = await supabase
-    .from("site_content")
+    .from("public_site_content")
     .select(SITE_CONTENT_COLUMNS)
     .eq("id", true)
     .limit(1)
