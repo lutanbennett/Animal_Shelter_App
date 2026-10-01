@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "If you are signed out because you have not used the app for a long time, the sign-in page now says so and takes you back to the page you were on once you sign in again.",
   {
     text: "Management → Stock between counts now says when someone typed a figure by hand during the dates being compared. The row still shows the same used figure — a correction isn't counted as use, because fixing a typo would otherwise look like stock disappearing — but if an item is far off its plan and carries the note, the figure someone typed is the first thing to check. It appears in the downloaded CSV too.",
     roles: ["admin", "management"],

@@ -19,6 +19,11 @@ import { isPublicSiteLocked } from "@/lib/public-site";
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
+  // Read before getUser(): a refresh the server refuses makes the client
+  // clear these cookies, and this is what tells "signed in, now expired"
+  // from "never signed in".
+  const hadSession = request.cookies.getAll().some((c) => /^sb-.+-auth-token(\.\d+)?$/.test(c.name));
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -59,7 +64,11 @@ export async function updateSession(request: NextRequest) {
     url.pathname = "/login";
     url.search = "";
     url.searchParams.set("next", next);
-    return noindex(NextResponse.redirect(url), locked);
+    // A session that was there and no longer is (the 60-day inactivity
+    // timeout, a revoked refresh token) is told so, and the redirect carries
+    // the cleared cookies so /login does not retry the dead token.
+    if (hadSession) url.searchParams.set("error", "expired");
+    return noindex(withCookies(NextResponse.redirect(url), response), locked);
   }
 
   // "/" is the public home page for everyone — a signed-in staff member
