@@ -110,3 +110,33 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm audit --omit=dev --audit-level=high
+
+  # The public tier of the test database must read the public_* views and
+  # nothing else: no write through them, no other table, view or function
+  # answering anon (check-public-views.mjs; backlog DB-10). Until now it was
+  # run by hand before a go-live. It needs the test project's URL, anon key
+  # and service-role key as repository secrets (TEST_SUPABASE_URL,
+  # TEST_SUPABASE_ANON_KEY, TEST_SUPABASE_SERVICE_ROLE_KEY); a pull request
+  # from a fork gets none, and the job says so rather than passing for
+  # having checked nothing. The test database is what the merged migrations
+  # are applied to first (CLAUDE.md, "Database migrations"), so a PR's own
+  # migration is already there when this runs.
+  public-views:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - name: Check the public tier
+        run: |
+          if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] || [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::warning title=public-views not run::TEST_SUPABASE_URL, TEST_SUPABASE_ANON_KEY and TEST_SUPABASE_SERVICE_ROLE_KEY are not available to this run, so the public tier was not checked."
+            exit 0
+          fi
+          node scripts/check-public-views.mjs
