@@ -84,7 +84,7 @@ gates: typecheck=0 lint=0 build=0
 ## 6. Regression
 
 - [x] The pages nearest the change still work — `/maintenance` and `/maintenance/[id]` compile and type-check in the production build
-- [x] Any shared file touched checked from a second, unrelated page — n/a in effect: nothing shared was touched; `FolderGrid` is used on both `/maintenance` and `/maintenance/[id]` and is type-checked in both
+- [x] Any shared file touched checked from a second, unrelated page — n/a in effect: nothing shared was touched; `setMaintenanceStatus` is called from the board, the job page and `/my`, and all three type-check
 - [x] Nothing merged from `main` during `sync` was broken by this branch — gates ran after the merge
 
 ## 7. Documentation
