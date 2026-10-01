@@ -209,6 +209,19 @@ for (const name of PUBLIC) {
   report(!read.ok, `${name}.monthly_amount: no public object carries an amount column`, `HTTP ${read.status}`);
 }
 
+// The audit log (0121) holds whole before/after copies of resident, medical
+// and contact rows, so it is admin-read only and nobody writes it through the
+// API. Anon must be refused every method; staff, volunteer and vet are
+// asserted in scripts/check-audit-log.mjs.
+for (const [method, body] of [["GET"], ["POST", {}], ["PATCH", {}], ["DELETE"]]) {
+  const call = await fetch(`${url}/rest/v1/audit_log${method === "GET" ? "?select=old_row,new_row&limit=1" : ""}`, {
+    method,
+    headers: { ...headers, "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  report(!call.ok, `audit_log: anon ${method} is refused`, `HTTP ${call.status}`);
+}
+
 // is_public_drive_file must tell the two kinds of file apart when anon asks:
 // yes for a photo the public site shows, no for an internal attachment the
 // photo proxy also knows (a blood-test or procedure file). Skipped, not
