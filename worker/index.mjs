@@ -47,6 +47,7 @@
 
 import openNext from "../.open-next/worker.js";
 import { handleReleaseRequest } from "./release-mail.mjs";
+import { withSecurityHeaders } from "./security-headers.mjs";
 
 // OpenNext's Durable Object classes must stay exported from the entry module.
 export { DOQueueHandler, DOShardedTagCache, BucketCachePurge } from "../.open-next/worker.js";
@@ -152,44 +153,50 @@ async function serve(request, env, ctx) {
   return withHeaders(local, { "x-lanna-served-by": "worker" });
 }
 
+async function route(request, env, ctx) {
+  const release = await handleReleaseRequest(request, env);
+  if (release) return withHeaders(release, { "x-lanna-served-by": "worker", "x-lanna-cache": "BYPASS" });
+
+  const url = new URL(request.url);
+  const cacheable = isCacheable(request, url);
+  if (!cacheable) {
+    return withHeaders(await serve(request, env, ctx), { "x-lanna-cache": "BYPASS" });
+  }
+
+  const cache = caches.default;
+  const key = cacheKeyFor(request, url);
+  const hit = await cache.match(key);
+  if (hit) {
+    // Hand the browser the caching policy the app chose, not the edge TTL.
+    const out = withHeaders(hit, {
+      "x-lanna-cache": "HIT",
+      "cache-control": hit.headers.get("x-lanna-origin-cache-control") ?? "private, no-store",
+    });
+    out.headers.delete("x-lanna-origin-cache-control");
+    return out;
+  }
+
+  const response = await serve(request, env, ctx);
+  // Only a complete, cookie-free success is worth keeping; Next marks its
+  // dynamic pages no-store for the browser, so the stored copy carries
+  // its own edge TTL while the browser keeps re-asking.
+  if (response.status === 200 && !response.headers.has("set-cookie") && response.body) {
+    const [toClient, toCache] = response.body.tee();
+    const stored = new Response(toCache, { status: 200, headers: response.headers });
+    stored.headers.set("x-lanna-origin-cache-control", response.headers.get("cache-control") ?? "private, no-store");
+    stored.headers.set("cache-control", `public, max-age=${CACHE_TTL_SECONDS}`);
+    stored.headers.delete("x-lanna-cache");
+    ctx.waitUntil(cache.put(key, stored));
+    return withHeaders(new Response(toClient, response), { "x-lanna-cache": "MISS" });
+  }
+  return withHeaders(response, { "x-lanna-cache": "MISS" });
+}
+
 const worker = {
+  // Every response, whichever path made it (edge cache, Pi, Worker render),
+  // leaves with the security headers (worker/security-headers.mjs).
   async fetch(request, env, ctx) {
-    const release = await handleReleaseRequest(request, env);
-    if (release) return withHeaders(release, { "x-lanna-served-by": "worker", "x-lanna-cache": "BYPASS" });
-
-    const url = new URL(request.url);
-    const cacheable = isCacheable(request, url);
-    if (!cacheable) {
-      return withHeaders(await serve(request, env, ctx), { "x-lanna-cache": "BYPASS" });
-    }
-
-    const cache = caches.default;
-    const key = cacheKeyFor(request, url);
-    const hit = await cache.match(key);
-    if (hit) {
-      // Hand the browser the caching policy the app chose, not the edge TTL.
-      const out = withHeaders(hit, {
-        "x-lanna-cache": "HIT",
-        "cache-control": hit.headers.get("x-lanna-origin-cache-control") ?? "private, no-store",
-      });
-      out.headers.delete("x-lanna-origin-cache-control");
-      return out;
-    }
-
-    const response = await serve(request, env, ctx);
-    // Only a complete, cookie-free success is worth keeping; Next marks its
-    // dynamic pages no-store for the browser, so the stored copy carries
-    // its own edge TTL while the browser keeps re-asking.
-    if (response.status === 200 && !response.headers.has("set-cookie") && response.body) {
-      const [toClient, toCache] = response.body.tee();
-      const stored = new Response(toCache, { status: 200, headers: response.headers });
-      stored.headers.set("x-lanna-origin-cache-control", response.headers.get("cache-control") ?? "private, no-store");
-      stored.headers.set("cache-control", `public, max-age=${CACHE_TTL_SECONDS}`);
-      stored.headers.delete("x-lanna-cache");
-      ctx.waitUntil(cache.put(key, stored));
-      return withHeaders(new Response(toClient, response), { "x-lanna-cache": "MISS" });
-    }
-    return withHeaders(response, { "x-lanna-cache": "MISS" });
+    return withSecurityHeaders(await route(request, env, ctx));
   },
 
   // The status alert run (src/lib/status/alerts.ts), on the cron in
