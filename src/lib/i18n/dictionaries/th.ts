@@ -31,6 +31,7 @@ const th: Dictionary = {
     failedToDelete: "ลบไม่สำเร็จ",
     failedToRemove: "ลบไม่สำเร็จ",
     failedToReorder: "จัดลำดับใหม่ไม่สำเร็จ",
+    notAllowedToDeleteFile: "คุณไม่มีสิทธิ์ลบไฟล์นี้",
     somethingWentWrong: (ref: string) =>
       `เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง หากยังเกิดขึ้นอีก โปรดแจ้งพร้อมรหัสอ้างอิง ${ref}`,
     alreadyExists: "มีรายการนี้อยู่แล้ว",

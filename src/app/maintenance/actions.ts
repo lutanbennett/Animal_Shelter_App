@@ -303,13 +303,9 @@ export async function deleteMaintenanceJob(jobId: string): Promise<ActionResult>
       .eq("owner_id", jobId)
       .returns<{ drive_file_id: string }[]>();
 
-    const { error: filesError } = await supabase
-      .from("attachments")
-      .delete()
-      .eq("owner_type", "maintenance")
-      .eq("owner_id", jobId);
-    if (filesError) return refuse(filesError.message);
-
+    // The job goes first: a caller RLS won't let delete it must not get to
+    // strip its file rows (attachments are polymorphic, so no cascade does
+    // this for us).
     const { data: deleted, error } = await supabase
       .from("maintenance")
       .delete()
@@ -319,13 +315,20 @@ export async function deleteMaintenanceJob(jobId: string): Promise<ActionResult>
     if (error) return refuse(error.message);
     if (!deleted || deleted.length === 0) return refuse(t.maintenance.errors.notAuthorized);
 
+    const { error: filesError } = await supabase
+      .from("attachments")
+      .delete()
+      .eq("owner_type", "maintenance")
+      .eq("owner_id", jobId);
+    if (filesError) return refuse(filesError.message);
+
     try {
       const drive = getDriveClient();
       if (job.drive_folder_id) {
-        // Deleting the folder removes everything under it in one call.
-        await drive.deleteFile(job.drive_folder_id);
+        // Trashing the folder takes everything under it in one call.
+        await drive.trashFile(job.drive_folder_id);
       } else {
-        for (const file of files ?? []) await drive.deleteFile(file.drive_file_id);
+        for (const file of files ?? []) await drive.trashFile(file.drive_file_id);
       }
     } catch {
       // See above: the record is gone; the folder can be tidied by hand.
@@ -362,14 +365,18 @@ export async function deleteMaintenanceAttachment(
         return refuse(selectError?.message ?? t.maintenance.errors.fileNotFound);
       }
 
-      const { error: deleteError } = await supabase
+      // A refused delete under RLS matches no row without an error; only the
+      // row count proves it went, so don't touch Drive without it.
+      const { data: deletedRows, error: deleteError } = await supabase
         .from("attachments")
         .delete()
-        .eq("id", attachmentId);
+        .eq("id", attachmentId)
+        .select("id");
       if (deleteError) return refuse(deleteError.message);
+      if (deletedRows?.length !== 1) return refuse(t.common.notAllowedToDeleteFile);
 
       try {
-        await getDriveClient().deleteFile(attachment.drive_file_id);
+        await getDriveClient().trashFile(attachment.drive_file_id);
       } catch {
         // The DB record is already gone; an orphaned Drive file is a minor
         // cleanup issue, not worth failing the user-facing action over (same

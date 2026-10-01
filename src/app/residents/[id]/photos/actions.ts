@@ -69,7 +69,7 @@ export async function deletePhoto(
 
     if (driveFileId) {
       try {
-        await getDriveClient().deleteFile(driveFileId);
+        await getDriveClient().trashFile(driveFileId);
       } catch {
         // The DB record is already gone; an orphaned Drive file is a minor
         // cleanup issue, not worth failing the user-facing action over.

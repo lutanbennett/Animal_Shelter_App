@@ -144,7 +144,7 @@ export async function syncProjectFolderMove(
 export async function deleteProjectDriveFolder(driveFolderId: string | null): Promise<string | null> {
   if (!driveFolderId) return null;
   try {
-    await getDriveClient().deleteFile(driveFolderId);
+    await getDriveClient().trashFile(driveFolderId);
     return null;
   } catch (error) {
     if (error instanceof DriveApiError && error.status === 404) return null;

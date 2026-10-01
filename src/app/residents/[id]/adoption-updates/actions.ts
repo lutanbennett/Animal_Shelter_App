@@ -125,7 +125,7 @@ export async function deleteAdoptionUpdate(
       if (error) throw error;
       if (driveFileId) {
         try {
-          await drive.deleteFile(driveFileId);
+          await drive.trashFile(driveFileId);
         } catch {
           // As in deletePhoto: the record is gone; an orphaned Drive file is
           // a cleanup matter, not a reason to fail the delete.

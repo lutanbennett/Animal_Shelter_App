@@ -29,17 +29,24 @@ export async function deleteBloodTestAttachment(
       return { ok: false, error: selectError?.message ?? "Attachment not found." };
     }
 
-    const { error: deleteError } = await supabase
+    // Under RLS a refused delete matches no row and raises no error, so the
+    // row count is the only proof it went; without it the Drive file below
+    // would be trashed while the record survives.
+    const { data: deletedRows, error: deleteError } = await supabase
       .from("attachments")
       .delete()
-      .eq("id", attachmentId);
+      .eq("id", attachmentId)
+      .select("id");
 
     if (deleteError) {
       return { ok: false, error: deleteError.message };
     }
+    if (deletedRows?.length !== 1) {
+      return { ok: false, error: t.common.notAllowedToDeleteFile };
+    }
 
     try {
-      await getDriveClient().deleteFile(attachmentRow.drive_file_id);
+      await getDriveClient().trashFile(attachmentRow.drive_file_id);
     } catch {
       // The DB record is already gone; an orphaned Drive file is a minor
       // cleanup issue, not worth failing the user-facing action over (same
