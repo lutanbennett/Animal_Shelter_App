@@ -64,10 +64,14 @@ const PUBLIC_VIEWS = [
   "public_shelter_friends",
   "public_enclosures",
   "public_shelter_stats",
+  "public_site_content",
+  "public_site_content_photos",
 ];
-// Base tables the home page and footer read directly, each behind a
-// public_read_* policy.
-const PUBLIC_TABLES = ["site_content", "site_content_photos", "site_pages"];
+// No base tables: site_content, site_content_photos and site_pages were
+// readable by anon with select * until 0122, so a new column was public the
+// moment it existed. They now refuse anon like every other table, and the
+// home page and footer read the fixed-column views above.
+const PUBLIC_TABLES = [];
 const PUBLIC = new Set([...PUBLIC_VIEWS, ...PUBLIC_TABLES]);
 
 // Functions anon may execute, each granted back by 0082, with arguments
@@ -100,6 +104,18 @@ for (const name of PUBLIC) {
     // 401/403 with 42501 is what we want; 2xx means the write was allowed.
     report(!write.ok, `${name}: anon ${method} is refused`, `HTTP ${write.status}`);
   }
+}
+
+// A column is public only when the view names it. vet_visit_estimate (0071) is
+// an internal figure on site_content; it must not reach anon through the view
+// or the base table (0122).
+for (const [source, column] of [
+  ["public_site_content", "vet_visit_estimate"],
+  ["site_content", "vet_visit_estimate"],
+  ["site_content", "id"],
+]) {
+  const res = await fetch(`${url}/rest/v1/${source}?select=${column}&limit=1`, { headers });
+  report(!res.ok, `${source}.${column}: anon cannot read it`, `HTTP ${res.status}`);
 }
 
 // Every other table and view the Data API exposes must refuse anon, not
