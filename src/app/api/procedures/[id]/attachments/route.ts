@@ -12,6 +12,7 @@ import {
 } from "@/lib/google/drive";
 import { dateToYyyymmdd, driveImageUrl } from "@/lib/google/drive-client";
 import { withDriveErrors } from "@/lib/google/drive-errors";
+import { refuseCrossSite } from "@/lib/auth/same-origin";
 
 const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
@@ -33,6 +34,9 @@ async function handlePost(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const crossSite = refuseCrossSite(request);
+  if (crossSite) return crossSite;
+
   const { id: procedureId } = await params;
 
   try {
