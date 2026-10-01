@@ -1666,6 +1666,10 @@ const en = {
         `The plan leaves out ${n} resident${n === 1 ? "" : "s"} who ${n === 1 ? "was" : "were"} on this during these dates but ${n === 1 ? "has" : "have"} since left the shelter or died, so it reads low.`,
       editedSince: (date: string) =>
         `Changed by hand on ${date}, after this count. Only stocktakes are compared here.`,
+      correctedBetween: (n: number, dates: string) =>
+        n === 1
+          ? `Changed by hand on ${dates}, between these two counts. The figure here is unaffected: only stocktakes are compared, so a correction doesn't count as use.`
+          : `Changed by hand ${n} times between these two counts (${dates}). The figure here is unaffected: only stocktakes are compared, so a correction doesn't count as use.`,
       notCompared: (names: string) => `Not compared — not counted on two different days: ${names}.`,
       notInBoth: (names: string) => `Not counted in both stocktakes: ${names}.`,
       empty:

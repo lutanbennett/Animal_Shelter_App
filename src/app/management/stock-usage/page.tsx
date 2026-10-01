@@ -10,6 +10,7 @@ import { formatQuantity } from "@/lib/diets/options";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { CsvDownloadButton } from "@/components/CsvDownloadButton";
 import {
+  correctionsBetween,
   departedDuring,
   difference,
   editedSince,
@@ -24,6 +25,7 @@ import {
   type Assignment,
   type CountPair,
   type Between,
+  type CorrectionRow,
   type CountRow,
   type IntervalRow,
   type UsageReading,
@@ -55,6 +57,20 @@ type HistoryRow = {
   counted_at: string;
 };
 
+/**
+ * A correction row (0112). Narrower than HistoryRow on purpose: a
+ * correction belongs to no stocktake, so it has no stocktake_id to read,
+ * and nothing here needs its id because it is never paired.
+ */
+type CorrectionQueryRow = {
+  item_kind: "medication" | "diet_type";
+  medication_id: string | null;
+  diet_type_id: string | null;
+  counted_quantity: number | string;
+  unit: string;
+  counted_at: string;
+};
+
 type ItemRow = { id: string; name: string; unit: string; stock_counted_at: string | null };
 
 /** Forecast statuses each RPC leaves out (0044 / 0051). */
@@ -72,6 +88,8 @@ type Line = {
   reading: UsageReading;
   departed: number;
   edited: boolean;
+  /** Corrections inside this pair (0112). Explains, never changes, a figure. */
+  corrected: CorrectionRow[];
 };
 
 export default async function StockUsagePage(props: PageProps<"/management/stock-usage">) {
@@ -85,7 +103,15 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
   };
 
   const supabase = await createClient();
-  const [historyResult, medicationResult, dietResult, stateResult, intervalsResult, firstReceiptResult] = await Promise.all([
+  const [
+    historyResult,
+    medicationResult,
+    dietResult,
+    stateResult,
+    intervalsResult,
+    firstReceiptResult,
+    correctionsResult,
+  ] = await Promise.all([
     supabase
       .from("stock_counts")
       .select("id, stocktake_id, item_kind, medication_id, diet_type_id, counted_quantity, unit, counted_at")
@@ -124,6 +150,16 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
       .order("received_at")
       .limit(1)
       .returns<{ received_at: string }[]>(),
+    // The corrections the history query above deliberately excludes (0112).
+    // They are not paired into intervals and change no figure here — they
+    // are read only so a row can explain a gap they would otherwise leave
+    // unexplained (correctionsBetween in src/lib/management/stock-usage.ts).
+    supabase
+      .from("stock_counts")
+      .select("item_kind, medication_id, diet_type_id, counted_quantity, unit, counted_at")
+      .eq("source", "correction")
+      .order("counted_at")
+      .returns<CorrectionQueryRow[]>(),
   ]);
   const intervals = intervalsResult.error ? null : (intervalsResult.data ?? []);
   const firstReceipt = firstReceiptResult.data?.[0]?.received_at ?? null;
@@ -141,6 +177,23 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
         counted_at: r.counted_at,
       }));
   const rows: Record<Kind, CountRow[]> = { medication: rowsOf("medication"), diet: rowsOf("diet") };
+  // A failed corrections query costs the note, not the page: every figure is
+  // computed without it, so an empty list is a safe answer rather than an
+  // error state of its own.
+  const correctionRows = correctionsResult.data ?? [];
+  const correctionsOf = (kind: Kind): CorrectionRow[] =>
+    correctionRows
+      .filter((r) => r.item_kind === (kind === "medication" ? "medication" : "diet_type"))
+      .map((r) => ({
+        item_id: (kind === "medication" ? r.medication_id : r.diet_type_id) ?? "",
+        counted_quantity: Number(r.counted_quantity),
+        unit: r.unit,
+        counted_at: r.counted_at,
+      }));
+  const corrections: Record<Kind, CorrectionRow[]> = {
+    medication: correctionsOf("medication"),
+    diet: correctionsOf("diet"),
+  };
   const items: Record<Kind, ItemRow[]> = {
     medication: medicationResult.data ?? [],
     diet: dietResult.data ?? [],
@@ -274,6 +327,7 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
         departed: w ? departedDuring(assignments[kind], excluded, item.id, w) : 0,
         edited:
           latestAt.get(item.id) === pair.to.counted_at && editedSince(pair, item.stock_counted_at),
+        corrected: correctionsBetween(corrections[kind], pair),
       });
     }
     // The gaps first, then by name (items are already in name order).
@@ -388,6 +442,12 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
             line.departed > 0 ? u.departed(line.departed) : null,
             line.edited && line.item.stock_counted_at
               ? u.editedSince(formatDate(line.item.stock_counted_at, locale))
+              : null,
+            line.corrected.length > 0
+              ? u.correctedBetween(
+                  line.corrected.length,
+                  line.corrected.map((c) => formatDate(c.counted_at, locale)).join(", "),
+                )
               : null,
           ]
             .filter(Boolean)
@@ -603,6 +663,16 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
                                 {line.edited && line.item.stock_counted_at && (
                                   <p className="text-xs text-muted">
                                     {u.editedSince(formatDate(line.item.stock_counted_at, locale))}
+                                  </p>
+                                )}
+                                {line.corrected.length > 0 && (
+                                  <p className="text-xs text-muted">
+                                    {u.correctedBetween(
+                                      line.corrected.length,
+                                      line.corrected
+                                        .map((c) => formatDate(c.counted_at, locale))
+                                        .join(", "),
+                                    )}
                                   </p>
                                 )}
                               </td>

@@ -2,7 +2,8 @@
 // not a copy — against fixed counts: the interval and plan-window maths,
 // adding up stock_count_intervals (0096) across a pair, the reading of
 // usage against the plan, and the two caveats
-// (edited since the count, residents who left during the interval).
+// (edited since the count, residents who left during the interval), and the
+// corrections that fall inside an interval without being paired into it.
 //
 //   node scripts/check-stock-usage.mjs            (local zone)
 //   TZ=UTC node scripts/check-stock-usage.mjs     (the Workers case)
@@ -23,7 +24,7 @@ register(
       }`),
 );
 const lib = await import(pathToFileURL(join(process.cwd(), "src/lib/management/stock-usage.ts")).href);
-const { latestPairs, stocktakePairs, stocktakeSessions, planWindow, receivedBetween, readUsage, standsOut, countMargin, difference, editedSince, departedDuring } = lib;
+const { latestPairs, stocktakePairs, stocktakeSessions, planWindow, receivedBetween, readUsage, standsOut, countMargin, difference, editedSince, departedDuring, correctionsBetween } = lib;
 
 let fails = 0;
 const eq = (name, got, want) => {
@@ -152,6 +153,35 @@ const excluded = new Map([["adoptedMid", "2026-09-05"], ["adoptedBefore", "2026-
 // prescription ended before the window.
 eq("departed during the window", departedDuring(assignments, excluded, "pill", window), 1);
 eq("departed: other item", departedDuring(assignments, excluded, "food", window), 1);
+
+// --- corrections inside an interval (0112) ---
+// A correction changes stock_on_hand but is never paired, so the interval
+// reads as though nothing happened. These check only that the right ones are
+// attributed to the pair; no figure moves.
+const corr = (item, qty, at, unit = "tablet") => ({ item_id: item, counted_quantity: qty, unit, counted_at: at });
+const pairAC = latest.get("pill"); // A (1 Sep) -> C (15 Sep, the recount)
+const mid = "2026-09-08T03:00:00Z"; // 8 Sep, inside the interval
+const earlier = "2026-08-25T03:00:00Z"; // before the earlier count
+const later = "2026-09-20T03:00:00Z"; // after the later count
+const allCorr = [
+  corr("pill", 90, mid),
+  corr("pill", 80, earlier),
+  corr("pill", 70, later),
+  corr("food", 4000, mid, "g"),
+];
+eq("corrections: only those inside the interval", correctionsBetween(allCorr, pairAC).map((c) => c.counted_at), [mid]);
+eq("corrections: only this item", correctionsBetween(allCorr, latest.get("food")).map((c) => c.counted_quantity), [4000]);
+eq("corrections: none -> empty", correctionsBetween([], pairAC), []);
+// The window matches the view's for receipts: later than `from`, up to and
+// including `to`. So one stamped at the same instant as the earlier count
+// belongs to the previous interval, and one stamped at the same instant as
+// the later count belongs to this one.
+eq("corrections: same instant as `from` excluded", correctionsBetween([corr("pill", 1, pairAC.from.counted_at)], pairAC), []);
+eq("corrections: same instant as `to` included", correctionsBetween([corr("pill", 1, pairAC.to.counted_at)], pairAC).length, 1);
+eq("corrections: oldest first", correctionsBetween([corr("pill", 1, "2026-09-10T03:00:00Z"), corr("pill", 2, mid)], pairAC).map((c) => c.counted_quantity), [2, 1]);
+// editedSince covers the other side of `to`, so the two cannot double-report.
+eq("corrections: an edit after `to` belongs to editedSince, not here", [correctionsBetween([corr("pill", 1, later)], pairAC).length, editedSince(pairAC, later)], [0, true]);
+
 
 console.log(fails ? `\n${fails} FAILED` : "\nall ok");
 process.exitCode = fails ? 1 : 0;
