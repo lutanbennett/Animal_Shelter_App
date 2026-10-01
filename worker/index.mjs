@@ -27,10 +27,11 @@
 //      with a shared secret header (a WAF rule on that hostname rejects
 //      requests without it) and the response streamed back. ~2 ms of CPU.
 //      Tunnel down (530), app down behind the tunnel (502) or a gateway
-//      timeout → step 3. A GET that gets no answer at all within
-//      ORIGIN_TIMEOUT_MS → step 3. A POST that has no answer is NOT
-//      retried — the Pi may have already recorded the intake, and a second
-//      copy is worse than an error the user can see.
+//      timeout → step 3, for a GET/HEAD/OPTIONS, as is one that gets no
+//      answer at all within ORIGIN_TIMEOUT_MS. A POST that gets either is
+//      NOT retried — the Pi may have already recorded the intake, and a
+//      second copy is worse than an error the user can see — it is answered
+//      with a 503 (worker/origin.mjs).
 //
 //   3. Itself: the OpenNext handler that has served the site so far, at
 //      full CPU cost. With ORIGIN_HOST unset this is the only step, and the
@@ -47,6 +48,7 @@
 
 import openNext from "../.open-next/worker.js";
 import { handleReleaseRequest } from "./release-mail.mjs";
+import { fetchFromOrigin } from "./origin.mjs";
 import { withSecurityHeaders } from "./security-headers.mjs";
 
 // OpenNext's Durable Object classes must stay exported from the entry module.
@@ -62,11 +64,6 @@ const PUBLIC_PAGE_PREFIXES = ["/adopt", "/our-work", "/foster", "/volunteer", "/
 const isPublicPage = (pathname) =>
   pathname === "/" ||
   PUBLIC_PAGE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
-
-// Responses cloudflared / Cloudflare produce when the origin isn't there,
-// as opposed to responses the app produced.
-const ORIGIN_DOWN_STATUSES = new Set([502, 503, 504, 521, 522, 523, 530]);
-const IDEMPOTENT_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
 function cookieValue(request, name) {
   const header = request.headers.get("cookie") ?? "";
@@ -104,52 +101,12 @@ function withHeaders(response, extra) {
   return out;
 }
 
-/** Replay the request against the Pi; null means "fall back to local". */
-async function fetchFromOrigin(request, env) {
-  const url = new URL(request.url);
-  const publicHost = url.host;
-  url.host = env.ORIGIN_HOST;
-
-  const headers = new Headers(request.headers);
-  headers.set("x-origin-key", env.ORIGIN_KEY ?? "");
-  headers.set("x-forwarded-host", publicHost);
-  headers.set("x-forwarded-proto", "https");
-
-  const idempotent = IDEMPOTENT_METHODS.has(request.method);
-  const timeoutMs = Number(env.ORIGIN_TIMEOUT_MS) || DEFAULT_ORIGIN_TIMEOUT_MS;
-
-  let response;
-  try {
-    response = await fetch(url, {
-      method: request.method,
-      headers,
-      body: idempotent ? null : request.body,
-      // Redirects (to /login, after a form post…) belong to the browser.
-      redirect: "manual",
-      signal: idempotent ? AbortSignal.timeout(timeoutMs) : undefined,
-    });
-  } catch {
-    if (idempotent) return null;
-    // The Pi may or may not have acted on this write — say so rather than guess.
-    return new Response(
-      "The shelter's server did not answer in time. Check whether your change was saved before trying again.",
-      { status: 503, headers: { "content-type": "text/plain; charset=utf-8", "retry-after": "10", "x-lanna-served-by": "pi-timeout" } },
-    );
-  }
-  if (ORIGIN_DOWN_STATUSES.has(response.status)) return null;
-  return response;
-}
-
 async function serve(request, env, ctx) {
-  // A write is cloned before the origin attempt so its body is still
-  // readable if the fallback has to render it.
-  const forLocal = IDEMPOTENT_METHODS.has(request.method) ? request : request.clone();
-
   if (env.ORIGIN_HOST) {
     const fromPi = await fetchFromOrigin(request, env);
     if (fromPi) return withHeaders(fromPi, { "x-lanna-served-by": fromPi.headers.get("x-lanna-served-by") ?? "pi" });
   }
-  const local = await openNext.fetch(forLocal, env, ctx);
+  const local = await openNext.fetch(request, env, ctx);
   return withHeaders(local, { "x-lanna-served-by": "worker" });
 }
 
