@@ -2,18 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { runAction, type ActionResult } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getDriveClient } from "@/lib/google/drive";
 import { getT } from "@/lib/i18n/get-t";
 import { syncJobFolderAfterChange } from "@/lib/maintenance/drive-sync";
 import { isMaintenanceStatus, type MaintenanceStatus } from "@/lib/maintenance/status";
 
-export type MaintenanceFormState =
-  | { error: string }
-  | { success: true; jobId: string; driveWarning: string | null }
-  | undefined;
+type JobSaved = { jobId: string; driveWarning: string | null };
 
-export type MaintenanceActionResult = { error?: string; driveWarning?: string | null };
+const refuse = (error: string) => ({ ok: false as const, error });
 
 function str(formData: FormData, key: string): string | null {
   const value = formData.get(key);
@@ -150,101 +148,97 @@ async function parseFields(
  * thing the user didn't want here) and navigates itself when they're up.
  * RLS (0001) is what stops a volunteer: their insert returns no row.
  */
-export async function createMaintenanceJob(
-  _state: MaintenanceFormState,
-  formData: FormData,
-): Promise<MaintenanceFormState> {
-  const parsed = await parseFields(formData);
-  if ("error" in parsed) return parsed;
-  const { fields } = parsed;
+export async function createMaintenanceJob(formData: FormData): Promise<ActionResult<JobSaved>> {
+  const { t } = await getT();
+  return runAction("maintenance.createMaintenanceJob", t.common.somethingWentWrong, async () => {
+    const parsed = await parseFields(formData);
+    if ("error" in parsed) return refuse(parsed.error);
+    const { fields } = parsed;
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("maintenance")
-    .insert({
-      title: fields.title,
-      description: fields.description,
-      status: fields.status,
-      enclosure_id: fields.enclosure_id,
-      zone_id: fields.zone_id,
-      due_date: fields.due_date,
-      estimated_cost: fields.estimated_cost,
-      actual_cost: fields.actual_cost,
-    })
-    .select("id")
-    .limit(1)
-    .returns<{ id: string }[]>();
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("maintenance")
+      .insert({
+        title: fields.title,
+        description: fields.description,
+        status: fields.status,
+        enclosure_id: fields.enclosure_id,
+        zone_id: fields.zone_id,
+        due_date: fields.due_date,
+        estimated_cost: fields.estimated_cost,
+        actual_cost: fields.actual_cost,
+      })
+      .select("id")
+      .limit(1)
+      .returns<{ id: string }[]>();
 
-  if (error) return { error: error.message };
-  const row = data?.[0];
-  if (!row) {
-    const { t } = await getT();
-    return { error: t.maintenance.errors.saveFailed };
-  }
+    if (error) return refuse(error.message);
+    const row = data?.[0];
+    if (!row) return refuse(t.maintenance.errors.saveFailed);
 
-  const teamError = await setAssignees(supabase, row.id, fields.assignee_ids);
-  if (teamError) return { error: teamError };
+    const teamError = await setAssignees(supabase, row.id, fields.assignee_ids);
+    if (teamError) return refuse(teamError);
 
-  revalidateJob(row.id, fields.enclosure_id);
-  return { success: true, jobId: row.id, driveWarning: null };
+    revalidateJob(row.id, fields.enclosure_id);
+    return { ok: true, jobId: row.id, driveWarning: null };
+  });
 }
 
 /**
  * Edits a job's details. The title and location are part of the Drive
  * path, so the folder (if the job has one) is moved/renamed afterwards.
  */
-export async function updateMaintenanceJob(
-  _state: MaintenanceFormState,
-  formData: FormData,
-): Promise<MaintenanceFormState> {
+export async function updateMaintenanceJob(formData: FormData): Promise<ActionResult<JobSaved>> {
   const { t } = await getT();
-  const jobId = str(formData, "jobId");
-  if (!jobId) return { error: t.maintenance.errors.notFound };
+  return runAction("maintenance.updateMaintenanceJob", t.common.somethingWentWrong, async () => {
+    const jobId = str(formData, "jobId");
+    if (!jobId) return refuse(t.maintenance.errors.notFound);
 
-  const parsed = await parseFields(formData);
-  if ("error" in parsed) return parsed;
-  const { fields } = parsed;
+    const parsed = await parseFields(formData);
+    if ("error" in parsed) return refuse(parsed.error);
+    const { fields } = parsed;
 
-  const supabase = await createClient();
-  const { data: before } = await supabase
-    .from("maintenance")
-    .select("enclosure_id")
-    .eq("id", jobId)
-    .limit(1)
-    .returns<{ enclosure_id: string | null }[]>();
+    const supabase = await createClient();
+    const { data: before } = await supabase
+      .from("maintenance")
+      .select("enclosure_id")
+      .eq("id", jobId)
+      .limit(1)
+      .returns<{ enclosure_id: string | null }[]>();
 
-  const { data, error } = await supabase
-    .from("maintenance")
-    .update({
-      title: fields.title,
-      description: fields.description,
-      status: fields.status,
-      enclosure_id: fields.enclosure_id,
-      zone_id: fields.zone_id ?? undefined,
-      due_date: fields.due_date,
-      estimated_cost: fields.estimated_cost,
-      actual_cost: fields.actual_cost,
-    })
-    .eq("id", jobId)
-    .select("id")
-    .returns<{ id: string }[]>();
+    const { data, error } = await supabase
+      .from("maintenance")
+      .update({
+        title: fields.title,
+        description: fields.description,
+        status: fields.status,
+        enclosure_id: fields.enclosure_id,
+        zone_id: fields.zone_id ?? undefined,
+        due_date: fields.due_date,
+        estimated_cost: fields.estimated_cost,
+        actual_cost: fields.actual_cost,
+      })
+      .eq("id", jobId)
+      .select("id")
+      .returns<{ id: string }[]>();
 
-  if (error) return { error: error.message };
-  // RLS filters rather than rejects, so a volunteer (or a stale id) shows
-  // up as "nothing updated".
-  if (!data || data.length === 0) return { error: t.maintenance.errors.notAuthorized };
+    if (error) return refuse(error.message);
+    // RLS filters rather than rejects, so a volunteer (or a stale id) shows
+    // up as "nothing updated".
+    if (!data || data.length === 0) return refuse(t.maintenance.errors.notAuthorized);
 
-  const teamError = await setAssignees(supabase, jobId, fields.assignee_ids);
-  if (teamError) return { error: teamError };
+    const teamError = await setAssignees(supabase, jobId, fields.assignee_ids);
+    if (teamError) return refuse(teamError);
 
-  const driveWarning = await syncJobFolderAfterChange(supabase, jobId);
+    const driveWarning = await syncJobFolderAfterChange(supabase, jobId);
 
-  revalidateJob(jobId, fields.enclosure_id);
-  const previousEnclosure = before?.[0]?.enclosure_id ?? null;
-  if (previousEnclosure && previousEnclosure !== fields.enclosure_id) {
-    revalidatePath(`/enclosures/${previousEnclosure}`);
-  }
-  return { success: true, jobId, driveWarning };
+    revalidateJob(jobId, fields.enclosure_id);
+    const previousEnclosure = before?.[0]?.enclosure_id ?? null;
+    if (previousEnclosure && previousEnclosure !== fields.enclosure_id) {
+      revalidatePath(`/enclosures/${previousEnclosure}`);
+    }
+    return { ok: true, jobId, driveWarning };
+  });
 }
 
 /**
@@ -255,25 +249,27 @@ export async function updateMaintenanceJob(
 export async function setMaintenanceStatus(
   jobId: string,
   status: string,
-): Promise<MaintenanceActionResult> {
+): Promise<ActionResult<{ driveWarning: string | null }>> {
   const { t } = await getT();
-  if (!isMaintenanceStatus(status)) return { error: t.maintenance.errors.invalidStatus };
+  return runAction("maintenance.setMaintenanceStatus", t.common.somethingWentWrong, async () => {
+    if (!isMaintenanceStatus(status)) return refuse(t.maintenance.errors.invalidStatus);
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("maintenance")
-    .update({ status })
-    .eq("id", jobId)
-    .select("id, enclosure_id")
-    .returns<{ id: string; enclosure_id: string | null }[]>();
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("maintenance")
+      .update({ status })
+      .eq("id", jobId)
+      .select("id, enclosure_id")
+      .returns<{ id: string; enclosure_id: string | null }[]>();
 
-  if (error) return { error: error.message };
-  const row = data?.[0];
-  if (!row) return { error: t.maintenance.errors.notAuthorized };
+    if (error) return refuse(error.message);
+    const row = data?.[0];
+    if (!row) return refuse(t.maintenance.errors.notAuthorized);
 
-  const driveWarning = await syncJobFolderAfterChange(supabase, jobId);
-  revalidateJob(jobId, row.enclosure_id);
-  return { driveWarning };
+    const driveWarning = await syncJobFolderAfterChange(supabase, jobId);
+    revalidateJob(jobId, row.enclosure_id);
+    return { ok: true, driveWarning };
+  });
 }
 
 /**
@@ -282,102 +278,112 @@ export async function setMaintenanceStatus(
  * got a folder, nothing in Drive at all. The database goes first and is
  * the source of truth; a Drive failure after that leaves an orphaned
  * folder, which is a cleanup nuisance rather than a wrong record, so it
- * isn't allowed to fail the action. Redirects to the board on success.
+ * isn't allowed to fail the action. Redirects to the board on success, so
+ * only a refusal ever comes back.
  * RLS (0001) is what stops a volunteer: their delete matches no row.
  */
-export async function deleteMaintenanceJob(jobId: string): Promise<{ error: string }> {
+export async function deleteMaintenanceJob(jobId: string): Promise<ActionResult> {
   const { t } = await getT();
-  const supabase = await createClient();
+  return runAction("maintenance.deleteMaintenanceJob", t.common.somethingWentWrong, async () => {
+    const supabase = await createClient();
 
-  const { data: rows } = await supabase
-    .from("maintenance")
-    .select("id, enclosure_id, drive_folder_id")
-    .eq("id", jobId)
-    .limit(1)
-    .returns<{ id: string; enclosure_id: string | null; drive_folder_id: string | null }[]>();
-  const job = rows?.[0];
-  if (!job) return { error: t.maintenance.errors.notFound };
+    const { data: rows } = await supabase
+      .from("maintenance")
+      .select("id, enclosure_id, drive_folder_id")
+      .eq("id", jobId)
+      .limit(1)
+      .returns<{ id: string; enclosure_id: string | null; drive_folder_id: string | null }[]>();
+    const job = rows?.[0];
+    if (!job) return refuse(t.maintenance.errors.notFound);
 
-  const { data: files } = await supabase
-    .from("attachments")
-    .select("drive_file_id")
-    .eq("owner_type", "maintenance")
-    .eq("owner_id", jobId)
-    .returns<{ drive_file_id: string }[]>();
+    const { data: files } = await supabase
+      .from("attachments")
+      .select("drive_file_id")
+      .eq("owner_type", "maintenance")
+      .eq("owner_id", jobId)
+      .returns<{ drive_file_id: string }[]>();
 
-  const { error: filesError } = await supabase
-    .from("attachments")
-    .delete()
-    .eq("owner_type", "maintenance")
-    .eq("owner_id", jobId);
-  if (filesError) return { error: filesError.message };
+    const { error: filesError } = await supabase
+      .from("attachments")
+      .delete()
+      .eq("owner_type", "maintenance")
+      .eq("owner_id", jobId);
+    if (filesError) return refuse(filesError.message);
 
-  const { data: deleted, error } = await supabase
-    .from("maintenance")
-    .delete()
-    .eq("id", jobId)
-    .select("id")
-    .returns<{ id: string }[]>();
-  if (error) return { error: error.message };
-  if (!deleted || deleted.length === 0) return { error: t.maintenance.errors.notAuthorized };
+    const { data: deleted, error } = await supabase
+      .from("maintenance")
+      .delete()
+      .eq("id", jobId)
+      .select("id")
+      .returns<{ id: string }[]>();
+    if (error) return refuse(error.message);
+    if (!deleted || deleted.length === 0) return refuse(t.maintenance.errors.notAuthorized);
 
-  try {
-    const drive = getDriveClient();
-    if (job.drive_folder_id) {
-      // Deleting the folder removes everything under it in one call.
-      await drive.deleteFile(job.drive_folder_id);
-    } else {
-      for (const file of files ?? []) await drive.deleteFile(file.drive_file_id);
+    try {
+      const drive = getDriveClient();
+      if (job.drive_folder_id) {
+        // Deleting the folder removes everything under it in one call.
+        await drive.deleteFile(job.drive_folder_id);
+      } else {
+        for (const file of files ?? []) await drive.deleteFile(file.drive_file_id);
+      }
+    } catch {
+      // See above: the record is gone; the folder can be tidied by hand.
     }
-  } catch {
-    // See above: the record is gone; the folder can be tidied by hand.
-  }
 
-  revalidateJob(jobId, job.enclosure_id);
-  redirect("/maintenance");
+    revalidateJob(jobId, job.enclosure_id);
+    // runAction passes redirect's control-flow throw straight through.
+    redirect("/maintenance");
+  });
 }
 
 export async function deleteMaintenanceAttachment(
   jobId: string,
   attachmentId: string,
-): Promise<MaintenanceActionResult> {
-  const supabase = await createClient();
+): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction(
+    "maintenance.deleteMaintenanceAttachment",
+    t.common.somethingWentWrong,
+    async () => {
+      const supabase = await createClient();
 
-  const { data: rows, error: selectError } = await supabase
-    .from("attachments")
-    .select("id, drive_file_id")
-    .eq("id", attachmentId)
-    .eq("owner_type", "maintenance")
-    .eq("owner_id", jobId)
-    .limit(1)
-    .returns<{ id: string; drive_file_id: string }[]>();
+      const { data: rows, error: selectError } = await supabase
+        .from("attachments")
+        .select("id, drive_file_id")
+        .eq("id", attachmentId)
+        .eq("owner_type", "maintenance")
+        .eq("owner_id", jobId)
+        .limit(1)
+        .returns<{ id: string; drive_file_id: string }[]>();
 
-  const attachment = rows?.[0];
-  if (selectError || !attachment) {
-    const { t } = await getT();
-    return { error: selectError?.message ?? t.maintenance.errors.fileNotFound };
-  }
+      const attachment = rows?.[0];
+      if (selectError || !attachment) {
+        return refuse(selectError?.message ?? t.maintenance.errors.fileNotFound);
+      }
 
-  const { error: deleteError } = await supabase
-    .from("attachments")
-    .delete()
-    .eq("id", attachmentId);
-  if (deleteError) return { error: deleteError.message };
+      const { error: deleteError } = await supabase
+        .from("attachments")
+        .delete()
+        .eq("id", attachmentId);
+      if (deleteError) return refuse(deleteError.message);
 
-  try {
-    await getDriveClient().deleteFile(attachment.drive_file_id);
-  } catch {
-    // The DB record is already gone; an orphaned Drive file is a minor
-    // cleanup issue, not worth failing the user-facing action over (same
-    // tradeoff as deleteProcedureAttachment).
-  }
+      try {
+        await getDriveClient().deleteFile(attachment.drive_file_id);
+      } catch {
+        // The DB record is already gone; an orphaned Drive file is a minor
+        // cleanup issue, not worth failing the user-facing action over (same
+        // tradeoff as deleteProcedureAttachment).
+      }
 
-  const { data: job } = await supabase
-    .from("maintenance")
-    .select("enclosure_id")
-    .eq("id", jobId)
-    .limit(1)
-    .returns<{ enclosure_id: string | null }[]>();
-  revalidateJob(jobId, job?.[0]?.enclosure_id ?? null);
-  return {};
+      const { data: job } = await supabase
+        .from("maintenance")
+        .select("enclosure_id")
+        .eq("id", jobId)
+        .limit(1)
+        .returns<{ enclosure_id: string | null }[]>();
+      revalidateJob(jobId, job?.[0]?.enclosure_id ?? null);
+      return { ok: true };
+    },
+  );
 }
