@@ -40,8 +40,12 @@ wait for `worktree.mjs new` to exit before trusting the tree. A gate ticked
 because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
-- [ ] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly — n/a: deploy tooling only, no UI, role, schema or page
-- [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them — n/a: deploy tooling only, no UI, role, schema or page
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (already up to date)
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`
+
+  ```
+  gates: typecheck=0 lint=0 build=0
+  ```
 - [ ] CI green on the PR (runs the same three).  — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
