@@ -138,6 +138,8 @@ export async function updateWeight(
     .update(changes)
     .eq("id", id)
     .eq("resident_id", input.residentId)
+    // An archived reading is gone as far as a correction is concerned (0124).
+    .is("archived_at", null)
     .select("id")
     .returns<{ id: string }[]>();
 

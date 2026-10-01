@@ -42,6 +42,7 @@ export async function loadLinkableVisits(
     supabase
       .from("vet_appointments")
       .select("id, appointment_date, reason")
+      .is("archived_at", null)
       .eq("resident_id", residentId)
       .order("appointment_date", { ascending: false })
       .returns<LinkableVisit[]>(),
@@ -49,6 +50,7 @@ export async function loadLinkableVisits(
       ? supabase
           .from(options.onePerVisit)
           .select("vet_appointment_id")
+          .is("archived_at", null)
           .eq("resident_id", residentId)
           .not("vet_appointment_id", "is", null)
           .returns<{ vet_appointment_id: string }[]>()

@@ -390,18 +390,21 @@ export async function loadResidentArchiveRecord(
       .select(
         "id, date_administered, administered_by, batch_number, notes, immunization_types(name)",
       )
+      .is("archived_at", null)
       .eq("resident_id", residentId)
       .order("date_administered", { ascending: false })
       .returns<ImmunizationRow[]>(),
     supabase
       .from("vet_appointments")
       .select("id, appointment_date, status, reason, doctor_name, notes, vets(name)")
+      .is("archived_at", null)
       .eq("resident_id", residentId)
       .order("appointment_date", { ascending: false })
       .returns<AppointmentRow[]>(),
     supabase
       .from("prescriptions")
       .select("id, start_date, end_date, dose_quantity, notes, medication(name, dose_unit), frequency(label)")
+      .is("archived_at", null)
       .eq("resident_id", residentId)
       .order("start_date", { ascending: false })
       .returns<PrescriptionRow[]>(),
@@ -416,6 +419,7 @@ export async function loadResidentArchiveRecord(
     supabase
       .from("weight")
       .select("id, date, weight_kg, notes")
+      .is("archived_at", null)
       .eq("resident_id", residentId)
       .order("date", { ascending: false })
       .returns<WeightRow[]>(),

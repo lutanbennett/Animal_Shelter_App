@@ -40,6 +40,7 @@ export default async function VetPage(props: PageProps<"/vets/[id]">) {
         .select(
           "id, resident_id, appointment_date, status, reason, doctor_id, doctor_name, cost, residents(name, thai_name, resident_code)",
         )
+        .is("archived_at", null)
         .eq("vet_id", id)
         .order("appointment_date", { ascending: false })
         .returns<VetHubVisit[]>(),
@@ -47,16 +48,20 @@ export default async function VetPage(props: PageProps<"/vets/[id]">) {
         .from("procedures")
         .select(linkedSelect)
         .eq("vet_appointments.vet_id", id)
+        .is("vet_appointments.archived_at", null)
         .returns<LinkedRecord[]>(),
       supabase
         .from("blood_tests")
         .select(linkedSelect)
         .eq("vet_appointments.vet_id", id)
+        .is("vet_appointments.archived_at", null)
         .returns<LinkedRecord[]>(),
       supabase
         .from("prescriptions")
         .select(linkedSelect)
         .eq("vet_appointments.vet_id", id)
+        .is("vet_appointments.archived_at", null)
+        .is("archived_at", null)
         .returns<LinkedRecord[]>(),
       supabase.rpc("current_user_role"),
       // The clinic's doctor list (0102). Read-only here; corrected under

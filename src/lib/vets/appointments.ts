@@ -47,6 +47,7 @@ export async function loadClinicAppointments(
     .select(
       "id, resident_id, appointment_date, status, reason, doctor_name, residents(name, thai_name)",
     )
+    .is("archived_at", null)
     .eq("vet_id", vetId)
     .in("status", ["scheduled", "completed"])
     .order("appointment_date", { ascending: true })

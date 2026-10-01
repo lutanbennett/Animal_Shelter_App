@@ -385,6 +385,7 @@ export default async function ResidentSectionPage(
       const { data } = await supabase
         .from("immunization_records")
         .select("id, date_administered, administered_by, immunization_types(name)")
+        .is("archived_at", null)
         .eq("resident_id", id)
         .order("date_administered", { ascending: false })
         .returns<
@@ -484,6 +485,7 @@ export default async function ResidentSectionPage(
         supabase
           .from("vet_appointments")
           .select("id, appointment_date, status, reason, doctor_name, notes, cost, vets(name)")
+          .is("archived_at", null)
           .eq("resident_id", id)
           .order("appointment_date", { ascending: false })
           .returns<
@@ -501,6 +503,7 @@ export default async function ResidentSectionPage(
         supabase
           .from("weight")
           .select("id, vet_appointment_id")
+          .is("archived_at", null)
           .eq("resident_id", id)
           .not("vet_appointment_id", "is", null)
           .returns<{ id: string; vet_appointment_id: string }[]>(),
@@ -624,6 +627,7 @@ export default async function ResidentSectionPage(
         .select(
           "id, start_date, end_date, dose_quantity, notes, medication(name, dose_unit), frequency(label), vet_appointments(appointment_date)",
         )
+        .is("archived_at", null)
         .eq("resident_id", id)
         .order("start_date", { ascending: false })
         .returns<
@@ -885,6 +889,7 @@ export default async function ResidentSectionPage(
       const { data, error } = await supabase
         .from("weight")
         .select("id, date, weight_kg, notes, vet_appointments(appointment_date)")
+        .is("archived_at", null)
         .eq("resident_id", id)
         .order("date", { ascending: false })
         .order("created_at", { ascending: false })

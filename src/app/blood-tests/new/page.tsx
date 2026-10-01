@@ -45,6 +45,7 @@ export default async function NewBloodTestPage(
     supabase
       .from("vet_appointments")
       .select("id, appointment_date, reason")
+      .is("archived_at", null)
       .eq("resident_id", residentId)
       .order("appointment_date", { ascending: false })
       .returns<VetAppointmentOption[]>(),
