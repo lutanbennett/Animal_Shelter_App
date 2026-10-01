@@ -7,7 +7,9 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDateTime } from "@/lib/format";
 import { formatQuantity } from "@/lib/diets/options";
 import { readStock } from "@/lib/management/stock";
+import { inUnit } from "@/lib/units";
 import {
+  entryUnit,
   rowOutcome,
   summarise,
   isBigChange,
@@ -289,11 +291,16 @@ function StocktakeRow({
   const same = entry?.same ?? false;
   const neverCounted = item.lastCount == null;
 
+  const conversions = item.conversions ?? [];
+  const unit = entryUnit(item, entry);
+  const typedUnit = unit ? conversions.find((c) => c.unit === unit) : undefined;
+  const lastInUnit = typedUnit && item.lastCount != null ? inUnit(item.lastCount, typedUnit) : null;
   const lastLine = neverCounted
     ? s.notCounted
-    : `${s.lastCount(formatQuantity(item.lastCount), item.unit)} · ${t.management.stock.countedAgo(
-        countedDaysAgo(item),
-      )}`;
+    : `${s.lastCount(formatQuantity(item.lastCount), item.unit)}${
+        lastInUnit ? ` (${t.units.onHand(formatQuantity(lastInUnit), typedUnit!.unit)})` : ""
+      } · ${t.management.stock.countedAgo(countedDaysAgo(item))}`;
+  const shownUnit = typedUnit ? typedUnit.unit : item.unit;
 
   return (
     <li
@@ -310,6 +317,21 @@ function StocktakeRow({
         <span className="text-xs text-muted">{lastLine}</span>
       </div>
       <div className="flex gap-2">
+        {conversions.length > 0 && (
+          <select
+            aria-label={t.units.entry.unit}
+            value={unit}
+            onChange={(e) => onChange({ value: entry?.value ?? "", same: false, unit: e.target.value })}
+            className="min-h-12 max-w-36 shrink-0 rounded border border-border bg-background px-2 text-sm text-foreground"
+          >
+            <option value="">{item.unit}</option>
+            {conversions.map((c) => (
+              <option key={c.id} value={c.unit}>
+                {c.unit}
+              </option>
+            ))}
+          </select>
+        )}
         <input
           ref={inputRef}
           type="text"
@@ -317,7 +339,7 @@ function StocktakeRow({
           enterKeyHint={last ? "done" : "next"}
           autoComplete="off"
           value={same ? "" : (entry?.value ?? "")}
-          onChange={(e) => onChange({ value: e.target.value, same: false })}
+          onChange={(e) => onChange({ value: e.target.value, same: false, unit: entry?.unit })}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
@@ -327,9 +349,9 @@ function StocktakeRow({
           placeholder={
             same && item.lastCount != null
               ? s.samePlaceholder(formatQuantity(item.lastCount), item.unit)
-              : s.countPlaceholder(item.unit)
+              : s.countPlaceholder(shownUnit)
           }
-          aria-label={s.countLabel(item.name, item.unit)}
+          aria-label={s.countLabel(item.name, shownUnit)}
           aria-invalid={outcome.kind === "invalid" || undefined}
           className={`min-h-12 min-w-0 flex-1 rounded border bg-background px-3 text-lg text-foreground outline-none focus:border-primary ${
             outcome.kind === "invalid" ? "border-danger" : "border-border"
@@ -340,7 +362,7 @@ function StocktakeRow({
           aria-pressed={same}
           disabled={neverCounted}
           title={neverCounted ? s.sameUnavailable : undefined}
-          onClick={() => onChange({ value: "", same: !same })}
+          onClick={() => onChange({ value: "", same: !same, unit: entry?.unit })}
           className={`inline-flex min-h-12 shrink-0 items-center gap-1 rounded border px-3 text-sm font-medium disabled:opacity-40 ${
             same
               ? "border-primary bg-primary text-primary-foreground"
@@ -352,6 +374,11 @@ function StocktakeRow({
         </button>
       </div>
       {outcome.kind === "invalid" && <p className="text-xs text-danger">{s.invalid}</p>}
+      {outcome.kind === "counted" && outcome.typed && (
+        <p className="text-xs text-muted">
+          {t.units.entry.equals(formatQuantity(outcome.count), item.unit)} · {t.units.entry.approx}
+        </p>
+      )}
       {outcome.kind === "counted" && (
         <ChangeLine lastCount={item.lastCount} count={outcome.count} unit={item.unit} />
       )}
@@ -451,7 +478,19 @@ function ReviewDialog({
                   {s.confirmedLine(formatQuantity(line.outcome.count), line.item.unit)}
                 </span>
               ) : (
-                <ChangeLine lastCount={line.item.lastCount} count={line.outcome.count} unit={line.item.unit} />
+                <>
+                  {line.outcome.kind === "counted" && line.outcome.typed && (
+                    <span className="text-xs text-muted">
+                      {t.units.entry.recent(
+                        formatQuantity(line.outcome.typed.quantity),
+                        line.outcome.typed.unit,
+                        formatQuantity(line.outcome.count),
+                        line.item.unit,
+                      )}
+                    </span>
+                  )}
+                  <ChangeLine lastCount={line.item.lastCount} count={line.outcome.count} unit={line.item.unit} />
+                </>
               )}
             </li>
           ))}

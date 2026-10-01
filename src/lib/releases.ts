@@ -63,6 +63,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   "If something goes wrong while saving, renaming, moving or deleting a project folder or photo, the Projects pages now say so with a short reference you can quote, instead of showing a numbered error code.",
+  "Food and medicines can now be bought, delivered and counted in a different unit from the one they are fed or dosed in. Under Management → Diets or → Medications, Units of measure lets you say that a bag (20 kg) is 200 cups, say, and which unit the item is bought and counted in. Record a delivery and the stocktake then let you pick that unit, show what it comes to in cups, and save the cups; In stock also shows it in bags. Enter the price per bag and the cost per cup is worked out for the forecasts. Correcting a bag's size later never changes deliveries and counts already saved.",
   "The website and the app are now prepared by a Raspberry Pi at the shelter instead of by Cloudflare's own servers, which should stop the \"Error 1102: Worker exceeded resource limits\" page that some heavier pages showed now and then. If a page ever does fail, the app falls back to the old way by itself, so you keep working. The weekly database backup also now runs on the Pi.",
 ];
 

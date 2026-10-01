@@ -20,11 +20,14 @@ export function StockOnHandCell({
   counting,
   countValue,
   onCountChange,
+  inPurchaseUnit,
 }: {
   figures: StockFigures;
   reading: StockReading;
   /** Already translated. */
   unit: string;
+  /** The same stock in the item's purchase unit (0118), when it has one. */
+  inPurchaseUnit?: { quantity: number; unit: string } | null;
   counting: boolean;
   countValue: string;
   onCountChange: (value: string) => void;
@@ -66,6 +69,14 @@ export function StockOnHandCell({
             <span className="font-medium text-foreground">
               {s.quantity(formatQuantity(figures.stock_on_hand), unit)}
             </span>
+          )}
+          {inPurchaseUnit && figures.stock_on_hand > 0 && (
+            <>
+              <br />
+              <span className="text-xs text-muted">
+                {t.units.onHand(formatQuantity(inPurchaseUnit.quantity), inPurchaseUnit.unit)}
+              </span>
+            </>
           )}
           <br />
           <span className="text-xs text-muted">{s.countedAgo(reading.countedDaysAgo ?? 0)}</span>

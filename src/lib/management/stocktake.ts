@@ -13,6 +13,8 @@
  * exactly one of: left alone, counted, confirmed.
  */
 
+import { defaultUnit, resolveEntered, type UnitConversion } from "@/lib/units";
+
 /** Admin and management as for the single stock cell, plus the people who walk the shelves (0091). */
 export const STOCKTAKE_ROLES = ["admin", "management", "staff", "volunteer"] as const;
 
@@ -30,7 +32,15 @@ export type StocktakeItem = {
   /** Last count. Null = never counted, which is not 0. */
   lastCount: number | null;
   lastCountedAt: string | null;
+  /** Other units it is counted in (0118), as they are now. Absent = base unit only. */
+  conversions?: UnitConversion[];
 };
+
+/** The unit a row counts in unless the person changed it: the count unit, else the base unit (""). */
+export function entryUnit(item: StocktakeItem, entry: RowEntry | undefined): string {
+  if (entry?.unit != null) return entry.unit;
+  return defaultUnit(item.conversions ?? [], "count")?.unit ?? "";
+}
 
 /** What the person has done to one row. Both empty = left alone. */
 export type RowEntry = {
@@ -38,11 +48,14 @@ export type RowEntry = {
   value: string;
   /** "Same as last time": confirm lastCount without retyping it. */
   same: boolean;
+  /** A conversion's unit name; "" = base. Unset = the item's default count unit. */
+  unit?: string;
 };
 
 export type RowOutcome =
   | { kind: "untouched" }
-  | { kind: "counted"; count: number }
+  /** `count` is in BASE units; `typed` is what was entered when that was another unit. */
+  | { kind: "counted"; count: number; typed?: { quantity: number; unit: string } }
   | { kind: "confirmed"; count: number }
   | { kind: "invalid" };
 
@@ -64,7 +77,13 @@ export function rowOutcome(item: StocktakeItem, entry: RowEntry | undefined): Ro
   // so both are refused and the row is flagged, rather than saved wrong.
   const n = Number(trimmed);
   if (!Number.isFinite(n) || n < 0) return { kind: "invalid" };
-  return { kind: "counted", count: n };
+  const unit = entryUnit(item, entry);
+  if (!unit) return { kind: "counted", count: n };
+  // The sheet's own preview. The server stamps the factor again from the
+  // live conversion when it saves; this one is never stored.
+  const resolved = resolveEntered(n, unit, item.conversions ?? []);
+  if (!resolved.ok) return { kind: "invalid" };
+  return { kind: "counted", count: resolved.base, typed: { quantity: n, unit } };
 }
 
 /**
@@ -93,9 +112,12 @@ export type SheetSummary = {
   invalid: { kind: StocktakeKind; item: StocktakeItem }[];
   /** Rows left blank — left alone by the save. */
   untouched: number;
-  medication: { id: string; count: number }[];
-  diet: { id: string; count: number }[];
+  medication: SheetCount[];
+  diet: SheetCount[];
 };
+
+/** One row of the save: `count` in base units, plus the unit it was typed in when that was not the base. */
+export type SheetCount = { id: string; count: number; quantity?: number; unit?: string };
 
 export function summarise(
   items: Record<StocktakeKind, StocktakeItem[]>,
@@ -111,7 +133,11 @@ export function summarise(
         summary.invalid.push({ kind, item });
       } else {
         summary.lines.push({ kind, item, outcome, big: isBigChange(item.lastCount, outcome.count) });
-        summary[kind].push({ id: item.id, count: outcome.count });
+        summary[kind].push(
+          outcome.kind === "counted" && outcome.typed
+            ? { id: item.id, count: outcome.count, quantity: outcome.typed.quantity, unit: outcome.typed.unit }
+            : { id: item.id, count: outcome.count },
+        );
       }
     }
   }
