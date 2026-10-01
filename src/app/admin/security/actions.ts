@@ -9,7 +9,14 @@ import {
   type ActionResult,
 } from "@/lib/action-result";
 import { hasAdminRole } from "@/lib/auth/require-admin";
-import { hasTwoStep, isVerifiedTotp } from "@/lib/auth/two-step";
+import {
+  APPROVED_FACTOR,
+  SETUP_OPEN_UNTIL,
+  hasTwoStep,
+  isVerifiedTotp,
+  setupWindowEnd,
+  trustedTotpFactors,
+} from "@/lib/auth/two-step";
 import { MUST_CHANGE_PASSWORD } from "@/lib/auth/password-change";
 import { generateTemporaryPassword } from "@/lib/auth/temp-password";
 import { forgetWaitingAccessRequests } from "@/lib/status/access-requests";
@@ -36,6 +43,21 @@ function revalidateSecurity() {
   forgetWaitingAccessRequests();
   revalidatePath("/admin/security");
   refresh();
+}
+
+/**
+ * Giving someone the admin role is an admin vouching for them, so it opens
+ * their first authenticator set-up (src/lib/auth/two-step.ts): they can
+ * enrol on their next visit to Security, and nobody holding only a password
+ * can before then. Best effort — the role is already granted, and Allow
+ * set-up does the same later.
+ */
+async function openSetupForNewAdmin(userId: string, role: string) {
+  if (role !== "admin") return;
+  const { error } = await createAdminClient().auth.admin.updateUserById(userId, {
+    app_metadata: { [SETUP_OPEN_UNTIL]: setupWindowEnd() },
+  });
+  if (error) console.error("[security.openSetupForNewAdmin]", error);
 }
 
 type T = Awaited<ReturnType<typeof getT>>["t"];
@@ -107,7 +129,10 @@ export async function createUser(
       email,
       password: temporaryPassword,
       email_confirm: true,
-      app_metadata: { [MUST_CHANGE_PASSWORD]: true },
+      app_metadata: {
+        [MUST_CHANGE_PASSWORD]: true,
+        ...(role === "admin" ? { [SETUP_OPEN_UNTIL]: setupWindowEnd() } : {}),
+      },
     });
 
     if (error) {
@@ -155,6 +180,7 @@ export async function approveAccessRequest(userId: string, role: string): Promis
     if (error) {
       return unexpectedFailure("security.approveAccessRequest", error, t.common.somethingWentWrong);
     }
+    await openSetupForNewAdmin(userId, role);
     revalidateSecurity();
     return { ok: true };
   });
@@ -173,6 +199,7 @@ export async function updateUserRole(userId: string, role: string): Promise<Acti
     if (error) {
       return unexpectedFailure("security.updateUserRole", error, t.common.somethingWentWrong);
     }
+    await openSetupForNewAdmin(userId, role);
     revalidateSecurity();
     return { ok: true };
   });
@@ -370,6 +397,53 @@ export async function resetTwoStep(userId: string): Promise<ActionResult> {
       if (deleteError) {
         return unexpectedFailure("security.resetTwoStep", deleteError, t.common.somethingWentWrong);
       }
+    }
+    // The reset is the admin's say-so for the replacement: set-up opens.
+    const { error: openError } = await admin.auth.admin.updateUserById(userId, {
+      app_metadata: { [APPROVED_FACTOR]: null, [SETUP_OPEN_UNTIL]: setupWindowEnd() },
+    });
+    if (openError) return unexpectedFailure("security.resetTwoStep", openError, t.common.somethingWentWrong);
+    revalidateSecurity();
+    return { ok: true };
+  });
+}
+
+/**
+ * Opens a first authenticator set-up for a login that has none the app
+ * trusts (src/lib/auth/two-step.ts): for the admin who was never prompted,
+ * or whose set-up window ran out. Any app that is there but untrusted — a
+ * half-finished set-up, or one enrolled around the app — is removed so the
+ * person starts clean. A login that has a trusted app uses Reset instead.
+ */
+export async function allowTwoStepSetup(userId: string): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.admin.security.errors;
+  return runAction("security.allowTwoStepSetup", t.common.somethingWentWrong, async () => {
+    const denied = await refuseUnlessAdmin(t);
+    if (denied) return denied;
+
+    const admin = createAdminClient();
+    const { data, error } = await admin.auth.admin.getUserById(userId);
+    if (error || !data.user) {
+      if (!error || isUserNotFound(error)) return refuse(e.userNotFound);
+      return unexpectedFailure("security.allowTwoStepSetup", error, t.common.somethingWentWrong);
+    }
+    if (trustedTotpFactors(data.user).length > 0) return refuse(e.alreadyHasTwoStep);
+
+    for (const factor of data.user.factors ?? []) {
+      const { error: deleteError } = await admin.auth.admin.mfa.deleteFactor({
+        id: factor.id,
+        userId,
+      });
+      if (deleteError) {
+        return unexpectedFailure("security.allowTwoStepSetup", deleteError, t.common.somethingWentWrong);
+      }
+    }
+    const { error: openError } = await admin.auth.admin.updateUserById(userId, {
+      app_metadata: { [APPROVED_FACTOR]: null, [SETUP_OPEN_UNTIL]: setupWindowEnd() },
+    });
+    if (openError) {
+      return unexpectedFailure("security.allowTwoStepSetup", openError, t.common.somethingWentWrong);
     }
     revalidateSecurity();
     return { ok: true };

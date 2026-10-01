@@ -11,8 +11,27 @@ import type { SupabaseClient, User } from "@supabase/supabase-js";
  * through here so the card and the list can never disagree.
  */
 
-/** One page of logins: a shelter has a handful, far below this. */
+/** Logins per request to GoTrue; listAllUsers() asks for as many pages as there are. */
 export const LIST_USERS_PER_PAGE = 200;
+
+/**
+ * Every login, however many. listUsers() returns one page and says
+ * nothing when there are more, so a single call silently drops the rest:
+ * once junk sign-ups outnumbered a page, real logins fell off Security and
+ * out of the access-request count with no sign anything was missing. A
+ * short page is the last one.
+ */
+export async function listAllUsers(
+  admin: SupabaseClient,
+): Promise<{ users: User[]; error?: string }> {
+  const users: User[] = [];
+  for (let page = 1; ; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: LIST_USERS_PER_PAGE });
+    if (error) return { users, error: error.message };
+    users.push(...data.users);
+    if (data.users.length < LIST_USERS_PER_PAGE) return { users };
+  }
+}
 
 export function accessRequestsAmong<U extends Pick<User, "id">>(
   authUsers: U[],
@@ -40,14 +59,14 @@ export async function countWaitingAccessRequests(
   admin: SupabaseClient,
 ): Promise<{ data?: WaitingAccessRequests; error?: string }> {
   const [authUsersResult, rolesResult] = await Promise.all([
-    admin.auth.admin.listUsers({ perPage: LIST_USERS_PER_PAGE }),
+    listAllUsers(admin),
     admin.from("user_roles").select("user_id"),
   ]);
-  if (authUsersResult.error) return { error: authUsersResult.error.message };
+  if (authUsersResult.error) return { error: authUsersResult.error };
   if (rolesResult.error) return { error: rolesResult.error.message };
 
   const roleUserIds = new Set((rolesResult.data ?? []).map((r) => r.user_id as string));
-  const waiting = accessRequestsAmong(authUsersResult.data.users, roleUserIds);
+  const waiting = accessRequestsAmong(authUsersResult.users, roleUserIds);
   const oldestSince = waiting.map((u) => u.created_at).sort()[0] ?? null;
   const oldestDays = oldestSince ? Math.floor((Date.now() - Date.parse(oldestSince)) / 86_400_000) : 0;
   return { data: { count: waiting.length, oldestSince, oldestDays } };

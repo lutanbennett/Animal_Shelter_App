@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { LIST_USERS_PER_PAGE, accessRequestsAmong } from "@/lib/auth/access-requests";
+import { accessRequestsAmong, listAllUsers } from "@/lib/auth/access-requests";
 import { requireAdminUser } from "@/lib/auth/require-admin";
-import { TWO_STEP_PATH, hasTwoStep, isVerifiedTotp } from "@/lib/auth/two-step";
+import { TWO_STEP_PATH, SETUP_OPEN_UNTIL, hasTwoStep, isSetupOpen, trustedTotpFactors } from "@/lib/auth/two-step";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getT } from "@/lib/i18n/get-t";
 import { mustChangePassword } from "@/lib/auth/password-change";
@@ -19,7 +19,7 @@ export default async function SecurityPage() {
   const admin = createAdminClient();
 
   const [authUsersResult, rolesResult, vetsResult] = await Promise.all([
-    admin.auth.admin.listUsers({ perPage: LIST_USERS_PER_PAGE }),
+    listAllUsers(admin),
     admin.from("user_roles").select("user_id, role, archived_at, vet_id"),
     admin.from("vets").select("id, name, clinic_name").order("name"),
   ]);
@@ -39,7 +39,7 @@ export default async function SecurityPage() {
     label: v.clinic_name ? `${v.name} — ${v.clinic_name}` : (v.name as string),
   }));
 
-  const authUsers = authUsersResult.data?.users ?? [];
+  const authUsers = authUsersResult.users;
 
   // Who has an authenticator app set up. listUsers() leaves factors out
   // (getUserById() has them), so ask per login — a shelter's handful, in
@@ -50,7 +50,12 @@ export default async function SecurityPage() {
         .filter((u) => roleByUserId.has(u.id))
         .map(async (u) => {
           const { data } = await admin.auth.admin.mfa.listFactors({ userId: u.id });
-          return [u.id, (data?.factors ?? []).some(isVerifiedTotp)] as const;
+          // Only an app Security would accept counts as set up (two-step.ts).
+          const factors = data?.factors ?? [];
+          return [
+            u.id,
+            trustedTotpFactors({ factors, app_metadata: u.app_metadata }).length > 0,
+          ] as const;
         }),
     ),
   );
@@ -83,6 +88,7 @@ export default async function SecurityPage() {
       lastSignInAt: u.last_sign_in_at ?? null,
       mustChangePassword: mustChangePassword(u),
       twoStep: twoStepByUserId.get(u.id) ?? false,
+      twoStepSetupUntil: isSetupOpen(u) ? (u.app_metadata[SETUP_OPEN_UNTIL] as string) : null,
     }))
     // People who have left (0063) sit under the current team.
     .sort(
@@ -101,7 +107,7 @@ export default async function SecurityPage() {
 
       {authUsersResult.error && (
         <p className="text-sm text-danger">
-          {t.admin.security.couldntLoadUsers}: {authUsersResult.error.message}
+          {t.admin.security.couldntLoadUsers}: {authUsersResult.error}
         </p>
       )}
       {rolesResult.error && (

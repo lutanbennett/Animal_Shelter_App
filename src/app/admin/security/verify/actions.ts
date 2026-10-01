@@ -9,7 +9,13 @@ import {
   type ActionResult,
 } from "@/lib/action-result";
 import { hasAdminRole } from "@/lib/auth/require-admin";
-import { totpIssuer } from "@/lib/auth/two-step";
+import {
+  APPROVED_FACTOR,
+  SETUP_OPEN_UNTIL,
+  isSetupOpen,
+  totpIssuer,
+  trustedTotpFactors,
+} from "@/lib/auth/two-step";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -54,9 +60,9 @@ export async function startTwoStepSetup(): Promise<TwoStepSetup> {
     if (!user) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const factors = user.factors ?? [];
-    if (factors.some((f) => f.factor_type === "totp" && f.status === "verified")) {
-      return refuse(e.alreadySetUp);
-    }
+    if (trustedTotpFactors(user).length > 0) return refuse(e.alreadySetUp);
+    // A password alone must not enrol an app: an admin opens a first set-up.
+    if (!isSetupOpen(user)) return refuse(e.setupNotOpen);
     const admin = createAdminClient();
     for (const factor of factors.filter((f) => f.status !== "verified")) {
       await admin.auth.admin.mfa.deleteFactor({ id: factor.id, userId: user.id });
@@ -121,14 +127,26 @@ export async function confirmTwoStep(
     // set up (named by the form). Anything else is refused before GoTrue.
     const factors = (user.factors ?? []).filter((f) => f.factor_type === "totp");
     const wanted = formData.get("factorId") as string | null;
-    const factor =
-      factors.find((f) => f.status === "verified") ?? factors.find((f) => f.id === wanted);
+    const trusted = trustedTotpFactors(user)[0];
+    const factor = trusted ?? factors.find((f) => f.status !== "verified" && f.id === wanted);
     if (!factor) return refuse(e.noFactor);
+    // Confirming a new app binds it to the login: only inside an opened window.
+    if (!trusted && !isSetupOpen(user)) return refuse(e.setupNotOpen);
 
     const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: factor.id, code });
     if (error) {
       const words = codeRefusal(error, e);
       return words ? refuse(words) : unexpectedFailure("security.confirmTwoStep", error, t.common.somethingWentWrong);
+    }
+    if (!trusted) {
+      // Bound: this app is now the login's own, and the window closes.
+      const admin = createAdminClient();
+      const { error: bindError } = await admin.auth.admin.updateUserById(user.id, {
+        app_metadata: { [APPROVED_FACTOR]: factor.id, [SETUP_OPEN_UNTIL]: null },
+      });
+      if (bindError) {
+        return unexpectedFailure("security.confirmTwoStep", bindError, t.common.somethingWentWrong);
+      }
     }
     return { ok: true };
   });
