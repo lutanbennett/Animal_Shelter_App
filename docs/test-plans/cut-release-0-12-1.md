@@ -111,7 +111,9 @@
 
 ### On the deployed build
 
-- [ ] Deployed to test: `npm run deploy:test` — deferred: this session, after merge. Before the production deploys
+- [x] Deployed to test: `npm run deploy:test` — **done 2026-10-02**, from `main` at `a2cf24e`, before any production deploy. `deploy: test → Supabase project qxkmhwybjggxvsfxsxbd (a2cf24e)`, `Uploaded lanna-animal-care-test (23.13 sec)`, Worker `ad65d861-c917-4c94-9be3-cac5c2d051dd`, and `no major release new to test (was 0.12.0), so no email` — correct for a minor. `test.lannacare.org/api/releases/current` returns `{"version":"0.12.1"}`, the page is 200 and `x-lanna-served-by: worker`. UAT still reports `0.12.0`, the intended pre-deploy state.
+
+  **`strip-baked-env` removed 10 env vars, which is the number this plan said to expect.** A count of 12 was the signature of the `.env.production.local` leak found on 2026-10-01; 10 says the stray file is still gone and #271 guard aside, nothing has reintroduced it
 - [ ] Smoke-tested on `test.lannacare.org` — deferred: Lutan, for the signed-in paths. **Test is Worker-served**, so it does not exercise the Pi path production uses. **Worth most attention**: a destructive confirmation dialog (#263 — it names what will be lost and focuses Cancel), and Manual → Download PDF, which is note 1 and was broken on the Pi specifically
 - [ ] Timezone-sensitive behaviour checked on test — deferred: release manager. Low relevance: no note here is a date fix
 - [ ] Public pages re-checked after a cache purge or a 10-minute wait — deferred: release manager. **Relevant**: `0123` changes what the photo proxy will serve anonymously
