@@ -713,6 +713,11 @@ const en = {
           "Reset your own 2-step verification? Your authenticator app stops working here, and within the hour Security asks you to set up an app again — have the new phone ready.",
         twoStepReset: "2-step verification reset.",
         failedToResetTwoStep: "Failed to reset 2-step verification.",
+        allowTwoStepSetup: "Allow set-up",
+        renewTwoStepSetup: "Renew",
+        twoStepSetupOpenUntil: (when: string) => `Set-up open until ${when}`,
+        twoStepSetupAllowed: "Set-up is open. They can set up their authenticator app the next time they open Security.",
+        failedToAllowTwoStep: "Failed to open 2-step set-up.",
       },
       errors: {
         emailRequired: "Email is required.",
@@ -734,6 +739,7 @@ const en = {
         twoStepRequired:
           "This needs your authenticator app. Reload the page, enter the code from the app, then try again.",
         noTwoStep: "This login has no authenticator app set up. Reload the page.",
+        alreadyHasTwoStep: "This login already has an authenticator app. Use Reset to replace it.",
       },
       twoStep: {
         setupTitle: "Set up 2-step verification",
@@ -760,7 +766,12 @@ const en = {
         lostPhone:
           "Lost or replaced your phone? Ask another admin to reset your 2-step verification from Security. If no admin can get in, the developer can reset it.",
         backToSettings: "Back to Settings",
+        setupClosedTitle: "Set-up isn't open yet",
+        setupClosed:
+          "To protect your login, an authenticator app can only be set up once another admin has allowed it: they open Settings → Security and press Allow set-up next to your name. Then come back here. If you are the only admin, the developer can open it.",
         errors: {
+          setupNotOpen:
+            "Set-up isn't open for your login. Another admin can allow it from Security (Allow set-up), then try again.",
           alreadySetUp:
             "An authenticator app is already set up for your login. Reload the page and enter its code.",
           couldntStart: "Couldn't start the setup. Check your connection and try again.",
@@ -3618,6 +3629,12 @@ const en = {
     },
     daysLate: (n: number) => `${n} day${n === 1 ? "" : "s"} late`,
     waitingFor: (title: string) => `Waiting for ${title}`,
+    twoStepBanner: {
+      title: "Set up 2-step verification",
+      about:
+        "Your login has no authenticator app yet, so Security is not protected by a second step. Open Security to set one up; if it says set-up isn't open, ask another admin to press Allow set-up next to your name.",
+      open: "Open Security",
+    },
     accessRequests: {
       title: "Review access requests",
       about: (n: number) => `${n} waiting for a role — every admin sees this until they are dealt with`,

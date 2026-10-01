@@ -23,14 +23,22 @@ export default async function TwoStepPage() {
     <main className="flex flex-1 flex-col gap-6 p-6">
       <div>
         <h1 className="text-2xl font-semibold text-foreground">
-          {level.enrolled ? s.codeTitle : s.setupTitle}
+          {level.enrolled ? s.codeTitle : level.setupOpen ? s.setupTitle : s.setupClosedTitle}
         </h1>
         <p className="max-w-prose text-sm text-muted">
-          {level.enrolled ? s.codeSubtitle : s.setupSubtitle}
+          {level.enrolled ? s.codeSubtitle : level.setupOpen ? s.setupSubtitle : null}
         </p>
       </div>
 
-      <TwoStepForm enrolled={level.enrolled} />
+      {level.enrolled || level.setupOpen ? (
+        <TwoStepForm enrolled={level.enrolled} />
+      ) : (
+        // A password alone can't bind a first app: an admin opens set-up (two-step.ts).
+        <div className="max-w-prose rounded-lg border border-border bg-surface p-4">
+          <p className="font-medium text-foreground">{s.setupClosedTitle}</p>
+          <p className="mt-1 text-sm text-muted">{s.setupClosed}</p>
+        </div>
+      )}
 
       <p className="max-w-prose text-xs text-muted">{s.lostPhone}</p>
       <div>

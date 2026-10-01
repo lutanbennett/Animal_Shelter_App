@@ -2,6 +2,7 @@
 
 import { Fragment, useState, useTransition } from "react";
 import {
+  allowTwoStepSetup,
   archiveUser,
   deleteUser,
   issueTemporaryPassword,
@@ -30,6 +31,8 @@ export type SecurityUser = {
   mustChangePassword: boolean;
   /** Has an authenticator app set up for Settings → Security. */
   twoStep: boolean;
+  /** Until when their first set-up is open; null when it isn't. */
+  twoStepSetupUntil: string | null;
 };
 
 const ROLES = ["admin", "management", "staff", "vet", "volunteer", "public_viewer"];
@@ -129,6 +132,15 @@ function UserRow({
       () => resetTwoStep(user.id),
       t.admin.security.table.failedToResetTwoStep,
       () => setMessage({ type: "success", text: t.admin.security.table.twoStepReset }),
+    );
+  }
+
+  /** An admin vouching for a first set-up (src/lib/auth/two-step.ts); no confirm, nothing is lost. */
+  function handleAllowTwoStepSetup() {
+    run(
+      () => allowTwoStepSetup(user.id),
+      t.admin.security.table.failedToAllowTwoStep,
+      () => setMessage({ type: "success", text: t.admin.security.table.twoStepSetupAllowed }),
     );
   }
 
@@ -239,7 +251,35 @@ function UserRow({
               </button>
             </div>
           ) : (
-            <span className="text-xs text-muted">{t.admin.security.table.twoStepOff}</span>
+            <div className="flex flex-wrap items-center gap-2">
+              {/* An admin with no second factor is the row to notice. */}
+              <span
+                className={
+                  user.role === "admin" && !archived
+                    ? "rounded-full bg-warning/20 px-2 py-0.5 text-xs font-medium text-foreground"
+                    : "text-xs text-muted"
+                }
+              >
+                {t.admin.security.table.twoStepOff}
+              </span>
+              {user.twoStepSetupUntil && (
+                <span className="text-xs text-muted">
+                  {t.admin.security.table.twoStepSetupOpenUntil(formatDate(user.twoStepSetupUntil, locale))}
+                </span>
+              )}
+              {!isSelf && !archived && (
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={handleAllowTwoStepSetup}
+                  className="rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
+                >
+                  {user.twoStepSetupUntil
+                    ? t.admin.security.table.renewTwoStepSetup
+                    : t.admin.security.table.allowTwoStepSetup}
+                </button>
+              )}
+            </div>
           )}
         </td>
         <td className="px-4 py-2">

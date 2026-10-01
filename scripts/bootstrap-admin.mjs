@@ -18,7 +18,16 @@
 // so the next time they open Security they set one up again. The normal
 // route is another admin's "Reset" in the 2-step column; this is for when
 // no admin can pass 2-step — the only admin lost their phone. Runs whatever
-// roles exist, and changes nothing but the factors.
+// roles exist, and changes nothing but the factors (and opens set-up, below).
+//
+//   node scripts/bootstrap-admin.mjs --env production --allow-2step-setup someone@gmail.com
+//
+// Opens a first authenticator set-up for a login with no app the site
+// trusts, for three days (src/lib/auth/two-step.ts). A password alone can't
+// enrol an app any more — another admin presses Allow set-up on Security —
+// so this is the route when there is no other admin: the only admin, never
+// prompted, or whose window ran out. Also removes any app that is there but
+// untrusted. Use --reset-2step instead for a login that already has one.
 import { randomBytes } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
@@ -26,6 +35,12 @@ import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
 const { name: envName, rest } = parseEnvArg(process.argv.slice(2));
 const email = rest.find((a) => a.includes("@"));
 const resetTwoStep = rest.includes("--reset-2step");
+const allowSetup = rest.includes("--allow-2step-setup");
+// Mirrors src/lib/auth/two-step.ts (this script runs outside the app build).
+const SETUP_OPEN_UNTIL = "two_step_setup_until";
+const APPROVED_FACTOR = "two_step_factor";
+const RULE_STARTS_AT = "2026-10-01T00:00:00Z";
+const setupWindowEnd = () => new Date(Date.now() + 3 * 86_400_000).toISOString();
 if (!email) {
   console.error("bootstrap-admin: give the admin's email address.");
   process.exit(2);
@@ -35,8 +50,8 @@ const admin = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_RO
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-/** --reset-2step: remove the login's authenticator app(s). Returns the exit code. */
-async function resetFactors() {
+/** The login with this email, or null. */
+async function findUser() {
   let user = null;
   for (let page = 1; !user; page++) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
@@ -44,6 +59,12 @@ async function resetFactors() {
     user = data.users.find((u) => u.email?.toLowerCase() === email.toLowerCase()) ?? null;
     if (data.users.length < 200) break;
   }
+  return user;
+}
+
+/** --reset-2step: remove the login's authenticator app(s). Returns the exit code. */
+async function resetFactors() {
+  const user = await findUser();
   if (!user) {
     console.error(`bootstrap-admin: no login for ${email} on ${envName} (${projectRef(env)}).`);
     return 1;
@@ -55,10 +76,46 @@ async function resetFactors() {
     const { error: deleteError } = await admin.auth.admin.mfa.deleteFactor({ id: factor.id, userId: user.id });
     if (deleteError) throw deleteError;
   }
+  // The replacement needs an admin's say-so too; this is it.
+  const { error: openError } = await admin.auth.admin.updateUserById(user.id, {
+    app_metadata: { [APPROVED_FACTOR]: null, [SETUP_OPEN_UNTIL]: setupWindowEnd() },
+  });
+  if (openError) throw openError;
   console.log(
     factors.length
       ? `bootstrap-admin: removed ${factors.length} authenticator app(s) from ${email} on ${envName} (${projectRef(env)}). They set one up again the next time they open Security.`
       : `bootstrap-admin: ${email} on ${envName} (${projectRef(env)}) has no authenticator app; nothing to reset.`,
+  );
+  return 0;
+}
+
+/** --allow-2step-setup: open a first set-up for a login with no trusted app. Returns the exit code. */
+async function allowSetup2() {
+  const user = await findUser();
+  if (!user) {
+    console.error(`bootstrap-admin: no login for ${email} on ${envName} (${projectRef(env)}).`);
+    return 1;
+  }
+  const { data, error } = await admin.auth.admin.mfa.listFactors({ userId: user.id });
+  if (error) throw error;
+  const factors = data.factors.filter((f) => f.factor_type === "totp");
+  const trusted = factors.some(
+    (f) => f.status === "verified" && (f.id === user.app_metadata?.[APPROVED_FACTOR] || f.created_at < RULE_STARTS_AT),
+  );
+  if (trusted) {
+    console.error(`bootstrap-admin: ${email} already has an authenticator app; use --reset-2step to replace it.`);
+    return 1;
+  }
+  for (const factor of factors) {
+    const { error: deleteError } = await admin.auth.admin.mfa.deleteFactor({ id: factor.id, userId: user.id });
+    if (deleteError) throw deleteError;
+  }
+  const { error: openError } = await admin.auth.admin.updateUserById(user.id, {
+    app_metadata: { [APPROVED_FACTOR]: null, [SETUP_OPEN_UNTIL]: setupWindowEnd() },
+  });
+  if (openError) throw openError;
+  console.log(
+    `bootstrap-admin: authenticator set-up is open for ${email} on ${envName} (${projectRef(env)}) for three days. They open Security and set it up.`,
   );
   return 0;
 }
@@ -79,7 +136,8 @@ async function bootstrap() {
     email,
     password: temporaryPassword,
     email_confirm: true,
-    app_metadata: { must_change_password: true },
+    // The first admin's set-up is open: nobody else exists to open it.
+    app_metadata: { must_change_password: true, [SETUP_OPEN_UNTIL]: setupWindowEnd() },
   });
   if (error) throw error;
 
@@ -96,4 +154,4 @@ async function bootstrap() {
 }
 
 // exitCode, not exit(): exiting straight after fetch trips a libuv assertion on Windows.
-process.exitCode = resetTwoStep ? await resetFactors() : await bootstrap();
+process.exitCode = resetTwoStep ? await resetFactors() : allowSetup ? await allowSetup2() : await bootstrap();

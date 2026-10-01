@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { todayIso } from "@/lib/format";
 import { VET_HOME_PATH } from "@/lib/auth/next-path";
+import { TWO_STEP_PATH, getAssuranceLevel } from "@/lib/auth/two-step";
 import { canManage } from "@/lib/auth/require-management";
 import { canReadMaintenance } from "@/lib/maintenance/queries";
 import { canReadRecurringJobs } from "@/lib/recurring-jobs/access";
@@ -45,12 +47,25 @@ export default async function MyPage() {
       ])
     : [];
 
+  // An admin whose login has no authenticator app is prompted until it does.
+  const needsTwoStep = role === "admin" && !(await getAssuranceLevel()).enrolled;
+
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-6">
       <div>
         <h1 className="text-2xl font-semibold text-foreground">{t.my.pageTitle}</h1>
         <p className="text-sm text-muted">{t.my.pageSubtitle}</p>
       </div>
+
+      {needsTwoStep && (
+        <section className="flex flex-col gap-1 rounded-lg border border-warning/40 bg-warning/10 p-4">
+          <h2 className="font-semibold text-foreground">{t.my.twoStepBanner.title}</h2>
+          <p className="max-w-prose text-sm text-foreground">{t.my.twoStepBanner.about}</p>
+          <Link href={TWO_STEP_PATH} className="w-fit text-sm font-medium text-primary underline">
+            {t.my.twoStepBanner.open}
+          </Link>
+        </section>
+      )}
 
       <MyTaskList sections={sections} today={today} canManage={canManage(role)} />
     </main>
