@@ -114,7 +114,9 @@ rather than in this PR.
 
 ### On the deployed build
 
-- [ ] Deployed to test: `npm run deploy:test` — deferred: this session, after merge. Before the UAT deploy
+- [x] Deployed to test: `npm run deploy:test` — **done 2026-10-01**, from `main` at `a84d453`, after the merge and before any production deploy. `deploy: test → Supabase project qxkmhwybjggxvsfxsxbd (a84d453)`, `Uploaded lanna-animal-care-test (24.34 sec)`, Worker `3dcf5524-de78-41ab-9c7f-0fe4d5bfc339`, and `deploy: release mail for 0.11.0 [off]: sent 0, skipped 4` — the mail step engaged and was refused only by the test environment guard, so the admin lookup and relay POST are exercised without anyone being written to. `test.lannacare.org/api/releases/current` returns `{"version":"0.11.0"}`.
+
+  **Confirmed the serving split at the same time, since §8 turns on it:** `test.lannacare.org` answers `x-lanna-served-by: worker` and `lannacare.org` answers `x-lanna-served-by: pi`. And `lannacare.org/api/releases/current` still reports `0.10.1` — the Worker fallback, which is exactly the stale copy this release exists to refresh. It will keep saying `0.10.1` until `deploy:prod` runs, no matter what the Pi is serving
 - [ ] Smoke-tested on `test.lannacare.org` — deferred: Lutan, for the signed-in paths. **Note that test is Worker-served** (`ORIGIN_HOST` is `""` there, and it answers `x-lanna-served-by: worker`), so a pass on test exercises the Worker build and **not** the Pi path that production actually uses. That asymmetry is new since 2026-09-30 and is worth knowing before treating a test pass as representative
 - [ ] Timezone-sensitive behaviour checked on test — deferred: release manager. Low relevance: no note here is a date fix
 - [ ] Public pages re-checked after a cache purge or a 10-minute wait — deferred: release manager. **Relevant**: note 5 changes who serves public pages, and `x-lanna-cache` is keyed by URL at the edge
