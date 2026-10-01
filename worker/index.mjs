@@ -39,6 +39,9 @@
 //
 // Before all three: /api/releases/* is answered here and never cached or
 // sent to the Pi — only this Worker has the mail binding (release-mail.mjs).
+// So is /api/csp-report, where browsers send CSP violation reports: it must
+// work with the Pi down, and a report is logged here, not on the Pi's disk
+// (csp-report.mjs).
 //
 // Besides requests, a cron trigger: `scheduled` below runs the status
 // alerts every 15 minutes (wrangler.jsonc, src/lib/status/alerts.ts).
@@ -49,6 +52,7 @@
 import openNext from "../.open-next/worker.js";
 import { handleReleaseRequest } from "./release-mail.mjs";
 import { fetchFromOrigin } from "./origin.mjs";
+import { handleCspReport } from "./csp-report.mjs";
 import { withSecurityHeaders } from "./security-headers.mjs";
 
 // OpenNext's Durable Object classes must stay exported from the entry module.
@@ -113,6 +117,9 @@ async function serve(request, env, ctx) {
 async function route(request, env, ctx) {
   const release = await handleReleaseRequest(request, env);
   if (release) return withHeaders(release, { "x-lanna-served-by": "worker", "x-lanna-cache": "BYPASS" });
+
+  const report = await handleCspReport(request);
+  if (report) return withHeaders(report, { "x-lanna-served-by": "worker", "x-lanna-cache": "BYPASS" });
 
   const url = new URL(request.url);
   const cacheable = isCacheable(request, url);
