@@ -31,7 +31,8 @@ export function OfflineBanner() {
   const [offline, setOffline] = useState(false);
 
   useEffect(() => {
-    setOffline(!navigator.onLine);
+    // Deferred: setState straight in an effect cascades a render.
+    const initial = window.setTimeout(() => setOffline(!navigator.onLine), 0);
     const goOffline = () => setOffline(true);
     const goOnline = () => setOffline(false);
     window.addEventListener("offline", goOffline);
@@ -53,6 +54,7 @@ export function OfflineBanner() {
     };
 
     return () => {
+      window.clearTimeout(initial);
       window.fetch = realFetch;
       window.removeEventListener("offline", goOffline);
       window.removeEventListener("online", goOnline);
