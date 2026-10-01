@@ -111,11 +111,10 @@ export function MyTaskList({
     startTransition(async () => {
       setOptimistic({ key: task.key, status });
       const result = await setMaintenanceStatus(jobId, status);
-      if (result.error) {
+      if (!result.ok) {
         setError(result.error);
         setUndoable(null);
-      }
-      if (result.driveWarning) setDriveWarning(result.driveWarning);
+      } else if (result.driveWarning) setDriveWarning(result.driveWarning);
       router.refresh();
     });
   }

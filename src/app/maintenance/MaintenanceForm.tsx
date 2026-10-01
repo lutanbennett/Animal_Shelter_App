@@ -132,10 +132,10 @@ export function MaintenanceForm({
     startTransition(async () => {
       const result =
         mode === "create"
-          ? await createMaintenanceJob(undefined, formData)
-          : await updateMaintenanceJob(undefined, formData);
-      if (!result || "error" in result) {
-        setError(result?.error ?? t.maintenance.errors.saveFailed);
+          ? await createMaintenanceJob(formData)
+          : await updateMaintenanceJob(formData);
+      if (!result.ok) {
+        setError(result.error);
         return;
       }
       setSaved({ jobId: result.jobId, driveWarning: result.driveWarning });

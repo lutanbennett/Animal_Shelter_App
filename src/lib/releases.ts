@@ -61,7 +61,9 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  "If something goes wrong while saving, moving, completing or deleting a maintenance job or its photos, the Maintenance pages now say so with a short reference you can quote, instead of a numbered error code. That finishes the same fix across the whole app: every page that saves something now explains a failure in words.",
+];
 
 /** Newest first. */
 export const releases: Release[] = [
