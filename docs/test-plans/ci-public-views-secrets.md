@@ -35,7 +35,7 @@ Filled from `docs/test-plan-template.md`.
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: run 36897466825, `public-views` passed after running every check and ending `Project: qxkmhwybjggxvsfxsxbd.supabase.co`, with no "not run" warning
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -91,7 +91,7 @@ gates: typecheck=0 lint=0 build=0
 
 ## 7. Documentation
 
-- [ ] Backlog item ticked in `docs/backlog.md` on this branch — n/a: not yet — ticked only once the `public-views` run is seen to check
+- [x] Backlog item ticked in `docs/backlog.md` on this branch, after the PR run checked the dev database
 - [ ] Non-obvious design choices added as a new file in `docs/decisions/` — n/a: nothing non-obvious; secret names and the dev project matched the item
 - [ ] `README.md` still accurate — n/a: README does not describe CI secrets
 - [ ] **Release notes.** — n/a: CI configuration, no shelter user sees it
