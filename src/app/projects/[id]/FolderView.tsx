@@ -14,6 +14,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
+import type { ActionResult } from "@/lib/action-result";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { TranslationPanel } from "@/components/TranslationPanel";
 import { localizedFromRow } from "@/lib/translations/localize";
@@ -100,12 +101,12 @@ export function FolderView({
   const summary = localizedFromRow(locale, folder.summary, summaryTranslation) || null;
   const isEmpty = folder.child_count === 0 && folder.photo_count === 0;
 
-  function run(action: () => Promise<{ error?: string; driveWarning?: string | null; folderId?: string }>, after?: (folderId?: string) => void) {
+  function run(action: () => Promise<ActionResult<{ driveWarning?: string | null; folderId?: string }>>, after?: (folderId?: string) => void) {
     setError(null);
     setDriveWarning(null);
     startTransition(async () => {
       const result = await action();
-      if (result.error) {
+      if (!result.ok) {
         setError(result.error);
         return;
       }
