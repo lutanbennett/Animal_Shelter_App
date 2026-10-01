@@ -1,0 +1,12 @@
+# Actions are pinned to commit SHAs (ci.yml), which stops them updating on
+# their own; this is what bumps them. One grouped PR a month, so a pin is
+# never more than a month stale and never a stream of PRs.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]

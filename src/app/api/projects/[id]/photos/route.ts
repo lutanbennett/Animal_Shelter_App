@@ -7,6 +7,7 @@ import { assertPhotoWriteAccess } from "@/lib/auth/require-role";
 import { getDriveClient, uploadImageToFolder } from "@/lib/google/drive";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { withDriveErrors } from "@/lib/google/drive-errors";
+import { refuseCrossSite } from "@/lib/auth/same-origin";
 import { ensureProjectDriveFolder } from "@/lib/projects/drive-sync";
 
 const ALLOWED_MIME_TYPES = new Set([
@@ -34,6 +35,9 @@ async function handlePost(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const crossSite = refuseCrossSite(request);
+  if (crossSite) return crossSite;
+
   const { id: folderId } = await params;
 
   try {
