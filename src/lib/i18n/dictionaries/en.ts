@@ -33,6 +33,10 @@ const en = {
     // (src/lib/action-result.ts); the reference finds the logged cause.
     somethingWentWrong: (ref: string) =>
       `Something went wrong. Please try again; if it keeps happening, report it with reference ${ref}.`,
+    // A database refusal in words (databaseFailure in src/lib/action-result.ts).
+    alreadyExists: "That already exists.",
+    notAllowed: "You don't have permission to do that.",
+    notAccepted: "The database didn't accept those values. Check the form and try again.",
     // Any Drive call whose token or client is dead (drive-errors.ts).
     driveNotConnected: "Photo storage is not connected — tell an admin.",
     driveFailed: "Google Drive didn't accept that. Try again in a minute.",
@@ -629,7 +633,7 @@ const en = {
       createForm: {
         email: "Email",
         password: "Password",
-        passwordPlaceholder: "At least 8 characters",
+        passwordPlaceholder: "At least 12 characters",
         role: "Role",
         createButton: "Create user",
         tempPasswordNote:
@@ -686,7 +690,7 @@ const en = {
         clinicUpdated: "Clinic updated.",
         passwordUpdated: "Password updated.",
         deleteConfirm: (email: string) => `Delete ${email}? This can't be undone.`,
-        passwordTooShort: "Password must be at least 8 characters.",
+        passwordTooShort: "Password must be at least 12 characters.",
         failedToUpdateRole: "Failed to update role.",
         failedToUpdateClinic: "Failed to update clinic.",
         failedToResetPassword: "Failed to reset password.",
@@ -711,7 +715,7 @@ const en = {
       },
       errors: {
         emailRequired: "Email is required.",
-        passwordTooShort: "Password must be at least 8 characters.",
+        passwordTooShort: "Password must be at least 12 characters.",
         selectValidRole: "Select a valid role.",
         invalidRole: "Invalid role.",
         cantChangeOwnRole: "You can't change your own role.",

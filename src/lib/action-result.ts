@@ -35,6 +35,32 @@ export function unexpectedFailure(
   return { ok: false, error: message(ref) };
 }
 
+/** The words databaseFailure() can use, from the dictionary's `common`. */
+type DatabaseMessages = {
+  alreadyExists: string;
+  notAllowed: string;
+  notAccepted: string;
+  somethingWentWrong: (ref: string) => string;
+};
+
+/**
+ * The refusal for a Postgres error from a write. The ones a person can act
+ * on get their sentence — unique (23505), check (23514) and row-level
+ * security / privilege (42501) — and everything else goes through
+ * unexpectedFailure(), so the raw message (table, column and constraint
+ * names) stays in the server log and never reaches the browser.
+ */
+export function databaseFailure(
+  where: string,
+  error: { code?: string; message?: string },
+  messages: DatabaseMessages,
+): ActionRefusal {
+  if (error.code === "23505") return { ok: false, error: messages.alreadyExists };
+  if (error.code === "23514") return { ok: false, error: messages.notAccepted };
+  if (error.code === "42501") return { ok: false, error: messages.notAllowed };
+  return unexpectedFailure(where, error, messages.somethingWentWrong);
+}
+
 /**
  * Runs an action body and turns anything it throws into
  * unexpectedFailure(), so no throw escapes to become #441. Next's own

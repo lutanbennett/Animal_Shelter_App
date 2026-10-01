@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { databaseFailure } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 
@@ -73,7 +74,7 @@ export async function createProcedure(
         .select("id, name")
         .limit(1)
         .returns<{ id: string; name: string }[]>();
-      if (error) return { error: error.message };
+      if (error) return databaseFailure("procedures.createType", error, t.common);
       procedureTypeId = data?.[0]?.id ?? null;
       if (!procedureTypeId) return { error: t.procedures.errors.saveFailed };
       typeName = newTypeName;
@@ -101,7 +102,7 @@ export async function createProcedure(
     .limit(1)
     .returns<{ id: string; date: string }[]>();
 
-  if (error) return { error: error.message };
+  if (error) return databaseFailure("procedures.create", error, t.common);
   const row = data?.[0];
   if (!row) return { error: t.procedures.errors.saveFailed };
 

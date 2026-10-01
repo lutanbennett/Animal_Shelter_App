@@ -14,8 +14,12 @@ export default async function proxy(request: NextRequest) {
   return updateSession(request);
 }
 
+/**
+ * Only Next's own build output and the favicon skip the gate. Image
+ * extensions used to be skipped too, which meant any route whose path
+ * ended in .png or .svg bypassed sign-in; the one static file public
+ * pages need, /lca-logo.jpg, is on the public list instead.
+ */
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

@@ -3,9 +3,19 @@
  * between counts). One writer, so both files open the same way.
  */
 
-/** Quotes one CSV field only when it has to (RFC 4180). */
+/** A plain decimal number, optionally signed — what a money or quantity cell holds. */
+const NUMERIC = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/;
+
+/**
+ * Quotes one CSV field only when it has to (RFC 4180). A value that opens
+ * with =, +, -, @, tab or CR is read by Excel as a formula (a resident
+ * named "=HYPERLINK(...)" would run when the export is opened), so it gets
+ * a leading ' that makes it text — unless it is just a number, where the
+ * apostrophe would turn every -12.50 into text.
+ */
 export function csvField(value: string): string {
-  return /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+  const safe = /^[=+\-@\t\r]/.test(value) && !NUMERIC.test(value) ? `'${value}` : value;
+  return /[",\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
 }
 
 /** Rows of fields as CSV text, CRLF line ends as RFC 4180 has them. */

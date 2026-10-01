@@ -1,5 +1,6 @@
 "use server";
 
+import { databaseFailure } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 
@@ -54,9 +55,7 @@ export async function createBloodTest(
     .limit(1)
     .returns<{ id: string; date: string }[]>();
 
-  if (error) {
-    return { error: error.message };
-  }
+  if (error) return databaseFailure("bloodTests.create", error, t.common);
 
   const row = data?.[0];
   if (!row) {

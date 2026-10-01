@@ -40,7 +40,9 @@ const HEIC = pad(bytes(u32(24), "ftypheic", u32(0), "mif1heic"));
 const HEIF_MIF1 = pad(bytes(u32(24), "ftypmif1", u32(0), "mif1heic"));
 const MP4 = pad(bytes(u32(24), "ftypisom", u32(0), "isomavc1"));
 const PDF = pad(bytes("%PDF-1.7\n"));
-const PDF_PREAMBLE = pad(bytes("\n\n junk from a scanner \n%PDF-1.4\n"));
+const PDF_BLANK_LINES = pad(bytes("\r\n\n  %PDF-1.4\n"));
+const PDF_JUNK_PREAMBLE = pad(bytes("\n\n junk from a scanner \n%PDF-1.4\n"));
+const PDF_MENTIONED = pad(bytes("this text file mentions %PDF- in passing"));
 const ZEROS = new Uint8Array(3 * 1024 * 1024);
 const TEXT = pad(bytes("hello, this is not a photo"));
 
@@ -61,7 +63,9 @@ const cases = [
   ["GIF where GIF is not accepted", file(GIF, "a.gif", "image/jpeg"), WEBSITE, null],
   ["GIF on a project", file(GIF, "a.gif", "image/gif"), PROJECTS, "image/gif"],
   ["PDF on an attachment", file(PDF, "lab.pdf", "application/pdf"), ATTACHMENTS, "application/pdf"],
-  ["PDF with a preamble", file(PDF_PREAMBLE, "scan.pdf", "application/pdf"), ATTACHMENTS, "application/pdf"],
+  ["PDF after blank lines", file(PDF_BLANK_LINES, "scan.pdf", "application/pdf"), ATTACHMENTS, "application/pdf"],
+  ["PDF after other text", file(PDF_JUNK_PREAMBLE, "scan.pdf", "application/pdf"), ATTACHMENTS, null],
+  ["text that mentions %PDF-", file(PDF_MENTIONED, "notes.pdf", "application/pdf"), ATTACHMENTS, null],
   ["PDF on the Website", file(PDF, "lab.pdf", "image/jpeg"), WEBSITE, null],
   ["zero-byte PDF", file(new Uint8Array(4096), "lab.pdf", "application/pdf"), ATTACHMENTS, null],
 ];

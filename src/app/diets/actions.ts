@@ -2,6 +2,7 @@
 
 import { refresh, revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { databaseFailure } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -101,7 +102,7 @@ export async function createDiet(_state: DietFormState, formData: FormData): Pro
     daily_quantity: fields.dailyQuantity,
     notes: fields.notes,
   });
-  if (error) return { error: error.message };
+  if (error) return databaseFailure("diets.write", error, t.common);
 
   revalidateResidentPages(residentId);
   redirect(`/residents/${residentId}/diet`);
@@ -138,7 +139,7 @@ export async function updateDiet(_state: DietFormState, formData: FormData): Pro
     .eq("resident_id", residentId)
     .select("id")
     .returns<{ id: string }[]>();
-  if (error) return { error: error.message };
+  if (error) return databaseFailure("diets.write", error, t.common);
   // RLS filters rather than rejects: a volunteer's update matches no rows.
   if (!data || data.length === 0) return { error: t.diets.errors.saveFailed };
 
@@ -167,7 +168,7 @@ export async function endDietToday(
     .lte("start_date", today)
     .select("id")
     .returns<{ id: string }[]>();
-  if (error) return { error: error.message };
+  if (error) return databaseFailure("diets.write", error, t.common);
   if (!data || data.length === 0) return { error: t.diets.errors.saveFailed };
 
   revalidateResidentPages(residentId);

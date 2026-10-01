@@ -1,10 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { type ActionResult, runAction } from "@/lib/action-result";
 import { hasAdminRole } from "@/lib/auth/require-admin";
 import { getT } from "@/lib/i18n/get-t";
+import { getSiteOrigin } from "@/lib/site-origin";
 import { runStatusAlerts, sendTestAlert, type Skipped } from "@/lib/status/alerts";
 import { clearStatusCache } from "@/lib/status/run";
 
@@ -27,12 +27,13 @@ export async function checkNow(): Promise<ActionResult> {
   });
 }
 
-/** This site's origin, for the link in the mail. */
+/**
+ * This site's origin, for the link in the mail — the pinned
+ * NEXT_PUBLIC_SITE_URL where there is one, so a forged Host header cannot
+ * put another address in an alert.
+ */
 async function origin() {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
-  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  return `${proto}://${host}`;
+  return (await getSiteOrigin())?.origin ?? "";
 }
 
 type AlertOutcome = { message: string; skipped: Skipped[] };

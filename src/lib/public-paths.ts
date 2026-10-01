@@ -21,9 +21,11 @@
  * QR code and works the same way: a visitor sees the enclosure and who
  * lives there (public_enclosures, 0079), a signed-in user is sent on to
  * the enclosure page (src/app/e/[id]/page.tsx). /robots.txt is
- * src/app/robots.ts, which a crawler fetches signed out.
+ * src/app/robots.ts, which a crawler fetches signed out. /lca-logo.jpg is the
+ * one static file the proxy still sees (its matcher no longer skips image
+ * extensions) — the logo on the login page and the public header.
  */
-export const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt"];
+export const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/lca-logo.jpg"];
 
 export const PUBLIC_PATH_PREFIXES = [
   "/api/photos/",
@@ -49,21 +51,24 @@ export const PUBLIC_PATH_PREFIXES = [
  * carry the session cookie. No /r/ or /e/ either: a scanned card or QR
  * code lands on /login with ?next= and goes back there after sign-in.
  */
-export const LOCKED_PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt"];
+export const LOCKED_PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/lca-logo.jpg"];
 
 export const LOCKED_PUBLIC_PATH_PREFIXES = ["/privacy"];
 
+/**
+ * Whether `pathname` is under `prefix` at a segment boundary: "/adopt" and
+ * "/adopt/12" are, "/adoptive" is not. A prefix ending in "/" already
+ * names a segment boundary and is matched as written.
+ */
+function underPrefix(pathname: string, prefix: string): boolean {
+  if (prefix.endsWith("/")) return pathname.startsWith(prefix);
+  return pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
+
 export function isPublicPath(pathname: string, locked = false): boolean {
-  if (locked) {
-    return (
-      LOCKED_PUBLIC_PATHS.includes(pathname) ||
-      LOCKED_PUBLIC_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix))
-    );
-  }
-  return (
-    PUBLIC_PATHS.includes(pathname) ||
-    PUBLIC_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix))
-  );
+  const paths = locked ? LOCKED_PUBLIC_PATHS : PUBLIC_PATHS;
+  const prefixes = locked ? LOCKED_PUBLIC_PATH_PREFIXES : PUBLIC_PATH_PREFIXES;
+  return paths.includes(pathname) || prefixes.some((prefix) => underPrefix(pathname, prefix));
 }
 
 /** The public *pages* (not /login or the photo proxy): no app chrome. */

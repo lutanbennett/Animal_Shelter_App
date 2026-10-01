@@ -470,7 +470,7 @@ export async function findOrCreateFolder(
   parentId: string,
   name: string,
 ): Promise<string> {
-  const escapedName = name.replace(/'/g, "\\'");
+  const escapedName = name.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
   const files = await drive.listFiles({
     q: `'${parentId}' in parents and name = '${escapedName}' and mimeType = '${FOLDER_MIME_TYPE}' and trashed = false`,
     fields: "files(id, name, createdTime)",
@@ -887,7 +887,7 @@ async function findFolderByName(
   parentId: string,
   name: string,
 ): Promise<string | null> {
-  const escapedName = name.replace(/'/g, "\\'");
+  const escapedName = name.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
   const files = await drive.listFiles({
     q: `'${parentId}' in parents and name = '${escapedName}' and mimeType = '${FOLDER_MIME_TYPE}' and trashed = false`,
     fields: "files(id, name, createdTime)",
@@ -950,7 +950,7 @@ async function findFileByName(
   parentId: string,
   name: string,
 ): Promise<string | null> {
-  const escapedName = name.replace(/'/g, "\\'");
+  const escapedName = name.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
   const files = await drive.listFiles({
     q: `'${parentId}' in parents and name = '${escapedName}' and mimeType != '${FOLDER_MIME_TYPE}' and trashed = false`,
     fields: "files(id, name, createdTime)",
