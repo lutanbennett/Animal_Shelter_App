@@ -516,13 +516,13 @@ where r.is_public_visible = true
 
 create or replace view public_shelter_stats as
 select
-  (select count(*) from resident_current_state
+  (select count(*) from private.resident_current_state
      where current_status in ('Resident', 'Unassigned', 'Hospitalised', 'Fostered'))::integer as in_care,
-  (select count(*) from resident_current_state
+  (select count(*) from private.resident_current_state
      where current_status = 'Hospitalised')::integer as in_hospital,
-  (select count(*) from resident_current_state
+  (select count(*) from private.resident_current_state
      where current_status = 'Fostered')::integer as in_foster,
-  (select count(*) from resident_current_state s
+  (select count(*) from private.resident_current_state s
      join residents r on r.id = s.resident_id
      where r.ready_for_adoption and r.is_public_visible
        and s.current_status not in ('Deceased', 'Adopted'))::integer as ready_for_adoption,
@@ -537,7 +537,7 @@ select
      where placement_type = 'Intake'
        and shelter_date(start_date) >= make_date(extract(year from shelter_today())::integer, 1, 1)
   )::integer as intakes_this_year,
-  (select count(*) from resident_current_state s
+  (select count(*) from private.resident_current_state s
      where s.current_status in ('Resident', 'Unassigned', 'Hospitalised', 'Fostered')
        and (
          s.current_status = 'Hospitalised'
@@ -548,6 +548,11 @@ select
               and (p.end_date is null or p.end_date >= shelter_today())
          )
        ))::integer as in_treatment;
+
+-- create or replace keeps the grants; stated again so the file says what the
+-- views are for (the two public_* are read by the signed-out site).
+grant select on public_resident_profiles, public_shelter_stats to anon, authenticated;
+grant select on immunization_next_due to authenticated, service_role;
 
 -- Vet scoping: an archived visit (or a prescription on one) no longer gives
 -- a vet sight of the resident, exactly as if it had been deleted.
