@@ -61,22 +61,30 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [
-  {
-    text: "Admins are now reminded on My tasks to set up 2-step verification, and the Security page flags any admin who hasn't. Setting up the first authenticator app now needs another admin to allow it (press Allow set-up beside their name in the 2-step column; making someone an admin allows it for three days), so someone who has only a stolen password can no longer set up their own app and lock the real admin out. The Security page also now lists every login and every access request however many there are, where before a long list of junk sign-ups could push real people off it.",
-    roles: ["admin"],
-  },
-  "The public website now loads photos much faster. Project cards, resident cards, galleries, thumbnails and logos used to download the full-size photo straight off the phone, several megabytes each, which was slow on a phone connection; they now download a smaller copy sized for where it is shown, and the large photo is still sharp. Photos you view inside the app are unchanged.",
-  "Passwords must now be at least 12 characters (it was 8), with no other rules about capitals or symbols. Existing passwords keep working; the longer minimum applies when you next choose one. Exported spreadsheets (Cashflow, Stock) no longer let a name that starts with = or @ run as a formula when opened in Excel, and the Website settings now check the map link is a real https address.",
-  {
-    text: "The vet line on the Cashflow page now follows how often the shelter really goes. Each week it counts the larger of the typical number of visits (the last 90 days' completed visits, averaged) and the visits actually booked that week, so a quiet week still carries the usual cost and a busy one is not understated. A booked visit with its real cost recorded uses that cost; the rest use the average of recorded costs, or the typical-visit figure until enough are recorded. A line under the table says exactly which numbers were used.",
-    roles: ["admin", "management"],
-  },
-  "If something goes wrong while saving, moving, completing or deleting a maintenance job or its photos, the Maintenance pages now say so with a short reference you can quote, instead of a numbered error code. That finishes the same fix across the whole app: every page that saves something now explains a failure in words.",
-];
+export const unreleased: ReleaseNote[] = [];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.12.0",
+    date: "2026-10-01",
+    title:
+      "2-step verification needs a second admin, faster photos on the website, and longer passwords",
+    major: true,
+    notes: [
+      {
+        text: "Admins are now reminded on My tasks to set up 2-step verification, and the Security page flags any admin who hasn't. Setting up the first authenticator app now needs another admin to allow it (press Allow set-up beside their name in the 2-step column; making someone an admin allows it for three days), so someone who has only a stolen password can no longer set up their own app and lock the real admin out. The Security page also now lists every login and every access request however many there are, where before a long list of junk sign-ups could push real people off it.",
+        roles: ["admin"],
+      },
+      "The public website now loads photos much faster. Project cards, resident cards, galleries, thumbnails and logos used to download the full-size photo straight off the phone, several megabytes each, which was slow on a phone connection; they now download a smaller copy sized for where it is shown, and the large photo is still sharp. Photos you view inside the app are unchanged.",
+      "Passwords must now be at least 12 characters (it was 8), with no other rules about capitals or symbols. Existing passwords keep working; the longer minimum applies when you next choose one. Exported spreadsheets (Cashflow, Stock) no longer let a name that starts with = or @ run as a formula when opened in Excel, and the Website settings now check the map link is a real https address.",
+      {
+        text: "The vet line on the Cashflow page now follows how often the shelter really goes. Each week it counts the larger of the typical number of visits (the last 90 days' completed visits, averaged) and the visits actually booked that week, so a quiet week still carries the usual cost and a busy one is not understated. A booked visit with its real cost recorded uses that cost; the rest use the average of recorded costs, or the typical-visit figure until enough are recorded. A line under the table says exactly which numbers were used.",
+        roles: ["admin", "management"],
+      },
+      "If something goes wrong while saving, moving, completing or deleting a maintenance job or its photos, the Maintenance pages now say so with a short reference you can quote, instead of a numbered error code. That finishes the same fix across the whole app: every page that saves something now explains a failure in words.",
+    ],
+  },
   {
     version: "0.11.0",
     date: "2026-10-01",
