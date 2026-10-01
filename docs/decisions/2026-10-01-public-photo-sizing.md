@@ -54,9 +54,8 @@ and a plain `<img srcset>` needs a decision per layout; each place picks the one
 width that suits it. Cheap to add later, now that the sizes exist.
 
 **The Pi spike** ("would serving the published photos from the Pi make them load
-faster?") is subsumed: question (2) (does a smaller image fix most of it) is this change, with the
-bytes before and after in the PR; question (1)'s phone-from-Thailand timing is
-Lutan's to take, and the Pi disk cache is the pull-through cache it proposes, built for sized copies. The rest of
-the spike's is this change, and the
-pull-through cache it proposes is built for sized copies. Caching full-size
-originals on the Pi is not worth doing now that nothing public serves them.
+faster?") is subsumed. Its question (2), whether a smaller image fixes most of it,
+is this change; the bytes before and after are in the PR. Its pull-through cache
+is built here, for sized copies. The phone-from-Thailand timing (its question 1)
+is Lutan's to take. Caching full-size originals on the Pi is not worth doing now
+that nothing public serves them.
