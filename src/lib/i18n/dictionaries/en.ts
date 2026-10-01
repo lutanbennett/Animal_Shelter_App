@@ -1297,7 +1297,7 @@ const en = {
       itemPlaceholder: "Choose…",
       quantity: "Quantity",
       quantityIn: (unit: string) => `Quantity, in ${unit}`,
-      quantityHint: "In the item's own unit — tablets, ml, g — not boxes or bags.",
+      quantityHint: "In the unit shown beside it. If the item has other units set up, pick one — bags, boxes — and the amount in its own unit is worked out for you.",
       packs: "Came in packs?",
       packsCount: "Number of packs",
       perPack: "Amount in each pack",
