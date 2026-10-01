@@ -135,11 +135,24 @@ Worker discovers the Pi is down takes about one to two seconds; the rest are fas
 The same box takes the weekly database backup (README "Backups"): a cron job runs
 `scripts/backup.mjs --env production --local-copy ~/backups/lannacare` on Sundays at
 03:00, which uploads to Drive and keeps the newest 12 dumps on the SSD, printing each
-one it removes. Needs `postgresql-client-17` (above) and the same two env files.
+one it removes. Needs `postgresql-client-17` (above) and the same two env files, plus the public key.
 
 Holding a production dump on an internet-reachable render box means the old "no data
 on the Pi" rule no longer holds, so:
 
+- **The dumps are encrypted and the Pi cannot read them.** `backup.mjs` encrypts with the
+  administrator's age *public* key (`BACKUP_AGE_RECIPIENT` in `.env.deploy.production`)
+  before the Drive upload and before the local copy, and never writes a plaintext file.
+  The private key is in Lutan's password manager and is never on the Pi, so a read of
+  `~/backups` by a compromised app gives ciphertext only. It refuses to run with no key.
+  The session tables are left out of the dump and the Drive link is no longer logged.
+  **Setup on the Pi:** add the `BACKUP_AGE_RECIPIENT=age1…` line, `git pull && npm ci`
+  (adds `age-encryption`), then run `node scripts/backup.mjs --env production --local-copy ~/backups/lannacare`
+  once by hand. Then handle what predates encryption: **delete the plaintext
+  `~/backups/lannacare/*.dump` files** (the run names each one it finds), and **remove
+  or truncate `~/backups/backup.log`**, which holds a live Drive link for every earlier
+  week (`: > ~/backups/backup.log`). Assume those links are exposed until the Drive
+  folder is re-shared (README "Backups").
 - The Tunnel is outbound-only and `next start` listens on `127.0.0.1` only, so nothing
   is exposed to the internet directly. The exposure is a compromised app, not an open port.
 - The dump folder is `0700` and each dump `0600`, outside the repo (`backup.mjs` refuses a
