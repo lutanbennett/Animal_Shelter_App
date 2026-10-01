@@ -261,11 +261,12 @@ async function updateDeceasedResident(
     if (refused) return { ok: false, error: refused.error };
   }
 
-  // Best effort — the edit is saved; a Drive hiccup leaves the old files
-  // until the next change or the hub's Retry.
-  await refreshDeceasedArchiveIfNeeded(supabase, residentId);
+  // The edit is saved and a Drive hiccup does not undo it, but it must not
+  // pass silently: the hub opens with a warning and its Refresh archive
+  // button (decisions 2026-10-01).
+  const refresh = await refreshDeceasedArchiveIfNeeded(supabase, residentId);
 
   revalidatePath(`/residents/${residentId}`);
   revalidatePath(`/residents/${residentId}/photos`);
-  redirect(`/residents/${residentId}`);
+  redirect(`/residents/${residentId}${refresh.error ? "?archive=stale" : ""}`);
 }

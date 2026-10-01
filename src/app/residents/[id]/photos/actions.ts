@@ -17,7 +17,17 @@ import { assertPhotoWriteAccess } from "@/lib/auth/require-role";
 import { setResidentProfilePhoto } from "@/lib/residents/profile-photo";
 import { todayIso } from "@/lib/format";
 
-export type PhotoActionState = ActionResult;
+/** `archiveWarning` is set when a deceased resident's Drive archive could not be refreshed. */
+export type PhotoActionState = ActionResult<{ archiveWarning?: string }>;
+
+async function archiveWarningFor(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  t: Awaited<ReturnType<typeof getT>>["t"],
+  residentId: string,
+): Promise<string | undefined> {
+  const refresh = await refreshDeceasedArchiveIfNeeded(supabase, residentId);
+  return refresh.error ? t.residents.deceased.banner.archiveNotRefreshed : undefined;
+}
 
 function revalidateResident(residentId: string) {
   revalidatePath(`/residents/${residentId}`);
@@ -29,15 +39,15 @@ export async function setProfilePhoto(
   driveFileId: string,
 ): Promise<PhotoActionState> {
   const { t } = await getT();
-  return runAction("residents.setProfilePhoto", t.common.somethingWentWrong, async () => {
+  return runAction<{ archiveWarning?: string }>("residents.setProfilePhoto", t.common.somethingWentWrong, async () => {
     const supabase = await createClient();
     const refused = await setResidentProfilePhoto(supabase, t, residentId, driveFileId);
     if (refused) return { ok: false, error: refused.error };
 
     // The summary PDF carries the profile photo (0052 keeps photos open).
-    await refreshDeceasedArchiveIfNeeded(supabase, residentId);
+    const archiveWarning = await archiveWarningFor(supabase, t, residentId);
     revalidateResident(residentId);
-    return { ok: true };
+    return { ok: true, archiveWarning };
   });
 }
 
@@ -46,7 +56,7 @@ export async function deletePhoto(
   attachmentId: string,
 ): Promise<PhotoActionState> {
   const { t } = await getT();
-  return runAction("residents.deletePhoto", t.common.somethingWentWrong, async () => {
+  return runAction<{ archiveWarning?: string }>("residents.deletePhoto", t.common.somethingWentWrong, async () => {
     const supabase = await createClient();
     const { data: driveFileId, error } = await supabase.rpc(
       "delete_resident_photo",
@@ -66,9 +76,9 @@ export async function deletePhoto(
       }
     }
 
-    await refreshDeceasedArchiveIfNeeded(supabase, residentId);
+    const archiveWarning = await archiveWarningFor(supabase, t, residentId);
     revalidateResident(residentId);
-    return { ok: true };
+    return { ok: true, archiveWarning };
   });
 }
 
@@ -93,7 +103,7 @@ export async function movePhotoToFolder(
   targetCategory: PhotoCategory,
 ): Promise<PhotoActionState> {
   const { t } = await getT();
-  return runAction("residents.movePhotoToFolder", t.common.somethingWentWrong, async () => {
+  return runAction<{ archiveWarning?: string }>("residents.movePhotoToFolder", t.common.somethingWentWrong, async () => {
     const supabase = await createClient();
 
     let role: string;
@@ -207,8 +217,8 @@ export async function movePhotoToFolder(
       return { ok: false, error: t.photos.errors.moveIncomplete };
     }
 
-    await refreshDeceasedArchiveIfNeeded(supabase, residentId);
+    const archiveWarning = await archiveWarningFor(supabase, t, residentId);
     revalidateResident(residentId);
-    return { ok: true };
+    return { ok: true, archiveWarning };
   });
 }

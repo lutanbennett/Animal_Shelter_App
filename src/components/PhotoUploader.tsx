@@ -17,6 +17,7 @@ type QueueItem = {
   progress: number;
   status: UploadStatus;
   error?: string;
+  warning?: string;
 };
 
 // Sequential, not parallel: the upload route does a check-then-create when
@@ -38,7 +39,7 @@ export function uploadResidentPhoto(
   file: File,
   fields: Record<string, string>,
   onProgress: (percent: number) => void,
-): Promise<{ error?: string }> {
+): Promise<{ error?: string; archiveWarning?: string }> {
   return new Promise((resolve) => {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `/api/residents/${residentId}/photos`);
@@ -49,7 +50,11 @@ export function uploadResidentPhoto(
 
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
-        resolve({});
+        try {
+          resolve({ archiveWarning: JSON.parse(xhr.responseText).archiveWarning });
+        } catch {
+          resolve({});
+        }
         return;
       }
       try {
@@ -120,7 +125,11 @@ export function PhotoUploader({
           if (result.error) {
             updateItem(item.key, { status: "error", error: result.error });
           } else {
-            updateItem(item.key, { status: "done", progress: 100 });
+            updateItem(item.key, {
+              status: "done",
+              progress: 100,
+              warning: result.archiveWarning,
+            });
             refreshNeeded = true;
           }
         }
@@ -286,9 +295,13 @@ export function PhotoUploader({
                   </button>
                 </>
               ) : item.status === "done" ? (
-                <span className="text-xs font-medium text-success">
-                  {t.photos.uploader.done}
-                </span>
+                item.warning ? (
+                  <span className="text-xs text-danger">{item.warning}</span>
+                ) : (
+                  <span className="text-xs font-medium text-success">
+                    {t.photos.uploader.done}
+                  </span>
+                )
               ) : (
                 <div className="h-1.5 w-24 overflow-hidden rounded-full bg-surface-hover">
                   <div

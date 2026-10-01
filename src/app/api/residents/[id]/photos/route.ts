@@ -208,13 +208,19 @@ async function handlePost(
 
   // Uploads are sequential (DeferredUploads), so this runs once per file;
   // acceptable for the handful of photos added after a death.
-  if (isDeceased) await refreshDeceasedArchiveIfNeeded(supabase, id);
+  const archiveRefresh = isDeceased
+    ? await refreshDeceasedArchiveIfNeeded(supabase, id)
+    : null;
+  const { t } = await getT();
 
   return NextResponse.json({
     attachmentId: row.attachment.id,
     driveFileId,
     fileName: file.name,
     isProfile: row.is_profile,
+    archiveWarning: archiveRefresh?.error
+      ? t.residents.deceased.banner.archiveNotRefreshed
+      : undefined,
     thumbnailUrl: driveImageUrl(driveFileId),
   });
 }
