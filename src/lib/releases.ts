@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "The printable manual (Manual → Download PDF) has its screenshots again. For a short while after the app moved to its new server the PDF came out with text only; it now includes every picture, and builds faster.",
   "Deleting or removing something now opens a box that names exactly what you are about to lose, with Cancel selected so a stray Enter cannot confirm it. The Security page's archive, delete and reset actions work the same way. Buttons on the Settings tables are taller, so they are easier to tap on a phone. A red bar now warns you when the app is offline and changes will not save.",
   "If you are signed out because you have not used the app for a long time, the sign-in page now says so and takes you back to the page you were on once you sign in again.",
   {
