@@ -153,9 +153,9 @@ Automated checks by: Claude  Date: 2026-10-02
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty; this is Lutan's to tick after looking
 
-Manual verification by:
+Manual verification by: pending: the four items under Left for manual verification
 
 ### Result
 
