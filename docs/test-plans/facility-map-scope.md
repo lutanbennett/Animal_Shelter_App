@@ -148,7 +148,7 @@ Automated checks by: Claude  Date: 2026-10-01
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — the one item waits for Lutan to read the scope
 
 Manual verification by: pending: Lutan to read the scope and confirm the recommendation
 
