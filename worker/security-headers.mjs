@@ -10,8 +10,10 @@
 // Broader than `default-src 'self'` alone because a policy that would flag
 // every page's own inline scripts and Supabase calls would bury real hits:
 // Next.js emits inline bootstrap scripts and styles, and the browser talks
-// to Supabase directly. Nothing collects violation reports yet (no
-// report-uri); the browser console shows them, which is the known gap.
+// to Supabase directly. Violations are reported to /api/csp-report, which the
+// Worker answers itself and logs (worker/csp-report.mjs): report-uri for
+// browsers that only know the old mechanism, report-to + Reporting-Endpoints
+// for the rest.
 export const CSP_REPORT_ONLY = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
@@ -24,6 +26,8 @@ export const CSP_REPORT_ONLY = [
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
+  "report-uri /api/csp-report",
+  "report-to csp",
 ].join("; ");
 
 export const SECURITY_HEADERS = {
@@ -35,6 +39,7 @@ export const SECURITY_HEADERS = {
   // No includeSubDomains/preload: pi.* and any future subdomain are not
   // ours to commit to HTTPS-only for a year from here.
   "strict-transport-security": "max-age=15552000",
+  "reporting-endpoints": 'csp="/api/csp-report"',
   "content-security-policy-report-only": CSP_REPORT_ONLY,
 };
 
