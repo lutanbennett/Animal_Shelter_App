@@ -61,18 +61,26 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [
-  "The printable manual (Manual → Download PDF) has its screenshots again. For a short while after the app moved to its new server the PDF came out with text only; it now includes every picture, and builds faster.",
-  "Deleting or removing something now opens a box that names exactly what you are about to lose, with Cancel selected so a stray Enter cannot confirm it. The Security page's archive, delete and reset actions work the same way. Buttons on the Settings tables are taller, so they are easier to tap on a phone. A red bar now warns you when the app is offline and changes will not save.",
-  "If you are signed out because you have not used the app for a long time, the sign-in page now says so and takes you back to the page you were on once you sign in again.",
-  {
-    text: "Management → Stock between counts now says when someone typed a figure by hand during the dates being compared. The row still shows the same used figure — a correction isn't counted as use, because fixing a typo would otherwise look like stock disappearing — but if an item is far off its plan and carries the note, the figure someone typed is the first thing to check. It appears in the downloaded CSV too.",
-    roles: ["admin", "management"],
-  },
-];
+export const unreleased: ReleaseNote[] = [];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.12.1",
+    date: "2026-10-02",
+    title:
+      "A printable manual with its pictures back, safer confirmations, and a note when a stock figure was typed by hand",
+    major: false,
+    notes: [
+      "The printable manual (Manual → Download PDF) has its screenshots again. For a short while after the app moved to its new server the PDF came out with text only; it now includes every picture, and builds faster.",
+      "Deleting or removing something now opens a box that names exactly what you are about to lose, with Cancel selected so a stray Enter cannot confirm it. The Security page's archive, delete and reset actions work the same way. Buttons on the Settings tables are taller, so they are easier to tap on a phone. A red bar now warns you when the app is offline and changes will not save.",
+      "If you are signed out because you have not used the app for a long time, the sign-in page now says so and takes you back to the page you were on once you sign in again.",
+      {
+        text: "Management → Stock between counts now says when someone typed a figure by hand during the dates being compared. The row still shows the same used figure — a correction isn't counted as use, because fixing a typo would otherwise look like stock disappearing — but if an item is far off its plan and carries the note, the figure someone typed is the first thing to check. It appears in the downloaded CSV too.",
+        roles: ["admin", "management"],
+      },
+    ],
+  },
   {
     version: "0.12.0",
     date: "2026-10-01",
