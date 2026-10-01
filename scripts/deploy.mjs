@@ -27,6 +27,7 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { readFileSync } from "node:fs";
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
+import { appliedMigrations, deployedMigrations, missingFromDatabase } from "./lib/deploy-schema.mjs";
 import { lockedPublicSiteProblem, readWranglerConfig } from "./lib/wrangler.mjs";
 // TypeScript, loaded through Node's type stripping: the same file the app
 // renders, so the page, the tag and the email can't disagree.
@@ -159,6 +160,29 @@ if (GUARDED) {
   if (problems.length) {
     console.error(`deploy: ${envName} deploys only from a clean, pushed main:\n  - ` + problems.join("\n  - "));
     process.exit(2);
+  }
+}
+
+// The database must hold every migration this commit carries. 0.10.1 put a
+// column reader live an hour before its migration (docs/releases/2026-09-30.md).
+// Only "every file in the deployed commit is applied" counts: extra applied rows
+// are schema ahead of code, which is fine (docs/decisions/2026-10-01-deploy-requires-deployed-migrations-applied.md).
+// Could not ask is a warning, not a refusal: a Supabase blip must not block a release.
+if (GUARDED) {
+  const result = await appliedMigrations(env, projectRef(env));
+  if (!result.ok) {
+    console.warn(`deploy: WARNING: could not ask ${envName} which migrations it has applied (${result.reason}).`);
+    console.warn(`deploy: WARNING: continuing WITHOUT the schema check. Verify by hand: node scripts/apply-migrations.mjs --drift ${envName}`);
+  } else {
+    const missing = missingFromDatabase(deployedMigrations(git), result.applied);
+    if (missing.length) {
+      console.error(
+        `deploy: ${envName} is missing ${missing.length} migration(s) this commit carries; shipping now would run code against schema that is not there:\n  - ` +
+          missing.join("\n  - ") +
+          `\nApply them first: node scripts/apply-migrations.mjs --env ${envName}`,
+      );
+      process.exit(2);
+    }
   }
 }
 
