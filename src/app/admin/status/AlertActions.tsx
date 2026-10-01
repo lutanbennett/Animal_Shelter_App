@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { type AlertActionResult, runAlertCheckNow, sendTestAlertNow } from "./actions";
@@ -11,6 +12,7 @@ import { type AlertActionResult, runAlertCheckNow, sendTestAlertNow } from "./ac
  */
 export function AlertActions() {
   const { t } = useI18n();
+  const confirm = useConfirm();
   const a = t.admin.status.alerts;
   const [result, setResult] = useState<AlertActionResult | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -40,8 +42,8 @@ export function AlertActions() {
           type="button"
           className={button}
           disabled={isPending}
-          onClick={() => {
-            if (window.confirm(a.testConfirm)) run(sendTestAlertNow);
+          onClick={async () => {
+            if (await confirm({ body: a.testConfirm })) run(sendTestAlertNow);
           }}
         >
           {a.sendTest}

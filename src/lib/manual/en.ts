@@ -98,6 +98,14 @@ const manual: Manual = {
           ],
         },
         {
+          id: "confirm-and-offline",
+          title: "Confirming a delete, and working offline",
+          steps: [
+            "Anything that can't be taken back — deleting or removing a record, archiving or deleting a login, issuing a temporary password, resetting 2-step verification — asks first, in a box that names exactly what you're about to lose (\"Delete zone \\\"Quarantine\\\"?\"). The Cancel button is the one selected, so pressing Enter by accident cancels; tap the red button, or Delete, to go ahead. Esc or tapping outside the box also cancels.",
+            "If the app can't reach the internet, a red bar across the top says \"You're offline, changes will not save.\" It appears when your device drops its connection and also when the Wi-Fi is connected but nothing gets through, which a phone often can't tell the difference between. It clears by itself once something goes through. Until then, don't rely on anything you just entered: wait for the bar to go, then try the change again.",
+          ],
+        },
+        {
           id: "language",
           title: "Switching language",
           steps: [

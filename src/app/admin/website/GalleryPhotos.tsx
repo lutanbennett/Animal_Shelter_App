@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import Image from "next/image";
 import { useRef, useState, useTransition } from "react";
 import { driveImageUrl } from "@/lib/google/drive-client";
@@ -12,6 +13,7 @@ export type GalleryPhotoRow = { id: string; drive_file_id: string };
 
 export function GalleryPhotos({ photos }: { photos: GalleryPhotoRow[] }) {
   const { t } = useI18n();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -29,8 +31,8 @@ export function GalleryPhotos({ photos }: { photos: GalleryPhotoRow[] }) {
     });
   }
 
-  function handleDelete(photoId: string) {
-    if (!window.confirm(t.admin.website.gallery.removeConfirm)) return;
+  async function handleDelete(photoId: string) {
+    if (!await confirm({ body: t.admin.website.gallery.removeConfirm })) return;
     setMessage(null);
     startTransition(async () => {
       const result = await deleteGalleryPhoto(photoId);

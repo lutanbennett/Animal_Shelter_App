@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import {
@@ -29,6 +30,7 @@ function BloodTestTypeRowItem({
   mergeTargets: BloodTestTypeRow[];
 }) {
   const { t } = useI18n();
+  const confirm = useConfirm();
   const p = t.admin.bloodTestTypes;
   const [name, setName] = useState(bloodTestType.name);
   const [mode, setMode] = useState<"view" | "edit" | "merge">("view");
@@ -57,8 +59,8 @@ function BloodTestTypeRowItem({
     });
   }
 
-  function handleDelete() {
-    if (!window.confirm(p.deleteConfirm(bloodTestType.name))) return;
+  async function handleDelete() {
+    if (!await confirm({ body: p.deleteConfirm(bloodTestType.name), confirmLabel: t.common.delete })) return;
     setMessage(null);
     startTransition(async () => {
       const result = await deleteBloodTestType(bloodTestType.id);
@@ -68,17 +70,15 @@ function BloodTestTypeRowItem({
     });
   }
 
-  function handleMerge() {
+  async function handleMerge() {
     const target = mergeTargets.find((row) => row.id === mergeInto);
     if (!target) return;
     if (
-      !window.confirm(
-        p.mergeConfirm(
+      !await confirm({ body: p.mergeConfirm(
           bloodTestType.name,
           target.name,
           bloodTestType.blood_test_count,
-        ),
-      )
+        ) })
     ) {
       return;
     }
@@ -120,7 +120,7 @@ function BloodTestTypeRowItem({
                   type="button"
                   disabled={isPending}
                   onClick={handleSave}
-                  className="rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
+                  className="min-h-11 rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
                 >
                   {t.common.save}
                 </button>
@@ -153,7 +153,7 @@ function BloodTestTypeRowItem({
                   type="button"
                   disabled={isPending || !mergeInto}
                   onClick={handleMerge}
-                  className="rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
+                  className="min-h-11 rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
                 >
                   {p.merge.button}
                 </button>
@@ -193,7 +193,7 @@ function BloodTestTypeRowItem({
                       : undefined
                   }
                   onClick={handleDelete}
-                  className="rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="min-h-11 rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {t.common.delete}
                 </button>

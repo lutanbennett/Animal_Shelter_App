@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useState, useTransition } from "react";
 import {
   allowTwoStepSetup,
@@ -49,6 +50,7 @@ function UserRow({
   isSelf: boolean;
 }) {
   const { t, locale } = useI18n();
+  const confirm = useConfirm();
   const [role, setRole] = useState(user.role ?? "");
   const [vetId, setVetId] = useState(user.vetId ?? "");
   const [issuedPassword, setIssuedPassword] = useState<string | null>(null);
@@ -113,8 +115,8 @@ function UserRow({
     );
   }
 
-  function handleIssuePassword() {
-    if (!window.confirm(t.admin.security.table.issueConfirm(user.email))) return;
+  async function handleIssuePassword() {
+    if (!await confirm({ body: t.admin.security.table.issueConfirm(user.email) })) return;
     setIssuedPassword(null);
     run(
       () => issueTemporaryPassword(user.id),
@@ -123,11 +125,11 @@ function UserRow({
     );
   }
 
-  function handleResetTwoStep() {
+  async function handleResetTwoStep() {
     const confirmText = isSelf
       ? t.admin.security.table.resetTwoStepSelfConfirm
       : t.admin.security.table.resetTwoStepConfirm(user.email);
-    if (!window.confirm(confirmText)) return;
+    if (!await confirm({ body: confirmText })) return;
     run(
       () => resetTwoStep(user.id),
       t.admin.security.table.failedToResetTwoStep,
@@ -144,8 +146,8 @@ function UserRow({
     );
   }
 
-  function handleArchive() {
-    if (!window.confirm(t.admin.security.table.archiveConfirm(user.email))) return;
+  async function handleArchive() {
+    if (!await confirm({ body: t.admin.security.table.archiveConfirm(user.email) })) return;
     run(() => archiveUser(user.id), t.admin.security.table.failedToArchiveUser);
   }
 
@@ -153,8 +155,8 @@ function UserRow({
     run(() => restoreUser(user.id), t.admin.security.table.failedToRestoreUser);
   }
 
-  function handleDelete() {
-    if (!window.confirm(t.admin.security.table.deleteConfirm(user.email))) return;
+  async function handleDelete() {
+    if (!await confirm({ body: t.admin.security.table.deleteConfirm(user.email), confirmLabel: t.common.delete })) return;
     run(() => deleteUser(user.id), t.admin.security.table.failedToDeleteUser);
   }
 
@@ -231,7 +233,7 @@ function UserRow({
               type="button"
               disabled={isPending}
               onClick={handleIssuePassword}
-              className="rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
+              className="min-h-11 rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
             >
               {t.admin.security.table.issueTemporaryPassword}
             </button>
@@ -245,7 +247,7 @@ function UserRow({
                 type="button"
                 disabled={isPending}
                 onClick={handleResetTwoStep}
-                className="rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
+                className="min-h-11 rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
               >
                 {t.admin.security.table.resetTwoStep}
               </button>
@@ -272,7 +274,7 @@ function UserRow({
                   type="button"
                   disabled={isPending}
                   onClick={handleAllowTwoStepSetup}
-                  className="rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
+                  className="min-h-11 rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
                 >
                   {user.twoStepSetupUntil
                     ? t.admin.security.table.renewTwoStepSetup
@@ -290,7 +292,7 @@ function UserRow({
                   type="button"
                   disabled={isPending}
                   onClick={handleRestore}
-                  className="rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
+                  className="min-h-11 rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
                 >
                   {t.admin.security.table.restore}
                 </button>
@@ -299,7 +301,7 @@ function UserRow({
                   type="button"
                   disabled={isPending}
                   onClick={handleArchive}
-                  className="rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
+                  className="min-h-11 rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
                 >
                   {t.admin.security.table.archive}
                 </button>
@@ -308,7 +310,7 @@ function UserRow({
                 type="button"
                 disabled={isPending}
                 onClick={handleDelete}
-                className="rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
+                className="min-h-11 rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
               >
                 {t.common.delete}
               </button>

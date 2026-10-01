@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useState, useTransition } from "react";
 import { deleteImmunizationType, updateImmunizationType } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -20,6 +21,7 @@ function ImmunizationTypeRowItem({
   immunizationType: ImmunizationTypeRow;
 }) {
   const { t, locale } = useI18n();
+  const confirm = useConfirm();
   const [name, setName] = useState(immunizationType.name);
   const [isMandatory, setIsMandatory] = useState(immunizationType.is_mandatory);
   const [intervalMonths, setIntervalMonths] = useState(
@@ -71,8 +73,8 @@ function ImmunizationTypeRowItem({
     });
   }
 
-  function handleDelete() {
-    if (!window.confirm(t.admin.immunizationTypes.deleteConfirm(immunizationType.name)))
+  async function handleDelete() {
+    if (!await confirm({ body: t.admin.immunizationTypes.deleteConfirm(immunizationType.name), confirmLabel: t.common.delete }))
       return;
     setMessage(null);
     startTransition(async () => {
@@ -169,7 +171,7 @@ function ImmunizationTypeRowItem({
                   type="button"
                   disabled={isPending}
                   onClick={handleSave}
-                  className="rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
+                  className="min-h-11 rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
                 >
                   {t.common.save}
                 </button>
@@ -185,7 +187,7 @@ function ImmunizationTypeRowItem({
                     );
                     setCost(immunizationType.cost?.toString() ?? "");
                   }}
-                  className="rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover"
+                  className="min-h-11 rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover"
                 >
                   {t.common.cancel}
                 </button>
@@ -194,7 +196,7 @@ function ImmunizationTypeRowItem({
               <button
                 type="button"
                 onClick={() => setEditing(true)}
-                className="rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground"
+                className="min-h-11 rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground"
               >
                 {t.common.edit}
               </button>
@@ -203,7 +205,7 @@ function ImmunizationTypeRowItem({
               type="button"
               disabled={isPending}
               onClick={handleDelete}
-              className="rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
+              className="min-h-11 rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
             >
               {t.common.delete}
             </button>

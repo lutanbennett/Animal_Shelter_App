@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatBaht } from "@/lib/format";
@@ -78,6 +79,7 @@ function DietTypeRowItem({
   standardName: string | null;
 }) {
   const { t, locale } = useI18n();
+  const confirm = useConfirm();
   const m = t.management.diets;
   const [fields, setFields] = useState<DietTypeFields>(() => fieldsOf(dietType));
   const [editing, setEditing] = useState(false);
@@ -137,8 +139,8 @@ function DietTypeRowItem({
     });
   }
 
-  function handleMakeStandard() {
-    if (!window.confirm(m.standard.confirm(dietType.name, standardName))) return;
+  async function handleMakeStandard() {
+    if (!await confirm({ body: m.standard.confirm(dietType.name, standardName) })) return;
     setMessage(null);
     startTransition(async () => {
       const result = await setStandardDietType(dietType.id);
@@ -150,8 +152,8 @@ function DietTypeRowItem({
     });
   }
 
-  function handleDelete() {
-    if (!window.confirm(m.deleteConfirm(dietType.name))) return;
+  async function handleDelete() {
+    if (!await confirm({ body: m.deleteConfirm(dietType.name), confirmLabel: t.common.delete })) return;
     setMessage(null);
     startTransition(async () => {
       const result = await deleteDietType(dietType.id);

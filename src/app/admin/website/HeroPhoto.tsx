@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import Image from "next/image";
 import { useRef, useState, useTransition } from "react";
 import { driveImageUrl } from "@/lib/google/drive-client";
@@ -14,6 +15,7 @@ export function HeroPhoto({
   heroDriveFileId: string | null;
 }) {
   const { t } = useI18n();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<
     { type: "error" | "success"; text: string } | null
@@ -37,8 +39,8 @@ export function HeroPhoto({
     });
   }
 
-  function handleRemove() {
-    if (!window.confirm(t.admin.website.hero.removeConfirm)) return;
+  async function handleRemove() {
+    if (!await confirm({ body: t.admin.website.hero.removeConfirm })) return;
     setMessage(null);
     startTransition(async () => {
       const result = await removeHeroPhoto();

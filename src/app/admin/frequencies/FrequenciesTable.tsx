@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import {
@@ -30,6 +31,7 @@ function FrequencyRowItem({
   mergeTargets: FrequencyRow[];
 }) {
   const { t } = useI18n();
+  const confirm = useConfirm();
   const f = t.admin.frequencies;
   const [label, setLabel] = useState(frequency.label);
   const [schedule, setSchedule] = useState(() => scheduleToFields(frequency));
@@ -64,8 +66,8 @@ function FrequencyRowItem({
     });
   }
 
-  function handleDelete() {
-    if (!window.confirm(f.deleteConfirm(frequency.label))) return;
+  async function handleDelete() {
+    if (!await confirm({ body: f.deleteConfirm(frequency.label), confirmLabel: t.common.delete })) return;
     setMessage(null);
     startTransition(async () => {
       const result = await deleteFrequency(frequency.id);
@@ -75,18 +77,16 @@ function FrequencyRowItem({
     });
   }
 
-  function handleMerge() {
+  async function handleMerge() {
     const target = mergeTargets.find((row) => row.id === mergeInto);
     if (!target) return;
     if (
-      !window.confirm(
-        f.mergeConfirm(
+      !await confirm({ body: f.mergeConfirm(
           frequency.label,
           target.label,
           frequency.prescription_count,
           describe(target),
-        ),
-      )
+        ) })
     ) {
       return;
     }
@@ -138,7 +138,7 @@ function FrequencyRowItem({
                   type="button"
                   disabled={isPending}
                   onClick={handleSave}
-                  className="rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
+                  className="min-h-11 rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
                 >
                   {t.common.save}
                 </button>
@@ -171,7 +171,7 @@ function FrequencyRowItem({
                   type="button"
                   disabled={isPending || !mergeInto}
                   onClick={handleMerge}
-                  className="rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
+                  className="min-h-11 rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
                 >
                   {f.merge.button}
                 </button>
@@ -211,7 +211,7 @@ function FrequencyRowItem({
                       : undefined
                   }
                   onClick={handleDelete}
-                  className="rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="min-h-11 rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {t.common.delete}
                 </button>
