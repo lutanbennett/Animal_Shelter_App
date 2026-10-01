@@ -157,6 +157,141 @@ function checkFile(file) {
   return missing;
 }
 
+// ---------------------------------------------------------------------------
+// Security checks (backlog DB-10). Each is a mistake no later migration can
+// make; they apply to every file above LAST_EXEMPT, like the grant check.
+//
+//   RLS            every table created in `public` is followed, in the same
+//                  file, by `alter table … enable row level security`
+//   search_path    every `security definer` function pins `set search_path`
+//   function anon  every function created in `public` (trigger functions
+//                  aside: PostgREST cannot call them) is followed by a
+//                  `revoke … on function … from … public … anon …`. Postgres
+//                  grants EXECUTE to PUBLIC on a new function and anon is a
+//                  member of PUBLIC, so naming anon alone leaves it callable.
+//   anon grants    `grant … to anon` only on objects named public_* / site_*
+//                  (and the functions the public site calls, below)
+// ---------------------------------------------------------------------------
+
+// Functions the public site calls as anon, granted back by 0082 and 0084; the
+// same set as PUBLIC_FUNCTIONS in check-public-views.mjs, which verifies them
+// against the live project.
+const ANON_FUNCTIONS = new Set([
+  "current_user_role",
+  "is_public_drive_file",
+  "shelter_date",
+  "shelter_time_zone",
+  "shelter_today",
+  // Granted by 0082, taken back by 0089; the file that granted it is history.
+  "is_known_drive_file",
+]);
+const ANON_OK = /^(public_|site_)/;
+
+/** Statements of a stripped file, trimmed, with blanks dropped. */
+function statements(sql) {
+  return sql.split(";").map((s) => s.trim()).filter(Boolean);
+}
+
+const OBJECT_NAME = String.raw`((?:"?\w+"?\.)?"?\w+"?)`;
+
+/** Names of functions created in `public` by every migration numbered below `n`. */
+function functionsBefore(n) {
+  const known = new Set();
+  const fn = new RegExp(String.raw`\bcreate\s+(?:or\s+replace\s+)?function\s+${OBJECT_NAME}\s*\(`, "gi");
+  for (const f of readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith(".sql") && (numberOf(f) ?? 0) < n)) {
+    for (const m of stripSql(readFileSync(path.join(MIGRATIONS_DIR, f), "utf8")).matchAll(fn)) {
+      const name = normalise(m[1]);
+      if (name) known.add(name);
+    }
+  }
+  return known;
+}
+
+function securityFindings(sql, before) {
+  const out = [];
+  const stmts = statements(sql);
+  const lc = stmts.map((s) => s.toLowerCase());
+
+  // RLS
+  for (const obj of createdObjects(sql)) {
+    if (obj.kind !== "table") continue;
+    const enabled = lc.some((s) =>
+      new RegExp(String.raw`^alter\s+table\s+(?:if\s+exists\s+)?(?:only\s+)?(?:public\.)?"?${obj.name}"?\s+enable\s+row\s+level\s+security\b`).test(s),
+    );
+    if (!enabled) {
+      out.push(`table ${obj.name} is created without \`alter table ${obj.name} enable row level security;\` — without it every grant reads and writes every row.`);
+    }
+  }
+
+  // Functions
+  const fn = new RegExp(
+    String.raw`^create\s+(?:or\s+replace\s+)?function\s+${OBJECT_NAME}\s*\(([\s\S]*?)\)\s*returns\s+([\s\S]*)$`,
+    "i",
+  );
+  for (const s of stmts) {
+    const m = s.match(fn);
+    if (!m) continue;
+    const name = normalise(m[1]);
+    if (!name) continue;
+    const header = m[3];
+    if (/\bsecurity\s+definer\b/i.test(header) && !/\bset\s+search_path\b/i.test(header)) {
+      out.push(`security definer function ${name}() does not pin \`set search_path = public\` — a caller's search_path would resolve its unqualified names.`);
+    }
+    if (/^trigger\b/i.test(header.trim())) continue;
+    // The ACL survives `create or replace`; only a first creation (or one after a drop) needs a revoke.
+    if (
+      /^create\s+or\s+replace\b/i.test(s) &&
+      before.has(name) &&
+      !lc.some((t) => /^drop\s+function\b/.test(t) && t.includes(name))
+    ) {
+      continue;
+    }
+    // A function the public site calls is granted back to anon on purpose.
+    if (ANON_FUNCTIONS.has(name)) continue;
+    const revokes = lc.filter(
+      (t) =>
+        /^revoke\b/.test(t) &&
+        /\bon\s+(?:function|all\s+functions\s+in\s+schema)\b/.test(t) &&
+        (/\ball\s+functions\s+in\s+schema\b/.test(t) || new RegExp(String.raw`\b${name}\b`).test(t)),
+    );
+    const revokedFrom = (role) => revokes.some((t) => new RegExp(String.raw`\bfrom\b[\s\S]*\b${role}\b`).test(t));
+    const revoked = revokedFrom("public") && revokedFrom("anon");
+    if (!revoked) {
+      out.push(`function ${name}() is created without \`revoke all on function ${name}(…) from public, anon;\` — Postgres grants EXECUTE to PUBLIC, so anon could call it through /rest/v1/rpc/.`);
+    }
+  }
+
+  // Grants to anon
+  for (const s of stmts) {
+    const m = s.match(/^grant\s+[\s\S]*?\s+on\s+([\s\S]+?)\s+to\s+([\s\S]+)$/i);
+    if (!m) {
+      const d = s.match(/^alter\s+default\s+privileges[\s\S]*?\bgrant\b[\s\S]*\bto\b([\s\S]*)$/i);
+      if (d && /\banon\b/i.test(d[1])) out.push("`alter default privileges … grant … to anon` would hand anon every future object.");
+      continue;
+    }
+    const roles = m[2].replace(/\bwith\s+grant\s+option\b/i, "").split(",").map((r) => r.trim().replace(/"/g, "").toLowerCase());
+    if (!roles.includes("anon")) continue;
+    const target = m[1].trim();
+    const kind = target.match(/^(table|sequence|function|procedure|routine|schema|all\s+\w+\s+in\s+schema)\b/i);
+    const keyword = kind ? kind[1].toLowerCase().replace(/\s+/g, " ") : "table";
+    if (keyword === "schema") continue;
+    if (keyword.startsWith("all ")) {
+      out.push(`\`grant … ${keyword} … to anon\` reaches objects that are not public_* / site_*.`);
+      continue;
+    }
+    const rest = kind ? target.slice(kind[0].length) : target;
+    const isFn = ["function", "procedure", "routine"].includes(keyword);
+    // Split on commas outside parentheses (argument lists).
+    const names = rest.split(/,(?![^(]*\))/).map((o) => o.trim().replace(/\(.*$/s, "")).filter(Boolean).map(normalise);
+    for (const name of names) {
+      if (!name) continue;
+      if (ANON_OK.test(name) || (isFn && ANON_FUNCTIONS.has(name))) continue;
+      out.push(`\`grant … on ${name} to anon\` — anon may only be granted public_* / site_* objects${isFn ? " or a function on the public-site allow-list (ANON_FUNCTIONS)" : ""}.`);
+    }
+  }
+  return out;
+}
+
 function numberOf(file) {
   const m = path.basename(file).match(/^(\d+)_/);
   return m ? Number(m[1]) : null;
@@ -172,6 +307,7 @@ const files = args.length
 
 let failed = 0;
 let ungated = 0;
+let secure = 0;
 for (const file of files) {
   if ((numberOf(file) ?? 0) > GATED_SINCE) {
     for (const statement of stripSql(readFileSync(file, "utf8")).split(";")) {
@@ -188,6 +324,10 @@ for (const file of files) {
           ` where private.has_app_access()\` so it picks up the new columns.`,
       );
     }
+  }
+  for (const finding of securityFindings(stripSql(readFileSync(file, "utf8")), functionsBefore(numberOf(file) ?? 0))) {
+    secure++;
+    console.error(`${path.basename(file)}: ${finding}`);
   }
   for (const obj of checkFile(file)) {
     failed++;
@@ -211,5 +351,8 @@ if (failed) {
       ` automatically (docs/decisions.md, 2026-09-24).`,
   );
 }
-if (failed || ungated) process.exit(1);
+if (secure) {
+  console.error(`\nmigration grants: ${secure} security finding(s) (backlog DB-10; see the header).`);
+}
+if (failed || ungated || secure) process.exit(1);
 console.log(`migration grants: ok (${files.length} file(s) checked)`);
