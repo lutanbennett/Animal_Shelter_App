@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { runAction, type ActionResult } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getDriveClient } from "@/lib/google/drive";
 import { getT } from "@/lib/i18n/get-t";
@@ -10,12 +11,13 @@ import {
   syncProjectFolderRename,
 } from "@/lib/projects/drive-sync";
 
-export type ProjectActionResult = {
-  error?: string;
+type ProjectOutcome = {
   driveWarning?: string | null;
   /** The folder the caller should now be looking at (a new folder's id). */
   folderId?: string;
 };
+
+const refuse = (error: string) => ({ ok: false as const, error });
 
 function str(formData: FormData, key: string): string | null {
   const value = formData.get(key);
@@ -51,293 +53,311 @@ function revalidateFolder(folderId: string | null, parentId: string | null) {
 export async function createProjectFolder(
   parentId: string,
   formData: FormData,
-): Promise<ProjectActionResult> {
+): Promise<ActionResult<ProjectOutcome>> {
   const { t } = await getT();
-  const name = str(formData, "name");
-  if (!name) return { error: t.projects.errors.nameRequired };
+  return runAction("projects.createProjectFolder", t.common.somethingWentWrong, async () => {
+    const name = str(formData, "name");
+    if (!name) return refuse(t.projects.errors.nameRequired);
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  const { data, error } = await supabase
-    .from("project_folders")
-    .insert({
-      // Overwritten by the trigger from the parent; a value is needed to
-      // satisfy NOT NULL before the trigger runs.
-      top_level_category: "Miscellaneous",
-      parent_folder_id: parentId,
-      name,
-      name_th: str(formData, "nameTh"),
-      created_by: user?.id ?? null,
-    })
-    .select("id")
-    .limit(1)
-    .returns<{ id: string }[]>();
+    const { data, error } = await supabase
+      .from("project_folders")
+      .insert({
+        // Overwritten by the trigger from the parent; a value is needed to
+        // satisfy NOT NULL before the trigger runs.
+        top_level_category: "Miscellaneous",
+        parent_folder_id: parentId,
+        name,
+        name_th: str(formData, "nameTh"),
+        created_by: user?.id ?? null,
+      })
+      .select("id")
+      .limit(1)
+      .returns<{ id: string }[]>();
 
-  if (error) return { error: await friendlyDbError(error.message) };
-  const row = data?.[0];
-  // RLS filters rather than rejects: a volunteer's insert returns no row.
-  if (!row) return { error: t.projects.errors.notAuthorized };
+    if (error) return refuse(await friendlyDbError(error.message));
+    const row = data?.[0];
+    // RLS filters rather than rejects: a volunteer's insert returns no row.
+    if (!row) return refuse(t.projects.errors.notAuthorized);
 
-  revalidateFolder(row.id, parentId);
-  return { folderId: row.id };
+    revalidateFolder(row.id, parentId);
+    return { ok: true, folderId: row.id };
+  });
 }
 
 export async function renameProjectFolder(
   folderId: string,
   formData: FormData,
-): Promise<ProjectActionResult> {
+): Promise<ActionResult<ProjectOutcome>> {
   const { t } = await getT();
-  const name = str(formData, "name");
-  if (!name) return { error: t.projects.errors.nameRequired };
+  return runAction("projects.renameProjectFolder", t.common.somethingWentWrong, async () => {
+    const name = str(formData, "name");
+    if (!name) return refuse(t.projects.errors.nameRequired);
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("project_folders")
-    .update({ name, name_th: str(formData, "nameTh") })
-    .eq("id", folderId)
-    .select("id, parent_folder_id")
-    .returns<{ id: string; parent_folder_id: string | null }[]>();
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("project_folders")
+      .update({ name, name_th: str(formData, "nameTh") })
+      .eq("id", folderId)
+      .select("id, parent_folder_id")
+      .returns<{ id: string; parent_folder_id: string | null }[]>();
 
-  if (error) return { error: await friendlyDbError(error.message) };
-  const row = data?.[0];
-  if (!row) return { error: t.projects.errors.notAuthorized };
+    if (error) return refuse(await friendlyDbError(error.message));
+    const row = data?.[0];
+    if (!row) return refuse(t.projects.errors.notAuthorized);
 
-  const driveWarning = await syncProjectFolderRename(supabase, folderId);
-  revalidateFolder(folderId, row.parent_folder_id);
-  return { driveWarning };
+    const driveWarning = await syncProjectFolderRename(supabase, folderId);
+    revalidateFolder(folderId, row.parent_folder_id);
+    return { ok: true, driveWarning };
+  });
 }
 
 /** The info card: story, date, location, public flag. */
 export async function updateProjectFolderInfo(
   folderId: string,
   formData: FormData,
-): Promise<ProjectActionResult> {
+): Promise<ActionResult<ProjectOutcome>> {
   const { t } = await getT();
+  return runAction("projects.updateProjectFolderInfo", t.common.somethingWentWrong, async () => {
 
-  const projectDate = str(formData, "projectDate");
-  if (projectDate && Number.isNaN(new Date(projectDate).getTime())) {
-    return { error: t.projects.errors.invalidDate };
-  }
+    const projectDate = str(formData, "projectDate");
+    if (projectDate && Number.isNaN(new Date(projectDate).getTime())) {
+      return refuse(t.projects.errors.invalidDate);
+    }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("project_folders")
-    .update({
-      summary: str(formData, "summary"),
-      project_date: projectDate,
-      location: str(formData, "location"),
-      is_public: formData.get("isPublic") === "on",
-    })
-    .eq("id", folderId)
-    .select("id, parent_folder_id")
-    .returns<{ id: string; parent_folder_id: string | null }[]>();
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("project_folders")
+      .update({
+        summary: str(formData, "summary"),
+        project_date: projectDate,
+        location: str(formData, "location"),
+        is_public: formData.get("isPublic") === "on",
+      })
+      .eq("id", folderId)
+      .select("id, parent_folder_id")
+      .returns<{ id: string; parent_folder_id: string | null }[]>();
 
-  if (error) return { error: await friendlyDbError(error.message) };
-  const row = data?.[0];
-  if (!row) return { error: t.projects.errors.notAuthorized };
+    if (error) return refuse(await friendlyDbError(error.message));
+    const row = data?.[0];
+    if (!row) return refuse(t.projects.errors.notAuthorized);
 
-  revalidateFolder(folderId, row.parent_folder_id);
-  return {};
+    revalidateFolder(folderId, row.parent_folder_id);
+    return { ok: true };
+  });
 }
 
 export async function setProjectFolderPublic(
   folderId: string,
   isPublic: boolean,
-): Promise<ProjectActionResult> {
+): Promise<ActionResult<ProjectOutcome>> {
   const { t } = await getT();
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("project_folders")
-    .update({ is_public: isPublic })
-    .eq("id", folderId)
-    .select("id, parent_folder_id")
-    .returns<{ id: string; parent_folder_id: string | null }[]>();
+  return runAction("projects.setProjectFolderPublic", t.common.somethingWentWrong, async () => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("project_folders")
+      .update({ is_public: isPublic })
+      .eq("id", folderId)
+      .select("id, parent_folder_id")
+      .returns<{ id: string; parent_folder_id: string | null }[]>();
 
-  if (error) return { error: await friendlyDbError(error.message) };
-  const row = data?.[0];
-  if (!row) return { error: t.projects.errors.notAuthorized };
+    if (error) return refuse(await friendlyDbError(error.message));
+    const row = data?.[0];
+    if (!row) return refuse(t.projects.errors.notAuthorized);
 
-  revalidateFolder(folderId, row.parent_folder_id);
-  return {};
+    revalidateFolder(folderId, row.parent_folder_id);
+    return { ok: true };
+  });
 }
 
 export async function moveProjectFolder(
   folderId: string,
   newParentId: string,
-): Promise<ProjectActionResult> {
+): Promise<ActionResult<ProjectOutcome>> {
   const { t } = await getT();
-  const supabase = await createClient();
+  return runAction("projects.moveProjectFolder", t.common.somethingWentWrong, async () => {
+    const supabase = await createClient();
 
-  const { data: before } = await supabase
-    .from("project_folders")
-    .select("parent_folder_id")
-    .eq("id", folderId)
-    .limit(1)
-    .returns<{ parent_folder_id: string | null }[]>();
-  const previousParent = before?.[0]?.parent_folder_id ?? null;
-  if (previousParent === newParentId) return {};
+    const { data: before } = await supabase
+      .from("project_folders")
+      .select("parent_folder_id")
+      .eq("id", folderId)
+      .limit(1)
+      .returns<{ parent_folder_id: string | null }[]>();
+    const previousParent = before?.[0]?.parent_folder_id ?? null;
+    if (previousParent === newParentId) return { ok: true };
 
-  const { data, error } = await supabase
-    .from("project_folders")
-    .update({ parent_folder_id: newParentId })
-    .eq("id", folderId)
-    .select("id")
-    .returns<{ id: string }[]>();
+    const { data, error } = await supabase
+      .from("project_folders")
+      .update({ parent_folder_id: newParentId })
+      .eq("id", folderId)
+      .select("id")
+      .returns<{ id: string }[]>();
 
-  if (error) return { error: await friendlyDbError(error.message) };
-  if (!data || data.length === 0) return { error: t.projects.errors.notAuthorized };
+    if (error) return refuse(await friendlyDbError(error.message));
+    if (!data || data.length === 0) return refuse(t.projects.errors.notAuthorized);
 
-  const driveWarning = await syncProjectFolderMove(supabase, folderId);
-  revalidateFolder(folderId, newParentId);
-  if (previousParent) revalidatePath(`/projects/${previousParent}`);
-  return { driveWarning };
+    const driveWarning = await syncProjectFolderMove(supabase, folderId);
+    revalidateFolder(folderId, newParentId);
+    if (previousParent) revalidatePath(`/projects/${previousParent}`);
+    return { ok: true, driveWarning };
+  });
 }
 
 /**
  * Only an empty folder can be deleted — no subfolders, no photos — so
  * nothing in Drive is ever removed except the (empty) folder itself.
  */
-export async function deleteProjectFolder(folderId: string): Promise<ProjectActionResult> {
+export async function deleteProjectFolder(folderId: string): Promise<ActionResult<ProjectOutcome>> {
   const { t } = await getT();
-  const supabase = await createClient();
+  return runAction("projects.deleteProjectFolder", t.common.somethingWentWrong, async () => {
+    const supabase = await createClient();
 
-  const { data: rows } = await supabase
-    .from("project_folder_summary")
-    .select("id, parent_folder_id, drive_folder_id, child_count, photo_count")
-    .eq("id", folderId)
-    .limit(1)
-    .returns<
-      {
-        id: string;
-        parent_folder_id: string | null;
-        drive_folder_id: string | null;
-        child_count: number;
-        photo_count: number;
-      }[]
-    >();
-  const folder = rows?.[0];
-  if (!folder) return { error: t.projects.errors.notFound };
-  if (folder.child_count > 0 || folder.photo_count > 0) {
-    return { error: t.projects.errors.notEmpty };
-  }
+    const { data: rows } = await supabase
+      .from("project_folder_summary")
+      .select("id, parent_folder_id, drive_folder_id, child_count, photo_count")
+      .eq("id", folderId)
+      .limit(1)
+      .returns<
+        {
+          id: string;
+          parent_folder_id: string | null;
+          drive_folder_id: string | null;
+          child_count: number;
+          photo_count: number;
+        }[]
+      >();
+    const folder = rows?.[0];
+    if (!folder) return refuse(t.projects.errors.notFound);
+    if (folder.child_count > 0 || folder.photo_count > 0) {
+      return refuse(t.projects.errors.notEmpty);
+    }
 
-  const { data, error } = await supabase
-    .from("project_folders")
-    .delete()
-    .eq("id", folderId)
-    .select("id")
-    .returns<{ id: string }[]>();
+    const { data, error } = await supabase
+      .from("project_folders")
+      .delete()
+      .eq("id", folderId)
+      .select("id")
+      .returns<{ id: string }[]>();
 
-  if (error) return { error: await friendlyDbError(error.message) };
-  if (!data || data.length === 0) return { error: t.projects.errors.notAuthorized };
+    if (error) return refuse(await friendlyDbError(error.message));
+    if (!data || data.length === 0) return refuse(t.projects.errors.notAuthorized);
 
-  const driveWarning = await deleteProjectDriveFolder(folder.drive_folder_id);
-  revalidateFolder(null, folder.parent_folder_id);
-  return { driveWarning, folderId: folder.parent_folder_id ?? undefined };
+    const driveWarning = await deleteProjectDriveFolder(folder.drive_folder_id);
+    revalidateFolder(null, folder.parent_folder_id);
+    return { ok: true, driveWarning, folderId: folder.parent_folder_id ?? undefined };
+  });
 }
 
 export async function setProjectCoverPhoto(
   folderId: string,
   attachmentId: string | null,
-): Promise<ProjectActionResult> {
+): Promise<ActionResult<ProjectOutcome>> {
   const { t } = await getT();
-  const supabase = await createClient();
+  return runAction("projects.setProjectCoverPhoto", t.common.somethingWentWrong, async () => {
+    const supabase = await createClient();
 
-  if (attachmentId) {
-    const { data: photo } = await supabase
-      .from("attachments")
-      .select("id")
-      .eq("id", attachmentId)
-      .eq("owner_type", "project")
-      .eq("owner_id", folderId)
-      .limit(1)
-      .returns<{ id: string }[]>();
-    if (!photo?.[0]) return { error: t.projects.errors.photoNotFound };
-  }
+    if (attachmentId) {
+      const { data: photo } = await supabase
+        .from("attachments")
+        .select("id")
+        .eq("id", attachmentId)
+        .eq("owner_type", "project")
+        .eq("owner_id", folderId)
+        .limit(1)
+        .returns<{ id: string }[]>();
+      if (!photo?.[0]) return refuse(t.projects.errors.photoNotFound);
+    }
 
-  const { data, error } = await supabase
-    .from("project_folders")
-    .update({ cover_attachment_id: attachmentId })
-    .eq("id", folderId)
-    .select("id, parent_folder_id")
-    .returns<{ id: string; parent_folder_id: string | null }[]>();
+    const { data, error } = await supabase
+      .from("project_folders")
+      .update({ cover_attachment_id: attachmentId })
+      .eq("id", folderId)
+      .select("id, parent_folder_id")
+      .returns<{ id: string; parent_folder_id: string | null }[]>();
 
-  if (error) return { error: await friendlyDbError(error.message) };
-  const row = data?.[0];
-  if (!row) return { error: t.projects.errors.notAuthorized };
+    if (error) return refuse(await friendlyDbError(error.message));
+    const row = data?.[0];
+    if (!row) return refuse(t.projects.errors.notAuthorized);
 
-  revalidateFolder(folderId, row.parent_folder_id);
-  return {};
+    revalidateFolder(folderId, row.parent_folder_id);
+    return { ok: true };
+  });
 }
 
 export async function updateProjectPhotoCaption(
   folderId: string,
   attachmentId: string,
   formData: FormData,
-): Promise<ProjectActionResult> {
+): Promise<ActionResult<ProjectOutcome>> {
   const { t } = await getT();
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("attachments")
-    .update({ caption: str(formData, "caption") })
-    .eq("id", attachmentId)
-    .eq("owner_type", "project")
-    .eq("owner_id", folderId)
-    .select("id")
-    .returns<{ id: string }[]>();
+  return runAction("projects.updateProjectPhotoCaption", t.common.somethingWentWrong, async () => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("attachments")
+      .update({ caption: str(formData, "caption") })
+      .eq("id", attachmentId)
+      .eq("owner_type", "project")
+      .eq("owner_id", folderId)
+      .select("id")
+      .returns<{ id: string }[]>();
 
-  if (error) return { error: error.message };
-  if (!data || data.length === 0) return { error: t.projects.errors.notAuthorized };
+    if (error) return refuse(error.message);
+    if (!data || data.length === 0) return refuse(t.projects.errors.notAuthorized);
 
-  revalidatePath(`/projects/${folderId}`);
-  return {};
+    revalidatePath(`/projects/${folderId}`);
+    return { ok: true };
+  });
 }
 
 export async function deleteProjectPhoto(
   folderId: string,
   attachmentId: string,
-): Promise<ProjectActionResult> {
+): Promise<ActionResult<ProjectOutcome>> {
   const { t } = await getT();
-  const supabase = await createClient();
+  return runAction("projects.deleteProjectPhoto", t.common.somethingWentWrong, async () => {
+    const supabase = await createClient();
 
-  const { data: rows, error: selectError } = await supabase
-    .from("attachments")
-    .select("id, drive_file_id")
-    .eq("id", attachmentId)
-    .eq("owner_type", "project")
-    .eq("owner_id", folderId)
-    .limit(1)
-    .returns<{ id: string; drive_file_id: string }[]>();
+    const { data: rows, error: selectError } = await supabase
+      .from("attachments")
+      .select("id, drive_file_id")
+      .eq("id", attachmentId)
+      .eq("owner_type", "project")
+      .eq("owner_id", folderId)
+      .limit(1)
+      .returns<{ id: string; drive_file_id: string }[]>();
 
-  const photo = rows?.[0];
-  if (selectError || !photo) {
-    return { error: selectError?.message ?? t.projects.errors.photoNotFound };
-  }
+    const photo = rows?.[0];
+    if (selectError || !photo) {
+      return refuse(selectError?.message ?? t.projects.errors.photoNotFound);
+    }
 
-  // cover_attachment_id is `on delete set null` (0034), so a deleted cover
-  // simply falls back to the newest photo in the summary view.
-  const { error: deleteError } = await supabase
-    .from("attachments")
-    .delete()
-    .eq("id", attachmentId);
-  if (deleteError) return { error: deleteError.message };
+    // cover_attachment_id is `on delete set null` (0034), so a deleted cover
+    // simply falls back to the newest photo in the summary view.
+    const { error: deleteError } = await supabase
+      .from("attachments")
+      .delete()
+      .eq("id", attachmentId);
+    if (deleteError) return refuse(deleteError.message);
 
-  try {
-    await getDriveClient().deleteFile(photo.drive_file_id);
-  } catch {
-    // The row is gone; an orphaned Drive file is a minor cleanup, not a
-    // failed action (same tradeoff as deleteMaintenanceAttachment).
-  }
+    try {
+      await getDriveClient().deleteFile(photo.drive_file_id);
+    } catch {
+      // The row is gone; an orphaned Drive file is a minor cleanup, not a
+      // failed action (same tradeoff as deleteMaintenanceAttachment).
+    }
 
-  const { data: folder } = await supabase
-    .from("project_folders")
-    .select("parent_folder_id")
-    .eq("id", folderId)
-    .limit(1)
-    .returns<{ parent_folder_id: string | null }[]>();
-  revalidateFolder(folderId, folder?.[0]?.parent_folder_id ?? null);
-  return {};
+    const { data: folder } = await supabase
+      .from("project_folders")
+      .select("parent_folder_id")
+      .eq("id", folderId)
+      .limit(1)
+      .returns<{ parent_folder_id: string | null }[]>();
+    revalidateFolder(folderId, folder?.[0]?.parent_folder_id ?? null);
+    return { ok: true };
+  });
 }

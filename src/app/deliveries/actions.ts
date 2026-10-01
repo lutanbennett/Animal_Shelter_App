@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { parseBahtAmount } from "@/lib/format";
+import { resolveEntered } from "@/lib/units";
+import { loadConversions } from "@/lib/units-server";
 import {
   canRecordDelivery,
   parseDeliveryQuantity,
@@ -15,8 +17,10 @@ import {
 export type DeliveryInput = {
   kind: DeliveryKind;
   itemId: string;
-  /** In the item's own unit, as typed. */
+  /** In `unit`, as typed. */
   quantity: string;
+  /** One of the item's conversions by name; blank = the item's base unit. */
+  unit: string;
   /** YYYY-MM-DD, the shelter day it arrived. */
   date: string;
   /** Only asked for on a day the item was counted. */
@@ -58,6 +62,27 @@ export async function recordDelivery(input: DeliveryInput): Promise<DeliveryResu
   const cost = parseBahtAmount(input.cost);
   if (!cost.ok) return { ok: false, error: e.costInvalid };
 
+  // The factor is stamped from the conversion as it is NOW and stored with the
+  // row (entered, 0118); history never looks it up again.
+  const itemKind = input.kind === "medication" ? "medication" : "diet";
+  const conversions = await loadConversions(supabase, itemKind, [input.itemId]);
+  if (conversions.error) return { ok: false, error: `${e.failed}: ${conversions.error}` };
+  const baseUnit = await supabase
+    .from(itemKind === "medication" ? "medication" : "diet_types")
+    .select(itemKind === "medication" ? "unit:dose_unit" : "unit")
+    .eq("id", input.itemId)
+    .maybeSingle<{ unit: string }>();
+  const resolved = resolveEntered(
+    quantity.value,
+    typeof input.unit === "string" ? input.unit : "",
+    conversions.data[input.itemId] ?? [],
+    baseUnit.data ? [baseUnit.data.unit] : [],
+  );
+  if (!resolved.ok) {
+    return { ok: false, error: resolved.reason === "unknownUnit" ? t.units.errors.unknownUnit : e.quantityInvalid };
+  }
+  if (!(resolved.base > 0)) return { ok: false, error: e.quantityInvalid };
+
   const idColumn = input.kind === "medication" ? "medication_id" : "diet_type_id";
   const { data: counts, error: countsError } = await supabase
     .from("stock_counts")
@@ -75,7 +100,8 @@ export async function recordDelivery(input: DeliveryInput): Promise<DeliveryResu
   const { error } = await supabase.from("stock_receipts").insert({
     item_kind: input.kind === "medication" ? "medication" : "diet_type",
     [idColumn]: input.itemId,
-    quantity: quantity.value,
+    quantity: resolved.base,
+    entered: resolved.entered,
     ...(at.value ? { received_at: at.value } : {}),
     supplier_contact_id: input.supplierId || null,
     cost: cost.value,

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Star } from "lucide-react";
+import type { ActionResult } from "@/lib/action-result";
 import { AttachmentUploader } from "@/components/AttachmentUploader";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { TranslationPanel } from "@/components/TranslationPanel";
@@ -47,11 +48,11 @@ export function PhotoSection({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  function run(action: () => Promise<{ error?: string }>, after?: () => void) {
+  function run(action: () => Promise<ActionResult>, after?: () => void) {
     setError(null);
     startTransition(async () => {
       const result = await action();
-      if (result.error) {
+      if (!result.ok) {
         setError(result.error);
         return;
       }

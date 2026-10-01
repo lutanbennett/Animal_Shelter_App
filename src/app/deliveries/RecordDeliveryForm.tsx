@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatQuantity } from "@/lib/diets/options";
+import { defaultUnit, resolveEntered, type UnitConversion } from "@/lib/units";
 import { packTotal, parseDeliveryQuantity, type DeliveryKind, type DeliveryTiming } from "@/lib/management/stock-receipts";
 import { recordDelivery } from "./actions";
 
@@ -11,6 +12,8 @@ export type DeliveryFormItem = {
   name: string;
   /** Already translated, e.g. "tablet", "g". */
   unit: string;
+  /** Other units it is bought in (0118), as they are now. */
+  conversions: UnitConversion[];
 };
 
 const inputClass =
@@ -43,6 +46,8 @@ export function RecordDeliveryForm({
   const [kind, setKind] = useState<DeliveryKind>(initialKind);
   const [itemId, setItemId] = useState("");
   const [quantity, setQuantity] = useState("");
+  /** A conversion's unit name; "" = the item's base unit. */
+  const [unitName, setUnitName] = useState("");
   const [packs, setPacks] = useState("");
   const [perPack, setPerPack] = useState("");
   const [date, setDate] = useState(today);
@@ -56,6 +61,15 @@ export function RecordDeliveryForm({
   const item = items[kind].find((i) => i.id === itemId);
   const countedThatDay = itemId !== "" && (countDays[kind][itemId] ?? []).includes(date);
   const quantityOk = parseDeliveryQuantity(quantity).ok;
+  const unitLabel = unitName || item?.unit || "";
+  const preview =
+    item && unitName && quantityOk ? resolveEntered(Number(quantity), unitName, item.conversions) : null;
+  const chooseItem = (id: string) => {
+    setItemId(id);
+    setTiming(null);
+    const next = items[kind].find((i) => i.id === id);
+    setUnitName(next ? (defaultUnit(next.conversions, "purchase")?.unit ?? "") : "");
+  };
 
   const setPack = (nextPacks: string, nextPerPack: string) => {
     setPacks(nextPacks);
@@ -67,12 +81,13 @@ export function RecordDeliveryForm({
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     setMessage(null);
-    const saved = { name: item?.name ?? "", quantity, unit: item?.unit ?? "" };
+    const saved = { name: item?.name ?? "", quantity, unit: unitLabel };
     startTransition(async () => {
       const result = await recordDelivery({
         kind,
         itemId,
         quantity,
+        unit: unitName,
         date,
         timing: countedThatDay ? timing : null,
         supplierId,
@@ -88,6 +103,7 @@ export function RecordDeliveryForm({
         text: d.saved(saved.name, formatQuantity(Number(saved.quantity)), saved.unit),
       });
       setItemId("");
+      setUnitName("");
       setQuantity("");
       setPacks("");
       setPerPack("");
@@ -110,6 +126,7 @@ export function RecordDeliveryForm({
               if (k === kind) return;
               setKind(k);
               setItemId("");
+              setUnitName("");
               setTiming(null);
             }}
             className={`rounded px-3 py-1.5 text-sm font-medium ${
@@ -130,10 +147,7 @@ export function RecordDeliveryForm({
             id="delivery-item"
             required
             value={itemId}
-            onChange={(e) => {
-              setItemId(e.target.value);
-              setTiming(null);
-            }}
+            onChange={(e) => chooseItem(e.target.value)}
             className={`${inputClass} w-72 max-w-full`}
           >
             <option value="">{items[kind].length ? f.itemPlaceholder : d.noItems[kind]}</option>
@@ -147,7 +161,7 @@ export function RecordDeliveryForm({
 
         <div className="flex flex-col gap-1">
           <label htmlFor="delivery-quantity" className="text-sm font-medium text-muted">
-            {item ? f.quantityIn(item.unit) : f.quantity}
+            {item ? f.quantityIn(unitLabel) : f.quantity}
           </label>
           <input
             id="delivery-quantity"
@@ -168,6 +182,32 @@ export function RecordDeliveryForm({
           <span className="text-xs text-muted">{f.quantityHint}</span>
         </div>
 
+        {item && item.conversions.length > 0 && (
+          <div className="flex flex-col gap-1">
+            <label htmlFor="delivery-unit" className="text-sm font-medium text-muted">
+              {t.units.entry.unit}
+            </label>
+            <select
+              id="delivery-unit"
+              value={unitName}
+              onChange={(e) => setUnitName(e.target.value)}
+              className={`${inputClass} w-44`}
+            >
+              <option value="">{item.unit}</option>
+              {item.conversions.map((c) => (
+                <option key={c.id} value={c.unit}>
+                  {c.unit}
+                </option>
+              ))}
+            </select>
+            {preview?.ok && (
+              <span className="text-xs text-muted">
+                {t.units.entry.equals(formatQuantity(preview.base), item.unit)} · {t.units.entry.approx}
+              </span>
+            )}
+          </div>
+        )}
+
         <fieldset className="flex flex-col gap-1">
           <legend className="text-sm font-medium text-muted">{f.packs}</legend>
           <div className="flex items-center gap-2 text-sm text-foreground">
@@ -183,7 +223,7 @@ export function RecordDeliveryForm({
             />
             <span aria-hidden="true">×</span>
             <input
-              aria-label={item ? f.perPackIn(item.unit) : f.perPack}
+              aria-label={item ? f.perPackIn(unitLabel) : f.perPack}
               type="number"
               min={0}
               step="any"
@@ -192,7 +232,7 @@ export function RecordDeliveryForm({
               onChange={(e) => setPack(packs, e.target.value)}
               className={`${inputClass} w-24`}
             />
-            {item && <span className="text-muted">{item.unit}</span>}
+            {item && <span className="text-muted">{unitLabel}</span>}
           </div>
           <span className="text-xs text-muted">{f.packsHint}</span>
         </fieldset>

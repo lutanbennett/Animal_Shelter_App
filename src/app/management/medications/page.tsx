@@ -10,6 +10,10 @@ import { formatDate } from "@/lib/format";
 import { forecastWindows, parseCustomWindow } from "@/lib/management/forecast-window";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { STOCK_RATE_DAYS, readStock, stockFiguresOf } from "@/lib/management/stock";
+import { UnitsPanel } from "@/components/UnitsPanel";
+import { doseUnitLabel } from "@/lib/i18n/enum-labels";
+import { inPurchaseUnit } from "@/lib/units";
+import { loadConversions } from "@/lib/units-server";
 
 type MedicationQueryRow = {
   id: string;
@@ -84,6 +88,8 @@ export default async function MedicationsAdminPage(props: PageProps<"/management
   // so it means the same thing whatever the picker shows.
   const rateWindow = windows.findIndex((window) => window.days === STOCK_RATE_DAYS);
 
+  const conversions = await loadConversions(supabase, "medication");
+
   const medications: MedicationRow[] = (medicationsResult.data ?? []).map((medication) => {
     const forecast = forecasts.map((byMedication) => {
       const row = byMedication.get(medication.id);
@@ -104,6 +110,7 @@ export default async function MedicationsAdminPage(props: PageProps<"/management
       forecast,
       stock,
       stockReading: readStock(stock, forecast[rateWindow]?.quantity ?? 0),
+      purchaseUnit: inPurchaseUnit(stock.stock_on_hand, conversions.data[medication.id] ?? []),
     };
   });
 
@@ -175,6 +182,22 @@ export default async function MedicationsAdminPage(props: PageProps<"/management
           <p className="text-xs text-muted">{m.table.forecastNote}</p>
           <p className="text-xs text-muted">{t.management.stock.note}</p>
         </section>
+
+        {conversions.error && (
+          <p className="text-sm text-danger">
+            {t.units.title}: {conversions.error}
+          </p>
+        )}
+        <UnitsPanel
+          kind="medication"
+          items={(medicationsResult.data ?? []).map((medication) => ({
+            id: medication.id,
+            name: medication.name,
+            baseUnit: doseUnitLabel(t, medication.dose_unit),
+            conversions: conversions.data[medication.id] ?? [],
+            costPerBase: medication.cost_per_unit == null ? null : Number(medication.cost_per_unit),
+          }))}
+        />
       </LargerScreenNotice>
     </main>
   );
