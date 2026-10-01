@@ -152,7 +152,7 @@ function MoveFolderDialogBody({ folder, allFolders, onClose, onMoved }: MoveFold
               setError(null);
               startTransition(async () => {
                 const result = await moveProjectFolder(folder.id, selected);
-                if (result.error) {
+                if (!result.ok) {
                   setError(result.error);
                   return;
                 }

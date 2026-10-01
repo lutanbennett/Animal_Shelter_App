@@ -133,7 +133,7 @@ export function NewFolderCard({ parentId }: { parentId: string }) {
         setError(null);
         startTransition(async () => {
           const result = await createProjectFolder(parentId, formData);
-          if (result.error) {
+          if (!result.ok) {
             setError(result.error);
             return;
           }
