@@ -520,16 +520,54 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
 Free-tier Supabase projects have no automatic backups or point-in-time
 recovery, so production's safety net is `scripts/backup.mjs`: a `pg_dump`
 (custom format) of the `public` and `auth` schemas — every record plus the
-accounts that can sign in — uploaded to a `Backups/` folder under the Drive
-root as `lannacare-<env>-<timestamp>.dump`, keeping the newest twelve per
+accounts that can sign in — **encrypted with [age](https://age-encryption.org)
+before it goes anywhere**, uploaded to a `Backups/` folder under the Drive
+root as `lannacare-<env>-<timestamp>.dump.age`, keeping the newest twelve per
 environment (older ones go to the Drive trash, which empties itself after
 30 days).
+
+**Encryption is not optional and uses a public key** (security assessment
+DB-1, 2026-09-30). The machine that runs the backup holds only the
+administrator's *public* key (`BACKUP_AGE_RECIPIENT=age1…` in
+`.env.deploy.production`, or `--age-recipient`), so it can write a backup that
+nobody on that machine can read. The private key lives only in the
+administrator's password manager. `backup.mjs` refuses to run without a
+recipient, refuses a private key in that slot, never writes a plaintext dump
+to disk (the dump is encrypted in memory), and leaves out the session tables
+(`auth.refresh_tokens`, `sessions`, `mfa_*`, `one_time_tokens`,
+`flow_state`). It also no longer prints the Drive link, since the output is
+kept in `backup.log`. Because `mfa_*` holds the authenticator secrets, **after
+a restore everyone re-enrols their authenticator app** (the recovery in
+"2-step verification" above).
+
+**Making the key pair — once, by the administrator, on their own machine**
+(not the Pi, not in this repo; the private key is never pasted into chat, an
+env file or a ticket):
+
+```bash
+age-keygen -o lannacare-backup-key.txt
+```
+
+(`winget install FiloSottile.age` on Windows, `sudo apt-get install age` on
+Debian.) It prints `Public key: age1…`. Save the **whole file** in the password
+manager (the `AGE-SECRET-KEY-1…` line is the private key), then delete the
+file. Put only the `age1…` public key in `BACKUP_AGE_RECIPIENT` on each machine
+that takes backups. Several keys may be listed, comma-separated (a second
+administrator, or a sealed spare); any one of them can decrypt. A lost private
+key means every encrypted backup is unreadable, so keep a second copy of it
+somewhere as safe as the first. To change the key later, install the new
+public key and keep the old private key for as long as any backup made with it
+is kept (twelve weeks by default).
 
 ```bash
 node scripts/backup.mjs --env production
 ```
 
-`--keep N` changes the retention; `--local <dir>` writes the dump there
+`node scripts/check-backup-encryption.mjs` is the offline check of all this
+(round trip with a throwaway key, exclusions, no plaintext, no link); it needs
+no database or key of the shelter's.
+
+`--keep N` changes the retention; `--local <dir>` writes the encrypted dump there
 instead of uploading (for a restore rehearsal); `--local-copy <dir>` uploads
 *and* keeps a copy there, removing local copies beyond the newest `--keep`
 after the upload is confirmed and printing each one it removes. The folder
@@ -548,8 +586,10 @@ Pi's cron job (Sundays 03:00 Thailand time), the same box that hosts the site
 Drive stays the off-site copy: the Pi is in the same house as the origin it
 protects, so its own copies guard against a bad Drive upload or a revoked
 token, not against the house. The dumps live in `~/backups/lannacare`, readable
-only by the Pi's user and nowhere under the repo. `~/backups/backup.log` is
-the run history; `ls -l ~/backups/lannacare` shows the newest dump and its date.
+only by the Pi's user and nowhere under the repo, and encrypted, so a copy of
+that folder is useless without the administrator's private key.
+`~/backups/backup.log` is the run history; `ls -l ~/backups/lannacare` shows
+the newest dump and its date.
 The steps below describe the setup on any machine; the Pi's own are in
 `docs/pi-hosting.md`.
 
@@ -576,7 +616,10 @@ One-time setup on the machine that runs it:
    goes over Supabase's session pooler on port 5432 (the direct
    `db.<ref>.supabase.co` host is IPv6-only), whose host and user the
    script reads from the Management API with `SUPABASE_ACCESS_TOKEN`.
-3. **The weekly schedule** — on the Pi, the cron line above. The Windows
+3. **The administrator's public key** — `BACKUP_AGE_RECIPIENT` in
+   `.env.deploy.production` (see above). No `age` program is needed on the
+   backup machine: the script encrypts itself (the `age-encryption` package).
+4. **The weekly schedule** — on the Pi, the cron line above. The Windows
    laptop's task is being retired once the Pi's first scheduled Sunday run is
    confirmed; until then `scripts/backup-schedule.ps1` registers a
    Task Scheduler job, "Lanna Care production backup", for Sundays at
@@ -592,7 +635,7 @@ One-time setup on the machine that runs it:
    The task runs only while Lutan is logged on, so a laptop that stays
    shut for a fortnight simply has no backup that fortnight.
    **Settings → System status** makes that visible: its Weekly backup tile
-   reads the newest `lannacare-production-*.dump` in `Backups/` and turns
+   reads the newest `lannacare-production-*.dump.age` in `Backups/` and turns
    amber after 8 days, red after 15. The Drive file's own creation time is
    the record of the run, so nothing else needs storing.
 
@@ -618,11 +661,21 @@ in `.env.development.local` (dev database only) and press *Run the alert
 check now* twice; the mail is printed to the server log.
 
 **Restoring** into a Supabase project (a scratch one, or production after a
-disaster) — untested until the backlog's restore rehearsal is done:
+disaster) — the database half is untested until the backlog's restore
+rehearsal is done; the decrypt step was exercised on 2026-09-30
+(`docs/test-plans/backup-encryption.md`). Download the `.dump.age` from Drive
+(or take one from the Pi's `~/backups/lannacare`), then on the administrator's
+own machine, with the private key saved to a file out of the repo:
 
 ```bash
+node scripts/decrypt-backup.mjs lannacare-production-<timestamp>.dump.age --identity path/to/lannacare-backup-key.txt
+# (or, with the age program:  age -d -i path/to/key.txt -o x.dump x.dump.age)
 pg_restore --dbname="postgresql://postgres.<ref>:<password>@aws-0-ap-south-1.pooler.supabase.com:5432/postgres" --schema=public --clean --if-exists --no-owner --no-privileges lannacare-production-<timestamp>.dump
 ```
+
+The decrypted `.dump` is plaintext: delete it when the restore is done.
+The dump has no session tables, so nobody is signed in afterwards, and
+authenticator apps are re-enrolled (see above).
 
 then the same with `--schema=auth --data-only` for the accounts (the `auth`
 tables already exist in every project, so only their rows are restored),

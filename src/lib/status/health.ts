@@ -174,7 +174,7 @@ export type BackupFacts = {
 
 /**
  * The newest dump scripts/backup.mjs uploaded for this environment:
- * Backups/lannacare-<env>-<timestamp>.dump under the Drive root. The Drive
+ * Backups/lannacare-<env>-<timestamp>.dump.age (age-encrypted) under the Drive root. The Drive
  * file's own creation time is the record of the run, so nothing new had to
  * be stored. Only production is backed up on a schedule
  * (scripts/backup-schedule.ps1), so elsewhere "none yet" is grey.
@@ -201,7 +201,7 @@ export async function checkBackup(): Promise<CheckOutcome<BackupFacts>> {
           orderBy: "createdTime desc",
           pageSize: 100,
         })
-      ).filter((f) => f.name?.startsWith(prefix) && f.name.endsWith(".dump") && f.createdTime)
+      ).filter((f) => f.name?.startsWith(prefix) && f.name.endsWith(".dump.age") && f.createdTime)
     : [];
 
   const top = dumps[0];
