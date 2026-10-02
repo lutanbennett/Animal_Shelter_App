@@ -1,0 +1,13 @@
+# Re-clones the NVMe onto the spare USB drive. Installed by
+# scripts/pi/spare-clone.sh init (or install-timer); __REPO__ is rewritten there.
+# Runs as root because rpi-clone mounts and writes the other disk.
+[Unit]
+Description=Re-clone the NVMe onto the spare USB boot drive
+
+[Service]
+Type=oneshot
+ExecStart=__REPO__/scripts/pi/spare-clone.sh sync
+# A failed clone must be visible: the unit goes red and status.json says why.
+TimeoutStartSec=3h
+Nice=10
+IOSchedulingClass=idle
