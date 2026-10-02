@@ -27,7 +27,7 @@ import { DeleteDeliveryButton } from "./DeleteDeliveryButton";
  * Management → Stock between counts.
  */
 
-type ItemRow = { id: string; name: string; unit: string };
+type ItemRow = { id: string; name: string; unit: string; label_drive_file_id?: string | null };
 
 type ReceiptRow = {
   id: string;
@@ -57,7 +57,7 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
   const initialKind: DeliveryKind = searchParams.tab === "diets" ? "diet" : "medication";
 
   const [medicationResult, dietResult, countsResult, suppliersResult, receiptsResult, conversionsResult] = await Promise.all([
-    supabase.from("medication").select("id, name, unit:dose_unit").order("name").returns<ItemRow[]>(),
+    supabase.from("medication").select("id, name, unit:dose_unit, label_drive_file_id").order("name").returns<ItemRow[]>(),
     supabase.from("diet_types").select("id, name, unit").order("name").returns<ItemRow[]>(),
     supabase
       .from("stock_counts")
@@ -92,6 +92,7 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
       id: row.id,
       name: row.name,
       unit: unitLabel(row.unit),
+      labelFileId: row.label_drive_file_id ?? null,
       conversions: conversions[row.id] ?? [],
     });
 

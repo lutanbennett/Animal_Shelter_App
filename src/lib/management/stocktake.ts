@@ -32,6 +32,8 @@ export type StocktakeItem = {
   /** Last count. Null = never counted, which is not 0. */
   lastCount: number | null;
   lastCountedAt: string | null;
+  /** Drive id of the box/bottle label photo (medications only, 0129). */
+  labelFileId?: string | null;
   /** Other units it is counted in (0118), as they are now. Absent = base unit only. */
   conversions?: UnitConversion[];
 };

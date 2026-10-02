@@ -10,6 +10,15 @@ import { parseBahtAmount } from "@/lib/format";
 import { parseLeadDays, parseSafetyStock, parseStockCount } from "@/lib/management/stock";
 import { resolveSafetyStock } from "@/lib/management/purchasing";
 import { loadConversions } from "@/lib/units-server";
+import { MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits";
+import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
+import {
+  confirmUploaded,
+  findOrCreateFolder,
+  getDriveClient,
+  uploadImageToFolder,
+} from "@/lib/google/drive";
+import { driveErrorMessage } from "@/lib/google/drive-errors";
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
@@ -47,6 +56,13 @@ function revalidateMedicationPages() {
   // read these tables too.
   revalidatePath("/prescriptions/new");
   revalidatePath("/residents", "layout");
+}
+
+/** Where the photo shows: this table, the stocktake sheet and the delivery form. */
+function revalidateLabelPages() {
+  revalidatePath("/management/medications");
+  revalidatePath("/stocktake");
+  revalidatePath("/deliveries");
 }
 
 async function countPrescriptions(id: string) {
@@ -246,5 +262,123 @@ export async function mergeMedication(
 
     revalidateMedicationPages();
     return { ok: true, count: (data as number | null) ?? 0 };
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Label photo (0129)
+// ---------------------------------------------------------------------------
+
+/** To Drive's trash, restorable for 30 days — as for Shelter Friend logos. */
+async function trashInDrive(fileId: string) {
+  try {
+    await getDriveClient().trashFile(fileId);
+  } catch {
+    // Best-effort: an orphaned Drive file is a cleanup chore, not a reason
+    // to fail the user's action.
+  }
+}
+
+async function currentLabel(supabase: Awaited<ReturnType<typeof createClient>>, id: string) {
+  const { data, error } = await supabase
+    .from("medication")
+    .select("label_drive_file_id")
+    .eq("id", id)
+    .limit(1)
+    .returns<{ label_drive_file_id: string | null }[]>();
+  if (error) throw new Error(error.message);
+  return data?.[0] ?? null;
+}
+
+/**
+ * Replace (or set) the photo of a medication's box or bottle label. Stored in
+ * Drive under Medications/Labels and served through /api/photos, which only
+ * shows it to a signed-in caller who can read the medication row — it is an
+ * internal photo, never on the public site. Refusals come back as
+ * { ok: false, error }, as for the Shelter Friend logo.
+ */
+export async function uploadMedicationLabel(
+  id: string,
+  formData: FormData,
+): Promise<ActionResult<{ success: string }>> {
+  const { t } = await getT();
+  return runAction("medications.uploadMedicationLabel", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const w = t.admin.website.errors;
+
+    const file = formData.get("file");
+    if (!(file instanceof File) || file.size === 0) return refuse(w.noFile);
+    if (!WEBSITE_IMAGE_MIME_TYPES.has(file.type)) return refuse(w.unsupportedFileType(file.type || "unknown"));
+    if (file.size > MAX_UPLOAD_BYTES) return refuse(w.fileTooLarge);
+    // The bytes decide, not the browser's guess from the name (file-signature.ts).
+    const mimeType = await checkFileSignature(file, WEBSITE_IMAGE_MIME_TYPES);
+    if (!mimeType) {
+      return refuse(t.uploads.notReadable(file.name, formatNames(WEBSITE_IMAGE_MIME_TYPES)));
+    }
+
+    const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+    if (!rootId) return refuse(w.driveNotConfigured);
+
+    const supabase = await createClient();
+    const current = await currentLabel(supabase, id);
+    if (!current) return refuse(t.management.medications.errors.notFound);
+
+    let driveFileId: string;
+    try {
+      const drive = getDriveClient();
+      const medications = await findOrCreateFolder(drive, rootId, "Medications");
+      const folderId = await findOrCreateFolder(drive, medications, "Labels");
+      driveFileId = await uploadImageToFolder(drive, folderId, {
+        name: file.name,
+        mimeType,
+        content: file,
+      });
+    } catch (err) {
+      return refuse(await driveErrorMessage(err, w.uploadFailed));
+    }
+    // Read it back before the row points at it or the old photo is trashed.
+    try {
+      await confirmUploaded(getDriveClient(), driveFileId, file.size);
+    } catch (err) {
+      console.error("Label upload did not land whole:", err);
+      await trashInDrive(driveFileId);
+      return refuse(w.uploadFailed);
+    }
+
+    // .select() so success is only said when the row really changed: an
+    // update that matches nothing (RLS, a medication merged away meanwhile)
+    // is not an error to PostgREST, just zero rows.
+    const { data: saved, error } = await supabase
+      .from("medication")
+      .update({ label_drive_file_id: driveFileId })
+      .eq("id", id)
+      .select("label_drive_file_id")
+      .returns<{ label_drive_file_id: string | null }[]>();
+    if (error || saved?.[0]?.label_drive_file_id !== driveFileId) {
+      await trashInDrive(driveFileId);
+      return refuse(error?.message ?? t.management.medications.errors.notFound);
+    }
+
+    if (current.label_drive_file_id) await trashInDrive(current.label_drive_file_id);
+    revalidateLabelPages();
+    return { ok: true, success: t.management.medications.label.updated };
+  });
+}
+
+export async function removeMedicationLabel(id: string): Promise<ActionResult<{ success: string }>> {
+  const { t } = await getT();
+  return runAction("medications.removeMedicationLabel", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const supabase = await createClient();
+
+    const current = await currentLabel(supabase, id);
+    if (!current) return refuse(t.management.medications.errors.notFound);
+
+    const { error } = await supabase.from("medication").update({ label_drive_file_id: null }).eq("id", id);
+    if (error) return refuse(error.message);
+
+    if (current.label_drive_file_id) await trashInDrive(current.label_drive_file_id);
+    revalidateLabelPages();
+    return { ok: true, success: t.management.medications.label.removed };
   });
 }

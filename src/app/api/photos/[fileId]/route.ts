@@ -19,7 +19,7 @@ import { readCachedPhoto, writeCachedPhoto } from "@/lib/photo-cache";
  *    to anyone, and cached as public.
  *  - Any other file — blood-test and procedure attachments, a resident's
  *    non-profile photos, maintenance photos, unpublished project photos and
- *    Friend logos — only to a caller whose own session can select the row
+ *    Friend logos and medication label photos — only to a caller whose own session can select the row
  *    that holds it (`canSeeInternalFile`), so RLS decides: signed out, an
  *    archived login and a role with no app access all see nothing, and a
  *    vet is refused a maintenance photo as the maintenance pages refuse
@@ -82,6 +82,7 @@ async function canSeeInternalFile(supabase: Supabase, fileId: string) {
     supabase.from("project_photos").select("id").eq("drive_file_id", fileId).limit(1),
     supabase.from("maintenance_photos").select("id").eq("drive_file_id", fileId).limit(1),
     supabase.from("shelter_friends").select("id").eq("logo_drive_file_id", fileId).limit(1),
+    supabase.from("medication").select("id").eq("label_drive_file_id", fileId).limit(1),
   ];
   const results = await Promise.all(lookups);
   return results.some(({ data }) => (data?.length ?? 0) > 0);

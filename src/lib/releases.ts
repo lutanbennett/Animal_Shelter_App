@@ -63,6 +63,10 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "Each medication can now have a photo of its box or bottle label. A manager taps Upload label on Management → Medications (on a phone this opens the camera); the photo then shows beside the medicine on the Stocktake sheet and on the Record a delivery form, so whoever is holding the box can match it at a glance. It is only visible to people signed in to the app, never on the public website.",
+    roles: ["admin", "management", "staff", "volunteer"],
+  },
+  {
     text: "If the shelter's main server is switched off or off the network, signing in and saving now keep working instead of showing \"The shelter's server did not answer in time\". Pages may be a little slower until it is back. If a page you already had open will not save, reload it and try again.",
     roles: ["admin"],
   },
