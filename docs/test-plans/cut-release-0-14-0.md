@@ -201,7 +201,7 @@ Automated checks by: Claude (release manager session)  Date: 2026-10-02
 
 - [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — five items are open. Items 1 and 2 matter most: this release mails, and note 1 concerns a security matter
 
-Manual verification by: pending: Lutan to re-read note 1 as rewritten (item 1), judge the title (item 2), confirm the role tags (item 3), check Settings → Security after the deploy (item 4) and `/releases` on the Pi (item 5)
+Manual verification by: pending: Lutan to re-read note 1 as rewritten (item 1), judge the title (item 2) and confirm the role tags (item 3). **Item 4 was checked by Lutan and reported in chat on 2026-10-02**: he signed in to UAT and reached Settings → Security through 2-step verification. That is the page `0127` affects and the one broken between the apply at 18:29:37 and the Pi restart, so reaching it is the evidence that window is closed. It also settles something that was expected rather than tested — the backup rollout deleted every session and refresh token but deliberately left MFA factors alone, so 2-step surviving the forced sign-out was an assumption until now. **This line is not signed**: the three remaining items are unchecked, and the signature is Lutan’s to give
 
 ### Result
 
