@@ -63,6 +63,10 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "If the shelter's main server is switched off or off the network, signing in and saving now keep working instead of showing \"The shelter's server did not answer in time\". Pages may be a little slower until it is back. Nothing for you to do.",
+    roles: ["admin"],
+  },
+  {
     text: "Settings → Recent changes can now undo a mistake. Tap Undo this change on the newest change to a record and confirm: an edit puts the fields back as they were, and a deleted contact, prescription, vet visit, weight or vaccination is put back. If the record has been changed again since, or something has taken its place (a new weight for the same day, say), the page tells you instead of overwriting anything. The undo shows up in the list as a change of its own.",
     roles: ["admin"],
   },

@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 /**
  * Checks fetchFromOrigin (worker/origin.mjs) — what the Worker does when the
- * Pi, behind the tunnel, is not there. A GET/HEAD/OPTIONS gets null (fall
+ * Pi, behind the tunnel, is not there. A write falls through to local only
+ * for 521/522/523/530 (the edge never reached the Pi); 502/503/504 and a
+ * thrown fetch stay refused. A GET/HEAD/OPTIONS gets null (fall
  * back to rendering locally; that kept the public site up on 2026-10-01). A
  * write must NOT get null: the Pi may already have recorded it, and the
  * local replay would double-apply an intake, a weight, a delivery. Before
@@ -12,7 +14,7 @@
  *
  * No network: `fetch` is stubbed. Exits 1 if any case is wrong.
  */
-import { fetchFromOrigin, ORIGIN_DOWN_STATUSES } from "../worker/origin.mjs";
+import { fetchFromOrigin, ORIGIN_DOWN_STATUSES, NEVER_ARRIVED_STATUSES } from "../worker/origin.mjs";
 
 const env = { ORIGIN_HOST: "origin.test", ORIGIN_KEY: "k" };
 const realFetch = globalThis.fetch;
@@ -35,6 +37,10 @@ for (const [label, stub] of Object.entries(stubs)) {
   }
   for (const method of ["POST", "PUT", "PATCH", "DELETE"]) {
     const r = await fetchFromOrigin(new Request("https://lannacare.org/x", { method, body: "a=1" }), env);
+    if (NEVER_ARRIVED_STATUSES.has(Number(label.slice(7)))) {
+      check(`${method} ${label} never reached the Pi, so falls back to local`, r === null);
+      continue;
+    }
     check(
       `${method} ${label} is answered 503, not replayed`,
       r !== null && r.status === 503 && r.headers.get("x-lanna-served-by") === "pi-timeout"

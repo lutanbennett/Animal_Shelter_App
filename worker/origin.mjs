@@ -7,6 +7,15 @@ const DEFAULT_ORIGIN_TIMEOUT_MS = 20_000;
 // Responses cloudflared / Cloudflare produce when the origin isn't there,
 // as opposed to responses the app produced.
 export const ORIGIN_DOWN_STATUSES = new Set([502, 503, 504, 521, 522, 523, 530]);
+// Of those, the ones Cloudflare's edge produces when it could not connect to
+// the origin at all: 530 (no tunnel connector registered — error 1033), 521
+// refused, 522 connect timed out, 523 unreachable. The request provably never
+// reached the Pi, so a write may be replayed locally without duplicating
+// anything. 502/503/504 are not here: cloudflared can answer those after the
+// Pi has acted. A *thrown* fetch is not here either — workerd throws
+// "Network connection lost" both for a refused connect and a mid-flight reset
+// (observed 2026-10-02, docs/decisions/2026-10-02-origin-write-fallback.md).
+export const NEVER_ARRIVED_STATUSES = new Set([521, 522, 523, 530]);
 export const IDEMPOTENT_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
 /** The Pi may or may not have acted on this write — say so rather than guess. */
@@ -18,9 +27,11 @@ function writeUnanswered() {
 }
 
 /**
- * Replay the request against the Pi; null means "fall back to local". Only
- * a GET/HEAD/OPTIONS ever gets null — a write that got no usable answer is
- * answered here with writeUnanswered() instead of being re-run locally.
+ * Replay the request against the Pi; null means "fall back to local". A
+ * GET/HEAD/OPTIONS gets null on any failure. A write gets null only when the
+ * edge says it never reached the Pi (NEVER_ARRIVED_STATUSES); any other
+ * failure is answered here with writeUnanswered() instead of being re-run
+ * locally.
  */
 export async function fetchFromOrigin(request, env) {
   const url = new URL(request.url);
@@ -49,10 +60,12 @@ export async function fetchFromOrigin(request, env) {
     return idempotent ? null : writeUnanswered();
   }
   if (ORIGIN_DOWN_STATUSES.has(response.status)) {
+    if (idempotent || NEVER_ARRIVED_STATUSES.has(response.status)) return null;
     // A 502/504 can be cloudflared losing the origin mid-request, after the
     // Pi has already acted — so a write is no more replayed locally here
     // than when the fetch itself throws.
-    return idempotent ? null : writeUnanswered();
+    return writeUnanswered();
+
   }
   return response;
 }
