@@ -129,3 +129,32 @@ be pasted into `docs/backlog.md`; none has been raised — Lutan decides.
 | R006 | Offline was simulated by the browser event only | A real phone with its data turned off |
 
 *(grows as the run continues)*
+
+## Run log since the last commit (to be folded into the tables above)
+
+English, phone, 2026-10-03 from about 00:30 to 01:20 Thai time. Test residents: **Dryrun Zeta EN** R-0394 (intake today) and **Dryrun Yota EN** R-0395 (intake back-dated to 1 Sep 2026 so each placement could have its own date).
+
+- R005 **P** easy — Delete on an adoption update asks "Delete this update and its photo?" inline; Cancel changes nothing. Record death opens a full dialog ("Only an admin can withdraw this afterwards") with Cancel / Yes, record the death.
+- R024 **P** easy — Add update: date, sender (adopter pre-chosen), LINE / Facebook / Email / Visit buttons, note, photo. Shown with date, channel, note and photo. The first photo of an adopted resident became its **Profile** photo.
+- R026 **P** when the move date is after the placement started (Yota: 5 Sep) — hub and Placement history show it. **F** on the same day (F-02). The nearly-full confirm was not triggered: no enclosure near capacity in the zones tried.
+- R027 **P** easy — 2 fields; hub reads "In hospital · Off-site in medical care · Returns to Blue Enclosure 9"; Move enclosure is gone.
+- R028 **P** easy — the enclosure they left is pre-selected. Page 31 px too wide (F-03).
+- R029 **P** easy — Foster / Adopt toggle, carer list, date. "With foster carer Test Fosterer".
+- R030 **P** — "Adopted by Sylvia and Estella". The public Adopt page still listed the animal on its first load about 20 s later and not on the next (a short-lived cache). The form calls the adopter a **Carer**, and the hub keeps the "Ready for adoption" badge and its microchip warning after adoption.
+- R031 **P** easy — back in the enclosure, history shows it. Page 31 px too wide; two lines of help text are cut at the right edge.
+- R032 **P** some friction — confirm dialog is excellent; saving takes ~15–20 s ("Recording…"). Status Deceased, read-only, Summary PDF / Offline index / Drive folder offered. The heart icon that starts it is off-screen on the hub (F-03).
+- R034 **P** some friction — seven placements, newest first, with type, dates, carer and notes. Reached by a 20×20 px house icon; the words "Housing & Status" are not on the phone card (F-08).
+- R035 **P\*** — Rabies recorded for one resident, "Recorded 1 immunization" with a next-due table. **Today's date was refused: "Date administered can't be in the future"** at 01:00 Thai time (F-11). The ticks are lost when a save is refused. The success table appears at the top while the screen stays at the bottom.
+- R036 **P** some friction — visit listed. Page 4 px too wide. A visit dated in the past is saved as Completed without being asked. The row's seven actions are 16 px-high links (F-12).
+- R037 **P** easy — "Mae Wang · Dr Dryrun · Completed · ฿450".
+- R038 **P** easy — under Current; choosing the linked visit moved the start date to the visit's date. A visit in the future is simply not offered as a link.
+- R039 **P\*** some friction — End today acts at once, no question and no message; only the date range changes ("– 3 Oct 2026") and it stays under Current today, so the checklist's "moves to Expired" is tomorrow's result.
+- R040 **P** easy — Current; the End date has a proper **Clear** button on the phone and stays empty after saving. A new diet is added beside the existing one, not instead of it.
+- R041 **P** easy — the form says a weight already exists for today and the button becomes "Correct the day's weight"; 9.5 → 9.8 kg, still one reading.
+- R042 **P** easy — new type typed in place ("+ Add new procedure type…"), date, file; saved with its thumbnail after ~15 s. **Staff can add a procedure type here**, which the checklist lists as must-not (R085) — the manual says this is intended.
+- R043 **F** — **"You don't have permission to do that."** with or without a file. `blood_tests` has no insert policy for staff (0001 line 534 is select-only; `procedures` got its staff insert in 0031) (F-13). Today's date was also refused as "in the future" first (F-11).
+- R044 **P** easy — Remove asks for an optional reason and explains it can be brought back; "1 removed hidden" → Show removed → Restore.
+- R045 **P** easy — Folder must be chosen first, then the photo uploads and shows "Shelter · 2026-10-03" (ISO date here, "3 Oct 2026" everywhere else). Camera capture not exercised.
+- B3 / R033 **P** — no Withdraw control on the deceased resident; typing `/deceased/undo` shows "Only an admin can withdraw a recorded death." inside the app.
+
+New findings: **F-11** wrong result — before 07:00 Thai time today's date is refused as "in the future" on immunizations and blood tests (UTC "today"), while weight, death and visits accept it. **F-12** friction — row actions (Edit / End today / Remove / Log … / Send to hospital) are 16 px-high text links side by side; End today has no confirm. **F-13** blocks an activity — staff cannot log a blood test. Polish: "Structured values from OCR are a future build" is shown to users in the blood-test notes box; "Lifecycle" appears as a zone name; medication names read "Amoxicillin 250mg tablet (tablet(s))".
