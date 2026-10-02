@@ -62,6 +62,10 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "Settings → Security: Deny on an access request now says plainly that the sign-in is deleted for good, and refuses if the person was given access in the meantime, so it can no longer remove someone who has just been approved. Requests are listed newest first.",
+    roles: ["admin"],
+  },
   "Everyone was signed out on 2 October 2026 and has to sign in again once. This is a precaution after we found old copies of the shelter's backups had been kept in a place they should not have been; nothing was lost or changed, every account and record is exactly as it was, and the backups are now locked so only the administrator can open them. Sign in as usual.",
   {
     text: "New Management → Purchasing page works out how much of each medicine and food to buy, so whoever orders no longer does the arithmetic by hand. Pick 1 week, 2 weeks or 1 month and every item shows its working — what was last counted, roughly how much has been used since, what has been delivered since, and what the period needs — with the amount to buy rounded up to whole bags or boxes. An item nobody has counted is flagged instead of guessed, and a count more than three weeks old is marked as probably out of date. Items can now have a safety stock (a floor kept on the shelf whatever is prescribed): set it when adding or editing a medication or food, in the unit it is bought in if you like. The page ends with a list of just the items to buy, grouped by supplier, to print or download as a CSV. Days of stock on Medications and Diets now also counts deliveries recorded since the last count, which it had been ignoring, so it may read longer than before.",
