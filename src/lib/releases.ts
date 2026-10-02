@@ -61,28 +61,36 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [
-  "Everyone was signed out on 2 October 2026 and has to sign in again once. This is a precaution after we found old copies of the shelter's backups had been kept in a place they should not have been; nothing was lost or changed, every account and record is exactly as it was, and the backups are now locked so only the administrator can open them. Sign in as usual.",
-  {
-    text: "New Management → Purchasing page works out how much of each medicine and food to buy, so whoever orders no longer does the arithmetic by hand. Pick 1 week, 2 weeks or 1 month and every item shows its working — what was last counted, roughly how much has been used since, what has been delivered since, and what the period needs — with the amount to buy rounded up to whole bags or boxes. An item nobody has counted is flagged instead of guessed, and a count more than three weeks old is marked as probably out of date. Items can now have a safety stock (a floor kept on the shelf whatever is prescribed): set it when adding or editing a medication or food, in the unit it is bought in if you like. The page ends with a list of just the items to buy, grouped by supplier, to print or download as a CSV. Days of stock on Medications and Diets now also counts deliveries recorded since the last count, which it had been ignoring, so it may read longer than before.",
-    roles: ["admin", "management"],
-  },
-  {
-    text: "Adding a Shelter Friend is now one guided path instead of five places. Tap Add a Shelter Friend on Management → Shelter Friends or Management → Contacts, then follow five short steps: who they are (pick a supplier you already have, or add a new business there and then), how they help, their logo and links, what the public may see, and a Review with a preview of their card exactly as the website will show it. Finish with Publish now or Save as a draft. Nothing is ticked for you in the what-the-public-may-see step: phone, email, LINE and address stay private unless you tick them, so ask the business first. Refreshing the page keeps your place and what you typed. If the logo cannot be uploaded the Friend is still saved and you are told to add the logo from their card.",
-    roles: ["admin", "management"],
-  },
-  {
-    text: "A doctor can now work at more than one clinic, and a vet can work at more than one too. A doctor is one person with a list of clinics: add a doctor from another clinic with Also works here on the clinic's Doctors page, or merge two entries for the same person, even from different clinics, with Merge. A vet login is linked to its doctor in Settings → Security, and sees and records for all of that doctor's clinics and no others. When a vet records a visit the Doctor is themselves, filled in and locked. A doctor needs only a name to be added: no email or account.",
-    roles: ["admin", "management", "staff", "vet"],
-  },
-  {
-    text: "Vets and volunteers now see less of the shelter’s address book, to protect people’s personal details. A volunteer sees each contact’s name and phone number, enough to ring a carer, but not their email, address, LINE or notes. A vet sees only the name behind a carer or sender, and no longer sees other people’s email addresses in the list of logins. Staff and above see everything, as before.",
-    roles: ["vet", "volunteer"],
-  },
-];
+export const unreleased: ReleaseNote[] = [];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.14.0",
+    date: "2026-10-02",
+    title:
+      "Encrypted backups and a one-off sign-out, a Purchasing page, a guided Shelter Friend path, and doctors across clinics",
+    major: true,
+    notes: [
+      "Everyone was signed out on 2 October 2026 and has to sign in again once. A security review the shelter commissioned found that the database backups were not encrypted; they now are, and only the administrator can open them. Signing everyone out was a precaution taken at the same time — nothing was lost or changed, and every account and record is exactly as it was. Sign in as usual.",
+      {
+        text: "New Management → Purchasing page works out how much of each medicine and food to buy, so whoever orders no longer does the arithmetic by hand. Pick 1 week, 2 weeks or 1 month and every item shows its working — what was last counted, roughly how much has been used since, what has been delivered since, and what the period needs — with the amount to buy rounded up to whole bags or boxes. An item nobody has counted is flagged instead of guessed, and a count more than three weeks old is marked as probably out of date. Items can now have a safety stock (a floor kept on the shelf whatever is prescribed): set it when adding or editing a medication or food, in the unit it is bought in if you like. The page ends with a list of just the items to buy, grouped by supplier, to print or download as a CSV. Days of stock on Medications and Diets now also counts deliveries recorded since the last count, which it had been ignoring, so it may read longer than before.",
+        roles: ["admin", "management"],
+      },
+      {
+        text: "Adding a Shelter Friend is now one guided path instead of five places. Tap Add a Shelter Friend on Management → Shelter Friends or Management → Contacts, then follow five short steps: who they are (pick a supplier you already have, or add a new business there and then), how they help, their logo and links, what the public may see, and a Review with a preview of their card exactly as the website will show it. Finish with Publish now or Save as a draft. Nothing is ticked for you in the what-the-public-may-see step: phone, email, LINE and address stay private unless you tick them, so ask the business first. Refreshing the page keeps your place and what you typed. If the logo cannot be uploaded the Friend is still saved and you are told to add the logo from their card.",
+        roles: ["admin", "management"],
+      },
+      {
+        text: "A doctor can now work at more than one clinic, and a vet can work at more than one too. A doctor is one person with a list of clinics: add a doctor from another clinic with Also works here on the clinic's Doctors page, or merge two entries for the same person, even from different clinics, with Merge. A vet login is linked to its doctor in Settings → Security, and sees and records for all of that doctor's clinics and no others. When a vet records a visit the Doctor is themselves, filled in and locked. A doctor needs only a name to be added: no email or account.",
+        roles: ["admin", "management", "staff", "vet"],
+      },
+      {
+        text: "Vets and volunteers now see less of the shelter’s address book, to protect people’s personal details. A volunteer sees each contact’s name and phone number, enough to ring a carer, but not their email, address, LINE or notes. A vet sees only the name behind a carer or sender, and no longer sees other people’s email addresses in the list of logins. Staff and above see everything, as before.",
+        roles: ["vet", "volunteer"],
+      },
+    ],
+  },
   {
     version: "0.13.0",
     date: "2026-10-02",
