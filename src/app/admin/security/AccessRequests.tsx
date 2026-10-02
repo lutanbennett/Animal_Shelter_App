@@ -2,7 +2,7 @@
 
 import { useConfirm } from "@/components/ConfirmProvider";
 import { useState, useTransition } from "react";
-import { approveAccessRequest, deleteUser } from "./actions";
+import { approveAccessRequest, dismissAccessRequest } from "./actions";
 import type { ActionResult } from "@/lib/action-result";
 import { formatDateTime } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -39,7 +39,7 @@ function RequestRow({ request }: { request: AccessRequest }) {
 
   async function deny() {
     if (!await confirm({ body: r.denyConfirm(request.email) })) return;
-    run(() => deleteUser(request.id), t.admin.security.table.failedToDeleteUser);
+    run(() => dismissAccessRequest(request.id), t.admin.security.table.failedToDeleteUser);
   }
 
   /**
