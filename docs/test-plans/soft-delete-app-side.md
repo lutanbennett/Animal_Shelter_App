@@ -158,7 +158,7 @@ Automated checks by: Claude  Date: 2026-10-02
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — three items await someone to sign in as staff, vet and volunteer
 
 Manual verification by: pending: staff, vet and volunteer views and the Thai wording, three items above
 
