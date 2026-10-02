@@ -70,6 +70,20 @@ updates. Re-runnable.
 
 1. **Shared secret.** `openssl rand -hex 32` → add to
    `.env.deploy.production` as `ORIGIN_KEY=…` on the dev machine.
+1b. **Server Actions key** (one per environment, shared by the Worker and the Pi).
+   `node scripts/actions-key.mjs --generate`, then put
+   `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=<it>` in the environment's values file on
+   the dev machine (`.env.deploy.production`; `.env.local` for test) **and the same
+   line in the same file on the Pi**. Without it each build invents its own key,
+   and a form rendered by one build is rejected by the other with "Failed to find
+   Server Action" — which now happens whenever the Worker takes over a write
+   (`docs/decisions/2026-10-03-server-actions-encryption-key.md`). `deploy.mjs` and
+   `write-env.mjs` refuse to build without it. **Check they match:**
+   `node scripts/actions-key.mjs --env production` prints a fingerprint on each
+   machine (equal fingerprints, equal keys), and both deploys print it after
+   building. **Rotating it** (generate a new one, set it in all four places,
+   deploy both) makes forms already open in someone's browser fail once, as any
+   deploy does; a reload fixes it.
 2. **WAF rule** so only the Worker can reach the Pi: Security → WAF →
    Custom rules → create, expression
    `(http.host eq "pi.lannacare.org" and not any(http.request.headers["x-origin-key"][*] eq "<the key>"))`,
