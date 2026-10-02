@@ -1,5 +1,6 @@
 // Rollback harness for 0076_shelter_friends.sql against DEV only.
-// One transaction: the migration, assertions against real rows, then a
+// One transaction: assertions against the LIVE schema (0076 is not replayed: its view reads
+// functions and tables later migrations changed), then a
 // deliberate `raise exception` carrying the evidence — so nothing can commit.
 //
 //   node scripts/check-shelter-friends.mjs     (from the repo root; dev only)
@@ -10,7 +11,6 @@
 // detail nobody opted into must all be invisible.
 //
 // Exits 0 when every assertion held. Writes nothing even on success.
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -20,13 +20,8 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-const migration = readFileSync(join(root, "supabase/migrations/0076_shelter_friends.sql"), "utf8");
-
 const sql = `
 begin;
-${migration}
--- a second run of the whole file must be harmless
-${migration}
 
 -- What anon sees of one Friend, as json (null when the row is not visible).
 create function pg_temp.anon_view(p_id uuid) returns jsonb language plpgsql as $f$
