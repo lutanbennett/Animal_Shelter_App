@@ -105,7 +105,7 @@ It proves the loop runs, the header is read and `served-by` shows `pi` in the he
 - [x] `README.md` still accurate — it does not describe failover behaviour
 - [ ] **Release notes.** n/a: a document only, nothing ships to a shelter user
 - [x] Commit messages say why, not just what
-- [x] Claims were measured, not reasoned **where the paper makes them as facts**: the Worker's behaviour is read from the code, and the three-iteration timer output is above. **Everything the paper reasons rather than measures is labelled as such in the paper itself**: the timing of every outage, whether a form posts across builds, whether saving fits the Worker's CPU limit, and the Workers KV free-plan write limit, which is recalled and flagged "check before choosing"
+- [x] Claims were measured, not reasoned **where the paper makes them as facts**: the Worker's behaviour is read from the code, and the three-iteration timer output is above. **Everything the paper reasons rather than measures is labelled as such in the paper itself**: the timing of every outage, whether saving fits the Worker's CPU limit, and the Workers KV free-plan write limit, which is recalled and flagged "check before choosing". The cross-build form failure is **another session's measurement, reported in a message and credited as such in the paper, not re-run here**
 
 ## 8. Pre-production gate
 
@@ -153,7 +153,7 @@ It proves the loop runs, the header is read and `served-by` shows `pi` in the he
 | 1 | **Read the paper and answer its two questions:** is a small refused window acceptable, and should the drills run first. Until then no decision file is written | Lutan |
 | 2 | **Run the drill** (section "Running the drill") for the five cases and fill in the results table. It uses test, but stopping `cloudflared` or pulling the plug also takes production's Pi away, so pick a quiet moment | The Pi |
 | 3 | **Does the paper read as clear English** to someone with no context, which is the point of it | Lutan |
-| 4 | **Option 5 stays on hold** until `server-actions-encryption-key` reports whether a form from one build posts to the other; ask it, do not re-run it | that stream |
+| 4 | **Option 5 stays on hold on CPU.** The form-key question was answered by `server-actions-encryption-key` on 2026-10-03 (fails with different keys, works with a shared one; plain Node builds, **not reproduced here** and the Worker's own build not yet checked). Still open: whether saving fits the Worker's CPU limit | that stream, then a CPU measurement |
 
 ## Sign-off
 

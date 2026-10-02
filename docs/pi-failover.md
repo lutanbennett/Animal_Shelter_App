@@ -70,6 +70,23 @@ Two things follow:
 2. The Pi-down alert (#308) does not change any of this. It sends an email 15
    to 30 minutes after the Pi goes. It does not move traffic.
 
+## One thing every option depends on: the shared form key
+
+Added 2026-10-03, from the `server-actions-encryption-key` stream's result.
+
+The Pi and the Worker are separate builds, and a form drawn by one **fails when
+posted to the other** unless both were built with the same key. This is not only
+a point about option 5. It hits **today's fallback**: a page the Pi drew just
+before it dropped, then saved on the Worker, fails once and works after a
+reload. It would also hit options 1 and 2 for exactly the same reason: any
+design that lets a form drawn by the Pi be saved by the Worker needs the shared
+key first. So **the key is a precondition for all of them**, not one more option.
+
+It is being fixed on its own, in another PR. This paper treats it as done.
+That stream also noted that a rebuild on one machine reuses a cached key, which
+is why redeploying never showed the problem; the Pi and the Worker are built on
+different machines, so they would always have differed.
+
 ## The fact everything else is built on
 
 **The data is not on the Pi.** The Pi and the Worker both save to the same
@@ -153,14 +170,18 @@ a second copy elsewhere (for example a free cloud server) keeps answering.
 The 1102 errors that put the Pi in front came from *drawing pages*. Saving may
 fit the Worker's limit. If it does, a Pi outage costs nothing but speed.
 
-- **Cannot be judged yet, for two reasons.**
-  1. A form the Pi drew would be posted to the Worker's build. The two builds do
-     not share an encryption key for forms, and the guidance in Next says that
-     fails with "Failed to find Server Action". The `server-actions-encryption-key`
-     stream is testing that, and **has not reported.**
-  2. Saving on the Worker has to fit the free CPU limit. Nobody has measured it.
-     The fallback today does exactly this and it is an outage mode, not the
-     everyday path.
+- **Cannot be judged yet, because one question is still open.**
+  1. **The form key (answered 2026-10-03, by the `server-actions-encryption-key`
+     stream, not re-run here).** A form drawn by one build and posted to a build
+     with a different key **fails** with "Failed to find Server Action", and it
+     fails for *every* form, not only some. With the **same key** on both builds
+     it works in both directions. That stream reproduced it locally with plain
+     Node builds. **It has not yet checked the Worker's own build**, so treat that
+     as likely but unconfirmed. So option 5 is possible only if both builds
+     carry one shared key, and that key is now being set up in its own PR.
+  2. **CPU is still open.** Saving on the Worker has to fit the free CPU limit.
+     Nobody has measured it. The fallback today does exactly this, and it is an
+     outage mode, not the everyday path.
 - **Double save:** none, as nothing is sent to the Pi.
 
 Paid Cloudflare Load Balancing is out: it costs every month and cannot point at
@@ -191,9 +212,10 @@ a Worker.
    The refusal message already tells the person to check before retrying.
 3. **Option 1 is the only way to make that last window zero.** It is a bigger
    build, so it should be a decision, not a default.
-4. **Option 5 waits** for the encryption-key answer and one CPU measurement. If it
-   works, it may make all of the above unnecessary for saving, and we should not
-   build around a Pi outage we could avoid.
+4. **Option 5 waits** for one CPU measurement (the key question now has an
+   answer: it works with a shared key). If saving fits on the Worker, it may make
+   all of the above unnecessary for saving, and we should not build around a Pi
+   outage we could avoid.
 5. **Option 4 stays on the shelf.** It is the right step if one house is no
    longer enough, but it brings a second machine to look after.
 
@@ -220,6 +242,8 @@ as an emergency lever.
 
 These are my judgement of batch-sized pieces, in order:
 
+0. **The shared form key** (already in progress in its own PR). Everything below
+   assumes it.
 1. **Power.** Measure past outages, choose and fit a battery for the Pi and
    router, set up clean shutdown. No code.
 2. **Quick Worker memory of a failed Pi.** Small, in `worker/origin.mjs`.
@@ -328,9 +352,12 @@ Put the numbers in this table. Until each cell is filled in, it stays "unmeasure
 ## What is not known yet
 
 - **Every timing above.** No drill has been run for this paper.
-- **Whether a form from one build works on the other.** Waiting on
-  `server-actions-encryption-key`. Until then option 5 is on hold.
-- **Whether saving fits the Worker's CPU limit.** Unmeasured.
+- **Whether the Worker's own build behaves like the plain builds that were
+  tested.** A form from one build fails on another unless they share a key, and
+  a shared key fixes it; that was shown on plain Node builds. The Worker's build
+  is still to be checked by that stream.
+- **Whether saving fits the Worker's CPU limit.** Unmeasured. This is now the
+  only open question on option 5.
 - **How long past power cuts in Suphan Buri lasted.** Needed to size a battery.
 - **Whether Workers KV's free plan suits a heartbeat.** My recollection is that
   it does not. Check before designing around it.
