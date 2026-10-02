@@ -29,7 +29,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — #282 at `cb9053d`: all five checks passed: check, test-plan, migration-numbers, audit, public-views
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -155,7 +155,7 @@ Manual verification by: pending: item 1, the logo in the dark-mode app header an
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — pasted when the PR is opened
+- [x] Checklist pasted into the PR — summarised in the #282 description, which links this file
 - [ ] Handed to the production release manager — n/a: not yet — after merge
 
 Result: pass
