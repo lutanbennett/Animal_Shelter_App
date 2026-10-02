@@ -75,7 +75,7 @@ export function parseFilters(sp: Record<string, string | string[] | undefined>):
   };
 }
 
-type Image = Record<string, unknown> | null;
+export type Image = Record<string, unknown> | null;
 
 export type AuditEntry = {
   id: number;
@@ -95,9 +95,9 @@ export type AuditEntry = {
 };
 
 /** Columns that change on every touch and mean nothing to a reader. */
-const NOISE = new Set(["updated_at", "updated_by"]);
+export const NOISE = new Set(["updated_at", "updated_by"]);
 
-function changedColumns(oldRow: Image, newRow: Image): string[] {
+export function changedColumns(oldRow: Image, newRow: Image): string[] {
   if (!oldRow || !newRow) return [];
   const keys = new Set([...Object.keys(oldRow), ...Object.keys(newRow)]);
   return [...keys]
@@ -105,7 +105,7 @@ function changedColumns(oldRow: Image, newRow: Image): string[] {
     .sort();
 }
 
-function kindOf(op: string, oldRow: Image, newRow: Image, changed: string[]): AuditEntry["kind"] {
+export function kindOf(op: string, oldRow: Image, newRow: Image, changed: string[]): AuditEntry["kind"] {
   if (op === "INSERT") return "added";
   if (op === "DELETE") return "deleted";
   if (changed.includes("archived_at")) {
