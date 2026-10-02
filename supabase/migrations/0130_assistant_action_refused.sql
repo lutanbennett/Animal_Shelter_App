@@ -1,0 +1,23 @@
+-- consumer: src/lib/assistant/audit.ts, src/components/assistant/AssistantConversation.tsx
+--
+-- 'refused' joins assistant_action_status (0070) (backlog, Assistant: "A
+-- volunteer turned away from an assistant write leaves no audit row"; schema
+-- half — recording the refusal is the feature half and reads this).
+--
+-- A volunteer who types a write request is answered in the browser ("that one
+-- is for staff and management") and nothing reaches the server, so
+-- assistant_actions has never seen it. None of 'confirmed', 'cancelled' or
+-- 'unmatched' is true of that turn, so the value has to exist before the
+-- client can write it. Those rows are the record of what the people with the
+-- least access ask the assistant to do.
+--
+-- One file, not the usual two (docs/decisions/2026-10-02-assistant-refused-one-file.md):
+-- `alter type … add value` cannot share a transaction with anything that uses
+-- the value, and nothing in SQL does. The column is a plain enum with no check
+-- constraint, view, function or partial index over its values; the policies on
+-- assistant_actions never look at status. Adding the value is the whole change.
+--
+-- `if not exists` makes it re-runnable. Harmless to code that does not know
+-- about it: a row can still only be written with a status the client sends.
+
+alter type assistant_action_status add value if not exists 'refused';
