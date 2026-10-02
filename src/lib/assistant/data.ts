@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { loadEnclosureOptions, type EnclosureOption, type ZoneOption } from "@/lib/enclosures/options";
 import { NOT_DECEASED } from "@/lib/residents/status";
+import { loadDoctorNamesByVet, type DoctorNamesByVet } from "@/lib/vets/doctors";
 
 /** Roles that may confirm a write. Volunteers get the lookups only. */
 export const ASSISTANT_WRITE_ROLES = new Set(["admin", "management", "staff"]);
@@ -39,6 +40,8 @@ export type AssistantContext = {
   zones: ZoneOption[];
   enclosures: EnclosureOption[];
   vets: AssistantVet[];
+  /** Each clinic's active doctors, for the vet card's optional Doctor field. */
+  doctors: DoctorNamesByVet;
   role: string | null;
   canWrite: boolean;
   error: string | null;
@@ -64,7 +67,7 @@ export function emptyAssistantContext(
   role: string | null,
   error: string | null = null,
 ): AssistantContext {
-  return { residents: [], zones: [], enclosures: [], vets: [], role, canWrite: false, error };
+  return { residents: [], zones: [], enclosures: [], vets: [], doctors: {}, role, canWrite: false, error };
 }
 
 /** The caller's role as `current_user_role` reports it, or null. */
@@ -96,7 +99,7 @@ export async function loadAssistantContext(
   supabase: SupabaseClient,
   role: string | null,
 ): Promise<AssistantContext> {
-  const [listResult, vetsResult, options] = await Promise.all([
+  const [listResult, vetsResult, options, doctors] = await Promise.all([
     supabase
       .from("resident_list_view")
       .select(
@@ -111,6 +114,7 @@ export async function loadAssistantContext(
       .order("name")
       .returns<AssistantVet[]>(),
     loadEnclosureOptions(supabase),
+    loadDoctorNamesByVet(supabase),
   ]);
 
   const rows = listResult.data ?? [];
@@ -168,6 +172,7 @@ export async function loadAssistantContext(
     zones: options.zones,
     enclosures: options.enclosures,
     vets: vetsResult.data ?? [],
+    doctors,
     role,
     canWrite: canWriteWithAssistant(role),
     error:
