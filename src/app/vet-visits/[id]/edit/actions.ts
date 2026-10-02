@@ -59,14 +59,18 @@ export async function updateVetVisit(
   // visit's current clinic or choose their own, nothing else.
   const scope = await loadVetScope(supabase);
   if (scope.kind === "unlinked") return { error: t.vetVisits.noClinicForAccount };
-  if (scope.kind === "clinic" && vetId !== scope.vetId) {
+  let doctorName = str(formData, "doctorName");
+  if (scope.kind === "clinics") {
     const { data: current } = await supabase
       .from("vet_appointments")
-      .select("vet_id")
+      .select("vet_id, doctor_name")
       .eq("id", visitId)
       .limit(1)
-      .returns<{ vet_id: string | null }[]>();
+      .returns<{ vet_id: string | null; doctor_name: string | null }[]>();
     if (!scopeAllowsVet(scope, vetId, current?.[0]?.vet_id)) return { error: e.notYourClinic };
+    // Locked Doctor (Lutan, 2026-10-01): the visit's own doctor stays, a
+    // visit with none becomes the vet's own. Not trusted from the form.
+    if (scope.doctorName) doctorName = current?.[0]?.doctor_name ?? scope.doctorName;
   }
 
   const { data, error } = await supabase
@@ -77,7 +81,7 @@ export async function updateVetVisit(
       status,
       reason: str(formData, "reason"),
       // str() trims and turns blank into null, as 0074's comment promises.
-      doctor_name: str(formData, "doctorName"),
+      doctor_name: doctorName,
       notes: str(formData, "notes"),
       cost,
     })

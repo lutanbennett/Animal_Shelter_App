@@ -63,6 +63,10 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "A doctor can now work at more than one clinic, and a vet can work at more than one too. A doctor is one person with a list of clinics: add a doctor from another clinic with Also works here on the clinic's Doctors page, or merge two entries for the same person, even from different clinics, with Merge. A vet login is linked to its doctor in Settings → Security, and sees and records for all of that doctor's clinics and no others. When a vet records a visit the Doctor is themselves, filled in and locked. A doctor needs only a name to be added: no email or account.",
+    roles: ["admin", "management", "staff", "vet"],
+  },
+  {
     text: "Vets and volunteers now see less of the shelter’s address book, to protect people’s personal details. A volunteer sees each contact’s name and phone number, enough to ring a carer, but not their email, address, LINE or notes. A vet sees only the name behind a carer or sender, and no longer sees other people’s email addresses in the list of logins. Staff and above see everything, as before.",
     roles: ["vet", "volunteer"],
   },

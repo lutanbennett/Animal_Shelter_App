@@ -8,20 +8,41 @@ import type { DoctorNamesByVet } from "@/lib/vets/doctors";
  * the names already recorded against the chosen vet offered as a datalist
  * so a name is typed once and picked after that. The list follows the vet
  * select, so the form passes the currently selected vet id.
+ *
+ * `lockedName` is a linked vet's own doctor entry (Lutan, 2026-10-01): when
+ * a vet records a visit the Doctor is themselves, shown but not editable,
+ * and sent as a hidden field. The action sets it again server-side.
  */
 export function DoctorNameField({
   vetId,
   namesByVet,
+  lockedName,
   defaultValue,
   className,
 }: {
   vetId: string;
   namesByVet: DoctorNamesByVet;
+  lockedName?: string | null;
   defaultValue?: string;
   className: string;
 }) {
   const { t } = useI18n();
   const names = namesByVet[vetId] ?? [];
+
+  if (lockedName) {
+    return (
+      <div className="flex flex-col gap-1">
+        <label htmlFor="doctorName" className="text-sm font-medium text-muted">
+          {t.vetVisits.doctorName}
+        </label>
+        <input type="hidden" name="doctorName" value={lockedName} />
+        <p id="doctorName" className="py-2 text-sm text-foreground">
+          {lockedName}
+        </p>
+        <p className="text-xs text-muted">{t.vetVisits.doctorLockedHint}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-1">

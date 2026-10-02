@@ -20,19 +20,23 @@ export function vetOptionLabel(v: VetOption) {
 }
 
 /**
- * `fixedVet` is a vet account's own clinic (src/lib/vets/scope.ts): shown
- * as the clinic the visit is for rather than a dropdown with one entry.
+ * `fixedVet` is a vet account's only clinic (src/lib/vets/scope.ts): shown
+ * as the clinic the visit is for rather than a dropdown with one entry. A vet
+ * who works at several chooses among theirs.
  */
 export function VetVisitForm({
   residents,
   vets,
   fixedVet,
+  lockedDoctor,
   doctorNamesByVet,
   preselectedResidentIds,
 }: {
   residents: ResidentOption[];
   vets: VetOption[];
   fixedVet: VetOption | null;
+  /** A linked vet's own doctor entry: the Doctor field is them, locked. */
+  lockedDoctor: string | null;
   doctorNamesByVet: DoctorNamesByVet;
   preselectedResidentIds: string[];
 }) {
@@ -106,6 +110,7 @@ export function VetVisitForm({
         <DoctorNameField
           vetId={vetId}
           namesByVet={doctorNamesByVet}
+          lockedName={lockedDoctor}
           className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
         />
 

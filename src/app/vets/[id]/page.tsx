@@ -64,14 +64,20 @@ export default async function VetPage(props: PageProps<"/vets/[id]">) {
         .is("archived_at", null)
         .returns<LinkedRecord[]>(),
       supabase.rpc("current_user_role"),
-      // The clinic's doctor list (0102). Read-only here; corrected under
-      // Management → Vets → Doctors.
+      // The clinic's doctor list (0102, links 0125). Read-only here; corrected
+      // under Management → Vets → Doctors. `active` is the link's: a doctor
+      // who left this clinic may still work at another.
       supabase
-        .from("vet_doctors")
-        .select("id, name, active")
+        .from("vet_doctor_clinics")
+        .select("active, vet_doctors!inner(id, name)")
         .eq("vet_id", id)
-        .order("name")
-        .returns<HubDoctor[]>(),
+        .returns<{ active: boolean; vet_doctors: { id: string; name: string } }[]>()
+        .then((r) => ({
+          error: r.error,
+          data: (r.data ?? [])
+            .map((l): HubDoctor => ({ ...l.vet_doctors, active: l.active }))
+            .sort((a, b) => a.name.localeCompare(b.name)),
+        })),
     ]);
 
   // A query error must not look like a missing vet — surface it, not a 404.

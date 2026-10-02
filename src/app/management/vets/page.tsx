@@ -24,7 +24,8 @@ export default async function VetsAdminPage() {
       .select("vet_id")
       .not("vet_id", "is", null)
       .returns<{ vet_id: string }[]>(),
-    supabase.from("vet_doctors").select("vet_id").returns<{ vet_id: string }[]>(),
+    // Links, not vet_doctors.vet_id (deprecated, 0125): a doctor counts at every clinic they work at.
+    supabase.from("vet_doctor_clinics").select("vet_id").returns<{ vet_id: string }[]>(),
   ]);
 
   const counts = new Map<string, number>();

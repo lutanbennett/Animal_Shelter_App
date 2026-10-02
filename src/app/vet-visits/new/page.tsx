@@ -36,9 +36,9 @@ export default async function NewVetVisitPage(
     );
   }
 
-  // A vet account books against its own clinic only (src/lib/vets/scope.ts).
+  // A vet account books against its own clinics only (src/lib/vets/scope.ts).
   let vetsQuery = supabase.from("vets").select("id, name, clinic_name").order("name");
-  if (scope.kind === "clinic") vetsQuery = vetsQuery.eq("id", scope.vetId);
+  if (scope.kind === "clinics") vetsQuery = vetsQuery.in("id", scope.vetIds);
 
   const [residentsResult, vetsResult, doctorNamesByVet] = await Promise.all([
     supabase
@@ -84,7 +84,8 @@ export default async function NewVetVisitPage(
       <VetVisitForm
         residents={residents}
         vets={vets}
-        fixedVet={scope.kind === "clinic" ? (vets[0] ?? null) : null}
+        fixedVet={scope.kind === "clinics" && vets.length === 1 ? vets[0] : null}
+        lockedDoctor={scope.kind === "clinics" ? scope.doctorName : null}
         doctorNamesByVet={doctorNamesByVet}
         preselectedResidentIds={[...preselectedIds]}
       />

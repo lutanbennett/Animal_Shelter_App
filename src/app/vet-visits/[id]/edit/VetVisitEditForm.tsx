@@ -40,14 +40,20 @@ export function VetVisitEditForm({
   visit,
   vets,
   fixedVet,
+  lockedDoctor,
   doctorNamesByVet,
   residentDisplayName,
   cancelHref,
 }: {
   visit: VetVisitInitial;
   vets: VetOption[];
-  /** A vet account's own clinic, when that is the only one on offer (src/lib/vets/scope.ts). */
+  /** A vet account's only clinic, when that is the only one on offer (src/lib/vets/scope.ts). */
   fixedVet: VetOption | null;
+  /**
+   * A linked vet's Doctor field, locked: the visit's own doctor if it has
+   * one (a vet does not reassign a colleague's visit), otherwise themselves.
+   */
+  lockedDoctor: string | null;
   doctorNamesByVet: DoctorNamesByVet;
   residentDisplayName: string;
   cancelHref: string;
@@ -101,6 +107,7 @@ export function VetVisitEditForm({
         <DoctorNameField
           vetId={vetId}
           namesByVet={doctorNamesByVet}
+          lockedName={lockedDoctor}
           defaultValue={visit.doctor_name ?? ""}
           className={inputClass}
         />

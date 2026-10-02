@@ -10,14 +10,20 @@ const refuse = (error: string) => ({ ok: false as const, error });
 
 export type DoctorFormState = ActionResult<{ success: string }> | undefined;
 
-// vet_doctors_vet_key_idx: one row per spelling (ignoring case and spacing)
-// per clinic.
+// vet_doctor_clinics_vet_key_idx: one row per spelling (ignoring case and
+// spacing) per clinic (0125).
 const UNIQUE_VIOLATION = "23505";
+// Row-level security refusing a write (0125): management and staff cannot
+// edit where a doctor who has a login works.
+const INSUFFICIENT_PRIVILEGE = "42501";
 
 function revalidateDoctorPages(vetId: string) {
   revalidatePath(`/management/vets/${vetId}/doctors`);
-  revalidatePath("/management/vets");
+  // A doctor can work at several clinics, so a rename, merge or link here
+  // shows on the other clinics' pages too.
+  revalidatePath("/management/vets", "layout");
   revalidatePath(`/vets/${vetId}`);
+  revalidatePath("/vets", "layout");
   // A rename or merge rewrites doctor_name on visits, which the resident
   // pages and the visit forms' suggestions read.
   revalidatePath("/residents", "layout");
@@ -31,6 +37,10 @@ function tidy(name: string | null | undefined) {
   return typeof name === "string" ? name.trim().replace(/\s+/g, " ") : "";
 }
 
+/**
+ * A doctor needs only a name and a clinic: no email, no account, no
+ * invitation (Lutan, 2026-10-01). The database links them to this clinic.
+ */
 export async function addDoctor(
   vetId: string,
   _state: DoctorFormState,
@@ -56,9 +66,49 @@ export async function addDoctor(
 }
 
 /**
+ * Lists a doctor who already exists, at another clinic, as working here too.
+ * A doctor who used to work here and is marked as left comes back instead
+ * (their link stays, because past visits reference it).
+ */
+export async function addExistingDoctor(
+  vetId: string,
+  _state: DoctorFormState,
+  formData: FormData,
+): Promise<DoctorFormState> {
+  const { t } = await getT();
+  return runAction("vetDoctors.addExistingDoctor", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const d = t.management.vetDoctors;
+
+    const doctorId = formData.get("doctorId");
+    if (typeof doctorId !== "string" || !doctorId) return refuse(d.errors.pickDoctor);
+
+    const supabase = await createClient();
+    const { data: doctor } = await supabase
+      .from("vet_doctors")
+      .select("name")
+      .eq("id", doctorId)
+      .maybeSingle<{ name: string }>();
+    if (!doctor) return refuse(d.errors.doctorNotFound);
+
+    const { error } = await supabase
+      .from("vet_doctor_clinics")
+      .upsert({ vet_id: vetId, doctor_id: doctorId, active: true }, { onConflict: "vet_id,doctor_id" });
+    if (error) {
+      if (error.code === UNIQUE_VIOLATION) return refuse(d.errors.alreadyListed(doctor.name));
+      if (error.code === INSUFFICIENT_PRIVILEGE) return refuse(d.errors.loginLinksAdminOnly);
+      return refuse(error.message);
+    }
+
+    revalidateDoctorPages(vetId);
+    return { ok: true, success: d.addedExisting(doctor.name) };
+  });
+}
+
+/**
  * Renames a doctor. The database writes the new spelling onto every visit
- * linked to them (vet_doctors_propagate_name, 0102), so the page confirms
- * with the visit count before calling this.
+ * linked to them (vet_doctors_propagate_name, 0102), at every clinic they
+ * work at, so the page confirms with the visit count before calling this.
  */
 export async function renameDoctor(
   vetId: string,
@@ -74,11 +124,7 @@ export async function renameDoctor(
     if (!name) return refuse(d.errors.nameRequired);
 
     const supabase = await createClient();
-    const { error } = await supabase
-      .from("vet_doctors")
-      .update({ name })
-      .eq("id", id)
-      .eq("vet_id", vetId);
+    const { error } = await supabase.from("vet_doctors").update({ name }).eq("id", id);
     if (error) {
       return refuse(error.code === UNIQUE_VIOLATION ? d.errors.renameClash(name) : error.message);
     }
@@ -87,6 +133,12 @@ export async function renameDoctor(
   });
 }
 
+/**
+ * Marks a doctor as having left this clinic, or back. It is the link's own
+ * flag (vet_doctor_clinics.active, 0125), so a doctor who left one clinic
+ * is still suggested at the others, and a vet login linked to them loses
+ * this clinic only.
+ */
 export async function setDoctorActive(
   vetId: string,
   id: string,
@@ -96,21 +148,28 @@ export async function setDoctorActive(
   return runAction("vetDoctors.setDoctorActive", t.common.somethingWentWrong, async () => {
     if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
     const supabase = await createClient();
-    const { error } = await supabase
-      .from("vet_doctors")
+    const { data, error } = await supabase
+      .from("vet_doctor_clinics")
       .update({ active })
-      .eq("id", id)
-      .eq("vet_id", vetId);
+      .eq("doctor_id", id)
+      .eq("vet_id", vetId)
+      .select("doctor_id");
     if (error) return refuse(error.message);
+    // Row-level security filters rather than errors on an update: nothing
+    // changed means the link is a login's, which only an admin edits.
+    if (!data?.length) return refuse(t.management.vetDoctors.errors.loginLinksAdminOnly);
     revalidateDoctorPages(vetId);
     return { ok: true };
   });
 }
 
 /**
- * Folds `fromId` into `intoId` (merge_vet_doctors, 0102): the visits move
- * across and take `intoId`'s spelling, and `fromId` leaves the list. The
- * function itself refuses two doctors at different clinics.
+ * The "same person as…" merge: folds `fromId` into `intoId`
+ * (merge_vet_doctors, 0125). `intoId` takes every clinic `fromId` worked
+ * at, the visits move across and show `intoId`'s spelling, and a login
+ * moves with them. `fromId` is deleted. The function refuses two doctors
+ * who both have a login, and a doctor with a login unless an admin merges.
+ * Never done by name: always a person choosing.
  */
 export async function mergeDoctors(
   vetId: string,
@@ -133,26 +192,46 @@ export async function mergeDoctors(
   });
 }
 
+/**
+ * Removes a doctor from this clinic's list. A doctor on any visit here is
+ * part of a medical record (the link cannot go while a visit uses it), so
+ * they are marked as left instead. A doctor who works nowhere else, and has
+ * no login, goes entirely.
+ */
 export async function deleteDoctor(vetId: string, id: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("vetDoctors.deleteDoctor", t.common.somethingWentWrong, async () => {
     if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
-    // vet_appointments' foreign key has no cascade: a doctor on any visit is
-    // part of a medical record. Say so rather than surface the key error.
     const supabase = await createClient();
     const { count, error: countError } = await supabase
       .from("vet_appointments")
       .select("id", { count: "exact", head: true })
-      .eq("doctor_id", id);
+      .eq("doctor_id", id)
+      .eq("vet_id", vetId);
     if (countError) return refuse(countError.message);
     if (count && count > 0) return refuse(t.management.vetDoctors.errors.hasVisits(count));
 
-    const { error } = await supabase
-      .from("vet_doctors")
+    const { data, error } = await supabase
+      .from("vet_doctor_clinics")
       .delete()
-      .eq("id", id)
-      .eq("vet_id", vetId);
+      .eq("doctor_id", id)
+      .eq("vet_id", vetId)
+      .select("doctor_id");
     if (error) return refuse(error.message);
+    if (!data?.length) return refuse(t.management.vetDoctors.errors.loginLinksAdminOnly);
+
+    // Nothing else holds the person: no other clinic and no login.
+    const [{ count: remaining }, { data: person }] = await Promise.all([
+      supabase
+        .from("vet_doctor_clinics")
+        .select("doctor_id", { count: "exact", head: true })
+        .eq("doctor_id", id),
+      supabase.from("vet_doctors").select("user_id").eq("id", id).maybeSingle<{ user_id: string | null }>(),
+    ]);
+    if (!remaining && person && !person.user_id) {
+      const { error: personError } = await supabase.from("vet_doctors").delete().eq("id", id);
+      if (personError) return refuse(personError.message);
+    }
     revalidateDoctorPages(vetId);
     return { ok: true };
   });
