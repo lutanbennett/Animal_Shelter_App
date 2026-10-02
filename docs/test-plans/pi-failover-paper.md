@@ -36,7 +36,7 @@ are true of the code and whether its drill is runnable, not about the Pi.
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [ ] CI green on the PR — n/a: not yet — the first push of PR #310 is not green by construction; ticked in a follow-up once the run has actually gone green
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -173,8 +173,8 @@ Manual verification by: pending: Lutan, reading the paper, agreeing or changing 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
-- [ ] Handed to the production release manager — n/a: not yet — the PR does not exist at this commit
+- [ ] Checklist pasted into the PR — n/a: the PR body (#310) summarises the plan and names its file rather than pasting it, since every line but the gate output is `n/a`
+- [ ] Handed to the production release manager — n/a: nothing here ships; the paper is not deployed and no decision is made yet
 
 Result: pass
 
