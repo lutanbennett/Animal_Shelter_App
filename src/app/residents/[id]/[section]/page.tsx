@@ -130,16 +130,11 @@ export default async function ResidentSectionPage(
   // Archive (0124): a second list of archived rows behind ?archived=1, as on
   // contacts. The live queries below already skip archived rows; this only
   // adds the way to see and restore them. Who gets the button is
-  // canArchiveMedical: staff and up everywhere, a vet only on their own
-  // clinic's visits and prescriptions, nobody on a deceased resident.
+  // canArchiveMedical: admin, management and staff, never a vet or
+  // volunteer, and nobody on a deceased resident.
   const showArchived = (await props.searchParams).archived === "1";
   const role = (roleResult.data as string | null) ?? null;
-  const ownVetId =
-    role === "vet"
-      ? (((await supabase.rpc("current_user_vet_id")).data as string | null) ?? null)
-      : null;
-  const canArchive = (kind: MedicalArchiveKind, clinicVetId: string | null = null) =>
-    !isDeceased && canArchiveMedical(kind, role, ownVetId, clinicVetId);
+  const canArchive = (kind: MedicalArchiveKind) => !isDeceased && canArchiveMedical(role);
   const archivedCount = async (
     table: "weight" | "prescriptions" | "vet_appointments" | "immunization_records",
   ) =>
@@ -580,14 +575,13 @@ export default async function ResidentSectionPage(
       const [{ data }, { data: visitWeights }] = await Promise.all([
         supabase
           .from("vet_appointments")
-          .select("id, vet_id, appointment_date, status, reason, doctor_name, notes, cost, vets(name)")
+          .select("id, appointment_date, status, reason, doctor_name, notes, cost, vets(name)")
           .is("archived_at", null)
           .eq("resident_id", id)
           .order("appointment_date", { ascending: false })
           .returns<
             {
               id: string;
-              vet_id: string | null;
               appointment_date: string;
               status: string;
               reason: string | null;
@@ -615,14 +609,13 @@ export default async function ResidentSectionPage(
       const { data: archivedVisits } = showArchived
         ? await supabase
             .from("vet_appointments")
-            .select("id, vet_id, appointment_date, status, reason, doctor_name, archive_reason, vets(name)")
+            .select("id, appointment_date, status, reason, doctor_name, archive_reason, vets(name)")
             .not("archived_at", "is", null)
             .eq("resident_id", id)
             .order("appointment_date", { ascending: false })
             .returns<
               {
                 id: string;
-                vet_id: string | null;
                 appointment_date: string;
                 status: string;
                 reason: string | null;
@@ -731,7 +724,7 @@ export default async function ResidentSectionPage(
                       </Link>
                     )}
                   </div>
-                  {canArchive("visit", row.vet_id) && (
+                  {canArchive("visit") && (
                     <ArchiveRecordControl
                       kind="visit"
                       residentId={id}
@@ -761,7 +754,7 @@ export default async function ResidentSectionPage(
                   {formatDate(row.appointment_date, locale)} ·{" "}
                   {appointmentStatusLabel(t, row.status)}
                 </span>
-                {canArchive("visit", row.vet_id) && (
+                {canArchive("visit") && (
                   <ArchiveRecordControl
                     kind="visit"
                     residentId={id}
@@ -780,7 +773,7 @@ export default async function ResidentSectionPage(
       const { data, error } = await supabase
         .from("prescriptions")
         .select(
-          "id, start_date, end_date, dose_quantity, notes, medication(name, dose_unit), frequency(label), vet_appointments(appointment_date, vet_id)",
+          "id, start_date, end_date, dose_quantity, notes, medication(name, dose_unit), frequency(label), vet_appointments(appointment_date)",
         )
         .is("archived_at", null)
         .eq("resident_id", id)
@@ -794,7 +787,7 @@ export default async function ResidentSectionPage(
             notes: string | null;
             medication: { name: string; dose_unit: string } | null;
             frequency: { label: string } | null;
-            vet_appointments: { appointment_date: string; vet_id: string | null } | null;
+            vet_appointments: { appointment_date: string } | null;
           }[]
         >();
       const rxCount = await archivedCount("prescriptions");
@@ -802,7 +795,7 @@ export default async function ResidentSectionPage(
         ? await supabase
             .from("prescriptions")
             .select(
-              "id, start_date, end_date, dose_quantity, notes, archive_reason, medication(name, dose_unit), frequency(label), vet_appointments(appointment_date, vet_id)",
+              "id, start_date, end_date, dose_quantity, notes, archive_reason, medication(name, dose_unit), frequency(label), vet_appointments(appointment_date)",
             )
             .not("archived_at", "is", null)
             .eq("resident_id", id)
@@ -817,7 +810,7 @@ export default async function ResidentSectionPage(
                 archive_reason: string | null;
                 medication: { name: string; dose_unit: string } | null;
                 frequency: { label: string } | null;
-                vet_appointments: { appointment_date: string; vet_id: string | null } | null;
+                vet_appointments: { appointment_date: string } | null;
               }[]
             >()
         : { data: [] };
@@ -886,7 +879,7 @@ export default async function ResidentSectionPage(
                 }}
               />
             )}
-            {canArchive("prescription", row.vet_appointments?.vet_id ?? null) && (
+            {canArchive("prescription") && (
               <div className="flex justify-end">
                 <ArchiveRecordControl
                   kind="prescription"

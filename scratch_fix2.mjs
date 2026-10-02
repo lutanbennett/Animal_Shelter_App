@@ -1,0 +1,17 @@
+import fs from "node:fs";
+const src = fs.readFileSync("scratch_fix.mjs", "utf8");
+const topic = src.slice(src.indexOf("const topic = `") + 15, src.indexOf("`;\ns = s.replace(marker"));
+let p = "src/lib/manual/en.ts";
+let s = fs.readFileSync(p, "utf8");
+const photos = s.indexOf('      id: "photos",');
+const close = s.lastIndexOf("      ],\n    },", photos);
+if (close < 0) throw new Error("no close");
+s = s.slice(0, close) + topic + s.slice(close);
+fs.writeFileSync(p, s);
+p = "src/lib/releases.ts";
+s = fs.readFileSync(p, "utf8");
+const m = "export const unreleased: ReleaseNote[] = [];";
+if (!s.includes(m)) throw new Error("rel");
+const note = src.slice(src.indexOf("s = s.replace(\"export const unreleased: ReleaseNote[] = [];\", `") + "s = s.replace(\"export const unreleased: ReleaseNote[] = [];\", `".length, src.indexOf("`);\nfs.writeFileSync(p, s);\n", src.indexOf("releases.ts")));
+s = s.replace(m, () => note);
+fs.writeFileSync(p, s);

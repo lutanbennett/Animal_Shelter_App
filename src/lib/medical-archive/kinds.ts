@@ -29,32 +29,18 @@ export const MEDICAL_ARCHIVE_SECTIONS = {
 } as const satisfies Record<MedicalArchiveKind, readonly string[]>;
 
 /**
- * Who is offered Archive (docs/decisions/2026-10-02-medical-archive-roles.md).
- * Archive is an UPDATE, so this follows what RLS lets each role update:
+ * Who is offered Archive (docs/decisions/2026-10-02-medical-archive-roles.md):
+ * admin, management and staff, on all four kinds. Never a vet and never a
+ * volunteer.
  *
- *  - admin, management, staff: all four kinds.
- *  - a vet: only what 0110 scopes to their own clinic — their clinic's visits
- *    and prescriptions on those visits. Never weight or immunizations (0001
- *    lets a vet write those on any resident they can see, which is wider
- *    than a vet should reach for a record the shelter keeps).
- *  - a volunteer: nothing; they cannot update any of the four.
- *
- * `clinicVetId` is the clinic that owns the visit (the visit's own vet_id; a
- * prescription's visit's vet_id), or null when there is none.
+ * Archive is an UPDATE, so the ceiling is what RLS lets each role update,
+ * and a vet could (their own clinic's visits and the prescriptions on them,
+ * 0110). They are not offered it because the archive is one-way for them:
+ * 0124 drops an archived visit from current_vet_resident_ids(), so the vet
+ * who archives a resident's only visit loses sight of the resident and
+ * cannot restore it (found by scripts/check-medical-archive-roles.mjs).
+ * A volunteer cannot update any of the four.
  */
-export function canArchiveMedical(
-  kind: MedicalArchiveKind,
-  role: string | null | undefined,
-  ownClinicVetId: string | null,
-  clinicVetId: string | null,
-): boolean {
-  if (role === "admin" || role === "management" || role === "staff") return true;
-  if (role === "vet") {
-    return (
-      (kind === "visit" || kind === "prescription") &&
-      ownClinicVetId !== null &&
-      clinicVetId === ownClinicVetId
-    );
-  }
-  return false;
+export function canArchiveMedical(role: string | null | undefined): boolean {
+  return role === "admin" || role === "management" || role === "staff";
 }

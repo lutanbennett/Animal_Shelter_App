@@ -8,6 +8,7 @@ import { getT } from "@/lib/i18n/get-t";
 import {
   MEDICAL_ARCHIVE_SECTIONS,
   MEDICAL_ARCHIVE_TABLES,
+  canArchiveMedical,
   isMedicalArchiveKind,
   type MedicalArchiveKind,
 } from "@/lib/medical-archive/kinds";
@@ -30,8 +31,8 @@ function revalidate(kind: MedicalArchiveKind, residentId: string) {
  * readers skip it). The audit trigger (0121) writes the one audit row for
  * the update; nothing here does.
  *
- * Who is offered the button is decided by canArchiveMedical in the page;
- * the database is what actually refuses. An update RLS filters out comes
+ * canArchiveMedical decides who may, here and in the page; the database is
+ * the backstop. An update RLS filters out comes
  * back with no rows, which is reported as not allowed rather than as a
  * mystery.
  */
@@ -47,9 +48,7 @@ export async function archiveMedicalRecord(
     if (!isMedicalArchiveKind(kind)) return refuse(a.errors.notAllowed);
     const supabase = await createClient();
     const role = await loadCurrentRole(supabase);
-    if (role !== "admin" && role !== "management" && role !== "staff" && role !== "vet") {
-      return refuse(a.errors.notAllowed);
-    }
+    if (!canArchiveMedical(role)) return refuse(a.errors.notAllowed);
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -93,9 +92,7 @@ export async function restoreMedicalRecord(
     if (!isMedicalArchiveKind(kind)) return refuse(a.errors.notAllowed);
     const supabase = await createClient();
     const role = await loadCurrentRole(supabase);
-    if (role !== "admin" && role !== "management" && role !== "staff" && role !== "vet") {
-      return refuse(a.errors.notAllowed);
-    }
+    if (!canArchiveMedical(role)) return refuse(a.errors.notAllowed);
 
     const { data, error } = await supabase
       .from(MEDICAL_ARCHIVE_TABLES[kind])
