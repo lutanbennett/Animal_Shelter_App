@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DECEASED_ROLES, UNDO_DECEASED_ROLES } from "@/lib/placements/deceased";
 import { canManage } from "@/lib/auth/require-management";
+import { contactRelation } from "@/lib/contacts/visibility";
 import { getTagOrigin } from "@/lib/tags/origin";
 import { loadTranslations } from "@/lib/translations/queries";
 import { ADOPTION_UPDATE_ROLES } from "@/lib/adoption-updates/options";
@@ -180,7 +181,7 @@ export default async function ResidentPage(
   const [carerResult, previousEnclosureResult, translations, tagOrigin] = await Promise.all([
     carerId
       ? supabase
-          .from("contacts")
+          .from(contactRelation(roleResult.data as string | null))
           .select("name")
           .eq("id", carerId)
           .limit(1)
