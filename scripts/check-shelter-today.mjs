@@ -1,6 +1,10 @@
-// Rollback harness for 0073_shelter_today.sql against DEV only.
-// One transaction: the migration, assertions, an anon read, then a
-// deliberate `raise exception` carrying the evidence — so nothing can commit.
+// Rollback harness for the 0073 shelter-today functions and views, run against
+// DEV only. It asserts against the LIVE schema and does not replay 0073: a
+// replay rebuilt public_shelter_stats from 0073 text, which reads a view whose
+// function grants were since scoped (0108), so the anon step failed on a
+// fixture the database no longer contains. Needs 0073 applied on dev.
+// One transaction: assertions, an anon read, then a deliberate
+// `raise exception` carrying the evidence — so nothing can commit.
 //
 //   node scripts/check-shelter-today.mjs     (from the repo root; dev only)
 //
@@ -8,7 +12,6 @@
 // ends in a raise, so it writes nothing even on success. Postgres now()
 // is the real clock, so run it between 00:00 and 07:00 Bangkok to see
 // current_date and shelter_today() actually differ in the evidence line.
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -22,11 +25,8 @@ if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the
 const { todayIso } = await import(pathToFileURL(join(root, "src/lib/format.ts")).href);
 const tsToday = todayIso();
 
-const migration = readFileSync(join(root, "supabase/migrations/0073_shelter_today.sql"), "utf8");
-
 const sql = `
 begin;
-${migration}
 
 do $h$
 declare

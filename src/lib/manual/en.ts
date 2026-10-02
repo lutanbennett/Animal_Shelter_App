@@ -1294,6 +1294,19 @@ const manual: Manual = {
           },
         },
         {
+          id: "recent-changes",
+          title: "Who changed what (Recent changes)",
+          roles: ["admin"],
+          path: "Settings → Recent changes",
+          steps: [
+            "Every add, edit, archive and delete on residents, contacts, prescriptions, vet visits, weights, files and vaccinations is recorded automatically, with who did it and when. Recent changes lists them newest first, 50 at a time. Tap Older changes for the next page. The list is read-only: nothing here changes a record.",
+            "Each line says when, who, what (Added, Edited, Archived, Restored or Deleted) and which record, with the resident's name where the record belongs to one. For an edit, Fields lists which fields changed, not what they were changed to — so the page is safe to have open where others can see it. A change shown as made by No login came from outside the app (a migration or the developer's console), not from a person.",
+            "Tap Show values on a line to open it. That shows the value before and after for each changed field, which can include phone numbers and medical notes, so open it only when you need it. Only one line is open at a time.",
+            "To answer \"something changed and I don't know who\", filter by Kind of record, by Changed by and by date (From and To, both inclusive), then tap Show. Under any line, All changes to this record shows the whole history of that one resident, contact or record, oldest at the bottom.",
+            "An accidental change can't be undone from this page yet. The values you can open here are what to type back in by hand. A microchip number is never kept in this history.",
+          ],
+        },
+        {
           id: "two-step",
           title: "2-step verification for Security",
           roles: ["admin"],
