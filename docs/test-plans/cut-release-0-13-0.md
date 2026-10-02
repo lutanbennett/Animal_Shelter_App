@@ -115,7 +115,9 @@ The counter-argument, recorded: both are additive and discoverable in the UI, no
 
 ### On the deployed build
 
-- [ ] Deployed to test: `npm run deploy:test` — deferred: this session, after merge. Before the production deploys
+- [x] Deployed to test: `npm run deploy:test` — **done 2026-10-02**, from `main` at `4e7cba8`, before any production deploy. `deploy: test → Supabase project qxkmhwybjggxvsfxsxbd (4e7cba8)`, `Uploaded lanna-animal-care-test (23.96 sec)`, Worker `8331cd55-e1f3-414e-973d-9dd9bc02e767`. `test.lannacare.org/api/releases/current` returns `{"version":"0.13.0"}`; UAT still reports `0.12.1`, the intended pre-deploy state. **`strip-baked-env` removed 10**, the expected count — 12 was the signature of the `.env.production.local` leak, and 10 has now held across four builds.
+
+  **The mail step engaged and was refused by the environment guard: `release mail for 0.13.0 [off]: sent 0, skipped 4`.** That is worth more than usual on this release: it confirms `majorReleasesSince` returned the release, the admin lookup found four addresses on the dev database and the built mail reached the relay — everything except the send — against notes that are **three-quarters the object form**, the highest proportion any release has put through `noteText`
 - [ ] Smoke-tested on `test.lannacare.org` — deferred: Lutan, for the signed-in paths. **Test is Worker-served**, so it does not exercise the Pi path production uses. **Worth most attention**: Remove and then Restore on a weight (the note claims a removed weight stops blocking a correct one for the same day — that is the subtle half), and Settings → Recent changes showing before-and-after values
 - [ ] Timezone-sensitive behaviour checked on test — deferred: release manager. **Relevant**: Recent changes filters by date, and the removed-weight rule is "for that day", which is a shelter-day question
 - [ ] Public pages re-checked after a cache purge or a 10-minute wait — deferred: release manager. The logo change (#282) is the only public-facing item, and a replaced asset is exactly the kind of thing an edge cache holds
