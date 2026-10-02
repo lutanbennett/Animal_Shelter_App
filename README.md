@@ -154,7 +154,7 @@ to deploy. The UAT column is what the cutover makes true.
 
 | | Dev | Test | UAT | Production |
 |---|---|---|---|---|
-| Where | `next dev` on your machine | `test.lannacare.org` | `lannacare.org`, `www.lannacare.org` — for good | `lannacare.org` until the cutover, then `lannacareforanimals.org` |
+| Where | `next dev` on your machine | `test.lannacare.org` (served by the Pi from its own clone once `ORIGIN_KEY` and the WAF rule are in place, `docs/pi-hosting.md`) | `lannacare.org`, `www.lannacare.org` — for good | `lannacare.org` until the cutover, then `lannacareforanimals.org` |
 | Worker | — | `lanna-animal-care-test` | `lanna-animal-care-uat` (no routes until the cutover) | `lanna-animal-care` |
 | Database | dev Supabase project (`qxkmhwybjggxvsfxsxbd`) | **the same dev project** | `dbkodyyxxhtygxcxmfcu` — today's production project, demoted at the cutover | `dbkodyyxxhtygxcxmfcu` today; a new project from the cutover |
 | Google Drive | dev account | dev account | dev account (the current tree) | dev account, until the shelter's own account exists |
