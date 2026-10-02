@@ -18,6 +18,7 @@ import {
   type StocktakeItem,
   type StocktakeKind,
 } from "@/lib/management/stocktake";
+import { MedicationLabelThumb } from "@/components/MedicationLabelThumb";
 import { saveStocktake } from "./actions";
 
 type Items = Record<StocktakeKind, StocktakeItem[]>;
@@ -312,9 +313,16 @@ function StocktakeRow({
             : "border-primary/50 bg-primary/5"
       }`}
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3">
-        <span className="font-medium text-foreground">{item.name}</span>
-        <span className="text-xs text-muted">{lastLine}</span>
+      <div className="flex items-center gap-3">
+        <MedicationLabelThumb
+          fileId={item.labelFileId}
+          alt={t.management.medications.label.alt(item.name)}
+          size={64}
+        />
+        <div className="flex min-w-0 flex-1 flex-wrap items-baseline justify-between gap-x-3">
+          <span className="font-medium text-foreground">{item.name}</span>
+          <span className="text-xs text-muted">{lastLine}</span>
+        </div>
       </div>
       <div className="flex gap-2">
         {conversions.length > 0 && (

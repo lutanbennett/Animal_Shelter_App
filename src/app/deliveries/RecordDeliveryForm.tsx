@@ -5,6 +5,7 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatQuantity } from "@/lib/diets/options";
 import { defaultUnit, resolveEntered, type UnitConversion } from "@/lib/units";
 import { packTotal, parseDeliveryQuantity, type DeliveryKind, type DeliveryTiming } from "@/lib/management/stock-receipts";
+import { MedicationLabelThumb } from "@/components/MedicationLabelThumb";
 import { recordDelivery } from "./actions";
 
 export type DeliveryFormItem = {
@@ -12,6 +13,8 @@ export type DeliveryFormItem = {
   name: string;
   /** Already translated, e.g. "tablet", "g". */
   unit: string;
+  /** Label photo of a medication (0129), so the box in hand can be matched; null/absent = none. */
+  labelFileId?: string | null;
   /** Other units it is bought in (0118), as they are now. */
   conversions: UnitConversion[];
 };
@@ -158,6 +161,14 @@ export function RecordDeliveryForm({
             ))}
           </select>
         </div>
+
+        {kind === "medication" && item?.labelFileId && (
+          <MedicationLabelThumb
+            fileId={item.labelFileId}
+            alt={t.management.medications.label.alt(item.name)}
+            size={96}
+          />
+        )}
 
         <div className="flex flex-col gap-1">
           <label htmlFor="delivery-quantity" className="text-sm font-medium text-muted">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useConfirm } from "@/components/ConfirmProvider";
-import { Fragment, useState, useTransition } from "react";
+import { Fragment, useRef, useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { DOSE_UNITS, doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { formatBahtPrice, parseBahtAmount } from "@/lib/format";
@@ -13,11 +13,15 @@ import {
   type StockReading,
 } from "@/lib/management/stock";
 import { DaysOfStockCell, StockOnHandCell } from "@/components/StockCells";
+import { MedicationLabelThumb } from "@/components/MedicationLabelThumb";
+import { runUploadAction } from "@/lib/uploads/run-upload-action";
 import {
   deleteMedication,
   mergeMedication,
+  removeMedicationLabel,
   updateMedication,
   updateMedicationStock,
+  uploadMedicationLabel,
 } from "./actions";
 
 export type MedicationRow = {
@@ -42,12 +46,14 @@ export type MedicationRow = {
   purchaseUnit: { quantity: number; unit: string } | null;
   /** Safety stock in base units; null = no floor, 0 = a floor of nothing (0128). */
   safetyStock: number | null;
+  /** Drive id of the box/bottle label photo (0129); null = none. */
+  labelFileId: string | null;
   /** The item's other units by name, for typing the safety stock in one. */
   unitOptions: string[];
 };
 
-/** Columns besides the forecast windows: name, unit, cost, stock, days, prescriptions, actions. */
-const FIXED_COLUMNS = 7;
+/** Columns besides the forecast windows: label, name, unit, cost, stock, days, prescriptions, actions. */
+const FIXED_COLUMNS = 8;
 
 const inputClass =
   "w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary";
@@ -83,6 +89,7 @@ function MedicationRowItem({
     { type: "error" | "success"; text: string } | null
   >(null);
   const [isPending, startTransition] = useTransition();
+  const labelInput = useRef<HTMLInputElement>(null);
 
   function reset() {
     setName(medication.name);
@@ -175,6 +182,35 @@ function MedicationRowItem({
     });
   }
 
+  function uploadLabel(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+    setMessage(null);
+    startTransition(async () => {
+      const result = await runUploadAction(file, t.admin.website.errors, () =>
+        uploadMedicationLabel(medication.id, formData),
+      );
+      setMessage(
+        result.ok
+          ? { type: "success", text: result.success }
+          : { type: "error", text: result.error },
+      );
+    });
+  }
+
+  async function handleRemoveLabel() {
+    if (!(await confirm({ body: m.label.removeConfirm(medication.name), confirmLabel: m.label.remove }))) return;
+    setMessage(null);
+    startTransition(async () => {
+      const result = await removeMedicationLabel(medication.id);
+      setMessage(
+        result.ok
+          ? { type: "success", text: result.success }
+          : { type: "error", text: result.error },
+      );
+    });
+  }
+
   async function handleMerge() {
     const target = mergeTargets.find((row) => row.id === mergeInto);
     if (!target) return;
@@ -196,6 +232,9 @@ function MedicationRowItem({
   return (
     <Fragment>
       <tr className="align-top hover:bg-surface-hover">
+        <td className="px-4 py-2">
+          <MedicationLabelThumb fileId={medication.labelFileId} alt={m.label.alt(medication.name)} />
+        </td>
         <td className="px-4 py-2">
           {editing ? (
             <input
@@ -366,6 +405,30 @@ function MedicationRowItem({
                 </button>
                 <button
                   type="button"
+                  disabled={isPending}
+                  onClick={() => labelInput.current?.click()}
+                  className={smallButton}
+                >
+                  {isPending ? t.common.uploading : medication.labelFileId ? m.label.replace : m.label.upload}
+                </button>
+                {medication.labelFileId && (
+                  <button type="button" disabled={isPending} onClick={handleRemoveLabel} className={smallButton}>
+                    {m.label.remove}
+                  </button>
+                )}
+                <input
+                  ref={labelInput}
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = "";
+                    if (file) uploadLabel(file);
+                  }}
+                />
+                <button
+                  type="button"
                   disabled={mergeTargets.length === 0}
                   title={
                     mergeTargets.length === 0 ? m.merge.noTargets : undefined
@@ -432,6 +495,7 @@ export function MedicationsTable({
       <table className="w-full text-left text-sm">
         <thead className="bg-surface text-muted">
           <tr>
+            <th className="px-4 py-2 font-medium">{m.label.heading}</th>
             <th className="px-4 py-2 font-medium">{m.table.name}</th>
             <th className="px-4 py-2 font-medium">{m.table.unit}</th>
             <th className="px-4 py-2 font-medium">{m.table.cost}</th>

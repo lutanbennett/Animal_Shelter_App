@@ -15,6 +15,8 @@ type StockRow = {
   // numeric: PostgREST can hand it back as a string.
   stock_on_hand: number | string | null;
   stock_counted_at: string | null;
+  /** Medications only (0129); diet_types has the column but nothing reads it. */
+  label_drive_file_id?: string | null;
 };
 
 /**
@@ -37,7 +39,7 @@ export default async function StocktakePage(props: PageProps<"/stocktake">) {
   const [medicationResult, dietResult, conversionsResult] = await Promise.all([
     supabase
       .from("medication")
-      .select("id, name, unit:dose_unit, stock_on_hand, stock_counted_at")
+      .select("id, name, unit:dose_unit, stock_on_hand, stock_counted_at, label_drive_file_id")
       .order("name")
       .returns<StockRow[]>(),
     supabase
@@ -57,6 +59,7 @@ export default async function StocktakePage(props: PageProps<"/stocktake">) {
       unit: unitLabel(row.unit),
       lastCount: row.stock_on_hand == null ? null : Number(row.stock_on_hand),
       lastCountedAt: row.stock_counted_at,
+      labelFileId: row.label_drive_file_id ?? null,
       conversions: conversions[row.id] ?? [],
     });
 
