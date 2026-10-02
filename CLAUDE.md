@@ -265,6 +265,10 @@ dev server running, none of it matters.
   branch is abandoned, its migration must be reverted from the dev
   database (write a down-migration, apply it, delete both files) before
   the number is reused.
+- A migration whose columns, views or functions are read by app code starts with
+  `-- consumer: <repo path>[, <path>]` (`none` if nothing reads it). `apply-migrations.mjs`
+  then warns, never blocks, when that file is not yet in the release assumed live
+  (`docs/decisions/2026-10-02-migration-consumer-header.md`). No header, no check.
 - Applied files are never edited; write a new one. Write every file to be
   re-runnable (`if not exists` / `or replace` / `drop … if exists`) as the
   existing ones are.
