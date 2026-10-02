@@ -35,7 +35,7 @@ or `n/a` with the reason.
 
 gates: typecheck=0 lint=0 build=0
 ```
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR for the three gates: `check` (typecheck, lint, build) passed on `6e30a6a`, as did `migration-numbers`, `audit` and `public-views`. `test-plan` was red on that commit, correctly: the manual-list line further down was neither ticked nor `n/a`, and an earlier local run of the checker was misread as passing from its last line. Fixed in the commit that ticks this
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -159,7 +159,7 @@ Automated checks by: Claude (origin-write-fallback session)  Date: 2026-10-02
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — not ticked: items 1 and 2 are outstanding
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — items 1 and 2 above are outstanding and nobody has looked
 
 Manual verification by: pending: Lutan to read the release-note wording and run the cloudflared drill after deploy
 
