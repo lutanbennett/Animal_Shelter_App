@@ -2003,7 +2003,7 @@ const en = {
       back: "← Back to vets",
       title: (vet: string) => `Doctors at ${vet}`,
       subtitle:
-        "This list fills itself: every doctor's name typed on a visit with this vet is added here, and the visit forms suggest the names on it. Use this page to put it right — rename a misspelling, merge two spellings of one person, and mark a doctor who has left so they are no longer suggested.",
+        "This list fills itself: every doctor's name typed on a visit with this vet is added here, and the visit forms suggest the names on it. A doctor needs only a name — no email or account. One who works at more than one clinic is one person listed at each. Use this page to put it right — rename a misspelling, merge two entries for one person (even from different clinics), add a doctor from another clinic, and mark a doctor who has left this clinic so they are no longer suggested here.",
       viewHub: "View this vet's visits →",
       couldntLoad: "Couldn't load the doctors",
       couldntLoadVisits: "Couldn't load visit counts",
@@ -2011,9 +2011,19 @@ const en = {
         name: "Add a doctor",
         namePlaceholder: "e.g. Dr Ploy",
         addButton: "Add doctor",
-        hint: "Only needed for a doctor nobody has recorded a visit with yet — anyone typed on a visit is added automatically.",
+        hint: "Only needed for a doctor nobody has recorded a visit with yet — anyone typed on a visit is added automatically. A name is all it takes: no email, account or invitation.",
+      },
+      existingForm: {
+        label: "Also works here",
+        pick: "Choose a doctor from another clinic…",
+        option: (name: string, clinics: string[]) => (clinics.length ? `${name} — ${clinics.join(", ")}` : name),
+        button: "Add to this clinic",
+        hint: "For a doctor already listed at another clinic. They stay one person, with their visits and name intact.",
       },
       added: (name: string) => `Added "${name}".`,
+      addedExisting: (name: string) => `"${name}" now works here too.`,
+      loginBadge: "Has a login",
+      alsoWorksAt: (clinics: string[]) => `Also works at ${clinics.join(", ")}`,
       table: {
         name: "Doctor",
         visits: "Visits",
@@ -2027,10 +2037,10 @@ const en = {
       rename: "Rename",
       renameReach: (n: number, name: string) =>
         `Saving changes the doctor on ${n} recorded visit${n === 1 ? "" : "s"} to "${name}", past visits included.`,
-      renameConfirm: (from: string, to: string, n: number) =>
-        `Rename "${from}" to "${to}"?\n\nThe doctor's name changes on ${n === 1 ? "the visit" : `all ${n} visits`} linked to them, past ones included, everywhere the visit is shown.\n\nIf "${to}" is someone already on the list, cancel and use Merge… instead.`,
+      renameConfirm: (from: string, to: string, n: number, clinics: string[]) =>
+        `Rename "${from}" to "${to}"?\n\n${clinics.length ? `This is one person: the name changes at ${clinics.join(", ")} too.\n\n` : ""}The doctor's name changes on ${n === 0 ? "every visit linked to them" : n === 1 ? "the visit" : `all ${n} visits`} linked to them, past ones included, everywhere the visit is shown.\n\nIf "${to}" is someone already on the list, cancel and use Merge… instead.`,
       markLeft: "Mark as left",
-      markLeftHint: "Stops suggesting them on the visit forms. Their visits keep their name.",
+      markLeftHint: "Stops suggesting them at this clinic. Their visits keep their name, and they stay listed at any other clinic. A vet login linked to them loses this clinic.",
       markActive: "Back at the clinic",
       possibleDuplicate: (names: string) => `Possibly the same person as ${names}`,
       duplicatesNote: (n: number) =>
@@ -2040,12 +2050,13 @@ const en = {
         into: "Merge into",
         pickTarget: "Merge into…",
         leftOption: (name: string) => `${name} (left)`,
+        option: (name: string, clinics: string[]) => (clinics.length ? `${name} — ${clinics.join(", ")}` : name),
         button: "Merge",
         hint: (name: string, n: number) =>
-          `Choose the spelling to keep. ${n === 0 ? `"${name}" has no visits` : `${n === 1 ? "The visit" : `The ${n} visits`} recorded with "${name}" will show the kept name`}, and "${name}" leaves the list.`,
+          `Same person as…: choose the entry to keep, here or at another clinic. ${n === 0 ? `"${name}" has no visits` : `${n === 1 ? "The visit" : `The ${n} visits`} recorded with "${name}" will show the kept name`}, every clinic "${name}" works at is added to the kept doctor, and "${name}" is removed. Only ever done by choosing — names are never matched for you.`,
       },
-      mergeConfirm: (from: string, into: string, n: number) =>
-        `Merge "${from}" into "${into}"?\n\n${n === 0 ? `"${from}" has no visits.` : `${n === 1 ? "The visit" : `The ${n} visits`} recorded with "${from}" will show "${into}" instead, past ones included.`} "${from}" is removed from the list.\n\nThis can't be undone.`,
+      mergeConfirm: (from: string, into: string, n: number, clinics: string[]) =>
+        `Merge "${from}" into "${into}"?\n\n${n === 0 ? `"${from}" has no visits.` : `${n === 1 ? "The visit" : `The ${n} visits`} recorded with "${from}" will show "${into}" instead, past ones included.`} "${into}" will work at every clinic "${from}" does${clinics.length ? `, and keeps working at ${clinics.join(", ")}` : ""}. "${from}" is removed from the list.\n\nThis can't be undone.`,
       deleteConfirm: (name: string) => `Remove "${name}" from the list? This can't be undone.`,
       errors: {
         nameRequired: "Enter the doctor's name.",
@@ -2053,7 +2064,11 @@ const en = {
         renameClash: (name: string) =>
           `"${name}" is already on this vet's list. If it is the same person, use Merge… instead of renaming.`,
         hasVisits: (n: number) =>
-          `This doctor is on ${n} recorded visit${n === 1 ? "" : "s"}, so they can't be removed — merge them into another spelling, or mark them as left.`,
+          `This doctor is on ${n} recorded visit${n === 1 ? "" : "s"} here, so they can't be removed — merge them into another spelling, or mark them as left.`,
+        pickDoctor: "Choose a doctor.",
+        doctorNotFound: "That doctor no longer exists.",
+        loginLinksAdminOnly:
+          "This doctor has a login, so only an admin can change where they work or merge them.",
         mergeSelf: "Choose a different doctor to merge into.",
         mergeFailed: "Merge failed.",
       },
@@ -2427,6 +2442,7 @@ const en = {
     statusHint:
       "A scheduled visit whose date has passed shows as overdue until someone marks it completed or cancelled.",
     ownClinicHint: "Your account belongs to this clinic, so visits you record are for it.",
+    doctorLockedHint: "You are the doctor on visits you record, so this is filled in for you.",
     noClinicForAccount:
       "Your account isn't linked to a clinic yet, so you can't record vet visits. Ask a shelter admin to set your clinic in Settings → Security.",
     otherClinicReadOnly:
@@ -3067,7 +3083,7 @@ const en = {
        * residents.
        */
       vetScope: (clinic: string) =>
-        `Showing the residents ${clinic} has a vet visit, prescription, procedure or blood test for. A resident appears here once the shelter books them a visit with your clinic.`,
+        `Showing the residents ${clinic} ${clinic.includes(", ") ? "have" : "has"} a vet visit, prescription, procedure or blood test for. A resident appears here once the shelter books them a visit with one of your clinics.`,
       vetScopeNoClinic:
         "Your account isn't linked to a clinic yet, so no residents are shown. Ask a shelter admin to set your clinic in Settings → Security.",
       selectedCount: (n: number) => `${n} selected`,

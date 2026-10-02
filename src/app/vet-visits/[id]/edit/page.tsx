@@ -37,7 +37,7 @@ export default async function EditVetVisitPage(props: PageProps<"/vet-visits/[id
 
   // Another clinic's visit is read-only to a vet (0110): the database would
   // refuse the save, so say so rather than show a form that can only fail.
-  if (scope.kind === "clinic" && visit.vet_id !== scope.vetId) {
+  if (scope.kind === "clinics" && (!visit.vet_id || !scope.vetIds.includes(visit.vet_id))) {
     return (
       <main className="flex flex-1 flex-col gap-4 p-6">
         <h1 className="text-2xl font-semibold text-foreground">{t.vetVisits.editPageTitle}</h1>
@@ -47,7 +47,7 @@ export default async function EditVetVisitPage(props: PageProps<"/vet-visits/[id
   }
 
   let vetsQuery = supabase.from("vets").select("id, name, clinic_name").order("name");
-  if (scope.kind === "clinic") vetsQuery = vetsQuery.eq("id", scope.vetId);
+  if (scope.kind === "clinics") vetsQuery = vetsQuery.in("id", scope.vetIds);
 
   const [residentResult, stateResult, vetsResult, doctorNamesByVet, roleResult] = await Promise.all([
     supabase
@@ -120,7 +120,8 @@ export default async function EditVetVisitPage(props: PageProps<"/vet-visits/[id
       <VetVisitEditForm
         visit={{ ...visit, cost: visit.cost == null ? null : Number(visit.cost) }}
         vets={vets}
-        fixedVet={scope.kind === "clinic" && vets.length === 1 ? vets[0] : null}
+        fixedVet={scope.kind === "clinics" && vets.length === 1 ? vets[0] : null}
+        lockedDoctor={scope.kind === "clinics" ? (visit.doctor_name ?? scope.doctorName) : null}
         doctorNamesByVet={doctorNamesByVet}
         residentDisplayName={displayName}
         cancelHref={tabHref}

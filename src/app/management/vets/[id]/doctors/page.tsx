@@ -5,14 +5,23 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { AddDoctorForm } from "./AddDoctorForm";
-import { DoctorsTable, type DoctorRow } from "./DoctorsTable";
+import { DoctorsTable, type DoctorRow, type ElsewhereDoctor } from "./DoctorsTable";
+
+type PersonRow = {
+  id: string;
+  name: string;
+  user_id: string | null;
+  vet_doctor_clinics: { vet_id: string; active: boolean; vets: { name: string } | null }[];
+};
 
 /**
- * One clinic's doctors (vet_doctors, 0102). The list fills itself from the
- * names typed on visits; this page is where it is seen and corrected —
- * renamed, merged, marked as left. Management and admin only: every
- * booking role may write the table under RLS (a visit can add a name), but
- * a rename or merge rewrites past visits, so it is a manager's correction.
+ * One clinic's doctors (vet_doctors, 0102; the clinics a doctor works at are
+ * vet_doctor_clinics, 0125). The list fills itself from the names typed on
+ * visits; this page is where it is seen and corrected — renamed, merged,
+ * marked as left, or a doctor from another clinic added as working here too.
+ * Management and admin only: every booking role may write the table under
+ * RLS (a visit can add a name), but a rename or merge rewrites past visits,
+ * so it is a manager's correction.
  */
 export default async function VetDoctorsPage(
   props: PageProps<"/management/vets/[id]/doctors">,
@@ -23,24 +32,27 @@ export default async function VetDoctorsPage(
   const d = t.management.vetDoctors;
 
   const supabase = await createClient();
-  const [vetResult, doctorsResult, visitsResult] = await Promise.all([
+  const [vetResult, doctorsResult, visitsResult, roleResult] = await Promise.all([
     supabase
       .from("vets")
       .select("id, name, clinic_name")
       .eq("id", id)
       .limit(1)
       .returns<{ id: string; name: string; clinic_name: string | null }[]>(),
+    // Every doctor with every clinic they work at: this clinic's roster is
+    // the ones linked here, the rest are who "same person as…" and "also
+    // works here" can pick from.
     supabase
       .from("vet_doctors")
-      .select("id, name, active")
-      .eq("vet_id", id)
-      .returns<Omit<DoctorRow, "visit_count" | "last_visit">[]>(),
+      .select("id, name, user_id, vet_doctor_clinics(vet_id, active, vets(name))")
+      .returns<PersonRow[]>(),
     supabase
       .from("vet_appointments")
       .select("doctor_id, appointment_date")
       .eq("vet_id", id)
       .not("doctor_id", "is", null)
       .returns<{ doctor_id: string; appointment_date: string }[]>(),
+    supabase.rpc("current_user_role"),
   ]);
 
   if (vetResult.error) throw new Error(vetResult.error.message);
@@ -55,13 +67,31 @@ export default async function VetDoctorsPage(
       last: s && s.last > visit.appointment_date ? s.last : visit.appointment_date,
     });
   }
-  const doctors: DoctorRow[] = (doctorsResult.data ?? [])
-    .map((doctor) => ({
-      ...doctor,
-      visit_count: stats.get(doctor.id)?.count ?? 0,
-      last_visit: stats.get(doctor.id)?.last ?? null,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const doctors: DoctorRow[] = [];
+  const elsewhere: ElsewhereDoctor[] = [];
+  for (const person of doctorsResult.data ?? []) {
+    const here = person.vet_doctor_clinics.find((link) => link.vet_id === id);
+    const otherClinics = person.vet_doctor_clinics
+      .filter((link) => link.vet_id !== id)
+      .map((link) => link.vets?.name ?? "")
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+    if (here) {
+      doctors.push({
+        id: person.id,
+        name: person.name,
+        active: here.active,
+        hasLogin: person.user_id !== null,
+        otherClinics,
+        visit_count: stats.get(person.id)?.count ?? 0,
+        last_visit: stats.get(person.id)?.last ?? null,
+      });
+    } else {
+      elsewhere.push({ id: person.id, name: person.name, hasLogin: person.user_id !== null, clinics: otherClinics });
+    }
+  }
+  doctors.sort((a, b) => a.name.localeCompare(b.name));
+  elsewhere.sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
@@ -91,8 +121,13 @@ export default async function VetDoctorsPage(
           </p>
         )}
 
-        <AddDoctorForm vetId={vet.id} />
-        <DoctorsTable vetId={vet.id} doctors={doctors} />
+        <AddDoctorForm vetId={vet.id} elsewhere={elsewhere} />
+        <DoctorsTable
+          vetId={vet.id}
+          doctors={doctors}
+          elsewhere={elsewhere}
+          isAdmin={roleResult.data === "admin"}
+        />
       </LargerScreenNotice>
     </main>
   );

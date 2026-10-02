@@ -23,7 +23,7 @@ export async function bookVetVisit(
   const status = formData.get("status");
   // 0074 promises trimmed text with blank stored as null, not ''.
   const doctorRaw = formData.get("doctorName");
-  const doctorName =
+  let doctorName =
     typeof doctorRaw === "string" && doctorRaw.trim() ? doctorRaw.trim() : null;
 
   if (residentIds.length === 0) {
@@ -47,6 +47,9 @@ export async function bookVetVisit(
   const scope = await loadVetScope(supabase);
   if (scope.kind === "unlinked") return { error: t.vetVisits.noClinicForAccount };
   if (!scopeAllowsVet(scope, vetId)) return { error: t.vetVisits.errors.notYourClinic };
+  // A linked vet's visit is their own: the locked Doctor field is not
+  // trusted from the form (Lutan, 2026-10-01).
+  if (scope.kind === "clinics" && scope.doctorName) doctorName = scope.doctorName;
 
   const { error } = await supabase.rpc("schedule_bulk_appointments", {
     p_resident_ids: residentIds,

@@ -4,29 +4,48 @@ import { loadCurrentRole } from "@/lib/auth/app-access";
 /**
  * Which clinics this session may record a vet visit against. The shelter's
  * own people book against any clinic. A vet account books against the
- * clinic it belongs to (user_roles.vet_id, 0102), set by an admin in
- * Settings → Security. A vet account with no clinic set is refused rather
- * than shown every clinic: Lutan's call, 2026-09-27 (docs/decisions.md).
+ * clinics of the doctor its login is linked to (vet_doctors.user_id, 0125),
+ * set by an admin in Settings → Security; a doctor may work at several. A
+ * vet account linked to no clinic is refused rather than shown every
+ * clinic: Lutan's call, 2026-09-27 (docs/decisions.md).
+ *
+ * `doctorName` is the linked doctor's own name, which the Doctor field is
+ * locked to when a vet records a visit (Lutan, 2026-10-01). Null for a
+ * login that has clinics but no doctor entry yet (an older account that
+ * still carries user_roles.vet_id), whose Doctor field stays free text.
  *
  * This is the forms' and actions' rule, not RLS: the database still lets a
- * vet write a visit for any clinic, on a resident they can see. Which
- * residents they can see is RLS (0108, current_vet_resident_ids()), and
- * /residents uses this scope only to say whose list it is.
+ * vet write a visit for any of their clinics, on a resident they can see.
+ * Which residents they can see is RLS (0108, current_vet_resident_ids()),
+ * and /residents uses this scope only to say whose list it is.
  */
 export type VetScope =
   | { kind: "any" }
-  | { kind: "clinic"; vetId: string }
+  | { kind: "clinics"; vetIds: string[]; doctorName: string | null }
   | { kind: "unlinked" };
 
 export async function loadVetScope(supabase: SupabaseClient): Promise<VetScope> {
   if ((await loadCurrentRole(supabase)) !== "vet") return { kind: "any" };
-  const { data } = await supabase.rpc("current_user_vet_id");
-  return typeof data === "string" && data ? { kind: "clinic", vetId: data } : { kind: "unlinked" };
+  const { data } = await supabase.rpc("current_user_vet_ids");
+  const vetIds = Array.isArray(data) ? (data as string[]) : [];
+  if (vetIds.length === 0) return { kind: "unlinked" };
+
+  const { data: userData } = await supabase.auth.getUser();
+  let doctorName: string | null = null;
+  if (userData.user) {
+    const { data: doctor } = await supabase
+      .from("vet_doctors")
+      .select("name")
+      .eq("user_id", userData.user.id)
+      .maybeSingle<{ name: string }>();
+    doctorName = doctor?.name ?? null;
+  }
+  return { kind: "clinics", vetIds, doctorName };
 }
 
 /** Whether a visit may be recorded against `vetId`; `keep` is a clinic the visit already has. */
 export function scopeAllowsVet(scope: VetScope, vetId: string, keep?: string | null): boolean {
   if (scope.kind === "any") return true;
   if (scope.kind === "unlinked") return false;
-  return vetId === scope.vetId || (!!keep && vetId === keep);
+  return scope.vetIds.includes(vetId) || (!!keep && vetId === keep);
 }

@@ -16,10 +16,23 @@ import {
 export type DoctorRow = {
   id: string;
   name: string;
+  /** Still works at this clinic (the link's flag, 0125). */
   active: boolean;
+  /** A login is linked to this doctor (user_id). Their links are an admin's to edit. */
+  hasLogin: boolean;
+  /** The other clinics they work at, by name. */
+  otherClinics: string[];
   /** Visits linked to this doctor, all statuses. Any at all blocks delete. */
   visit_count: number;
   last_visit: string | null;
+};
+
+/** A doctor who is not on this clinic's list: who "same person as…" can merge into. */
+export type ElsewhereDoctor = {
+  id: string;
+  name: string;
+  hasLogin: boolean;
+  clinics: string[];
 };
 
 const inputClass =
@@ -33,17 +46,25 @@ const primaryButton =
 
 const COLUMNS = 3;
 
+type MergeTarget = { id: string; name: string; active: boolean; hasLogin: boolean; clinics: string[] };
+
+const mergeLabel = (d: ReturnType<typeof useI18n>["t"]["management"]["vetDoctors"], row: MergeTarget) =>
+  d.merge.option(row.active ? row.name : d.merge.leftOption(row.name), row.clinics);
+
 function DoctorRowItem({
   vetId,
   doctor,
   mergeTargets,
   duplicates,
+  isAdmin,
 }: {
   vetId: string;
   doctor: DoctorRow;
-  mergeTargets: DoctorRow[];
-  /** Other doctors on the list whose name looks like this one's. */
-  duplicates: DoctorRow[];
+  /** Any other doctor, here or at another clinic: the "same person as…" choices. */
+  mergeTargets: MergeTarget[];
+  /** Other doctors whose name looks like this one's. */
+  duplicates: MergeTarget[];
+  isAdmin: boolean;
 }) {
   const { t, locale } = useI18n();
   const confirm = useConfirm();
@@ -84,7 +105,10 @@ function DoctorRowItem({
     }
     // A rename rewrites the name on every linked visit, past ones included.
     // Say how many before doing it.
-    if (doctor.visit_count > 0 && !await confirm({ body: d.renameConfirm(doctor.name, next, doctor.visit_count) })) {
+    if (
+      (doctor.visit_count > 0 || doctor.otherClinics.length > 0) &&
+      !await confirm({ body: d.renameConfirm(doctor.name, next, doctor.visit_count, doctor.otherClinics) })
+    ) {
       return;
     }
     run(() => renameDoctor(vetId, doctor.id, next), t.common.saved);
@@ -99,7 +123,7 @@ function DoctorRowItem({
   async function handleMerge() {
     const target = mergeTargets.find((row) => row.id === mergeInto);
     if (!target) return;
-    if (!await confirm({ body: d.mergeConfirm(doctor.name, target.name, doctor.visit_count) })) return;
+    if (!await confirm({ body: d.mergeConfirm(doctor.name, target.name, doctor.visit_count, target.clinics) })) return;
     run(() => mergeDoctors(vetId, doctor.id, target.id));
   }
 
@@ -137,10 +161,18 @@ function DoctorRowItem({
                     {d.leftBadge}
                   </span>
                 )}
+                {doctor.hasLogin && (
+                  <span className="rounded border border-border px-1.5 text-xs text-muted">
+                    {d.loginBadge}
+                  </span>
+                )}
               </span>
+              {doctor.otherClinics.length > 0 && (
+                <span className="text-xs text-muted">{d.alsoWorksAt(doctor.otherClinics)}</span>
+              )}
               {duplicates.length > 0 && (
                 <span className="text-xs text-warning">
-                  {d.possibleDuplicate(duplicates.map((row) => row.name).join(", "))}
+                  {d.possibleDuplicate(duplicates.map((row) => mergeLabel(d, row)).join(", "))}
                 </span>
               )}
             </div>
@@ -177,7 +209,7 @@ function DoctorRowItem({
                   <option value="">{d.merge.pickTarget}</option>
                   {mergeTargets.map((row) => (
                     <option key={row.id} value={row.id}>
-                      {row.active ? row.name : d.merge.leftOption(row.name)}
+                      {mergeLabel(d, row)}
                     </option>
                   ))}
                 </select>
@@ -209,19 +241,31 @@ function DoctorRowItem({
                 </button>
                 <button
                   type="button"
-                  disabled={isPending}
+                  disabled={isPending || (doctor.hasLogin && !isAdmin)}
                   onClick={() =>
                     run(() => setDoctorActive(vetId, doctor.id, !doctor.active))
                   }
-                  title={doctor.active ? d.markLeftHint : undefined}
+                  title={
+                    doctor.hasLogin && !isAdmin
+                      ? d.errors.loginLinksAdminOnly
+                      : doctor.active
+                        ? d.markLeftHint
+                        : undefined
+                  }
                   className={smallButton}
                 >
                   {doctor.active ? d.markLeft : d.markActive}
                 </button>
                 <button
                   type="button"
-                  disabled={isPending || doctor.visit_count > 0}
-                  title={doctor.visit_count > 0 ? d.errors.hasVisits(doctor.visit_count) : undefined}
+                  disabled={isPending || doctor.visit_count > 0 || (doctor.hasLogin && !isAdmin)}
+                  title={
+                    doctor.visit_count > 0
+                      ? d.errors.hasVisits(doctor.visit_count)
+                      : doctor.hasLogin && !isAdmin
+                        ? d.errors.loginLinksAdminOnly
+                        : undefined
+                  }
                   onClick={handleDelete}
                   className="rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >
@@ -260,29 +304,50 @@ function DoctorRowItem({
   );
 }
 
-export function DoctorsTable({ vetId, doctors }: { vetId: string; doctors: DoctorRow[] }) {
+export function DoctorsTable({
+  vetId,
+  doctors,
+  elsewhere,
+  isAdmin,
+}: {
+  vetId: string;
+  doctors: DoctorRow[];
+  elsewhere: ElsewhereDoctor[];
+  isAdmin: boolean;
+}) {
   const { t } = useI18n();
   const d = t.management.vetDoctors;
 
   const active = doctors.filter((doctor) => doctor.active);
   const left = doctors.filter((doctor) => !doctor.active);
-  const duplicates = useMemo(() => likelyDuplicates(doctors), [doctors]);
+  // Everyone a doctor might be the same person as: this clinic's list and
+  // the other clinics'. Suggested by name core, never merged by it.
+  const everyone = useMemo<MergeTarget[]>(
+    () => [
+      ...doctors.map((x) => ({ id: x.id, name: x.name, active: x.active, hasLogin: x.hasLogin, clinics: [] })),
+      ...elsewhere.map((x) => ({ id: x.id, name: x.name, active: true, hasLogin: x.hasLogin, clinics: x.clinics })),
+    ],
+    [doctors, elsewhere],
+  );
+  const duplicates = useMemo(() => likelyDuplicates(everyone), [everyone]);
+  const hereDuplicates = doctors.filter((doctor) => duplicates.has(doctor.id)).length;
 
   const row = (doctor: DoctorRow) => (
     <DoctorRowItem
       key={doctor.id}
       vetId={vetId}
       doctor={doctor}
-      mergeTargets={doctors.filter((other) => other.id !== doctor.id)}
+      mergeTargets={everyone.filter((other) => other.id !== doctor.id)}
       duplicates={duplicates.get(doctor.id) ?? []}
+      isAdmin={isAdmin}
     />
   );
 
   return (
     <div className="flex flex-col gap-3">
-      {duplicates.size > 0 && (
+      {hereDuplicates > 0 && (
         <p role="note" className="rounded border border-warning/40 bg-warning/5 px-4 py-2 text-sm text-foreground">
-          {d.duplicatesNote(duplicates.size)}
+          {d.duplicatesNote(hereDuplicates)}
         </p>
       )}
       <div className="overflow-x-auto rounded border border-border">

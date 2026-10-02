@@ -7,7 +7,8 @@ export type DoctorNamesByVet = Record<string, string[]>;
 
 /**
  * The suggestions behind the vet-visit forms' Doctor field: each clinic's
- * active doctors from its list (vet_doctors, 0102), loaded once with the
+ * active doctors from its list (vet_doctor_clinics, 0125: a doctor appears
+ * under every clinic they work at), loaded once with the
  * page so switching the vet select costs no round trip. The list fills
  * itself from the names typed on visits and is corrected under
  * Management → Vets → Doctors, so a merged typo stops being offered and a
@@ -16,14 +17,14 @@ export type DoctorNamesByVet = Record<string, string[]>;
  */
 export async function loadDoctorNamesByVet(supabase: Supabase): Promise<DoctorNamesByVet> {
   const { data } = await supabase
-    .from("vet_doctors")
-    .select("vet_id, name")
+    .from("vet_doctor_clinics")
+    .select("vet_id, vet_doctors!inner(name)")
     .eq("active", true)
-    .returns<{ vet_id: string; name: string }[]>();
+    .returns<{ vet_id: string; vet_doctors: { name: string } }[]>();
 
   const byVet = new Map<string, string[]>();
   for (const row of data ?? []) {
-    byVet.set(row.vet_id, [...(byVet.get(row.vet_id) ?? []), row.name]);
+    byVet.set(row.vet_id, [...(byVet.get(row.vet_id) ?? []), row.vet_doctors.name]);
   }
   // Suggestions are a convenience: a failed load leaves the field plain
   // free text rather than breaking the form.

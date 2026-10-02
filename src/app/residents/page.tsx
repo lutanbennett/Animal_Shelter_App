@@ -290,13 +290,15 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
       : Promise.resolve({ count: 0 }),
   ]);
 
-  // RLS already limits a vet to their clinic's residents (0108); this only
-  // names the clinic, so the list says whose it is.
+  // RLS already limits a vet to their clinics' residents (0108); this only
+  // names the clinics, so the list says whose it is.
   const vetClinicName =
-    vetScope.kind === "clinic"
+    vetScope.kind === "clinics"
       ? ((
-          await supabase.from("vets").select("name").eq("id", vetScope.vetId).maybeSingle()
-        ).data?.name ?? null)
+          await supabase.from("vets").select("name").in("id", vetScope.vetIds).order("name")
+        ).data ?? [])
+          .map((v) => v.name as string)
+          .join(", ") || null
       : null;
 
   const { data: residents, error } = residentsResult;
@@ -361,7 +363,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
         {adopted && (
           <p className="text-sm text-muted">{t.residents.list.adoptedOnly}</p>
         )}
-        {vetScope.kind === "clinic" && vetClinicName && (
+        {vetScope.kind === "clinics" && vetClinicName && (
           <p className="text-sm text-muted">{t.residents.list.vetScope(vetClinicName)}</p>
         )}
         {vetScope.kind === "unlinked" && (

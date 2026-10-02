@@ -26,8 +26,8 @@ export type ClinicAppointments = {
 };
 
 /**
- * The visits booked with one clinic, for a vet's /appointments page. `vetId`
- * is the vet's own clinic (loadVetScope): the page shows the clinic's
+ * The visits booked with the vet's clinics, for their /appointments page.
+ * `vetIds` are the clinics of their login (loadVetScope): the page shows the clinics'
  * appointments, not just the signed-in doctor's (Lutan, 2026-09-29). Which
  * residents a vet may see is RLS (0108) and is not re-decided here.
  *
@@ -37,7 +37,7 @@ export type ClinicAppointments = {
  */
 export async function loadClinicAppointments(
   supabase: SupabaseClient,
-  vetId: string,
+  vetIds: string[],
 ): Promise<ClinicAppointments> {
   const today = todayIso();
   const since = addDaysIso(today, -RECENTLY_DONE_DAYS);
@@ -48,7 +48,7 @@ export async function loadClinicAppointments(
       "id, resident_id, appointment_date, status, reason, doctor_name, residents(name, thai_name)",
     )
     .is("archived_at", null)
-    .eq("vet_id", vetId)
+    .in("vet_id", vetIds)
     .in("status", ["scheduled", "completed"])
     .order("appointment_date", { ascending: true })
     .returns<ClinicAppointment[]>();

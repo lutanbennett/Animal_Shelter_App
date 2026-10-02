@@ -35,11 +35,11 @@ export default async function AppointmentsPage() {
     </main>
   );
 
-  if (scope.kind !== "clinic") return shell(<p className="text-sm text-muted">{a.unlinked}</p>);
+  if (scope.kind !== "clinics") return shell(<p className="text-sm text-muted">{a.unlinked}</p>);
 
   const { toWriteUp, upcoming, recentlyDone, error } = await loadClinicAppointments(
     supabase,
-    scope.vetId,
+    scope.vetIds,
   );
   const today = todayIso();
 
