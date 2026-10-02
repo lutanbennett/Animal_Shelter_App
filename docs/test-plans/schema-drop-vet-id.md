@@ -154,9 +154,9 @@ Automated checks by: Claude (schema-drop-vet-id session)  Date: 2026-10-02
 
 ### Manual verification
 
-- [ ] The manual list above is empty, so whoever filled the plan may tick this
+- [ ] The manual list above is empty, so whoever filled the plan may tick this — n/a: the list is not empty, item 1 is waiting for a person
 
-Manual verification by:
+Manual verification by: pending: the one item under Left for manual verification
 
 ### Result
 
