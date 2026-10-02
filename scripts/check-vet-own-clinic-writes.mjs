@@ -88,7 +88,9 @@ begin
             'harness-own-writes-' || r.who || '-' || r.id || '@example.invalid',
             '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || r.who), now(), now());
   end loop;
-  insert into user_roles (user_id, role, vet_id) values (pg_temp.hid('vet'), 'vet', v_own);
+  insert into user_roles (user_id, role) values (pg_temp.hid('vet'), 'vet');
+  -- 0127: a vet login's clinic is its linked doctor's (the home-clinic trigger links it)
+  insert into vet_doctors (name, user_id, vet_id) values ('Harness vet doctor', pg_temp.hid('vet'), v_own);
   insert into user_roles (user_id, role) values
     (pg_temp.hid('admin'), 'admin'), (pg_temp.hid('mgmt'), 'management'), (pg_temp.hid('staff'), 'staff');
 

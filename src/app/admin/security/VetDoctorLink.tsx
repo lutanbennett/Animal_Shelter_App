@@ -65,8 +65,6 @@ export function VetDoctorLink({
     run(() => unlinkVetDoctor(user.id), v.unlinked);
   }
 
-  const noClinics = !user.doctor && !user.legacyClinic;
-
   return (
     <div className="mt-1 flex flex-col gap-1 text-xs text-muted">
       <span>{v.label}</span>
@@ -85,11 +83,7 @@ export function VetDoctorLink({
         </div>
       ) : (
         <div className="flex flex-col gap-1">
-          {user.legacyClinic ? (
-            <span className="text-foreground">{v.legacyClinic(user.legacyClinic)}</span>
-          ) : (
-            <span className={noClinics ? "text-warning" : undefined}>{v.notLinked}</span>
-          )}
+          <span className="text-warning">{v.notLinked}</span>
           {!creating && (
             <>
               <select
@@ -151,7 +145,6 @@ export function VetDoctorLink({
                   </label>
                 ))}
               </fieldset>
-              {user.legacyClinic && <span>{v.legacyKept(user.legacyClinic)}</span>}
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"

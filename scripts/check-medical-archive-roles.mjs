@@ -85,7 +85,9 @@ begin
          'harness-archive-' || u || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
   from unnest(array[v_staff, v_vet, v_vol]) u;
   insert into user_roles (user_id, role) values (v_staff, 'staff'), (v_vol, 'volunteer');
-  insert into user_roles (user_id, role, vet_id) values (v_vet, 'vet', v_own);
+  insert into user_roles (user_id, role) values (v_vet, 'vet');
+  -- 0127: a vet login's clinic is its linked doctor's (the home-clinic trigger links it)
+  insert into vet_doctors (name, user_id, vet_id) values ('Harness vet doctor', v_vet, v_own);
 end $setup$;
 
 do $h$

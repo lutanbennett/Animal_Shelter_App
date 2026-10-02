@@ -211,42 +211,20 @@ export async function updateUserRole(userId: string, role: string): Promise<Acti
  * and edited on the clinic page. Most doctors never get a login; this is
  * only for the ones who do. Unlinking or archiving the login leaves the
  * doctor and their visits untouched.
- *
- * Until the older user_roles.vet_id (0102) is retired a login may still
- * carry one clinic there. Linking or creating a doctor keeps that clinic
- * (the doctor is put at it) and then clears the column, so no vet gains or
- * loses a clinic in the move.
  */
 async function loadVetLogin(userId: string, t: T) {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("user_roles")
-    .select("vet_id")
+    .select("user_id")
     .eq("user_id", userId)
     .eq("role", "vet")
-    .maybeSingle<{ vet_id: string | null }>();
+    .maybeSingle<{ user_id: string }>();
   if (error) {
     return { denied: unexpectedFailure("security.loadVetLogin", error, t.common.somethingWentWrong) };
   }
   if (!data) return { denied: refuse(t.admin.security.errors.linkOnlyForVets) };
-  return { denied: null, admin, legacyVetId: data.vet_id };
-}
-
-/** Keeps a legacy clinic on the doctor, then clears it from the login. */
-async function retireLegacyClinic(
-  admin: ReturnType<typeof createAdminClient>,
-  userId: string,
-  doctorId: string,
-  legacyVetId: string | null,
-) {
-  if (legacyVetId) {
-    const { error } = await admin
-      .from("vet_doctor_clinics")
-      .upsert({ vet_id: legacyVetId, doctor_id: doctorId, active: true }, { onConflict: "vet_id,doctor_id" });
-    if (error) return error;
-  }
-  const { error } = await admin.from("user_roles").update({ vet_id: null }).eq("user_id", userId);
-  return error;
+  return { denied: null, admin };
 }
 
 export async function linkVetDoctor(userId: string, doctorId: string): Promise<ActionResult> {
@@ -258,7 +236,7 @@ export async function linkVetDoctor(userId: string, doctorId: string): Promise<A
 
     const login = await loadVetLogin(userId, t);
     if (login.denied) return login.denied;
-    const { admin, legacyVetId } = login;
+    const { admin } = login;
 
     const { data: doctor, error: lookupError } = await admin
       .from("vet_doctors")
@@ -281,9 +259,6 @@ export async function linkVetDoctor(userId: string, doctorId: string): Promise<A
 
     const { error } = await admin.from("vet_doctors").update({ user_id: userId }).eq("id", doctorId);
     if (error) return unexpectedFailure("security.linkVetDoctor", error, t.common.somethingWentWrong);
-
-    const legacyError = await retireLegacyClinic(admin, userId, doctorId, legacyVetId);
-    if (legacyError) return unexpectedFailure("security.linkVetDoctor", legacyError, t.common.somethingWentWrong);
 
     revalidateSecurity();
     revalidatePath("/management/vets", "layout");
@@ -312,9 +287,9 @@ export async function createVetDoctorForLogin(
 
     const login = await loadVetLogin(userId, t);
     if (login.denied) return login.denied;
-    const { admin, legacyVetId } = login;
+    const { admin } = login;
 
-    const clinics = [...new Set([...(legacyVetId ? [legacyVetId] : []), ...clinicIds])];
+    const clinics = [...new Set(clinicIds)];
     if (clinics.length === 0) return refuse(e.pickAClinic);
     const { data: found, error: clinicError } = await admin.from("vets").select("id").in("id", clinics);
     if (clinicError) return unexpectedFailure("security.createVetDoctorForLogin", clinicError, t.common.somethingWentWrong);
@@ -350,11 +325,6 @@ export async function createVetDoctorForLogin(
       await admin.from("vet_doctors").delete().eq("id", created.id);
       if (linkError.code === "23505") return refuse(e.doctorNameTaken(name));
       return unexpectedFailure("security.createVetDoctorForLogin", linkError, t.common.somethingWentWrong);
-    }
-
-    const legacyError = await retireLegacyClinic(admin, userId, created.id, null);
-    if (legacyError) {
-      return unexpectedFailure("security.createVetDoctorForLogin", legacyError, t.common.somethingWentWrong);
     }
 
     revalidateSecurity();

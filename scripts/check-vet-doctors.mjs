@@ -149,30 +149,16 @@ begin
     p_appointment_date => now(), p_reason => 'harness old shape', p_notes => null, p_status => 'scheduled');
   if v_n <> 1 then raise exception 'FAIL H old call shape'; end if;
 
-  -- I. vet account -> clinic
-  update user_roles set vet_id = v_vet where user_id = v_staff returning vet_id into v_d3;
-  if v_d3 is not null then raise exception 'FAIL I a staff account kept a clinic'; end if;
-  update user_roles set vet_id = v_vet where user_id = v_vetuser returning vet_id into v_d3;
-  if v_d3 is distinct from v_vet then raise exception 'FAIL I vet account clinic not stored'; end if;
-  alter table user_roles disable trigger user_roles_clear_vet_id;
-  v_rejected := false;
-  begin update user_roles set vet_id = v_vet where user_id = v_staff;
-  exception when check_violation then v_rejected := true;
-  end;
-  alter table user_roles enable trigger user_roles_clear_vet_id;
-  if not v_rejected then raise exception 'FAIL I constraint accepted a clinic on a staff account'; end if;
-
+  -- I. vet account -> clinic. 0127: a login's clinics are its linked doctor's
+  -- (user_roles.vet_id and current_user_vet_ids() are gone); 0125's harness covers the model.
+  insert into vet_doctors (name, user_id, vet_id) values ('Harness login doctor', v_vetuser, v_vet) returning id into v_d3;
   perform set_config('request.jwt.claims', json_build_object('sub', v_vetuser, 'role', 'authenticated')::text, true);
-  if current_user_vet_id() is distinct from v_vet then raise exception 'FAIL I current_user_vet_id for the vet: %', current_user_vet_id(); end if;
+  if current_user_vet_ids() is distinct from array[v_vet] then raise exception 'FAIL I current_user_vet_ids for the vet: %', current_user_vet_ids(); end if;
   perform set_config('request.jwt.claims', json_build_object('sub', v_staff, 'role', 'authenticated')::text, true);
-  if current_user_vet_id() is not null then raise exception 'FAIL I current_user_vet_id for staff'; end if;
+  if current_user_vet_ids() <> '{}'::uuid[] then raise exception 'FAIL I current_user_vet_ids for staff'; end if;
   perform set_config('request.jwt.claims', '{}', true);
 
-  update user_roles set role = 'staff' where user_id = v_vetuser returning vet_id into v_d3;
-  if v_d3 is not null then raise exception 'FAIL I role change kept the clinic'; end if;
-  update user_roles set role = 'vet' where user_id = v_vetuser;
-
-  raise exception 'HARNESS-OK %| typed name adds, variant spelling links to the same doctor, one list row | by id fills name, other clinic refused | no clinic stays free text, blank clears | vet change relinks, other edits keep | rename reaches visits, bypass restored, duplicate rename refused | merge moves visits and clinics, used doctor undeletable | rpc links both rows, old call shape works | clinic only on vet accounts (trigger and constraint), role change clears, current_user_vet_id | live schema, no replay', v_evidence;
+  raise exception 'HARNESS-OK %| typed name adds, variant spelling links to the same doctor, one list row | by id fills name, other clinic refused | no clinic stays free text, blank clears | vet change relinks, other edits keep | rename reaches visits, bypass restored, duplicate rename refused | merge moves visits and clinics, used doctor undeletable | rpc links both rows, old call shape works | vet login clinics come from the linked doctor, staff get none, current_user_vet_ids | live schema, no replay', v_evidence;
 end;
 $h$;
 rollback;
@@ -248,11 +234,11 @@ begin
   exception when insufficient_privilege then null;
   end;
   begin
-    perform current_user_vet_id();
-    raise exception 'FAIL RLS anon could call current_user_vet_id';
+    perform current_user_vet_ids();
+    raise exception 'FAIL RLS anon could call current_user_vet_ids';
   exception when insufficient_privilege then null;
   end;
-  raise exception 'HARNESS-OK rls: staff booking adds and renames a doctor | volunteer (%) reads, cannot add or merge | anon cannot read the list or call current_user_vet_id',
+  raise exception 'HARNESS-OK rls: staff booking adds and renames a doctor | volunteer (%) reads, cannot add or merge | anon cannot read the list or call current_user_vet_ids',
     case when current_setting('harness.vol') = '' then 'no volunteer on dev, skipped' else 'checked' end;
 end;
 $h$;

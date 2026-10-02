@@ -11,8 +11,8 @@ import { loadCurrentRole } from "@/lib/auth/app-access";
  *
  * `doctorName` is the linked doctor's own name, which the Doctor field is
  * locked to when a vet records a visit (Lutan, 2026-10-01). Null for a
- * login that has clinics but no doctor entry yet (an older account that
- * still carries user_roles.vet_id), whose Doctor field stays free text.
+ * login that has clinics but no doctor entry yet, whose Doctor field stays
+ * free text.
  *
  * This is the forms' and actions' rule, not RLS: the database still lets a
  * vet write a visit for any of their clinics, on a resident they can see.

@@ -20,7 +20,7 @@ export default async function SecurityPage() {
 
   const [authUsersResult, rolesResult, vetsResult, doctorsResult] = await Promise.all([
     listAllUsers(admin),
-    admin.from("user_roles").select("user_id, role, archived_at, vet_id"),
+    admin.from("user_roles").select("user_id, role, archived_at"),
     admin.from("vets").select("id, name, clinic_name").order("name"),
     // Doctors with the clinics they work at: a vet login's clinics are its
     // linked doctor's (0125).
@@ -36,7 +36,6 @@ export default async function SecurityPage() {
       {
         role: r.role as string,
         archivedAt: (r.archived_at as string | null) ?? null,
-        vetId: (r.vet_id as string | null) ?? null,
       },
     ]),
   );
@@ -106,7 +105,6 @@ export default async function SecurityPage() {
       email: u.email ?? "(no email)",
       role: roleByUserId.get(u.id)?.role ?? null,
       archivedAt: roleByUserId.get(u.id)?.archivedAt ?? null,
-      legacyClinic: clinicName.get(roleByUserId.get(u.id)?.vetId ?? "") ?? null,
       doctor: doctorByUserId.get(u.id)
         ? { id: doctorByUserId.get(u.id)!.id, name: doctorByUserId.get(u.id)!.name, clinics: doctorByUserId.get(u.id)!.clinics }
         : null,
