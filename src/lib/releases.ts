@@ -61,24 +61,32 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [
-  "The Lanna Care for Animals logo is sharper: it has been replaced with a higher-quality copy of the same artwork, so it no longer looks blurry in the header, on the sign-in pages or on a high-resolution phone screen.",
-  {
-    text: "Booking a vet visit through the assistant now keeps the doctor you name. Say \"book a vet visit for Panda with Dr Somchai on Friday at 10am\" (or \"หมอสมชาย\") and the card shows Somchai in an optional Doctor field, which you can change or clear. If the clinic's doctor list has a matching name, the card offers that spelling; if it has no such doctor yet, the card says the name will be added. The assistant never asks for a doctor.",
-    roles: ["admin", "management", "staff"],
-  },
-  {
-    text: "Weight readings, prescriptions, vet visits and immunizations can now be removed. If one was entered by mistake, tap Remove on its row on the resident's page and, if you like, say why. It leaves the list, the weight chart, the forecasts and the counts, but it is kept, not deleted. Under each list, Show removed brings the removed ones back into view, greyed out with the reason, and Restore puts one back. A removed weight or vaccination no longer blocks entering the correct one for that day. Remove is for admin, management and staff; vets and volunteers don't see it.",
-    roles: ["admin", "management", "staff"],
-  },
-  {
-    text: "Settings now has a Recent changes page that shows who added, edited, archived or deleted a resident, contact, prescription, vet visit, weight, file or vaccination record, and when. You can filter by kind of record, person and date, and open one change to see the values before and after.",
-    roles: ["admin"],
-  },
-];
+export const unreleased: ReleaseNote[] = [];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.13.0",
+    date: "2026-10-02",
+    title:
+      "Records can be removed and put back, a Recent changes page, and the assistant keeps the doctor you name",
+    major: true,
+    notes: [
+      "The Lanna Care for Animals logo is sharper: it has been replaced with a higher-quality copy of the same artwork, so it no longer looks blurry in the header, on the sign-in pages or on a high-resolution phone screen.",
+      {
+        text: "Booking a vet visit through the assistant now keeps the doctor you name. Say \"book a vet visit for Panda with Dr Somchai on Friday at 10am\" (or \"หมอสมชาย\") and the card shows Somchai in an optional Doctor field, which you can change or clear. If the clinic's doctor list has a matching name, the card offers that spelling; if it has no such doctor yet, the card says the name will be added. The assistant never asks for a doctor.",
+        roles: ["admin", "management", "staff"],
+      },
+      {
+        text: "Weight readings, prescriptions, vet visits and immunizations can now be removed. If one was entered by mistake, tap Remove on its row on the resident's page and, if you like, say why. It leaves the list, the weight chart, the forecasts and the counts, but it is kept, not deleted. Under each list, Show removed brings the removed ones back into view, greyed out with the reason, and Restore puts one back. A removed weight or vaccination no longer blocks entering the correct one for that day. Remove is for admin, management and staff; vets and volunteers don't see it.",
+        roles: ["admin", "management", "staff"],
+      },
+      {
+        text: "Settings now has a Recent changes page that shows who added, edited, archived or deleted a resident, contact, prescription, vet visit, weight, file or vaccination record, and when. You can filter by kind of record, person and date, and open one change to see the values before and after.",
+        roles: ["admin"],
+      },
+    ],
+  },
   {
     version: "0.12.1",
     date: "2026-10-02",
