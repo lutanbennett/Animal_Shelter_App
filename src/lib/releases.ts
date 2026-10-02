@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "The Lanna Care for Animals logo is sharper: it has been replaced with a higher-quality copy of the same artwork, so it no longer looks blurry in the header, on the sign-in pages or on a high-resolution phone screen.",
   {
     text: "Booking a vet visit through the assistant now keeps the doctor you name. Say \"book a vet visit for Panda with Dr Somchai on Friday at 10am\" (or \"หมอสมชาย\") and the card shows Somchai in an optional Doctor field, which you can change or clear. If the clinic's doctor list has a matching name, the card offers that spelling; if it has no such doctor yet, the card says the name will be added. The assistant never asks for a doctor.",
     roles: ["admin", "management", "staff"],
