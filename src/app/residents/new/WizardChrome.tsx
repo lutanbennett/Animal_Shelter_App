@@ -1,7 +1,24 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { INTAKE_STEPS, REVIEW_STEP } from "./steps";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import { REVIEW_STEP } from "./steps";
+
+/**
+ * The words the chrome speaks. Intake's come from its own dictionary
+ * section; another wizard (the Shelter Friend one) passes its own, so the
+ * four behaviours below are shared rather than copied.
+ */
+export type WizardLabels = Pick<
+  Dictionary["residents"]["new"]["wizard"],
+  "stepOf" | "goToStep" | "back" | "next" | "edit" | "notProvided" | "reviewIntro"
+>;
+
+function useLabels(labels?: WizardLabels): WizardLabels {
+  const { t } = useI18n();
+  return labels ?? t.residents.new.wizard;
+}
 
 /** One answer on the Review step: the field's label and what was entered. */
 export type ReviewEntry = { label: string; value: string | null };
@@ -20,34 +37,36 @@ export function WizardProgress({
   titles,
   pending,
   onGo,
+  labels,
 }: {
   current: number;
   maxVisited: number;
+  /** One per step, Review last; their count is the step count. */
   titles: string[];
   pending: boolean;
   onGo: (step: number) => void;
+  labels?: WizardLabels;
 }) {
-  const { t } = useI18n();
-  const w = t.residents.new.wizard;
+  const w = useLabels(labels);
 
   return (
     <div className="flex flex-col gap-3">
       <h2 className="text-base font-semibold text-foreground">
-        {w.stepOf(current + 1, INTAKE_STEPS.length)} · {titles[current]}
+        {w.stepOf(current + 1, titles.length)} · {titles[current]}
       </h2>
       <ol className="flex flex-wrap items-center gap-1.5">
-        {INTAKE_STEPS.map((id, i) => {
+        {titles.map((title, i) => {
           const isCurrent = i === current;
           // Locked while the intake is in flight, so a rejected one always
           // comes back to the Review step it was sent from.
           const visited = i <= maxVisited && !pending;
           return (
-            <li key={id}>
+            <li key={i}>
               <button
                 type="button"
                 disabled={!visited}
                 aria-current={isCurrent ? "step" : undefined}
-                aria-label={w.goToStep(i + 1, titles[i])}
+                aria-label={w.goToStep(i + 1, title)}
                 onClick={() => onGo(i)}
                 className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
                   isCurrent
@@ -58,7 +77,7 @@ export function WizardProgress({
                 }`}
               >
                 <span aria-hidden>{i + 1}</span>
-                <span className="hidden sm:inline">{titles[i]}</span>
+                <span className="hidden sm:inline">{title}</span>
               </button>
             </li>
           );
@@ -80,16 +99,28 @@ export function WizardNav({
   onBack,
   onNext,
   onRegister,
+  reviewStep = REVIEW_STEP,
+  finalActions,
+  labels,
 }: {
   current: number;
   pending: boolean;
   onBack: () => void;
   onNext: () => void;
-  onRegister: () => void;
+  onRegister?: () => void;
+  /** Index of the Review step; defaults to intake's. */
+  reviewStep?: number;
+  /**
+   * What replaces Next on the Review step, for a wizard that ends in a
+   * choice rather than one Register press (Publish now / Save as a draft).
+   * Each must be type="button", for the reason given below.
+   */
+  finalActions?: ReactNode;
+  labels?: WizardLabels;
 }) {
   const { t } = useI18n();
-  const w = t.residents.new.wizard;
-  const isReview = current === REVIEW_STEP;
+  const w = useLabels(labels);
+  const isReview = current === reviewStep;
 
   return (
     <div className="sticky bottom-0 z-10 -mx-6 flex gap-3 border-t border-border bg-background px-6 py-3 sm:justify-end">
@@ -103,7 +134,9 @@ export function WizardNav({
           {w.back}
         </button>
       )}
-      {isReview ? (
+      {isReview && finalActions ? (
+        finalActions
+      ) : isReview ? (
         /*
          * type="button", not "submit": the browser runs its own validation
          * before the submit event, and a required field left empty on a
@@ -146,12 +179,13 @@ export function WizardNav({
 export function ReviewSummary({
   groups,
   onEdit,
+  labels,
 }: {
   groups: ReviewGroup[];
   onEdit: (step: number) => void;
+  labels?: WizardLabels;
 }) {
-  const { t } = useI18n();
-  const w = t.residents.new.wizard;
+  const w = useLabels(labels);
 
   return (
     <div className="flex flex-col gap-4">

@@ -96,16 +96,24 @@ export default async function ContactsAdminPage(
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">
-          {t.management.contacts.title}
-        </h1>
-        <p className="text-sm text-muted">
-          {t.management.contacts.subtitle}{" "}
-          <Link href="/contacts" className="text-primary hover:underline">
-            {t.management.contacts.viewList}
-          </Link>
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">
+            {t.management.contacts.title}
+          </h1>
+          <p className="text-sm text-muted">
+            {t.management.contacts.subtitle}{" "}
+            <Link href="/contacts" className="text-primary hover:underline">
+              {t.management.contacts.viewList}
+            </Link>
+          </p>
+        </div>
+        <Link
+          href="/management/shelter-friends/new"
+          className="rounded border border-primary px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/10"
+        >
+          {t.shelterFriends.wizard.addButton}
+        </Link>
       </div>
 
       <LargerScreenNotice>

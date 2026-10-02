@@ -4517,11 +4517,108 @@ const en = {
       subtitle:
         "The businesses thanked on the public website, in the order they appear there. Edit a profile from the contact's page.",
       viewPage: "View the Shelter Friends page",
-      empty: "No Shelter Friends yet. Open a Supplier under Contacts and tap Make a Shelter Friend.",
+      empty: "No Shelter Friends yet. Tap Add a Shelter Friend to thank the first business.",
       moveUp: (name: string) => `Move ${name} up`,
       moveDown: (name: string) => `Move ${name} down`,
       openContact: "Open contact",
       archivedNote: "Contact archived — hidden from the website",
+    },
+    /** Management → Shelter Friends → Add a Shelter Friend: the guided way in. */
+    wizard: {
+      addButton: "Add a Shelter Friend",
+      pageTitle: "Add a Shelter Friend",
+      pageSubtitle:
+        "A few short steps: who they are, how they help, and what the public may see. Nothing is saved until the last step.",
+      backToList: "Back to Shelter Friends",
+      // Shared chrome (WizardChrome): the same names intake's wizard uses.
+      stepOf: (current: number, total: number) => `Step ${current} of ${total}`,
+      goToStep: (n: number, title: string) => `Go to step ${n}: ${title}`,
+      back: "Back",
+      next: "Next",
+      edit: "Edit",
+      notProvided: "Not given",
+      reviewIntro:
+        "Check everything below. Nothing is saved until you choose Publish now or Save as a draft.",
+      steps: {
+        who: "Who",
+        help: "How they help",
+        links: "Logo and links",
+        visibility: "What the public may see",
+        review: "Review",
+      },
+      who: {
+        existing: "Pick a supplier you already have",
+        brandNew: "Add a new business",
+        onlySuppliers:
+          "Only suppliers can be Shelter Friends for now. A business that only donates is a supplier too.",
+        searchLabel: "Search suppliers",
+        searchPlaceholder: "Name or phone",
+        noMatches: "No supplier matches that.",
+        noneAvailable:
+          "There is no supplier left to pick — each one is already a Shelter Friend, or none has been added yet. Add a new business instead.",
+        selected: (name: string) => `Selected: ${name}`,
+        newIntro:
+          "Just enough to find them again. Their full details can be added later on their contact page.",
+        pickRequired: "Pick a supplier, or choose Add a new business.",
+        nameRequired: "Enter the business's name.",
+      },
+      help: {
+        intro: "All optional, but a short line or two is what makes their card worth reading.",
+        thaiNote:
+          "No need to write a Thai version. When you save, the Thai goes to the translation queue (Management → Translations) by itself.",
+      },
+      links: {
+        intro: "All optional. The logo and links show on their card.",
+        logoHint: "A clear square or wide picture. The logo is uploaded when you save.",
+        chooseLogo: "Choose logo",
+        replaceLogo: "Choose another",
+        removeLogo: "Remove",
+        notAnImage: "That file is not a picture. Choose a PNG, JPG or WebP image.",
+        logoLostOnRefresh: (file: string) =>
+          `You had chosen a logo (${file}) before the page was refreshed. Choose it again to keep it.`,
+      },
+      visibility: {
+        intro:
+          "Their name, the text you wrote and their links go on the website as soon as you publish. Their phone, email, LINE and address never do — unless you tick them here.",
+        askFirst:
+          "Ask the business first. Tick only what they said yes to. Nothing is ticked for you, and each tick shows exactly that one detail.",
+      },
+      review: {
+        groupWho: "Who",
+        groupHelp: "How they help",
+        groupLinks: "Logo and links",
+        groupVisibility: "What the public may see",
+        newBusiness: "New business, added with this profile",
+        existingBusiness: "Already in your contacts",
+        logoChosen: (file: string) => `${file} — uploaded when you save`,
+        noLogo: "No logo",
+        shownLabel: "Shown on the website",
+        nothingShown: "Nothing — only their name, text and links",
+        previewHeading: "How their card will look on the website",
+        previewLogoNote: "A logo you chose is added once the profile is saved.",
+        choiceHeading: "Ready?",
+        choiceHint:
+          "Publish now puts the card on the website straight away. Save as a draft keeps it private — publish it later from their contact page or Management → Shelter Friends.",
+        publishNow: "Publish now",
+        saveDraft: "Save as a draft",
+        saving: "Saving…",
+      },
+      created: (name: string, published: boolean) =>
+        published ? `${name} is now a Shelter Friend, and on the website.` : `${name} is saved as a draft.`,
+      done: {
+        draftHint:
+          "It is not on the website yet. Publish it from their contact page or Management → Shelter Friends when you are ready.",
+        publishedHint: "It is on the Shelter Friends page now.",
+        logoUploaded: "Their logo is uploaded.",
+        logoMissing: "Saved without a logo — add it from the friend's card.",
+        openCard: "Open their Shelter Friend card",
+        viewList: "Back to Shelter Friends",
+        addAnother: "Add another",
+      },
+      errors: {
+        contactKept: (name: string) =>
+          `${name} was added to Contacts, but their Shelter Friend profile could not be saved and the new contact could not be removed again. Open them under Contacts and tap Make a Shelter Friend to finish.`,
+      },
     },
   },
 

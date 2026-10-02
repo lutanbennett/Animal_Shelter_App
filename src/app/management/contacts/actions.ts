@@ -5,6 +5,7 @@ import { runAction, type ActionResult } from "@/lib/action-result";
 import { hasManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { insertContact } from "@/lib/contacts/create";
 import {
   CARER_CONTACT_TYPE,
   isContactType,
@@ -48,28 +49,26 @@ export async function createContact(
   const { t } = await getT();
   return runAction("contacts.createContact", t.common.somethingWentWrong, async () => {
     if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
-    const name = optional(formData.get("name"));
-    if (!name) return refuse(t.management.contacts.errors.nameRequired);
-    const type = formData.get("type");
-    if (!isContactType(type)) return refuse(t.management.contacts.errors.invalidType);
-
+    const text = (key: string) => {
+      const value = formData.get(key);
+      return typeof value === "string" ? value : null;
+    };
     const supabase = await createClient();
-    const { error } = await supabase.from("contacts").insert({
-      name,
-      type,
-      phone: optional(formData.get("phone")),
-      email: optional(formData.get("email")),
-      line_id: optional(formData.get("lineId")),
-      messenger_id: optional(formData.get("messengerId")),
-      whatsapp: optional(formData.get("whatsapp")),
-      address: optional(formData.get("address")),
-      notes: optional(formData.get("notes")),
+    const created = await insertContact(supabase, t, {
+      name: text("name"),
+      type: text("type"),
+      phone: text("phone"),
+      email: text("email"),
+      lineId: text("lineId"),
+      messengerId: text("messengerId"),
+      whatsapp: text("whatsapp"),
+      address: text("address"),
+      notes: text("notes"),
     });
-
-    if (error) return refuse(error.message);
+    if (!created.ok) return refuse(created.error);
 
     revalidateContactPages();
-    return { ok: true, success: t.management.contacts.createdContact(name) };
+    return { ok: true, success: t.management.contacts.createdContact(created.name) };
   });
 }
 

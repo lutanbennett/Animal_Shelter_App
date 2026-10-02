@@ -27,9 +27,12 @@ export const REVIEW_STEP = INTAKE_STEPS.length - 1;
  * is in the URL — the answers live in the form, so a refresh still clears
  * them. Anything unparseable starts at step 1.
  */
-export function parseStepParam(raw: string | string[] | undefined): number {
+export function parseStepParam(
+  raw: string | string[] | undefined,
+  stepCount: number = INTAKE_STEPS.length,
+): number {
   const value = Array.isArray(raw) ? raw[0] : raw;
   const n = Number(value);
-  if (!Number.isInteger(n) || n < 1 || n > INTAKE_STEPS.length) return 0;
+  if (!Number.isInteger(n) || n < 1 || n > stepCount) return 0;
   return n - 1;
 }
