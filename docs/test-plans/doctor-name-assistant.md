@@ -55,7 +55,7 @@ The phrase parser was run for real: `src/lib/assistant/intents/vet.ts` was trans
 - [x] Invalid input is rejected with a readable message, not a crash: no new rejection path. A blank or whitespace-only doctor is sent as null (trimmed, blank is null) as on the form
 - [x] Boundary cases checked (long text, zero, negative, missing optional fields, dates): a name stops after two Latin words and at date, time and reason words; a Thai name stops at the first of ให้ / ที่ / ใน / วัน / พรุ่งนี้ / เวลา / digits. A name nothing follows the title for is null
 
-An unmatched doctor name is surfaced rather than dropped: with a clinic chosen, a name not on its active doctor list shows "Not on <clinic>'s doctor list yet — it will be added when you confirm…"; the same person under another spelling shows "<name> is on this clinic's list" with a "Use …" button; an exact match shows nothing. Read from the card source and typechecked; the display is in *Left for manual verification*.
+An unmatched doctor name is surfaced rather than dropped: with a clinic chosen, a name not on its active doctor list shows "Not on the clinic's doctor list yet — it will be added when you confirm…"; the same person under another spelling shows "the name is on this clinic's list" with a "Use …" button; an exact match shows nothing. Read from the card source and typechecked; the display is in *Left for manual verification*.
 
 ### Role access matrix
 
