@@ -1,5 +1,5 @@
 // Rollback harness for 0096_stock_receipts.sql against DEV only. One
-// transaction: the migration twice (re-runnable), throwaway items, counts and
+// transaction: LIVE schema (0096 is not replayed: 0112 redefined stock_count_intervals), throwaway items, counts and
 // deliveries, the usage sum through stock_count_intervals, the unit snapshot,
 // the constraints and each role's access — then a deliberate
 // `raise exception` carrying the evidence, so nothing can commit.
@@ -7,7 +7,6 @@
 //   node scripts/check-stock-receipts.mjs     (from the repo root; dev only)
 //
 // Exits 0 when every assertion held. Writes nothing.
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -17,13 +16,8 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-const migration = readFileSync(join(root, "supabase/migrations/0096_stock_receipts.sql"), "utf8");
-
 const sql = `
 begin;
-${migration}
--- a second run of the whole file must be harmless
-${migration}
 
 create temp table who (who text primary key, uid uuid);
 insert into who values
@@ -210,7 +204,7 @@ begin
   if v_n <> 0 then raise exception 'S5 receipts survived their diet type'; end if;
   v_report := v_report || ' | S5 deleting an item deletes its receipts';
 
-  raise exception 'HARNESS-OK 0096 twice%', v_report;
+  raise exception 'HARNESS-OK 0096 (live)%', v_report;
 end $$;
 `;
 

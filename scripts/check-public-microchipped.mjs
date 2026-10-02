@@ -3,7 +3,7 @@
 //
 //   node scripts/check-public-microchipped.mjs     (from the repo root; dev only)
 //
-// Database: one transaction — the migration (twice), assertions as anon
+// Database: one transaction — assertions as anon, on the LIVE schema (0117 is not replayed: 0124 redefined public_resident_profiles)
 // against a real public resident, then a deliberate `raise exception`
 // carrying the evidence, so nothing can commit.
 //
@@ -12,7 +12,6 @@
 // sees the number and always returns both fields (the function overwrites
 // the date with whatever it is given, so a missing date must be an explicit
 // null, never an absent key). Exits 0 when every assertion held.
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -51,12 +50,9 @@ check("invalid" in chip.readMicrochip(form({ microchipNumber: "98511234567890" }
 const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
-const migration = readFileSync(join(root, "supabase/migrations/0117_public_is_microchipped.sql"), "utf8");
 
 const sql = `
 begin;
-${migration}
-${migration}
 
 do $h$
 declare
@@ -98,7 +94,7 @@ begin
    where s.current_status in ('Adopted', 'Deceased');
   if v_n <> 0 then raise exception 'FAIL D % adopted/deceased resident(s) on the public view', v_n; end if;
 
-  raise exception 'HARNESS-OK file ran twice | is_microchipped is boolean; no public view column carries the number or date | anon reads false then true for a public resident as a chip is set | anon still refused residents.microchip_number | no adopted or deceased resident on the view';
+  raise exception 'HARNESS-OK live schema | is_microchipped is boolean; no public view column carries the number or date | anon reads false then true for a public resident as a chip is set | anon still refused residents.microchip_number | no adopted or deceased resident on the view';
 end;
 $h$;
 rollback;
