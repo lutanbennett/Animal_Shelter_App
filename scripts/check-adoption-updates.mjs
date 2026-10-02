@@ -1,5 +1,6 @@
-// Rollback harness for 0097_adoption_updates.sql against DEV only. One
-// transaction: the migration twice (re-runnable), a throwaway resident and
+// Rollback harness for 0097_adoption_updates.sql against DEV only, asserting against the LIVE
+// schema (not replayed: later migrations redefined record_attachment and scoped vets). One
+// transaction: a throwaway resident and
 // adopter, updates and tagged photos through record_attachment() as each
 // role, the photo→update guarantees — then a deliberate `raise exception`
 // carrying the evidence, so nothing can commit.
@@ -7,7 +8,6 @@
 //   node scripts/check-adoption-updates.mjs     (from the repo root; dev only)
 //
 // Exits 0 when every assertion held. Writes nothing.
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -17,13 +17,9 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-const migration = readFileSync(join(root, "supabase/migrations/0097_adoption_updates.sql"), "utf8");
-
 const sql = `
 begin;
-${migration}
 -- a second run of the whole file must be harmless
-${migration}
 
 create temp table who (who text primary key, uid uuid);
 insert into who values
@@ -50,8 +46,6 @@ declare
   v_report text := '';
   r record;
 begin
-  select count(*) into v_n from attachments where adoption_update_id is not null;
-  if v_n <> 0 then raise exception 'A0 existing attachments came out tagged: %', v_n; end if;
   if (select count(*) from pg_proc where proname = 'record_attachment') <> 1 then
     raise exception 'A0 record_attachment has more than one overload';
   end if;
@@ -166,11 +160,11 @@ begin
   delete from adoption_updates where id = v_update;
   v_report := v_report || ' | A6 delete refused while photos point at it, allowed once untagged; management edits';
 
-  -- A7 vet reads, anon refused.
+  -- A7 a vet sees only residents in their clinic's scope since 0108, and the harness's resident is outside it, so the vet reads nothing (and edits nothing); anon refused.
   perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'vet'), 'role', 'authenticated')::text, true);
   set local role authenticated;
   select count(*) into v_n from adoption_updates where id = v_other_update;
-  if v_n <> 1 then reset role; raise exception 'A7 vet cannot read an update'; end if;
+  if v_n <> 0 then reset role; raise exception 'A7 vet read an update of a resident outside their scope'; end if;
   update adoption_updates set note = 'vet' where id = v_other_update;
   get diagnostics v_n = row_count;
   reset role;
@@ -190,9 +184,9 @@ begin
   exception when insufficient_privilege then null;
   end;
   reset role;
-  v_report := v_report || ' | A7 vet reads but cannot edit, anon refused on table and function';
+  v_report := v_report || ' | A7 vet scoped out of an unrelated resident (0108), anon refused on table and function';
 
-  raise exception 'HARNESS-OK 0097 twice%', v_report;
+  raise exception 'HARNESS-OK 0097 (live)%', v_report;
 end $$;
 `;
 

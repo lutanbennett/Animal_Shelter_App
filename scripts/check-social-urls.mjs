@@ -23,6 +23,8 @@ begin;
 -- the row as it stood, minus the two new columns, to prove nothing else moved
 create temp table harness_before on commit drop as
   select to_jsonb(s) - 'facebook_url' - 'instagram_url' as row from site_content s;
+create temp table harness_pre on commit drop as
+  select count(*) as n from site_content where facebook_url is not null or instagram_url is not null;
 
 ${migration}
 -- a second run of the whole file must be harmless
@@ -32,11 +34,11 @@ do $h$
 declare
   v_n int; v_rows int; v_same boolean; v_rejected boolean; v_fb text; v_ig text;
 begin
-  -- A. still the singleton: one row, both new columns NULL, everything else unchanged
+  -- A. still the singleton: one row, the replay filled neither new column (real values may exist: compare with before), everything else unchanged
   select count(*) into v_rows from site_content;
   if v_rows <> 1 then raise exception 'FAIL A site_content has % rows, expected 1', v_rows; end if;
   select count(*) into v_n from site_content where facebook_url is not null or instagram_url is not null;
-  if v_n <> 0 then raise exception 'FAIL A the new columns were back-filled'; end if;
+  if v_n <> (select n from harness_pre) then raise exception 'FAIL A the replay back-filled the new columns'; end if;
   select (select row from harness_before) = (to_jsonb(s) - 'facebook_url' - 'instagram_url') into v_same from site_content s;
   if not v_same then raise exception 'FAIL A existing site_content values changed'; end if;
 
@@ -72,14 +74,14 @@ begin
   -- E. clearing back to NULL ("not shown") is allowed
   update site_content set facebook_url = null, instagram_url = null;
 
-  -- F. the public site reads them with the anon key
+  -- F. the public site reads them with the anon key, through public_site_content
   update site_content set facebook_url = 'https://fb.com/lannacare';
   set local role anon;
-  select facebook_url into v_fb from site_content;
+  select facebook_url into v_fb from public_site_content; -- 0122 closed the base table to anon
   reset role;
   if v_fb is distinct from 'https://fb.com/lannacare' then raise exception 'FAIL F anon read %', v_fb; end if;
 
-  raise exception 'HARNESS-OK singleton: % row, new columns NULL, other values unchanged | shape: 2 nullable text columns, 2 checks after two runs | https urls round-trip | javascript: and schemeless refused | clear to NULL ok | anon reads facebook_url | file ran twice', v_rows;
+  raise exception 'HARNESS-OK singleton: % row, replay filled neither new column, other values unchanged | shape: 2 nullable text columns, 2 checks after two runs | https urls round-trip | javascript: and schemeless refused | clear to NULL ok | anon reads facebook_url | file ran twice', v_rows;
 end;
 $h$;
 rollback;

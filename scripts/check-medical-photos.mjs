@@ -1,6 +1,8 @@
 // Rollback harness for 0101_public_photos_exclude_medical.sql and
 // 0103_public_profile_photo_exclude_medical.sql against DEV only.
-// One transaction: each migration (twice), fixtures, assertions, then a
+// One transaction: fixtures, assertions against the LIVE schema (neither file is replayed:
+// later migrations redefined the views and functions they touch, so a replay tests a
+// schema that no longer exists), then a
 // deliberate `raise exception` carrying the evidence — so nothing can commit.
 //
 //   node scripts/check-medical-photos.mjs     (from the repo root; dev only)
@@ -28,7 +30,6 @@
 // in another folder. Listed, not asserted: it does not change the exit.
 //
 // Exits 0 when every assertion held. Writes nothing even on success.
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -37,9 +38,6 @@ const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/l
 const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
-
-const migration = readFileSync(join(root, "supabase/migrations/0101_public_photos_exclude_medical.sql"), "utf8");
-const migration0103 = readFileSync(join(root, "supabase/migrations/0103_public_profile_photo_exclude_medical.sql"), "utf8");
 
 const sql = `
 begin;
@@ -69,12 +67,6 @@ create temp table h0103_expected on commit drop as
     select 'adoptions', v.id, p.resident_id, v.profile_photo_drive_file_id
       from public_recent_adoptions v join placement_history p on p.id = v.id
   ) v;
-
-${migration}
--- a second run of the whole file must be harmless
-${migration}
-${migration0103}
-${migration0103}
 
 create function pg_temp.as_anon(p text) returns boolean language plpgsql as $f$
 declare v boolean;
@@ -260,7 +252,7 @@ begin
       then raise exception 'FAIL L % has a write privilege', v_s; end if;
   end loop;
 
-  raise exception 'HARNESS-OK 0101: Shelter/Foster/Adoption/null/date photos in gallery + servable to anon; Medical, medical, " Medical " in neither; real rows = old view minus Medical, none adopted/deceased/hidden; binds private.resident_current_state; SELECT only; ran twice | 0103: Medical profile photo (incl. " MEDICAL ") null in profiles, cards and recent adoptions and not servable to anon, resident still listed, still the profile photo in residents, Shelter profile untouched; real rows unchanged except % Medical profile photo(s) nulled on /adopt; no real Medical profile photo servable; binds private objects; SELECT only; ran twice', v_real_med;
+  raise exception 'HARNESS-OK 0101: Shelter/Foster/Adoption/null/date photos in gallery + servable to anon; Medical, medical, " Medical " in neither; real rows = old view minus Medical, none adopted/deceased/hidden; binds private.resident_current_state; SELECT only | 0103: Medical profile photo (incl. " MEDICAL ") null in profiles, cards and recent adoptions and not servable to anon, resident still listed, still the profile photo in residents, Shelter profile untouched; real rows unchanged except % Medical profile photo(s) nulled on /adopt; no real Medical profile photo servable; binds private objects; SELECT only', v_real_med;
 end;
 $h$;
 rollback;

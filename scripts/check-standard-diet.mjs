@@ -98,6 +98,7 @@ begin
   end if;
   select count(*) into v_n from resident_diets
    where notes like 'Backfilled with the shelter''s standard diet (0087)%'
+     and xmin::text::bigint = (txid_current() & 4294967295) -- this run's rows; earlier real backfills started on their own day
      and (diet_type_id <> v_std or start_date <> shelter_today());
   if v_n <> 0 then raise exception 'FAIL D: % backfilled row(s) not standard-from-today', v_n; end if;
 

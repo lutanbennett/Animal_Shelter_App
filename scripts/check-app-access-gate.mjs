@@ -1,13 +1,16 @@
-// Rollback harness for *_app_access_gate.sql (and the public_viewer role)
-// against DEV only. One transaction: throwaway logins, what each of them can
-// read before the migration, the migration (twice), what each can read
-// after, then a deliberate `raise exception` carrying the evidence — so
-// nothing can commit.
+// Rollback harness for the app-access gate (*_app_access_gate.sql, and the
+// public_viewer role) against DEV only. One transaction: throwaway logins,
+// what each of them can read from the LIVE schema, then a deliberate
+// `raise exception` carrying the evidence — so nothing can commit.
+// The migration is NOT replayed and there is no "before" phase: a before/after
+// comparison pins the harness to the schema as it stood when the gate landed,
+// and later migrations (0122 closed anon on site_content and site_pages) have
+// moved the public surface since.
 //
 //   node scripts/check-app-access-gate.mjs     (from the repo root; dev only)
 //
 // The logins, each a new auth.users row with a user_roles row:
-//   staff         the control: must read exactly what it read before
+//   staff         the control: must still read the internal objects
 //   archived      role 'staff', archived_at set — current_user_role() null
 //   roleless      no user_roles row at all
 //   public_viewer role 'public_viewer' — only once *_public_viewer_role.sql
@@ -15,12 +18,11 @@
 //                 transaction that adds it); reported as skipped otherwise
 //   anon          no JWT subject, role anon
 //
-// The rule being checked: after the migration, archived, roleless and
+// The rule being checked: archived, roleless and
 // public_viewer read nothing from any internal view or table, the same as
 // each other, and exactly what anon reads from the public site.
 //
 // Exits 0 when every assertion held. Writes nothing even on success.
-import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -29,11 +31,6 @@ const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/l
 const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
-
-const dir = join(root, "supabase/migrations");
-const file = readdirSync(dir).find((f) => /^\d+_app_access_gate\.sql$/.test(f));
-if (!file) throw new Error("no *_app_access_gate.sql in supabase/migrations");
-const migration = readFileSync(join(dir, file), "utf8");
 
 // What a session without a staff role must not read. `-1` is "permission
 // denied", which is what anon gets from all of these.
@@ -72,9 +69,8 @@ const PUBLIC = [
   "public_project_photos",
   "public_shelter_friends",
   "public_site_pages",
-  "site_content",
-  "site_content_photos",
-  "site_pages",
+  "public_site_content",
+  "public_site_content_photos",
 ];
 
 const queries = [
@@ -134,17 +130,6 @@ begin
   end if;
 end $h$;
 
--- Before the migration.
-insert into seen
-select 'before', w.who, q.label, q.kind, pg_temp.seen(w.uid, q.sql)
-  from who w,
-       unnest(${qArray(0)}, ${qArray(1)}, ${qArray(2)}) as q(label, sql, kind);
-
-${migration}
--- a second run of the whole file must be harmless
-${migration}
-
--- After.
 insert into seen
 select 'after', w.who, q.label, q.kind, pg_temp.seen(w.uid, q.sql)
   from who w,
@@ -153,7 +138,6 @@ select 'after', w.who, q.label, q.kind, pg_temp.seen(w.uid, q.sql)
 do $h$
 declare
   r record;
-  v_report text := '';
   v_bad text := '';
   v_pv boolean := exists (select 1 from who where who = 'public_viewer');
   v_n bigint;
@@ -167,15 +151,11 @@ begin
     v_bad := v_bad || format(' A:anon reads %s rows of %s;', r.n, r.label);
   end loop;
 
-  -- B. the staff control reads exactly what it read before, everywhere
-  for r in select b.label, b.n as before_n, a.n as after_n from seen b join seen a using (who, label)
-            where b.phase = 'before' and a.phase = 'after' and who = 'staff' and a.n <> b.n loop
-    v_bad := v_bad || format(' B:staff %s %s -> %s;', r.label, r.before_n, r.after_n);
-  end loop;
+  -- B. the staff control still reads the internal objects
   select count(*) into v_n from seen where phase = 'after' and who = 'staff' and kind = 'internal' and n > 0;
   if v_n < 8 then v_bad := v_bad || format(' B:staff reads only %s internal objects (setup?);', v_n); end if;
 
-  -- C. everyone reads the public site exactly as anon does, before and after
+  -- C. everyone reads the public site exactly as anon does
   for r in select s.phase, s.who, s.label, s.n, a.n as anon_n from seen s
              join seen a on a.phase = s.phase and a.label = s.label and a.who = 'anon'
             where s.kind = 'public' and s.n <> a.n loop
@@ -209,28 +189,13 @@ begin
 
   if v_bad <> '' then raise exception 'FAIL%', v_bad; end if;
 
-  -- The evidence: what was open before, per object, for the non-staff logins.
-  for r in select b.label,
-                  max(b.n) filter (where b.who = 'staff') as st,
-                  max(b.n) filter (where b.who = 'archived') as ar,
-                  max(b.n) filter (where b.who = 'roleless') as rl,
-                  max(b.n) filter (where b.who = 'public_viewer') as pv
-             from seen b where b.phase = 'before' and b.kind = 'internal'
-            group by b.label
-           having max(b.n) filter (where b.who in ('archived', 'roleless', 'public_viewer')) > 0
-            order by b.label loop
-    v_report := v_report || format(E'\\n  before: %s  staff=%s archived=%s roleless=%s public_viewer=%s',
-                                   r.label, r.st, r.ar, r.rl, coalesce(r.pv::text, 'n/a'));
-  end loop;
   raise exception '%', format(
-    'HARNESS-OK %s | A: archived, roleless%s read 0 rows of %s internal objects after, anon refused all | B: staff control unchanged on every object | C: every login reads the %s public objects exactly as anon, before and after | D: %s | E: 6 views in private, 6 gated wrappers, no public_* view reaches the gate | file ran twice%s',
-    ${JSON.stringify(file).replace(/"/g, "'")},
+    'HARNESS-OK app access gate | A: archived, roleless%s read 0 rows of %s internal objects, anon refused all | B: staff reads the internal objects | C: every login reads the %s public objects exactly as anon | D: %s | E: 6 views in private, 6 gated wrappers, no public_* view reaches the gate',
     case when v_pv then ', public_viewer' else '' end,
     ${INTERNAL.length + Object.keys(FUNCTIONS).length},
     ${PUBLIC.length},
     case when v_pv then 'public_viewer = archived on every object'
-         else 'SKIPPED — public_viewer is not in app_role on dev yet (apply *_public_viewer_role.sql, then rerun)' end,
-    v_report);
+         else 'SKIPPED — public_viewer is not in app_role on dev yet (apply *_public_viewer_role.sql, then rerun)' end);
 end;
 $h$;
 rollback;

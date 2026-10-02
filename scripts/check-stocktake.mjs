@@ -1,6 +1,6 @@
 // Rollback harness for 0088_record_stocktake.sql,
 // 0091_record_stocktake_staff.sql and 0093_stock_counts.sql against DEV only.
-// One transaction: the migrations in order (0091 and 0093 twice), harness
+// One transaction: LIVE schema, not replayed (0112 and 0118 redefined record_stocktake after these), harness
 // logins, calls to
 // record_stocktake() as each of them, then a deliberate `raise exception`
 // carrying the evidence — so nothing can commit.
@@ -8,7 +8,6 @@
 //   node scripts/check-stocktake.mjs     (from the repo root; dev only)
 //
 // Exits 0 when every assertion held. Writes nothing.
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -18,23 +17,8 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-const read = (file) => readFileSync(join(root, "supabase/migrations", file), "utf8");
-// Each file replaces the previous definition, so the harness runs them in
-// order to start from the state each is applied on.
-const migration0088 = read("0088_record_stocktake.sql");
-const migration = read("0091_record_stocktake_staff.sql");
-const migration0093 = read("0093_stock_counts.sql");
-
 const sql = `
 begin;
-${migration0088}
-${migration}
--- a second run of the whole file must be harmless
-${migration}
-${migration0093}
-create temp table hist_first_run as select count(*) as n from stock_counts;
--- and 0093 again: the back-fill must add nothing the second time
-${migration0093}
 
 create temp table who (who text primary key, uid uuid);
 insert into who values
@@ -81,16 +65,6 @@ declare
   list jsonb;
   v_hist int; v_a_stocktake uuid; v_tmp uuid;
 begin
-  -- K0. 0093's back-fill: one history row per counted item, and none added
-  -- by the second run
-  if (select count(*) from stock_counts) <> (select n from hist_first_run) then
-    raise exception 'FAIL K0: second run of 0093 added % history rows', (select count(*) from stock_counts) - (select n from hist_first_run);
-  end if;
-  if (select count(*) from stock_counts where counted_by is null)
-     <> (select count(*) from medication where stock_on_hand is not null and stock_counted_at is not null)
-      + (select count(*) from diet_types where stock_on_hand is not null and stock_counted_at is not null) then
-    raise exception 'FAIL K0: back-fill does not match the counted items';
-  end if;
 
   select id into m1 from medication order by name limit 1;
   select id into m2 from medication order by name offset 1 limit 1;
@@ -301,7 +275,7 @@ begin
     raise exception 'FAIL H: grants not anon-no / authenticated-yes / service_role-yes';
   end if;
 
-  raise exception 'HARNESS-OK 0088, 0091 twice, 0093 twice | K0 back-fill one row per counted item, none on re-run | K1 one history row per listed item: one stocktake id, stored figure, unit, same stamp, caller; none for the unlisted row | K2 refusals write no history | K3 each call its own stocktake id, attributed | K4 staff read-only, vet sees none, anon refused | K5 delete cascades | A 2 meds + 1 diet in one call, all stamped now() | B same figure restamps | C zero is a count | D unlisted row untouched | E admin ok, null and [] lists ok | F refused, nothing written:% | bad diet list stops the meds | G vet, public_viewer and role-less refused by the guard, anon by the grant | I staff and volunteer save both tables; still refused before writing | J staff cannot update either table directly; definer + search_path | H grants', v_report;
+  raise exception 'HARNESS-OK record_stocktake against the live schema | K1 one history row per listed item: one stocktake id, stored figure, unit, same stamp, caller; none for the unlisted row | K2 refusals write no history | K3 each call its own stocktake id, attributed | K4 staff read-only, vet sees none, anon refused | K5 delete cascades | A 2 meds + 1 diet in one call, all stamped now() | B same figure restamps | C zero is a count | D unlisted row untouched | E admin ok, null and [] lists ok | F refused, nothing written:% | bad diet list stops the meds | G vet, public_viewer and role-less refused by the guard, anon by the grant | I staff and volunteer save both tables; still refused before writing | J staff cannot update either table directly; definer + search_path | H grants', v_report;
 end;
 $h$;
 rollback;

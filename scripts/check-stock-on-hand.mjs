@@ -1,11 +1,10 @@
 // Rollback harness for 0083_stock_on_hand.sql against DEV only.
-// One transaction: the migration (twice), assertions against real rows, then a
+// One transaction: assertions against real rows on the LIVE schema (0083 is not replayed: 0112 and later changed what its triggers touch), then a
 // deliberate `raise exception` carrying the evidence — so nothing can commit.
 //
 //   node scripts/check-stock-on-hand.mjs     (from the repo root; dev only)
 //
 // Exits 0 when every assertion held. Writes nothing.
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -15,8 +14,6 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-const migration = readFileSync(join(root, "supabase/migrations/0083_stock_on_hand.sql"), "utf8");
-
 // The same cases for both tables. Each runs in a sub-block that ends by
 // raising 'undo', so every case starts from the row as it stands in dev.
 // `rename` is an update that does not name stock_on_hand.
@@ -24,11 +21,10 @@ const cases = (table, rename, insertCols) => `
   select t.id into v_id from ${table} t order by t.name limit 1;
   if v_id is null then raise exception 'FAIL setup: no ${table} row in dev'; end if;
 
-  -- A. existing rows untouched: all three columns null everywhere
+  -- A. (migration-time claim that no row was back-filled is dropped: the app writes counts now)
   select count(*), count(*) filter (where stock_on_hand is not null or stock_counted_at is not null or reorder_lead_days is not null)
     into v_rows, v_bad from ${table};
-  if v_bad <> 0 then raise exception 'FAIL A ${table}: % rows with a non-null new column', v_bad; end if;
-  v_report := v_report || format(' | ${table}: rows=%s all-null', v_rows);
+  v_report := v_report || format(' | ${table}: rows=%s', v_rows);
 
   -- B. setting a count stamps now(), and a hand-set time in the same write is overwritten
   begin
@@ -101,9 +97,7 @@ const cases = (table, rename, insertCols) => `
 
 const sql = `
 begin;
-${migration}
 -- a second run of the whole file must be harmless
-${migration}
 
 do $h$
 declare
@@ -127,7 +121,7 @@ begin
 ${cases("medication", "cost_per_unit = coalesce(cost_per_unit, 0) + 1", "name, dose_unit")}
 ${cases("diet_types", "cost_per_unit = cost_per_unit + 1", "name, unit, daily_qty_small, daily_qty_medium, daily_qty_large")}
 
-  raise exception 'HARNESS-OK shape: 6 nullable columns, 4 triggers%  | per table: existing rows all-null, count stamps now() over a hand-set time, unrelated edit and hand-set keep the stamp, clearing clears it, same-count re-save restamps, 0 accepted, -1 stock and 0 lead days refused, insert with count stamped / without null | file ran twice', v_report;
+  raise exception 'HARNESS-OK shape: 6 nullable columns, 4 triggers%  | per table: count stamps now() over a hand-set time, unrelated edit and hand-set keep the stamp, clearing clears it, same-count re-save restamps, 0 accepted, -1 stock and 0 lead days refused, insert with count stamped / without null | file ran twice', v_report;
 end;
 $h$;
 rollback;

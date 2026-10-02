@@ -1,5 +1,6 @@
 // Rollback harness for 0079_public_enclosures.sql against DEV only.
-// One transaction: the migration, assertions against real rows, then a
+// One transaction: assertions against the LIVE schema (0079 is not replayed: the view reads
+// resident_current_state and public_resident_cards, which later migrations changed), then a
 // deliberate `raise exception` carrying the evidence — so nothing can commit.
 //
 //   node scripts/check-public-enclosures.mjs     (from the repo root; dev only)
@@ -12,7 +13,6 @@
 // row — no field more, no field less.
 //
 // Exits 0 when every assertion held. Writes nothing even on success.
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -22,13 +22,8 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-const migration = readFileSync(join(root, "supabase/migrations/0079_public_enclosures.sql"), "utf8");
-
 const sql = `
 begin;
-${migration}
--- a second run of the whole file must be harmless
-${migration}
 
 -- What anon sees of one enclosure / one resident card, as json (null when not visible).
 create function pg_temp.anon_enclosure(p_id uuid) returns jsonb language plpgsql as $f$
