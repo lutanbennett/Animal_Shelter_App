@@ -1,5 +1,6 @@
 // Rollback harness for 0084_is_public_drive_file.sql against DEV only.
-// One transaction: the migration (twice), fixtures, assertions, then a
+// One transaction: fixtures, assertions against the LIVE schema (0084 is not replayed: 0123 redefined
+// the function over the public_* views), then a
 // deliberate `raise exception` carrying the evidence — so nothing can commit.
 //
 //   node scripts/check-public-drive-file.mjs     (from the repo root; dev only)
@@ -11,7 +12,6 @@
 // the function borrows no privilege, so the caller cannot change it.
 //
 // Exits 0 when every assertion held. Writes nothing even on success.
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -21,13 +21,8 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-const migration = readFileSync(join(root, "supabase/migrations/0084_is_public_drive_file.sql"), "utf8");
-
 const sql = `
 begin;
-${migration}
--- a second run of the whole file must be harmless
-${migration}
 
 -- The answer as anon, and as a signed-in admin.
 create function pg_temp.as_anon(p text) returns boolean language plpgsql as $f$

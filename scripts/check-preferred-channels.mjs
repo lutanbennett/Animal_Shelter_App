@@ -1,12 +1,12 @@
 // Rollback harness for 0111_site_content_preferred_channels.sql against DEV only.
 // One transaction: assertions against the real site_content row, then a
 // deliberate `raise exception` carrying the evidence — so nothing can commit.
-// The migration is re-run inside the transaction to prove it is re-runnable.
+// Asserts against the LIVE schema: it does not replay 0111, so the anon step reads
+// the view the public site reads today rather than a base table 0122 closed to anon.
 //
 //   node scripts/check-preferred-channels.mjs     (from the repo root; dev only)
 //
 // Exits 0 when every assertion held. Writes nothing even on success.
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -16,11 +16,8 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-const migration = readFileSync(join(root, "supabase/migrations/0111_site_content_preferred_channels.sql"), "utf8");
-
 const sql = `
 begin;
-${migration}
 
 do $h$
 declare
@@ -70,14 +67,14 @@ begin
   if not v_rejected then raise exception 'FAIL E NULL accepted'; end if;
   update site_content set preferred_channels = '{}';
 
-  -- F. the public site reads it with the anon key
+  -- F. the public site reads it with the anon key, through public_site_content (0122 revoked anon on the table)
   update site_content set preferred_channels = array['messenger'];
   set local role anon;
-  select preferred_channels into v_val from site_content;
+  select preferred_channels into v_val from public_site_content;
   reset role;
   if v_val is distinct from array['messenger']::text[] then raise exception 'FAIL F anon read %', v_val; end if;
 
-  raise exception 'HARNESS-OK singleton reads {line} | NOT NULL text[], 1 check after two runs | full ordered list round-trips | unknown / upper-case / 7 entries refused | NULL refused, empty allowed | anon reads it';
+  raise exception 'HARNESS-OK singleton reads {line} | NOT NULL text[], 1 check after two runs | full ordered list round-trips | unknown / upper-case / 7 entries refused | NULL refused, empty allowed | anon reads it through public_site_content';
 end;
 $h$;
 rollback;
