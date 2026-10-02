@@ -183,15 +183,22 @@ export async function checkBackup(): Promise<CheckOutcome<BackupFacts>> {
   const appEnv = getAppEnv();
   const env = appEnv === "dev" ? "test" : appEnv;
   const scheduled = appEnv === "production";
+  // BACKUP_DRIVE_FOLDER_ID, when set, is the Backups folder itself
+  // (scripts/backup.mjs uploads there), outside the photo tree.
+  const backupFolderId = process.env.BACKUP_DRIVE_FOLDER_ID;
   const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
-  if (!rootId) return { state: "fail", error: "GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured." };
+  if (!backupFolderId && !rootId) return { state: "fail", error: "GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured." };
 
   const drive = getDriveClient();
-  const [folder] = await drive.listFiles({
-    q: `'${rootId}' in parents and name = 'Backups' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
-    fields: "files(id)",
-    pageSize: 1,
-  });
+  const folder = backupFolderId
+    ? { id: backupFolderId }
+    : (
+        await drive.listFiles({
+          q: `'${rootId}' in parents and name = 'Backups' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+          fields: "files(id)",
+          pageSize: 1,
+        })
+      )[0];
   const prefix = `lannacare-${env}-`;
   const dumps = folder
     ? (

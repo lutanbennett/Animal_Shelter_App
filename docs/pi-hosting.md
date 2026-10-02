@@ -104,11 +104,38 @@ updates. Re-runnable.
   leaving for long.
 - **Logs**: `journalctl -u lanna-care -f`, `journalctl -u cloudflared -f`.
 - **Restart**: `sudo systemctl restart lanna-care`.
-- **Test on the same Pi** (optional): `./scripts/pi/deploy-pi.sh --env test`
-  needs a `lanna-care-test.service` copy on port 3001, a
-  `test-pi.lannacare.org` DNS route to the same tunnel (already in the
-  cloudflared config), and `ORIGIN_HOST: "test-pi.lannacare.org"` in the
-  Worker's test env.
+- **Test on the same Pi**: its own clone, its own service, never production's
+  folder. `~/Animal_Shelter_App_test` holds its own `node_modules`, `.next` and
+  `.env.production.local` (dev Supabase, dev Drive, written by
+  `write-env.mjs --env test`); `lanna-care-test.service`
+  (`scripts/pi/lanna-care-test.service`) runs from it on 127.0.0.1:3001 at
+  `Nice=10`, `CPUWeight=50`, `MemoryMax=900M`, and test builds run under `nice`.
+  **Why a separate clone:** a build bakes `NEXT_PUBLIC_*` into `.next`, and the
+  service serves whatever `.next` is in its folder, so a test build in the
+  production folder would put the dev database in front of users at the next
+  restart. `deploy-pi.sh` therefore **refuses** `--env test` from a clone not named
+  `*_test`, refuses production/uat from one that is, and refuses to run in a test
+  clone that holds `.env.deploy.production` or `.env.deploy.uat` (it names the
+  folder and the command to run instead). The test clone's photo cache is
+  `~/photo-cache-test`, separate from production's.
+  Setup, once: clone to `~/Animal_Shelter_App_test`, copy the dev `.env.local` in
+  (and nothing else), run `./scripts/pi/setup-test.sh`. Deploy:
+  `cd ~/Animal_Shelter_App_test && ./scripts/pi/deploy-pi.sh --env test`
+  (`--ref origin/claude/<feature>` puts a branch on test). Then, outside the box:
+  `cloudflared tunnel route dns <tunnel> test-pi.lannacare.org`; the WAF rule
+  (**the free plan allows five custom rules, so extend production's expression to
+  `http.host in {"pi.lannacare.org" "test-pi.lannacare.org"}` rather than adding a
+  sixth**; both Workers send the same key); `ORIGIN_KEY=<same value>` in
+  **`.env.local`** on the dev machine (test's values file is `.env.local`, there is
+  no `.env.deploy.test`); `npm run deploy:test -- --secrets`. `ORIGIN_HOST` is
+  already `test-pi.lannacare.org` in the test env of `wrangler.jsonc`.
+  **Check:** `curl -sI https://test.lannacare.org/login | grep x-lanna` says `pi`,
+  and so does a signed-in page; `curl -sI https://test-pi.lannacare.org/` from
+  elsewhere is 403. **Failover drill:** `sudo systemctl stop lanna-care-test` and
+  the header flips to `worker`; sign in and submit something while it is
+  stopped, because a GET-only drill passed on 2026-09-30 while auth and every
+  Server Action were broken. **Capacity:** with both servers running and a test
+  build in progress, watch `free -m` and `journalctl -u lanna-care` for restarts.
 - **Rollback (the Pi serves users, so this is the production rollback)**:
   find the release's commit (`git log --oneline -- src/lib/releases.ts`, the
   cut that preceded the bad one), then `./scripts/pi/deploy-pi.sh --ref <sha>`.

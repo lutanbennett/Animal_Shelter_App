@@ -62,6 +62,22 @@ export function CreateMedicationForm() {
         />
         <span className="text-xs text-muted">{m.createForm.costHint}</span>
       </div>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="medication-safety" className="text-sm font-medium text-muted">
+          {t.management.stock.safetyCreateLabel}
+        </label>
+        <input
+          id="medication-safety"
+          name="safetyStock"
+          type="number"
+          min={0}
+          step="any"
+          inputMode="decimal"
+          placeholder={t.management.stock.safetyPlaceholder}
+          className="w-40 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+        />
+        <span className="text-xs text-muted">{t.management.stock.safetyHint}</span>
+      </div>
       <button
         type="submit"
         disabled={pending}

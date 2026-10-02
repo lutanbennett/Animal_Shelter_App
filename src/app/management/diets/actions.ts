@@ -7,7 +7,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { DIET_UNITS, type DietUnit } from "@/lib/i18n/enum-labels";
-import { parseLeadDays, parseStockCount } from "@/lib/management/stock";
+import { parseLeadDays, parseSafetyStock, parseStockCount } from "@/lib/management/stock";
+import { resolveSafetyStock } from "@/lib/management/purchasing";
+import { loadConversions } from "@/lib/units-server";
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
@@ -24,6 +26,13 @@ export type DietTypeFields = {
   notes: string;
   /** Supplier lead time in days; blank = no reorder flag (0083). Not on the add form. */
   reorderLeadDays: string;
+  /**
+   * Safety stock as typed, in `safetyUnit` (0128). Blank = no floor (null);
+   * 0 is a floor of nothing. Converted to the base unit on save.
+   */
+  safetyStock: string;
+  /** Blank = the base unit; else the name of one of the item's other units. */
+  safetyUnit: string;
 };
 
 type DietTypeRowInput = {
@@ -35,6 +44,7 @@ type DietTypeRowInput = {
   daily_qty_large: number;
   notes: string | null;
   reorder_lead_days: number | null;
+  safety_stock: number | null;
 };
 
 function optional(value: FormDataEntryValue | string | null | undefined) {
@@ -48,6 +58,7 @@ function isDietUnit(value: string | null): value is DietUnit {
 
 function revalidateDietPages() {
   revalidatePath("/management/diets");
+  revalidatePath("/management/purchasing");
   // The diet form's picker, the intake form and the hub's diet_types(name)
   // embeds read this table too.
   revalidatePath("/diets/new");
@@ -69,6 +80,8 @@ function fieldsFromForm(formData: FormData): DietTypeFields {
     dailyQtyLarge: get("dailyQtyLarge"),
     notes: get("notes"),
     reorderLeadDays: get("reorderLeadDays"),
+    safetyStock: get("safetyStock"),
+    safetyUnit: get("safetyUnit"),
   };
 }
 
@@ -96,6 +109,11 @@ function parseFields(
   const leadDays = parseLeadDays(fields.reorderLeadDays);
   if (!leadDays.ok) return { error: t.management.stock.errors.leadDaysInvalid };
 
+  // As typed, taken to be in the base unit: right for the add form, which
+  // has no other units yet. updateDietType converts a purchase-unit entry.
+  const safety = parseSafetyStock(fields.safetyStock);
+  if (!safety.ok) return { error: t.management.stock.errors.safetyInvalid };
+
   return {
     row: {
       name,
@@ -106,6 +124,7 @@ function parseFields(
       daily_qty_large: quantities[2],
       notes: optional(fields.notes),
       reorder_lead_days: leadDays.value,
+      safety_stock: safety.value,
     },
   };
 }
@@ -142,10 +161,29 @@ export async function updateDietType(id: string, fields: DietTypeFields): Promis
     const parsed = parseFields(fields, t);
     if (parsed.error !== undefined) return refuse(parsed.error);
 
+    // The floor may be typed in the purchase unit; it is stored in base
+    // units (0128), converted with the factor in force now.
+    const supabase = await createClient();
+    const conversions = await loadConversions(supabase, "diet", [id]);
+    if (conversions.error) return refuse(conversions.error);
+    const safety = resolveSafetyStock(
+      fields.safetyStock,
+      fields.safetyUnit,
+      conversions.data[id] ?? [],
+      [parsed.row.unit],
+    );
+    if (!safety.ok) {
+      return refuse(
+        safety.reason === "unknownUnit" ? t.units.errors.unknownUnit : t.management.stock.errors.safetyInvalid,
+      );
+    }
+
     // stock_on_hand is deliberately not in this write: naming it restamps
     // stock_counted_at (0083), and a price change is not a stocktake.
-    const supabase = await createClient();
-    const { error } = await supabase.from("diet_types").update(parsed.row).eq("id", id);
+    const { error } = await supabase
+      .from("diet_types")
+      .update({ ...parsed.row, safety_stock: safety.value })
+      .eq("id", id);
     if (error) return refuse(error.message);
     revalidateDietPages();
     return { ok: true };

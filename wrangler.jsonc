@@ -45,7 +45,7 @@
       // where the alert path is proved before production relies on it.
       "vars": {
         "NODE_ENV": "production",
-        "ORIGIN_HOST": "",
+        "ORIGIN_HOST": "test-pi.lannacare.org",
         "ORIGIN_TIMEOUT_MS": "20000",
         "RELEASE_MAIL_ENV": "",
         "PUBLIC_SITE": "locked",

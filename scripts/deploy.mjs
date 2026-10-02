@@ -69,7 +69,7 @@ const RUNTIME_SECRETS = [
 // (docs/pi-hosting.md); pushed when set, harmless when not. The two
 // Cloudflare ones feed the visitor count on Settings → System status
 // (src/lib/status/usage.ts), which stays grey until both are set.
-const OPTIONAL_SECRETS = ["ORIGIN_KEY", "CLOUDFLARE_ANALYTICS_TOKEN", "CLOUDFLARE_ZONE_ID"];
+const OPTIONAL_SECRETS = ["BACKUP_DRIVE_FOLDER_ID", "ORIGIN_KEY", "CLOUDFLARE_ANALYTICS_TOKEN", "CLOUDFLARE_ZONE_ID"];
 const BUILD_VARS = ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY"];
 
 function run(cmd, opts = {}) {
