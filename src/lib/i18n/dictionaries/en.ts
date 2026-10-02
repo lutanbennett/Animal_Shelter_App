@@ -2614,6 +2614,34 @@ const en = {
       },
     },
   },
+  recordArchive: {
+    badge: "Removed",
+    archive: "Remove",
+    restore: "Restore",
+    reasonLabel: "Reason (optional)",
+    reasonPlaceholder: "e.g. entered on the wrong resident",
+    confirmArchive: "Remove",
+    explain:
+      "Removing takes the record out of the lists, charts, forecasts and counts, but it is kept, not deleted. You can bring it back from Show removed.",
+    showArchived: "Show removed",
+    hideArchived: "Hide removed",
+    archivedHidden: (n: number) => `${n} removed hidden`,
+    archivedHeading: (n: number) => `Removed (${n})`,
+    reason: (reason: string) => `Reason: ${reason}`,
+    errors: {
+      notAllowed: "Your role can't remove medical records.",
+      cannotArchive:
+        "This record couldn't be removed. It may already be removed, or it isn't one your role can change.",
+      cannotRestore:
+        "This record couldn't be restored. It may already be restored, or it isn't one your role can change.",
+      slotTaken: {
+        weight: "There is already a reading for that day, or for that visit. Remove or correct it first.",
+        immunization: "That dose has already been recorded again for the same day. Remove that one first.",
+        prescription: "This prescription can't be restored right now.",
+        visit: "This visit can't be restored right now.",
+      },
+    },
+  },
   bloodTests: {
     pageTitle: "Log Blood Test",
     pageSubtitle:
