@@ -1,4 +1,4 @@
-# 2026-10-02 — Archive on medical records: admin, management and staff; not vets
+# 2026-10-02 — Remove (archive) on medical records: admin, management and staff; not vets
 
 Backlog DB-6, app side of soft delete (`claude/soft-delete-app-side`), on top of
 `0124` (`docs/decisions/2026-10-02-medical-soft-delete.md`).
@@ -47,13 +47,23 @@ Weight and immunization records are not scoped to a clinic at all (`0001`'s
 `vet_rw_*` policies were never replaced), so no "own clinic only" rule exists to
 follow for them; a vet is simply not offered Archive on any of the four.
 
-## One vocabulary, as contacts
+## The word staff see is "Remove", not "Archive"
 
-Archive with an optional reason, Restore, a greyed list below the live one, and a
-Show archived link that appears only when something is archived and says how many
-are hidden. The strings are `t.recordArchive` (English and Thai), written to read
-the same as `t.contacts.archive`. The toggle is `?archived=1` on the section page,
-so it survives a refresh and can be shared, as the contacts list's does.
+Lutan, 2026-10-02: shelter staff will not understand "archive". The buttons,
+badge, toggle and manual say **Remove** ("Remove", "Show removed", "Hide removed",
+"N removed hidden", "Removed (N)") and **Restore**; Thai uses นำออก. **Not
+"Delete"**: the record is kept and comes back with Restore, and a button that says
+Delete while promising an undo is the more dangerous lie. The copy says plainly
+that it is "kept, not deleted". Everything underneath is still archive
+(`archived_at`, `archiveMedicalRecord`, `t.recordArchive`), so it stays one
+mechanism with contacts. The cost is that contacts still say "Archive": two words
+for one idea. If staff take to Remove, contacts' wording should follow in its own
+change; if not, this is the one place to revert.
+
+Layout is otherwise as contacts: an optional reason, a greyed list below the live
+one, and a link that appears only when something is removed and says how many are
+hidden. The toggle is `?archived=1` on the section page, so it survives a refresh
+and can be shared.
 
 The live lists are untouched: they still rely on `0124`'s readers and
 `.is("archived_at", null)`. Show archived is a **second query**

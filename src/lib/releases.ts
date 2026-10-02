@@ -63,7 +63,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
-    text: "Weight readings, prescriptions, vet visits and immunizations can now be archived. If one was entered by mistake, tap Archive on its row on the resident's page and, if you like, say why. It leaves the list, the weight chart, the forecasts and the counts, but it is kept, not deleted. Under each list, Show archived brings the archived ones back into view, greyed out with the reason, and Restore puts one back. An archived weight or vaccination no longer blocks entering the correct one for that day. Archive is for admin, management and staff; vets and volunteers don't see it.",
+    text: "Weight readings, prescriptions, vet visits and immunizations can now be removed. If one was entered by mistake, tap Remove on its row on the resident's page and, if you like, say why. It leaves the list, the weight chart, the forecasts and the counts, but it is kept, not deleted. Under each list, Show removed brings the removed ones back into view, greyed out with the reason, and Restore puts one back. A removed weight or vaccination no longer blocks entering the correct one for that day. Remove is for admin, management and staff; vets and volunteers don't see it.",
     roles: ["admin", "management", "staff"],
   },
   {
