@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Minus, TrendingDown, TrendingUp } from "lucide-react";
 import { formatBaht, formatDate, formatWeightDelta, formatWeightKg, todayIso } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
+import { contactNameEmbed } from "@/lib/contacts/visibility";
 import { placeName } from "@/lib/enclosures/names";
 import {
   appointmentStatusLabel,
@@ -17,7 +18,7 @@ import { photoCategoriesForRole } from "@/lib/google/drive-client";
 import { PhotoGallery, type PhotoRow } from "@/components/PhotoGallery";
 import {
   ADOPTION_UPDATE_ROLES,
-  RESIDENT_PHOTO_SELECT,
+  residentPhotoSelect,
   type PhotoProvenance,
 } from "@/lib/adoption-updates/options";
 import { AdoptionUpdateActions } from "../adoption-updates/AdoptionUpdateActions";
@@ -134,6 +135,9 @@ export default async function ResidentSectionPage(
   // volunteer, and nobody on a deceased resident.
   const showArchived = (await props.searchParams).archived === "1";
   const role = (roleResult.data as string | null) ?? null;
+  // A vet or volunteer reads a carer or sender name through a narrow view (0126).
+  const photoSelect = residentPhotoSelect(role);
+  const contactEmbed = (withArchive = false) => contactNameEmbed(role, withArchive);
   const canArchive = (kind: MedicalArchiveKind) => !isDeceased && canArchiveMedical(role);
   const archivedCount = async (
     table: "weight" | "prescriptions" | "vet_appointments" | "immunization_records",
@@ -187,7 +191,7 @@ export default async function ResidentSectionPage(
       const { data, error } = await supabase
         .from("placement_history")
         .select(
-          "id, placement_type, start_date, end_date, notes, cause_of_death, enclosure:enclosures!enclosure_id(name, name_th), previous_enclosure:enclosures!previous_enclosure_id(name, name_th), carer:contacts(name, archived_at, archive_reason)",
+          `id, placement_type, start_date, end_date, notes, cause_of_death, enclosure:enclosures!enclosure_id(name, name_th), previous_enclosure:enclosures!previous_enclosure_id(name, name_th), carer:${contactEmbed(true)}`,
         )
         .eq("resident_id", id)
         .order("start_date", { ascending: false })
@@ -290,7 +294,7 @@ export default async function ResidentSectionPage(
       const [{ data: photos }, { data: role }] = await Promise.all([
         supabase
           .from("attachments")
-          .select(RESIDENT_PHOTO_SELECT)
+          .select(photoSelect)
           .eq("owner_type", "resident")
           .eq("owner_id", id)
           .order("uploaded_at", { ascending: true })
@@ -320,7 +324,7 @@ export default async function ResidentSectionPage(
       const [updatesResult, photosResult, adoptCountResult, roleResult] = await Promise.all([
         supabase
           .from("adoption_updates")
-          .select("id, received_on, channel, note, created_at, sender:contacts(name)")
+          .select(`id, received_on, channel, note, created_at, sender:${contactEmbed()}`)
           .eq("resident_id", id)
           .order("received_on", { ascending: false })
           .order("created_at", { ascending: false })
@@ -336,7 +340,7 @@ export default async function ResidentSectionPage(
           >(),
         supabase
           .from("attachments")
-          .select(RESIDENT_PHOTO_SELECT)
+          .select(photoSelect)
           .eq("owner_type", "resident")
           .eq("owner_id", id)
           .not("adoption_update_id", "is", null)

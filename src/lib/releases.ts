@@ -61,7 +61,12 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  {
+    text: "Vets and volunteers now see less of the shelter’s address book, to protect people’s personal details. A volunteer sees each contact’s name and phone number, enough to ring a carer, but not their email, address, LINE or notes. A vet sees only the name behind a carer or sender, and no longer sees other people’s email addresses in the list of logins. Staff and above see everything, as before.",
+    roles: ["vet", "volunteer"],
+  },
+];
 
 /** Newest first. */
 export const releases: Release[] = [

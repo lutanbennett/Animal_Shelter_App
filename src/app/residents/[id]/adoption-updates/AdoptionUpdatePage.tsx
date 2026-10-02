@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { todayIso } from "@/lib/format";
+import { loadCurrentRole } from "@/lib/auth/app-access";
 import { SECTION_ICONS } from "@/components/hub-icons";
 import { ADOPTION_UPDATE_ROLES } from "@/lib/adoption-updates/options";
 import { loadSenderOptions } from "@/lib/adoption-updates/queries";
@@ -45,7 +46,7 @@ export async function AdoptionUpdatePage({
           >()
       : null,
     supabase.rpc("current_user_role"),
-    loadSenderOptions(supabase, residentId),
+    loadCurrentRole(supabase).then((role) => loadSenderOptions(supabase, residentId, role)),
   ]);
 
   if (residentResult.error) throw new Error(residentResult.error.message);

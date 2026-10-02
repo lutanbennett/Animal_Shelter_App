@@ -3,7 +3,12 @@ import { canManage } from "@/lib/auth/require-management";
 import { isShelterRole } from "@/lib/auth/app-access";
 import { requireRole } from "@/lib/auth/require-role";
 import { getT } from "@/lib/i18n/get-t";
-import { CONTACT_COLUMNS, type Contact } from "@/lib/contacts/contacts";
+import {
+  CONTACT_COLUMNS,
+  toVolunteerContact,
+  type Contact,
+  type VolunteerContact,
+} from "@/lib/contacts/contacts";
 import { ContactList, type ContactSummary } from "./ContactList";
 
 export default async function ContactsPage(props: PageProps<"/contacts">) {
@@ -11,18 +16,28 @@ export default async function ContactsPage(props: PageProps<"/contacts">) {
   // Archived contacts are loaded either way — a search still finds them —
   // and ContactList hides them unless this is set.
   const showArchived = (await props.searchParams).archived === "1";
-  const { supabase } = await requireRole(isShelterRole);
+  const { supabase, role } = await requireRole(isShelterRole);
 
-  // Every signed-in role can read contacts and placement_history (0001),
-  // so the list is open to all — a volunteer doing a foster pick-up needs
-  // the carer's number as much as staff do. Open placements give each
-  // carer their "N in care" badge.
+  // The list is open to every shelter role, but a volunteer reads only name
+  // and phone (0126, volunteer_contacts) — a volunteer doing a foster pick-up
+  // needs the carer's number, not their address or notes. Open placements
+  // give each carer their "N in care" badge.
   const [contactsResult, placementsResult, roleResult, friendsResult] = await Promise.all([
-    supabase
-      .from("contacts")
-      .select(CONTACT_COLUMNS)
-      .order("name")
-      .returns<Contact[]>(),
+    role === "volunteer"
+      ? supabase
+          .from("volunteer_contacts")
+          .select("id, name, phone")
+          .order("name")
+          .returns<{ id: string; name: string; phone: string | null }[]>()
+          .then((r) => ({
+            ...r,
+            data: r.data?.map(toVolunteerContact) as VolunteerContact[] | null,
+          }))
+      : supabase
+          .from("contacts")
+          .select(CONTACT_COLUMNS)
+          .order("name")
+          .returns<Contact[]>(),
     supabase
       .from("placement_history")
       .select("carer_id")

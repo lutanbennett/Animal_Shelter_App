@@ -15,9 +15,10 @@ import {
   isArchived,
   type Contact,
   type ContactType,
+  type VolunteerContact,
 } from "@/lib/contacts/contacts";
 
-export type ContactSummary = Contact & {
+export type ContactSummary = (Contact | VolunteerContact) & {
   /** Residents fostered or adopted and living with this carer now. */
   inCareCount: number;
   /** Shelter Friend profile (0076): null when there is none, else whether it is published. */
@@ -34,7 +35,7 @@ type TypeFilter = ContactType | "all" | "friends";
 const isFriend = (c: ContactSummary) => c.friendPublished !== null;
 
 /** Case-insensitive substring match over the fields someone would search by. */
-function matches(contact: Contact, query: string) {
+function matches(contact: Contact | VolunteerContact, query: string) {
   if (!query) return true;
   const q = query.toLowerCase();
   return [
@@ -75,13 +76,15 @@ function ContactCard({ contact }: { contact: ContactSummary }) {
             {contact.name}
           </Link>
           <div className="flex flex-wrap items-center gap-1.5">
-            <span
-              className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                isCarer ? "bg-success/15 text-success" : "bg-surface-hover text-muted"
-              }`}
-            >
-              {contactTypeLabel(t, contact.type)}
-            </span>
+            {contact.type && (
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                  isCarer ? "bg-success/15 text-success" : "bg-surface-hover text-muted"
+                }`}
+              >
+                {contactTypeLabel(t, contact.type)}
+              </span>
+            )}
             {archived && <ArchivedBadge label={t.contacts.archive.badge} />}
             {contact.friendPublished !== null && (
               <FriendBadge
@@ -151,7 +154,9 @@ export function ContactList({
       ["all", listed.length],
       ["friends", listed.filter(isFriend).length],
     ]);
-    for (const c of listed) counts.set(c.type, (counts.get(c.type) ?? 0) + 1);
+    for (const c of listed) {
+      if (c.type) counts.set(c.type, (counts.get(c.type) ?? 0) + 1);
+    }
     return counts;
   }, [listed]);
 
@@ -196,7 +201,8 @@ export function ContactList({
   // The Friends chip appears once there is a Friend to filter to.
   const filters: TypeFilter[] = [
     "all",
-    ...CONTACT_TYPES,
+    // A volunteer reads no type (0126), so there is nothing to filter by.
+    ...(contacts.some((c) => c.type) ? CONTACT_TYPES : []),
     ...(contacts.some(isFriend) ? (["friends"] as const) : []),
   ];
 

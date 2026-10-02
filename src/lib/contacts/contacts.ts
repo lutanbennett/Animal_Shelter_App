@@ -39,6 +39,33 @@ export type Contact = {
   archive_reason: string | null;
 };
 
+/**
+ * What a volunteer reads of a contact (0126, backlog DB-5): id, name and
+ * phone, from the volunteer_contacts view. Everything else is null, and so is
+ * the type — a page that shows the type or the archive state shows nothing
+ * for these rather than a guess.
+ */
+export type VolunteerContact = Omit<Contact, "type"> & { type: null };
+
+export function toVolunteerContact(row: {
+  id: string;
+  name: string;
+  phone: string | null;
+}): VolunteerContact {
+  return {
+    ...row,
+    type: null,
+    email: null,
+    line_id: null,
+    messenger_id: null,
+    whatsapp: null,
+    address: null,
+    notes: null,
+    archived_at: null,
+    archive_reason: null,
+  };
+}
+
 export const CONTACT_COLUMNS =
   "id, name, type, phone, email, line_id, messenger_id, whatsapp, address, notes, archived_at, archive_reason";
 
