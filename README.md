@@ -230,6 +230,11 @@ read that file on their own, which is what keeps a production build from
 happening by accident: only `scripts/deploy.mjs` puts its values in the
 shell.
 
+Each environment's values file also carries `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`,
+the same value on the dev machine and on the Pi, so the Worker's build and the
+Pi's build accept each other's forms (`docs/pi-hosting.md`, step 1b;
+`node scripts/actions-key.mjs --generate` makes one).
+
 ## Deploying to Cloudflare
 
 The app deploys to Cloudflare Workers through the `@opennextjs/cloudflare`

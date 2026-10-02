@@ -170,15 +170,17 @@ a second copy elsewhere (for example a free cloud server) keeps answering.
 The 1102 errors that put the Pi in front came from *drawing pages*. Saving may
 fit the Worker's limit. If it does, a Pi outage costs nothing but speed.
 
-- **Cannot be judged yet, because one question is still open.**
+- **Cannot be judged yet, because one question is still open (CPU).**
   1. **The form key (answered 2026-10-03, by the `server-actions-encryption-key`
      stream, not re-run here).** A form drawn by one build and posted to a build
      with a different key **fails** with "Failed to find Server Action", and it
      fails for *every* form, not only some. With the **same key** on both builds
      it works in both directions. That stream reproduced it locally with plain
-     Node builds. **It has not yet checked the Worker's own build**, so treat that
-     as likely but unconfirmed. So option 5 is possible only if both builds
-     carry one shared key, and that key is now being set up in its own PR.
+     Node builds, and then on the Worker’s own OpenNext build too: built with a given
+     key it records that key and the same 164 action IDs as the plain build the
+     Pi runs (the other stream’s report, evidence in the decision file `docs/decisions/2026-10-03-server-actions-encryption-key.md`,
+     which arrives with #312; not re-run here). So option 5 is possible only if both builds
+     carry one shared key, and that key is being set up in its own PR (#312), **not yet deployed**.
   2. **CPU is still open.** Saving on the Worker has to fit the free CPU limit.
      Nobody has measured it. The fallback today does exactly this, and it is an
      outage mode, not the everyday path.
@@ -352,10 +354,11 @@ Put the numbers in this table. Until each cell is filled in, it stays "unmeasure
 ## What is not known yet
 
 - **Every timing above.** No drill has been run for this paper.
-- **Whether the Worker's own build behaves like the plain builds that were
-  tested.** A form from one build fails on another unless they share a key, and
-  a shared key fixes it; that was shown on plain Node builds. The Worker's build
-  is still to be checked by that stream.
+- **Whether the shared key is live.** A form from one build fails on another
+  unless they share a key, and a shared key fixes it; that was shown on plain
+  builds and on the Worker’s own build. The key is in PR #312 and has to be in
+  both machines’ values files and both builds redeployed before it counts. Until
+  then a Pi-drawn form saved on the Worker still fails.
 - **Whether saving fits the Worker's CPU limit.** Unmeasured. This is now the
   only open question on option 5.
 - **How long past power cuts in Suphan Buri lasted.** Needed to size a battery.

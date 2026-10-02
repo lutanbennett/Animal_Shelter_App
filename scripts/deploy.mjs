@@ -31,6 +31,7 @@ import { appliedMigrations } from "./lib/deploy-schema.mjs";
 import { releaseProblems, schemaVerdict } from "./lib/release-guards.mjs";
 import { strayEnvFiles } from "./lib/env-leak.mjs";
 import { lockedPublicSiteProblem, readWranglerConfig } from "./lib/wrangler.mjs";
+import { ACTIONS_KEY_VAR, actionsKeyProblem, builtKeyProblem, keyFingerprint } from "./lib/actions-key.mjs";
 // TypeScript, loaded through Node's type stripping: the same file the app
 // renders, so the page, the tag and the email can't disagree.
 import { latestRelease, majorReleasesSince, unreleased } from "../src/lib/releases.ts";
@@ -135,6 +136,17 @@ for (const key of [...BUILD_VARS, ...(pushSecrets ? RUNTIME_SECRETS : [])]) {
   }
 }
 
+// Same value the Pi builds with, or a form one renders fails on the other
+// (scripts/lib/actions-key.mjs). Refused here, before a build, rather than
+// shipped with a random key of its own.
+{
+  const problem = actionsKeyProblem(env[ACTIONS_KEY_VAR]);
+  if (problem) {
+    console.error(`deploy: ${envName}: ${problem}`);
+    process.exit(2);
+  }
+}
+
 {
   const builds = appEnvForSupabaseUrl(env.NEXT_PUBLIC_SUPABASE_URL);
   if (builds !== EXPECTED_APP_ENV[envName]) {
@@ -228,12 +240,24 @@ console.log(`deploy: ${envName} → Supabase project ${projectRef(env)} (${git("
 // `.next/dev` types the dev server keeps rewriting.
 if (!skipBuild) {
   const buildEnv = { ...process.env };
-  for (const key of BUILD_VARS) buildEnv[key] = env[key];
+  for (const key of [...BUILD_VARS, ACTIONS_KEY_VAR]) buildEnv[key] = env[key];
   // Pinned, not inherited: the shell beats every env file, so none can leak a
   // host into the bundle, and the Worker's host no longer rides on a file.
   buildEnv.NEXT_PUBLIC_SITE_URL = SITE_ORIGINS[envName];
   run("npm run opennext:build", { env: buildEnv });
   run("node scripts/strip-baked-env.mjs");
+}
+
+// Whatever .next holds now — fresh, or the previous run's under --skip-build —
+// must carry this environment's key. Compare this fingerprint with the one
+// deploy-pi.sh prints on the Pi.
+{
+  const problem = builtKeyProblem(env[ACTIONS_KEY_VAR]);
+  if (problem) {
+    console.error(`deploy: ${envName}: ${problem}`);
+    process.exit(2);
+  }
+  console.log(`deploy: Server Actions key ${keyFingerprint(env[ACTIONS_KEY_VAR])} (the Pi's build must print the same)`);
 }
 
 if (pushSecrets) {
