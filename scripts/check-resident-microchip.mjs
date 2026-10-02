@@ -22,6 +22,8 @@ const fn = readFileSync(join(root, "supabase/migrations/0116_set_resident_microc
 
 const sql = `
 begin;
+create temp table h_pre on commit drop as
+  select count(*) filter (where microchip_number is not null or microchip_implanted_on is not null) as n from residents;
 ${migration}
 -- a second run of the whole file must be harmless
 ${migration}
@@ -37,10 +39,10 @@ declare
   v_unl uuid := gen_random_uuid(); v_own uuid := gen_random_uuid(); v_oth uuid := gen_random_uuid();
   v_in uuid; v_out uuid; v_before jsonb; v_after jsonb; v_err text;
 begin
-  -- A. existing rows: none back-filled
+  -- A. the replay back-filled nothing (real rows may carry a chip by now: compare with before)
   select count(*), count(*) filter (where microchip_number is not null or microchip_implanted_on is not null)
     into v_rows, v_set from residents;
-  if v_set <> 0 then raise exception 'FAIL A % existing rows were back-filled', v_set; end if;
+  if v_set <> (select n from h_pre) then raise exception 'FAIL A the replay back-filled % rows', v_set - (select n from h_pre); end if;
 
   -- B. shape: text and date, both nullable
   select count(*) into v_n from information_schema.columns
@@ -197,7 +199,7 @@ begin
   select count(*) into v_n from residents where id = v_in and microchip_number = '985112345678905';
   if v_n <> 1 then raise exception 'FAIL G4 a refused call changed the row'; end if;
 
-  raise exception 'HARNESS-OK existing rows=% back-filled=0 | shape: text + date, nullable | many nulls coexist | check rejects 14 digits, 16 digits, spaces, dashes, a letter, legacy 9-digit and empty string; accepts 15 digits with leading zeros | partial unique rejects a duplicate on update and insert and frees on clear | deceased resident: chip and date locked, bio still editable | file ran twice | 0116 set_resident_microchip: vet in scope writes, corrects and clears with no other column changed; vet out of scope, vet or staff on a deceased resident, duplicate, 14-digit / spaced / letters / empty, volunteer, unlinked vet and anon all refused; staff write allowed', v_rows;
+  raise exception 'HARNESS-OK existing rows=% back-filled=0 by the replay | shape: text + date, nullable | many nulls coexist | check rejects 14 digits, 16 digits, spaces, dashes, a letter, legacy 9-digit and empty string; accepts 15 digits with leading zeros | partial unique rejects a duplicate on update and insert and frees on clear | deceased resident: chip and date locked, bio still editable | file ran twice | 0116 set_resident_microchip: vet in scope writes, corrects and clears with no other column changed; vet out of scope, vet or staff on a deceased resident, duplicate, 14-digit / spaced / letters / empty, volunteer, unlinked vet and anon all refused; staff write allowed', v_rows;
 end;
 $h$;
 rollback;

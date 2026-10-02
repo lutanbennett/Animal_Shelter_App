@@ -19,6 +19,7 @@ const migration = readFileSync(join(root, "supabase/migrations/0074_vet_doctor_n
 
 const sql = `
 begin;
+create temp table h_pre on commit drop as select count(doctor_name) as n from vet_appointments;
 ${migration}
 -- a second run of the whole file must be harmless
 ${migration}
@@ -29,9 +30,9 @@ declare
   v_rows int; v_nonnull int; v_long text := repeat('ก', 500);
   v_rejected boolean := false;
 begin
-  -- A. existing rows: all still there, none back-filled
+  -- A. the replay back-filled nothing (real rows may carry a name by now: compare with before)
   select count(*), count(doctor_name) into v_rows, v_nonnull from vet_appointments;
-  if v_nonnull <> 0 then raise exception 'FAIL A % existing rows were back-filled', v_nonnull; end if;
+  if v_nonnull <> (select n from h_pre) then raise exception 'FAIL A the replay back-filled % rows', v_nonnull - (select n from h_pre); end if;
 
   select s.resident_id into v_res from resident_current_state s
    where s.current_status in ('Resident', 'Unassigned') limit 1;
@@ -72,7 +73,7 @@ begin
   if v_got is not null then raise exception 'FAIL C cleared to [%]', v_got; end if;
 
   -- D. the constraint holds on its own, with the trigger out of the way
-  alter table vet_appointments disable trigger vet_appointments_tidy_doctor_name;
+  alter table vet_appointments disable trigger user; -- all of them: 0102's doctor-link trigger also trims doctor_name
   begin
     insert into vet_appointments (resident_id, vet_id, appointment_date, doctor_name)
       values (v_res, v_vet, now(), ' untrimmed');
@@ -86,9 +87,9 @@ begin
   exception when check_violation then v_rejected := true;
   end;
   if not v_rejected then raise exception 'FAIL D constraint accepted an empty string'; end if;
-  alter table vet_appointments enable trigger vet_appointments_tidy_doctor_name;
+  alter table vet_appointments enable trigger user;
 
-  raise exception 'HARNESS-OK existing rows=% back-filled=% | insert trim, tab/newline, blank->null, whitespace->null, omitted->null, 500 Thai chars | update trim, other-column edit, clear->null | constraint rejects untrimmed and empty with trigger disabled | file ran twice', v_rows, v_nonnull;
+  raise exception 'HARNESS-OK existing rows=% with a name=% (replay added none) | insert trim, tab/newline, blank->null, whitespace->null, omitted->null, 500 Thai chars | update trim, other-column edit, clear->null | constraint rejects untrimmed and empty with trigger disabled | file ran twice', v_rows, v_nonnull;
 end;
 $h$;
 rollback;
