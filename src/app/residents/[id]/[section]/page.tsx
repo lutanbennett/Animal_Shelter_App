@@ -24,6 +24,9 @@ import { AdoptionUpdateActions } from "../adoption-updates/AdoptionUpdateActions
 import { BloodTestList, type BloodTestRow } from "@/components/BloodTestList";
 import { ProcedureList, type ProcedureRow } from "@/components/ProcedureList";
 import { RecordRowActions } from "@/components/RecordRowActions";
+import { ArchiveRecordControl } from "@/components/ArchiveRecordControl";
+import { ShowArchivedToggle } from "@/components/ShowArchivedToggle";
+import { canArchiveMedical, type MedicalArchiveKind } from "@/lib/medical-archive/kinds";
 import { endPrescriptionToday } from "@/app/prescriptions/actions";
 import { endDietToday } from "@/app/diets/actions";
 import { defaultDailyQuantity, formatQuantity } from "@/lib/diets/options";
@@ -123,6 +126,61 @@ export default async function ResidentSectionPage(
   const displayName = resident.thai_name
     ? `${resident.name} (${resident.thai_name})`
     : resident.name;
+
+  // Archive (0124): a second list of archived rows behind ?archived=1, as on
+  // contacts. The live queries below already skip archived rows; this only
+  // adds the way to see and restore them. Who gets the button is
+  // canArchiveMedical: staff and up everywhere, a vet only on their own
+  // clinic's visits and prescriptions, nobody on a deceased resident.
+  const showArchived = (await props.searchParams).archived === "1";
+  const role = (roleResult.data as string | null) ?? null;
+  const ownVetId =
+    role === "vet"
+      ? (((await supabase.rpc("current_user_vet_id")).data as string | null) ?? null)
+      : null;
+  const canArchive = (kind: MedicalArchiveKind, clinicVetId: string | null = null) =>
+    !isDeceased && canArchiveMedical(kind, role, ownVetId, clinicVetId);
+  const archivedCount = async (
+    table: "weight" | "prescriptions" | "vet_appointments" | "immunization_records",
+  ) =>
+    (
+      await supabase
+        .from(table)
+        .select("id", { count: "exact", head: true })
+        .eq("resident_id", id)
+        .not("archived_at", "is", null)
+    ).count ?? 0;
+  const ra = t.recordArchive;
+  const archivedToggle = (count: number) => (
+    <ShowArchivedToggle
+      count={count}
+      shown={showArchived}
+      href={`/residents/${id}/${section}${showArchived ? "" : "?archived=1"}`}
+      labels={{ hidden: ra.archivedHidden, show: ra.showArchived, hide: ra.hideArchived }}
+    />
+  );
+  const archivedList = <T extends { id: string; archive_reason: string | null }>(
+    rows: T[],
+    render: (row: T) => React.ReactNode,
+  ) =>
+    showArchived &&
+    rows.length > 0 && (
+      <section className="flex flex-col gap-2">
+        <h2 className="text-sm font-medium text-muted">{ra.archivedHeading(rows.length)}</h2>
+        <RecordList
+          rows={rows}
+          empty=""
+          render={(row) => (
+            <div className="flex flex-col gap-1 opacity-80">
+              {render(row)}
+              {row.archive_reason && (
+                <span className="text-xs text-muted">{ra.reason(row.archive_reason)}</span>
+              )}
+            </div>
+          )}
+        />
+      </section>
+    );
 
   let body: React.ReactNode = null;
 
@@ -396,6 +454,53 @@ export default async function ResidentSectionPage(
             immunization_types: { name: string } | null;
           }[]
         >();
+      const immCount = await archivedCount("immunization_records");
+      const { data: archivedImm } = showArchived
+        ? await supabase
+            .from("immunization_records")
+            .select("id, date_administered, administered_by, archive_reason, immunization_types(name)")
+            .not("archived_at", "is", null)
+            .eq("resident_id", id)
+            .order("date_administered", { ascending: false })
+            .returns<
+              {
+                id: string;
+                date_administered: string;
+                administered_by: string | null;
+                archive_reason: string | null;
+                immunization_types: { name: string } | null;
+              }[]
+            >()
+        : { data: [] };
+      const renderImmunization = (
+        row: {
+          id: string;
+          date_administered: string;
+          administered_by: string | null;
+          immunization_types: { name: string } | null;
+        },
+        archived: boolean,
+      ) => (
+        <div className="flex items-center justify-between gap-3">
+          <span className="font-medium">
+            {row.immunization_types?.name ?? t.residents.sections.unknownVaccine}
+          </span>
+          <span className="flex flex-col items-end gap-1 text-xs text-muted">
+            <span>
+              {formatDate(row.date_administered, locale)}
+              {row.administered_by ? ` · ${row.administered_by}` : ""}
+            </span>
+            {canArchive("immunization") && (
+              <ArchiveRecordControl
+                kind="immunization"
+                residentId={id}
+                id={row.id}
+                archived={archived}
+              />
+            )}
+          </span>
+        </div>
+      );
       const { data: missing } = await supabase
         .from("immunization_compliance")
         .select("immunization_type_name")
@@ -463,19 +568,10 @@ export default async function ResidentSectionPage(
           <RecordList
             rows={data ?? []}
             empty={t.residents.sections.empty.immunizations}
-            render={(row) => (
-              <div className="flex items-center justify-between">
-                <span className="font-medium">
-                  {row.immunization_types?.name ??
-                    t.residents.sections.unknownVaccine}
-                </span>
-                <span className="text-xs text-muted">
-                  {formatDate(row.date_administered, locale)}
-                  {row.administered_by ? ` · ${row.administered_by}` : ""}
-                </span>
-              </div>
-            )}
+            render={(row) => renderImmunization(row, false)}
           />
+          {archivedToggle(immCount)}
+          {archivedList(archivedImm ?? [], (row) => renderImmunization(row, true))}
         </div>
       );
       break;
@@ -484,13 +580,14 @@ export default async function ResidentSectionPage(
       const [{ data }, { data: visitWeights }] = await Promise.all([
         supabase
           .from("vet_appointments")
-          .select("id, appointment_date, status, reason, doctor_name, notes, cost, vets(name)")
+          .select("id, vet_id, appointment_date, status, reason, doctor_name, notes, cost, vets(name)")
           .is("archived_at", null)
           .eq("resident_id", id)
           .order("appointment_date", { ascending: false })
           .returns<
             {
               id: string;
+              vet_id: string | null;
               appointment_date: string;
               status: string;
               reason: string | null;
@@ -514,6 +611,27 @@ export default async function ResidentSectionPage(
       const weightByVisit = new Map(
         (visitWeights ?? []).map((w) => [w.vet_appointment_id, w.id]),
       );
+      const visitCount = await archivedCount("vet_appointments");
+      const { data: archivedVisits } = showArchived
+        ? await supabase
+            .from("vet_appointments")
+            .select("id, vet_id, appointment_date, status, reason, doctor_name, archive_reason, vets(name)")
+            .not("archived_at", "is", null)
+            .eq("resident_id", id)
+            .order("appointment_date", { ascending: false })
+            .returns<
+              {
+                id: string;
+                vet_id: string | null;
+                appointment_date: string;
+                status: string;
+                reason: string | null;
+                doctor_name: string | null;
+                archive_reason: string | null;
+                vets: { name: string } | null;
+              }[]
+            >()
+        : { data: [] };
       const today = todayIso();
       // A visit can end with the resident admitted; offer that on each record
       // unless they're already in hospital, adopted out, or gone.
@@ -613,10 +731,47 @@ export default async function ResidentSectionPage(
                       </Link>
                     )}
                   </div>
+                  {canArchive("visit", row.vet_id) && (
+                    <ArchiveRecordControl
+                      kind="visit"
+                      residentId={id}
+                      id={row.id}
+                      archived={false}
+                    />
+                  )}
                 </div>
               </div>
             )}
           />
+          {archivedToggle(visitCount)}
+          {archivedList(archivedVisits ?? [], (row) => (
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col">
+                <span className="font-medium">
+                  {row.reason ?? t.residents.sections.vetVisitFallback}
+                </span>
+                {(row.vets?.name || row.doctor_name) && (
+                  <span className="text-xs text-muted">
+                    {[row.vets?.name, row.doctor_name].filter(Boolean).join(" · ")}
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <span className="text-xs text-muted">
+                  {formatDate(row.appointment_date, locale)} ·{" "}
+                  {appointmentStatusLabel(t, row.status)}
+                </span>
+                {canArchive("visit", row.vet_id) && (
+                  <ArchiveRecordControl
+                    kind="visit"
+                    residentId={id}
+                    id={row.id}
+                    archived
+                  />
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       );
       break;
@@ -625,7 +780,7 @@ export default async function ResidentSectionPage(
       const { data, error } = await supabase
         .from("prescriptions")
         .select(
-          "id, start_date, end_date, dose_quantity, notes, medication(name, dose_unit), frequency(label), vet_appointments(appointment_date)",
+          "id, start_date, end_date, dose_quantity, notes, medication(name, dose_unit), frequency(label), vet_appointments(appointment_date, vet_id)",
         )
         .is("archived_at", null)
         .eq("resident_id", id)
@@ -639,9 +794,33 @@ export default async function ResidentSectionPage(
             notes: string | null;
             medication: { name: string; dose_unit: string } | null;
             frequency: { label: string } | null;
-            vet_appointments: { appointment_date: string } | null;
+            vet_appointments: { appointment_date: string; vet_id: string | null } | null;
           }[]
         >();
+      const rxCount = await archivedCount("prescriptions");
+      const { data: archivedRx } = showArchived
+        ? await supabase
+            .from("prescriptions")
+            .select(
+              "id, start_date, end_date, dose_quantity, notes, archive_reason, medication(name, dose_unit), frequency(label), vet_appointments(appointment_date, vet_id)",
+            )
+            .not("archived_at", "is", null)
+            .eq("resident_id", id)
+            .order("start_date", { ascending: false })
+            .returns<
+              {
+                id: string;
+                start_date: string;
+                end_date: string | null;
+                dose_quantity: number | null;
+                notes: string | null;
+                archive_reason: string | null;
+                medication: { name: string; dose_unit: string } | null;
+                frequency: { label: string } | null;
+                vet_appointments: { appointment_date: string; vet_id: string | null } | null;
+              }[]
+            >()
+        : { data: [] };
       // Current = still running today (including one dated to start later);
       // expired = its end date has passed. A death ends every open
       // prescription on the date of death (0027), so a deceased resident's
@@ -652,7 +831,11 @@ export default async function ResidentSectionPage(
       const expired = rows.filter((row) => row.end_date && row.end_date < today);
       // Every row can be edited while the record is open; "End today" only
       // makes sense on a current row whose course has started.
-      const renderPrescription = (row: (typeof rows)[number], isCurrent: boolean) => {
+      const renderPrescription = (
+        row: (typeof rows)[number],
+        isCurrent: boolean,
+        archived = false,
+      ) => {
         const dose = formatDose(t, row.dose_quantity, row.medication?.dose_unit);
         return (
           <div className="flex flex-col gap-1">
@@ -689,7 +872,7 @@ export default async function ResidentSectionPage(
               </div>
             </div>
             {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
-            {!isDeceased && (
+            {!isDeceased && !archived && (
               <RecordRowActions
                 editHref={`/prescriptions/${row.id}/edit`}
                 endToday={
@@ -702,6 +885,16 @@ export default async function ResidentSectionPage(
                   ending: t.prescriptions.ending,
                 }}
               />
+            )}
+            {canArchive("prescription", row.vet_appointments?.vet_id ?? null) && (
+              <div className="flex justify-end">
+                <ArchiveRecordControl
+                  kind="prescription"
+                  residentId={id}
+                  id={row.id}
+                  archived={archived}
+                />
+              </div>
             )}
           </div>
         );
@@ -748,6 +941,8 @@ export default async function ResidentSectionPage(
               )}
             </>
           )}
+          {archivedToggle(rxCount)}
+          {archivedList(archivedRx ?? [], (row) => renderPrescription(row, false, true))}
         </div>
       );
       break;
@@ -903,6 +1098,25 @@ export default async function ResidentSectionPage(
           }[]
         >();
       const rows = data ?? [];
+      const weightCount = await archivedCount("weight");
+      const { data: archivedWeights } = showArchived
+        ? await supabase
+            .from("weight")
+            .select("id, date, weight_kg, notes, archive_reason, vet_appointments(appointment_date)")
+            .not("archived_at", "is", null)
+            .eq("resident_id", id)
+            .order("date", { ascending: false })
+            .returns<
+              {
+                id: string;
+                date: string;
+                weight_kg: number;
+                notes: string | null;
+                archive_reason: string | null;
+                vet_appointments: { appointment_date: string } | null;
+              }[]
+            >()
+        : { data: [] };
       // Newest first, so the trend reads latest vs the one before it and
       // vs the very first reading on file.
       const latest = rows[0];
@@ -988,17 +1202,50 @@ export default async function ResidentSectionPage(
                   </span>
                 </div>
                 {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
-                {!isDeceased && (
-                  <Link
-                    href={`/weight/${row.id}/edit`}
-                    className="self-end text-xs font-medium text-primary hover:underline"
-                  >
-                    {t.common.edit}
-                  </Link>
+                {(!isDeceased || canArchive("weight")) && (
+                  <div className="flex items-start justify-end gap-3">
+                    {!isDeceased && (
+                      <Link
+                        href={`/weight/${row.id}/edit`}
+                        className="text-xs font-medium text-primary hover:underline"
+                      >
+                        {t.common.edit}
+                      </Link>
+                    )}
+                    {canArchive("weight") && (
+                      <ArchiveRecordControl
+                        kind="weight"
+                        residentId={id}
+                        id={row.id}
+                        archived={false}
+                      />
+                    )}
+                  </div>
                 )}
               </div>
             )}
           />
+          {archivedToggle(weightCount)}
+          {archivedList(archivedWeights ?? [], (row) => (
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-medium">{formatWeightKg(row.weight_kg, locale)}</span>
+                <span className="text-right text-xs text-muted">
+                  {formatDate(row.date, locale)}
+                  {row.vet_appointments &&
+                    ` · ${t.residents.sections.linkedVisit(
+                      formatDate(row.vet_appointments.appointment_date, locale),
+                    )}`}
+                </span>
+              </div>
+              {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
+              {canArchive("weight") && (
+                <div className="flex justify-end">
+                  <ArchiveRecordControl kind="weight" residentId={id} id={row.id} archived />
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       );
       break;

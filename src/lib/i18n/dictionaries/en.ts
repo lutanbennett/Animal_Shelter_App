@@ -2555,6 +2555,34 @@ const en = {
       },
     },
   },
+  recordArchive: {
+    badge: "Archived",
+    archive: "Archive",
+    restore: "Restore",
+    reasonLabel: "Reason (optional)",
+    reasonPlaceholder: "e.g. entered on the wrong resident",
+    confirmArchive: "Archive",
+    explain:
+      "Archiving keeps the record but takes it out of the lists, charts, forecasts and counts. You can restore it from Show archived.",
+    showArchived: "Show archived",
+    hideArchived: "Hide archived",
+    archivedHidden: (n: number) => `${n} archived hidden`,
+    archivedHeading: (n: number) => `Archived (${n})`,
+    reason: (reason: string) => `Reason: ${reason}`,
+    errors: {
+      notAllowed: "Your role can't archive medical records.",
+      cannotArchive:
+        "This record couldn't be archived. It may already be archived, or it isn't one your role can change.",
+      cannotRestore:
+        "This record couldn't be restored. It may already be restored, or it isn't one your role can change.",
+      slotTaken: {
+        weight: "There is already a reading for that day, or for that visit. Archive or correct it first.",
+        immunization: "That dose has already been recorded again for the same day. Archive that one first.",
+        prescription: "This prescription can't be restored right now.",
+        visit: "This visit can't be restored right now.",
+      },
+    },
+  },
   bloodTests: {
     pageTitle: "Log Blood Test",
     pageSubtitle:
