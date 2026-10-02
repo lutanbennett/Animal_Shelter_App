@@ -96,7 +96,7 @@ export default async function SecurityPage() {
       createdAt: u.created_at,
       lastSignInAt: u.last_sign_in_at ?? null,
     }))
-    .sort((a, b) => (b.lastSignInAt ?? b.createdAt).localeCompare(a.lastSignInAt ?? a.createdAt));
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   const users: SecurityUser[] = authUsers
     .filter((u) => roleByUserId.has(u.id))

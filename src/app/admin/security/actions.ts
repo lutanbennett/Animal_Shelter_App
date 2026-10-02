@@ -467,6 +467,40 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
 }
 
 /**
+ * Dismisses an access request: deletes the orphan sign-in. Only ever for
+ * a login with no role. The check is made here, against the database, so
+ * a stale page (someone approved them a moment ago) or a hand-made call
+ * cannot delete a real person; deleteUser is for those, and refuses
+ * anyone with records.
+ */
+export async function dismissAccessRequest(userId: string): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.admin.security.errors;
+  return runAction("security.dismissAccessRequest", t.common.somethingWentWrong, async () => {
+    const denied = await refuseUnlessAdmin(t);
+    if (denied) return denied;
+    if (await isCurrentUser(userId)) return refuse(e.cantDeleteOwnAccount);
+
+    const admin = createAdminClient();
+    const { data: role, error: roleError } = await admin
+      .from("user_roles")
+      .select("user_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (roleError) return unexpectedFailure("security.dismissAccessRequest", roleError, t.common.somethingWentWrong);
+    if (role) return refuse(e.alreadyHasAccess);
+
+    const { error } = await admin.auth.admin.deleteUser(userId);
+    if (error) {
+      if (isUserNotFound(error)) return refuse(e.userNotFound);
+      return unexpectedFailure("security.dismissAccessRequest", error, t.common.somethingWentWrong);
+    }
+    revalidateSecurity();
+    return { ok: true };
+  });
+}
+
+/**
  * Removes a login's authenticator app, for a lost or replaced phone: the
  * next time they open Security they set one up again. Done by another
  * admin who has passed 2-step — or by yourself, to move to a new phone
