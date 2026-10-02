@@ -7,7 +7,8 @@ rollout, done in one guided session with Lutan at the keyboard.
 
 - **Key pair** made by Lutan on his own machine. The public key is the
   recipient (`age1fz65…y56v9sv3cxyp`); the private key is in his iPhone
-  Passwords (iCloud Keychain) and nowhere else, never on the Pi or in chat. It
+  Passwords (iCloud Keychain) and on a hardware-encrypted USB stick, two copies
+  and no more, never on the Pi or in chat. It
   was first stored without the `AGE-SECRET-KEY-` prefix; caught when the
   rehearsal's decrypt failed, which is what the rehearsal is for.
 - **First encrypted production run** on the Pi, 2026-10-02 07:59 UTC: "encrypted
