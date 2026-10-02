@@ -89,7 +89,7 @@ gates: typecheck=0 lint=0 build=0
 
   The first run, before the untagging, ended the same way (`build exited 0 after 185s`). Both are recorded because the second is the one that applies to the shipped commit, and a note's object-to-string form is exactly the sort of change a reader would assume needed no re-run.
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — **6 of 6 passing, 0 failing, `mergeStateStatus: CLEAN`** on #306 at `39bcbd8`, read from the PR rather than assumed from the local gates. Ticked in this follow-up commit, after the run reported, not at push time
 - [x] Newest release version matches `package.json` — both `0.15.0`, read back from the parsed register rather than from the diff
 - [x] `unreleased` is empty — emptied by this PR; it held exactly 3 entries and the cut script refused any other count
 - [x] **`majorReleasesSince("0.14.0")` returns `["0.15.0"]`** — the check that makes the deploy mail admins, verified rather than inferred
