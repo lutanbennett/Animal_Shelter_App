@@ -13,7 +13,7 @@ Filled from `docs/test-plan-template.md`.
 | PR | linked from the PR itself |
 | Tested by / date | Claude / 2026-10-02 |
 | Carries a migration? | no |
-| Tested at SHA | `4e7cba8` (base); see the PR for the tip |
+| Tested at SHA | `dbe5daa` (gates; base `4e7cba8`); see the PR for the tip |
 
 ## 1. Scope and risk
 
@@ -38,8 +38,8 @@ wait for `worktree.mjs new` to exit before trusting the tree. A gate ticked
 because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
-- [ ] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly — n/a: not yet run at this commit; run before the PR opens
-- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`, at `0476292`:
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (no conflicts), and `sync` pushed
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`, at `dbe5daa`:
 
 ```
 === gates: build exited 0 after 358s
@@ -47,7 +47,6 @@ indistinguishable from one that passed.
 gates: typecheck=0 lint=0 build=0
 ```
 
-(a first run reported build=1, "Another next build process is already running": a stale `.next/lock`, removed; the rerun above is clean)
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
