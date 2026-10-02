@@ -8,7 +8,8 @@ import { MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
-import type { ContactType } from "@/lib/contacts/contacts";
+import { isArchived, type ContactType } from "@/lib/contacts/contacts";
+import { insertContact } from "@/lib/contacts/create";
 import { checkFacebookUrl, checkHttpsUrl, FACEBOOK_HOSTS, type LinkCheck } from "@/lib/links/validate";
 import {
   canBecomeFriend,
@@ -83,6 +84,51 @@ async function friendContactId(
 }
 
 /**
+ * The checks every write of a profile's fields shares — Save on the card
+ * and the wizard's one save: both links, the date, and the opt-ins read
+ * as strictly boolean (anything not exactly true is off). Returns the
+ * columns to write, or the sentence to refuse with.
+ */
+function checkFriendFields(t: Dictionary, fields: FriendFields) {
+  const website = checkHttpsUrl(fields.websiteUrl);
+  const facebook = checkFacebookUrl(fields.facebookUrl);
+  const bad = linkError(t, website) ?? linkError(t, facebook, FACEBOOK_HOSTS);
+  if (bad || !website.ok || !facebook.ok) return { error: bad ?? t.common.failedToSave };
+
+  const friendSince = optional(fields.friendSince);
+  if (friendSince && !/^\d{4}-\d{2}-\d{2}$/.test(friendSince)) {
+    return { error: t.shelterFriends.errors.invalidDate };
+  }
+
+  const optIns = Object.fromEntries(
+    FRIEND_OPT_INS.map((key) => [key, fields[key] === true]),
+  ) as Record<FriendOptIn, boolean>;
+
+  return {
+    columns: {
+      blurb: optional(fields.blurb),
+      help_kind: optional(fields.helpKind),
+      discount_note: optional(fields.discountNote),
+      website_url: website.url,
+      facebook_url: facebook.url,
+      friend_since: friendSince,
+      ...optIns,
+    },
+  };
+}
+
+/** New profiles go last in the public order. */
+async function nextSortOrder(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const { data: last } = await supabase
+    .from("shelter_friends")
+    .select("sort_order")
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .returns<{ sort_order: number }[]>();
+  return (last?.[0]?.sort_order ?? -1) + 1;
+}
+
+/**
  * Make a Shelter Friend: an empty, unpublished profile with every detail
  * opted out (the table's defaults), placed last in the public order.
  * Offered only where canBecomeFriend() says — the one gate.
@@ -104,20 +150,13 @@ export async function createFriend(contactId: string): Promise<ActionResult<{ su
     const contact = contacts?.[0];
     if (!contact || !canBecomeFriend(contact)) return refuse(e.notOffered);
 
-    const { data: last } = await supabase
-      .from("shelter_friends")
-      .select("sort_order")
-      .order("sort_order", { ascending: false })
-      .limit(1)
-      .returns<{ sort_order: number }[]>();
-
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
     const { error } = await supabase.from("shelter_friends").insert({
       contact_id: contactId,
-      sort_order: (last?.[0]?.sort_order ?? -1) + 1,
+      sort_order: await nextSortOrder(supabase),
       updated_by: user?.id ?? null,
     });
     // contact_id is unique: a second tab's click lands here.
@@ -136,35 +175,18 @@ export async function updateFriend(
   return runAction("shelterFriends.updateFriend", t.common.somethingWentWrong, async () => {
     if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
 
-    const website = checkHttpsUrl(fields.websiteUrl);
-    const facebook = checkFacebookUrl(fields.facebookUrl);
-    const bad = linkError(t, website) ?? linkError(t, facebook, FACEBOOK_HOSTS);
-    if (bad || !website.ok || !facebook.ok) return refuse(bad ?? t.common.failedToSave);
-
-    const friendSince = optional(fields.friendSince);
-    if (friendSince && !/^\d{4}-\d{2}-\d{2}$/.test(friendSince)) {
-      return refuse(t.shelterFriends.errors.invalidDate);
-    }
+    const checked = checkFriendFields(t, fields);
+    if (!checked.columns) return refuse(checked.error);
 
     const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const optIns = Object.fromEntries(
-      FRIEND_OPT_INS.map((key) => [key, fields[key] === true]),
-    ) as Record<FriendOptIn, boolean>;
-
     const { data, error } = await supabase
       .from("shelter_friends")
       .update({
-        blurb: optional(fields.blurb),
-        help_kind: optional(fields.helpKind),
-        discount_note: optional(fields.discountNote),
-        website_url: website.url,
-        facebook_url: facebook.url,
-        friend_since: friendSince,
-        ...optIns,
+        ...checked.columns,
         updated_at: new Date().toISOString(),
         updated_by: user?.id ?? null,
       })
@@ -177,6 +199,135 @@ export async function updateFriend(
 
     revalidateFriendPages(data[0].contact_id);
     return { ok: true, success: t.common.saved };
+  });
+}
+
+/** Who the wizard's friend is: a contact already in the book, or one made on the spot. */
+export type WizardContact =
+  | { mode: "existing"; id: string }
+  | {
+      mode: "new";
+      name: string;
+      type: string;
+      phone: string;
+      email: string;
+      lineId: string;
+      address: string;
+    };
+
+/**
+ * The Shelter Friend wizard's one save: the contact (if it is new), the
+ * profile with its text and opt-ins, and the publish flag, in that order.
+ *
+ * Everything that can be refused is checked before the first write, and
+ * the profile goes in as a single row — so the only half-finished state
+ * there can be is a contact made a moment ago whose profile then failed,
+ * and that contact is removed again. (No RPC: the contact and the profile
+ * are two inserts either way, and a failed second one is cheap to undo.)
+ * The logo is not here — it goes to Drive, and a Drive failure must not
+ * undo the rest — so the wizard calls uploadFriendLogo with the id this
+ * returns. The opt-ins go through the same checkFriendFields as Save on
+ * the card: only what the caller sent as exactly true is on.
+ */
+export async function addShelterFriend(input: {
+  contact: WizardContact;
+  fields: FriendFields;
+  publish: boolean;
+}): Promise<ActionResult<{ success: string; friendId: string; contactId: string; name: string }>> {
+  const { t } = await getT();
+  return runAction("shelterFriends.addShelterFriend", t.common.somethingWentWrong, async () => {
+    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    const e = t.shelterFriends.errors;
+
+    const checked = checkFriendFields(t, input.fields);
+    if (!checked.columns) return refuse(checked.error);
+
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    let contactId: string;
+    let name: string;
+    let createdContact = false;
+
+    if (input.contact.mode === "existing") {
+      const { data: contacts, error: contactError } = await supabase
+        .from("contacts")
+        .select("id, name, type, archived_at")
+        .eq("id", input.contact.id)
+        .limit(1)
+        .returns<{ id: string; name: string; type: ContactType; archived_at: string | null }[]>();
+      if (contactError) return refuse(contactError.message);
+      const contact = contacts?.[0];
+      if (!contact || !canBecomeFriend(contact) || isArchived(contact)) return refuse(e.notOffered);
+      const { data: existing, error: existingError } = await supabase
+        .from("shelter_friends")
+        .select("id")
+        .eq("contact_id", contact.id)
+        .limit(1)
+        .returns<{ id: string }[]>();
+      if (existingError) return refuse(existingError.message);
+      if (existing?.length) return refuse(e.alreadyFriend);
+      contactId = contact.id;
+      name = contact.name;
+    } else {
+      const c = input.contact;
+      // The gate comes before the contact is made, not after: a type that
+      // can't be a Friend must not leave a stray contact behind.
+      if (!canBecomeFriend({ type: c.type as ContactType })) return refuse(e.notOffered);
+      const created = await insertContact(supabase, t, {
+        name: c.name,
+        type: c.type,
+        phone: c.phone,
+        email: c.email,
+        lineId: c.lineId,
+        address: c.address,
+      });
+      if (!created.ok) return refuse(created.error);
+      contactId = created.id;
+      name = created.name;
+      createdContact = true;
+    }
+
+    const { data: saved, error } = await supabase
+      .from("shelter_friends")
+      .insert({
+        contact_id: contactId,
+        ...checked.columns,
+        published: input.publish === true,
+        sort_order: await nextSortOrder(supabase),
+        updated_by: user?.id ?? null,
+      })
+      .select("id")
+      .returns<{ id: string }[]>();
+    const friendId = saved?.[0]?.id;
+
+    if (error || !friendId) {
+      let message = error?.code === "23505" ? e.alreadyFriend : (error?.message ?? t.common.failedToSave);
+      if (createdContact) {
+        // Don't leave half a friend behind: take the new contact back out.
+        const { error: undoError } = await supabase.from("contacts").delete().eq("id", contactId);
+        if (undoError) {
+          console.error("addShelterFriend: could not remove the contact it had just made:", undoError);
+          message = t.shelterFriends.wizard.errors.contactKept(name);
+          revalidatePath("/management/contacts");
+          revalidatePath("/contacts");
+        }
+      }
+      return refuse(message);
+    }
+
+    revalidatePath("/management/contacts");
+    revalidatePath("/contacts");
+    revalidateFriendPages(contactId);
+    return {
+      ok: true,
+      success: t.shelterFriends.wizard.created(name, input.publish === true),
+      friendId,
+      contactId,
+      name,
+    };
   });
 }
 
