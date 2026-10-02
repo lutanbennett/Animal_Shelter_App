@@ -23,7 +23,13 @@
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in; already up to date
-- [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — n/a: GATES_PLACEHOLDER
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Closing lines as printed:
+
+```
+=== gates: build exited 0 after 266s
+
+gates: typecheck=0 lint=0 build=0
+```
 - [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
