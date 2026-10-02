@@ -26,7 +26,7 @@ import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { readFileSync } from "node:fs";
-import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
+import { SITE_ORIGINS, loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
 import { appliedMigrations } from "./lib/deploy-schema.mjs";
 import { releaseProblems, schemaVerdict } from "./lib/release-guards.mjs";
 import { strayEnvFiles } from "./lib/env-leak.mjs";
