@@ -44,7 +44,7 @@ const manual: Manual = {
       "Day-to-day resident work: intake, moves, hospital, foster and adoption, photos, maintenance, projects. Can read medical records.",
     vet: "Vet visits, procedures, blood tests, prescriptions and immunizations, for the residents their own clinic treats — any resident the clinic has a visit, prescription, procedure or blood test for, with that resident's whole history. Other residents are not shown at all. The menu is Appointments and Residents only — the shelter's enclosures, maintenance, projects, contacts and vet list are not part of a vet's access.",
     volunteer:
-      "Can see everything; can add photos and move residents between enclosures.",
+      "Can see everything operational; can add photos and move residents between enclosures. In Contacts, sees each person’s name and phone number only.",
   },
 
   filter: {
@@ -947,7 +947,7 @@ const manual: Manual = {
           roles: ["admin", "management", "staff", "volunteer"],
           path: "Contacts",
           steps: [
-            "Open Contacts to find carers, volunteers and suppliers. Search by name, phone, email or chat ID, and filter by type.",
+            "Open Contacts to find carers, volunteers and suppliers. Search by name, phone, email or chat ID, and filter by type. Volunteers see each contact’s name and phone number only, so the list has no type filter and a contact’s page has no address, email or notes: ask staff if you need more.",
             "Each contact has one-tap buttons: Call, LINE, Messenger, WhatsApp, Email and Map — handy on a phone.",
             "Tap a contact for their page, including the residents currently fostered or adopted with them and past placements.",
             "Contacts the shelter no longer works with are archived rather than deleted. They're hidden from the list; tap Show archived under the search box to see them, greyed out with an Archived badge and the reason. A search always finds them, so you can still look up an old number.",

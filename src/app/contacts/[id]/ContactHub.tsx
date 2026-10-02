@@ -14,7 +14,12 @@ import {
   placementTypeLabel,
   speciesLabel,
 } from "@/lib/i18n/enum-labels";
-import { CARER_CONTACT_TYPE, isArchived, type Contact } from "@/lib/contacts/contacts";
+import {
+  CARER_CONTACT_TYPE,
+  isArchived,
+  type Contact,
+  type VolunteerContact,
+} from "@/lib/contacts/contacts";
 import { FriendBadge } from "@/components/FriendBadge";
 import type { ShelterFriend } from "@/lib/shelter-friends/friends";
 import type { TranslationRow } from "@/lib/translations/types";
@@ -72,7 +77,7 @@ export function ContactHub({
   friend,
   friendTranslations,
 }: {
-  contact: Contact;
+  contact: Contact | VolunteerContact;
   placements: CarerPlacement[];
   canManage: boolean;
   /** Embed URL for the address, resolved by the page (map-preview.ts); null hides the map. */
@@ -112,13 +117,15 @@ export function ContactHub({
           <div className="flex flex-wrap items-center gap-2">
             <CONTACT_ICONS.contact aria-hidden="true" className="h-6 w-6 shrink-0 text-muted" />
             <h1 className="text-2xl font-semibold text-foreground">{contact.name}</h1>
-            <span
-              className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                isCarer ? "bg-success/15 text-success" : "bg-surface-hover text-muted"
-              }`}
-            >
-              {contactTypeLabel(t, contact.type)}
-            </span>
+            {contact.type && (
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                  isCarer ? "bg-success/15 text-success" : "bg-surface-hover text-muted"
+                }`}
+              >
+                {contactTypeLabel(t, contact.type)}
+              </span>
+            )}
             {archived && <ArchivedBadge label={a.badge} />}
             {friend && (
               <FriendBadge
@@ -209,13 +216,16 @@ export function ContactHub({
         )}
       </div>
 
-      <ShelterFriendCard
-        contact={contact}
-        friend={friend}
-        canManage={canManage}
-        mapSrc={mapSrc}
-        translations={friendTranslations}
-      />
+      {/* A volunteer reads no type (0126), so no Friend card: it needs one. */}
+      {contact.type && (
+        <ShelterFriendCard
+          contact={contact}
+          friend={friend}
+          canManage={canManage}
+          mapSrc={mapSrc}
+          translations={friendTranslations}
+        />
+      )}
 
       {/* Residents only make sense for carers. A contact of another type
           that somehow has placements (the type was Carer at the time)

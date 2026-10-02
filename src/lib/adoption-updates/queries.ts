@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { contactRelation } from "@/lib/contacts/visibility";
 
 export type SenderOptions = {
   /** Carers of the resident's Adopt placements, newest adoption first. */
@@ -22,21 +23,28 @@ export type SenderOptions = {
 export async function loadSenderOptions(
   supabase: SupabaseClient,
   residentId: string,
+  role: string | null,
 ): Promise<SenderOptions> {
   const [adoptions, contacts] = await Promise.all([
     supabase
       .from("placement_history")
-      .select("carer_id, carer:contacts(id, name)")
+      .select(`carer_id, carer:${contactRelation(role)}(id, name)`)
       .eq("resident_id", residentId)
       .eq("placement_type", "Adopt")
       .order("start_date", { ascending: false })
       .returns<{ carer_id: string | null; carer: { id: string; name: string } | null }[]>(),
-    supabase
-      .from("contacts")
-      .select("id, name")
-      .is("archived_at", null)
-      .order("name")
-      .returns<{ id: string; name: string }[]>(),
+    // Only staff record an update, so only staff need the address book to
+    // choose a sender from; a vet or volunteer reads names through a narrow
+    // view (0126) with no archive state, and is shown the "not allowed"
+    // message instead of the form.
+    contactRelation(role) === "contacts"
+      ? supabase
+          .from("contacts")
+          .select("id, name")
+          .is("archived_at", null)
+          .order("name")
+          .returns<{ id: string; name: string }[]>()
+      : Promise.resolve({ data: [] as { id: string; name: string }[], error: null }),
   ]);
   if (adoptions.error) throw new Error(adoptions.error.message);
   if (contacts.error) throw new Error(contacts.error.message);
