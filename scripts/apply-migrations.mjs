@@ -47,6 +47,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { ENVIRONMENTS, loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
 import { MIGRATION_NAME, MIGRATIONS_DIR, parseLsTree } from "./lib/migrations.mjs";
+import { assumedLiveRelease, consumerReport } from "./lib/migration-consumers.mjs";
 // Shared with Settings → System status, so the page and --drift agree.
 import { migrationDrift } from "../src/lib/migration-drift.ts";
 
@@ -240,6 +241,28 @@ if (statusOnly || pending.length === 0) {
   }
   if (statusOnly) driftReport();
   process.exit(0);
+}
+
+// Print-only: warn about files whose declared reader is not live yet. It
+// never refuses and never touches what is applied; any failure here is swallowed.
+try {
+  const gitOut = (a) => {
+    const r = spawnSync("git", a, { encoding: "utf8" });
+    if (r.status !== 0) throw new Error(r.stderr);
+    return r.stdout.trim();
+  };
+  const read = (ref, path) => {
+    const r = spawnSync("git", ["show", `${ref}:${path}`], { encoding: "utf8" });
+    return r.status === 0 ? r.stdout : null;
+  };
+  const { warnings, notes } = consumerReport(
+    pending.map((name) => ({ name, sql: readFileSync(join(MIGRATIONS_DIR, name), "utf8") })),
+    { release: assumedLiveRelease(gitOut), read },
+  );
+  for (const w of warnings) console.warn(`WARNING ${w}`);
+  for (const n of notes) console.log(`  note: ${n}`);
+} catch (error) {
+  console.log(`  note: consumer check skipped (${error.message.split("\n")[0]}).`);
 }
 
 for (const name of pending) {
