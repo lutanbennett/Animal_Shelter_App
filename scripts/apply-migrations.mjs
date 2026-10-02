@@ -45,9 +45,9 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { ENVIRONMENTS, loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
+import { ENVIRONMENTS, SITE_ORIGINS, loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
 import { MIGRATION_NAME, MIGRATIONS_DIR, parseLsTree } from "./lib/migrations.mjs";
-import { assumedLiveRelease, consumerReport } from "./lib/migration-consumers.mjs";
+import { consumerReport, liveRelease } from "./lib/migration-consumers.mjs";
 // Shared with Settings → System status, so the page and --drift agree.
 import { migrationDrift } from "../src/lib/migration-drift.ts";
 
@@ -257,7 +257,14 @@ try {
   };
   const { warnings, notes } = consumerReport(
     pending.map((name) => ({ name, sql: readFileSync(join(MIGRATIONS_DIR, name), "utf8") })),
-    { release: assumedLiveRelease(gitOut), read },
+    {
+      release: await liveRelease({
+        siteOrigin: SITE_ORIGINS[envName],
+        git: gitOut,
+        hasCommit: (sha) => spawnSync("git", ["cat-file", "-e", `${sha}^{commit}`]).status === 0,
+      }),
+      read,
+    },
   );
   for (const w of warnings) console.warn(`WARNING ${w}`);
   for (const n of notes) console.log(`  note: ${n}`);

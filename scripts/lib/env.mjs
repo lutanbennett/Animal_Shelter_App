@@ -23,6 +23,16 @@ import { existsSync, readFileSync } from "node:fs";
 
 export const ENVIRONMENTS = ["test", "uat", "production"];
 
+// Where each environment answers: for asking the live site which release it
+// runs, and for the link in the email. lannacare.org is UAT's for good; the
+// cutover moves production to lannacareforanimals.org and until then uat
+// can't deploy, so the two sharing an origin never meet.
+export const SITE_ORIGINS = {
+  test: "https://test.lannacare.org",
+  uat: "https://lannacare.org",
+  production: "https://lannacare.org",
+};
+
 /** The file an environment's own values live in; test has none beyond .env.local. */
 export function envFile(name) {
   return name === "test" ? ".env.local" : `.env.deploy.${name}`;

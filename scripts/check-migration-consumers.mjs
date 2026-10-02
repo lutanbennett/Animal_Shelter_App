@@ -8,7 +8,7 @@
  *   node scripts/check-migration-consumers.mjs
  */
 import { spawnSync } from "node:child_process";
-import { assumedLiveRelease, consumerReport, declaredConsumers } from "./lib/migration-consumers.mjs";
+import { assumedLiveRelease, consumerReport, declaredConsumers, liveRelease } from "./lib/migration-consumers.mjs";
 
 let failures = 0;
 const check = (name, ok, detail = "") => {
@@ -45,6 +45,21 @@ const none = consumerReport([f("0005_e.sql", "-- consumer: none"), f("0006_f.sql
 check("none is silent; no header is counted, not guessed", none.warnings.length === 0 && none.notes.length === 1 && none.notes[0].includes("1 file(s) declare no"), JSON.stringify(none));
 const blind = consumerReport([f("0007_g.sql", "-- consumer: src/new.ts")], { release: null, read });
 check("unknown live release -> skipped note, no warning", blind.warnings.length === 0 && blind.notes.some((n) => n.includes("skipped")));
+
+// The origin is asked first (/api/version); the assumption is the fallback.
+const sha = "a".repeat(40);
+const answers = (body, status = 200, servedBy = "pi") => async () => ({ ok: status === 200, status, json: async () => body, headers: new Headers({ "x-lanna-served-by": servedBy }) });
+const noGit = () => { throw new Error("no git"); };
+const asked = await liveRelease({ siteOrigin: "https://x", git: noGit, hasCommit: () => true, fetchImpl: answers({ version: "0.11.0", sha }) });
+check("origin answers -> exact release at its commit", asked?.exact === true && asked.version === "0.11.0" && asked.ref === sha, JSON.stringify(asked));
+const exactReport = consumerReport([f("0008_h.sql", "-- consumer: src/new.ts")], { release: asked, read });
+check("exact release is reported as what the origin runs, not as assumed", exactReport.notes.some((n) => n.includes("reports it runs")) && !exactReport.notes.some((n) => n.includes("ASSUMED")), JSON.stringify(exactReport));
+const unknownSha = await liveRelease({ siteOrigin: "https://x", git: noGit, hasCommit: () => false, fetchImpl: answers({ version: "0.11.0", sha }) });
+check("a commit this checkout lacks is not compared", unknownSha === null || unknownSha.exact === false);
+const oldBuild = await liveRelease({ siteOrigin: "https://x", git: noGit, hasCommit: () => true, fetchImpl: answers({}, 404) });
+check("an origin without the route falls back, never throws", oldBuild === null || oldBuild.exact === false);
+const garbage = await liveRelease({ siteOrigin: "https://x", git: noGit, hasCommit: () => true, fetchImpl: answers({ version: "0.11.0", sha: "not-a-sha" }) });
+check("a malformed sha is refused", garbage === null || garbage.exact === false);
 
 const git = (a) => {
   const r = spawnSync("git", a, { encoding: "utf8" });

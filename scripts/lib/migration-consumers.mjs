@@ -17,10 +17,11 @@
 // consumer" - a different sentence from "no consumer found", and the only one
 // this can honestly say.
 //
-// "Live" is an ASSUMPTION: the commit that cut the version package.json names
-// on origin/main. Nothing can ask the serving origin its version without
-// signing in (/api/releases/current is answered by the Worker before the
-// origin), so a cut that has not been deployed yet reads as live here.
+// "Live" is what the serving origin says it runs (GET /api/version, version and
+// commit, no sign-in; liveRelease below). Only when it cannot say - unreachable,
+// an older build without the route, a commit this checkout does not have - does
+// this fall back to ASSUMING the newest cut on origin/main is live, and then an
+// undeployed cut reads as live. The report says which one it used.
 
 const HEADER_LINE = /^--\s*consumer:\s*(.+?)\s*$/i;
 
@@ -83,7 +84,9 @@ export function consumerReport(files, { release, read }) {
   if (warnings.length) {
     notes.push(
       "These tables/columns land before the code that reads them is live. That is the safe direction - nothing is blocked - but do not deploy the reader before this is applied, and expect nothing to use it yet.",
-      `\"Live\" here is ASSUMED to be the commit that cut ${release.version}; this cannot ask the serving origin its version, so an undeployed cut counts as live.`,
+      release.exact
+        ? `\"Live\" here is what ${release.origin} reports it runs: ${release.version} @ ${release.ref.slice(0, 7)}${release.servedBy === "worker" ? " (answered by the Worker, the fallback, not the Pi)" : ""}.`
+        : `\"Live\" here is ASSUMED to be the commit that cut ${release.version} (${release.askedFailed}), so an undeployed cut counts as live.`,
     );
   }
   if (undeclared.length) {
@@ -92,13 +95,37 @@ export function consumerReport(files, { release, read }) {
   return { warnings, notes };
 }
 
-/** The release assumed live: version in origin/main's package.json and the commit that set it. */
+/**
+ * The release the serving origin says it runs: { version, ref (the commit),
+ * exact: true, ... }, or the assumption below with exact: false and
+ * `askedFailed` saying why asking did not work. `hasCommit(sha)` says whether
+ * this checkout can read that commit - a sha it cannot read cannot be compared.
+ */
+export async function liveRelease({ siteOrigin, git, hasCommit, fetchImpl = fetch }) {
+  let askedFailed;
+  try {
+    const res = await fetchImpl(`${siteOrigin}/api/version`, { signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) askedFailed = `${siteOrigin}/api/version answered ${res.status}`;
+    else {
+      const { version, sha } = await res.json();
+      if (typeof version !== "string" || !/^[0-9a-f]{40}$/.test(sha ?? "")) askedFailed = `${siteOrigin}/api/version gave no version and commit`;
+      else if (!hasCommit(sha)) askedFailed = `${siteOrigin} runs ${sha.slice(0, 7)}, which this checkout does not have (git fetch)`;
+      else return { version, ref: sha, exact: true, origin: siteOrigin, servedBy: res.headers.get("x-lanna-served-by") };
+    }
+  } catch (error) {
+    askedFailed = `could not ask ${siteOrigin}: ${error.message}`;
+  }
+  const assumed = assumedLiveRelease(git);
+  return assumed && { ...assumed, exact: false, askedFailed };
+}
+
+/** The release assumed live, when the origin cannot be asked: version in origin/main's package.json and the commit that set it. */
 export function assumedLiveRelease(git) {
   try {
     const version = JSON.parse(git(["show", "origin/main:package.json"])).version;
     if (!version) return null;
     const ref = git(["log", "-1", "--format=%H", `-S"version": "${version}"`, "origin/main", "--", "package.json"]);
-    return ref ? { version, ref } : null;
+    return ref ? { version, ref, exact: false, askedFailed: "the origin was not asked" } : null;
   } catch {
     return null;
   }

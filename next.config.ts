@@ -1,9 +1,23 @@
-import { readdirSync } from "node:fs";
+import { execSync } from "node:child_process";
+import { readdirSync, readFileSync } from "node:fs";
 import type { NextConfig } from "next";
 import { MAX_UPLOAD_BODY_BYTES } from "./src/lib/uploads/limits";
 
+function gitSha(): string {
+  try {
+    return execSync("git rev-parse HEAD", { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+  } catch {
+    return "";
+  }
+}
+
 const nextConfig: NextConfig = {
   env: {
+    // What /api/version answers: the release in package.json and the commit
+    // this build was made from, so a caller can ask the serving origin what
+    // it runs instead of assuming. Empty sha when git is not there to ask.
+    BUILD_VERSION: JSON.parse(readFileSync("package.json", "utf8")).version,
+    BUILD_SHA: gitSha(),
     // The migration files this build was made from, for Settings → System
     // status to compare with the database's schema_migrations
     // (src/lib/status/health.ts). A Worker has no folder to read at
