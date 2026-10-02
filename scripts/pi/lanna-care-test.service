@@ -1,0 +1,31 @@
+# systemd unit for the TEST instance on the Pi — installed by
+# scripts/pi/setup-test.sh as /etc/systemd/system/lanna-care-test.service
+# (WorkingDirectory and User are rewritten to the real ones there).
+#
+# A copy of lanna-care.service with three differences that matter:
+#   - WorkingDirectory is the TEST clone (~/Animal_Shelter_App_test), never the
+#     production one: each clone has its own .next and .env.production.local,
+#     and a shared folder would let a test build overwrite what production serves.
+#   - port 3001 (cloudflared routes test-pi.lannacare.org there).
+#   - lower priority and a smaller memory cap, so test cannot starve production.
+[Unit]
+Description=Lanna Care for Animals — test instance (Next.js)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__REPO__
+Environment=NODE_ENV=production
+Environment=PORT=3001
+ExecStart=/usr/bin/npm run start -- --port 3001 --hostname 127.0.0.1
+Restart=always
+RestartSec=3
+Nice=10
+CPUWeight=50
+MemoryMax=900M
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target
