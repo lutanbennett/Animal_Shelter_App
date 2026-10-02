@@ -21,6 +21,7 @@ export default async function EditWeightPage(props: PageProps<"/weight/[id]/edit
   const { data: rows, error } = await supabase
     .from("weight")
     .select("id, resident_id, date, weight_kg, vet_appointment_id, notes")
+    .is("archived_at", null)
     .eq("id", id)
     .limit(1)
     .returns<(WeightInitial & { resident_id: string })[]>();
@@ -50,6 +51,7 @@ export default async function EditWeightPage(props: PageProps<"/weight/[id]/edit
     supabase
       .from("weight")
       .select("id, date, weight_kg")
+      .is("archived_at", null)
       .eq("resident_id", residentId)
       .neq("id", reading.id)
       .returns<ExistingReading[]>(),

@@ -63,6 +63,7 @@ export default async function NewProcedurePage(props: PageProps<"/procedures/new
       supabase
         .from("vet_appointments")
         .select("id, appointment_date, reason")
+        .is("archived_at", null)
         .eq("resident_id", residentId)
         .order("appointment_date", { ascending: false })
         .returns<VetAppointmentOption[]>(),

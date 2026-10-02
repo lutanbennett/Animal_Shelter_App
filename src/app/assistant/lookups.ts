@@ -235,6 +235,7 @@ async function answerDue(
     supabase
       .from("vet_appointments")
       .select("id, resident_id, appointment_date, reason, vets(name)")
+      .is("archived_at", null)
       .eq("status", "scheduled")
       .lt("appointment_date", end.toISOString())
       .order("appointment_date")

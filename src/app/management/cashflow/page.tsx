@@ -54,6 +54,7 @@ export default async function CashflowPage(props: PageProps<"/management/cashflo
     supabase
       .from("vet_appointments")
       .select("appointment_date, cost")
+      .is("archived_at", null)
       .eq("status", "scheduled")
       .gte("appointment_date", `${addDaysIso(window.from, -1)}T00:00:00Z`)
       .lte("appointment_date", `${addDaysIso(window.to, 2)}T00:00:00Z`)
@@ -61,6 +62,7 @@ export default async function CashflowPage(props: PageProps<"/management/cashflo
     supabase
       .from("vet_appointments")
       .select("appointment_date, cost")
+      .is("archived_at", null)
       .eq("status", "completed")
       .gte("appointment_date", `${addDaysIso(today, -VET_HISTORY_DAYS - 1)}T00:00:00Z`)
       .lte("appointment_date", `${addDaysIso(today, 2)}T00:00:00Z`)
