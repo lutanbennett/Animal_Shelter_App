@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Everyone was signed out on 2 October 2026 and has to sign in again once. This is a precaution after we found old copies of the shelter's backups had been kept in a place they should not have been; nothing was lost or changed, every account and record is exactly as it was, and the backups are now locked so only the administrator can open them. Sign in as usual.",
   {
     text: "Adding a Shelter Friend is now one guided path instead of five places. Tap Add a Shelter Friend on Management → Shelter Friends or Management → Contacts, then follow five short steps: who they are (pick a supplier you already have, or add a new business there and then), how they help, their logo and links, what the public may see, and a Review with a preview of their card exactly as the website will show it. Finish with Publish now or Save as a draft. Nothing is ticked for you in the what-the-public-may-see step: phone, email, LINE and address stay private unless you tick them, so ask the business first. Refreshing the page keeps your place and what you typed. If the logo cannot be uploaded the Friend is still saved and you are told to add the logo from their card.",
     roles: ["admin", "management"],
