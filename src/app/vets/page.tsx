@@ -35,6 +35,7 @@ export default async function VetsPage() {
     supabase
       .from("vet_appointments")
       .select("id, vet_id, resident_id, appointment_date, status, reason")
+      .is("archived_at", null)
       .not("vet_id", "is", null)
       .returns<VisitRow[]>(),
     supabase.rpc("current_user_role"),

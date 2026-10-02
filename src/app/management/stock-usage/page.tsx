@@ -237,6 +237,7 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
     supabase
       .from("prescriptions")
       .select("item_id:medication_id, resident_id, start_date, end_date")
+      .is("archived_at", null)
       .returns<Assignment[]>(),
     supabase
       .from("resident_diets")

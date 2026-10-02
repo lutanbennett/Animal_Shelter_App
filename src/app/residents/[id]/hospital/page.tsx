@@ -69,6 +69,7 @@ export default async function SendToHospitalPage(
         ? supabase
             .from("vet_appointments")
             .select("id, appointment_date, reason, vets(name)")
+            .is("archived_at", null)
             .eq("id", vetAppointmentId)
             .eq("resident_id", id)
             .limit(1)

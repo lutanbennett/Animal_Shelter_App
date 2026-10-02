@@ -92,6 +92,7 @@ export default async function ResidentPage(
     supabase
       .from("immunization_records")
       .select("id, date_administered, immunization_types(name)")
+      .is("archived_at", null)
       .eq("resident_id", id)
       .order("date_administered", { ascending: false })
       .returns<ImmunizationRecordRow[]>(),
@@ -103,12 +104,14 @@ export default async function ResidentPage(
     supabase
       .from("vet_appointments")
       .select("id, appointment_date, status, reason")
+      .is("archived_at", null)
       .eq("resident_id", id)
       .order("appointment_date", { ascending: false })
       .returns<VetAppointmentRow[]>(),
     supabase
       .from("prescriptions")
       .select("id, start_date, end_date, medication(name)")
+      .is("archived_at", null)
       .eq("resident_id", id)
       .order("start_date", { ascending: false })
       .returns<PrescriptionRow[]>(),
@@ -121,6 +124,7 @@ export default async function ResidentPage(
     supabase
       .from("weight")
       .select("id, date, weight_kg")
+      .is("archived_at", null)
       .eq("resident_id", id)
       .order("date", { ascending: false })
       .returns<WeightRow[]>(),

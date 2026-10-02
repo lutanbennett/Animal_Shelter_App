@@ -106,6 +106,7 @@ export default async function ManagementDashboardPage(
     supabase
       .from("vet_appointments")
       .select("resident_id, appointment_date, status")
+      .is("archived_at", null)
       .gte("appointment_date", window.start.toISOString())
       .lt("appointment_date", window.end.toISOString())
       .neq("status", "cancelled")
@@ -113,6 +114,7 @@ export default async function ManagementDashboardPage(
     supabase
       .from("vet_appointments")
       .select("resident_id, appointment_date, status")
+      .is("archived_at", null)
       .eq("status", "scheduled")
       .returns<AppointmentRow[]>(),
     supabase
@@ -156,6 +158,7 @@ export default async function ManagementDashboardPage(
       ? await supabase
           .from("vet_appointments")
           .select("resident_id, appointment_date, status")
+          .is("archived_at", null)
           .in("resident_id", seenIds)
           .lt("appointment_date", window.start.toISOString())
           .neq("status", "cancelled")

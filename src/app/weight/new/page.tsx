@@ -39,6 +39,7 @@ export default async function NewWeightPage(props: PageProps<"/weight/new">) {
     const { data: onVisit } = await supabase
       .from("weight")
       .select("id")
+      .is("archived_at", null)
       .eq("vet_appointment_id", vetAppointmentId)
       .limit(1)
       .returns<{ id: string }[]>();
@@ -63,6 +64,7 @@ export default async function NewWeightPage(props: PageProps<"/weight/new">) {
       supabase
         .from("weight")
         .select("id, date, weight_kg")
+        .is("archived_at", null)
         .eq("resident_id", residentId)
         .order("date", { ascending: false })
         .returns<ExistingReading[]>(),
