@@ -81,6 +81,7 @@ a minute where finding it mid-Vet-pass dead-ends the pass.
 - [ ] Set the test account's role to **staff**, then **Management → Recurring jobs**: create a job due **today**, assigned to the **test account**, on a frequency you can see. This seeds the **Staff** and **Volunteer** passes — it is the job each marks done. Note its name: `________`
 - [ ] **A vet cannot be given a job.** The assignee picker offers shelter roles only (`claude/recurring-jobs-eligible-assignees`), so once the role is **vet** (next step) open the job form and confirm the test account is **not** in the picker. Before this fix the seed could be done for a vet, which exposed 2026-09-27 findings 5 and 6; that setup is impossible by design now
 - [ ] Set the test account's role to **vet**, then check the picker as above
+- [ ] **Put a doctor on the test clinic's roster.** On 2026-10-02 the test account's clinic (**Novel**, 14 residents in scope) had **no doctors** — the only rosters with any were `[roster] Test Clinic` and `Mae Wang`. The roster fills itself from doctors' names typed on visits (0.8.1), and Novel's visits were recorded without one, which is how a clinic ends up with residents and no doctors. With it empty, the Vet pass's visit-form doctor picker has nothing in it and you cannot tell a working empty state from a broken one. Add at least one at **Management → Vets → Novel → Doctors** (also exercises the roster screen the Vet pass checks is refused). Doctor added: `________`
 - [ ] **Set the test account's clinic** at **Settings → Security**: on the test account's row, choose the **own** clinic (`user_roles.vet_id`, `0102`). It only takes for an account whose role is `vet`, hence this step comes after the role change. **Without a clinic the vet sees no residents at all** (0.9.0's lead note), and Pass 1 dead-ends on its first line
 
 ---
@@ -106,7 +107,7 @@ the assistant is closed to it (`0070`).
 - [ ] **Signing in lands on Appointments** (`/appointments`), not My tasks. Typing `/my` redirects there too
 - [ ] **Appointments** shows the clinic's visits in three groups — **To write up** (date passed, not marked done), **Upcoming**, **Recently done** (last 30 days) — each with a count. A clinic with no visits reads as empty, not broken. Write what it shows: `________`
 - [ ] A row's resident name opens that resident; its links log a procedure, blood test, prescription or weight (the last two only once the visit has started) or edit the visit, and the record saved is **linked to that visit**
-- [ ] Only **this clinic's** appointments are listed, whichever doctor they are booked with. (A vet account with no clinic set sees an explanation instead — check from Admin → Security if you want to see it)
+- [ ] Only **this clinic's** appointments are listed, whichever doctor they are booked with. (A vet account with no clinic set sees an explanation instead — check from Admin → Security if you want to see it. In dev, `medphotos-vet@example.test` and the `release-role-test-…` account have no clinic set, so this is testable without unsetting anything)
 - [ ] `/residents` **names the clinic** at the top and lists **only that clinic's residents**; the test resident is there. Find it by search
 - [ ] **Clinic scoping, negative half:** a resident with no record from this clinic is **absent** from the list, and typing its URL is refused
 - [ ] Its hub opens; **info**, **medical** and **placement** tabs all load
@@ -122,9 +123,8 @@ the assistant is closed to it (`0070`).
 - [ ] **Release notes** opens showing what a vet is affected by, and lists the current version
 - [ ] **Change password** page loads
 
-> **Not in this pass yet:** recording a microchip number as a vet
-> (`microchip-vet-feature`, `0116`) is not merged. Do not score its absence as a
-> failure; it gets a line here when it ships.
+- [ ] **Record a microchip** (#232, `0116`). Under the resident's name on their page, and at the top of their vet appointment, the control reads **Record chip** (or **Correct** if one is already set). 15 digits; spaces and dashes are accepted. It saves and the number shows on the page
+- [ ] **A long pass can sign you out, and that is expected.** The session inactivity timeout (#261, 0.12.1) ends an idle session; the sign-in page says why and returns you to the page you were on. Sign back in and carry on. It is **not** a finding — log it only if the sign-in page does *not* explain, or does not return you to where you were
 
 ### Other clinics' records are read-only
 
@@ -158,14 +158,22 @@ saw for the first one: `________`
 - [ ] `/stocktake` — refused → `/no-access`
 - [ ] `/management` and `/management/dashboard` — refused → `/no-access`
 - [ ] `/management/vets/<id>/doctors` — the **Doctors roster screen** is management and admin only; a vet may not open it, and cannot rename, merge or retire doctors
-- [ ] `/admin` and `/admin/security` — refused → `/no-access`
+- [ ] `/admin`, `/admin/security` and `/admin/recent-changes` (#277, 0.13.0) — refused → `/no-access`
 - [ ] `/deliveries` — refused → `/no-access` (delivery roles are admin/management/staff)
 - [ ] Resident hub shows **no** New resident / Edit / Move / Hospital / Foster / Adopt / Record a death controls
 - [ ] `/residents/<id>/edit`, `/move`, `/hospital`, `/rehome`, `/deceased` typed directly — all refused
+- [ ] **No Remove control** on a weight, a prescription, a vet visit or an immunization record (`0124`, #278). Admin, management and staff are offered it; a vet never is (`canArchiveMedical`, `src/lib/medical-archive/kinds.ts`, checked again server-side in `src/app/residents/[id]/archive-actions.ts`)
+- [ ] **A resident whose only record from this clinic was archived** (by admin or staff) has left the vet's list — `0124` drops an archived visit from `current_vet_resident_ids()`. Check it reads as **absent** (gone from `/residents`, URL refused), not broken. Needs a resident seeded for it in Pass 0, or skip and write "not run"
 - [ ] A resident **outside the clinic's scope** typed by URL — refused, not shown
 - [ ] **Photo upload to any folder but Medical** — the route answers **403**. With no folder picker there is nothing to click, so this needs the browser's network tools or a `fetch` from the console; if you cannot do that, write "not run" rather than tick it
 - [ ] The Assistant slide-over cannot be opened by any route you can find
 - [ ] The vet is **not** offered when a recurring job is assigned (checked in Pass 0; look again from the admin profile if the picker was touched)
+
+**Not a UI line — leave it for the security review:** `0124`'s own comment says
+RLS was not changed, and only admin and vets have a DELETE policy. The app
+decides who is offered Remove; a vet cannot archive through the UI, but whether
+a vet can still hard-delete their own clinic's visit through the API is a
+defence-in-depth question. Do not tick or fail it here.
 
 **Anything odd:**
 
@@ -194,9 +202,13 @@ was not run stays pending.
 | `file-type-icon` | Blood-test attachment shows a file-type icon |
 
 **Known risk to the run itself:** Cloudflare **1102** on the test site (finding
-17) is unresolved — `ORIGIN_HOST` is still empty in `wrangler.jsonc`. Finding
-6's fix lightens the CPU path but does not remove the mechanism, so the run may
-be cut short. If it is, record where and mark the rest "not run"; do not read a
+17) is unresolved there. The Pi took **production** on 2026-10-01 (0.11.0), so
+`lannacare.org` (`ORIGIN_HOST` = `pi.lannacare.org`) is off the CPU-limited
+path; `test.lannacare.org` is not — `ORIGIN_HOST` is `""` in the `test` and
+`uat` environments of `wrangler.jsonc`, so it still renders in the Worker.
+`docs/pi-hosting.md` (lines 108–111) describes the optional test target that
+would fix it. Finding 6's fix lightens the CPU path but does not remove the
+mechanism, so a run on the test site may be cut short. If it is, record where and mark the rest "not run"; do not read a
 `curl` from another machine as evidence either way (`docs/uat/2026-09-27.md`
 says why).
 
