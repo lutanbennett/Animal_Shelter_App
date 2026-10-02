@@ -96,7 +96,7 @@ gates: typecheck=0 lint=0 build=0
 - [ ] Backlog item ticked in `docs/backlog.md` — n/a: not ticked, on purpose: the encryption is not in place end to end until Lutan installs the public key and re-shares the folder. A status note goes on the `backlog` branch
 - [x] Non-obvious design choices added as `docs/decisions/2026-09-30-backup-encryption.md` (public key not passphrase, in-process encrypt, extra excluded tables, tile filter)
 - [x] `README.md` still accurate: Backups section rewritten for the key pair, the recipient, the restore step and the re-enrolment consequence; `docs/pi-hosting.md` and `.env.example` updated too
-- [x] **Release notes.** Would a shelter user notice this change? — yes: the forced sign-out of 2026-10-02 (row 7); a line was added to `unreleased`
+- [ ] **Release notes.** Would a shelter user notice this change? — n/a: this follow-up only corrects where the key is recorded; the forced sign-out line shipped in #296
 - [x] Commit messages say why, not just what
 - [x] Claims in commit messages and decisions were measured, not reasoned, except one, which is worded as an intent: that `maxBuffer` 2 GiB is enough (a database of megabytes is far below it; not measured at size)
 
