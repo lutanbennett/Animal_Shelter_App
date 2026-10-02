@@ -179,6 +179,109 @@ on the Pi" rule no longer holds, so:
 - **Drive stays the off-site copy.** The Pi is in the same house as the origin it
   protects; a flood or theft takes both.
 
+## Spare boot drive (USB SSD)
+
+**Status 2026-10-02: script, timer and these steps are in; the boot test has not been
+done, so this is not yet a spare.** A clone nobody has booted is not a spare. The
+acceptance for the backlog item is: with the NVMe out, the Pi boots from the USB drive
+and `curl -sI https://lannacare.org/` says `x-lanna-served-by: pi`.
+
+**What it is.** A USB SSD holding a bootable clone of the NVMe: the OS, `/etc`, and
+everything that is not in git (the two env files, the `cloudflared` credentials and config,
+the `lanna-care` unit, the encrypted dumps in `~/backups`). It is the quick way back from
+a **dead NVMe**: minutes, not a rebuild from `setup.sh` plus hunting for secrets.
+
+**What it is not. Read this before relying on it.** The drive sits in the same box in the
+same house. Theft, fire, flood or a power surge takes the NVMe *and* the spare together.
+**Drive and GitHub stay the off-site copies. The USB drive is not the backup.** Nobody
+should restore the database from it when a Drive copy exists.
+
+### One-time setup
+
+1. Plug the drive into a **blue USB 3 port** and check it is the drive you mean:
+   `lsblk -o NAME,SIZE,MODEL,TRAN` and `ls -l /dev/disk/by-id/ | grep usb`.
+   Check it is not throttling: `vcgencmd get_throttled` must say `0x0` (the 27 W supply).
+2. **Check the drive is real before it holds anything** (see "The first drive" below):
+   `sudo apt install f3 && sudo f3probe --destructive --time-ops /dev/sdX`.
+3. `sudo scripts/pi/spare-clone.sh init /dev/disk/by-id/usb-<the one from step 1>`.
+   It refuses the disk the Pi booted from, refuses a non-USB disk, makes you retype the
+   device name, **fails a drive slower than about 9 MB/s**, then writes a 512 MB FAT32 boot
+   partition and a 64 GB ext4 root (`ROOT_SIZE=` to change) and **leaves the rest
+   unpartitioned** for a data partition (the archive mirror, a separate backlog item).
+   It clones, checks the clone's `cmdline.txt` names the clone's own root partition, and
+   installs `spare-clone.timer`. The drive is recorded by its `by-id` name in
+   `/etc/default/lanna-spare`, **never `/dev/sda`**, so a different drive that enumerates
+   first is not touched. The mount by UUID requirement does not arise: nothing mounts the
+   spare except the clone script, and the clone's own `fstab` uses PARTUUIDs.
+4. Do the **boot test** below once, then record the date here.
+
+### Keeping it current
+
+`spare-clone.timer` runs Sundays 04:00, an hour after the weekly backup, so each clone
+carries that week's encrypted dump (the dumps live in `~/backups`, which `rpi-clone`
+copies like everything else; there is no separate "copy the dumps to the USB drive" step).
+Missed runs fire at the next boot. It runs `rpi-clone -u`, which **cannot erase**: if the
+layout no longer matches it stops and says so rather than re-initialising.
+
+- Look: `scripts/pi/spare-clone.sh status` (prints the age; exits 2 over 9 days) and
+  `systemctl list-timers spare-clone.timer`; `journalctl -u spare-clone -n 50` for a run.
+- **Before an OS upgrade**, clone first: `sudo scripts/pi/spare-clone.sh`.
+- Skipped: `~/photo-cache`, `~/.cache`, the npm cache (rebuildable).
+- `/var/lib/lanna-spare/status.json` is `{"lastAttempt","lastSuccess","result","detail"}`
+  with `result` one of `ok | failed | absent` (drive unplugged). **That file is the
+  clone-age tile for the Home Assistant item**: show `lastSuccess`, go amber past 8 days
+  and red on `failed`/`absent`. Nothing is built for it here; that item owns the dashboard.
+
+### Boot test (the point of the item)
+
+`BOOT_ORDER=0xf146` reads right to left: **6 NVMe, then 4 USB, then 1 SD**, then retry. With
+the NVMe present it always wins, so to test the clone you must take the NVMe out of the
+running.
+
+1. `sudo scripts/pi/spare-clone.sh` (fresh clone), then `sudo poweroff`; wait for the LED to go dark.
+2. **Unplug the power**, then remove the NVMe HAT (or its ribbon cable). Keep the USB drive in.
+3. Power on. Wait two minutes. `ssh` in (the hostname and `authorized_keys` came across).
+4. `findmnt /` must say `/dev/sda2`; `systemctl is-active lanna-care cloudflared` both `active`;
+   `curl -sI https://lannacare.org/ | grep -i served-by` says `pi`.
+5. Power off, put the NVMe back, power on, and confirm `findmnt /` is `nvme0n1p2` again.
+
+If step 3 never gets an IP: attach a monitor. A rainbow screen or a blank one means the
+bootloader found nothing bootable on USB; check `sudo rpi-eeprom-config | grep BOOT_ORDER`
+and that `/boot/firmware` on the USB drive has `cmdline.txt` naming its own `PARTUUID`.
+
+### Recovery: the NVMe is dead and you have no context
+
+1. **Do not panic; the site is still up** through the Worker fallback (staff pages are
+   slower and may show a 1102 now and then). Drive has the data; GitHub has the code.
+2. Power the Pi off at the wall. Take out the dead NVMe (or leave it; USB is tried second).
+3. Leave the USB drive in a **blue** port. Power on. It boots from the spare in about a minute.
+4. `ssh lutan@lanna-pi.local`. Check `findmnt /` is `/dev/sda2`, then
+   `systemctl is-active lanna-care cloudflared` and the `curl` from the boot test.
+5. The site now runs from the spare, at USB speed. **Fit a replacement NVMe**, then copy
+   back onto it with `sudo rpi-clone nvme0n1 -f` (as in "Building the box": it erases the
+   destination; read the two disk lines before typing `yes`). Reboot; `findmnt /` should be
+   `nvme0n1p2`. Then re-run `sudo scripts/pi/spare-clone.sh` to make the spare current again.
+6. If the spare also will not boot: `git clone` the repo, copy the two env files from the
+   dev machine (not from the Pi), and follow "Pi side (once)" and `setup.sh`. The
+   `cloudflared` credentials JSON can be re-created in the Zero Trust dashboard.
+
+### Encryption: decided how (see `docs/decisions/2026-10-02-spare-boot-drive-not-encrypted.md`)
+
+The clone holds the env files and the tunnel credentials in plain text, because a Pi
+that must come back unattended after a power cut cannot wait for a LUKS passphrase. The
+dumps in it are already age-encrypted (`.dump.age`; the key is not on the Pi). So keep
+the drive **plugged into the Pi and out of sight**, never lend or post it, and treat a
+lost or stolen drive like a lost laptop: rotate the secrets in the decision's list.
+
+### The first drive (2026-10-02): a counterfeit, rejected
+
+The first USB SSD tried sold itself as 2 TB (`idVendor=048d idProduct=1234`, product
+`VendorCo ProductCode`, enumerating at USB 2 speed). A raw `dd` to it ran at **40 to 50 kB/s**
+(a healthy USB 2 link does 30 MB/s or more) and `mkfs.ext4` of the full size ran over half an
+hour without finishing. `init` now fails a slow drive for this reason. **Use a branded
+500 GB to 1 TB SSD** from a reputable shop (the clone needs about 7 GB; the archive less than
+that), and run `f3probe` on it before first use.
+
 ## Second Pi (later)
 
 There is **no second connector today**. This section is for if one is ever added.
