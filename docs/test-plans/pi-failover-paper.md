@@ -36,7 +36,7 @@ are true of the code and whether its drill is runnable, not about the Pi.
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the first push of PR #310 is not green by construction; ticked in a follow-up once the run has actually gone green
+- [x] CI green on the PR: `check`, `test-plan`, `migration-numbers`, `script-integrity`, `audit` and `public-views` all completed SUCCESS at a9752cf, read from `gh pr view 310` before merging
 
 ## 3. Schema and data — *skip if no migration*
 
