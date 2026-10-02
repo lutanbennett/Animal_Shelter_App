@@ -95,6 +95,23 @@ const TITLES: Record<HealthCheckKey, string> = {
 const CHECK_KEYS = Object.keys(TITLES) as HealthCheckKey[];
 
 /**
+ * What counts as red for an alert. Normally only `fail`; the exception is the
+ * Pi. Its tile is amber when the Pi is down because every public page still
+ * renders from the Worker fallback, but sign-in and saving may not (a write
+ * survives only a 530, worker/origin.mjs), and the screen that would say so
+ * sits behind a login the Pi's absence breaks. Amber on the page, red here
+ * (docs/decisions/2026-10-02-pi-down-alert.md).
+ */
+const isRed = (key: HealthCheckKey, report: HealthReport) =>
+  report[key].state === "fail" || (key === "origin" && report[key].state === "warn");
+
+/** What a person can do about a red check, appended to its line in the mail. */
+const ADVICE: Partial<Record<HealthCheckKey, string>> = {
+  origin:
+    "Public pages still load (the Worker serves them); signing in and saving may be failing. First checks: is the Pi powered and on the network (power, router, cable), then cloudflared on it. The Pi serves production and test, so both are affected.",
+};
+
+/**
  * A way to break a check on purpose, so the whole path — two red runs, one
  * mail, quiet runs, a recovery — can be proved without breaking anything
  * real: STATUS_ALERT_SIMULATE_FAIL=drive,backup turns those checks red in
@@ -202,8 +219,11 @@ function buildMail(
     html.push(`<p><strong>Not working</strong> (red on ${FAIL_RUNS_BEFORE_MAIL} checks in a row):</p><ul>`);
     for (const key of failed) {
       const why = redactSecrets(report[key].error ?? "No reason given.");
-      text.push(`  - ${TITLES[key]}: ${why}`);
-      html.push(`<li><strong>${escapeHtml(TITLES[key])}</strong>: ${escapeHtml(why)}</li>`);
+      const advice = ADVICE[key];
+      text.push(`  - ${TITLES[key]}: ${why}${advice ? `\n    ${advice}` : ""}`);
+      html.push(
+        `<li><strong>${escapeHtml(TITLES[key])}</strong>: ${escapeHtml(why)}${advice ? `<br>${escapeHtml(advice)}` : ""}</li>`,
+      );
     }
     html.push("</ul>");
   }
@@ -247,7 +267,7 @@ async function recordRun(
  */
 export async function runStatusAlerts(trigger: "cron" | "manual", origin: string): Promise<AlertRunResult> {
   const report = simulated(await runHealthChecks());
-  const failing = CHECK_KEYS.filter((k) => report[k].state === "fail");
+  const failing = CHECK_KEYS.filter((k) => isRed(k, report));
   const result: AlertRunResult = { remembered: false, failing, failed: [], recovered: [], sent: [], skipped: [], note: null };
 
   const db = createAdminClient();
@@ -264,7 +284,7 @@ export async function runStatusAlerts(trigger: "cron" | "manual", origin: string
   const rows = CHECK_KEYS.map((key) => {
     const r = report[key];
     const p = prev.get(key);
-    const failRuns = r.state === "fail" ? (p?.fail_runs ?? 0) + 1 : 0;
+    const failRuns = isRed(key, report) ? (p?.fail_runs ?? 0) + 1 : 0;
     return {
       key,
       failRuns,
@@ -282,7 +302,7 @@ export async function runStatusAlerts(trigger: "cron" | "manual", origin: string
   });
 
   const failed = rows.filter((x) => x.failRuns >= FAIL_RUNS_BEFORE_MAIL && !x.alertedAt).map((x) => x.key);
-  const recovered = rows.filter((x) => report[x.key].state !== "fail" && x.alertedAt);
+  const recovered = rows.filter((x) => !isRed(x.key, report) && x.alertedAt);
   result.failed = failed;
   result.recovered = recovered.map((x) => x.key);
 
