@@ -80,10 +80,7 @@ export const releases: Release[] = [
         text: "Settings → Security: Deny on an access request now says plainly that the sign-in is deleted for good, and refuses if the person was given access in the meantime, so it can no longer remove someone who has just been approved. Requests are listed newest first.",
         roles: ["admin"],
       },
-      {
-        text: "If the shelter's main server is switched off or off the network, signing in and saving now keep working instead of showing \"The shelter's server did not answer in time\". Pages may be a little slower until it is back. If a page you already had open will not save, reload it and try again.",
-        roles: ["admin"],
-      },
+      "If the shelter's main server is switched off or off the network, signing in and saving now keep working instead of showing \"The shelter's server did not answer in time\". Pages may be a little slower until it is back. If a page you already had open will not save, reload it and try again.",
     ],
   },
   {

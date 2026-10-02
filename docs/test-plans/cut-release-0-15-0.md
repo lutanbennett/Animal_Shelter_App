@@ -17,7 +17,7 @@
 
 - [x] Change is described in one sentence, and it matches what was asked for — two files: a `0.15.0` entry holding the three notes written by PRs #300, #301 and #305, and `package.json`'s version field
 - [x] Files/areas touched listed — `src/lib/releases.ts` (data only) and `package.json`. No `src/app/`, no `worker/`, no migrations
-- [x] Roles affected identified — all three notes are tagged `admin`, as the PRs that wrote them tagged them. `major: true`, so **every admin with an email is mailed**. Note 3's tag is queried in **Left for manual verification**: it describes behaviour every signed-in user gets, not an admin-only screen
+- [x] Roles affected identified — notes 1 and 2 are tagged `admin`, as the PRs that wrote them tagged them; **note 3 is untagged, on Lutan's instruction in chat** (below), so every signed-in user sees it. `major: true`, so **every admin with an email is mailed**
 - [x] Anything explicitly **out of scope** written down — (a) the deploys, Lutan's go; (b) applying `0129` (§3); (c) the release record, written after the deploy; (d) the outstanding manual verification on three of the five PRs in this release, which is theirs and not closed by this PR (below)
 
 ### What is in the release
@@ -55,20 +55,39 @@ rather than discovered later:
 
 `#303` (`n/a: no UI or visual surface`) and `#304` (`n/a: no UI surface`) need nobody to look.
 
-Shipping on those three is Lutan's call, and whatever he decides goes in the
-release record as either a closed item or a stated gap. #305's drill is in the
-second category by construction: it cannot be run before the deploy it tests.
+### Decided in chat by Lutan, 2026-10-02
+
+Asked before the merge, with the three unsigned plans and their outstanding
+items set out as above:
+
+1. **Ship, and record the gap.** `0.15.0` goes out with #300, #301 and #305
+   unsigned for manual verification, and the release record states it as a gap
+   rather than leaving it implied — the shape `0.14.0`'s record used for the
+   same thing. The eleven outstanding items are not closed by this decision and
+   are not re-homed into this plan; they stay on their own plans, where their
+   owners' signatures still belong. #305's drill could not have been done first
+   in any case: it tests the deployed build.
+2. **Widen note 3 to everyone.** It was tagged `admin` by #305; writes
+   surviving the Pi being off is behaviour every signed-in user gets, so the
+   tag is dropped and the note reads to all roles, as `0.14.0`'s forced sign-out
+   note did. Applied here before the merge, and the register re-verified after:
+   text unchanged at 287 characters, `roles=undefined`.
+3. **Deploys.** Lutan runs `npm run deploy:prod`. This session applies `0129`
+   to production, deploys test, builds on the Pi over SSH, restarts the Pi
+   service and writes the record.
 
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — not needed and checked rather than assumed: the branch was created from `origin/main` at `41b84c3` and is 0 behind
-- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Its closing lines, as printed:
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Its closing lines, as printed — **re-run on the tree that ships**, after note 3 was untagged, rather than kept from the first run:
 
 ```
-=== gates: build exited 0 after 185s
+=== gates: build exited 0 after 123s
 
 gates: typecheck=0 lint=0 build=0
 ```
+
+  The first run, before the untagging, ended the same way (`build exited 0 after 185s`). Both are recorded because the second is the one that applies to the shipped commit, and a note's object-to-string form is exactly the sort of change a reader would assume needed no re-run.
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 - [x] Newest release version matches `package.json` — both `0.15.0`, read back from the parsed register rather than from the diff
@@ -77,7 +96,7 @@ gates: typecheck=0 lint=0 build=0
 - [x] **The date was read from the local clock** — `2026-10-02`, matching the entry
 - [x] The register parses the way `deploy.mjs` loads it — `0.15.0` / `2026-10-02` / `major: true` / 3 notes, under Node's type stripping
 - [x] Order intact — `0.15.0 > 0.14.0 > 0.13.0`, the register's file order still matching a re-sort by `compareVersions` across all 23 entries
-- [x] **The cut was verified against the pre-cut register**, not read over: all three notes compared against `origin/main:src/lib/releases.ts` — `carried across unchanged: 3 of 3`, `text lost: 0 text invented: 0`, roles `["admin"]` on each, 463 / 258 / 287 characters
+- [x] **The cut was verified against the pre-cut register**, not read over: all three notes compared against `origin/main:src/lib/releases.ts` — `carried across unchanged: 3 of 3`, `text lost: 0 text invented: 0`, 463 / 258 / 287 characters. **Re-run after note 3 was untagged**, because that edit touches the same lines the comparison reads: still 3 of 3 unchanged, note 3's text identical at 287 characters and `roles=undefined`, notes 1 and 2 still `["admin"]`
 - [x] **The notes render clean** — `noteText` on each: no `[object Object]`, no `undefined`
 - [x] `node scripts/check-release-guards.mjs` — 15 cases, all ok: a cut release with nothing unreleased passes, and both "unreleased notes" and "a migration the database lacks" still refuse
 
@@ -107,13 +126,13 @@ gates: typecheck=0 lint=0 build=0
 | Role | Can reach | Expected | Result |
 |---|---|---|---|
 | admin | `/releases` | all three notes, and the `0.15.0` mail | not driven — register parse checked instead |
-| management | `/releases` | no `0.15.0` notes (all tagged `admin`) | not driven |
-| staff | `/releases` | no `0.15.0` notes | not driven |
-| vet | `/releases` | no `0.15.0` notes | not driven |
-| volunteer | `/releases` | no `0.15.0` notes | not driven |
+| management | `/releases` | note 3 only (notes 1–2 tagged `admin`) | not driven |
+| staff | `/releases` | note 3 only | not driven |
+| vet | `/releases` | note 3 only | not driven |
+| volunteer | `/releases` | note 3 only | not driven |
 | signed out | `/releases` | page renders; role-tagged notes hidden | not driven |
 
-- [ ] Every role above tested — n/a: no code changed, and the role tags are data this PR carries across unaltered. The behaviour behind them (`noteRoles`) is #62's, unchanged here. Note 3's tag is a judgement left to Lutan, not a defect
+- [ ] Every role above tested — n/a: no code changed. The behaviour behind the tags (`noteRoles`) is #62's, unchanged here; what this PR changed is one note's data, and the expected column above follows from `roles=undefined` on note 3, read back from the parsed register in §2
 - [ ] A role that should not have access is blocked server-side — n/a: no new access path; `/releases` is unchanged
 
 ## 5. Cross-cutting
@@ -183,9 +202,14 @@ gates: typecheck=0 lint=0 build=0
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | The `0.15.0` title reads well to a shelter admin, and is the right summary of the three notes | `src/lib/releases.ts`, the `0.15.0` entry |
-| 2 | **Note 3's role tag.** All three notes are tagged `admin`, as their PRs wrote them, so only admins see them on `/releases`. Notes 1 and 2 are admin-only screens and that is right. Note 3 — signing in and saving keep working while the Pi is down — is behaviour *every* signed-in user gets. Leave it, or widen it before the merge | same entry, `roles` on note 3 |
-| 3 | Whether to ship with #300, #301 and #305 unsigned for manual verification, or hold the deploy until those items are looked at (§1) | `docs/test-plans/{signup-bounds-two-step,audit-undo,origin-write-fallback}.md` |
+| 1 | The `0.15.0` title reads well to a shelter admin, and is the right summary of the three notes. It is Claude's wording, not carried across from a PR, and it is the one line of this cut nobody else has written | `src/lib/releases.ts`, the `0.15.0` entry |
+
+The two items that stood here before — note 3's role tag, and whether to ship
+with three unsigned plans — were put to Lutan in chat and decided; they are
+recorded in §1 rather than left open here. The eleven items outstanding on
+#300, #301 and #305 are deliberately **not** listed in this table: they belong
+to those plans and to their signatures, and copying them here would give them a
+second home that signing this plan would appear to close.
 
 ## Sign-off
 
@@ -198,9 +222,9 @@ Automated checks by: Claude (release manager session)  Date: 2026-10-02
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty and all three items are Lutan's; the line below stays `pending` until he has looked
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: one item is left and it is Lutan's; the line below stays `pending` until he has read the title
 
-Manual verification by: pending: the title wording, note 3's role tag, and the decision on shipping with #300, #301 and #305 unsigned
+Manual verification by: pending: the `0.15.0` title wording. The other two items this plan raised were decided by Lutan in chat on 2026-10-02 and are recorded in §1; this line is not signed, because reading the title is still a separate look and the signature is his to give
 
 ### Result
 
@@ -210,4 +234,4 @@ Manual verification by: pending: the title wording, note 3's role tag, and the d
 
 Result: pass
 
-Release manager acknowledgement: Claude (release manager session), 2026-10-02 — the five PRs' plans were read in full, and the three unsigned manual-verification lines are raised in §1 for Lutan's decision rather than absorbed
+Release manager acknowledgement: Claude (release manager session), 2026-10-02 — the five PRs' plans were read in full; the three unsigned manual-verification lines were raised in §1 rather than absorbed, and Lutan's decision to ship on them goes into the release record as a stated gap
