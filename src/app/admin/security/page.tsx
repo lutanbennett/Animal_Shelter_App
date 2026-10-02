@@ -18,10 +18,16 @@ export default async function SecurityPage() {
 
   const admin = createAdminClient();
 
-  const [authUsersResult, rolesResult, vetsResult] = await Promise.all([
+  const [authUsersResult, rolesResult, vetsResult, doctorsResult] = await Promise.all([
     listAllUsers(admin),
     admin.from("user_roles").select("user_id, role, archived_at, vet_id"),
     admin.from("vets").select("id, name, clinic_name").order("name"),
+    // Doctors with the clinics they work at: a vet login's clinics are its
+    // linked doctor's (0125).
+    admin
+      .from("vet_doctors")
+      .select("id, name, user_id, vet_doctor_clinics(vet_id, active)")
+      .order("name"),
   ]);
 
   const roleByUserId = new Map(
@@ -38,6 +44,23 @@ export default async function SecurityPage() {
     id: v.id as string,
     label: v.clinic_name ? `${v.name} — ${v.clinic_name}` : (v.name as string),
   }));
+
+  const clinicName = new Map((vetsResult.data ?? []).map((v) => [v.id as string, v.name as string]));
+  type DoctorLink = { vet_id: string; active: boolean };
+  const doctorRows = (doctorsResult.data ?? []).map((d) => ({
+    id: d.id as string,
+    name: d.name as string,
+    userId: (d.user_id as string | null) ?? null,
+    clinics: ((d.vet_doctor_clinics ?? []) as DoctorLink[])
+      .filter((l) => l.active)
+      .map((l) => clinicName.get(l.vet_id) ?? "")
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b)),
+  }));
+  const doctorByUserId = new Map(doctorRows.filter((d) => d.userId).map((d) => [d.userId as string, d]));
+  const unlinkedDoctors = doctorRows
+    .filter((d) => !d.userId)
+    .map((d) => ({ id: d.id, name: d.name, clinics: d.clinics }));
 
   const authUsers = authUsersResult.users;
 
@@ -83,7 +106,10 @@ export default async function SecurityPage() {
       email: u.email ?? "(no email)",
       role: roleByUserId.get(u.id)?.role ?? null,
       archivedAt: roleByUserId.get(u.id)?.archivedAt ?? null,
-      vetId: roleByUserId.get(u.id)?.vetId ?? null,
+      legacyClinic: clinicName.get(roleByUserId.get(u.id)?.vetId ?? "") ?? null,
+      doctor: doctorByUserId.get(u.id)
+        ? { id: doctorByUserId.get(u.id)!.id, name: doctorByUserId.get(u.id)!.name, clinics: doctorByUserId.get(u.id)!.clinics }
+        : null,
       createdAt: u.created_at,
       lastSignInAt: u.last_sign_in_at ?? null,
       mustChangePassword: mustChangePassword(u),
@@ -118,7 +144,12 @@ export default async function SecurityPage() {
 
       <AccessRequests requests={requests} />
       <CreateUserForm />
-      <UsersTable users={users} clinics={clinics} currentUserId={currentUser.id} />
+      <UsersTable
+        users={users}
+        clinics={clinics}
+        unlinkedDoctors={unlinkedDoctors}
+        currentUserId={currentUser.id}
+      />
     </main>
   );
 }

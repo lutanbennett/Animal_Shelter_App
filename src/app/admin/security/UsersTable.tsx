@@ -10,8 +10,8 @@ import {
   resetTwoStep,
   restoreUser,
   updateUserRole,
-  updateVetClinic,
 } from "./actions";
+import { VetDoctorLink, type DoctorOption } from "./VetDoctorLink";
 import { TemporaryPasswordNotice } from "@/components/TemporaryPasswordNotice";
 import type { ActionResult } from "@/lib/action-result";
 import { formatDateTime as formatDate } from "@/lib/format";
@@ -24,8 +24,13 @@ export type SecurityUser = {
   role: string | null;
   /** Set when they've left (0063): no access, kept for past work. */
   archivedAt: string | null;
-  /** A vet account's clinic (0102); null for every other role. */
-  vetId: string | null;
+  /**
+   * The clinic an older vet account still carries in user_roles.vet_id
+   * (0102), by name; kept until the account is linked to a doctor.
+   */
+  legacyClinic: string | null;
+  /** The doctor this login is linked to (0125); its clinics are the vet's. */
+  doctor: { id: string; name: string; clinics: string[] } | null;
   createdAt: string;
   lastSignInAt: string | null;
   /** On a temporary password — must choose their own at the next password sign-in. */
@@ -43,16 +48,17 @@ export type ClinicOption = { id: string; label: string };
 function UserRow({
   user,
   clinics,
+  unlinkedDoctors,
   isSelf,
 }: {
   user: SecurityUser;
   clinics: ClinicOption[];
+  unlinkedDoctors: DoctorOption[];
   isSelf: boolean;
 }) {
   const { t, locale } = useI18n();
   const confirm = useConfirm();
   const [role, setRole] = useState(user.role ?? "");
-  const [vetId, setVetId] = useState(user.vetId ?? "");
   const [issuedPassword, setIssuedPassword] = useState<string | null>(null);
   const [message, setMessage] = useState<
     { type: "error" | "success"; text: string } | null
@@ -95,23 +101,10 @@ function UserRow({
     run(
       () => updateUserRole(user.id, nextRole),
       t.admin.security.table.failedToUpdateRole,
-      // The database clears a clinic when the role stops being vet (0102).
       () => {
-        if (nextRole !== "vet") setVetId("");
         setMessage({ type: "success", text: t.admin.security.table.roleUpdated });
       },
       () => setRole(previous),
-    );
-  }
-
-  function handleClinicChange(nextVetId: string) {
-    const previous = vetId;
-    setVetId(nextVetId);
-    run(
-      () => updateVetClinic(user.id, nextVetId || null),
-      t.admin.security.table.failedToUpdateClinic,
-      () => setMessage({ type: "success", text: t.admin.security.table.clinicUpdated }),
-      () => setVetId(previous),
     );
   }
 
@@ -207,24 +200,12 @@ function UserRow({
             ))}
           </select>
           {role === "vet" && (
-            <label className="mt-1 flex flex-col gap-0.5 text-xs text-muted">
-              {t.admin.security.table.clinic}
-              <select
-                value={vetId}
-                disabled={isPending || archived}
-                onChange={(e) => handleClinicChange(e.target.value)}
-                className={`rounded border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary disabled:opacity-50 ${
-                  vetId ? "border-border" : "border-warning"
-                }`}
-              >
-                <option value="">{t.admin.security.table.noClinic}</option>
-                {clinics.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <VetDoctorLink
+              user={user}
+              clinics={clinics}
+              unlinkedDoctors={unlinkedDoctors}
+              disabled={archived}
+            />
           )}
         </td>
         <td className="px-4 py-2">
@@ -344,10 +325,12 @@ function UserRow({
 export function UsersTable({
   users,
   clinics,
+  unlinkedDoctors,
   currentUserId,
 }: {
   users: SecurityUser[];
   clinics: ClinicOption[];
+  unlinkedDoctors: DoctorOption[];
   currentUserId: string;
 }) {
   const { t } = useI18n();
@@ -384,6 +367,7 @@ export function UsersTable({
               key={user.id}
               user={user}
               clinics={clinics}
+              unlinkedDoctors={unlinkedDoctors}
               isSelf={user.id === currentUserId}
             />
           ))}

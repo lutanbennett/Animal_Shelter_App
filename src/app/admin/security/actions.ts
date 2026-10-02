@@ -206,43 +206,175 @@ export async function updateUserRole(userId: string, role: string): Promise<Acti
 }
 
 /**
- * Which clinic a vet account belongs to (user_roles.vet_id, 0102), or none.
- * The vet-visit forms offer that clinic only, and refuse a vet account with
- * none set (src/lib/vets/scope.ts). The database refuses a clinic on any
- * other role (user_roles_vet_id_only_for_vets), and the update is filtered
- * to vet rows so that refusal is never the answer an admin sees.
+ * A vet login's clinics are the clinics of the doctor it is linked to
+ * (vet_doctors.user_id, 0125) — one source of truth, set here by an admin
+ * and edited on the clinic page. Most doctors never get a login; this is
+ * only for the ones who do. Unlinking or archiving the login leaves the
+ * doctor and their visits untouched.
+ *
+ * Until the older user_roles.vet_id (0102) is retired a login may still
+ * carry one clinic there. Linking or creating a doctor keeps that clinic
+ * (the doctor is put at it) and then clears the column, so no vet gains or
+ * loses a clinic in the move.
  */
-export async function updateVetClinic(userId: string, vetId: string | null): Promise<ActionResult> {
+async function loadVetLogin(userId: string, t: T) {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("user_roles")
+    .select("vet_id")
+    .eq("user_id", userId)
+    .eq("role", "vet")
+    .maybeSingle<{ vet_id: string | null }>();
+  if (error) {
+    return { denied: unexpectedFailure("security.loadVetLogin", error, t.common.somethingWentWrong) };
+  }
+  if (!data) return { denied: refuse(t.admin.security.errors.linkOnlyForVets) };
+  return { denied: null, admin, legacyVetId: data.vet_id };
+}
+
+/** Keeps a legacy clinic on the doctor, then clears it from the login. */
+async function retireLegacyClinic(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+  doctorId: string,
+  legacyVetId: string | null,
+) {
+  if (legacyVetId) {
+    const { error } = await admin
+      .from("vet_doctor_clinics")
+      .upsert({ vet_id: legacyVetId, doctor_id: doctorId, active: true }, { onConflict: "vet_id,doctor_id" });
+    if (error) return error;
+  }
+  const { error } = await admin.from("user_roles").update({ vet_id: null }).eq("user_id", userId);
+  return error;
+}
+
+export async function linkVetDoctor(userId: string, doctorId: string): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.admin.security.errors;
-  return runAction("security.updateVetClinic", t.common.somethingWentWrong, async () => {
+  return runAction("security.linkVetDoctor", t.common.somethingWentWrong, async () => {
+    const denied = await refuseUnlessAdmin(t);
+    if (denied) return denied;
+
+    const login = await loadVetLogin(userId, t);
+    if (login.denied) return login.denied;
+    const { admin, legacyVetId } = login;
+
+    const { data: doctor, error: lookupError } = await admin
+      .from("vet_doctors")
+      .select("id, user_id")
+      .eq("id", doctorId)
+      .maybeSingle<{ id: string; user_id: string | null }>();
+    if (lookupError) {
+      return unexpectedFailure("security.linkVetDoctor", lookupError, t.common.somethingWentWrong);
+    }
+    if (!doctor) return refuse(e.doctorNotFound);
+    if (doctor.user_id && doctor.user_id !== userId) return refuse(e.doctorAlreadyLinked);
+
+    // One login is one doctor: clear any other doctor this login had.
+    const { error: clearError } = await admin
+      .from("vet_doctors")
+      .update({ user_id: null })
+      .eq("user_id", userId)
+      .neq("id", doctorId);
+    if (clearError) return unexpectedFailure("security.linkVetDoctor", clearError, t.common.somethingWentWrong);
+
+    const { error } = await admin.from("vet_doctors").update({ user_id: userId }).eq("id", doctorId);
+    if (error) return unexpectedFailure("security.linkVetDoctor", error, t.common.somethingWentWrong);
+
+    const legacyError = await retireLegacyClinic(admin, userId, doctorId, legacyVetId);
+    if (legacyError) return unexpectedFailure("security.linkVetDoctor", legacyError, t.common.somethingWentWrong);
+
+    revalidateSecurity();
+    revalidatePath("/management/vets", "layout");
+    return { ok: true };
+  });
+}
+
+/**
+ * Makes a new doctor entry for a login — the "create one from the user's
+ * name" path — at the clinics ticked. The doctor is the person; the login
+ * is linked to them. More clinics are added later on the clinic page.
+ */
+export async function createVetDoctorForLogin(
+  userId: string,
+  rawName: string,
+  clinicIds: string[],
+): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.admin.security.errors;
+  return runAction("security.createVetDoctorForLogin", t.common.somethingWentWrong, async () => {
+    const denied = await refuseUnlessAdmin(t);
+    if (denied) return denied;
+
+    const name = rawName.trim().replace(/\s+/g, " ");
+    if (!name) return refuse(e.doctorNameRequired);
+
+    const login = await loadVetLogin(userId, t);
+    if (login.denied) return login.denied;
+    const { admin, legacyVetId } = login;
+
+    const clinics = [...new Set([...(legacyVetId ? [legacyVetId] : []), ...clinicIds])];
+    if (clinics.length === 0) return refuse(e.pickAClinic);
+    const { data: found, error: clinicError } = await admin.from("vets").select("id").in("id", clinics);
+    if (clinicError) return unexpectedFailure("security.createVetDoctorForLogin", clinicError, t.common.somethingWentWrong);
+    if ((found ?? []).length !== clinics.length) return refuse(e.clinicNotFound);
+
+    // One login is one doctor.
+    const { data: existing } = await admin
+      .from("vet_doctors")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle<{ id: string }>();
+    if (existing) return refuse(e.alreadyLinked);
+
+    // vet_id is the first clinic: the database links the doctor to it.
+    const { data: created, error } = await admin
+      .from("vet_doctors")
+      .insert({ name, user_id: userId, vet_id: clinics[0] })
+      .select("id")
+      .maybeSingle<{ id: string }>();
+    if (error || !created) {
+      if (error?.code === "23505") return refuse(e.doctorNameTaken(name));
+      return unexpectedFailure("security.createVetDoctorForLogin", error, t.common.somethingWentWrong);
+    }
+
+    const { error: linkError } = await admin
+      .from("vet_doctor_clinics")
+      .upsert(
+        clinics.map((vet_id) => ({ vet_id, doctor_id: created.id, active: true })),
+        { onConflict: "vet_id,doctor_id" },
+      );
+    if (linkError) {
+      // A name already taken at one of the other clinics: nothing half-made.
+      await admin.from("vet_doctors").delete().eq("id", created.id);
+      if (linkError.code === "23505") return refuse(e.doctorNameTaken(name));
+      return unexpectedFailure("security.createVetDoctorForLogin", linkError, t.common.somethingWentWrong);
+    }
+
+    const legacyError = await retireLegacyClinic(admin, userId, created.id, null);
+    if (legacyError) {
+      return unexpectedFailure("security.createVetDoctorForLogin", legacyError, t.common.somethingWentWrong);
+    }
+
+    revalidateSecurity();
+    revalidatePath("/management/vets", "layout");
+    return { ok: true };
+  });
+}
+
+/** Unlinks the login; the doctor and every visit stay as they are. */
+export async function unlinkVetDoctor(userId: string): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("security.unlinkVetDoctor", t.common.somethingWentWrong, async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
 
     const admin = createAdminClient();
-    if (vetId) {
-      const { data: vet, error: vetError } = await admin
-        .from("vets")
-        .select("id")
-        .eq("id", vetId)
-        .maybeSingle();
-      if (vetError) {
-        return unexpectedFailure("security.updateVetClinic", vetError, t.common.somethingWentWrong);
-      }
-      if (!vet) return refuse(e.clinicNotFound);
-    }
-
-    const { data, error } = await admin
-      .from("user_roles")
-      .update({ vet_id: vetId })
-      .eq("user_id", userId)
-      .eq("role", "vet")
-      .select("user_id");
-    if (error) {
-      return unexpectedFailure("security.updateVetClinic", error, t.common.somethingWentWrong);
-    }
-    if (!data?.length) return refuse(e.clinicOnlyForVets);
+    const { error } = await admin.from("vet_doctors").update({ user_id: null }).eq("user_id", userId);
+    if (error) return unexpectedFailure("security.unlinkVetDoctor", error, t.common.somethingWentWrong);
     revalidateSecurity();
+    revalidatePath("/management/vets", "layout");
     return { ok: true };
   });
 }
