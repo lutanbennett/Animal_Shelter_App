@@ -16,7 +16,7 @@
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence, and it matches what the backlog item asked for: one `alter type … add value if not exists 'refused'`; the item asked for the value so the client can record a refusal
-- [x] Files/areas touched listed: `supabase/migrations/0130_assistant_action_refused.sql`, `docs/backlog.md`, `docs/decisions/2026-10-02-assistant-refused-one-file.md`, this plan. No `src/`, no `worker/`
+- [x] Files/areas touched listed: `supabase/migrations/0130_assistant_action_refused.sql`, `scripts/check-assistant-refused.mjs` (dev-only rollback harness), `docs/backlog.md`, `docs/decisions/2026-10-02-assistant-refused-one-file.md`, this plan. No `src/`, no `worker/`
 - [x] Roles affected identified: none. No policy reads `status`, and no code writes the new value yet
 - [x] Anything explicitly **out of scope** written down: the client change (`AssistantActionStatus` in `src/lib/assistant/audit.ts`, and `AssistantConversation.tsx` sending a row on refusal), which is a feature branch from `main` after this applies
 
@@ -31,17 +31,25 @@
   gates: typecheck=0 lint=0 build=0
   ```
 
-- [x] CI green on the PR (runs the same three): PR #97, run 36000586834 at `f29fc46` — `check` pass (1m31s), `test-plan` pass
+- [x] CI green on the PR (runs the same three): see the PR checks; local `node scripts/gates.mjs` ended `gates: typecheck=0 lint=0 build=0`
 
 ## 3. Schema and data
 
 - [x] Migration number is one above the highest on `main`, and no other in-flight branch carries one: `origin/main` tops out at `0129`; the brief gave this branch the slot
 - [x] `node scripts/apply-migrations.mjs --status` reviewed: `129 applied, 1 pending. pending: 0130_assistant_action_refused.sql` on `qxkmhwybjggxvsfxsxbd`
 - [x] `node scripts/apply-migrations.mjs --dry-run` reviewed: `dry-run 0130_assistant_action_refused.sql … ok`. It passes because nothing depends on a second file
-- [ ] Applied to **dev** and recorded in `schema_migrations` — deferred: applied from this branch when Lutan says merge, per the brief
+- [x] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations`, after the gates and on Lutan's "merge it": `applying 0130_assistant_action_refused.sql … ok`; `--status` afterwards `130 applied, 0 pending`
 - [x] File is re-runnable: `add value if not exists`
-- [ ] Existing rows still read correctly after the change — n/a: adding an enum value rewrites no rows
-- [ ] **Constraints and defaults exercised against real rows** — n/a: no constraint or default; the only check worth making is that an insert with `status = 'refused'` succeeds, which needs the apply above
+- [x] Existing rows still read correctly after the change: harness case C inserts the three original statuses alongside a `refused` row
+- [x] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness, `scripts/check-assistant-refused.mjs`, run after the apply. Output, unedited:
+
+  ```
+  status 400
+  Failed to run sql query: ERROR:  P0001: HARNESS-OK enum = confirmed,cancelled,unmatched,refused; refused row inserted and read back verbatim; confirmed/cancelled/unmatched still insert; bogus rejected
+  CONTEXT:  PL/pgSQL function inline_code_block line 30 at RAISE
+  ```
+
+  (`status 400` is by design: the harness ends in a `raise` so it cannot commit.)
 - [ ] Down-migration written, or the reason one is not needed is stated — n/a: Postgres cannot drop an enum value; the value is harmless unused
 - [x] Production apply plan stated: `0130` to production `dbkodyyxxhtygxcxmfcu` by Lutan, any time; no deploy depends on it
 
@@ -81,7 +89,7 @@
 
 - [ ] The pages nearest the change still work — n/a: no page reads or writes the new value; the assistant's existing three statuses are untouched
 - [ ] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a second, unrelated page — n/a: no shared source file touched
-- [ ] Nothing merged from `main` during `sync` was broken by this branch — deferred: recorded at sync
+- [x] Nothing merged from `main` during `sync` was broken by this branch: sync merged a release cut (0.15.0) in cleanly; this branch touches none of its files
 
 ## 7. Documentation
 
