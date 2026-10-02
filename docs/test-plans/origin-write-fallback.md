@@ -27,8 +27,14 @@ or `n/a` with the reason.
 
 ## 2. Automated gates
 
-- [ ] `node scripts/worktree.mjs sync` — n/a: not yet run at this commit
-- [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — n/a: not yet run at this commit
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (`449f363`; it brought only `docs/backlog.md`)
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`, run after that merge. Closing lines as printed:
+
+```
+=== gates: build exited 0 after 33s
+
+gates: typecheck=0 lint=0 build=0
+```
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
@@ -83,7 +89,7 @@ n/a for every role: no page, route or permission changed.
 
 - [x] Nearest paths: `serve()` in `worker/index.mjs` is now three lines over `originOrLocal`, which the script covers for reads, pass-through, and `ORIGIN_HOST` empty; the `x-lanna-served-by` values (`pi`, `worker`, `pi-timeout`) are asserted. `index.mjs` itself is only exercised by the build gate, since it imports the OpenNext bundle
 - [ ] Shared file loaded from a second page — n/a: no shared UI file touched (`src/lib/releases.ts` only gains a note)
-- [ ] Nothing merged from `main` during `sync` was broken — n/a: sync not yet run
+- [x] Nothing merged from `main` during `sync` was broken: the merge touched `docs/backlog.md` only, and the gates ran after it
 
 ## 7. Documentation
 
