@@ -61,7 +61,12 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  {
+    text: "Settings now has a Recent changes page that shows who added, edited, archived or deleted a resident, contact, prescription, vet visit, weight, file or vaccination record, and when. You can filter by kind of record, person and date, and open one change to see the values before and after.",
+    roles: ["admin"],
+  },
+];
 
 /** Newest first. */
 export const releases: Release[] = [

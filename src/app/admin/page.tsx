@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Activity, Globe } from "lucide-react";
+import { Activity, Globe, History } from "lucide-react";
 import { DriveStatus } from "./DriveStatus";
 import { requireAdminUser } from "@/lib/auth/require-admin";
 import { getT } from "@/lib/i18n/get-t";
@@ -78,6 +78,12 @@ export default async function AdminPage() {
       label: t.nav.security,
       description: t.admin.landing.tiles.security,
       icon: NAV_ICONS.security,
+    },
+    {
+      href: "/admin/recent-changes",
+      label: t.nav.recentChanges,
+      description: t.admin.landing.tiles.recentChanges,
+      icon: History,
     },
     {
       href: "/admin/status",
