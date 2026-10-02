@@ -66,22 +66,28 @@ export const unreleased: ReleaseNote[] = [
     text: "Each medication can now have a photo of its box or bottle label. A manager taps Upload label on Management → Medications (on a phone this opens the camera); the photo then shows beside the medicine on the Stocktake sheet and on the Record a delivery form, so whoever is holding the box can match it at a glance. It is only visible to people signed in to the app, never on the public website.",
     roles: ["admin", "management", "staff", "volunteer"],
   },
-  {
-    text: "If the shelter's main server is switched off or off the network, signing in and saving now keep working instead of showing \"The shelter's server did not answer in time\". Pages may be a little slower until it is back. If a page you already had open will not save, reload it and try again.",
-    roles: ["admin"],
-  },
-  {
-    text: "Settings → Recent changes can now undo a mistake. Tap Undo this change on the newest change to a record and confirm: an edit puts the fields back as they were, and a deleted contact, prescription, vet visit, weight or vaccination is put back. If the record has been changed again since, or something has taken its place (a new weight for the same day, say), the page tells you instead of overwriting anything. The undo shows up in the list as a change of its own.",
-    roles: ["admin"],
-  },
-  {
-    text: "Settings → Security: Deny on an access request now says plainly that the sign-in is deleted for good, and refuses if the person was given access in the meantime, so it can no longer remove someone who has just been approved. Requests are listed newest first.",
-    roles: ["admin"],
-  },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.15.0",
+    date: "2026-10-02",
+    title:
+      "Undo a recent change, a Deny that cannot remove an approved person, and signing in that keeps working while the shelter server is down",
+    major: true,
+    notes: [
+      {
+        text: "Settings → Recent changes can now undo a mistake. Tap Undo this change on the newest change to a record and confirm: an edit puts the fields back as they were, and a deleted contact, prescription, vet visit, weight or vaccination is put back. If the record has been changed again since, or something has taken its place (a new weight for the same day, say), the page tells you instead of overwriting anything. The undo shows up in the list as a change of its own.",
+        roles: ["admin"],
+      },
+      {
+        text: "Settings → Security: Deny on an access request now says plainly that the sign-in is deleted for good, and refuses if the person was given access in the meantime, so it can no longer remove someone who has just been approved. Requests are listed newest first.",
+        roles: ["admin"],
+      },
+      "If the shelter's main server is switched off or off the network, signing in and saving now keep working instead of showing \"The shelter's server did not answer in time\". Pages may be a little slower until it is back. If a page you already had open will not save, reload it and try again.",
+    ],
+  },
   {
     version: "0.14.0",
     date: "2026-10-02",
