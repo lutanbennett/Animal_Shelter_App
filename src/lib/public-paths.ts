@@ -24,8 +24,12 @@
  * src/app/robots.ts, which a crawler fetches signed out. /lca-logo.jpg is the
  * one static file the proxy still sees (its matcher no longer skips image
  * extensions) — the logo on the login page and the public header.
+ * /api/version (src/app/api/version/route.ts) is the build's version and
+ * commit, nothing else; deploy and migration tooling ask it signed out, on
+ * locked environments too. Exact path only. It is not an isPublicPage()
+ * page, so the Worker never edge-caches it.
  */
-export const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/lca-logo.jpg"];
+export const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/lca-logo.jpg", "/api/version"];
 
 export const PUBLIC_PATH_PREFIXES = [
   "/api/photos/",
@@ -51,7 +55,7 @@ export const PUBLIC_PATH_PREFIXES = [
  * carry the session cookie. No /r/ or /e/ either: a scanned card or QR
  * code lands on /login with ?next= and goes back there after sign-in.
  */
-export const LOCKED_PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/lca-logo.jpg"];
+export const LOCKED_PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/lca-logo.jpg", "/api/version"];
 
 export const LOCKED_PUBLIC_PATH_PREFIXES = ["/privacy"];
 

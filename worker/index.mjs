@@ -43,6 +43,10 @@
 // work with the Pi down, and a report is logged here, not on the Pi's disk
 // (csp-report.mjs).
 //
+// /api/version is the opposite case and must stay that way: the app answers it
+// (src/app/api/version/route.ts), so it reports what the Pi runs. It is not on
+// the cached page list, so nothing here stores it.
+//
 // Besides requests, a cron trigger: `scheduled` below runs the status
 // alerts every 15 minutes (wrangler.jsonc, src/lib/status/alerts.ts).
 //
