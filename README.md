@@ -555,7 +555,12 @@ Debian.) It prints `Public key: age1…`. Save the **whole file** in the passwor
 manager (the `AGE-SECRET-KEY-1…` line is the private key), then delete the
 file. Put only the `age1…` public key in `BACKUP_AGE_RECIPIENT` on each machine
 that takes backups. Several keys may be listed, comma-separated (a second
-administrator, or a sealed spare); any one of them can decrypt. A lost private
+administrator, or a sealed spare); any one of them can decrypt. Where the dumps go in Drive:
+by default `Backups/` under `GOOGLE_DRIVE_ROOT_FOLDER_ID`; set
+`BACKUP_DRIVE_FOLDER_ID` to a folder id and `backup.mjs` uploads straight into
+that folder and the status tile reads it, so `Backups/` can sit outside the
+photo tree, shared with one person (decisions/2026-10-02-backup-encryption-rollout.md).
+A lost private
 key means every encrypted backup is unreadable, so keep a second copy of it
 somewhere as safe as the first. To change the key later, install the new
 public key and keep the old private key for as long as any backup made with it
