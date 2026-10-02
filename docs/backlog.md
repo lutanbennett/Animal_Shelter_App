@@ -4,6 +4,8 @@ Each item is a self-contained prompt for a new thread. Ordered by suggested prio
 
 ## Next up
 
+- [ ] **Drop `current_user_vet_id()` and `user_roles.vet_id` (schema PR).** Follow-up to the doctor multi-clinic feature (`claude/doctor-multi-clinic-feature`, 2026-10-02). `src/` no longer reads either: `scope.ts` uses `current_user_vet_ids()`, and Security links a vet login to a doctor instead of writing a clinic. What is left: (1) before dropping the column, list vet logins that still have `user_roles.vet_id` and no linked doctor in `vet_doctors.user_id` (Security shows them as "Clinic set the old way") and link or create a doctor for each, or backfill in the migration; (2) a migration that redefines `current_user_vet_ids()` without the `user_roles.vet_id` union, drops `current_user_vet_id()`, the `user_roles_vet_id_only_for_vets` check and the column, and grep every security-definer function for the singular name first (a definer calling a dropped function fails at runtime); (3) `scripts/check-doctor-multi-clinic.mjs` section H asserts the singular function still answers and the legacy-login fixtures use the column, so update them. One in-flight migration at a time, so land it alone.
+
 **Role walkthrough, Pass 1 (Vet) — 2026-09-27. Work these first, then re-run the
 walkthrough from the top** (Lutan). The twelve items live under their own headings
 rather than being copied here; this is the order to take them in and what blocks
