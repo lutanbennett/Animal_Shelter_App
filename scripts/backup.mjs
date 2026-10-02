@@ -34,7 +34,8 @@
 //      on restore. (mfa_* holds the TOTP secrets, so everyone re-enrols their
 //      authenticator app after a restore.) Then encrypts it with age.
 //   2. Uploads the file as Backups/lannacare-<env>-<timestamp>.dump.age under
-//      GOOGLE_DRIVE_ROOT_FOLDER_ID, creating the Backups folder if needed.
+//      GOOGLE_DRIVE_ROOT_FOLDER_ID, creating the Backups folder if needed, or
+//      straight into the folder BACKUP_DRIVE_FOLDER_ID names when that is set.
 //      The Drive link is deliberately not printed: the output goes to
 //      backup.log, and a log of live links is its own exposure.
 //   3. Moves older dumps for the same environment beyond the newest --keep
@@ -294,7 +295,6 @@ function driveClient() {
     "GOOGLE_OAUTH_CLIENT_ID",
     "GOOGLE_OAUTH_CLIENT_SECRET",
     "GOOGLE_OAUTH_REFRESH_TOKEN",
-    "GOOGLE_DRIVE_ROOT_FOLDER_ID",
   ]) {
     if (!env[k]) fail(`${k} is required to upload to Drive (use --local to skip the upload).`);
   }
@@ -304,7 +304,11 @@ function driveClient() {
 }
 
 async function ensureBackupsFolder(drive) {
+  // BACKUP_DRIVE_FOLDER_ID names the folder the dumps go in, so Backups/ can sit
+  // somewhere the app's photo tree does not (shared with the administrator only).
+  if (env.BACKUP_DRIVE_FOLDER_ID) return env.BACKUP_DRIVE_FOLDER_ID;
   const root = env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  if (!root) fail("Set BACKUP_DRIVE_FOLDER_ID or GOOGLE_DRIVE_ROOT_FOLDER_ID to upload to Drive (use --local to skip the upload).");
   const found = await drive.files.list({
     q: `'${root}' in parents and name = 'Backups' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
     fields: "files(id)",
