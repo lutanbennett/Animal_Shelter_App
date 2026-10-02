@@ -9,7 +9,7 @@ or `n/a` with the reason.
 
 | | |
 |---|---|
-| Feature | A write falls back to the Worker's local render when Cloudflare's edge says it never reached the Pi (521/522/523/530) |
+| Feature | A write falls back to the Worker's local render when Cloudflare's edge says it never reached the Pi (a 530: no tunnel connector) |
 | Backlog item | `docs/backlog.md` → Next up: the Pi is a single point of failure, piece (a); the item stays open for (b), (c) |
 | Branch / worktree | `claude/origin-write-fallback` @ `C:\Development\Animal_Shelter_origin-write-fallback` |
 | Dev server | not used: Worker logic only |
@@ -20,8 +20,8 @@ or `n/a` with the reason.
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence, and it matches the item's piece (a): `fetchFromOrigin` replays a write locally only on 521/522/523/530; thrown fetches and 502/503/504 stay refused with the 503 "check whether your change was saved"
-- [x] Files/areas touched: `worker/origin.mjs`, `scripts/check-worker-origin.mjs`, `src/lib/releases.ts`, `docs/backlog.md`, `docs/decisions/`, this plan. Nothing under `supabase/`
+- [x] Change is described in one sentence, and it matches the item's piece (a): a write is rendered by the Worker only when the edge answers 530 for the Pi; thrown fetches and 502/503/504/52x stay refused with the 503 "check whether your change was saved"
+- [x] Files/areas touched: `worker/origin.mjs`, `worker/index.mjs` (`serve()` now goes through `originOrLocal`), `scripts/check-worker-origin.mjs`, `src/lib/releases.ts`, `docs/backlog.md`, `docs/decisions/`, this plan. Nothing under `supabase/`
 - [ ] Roles affected identified — n/a: applies to any write while the Pi is down; nothing role-specific
 - [x] Out of scope: (b) the Worker alerting that the Pi is down, (c) the weekly backup, the `ORIGIN_HOST=""` lever, and any pre-flight probe (not needed, see the decision)
 
@@ -45,14 +45,14 @@ or `n/a` with the reason.
 
 ## 4. Functional checks
 
-`node scripts/check-worker-origin.mjs` stubs `fetch` and drives the real `fetchFromOrigin`. A probe Worker under `wrangler dev` established what `fetch` throws (see the decision file).
+`node scripts/check-worker-origin.mjs` drives the real `fetchFromOrigin` with `fetch` stubbed, then the real `originOrLocal` against throwaway origins on 127.0.0.1 (answers 530, answers 504, takes the write then drops the connection, refuses, hangs, answers 303). The same five write cases were also run once through `originOrLocal` inside workerd (`wrangler dev`), with the same results; that run also established what `fetch` throws (see the decision file).
 
-- [x] Happy path: a 200/303/400/401/404/500 from the Pi passes through for GET and POST
+- [x] Happy path: a POST to an origin answering 530 is rendered locally, returns 200, and the local render receives the write's body exactly once (Node and workerd). A 200/303/400/401/404/500 from the Pi passes through for GET and POST, with the body, key and public host reaching the origin
 - [ ] Data persists — n/a: no data written
 - [ ] Create / edit / delete — n/a: no data written
 - [ ] Empty state — n/a: no UI
-- [x] Failure handling: POST/PUT/PATCH/DELETE on 502/503/504 or a thrown fetch is still answered 503 `pi-timeout`, not replayed (the #250 case); on 521/522/523/530 the write returns null and renders locally; GET/HEAD/OPTIONS fall back on all of them
-- [x] Boundary cases: both sides of the line checked, 521/522/523/530 versus 502/503/504, for all four write methods
+- [x] Failure handling: POST/PUT/PATCH/DELETE on 502/503/504/521/522/523 or a thrown fetch is still answered 503 `pi-timeout` and the local render is never called (the #250 case) — including an origin that reads the whole write and then drops the connection, and one that refuses the connection; GET/HEAD/OPTIONS fall back on all of them, and on a hang after `ORIGIN_TIMEOUT_MS`
+- [x] Boundary cases: both sides of the line for all four write methods — 530 versus every other down status. The check was also run against a copy of `origin.mjs` with the clone removed, and exits 1 ("Body is unusable"), so it does catch the defect below
 
 ### Role access matrix
 
@@ -81,7 +81,7 @@ n/a for every role: no page, route or permission changed.
 
 ## 6. Regression
 
-- [x] Nearest paths: `serve()` in `worker/index.mjs` is unchanged and only consumes `fetchFromOrigin`'s null or Response; reads and pass-through are covered by the same script
+- [x] Nearest paths: `serve()` in `worker/index.mjs` is now three lines over `originOrLocal`, which the script covers for reads, pass-through, and `ORIGIN_HOST` empty; the `x-lanna-served-by` values (`pi`, `worker`, `pi-timeout`) are asserted. `index.mjs` itself is only exercised by the build gate, since it imports the OpenNext bundle
 - [ ] Shared file loaded from a second page — n/a: no shared UI file touched (`src/lib/releases.ts` only gains a note)
 - [ ] Nothing merged from `main` during `sync` was broken — n/a: sync not yet run
 
@@ -92,7 +92,7 @@ n/a for every role: no page, route or permission changed.
 - [ ] `README.md` still accurate — n/a: not touched, nothing it describes changed
 - [x] **Release notes.** `unreleased` gained a line saying signing in and saving keep working if the main server is off the network
 - [x] Commit messages say why, not just what
-- [x] **Claims were measured, not reasoned.** The thrown-error behaviour was observed in workerd, not inferred from error names. The 52x/530 production mapping is from Cloudflare's documented behaviour and is not observed live, stated as a caveat in the decision
+- [x] **Claims were measured, not reasoned.** The thrown-error behaviour was observed in workerd, not inferred from error names. That a missing tunnel connector is a 530 comes from Cloudflare's documentation and `docs/pi-hosting.md`'s drill line, not from watching this tunnel; the decision says so under "What this does not establish", along with the server-action-ID caveat, which is reasoned from Next's docs and not reproduced
 
 ## 8. Pre-production gate
 
@@ -132,12 +132,15 @@ n/a for every role: no page, route or permission changed.
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
 | 1 | low | The item's premise that a thrown fetch separates connect from in-flight failure is false in workerd | accepted: replaced by a status-based distinction, recorded in the decision |
+| 2 | high | First cut (`ebd3570`) returned null for the write but the origin attempt had consumed its body, so the local render would have thrown instead of saving | fixed: `originOrLocal` clones a write first; the loopback cases assert the body arrives |
+| 3 | medium | First cut also let 521/522/523 fall back; 522 is not provably pre-arrival | fixed: 530 only |
 
 ## Left for manual verification
 
 | # | What to check | Where |
 |---|---|---|
 | 1 | The release-note wording reads calmly to a shelter admin | `src/lib/releases.ts`, `unreleased` |
+| 2 | The drill, once this is deployed: `sudo systemctl stop cloudflared` on the Pi, then sign in on test — expect it to work with `x-lanna-served-by: worker`, not a 503 — and `start` it again. This is the only thing that proves the tunnel answers a POST with 530 | the Pi, `test.lannacare.org` |
 
 ## Sign-off
 
@@ -150,9 +153,9 @@ Automated checks by: Claude (origin-write-fallback session)  Date: 2026-10-02
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — not ticked: item 1 is outstanding
+- [ ] The manual list above is empty, or every item in it was checked by a person — not ticked: items 1 and 2 are outstanding
 
-Manual verification by: pending: Lutan to read the release-note wording
+Manual verification by: pending: Lutan to read the release-note wording and run the cloudflared drill after deploy
 
 ### Result
 
