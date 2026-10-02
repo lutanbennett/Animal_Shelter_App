@@ -98,6 +98,11 @@ node scripts/apply-migrations.mjs --env "$ENV_NAME" --status 2>/dev/null | tail 
 node scripts/pi/write-env.mjs --env "$ENV_NAME"
 "${NICE[@]}" npm ci --no-audit --no-fund   # devDependencies too: next build needs TypeScript and Tailwind
 "${NICE[@]}" npm run build
+# The build must carry this environment's Server Actions key, the one the Worker
+# builds with, or forms rendered by one are rejected by the other. Stops before
+# the restart, so the running service keeps serving what it has. Compare the
+# fingerprint with the one `npm run deploy:*` prints on the dev machine.
+node scripts/actions-key.mjs --env "$ENV_NAME" --built
 
 sudo systemctl restart "$SERVICE"
 sleep 3
