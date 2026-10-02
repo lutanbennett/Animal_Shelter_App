@@ -751,7 +751,7 @@ const en = {
         approving: "Approving...",
         deny: "Deny",
         denyConfirm: (email: string) =>
-          `Deny ${email}? Their account is removed; they can sign in with Google again to ask afresh.`,
+          `Deny ${email}? Their sign-in is deleted for good and can't be undone. They can sign in with Google again to ask afresh.`,
       },
       tempPassword: {
         heading: (email: string) => `Temporary password for ${email}`,
@@ -854,6 +854,7 @@ const en = {
         hasRecords:
           "This person has records in the system, so they can't be deleted. Archive them instead.",
         userNotFound: "This login no longer exists. Reload the page.",
+        alreadyHasAccess: "This person has been given access since this page loaded, so nothing was removed. Reload the page.",
         emailTaken: "There is already a login with that email.",
         emailInvalid: "That email address doesn't look right.",
         twoStepRequired:
