@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ClipboardCheck, Scale, Truck } from "lucide-react";
+import { ClipboardCheck, Scale, ShoppingCart, Truck } from "lucide-react";
 import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -14,11 +14,17 @@ import { UnitsPanel } from "@/components/UnitsPanel";
 import { dietUnitLabel } from "@/lib/i18n/enum-labels";
 import { inPurchaseUnit } from "@/lib/units";
 import { loadConversions } from "@/lib/units-server";
+import { loadReceipts } from "@/lib/management/receipts-server";
+import { receivedSinceCount } from "@/lib/management/purchasing";
 
-type DietTypeQueryRow = Omit<DietTypeRow, "diet_count" | "forecast" | "stock" | "stockReading"> & {
+type DietTypeQueryRow = Omit<
+  DietTypeRow,
+  "diet_count" | "forecast" | "stock" | "stockReading" | "purchaseUnit" | "safetyStock" | "unitOptions"
+> & {
   stock_on_hand: number | string | null;
   stock_counted_at: string | null;
   reorder_lead_days: number | null;
+  safety_stock: number | string | null;
 };
 
 type ForecastRow = {
@@ -51,7 +57,7 @@ export default async function DietsManagementPage(props: PageProps<"/management/
     supabase
       .from("diet_types")
       .select(
-        "id, name, unit, cost_per_unit, daily_qty_small, daily_qty_medium, daily_qty_large, notes, stock_on_hand, stock_counted_at, reorder_lead_days, is_standard",
+        "id, name, unit, cost_per_unit, daily_qty_small, daily_qty_medium, daily_qty_large, notes, stock_on_hand, stock_counted_at, reorder_lead_days, is_standard, safety_stock",
       )
       .order("name")
       .returns<DietTypeQueryRow[]>(),
@@ -83,6 +89,13 @@ export default async function DietsManagementPage(props: PageProps<"/management/
   const rateWindow = windows.findIndex((window) => window.days === STOCK_RATE_DAYS);
 
   const conversions = await loadConversions(supabase, "diet");
+  // Deliveries since each count are part of the cupboard now (stock.ts), so
+  // days-of-stock agrees with Management → Purchasing.
+  const receipts = await loadReceipts(supabase, "diet");
+  const receivedSince = receivedSinceCount(
+    receipts.data,
+    new Map((typesResult.data ?? []).map((row) => [row.id, row.stock_counted_at])),
+  );
 
   const dietTypes: DietTypeRow[] = (typesResult.data ?? []).map((type) => {
     const forecast = forecasts.map((byType) => {
@@ -107,8 +120,15 @@ export default async function DietsManagementPage(props: PageProps<"/management/
       diet_count: counts.get(type.id) ?? 0,
       forecast,
       stock,
-      stockReading: readStock(stock, forecast[rateWindow]?.quantity ?? 0),
+      stockReading: readStock(
+        stock,
+        forecast[rateWindow]?.quantity ?? 0,
+        Date.now(),
+        receivedSince.get(type.id) ?? 0,
+      ),
       purchaseUnit: inPurchaseUnit(stock.stock_on_hand, conversions.data[type.id] ?? []),
+      safetyStock: type.safety_stock == null ? null : Number(type.safety_stock),
+      unitOptions: (conversions.data[type.id] ?? []).map((c) => c.unit),
     };
   });
 
@@ -144,6 +164,13 @@ export default async function DietsManagementPage(props: PageProps<"/management/
           {t.management.stockUsage.link}
         </Link>
         <Link
+          href="/management/purchasing?tab=food"
+          className="mt-2 ml-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+        >
+          <ShoppingCart aria-hidden="true" className="h-4 w-4" />
+          {t.management.purchasing.link}
+        </Link>
+        <Link
           href="/deliveries?tab=diets"
           className="mt-2 ml-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
         >
@@ -161,6 +188,11 @@ export default async function DietsManagementPage(props: PageProps<"/management/
         {dietsResult.error && (
           <p className="text-sm text-danger">
             {m.couldntLoadUsage}: {dietsResult.error.message}
+          </p>
+        )}
+        {receipts.error && (
+          <p className="text-sm text-danger">
+            {t.management.stock.couldntLoadReceipts}: {receipts.error}
           </p>
         )}
         {forecastError && (

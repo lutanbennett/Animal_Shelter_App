@@ -60,6 +60,22 @@ export function CreateDietTypeForm() {
           />
           <span className="text-xs text-muted">{m.createForm.costHint}</span>
         </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="diet-safety" className="text-sm font-medium text-muted">
+            {t.management.stock.safetyCreateLabel}
+          </label>
+          <input
+            id="diet-safety"
+            name="safetyStock"
+            type="number"
+            inputMode="decimal"
+            min="0"
+            step="any"
+            placeholder={t.management.stock.safetyPlaceholder}
+            className={`${inputClass} w-32`}
+          />
+          <span className="text-xs text-muted">{t.management.stock.safetyHint}</span>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-end gap-3">
