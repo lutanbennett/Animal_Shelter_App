@@ -7,7 +7,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { DOSE_UNITS, type DoseUnit } from "@/lib/i18n/enum-labels";
 import { parseBahtAmount } from "@/lib/format";
-import { parseLeadDays, parseStockCount } from "@/lib/management/stock";
+import { parseLeadDays, parseSafetyStock, parseStockCount } from "@/lib/management/stock";
+import { resolveSafetyStock } from "@/lib/management/purchasing";
+import { loadConversions } from "@/lib/units-server";
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
@@ -20,6 +22,13 @@ export type MedicationFields = {
   costPerUnit: number | null;
   /** Supplier lead time in days, as typed; blank = no reorder flag (0083). */
   reorderLeadDays: string;
+  /**
+   * Safety stock as typed, in `safetyUnit` (0128). Blank = no floor (null);
+   * 0 is a floor of nothing. Converted to the base unit on save.
+   */
+  safetyStock: string;
+  /** Blank = the base unit; else the name of one of the item's other units. */
+  safetyUnit: string;
 };
 
 function optional(value: FormDataEntryValue | string | null | undefined) {
@@ -33,6 +42,7 @@ function isDoseUnit(value: string | null): value is DoseUnit {
 
 function revalidateMedicationPages() {
   revalidatePath("/management/medications");
+  revalidatePath("/management/purchasing");
   // The prescription form's pickers and the hub's medication(name) embeds
   // read these tables too.
   revalidatePath("/prescriptions/new");
@@ -71,10 +81,14 @@ export async function createMedication(
     const cost = parseBahtAmount(formData.get("costPerUnit") as string | null);
     if (!cost.ok) return refuse(t.management.medications.errors.costInvalid);
 
+    // A new item has no other units yet, so the floor is in its own unit.
+    const safety = parseSafetyStock(optional(formData.get("safetyStock")));
+    if (!safety.ok) return refuse(t.management.stock.errors.safetyInvalid);
+
     const supabase = await createClient();
     const { error } = await supabase
       .from("medication")
-      .insert({ name, dose_unit: doseUnit, cost_per_unit: cost.value });
+      .insert({ name, dose_unit: doseUnit, cost_per_unit: cost.value, safety_stock: safety.value });
 
     if (error) return refuse(error.message);
 
@@ -105,9 +119,25 @@ export async function updateMedication(id: string, fields: MedicationFields): Pr
     const leadDays = parseLeadDays(fields.reorderLeadDays);
     if (!leadDays.ok) return refuse(t.management.stock.errors.leadDaysInvalid);
 
+    const supabase = await createClient();
+    // The floor may be typed in the purchase unit; it is stored in base
+    // units (0128), converted with the factor in force now.
+    const conversions = await loadConversions(supabase, "medication", [id]);
+    if (conversions.error) return refuse(conversions.error);
+    const safety = resolveSafetyStock(
+      fields.safetyStock,
+      fields.safetyUnit,
+      conversions.data[id] ?? [],
+      [doseUnit],
+    );
+    if (!safety.ok) {
+      return refuse(
+        safety.reason === "unknownUnit" ? t.units.errors.unknownUnit : t.management.stock.errors.safetyInvalid,
+      );
+    }
+
     // stock_on_hand is deliberately not in this write: naming it restamps
     // stock_counted_at (0083), and a rename is not a stocktake.
-    const supabase = await createClient();
     const { error } = await supabase
       .from("medication")
       .update({
@@ -115,6 +145,7 @@ export async function updateMedication(id: string, fields: MedicationFields): Pr
         dose_unit: doseUnit,
         cost_per_unit: cost.value,
         reorder_lead_days: leadDays.value,
+        safety_stock: safety.value,
       })
       .eq("id", id);
 

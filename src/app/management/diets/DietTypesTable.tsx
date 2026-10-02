@@ -8,6 +8,7 @@ import { DIET_UNITS, dietUnitLabel } from "@/lib/i18n/enum-labels";
 import { formatQuantity } from "@/lib/diets/options";
 import {
   parseLeadDays,
+  parseSafetyStock,
   parseStockCount,
   type StockFigures,
   type StockReading,
@@ -46,6 +47,10 @@ export type DietTypeRow = {
   stockReading: StockReading;
   /** Stock on hand in the purchase unit (0118); null without one. */
   purchaseUnit: { quantity: number; unit: string } | null;
+  /** Safety stock in base units; null = no floor, 0 = a floor of nothing (0128). */
+  safetyStock: number | null;
+  /** The item's other units by name, for typing the safety stock in one. */
+  unitOptions: string[];
 };
 
 /** Columns besides the forecast windows: name, unit, cost, daily, stock, days, records, actions. */
@@ -67,6 +72,8 @@ function fieldsOf(row: DietTypeRow): DietTypeFields {
     dailyQtyLarge: formatQuantity(row.daily_qty_large),
     notes: row.notes ?? "",
     reorderLeadDays: row.stock.reorder_lead_days?.toString() ?? "",
+    safetyStock: row.safetyStock?.toString() ?? "",
+    safetyUnit: "",
   };
 }
 
@@ -100,6 +107,10 @@ function DietTypeRowItem({
   function handleSave() {
     if (!parseLeadDays(fields.reorderLeadDays).ok) {
       setMessage({ type: "error", text: t.management.stock.errors.leadDaysInvalid });
+      return;
+    }
+    if (!parseSafetyStock(fields.safetyStock).ok) {
+      setMessage({ type: "error", text: t.management.stock.errors.safetyInvalid });
       return;
     }
     setMessage(null);
@@ -290,6 +301,15 @@ function DietTypeRowItem({
           editing={editing}
           leadDaysValue={fields.reorderLeadDays}
           onLeadDaysChange={set("reorderLeadDays")}
+          safety={{
+            stored: dietType.safetyStock,
+            baseUnitLabel: unit,
+            unitOptions: dietType.unitOptions,
+            value: fields.safetyStock,
+            unit: fields.safetyUnit,
+            onValueChange: set("safetyStock"),
+            onUnitChange: set("safetyUnit"),
+          }}
         />
         <td className="px-4 py-2 text-muted">{m.table.dietCount(dietType.diet_count)}</td>
         <td className="px-4 py-2">

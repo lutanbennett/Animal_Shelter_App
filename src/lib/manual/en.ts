@@ -1169,6 +1169,33 @@ const manual: Manual = {
           ],
         },
         {
+          id: "purchasing",
+          title: "Purchasing: what to buy",
+          roles: ["admin", "management"],
+          path: "Management → Purchasing",
+          intro:
+            "Works out how much of each medicine and food to buy for a week, two weeks or a month, so whoever orders does not do the arithmetic by hand. Every row shows its working, so nobody has to trust a bare number.",
+          steps: [
+            "Open it from the Management page, or from the Purchasing link at the top of Management → Medications or → Diets. Pick the Period: 1 week, 2 weeks or 1 month, counted from today.",
+            "Each row is one medicine or food. The working says what was counted and when, how much has probably been used since (the prescriptions' and diets' forecast, the same one Days of stock uses), how much has been received since (the deliveries recorded under Deliveries), and so how much should be on the shelf now. The second line says what the period needs: the forecast use over the period, plus the item's safety stock.",
+            "Buy is what is needed minus what should be on the shelf now, never below zero. If the item has a unit it is bought in (set under Units of measure on Management → Medications or → Diets, e.g. a 20 kg bag), the amount is rounded up to whole packs, and the amount in the item's own unit is shown beside it.",
+            "Include supplier lead time is on by default. Stock ordered today only arrives after the item's reorder lead time (set on Management → Medications or → Diets), and the period should be covered from the day it arrives, so those days of use are added. Turn it off to count the period from today.",
+            "Food is listed after medicines, with the special diets before the standard diet.",
+            "To buy lists only the items with something to buy, grouped by their usual supplier — the supplier named on the item's most recent delivery. Download CSV saves that list for a spreadsheet; Print prints just the list.",
+            "Set an item's safety stock by Edit on Management → Medications or → Diets (or when adding it): the floor to keep on the shelf whatever is prescribed today, such as fluids or a common antibiotic. It can be typed in the unit the item is bought in (2 bags) and is saved in the item's own unit. Blank means no floor; 0 is allowed and adds nothing.",
+          ],
+          callouts: [
+            {
+              kind: "warning",
+              text: "An item that has never been counted has no recommendation: the page says so instead of guessing, and shows only what the period would need. Count it in a stocktake first. A count older than three weeks is flagged as probably out of date, because the shelf has changed since — count it again before ordering.",
+            },
+            {
+              kind: "note",
+              text: "Used since the count is the forecast, not a measurement, and a delivery nobody recorded is invisible here, so recommended quantities are only as good as the counts and the delivery records. The working is there so you can see what the figure rests on and overrule it.",
+            },
+          ],
+        },
+        {
           id: "deliveries",
           title: "Recording a delivery",
           roles: ["admin", "management", "staff"],
