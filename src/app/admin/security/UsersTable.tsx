@@ -24,11 +24,6 @@ export type SecurityUser = {
   role: string | null;
   /** Set when they've left (0063): no access, kept for past work. */
   archivedAt: string | null;
-  /**
-   * The clinic an older vet account still carries in user_roles.vet_id
-   * (0102), by name; kept until the account is linked to a doctor.
-   */
-  legacyClinic: string | null;
   /** The doctor this login is linked to (0125); its clinics are the vet's. */
   doctor: { id: string; name: string; clinics: string[] } | null;
   createdAt: string;

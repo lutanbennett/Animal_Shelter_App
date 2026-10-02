@@ -111,7 +111,9 @@ begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-0116-' || u || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from unnest(array[v_vet, v_staff, v_vol, v_unl]) u;
-  insert into user_roles (user_id, role, vet_id) values (v_vet, 'vet', v_own), (v_unl, 'vet', null);
+  insert into user_roles (user_id, role) values (v_vet, 'vet'), (v_unl, 'vet');
+  -- 0127: a vet login's clinic is its linked doctor's (the home-clinic trigger links it)
+  insert into vet_doctors (name, user_id, vet_id) values ('Harness vet doctor', v_vet, v_own);
   insert into user_roles (user_id, role) values (v_staff, 'staff'), (v_vol, 'volunteer');
   insert into residents (name) values ('harness 0116 in'), ('harness 0116 out');
   select id into v_in from residents where name = 'harness 0116 in';

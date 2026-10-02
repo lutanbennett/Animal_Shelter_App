@@ -1,4 +1,4 @@
-// Rollback harness for *_doctor_multi_clinic.sql against DEV only. One
+// Rollback harness for *_drop_user_roles_vet_id.sql against DEV only. One
 // transaction: fixtures, the file (twice), assertions through real JWTs and
 // RLS, then a deliberate `raise exception` carrying the evidence, so nothing
 // can commit. Safe to run before or after the file is applied.
@@ -7,7 +7,9 @@
 //
 // Fixtures: clinics A, B, C; residents rA / rB / rC with one visit each at
 // that clinic; a vet login "multi" linked to a doctor who works at A and B;
-// a legacy vet login whose only clinic is user_roles.vet_id = A; a vet login
+// a legacy vet login whose only clinic is user_roles.vet_id = A (the column is
+// re-added inside the transaction if 0127 already dropped it, so the back-fill is
+// exercised whether or not the file is applied); a vet login
 // with no clinic; admin, management, staff.
 //
 //   A  the moved guarantee: a visit whose doctor does not work at its clinic
@@ -25,7 +27,9 @@
 //   F  nobody widens a vet's reach: a vet cannot link themselves to C or take
 //      another clinic's doctor; staff cannot touch a login-linked doctor's links
 //   G  merge_vet_doctors across clinics: links, visits and login follow
-//   H  current_user_vet_id() still answers; audit_log writes once per change
+//   H  the legacy login was back-filled with a doctor at A before the column
+//      went; user_roles.vet_id, its check and current_user_vet_id() are gone and
+//      nothing in the catalogue calls it; audit_log writes once per change
 //
 // Exits 0 when every assertion held.
 import { readdirSync, readFileSync } from "node:fs";
@@ -39,8 +43,8 @@ const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
 const dir = join(root, "supabase/migrations");
-const file = readdirSync(dir).find((f) => /^\d+_doctor_multi_clinic\.sql$/.test(f));
-if (!file) throw new Error("no *_doctor_multi_clinic.sql in supabase/migrations");
+const file = readdirSync(dir).find((f) => /^\d+_drop_user_roles_vet_id\.sql$/.test(f));
+if (!file) throw new Error("no *_drop_user_roles_vet_id.sql in supabase/migrations");
 const migration = readFileSync(join(dir, file), "utf8");
 
 const sql = `
@@ -107,6 +111,7 @@ begin
   insert into user_roles (user_id, role) values
     (pg_temp.hid('multi'), 'vet'), (pg_temp.hid('nolink'), 'vet'),
     (pg_temp.hid('admin'), 'admin'), (pg_temp.hid('mgmt'), 'management'), (pg_temp.hid('staff'), 'staff');
+  alter table user_roles add column if not exists vet_id uuid references vets (id) on delete set null;
   insert into user_roles (user_id, role, vet_id) values (pg_temp.hid('legacy'), 'vet', a);
 
   insert into residents (id, name, species) values
@@ -206,7 +211,6 @@ begin
   v_report := v_report || 'B: one spelling per clinic on insert/rename/link, rename re-keys, same name elsewhere stays separate | ';
 
   ----------------------------------------------------------------- C (0108)
-  update user_roles set vet_id = null where user_id = multi;
   update vet_doctors set user_id = multi where id = dm;   -- owner context: no auth.uid(), so the login guard lets it through
   if pg_temp.scalar(multi, 'select array_to_string(array(select x from unnest(current_user_vet_ids()) x order by x), '','')')
      is distinct from (select string_agg(x::text, ',' order by x) from unnest(array[a, b]) x) then
@@ -330,6 +334,7 @@ begin
     raise exception 'HARNESS-FAIL G: the merge added C to multi''s clinics, so C''s resident should be visible'; end if;
   -- login transfers from the loser to the survivor; two logins never merge
   update vet_doctors set user_id = null where id = dm;
+  update vet_doctors set user_id = null where user_id = legacy;   -- the back-filled doctor gives the login up
   insert into vet_doctors (id, vet_id, name, user_id) values (dz, a, 'Harness Dr Twin', legacy);
   n := pg_temp.try(adm, format('select merge_vet_doctors(%L, %L)', dz, dm));
   if n <> 1 then raise exception 'HARNESS-FAIL G: merging a login-bearing doctor into a loginless one gave %', n; end if;
@@ -350,13 +355,30 @@ begin
   v_report := v_report || 'G: cross-clinic merge moves links, visits and login; staff refused on a login, two logins refused | ';
 
   ----------------------------------------------------------------- H
-  if pg_temp.scalar(legacy, 'select current_user_vet_id()::text') is distinct from a::text then
-    raise exception 'HARNESS-FAIL H: current_user_vet_id() no longer answers for the legacy vet'; end if;
+  -- the back-fill: the legacy login got a doctor, linked to it and to A
+  if not exists (select 1 from vet_doctors d join vet_doctor_clinics l on l.doctor_id = d.id
+                  where d.name = 'Harness legacy' and l.vet_id = a and l.active)
+  then raise exception 'HARNESS-FAIL H: the legacy login was not back-filled with a doctor at A'; end if;
+  if exists (select 1 from information_schema.columns where table_name = 'user_roles' and column_name = 'vet_id') then
+    raise exception 'HARNESS-FAIL H: user_roles.vet_id still exists'; end if;
+  if to_regprocedure('current_user_vet_id()') is not null then
+    raise exception 'HARNESS-FAIL H: current_user_vet_id() still exists'; end if;
+  if exists (select 1 from pg_constraint where conname = 'user_roles_vet_id_only_for_vets')
+     or exists (select 1 from pg_trigger where tgname = 'user_roles_clear_vet_id') then
+    raise exception 'HARNESS-FAIL H: the old check or trigger survived'; end if;
+  select count(*) into k from (
+    select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public' and p.prosrc ~ 'current_user_vet_id[[:space:]]*[(]'
+    union all select policyname from pg_policies
+     where coalesce(qual, '') || coalesce(with_check, '') ~ 'current_user_vet_id[[:space:]]*[(]'
+    union all select viewname from pg_views where schemaname = 'public' and definition ~ 'current_user_vet_id[[:space:]]*[(]'
+  ) x;
+  if k <> 0 then raise exception 'HARNESS-FAIL H: % function/policy/view still reference current_user_vet_id()', k; end if;
   select count(*) into v_before from audit_log where table_name = 'vet_appointments' and row_id = va;
   update vet_appointments set notes = 'audit once' where id = va;
   select count(*) into v_after from audit_log where table_name = 'vet_appointments' and row_id = va;
   if v_after - v_before <> 1 then raise exception 'HARNESS-FAIL H: one visit update wrote % audit rows', v_after - v_before; end if;
-  v_report := v_report || 'H: current_user_vet_id() kept, one audit row per visit change';
+  v_report := v_report || 'H: legacy login back-filled, column/check/trigger/singular function gone, no catalogue caller, one audit row per visit change';
 
   raise exception '%', format('HARNESS-OK %s ran twice | %s', ${JSON.stringify(file).replace(/"/g, "'")}, v_report);
 end;

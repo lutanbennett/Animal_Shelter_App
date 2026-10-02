@@ -1,8 +1,9 @@
 // Rollback harness for *_medical_soft_delete.sql against DEV only.
 // One transaction: seed a harness resident (record_intake, with an intake
-// weight), re-run the migration file (it must be re-runnable), then check
+// weight), then check
 // what archiving does, ending in a deliberate `raise exception` carrying the
 // evidence — so nothing can commit. Run it after the file is applied on dev.
+// The file is no longer replayed (0127 dropped a function it calls).
 //
 //   node scripts/check-medical-soft-delete.mjs     (from the repo root; dev only)
 //
@@ -83,12 +84,15 @@ begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   values (v_vet, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
           'harness-soft-delete-' || v_vet || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now());
-  insert into user_roles (user_id, role, vet_id) values (v_vet, 'vet', v_clinic);
+  insert into user_roles (user_id, role) values (v_vet, 'vet');
+  -- 0127: a vet login's clinic is its linked doctor's (the home-clinic trigger links it)
+  insert into vet_doctors (name, user_id, vet_id) values ('Harness vet doctor', v_vet, v_clinic);
 end $setup$;
 
--- Re-runnable: the file applied once already on dev; running it again must
--- leave everything below true.
-${migration}
+-- Not replayed (0127): 0124's vet_owns_visit and friends were redefined onto
+-- current_user_vet_ids() by 0125, and replaying the file would put back calls to
+-- current_user_vet_id(), which no longer exists. The assertions run against the
+-- live definitions instead.
 
 do $h$
 declare
@@ -270,7 +274,7 @@ begin
   end if;
   v_report := v_report || 'E: vet scope drops archived visits and returns on restore | ';
 
-  raise exception '%', format('HARNESS-OK %s ran twice | %s', ${pgQuote(file)}, v_report);
+  raise exception '%', format('HARNESS-OK %s asserted live | %s', ${pgQuote(file)}, v_report);
 end;
 $h$;
 rollback;

@@ -101,8 +101,9 @@ begin
             'harness-vet-scope-' || r.who || '-' || r.id || '@example.invalid',
             '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || r.who), now(), now());
   end loop;
-  insert into user_roles (user_id, role, vet_id)
-  select id, 'vet', v_own from harness_ids where who = 'vet';
+  insert into user_roles (user_id, role) select id, 'vet' from harness_ids where who = 'vet';
+  -- 0127: a vet login's clinic is its linked doctor's (the home-clinic trigger links it)
+  insert into vet_doctors (name, user_id, vet_id) select 'Harness vet doctor', id, v_own from harness_ids where who = 'vet';
   insert into user_roles (user_id, role)
   select id, case who when 'mgmt' then 'management' when 'unlinked' then 'vet' else who end::app_role
   from harness_ids where who in ('unlinked', 'mgmt', 'admin', 'staff', 'volunteer');
