@@ -42,15 +42,12 @@ const pushSecrets = rest.includes("--secrets");
 const skipBuild = rest.includes("--skip-build");
 const noMail = rest.includes("--no-mail");
 
-// Where each environment answers: for asking the live site which release it
-// runs, and for the link in the email. lannacare.org is UAT's for good; the
-// cutover moves production to lannacareforanimals.org and until then uat
-// can't deploy (below), so the two sharing an origin never meet.
-const SITE_ORIGINS = {
-  test: "https://test.lannacare.org",
-  uat: "https://lannacare.org",
-  production: "https://lannacare.org",
-};
+// SITE_ORIGINS — where each environment answers — is imported from
+// ./lib/env.mjs above. It used to be declared here as well; #290 moved it into
+// the shared module so apply-migrations.mjs could ask /api/version too, and a
+// later merge brought this copy back, which made the whole script a syntax
+// error ("Identifier 'SITE_ORIGINS' has already been declared"). The two
+// definitions were identical, so removing this one changes nothing.
 
 // What src/lib/app-env.ts must call each environment's database.
 const EXPECTED_APP_ENV = { test: "dev", uat: "uat", production: "production" };
