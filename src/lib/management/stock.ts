@@ -51,15 +51,69 @@ function shelterDaysBetween(fromIso: string, toIso: string): number {
   return Math.round((Date.parse(toIso) - Date.parse(fromIso)) / MS_PER_DAY);
 }
 
+/** Receipts are quantities; keep float dust (3 × 0.1) out of the sum. */
+const round6 = (n: number) => Math.round(n * 1e6) / 1e6;
+
+export type ExpectedStock = {
+  /** The last count, in the item's base unit. */
+  counted: number;
+  /** Shelter calendar days since the count. */
+  countedDaysAgo: number;
+  /** Forecast use since the count: the daily rate × whole shelter days. */
+  usedSince: number;
+  /** Deliveries recorded after the count (0096), in the same unit. */
+  receivedSince: number;
+  /** counted − usedSince + receivedSince; below 0 means it has been used up. */
+  expected: number;
+};
+
+/**
+ * The cupboard now, as far as the app can tell: the last count, less what
+ * the forecast says has gone since, plus what has been delivered since.
+ *
+ * ONE place for the sum. Medications' and Diets' days-of-stock and
+ * Management → Purchasing both read it, so they cannot disagree.
+ *
+ * Usage since the count is taken in whole shelter days — the same "counted
+ * N days ago" the table shows — not in elapsed real time, which made a
+ * count saved seconds ago read a day short once floored.
+ *
+ * Until 2026-10-02 this sum had no deliveries in it: stock_receipts (0096)
+ * does not change stock_on_hand, so a delivery recorded after the count was
+ * invisible and days-of-stock ran short.
+ */
+export function expectedStockNow(
+  counted: number,
+  countedAt: string | null,
+  perDay: number,
+  receivedSince: number,
+  now: number = Date.now(),
+): ExpectedStock {
+  const today = todayIso(now);
+  const countedMs = countedAt ? Date.parse(countedAt) : now;
+  const countedDaysAgo = Math.max(0, shelterDaysBetween(todayIso(countedMs), today));
+  const usedSince = perDay > 0 ? perDay * countedDaysAgo : 0;
+  const received = receivedSince > 0 ? receivedSince : 0;
+  return {
+    counted,
+    countedDaysAgo,
+    usedSince,
+    receivedSince: received,
+    expected: round6(counted - usedSince + received),
+  };
+}
+
 /**
  * Reads one item's stock against its forecast use over the next
- * STOCK_RATE_DAYS days (in the same unit as stock_on_hand). `now` is
- * injectable so the arithmetic can be checked against fixed instants.
+ * STOCK_RATE_DAYS days (in the same unit as stock_on_hand), and the
+ * deliveries recorded since the count. `now` is injectable so the
+ * arithmetic can be checked against fixed instants.
  */
 export function readStock(
   figures: StockFigures,
   usedInRateWindow: number,
   now: number = Date.now(),
+  receivedSince: number = 0,
 ): StockReading {
   const { stock_on_hand: stock, stock_counted_at: countedAt, reorder_lead_days: leadDays } =
     figures;
@@ -68,30 +122,26 @@ export function readStock(
   }
 
   const today = todayIso(now);
-  const countedMs = countedAt ? Date.parse(countedAt) : now;
-  const countedDaysAgo = Math.max(0, shelterDaysBetween(todayIso(countedMs), today));
+  const perDay = usedInRateWindow / STOCK_RATE_DAYS;
+  const { countedDaysAgo, expected } = expectedStockNow(stock, countedAt, perDay, receivedSince, now);
   const flag = (daysLeft: number) => leadDays != null && daysLeft <= leadDays;
 
-  if (stock <= 0) {
+  // Counted as 0 and nothing delivered since: out. A delivery after a count
+  // of 0 means it is not out, whatever the shelf said at the count.
+  if (stock <= 0 && !(receivedSince > 0)) {
     return { state: "out", daysLeft: 0, runsOutOn: today, countedDaysAgo, reorder: flag(0) };
   }
 
-  const perDay = usedInRateWindow / STOCK_RATE_DAYS;
   if (!(perDay > 0)) {
     return { state: "notUsed", daysLeft: null, runsOutOn: null, countedDaysAgo, reorder: false };
   }
 
-  // Usage since the count is taken off in whole shelter days — the same
-  // "counted N days ago" the cell shows — not in elapsed real time, which
-  // made a count saved seconds ago read a day short once floored
-  // (20 tablets at 1 a day read "About 19 days").
-  const remaining = stock - perDay * countedDaysAgo;
-  if (remaining <= 0) {
+  if (expected <= 0) {
     return { state: "runDown", daysLeft: 0, runsOutOn: today, countedDaysAgo, reorder: flag(0) };
   }
 
   // The epsilon keeps a float quotient like 2.9999999 from losing a day.
-  const daysLeft = Math.floor(remaining / perDay + 1e-9);
+  const daysLeft = Math.floor(expected / perDay + 1e-9);
   return {
     state: "days",
     daysLeft,
@@ -127,6 +177,15 @@ export function parseStockCount(raw: string | null | undefined): Parsed<number |
   const n = Number(trimmed);
   if (!Number.isFinite(n) || n < 0) return { ok: false };
   return { ok: true, value: n };
+}
+
+/**
+ * A safety stock as typed (0128). Same rule as a count: blank is "no floor"
+ * (null) and is kept apart from 0, "a floor of nothing"; negative or not a
+ * number is refused here, before the check constraint would.
+ */
+export function parseSafetyStock(raw: string | null | undefined): Parsed<number | null> {
+  return parseStockCount(raw);
 }
 
 /** Longest lead time accepted; also keeps a typo inside the integer column. */

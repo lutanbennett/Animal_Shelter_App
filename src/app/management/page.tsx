@@ -1,4 +1,4 @@
-import { Coins, HeartHandshake, LayoutDashboard, Languages, Scale } from "lucide-react";
+import { Coins, HeartHandshake, LayoutDashboard, Languages, Scale, ShoppingCart } from "lucide-react";
 import { requireManagementUser } from "@/lib/auth/require-management";
 import { getT } from "@/lib/i18n/get-t";
 import { SectionTiles, type SectionTile } from "@/components/SectionTiles";
@@ -69,6 +69,13 @@ export default async function ManagementPage() {
       label: t.nav.stockUsage,
       description: t.management.landing.tiles.stockUsage,
       icon: Scale,
+      phoneNote: t.largerScreen.tileLabel,
+    },
+    {
+      href: "/management/purchasing",
+      label: t.nav.purchasing,
+      description: t.management.landing.tiles.purchasing,
+      icon: ShoppingCart,
       phoneNote: t.largerScreen.tileLabel,
     },
     {

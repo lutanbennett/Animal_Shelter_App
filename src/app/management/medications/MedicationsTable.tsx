@@ -7,6 +7,7 @@ import { DOSE_UNITS, doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { formatBahtPrice, parseBahtAmount } from "@/lib/format";
 import {
   parseLeadDays,
+  parseSafetyStock,
   parseStockCount,
   type StockFigures,
   type StockReading,
@@ -39,6 +40,10 @@ export type MedicationRow = {
   stockReading: StockReading;
   /** Stock on hand in the purchase unit (0118); null without one. */
   purchaseUnit: { quantity: number; unit: string } | null;
+  /** Safety stock in base units; null = no floor, 0 = a floor of nothing (0128). */
+  safetyStock: number | null;
+  /** The item's other units by name, for typing the safety stock in one. */
+  unitOptions: string[];
 };
 
 /** Columns besides the forecast windows: name, unit, cost, stock, days, prescriptions, actions. */
@@ -69,6 +74,8 @@ function MedicationRowItem({
   const [leadDays, setLeadDays] = useState(
     medication.stock.reorder_lead_days?.toString() ?? "",
   );
+  const [safetyValue, setSafetyValue] = useState(medication.safetyStock?.toString() ?? "");
+  const [safetyUnit, setSafetyUnit] = useState("");
   const [count, setCount] = useState("");
   const [mode, setMode] = useState<"view" | "edit" | "merge" | "count">("view");
   const [mergeInto, setMergeInto] = useState("");
@@ -82,6 +89,8 @@ function MedicationRowItem({
     setDoseUnit(medication.dose_unit);
     setCostPerUnit(medication.cost_per_unit?.toString() ?? "");
     setLeadDays(medication.stock.reorder_lead_days?.toString() ?? "");
+    setSafetyValue(medication.safetyStock?.toString() ?? "");
+    setSafetyUnit("");
     setMergeInto("");
     setMode("view");
   }
@@ -96,6 +105,10 @@ function MedicationRowItem({
     }
     if (!parseLeadDays(leadDays).ok) {
       setMessage({ type: "error", text: t.management.stock.errors.leadDaysInvalid });
+      return;
+    }
+    if (!parseSafetyStock(safetyValue).ok) {
+      setMessage({ type: "error", text: t.management.stock.errors.safetyInvalid });
       return;
     }
     // The unit is what every prescription's dose is measured in, so
@@ -116,6 +129,8 @@ function MedicationRowItem({
         doseUnit,
         costPerUnit: parsedCost.value,
         reorderLeadDays: leadDays,
+        safetyStock: safetyValue,
+        safetyUnit,
       });
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
@@ -269,6 +284,15 @@ function MedicationRowItem({
           editing={editing}
           leadDaysValue={leadDays}
           onLeadDaysChange={setLeadDays}
+          safety={{
+            stored: medication.safetyStock,
+            baseUnitLabel: doseUnitLabel(t, medication.dose_unit),
+            unitOptions: medication.unitOptions,
+            value: safetyValue,
+            unit: safetyUnit,
+            onValueChange: setSafetyValue,
+            onUnitChange: setSafetyUnit,
+          }}
         />
         <td className="px-4 py-2 text-muted">
           {m.table.prescriptionCount(medication.prescription_count)}

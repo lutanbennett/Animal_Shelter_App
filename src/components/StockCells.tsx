@@ -86,13 +86,33 @@ export function StockOnHandCell({
   );
 }
 
-/** The "Days of stock" cell: the computed figure, the reorder flag and the lead time. */
+/**
+ * The safety stock of one item (0128) as the "Days of stock" cell edits and
+ * shows it. `stored` is in BASE units; the form may take it in one of the
+ * item's other units (`unitOptions`), and the server converts on save.
+ */
+export type SafetyStockEdit = {
+  /** As stored, base units. Null = no floor; 0 = a floor of nothing. */
+  stored: number | null;
+  /** The base unit's label, already translated. */
+  baseUnitLabel: string;
+  /** The item's other units, by name, for the unit picker. */
+  unitOptions: string[];
+  /** The text being typed, and the unit it is typed in ("" = base). */
+  value: string;
+  unit: string;
+  onValueChange: (value: string) => void;
+  onUnitChange: (unit: string) => void;
+};
+
+/** The "Days of stock" cell: the computed figure, the reorder flag, the lead time and the safety stock. */
 export function DaysOfStockCell({
   figures,
   reading,
   editing,
   leadDaysValue,
   onLeadDaysChange,
+  safety,
 }: {
   figures: StockFigures;
   reading: StockReading;
@@ -100,6 +120,7 @@ export function DaysOfStockCell({
   editing: boolean;
   leadDaysValue: string;
   onLeadDaysChange: (value: string) => void;
+  safety?: SafetyStockEdit;
 }) {
   const { t, locale } = useI18n();
   const s = t.management.stock;
@@ -120,6 +141,37 @@ export function DaysOfStockCell({
             className={`${inputClass} w-20`}
           />
           <span className="text-xs text-muted">{s.leadDaysLabel}</span>
+          {safety && (
+            <>
+              <div className="mt-1 flex gap-1">
+                <input
+                  type="number"
+                  min={0}
+                  step="any"
+                  inputMode="decimal"
+                  value={safety.value}
+                  onChange={(e) => safety.onValueChange(e.target.value)}
+                  placeholder={s.safetyPlaceholder}
+                  aria-label={s.safetyLabel}
+                  className={`${inputClass} w-24`}
+                />
+                <select
+                  value={safety.unit}
+                  onChange={(e) => safety.onUnitChange(e.target.value)}
+                  aria-label={s.safetyUnitLabel}
+                  className={`${inputClass} w-auto`}
+                >
+                  <option value="">{safety.baseUnitLabel}</option>
+                  {safety.unitOptions.map((unit) => (
+                    <option key={unit} value={unit}>
+                      {unit}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <span className="text-xs text-muted">{s.safetyLabel}</span>
+            </>
+          )}
         </div>
       </td>
     );
@@ -155,6 +207,11 @@ export function DaysOfStockCell({
   return (
     <td className="px-4 py-2">
       {main}
+      {safety && safety.stored != null && (
+        <div className="mt-1 text-xs text-muted">
+          {s.safetyShown(formatQuantity(safety.stored), safety.baseUnitLabel)}
+        </div>
+      )}
       {(reading.reorder || figures.reorder_lead_days != null) && (
         <div className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted">
           {reading.reorder && (
