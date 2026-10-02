@@ -122,7 +122,7 @@ export default async function MedicationsAdminPage(props: PageProps<"/management
       stockReading: readStock(
         stock,
         forecast[rateWindow]?.quantity ?? 0,
-        Date.now(),
+        undefined,
         receivedSince.get(medication.id) ?? 0,
       ),
       purchaseUnit: inPurchaseUnit(stock.stock_on_hand, conversions.data[medication.id] ?? []),

@@ -96,6 +96,7 @@ const en = {
     diets: "Diets",
     cashflow: "Cashflow",
     stockUsage: "Stock between counts",
+    purchasing: "Purchasing",
     recurringJobs: "Recurring jobs",
     translations: "Translations",
     contacts: "Contacts",
@@ -1475,6 +1476,8 @@ const en = {
           "Public-facing text whose other-language version still has to be written or checked.",
         stockUsage:
           "How each count moved between two stocktakes, beside what the prescriptions and diets planned.",
+        purchasing:
+          "How much of each medicine and food to buy for a week, two weeks or a month, with the working shown and a list for the supplier.",
         shelterFriends:
           "The businesses thanked on the public website — their order, and which are live.",
         recurringJobs:
@@ -1672,16 +1675,79 @@ const en = {
       leadTime: (n: number) => `lead time ${n} day${n === 1 ? "" : "s"}`,
       leadDaysLabel: "Reorder lead time (days)",
       leadDaysPlaceholder: "Days",
+      safetyLabel: "Safety stock",
+      safetyUnitLabel: "Safety stock unit",
+      safetyPlaceholder: "None",
+      safetyCreateLabel: "Safety stock",
+      safetyHint: "Optional. A floor kept on the shelf whatever is prescribed. Blank = none.",
+      safetyShown: (quantity: string, unit: string) => `safety stock ${quantity} ${unit}`,
+      couldntLoadReceipts: "Couldn't load deliveries — days of stock leaves them out until they load",
       count: "Count",
       countLabel: (unit: string) => `Count in ${unit}`,
       countPlaceholder: "Blank = not counted",
       note:
-        "In stock is the last count, in the item's own unit. Days of stock starts from that count, takes off what the next-30-days forecast says has been used since it was taken, and divides what is left by the same daily rate. Items flagged Reorder have no more days of stock than their lead time. Saving a count — even the same figure — records a new count dated now.",
+        "In stock is the last count, in the item's own unit. Days of stock starts from that count, takes off what the next-30-days forecast says has been used since it was taken, adds any deliveries recorded since, and divides what is left by the same daily rate. Items flagged Reorder have no more days of stock than their lead time. Saving a count — even the same figure — records a new count dated now.",
       errors: {
         countInvalid: "Stock must be a number, 0 or more. Leave it blank if it hasn't been counted.",
         leadDaysInvalid:
           "Lead time must be a whole number of days, 1 to 365. Leave it blank for no reorder flag.",
+        safetyInvalid: "Safety stock must be a number, 0 or more. Leave it blank for none.",
       },
+    },
+    purchasing: {
+      title: "Purchasing",
+      subtitle:
+        "What to buy of each medicine and food for the period you choose, with the working shown so nobody has to trust a bare number.",
+      link: "Purchasing: what to buy",
+      period: "Period",
+      periods: { "7": "1 week", "14": "2 weeks", "30": "1 month" },
+      leadToggle: "Include supplier lead time",
+      leadHint:
+        "Stock ordered today arrives after the item's lead time (set on Medications or Diets), so the period is counted from the day it arrives. Turn it off to count the period from today.",
+      neverCountedBanner: (n: number) =>
+        `${n} item${n === 1 ? "" : "s"} in use ${n === 1 ? "has" : "have"} never been counted, so no amount is recommended for ${n === 1 ? "it" : "them"}.`,
+      stocktakeLink: "Count them in a stocktake",
+      sections: { medication: "Medicines", diet: "Food" },
+      standardBadge: "Standard diet",
+      table: { item: "Item", working: "The working", buy: "Buy" },
+      working: {
+        counted: (quantity: string, unit: string, date: string, daysAgo: number) =>
+          `Counted ${quantity} ${unit} on ${date} (${daysAgo === 0 ? "today" : daysAgo === 1 ? "yesterday" : `${daysAgo} days ago`})`,
+        used: (quantity: string) => `used about ${quantity} since`,
+        received: (quantity: string) => `received ${quantity}`,
+        expected: (quantity: string, unit: string) => `about ${quantity} ${unit} on the shelf now`,
+        usedUp: "probably none left",
+        need: (use: string, days: number, lead: string, unit: string, safety: string, total: string) =>
+          `Needs ${use} ${unit} over ${days} day${days === 1 ? "" : "s"}${lead}${safety} = ${total} ${unit}`,
+        withLead: (period: number, lead: number) => ` (${period} + ${lead} lead time)`,
+        safety: (quantity: string) => ` + ${quantity} safety stock`,
+        neverCounted: "Never counted — count it before ordering",
+        stale: (days: number) => `Counted ${days} days ago — probably out of date, count it again`,
+      },
+      cantTell: "Can't tell — count it first",
+      nothingToBuy: "Nothing to buy",
+      qty: (quantity: string, unit: string) => `${quantity} ${unit}`,
+      equals: (quantity: string, unit: string) => `= ${quantity} ${unit}`,
+      empty: "Nothing listed yet.",
+      list: {
+        title: "To buy",
+        csv: "Download CSV",
+        print: "Print",
+        empty: "Nothing to buy for this period.",
+      },
+      noSupplier: "No usual supplier",
+      csv: {
+        supplier: "Supplier",
+        kind: "Type",
+        item: "Item",
+        buy: "Buy",
+        unit: "Unit",
+        inBase: "In the item's own unit",
+        baseUnit: "The item's own unit",
+      },
+      note:
+        "Buy = what is needed (forecast use over the period, plus safety stock) minus what is expected on the shelf now (the last count, minus forecast use since, plus deliveries recorded since), never below zero, rounded up to whole packs where the item has a purchase unit. The supplier is the one named on the item's most recent delivery.",
+      couldntLoad: "Couldn't load everything",
     },
     stockUsage: {
       title: "Stock between counts",

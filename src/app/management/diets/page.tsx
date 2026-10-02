@@ -123,7 +123,7 @@ export default async function DietsManagementPage(props: PageProps<"/management/
       stockReading: readStock(
         stock,
         forecast[rateWindow]?.quantity ?? 0,
-        Date.now(),
+        undefined,
         receivedSince.get(type.id) ?? 0,
       ),
       purchaseUnit: inPurchaseUnit(stock.stock_on_hand, conversions.data[type.id] ?? []),
@@ -164,7 +164,7 @@ export default async function DietsManagementPage(props: PageProps<"/management/
           {t.management.stockUsage.link}
         </Link>
         <Link
-          href="/management/purchasing?tab=food"
+          href="/management/purchasing"
           className="mt-2 ml-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
         >
           <ShoppingCart aria-hidden="true" className="h-4 w-4" />
