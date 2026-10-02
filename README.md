@@ -713,6 +713,11 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
   unpublished drafts shown only to signed-in staff on `/friends`.
   `src/components/FriendCard.tsx` is the card both
   `/friends` and the contact hub's preview draw.
+  **Add a Shelter Friend** (`/management/shelter-friends/new`) is the staff
+  wizard that adds one end to end: it reuses intake's `WizardChrome`, and
+  saves through `addShelterFriend` (contact if new, then the profile row,
+  then the logo via `uploadFriendLogo`); see
+  `docs/decisions/2026-10-02-shelter-friend-wizard.md`.
 - `src/lib/links/` — checks for links staff paste into forms that end up
   on a public page (https only; Facebook links on facebook.com / fb.com).
 - `src/lib/maintenance/` — the enclosure maintenance feature's shared
