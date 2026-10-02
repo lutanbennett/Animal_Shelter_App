@@ -105,6 +105,9 @@ jobs:
         with:
           node-version: 22
       - run: node scripts/check-script-integrity.mjs
+      # The Worker and the Pi must build with the same Server Actions key, or a
+      # form rendered by one fails on the other (check-actions-key.mjs).
+      - run: node scripts/check-actions-key.mjs
 
   # Known-vulnerable production dependencies, reported, not enforced. Red on
   # this job would learn to be ignored: npm audit routinely reports things
