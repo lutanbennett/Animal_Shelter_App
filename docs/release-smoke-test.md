@@ -17,8 +17,10 @@ users quietly. If it takes more than ten minutes it is too long — add depth to
 the per-feature checklist instead.
 
 Anything that fails here is a rollback decision, not a defect to log and move on
-from: `npx wrangler rollback --env production` reverts the Worker in seconds, but
-does **not** revert migrations.
+from. **Production is served by the Pi**, so the rollback is
+`./scripts/pi/deploy-pi.sh --ref <previous release's SHA>` on the Pi (a rebuild, a few
+minutes; docs/pi-hosting.md). `npx wrangler rollback --env production` reverts only the
+Worker fallback, which answers when the Pi times out. Neither reverts migrations.
 
 ---
 
@@ -37,6 +39,12 @@ does **not** revert migrations.
 - [ ] If any migration ships: `node scripts/apply-migrations.mjs --env production --dry-run` clean, and applied **before** the deploy if code in this release reads it
 
 ## During the deploy
+
+Two deploys ship a release: `npm run deploy:prod` (the Worker fallback) and
+`./scripts/pi/deploy-pi.sh` on the Pi (what users are served). Both refuse a commit that
+is not a cut release or whose database lacks a migration, so the checks above are not
+skipped by going to the Pi directly. If either was run with `--force`, the reason is in
+the record (the Pi: `~/lanna-deploy-overrides.log`) and below.
 
 Read the output; do not assume it.
 
