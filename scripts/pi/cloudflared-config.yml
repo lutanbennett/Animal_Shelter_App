@@ -21,8 +21,9 @@ ingress:
       httpHostHeader: lannacare.org
       connectTimeout: 10s
       noHappyEyeballs: true
-  # Test on the same Pi (optional: `deploy-pi.sh --env test` + the
-  # lanna-care-test service on 3001). Remove if unused.
+  # Test on the same Pi: lanna-care-test.service on 3001, run from its own clone
+  # (~/Animal_Shelter_App_test, scripts/pi/setup-test.sh). Reached by the test
+  # Worker (ORIGIN_HOST) behind the same WAF rule as pi.lannacare.org.
   - hostname: test-pi.lannacare.org
     service: http://127.0.0.1:3001
     originRequest:

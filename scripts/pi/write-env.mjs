@@ -80,7 +80,8 @@ const lines = [
   // The sized-photo disk cache (src/lib/photo-cache.ts). Only a Pi has this
   // line, so the Worker fallback and `next dev` stay diskless. Disposable and
   // capped (PHOTO_CACHE_MAX_MB, default 1024), kept outside ~/backups.
-  `PHOTO_CACHE_DIR=${join(homedir(), "photo-cache")}`,
+  // Test has its own directory: it shares the Pi with production and its own cap.
+  `PHOTO_CACHE_DIR=${join(homedir(), name === "test" ? "photo-cache-test" : "photo-cache")}`,
 ];
 writeFileSync(".env.production.local", lines.join("\n") + "\n", { mode: 0o600 });
 console.log(`write-env: .env.production.local → ${name} (Supabase ${projectRef(env)}, site https://${publicHost})`);
