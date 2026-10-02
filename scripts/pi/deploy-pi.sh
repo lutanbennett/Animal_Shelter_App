@@ -4,6 +4,14 @@
 #   ./scripts/pi/deploy-pi.sh                 # production values
 #   ./scripts/pi/deploy-pi.sh --env test      # a Test instance on the same Pi
 #   ./scripts/pi/deploy-pi.sh --env uat       # a UAT instance, from the cutover
+#   ./scripts/pi/deploy-pi.sh --ref <sha>     # ROLLBACK: serve that commit instead
+#   ./scripts/pi/deploy-pi.sh --force "why"   # emergency: past the release guard, on record
+#
+# uat and production ship only a written-down release, as scripts/deploy.mjs
+# does for the Worker: unreleased notes empty, package.json at the newest
+# release, every migration the commit carries applied. test is unguarded.
+# The Pi is what serves users (the Worker answers only when it times out), so
+# this is the deploy that needs the guard (docs/decisions/2026-10-02-pi-ships-releases.md).
 #
 # Builds into a fresh .next before swapping, so the running server keeps
 # serving the old build until the new one is ready; the restart itself
@@ -14,21 +22,34 @@ cd "$(dirname "$0")/../.."
 
 ENV_NAME=production
 SERVICE=lanna-care
-if [[ "${1:-}" == "--env" && -n "${2:-}" ]]; then
-  ENV_NAME="$2"
-  [[ "$ENV_NAME" == "test" ]] && SERVICE=lanna-care-test
-  [[ "$ENV_NAME" == "uat" ]] && SERVICE=lanna-care-uat
-fi
+REF=origin/main
+FORCE=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --env) ENV_NAME="${2:?--env needs a name}"; shift 2 ;;
+    --ref) REF="${2:?--ref needs a commit}"; shift 2 ;;
+    --force) FORCE="${2:?--force needs a reason}"; shift 2 ;;
+    *) echo "deploy-pi: unknown argument $1"; exit 2 ;;
+  esac
+done
+[[ "$ENV_NAME" == "test" ]] && SERVICE=lanna-care-test
+[[ "$ENV_NAME" == "uat" ]] && SERVICE=lanna-care-uat
 
 echo "deploy-pi: fetching main"
 git fetch origin main --quiet
 git checkout main --quiet
-git reset --hard origin/main --quiet
+git reset --hard "$REF" --quiet
 echo "deploy-pi: at $(git rev-parse --short HEAD) — $(git log -1 --format=%s)"
 
+# Refuses (exit 2, set -e stops here) before anything is built or restarted,
+# so the running service keeps serving the build it has.
+GUARD_ARGS=(--env "$ENV_NAME")
+[[ -n "$FORCE" ]] && GUARD_ARGS+=(--force "$FORCE")
+node scripts/pi/guard-release.mjs "${GUARD_ARGS[@]}"
+
 # Migrations are applied from the developer's machine (CLAUDE.md), never
-# here; a build against a database missing a migration is still a valid
-# build, and --status just says so.
+# here; guard-release.mjs above refuses a uat/production deploy whose database
+# lacks one. For test, --status just says where it stands.
 node scripts/apply-migrations.mjs --env "$ENV_NAME" --status 2>/dev/null | tail -1 || true
 
 node scripts/pi/write-env.mjs --env "$ENV_NAME"

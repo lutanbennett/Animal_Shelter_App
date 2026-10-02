@@ -347,8 +347,8 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    mandatory before the next attempt; `node -e "…"` over `package-lock.json`
    comparing each entry against a `package.json` on disk is how the two
    gutted packages were found. Prefer letting a bad build finish and rolling
-   back after (`npx wrangler rollback --env production`, seconds) over
-   killing it.
+   back after (the Pi: `./scripts/pi/deploy-pi.sh --ref <sha>`; the Worker
+   fallback: `npx wrangler rollback --env production`) over killing it.
 
    **`npm ci` alone is not always enough, and neither is that audit.** Later
    the same day a worktree had every one of the 713 packages present with its

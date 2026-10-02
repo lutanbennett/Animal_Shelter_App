@@ -88,9 +88,17 @@ updates. Re-runnable.
 
 ## Day to day
 
-- **Deploy**: after merging to `main` and applying migrations from the dev
-  machine, on the Pi `cd ~/Animal_Shelter_App && ./scripts/pi/deploy-pi.sh`
-  (pull, build, restart, then prints who served the home page). Also
+- **Deploy**: after cutting a release (`src/lib/releases.ts`, `package.json`),
+  merging it to `main` and applying migrations from the dev machine, on the Pi
+  `cd ~/Animal_Shelter_App && ./scripts/pi/deploy-pi.sh` (pull, **guard**, build,
+  restart, then prints who served the home page). The Pi serves users, so it is
+  guarded like `deploy.mjs`: production and uat **refuse** when `unreleased` has
+  notes, `package.json` is not the newest release, or the database lacks a
+  migration the commit carries (`could not ask` only warns); `--env test` is
+  unguarded. A refusal happens before anything is built, so the running service
+  is untouched. A genuine emergency: `./scripts/pi/deploy-pi.sh --force "why"`
+  prints every overridden problem loudly and appends the reason to
+  `~/lanna-deploy-overrides.log`; mention it in the next release record. Also
   `npm run deploy:prod` from the dev machine so the fallback keeps pace —
   a version gap between the two is harmless (same database) but not worth
   leaving for long.
@@ -101,6 +109,14 @@ updates. Re-runnable.
   `test-pi.lannacare.org` DNS route to the same tunnel (already in the
   cloudflared config), and `ORIGIN_HOST: "test-pi.lannacare.org"` in the
   Worker's test env.
+- **Rollback (the Pi serves users, so this is the production rollback)**:
+  find the release's commit (`git log --oneline -- src/lib/releases.ts`, the
+  cut that preceded the bad one), then `./scripts/pi/deploy-pi.sh --ref <sha>`.
+  It rebuilds that commit and restarts, a few minutes, with the Worker answering
+  meanwhile; the same guards apply, so a cut-release commit passes. It does
+  **not** revert migrations. `npx wrangler rollback --env production` reverts
+  only the Worker fallback, which answers when the Pi times out; run it as well
+  if the Worker also carries the bad release.
 - **Rollback to Worker-only**: set `ORIGIN_HOST` back to `""` and
   `npm run deploy:prod`. The Pi can stay running; nothing reaches it.
 
