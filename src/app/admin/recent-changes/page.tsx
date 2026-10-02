@@ -12,6 +12,8 @@ import {
   type AuditEntry,
   type AuditFilters,
 } from "@/lib/audit/recent-changes";
+import { newestIdByRow, undoKind } from "@/lib/audit/undo";
+import { UndoButton } from "./UndoButton";
 import { formatDateTime } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
@@ -20,13 +22,13 @@ import { createAdminClient } from "@/lib/supabase/admin";
 type T = Awaited<ReturnType<typeof getT>>["t"];
 
 /**
- * Settings → Recent changes: a read-only view of audit_log (0121), backlog
- * DB-6 part 2. Admin only, checked here and again by the table's own RLS:
+ * Settings → Recent changes: a view of audit_log (0121), backlog DB-6 parts 2
+ * and 3 (the Undo button). Admin only, checked here and again by the table's own RLS:
  * the page reads with the signed-in admin's client, never the service role,
  * so a refusal by the policy would show as an empty page, not a leak.
  *
- * There is no server action on this page: filters and paging are plain GET
- * links, and "show values" is a link too. See lib/audit/recent-changes.ts and
+ * Reading has no server action: filters, paging and "show values" are plain GET
+ * links. The one write is Undo (./actions.ts, docs/decisions/2026-10-02-audit-undo.md). See lib/audit/recent-changes.ts and
  * docs/decisions/2026-10-02-recent-changes-page.md for why values are shown
  * for one opened row only and why the paging has no total.
  */
@@ -42,6 +44,13 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
     listAllUsers(createAdminClient()),
     filters.open ? loadDetail(supabase, filters.open) : Promise.resolve(null),
   ]);
+
+  // An entry is undoable only while it is the newest change to its row; the
+  // action checks again, this decides whether to offer the button.
+  const newest = await newestIdByRow(
+    supabase,
+    page.entries.filter((e) => ["edit", "reinsert"].includes(undoKind(e))),
+  );
 
   const actorLabel = new Map(
     users.users.map((u) => {
@@ -226,6 +235,7 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
                         {isOpen ? s.hideValues : s.showValues}
                       </Link>
                       {isOpen && <Detail detail={detail} s={s} changed={e.changed} op={e.op} />}
+                      <UndoCell e={e} newest={newest.get(`${e.table}:${e.rowId}`)} s={s} />
                     </td>
                   </tr>
                 );
@@ -248,6 +258,33 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
         )}
       </div>
     </main>
+  );
+}
+
+function UndoCell({
+  e,
+  newest,
+  s,
+}: {
+  e: AuditEntry;
+  newest: number | undefined;
+  s: T["admin"]["recentChanges"];
+}) {
+  const what = undoKind(e);
+  const u = s.undo;
+  if (what === "added") return null;
+  if (what !== "edit" && what !== "reinsert") {
+    return <p className="mt-1 text-xs text-muted">{u.notOffered[what]}</p>;
+  }
+  if (newest !== e.id) return <p className="mt-1 text-xs text-muted">{u.later}</p>;
+  return (
+    <div className="mt-1">
+      <UndoButton
+        id={e.id}
+        confirmText={what === "edit" ? u.confirmEdit : u.confirmDelete}
+        words={u.words}
+      />
+    </div>
   );
 }
 

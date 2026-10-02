@@ -479,7 +479,7 @@ const en = {
     recentChanges: {
       title: "Recent changes",
       subtitle:
-        "Who changed what, newest first: every add, edit, archive and delete on residents, contacts, prescriptions, vet visits, weights, files and vaccinations. Read-only. The list shows which fields changed; the values appear only when you open one.",
+        "Who changed what, newest first: every add, edit, archive and delete on residents, contacts, prescriptions, vet visits, weights, files and vaccinations. The list shows which fields changed; the values appear only when you open one. The newest change to a record can be undone.",
       tables: {
         residents: "Resident",
         contacts: "Contact",
@@ -530,6 +530,38 @@ const en = {
         before: "Before",
         after: "After",
         gone: "This entry could not be read.",
+      },
+      undo: {
+        words: {
+          button: "Undo this change",
+          yes: "Yes, undo it",
+          cancel: "Cancel",
+          working: "Undoing…",
+        },
+        confirmEdit:
+          "The fields this edit changed go back to their Before values (open Show values to see them). The undo is recorded here as a new change.",
+        confirmDelete:
+          "The deleted record is put back as it was. The undo is recorded here as a new change.",
+        later:
+          "Can't be undone: this record has been changed since. Undo the newer change first, or edit the record by hand.",
+        notOffered: {
+          archive: "To reverse an archive, use Restore on the record itself.",
+          resident:
+            "A deleted resident can't be undone here: it would come back without its chip number or anything that was deleted with it.",
+          file: "Files can't be undone here: a deleted file's copy is in the Drive bin.",
+        },
+        errors: {
+          gone: "That entry could not be found.",
+          notUndoable: "That change can't be undone here.",
+          later:
+            "This record has been changed since. Undo the newer change first, or edit the record by hand.",
+          changedSince: "The record has changed or been deleted since, so nothing was undone.",
+          nothingToUndo: "There is nothing in that change to undo.",
+          slotTaken:
+            "Something else now holds the place this record had (the same day or the same entry), so it can't be put back. Archive or change that one first.",
+          parentGone:
+            "The resident or visit this record belonged to no longer exists, so it can't be put back.",
+        },
       },
     },
     status: {

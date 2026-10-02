@@ -63,6 +63,10 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "Settings → Recent changes can now undo a mistake. Tap Undo this change on the newest change to a record and confirm: an edit puts the fields back as they were, and a deleted contact, prescription, vet visit, weight or vaccination is put back. If the record has been changed again since, or something has taken its place (a new weight for the same day, say), the page tells you instead of overwriting anything. The undo shows up in the list as a change of its own.",
+    roles: ["admin"],
+  },
+  {
     text: "Settings → Security: Deny on an access request now says plainly that the sign-in is deleted for good, and refuses if the person was given access in the meantime, so it can no longer remove someone who has just been approved. Requests are listed newest first.",
     roles: ["admin"],
   },

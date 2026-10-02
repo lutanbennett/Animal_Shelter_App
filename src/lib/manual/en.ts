@@ -1333,11 +1333,13 @@ const manual: Manual = {
           roles: ["admin"],
           path: "Settings → Recent changes",
           steps: [
-            "Every add, edit, archive and delete on residents, contacts, prescriptions, vet visits, weights, files and vaccinations is recorded automatically, with who did it and when. Recent changes lists them newest first, 50 at a time. Tap Older changes for the next page. The list is read-only: nothing here changes a record.",
+            "Every add, edit, archive and delete on residents, contacts, prescriptions, vet visits, weights, files and vaccinations is recorded automatically, with who did it and when. Recent changes lists them newest first, 50 at a time. Tap Older changes for the next page.",
             "Each line says when, who, what (Added, Edited, Archived, Restored or Deleted) and which record, with the resident's name where the record belongs to one. For an edit, Fields lists which fields changed, not what they were changed to — so the page is safe to have open where others can see it. A change shown as made by No login came from outside the app (a migration or the developer's console), not from a person.",
             "Tap Show values on a line to open it. That shows the value before and after for each changed field, which can include phone numbers and medical notes, so open it only when you need it. Only one line is open at a time.",
             "To answer \"something changed and I don't know who\", filter by Kind of record, by Changed by and by date (From and To, both inclusive), then tap Show. Under any line, All changes to this record shows the whole history of that one resident, contact or record, oldest at the bottom.",
-            "An accidental change can't be undone from this page yet. The values you can open here are what to type back in by hand. A microchip number is never kept in this history.",
+            "To undo a mistake, tap Undo this change on its line, then Yes, undo it. An edit puts the fields it changed back to their Before values (open Show values first to see them); a deleted contact, prescription, vet visit, weight or vaccination is put back as it was. The undo is itself recorded here as a new change, so the page shows the mistake and the correction.",
+            "Undo is offered only on the newest change to a record. If it has been changed since, the line says so: undo the newer change first, or edit the record by hand. An undo can also be refused because something now holds its place, such as a new weight for the same day or a vet visit that has since been deleted; the message says which.",
+            "Some things are not undone here. To reverse an archive, use Restore on the record itself. A deleted resident or file can't be put back from this page (a resident would return without its chip number and without what was deleted with it; a file's copy is in the Drive bin), and an added record is removed by archiving it. A microchip number is never kept in this history.",
           ],
         },
         {
