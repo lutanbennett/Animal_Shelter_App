@@ -75,6 +75,8 @@ export type VetVisitDraft = {
   /** HH:MM, or null when the text didn't say. */
   time: string | null;
   reason: string | null;
+  /** "with Dr X" / "หมอ X", as said; null when the sentence named no one. */
+  doctorName: string | null;
 };
 
 export type HospitalDraft = {

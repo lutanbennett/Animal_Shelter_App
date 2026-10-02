@@ -247,6 +247,7 @@ function TurnReply({
             zones: context.zones,
             enclosures: context.enclosures,
             vets: context.vets,
+            doctors: context.doctors,
             candidates: turn.parsed.residentCandidates,
             onSettle: (outcome) => onSettle(turn, outcome),
           }}

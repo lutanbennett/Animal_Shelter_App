@@ -9,6 +9,7 @@ import type { EnclosureOption, ZoneOption } from "@/lib/enclosures/options";
 import { EnclosurePicker } from "@/components/EnclosurePicker";
 import type { AssistantResident, AssistantVet } from "@/lib/assistant/data";
 import { isoLocal } from "@/lib/assistant/text";
+import { doctorNameCore, type DoctorNamesByVet } from "@/lib/vets/doctors";
 import type {
   Draft,
   HospitalDraft,
@@ -49,6 +50,8 @@ export type CardContext = {
   zones: ZoneOption[];
   enclosures: EnclosureOption[];
   vets: AssistantVet[];
+  /** Each clinic's active doctors, offered on the vet card. */
+  doctors: DoctorNamesByVet;
   /** Residents the name could have meant, when it could have meant several. */
   candidates: string[];
   onSettle: (outcome: AssistantOutcome) => void;
@@ -397,6 +400,16 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
   const [date, setDate] = useState(draft.date ?? "");
   const [time, setTime] = useState(draft.time ?? "");
   const [reason, setReason] = useState(draft.reason ?? "");
+  // "with Dr Somchai" arrives as "Somchai"; when the clinic is known and
+  // lists that doctor, start from the list's own spelling.
+  const [doctorName, setDoctorName] = useState(() => {
+    const said = draft.doctorName ?? "";
+    const core = doctorNameCore(said);
+    const listed = core
+      ? (ctx.doctors[draft.vetId ?? ""] ?? []).filter((n) => doctorNameCore(n) === core)
+      : [];
+    return listed.length === 1 ? listed[0] : said;
+  });
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -407,6 +420,23 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
   const whenLabel = when ? formatDateTime(when.toISOString(), locale) : a.unknown;
   const chrome = useCardChrome(ctx, !!residentId);
 
+  // The doctor is optional and never blocks Confirm. A name the clinic's
+  // list doesn't have is still written (the database adds it, as on the
+  // booking form), but the card says so rather than doing it silently.
+  const doctor = doctorName.trim();
+  const roster = ctx.doctors[vetId] ?? [];
+  const sameName = (x: string, y: string) =>
+    x.trim().replace(/s+/g, " ").toLowerCase() === y.trim().replace(/s+/g, " ").toLowerCase();
+  const listedAs = roster.find((n) => sameName(n, doctor)) ?? null;
+  const alike = doctor && !listedAs
+    ? roster.filter((n) => doctorNameCore(n) === doctorNameCore(doctor))
+    : [];
+  const doctorNote = !doctor || !vet || listedAs
+    ? null
+    : alike.length === 1
+      ? null
+      : a.vet.doctorNew(vet.name);
+
   function confirm() {
     if (!resident || !vet || !when) return;
     setError(null);
@@ -416,6 +446,7 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
         vetId: vet.id,
         appointmentIso: when.toISOString(),
         reason: reason || null,
+        doctorName: doctor || null,
         request: ctx.request,
         draft: {
           ...draft,
@@ -424,12 +455,13 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
           date,
           time,
           reason: reason || null,
+          doctorName: doctor || null,
         },
       });
       if ("error" in result) return setError(result.error);
       ctx.onSettle({
         kind: "done",
-        message: a.vet.done(`${resident.name} (${resident.code})`, vet.name, whenLabel),
+        message: a.vet.done(`${resident.name} (${resident.code})`, vet.name, whenLabel, doctor || null),
         residentId: resident.id,
       });
     });
@@ -442,6 +474,7 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
         resident ? `${resident.name} (${resident.code})` : a.unknown,
         vet ? vet.name : a.unknown,
         whenLabel,
+        doctor || null,
       )}
       hint={chrome.hint}
       hintTone={chrome.hintTone}
@@ -514,6 +547,41 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
           onChange={(e) => setReason(e.target.value)}
           className={inputClass}
         />
+      </div>
+      <div className="flex flex-col gap-1">
+        <label htmlFor={`vet-${ctx.turnId}-doctor`} className="text-sm font-medium text-muted">
+          {t.vetVisits.doctorName}
+        </label>
+        <input
+          id={`vet-${ctx.turnId}-doctor`}
+          type="text"
+          autoComplete="off"
+          list={roster.length > 0 ? `vet-${ctx.turnId}-doctors` : undefined}
+          value={doctorName}
+          placeholder={t.vetVisits.doctorNamePlaceholder}
+          onChange={(e) => setDoctorName(e.target.value)}
+          className={inputClass}
+        />
+        {roster.length > 0 && (
+          <datalist id={`vet-${ctx.turnId}-doctors`}>
+            {roster.map((n) => (
+              <option key={n} value={n} />
+            ))}
+          </datalist>
+        )}
+        {alike.length === 1 && (
+          <p className="text-xs text-muted">
+            {a.vet.doctorAlike(alike[0])}{" "}
+            <button
+              type="button"
+              onClick={() => setDoctorName(alike[0])}
+              className="font-medium underline"
+            >
+              {a.vet.doctorUse(alike[0])}
+            </button>
+          </p>
+        )}
+        {doctorNote && <p className="text-xs text-muted">{doctorNote}</p>}
       </div>
     </Card>
   );

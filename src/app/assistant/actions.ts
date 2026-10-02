@@ -131,6 +131,7 @@ export async function assistantBookVetVisit(
     vetId: string;
     appointmentIso: string;
     reason: string | null;
+    doctorName: string | null;
   }>,
 ): Promise<AssistantResult> {
   return runWrite(
@@ -153,6 +154,9 @@ export async function assistantBookVetVisit(
         // Mirrors the booking form's default: a visit already in the past
         // is being logged, not scheduled.
         p_status: appointment.getTime() <= Date.now() ? "completed" : "scheduled",
+        // As bookVetVisit: trimmed, blank is null, and the database links
+        // the name to the clinic's doctor list in the same transaction.
+        p_doctor_name: input.doctorName?.trim() || null,
       });
       if (error) return { error: error.message };
       // The RPC books for a list of residents, so it answers with a list
