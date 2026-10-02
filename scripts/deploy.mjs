@@ -27,7 +27,8 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { readFileSync } from "node:fs";
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
-import { appliedMigrations, deployedMigrations, missingFromDatabase } from "./lib/deploy-schema.mjs";
+import { appliedMigrations } from "./lib/deploy-schema.mjs";
+import { releaseProblems, schemaVerdict } from "./lib/release-guards.mjs";
 import { strayEnvFiles } from "./lib/env-leak.mjs";
 import { lockedPublicSiteProblem, readWranglerConfig } from "./lib/wrangler.mjs";
 // TypeScript, loaded through Node's type stripping: the same file the app
@@ -190,33 +191,18 @@ if (GUARDED) {
 // are schema ahead of code, which is fine (docs/decisions/2026-10-01-deploy-requires-deployed-migrations-applied.md).
 // Could not ask is a warning, not a refusal: a Supabase blip must not block a release.
 if (GUARDED) {
-  const result = await appliedMigrations(env, projectRef(env));
-  if (!result.ok) {
-    console.warn(`deploy: WARNING: could not ask ${envName} which migrations it has applied (${result.reason}).`);
-    console.warn(`deploy: WARNING: continuing WITHOUT the schema check. Verify by hand: node scripts/apply-migrations.mjs --drift ${envName}`);
-  } else {
-    const missing = missingFromDatabase(deployedMigrations(git), result.applied);
-    if (missing.length) {
-      console.error(
-        `deploy: ${envName} is missing ${missing.length} migration(s) this commit carries; shipping now would run code against schema that is not there:\n  - ` +
-          missing.join("\n  - ") +
-          `\nApply them first: node scripts/apply-migrations.mjs --env ${envName}`,
-      );
-      process.exit(2);
-    }
+  const verdict = schemaVerdict({ envName, result: await appliedMigrations(env, projectRef(env)), git });
+  for (const w of verdict.warnings) console.warn(`deploy: WARNING: ${w}`);
+  if (verdict.refusal) {
+    console.error(`deploy: ${verdict.refusal}`);
+    process.exit(2);
   }
 }
 
 // The release this deploy ships.
 {
   const pkgVersion = JSON.parse(readFileSync("package.json", "utf8")).version;
-  const problems = [];
-  if (pkgVersion !== latestRelease.version) {
-    problems.push(`package.json says ${pkgVersion} but the newest release in src/lib/releases.ts is ${latestRelease.version}`);
-  }
-  if (unreleased.length) {
-    problems.push(`src/lib/releases.ts has ${unreleased.length} unreleased note(s); cut a release first (see the top of that file)`);
-  }
+  const problems = releaseProblems({ pkgVersion, latestRelease, unreleased });
   if (problems.length && GUARDED) {
     console.error(`deploy: ${envName} ships only a written-down release:\n  - ` + problems.join("\n  - "));
     process.exit(2);

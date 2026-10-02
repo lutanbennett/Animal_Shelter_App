@@ -2253,10 +2253,14 @@ const th: Dictionary = {
     },
     vet: {
       title: "นัดหมอ",
-      summary: (resident: string, vet: string, when: string) =>
-        `นัดหมอให้ ${resident} กับ ${vet} วันที่ ${when}`,
-      done: (resident: string, vet: string, when: string) =>
-        `เรียบร้อย นัดหมอให้ ${resident} กับ ${vet} วันที่ ${when} แล้ว`,
+      summary: (resident: string, vet: string, when: string, doctor: string | null = null) =>
+        `นัดหมอให้ ${resident} กับ ${vet}${doctor ? ` (${doctor})` : ""} วันที่ ${when}`,
+      done: (resident: string, vet: string, when: string, doctor: string | null = null) =>
+        `เรียบร้อย นัดหมอให้ ${resident} กับ ${vet}${doctor ? ` (${doctor})` : ""} วันที่ ${when} แล้ว`,
+      doctorNew: (vet: string) =>
+        `ยังไม่มีในรายชื่อหมอของ ${vet} — จะเพิ่มให้เมื่อกดยืนยัน ถ้าสะกดผิดให้แก้ก่อน`,
+      doctorAlike: (name: string) => `${name} อยู่ในรายชื่อของคลินิกนี้`,
+      doctorUse: (name: string) => `ใช้ "${name}"`,
     },
     hospital: {
       title: "ส่งโรงพยาบาล",

@@ -2325,10 +2325,14 @@ const en = {
     },
     vet: {
       title: "Book vet visit",
-      summary: (resident: string, vet: string, when: string) =>
-        `Book a vet visit for ${resident} with ${vet} on ${when}`,
-      done: (resident: string, vet: string, when: string) =>
-        `Done — vet visit booked for ${resident} with ${vet} on ${when}.`,
+      summary: (resident: string, vet: string, when: string, doctor: string | null = null) =>
+        `Book a vet visit for ${resident} with ${vet}${doctor ? ` (${doctor})` : ""} on ${when}`,
+      done: (resident: string, vet: string, when: string, doctor: string | null = null) =>
+        `Done — vet visit booked for ${resident} with ${vet}${doctor ? ` (${doctor})` : ""} on ${when}.`,
+      doctorNew: (vet: string) =>
+        `Not on ${vet}'s doctor list yet — it will be added when you confirm. Fix the spelling first if it's wrong.`,
+      doctorAlike: (name: string) => `${name} is on this clinic's list.`,
+      doctorUse: (name: string) => `Use "${name}"`,
     },
     hospital: {
       title: "Send to hospital",
