@@ -163,7 +163,7 @@ Automated checks by: Claude (Sonnet 5.5)  Date: 2026-10-02
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — the list is open and awaits whoever looks
 
 Manual verification by: pending: the browser pass in the table above (items 1 to 11), signed by whoever looks
 
