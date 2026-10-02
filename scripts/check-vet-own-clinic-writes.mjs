@@ -24,6 +24,8 @@
 //   F  admin, management and staff still rewrite the other clinic's visit
 //
 // Exits 0 when every assertion held.
+// NOTE: asserts the LIVE schema; the 0110 file is no longer replayed because 0125 redefines its
+// functions and policies (docs/decisions/2026-10-02-replay-or-assert-live.md).
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -115,8 +117,6 @@ insert into harness_before
 select exists (select 1 from pg_proc where proname = 'vet_owns_visit'),
        pg_temp.try(pg_temp.hid('vet'), format('update vet_appointments set notes = ''x'' where id = %L', pg_temp.hid('oth_visit')));
 
-${migration}
-${migration}
 
 do $h$
 declare
@@ -233,7 +233,7 @@ begin
   end loop;
   v_report := v_report || 'F: admin/management/staff rewrite other''s visit (1 each)';
 
-  raise exception '%', format('HARNESS-OK %s ran twice | %s | %s', ${JSON.stringify(file).replace(/"/g, "'")},
+  raise exception '%', format('HARNESS-OK %s asserted live | %s | %s', ${JSON.stringify(file).replace(/"/g, "'")},
     case when v_applied then 'applied on dev' else 'pending on dev' end, v_report);
 end;
 $h$;

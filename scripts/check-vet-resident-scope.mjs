@@ -32,6 +32,8 @@
 //   G  translations and translation_queue: none of `other`'s rows
 //
 // Exits 0 when every assertion held. Writes nothing even on success.
+// NOTE: asserts the LIVE schema; the 0108 file is no longer replayed because 0125 redefines its
+// functions and policies (docs/decisions/2026-10-02-replay-or-assert-live.md).
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -133,8 +135,6 @@ select exists (select 1 from pg_proc where proname = 'current_vet_resident_ids')
        pg_temp.try((select id from harness_ids where who = 'vet'),
          format('select 1 from residents where id = %L', (select id from harness_ids where who = 'other')));
 
-${migration}
-${migration}
 
 do $h$
 declare
@@ -248,7 +248,7 @@ begin
   n := pg_temp.try(v_vet, format('select 1 from translations where table_name = ''residents'' and row_id = %L', v_seen));
   v_report := v_report || format('%s of seen''s', n);
 
-  raise exception '%', format('HARNESS-OK %s ran twice | %s | %s', ${JSON.stringify(file).replace(/"/g, "'")},
+  raise exception '%', format('HARNESS-OK %s asserted live | %s | %s', ${JSON.stringify(file).replace(/"/g, "'")},
     case when v_applied then 'applied on dev' else 'pending on dev' end, v_report);
 end;
 $h$;

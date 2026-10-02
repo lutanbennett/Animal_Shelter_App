@@ -1,11 +1,16 @@
 // Rollback harness for 0102_vet_doctors_and_vet_accounts.sql against DEV only.
-// One transaction: the migration (twice), assertions against real rows, then
-// a deliberate `raise exception` carrying the evidence — so nothing commits.
+// One transaction: assertions against the LIVE schema and real rows, then a
+// deliberate `raise exception` carrying the evidence — so nothing commits.
+//
+// It no longer replays 0102: 0108, 0110 and 0125 redefine its objects (0125
+// moved the clinic guarantee onto vet_doctor_clinics), so a replay would put
+// the old bodies back and test a schema that no longer exists
+// (docs/decisions/2026-10-02-replay-or-assert-live.md). The multi-clinic rules
+// are in check-doctor-multi-clinic.mjs.
 //
 //   node scripts/check-vet-doctors.mjs     (from the repo root; dev only)
 //
 // Exits 0 when every assertion held. Writes nothing even on success.
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -15,13 +20,9 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-const migration = readFileSync(join(root, "supabase/migrations/0102_vet_doctors_and_vet_accounts.sql"), "utf8");
 
 const sql = `
 begin;
-${migration}
--- a second run of the whole file must be harmless
-${migration}
 
 do $h$
 declare
@@ -127,12 +128,11 @@ begin
   if v_n <> 0 then raise exception 'FAIL G % merged visits kept another name', v_n; end if;
   if coalesce(current_setting('app.deceased_lock_bypass', true), '') <> '' then
     raise exception 'FAIL G the bypass leaked past the merge'; end if;
+  -- 0125: a merge may cross clinics (the "same person as..." merge); the survivor then works at both
   insert into vet_doctors (vet_id, name) values (v_vet2, 'Dr Elsewhere') returning id into v_d3;
-  v_rejected := false;
-  begin perform merge_vet_doctors(v_d3, v_d2);
-  exception when check_violation then v_rejected := true;
-  end;
-  if not v_rejected then raise exception 'FAIL G cross-clinic merge accepted'; end if;
+  perform merge_vet_doctors(v_d3, v_d2);
+  if not exists (select 1 from vet_doctor_clinics where doctor_id = v_d2 and vet_id = v_vet2) then
+    raise exception 'FAIL G cross-clinic merge did not give the survivor the other clinic'; end if;
   v_rejected := false;
   begin delete from vet_doctors where id = v_d2;
   exception when foreign_key_violation then v_rejected := true;
@@ -172,7 +172,7 @@ begin
   if v_d3 is not null then raise exception 'FAIL I role change kept the clinic'; end if;
   update user_roles set role = 'vet' where user_id = v_vetuser;
 
-  raise exception 'HARNESS-OK %| typed name adds, variant spelling links to the same doctor, one list row | by id fills name, other clinic refused | no clinic stays free text, blank clears | vet change relinks, other edits keep | rename reaches visits, bypass restored, duplicate rename refused | merge moves visits, cross-clinic refused, used doctor undeletable | rpc links both rows, old call shape works | clinic only on vet accounts (trigger and constraint), role change clears, current_user_vet_id | file ran twice', v_evidence;
+  raise exception 'HARNESS-OK %| typed name adds, variant spelling links to the same doctor, one list row | by id fills name, other clinic refused | no clinic stays free text, blank clears | vet change relinks, other edits keep | rename reaches visits, bypass restored, duplicate rename refused | merge moves visits and clinics, used doctor undeletable | rpc links both rows, old call shape works | clinic only on vet accounts (trigger and constraint), role change clears, current_user_vet_id | live schema, no replay', v_evidence;
 end;
 $h$;
 rollback;
@@ -182,7 +182,6 @@ rollback;
 // what the app actually meets.
 const rls = `
 begin;
-${migration}
 do $h$
 declare v_vet uuid; v_res uuid; v_staff uuid; v_vol uuid; v_id uuid; v_n int; v_rejected boolean := false;
 begin
