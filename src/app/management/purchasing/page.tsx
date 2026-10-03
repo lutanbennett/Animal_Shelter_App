@@ -187,6 +187,7 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
     baseQuantity: i.row.buy ?? 0,
     baseUnit: i.unitLabel,
     supplier: i.supplierId ? (supplierName.get(i.supplierId) ?? null) : null,
+    notCounted: i.row.state === "notCounted",
   }));
   const groups = groupBySupplier(lines);
   const notCounted = [...medItems, ...dietItems].filter((i) => i.row.state === "notCounted" && i.row.needed > 0);
@@ -230,7 +231,7 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
     if (r.state === "notCounted") {
       return (
         <div className="flex flex-col gap-1">
-          <span className="font-medium text-danger">{p.working.neverCounted}</span>
+          <span className="font-medium text-warning">{p.working.neverCounted}</span>
           <span className="text-xs">{needLine}</span>
         </div>
       );
@@ -261,7 +262,6 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
 
   function buyCell(item: Item) {
     const r = item.row;
-    if (r.state === "notCounted") return <span className="text-muted">{p.cantTell}</span>;
     if (!(r.buy && r.buy > 0)) return <span className="text-muted">{p.nothingToBuy}</span>;
     if (r.packs != null && item.pack) {
       return (
@@ -412,7 +412,10 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
                 <ul className="flex flex-col gap-1 text-sm">
                   {g.lines.map((l) => (
                     <li key={`${l.kind}-${l.name}`} className="flex flex-wrap justify-between gap-2">
-                      <span className="text-foreground">{l.name}</span>
+                      <span className="text-foreground">
+                        {l.name}
+                        {l.notCounted && <span className="ml-2 text-xs font-medium text-warning">{p.notCountedTag}</span>}
+                      </span>
                       <span className="text-muted">
                         <span className="font-medium text-foreground">{p.qty(formatQuantity(l.quantity), l.unit)}</span>
                         {l.unit !== l.baseUnit && <> ({p.equals(formatQuantity(l.baseQuantity), l.baseUnit)})</>}

@@ -126,9 +126,14 @@ eq("safety null and 0 add the same (nothing)", [noFloor, zeroFloor], [140, 140])
 r = P.purchaseRow({ ...base, counted: 30, usedInRateWindow: 0, usedInWindow: 0, safetyStock: 100, packBase: 50 }, now);
 eq("always-in-use item, no use scheduled: buy up to the floor", [r.needed, r.shortfall, r.packs], [100, 70, 2]);
 
-// never counted: flagged, no recommendation
+// never counted: flagged, and assumed to have nothing on the shelf (2026-10-04)
 r = P.purchaseRow({ ...base, counted: null, countedAt: null, safetyStock: 100 }, now);
-eq("never counted: flagged, not guessed", [r.state, r.expected, r.shortfall, r.packs, r.buy], ["notCounted", null, null, null, null]);
+eq("never counted: flagged, assumed none on the shelf, whole need bought", [r.state, r.expected, r.shortfall, r.buy], ["notCounted", null, 240, 240]);
+r = P.purchaseRow({ ...base, counted: null, countedAt: null, safetyStock: 100, packBase: 50 }, now);
+eq("never counted: rounds up to whole packs", [r.packs, r.buy], [5, 250]);
+r = P.purchaseRow({ ...base, counted: null, countedAt: null, usedInWindow: 0, safetyStock: null }, now);
+eq("never counted and nothing needed: nothing to buy", [r.state, r.buy], ["notCounted", 0]);
+r = P.purchaseRow({ ...base, counted: null, countedAt: null, safetyStock: 100 }, now);
 eq("never counted: still says what the period needs", r.needed, 240);
 r = P.purchaseRow({ ...base, counted: 0, countedAt: "2026-10-01T03:00:00Z" }, now);
 eq("counted as 0 is a count, not 'never counted'", [r.state, r.counted], ["ok", 0]);

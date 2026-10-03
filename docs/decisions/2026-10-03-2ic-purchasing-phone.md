@@ -28,9 +28,9 @@ watched test shows she gets lost, the steps are in this PR's history.
   register entry says `device: "any"`.
 - **How long it should last** (1 week / 2 weeks / 1 month): big buttons that are
   links, since the period changes the sums and so asks the server again.
-- **Anything nobody has counted** is listed apart in a warning box with a button to
-  the stocktake (shown only to someone who may count). Whether such items should
-  instead be assumed to be none on the shelf is a backlog item, not decided here.
+- **Anything nobody has counted** is assumed to have nothing on the shelf and is on
+  the list in yellow, marked "never counted", with a box above and a button to the
+  stocktake (shown only to someone who may count). See the next section.
 - **Medicines and Food are two folds** (`<details>`), because they are bought at
   different shops. The first non-empty one is open. Inside each, the list is grouped
   by usual supplier, A–Z, "no usual supplier" last. **Each item is one line: its name
@@ -47,9 +47,23 @@ watched test shows she gets lost, the steps are in this PR's history.
 - **Nothing is typed and nothing is saved**, so there is nothing to lose by going
   back. There is no keypad on this page.
 
+## Never counted means none on the shelf (added 2026-10-04)
+
+#295 refused to guess at an uncounted item and left it off the list. Lutan, testing
+this screen: a medicine newly prescribed is on no shelf and has never been counted,
+so it would never be bought. **Until a count exists, the shelf is assumed to hold
+nothing**, so the whole of what the period needs (plus safety stock) is bought,
+rounded up to whole packs like any other item. `purchaseRow()` keeps `state:
+"notCounted"`, so the flag survives: the desk table, the phone list (yellow) and the
+printed list (a "never counted" tag) all say the figure is an assumption, and a
+real count replaces it. An uncounted item the period would not use (`needed = 0`)
+is still not bought. This **supersedes** `2026-10-02-purchasing-page.md`'s no-guess
+rule, for the desk page too. The cost is a long first list for a shelter that has
+not done its first stocktake; it shrinks as items are counted.
+
 ## Kept from the desk version
 
-The working per item; an uncounted item flagged and never guessed; the three-week
+The working per item; an uncounted item flagged (now assumed none, see above); the three-week
 stale flag; rounding up to whole packs; `safety_stock`'s null versus zero (it is
 read, not changed: a floor of nothing and no floor both add nothing to what is
 needed, and the working only mentions a floor above zero); supplier grouping;

@@ -11,10 +11,12 @@
  * "Expected now" is NOT re-derived here: expectedStockNow() in stock.ts is
  * the one helper Medications' and Diets' days-of-stock read as well.
  *
- * An item nobody has counted gets no recommendation — a guess at the
- * cupboard would be a number nobody can account for. It keeps its `needed`
- * so the row still says what the period will use. A count older than
- * STALE_COUNT_DAYS is flagged, not refused.
+ * An item nobody has counted is assumed to have NOTHING on the shelf, and is
+ * flagged `notCounted` so it never passes for a worked-out figure (Lutan,
+ * 2026-10-04: a new prescription's medicine is on no shelf and would otherwise
+ * never be bought; supersedes docs/decisions/2026-10-02-purchasing-page.md's
+ * no-guess rule). It stops being assumed the moment a count exists. A count
+ * older than STALE_COUNT_DAYS is flagged, not refused.
  *
  * Pure: no database, no i18n. scripts/check-purchasing.mjs runs it.
  */
@@ -108,6 +110,7 @@ export type PurchaseInput = {
 export type PurchaseRow = {
   id: string;
   name: string;
+  /** "notCounted": nothing on the shelf is assumed, so the whole need is bought. */
   state: "notCounted" | "ok";
   counted: number | null;
   countedAt: string | null;
@@ -121,11 +124,11 @@ export type PurchaseRow = {
   periodUse: number;
   safetyStock: number | null;
   needed: number;
-  /** Shortfall before pack rounding; null when not counted. */
+  /** Shortfall before pack rounding. When not counted, all of `needed`. */
   shortfall: number | null;
   /** Whole packs to buy, when a pack is known and something is needed. */
   packs: number | null;
-  /** What to buy, base units, after pack rounding; null when not counted. */
+  /** What to buy, base units, after pack rounding. */
   buy: number | null;
 };
 
@@ -145,7 +148,17 @@ export function purchaseRow(input: PurchaseInput, now: number = Date.now()): Pur
     needed,
   };
 
+  const rounded = (shortfall: number) => {
+    if (shortfall > 0 && input.packBase != null && input.packBase > 0) {
+      const packs = Math.ceil(shortfall / input.packBase - 1e-9);
+      return { packs, buy: round6(packs * input.packBase) };
+    }
+    return { packs: null, buy: shortfall > 0 ? ceil2(shortfall) : shortfall };
+  };
+
   if (input.counted == null) {
+    // Never counted: assume none on the shelf, so the whole need is bought.
+    const shortfall = needed;
     return {
       ...base,
       state: "notCounted",
@@ -156,9 +169,8 @@ export function purchaseRow(input: PurchaseInput, now: number = Date.now()): Pur
       usedSince: 0,
       receivedSince: 0,
       expected: null,
-      shortfall: null,
-      packs: null,
-      buy: null,
+      shortfall,
+      ...rounded(shortfall),
     };
   }
 
@@ -167,15 +179,7 @@ export function purchaseRow(input: PurchaseInput, now: number = Date.now()): Pur
   // The shelf cannot hold less than nothing: a count used up on paper is 0.
   const onHand = Math.max(0, stock.expected);
   const shortfall = Math.max(0, round6(needed - onHand));
-
-  let packs: number | null = null;
-  let buy = shortfall;
-  if (shortfall > 0 && input.packBase != null && input.packBase > 0) {
-    packs = Math.ceil(shortfall / input.packBase - 1e-9);
-    buy = round6(packs * input.packBase);
-  } else if (shortfall > 0) {
-    buy = ceil2(shortfall);
-  }
+  const { packs, buy } = rounded(shortfall);
 
   return {
     ...base,
@@ -234,6 +238,8 @@ export function usualSuppliers(receipts: ReceiptFigure[]): Map<string, string> {
 export type ShoppingLine = {
   kind: "medication" | "diet";
   name: string;
+  /** True when nobody has counted the item: nothing on the shelf is assumed. */
+  notCounted?: boolean;
   /** What to buy, in the purchase unit when there is one, else base. */
   quantity: number;
   unit: string;

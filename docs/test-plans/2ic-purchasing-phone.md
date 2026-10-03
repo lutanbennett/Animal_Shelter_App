@@ -16,7 +16,7 @@
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence, and it matches what the brief asked for — §13's "phone-first, rebuilt as steps: what is low, how much, from whom"
-- [x] Files/areas touched listed — `src/app/management/purchasing/page.tsx` (guard, phone/desk split), new `PurchasingPhone.tsx`, `src/lib/permissions/routes.ts` (one entry), both dictionaries (`management.purchasing.steps`), `src/lib/manual/en.ts`, `scripts/lib/acceptance-matrix-entries.mjs`, `src/lib/releases.ts`; `src/lib/management/purchasing.ts` and `stock.ts` untouched; no migration, no `worker/`
+- [x] Files/areas touched listed — `src/app/management/purchasing/page.tsx` (guard, phone/desk split), new `PurchasingPhone.tsx`, `src/lib/permissions/routes.ts` (one entry), both dictionaries (`management.purchasing.steps`), `src/lib/manual/en.ts`, `scripts/lib/acceptance-matrix-entries.mjs`, `src/lib/releases.ts`; `src/lib/management/purchasing.ts` (a never-counted item is assumed to have none on the shelf) and `scripts/check-purchasing.mjs`; `stock.ts` untouched; no migration, no `worker/`
 - [x] Roles affected identified — admin and management, who hold `stock.purchasing` in the seed; everyone else is refused as before. The 2IC gets it when `2ic-role` lands
 - [x] Anything explicitly **out of scope** written down — the 2IC role, login and home screen; `2ic-delivery-steps`; leaving an item out or editing a quantity; the lead-time toggle on the phone (decision file)
 
@@ -52,7 +52,7 @@ gates: typecheck=0 lint=0 build=0
 - [ ] Create / edit / delete all exercised (whichever the feature has) — n/a: read-only page
 - [ ] Empty state renders sensibly (no rows yet) — n/a: not driven; read from code, the screen has a "nothing to buy" sentence
 - [ ] Invalid input is rejected with a readable message, not a crash — n/a: nothing is typed on this page
-- [ ] Boundary cases checked — n/a: not driven; the sums are the unchanged `purchaseRow()`, which this PR does not touch
+- [x] Boundary cases checked — `node scripts/check-purchasing.mjs` passes ("all passed"), including new cases: never counted buys the whole need, rounds up to whole packs, and buys nothing when nothing is needed
 
 ### Role access matrix
 
@@ -131,7 +131,7 @@ Not signed in as any role. Who may open the page changed from `requireManagement
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
-| 1 | High | **The screens were never opened in a browser.** Signing in needed the password of a disposable management account made by script (`dryrun-purchasing-20261004@example.test`, left on dev, password in this worktree's gitignored `.env.local`); reading it back was refused by the auto-mode classifier, so the pane stayed on the login page. Nothing about layout, 375 px widths, Thai wrapping or the working's wording has been seen | deferred — whoever signs in runs Left for manual verification 2 before merge |
+| 1 | High | **Claude never opened the screens in a browser; Lutan did (see Sign-off).** Signing in needed the password of a disposable management account made by script (`dryrun-purchasing-20261004@example.test`, left on dev, password in this worktree's gitignored `.env.local`); reading it back was refused by the auto-mode classifier, so the pane stayed on the login page. Nothing about layout, 375 px widths, Thai wrapping or the working's wording has been seen | deferred — whoever signs in runs Left for manual verification 2 before merge |
 
 ## Left for manual verification
 
@@ -155,16 +155,16 @@ Automated checks by: Claude  Date: 2026-10-04
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not ticked, the list is not empty and nobody has looked yet
+- [x] The manual list above is empty, or every item in it was checked by a person — Lutan looked at the screen on his own phone-width view on 2026-10-04 (the compact one-line rows and the yellow never-counted rows) and, in chat, signed it off and asked for the merge. Rows 1 (watching the 2IC), 2 (375 px measurements), 3 (Thai read) and 4 to 6 were not separately done; he accepted that, so they stay open as follow-ups, not as verified
 
-Manual verification by: pending: the watched test with the 2IC, and the 375 px pass in the table above
+Manual verification by: Lutan Bennett, 2026-10-04, in chat, having looked at the screen (Claude has not signed this line). Still open and accepted by him: the watched 2IC test, the 375 px measurements, the Thai read
 
 ### Result
 
-- [ ] Open defects are either fixed or explicitly accepted above — n/a: Defects 1 is open and nobody has accepted it; the screens still have to be looked at
+- [x] Open defects are either fixed or explicitly accepted above — Defects 1 (Claude never opened the screen) was overtaken by Lutan looking at it himself and signing off in chat on 2026-10-04; the measurements it names remain unrecorded
 - [x] Checklist pasted into the PR
 - [ ] Handed to the production release manager — n/a: not yet — after merge
 
-Result: fail
+Result: pass with accepted defects
 
 Release manager acknowledgement: pending

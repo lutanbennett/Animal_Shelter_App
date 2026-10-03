@@ -83,13 +83,6 @@ export function PurchasingPhone({
             {s.notCountedTitle(notCounted.length)}
           </h3>
           <p className="text-sm text-foreground">{s.notCountedBody}</p>
-          <ul className="list-disc pl-5 text-sm text-foreground">
-            {notCounted.map((i) => (
-              <li key={`${i.kind}-${i.row.id}`} className="break-words">
-                {i.row.name}
-              </li>
-            ))}
-          </ul>
           {canCount && (
             <Link
               href="/stocktake"
@@ -135,10 +128,16 @@ export function PurchasingPhone({
                         {g.lines.map((l) => {
                           const i = byKey.get(`${l.kind}|${l.name}`);
                           return (
-                            <li key={`${l.kind}-${l.name}`}>
+                            <li key={`${l.kind}-${l.name}`} className={i?.row.state === "notCounted" ? "-mx-2 rounded bg-warning/10 px-2" : undefined}>
                               <details className="[&_summary::-webkit-details-marker]:hidden">
                                 <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-3 py-2">
                                   <span className="flex min-w-0 items-center gap-1.5">
+                                    {i?.row.state === "notCounted" && (
+                                      <TriangleAlert
+                                        aria-label={p.notCountedTag}
+                                        className="h-4 w-4 shrink-0 text-warning"
+                                      />
+                                    )}
                                     {i?.row.stale && (
                                       <TriangleAlert
                                         aria-label={p.working.stale(i.row.countedDaysAgo ?? 0)}
@@ -162,9 +161,11 @@ export function PurchasingPhone({
                                   {i && (
                                     <>
                                       <span className="text-sm text-muted">
-                                        {i.row.expected != null && i.row.expected > 0
-                                          ? s.shelf(q(i.row.expected), q(i.row.needed), i.unitLabel)
-                                          : s.shelfNone(q(i.row.needed), i.unitLabel)}
+                                        {i.row.state === "notCounted"
+                                          ? s.shelfAssumed(q(i.row.needed), i.unitLabel)
+                                          : i.row.expected != null && i.row.expected > 0
+                                            ? s.shelf(q(i.row.expected), q(i.row.needed), i.unitLabel)
+                                            : s.shelfNone(q(i.row.needed), i.unitLabel)}
                                       </span>
                                       <p className="mt-1 text-sm font-medium text-foreground">{s.theWorking}</p>
                                       <Working item={i} includeLead={includeLead} period={period} />
@@ -241,6 +242,7 @@ function Working({ item, includeLead, period }: { item: PhoneItem; includeLead: 
   );
   return (
     <div className="flex flex-col gap-2 pb-1 text-sm text-muted">
+      {r.state === "notCounted" && <p className="font-medium text-foreground">{w.neverCounted}</p>}
       {r.state === "ok" && r.counted != null && (
         <p>
           {w.counted(q(r.counted), u, item.countedOn ?? "", r.countedDaysAgo ?? 0)}
