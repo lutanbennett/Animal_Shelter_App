@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "Medication label photos, a card-by-card stocktake on phones, and Stocktake only for the people who do it". **Not ticked: part (3) remains.** A status line names this PR |
 | Branch / worktree | `claude/stocktake-cards-phone` @ `C:\Development\Animal_Shelter_stocktake-cards-phone` |
 | Dev server | `next dev` on `http://localhost:3001` (this worktree's `.port`), browser pane at the **mobile** preset 375×812, reloaded after each switch |
-| PR | opened from this branch |
+| PR | #331 |
 | Tested by / date | Claude / 2026-10-03 |
 | Carries a migration? | no |
 | Tested at SHA | `38a5b099` (after `worktree.mjs sync` merged `origin/main`) |
