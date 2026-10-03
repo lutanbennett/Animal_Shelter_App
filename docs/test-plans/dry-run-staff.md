@@ -39,7 +39,7 @@ plan. This plan only says whether the *PR* is sound.
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: `check`, `test-plan`, `migration-numbers`, `script-integrity`, `audit` and `public-views` all SUCCESS at `0f23b78`, read from `gh pr view 314` and the app's PR status
 
 ## 3. Schema and data — *skip if no migration*
 
