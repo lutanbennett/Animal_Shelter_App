@@ -159,7 +159,7 @@ Manual verification by: n/a: no UI surface, nothing a person would look at
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [x] Checklist pasted into the PR
-- [ ] Handed to the production release manager
+- [ ] Handed to the production release manager — n/a: the release manager reads the plan from the merged PR before deploy; nothing is handed over at this commit
 
 Result: pass
 
