@@ -30,6 +30,8 @@
 //   E  RLS: an admin at aal2 reads and writes the matrix, at aal1 only reads;
 //      no other role and not anon reaches it; permission_activities is read only
 //   F  audit: the seed left no audit rows, and a cell edit logs one with its actor
+//   H  every role x every activity x read and edit under that role's own login (660
+//      answers) equals the cell in the paper's §4 table, which the script reads itself
 //   G  the file replays: same rows afterwards, a shelter's edit to a cell kept
 //
 // Exits 0 when every assertion held. Writes nothing even on success.
@@ -47,6 +49,28 @@ const dir = join(root, "supabase/migrations");
 const file = readdirSync(dir).find((f) => /^\d+_permission_tables\.sql$/.test(f));
 if (!file) throw new Error("no *_permission_tables.sql in supabase/migrations");
 const migration = readFileSync(join(dir, file), "utf8");
+
+// H: the expected cells, read from the paper's §4 table at run time and not from the
+// migration, so the seed is checked against the document it claims to copy.
+const paper = readFileSync(join(root, "docs/roles-and-permissions.md"), "utf8").split("\n");
+const start = paper.findIndex((l) => l.startsWith("| Key | Activity | Kind | Admin | Mgmt | Staff | Vet | Vol |"));
+if (start < 0) throw new Error("§4 table not found in docs/roles-and-permissions.md");
+const ROLE_COLUMN = { management: 5, staff: 6, vet: 7, volunteer: 8 };
+const LEVEL = { E: 2, R: 1, Y: 2 };
+const expected = [];
+let activityCount = 0;
+for (const line of paper.slice(start + 2)) {
+  if (!line.startsWith("|")) break;
+  const c = line.split("|").map((x) => x.trim());
+  const m = /^`([a-z_.]+)`$/.exec(c[1] ?? "");
+  if (!m) continue;
+  activityCount++;
+  for (const [role, i] of Object.entries(ROLE_COLUMN)) {
+    const v = c[i].replace(/\*/g, "").replace("°", "");
+    if (v !== "–") expected.push(`('${role}', '${m[1]}', ${LEVEL[v]})`);
+  }
+}
+if (activityCount !== 55) throw new Error(`expected 55 activities in §4, parsed ${activityCount}`);
 
 const sql = `
 begin;
@@ -112,6 +136,10 @@ insert into harness_ids values
   ('sync', gen_random_uuid());
 grant select on harness_ids to authenticated, service_role;
 
+create temp table harness_expected (role_key text not null, activity text not null, level int not null);
+insert into harness_expected values
+${expected.join(",\n")};
+
 do $setup$
 declare r record;
 begin
@@ -157,6 +185,10 @@ declare
   v_role_custom uuid;
   v_raised boolean;
   v_before bigint;
+  v_who text;
+  v_act record;
+  v_exp int;
+  v_checked int := 0;
 begin
   -- A: the seed.
   perform pg_temp.eq('A roles', (select count(*) from roles where key in ('admin','management','staff','vet','volunteer','public_viewer'))::text, '6');
@@ -223,7 +255,25 @@ begin
   perform pg_temp.eq('C anon cannot call it', pg_temp.q(null, '(my_permissions() is null)', 'aal1', 'anon'), 'ERR:42501');
   v_report := v_report || 'C: my_permissions shape and counts; null for no role, archived role, archived person | ';
 
-  -- D: guards.
+  -- H: every role against every activity, at both levels, under the role's own login.
+  -- The expectation is the paper's §4 table, read by the script (harness_expected).
+  for v_who in select unnest(array['admin', 'management', 'staff', 'vet', 'volunteer', 'public_viewer']) loop
+    for v_act in select key from permission_activities order by sort loop
+      v_exp := case v_who when 'admin' then 2 else coalesce(
+                 (select level from harness_expected e where e.role_key = v_who and e.activity = v_act.key), 0) end;
+      perform pg_temp.eq('H ' || v_who || ' ' || v_act.key || ' read',
+        pg_temp.q((select id from harness_ids where who = v_who), format('has_permission(%L, ''read'')', v_act.key)),
+        (v_exp >= 1)::text);
+      perform pg_temp.eq('H ' || v_who || ' ' || v_act.key || ' edit',
+        pg_temp.q((select id from harness_ids where who = v_who), format('has_permission(%L)', v_act.key)),
+        (v_exp >= 2)::text);
+      v_checked := v_checked + 2;
+    end loop;
+  end loop;
+  perform pg_temp.eq('H answers checked', v_checked::text, '660');
+  perform pg_temp.eq('H expected cells', (select count(*) from harness_expected)::text, '122');
+  v_report := v_report || 'H: 660 answers, six roles x 55 activities x read and edit, equal the paper''s §4 table | ';
+
   n := pg_temp.try(null, format('insert into role_permissions (role_id, activity, level) values (%L, ''stock.count'', 2)', v_role_admin), 'aal1', 'service_role');
   if n <> -2 then raise exception 'HARNESS-FAIL D: a cell for admin was accepted (%)', n; end if;
   n := pg_temp.try(null, format('insert into role_permissions (role_id, activity, level) values (%L, ''stock.count'', 2)', v_role_pub), 'aal1', 'service_role');
@@ -380,7 +430,7 @@ begin
   perform pg_temp.eq('G the catalogue is restored', (select area from permission_activities where key = 'stock.delivery'), 'stock');
   perform pg_temp.eq('G replay logged nothing', (select count(*) from audit_log where table_name in ('roles', 'role_permissions'))::text, (select audit_rows::text from harness_pre));
 
-  raise exception '%', format('HARNESS-OK %s asserted live | A: 6 roles, 55 activities, cells 48/37/13/24/0/0 | B: four answers-no cases, archived person, signed out, anon, null, mistyped level, seeded yes, read vs edit, admin yes | C: my_permissions | D: guards, role_id bridge, last admin | E: RLS at aal1/aal2, anon | F: audit | G: replay keeps a shelter edit',
+  raise exception '%', format('HARNESS-OK %s asserted live | A: 6 roles, 55 activities, cells 48/37/13/24/0/0 | B: four answers-no cases, archived person, signed out, anon, null, mistyped level, seeded yes, read vs edit, admin yes | C: my_permissions | D: guards, role_id bridge, last admin | E: RLS at aal1/aal2, anon | F: audit | H: 660 answers (6 roles x 55 activities x read/edit) equal the paper's §4 | G: replay keeps a shelter edit',
     ${JSON.stringify(file).replace(/"/g, "'")});
 end;
 $h2$;
