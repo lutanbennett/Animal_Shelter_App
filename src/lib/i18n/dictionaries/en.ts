@@ -4058,6 +4058,38 @@ const en = {
       driveWarning: (message: string) =>
         `Saved, but the Drive folder couldn't be moved: ${message}. It will be retried on the next change.`,
     },
+    /** Phone board: moving a job on with a tap (the drag stays for a desktop). */
+    move: {
+      button: "Move job on",
+      sheetTitle: (title: string) => `Where does "${title}" go now?`,
+      cancel: "Cancel",
+      to: (status: string) => `Move to ${status}`,
+      confirm: (title: string, from: string, to: string) =>
+        `Move "${title}" from ${from} to ${to}? It will show in the ${to} list.`,
+      confirmDone: (title: string) =>
+        `Mark "${title}" as finished? Today's date is stamped on it, and you can move it back from the same button.`,
+      confirmLabel: "Yes, move it",
+      moved: (title: string, to: string) => `"${title}" is now ${to}.`,
+    },
+    /** Log maintenance as steps: the same chrome as intake and the Shelter Friend wizard. */
+    wizard: {
+      stepOf: (current: number, total: number) => `Step ${current} of ${total}`,
+      goToStep: (n: number, title: string) => `Go to step ${n}: ${title}`,
+      back: "Back",
+      next: "Next",
+      edit: "Edit",
+      notProvided: "Not given",
+      reviewIntro: "Check the job below. Nothing is saved until you press Save job.",
+      steps: {
+        what: "What is wrong",
+        where: "Where",
+        who: "Who and when",
+        review: "Review",
+      },
+      titleRequired: "Give the job a short title before going on.",
+      locationRequired: "Choose an enclosure, or tick zone-wide, before going on.",
+      photos: (n: number) => (n === 0 ? "None" : n === 1 ? "1 photo" : `${n} photos`),
+    },
     errors: {
       enterTitle: "Enter a title.",
       invalidStatus: "Choose a valid status.",

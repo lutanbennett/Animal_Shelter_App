@@ -3947,6 +3947,36 @@ const th: Dictionary = {
       driveWarning: (message: string) =>
         `บันทึกแล้ว แต่ย้ายโฟลเดอร์ใน Drive ไม่สำเร็จ: ${message} ระบบจะลองอีกครั้งเมื่อมีการเปลี่ยนแปลงครั้งถัดไป`,
     },
+    move: {
+      button: "ย้ายงานไปต่อ",
+      sheetTitle: (title: string) => `"${title}" จะไปที่ไหนต่อ?`,
+      cancel: "ยกเลิก",
+      to: (status: string) => `ย้ายไป ${status}`,
+      confirm: (title: string, from: string, to: string) =>
+        `ย้าย "${title}" จาก ${from} ไป ${to} ใช่ไหม? งานจะอยู่ในรายการ ${to}`,
+      confirmDone: (title: string) =>
+        `ทำเครื่องหมายว่า "${title}" เสร็จแล้วใช่ไหม? ระบบจะบันทึกวันที่วันนี้ และย้ายกลับได้จากปุ่มเดิม`,
+      confirmLabel: "ใช่ ย้ายเลย",
+      moved: (title: string, to: string) => `"${title}" ตอนนี้อยู่ที่ ${to}`,
+    },
+    wizard: {
+      stepOf: (current: number, total: number) => `ขั้นตอนที่ ${current} จาก ${total}`,
+      goToStep: (n: number, title: string) => `ไปขั้นตอนที่ ${n}: ${title}`,
+      back: "ย้อนกลับ",
+      next: "ถัดไป",
+      edit: "แก้ไข",
+      notProvided: "ไม่ได้ระบุ",
+      reviewIntro: "ตรวจงานด้านล่าง จะยังไม่บันทึกจนกว่าคุณจะกด บันทึกงาน",
+      steps: {
+        what: "มีปัญหาอะไร",
+        where: "ที่ไหน",
+        who: "ใครและเมื่อไร",
+        review: "ตรวจทาน",
+      },
+      titleRequired: "ตั้งชื่องานสั้นๆ ก่อนไปต่อ",
+      locationRequired: "เลือกกรง หรือติ๊กงานทั้งโซน ก่อนไปต่อ",
+      photos: (n: number) => (n === 0 ? "ไม่มี" : `${n} รูป`),
+    },
     errors: {
       enterTitle: "กรอกชื่องาน",
       invalidStatus: "เลือกสถานะที่ถูกต้อง",

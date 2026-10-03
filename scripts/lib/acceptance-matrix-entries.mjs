@@ -436,7 +436,7 @@ export const ENTRIES = {
     {
       activity: "Log a maintenance job with photos",
       device: "phone",
-      do: "Tap Log maintenance, give a title, pick the enclosure, assign it, add a photo, and Save job.",
+      do: "Tap Log maintenance and go through the steps: what is wrong (title, photo), where, who and when (assign it), then check the Review and Save job.",
       expect: "The job is on the board and on the assignee's My tasks.",
     },
   ],
@@ -449,10 +449,10 @@ export const ENTRIES = {
     },
     {
       activity: "Change a job's status on the board",
-      device: "desktop",
+      device: "both",
       roles: ["admin", "management", "staff"],
-      do: "Drag a job card to another column, up to Completed.",
-      expect: "The status changes and stays after a refresh.",
+      do: "On a phone, tap Move job on under a job, choose Move to In progress, and confirm; then do the same to reach Completed and to go back a column. On a desktop, drag the card to another column.",
+      expect: "The confirmation says in words what will happen; the status changes and stays after a refresh.",
       notes: { volunteer: "A volunteer sees no way to change a status on the board, and the change is refused if tried." },
     },
     {
