@@ -165,7 +165,7 @@ overwriting it — it is sometimes deliberately an integration build that exists
 nowhere else:
 
 ```bash
-curl -s https://test.lannacare.org/api/releases/current
+curl -s https://test.lannacare.org/api/version
 ```
 
 ### Worker, production — Lutan runs this
@@ -179,9 +179,18 @@ policy on this machine (`npm : File C:\Program Files\nodejs\npm.ps1 cannot be
 loaded`). `npm.cmd run deploy:prod` works, but the bare `node` form has no
 wrapper to go wrong and is what should be handed over.
 
-Read the output rather than assuming it: the
-`deploy: production → Supabase project dbkodyyxxhtygxcxmfcu (<sha>)` line, and
-`strip-baked-env: removed N env var(s)`.
+Hand it over **with a `tee`**, because the lines worth reading print before a
+three-minute build and scroll out of the terminal buffer:
+
+```bash
+node scripts/deploy.mjs --env production | tee deploy-<version>.log
+```
+
+The `deploy: production → Supabase project dbkodyyxxhtygxcxmfcu (<sha>)` line
+was missed for this reason on `0.15.0`, `0.15.1` and `0.16.0` — three releases
+running, each time recorded as a gap and each time settled indirectly. Also read
+`strip-baked-env: removed N env var(s)` and the `Server Actions key <fingerprint>`
+line, which must match what the Pi build printed.
 
 This deploy is also what **mails the admins** on a major release. The Pi deploy
 does not mail, and neither does test (`RELEASE_MAIL_ENV` is `""` there).
@@ -219,8 +228,8 @@ checks itself.
 account:
 
 ```bash
-curl -s https://lannacare.org/api/releases/current
-curl -s https://test.lannacare.org/api/releases/current
+curl -s https://lannacare.org/api/version
+curl -s https://test.lannacare.org/api/version
 ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App && git log --oneline -1; cd ~/Animal_Shelter_App_test && git log --oneline -1; systemctl is-active lanna-care lanna-care-test'
 ```
 
@@ -283,10 +292,23 @@ normal deploy needs nothing more, because both clones are owned by `lutan` — i
 deploy suddenly wants a password, something has become root-owned and *that* is
 the fault to fix.
 
-**`/api/releases/current` is answered by the Worker, not the Pi.** It is bundled
-into the Worker, so it reports the Worker's version even when the Pi serves the
-site. It is not evidence that the Pi took the release. Check the clone's
-`git log -1`, and `x-lanna-served-by` on a real page.
+**Ask `/api/version`, never `/api/releases/current`, for what an environment is
+running.** `/api/releases/current` is bundled into the Worker and answers from
+it, so it reports the Worker's version whatever the Pi is serving — on `0.15.0`
+that showed test as updated for forty minutes while it served the previous
+build. `/api/version` is answered by the app (`src/app/api/version/route.ts`,
+PR #290, there since `0.14.0`) and returns the version **and the commit sha**,
+so it can be compared against `main` rather than believed. Side by side on
+production, moments apart:
+
+```
+/api/version            x-lanna-served-by: pi       {"version":"0.16.0","sha":"4a626930869db06d482c747a29fa257f4a823d63"}
+/api/releases/current   x-lanna-served-by: worker   {"version":"0.16.0"}
+```
+
+The endpoint existed through two releases that were checked the wrong way, and
+through the first draft of this document, which named the trap without naming
+the remedy. Check `x-lanna-served-by` on whatever you ask.
 
 **A git-updated clone is not a deployed clone.** `deploy-pi.sh` fetches before it
 builds, so a run that fails partway leaves the clone's source at the new SHA with
