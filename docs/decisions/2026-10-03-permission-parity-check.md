@@ -130,7 +130,7 @@ None of these were closed here; closing is a policy change, which is `perm-conve
 
 ## What is not probed (stated by the run, not inferred)
 
-Nine activities have no database statement that tells them apart, with a reason each in
+Ten activities have no database statement that tells them apart, with a reason each in
 `NO_DB_PROBE`: `photos.resident_publish` (finding A5 — publishing is a side effect of
 filing a photo), `facility.map`, `stock.purchasing`, `stock.usage`, `reports.dashboard`,
 `translations.manage`, `assistant.ask`, `assistant.record`, `audit.undo`, and
