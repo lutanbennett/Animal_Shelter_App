@@ -1,11 +1,16 @@
 # Roles and permissions: the shelter's own roles, and a matrix each shelter can set — a paper
 
-**Status: PROPOSED, 2026-10-03. Nothing in this paper is agreed.** It ends in
-questions for Lutan and for the Director (§17). Until they answer, no
-`docs/decisions/` file records any of it as decided, and nothing is built. The
-one decision this stream does record is a fact, not an agreement: there are no
-PCs on site, which overturns part of the 2026-09-24 "Admin on mobile" decision
-(`docs/decisions/2026-10-03-no-pcs-on-site-supersedes-admin-on-mobile.md`).
+**Status, 2026-10-03: who does what at Lanna is answered by Lutan; how it is
+built is still PROPOSED.** Nothing is built. Two decision files record what is
+settled, and only that:
+
+- `docs/decisions/2026-10-03-no-pcs-on-site-supersedes-admin-on-mobile.md`: a
+  fact, which overturns part of the 2026-09-24 "Admin on mobile" decision.
+- `docs/decisions/2026-10-03-lanna-roles-lutans-answers.md`: Lutan's answers on
+  the roles, in his words.
+
+The design (the catalogue, the matrix, enforcement, the migration) has no
+decision file, because the questions about it in §17 are still open.
 
 It answers two backlog items as one piece of work, because both ask for the same
 table first: *The roles the shelter actually has, from the Director* (Auth) and
@@ -13,13 +18,26 @@ table first: *The roles the shelter actually has, from the Director* (Auth) and
 one-page table is its own file, written for her:
 [`roles-director-table.md`](roles-director-table.md).
 
-**One thing was answered while it was being written.** Lutan, 2026-10-03, on
-whether the 2IC and Management are one role: *"Yes I think we need to have them
-separate and here is why - the director will do management on her mobile during
-the day, the 2ic will do her duties on the mobile during the day and admin is
-done at night. One thing to think about is that admin and management will
-probably be the same person."* The paper is written around that answer. It is
-his ruling on that one point; the rest is still proposed.
+**What Lutan settled on 2026-10-03, in three messages while it was being
+written.** The paper is written around all three.
+
+1. *The 2IC and Management are separate:* "the director will do management on
+   her mobile during the day, the 2ic will do her duties on the mobile during the
+   day and admin is done at night. One thing to think about is that admin and
+   management will probably be the same person."
+2. *Answers to the questions on the Director's table* (§17 has them in full):
+   medication given is **not** recorded, the Head of Medical only needs to see
+   who gets what and how much; only Management and Admin move, hospitalise,
+   foster, adopt out or record a death; the 2IC does her three tasks and nothing
+   else; the Head of Maintenance views residents and updates only maintenance and
+   recurring tasks; volunteers see "just who and where", read-only; vets are on
+   hold; Management and Admin book vet visits; only Management and Admin put
+   photos on the website.
+3. *How to build it:* "I suggest that when we implement we take it role by
+   role." §12 and §15 are organised that way.
+
+He uses "Manager / Director" for the two roles the Director holds; this paper
+says Management and Admin, which are the names in the system.
 
 ---
 
@@ -40,11 +58,10 @@ his ruling on that one point; the rest is still proposed.
 3. **The fork: the 2IC, Maintenance and Medical should be configured roles, not
    three new enum values.** Recommended, not decided (§16). Each enum value
    costs a two-file migration plus a policy on nearly every one of 47 tables, and
-   all of it is thrown away when the matrix lands. The bridge that makes this
-   bearable is in §12: until the database is converted, a configured role
-   borrows one legacy role's database rights (the 2IC borrows *management*, the
-   two Heads borrow *staff*), so all three can have their own name, menu and
-   home screen two stages in, while losing nothing they can do today.
+   all of it is thrown away when the matrix lands. §12 shows how to get there
+   **role by role**, as Lutan asked: the volunteer is narrowed first, each new
+   role then starts from that narrowest set of rights and is granted only what
+   its own job needs, and the roles that exist today are converted last.
 4. **Lutan's steer, a page per role: yes to the idea, with one change.** Single
    pages that a role either can or cannot open, with no per-role branching inside
    them, is the right UI rule and the Director's description of the 2IC already
@@ -62,14 +79,15 @@ his ruling on that one point; the rest is still proposed.
    in TypeScript, both reading the same two small tables (§10). Not the JWT
    hook: with permissions in the token, archiving a person or narrowing a role
    would not bite until their token refreshed, and today both are immediate.
-6. **Three facts from the Director change earlier work** (§2): no PCs on site,
-   the Head of Medical has no feature at all (the medication round, scoped in
-   §14), and volunteers become read-only, which removes rights real accounts hold
-   today and has to be confirmed before anything is taken away.
+6. **Three things change earlier work** (§2): there are no PCs on site; the
+   Head of Medical needs a screen that does not exist, which Lutan has ruled is
+   a read-only list of who gets what and not a record of doses given (§14); and
+   volunteers shrink to "who and where", which removes rights that role holds
+   today.
 7. **`0132` is proposed as the permission tables**: additive, read by nothing,
-   seeded so that the defaults are today's behaviour (§12, §15). The medication
-   round's schema follows it, so that its policies are written against an
-   activity from their first day instead of against role names.
+   seeded so that the defaults are today's behaviour (§12, §15). Nothing else in
+   this paper needs a new table: the medication list reads the prescriptions
+   that are already there.
 
 ## 2. What the Director said, and what it changes
 
@@ -82,14 +100,19 @@ Director's own work falls into two roles:
 | 1 | Director, at night | **Admin** | Settings and setup: the website content, the projects pages, enclosures and zones, the medication and diet lists, people and security | her PC at home |
 | 2 | Director, by day | **Management** | Recurring tasks, vet appointments, intake, residents' details and medical records | her phone |
 | 3 | 2IC | **2IC** (new) | Stocktakes, ordering medicine and food (Purchasing, deliveries), maintenance tasks. **Not comfortable with computers** | her phone |
-| 4 | Head of Maintenance | **Maintenance** (new) | Creates, assigns, progresses and completes maintenance jobs | a phone |
-| 5 | Head of Medical | **Medical** (new) | Gives medication to the residents | a phone |
-| 6 | Volunteers | **Volunteer**, read-only | See the map and the resident hub. Change nothing | a phone |
-| 7 | Vets | the doctor login (`vet` today) | Add an appointment for a resident; add test results and the rest of the clinical record | the clinic's own |
+| 4 | Head of Maintenance | **Maintenance** (new) | Creates, assigns, progresses and completes maintenance jobs, and marks recurring tasks. Looks at residents; changes nothing about them | a phone |
+| 5 | Head of Medical | **Medical** (new) | Gives medication to the residents. Needs to see who gets what and how much. Records nothing | a phone |
+| 6 | Volunteers | **Volunteer**, read-only | See who each resident is and where they live, and the map. Nothing else, medical records included | a phone |
+| 7 | Vets | `vet`, **on hold** | Unchanged for now. The rename to Doctor and what a doctor login sees are in the parked clinics item | the clinic's own |
 
 The backlog item mapped the 2IC to Management. Lutan's answer separates them:
 the 2IC is her own role, and Management is what the Director does by day. So
 Lanna needs **three** roles the system does not have, not two.
+
+**Everything that changes a resident is Management's and Admin's alone**
+(Lutan's answer 1): registering one, moving one, hospital, foster, adoption, a
+death, booking a vet visit, the medical record, photos. The 2IC and the two
+Heads each have a narrow job and no part in that.
 
 Three things in that description overturn something already on `main`.
 
@@ -103,30 +126,36 @@ for every role but Admin, the Director's own daytime work included. That item is
 2026-10-02), so this paper reports the change and does not reopen it.
 
 **The Head of Medical has nothing to use.** A prescription records what *should*
-be given: medication, dose, frequency, dates. Nothing records that a dose *was*
-given, by whom, or when. Only immunizations carry `date_administered` and
-`administered_by`. The medication round is the largest new build in the item and
-is scoped in §14, not built.
+be given: medication, dose, frequency, dates. No screen gathers today's
+prescriptions into something a person can walk round the kennels with. The
+backlog item proposed a medication round that also recorded each dose given,
+skipped or refused. **Lutan ruled that out:** "We will not record medication
+given, the head of medical can purely just view what medicine should be given …
+all they need is a reference system to tell them who and how much." So the build
+is a read-only list (§14), with no new table, and the system will go on holding
+no record of a dose having been given.
 
 **Volunteers lose rights they hold today.** A volunteer account can now add,
 refile and remove resident photos and choose the profile photo; move a resident
 between enclosures; count the stock; add and remove maintenance and project
 photos; mark their own recurring jobs done; ask the assistant questions; and
 read every contact's name and phone, the maintenance board, projects, the vet
-list and all medical records. The Director leaves them the map and the resident
-hub, read-only. That is a behaviour change for real accounts, so §17 asks Lutan
-to confirm each line before any of it is removed. The dev database has **no**
-volunteer accounts at all (4 admin, 2 management, 6 staff, 4 vet, read
-2026-10-03); how many exist in production decides how carefully the change has
-to be staged, and this stream did not read production.
+list and all medical records. Lutan's answer: "Just Who and Where - Read only".
+So a volunteer keeps a resident's identity and where it lives, and the
+enclosures, and loses everything else in that list, the medical records
+included. The dev database has **no** volunteer accounts at all (4 admin, 2
+management, 6 staff, 4 vet, read 2026-10-03); how many exist in production
+decides how carefully the change has to be staged, and this stream did not read
+production.
 
 Two more points follow from the list rather than from any one line of it.
 
-**There is no plain Staff.** Six dev accounts hold `staff` today. Either every
-employee is the 2IC or one of the two Heads, or there are other employees
-(kennel hands) the Director did not mention. Until that is answered, nobody but
-the Director would be able to register a resident, move one, send one to
-hospital, record a foster, an adoption or a death (§17, question D1).
+**There is no plain Staff.** Six dev accounts hold `staff` today, and Staff is
+the role that registers, moves and treats residents. Lutan's answer gives all of
+that to Management and Admin alone, and names nobody else. This paper takes that
+to mean Staff is unused at Lanna: the role stays in the product's template (§16)
+and each of today's staff logins becomes one of the roles above or is archived.
+Which login becomes which is the one part still to be asked (L5).
 
 **"The map" does not exist yet.** The facility map is a prototype at
 `/enclosures/map-prototype`. Until the Facility item is built, a volunteer's
@@ -229,8 +258,9 @@ converted policy.
    project apart from editing it, undoing a change apart from seeing it, marking
    anyone's recurring job apart from your own, adding a contact apart from
    managing contacts, adding a missing medication from a form apart from managing
-   the list, managing photos apart from adding one, correcting a stock figure
-   apart from counting, and giving a dose apart from prescribing it.
+   the list, managing photos apart from adding one, putting a photo on the
+   website apart from adding it, and correcting a stock figure apart from
+   counting.
 4. **A lookup is not an activity.** A prescription form needs medication names;
    a move form needs enclosure names. Those reads come with the activity that
    needs them, through a view that carries only the columns the form shows, as
@@ -285,15 +315,15 @@ Admin is shown for completeness; it is never stored (§6).
 | `medical.visits` | Vet visits and how they went | E/R | E | E | E | E° | R | 10 | |
 | `medical.procedures` | Procedures and their files | E/R | E | E | E | E° | R | 10 | |
 | `medical.blood_tests` | Blood tests and their reports | E/R | E | E | E | E° | R | 10 | Staff and Management since `0131` |
-| `medical.prescriptions` | Prescriptions: what should be given | E/R | E | E | E | E° | R | 11 | |
-| `medical.doses` | Giving medication: what was given | E/R | not built | | | | | 12 | *New.* The medication round, §14 |
+| `medical.prescriptions` | Prescriptions: what should be given | E/R | E | E | E | E° | R | 11, 12 | Read also opens the medication list (§14), which is a new screen over the same records and not a new activity |
 | `medical.immunizations` | Immunizations | E/R | E | E | E | E° | R | 13 | |
 | `medical.weight` | Weight | E/R | E | E | E | E° | R | 13 | |
 | `medical.diet` | A resident's diet | E/R | E | E | E | E° | R | 13 | |
 | `medical.archive` | Remove a medical record entered by mistake, and restore it | Y/N | Y | Y | Y | – | – | 14 | |
 | **Photos** | | | | | | | | | |
-| `photos.resident_add` | Add a photo to a resident | Y/N | Y | Y | Y | Y° | Y | 15 | A vet's go to the Medical folder only (scope). Finding A5: any other folder is public for a resident on the Adopt page |
+| `photos.resident_add` | Add a photo to a resident | Y/N | Y | Y | Y | Y° | Y | 15 | A vet's go to the Medical folder only (scope) |
 | `photos.resident_manage` | Refile or remove a photo, choose the profile photo | Y/N | Y | Y | Y | – | Y | 15 | *Split*, finding A3 |
+| `photos.resident_publish` | Put a resident's photo on the public website | Y/N | Y | Y | Y | – | Y | 15 | *Split*, finding A5. Today it is not a separate act: filing a photo anywhere but Medical publishes it. Lutan's answer 8: at Lanna, Management and Admin only |
 | **Enclosures** | | | | | | | | | |
 | `facility.enclosures` | Enclosures and zones | E/R | E | R | R | – | R | 16 | Edit is Settings → Zones and Enclosures |
 | `facility.map` | The facility map | Y/N | Y | Y | Y | – | Y | 16 | A prototype today |
@@ -368,10 +398,18 @@ nearly does. A shelter picks an option; it cannot write its own.
 | Scope | Options | Today | Backed by |
 |---|---|---|---|
 | Which residents | all · those the login's clinic treats | vet: clinic's; everyone else: all | `current_vet_resident_ids()` (`0108`) |
+| How much of a resident | the whole page · who and where | everyone: the whole page | **new.** A fixed-column view (name, photo, species, sex, status, enclosure), as `0126` did for contacts. Lanna's volunteers, 2IC and two Heads get "who and where" |
 | Whose clinical records it may change | any · its own clinic's | vet: own clinic's | `vet_owns_visit()`, `current_user_vet_ids()` (`0110`) |
 | How much of a contact | everything · name and phone · name and type | volunteer: name and phone; vet: name and type; others: everything | the `volunteer_contacts` and `vet_contacts` views (`0126`) |
 | Which photo folders | all · Medical only | vet: Medical only | `PHOTO_CATEGORIES`, `record_attachment()` |
 | Other people's login emails | shown · hidden | hidden for vet and volunteer | `private.app_users` (`0126`) |
+
+"Who and where" is Lutan's phrase for what a volunteer sees (answer 5): who the
+resident is and where it lives, with no background, no placement history, no
+adopter's news and no medical record. It is the one scope here with nothing
+behind it yet. It is a scope and not a seventh kind of cell for the same reason
+the contact one is: a policy can hide a row but not a column, so "less of each
+row" has to be a view.
 
 A scope narrows what an activity reaches; it never grants anything. A role with
 "clinic's residents" and Read on `resident.record` reads those residents and no
@@ -407,28 +445,39 @@ nothing, as a vet with no clinic does today.
    it; a role the shelter made does not, and the matrix marks the row as new.
 9. **A cell never outranks a prerequisite** (§4, rule 5).
 
-## 7. Lanna's roles, proposed
+## 7. Lanna's roles
 
 The template every shelter starts from is today's six roles with today's cells
-(§4). Lanna's own set is that template changed to match the Director:
+(§4). Lanna's own set is that template changed to match Lutan's answers:
 
-| Role | Kind | Who at Lanna | Home screen | Proposed change from today |
+| Role | Kind | Who at Lanna | Home screen | What it may do |
 |---|---|---|---|---|
-| Admin | fixed | The Director, at night at her desk | Settings | none |
-| Management | default | The Director, by day on her phone. She signs in as Admin, which includes it (§8) | Recurring tasks, vet appointments, intake, residents | which other Management pages she wants on the phone is question D2 |
-| 2IC | **new**, configured | The 2IC | Stocktake, Purchasing, Maintenance tasks | see the Director's table |
-| Maintenance | **new**, configured | Head of Maintenance | Maintenance tasks | see the Director's table |
-| Medical | **new**, configured | Head of Medical | Today's medication round | see the Director's table |
-| Staff | default | open: question D1 | My tasks | kept in the template; whether anyone at Lanna holds it is the Director's call |
-| Volunteer | default, narrowed | Volunteers | Residents | read-only: every Yes and Edit in its column becomes No or Read, confirmed line by line first (L3) |
-| Vet | default | Clinics' doctors | Appointments | none now. The name becomes Doctor when the parked clinics item is taken up |
-| Public viewer | fixed | Test logins | the public site | none |
+| Admin | fixed | The Director, at night at her desk | Settings | everything |
+| Management | default | The Director, by day on her phone. She signs in as Admin, which includes it (§8) | Recurring tasks, vet appointments, intake, residents | as today's Management. It and Admin are the only roles that change a resident, book a vet visit or publish a photo |
+| 2IC | **new**, configured | The 2IC | Stocktake, Purchasing, Maintenance tasks | those three, and nothing else |
+| Maintenance | **new**, configured | Head of Maintenance | Maintenance tasks | maintenance jobs and their own recurring tasks. Sees who each resident is and where |
+| Medical | **new**, configured | Head of Medical | Today's medication list | reads prescriptions and the medication list. Changes nothing |
+| Staff | default | nobody, as far as Lutan's answers go (L5) | My tasks | kept in the template for other shelters |
+| Volunteer | default, narrowed | Volunteers | Residents | sees who each resident is and where, and the enclosures. Nothing else |
+| Vet | default, **on hold** | Clinics' doctors | Appointments | unchanged. The name becomes Doctor when the parked clinics item is taken up |
+| Public viewer | fixed | Test logins | the public site | unchanged |
 
-The cell-by-cell proposal for those roles **is the Director's table**
+Four of those roles, the 2IC, both Heads and the volunteer, see a resident as
+"who and where" (§5).
+
+**Publishing a photo** (Lutan's answer 8: Management and Admin only). At Lanna
+the cells alone deliver this: under the roles above nobody else can add a
+resident's photo at all, and a vet's go to Medical, which is never public. The
+per-photo switch, where a photo is public only once someone holding
+`photos.resident_publish` says so, is needed the day a role can add a photo
+without being allowed to publish it. That is a column on the photo and a change
+to the public view (`0101`), and it is not built until such a role exists.
+
+The cell-by-cell table for those roles **is the Director's table**
 ([`roles-director-table.md`](roles-director-table.md)): 37 rows, each one or
-more activities from §4, each cell marked as *stated by the Director*, *carried
-over from today*, or *a gap with a proposed answer*. It is kept as one file, not
-repeated here, so that there is one place to correct when she answers.
+more activities from §4. After Lutan's answers six cells are still a guess and
+marked `?`. It is kept as one file, not repeated here, so that there is one place
+to correct when the Director has seen it.
 
 On the vet's name: `doctor` is the target name for the role, per the parked
 *Clinics and doctors* item (Medical records, PARKED 2026-10-03). Nothing here
@@ -502,7 +551,7 @@ access**, and change one word: a page belongs to a **task**, not to a role.
    person may open. That is the only "branching" left, it is written once, and
    it is the same code that builds the menu.
 3. **Each role has a home screen made of its tasks.** Big tiles, an icon and a
-   word, in the person's language: Today's medication round, Count the stock,
+   word, in the person's language: Today's medication, Count the stock,
    Maintenance jobs. For the default roles the order is chosen by hand. For a
    role a shelter adds, the same screen is built from its column, so it is
    coherent on the day it is created.
@@ -541,7 +590,7 @@ with tiles under it:
 | **Admin / Settings** | Enclosures · Zones · Medication · Diets | `facility.enclosures` (Edit), `stock.medications`, `stock.diets` |
 | **2IC** | Stocktake · Purchasing · Maintenance tasks | `stock.count`, `stock.purchasing`, `maintenance.jobs` / `maintenance.progress` |
 | **Management** | Recurring tasks · Vet appts · Intake · Res medical · Res details | `recurring.manage`, `visit.book`, `resident.register`, the `medical.*` records, `resident.record` |
-| **Medical** | Residents (scroll) | `resident.record` (Read), `medical.doses` |
+| **Medical** | Residents (scroll) | `resident.record` (Read, who and where), `medical.prescriptions` (Read) |
 | **Maintenance** | Maint tasks | `maintenance.jobs`, `maintenance.progress` |
 
 It is a brainstorm, not a ruling, and it is recorded here as that. What it shows:
@@ -568,18 +617,17 @@ What it asked, and what was answered:
   The Director does management on her phone by day, the 2IC does her own duties
   on hers, and admin is done at night. See *One person, two roles' work* below.
 
-What it still asks, carried to §17:
-
-- **Much is on no screen**: deliveries, moving a resident, hospital, foster and
-  adoption, recording a death, photos, contacts, clinics, projects, Shelter
-  Friends, the dashboard, cashflow, stock usage, translations, the website. Each
-  is either the Director's at a desk or not placed yet (L7).
-- **Medical has one tile, "Residents (scroll)".** §14 proposes the round as a
-  list of residents grouped by where they live, which is a scroll of residents.
-  Whether the Head of Medical also needs the rest of the medical record from
-  there is question D4.
-- **No Volunteer and no Vet heading.** Taken to mean unchanged: a volunteer has
-  the map and the residents, a vet has Appointments and Residents.
+- **Medical has one tile, "Residents (scroll)".** Answered: the Head of Medical
+  needs "a reference system to tell them who and how much", and nothing is
+  recorded. §14's medication list is that scroll of residents, grouped by where
+  they live, with what each one gets.
+- **Much is on no screen**: moving a resident, hospital, foster and adoption,
+  recording a death, photos, contacts, clinics, projects, Shelter Friends, the
+  dashboard, cashflow, stock usage, translations, the website. Answered as to
+  *who*: all of it is Management's and Admin's. Still open as to *where*: which
+  of it the Director wants on her phone by day and which only at her desk (L7).
+- **No Volunteer and no Vet heading.** A volunteer has the residents (who and
+  where) and the enclosures; vets are on hold.
 
 ### One person, two roles' work
 
@@ -633,6 +681,7 @@ create table roles (
   opens_app         boolean not null default true,     -- false for the public viewer
   home_path         text,                              -- where sign-in lands (for Admin, on a phone: Management's)
   scope_residents   text not null default 'all'  check (scope_residents in ('all', 'own_clinic')),
+  scope_resident_detail text not null default 'full' check (scope_resident_detail in ('full', 'who_and_where')),
   scope_clinical    text not null default 'any'  check (scope_clinical  in ('any', 'own_clinic')),
   scope_contacts    text not null default 'full' check (scope_contacts  in ('full', 'name_phone', 'name_type')),
   scope_photos      text not null default 'all'  check (scope_photos    in ('all', 'medical_only')),
@@ -760,7 +809,7 @@ How it stays fast under RLS, concretely:
 - `role_permissions (role_id, activity)` is unique, so the lookup is one index
   probe.
 - It is **measured, not assumed**: `explain (analyze, buffers)` on the residents
-  list and on the medication round, as a volunteer and as staff, before and
+  list and on the medication list, as a volunteer and as staff, before and
   after the first converted table. The numbers go in that PR's test plan.
 
 If a measurement ever shows a problem, the hook can be added later as a cache in
@@ -818,50 +867,89 @@ set, and that every activity key written in a policy, a function or a `can()`
 call exists in the catalogue. A mistyped key in a policy would otherwise deny
 silently.
 
-## 12. Getting from the enum to the matrix
+## 12. Getting from the enum to the matrix, role by role
 
-The hard constraint is the one in `CLAUDE.md`: one schema PR in flight at a
-time, each additive and re-runnable. 243 policies cannot be converted in one
-file that anyone could review. So the conversion is staged, and a bridge keeps
-every stage shippable.
+> **Lutan, 2026-10-03:** "I suggest that when we implement we take it role by
+> role."
+
+The first draft of this section staged the database work by *area* (photos,
+stock, medical and so on), with the new roles borrowing staff's or management's
+rights in the meantime. Role by role is better, for four reasons that come from
+how the policies are written today.
+
+1. **A table does not have to be converted in one go.** Policies are permissive
+   and are OR-ed together, so a new policy that asks `has_permission()` can sit
+   on a table beside the old role-named ones. Each role's slice adds only what
+   that role needs.
+2. **Narrowing the volunteer is mostly deletion.** There is one policy per role
+   per table, so taking a right away from volunteers is dropping the
+   `volunteer_…` policy for it. 40 policies name the volunteer.
+3. **Once narrowed, the volunteer is the narrowest role in the system, and every
+   new role can start from it.** The 2IC and both Heads borrow the volunteer's
+   database rights ("who and where", the enclosures) and are granted the rest of
+   their job through `has_permission()`. Their database boundary is then right
+   from their first day. In the first draft it would have been staff's or
+   management's, wider than the job, until each area was converted.
+4. **Each slice ends in something a person uses and something that can be
+   tested:** that role's home screen on a phone, and that role's walkthrough
+   pass at 375 px.
+
+The hard constraint is unchanged: one schema PR in flight at a time, each
+additive and re-runnable (`CLAUDE.md`).
 
 **The bridge: `roles.legacy_role`.** Every existing policy asks
 `current_user_role()`. During the migration that function returns the role's
-*legacy* enum value. The six built-in roles map to themselves. A configured role
-names the legacy role whose database rights it borrows until its areas are
-converted: the 2IC borrows `management`, Maintenance and Medical borrow `staff`.
-So an unconverted table treats the Head of Maintenance as staff, and the 2IC as
-management, which is no more than those people can do today, while the app,
-already on `can()`, shows each of them their own menu, home screen and pages. Each area that is converted stops asking `current_user_role()` and the
-borrowed rights fall away there.
+*legacy* enum value. The six built-in roles map to themselves; a configured role
+names the one it borrows, which is `volunteer` for all three of Lanna's.
 
-| Stage | What | Behaviour change |
+### The foundation, once
+
+| Step | What | Behaviour change |
 |---|---|---|
-| 0 | This paper and the Director's table agreed; decision files written | none |
-| 1 | **Schema, `0132`:** the three tables, `user_roles.role_id` filled from the enum and kept in step by a trigger, the six roles seeded with today's cells, `has_permission()`, `my_permissions()`. Read by nothing | none |
-| 2 | **App:** the catalogue file, `can()`, `requirePermission()`, the route registry; predicates replaced area by area; the manual's `roles` tags and the acceptance matrix read activities. Parity layers 2 and 3 green | none |
-| 3 | **The three roles exist:** the 2IC as a row with `legacy_role = 'management'`, Maintenance and Medical with `'staff'`; Security lists roles from the table; the home screens, and Admin's switch between them | the 2IC and the two Heads get their own menu and home; the Director gets her daytime screen. Database rights still the borrowed role's |
-| 4 | **Database, area by area**, one schema PR each, parity check before and after: photos and moves · stock · maintenance and projects · medical · residents and housing · contacts, clinics, friends · management lists and reports · settings and setup lists · the 15 functions and 10 views that test a role, each with its area | each area: the listed tightenings, then Lanna's cells for it (the volunteer narrowed, the 2IC and the Heads narrowed from the role they borrowed) |
-| 5 | **Remove the bridge:** nothing calls `current_user_role()`; drop `legacy_role`, `user_roles.role` and the `app_role` type | none |
-| 6 | **Settings → Roles and permissions:** the matrix, editable by Admin with 2-step, audited, exportable | Admin can change a cell |
-| 7 | **Roles a shelter adds:** create, rename, archive, set scopes and home | a shelter can add a role |
+| F1 | **Schema, `0132`:** the three tables, `user_roles.role_id` filled from the enum and kept in step by a trigger, the six roles seeded with today's cells, `has_permission()`, `my_permissions()`. Read by nothing | none |
+| F2 | **App:** the catalogue file, `can()`, `requirePermission()`, the route registry, the home-screen shell; **every** page guard, predicate and role list moved onto `can()`; the manual's `roles` tags and the acceptance matrix read activities; the parity check built and green against today | none |
 
-**What the bridge does not do, said plainly.** Between stage 3 and the end of
-stage 4, a configured role's *database* boundary in an unconverted area is its
-legacy role's. The Head of Maintenance's screens will not offer a prescription
-form, and the database would still accept one from that login until the medical
-area is converted. That is no worse than today, when that person is staff, and
-it is why the areas where the Director wants a real boundary are converted
-first. It is also why stage 7 comes after stage 5: a role a shelter invents must
-not need a legacy role.
+F2 has to be complete before the first configured role exists. A page still
+guarded by an old predicate would see a Head as the role they borrow, a
+volunteer, and show them a volunteer's pages.
 
-**The order inside stage 4** puts the volunteer's areas first (photos and moves,
-then stock), because that is the one change in the Director's list that removes
-a right, and only the database makes it real.
+### Then one role at a time
 
-**New tables skip the bridge.** Anything created after stage 1, the medication
-round first, is written against `has_permission()` from its first migration and
-never names a role.
+| # | Role | Screens | Database | Done when |
+|---|---|---|---|---|
+| R1 | **Volunteer** | The buttons and pages a volunteer loses are gone; home is Residents and Enclosures; a resident's page in its who-and-where form | The who-and-where view; the volunteer's read of `residents` narrowed to it; the `volunteer_…` policies dropped on the medical tables, photos, maintenance and project photos, the move, the stock tables, contacts; `volunteer` removed from the role lists in `record_stocktake()`, `delete_resident_photo()`, `set_resident_profile_photo()`, `record_attachment()`, `record_recurring_job()`. Closes finding C9 | A script shows each removed right refused under a volunteer's own JWT; the walkthrough's volunteer pass, rewritten, is run |
+| R2 | **Head of Medical** | Home; the medication list (§14) | The role row; a read policy on `prescriptions`, and on the names it needs from `medication` and `frequency`, asking `has_permission('medical.prescriptions', 'read')` | The Head of Medical has used it for a real round |
+| R3 | **Head of Maintenance** | Home; the maintenance board on a phone (move a job on with a tap; log, assign and complete in steps); their own recurring tasks | The role row; `has_permission()` policies on `maintenance`, `maintenance_assignees` and a job's photos; `record_recurring_job()` asks `recurring.do_own` | The Head of Maintenance has logged, assigned and completed a job on a phone |
+| R4 | **2IC** | Home (Stocktake, Purchasing, Maintenance tasks); the card-by-card stocktake; Purchasing as steps; a delivery as steps | The role row; `record_stocktake()`, `stock_receipts` and the forecasts behind Purchasing ask `has_permission()`; maintenance is already done in R3 | The 2IC, watched, has done each of the three without help |
+| R5 | **Management** (the Director by day) | Her phone home from the whiteboard; recurring jobs on a phone; Admin's switch between home screens; the landing that follows the device; the microchip, if L6 says so | Management's 64 role-named policies replaced by `has_permission()`. A table converted here is converted for every role at once, because the function answers for staff, vets and Admin too; behaviour unchanged, proved by the parity check. The largest database slice: several schema PRs (medical · residents and housing · contacts, clinics, friends · stock and the management lists) | Parity green on every converted table; the Director has run a day from her phone |
+| R6 | **Admin** (the Director at her desk) | Settings unchanged | The Settings tables and setup lists on `has_permission()`. `user_roles` keeps its own fixed rule (§6) | Parity green |
+| Last | **Staff and Vet**, behaviour unchanged | none | Whatever still names `staff` or `vet` is replaced; a vet's clinic limits become the scopes of §5, one for one. Then nothing calls `current_user_role()`: drop `legacy_role`, `user_roles.role` and the `app_role` type | Parity green; the enum is gone |
+| Then | **The matrix, and roles a shelter adds** | Settings → Roles and permissions, editable by Admin with 2-step, audited, exportable; then create, rename and archive a role, set its scopes and home | none new | An Admin has changed a cell and seen it bite |
+
+**The order is a recommendation.** Volunteer first, because the three new roles
+stand on it. Then smallest first: Medical is one read-only screen, and proves
+the whole chain (a role row, a home, a page, a policy) on the least that can go
+wrong. Maintenance before the 2IC, because her third task is the page built for
+the Head of Maintenance. The 2IC's screens need the most care and a watched
+test, so they come when the pattern is settled. Lutan can reorder the new roles
+freely. Putting one of them *before* the volunteer also works, at a cost: it
+would borrow today's volunteer, who can still add photos, move a resident and
+count stock, until R1 lands.
+
+**What the bridge does not do, said plainly.** Between a role's slice and the
+end, that role's rights on a table nobody has converted yet are the narrowed
+volunteer's. That is *narrower* than its job, never wider. So the way this goes
+wrong is a refusal, not a leak: a slice that forgets a policy leaves the role
+unable to do part of its job, and the "done when" column is there to catch it.
+A role a shelter invents must not need a legacy role at all, which is why that
+comes after the enum is dropped.
+
+**New tables skip the bridge.** Anything created after F1 is written against
+`has_permission()` from its first migration and never names a role.
+
+**Vets are on hold** (Lutan's answer 6). Nothing in R1 to R6 changes what a vet
+can do. Their policies are only rewritten at the end, like for like, and the
+rename and the question of what a doctor login sees stay with the parked item.
 
 ## 13. Phones: what "no PCs on site" changes
 
@@ -889,18 +977,18 @@ depends on a question in §17.
 | Management → Medications, Diets | desktop only | Admin for prices and setup (the whiteboard puts both under Admin / Settings) | **stands for setup.** The stock figure, Count and the label photo are the 2IC's, and move to the phone stocktake |
 | Stocktake, the desktop sheet | n/a (later) | Admin at most | the card-by-card phone stocktake becomes the main one (the medication-label item, part 2) |
 | Purchasing | n/a (later; the acceptance matrix says desktop) | **2IC** (stated, and on the whiteboard) | **phone-first**, rebuilt as steps: what is low, how much, from whom |
-| Record a delivery | phone | **2IC** (stated) | phone-first, as steps |
+| Record a delivery | phone | **2IC** (from the backlog item; point P1) | phone-first, as steps |
 | Recurring jobs: set up, hand over | n/a (later; desktop) | **Management**: the Director by day (the whiteboard) | **phone-first** |
 | Booking a vet visit, intake, a resident's details and medical records | field-needed | **Management**: the Director by day (the whiteboard) | unchanged, and now also the Director's daily screens |
-| Stock between counts | n/a (later; desktop) | pending D2 | desktop if it is Admin's alone |
-| Management → Contacts, Vets | desktop only | pending D2 | phone-first **if** the Director wants them by day |
-| Shelter Friends, Translations, Dashboard, Cashflow | desktop / nice-to-have | pending D2 | follows the answer |
+| Stock between counts | n/a (later; desktop) | Management; pending L7 | desktop unless the Director wants it by day |
+| Management → Contacts, Vets | desktop only | Management; pending L7 | phone-first **if** the Director wants them by day |
+| Shelter Friends, Translations, Dashboard, Cashflow | desktop / nice-to-have | Management; pending L7 | follows the answer |
 | Maintenance board | both; moving a card between columns is a desktop drag | **Head of Maintenance**, and the 2IC on the whiteboard | **phone-first**: move a job on with a tap, and log, assign and complete in steps |
 | My tasks | phone | every shelter role | unchanged |
 | Residents list, hub, edit, move, hospital, foster and adopt | field-needed | every role that holds them | unchanged |
 | Residents bulk selection | desktop only | Director | stands |
 | Enclosures list | field-needed, known to scroll sideways at 375 px | everyone, and it is the volunteer's "map" until the map is built | field-needed, more so |
-| Medication round | does not exist | **Head of Medical** | phone-first from its first screen (§14) |
+| Today's medication list | does not exist | **Head of Medical** | phone-first from its first screen (§14). Read-only |
 | A vet's pages | not covered | the clinic's own phone or PC; the fact is about the shelter | both |
 
 **What else it reaches.**
@@ -918,107 +1006,111 @@ depends on a question in §17.
   but Admin**, the Director's own daytime work included. It is parked and Lutan schedules it (2026-10-02). This paper does
   not reopen it; it is reported to him as new information (L11).
 
-## 14. The medication round: scope
+## 14. The medication list: a reference, not a record
 
-Not built here. This is what the Head of Medical's role needs before it means
-anything.
+> **Lutan, 2026-10-03:** "We will not record medication given, the head of
+> medical can purely just view what medicine should be given." And, on the Head
+> of Medical: "their only job is to administer medicine and we will not be
+> recording it so all they need is a reference system to tell them who and how
+> much."
+
+The backlog item proposed a *medication round*: doses due, ticked off as given,
+skipped or refused, with a history per resident and a schema PR first. That is
+not being built. What is built instead is smaller.
 
 **What exists.** `prescriptions` holds the plan: resident, medication,
-`dose_quantity`, `frequency_id`, `start_date`, `end_date`, the visit it came
-from. `frequency` holds `doses_per_day`, `interval_count`, `interval_unit`.
-`medication` holds the unit, the stock and, since `0129`, a label photo. Nothing
-holds an administration.
+`dose_quantity`, `frequency_id`, `start_date`, `end_date`. `frequency` holds
+`doses_per_day`, `interval_count`, `interval_unit`. `medication` holds the unit
+and, since `0129`, a label photo. `current_placement` says where each resident
+lives. Everything the list needs is already stored.
 
-**What is needed.**
+**What is needed: one screen.**
 
-1. **Today's round.** Every dose due today, worked out from the active
-   prescriptions and their frequencies, grouped by zone, then enclosure, then
-   resident, in walking order. Each dose shows the resident's photo and name,
-   the medication with its label photo, and the amount.
-2. **One tap for Given.** Skipped and Refused need a reason, from a short list
-   with room for a note. "Given to all in this enclosure" for the common case,
-   with a confirmation that names them.
-3. **Who and when, recorded automatically.** The person signed in, and the time.
-4. **Undo**, while still on the round. After that, a correction goes through the
-   same Remove / Restore as other medical records (`0124`).
-5. **History on the resident**: for each prescription, what was given, skipped
-   and refused, and by whom. A card on the hub when a dose was missed.
-6. **A tile on the home screen**: "Medication round: 14 due, 3 given".
+1. **Today's medication**, for a phone: every resident with a prescription
+   current today, grouped by zone and then enclosure, in walking order.
+2. **For each resident:** photo and name, so the right animal is treated; then
+   each medication with its label photo, the amount, and how often.
+3. **Nothing to tap.** No given, no skipped, no reason, no history. It is a list
+   to read.
+4. **A tile on the Head of Medical's home screen** that opens it.
 
-**The model proposed.** Store what happened; work out what is due. One new
-table, `medication_doses`: the prescription, the resident, the day, which dose of
-that day, the outcome (`given`, `skipped`, `refused`), the reason, who, when, and
-the archive columns the other medical tables have. Unique on prescription, day
-and dose number, so a double tap is one record. A function,
-`medication_round(p_date)`, returns the doses due on a day with what has been
-recorded against each. This is how recurring jobs already work (dates are worked
-out, outcomes are stored), so a changed prescription changes tomorrow's round
-without any rows to repair.
+**The permission.** No new activity. The list is a second page over
+prescriptions, so it opens for anyone with Read on `medical.prescriptions`: the
+Head of Medical, and Management and Admin, who can already read them.
 
-**The permission.** `medical.doses`, Edit / Read / None: Edit records a dose,
-Read sees the history. Written against `has_permission()` from its first
-migration (§12).
+**No migration.** One query over tables that exist. So this can be built at any
+time, before any of §12, for the roles that can read prescriptions today; the
+Head of Medical gets it when their role exists (R2).
 
-**What has to be asked before it is designed**, because the answers change the
-table (D4, D6):
+**What the ruling leaves as it is.** The system will still hold no record that a
+dose was given, by whom or when, which is the gap the backlog item described.
+That is now a decision, not an oversight. Two things follow, neither needing
+action: *Stock between counts* goes on comparing stock used with what was
+*planned*, since there is no "given" to compare with; and if a record is ever
+wanted (a clinic asking whether a course was finished, a controlled medicine),
+it is a new item that starts from this list.
 
-- **Does the shelter give medication at fixed times** (morning, evening), or
-  "three times a day" whenever? `frequency` has a count per day and no clock
-  times. Fixed rounds would add shelter-wide round times and make the screen
-  "the morning round".
-- **Residents not on site.** In hospital, fostered or adopted: left off the
-  round, or listed apart?
-- **Recording late.** Can yesterday's round be filled in today, and by whom?
-  Never a future dose, by the shelter's own date (the rule the other medical
-  records follow).
-- **"As needed" medication**, with no schedule: given and recorded outside a
-  round?
-- **Does a vet see it?** Whether a prescription was actually given is clinically
-  useful to the clinic that wrote it.
-- **No signal in the kennels.** The app warns when offline and does not save.
-  "Nothing that loses work" may need more than a warning on this one screen. Not
-  designed here; flagged so it is not discovered on the first round.
-- **Stock.** "Used" on Stock between counts is planned use today. Real doses
-  could replace the plan later. Left out of the first version.
+**Small questions, for whoever builds it** (none blocks the roles work):
 
-**Pieces.** The schema (one table, one function, policies, the audit trigger) ·
-the round screen · history, hub card and home tile · manual, both dictionaries,
-acceptance entries and a release line with the piece that ships the screen.
+- **Residents not on site**, in hospital or fostered: left off, or listed apart?
+- **"Every 2 days" and the like:** show only on the days it falls due, worked
+  out from the start date? Proposed: yes.
+- **Times of day.** `frequency` has a count per day and no clock times, so the
+  list can say "3 times a day" and no more. If the shelter gives medication in
+  fixed rounds, that is the Head of Medical's knowledge and not the system's.
+- **No signal in the kennels.** A list that is only read can be opened at the
+  office and carried round. Worth checking on site once.
+
+**Pieces.** One app stream: the screen, the home tile, a manual topic, both
+dictionaries, acceptance entries and a release line.
 
 ## 15. Pieces for planning
 
-Named so that `/plan-day` can schedule them. *Schema* pieces are serial: only
-one may be in flight. Everything else can run beside them.
+Named so that `/plan-day` can schedule them, and grouped by role as Lutan asked.
+*Schema* pieces are serial: only one may be in flight. Everything else can run
+beside them.
 
 | Piece | Kind | Needs | What it delivers |
 |---|---|---|---|
-| `permissions-schema` | schema, `0132` | L1 = yes | Stage 1: the tables, the seed, `has_permission()`, `my_permissions()`. Read by nothing |
+| **Foundation** | | | |
+| `permissions-schema` | schema, `0132` | L1 = yes | F1: the tables, the seed, `has_permission()`, `my_permissions()`. Read by nothing |
 | `permission-parity-check` | scripts | `permissions-schema` | §11: the probes, the known tightenings, green against today's policies |
-| `permissions-catalogue` | app | `permissions-schema` | Stage 2, first half: the catalogue file, `can()`, `requirePermission()`, the route registry, and one area (stock) moved off its predicates as the pattern |
-| `permissions-sweep-residents`, `-medical`, `-rest` | app, three streams | `permissions-catalogue` | Stage 2, second half: every remaining predicate, role list and inline test |
-| `acceptance-matrix-from-catalogue` | scripts + manual | `permissions-catalogue` | Manual topics and matrix entries name an activity; cells and the device column are worked out |
-| `roles-2ic-maintenance-medical` | schema (rows) + app | stage 2 done, the Director's table agreed | Stage 3: the three roles, Security lists roles from the table |
-| `medication-round-schema` | schema | `permissions-schema`, D4 and D6 | `medication_doses`, `medication_round()` |
-| `medication-round` | app | its schema | The round screen, phone-first |
-| `medication-round-history` | app | `medication-round` | History, hub card, home tile |
-| `perm-convert-photos-moves`, `-stock`, `-maintenance-projects`, `-medical`, `-residents`, `-people`, `-management`, `-settings` | schema, eight in turn | the parity check, stage 2 done | Stage 4: one area's policies, functions and views on `has_permission()`; its tightenings; Lanna's cells for that area |
-| `volunteer-read-only` | app | L3, the first two conversions | The volunteer's screens, manual and release line. The rights themselves go in the conversions |
-| `perm-drop-enum` | schema | all eight conversions | Stage 5 |
-| `settings-permission-matrix` | app | stage 5 | Stage 6 |
-| `custom-roles` | schema + app | stage 6 | Stage 7 |
-| `home-screens` | app | `permissions-catalogue` | §8: a home of task tiles for each role, from the registry, starting from the whiteboard; Admin's switch between them; the landing that follows the device |
-| `2ic-purchasing-phone`, `2ic-delivery-steps`, `maintenance-phone-board`, `recurring-jobs-phone` | app, four streams | nothing here | §13's phone-first rebuilds. The card-by-card stocktake is already a backlog item |
+| `permissions-catalogue` | app | `permissions-schema` | F2, first part: the catalogue file, `can()`, `requirePermission()`, the route registry, and one area (stock) moved off its predicates as the pattern |
+| `permissions-sweep-residents`, `-medical`, `-rest` | app, three streams | `permissions-catalogue` | F2, the rest: every remaining predicate, role list and inline test; manual topics and acceptance entries name an activity |
+| `home-screens` | app | `permissions-catalogue` | §8: the home of task tiles built from the registry, Admin's switch between homes, the landing that follows the device |
+| **R1 Volunteer** | | | |
+| `volunteer-schema` | schema | L3 (how many volunteer logins production has) | The who-and-where view; the volunteer's policies dropped; five function role lists |
+| `volunteer-read-only` | app | `volunteer-schema` | The screens, the manual, the rewritten walkthrough pass, a release line |
+| **R2 Head of Medical** | | | |
+| `medication-list` | app | **nothing here** | §14: the list, phone-first. Usable by Management and Admin as soon as it ships |
+| `medical-role` | schema (a role row, one read policy) + its home | F2, R1 | The Head of Medical's login, home and boundary |
+| **R3 Head of Maintenance** | | | |
+| `maintenance-phone-board` | app | **nothing here** | §13: the board on a phone |
+| `maintenance-role` | schema + its home | F2, R1 | The Head of Maintenance's login, home and boundary |
+| **R4 2IC** | | | |
+| the card-by-card stocktake (already a backlog item), `2ic-purchasing-phone`, `2ic-delivery-steps` | app, three streams | **nothing here** | §13: her three tasks as one-task-per-screen steps, Thai first, tested by watching |
+| `2ic-role` | schema + its home | F2, R1, R3 | The 2IC's login, home and boundary |
+| **R5 Management** | | | |
+| `management-phone-home`, `recurring-jobs-phone` | app | `home-screens` | The Director's daytime screen from the whiteboard |
+| `perm-convert-medical`, `-residents`, `-people`, `-stock-and-lists` | schema, four in turn | the parity check | Management's policies on `has_permission()`, which converts those tables for every role |
+| **R6 Admin, and the finish** | | | |
+| `perm-convert-settings` | schema | the four above | The Settings tables and setup lists |
+| `perm-drop-enum` | schema | every table converted, vets and staff included | The bridge and the enum removed |
+| `settings-permission-matrix` | app | `perm-drop-enum` | The matrix in Settings |
+| `custom-roles` | schema + app | the matrix | A shelter adds a role |
 
 **What can start the day Lutan says yes**, three abreast: `permissions-schema`
-in the schema lane, and two of the phone rebuilds, which depend on nothing in
-this paper. **The batch after:** the parity check (scripts), the catalogue
-(app), and the medication round's schema once D4 and D6 are answered.
+in the schema lane, and two of the app streams marked *nothing here*. The
+medication list and the maintenance board are the obvious two: each is the whole
+of what its Head will use.
 
-**What does not wait for the fork at all:** the phone rebuilds; the medication
-round, if it is acceptable for it to be open to staff and above until the
-Medical role exists; and the two faults this audit found, as ordinary backlog
-items (Management and the microchip; a volunteer reading prices and a vet reading
-the other clinics).
+**What does not wait for the fork at all:** every stream marked *nothing here*,
+which is the medication list and all the phone rebuilds; and the two faults the
+audit found, as ordinary backlog items.
+
+**How long, as a judgement and not a measurement:** the foundation is about two
+batches of three, then about one batch per role. The 2IC's is the one most
+likely to run over, because it ends in a watched test.
 
 ## 16. The fork, Senior Staff, and Staff
 
@@ -1033,11 +1125,11 @@ What each costs, counted against today's code (§3):
 
 | | Three enum values | Configured roles |
 |---|---|---|
-| Schema | add the three values (their own file: a new enum value cannot be used in the transaction that adds it), then a policy for each role on nearly every one of 47 tables, in the one-policy-per-role style. The five existing roles have 40 to 64 policies each, so on the order of 150 to 190 new ones; 15 functions and 10 views reviewed for their lists | the three tables and the seed; later, eight conversions that have to happen for the matrix anyway |
+| Schema | add the three values (their own file: a new enum value cannot be used in the transaction that adds it), then a policy for each role on nearly every one of 47 tables, in the one-policy-per-role style. The five existing roles have 40 to 64 policies each, so on the order of 150 to 190 new ones; 15 functions and 10 views reviewed for their lists | the three tables and the seed; then a slice per role (§12), each of which has to happen for the matrix anyway |
 | App | every one of 14 predicates, 16 role lists and about 20 inline tests reviewed so that no new role can do less than the role it grew out of by omission; 55 manual tags; the release-note tags | `can()` replaces all of them once |
-| When the Director's three roles exist | about one batch | about two batches for their own name, menu and home (stage 3). Their own database boundary arrives area by area (stage 4) |
+| When the Director's three roles exist | about one batch for all three | after the foundation (about two batches), one role per batch, each with its real database boundary from its first day |
 | What is thrown away | all of it, when the matrix lands | nothing |
-| Risk | a missed list leaves the 2IC or a Head unable to do something they can do today | the bridge: for a while their database rights are the borrowed role's |
+| Risk | a missed list leaves the 2IC or a Head unable to do something they should, or able to do something they should not | a slice that forgets a policy leaves a role unable to do part of its job; never able to do more |
 
 The case for the enum is speed: the three roles would be real, database and all,
 about a batch sooner. The case against is that the same sweep is then done a
@@ -1047,17 +1139,19 @@ stronger, not weaker.
 
 What makes the slower route acceptable is that **nothing the three need is
 blocked by it.** Whatever logins they hold today, management can already do
-everything in the Director's description of the 2IC (the stocktake, Purchasing,
-deliveries, maintenance), and staff everything in her description of the Head of
-Maintenance. The Head of Medical's one missing thing is a feature, the
-medication round, not a role. What the new roles add is a *narrower* fit and
-their own home screen, and the Director's list asks for narrowing in one place
-only: volunteers.
+everything in the 2IC's job (the stocktake, Purchasing, deliveries,
+maintenance), and staff everything in the Head of Maintenance's. The Head of
+Medical's one missing thing is the medication list, which is a screen and not a
+role, and can be built first (§14). What the new roles add is a *narrower* fit
+and their own home screen.
 
-**If the Director wants a Head kept out of something now**, for instance the
-Head of Maintenance out of medical records this month, then the enum is the
-faster way to that boundary and this recommendation should be revisited. That is
-question L4.
+Lutan's answers make that narrower fit matter more than the first draft
+assumed: the 2IC and both Heads are to be kept out of nearly everything, the
+medical record included. Role by role is what delivers that. Each of the three
+gets its real boundary in its own slice (§12), about a batch each after the
+foundation, and none of them spends any time with staff's or management's rights
+under a new name. **If one of them has to be kept out of something sooner than
+its slice will come**, that is the case for the enum, and it is question L4.
 
 **And if shelter-defined roles are not going to be built at all**, the enum plus
 pages named for roles is simply cheaper, and both recommendations flip (L1).
@@ -1083,59 +1177,78 @@ are no rungs. Its candidate powers are all cells in §4 already:
 
 The 2IC, Maintenance and Medical are the Director's actual "staff with more
 control over some elements". If, after her answers, there is still a person who fits none of
-the roles, Senior Staff becomes the first role Lanna adds at stage 7, not an
+the roles, Senior Staff becomes the first role Lanna adds for itself (§12, the last step), not an
 enum value. The line to carry forward is the item's own warning, which the
 bridge has to honour: a new role must never be able to do less than staff by
 omission.
 
 ### Staff
 
-**Recommended: keep Staff in the template, and let the Director say whether
-anyone at Lanna holds it.**
+**Recommended: keep Staff in the template; at Lanna nobody holds it.**
 
 The template has to reproduce today, six dev accounts hold `staff`, and another
 shelter will have kennel hands. Removing it from the product would be a change
-nobody asked for. At Lanna it is question D1: if every employee is the 2IC or
-one of the Heads, the role is simply unused there and each of today's staff logins is moved
-to the role the Director names. Until stage 3, "moved" means nothing has to
-happen at all.
+nobody asked for. At Lanna, Lutan's answer 1 gives everything Staff does with a
+resident to Management and Admin alone and names no other employee, so the role
+is simply unused there. Each of today's staff logins is moved to the role Lutan
+names for it, or archived, when that role's slice lands (L5). Until then nothing
+has to happen to them.
 
-## 17. What has to be answered
+## 17. What is answered, and what still has to be
 
-Nothing here is decided. Each question has the answer this paper recommends.
+### Answered by Lutan, 2026-10-03
 
-### For Lutan
+The first draft put eight questions on the Director's table. Lutan answered
+them, with one piece of feedback ahead of them. His words, and what each does to
+the table:
+
+| | Lutan | What it changes |
+|---|---|---|
+| Feedback | "We will not record medication given, the head of medical can purely just view what medicine should be given" | The medication round is not built. A read-only list is (§14). No new table |
+| 1 | "Only Manager and Admin can perform those tasks" (moving a resident, hospital, foster, adoption, a death) | The 2IC and both Heads get None on every row that changes a resident |
+| 2 | "The 2IC only does those three tasks" | Stocktake, Purchasing, Maintenance tasks. Everything else is None for her |
+| 3 | "Head of maintenance can only view resident info, only update is the Maintenance tasks and recurring tasks" | Read on residents, Edit on maintenance jobs and on their own recurring tasks |
+| 4 | "No their only job is to administer medicine and we will not be recording it so all they need is a reference system to tell them who and how much" | Read on prescriptions and the medication list. No booking, no weight, no stock count, no adding a medicine |
+| 5 | "Just Who and Where - Read only" (what a volunteer sees of a resident) | A new scope (§5). Volunteers lose the medical records they read today, as well as everything they can change |
+| 6 | "Put vets on hold for now" | The vet role is left exactly as it is |
+| 7 | "Manager / Director book vet visits, the 2IC will create maintenance tasks along with Manager / Director" | Booking is Management's and Admin's. The 2IC has Edit on maintenance jobs |
+| 8 | "Only Manager Director should be allowed to publish photos" | `photos.resident_publish` is its own activity, held by Management and Admin |
+| On building | "I suggest that when we implement we take it role by role" | §12 and §15 |
+| Earlier | The 2IC and Management are separate; the Director does Management by day and Admin at night | §2, §8 |
+
+These are recorded in `docs/decisions/2026-10-03-lanna-roles-lutans-answers.md`.
+The Director has not yet seen the table they produce.
+
+### Still for Lutan: the design
+
+Nothing in this table is decided. Each has the answer this paper recommends.
 
 | # | Question | Recommended |
 |---|---|---|
 | L1 | Will roles that each shelter defines (the matrix) be built? Everything in §8, §12 and §16 assumes yes | Yes. It is why the Architecture item exists |
-| — | *Answered 2026-10-03:* the 2IC and Management are separate roles; the Director does Management by day on her phone and Admin at night | recorded in §2 and §8 |
-| L2 | "Admin and management will probably be the same person." One login for the Director, as Admin, with the home screen following the device and a switch between the two (§8)? Or two logins, or several roles per person? | One login. Admin already includes Management |
-| L3 | Volunteers become read-only. Confirm that **each** of these goes: adding, refiling and removing resident photos and choosing the profile photo; moving a resident between enclosures; the stocktake; maintenance and project photos; marking their own recurring jobs; asking the assistant; reading contacts' names and phones, the maintenance board, projects, the vet list. And: how many volunteer logins exist in production? | Remove all of it, as the Director said, in the database as well as the screens. Until the map is built, their "map" is the enclosures list |
-| L4 | The 2IC, Maintenance and Medical: configured roles (the three keep the logins they have until stage 3), or three enum values now? And what is the 2IC's role called on screen? | Configured roles, unless the Director wants one of them kept out of something this month. "2IC" until told otherwise |
-| L5 | Senior Staff: close as answered by the matrix? Staff: keep in the template? | Yes to both (§16) |
-| L6 | The manual says Management can record a microchip; the system refuses it. Which is right? | Give it to Management. They can edit everything else about a resident |
-| L7 | The whiteboard leaves much on no screen (§8). Is each of those the Director's at a desk, or not placed yet? | Go through them with the Director's table in hand |
-| L8 | Default cells are what the screens offer today, and the twelve places where the database allows more (§3 C) are closed as the tables are converted. Agreed? | Yes |
+| L2 | "Admin and management will probably be the same person." One login for the Director, as Admin, with the home screen following the device and a switch between the two (§8)? Or two logins? | One login. Admin already includes Management |
+| L3 | Volunteers: how many volunteer logins exist in production? It decides whether R1 can simply be applied or has to be announced first | Ask a session to read it, or look under Security |
+| L4 | The 2IC, Maintenance and Medical: configured roles, built role by role (§12), or three enum values now? And what is the 2IC's role called on screen? | Configured roles. "2IC" until told otherwise |
+| L5 | Senior Staff: close as answered by the matrix? Staff: keep in the template, unused at Lanna? And which of today's staff logins becomes which role? | Yes to both (§16) |
+| L6 | The manual says Management can record a microchip; the system refuses it. Which is right? | Give it to Management. It edits everything else about a resident |
+| L7 | Everything not on the whiteboard is Management's and Admin's. Which of it does the Director want on her phone by day, and which only at her desk: contacts, the clinic list, Shelter Friends, the dashboard, cashflow, stock used against planned, translations, projects? | Ask her with the table in hand. It decides phone work, not permissions |
+| L8 | Default cells are what the screens offer today, and the twelve places where the database allows more (§3 C) are closed as tables are converted. Agreed? | Yes |
 | L9 | The live lookup over the token hook (§10). Agreed? | Yes |
-| L10 | `0132` is the permission tables, and the medication round's schema follows it. Agreed? | Yes |
-| L11 | The Mobile responsiveness sweep is now on the critical path for every role but Admin. It is yours to schedule | Schedule it before the first role walkthrough at 375 px |
-| L12 | Does the Director's table need a Thai edition before she sees it? | Lutan's call |
+| L10 | `0132` is the permission tables. Agreed? | Yes |
+| L11 | The Mobile responsiveness sweep is now on the critical path for every role but Admin. It is yours to schedule | Schedule it before the first role's walkthrough at 375 px |
+| L12 | The order of the roles (§12): Volunteer, Medical, Maintenance, 2IC, Management, Admin? | That order; the three new roles can be swapped freely |
 
-### For the Director
+### Small points the answers leave open
 
-These are on her table in plain words. Listed here so the two files agree.
+Six cells on the Director's table are still marked `?`. None blocks the
+foundation; each is needed by the time its role is built.
 
-| # | Question |
-|---|---|
-| D1 | Is there anyone at the shelter who is not one of the six: other employees, kennel hands? If not, who moves an animal, sends one to hospital, records a foster, an adoption or a death: only you, or the 2IC and the two Heads as well? |
-| D2 | By day on your phone you have recurring tasks, vet appointments, intake, and residents' details and medical records. Which of these do you also want on the phone, and which only at your desk: contacts, the clinic list, Shelter Friends, the dashboard, cashflow, stock used against planned, translations, projects? And does the 2IC do anything besides the stocktake, ordering, deliveries and maintenance tasks? |
-| D3 | Does the Head of Maintenance change anything about the animals (move one, add a photo), or only look? |
-| D4 | The Head of Medical gives the medication. Do they also write or change a prescription, book a vet visit, record weight, vaccinations and diet, count the medicine stock, add a medicine that is missing from the list? And is medication given at fixed times of day? |
-| D5 | When a volunteer opens an animal's page, do they see its medical records, or only who it is and where it lives? |
-| D6 | Should a vet be able to see whether the medicine they prescribed was actually given? |
-| D7 | Who books a vet visit: only you, or the 2IC and the Head of Medical as well? And does the 2IC only work through maintenance tasks, or also create and assign them? |
-| D8 | Who may put an animal's photo on the public website? Today anyone who adds a photo does, unless they file it as Medical |
+| # | Point | Taken as, until told otherwise |
+|---|---|---|
+| P1 | "Those three tasks" for the 2IC are the whiteboard's: Stocktake, Purchasing, Maintenance tasks. The backlog item also gave her **recording a delivery** | Hers, as part of ordering |
+| P2 | The Head of Maintenance updates "recurring tasks": marking their own done, or also **setting up** recurring maintenance tasks? | Marking their own. Setting up stays Management's |
+| P3 | Does the 2IC see residents at all? Does the Head of Maintenance's "resident info" mean the whole page or who and where? | Both see who and where, as a volunteer does |
+| P4 | Does the 2IC mark her own recurring tasks done (the weekly stocktake is one)? | Yes |
 
 ## 18. What is not known yet
 
@@ -1147,10 +1260,12 @@ These are on her table in plain words. Listed here so the two files agree.
   measured and where the numbers go.
 - **The views.** 10 of the 31 views test a role in their own body. They were
   counted, and the two contact views were read; the other eight were not read
-  line by line. Each is converted with its area in stage 4.
-- **How the round is really done.** §14's questions need the Head of Medical,
-  and preferably someone watching a round.
-- **Signal in the kennels**, and what the round does without it.
+  line by line. Each is converted in the slice that touches it (§12).
+- **Whether the Director agrees.** The answers in §17 are Lutan's. The table
+  they produce has not been shown to her.
+- **Which login is whose.** Which of today's accounts are the 2IC, the two
+  Heads and the people who are plain staff now.
+- **Signal in the kennels**, for a list that has to be read there (§14).
 - **Thai names** for the roles and the 55 activities. They go in the
   dictionaries with everything else, and nobody has written them.
 - **Whether a clinic's doctors use a phone or a PC.**
@@ -1191,7 +1306,7 @@ means §6: not a cell.
 | procedures | `medical.procedures`, `reference.add_while_recording` |
 | blood-tests | `medical.blood_tests` |
 | archive-records | `medical.archive` |
-| resident-photos | `photos.resident_add`, `photos.resident_manage` |
+| resident-photos | `photos.resident_add`, `photos.resident_manage`, `photos.resident_publish` |
 | browse-enclosures, enclosure-hub | `facility.enclosures` (read) |
 | zones-enclosures | `facility.enclosures` (edit) |
 | log-maintenance | `maintenance.jobs` (edit), `maintenance.photos` |
@@ -1219,7 +1334,7 @@ means §6: not a cell.
 | immunization-types, procedure-types, blood-test-types, frequencies | `reference.types` |
 | system-status | `system.status` |
 
-Activities with no manual topic of their own yet: `medical.doses` (not built),
+Activities with no manual topic of their own yet: `photos.resident_publish` (not a separate act today),
 `facility.map` (a prototype), `recurring.do_any`, `maintenance.photos`.
 
 ## Appendix B. How the audit was done, and how to repeat it

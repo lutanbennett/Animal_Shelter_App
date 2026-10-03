@@ -48,8 +48,9 @@ pages are still phone pages, because she opens them on a phone.
 | `/management/medications`, `/management/diets` | desktop only | **stands for prices and setup**, which is Admin work. The stock figure and its count are not: they belong on the phone stocktake |
 | `/enclosures`, resident edit, intake | field-needed | field-needed, with more depending on it: `/enclosures` still scrolls sideways at 375 px |
 
-**What cannot be settled until the Director answers**, because it turns on who
-holds which page (the paper's §13 and its questions D1 and D2):
+**What cannot be settled until the Director is asked**, because it turns on
+which Management pages she wants on her phone by day (the paper's §13 and its
+question L7):
 `/management/contacts` and `/management/vets` (desktop only on 2026-09-24), and
 the pages built since then that the acceptance matrix marks desktop: Purchasing,
 Stock between counts, Recurring jobs, Shelter Friends. The paper proposes a
