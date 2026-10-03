@@ -31,7 +31,8 @@ register(
       const src = ${JSON.stringify(srcUrl)};
       export async function resolve(specifier, context, next) {
         if (specifier.startsWith("@/")) specifier = src + specifier.slice(2);
-        if (/^(file:|\.)/.test(specifier) && !/\.[cm]?[jt]s$/.test(specifier)) specifier += ".ts";
+        const local = specifier.startsWith("file:") || specifier.startsWith(".");
+        if (local && !/[.][cm]?[jt]s$/.test(specifier)) specifier += ".ts";
         return next(specifier, context);
       }`),
   import.meta.url,

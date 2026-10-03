@@ -65,6 +65,11 @@ async function signInCookies() {
   return [...jar].map(([n, v]) => `${n}=${v}`).join("; ");
 }
 
+/** A 3xx before anything streams; once loading.tsx has started the stream, Next sends a 200 whose body carries the redirect. Either way. */
+const goesTo = (res, hub) =>
+  (res.status >= 300 && res.status < 400 && (res.location ?? "").endsWith(hub)) ||
+  new RegExp(`NEXT_REDIRECT[^"]*${hub}|url=${hub}`).test(res.html);
+
 async function page(path, cookie) {
   const res = await fetch(`${base}${path}`, { headers: { cookie }, redirect: "manual" });
   return { status: res.status, location: res.headers.get("location"), html: await res.text() };
@@ -94,20 +99,20 @@ try {
 
   const bare = await page(`/residents?q=${chip}`, cookie);
   expect(
-    bare.status >= 300 && bare.status < 400 && (bare.location ?? "").endsWith(hub),
+    goesTo(bare, hub),
     `a scanned chip goes to the resident (${bare.status} → ${bare.location})`,
   );
 
   const grouped = chip.replace(/(\d{3})(?=\d)/g, "$1 ");
   const spaced = await page(`/residents?q=${encodeURIComponent(grouped)}`, cookie);
   expect(
-    spaced.status >= 300 && spaced.status < 400 && (spaced.location ?? "").endsWith(hub),
+    goesTo(spaced, hub),
     `a chip typed in groups goes to the resident ("${grouped}")`,
   );
 
   const dashed = await page(`/residents?q=${encodeURIComponent(chip.replace(/(\d{3})(?=\d)/g, "$1-"))}`, cookie);
   expect(
-    dashed.status >= 300 && dashed.status < 400 && (dashed.location ?? "").endsWith(hub),
+    goesTo(dashed, hub),
     "a chip typed with dashes goes to the resident",
   );
 
