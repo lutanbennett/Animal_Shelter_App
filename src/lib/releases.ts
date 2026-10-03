@@ -62,15 +62,23 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  {
-    text: "Each medication can now have a photo of its box or bottle label. A manager taps Upload label on Management → Medications (on a phone this opens the camera); the photo then shows beside the medicine on the Stocktake sheet and on the Record a delivery form, so whoever is holding the box can match it at a glance. It is only visible to people signed in to the app, never on the public website.",
-    roles: ["admin", "management", "staff", "volunteer"],
-  },
   "Pages now fit a phone screen instead of sliding sideways. On a resident's page the Edit pencil and the Record death heart are back on screen (they were cut off the right edge), and the Enclosures, Vets, Contacts, Deliveries, Book vet visit and Move/Return forms no longer push their buttons and boxes out of view; long enclosure and clinic names wrap instead of stretching the page. In Thai, Sign out no longer runs off the edge: on a phone it is a small door-and-arrow icon in the header (the words still show on a larger screen).",
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.15.1",
+    date: "2026-10-03",
+    title: "A photo of each medicine's label, on the stocktake sheet and the delivery form",
+    major: false,
+    notes: [
+      {
+        text: "Each medication can now have a photo of its box or bottle label. A manager taps Upload label on Management → Medications (on a phone this opens the camera); the photo then shows beside the medicine on the Stocktake sheet and on the Record a delivery form, so whoever is holding the box can match it at a glance. It is only visible to people signed in to the app, never on the public website.",
+        roles: ["admin", "management", "staff", "volunteer"],
+      },
+    ],
+  },
   {
     version: "0.15.0",
     date: "2026-10-02",
