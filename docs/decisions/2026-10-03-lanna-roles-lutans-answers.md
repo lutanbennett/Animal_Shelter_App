@@ -1,10 +1,10 @@
 # 2026-10-03 — Lanna's roles: Lutan's answers on who does what, and that it is built role by role
 
 **These are Lutan's rulings, given in chat on 2026-10-03, in his words.** They
-settle *who may do what* at Lanna. They do not settle *how it is built*: the
-catalogue, the matrix, enforcement and the migration in
-`docs/roles-and-permissions.md` are still proposed, and its §17 lists what is
-still asked of him. **The Director has not yet seen the table these answers
+settle *who may do what* at Lanna. They do not settle *how it is built*. The fork was decided separately the
+same day (`2026-10-03-configured-roles-not-enum-values.md`); the remaining
+details in `docs/roles-and-permissions.md` are still proposed, and its §17 lists
+what is still asked of him. **The Director has not yet seen the table these answers
 produce** (`docs/roles-director-table.md`); it is hers to confirm.
 
 He writes "Manager / Director" for the two roles the Director holds. In the

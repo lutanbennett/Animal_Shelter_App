@@ -1,16 +1,19 @@
 # Roles and permissions: the shelter's own roles, and a matrix each shelter can set — a paper
 
-**Status, 2026-10-03: who does what at Lanna is answered by Lutan; how it is
-built is still PROPOSED.** Nothing is built. Two decision files record what is
-settled, and only that:
+**Status, 2026-10-03: who does what at Lanna is answered by Lutan, and the fork
+is DECIDED: configured roles. The details of how it is built are still
+PROPOSED.** Nothing is built. Three decision files record what is settled, and
+only that:
 
 - `docs/decisions/2026-10-03-no-pcs-on-site-supersedes-admin-on-mobile.md`: a
   fact, which overturns part of the 2026-09-24 "Admin on mobile" decision.
 - `docs/decisions/2026-10-03-lanna-roles-lutans-answers.md`: Lutan's answers on
   the roles, in his words.
+- `docs/decisions/2026-10-03-configured-roles-not-enum-values.md`: the fork.
 
-The design (the catalogue, the matrix, enforcement, the migration) has no
-decision file, because the questions about it in §17 are still open.
+The rest of the design (the "today" rule for default cells, the live lookup, one
+login for the Director, the order of the roles) has no decision file, because
+the questions about it in §17 are still open.
 
 It answers two backlog items as one piece of work, because both ask for the same
 table first: *The roles the shelter actually has, from the Director* (Auth) and
@@ -35,6 +38,7 @@ written.** The paper is written around all three.
    photos on the website.
 3. *How to build it:* "I suggest that when we implement we take it role by
    role." §12 and §15 are organised that way.
+4. *The fork:* "Decision: Lets do Configured roles." §16.
 
 He uses "Manager / Director" for the two roles the Director holds; this paper
 says Management and Admin, which are the names in the system.
@@ -55,10 +59,10 @@ says Management and Admin, which are the names in the system.
    emergency. All of them have to be settled before "defaults reproduce today
    exactly" means anything, because *today* is three slightly different things:
    what the manual says, what the screens offer and what the database allows.
-3. **The fork: the 2IC, Maintenance and Medical should be configured roles, not
-   three new enum values.** Recommended, not decided (§16). Each enum value
-   costs a two-file migration plus a policy on nearly every one of 47 tables, and
-   all of it is thrown away when the matrix lands. §12 shows how to get there
+3. **The fork is decided: the 2IC, Maintenance and Medical are configured
+   roles, not three new enum values** (Lutan, 2026-10-03; §16). Each enum value
+   would have cost a two-file migration plus a policy on nearly every one of 47
+   tables, all of it thrown away when the matrix lands. §12 shows how to get there
    **role by role**, as Lutan asked: the volunteer is narrowed first, each new
    role then starts from that narrowest set of rights and is granted only what
    its own job needs, and the roles that exist today are converted last.
@@ -574,10 +578,10 @@ the Architecture item.
 **When his version as stated would be the better one:** if shelter-defined roles
 are *not* going to be built. With one fixed set of roles forever, pages named
 for roles plus three enum values is less work than a catalogue and a matrix, and
-the duplication is bounded by the number of roles. The Architecture item was raised the same day
-with seven shelters in mind, so this paper assumes configurable roles are
-wanted. If that is wrong, §16's recommendation flips with it, and that is
-question L1.
+the duplication is bounded by the number of roles. That was the open question
+when this section was written. Lutan has since decided for configured roles
+(§16), so roles a shelter defines are being built, and the page-per-task shape
+is the one that fits.
 
 ### Lutan's whiteboard, 2026-10-03
 
@@ -1073,7 +1077,7 @@ beside them.
 | Piece | Kind | Needs | What it delivers |
 |---|---|---|---|
 | **Foundation** | | | |
-| `permissions-schema` | schema, `0132` | L1 = yes | F1: the tables, the seed, `has_permission()`, `my_permissions()`. Read by nothing |
+| `permissions-schema` | schema, `0132` | nothing: the fork is decided | F1: the tables, the seed, `has_permission()`, `my_permissions()`. Read by nothing |
 | `permission-parity-check` | scripts | `permissions-schema` | §11: the probes, the known tightenings, green against today's policies |
 | `permissions-catalogue` | app | `permissions-schema` | F2, first part: the catalogue file, `can()`, `requirePermission()`, the route registry, and one area (stock) moved off its predicates as the pattern |
 | `permissions-sweep-residents`, `-medical`, `-rest` | app, three streams | `permissions-catalogue` | F2, the rest: every remaining predicate, role list and inline test; manual topics and acceptance entries name an activity |
@@ -1099,7 +1103,7 @@ beside them.
 | `settings-permission-matrix` | app | `perm-drop-enum` | The matrix in Settings |
 | `custom-roles` | schema + app | the matrix | A shelter adds a role |
 
-**What can start the day Lutan says yes**, three abreast: `permissions-schema`
+**What can start now that the fork is decided**, three abreast: `permissions-schema`
 in the schema lane, and two of the app streams marked *nothing here*. The
 medication list and the maintenance board are the obvious two: each is the whole
 of what its Head will use.
@@ -1119,7 +1123,9 @@ likely to run over, because it ends in a watched test.
 The backlog item asked this of two roles. Lutan's answer on the 2IC makes it
 three.
 
-**Recommended: configured roles. No new enum values.**
+**Decided by Lutan, 2026-10-03: "Lets do Configured roles."** No new enum
+values. What follows is the reasoning that was put to him, kept as the record of
+why.
 
 What each costs, counted against today's code (§3):
 
@@ -1150,11 +1156,12 @@ assumed: the 2IC and both Heads are to be kept out of nearly everything, the
 medical record included. Role by role is what delivers that. Each of the three
 gets its real boundary in its own slice (§12), about a batch each after the
 foundation, and none of them spends any time with staff's or management's rights
-under a new name. **If one of them has to be kept out of something sooner than
-its slice will come**, that is the case for the enum, and it is question L4.
+under a new name.
 
-**And if shelter-defined roles are not going to be built at all**, the enum plus
-pages named for roles is simply cheaper, and both recommendations flip (L1).
+Two cases would have argued the other way, and both were put to Lutan: one of
+the three having to be kept out of something sooner than its slice will come,
+and shelter-defined roles not being built at all. He decided for configured
+roles with both in front of him.
 
 ### Senior Staff
 
@@ -1219,22 +1226,37 @@ the table:
 These are recorded in `docs/decisions/2026-10-03-lanna-roles-lutans-answers.md`.
 The Director has not yet seen the table they produce.
 
-### Still for Lutan: the design
+### Decided by Lutan, 2026-10-03: the fork
+
+"Decision: Lets do Configured roles." That answers the two questions the rest
+turned on, which were L1 and L4 in the draft:
+
+- **The 2IC, Maintenance and Medical are configured roles**, rows in a `roles`
+  table with their own cells, and not three new values of the `app_role` enum.
+  No enum migration is written.
+- **So the permission tables are built**, since a configured role cannot exist
+  without them. That is the Architecture item's matrix going ahead, in its
+  stages: enforcement first, then the Settings screen, then roles a shelter adds.
+
+Recorded in `docs/decisions/2026-10-03-configured-roles-not-enum-values.md`.
+
+### Still for Lutan: the details of the design
 
 Nothing in this table is decided. Each has the answer this paper recommends.
+None of them holds up the first piece; L8 to L10 are settled in practice when
+its schema PR is reviewed.
 
 | # | Question | Recommended |
 |---|---|---|
-| L1 | Will roles that each shelter defines (the matrix) be built? Everything in §8, §12 and §16 assumes yes | Yes. It is why the Architecture item exists |
 | L2 | "Admin and management will probably be the same person." One login for the Director, as Admin, with the home screen following the device and a switch between the two (§8)? Or two logins? | One login. Admin already includes Management |
 | L3 | Volunteers: how many volunteer logins exist in production? It decides whether R1 can simply be applied or has to be announced first | Ask a session to read it, or look under Security |
-| L4 | The 2IC, Maintenance and Medical: configured roles, built role by role (§12), or three enum values now? And what is the 2IC's role called on screen? | Configured roles. "2IC" until told otherwise |
+| L4 | What is the 2IC's role called on screen, in English and in Thai? | "2IC" until told otherwise |
 | L5 | Senior Staff: close as answered by the matrix? Staff: keep in the template, unused at Lanna? And which of today's staff logins becomes which role? | Yes to both (§16) |
 | L6 | The manual says Management can record a microchip; the system refuses it. Which is right? | Give it to Management. It edits everything else about a resident |
 | L7 | Everything not on the whiteboard is Management's and Admin's. Which of it does the Director want on her phone by day, and which only at her desk: contacts, the clinic list, Shelter Friends, the dashboard, cashflow, stock used against planned, translations, projects? | Ask her with the table in hand. It decides phone work, not permissions |
 | L8 | Default cells are what the screens offer today, and the twelve places where the database allows more (§3 C) are closed as tables are converted. Agreed? | Yes |
 | L9 | The live lookup over the token hook (§10). Agreed? | Yes |
-| L10 | `0132` is the permission tables. Agreed? | Yes |
+| L10 | With configured roles decided, `0132` is the permission tables: additive, read by nothing. Agreed? | Yes. It is the first thing a configured role needs |
 | L11 | The Mobile responsiveness sweep is now on the critical path for every role but Admin. It is yours to schedule | Schedule it before the first role's walkthrough at 375 px |
 | L12 | The order of the roles (§12): Volunteer, Medical, Maintenance, 2IC, Management, Admin? | That order; the three new roles can be swapped freely |
 
