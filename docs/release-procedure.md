@@ -54,6 +54,17 @@ sat waiting on a handover that did not need to be sequential.
 
 ---
 
+## 0. Read the last release's record first
+
+**Before anything else, read `docs/releases/<most recent>.md` end to end.** It is
+the only place that says how the last one actually went: who ran which step, what
+broke, and what was left open. `0.15.0` went wrong mainly because this was not
+done — `0.14.0`'s record states plainly that Claude built the Pi over SSH, and
+its test plan records the major-versus-minor call as "confirmed in chat by
+Lutan". Both were sitting in the repo, unread, while this session guessed at
+both and got both wrong. A session that starts cold on `main` has none of the
+previous release's context except that file.
+
 ## 1. Before anything
 
 In `C:\Development\Animal_Shelter_App` (the main checkout, always on `main`):
