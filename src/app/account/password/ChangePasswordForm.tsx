@@ -10,10 +10,13 @@ const inputClass =
 export function ChangePasswordForm({
   minLength,
   continueAfter,
+  askCurrent,
 }: {
   minLength: number;
   /** Go on to the app after saving (forced change, recovery) rather than staying here. */
   continueAfter: boolean;
+  /** The server wants the current password (a change by choice); the action re-checks this itself. */
+  askCurrent: boolean;
 }) {
   const [state, formAction, pending] = useActionState(changeOwnPassword, undefined);
   const { t } = useI18n();
@@ -22,6 +25,22 @@ export function ChangePasswordForm({
   return (
     <form action={formAction} className="flex max-w-md flex-col gap-4">
       {continueAfter && <input type="hidden" name="continue" value="1" />}
+      {askCurrent && (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="current" className="text-sm font-medium text-muted">
+            {p.currentPassword}
+          </label>
+          <input
+            id="current"
+            name="current"
+            type="password"
+            required
+            autoComplete="current-password"
+            autoFocus
+            className={inputClass}
+          />
+        </div>
+      )}
       <div className="flex flex-col gap-1">
         <label htmlFor="password" className="text-sm font-medium text-muted">
           {p.newPassword}
@@ -33,7 +52,7 @@ export function ChangePasswordForm({
           required
           minLength={minLength}
           autoComplete="new-password"
-          autoFocus
+          autoFocus={!askCurrent}
           className={inputClass}
         />
         <p className="text-xs text-muted">{p.hint(minLength)}</p>
