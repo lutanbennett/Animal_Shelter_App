@@ -64,14 +64,22 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 export const unreleased: ReleaseNote[] = [
   "Scan a chip on the Residents page now finds the animal: type or scan the 15 digits and you go straight to their page. Before, it always answered \"0 residents\" even for a chip you had just recorded.",
   "Logging an immunization, a blood test or a procedure is no longer refused as \"in the future\" for today's date between midnight and 7 am. A resident can also be moved, sent to hospital, brought back or recorded as deceased on the same day they arrived or were last moved, instead of having to wait until the next day. If you pick a date before the current placement began, the message now says so.",
-  {
-    text: "Each medication can now have a photo of its box or bottle label. A manager taps Upload label on Management → Medications (on a phone this opens the camera); the photo then shows beside the medicine on the Stocktake sheet and on the Record a delivery form, so whoever is holding the box can match it at a glance. It is only visible to people signed in to the app, never on the public website.",
-    roles: ["admin", "management", "staff", "volunteer"],
-  },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.15.1",
+    date: "2026-10-03",
+    title: "A photo of each medicine's label, on the stocktake sheet and the delivery form",
+    major: false,
+    notes: [
+      {
+        text: "Each medication can now have a photo of its box or bottle label. A manager taps Upload label on Management → Medications (on a phone this opens the camera); the photo then shows beside the medicine on the Stocktake sheet and on the Record a delivery form, so whoever is holding the box can match it at a glance. It is only visible to people signed in to the app, never on the public website.",
+        roles: ["admin", "management", "staff", "volunteer"],
+      },
+    ],
+  },
   {
     version: "0.15.0",
     date: "2026-10-02",
