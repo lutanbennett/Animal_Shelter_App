@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { hasAppAccess, isShelterRole } from "@/lib/auth/app-access";
 import { canManage } from "@/lib/auth/require-management";
-import { canStocktake } from "@/lib/management/stocktake";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { todayIso } from "@/lib/format";
 import { canReadMaintenance } from "@/lib/maintenance/queries";
 import { countMyUrgentAccessRequests } from "@/lib/my-tasks/access-requests";
@@ -38,7 +39,7 @@ export async function NavPane() {
       isAdmin={role === "admin"}
       canManage={canManage(role)}
       isShelter={isShelterRole(role)}
-      canStocktake={canStocktake(role)}
+      canStocktake={can(await loadPermissions(), "stock.count")}
       urgentCount={urgentCount}
     />
   );
