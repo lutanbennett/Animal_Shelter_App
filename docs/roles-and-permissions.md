@@ -1138,6 +1138,8 @@ beside them.
 | `settings-permission-matrix` | app | `perm-drop-enum` | The matrix in Settings |
 | `custom-roles` | schema + app | the matrix | A shelter adds a role |
 
+**§15 is authoritative on order, not complete on prerequisites.** It has now omitted one twice: the parity check's probes, and `role_can()` (`0133`), the schema piece that recurring-job eligibility needs before any sweep touches `eligibility.ts` because `can()` answers only about the caller. Read the backlog's Architecture items and `docs/decisions/` for the permission streams before planning from this table.
+
 **What can start now that the fork is decided**, three abreast: `permissions-schema`
 in the schema lane, and two of the app streams marked *nothing here*. The
 medication list and the maintenance board are the obvious two: each is the whole
