@@ -3360,7 +3360,7 @@ const en = {
         enterDate: "Enter the date admitted.",
         dateInFuture: "The date admitted can't be in the future.",
         dateBeforeCurrent:
-          "The date admitted must be after the current placement started.",
+          "The date admitted can't be before the day the current placement started.",
         hospitalNotFound:
           "The Hospital status enclosure is missing from this database.",
         residentNotFound: "This resident no longer exists.",
@@ -3396,7 +3396,7 @@ const en = {
         enterDate: "Enter the date returned.",
         dateInFuture: "The date returned can't be in the future.",
         dateBeforeAdmitted:
-          "The date returned must be after the date they were admitted.",
+          "The date returned can't be before the day they were admitted.",
         enclosureNotFound: "That enclosure no longer exists.",
         systemEnclosure:
           "Residents return from hospital into a physical enclosure, not a lifecycle status.",
@@ -3507,7 +3507,7 @@ const en = {
         enterDate: "Enter the date of death.",
         dateInFuture: "The date of death can't be in the future.",
         dateBeforeCurrent:
-          "The date of death must be after the current placement started.",
+          "The date of death can't be before the day the current placement started.",
         enclosureNotFound:
           "The Deceased status enclosure is missing from this database.",
         residentNotFound: "This resident no longer exists.",
@@ -3547,7 +3547,7 @@ const en = {
         enterDate: "Enter the move date.",
         dateInFuture: "The move date can't be in the future.",
         dateBeforeCurrent:
-          "The move date must be after the current placement started.",
+          "The move date can't be before the day the current placement started.",
         enclosureNotFound: "That enclosure no longer exists.",
         systemEnclosure:
           "Lifecycle statuses (hospital, foster, adoption…) are recorded with their own actions, not as a move.",
@@ -3615,7 +3615,7 @@ const en = {
         newCarerName: "Enter the new carer's name.",
         enterDate: "Enter the date.",
         dateInFuture: "The date can't be in the future.",
-        dateBeforeCurrent: "The date must be after the current placement started.",
+        dateBeforeCurrent: "The date can't be before the day the current placement started.",
         enclosureNotFound: (name: string) =>
           `The ${name} status enclosure is missing from this database.`,
         residentNotFound: "This resident no longer exists.",
@@ -3658,7 +3658,7 @@ const en = {
         selectEnclosure: "Select the enclosure to return to.",
         enterDate: "Enter the date returned.",
         dateInFuture: "The date returned can't be in the future.",
-        dateBeforeLeft: "The date returned must be after the date they left.",
+        dateBeforeLeft: "The date returned can't be before the day they left.",
         enclosureNotFound: "That enclosure no longer exists.",
         systemEnclosure:
           "Residents return to the shelter into a physical enclosure, not a lifecycle status.",

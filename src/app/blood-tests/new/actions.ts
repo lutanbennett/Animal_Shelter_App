@@ -3,6 +3,7 @@
 import { databaseFailure } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { isFutureDate, isIsoDate } from "@/lib/placements/dates";
 
 export type BloodTestFormState =
   | { error: string }
@@ -30,11 +31,10 @@ export async function createBloodTest(
     return { error: t.bloodTests.errors.enterDate };
   }
 
-  const parsedDate = new Date(date);
-  if (Number.isNaN(parsedDate.getTime())) {
+  if (!isIsoDate(date) || Number.isNaN(new Date(date).getTime())) {
     return { error: t.bloodTests.errors.invalidDate };
   }
-  if (parsedDate.getTime() > Date.now()) {
+  if (isFutureDate(date, new Date())) {
     return { error: t.bloodTests.errors.dateInFuture };
   }
 
