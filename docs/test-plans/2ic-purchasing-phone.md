@@ -157,7 +157,9 @@ Automated checks by: Claude  Date: 2026-10-04
 
 - [x] The manual list above is empty, or every item in it was checked by a person — Lutan looked at the screen on his own phone-width view on 2026-10-04 (the compact one-line rows and the yellow never-counted rows) and, in chat, signed it off and asked for the merge. Rows 1 (watching the 2IC), 2 (375 px measurements), 3 (Thai read) and 4 to 6 were not separately done; he accepted that, so they stay open as follow-ups, not as verified
 
-Manual verification by: Lutan Bennett, 2026-10-04, in chat, having looked at the screen (Claude has not signed this line). Still open and accepted by him: the watched 2IC test, the 375 px measurements, the Thai read
+Manual verification by: Lutan Bennett  Date: 2026-10-04
+
+Note: said in chat, having looked at the screen; Claude has not signed this line. Still open and accepted by him: the watched 2IC test, the 375 px measurements, the Thai read
 
 ### Result
 
