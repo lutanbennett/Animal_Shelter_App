@@ -171,7 +171,7 @@ gates: typecheck=0 lint=0 build=0
 
 - [ ] Deployed to test: `npm run deploy:test` — deferred: release manager
 - [ ] Smoke-tested on `test.lannacare.org` — deferred: release manager
-- [ ] **Timezone-sensitive behaviour proved** — n/a *for this PR*: nothing here derives a date at runtime; the entry's `date` is a literal read from the local clock and checked in §2. **Note for the release manager:** #318 in this release fixes the 00:00–07:00 Thai-time refusals, and its own plan leaves that window unverified — it is the clearest candidate for a real check after the deploy
+- [ ] **Timezone-sensitive behaviour proved** — n/a: nothing in this PR derives a date at runtime; the entry's `date` is a literal read from the local clock and checked in §2. **Note for the release manager:** #318 in this release fixes the 00:00–07:00 Thai-time refusals, and its own plan leaves that window unverified — it is the clearest candidate for a real check after the deploy
 - [ ] **Boundary or banding change** — n/a: no boundary in this PR. #318's is the release's, and is on its plan
 - [ ] **Evidence pasted into this plan is the tool's actual output, unedited** — deferred: release manager, for the deploy output. Everything pasted above is unedited script output
 - [ ] Public pages re-checked after a cache purge or a 10-minute wait — deferred: release manager
