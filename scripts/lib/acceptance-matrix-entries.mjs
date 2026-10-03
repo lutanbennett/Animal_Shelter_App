@@ -568,6 +568,14 @@ export const ENTRIES = {
       expect: "The picture shows beside its name here and on the stocktake sheet.",
     },
   ],
+  "medication-list": [
+    {
+      activity: "Read today's medication list",
+      device: "phone",
+      do: "Management → Medication list, then scroll down the page.",
+      expect: "Animals with medicine due today are grouped by zone and enclosure, each with a photo, name, the medicine's label photo, the amount and how often. Nothing is tappable and the page does not slide sideways.",
+    },
+  ],
   "manage-diets": [
     {
       activity: "Add a diet and read the food forecast",
