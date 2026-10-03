@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| Feature | Purchasing below `md` is three steps — What is low, How much, From whom — in intake's wizard chrome, over the desk page's unchanged sums; the page is guarded by `stock.purchasing` and registered in the route registry; the table is unchanged from `md` up |
+| Feature | Purchasing below `md` is one screen — period, uncounted warning, then Medicines and Food as separate folds grouped by supplier, each item with its working — over the desk page's unchanged sums; the page is guarded by `stock.purchasing` and registered in the route registry; the table is unchanged from `md` up |
 | Backlog item | `docs/backlog.md` → "Roles build, then one role at a time". **Not ticked**: one of the 2IC's three screens, her role does not exist, and the watched test has not happened. A status line names this PR |
 | Branch / worktree | `claude/2ic-purchasing-phone` @ `C:\Development\Animal_Shelter_2ic-purchasing-phone` |
 | Dev server | `next dev` on `http://localhost:3006` — started, **but not signed in to** (see Defects 1) |
@@ -16,7 +16,7 @@
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence, and it matches what the brief asked for — §13's "phone-first, rebuilt as steps: what is low, how much, from whom"
-- [x] Files/areas touched listed — `src/app/management/purchasing/page.tsx` (guard, phone/desk split), new `PurchasingSteps.tsx`, `src/lib/permissions/routes.ts` (one entry), both dictionaries (`management.purchasing.steps`), `src/lib/manual/en.ts`, `scripts/lib/acceptance-matrix-entries.mjs`, `src/lib/releases.ts`; `src/lib/management/purchasing.ts` and `stock.ts` untouched; no migration, no `worker/`
+- [x] Files/areas touched listed — `src/app/management/purchasing/page.tsx` (guard, phone/desk split), new `PurchasingPhone.tsx`, `src/lib/permissions/routes.ts` (one entry), both dictionaries (`management.purchasing.steps`), `src/lib/manual/en.ts`, `scripts/lib/acceptance-matrix-entries.mjs`, `src/lib/releases.ts`; `src/lib/management/purchasing.ts` and `stock.ts` untouched; no migration, no `worker/`
 - [x] Roles affected identified — admin and management, who hold `stock.purchasing` in the seed; everyone else is refused as before. The 2IC gets it when `2ic-role` lands
 - [x] Anything explicitly **out of scope** written down — the 2IC role, login and home screen; `2ic-delivery-steps`; leaving an item out or editing a quantity; the lead-time toggle on the phone (decision file)
 
@@ -50,7 +50,7 @@ gates: typecheck=0 lint=0 build=0
 - [ ] Happy path works end to end — n/a: the screens were not driven in a browser (Defects 1); only typecheck, lint and build ran. Left for manual verification 1
 - [ ] Data persists — reload the page and the change is still there — n/a: the page writes nothing
 - [ ] Create / edit / delete all exercised (whichever the feature has) — n/a: read-only page
-- [ ] Empty state renders sensibly (no rows yet) — n/a: not driven; read from code, each step has its own "nothing" sentence
+- [ ] Empty state renders sensibly (no rows yet) — n/a: not driven; read from code, the screen has a "nothing to buy" sentence
 - [ ] Invalid input is rejected with a readable message, not a crash — n/a: nothing is typed on this page
 - [ ] Boundary cases checked — n/a: not driven; the sums are the unchanged `purchaseRow()`, which this PR does not touch
 
@@ -60,7 +60,7 @@ Not signed in as any role. Who may open the page changed from `requireManagement
 
 | Role | Can reach | Expected | Result |
 |---|---|---|---|
-| admin | Purchasing | steps under 768 px, table above | not signed in as this role |
+| admin | Purchasing | one screen under 768 px, table above | not signed in as this role |
 | management | Purchasing | same | not signed in as this role |
 | staff | refused | unchanged | not signed in as this role |
 | vet | refused | unchanged | not signed in as this role |
@@ -73,7 +73,7 @@ Not signed in as any role. Who may open the page changed from `requireManagement
 ## 5. Cross-cutting
 
 - [ ] Nav entry correct (`src/app/NavLinks.tsx`) — n/a: no nav change; the registry entry is `menu: false`
-- [x] Manual updated (`src/lib/manual/en.ts`) and the topic reads correctly at `/manual` — "Purchasing: what to buy" has a new first step describing the three steps; `npm run lint` passes its matrix check; not opened at `/manual`
+- [x] Manual updated (`src/lib/manual/en.ts`) and the topic reads correctly at `/manual` — "Purchasing: what to buy" has a new first step describing the one screen; `npm run lint` passes its matrix check; not opened at `/manual`
 - [x] Translatable strings go through the translation path — the new strings are in both dictionaries under `management.purchasing.steps` (Thai is a first draft to be read by a Thai speaker: Left for manual verification 3)
 - [ ] Mobile viewport (375px) — no overflow, controls reachable — n/a: not measured (Defects 1); Left for manual verification 2
 - [ ] Browser console clean — n/a: not run
@@ -137,12 +137,12 @@ Not signed in as any role. Who may open the page changed from `requireManagement
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | **Watch the 2IC (or someone like her) order from it**: can she pick how long it should last, find what is low, understand "Buy 3 bags" and the working, and tell which supplier to take the list to, without help. This is §12 R4's done-when and cannot be signed by Claude | A real phone, at the shelter, Thai |
-| 2 | **375 px, both languages, each of the three steps**: `document.scrollingElement.scrollWidth <= clientWidth`, nothing clipped, the sticky Back / Next bar clear of the last card, Print and Download CSV reachable on step 3. Not measured | The browser pane at the mobile preset, reloaded after switching, signed in as Management or Admin |
+| 1 | **Watch the 2IC (or someone like her) order from it**: can she pick how long it should last, find Medicines and Food, understand "3 bags" and the working, and tell which supplier to take each list to, without help. This is §12 R4's done-when and cannot be signed by Claude | A real phone, at the shelter, Thai |
+| 2 | **375 px, both languages, with Medicines and Food each open**: `document.scrollingElement.scrollWidth <= clientWidth`, nothing clipped, the folds open and close, Print and Download CSV reachable at the bottom. Not measured | The browser pane at the mobile preset, reloaded after switching, signed in as Management or Admin |
 | 3 | The Thai strings in `management.purchasing.steps` read naturally to a Thai speaker (a first draft) | Thai |
-| 4 | From 768 px up the table is as before, with its period chips, lead toggle, CSV and Print; and Print from a phone prints the grouped list, not the steps | A desktop, and a phone's print preview |
-| 5 | Step 1 with an item that was never counted: listed apart, with a Count them button that opens the stocktake only for a person who may count | Dev data, signed in |
-| 6 | Back and forward through the steps loses nothing, and the step numbers along the top go back to visited steps | A phone |
+| 4 | From 768 px up the table is as before, with its period chips, lead toggle, CSV and Print; and Print from a phone prints the grouped list, not the phone view | A desktop, and a phone's print preview |
+| 5 | The warning box with an item that was never counted: listed apart, with a Count them button that opens the stocktake only for a person who may count | Dev data, signed in |
+| 6 | The two folds: Medicines and Food each list only their own items, grouped by supplier, and a kind with nothing to buy is absent | A phone, dev data |
 
 ## Sign-off
 

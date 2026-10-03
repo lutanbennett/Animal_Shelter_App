@@ -63,7 +63,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
-    text: "Ordering medicine and food is now a few short steps on a phone instead of a table. First, how long it should last and what is running low; then how much to buy of each, with \"The working\" under it if you want to see how it was worked out; then the list to take to the shop, grouped by supplier, to print or save. Nothing is ordered or saved by the app, so you can go back at any step. Anything nobody has counted is listed apart with a button to count it. The computer's table is unchanged.",
+    text: "Ordering medicine and food is now one simple screen on a phone instead of a table. Pick how long it should last, then open Medicines or Food (they are bought at different shops) to see what to buy from each supplier, how much of each, and \"The working\" if you want to see how it was worked out. Print the list or save it from the bottom. Nothing is ordered or saved by the app. Anything nobody has counted is listed in a box at the top with a button to count it. The computer table is unchanged.",
     roles: ["admin", "management"],
   },
   {

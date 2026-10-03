@@ -8,7 +8,7 @@ import { toCsv } from "@/lib/csv";
 import { formatQuantity } from "@/lib/diets/options";
 import { CsvDownloadButton } from "@/components/CsvDownloadButton";
 import { PrintButton } from "@/components/PrintButton";
-import { PurchasingSteps, type PhoneItem } from "./PurchasingSteps";
+import { PurchasingPhone, type PhoneItem } from "./PurchasingPhone";
 import { loadConversions } from "@/lib/units-server";
 import { defaultUnit } from "@/lib/units";
 import { loadReceipts } from "@/lib/management/receipts-server";
@@ -335,7 +335,7 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
       {/* A phone gets three short steps; from md up, the table. Printing always
           takes the desk list, so the two cannot disagree on paper. */}
       <div className="md:hidden print:hidden">
-        <PurchasingSteps
+        <PurchasingPhone
           items={[...medItems, ...dietItems].map(
             (i): PhoneItem => ({
               kind: i.kind,
@@ -347,7 +347,7 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
               leadDays: i.leadDays ?? 0,
             }),
           )}
-          groups={groups}
+          lines={lines}
           csv={csv}
           period={period}
           includeLead={includeLead}

@@ -622,8 +622,8 @@ export const ENTRIES = {
     {
       activity: "Work out what to buy",
       device: "phone",
-      do: "Open Purchasing, pick 2 weeks, tap Next to see how much, open The working under one item, tap Next again, and tap Download CSV.",
-      expect: "Three steps: what is low, how much, from whom. Each amount has its working, the final list is grouped by supplier, and Back never loses anything.",
+      do: "Open Purchasing, pick 2 weeks, open the Medicines fold, open The working under one item, and tap Download CSV.",
+      expect: "One screen: Medicines and Food in separate folds, each grouped by supplier, each amount with its working.",
     },
   ],
   deliveries: [

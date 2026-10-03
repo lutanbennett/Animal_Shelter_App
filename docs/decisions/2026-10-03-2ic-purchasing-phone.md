@@ -1,41 +1,49 @@
-# 2026-10-03 — Purchasing on a phone is three steps over the desk page's sums
+# 2026-10-03 — Purchasing on a phone is one screen over the desk page's sums
 
 `2ic-purchasing-phone`, §13 and §12 R4 of `docs/roles-and-permissions.md`. The 2IC
 does the ordering, there are no PCs on site, and she is not comfortable with
-computers, so the table #295 built for a desk is rebuilt for her as the paper's
-sequence: **what is low, how much, from whom.** No migration, and **no
-arithmetic was reimplemented**: the page still computes every figure with
+computers, so the table #295 built for a desk is rebuilt for her. No migration, and
+**no arithmetic was reimplemented**: the page still computes every figure with
 `purchaseRow()`, `groupBySupplier()` and `expectedStockNow()`, and hands the
-results to the steps as data.
+results to the phone view as data.
+
+## One screen, not three steps (changed 2026-10-04, before merge)
+
+§13 sketches the rebuild as **what is low, how much, from whom**, and the first
+version was exactly that: three screens in intake's wizard chrome. Lutan, looking at
+it, said the screens were not adding value. They were not: step 1 and step 2 listed
+the same items with different figures, and step 3 repeated them again grouped by
+supplier. The task has one answer, "what do I buy, and from whom", so it is one
+screen. The wizard chrome fits tasks that gather input in stages (intake, the
+Shelter Friend wizard); this page asks for no input, so the steps only added taps.
+This departs from §13's wording on purpose: the requirement it serves is "one task
+per screen, nothing that loses work", and a single read-only screen meets it. If the
+watched test shows she gets lost, the steps are in this PR's history.
 
 ## The shape
 
-- **One page, two layouts.** Below `md` the page shows `PurchasingSteps`; from
-  `md` up it shows the table, unchanged. `LargerScreenNotice` is gone: §13's rule
-  is that a page a phone role can open has no "Best on a larger screen" in front
-  of it. The register entry says `device: "any"`.
-- **The chrome is intake's.** `WizardProgress` and `WizardNav` from
-  `src/app/residents/new/WizardChrome.tsx`, with this feature's own labels, as the
-  Shelter Friend wizard does. The last step uses `finalActions` (Print, Download
-  CSV) instead of a Next button. No fourth pattern.
-- **Step 1, What is low.** How long it should last (1 week / 2 weeks / 1 month,
-  big buttons that are links, since the period changes the sums and so asks the
-  server again; the step is first, so nothing is lost by the reload), then each
-  item that needs buying with "about X left, Y needed". Items nobody has counted
-  are listed apart with a button to the stocktake. A count over three weeks old
-  carries its "probably out of date" flag.
-- **Step 2, How much.** The amount to buy in big type, in whole bags or boxes
-  where there is a purchase unit, with the item's own unit beneath. **The working
-  is behind "The working"** (a `<details>`), sentence for sentence what the table
-  says: counted, used since, received since, so about this much on the shelf, and
-  what the period needs. Her trusting the number matters more than brevity, so it
-  is one tap away on every item rather than dropped.
-- **Step 3, From whom.** The list grouped by usual supplier, A–Z, "no usual
-  supplier" last: the step *is* the grouping, not a footer. Print and Download CSV.
-  It says in words that the app does not place the order.
-- **Nothing is typed and nothing is saved**, so Back loses nothing by
-  construction. There is no keypad on this page: it reads, it does not ask for a
-  quantity. (The brief expected one; nothing in §13's sequence needs her to type.)
+- **One page, two layouts.** Below `md` the page shows `PurchasingPhone`; from `md`
+  up it shows the table, unchanged. `LargerScreenNotice` is gone: §13's rule is that
+  a page a phone role can open has no "Best on a larger screen" in front of it. The
+  register entry says `device: "any"`.
+- **How long it should last** (1 week / 2 weeks / 1 month): big buttons that are
+  links, since the period changes the sums and so asks the server again.
+- **Anything nobody has counted** is listed apart in a warning box with a button to
+  the stocktake (shown only to someone who may count). Whether such items should
+  instead be assumed to be none on the shelf is a backlog item, not decided here.
+- **Medicines and Food are two folds** (`<details>`), because they are bought at
+  different shops. The first non-empty one is open. Inside each, the list is grouped
+  by usual supplier, A–Z, "no usual supplier" last, and each item shows the amount to
+  buy in big type (whole bags or boxes where there is a purchase unit, the item's own
+  unit beneath), what is left against what is needed, the "probably out of date" flag
+  where the count is over three weeks old, and **"The working"** one tap away:
+  counted, used since, received since, so about this much on the shelf, and what the
+  period needs. Her trusting the number matters more than brevity, so it is on every
+  item rather than dropped.
+- Print and Download CSV sit at the bottom. The page says in words that the app does
+  not place the order.
+- **Nothing is typed and nothing is saved**, so there is nothing to lose by going
+  back. There is no keypad on this page.
 
 ## Kept from the desk version
 
@@ -51,6 +59,7 @@ special diets before the standard diet; the desktop table, CSV and print.
   jargon for her. The phone always uses the default (lead time included) and the
   working says when it was added; `?lead=off` still works if a link carries it,
   and the period buttons keep it.
+- **Three steps** (see above).
 - **The long explanatory note** under the list ("Buy = needed minus…"): the
   working under each item says the same in the item's own numbers.
 - **Leaving an item out, or editing a quantity.** "No tables to edit in place"; the
