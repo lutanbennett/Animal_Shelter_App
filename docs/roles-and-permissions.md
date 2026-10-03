@@ -673,7 +673,7 @@ That is question L2.
 
 ## 9. The data model
 
-A sketch to agree the shape. It is not a migration and nothing has been run.
+**Built as `0132_permission_tables.sql` (2026-10-03, PR `claude/permissions-schema`), and corrected below to match it.** The first draft of this section was a sketch; where the migration departs from it, the bullets after the block say so, and `docs/decisions/2026-10-03-permission-tables.md` says why.
 
 ```sql
 create table roles (
@@ -685,28 +685,30 @@ create table roles (
   opens_app         boolean not null default true,     -- false for the public viewer
   home_path         text,                              -- where sign-in lands (for Admin, on a phone: Management's)
   scope_residents   text not null default 'all'  check (scope_residents in ('all', 'own_clinic')),
-  scope_resident_detail text not null default 'full' check (scope_resident_detail in ('full', 'who_and_where')),
   scope_clinical    text not null default 'any'  check (scope_clinical  in ('any', 'own_clinic')),
   scope_contacts    text not null default 'full' check (scope_contacts  in ('full', 'name_phone', 'name_type')),
   scope_photos      text not null default 'all'  check (scope_photos    in ('all', 'medical_only')),
   sees_login_emails boolean not null default true,
   legacy_role       app_role,                          -- the bridge of §12; dropped with the enum
-  archived_at       timestamptz
+  created_at        timestamptz not null default now(),
+  archived_at       timestamptz,
+  check ((kind = 'fixed') = (key in ('admin', 'public_viewer'))),   -- §6: fixed means exactly these two
+  check (kind = 'custom' or legacy_role is not null)               -- until the enum goes
 );
 
 create table permission_activities (                   -- the catalogue, seeded from the code file
   key      text primary key,
   kind     text not null check (kind in ('level', 'yesno')),
   area     text not null,
-  sort     integer not null,
-  requires jsonb not null default '[]'                 -- prerequisites: [{activity, level}]
+  sort     integer not null unique,
+  requires jsonb not null default '[]' check (jsonb_typeof(requires) = 'array')   -- [{activity, level}]: data, not enforced
 );
 
 create table role_permissions (
   id       uuid primary key default gen_random_uuid(), -- a single-column key, so audit_log (0121) can name the row
   role_id  uuid not null references roles on delete cascade,
   activity text not null references permission_activities,
-  level    smallint not null check (level in (1, 2)),  -- 1 read, 2 edit or yes
+  level    smallint not null check (level in (1, 2)),  -- 1 read, 2 edit or yes; a Yes/No activity takes 2 only (trigger)
   unique (role_id, activity)
 );
 
@@ -714,17 +716,40 @@ alter table user_roles add column role_id uuid references roles;
 ```
 
 - **No row means None.** A missing cell, an unknown activity, an archived role
-  and a person with no role all answer no.
-- **Admin has no rows.** Its column is a rule (§6), not data.
+  and a person with no role all answer no. So does a level that is not `read`
+  or `edit`. Only Admin answers yes without a cell, an activity the catalogue
+  does not know included (§6, rule 8).
+- **Admin has no rows.** Its column is a rule (§6), not data, and a trigger
+  refuses a cell for Admin or for the public viewer. The same trigger holds a
+  Yes/No activity to level 2.
+- **What the database holds of §6**, as built: rules 1 and 4 by check constraint
+  and trigger; rule 2 (always an Admin) by a deferred constraint trigger on
+  `user_roles`, new, judged at commit; rule 3 by RLS (an admin at aal2) on
+  `roles` and `role_permissions`; rule 7 by the audit trigger; rule 8 by
+  construction. Rules 5, 6 and 9 are not the database's: 5 and 6 are not
+  activities, and 9 waits with `requires`.
+- **The scope "who and where" is not in the table yet.** `scope_resident_detail`
+  was in the sketch, and nothing in the database can honour it until the
+  volunteer slice builds its view. That slice adds the column and the view
+  together (widening a check is one statement).
+- **`scope_photos = 'medical_only'` is honoured by app code, not the database.**
+  `record_attachment()` does not look at the folder. It is the only scope whose
+  enforcement is in TypeScript today.
+- **`requires` is data for later.** Empty in `0132`; the catalogue file states
+  the prerequisites and the Settings matrix refuses an incoherent column.
 - **Yes / No uses the same column**: Yes is 2. One comparison serves both kinds.
 - **Tenancy.** `permission_activities` is the product's and stays global. `roles`
   gains `shelter_id` when the multi-shelter work lands, `key` becomes unique per
   shelter, and `role_permissions` follows its role. Nothing here has to be
   rebuilt for that; it is one column and one index.
-- **Audit and export.** `roles` and `role_permissions` get the `audit_log`
-  trigger, so Recent changes shows who changed which cell. The matrix exports as
+- **Audit and export.** `roles` and `role_permissions` have the `audit_log`
+  trigger (the seed is excluded: the trigger is created after it), so Recent
+  changes shows who changed which cell. The matrix exports as
   a sheet and as a PDF from Settings, because it is also what a shelter's
   acceptance sign-off is checked against.
+- **`user_roles.role_id`** is filled from the enum for every existing login and
+  kept in step by a trigger in both directions until the enum goes. It is
+  nullable, so "a person with no role" has an answer.
 - **One person, one role**, as now. Several roles per person was considered and
   left out: it makes "what can this person do" a union nobody can read off the
   matrix, and a shelter that needs a mix can make a role for it. The Director,
@@ -737,20 +762,28 @@ alter table user_roles add column role_id uuid references roles;
 
 ```sql
 create function has_permission(p_activity text, p_level text default 'edit')
-returns boolean language sql stable security definer set search_path = '' as $$
+returns boolean language sql stable security definer set search_path = '' as $
   select exists (
     select 1
-    from public.user_roles ur
-    join public.roles r on r.id = ur.role_id
-    left join public.role_permissions rp
-           on rp.role_id = r.id and rp.activity = p_activity
-    where ur.user_id = (select auth.uid())
-      and ur.archived_at is null
-      and r.archived_at is null
-      and (r.key = 'admin' or rp.level >= case p_level when 'read' then 1 else 2 end)
+      from public.user_roles ur
+      join public.roles r on r.id = ur.role_id and r.archived_at is null
+     where ur.user_id = (select auth.uid())
+       and ur.archived_at is null
+       and p_activity is not null
+       and p_level in ('read', 'edit')
+       and (r.key = 'admin'
+            or exists (select 1 from public.role_permissions rp
+                        where rp.role_id = r.id and rp.activity = p_activity
+                          and rp.level >= case p_level when 'read' then 1 else 2 end))
   );
-$$;
+$;
 ```
+
+This is the function as built (`0132`). The draft let a mistyped level mean
+"edit", which is the stricter answer but a silent one; it now answers no.
+`my_permissions()` returns one `jsonb` object (`role`, `is_admin`, `scopes`,
+`permissions`, with Admin's cells expanded to every activity), or null for a
+person with no live role.
 
 Every policy and every `security definer` guard asks it, and nothing else.
 A table gets one policy per command instead of one per role per command:
@@ -759,6 +792,8 @@ A table gets one policy per command instead of one per role per command:
 create policy weight_select on weight for select to authenticated
   using ((select has_permission('medical.weight', 'read'))
          and ((select sees_all_residents()) or resident_id in (select current_vet_resident_ids())));
+-- (sees_all_residents() is illustrative and does not exist yet: the residents conversion
+-- PR writes it over roles.scope_residents, or inlines the test.)
 
 create policy weight_insert on weight for insert to authenticated
   with check ((select has_permission('medical.weight'))
@@ -1077,7 +1112,7 @@ beside them.
 | Piece | Kind | Needs | What it delivers |
 |---|---|---|---|
 | **Foundation** | | | |
-| `permissions-schema` | schema, `0132` | nothing: the fork is decided | F1: the tables, the seed, `has_permission()`, `my_permissions()`. Read by nothing |
+| `permissions-schema` | schema, `0132` | nothing: the fork is decided | F1: the tables, the seed, `has_permission()`, `my_permissions()`. Read by nothing. **Built, 2026-10-03** |
 | `permission-parity-check` | scripts | `permissions-schema` | §11: the probes, the known tightenings, green against today's policies |
 | `permissions-catalogue` | app | `permissions-schema` | F2, first part: the catalogue file, `can()`, `requirePermission()`, the route registry, and one area (stock) moved off its predicates as the pattern |
 | `permissions-sweep-residents`, `-medical`, `-rest` | app, three streams | `permissions-catalogue` | F2, the rest: every remaining predicate, role list and inline test; manual topics and acceptance entries name an activity |
