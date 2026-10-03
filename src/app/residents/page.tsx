@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { isValidMicrochip, stripToDigits } from "@/lib/residents/microchip";
+import { chipFromSearch } from "@/lib/residents/microchip";
 import { ScanChipBox } from "./ScanChipBox";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -116,8 +116,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   // straight to that resident whatever the place, zone or deceased filters
   // say (RLS still limits a vet to their clinic's residents); an unknown
   // chip offers a new resident. Anything else is the usual name search.
-  const chipDigits = /^[ds-]+$/.test(q) ? stripToDigits(q) : "";
-  const chipQuery = isValidMicrochip(chipDigits) ? chipDigits : null;
+  const chipQuery = chipFromSearch(q);
   if (chipQuery) {
     const { data: hit } = await supabase
       .from("residents")
