@@ -1,18 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { createPortal } from "react-dom";
-import { Check, ClipboardCheck, Search, TriangleAlert } from "lucide-react";
+import { Check, ClipboardCheck, Layers, Search, TriangleAlert } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDateTime } from "@/lib/format";
 import { formatQuantity } from "@/lib/diets/options";
 import { readStock } from "@/lib/management/stock";
 import { inUnit } from "@/lib/units";
 import {
+  CARDS_START,
+  cardSequence,
   entryUnit,
+  pruneCards,
   rowOutcome,
   summarise,
   isBigChange,
+  type CardsState,
   type RowEntry,
   type SheetSummary,
   type StocktakeItem,
@@ -20,12 +24,57 @@ import {
 } from "@/lib/management/stocktake";
 import { MedicationLabelThumb } from "@/components/MedicationLabelThumb";
 import { saveStocktake } from "./actions";
+import { StocktakeCards } from "./StocktakeCards";
 
 type Items = Record<StocktakeKind, StocktakeItem[]>;
 type Entries = Record<StocktakeKind, Record<string, RowEntry>>;
 
 const KINDS: StocktakeKind[] = ["medication", "diet"];
 const EMPTY: Entries = { medication: {}, diet: {} };
+
+/** Tailwind's `sm` breakpoint: below it the medication count is one card at a time. */
+const PHONE_QUERY = "(max-width: 639px)";
+
+function subscribePhone(onChange: () => void) {
+  const mq = window.matchMedia(PHONE_QUERY);
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
+
+/**
+ * The count in progress is kept on this phone, not on the server: a half-done
+ * count survives a lost signal, a locked screen or a closed tab, and goes up
+ * in one record_stocktake() call at the end like the desktop sheet's
+ * (docs/decisions/2026-10-03-stocktake-cards-phone.md). Two days, then it is
+ * treated as stale: a count typed last week is not what is on the shelf now.
+ */
+const DRAFT_KEY = "stocktake-draft-v1";
+const DRAFT_MAX_AGE_MS = 2 * 24 * 60 * 60 * 1000;
+
+type Draft = { at: string; entries: Entries; cards: CardsState };
+
+function readDraft(): Draft | null {
+  try {
+    const raw = window.localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const draft = JSON.parse(raw) as Draft;
+    if (!draft?.at || Date.now() - new Date(draft.at).getTime() > DRAFT_MAX_AGE_MS) return null;
+    return draft;
+  } catch {
+    return null;
+  }
+}
+
+/** False when the browser refuses (private mode, storage full): the leave warning then stays on. */
+function writeDraft(draft: Draft | null): boolean {
+  try {
+    if (draft) window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    else window.localStorage.removeItem(DRAFT_KEY);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 function countedDaysAgo(item: StocktakeItem): number {
   return (
@@ -59,11 +108,54 @@ export function StocktakeSheet({
   const [reviewing, setReviewing] = useState(false);
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const isPhone = useSyncExternalStore(
+    subscribePhone,
+    () => window.matchMedia(PHONE_QUERY).matches,
+    () => false,
+  );
+  const [cards, setCards] = useState<CardsState>(CARDS_START);
+  const [showList, setShowList] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+  const draftKept = useRef(false);
+  const [resumed, setResumed] = useState<{ n: number; at: string } | null>(null);
   const inputs = useRef(new Map<string, HTMLInputElement>());
   const reviewButton = useRef<HTMLButtonElement>(null);
 
   const summary = useMemo(() => summarise(items, entries), [items, entries]);
   const dirty = summary.lines.length > 0 || summary.invalid.length > 0;
+  const sequence = useMemo(() => cardSequence(items.medication), [items.medication]);
+  const cardsView = isPhone && tab === "medication" && !showList && items.medication.length > 0;
+
+  // Pick up a count left on this phone, the first render that is on a phone
+  // (the server and the first client render never are, so there is no
+  // mismatch). Phone only: the desktop sheet keeps its own behaviour —
+  // nothing is kept, and leaving asks first.
+  if (isPhone && !hydrated) {
+    setHydrated(true);
+    const draft = readDraft();
+    if (draft) {
+      const ids = (list: StocktakeItem[]) => new Set<string>(list.map((item) => item.id));
+      const keep = (rows: Record<string, RowEntry> | undefined, live: Set<string>) =>
+        Object.fromEntries(Object.entries(rows ?? {}).filter(([id]) => live.has(id)));
+      const restored: Entries = {
+        medication: keep(draft.entries?.medication, ids(initialItems.medication)),
+        diet: keep(draft.entries?.diet, ids(initialItems.diet)),
+      };
+      const n = Object.keys(restored.medication).length + Object.keys(restored.diet).length;
+      const restoredCards = pruneCards(draft.cards ?? CARDS_START, cardSequence(initialItems.medication));
+      if (n > 0 || restoredCards.pos > 0) {
+        setEntries(restored);
+        setCards(restoredCards);
+        setResumed({ n, at: draft.at });
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (!isPhone || !hydrated) return;
+    const empty = !dirty && cards.pos === 0 && cards.skipped.length === 0;
+    draftKept.current = writeDraft(empty ? null : { at: new Date().toISOString(), entries, cards });
+  }, [isPhone, hydrated, dirty, entries, cards]);
 
   const visible = useMemo(() => {
     const q = query.trim().toLocaleLowerCase();
@@ -75,12 +167,15 @@ export function StocktakeSheet({
   // without unloading. Captured at the document so it runs before Next's
   // <Link> handler, which skips a click whose default was prevented.
   useEffect(() => {
+    // Counts kept on the phone are not lost by leaving, so no warning there.
     if (!dirty) return;
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isPhone && draftKept.current) return;
       e.preventDefault();
       e.returnValue = "";
     };
     const onClick = (e: MouseEvent) => {
+      if (isPhone && draftKept.current) return;
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const anchor = (e.target as Element | null)?.closest?.("a[href]");
       if (!(anchor instanceof HTMLAnchorElement) || anchor.target === "_blank") return;
@@ -97,7 +192,7 @@ export function StocktakeSheet({
       window.removeEventListener("beforeunload", onBeforeUnload);
       document.removeEventListener("click", onClick, true);
     };
-  }, [dirty, s.leaveWarning]);
+  }, [dirty, isPhone, s.leaveWarning]);
 
   const setEntry = useCallback((kind: StocktakeKind, id: string, entry: RowEntry) => {
     setMessage(null);
@@ -137,7 +232,16 @@ export function StocktakeSheet({
   function save() {
     const { medication, diet, lines } = summary;
     startTransition(async () => {
-      const result = await saveStocktake(medication, diet);
+      let result: Awaited<ReturnType<typeof saveStocktake>>;
+      try {
+        result = await saveStocktake(medication, diet);
+      } catch {
+        // No signal: the request never arrived. Nothing was saved and
+        // nothing is lost — the counts are still here (and on the phone).
+        setReviewing(false);
+        setMessage({ type: "error", text: s.cards.offline });
+        return;
+      }
       if (!result.ok) {
         setReviewing(false);
         setMessage({ type: "error", text: result.error });
@@ -157,12 +261,21 @@ export function StocktakeSheet({
         return next;
       });
       setEntries(EMPTY);
+      setCards(CARDS_START);
+      setResumed(null);
       setReviewing(false);
       setMessage({
         type: "success",
         text: s.saved(result.medicationUpdated + result.dietUpdated, formatDateTime(result.countedAt, locale)),
       });
     });
+  }
+
+  function startAgain() {
+    setEntries(EMPTY);
+    setCards(CARDS_START);
+    setResumed(null);
+    setMessage(null);
   }
 
   const tabCount = (kind: StocktakeKind) =>
@@ -193,6 +306,54 @@ export function StocktakeSheet({
           );
         })}
       </div>
+
+      {isPhone && resumed && (
+        <div className="flex flex-col gap-2 rounded border border-primary/50 bg-primary/5 p-3 text-sm text-foreground">
+          <p>{s.cards.resumed(resumed.n, formatDateTime(resumed.at, locale))}</p>
+          <button
+            type="button"
+            onClick={startAgain}
+            className="min-h-12 self-start rounded border border-border bg-surface px-4 text-sm font-medium text-foreground"
+          >
+            {s.cards.startAgain}
+          </button>
+        </div>
+      )}
+
+      {cardsView ? (
+        <StocktakeCards
+          items={items.medication}
+          sequence={sequence}
+          entries={entries.medication}
+          cards={cards}
+          setCards={(next) => {
+            setMessage(null);
+            setCards(next);
+          }}
+          onEntry={(id, entry) => setEntry("medication", id, entry)}
+          onClearEntry={(id) =>
+            setEntries((prev) => {
+              const rest = { ...prev.medication };
+              delete rest[id];
+              return { ...prev, medication: rest };
+            })
+          }
+          onReview={openReview}
+          onList={() => setShowList(true)}
+          message={message}
+        />
+      ) : (
+      <>
+      {isPhone && tab === "medication" && items.medication.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setShowList(false)}
+          className="inline-flex min-h-14 items-center justify-center gap-2 rounded border border-primary bg-primary px-4 text-base font-medium text-primary-foreground"
+        >
+          <Layers aria-hidden="true" className="h-5 w-5" />
+          {s.cards.startCards}
+        </button>
+      )}
 
       <label className="relative block">
         <span className="sr-only">{s.searchLabel}</span>
@@ -259,6 +420,9 @@ export function StocktakeSheet({
           </button>
         </div>
       </div>
+
+      </>
+      )}
 
       <ReviewDialog
         open={reviewing}
