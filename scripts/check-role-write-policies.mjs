@@ -15,8 +15,8 @@
 //   2  Management mirrors staff — 0039's rule: whatever staff can do on a
 //      table, management can. Checked for every table, so no list to forget.
 //   3  Real rows, one rolled-back transaction, each role's own JWT: staff and
-//      management insert and update a blood test; neither can delete one; a
-//      volunteer can do none of it. Proves the policy works, not just exists.
+//      management insert and update a blood test and file a scan on it; neither
+//      can delete one; a volunteer can read it and write nothing to it. Proves the policy works, not just exists.
 //
 // And one advisory, never a failure: tables staff can read and nothing else.
 // Most are meant to be (types, vets, translations); the list is there so that
@@ -167,11 +167,16 @@ begin
       n := pg_temp.try(v_uid, format('update blood_tests set results = ''y'' where id = %L', v_bt));
       if n <> 0 then raise exception 'HARNESS-FAIL: % updated % rows', v_who, n; end if;
     end if;
+    -- the file half of "Log blood test": record_attachment is what the upload route calls
+    n := pg_temp.try(v_uid, format('select record_attachment(''blood_test'', %L, %L)', v_bt, 'harnessFile' || v_who));
+    if v_who in ('staff', 'management') then
+      if n <> 1 then raise exception 'HARNESS-FAIL: % record_attachment gave %', v_who, n; end if;
+    end if;
     n := pg_temp.try(v_uid, format('delete from blood_tests where id = %L', v_bt));
     if n <> 0 then raise exception 'HARNESS-FAIL: % deleted % rows', v_who, n; end if;
     n := pg_temp.try(v_uid, format('select 1 from blood_tests where id = %L', v_bt));
     if n < 1 then raise exception 'HARNESS-FAIL: % read % rows', v_who, n; end if;
-    v_report := v_report || v_who || (case when v_who = 'volunteer' then ' read only' else ' insert+update, no delete' end) || ' | ';
+    v_report := v_report || v_who || (case when v_who = 'volunteer' then ' read only' else ' insert+update+file, no delete' end) || ' | ';
   end loop;
 
   raise exception '%', 'HARNESS-OK blood_tests: ' || v_report;

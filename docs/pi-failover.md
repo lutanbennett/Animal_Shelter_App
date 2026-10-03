@@ -251,8 +251,9 @@ These are my judgement of batch-sized pieces, in order:
 2. **Quick Worker memory of a failed Pi.** Small, in `worker/origin.mjs`.
 3. **Health signal.** The Pi reports in on a timer; the Worker reads it. One
    stream. The storage choice is made then.
-4. **Only if option 1:** the database change first (its own PR, migration `0131`
-   is being kept free for this), then the shared wrapper, then one stream per
+4. **Only if option 1:** the database change first (its own PR, on the next free
+   migration number — `0131` went to the blood-test write policies on 2026-10-03 and
+   is no longer kept free), then the shared wrapper, then one stream per
    group of saves.
 5. **Drill again** after each piece.
 

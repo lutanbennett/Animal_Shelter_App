@@ -66,6 +66,10 @@ export const unreleased: ReleaseNote[] = [
     text: "Each medication can now have a photo of its box or bottle label. A manager taps Upload label on Management → Medications (on a phone this opens the camera); the photo then shows beside the medicine on the Stocktake sheet and on the Record a delivery form, so whoever is holding the box can match it at a glance. It is only visible to people signed in to the app, never on the public website.",
     roles: ["admin", "management", "staff", "volunteer"],
   },
+  {
+    text: "Staff and managers can now record a blood test. Until now, tapping Save blood test on a resident (or the Log blood test link on a vet visit) answered \"You don't have permission to do that\" and nothing was saved, even though the form was offered. It now saves, with or without a lab scan attached.",
+    roles: ["admin", "management", "staff"],
+  },
 ];
 
 /** Newest first. */
