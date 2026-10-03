@@ -33,13 +33,15 @@ watched test shows she gets lost, the steps are in this PR's history.
   instead be assumed to be none on the shelf is a backlog item, not decided here.
 - **Medicines and Food are two folds** (`<details>`), because they are bought at
   different shops. The first non-empty one is open. Inside each, the list is grouped
-  by usual supplier, A–Z, "no usual supplier" last, and each item shows the amount to
-  buy in big type (whole bags or boxes where there is a purchase unit, the item's own
-  unit beneath), what is left against what is needed, the "probably out of date" flag
-  where the count is over three weeks old, and **"The working"** one tap away:
-  counted, used since, received since, so about this much on the shelf, and what the
-  period needs. Her trusting the number matters more than brevity, so it is on every
-  item rather than dropped.
+  by usual supplier, A–Z, "no usual supplier" last. **Each item is one line: its name
+  and the amount to buy** (whole bags or boxes where there is a purchase unit), so a
+  long list stays short. A small warning mark on the line means the count is over
+  three weeks old. **Tapping an item opens its detail:** the amount in the item's own
+  unit, what is left against what is needed, and the working: counted, used since,
+  received since, so about this much on the shelf, and what the period needs. Her
+  trusting the number matters more than brevity, so every figure is there, one tap
+  away, rather than dropped. (The first cut showed all of this on every item as a
+  card; Lutan found the cards too large.)
 - Print and Download CSV sit at the bottom. The page says in words that the app does
   not place the order.
 - **Nothing is typed and nothing is saved**, so there is nothing to lose by going

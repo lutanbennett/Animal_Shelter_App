@@ -1817,7 +1817,7 @@ const en = {
       // The phone version: one screen over the same sums.
       steps: {
         periodTitle: "How long should it last?",
-        intro: "Take this list to the shop. The app does not place the order. Tap “The working” on an item to see how it was worked out.",
+        intro: "Take this list to the shop. The app does not place the order. Tap an item to see how it was worked out.",
         none: "Nothing to buy for this time.",
         shelf: (expected: string, needed: string, unit: string) =>
           `About ${expected} ${unit} left. Needed: ${needed} ${unit}.`,

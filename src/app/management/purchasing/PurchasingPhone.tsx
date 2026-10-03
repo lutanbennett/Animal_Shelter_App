@@ -135,32 +135,43 @@ export function PurchasingPhone({
                         {g.lines.map((l) => {
                           const i = byKey.get(`${l.kind}|${l.name}`);
                           return (
-                            <li key={`${l.kind}-${l.name}`} className="flex flex-col gap-1 py-3">
-                              <span className="break-words text-base font-semibold text-foreground">{l.name}</span>
-                              {i && <ItemBadges item={i} />}
-                              <span className="text-2xl font-semibold text-foreground">
-                                {p.qty(formatQuantity(l.quantity), l.unit)}
-                              </span>
-                              {l.unit !== l.baseUnit && (
-                                <span className="text-sm text-muted">
-                                  {p.equals(formatQuantity(l.baseQuantity), l.baseUnit)}
-                                </span>
-                              )}
-                              {i && (
-                                <>
-                                  <span className="text-sm text-muted">
-                                    {i.row.expected != null && i.row.expected > 0
-                                      ? s.shelf(q(i.row.expected), q(i.row.needed), i.unitLabel)
-                                      : s.shelfNone(q(i.row.needed), i.unitLabel)}
+                            <li key={`${l.kind}-${l.name}`}>
+                              <details className="[&_summary::-webkit-details-marker]:hidden">
+                                <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-3 py-2">
+                                  <span className="flex min-w-0 items-center gap-1.5">
+                                    {i?.row.stale && (
+                                      <TriangleAlert
+                                        aria-label={p.working.stale(i.row.countedDaysAgo ?? 0)}
+                                        className="h-4 w-4 shrink-0 text-warning"
+                                      />
+                                    )}
+                                    <span className="break-words text-base text-foreground">{l.name}</span>
                                   </span>
-                                  <details>
-                                    <summary className="flex min-h-12 cursor-pointer items-center text-sm font-medium text-primary">
-                                      {s.theWorking}
-                                    </summary>
-                                    <Working item={i} includeLead={includeLead} period={period} />
-                                  </details>
-                                </>
-                              )}
+                                  <span className="flex shrink-0 items-center gap-1 text-lg font-semibold text-foreground">
+                                    {p.qty(formatQuantity(l.quantity), l.unit)}
+                                    <ChevronDown aria-hidden="true" className="h-4 w-4 text-muted" />
+                                  </span>
+                                </summary>
+                                <div className="flex flex-col gap-1 pb-3">
+                                  {i && <ItemBadges item={i} />}
+                                  {l.unit !== l.baseUnit && (
+                                    <span className="text-sm text-muted">
+                                      {p.equals(formatQuantity(l.baseQuantity), l.baseUnit)}
+                                    </span>
+                                  )}
+                                  {i && (
+                                    <>
+                                      <span className="text-sm text-muted">
+                                        {i.row.expected != null && i.row.expected > 0
+                                          ? s.shelf(q(i.row.expected), q(i.row.needed), i.unitLabel)
+                                          : s.shelfNone(q(i.row.needed), i.unitLabel)}
+                                      </span>
+                                      <p className="mt-1 text-sm font-medium text-foreground">{s.theWorking}</p>
+                                      <Working item={i} includeLead={includeLead} period={period} />
+                                    </>
+                                  )}
+                                </div>
+                              </details>
                             </li>
                           );
                         })}
