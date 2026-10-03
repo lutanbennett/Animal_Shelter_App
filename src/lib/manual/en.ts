@@ -841,11 +841,10 @@ const manual: Manual = {
           roles: ["admin", "management", "staff"],
           path: "Maintenance → Log maintenance (or from an enclosure page)",
           steps: [
-            "Give the job a title, e.g. \"Gate latch broken\", and describe what needs doing.",
-            "Choose where: pick the zone and enclosure, or tick Zone-wide for something like a fence line or drainage.",
-            "Set the status, a due date and an estimated cost in baht if known, and tick everyone it's assigned to — anyone with a login who does the work (staff, volunteers, management). A big job can go to a team.",
-            "Add photos of the problem as it is now. They upload when you save.",
-            "Tap Save job.",
+            "Step 1, What is wrong: give the job a title, e.g. \"Gate latch broken\", describe what needs doing, and add photos of the problem as it is now. They upload when you save.",
+            "Step 2, Where: pick the zone and enclosure, or tick Zone-wide for something like a fence line or drainage.",
+            "Step 3, Who and when: set the status, a due date and an estimated cost in baht if known, and tick everyone it's assigned to — anyone with a login who does the work (staff, volunteers, management). A big job can go to a team.",
+            "Step 4, Review: check everything, use Edit to change a step, then tap Save job. Back never loses what you typed, and nothing is saved until this last step.",
           ],
           screenshot: {
             src: "/manual/maintenance-new.png",
@@ -859,7 +858,7 @@ const manual: Manual = {
           path: "Maintenance",
           steps: [
             "Staff and volunteers open on the jobs assigned to them; switch Assigned to from Me to Everyone to see the whole board (management and admin start there). Filter by zone or enclosure. Completed jobs from the last 30 days are shown; tick Show all completed jobs for older ones.",
-            "Drag a job card to another column to change its status. Cards are coloured when a job is overdue, due soon, or blocked.",
+            "On a computer, drag a job card to another column to change its status. On a phone, tap Move job on under the job, choose where it goes (Move to In progress, Blocked, Completed or Not started), and confirm — the question says in words what will happen. Use the status chips at the top to look at one status, such as Completed, and move a job back from there. Cards are coloured when a job is overdue, due soon, or blocked.",
             "Tap a card to open the job: edit its details, record the actual cost, and add Before and After photos. Who it's assigned to is shown under the title and on the card.",
             "A job logged by mistake can be deleted from its page (Delete job, bottom right). Its photos and Drive folder go with it and it can't be undone — for a job that was real but is finished, mark it Completed instead.",
           ],
@@ -1120,6 +1119,28 @@ const manual: Manual = {
             src: "/manual/management-diets.png",
             alt: "The diets management page with the forecast and cost columns",
           },
+        },
+        {
+          id: "medication-list",
+          title: "The medication list",
+          roles: ["admin", "management"],
+          path: "Management → Medication list",
+          intro:
+            "One list of who needs medicine today and how much, built for a phone while you walk round the enclosures. It is for reading: nothing on it is ticked off, and the app does not record that a dose was given.",
+          steps: [
+            "Open Management and tap Medication list. The date at the top is today at the shelter.",
+            "The list is grouped by zone, then by enclosure, in the order you would walk them, and each enclosure shows its animals. Each animal has a photo and name at the top, so you treat the right one.",
+            "Under the animal, each medicine shows a photo of its box or bottle label (added under Management → Medications), the amount to give, and how often. If a medicine has no label photo, only its name shows.",
+            "A medicine given every other day, weekly or monthly shows only on the days it falls due, counted from the day the prescription started. A medicine marked as needed is always shown. Last day of the course appears on a medicine whose prescription ends today.",
+            "An animal who is in hospital, fostered or out in the community is listed at the end under Not in an enclosure today, so no one thinks they were missed.",
+            "The list says how often (for example, 3 × a day) but not at what times: fixed rounds are the Head of Medical's knowledge, not something the app holds.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "There is nothing to tap and nothing is saved. To change who gets what, edit the prescription on the resident's page. If the kennels have no signal, open the list at the office first and carry it round.",
+            },
+          ],
         },
         {
           id: "stocktake",

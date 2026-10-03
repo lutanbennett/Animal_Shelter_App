@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useOptimistic, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CalendarClock, Camera, Plus, UserRound } from "lucide-react";
+import { ArrowRight, CalendarClock, Camera, Plus, UserRound } from "lucide-react";
+import { useConfirm } from "@/components/ConfirmProvider";
 import { ENCLOSURE_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
@@ -42,7 +43,9 @@ type Filters = {
  * the other layout). Below the `md` breakpoint it's a single list with
  * status chips, and a tap opens the job page where the status buttons
  * live. Both read from the same filtered list, so the two layouts can't
- * disagree.
+ * disagree. On the phone each card also has a "Move job on" button: it
+ * lists the other statuses, says in words what will happen, and calls the
+ * same moveJob as the drag — a tap for the people who have no desktop.
  *
  * Colour: the column header says the status (grey / blue / yellow /
  * green); a card's left edge says urgency (red = overdue, orange = due
@@ -86,6 +89,9 @@ export function MaintenanceBoard({
   }));
   // Phone list only: which status chip is active (null = every open job).
   const [mobileStatus, setMobileStatus] = useState<MaintenanceStatus | null>(null);
+  // Phone list only: the job whose "move on" choices are open.
+  const [moving, setMoving] = useState<string | null>(null);
+  const confirm = useConfirm();
 
   // A dropped card lands in its column at once; the server's rows replace
   // the optimistic copy when the refresh inside the same transition lands.
@@ -159,6 +165,26 @@ export function MaintenanceBoard({
       else if (result.driveWarning) setDriveWarning(result.driveWarning);
       router.refresh();
     });
+  }
+
+  function jobTitle(job: MaintenanceJob): string {
+    const translated = titles[job.id];
+    return translated && translated.lang === locale ? translated.text : job.title;
+  }
+
+  /** The phone's tap: say in words what will happen, then do what the drag does. */
+  async function requestMove(job: MaintenanceJob, to: MaintenanceStatus) {
+    const label = maintenanceStatusLabel(t, to);
+    const ok = await confirm({
+      body:
+        to === "Completed"
+          ? m.move.confirmDone(jobTitle(job))
+          : m.move.confirm(jobTitle(job), maintenanceStatusLabel(t, job.status), label),
+      confirmLabel: m.move.confirmLabel,
+    });
+    if (!ok) return;
+    setMoving(null);
+    moveJob(job.id, to);
   }
 
   const newJobHref = filters.enclosureId
@@ -344,8 +370,46 @@ export function MaintenanceBoard({
                 ? (byStatus.get(mobileStatus) ?? [])
                 : visible.filter((job) => job.status !== "Completed")
               ).map((job) => (
-                <li key={job.id}>
+                <li key={job.id} className="flex flex-col gap-1.5">
                   <JobCard job={job} title={titles[job.id]} locale={locale} showStatus={!mobileStatus} />
+                  {canWrite &&
+                    (moving === job.id ? (
+                      <div className="flex flex-col gap-2 rounded-lg border border-primary/40 bg-surface p-3">
+                        <p className="text-sm font-medium text-foreground">
+                          {m.move.sheetTitle(jobTitle(job))}
+                        </p>
+                        {MAINTENANCE_STATUSES.filter((s) => s !== job.status).map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => void requestMove(job, s)}
+                            className="flex items-center gap-3 rounded-lg border border-border bg-background px-4 py-3 text-base font-medium text-foreground hover:bg-surface-hover disabled:opacity-50"
+                          >
+                            <ArrowRight aria-hidden="true" className="h-5 w-5 shrink-0" />
+                            <span className={`h-3 w-3 shrink-0 rounded-full ${STATUS_TONE[s].dot}`} />
+                            {m.move.to(maintenanceStatusLabel(t, s))}
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => setMoving(null)}
+                          className="rounded-lg px-4 py-3 text-base font-medium text-muted hover:text-foreground"
+                        >
+                          {m.move.cancel}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={isPending}
+                        onClick={() => setMoving(job.id)}
+                        className="flex items-center justify-center gap-2 rounded-lg border border-primary/40 px-4 py-3 text-base font-medium text-primary hover:bg-primary/10 disabled:opacity-50"
+                      >
+                        <ArrowRight aria-hidden="true" className="h-5 w-5" />
+                        {m.move.button}
+                      </button>
+                    ))}
                 </li>
               ))}
             </ul>
