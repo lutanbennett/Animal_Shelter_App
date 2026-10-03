@@ -1,9 +1,9 @@
 # Feature test plan — roles-and-permissions-design
 
 Filled from `docs/test-plan-template.md`. Documents only; no code and no
-migration. The paper is **proposed, not agreed**: one point was settled by Lutan
-while it was being written (the 2IC and Management are separate roles) and one
-fact is recorded as a decision (no PCs on site). The checks below are about
+migration. **Who does what at Lanna is answered by Lutan** (three messages on
+2026-10-03, recorded in their own decision file) **and how it is built is still
+proposed.** The Director has not yet seen the table. The checks below are about
 whether what the documents say about today's system is true, not about any new
 behaviour, because there is none.
 
@@ -13,7 +13,7 @@ behaviour, because there is none.
 
 | | |
 |---|---|
-| Feature | `docs/roles-and-permissions.md` (the design paper), `docs/roles-director-table.md` (the Director's one-page table), and one decision file recording that there are no PCs on site |
+| Feature | `docs/roles-and-permissions.md` (the design paper), `docs/roles-director-table.md` (the Director's one-page table, second draft), and two decision files: that there are no PCs on site, and Lutan's answers on the roles |
 | Backlog item | `docs/backlog.md` → Auth: *The roles the shelter actually has, from the Director*; Architecture: *Roles and permissions each shelter configures* |
 | Branch / worktree | `claude/roles-and-permissions-design` @ `C:\Development\Animal_Shelter_roles-and-permissions-design` |
 | Dev server | not used: documents |
@@ -25,9 +25,9 @@ behaviour, because there is none.
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence: a design paper with one activity catalogue serving both backlog items, the Director's role-by-activity table with every gap marked, and a decision file superseding part of "Admin on mobile"; which is each item's stated first deliverable ("deliverable first: a one-page table"; "deliverable: `docs/roles-and-permissions.md`")
-- [x] Files touched: `docs/roles-and-permissions.md`, `docs/roles-director-table.md`, `docs/decisions/2026-10-03-no-pcs-on-site-supersedes-admin-on-mobile.md`, a one-line pointer at the top of `docs/decisions/2026-09-24-admin-on-mobile-which-settings-and-management-pages-belong.md`, three status lines in `docs/backlog.md`, this plan. On the `backlog` branch, separately: two follow-up items (commit `d38bb0b3`)
+- [x] Files touched: `docs/roles-and-permissions.md`, `docs/roles-director-table.md`, `docs/decisions/2026-10-03-no-pcs-on-site-supersedes-admin-on-mobile.md`, `docs/decisions/2026-10-03-lanna-roles-lutans-answers.md`, a one-line pointer at the top of `docs/decisions/2026-09-24-admin-on-mobile-which-settings-and-management-pages-belong.md`, three status lines in `docs/backlog.md`, this plan. On the `backlog` branch, separately: two follow-up items (commit `d38bb0b3`)
 - [ ] Roles affected identified — n/a: no app code and no policy changed; no role can do anything it could not do before, or less
-- [x] Out of scope, written down: every build (the paper's §15 lists the pieces); migration `0132`, which is proposed as the permission tables and not claimed; the parity check, specified in §11 and not built; the medication round, scoped in §14 and not built; the vet-to-doctor rename, which is parked and only named; the Mobile responsiveness sweep, reported to Lutan and not reopened; and any decision file for the roles design itself, which is not written because nobody has agreed it
+- [x] Out of scope, written down: every build (the paper's §15 lists the pieces); migration `0132`, which is proposed as the permission tables and not claimed; the parity check, specified in §11 and not built; the medication round, which Lutan ruled out, and the read-only medication list that replaces it, scoped in §14 and not built; vets, on hold by Lutan's answer, with the rename to Doctor parked and only named; the Mobile responsiveness sweep, reported to Lutan and not reopened; and any decision file for the *design* (catalogue, matrix, enforcement, migration), which is not written because nobody has agreed it
 
 ## 2. Automated gates
 
@@ -112,7 +112,7 @@ inserted 47 rows
 ## 7. Documentation
 
 - [ ] Backlog item ticked — n/a: deliberately not ticked; both items end "then build". Each has a status line saying what is written, what Lutan settled and what is still asked, and Senior Staff has a pointer to the recommendation to close it
-- [x] Non-obvious design choices in `docs/decisions/`: **one file, for the one thing that is a fact and not an agreement** (no PCs on site, superseding part of the 2026-09-24 decision). The roles design has **no** decision file, on purpose: nobody has agreed it, and a file recording an agreement that did not happen is the failure this checklist exists to prevent
+- [x] Non-obvious design choices in `docs/decisions/`: **two files, each for something that really was settled.** One records a fact (no PCs on site, superseding part of the 2026-09-24 decision). The other records Lutan's answers on who does what at Lanna, in his own words, with the four points they leave open listed as assumptions and a plain statement that the Director has not seen the table. The *design* has **no** decision file, on purpose: its questions (§17, L1 to L12) are unanswered, and a file recording an agreement that did not happen is the failure this checklist exists to prevent
 - [x] `README.md` still accurate — it does not describe roles beyond what the app does today, which is unchanged
 - [ ] **Release notes.** n/a: documents only; nothing ships to a shelter user
 - [x] Commit messages say why, not just what
@@ -160,16 +160,17 @@ inserted 47 rows
 | 3 | medium | The draft followed the backlog item in treating the 2IC as the Management role. Lutan corrected it mid-stream: they are separate, and the Director does Management by day and Admin at night | fixed: the paper, the Director's table and the decision file were reworked around his answer (commit `fe4e9e9b`) |
 | 4 | low | The brief and the first draft called the Director "he". Lutan's own message says "her" | fixed throughout |
 | 5 | low | The printed Director's table ran three rows onto a second page | fixed: one page for the table, the questions on the second |
-| 6 | info | Found in the system, not in this PR: Management cannot record a microchip though the manual says so; a volunteer can read prices and a vet the other clinics | deferred to backlog: filed on the `backlog` branch under Auth and Security |
+| 6 | medium | The first complete draft scoped a medication round that recorded each dose, guessed most of the 2IC's and the Heads' cells, and staged the database work by area. Lutan's answers changed all three: nothing is recorded, the three roles are far narrower than guessed, and the build goes role by role | fixed: the paper, the table and the PDF were reworked (commits `bf76df46` and the one after it); the cells that are still guesses dropped from most of the table to six |
+| 7 | info | Found in the system, not in this PR: Management cannot record a microchip though the manual says so; a volunteer can read prices and a vet the other clinics | deferred to backlog: filed on the `backlog` branch under Auth and Security |
 
 ## Left for manual verification
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | **Read the paper and answer L1 to L12**, the fork (L1, L4) first: three later batches wait on it | Lutan, `docs/roles-and-permissions.md` §17 |
-| 2 | **Go through the table with the Director** and bring back her corrections and her answers to the eight questions. Every `?` cell is a guess | The Director, with the PDF on Lutan's Desktop or `docs/roles-director-table.md` |
+| 1 | **Read the paper and answer L1 to L12**, the fork (L1, L4) first: later batches wait on it. The eight questions about who does what are answered; these are about how it is built | Lutan, `docs/roles-and-permissions.md` §17 |
+| 2 | **Show the table to the Director** and bring back her corrections. Six cells are still a guess (`?`), covered by the six points under "Still to confirm" | The Director, with the PDF on Lutan's Desktop or `docs/roles-director-table.md` |
 | 3 | **Does the Director's table read plainly to her**, and does she need it in Thai | Lutan and the Director |
-| 4 | **How many volunteer logins exist in production**, and which logins the 2IC and the two Heads hold today. Dev has no volunteers; production was not read | Lutan, or a session he asks to read production |
+| 4 | **How many volunteer logins exist in production**, and which of today's logins are the 2IC, the two Heads and plain staff. Dev has no volunteers; production was not read | Lutan, or a session he asks to read production |
 
 ## Sign-off
 
@@ -184,7 +185,7 @@ Automated checks by: Claude  Date: 2026-10-03
 
 - [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty and nobody has looked yet; see `pending:` below
 
-Manual verification by: pending: Lutan reading the paper and answering L1 to L12, and the Director going through her table and its eight questions
+Manual verification by: pending: Lutan answering L1 to L12 on how it is built, and the Director confirming her table and its six open points
 
 ### Result
 
