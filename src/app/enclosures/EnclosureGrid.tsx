@@ -60,7 +60,7 @@ function EnclosureCard({
           />
           <Link
             href={`/enclosures/${enclosure.id}`}
-            className="truncate font-medium text-foreground after:absolute after:inset-0 after:content-['']"
+            className="break-words font-medium text-foreground after:absolute after:inset-0 after:content-[''] sm:truncate"
           >
             {name}
           </Link>

@@ -225,7 +225,7 @@ export function VetHub({
                 role="radio"
                 aria-checked={p === period}
                 onClick={() => setPeriod(p)}
-                className={`rounded px-3 py-1.5 text-sm font-medium transition ${
+                className={`rounded px-2 py-1.5 text-sm font-medium transition sm:px-3 ${
                   p === period
                     ? "bg-primary text-primary-foreground"
                     : "text-muted hover:text-foreground"

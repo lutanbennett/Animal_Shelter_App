@@ -46,7 +46,7 @@ function VetCard({ vet }: { vet: VetSummary }) {
               aria-hidden="true"
               className="h-5 w-5 shrink-0 text-muted"
             />
-            <span className="truncate font-medium text-foreground">
+            <span className="min-w-0 break-words font-medium text-foreground sm:truncate">
               {vet.name}
             </span>
           </span>

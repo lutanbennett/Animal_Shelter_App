@@ -68,6 +68,7 @@ export const unreleased: ReleaseNote[] = [
     text: "Staff and managers can now record a blood test. Until now, tapping Save blood test on a resident (or the Log blood test link on a vet visit) answered \"You don't have permission to do that\" and nothing was saved, even though the form was offered. It now saves, with or without a lab scan attached.",
     roles: ["admin", "management", "staff"],
   },
+  "Pages now fit a phone screen instead of sliding sideways. On a resident's page the Edit pencil and the Record death heart are back on screen (they were cut off the right edge), and the Enclosures, Vets, Contacts, Deliveries, Book vet visit and Move/Return forms no longer push their buttons and boxes out of view; long enclosure and clinic names wrap instead of stretching the page. In Thai, Sign out no longer runs off the edge: on a phone it is a small door-and-arrow icon in the header (the words still show on a larger screen).",
 ];
 
 /** Newest first. */

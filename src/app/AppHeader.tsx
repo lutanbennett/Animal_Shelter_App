@@ -77,7 +77,7 @@ export async function AppHeader() {
         <span className="hidden text-sm text-muted md:inline">
           {user.email}
         </span>
-        <SignOutButton />
+        <SignOutButton iconOnPhone />
       </div>
     </header>
   );
