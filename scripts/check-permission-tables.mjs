@@ -430,7 +430,7 @@ begin
   perform pg_temp.eq('G the catalogue is restored', (select area from permission_activities where key = 'stock.delivery'), 'stock');
   perform pg_temp.eq('G replay logged nothing', (select count(*) from audit_log where table_name in ('roles', 'role_permissions'))::text, (select audit_rows::text from harness_pre));
 
-  raise exception '%', format('HARNESS-OK %s asserted live | A: 6 roles, 55 activities, cells 48/37/13/24/0/0 | B: four answers-no cases, archived person, signed out, anon, null, mistyped level, seeded yes, read vs edit, admin yes | C: my_permissions | D: guards, role_id bridge, last admin | E: RLS at aal1/aal2, anon | F: audit | H: 660 answers (6 roles x 55 activities x read/edit) equal the paper's §4 | G: replay keeps a shelter edit',
+  raise exception '%', format('HARNESS-OK %s asserted live | A: 6 roles, 55 activities, cells 48/37/13/24/0/0 | B: four answers-no cases, archived person, signed out, anon, null, mistyped level, seeded yes, read vs edit, admin yes | C: my_permissions | D: guards, role_id bridge, last admin | E: RLS at aal1/aal2, anon | F: audit | H: 660 answers (6 roles x 55 activities x read/edit) equal section 4 of the paper | G: replay keeps a shelter edit',
     ${JSON.stringify(file).replace(/"/g, "'")});
 end;
 $h2$;
