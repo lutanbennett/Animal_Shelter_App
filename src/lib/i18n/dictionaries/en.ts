@@ -93,6 +93,7 @@ const en = {
     frequencies: "Frequencies",
     vets: "Vets",
     medications: "Medications",
+    medicationList: "Medication list",
     diets: "Diets",
     cashflow: "Cashflow",
     stockUsage: "Stock between counts",
@@ -1507,6 +1508,8 @@ const en = {
           "The vets and clinics the shelter books visits with, and how much each one has seen.",
         medications:
           "The medication list prescriptions are written from — names, units, and duplicates to merge.",
+        medicationList:
+          "Who needs what medicine today, in walking order, with a photo of each animal and of each box. A list to read; nothing to tap.",
         diets:
           "The food list staff pick from, with the unit, cost and daily quantities the forecast uses.",
         cashflow:
@@ -1787,6 +1790,26 @@ const en = {
       note:
         "Buy = what is needed (forecast use over the period, plus safety stock) minus what is expected on the shelf now (the last count, minus forecast use since, plus deliveries recorded since), never below zero, rounded up to whole packs where the item has a purchase unit. The supplier is the one named on the item's most recent delivery.",
       couldntLoad: "Couldn't load everything",
+    },
+    medicationList: {
+      title: "Medication list",
+      subtitle:
+        "Who needs medicine today and how much, enclosure by enclosure. It is a list to read: nothing here is ticked off or recorded.",
+      today: (date: string) => `Today, ${date}`,
+      couldntLoad: "Couldn't load the medication list",
+      empty: "No one has medicine due today.",
+      residentsCount: (n: number) => (n === 1 ? "1 resident" : `${n} residents`),
+      photoAlt: (name: string) => `Photo of ${name}`,
+      noPhoto: "No photo",
+      labelAlt: (medication: string) => `Label of ${medication}`,
+      amountMissing: "Amount not recorded",
+      lastDay: "Last day of the course",
+      apartHeading: "Not in an enclosure today",
+      apartNote:
+        "In hospital, fostered or out in the community: their medicine is not given here. Listed so no one thinks they were missed.",
+      noEnclosure: "No enclosure recorded",
+      carryNote:
+        "Without signal in the kennels, open this list at the office first and carry it round.",
     },
     stockUsage: {
       title: "Stock between counts",
