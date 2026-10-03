@@ -841,11 +841,10 @@ const manual: Manual = {
           roles: ["admin", "management", "staff"],
           path: "Maintenance → Log maintenance (or from an enclosure page)",
           steps: [
-            "Give the job a title, e.g. \"Gate latch broken\", and describe what needs doing.",
-            "Choose where: pick the zone and enclosure, or tick Zone-wide for something like a fence line or drainage.",
-            "Set the status, a due date and an estimated cost in baht if known, and tick everyone it's assigned to — anyone with a login who does the work (staff, volunteers, management). A big job can go to a team.",
-            "Add photos of the problem as it is now. They upload when you save.",
-            "Tap Save job.",
+            "Step 1, What is wrong: give the job a title, e.g. \"Gate latch broken\", describe what needs doing, and add photos of the problem as it is now. They upload when you save.",
+            "Step 2, Where: pick the zone and enclosure, or tick Zone-wide for something like a fence line or drainage.",
+            "Step 3, Who and when: set the status, a due date and an estimated cost in baht if known, and tick everyone it's assigned to — anyone with a login who does the work (staff, volunteers, management). A big job can go to a team.",
+            "Step 4, Review: check everything, use Edit to change a step, then tap Save job. Back never loses what you typed, and nothing is saved until this last step.",
           ],
           screenshot: {
             src: "/manual/maintenance-new.png",
@@ -859,7 +858,7 @@ const manual: Manual = {
           path: "Maintenance",
           steps: [
             "Staff and volunteers open on the jobs assigned to them; switch Assigned to from Me to Everyone to see the whole board (management and admin start there). Filter by zone or enclosure. Completed jobs from the last 30 days are shown; tick Show all completed jobs for older ones.",
-            "Drag a job card to another column to change its status. Cards are coloured when a job is overdue, due soon, or blocked.",
+            "On a computer, drag a job card to another column to change its status. On a phone, tap Move job on under the job, choose where it goes (Move to In progress, Blocked, Completed or Not started), and confirm — the question says in words what will happen. Use the status chips at the top to look at one status, such as Completed, and move a job back from there. Cards are coloured when a job is overdue, due soon, or blocked.",
             "Tap a card to open the job: edit its details, record the actual cost, and add Before and After photos. Who it's assigned to is shown under the title and on the card.",
             "A job logged by mistake can be deleted from its page (Delete job, bottom right). Its photos and Drive folder go with it and it can't be undone — for a job that was real but is finished, mark it Completed instead.",
           ],

@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "On a phone, a maintenance job can now be moved on with a tap: each job on the Maintenance list has a Move job on button, which asks where it goes, says in words what will happen, and moves it, including back a step and on to Completed. Logging a job is now a few short steps (what is wrong, where, who and when, then a check before it is saved), and going Back keeps everything you typed. Dragging a card still works on a computer.",
   "Scan a chip on the Residents page now finds the animal: type or scan the 15 digits and you go straight to their page. Before, it always answered \"0 residents\" even for a chip you had just recorded.",
   "Logging an immunization, a blood test or a procedure is no longer refused as \"in the future\" for today's date between midnight and 7 am. A resident can also be moved, sent to hospital, brought back or recorded as deceased on the same day they arrived or were last moved, instead of having to wait until the next day. If you pick a date before the current placement began, the message now says so.",
   {
