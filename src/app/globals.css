@@ -289,6 +289,15 @@ body {
 @keyframes puppy-drift { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-10px); } }
 @keyframes puppy-route { from { stroke-dashoffset: 1; } }
 
+/* Stocktake cards: the next card slides in from the right, the previous from the left. */
+@keyframes card-in-next { from { opacity: 0; transform: translateX(28px); } }
+@keyframes card-in-prev { from { opacity: 0; transform: translateX(-28px); } }
+.card-in-next { animation: card-in-next 0.18s ease-out; }
+.card-in-prev { animation: card-in-prev 0.18s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .card-in-next, .card-in-prev { animation: none; }
+}
+
 @keyframes puppy-lean {
   0%, 100% { transform: rotate(-3deg) translateX(-2px); }
   45%, 60% { transform: rotate(4deg) translateX(3px); }

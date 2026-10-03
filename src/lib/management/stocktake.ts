@@ -145,3 +145,83 @@ export function summarise(
   }
   return summary;
 }
+
+/**
+ * The order the phone's cards come in: the ids of the items, first card first.
+ * Name order today, because that is the order the page loads them in. It is a
+ * function of its own so "Stocktake in cupboard order" (backlog, Management)
+ * can change it in one place without touching the cards.
+ */
+export function cardSequence(items: StocktakeItem[]): string[] {
+  return items.map((item) => item.id);
+}
+
+/**
+ * Where the card-by-card count has got to. `queue` is the ids still being
+ * walked this pass — null is the whole sequence, a list is a second pass over
+ * the cards that were skipped. `pos === queue.length` is the end screen.
+ * `skipped` is every card passed over and not counted since.
+ */
+export type CardsState = {
+  queue: string[] | null;
+  pos: number;
+  skipped: string[];
+};
+
+export const CARDS_START: CardsState = { queue: null, pos: 0, skipped: [] };
+
+function queueOf(state: CardsState, sequence: string[]): string[] {
+  return state.queue ?? sequence;
+}
+
+/** The card shown now, or null at the end screen (or with nothing to count). */
+export function currentCardId(state: CardsState, sequence: string[]): string | null {
+  return queueOf(state, sequence)[state.pos] ?? null;
+}
+
+export function cardsTotal(state: CardsState, sequence: string[]): number {
+  return queueOf(state, sequence).length;
+}
+
+/**
+ * Moves on from the card shown. `skip` marks it skipped, anything else
+ * counts it, which takes it off the skipped list if a second pass is
+ * revisiting it. Never moves past the end screen.
+ */
+export function cardsAdvance(state: CardsState, sequence: string[], outcome: "counted" | "skip"): CardsState {
+  const id = currentCardId(state, sequence);
+  if (id == null) return state;
+  const skipped =
+    outcome === "skip"
+      ? state.skipped.includes(id)
+        ? state.skipped
+        : [...state.skipped, id]
+      : state.skipped.filter((s) => s !== id);
+  return { ...state, skipped, pos: Math.min(state.pos + 1, queueOf(state, sequence).length) };
+}
+
+/** One card back, from the end screen too. Stays on the first card. */
+export function cardsBack(state: CardsState): CardsState {
+  return { ...state, pos: Math.max(state.pos - 1, 0) };
+}
+
+/** "5 skipped — count them now?": a pass over just the skipped cards. */
+export function cardsRevisit(state: CardsState, sequence: string[]): CardsState {
+  const ids = sequence.filter((id) => state.skipped.includes(id));
+  return ids.length === 0 ? state : { ...state, queue: ids, pos: 0 };
+}
+
+/** Back to the first card, keeping what was skipped (a restart after saving clears it too). */
+export function cardsFrom(state: CardsState, sequence: string[], id: string): CardsState {
+  const pos = sequence.indexOf(id);
+  return pos < 0 ? CARDS_START : { ...state, queue: null, pos };
+}
+
+/** A restored draft only keeps the ids that still exist: an item deleted since would fail the whole save. */
+export function pruneCards(state: CardsState, sequence: string[]): CardsState {
+  const live = new Set(sequence);
+  const skipped = state.skipped.filter((id) => live.has(id));
+  const queue = state.queue?.filter((id) => live.has(id)) ?? null;
+  const total = queue?.length ?? sequence.length;
+  return { queue: queue && queue.length > 0 ? queue : null, skipped, pos: Math.min(Math.max(state.pos, 0), total) };
+}
