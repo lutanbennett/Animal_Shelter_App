@@ -1,5 +1,7 @@
 # 2026-09-24 — Admin on mobile: which Settings and Management pages belong on a phone
 
+> **Superseded in part, 2026-10-03.** There are no PCs on site, so the phone is no longer only a field tool and the Management pages are phone work. The measurements below stand; the verdicts and the "Role angle" paragraph are replaced by `2026-10-03-no-pcs-on-site-supersedes-admin-on-mobile.md`.
+
 The phone stays a field tool. Every `/admin` and `/management` route was
 opened at 375px as admin (dev, 2026-09-24) and measured: `scrollWidth` of each
 table box against the 325px it has. No page breaks the layout — every table
