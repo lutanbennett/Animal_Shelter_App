@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { SYSTEM_ZONE } from "@/lib/enclosures/options";
 import { CARER_CONTACT_TYPE } from "@/lib/contacts/carers";
-import { isFutureDate, isIsoDate, placementStartDate } from "./dates";
+import { isFutureDate, isIsoDate, placementStartAfter, placementStartDate } from "./dates";
 
 /** Names of the Lifecycle pseudo-enclosures for residents living with a carer. */
 export const FOSTERED_ENCLOSURE = "Fostered";
@@ -177,12 +177,12 @@ export async function rehomeResident(
     return { error: errors.sameCarer };
   }
 
-  const startDate = placementStartDate(input.date, now);
-  // end_after_start on the prior row would reject this anyway, but with a
-  // constraint name rather than something a person can act on.
-  if (current && new Date(startDate) <= new Date(current.start_date)) {
-    return { error: errors.dateBeforeCurrent };
-  }
+  // A date before the current placement began is refused with words rather
+  // than the end_after_start constraint's name; the same day is allowed.
+  const startDate = current
+    ? placementStartAfter(input.date, now, current.start_date)
+    : placementStartDate(input.date, now);
+  if (!startDate) return { error: errors.dateBeforeCurrent };
 
   const {
     data: { user },
@@ -287,12 +287,10 @@ export async function returnResidentToShelter(
   }
 
   const current = currentResult.data?.[0];
-  const startDate = placementStartDate(input.date, now);
-  // end_after_start on the prior row would reject this anyway, but with a
-  // constraint name rather than something a person can act on.
-  if (current && new Date(startDate) <= new Date(current.start_date)) {
-    return { error: errors.dateBeforeLeft };
-  }
+  const startDate = current
+    ? placementStartAfter(input.date, now, current.start_date)
+    : placementStartDate(input.date, now);
+  if (!startDate) return { error: errors.dateBeforeLeft };
 
   const {
     data: { user },

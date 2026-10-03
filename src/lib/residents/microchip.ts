@@ -14,6 +14,19 @@ export function isValidMicrochip(digits: string): boolean {
   return new RegExp(`^[0-9]{${MICROCHIP_LENGTH}}$`).test(digits);
 }
 
+/**
+ * The chip a search-box entry stands for, or null when it is a name or an ID.
+ * Only digits, spaces and dashes count as a chip — a reader types the bare
+ * 15 digits, a person may group them — so "R-0394" is never read as one. The
+ * pattern once lacked its backslashes (`[ds-]`), matched no digit, and every
+ * scan fell through to the name search (dry run 2026-10-03, F-02).
+ */
+export function chipFromSearch(q: string): string | null {
+  if (!/^[\d\s-]+$/.test(q)) return null;
+  const digits = stripToDigits(q);
+  return isValidMicrochip(digits) ? digits : null;
+}
+
 export type MicrochipFields = {
   microchip_number: string | null;
   microchip_implanted_on: string | null;

@@ -62,6 +62,12 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Scan a chip on the Residents page now finds the animal: type or scan the 15 digits and you go straight to their page. Before, it always answered \"0 residents\" even for a chip you had just recorded.",
+  "Logging an immunization, a blood test or a procedure is no longer refused as \"in the future\" for today's date between midnight and 7 am. A resident can also be moved, sent to hospital, brought back or recorded as deceased on the same day they arrived or were last moved, instead of having to wait until the next day. If you pick a date before the current placement began, the message now says so.",
+  {
+    text: "Staff and managers can now record a blood test. Until now, tapping Save blood test on a resident (or the Log blood test link on a vet visit) answered \"You don't have permission to do that\" and nothing was saved, even though the form was offered. It now saves, with or without a lab scan attached.",
+    roles: ["admin", "management", "staff"],
+  },
   "Pages now fit a phone screen instead of sliding sideways. On a resident's page the Edit pencil and the Record death heart are back on screen (they were cut off the right edge), and the Enclosures, Vets, Contacts, Deliveries, Book vet visit and Move/Return forms no longer push their buttons and boxes out of view; long enclosure and clinic names wrap instead of stretching the page. In Thai, Sign out no longer runs off the edge: on a phone it is a small door-and-arrow icon in the header (the words still show on a larger screen).",
 ];
 

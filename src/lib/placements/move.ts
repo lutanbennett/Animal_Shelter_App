@@ -2,7 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { SYSTEM_ZONE } from "@/lib/enclosures/options";
-import { isFutureDate, isIsoDate, placementStartDate } from "./dates";
+import { isFutureDate, isIsoDate, placementStartAfter, placementStartDate } from "./dates";
 
 export type MoveResidentInput = {
   residentId: string;
@@ -91,12 +91,12 @@ export async function moveResidentToEnclosure(
   const current = currentResult.data?.[0];
   if (current?.enclosure_id === target.id) return { error: errors.alreadyThere };
 
-  const startDate = placementStartDate(input.moveDate, now);
-  // end_after_start on the prior row would reject this anyway, but with a
-  // constraint name rather than something a person can act on.
-  if (current && new Date(startDate) <= new Date(current.start_date)) {
-    return { error: errors.dateBeforeCurrent };
-  }
+  // A date before the current placement began is refused with words rather
+  // than the end_after_start constraint's name; the same day is allowed.
+  const startDate = current
+    ? placementStartAfter(input.moveDate, now, current.start_date)
+    : placementStartDate(input.moveDate, now);
+  if (!startDate) return { error: errors.dateBeforeCurrent };
 
   const {
     data: { user },

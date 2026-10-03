@@ -3,6 +3,7 @@
 import { databaseFailure } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { isFutureDate, isIsoDate } from "@/lib/placements/dates";
 
 export type ImmunizationRecordResult = {
   id: string;
@@ -69,11 +70,13 @@ export async function recordImmunizations(
     return { error: t.immunizations.errors.enterDate };
   }
 
-  const parsedDate = new Date(dateAdministered);
-  if (Number.isNaN(parsedDate.getTime())) {
+  if (
+    !isIsoDate(dateAdministered) ||
+    Number.isNaN(new Date(dateAdministered).getTime())
+  ) {
     return { error: t.immunizations.errors.invalidDate };
   }
-  if (parsedDate.getTime() > Date.now()) {
+  if (isFutureDate(dateAdministered, new Date())) {
     return { error: t.immunizations.errors.dateInFuture };
   }
 

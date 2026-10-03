@@ -2,7 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { SYSTEM_ZONE } from "@/lib/enclosures/options";
-import { isFutureDate, isIsoDate, placementStartDate } from "./dates";
+import { isFutureDate, isIsoDate, placementStartAfter, placementStartDate } from "./dates";
 
 /** Name of the Lifecycle pseudo-enclosure that holds hospitalised residents. */
 export const HOSPITAL_ENCLOSURE = "Hospital";
@@ -109,12 +109,12 @@ export async function sendResidentToHospital(
   if (state.current_status === "Adopted") return { error: errors.adopted };
 
   const current = currentResult.data?.[0];
-  const startDate = placementStartDate(input.date, now);
-  // end_after_start on the prior row would reject this anyway, but with a
-  // constraint name rather than something a person can act on.
-  if (current && new Date(startDate) <= new Date(current.start_date)) {
-    return { error: errors.dateBeforeCurrent };
-  }
+  // A date before the current placement began is refused with words rather
+  // than the end_after_start constraint's name; the same day is allowed.
+  const startDate = current
+    ? placementStartAfter(input.date, now, current.start_date)
+    : placementStartDate(input.date, now);
+  if (!startDate) return { error: errors.dateBeforeCurrent };
 
   const {
     data: { user },
@@ -208,12 +208,10 @@ export async function returnResidentFromHospital(
   }
 
   const current = currentResult.data?.[0];
-  const startDate = placementStartDate(input.date, now);
-  // end_after_start on the prior row would reject this anyway, but with a
-  // constraint name rather than something a person can act on.
-  if (current && new Date(startDate) <= new Date(current.start_date)) {
-    return { error: errors.dateBeforeAdmitted };
-  }
+  const startDate = current
+    ? placementStartAfter(input.date, now, current.start_date)
+    : placementStartDate(input.date, now);
+  if (!startDate) return { error: errors.dateBeforeAdmitted };
 
   const {
     data: { user },

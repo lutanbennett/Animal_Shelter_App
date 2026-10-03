@@ -17,6 +17,36 @@ export function placementStartDate(date: string, now: Date) {
   return date >= todayIso(now) ? now.toISOString() : `${date}T12:00:00.000Z`;
 }
 
+/**
+ * The start for a placement that follows `previousStart`, or null when the
+ * chosen date is a day *before* the previous placement began. Replaces a bare
+ * `placementStartDate(...) <= previousStart` refusal, which turned a same-day
+ * change into an error in two ways (dry run 2026-10-03, F-04):
+ *
+ * - intake stamps the placement `p_intake_date::timestamptz`, i.e. 00:00 UTC
+ *   = 07:00 Bangkok. A move made on the intake day before 07:00 is stamped
+ *   "now", which is *earlier* than that, so it was refused until the clock
+ *   passed 07:00;
+ * - two back-dated changes on one day both land on `T12:00:00Z`, and
+ *   `end_date > start_date` (0001) forbids a tie.
+ *
+ * The rule is by shelter calendar day: the same day as the previous
+ * placement, or later, is allowed. When the natural stamp does not fall after
+ * the previous start, the new one is put one second after it, which keeps the
+ * order (and the prior row's end) correct and the day unchanged.
+ */
+export function placementStartAfter(
+  date: string,
+  now: Date,
+  previousStart: string,
+): string | null {
+  const previous = new Date(previousStart);
+  if (date < todayIso(previous)) return null;
+  const natural = placementStartDate(date, now);
+  if (new Date(natural) > previous) return natural;
+  return new Date(previous.getTime() + 1000).toISOString();
+}
+
 export function isIsoDate(value: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
