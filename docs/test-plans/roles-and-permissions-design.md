@@ -20,7 +20,7 @@ behaviour, because there is none.
 | PR | https://github.com/lutanbennett/Animal_Shelter_App/pull/323 |
 | Tested by / date | Claude, 2026-10-03 |
 | Carries a migration? | no |
-| Tested at SHA | the tip of this branch when the PR was opened |
+| Tested at SHA | `fc10d428`, the commit CI was read green at; the one after it only ticks the CI line |
 
 ## 1. Scope and risk
 
@@ -40,7 +40,7 @@ behaviour, because there is none.
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: `check`, `test-plan`, `migration-numbers`, `script-integrity`, `audit` and `public-views` all completed SUCCESS at `fc10d428`, read from `gh pr view 323` before merging. This commit changes only this line
 
 ## 3. Schema and data — *skip if no migration*
 
