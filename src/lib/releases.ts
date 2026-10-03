@@ -61,24 +61,32 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [
-  {
-    text: "New Medication list under Management: open one page on your phone and see who needs medicine today, enclosure by enclosure in walking order. Each animal shows their photo and name, and each medicine shows a photo of its box, how much to give and how often, so you can match what's in your hand. A medicine given every other day, weekly or monthly appears only on the days it's due. It is a list to read: nothing is ticked off and the app does not record that a dose was given.",
-    roles: ["admin", "management"],
-  },
-  "On a phone, a maintenance job can now be moved on with a tap: each job on the Maintenance list has a Move job on button, which asks where it goes, says in words what will happen, and moves it, including back a step and on to Completed. Logging a job is now a few short steps (what is wrong, where, who and when, then a check before it is saved), and going Back keeps everything you typed. Dragging a card still works on a computer.",
-  "Scan a chip on the Residents page now finds the animal: type or scan the 15 digits and you go straight to their page. Before, it always answered \"0 residents\" even for a chip you had just recorded.",
-  "Logging an immunization, a blood test or a procedure is no longer refused as \"in the future\" for today's date between midnight and 7 am. A resident can also be moved, sent to hospital, brought back or recorded as deceased on the same day they arrived or were last moved, instead of having to wait until the next day. If you pick a date before the current placement began, the message now says so.",
-  {
-    text: "Staff and managers can now record a blood test. Until now, tapping Save blood test on a resident (or the Log blood test link on a vet visit) answered \"You don't have permission to do that\" and nothing was saved, even though the form was offered. It now saves, with or without a lab scan attached.",
-    roles: ["admin", "management", "staff"],
-  },
-  "Pages now fit a phone screen instead of sliding sideways. On a resident's page the Edit pencil and the Record death heart are back on screen (they were cut off the right edge), and the Enclosures, Vets, Contacts, Deliveries, Book vet visit and Move/Return forms no longer push their buttons and boxes out of view; long enclosure and clinic names wrap instead of stretching the page. In Thai, Sign out no longer runs off the edge: on a phone it is a small door-and-arrow icon in the header (the words still show on a larger screen).",
-  "Changing your password now asks for your current password first, and signs you out everywhere else once it's changed. Before, anyone holding your phone while you were signed in could set a new password without knowing the old one and take over your account. If you've forgotten the current password, sign out and use Forgot password? on the sign-in page instead. If you still sign in with a temporary password, or arrive from a reset link, nothing changes: you just choose a new one.",
-];
+export const unreleased: ReleaseNote[] = [];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.16.0",
+    date: "2026-10-03",
+    title:
+      "Changing your password now needs your current one, a Medication list for the phone, maintenance by tap, and pages that fit a phone screen",
+    major: true,
+    notes: [
+      "Changing your password now asks for your current password first, and signs you out everywhere else once it's changed. Before, anyone holding your phone while you were signed in could set a new password without knowing the old one and take over your account. If you've forgotten the current password, sign out and use Forgot password? on the sign-in page instead. If you still sign in with a temporary password, or arrive from a reset link, nothing changes: you just choose a new one.",
+      {
+        text: "New Medication list under Management: open one page on your phone and see who needs medicine today, enclosure by enclosure in walking order. Each animal shows their photo and name, and each medicine shows a photo of its box, how much to give and how often, so you can match what's in your hand. A medicine given every other day, weekly or monthly appears only on the days it's due. It is a list to read: nothing is ticked off and the app does not record that a dose was given.",
+        roles: ["admin", "management"],
+      },
+      {
+        text: "Staff and managers can now record a blood test. Until now, tapping Save blood test on a resident (or the Log blood test link on a vet visit) answered \"You don't have permission to do that\" and nothing was saved, even though the form was offered. It now saves, with or without a lab scan attached.",
+        roles: ["admin", "management", "staff"],
+      },
+      "On a phone, a maintenance job can now be moved on with a tap: each job on the Maintenance list has a Move job on button, which asks where it goes, says in words what will happen, and moves it, including back a step and on to Completed. Logging a job is now a few short steps (what is wrong, where, who and when, then a check before it is saved), and going Back keeps everything you typed. Dragging a card still works on a computer.",
+      "Pages now fit a phone screen instead of sliding sideways. On a resident's page the Edit pencil and the Record death heart are back on screen (they were cut off the right edge), and the Enclosures, Vets, Contacts, Deliveries, Book vet visit and Move/Return forms no longer push their buttons and boxes out of view; long enclosure and clinic names wrap instead of stretching the page. In Thai, Sign out no longer runs off the edge: on a phone it is a small door-and-arrow icon in the header (the words still show on a larger screen).",
+      "Scan a chip on the Residents page now finds the animal: type or scan the 15 digits and you go straight to their page. Before, it always answered \"0 residents\" even for a chip you had just recorded.",
+      "Logging an immunization, a blood test or a procedure is no longer refused as \"in the future\" for today's date between midnight and 7 am. A resident can also be moved, sent to hospital, brought back or recorded as deceased on the same day they arrived or were last moved, instead of having to wait until the next day. If you pick a date before the current placement began, the message now says so.",
+    ],
+  },
   {
     version: "0.15.1",
     date: "2026-10-03",
