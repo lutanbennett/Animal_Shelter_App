@@ -39,7 +39,7 @@ const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/l
 const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
-const { PROBES: TABLE_PROBES, NO_DB_PROBE } = await import(pathToFileURL(join(root, "scripts/lib/permission-probes.mjs")).href);
+const { PROBES: TABLE_PROBES, NO_DB_PROBE, NOT_A_DIFFERENCE } = await import(pathToFileURL(join(root, "scripts/lib/permission-probes.mjs")).href);
 
 // The expected cells, from the paper at run time (as check-permission-tables.mjs does).
 const paper = readFileSync(join(root, "docs/roles-and-permissions.md"), "utf8").split("\n");
@@ -384,6 +384,7 @@ if (knownSeen.length) {
 }
 if (verbose) { console.log("\nMatches:"); for (const m of matched) console.log(`  ${m.who}  ${m.label}`); }
 
+for (const [id, why] of Object.entries(NOT_A_DIFFERENCE)) console.log(`  ${id}: not a difference: ${why}`);
 if (zReport.length) {
   console.log("\nSection Z (has_permission, no-role / archived person / archived role / unknown activity / missing cell):");
   for (const z of zReport) console.log(`  FAIL ${z.z}`);

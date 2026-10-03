@@ -185,3 +185,10 @@ export const NO_DB_PROBE = {
   "audit.undo": "app code replaying the audit log through the ordinary table policies",
 };
 for (const k of Object.keys(NO_DB_PROBE)) if (NO_DB_PROBE[k] === undefined) delete NO_DB_PROBE[k];
+
+// Rows of §3 C that cannot show up as a difference here, measured on 2026-10-03, and why. Printed by
+// the runner so that "twelve" is accounted for: ten are probed above, these two are not tightenings.
+export const NOT_A_DIFFERENCE = {
+  C8: "stock_receipts update by staff: the delivery activity is Yes/No and staff hold Yes, so the default also lets staff update. The app only inserts and deletes; whether the converted policy should offer update at all is a decision for perm-convert, not a difference between the database and the cell",
+  C12: "resident_list_view carries insert/update/delete grants to authenticated, but information_schema.views reports it is_updatable = NO and is_insertable_into = NO: every statement fails for every role, Admin included. The grants are inert; the conversion can revoke them without any visible change",
+};
