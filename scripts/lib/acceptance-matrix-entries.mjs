@@ -592,6 +592,18 @@ export const ENTRIES = {
       expect: "Big changes are listed first for checking; after saving, the counts show as new.",
     },
     {
+      activity: "Count the medicines one card at a time",
+      device: "phone",
+      do: "Open Stocktake on a phone. On each medicine card type what is on the shelf and tap Save; tap Same as last time on one and Skip on another. At the end choose Count them now for the skipped one, then Review and save.",
+      expect: "Each card shows the box's photo (or the name), the keypad is open, the top says how far you are, and nothing is saved until Review and save.",
+    },
+    {
+      activity: "Close the page half-way and come back",
+      device: "phone",
+      do: "Count a few medicines on the cards, close the tab, then open Stocktake again.",
+      expect: "It says it picked up where you left off, with the same counts and the same card.",
+    },
+    {
       activity: "Skip an item, or keep its figure with \"Same as last time\"",
       device: "phone",
       do: "Leave one row blank and tick Same as last time on another, then save.",

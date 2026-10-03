@@ -28,13 +28,6 @@
 
 import { todayIso } from "@/lib/format";
 
-/** Who records a delivery: 0096's write policy. Volunteers count but do not. */
-export const DELIVERY_ROLES = ["admin", "management", "staff"] as const;
-
-export function canRecordDelivery(role: string | null | undefined): boolean {
-  return role != null && (DELIVERY_ROLES as readonly string[]).includes(role);
-}
-
 export type DeliveryKind = "medication" | "diet";
 
 /** Whether the delivery was on the shelf when that day's stocktake counted it. */

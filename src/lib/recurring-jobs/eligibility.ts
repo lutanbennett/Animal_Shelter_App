@@ -1,7 +1,5 @@
 import { APP_ACCESS_ROLES } from "@/lib/auth/app-access";
 import { canWriteMaintenance } from "@/lib/maintenance/queries";
-import { canRecordDelivery } from "@/lib/management/stock-receipts";
-import { canStocktake } from "@/lib/management/stocktake";
 
 /**
  * Who can actually do a recurring job, worked out from where it is done:
@@ -38,12 +36,25 @@ type Rule = { prefix: string; allows: (role: string) => boolean };
 /** canManage (require-management.ts), which lives beside server-only code. */
 const isManager = (role: string) => role === "admin" || role === "management";
 
+/**
+ * The two stock pages' rules. They ask about ANOTHER person's role (an
+ * assignee), which can() cannot answer: it reads the caller's own cells, and
+ * a non-admin cannot read role_permissions. Answering for any role needs a
+ * database function that does not exist yet, so until it does these two lists
+ * stay as they were, equal to the seeded cells of stock.count and
+ * stock.delivery (0132). The permissions-catalogue decision names the
+ * follow-up; scripts/check-permission-catalogue.mjs fails if they drift from
+ * the seed.
+ */
+export const STOCK_COUNT_ROLES: readonly string[] = ["admin", "management", "staff", "volunteer"];
+export const STOCK_DELIVERY_ROLES: readonly string[] = ["admin", "management", "staff"];
+
 /** Longest prefix wins, so /management/… is decided by /management, not by nothing. */
 const RULES: Rule[] = [
   { prefix: "/admin", allows: (role) => role === "admin" },
   { prefix: "/management", allows: isManager },
-  { prefix: "/stocktake", allows: canStocktake },
-  { prefix: "/deliveries", allows: canRecordDelivery },
+  { prefix: "/stocktake", allows: (role) => STOCK_COUNT_ROLES.includes(role) },
+  { prefix: "/deliveries", allows: (role) => STOCK_DELIVERY_ROLES.includes(role) },
   // The work on the board is logging and updating jobs; a volunteer reads it
   // and adds photos, but cannot move a job on.
   { prefix: "/maintenance", allows: canWriteMaintenance },
