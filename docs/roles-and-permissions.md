@@ -419,4 +419,338 @@ instead of an enum change; and the open question of which residents a doctor
 login sees, which is the "which residents" scope of §5 and should be answered
 there rather than with new policies.
 
+## 8. Lutan's steer: a fresh page for each role
+
+> **Lutan, 2026-10-03:** "For the roles and permissions design can we consider
+> fresh pages for each, this may be easier to maintain if we have single pages
+> with access or no access."
+
+This section recommends. It does not decide.
+
+### What is right about it
+
+- **It goes at the real mess.** About a dozen pages branch on the role *inside*
+  the page today. The resident hub alone consults five role lists to decide which
+  of ten controls to draw. A page that a role either opens or does not open has
+  none of that.
+- **The Director's description already requires it.** The Manager is not
+  comfortable with computers and needs one task per screen, wizard steps, big
+  buttons with an icon and a word, no table edited in place. No single
+  Management page can be right for that person and for the Director at a desk.
+- **It makes acceptance testing nearly mechanical.** "Can this role open this
+  page" is a yes or a no that can be generated, leaving people to test what the
+  page does.
+
+### What it does not solve
+
+- **It is navigation, not capability.** A role that cannot see a page can still
+  send its form. Both backlog items say enforcement must be in the database, and
+  the volunteer's narrowing most of all, "since a volunteer's JWT is the real
+  boundary". Separate pages make the screens simpler. They do not make anything
+  safer.
+- **Pages named for roles would duplicate actions.** The Manager counts stock;
+  so, today, does a volunteer; so might the Head of Medical. Three role pages
+  for one count are either three implementations that drift apart, or one
+  component in three wrappers. Drift in a medical record is worse than an `if`.
+- **Pages named for roles give a new role nothing.** The Architecture item
+  exists so that a shelter can add "Purchasing" or "Kennel lead" and set its
+  column. A role nobody wrote pages for would open onto an empty app.
+
+### Three shapes
+
+| | Shared pages, branching inside (today) | A page per **role** | A page per **task**, open or not |
+|---|---|---|---|
+| Per-role branching inside a page | yes, about a dozen pages | none | none |
+| The same action written twice | no | yes, wherever two roles share a job | no |
+| A role a shelter adds later | works, shows whatever the `if`s allow | gets no pages until someone builds them | gets every task its column holds |
+| Renaming a role (vet → doctor) | touches the `if`s | touches URLs and folders | touches one row |
+| Acceptance test per page | what does each role see here? | can the role open it? | can the role open it? |
+| The Manager's simple screens | hard: one page, two audiences | natural | natural: it is a second page for the same task |
+
+### What is recommended
+
+Keep Lutan's rule exactly as he put it, **single pages with access or no
+access**, and change one word: a page belongs to a **task**, not to a role.
+
+1. **One page, one activity, one guard.** A page opens with
+   `requirePermission("stock.count")` and contains no role name and no branch on
+   who is looking. Most action pages are already built this way: move,
+   hospital, foster and adopt, record a death, edit and microchip are each their
+   own route.
+2. **A page that shows a thing lists the tasks you can do to it.** The resident
+   hub draws its buttons from one registry of routes, filtered by what the
+   person may open. That is the only "branching" left, it is written once, and
+   it is the same code that builds the menu.
+3. **Each role has a home screen made of its tasks.** Big tiles, an icon and a
+   word, in the person's language: Today's medication round, Count the stock,
+   Maintenance jobs. For the default roles the order is chosen by hand. For a
+   role a shelter adds, the same screen is built from its column, so it is
+   coherent on the day it is created.
+4. **Where one task needs a simple and a full version, there are two pages over
+   one action.** The card-by-card stocktake and the desktop stocktake sheet both
+   end in `record_stocktake()`. Which one a person lands on is a setting on the
+   role (*simple* or *full* layout), not a test of the role's name. Simple is the
+   default for every role but Admin, since every role but the Director is on a
+   phone.
+5. **The route registry is the single list**: path, activity, level, icon,
+   label, layout. The menu, the home screens, the hub's buttons, the
+   recurring-job "who can do this" rule and the acceptance matrix's page column
+   all read it. Adding a page is one entry.
+
+This keeps what Lutan wants, easier maintenance through pages that are simply
+reachable or not, and it is the only one of the three shapes that also serves
+the Architecture item.
+
+**When his version as stated would be the better one:** if shelter-defined roles
+are *not* going to be built. With a fixed set of six roles forever, pages named
+for roles plus two enum values is less work than a catalogue and a matrix, and
+the duplication is bounded by six. The Architecture item was raised the same day
+with seven shelters in mind, so this paper assumes configurable roles are
+wanted. If that is wrong, §16's recommendation flips with it, and that is
+question L1.
+
+## 9. The data model
+
+A sketch to agree the shape. It is not a migration and nothing has been run.
+
+```sql
+create table roles (
+  id                uuid primary key default gen_random_uuid(),
+  key               text not null unique,   -- 'admin', 'management', 'maintenance', …
+  name              text not null,
+  name_th           text,
+  kind              text not null check (kind in ('fixed', 'default', 'custom')),
+  opens_app         boolean not null default true,     -- false for the public viewer
+  home_path         text,                              -- where sign-in lands
+  layout            text not null default 'simple' check (layout in ('simple', 'full')),
+  scope_residents   text not null default 'all'  check (scope_residents in ('all', 'own_clinic')),
+  scope_clinical    text not null default 'any'  check (scope_clinical  in ('any', 'own_clinic')),
+  scope_contacts    text not null default 'full' check (scope_contacts  in ('full', 'name_phone', 'name_type')),
+  scope_photos      text not null default 'all'  check (scope_photos    in ('all', 'medical_only')),
+  sees_login_emails boolean not null default true,
+  legacy_role       app_role,                          -- the bridge of §12; dropped with the enum
+  archived_at       timestamptz
+);
+
+create table permission_activities (                   -- the catalogue, seeded from the code file
+  key      text primary key,
+  kind     text not null check (kind in ('level', 'yesno')),
+  area     text not null,
+  sort     integer not null,
+  requires jsonb not null default '[]'                 -- prerequisites: [{activity, level}]
+);
+
+create table role_permissions (
+  id       uuid primary key default gen_random_uuid(), -- a single-column key, so audit_log (0121) can name the row
+  role_id  uuid not null references roles on delete cascade,
+  activity text not null references permission_activities,
+  level    smallint not null check (level in (1, 2)),  -- 1 read, 2 edit or yes
+  unique (role_id, activity)
+);
+
+alter table user_roles add column role_id uuid references roles;
+```
+
+- **No row means None.** A missing cell, an unknown activity, an archived role
+  and a person with no role all answer no.
+- **Admin has no rows.** Its column is a rule (§6), not data.
+- **Yes / No uses the same column**: Yes is 2. One comparison serves both kinds.
+- **Tenancy.** `permission_activities` is the product's and stays global. `roles`
+  gains `shelter_id` when the multi-shelter work lands, `key` becomes unique per
+  shelter, and `role_permissions` follows its role. Nothing here has to be
+  rebuilt for that; it is one column and one index.
+- **Audit and export.** `roles` and `role_permissions` get the `audit_log`
+  trigger, so Recent changes shows who changed which cell. The matrix exports as
+  a sheet and as a PDF from Settings, because it is also what a shelter's
+  acceptance sign-off is checked against.
+- **One person, one role**, as now. Several roles per person was considered and
+  left out: it makes "what can this person do" a union nobody can read off the
+  matrix, and a shelter that needs a mix can make a role for it.
+
+## 10. Enforcement, and how it stays fast
+
+### One function in the database
+
+```sql
+create function has_permission(p_activity text, p_level text default 'edit')
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (
+    select 1
+    from public.user_roles ur
+    join public.roles r on r.id = ur.role_id
+    left join public.role_permissions rp
+           on rp.role_id = r.id and rp.activity = p_activity
+    where ur.user_id = (select auth.uid())
+      and ur.archived_at is null
+      and r.archived_at is null
+      and (r.key = 'admin' or rp.level >= case p_level when 'read' then 1 else 2 end)
+  );
+$$;
+```
+
+Every policy and every `security definer` guard asks it, and nothing else.
+A table gets one policy per command instead of one per role per command:
+
+```sql
+create policy weight_select on weight for select to authenticated
+  using ((select has_permission('medical.weight', 'read'))
+         and ((select sees_all_residents()) or resident_id in (select current_vet_resident_ids())));
+
+create policy weight_insert on weight for insert to authenticated
+  with check ((select has_permission('medical.weight'))
+              and ((select sees_all_residents()) or resident_id in (select current_vet_resident_ids())));
+```
+
+47 tables with at most four commands each is fewer policies than today's 243,
+and none of them names a role.
+
+### One function in TypeScript
+
+```ts
+const perms = await loadPermissions();      // one RPC per request, my_permissions(), memoised with cache()
+perms.can("stock.delivery");                // edit, or yes
+perms.can("medical.weight", "read");
+await requirePermission("stock.count");     // page guard: signed out → /login, refused → /no-access
+```
+
+`my_permissions()` returns the role's key, name, layout, home, scopes and its
+cells. The keys are a TypeScript union generated from the catalogue file, so a
+mistyped activity does not compile. The fourteen predicates and sixteen role
+lists of §3 are replaced by it. Client components read the same map from a
+provider; it is the person's own permissions, so nothing in it is secret.
+
+The three checks every write has today stay three: the page (may you open it),
+the server action (may you do it), the database (the policy). What changes is
+that all three ask the same question with the same key.
+
+### Live lookup or the token hook
+
+The item names two ways to keep this fast. They are not equally good here.
+
+| | **Live lookup** (a `stable` function over two small tables) | **Token hook** (permissions written into the JWT at sign-in) |
+|---|---|---|
+| A changed cell takes effect | on the next request | when the person's token refreshes, up to its lifetime (an hour by default), or on signing in again |
+| Archiving a person, narrowing a role | immediate, as today | lags by the same interval |
+| Cost per statement | one indexed lookup per policy | none |
+| New moving parts | none | a hook registered in each Supabase project's Auth settings, outside the migration files, for dev, production and later UAT |
+| The token | unchanged | carries up to 55 entries per person |
+| The screen has to say | nothing | "changes apply within the hour" |
+
+**Recommended: the live lookup.** The reason is the second row. Today
+`current_user_role()` reads `user_roles` on every request, so the moment an
+Admin archives someone, that person is out. A token hook would quietly trade
+that for speed the app has not been shown to need: the tables are tiny (eight
+roles by 55 activities is 440 rows at most) and the lookup is on a primary key.
+
+How it stays fast under RLS, concretely:
+
+- The function is `stable` and every policy calls it as
+  `(select has_permission(…))`. Postgres then plans it once per statement as an
+  init-plan, not once per row. This is finding D of §3 applied from the start.
+- `role_permissions (role_id, activity)` is unique, so the lookup is one index
+  probe.
+- It is **measured, not assumed**: `explain (analyze, buffers)` on the residents
+  list and on the medication round, as a volunteer and as staff, before and
+  after the first converted table. The numbers go in that PR's test plan.
+
+If a measurement ever shows a problem, the hook can be added later as a cache in
+front of the same function. Starting with it buys a caveat for nothing.
+
+## 11. Proving that the defaults reproduce today
+
+Task B(a) asks for a check, not an assertion. Building it needs the catalogue
+file and the tables, which are the next stream's, so it is specified here.
+
+**`scripts/check-permission-parity.mjs`**, against the dev database, nothing
+committed, in the style of `check-role-write-policies.mjs`.
+
+**What it compares.** For every activity in the catalogue, every level, and each
+of the six legacy roles plus "no role": what the *default cell* says should
+happen, against what the system *actually does*, at three layers.
+
+1. **The database.** Each activity in the catalogue file carries one or more
+   *probes*: a concrete statement that exercises it at a level, for example
+   `{ level: "edit", sql: "insert into weight (resident_id, kg, date) values (…)" }`
+   and `{ level: "read", sql: "select 1 from weight where resident_id = …" }`.
+   The script builds one made-up resident and one login per role inside a single
+   transaction, runs every probe under each role's own JWT with the existing
+   `pg_temp.try()` harness, and rolls back. Expected: an Edit or Yes cell is
+   allowed; a Read cell reads rows and is refused the write; a None cell reads
+   nothing and is refused. For scoped roles the probe runs twice, inside the
+   scope and outside it.
+2. **The app's predicates.** A table pairs each activity with the predicate that
+   guards it today (`{ activity: "stock.count", legacy: canStocktake }`) and
+   asserts `legacy(role) === can(defaults[role], activity)` for every role,
+   `null` and `public_viewer` included. Before the predicates are deleted their
+   truth table is written to `scripts/fixtures/legacy-predicates.json`, and the
+   check compares against that file afterwards, so it keeps working once they
+   are gone.
+3. **The routes.** For every route in the registry and every role: the registry's
+   answer (open or refused) against the page's guard today, using the pure guard
+   functions and the walkthrough's "must not" lines already in
+   `acceptance-matrix-entries.mjs`. No browser.
+
+**Known tightenings.** A list in the script, one entry per row of §3 C:
+`{ id: "C3", table: "immunization_types", role: "vet", command: "INSERT", today: "allowed", default: "refused" }`.
+The check **fails on any difference that is not in the list**, and it **fails on
+any entry in the list that no longer differs**, so the list can neither hide a
+regression nor rot. That second rule is the one from
+`docs/decisions/2026-10-02-check-scripts-assert-live-not-replay.md`.
+
+**When it runs.** Before each conversion PR against the old policies: green
+means the catalogue describes today. After it against the new ones: green means
+the conversion changed nothing but the listed tightenings. In CI once the tables
+exist.
+
+**A second, smaller check:** `scripts/check-permission-catalogue.mjs` asserts
+that the activities in the code file and in `permission_activities` are the same
+set, and that every activity key written in a policy, a function or a `can()`
+call exists in the catalogue. A mistyped key in a policy would otherwise deny
+silently.
+
+## 12. Getting from the enum to the matrix
+
+The hard constraint is the one in `CLAUDE.md`: one schema PR in flight at a
+time, each additive and re-runnable. 243 policies cannot be converted in one
+file that anyone could review. So the conversion is staged, and a bridge keeps
+every stage shippable.
+
+**The bridge: `roles.legacy_role`.** Every existing policy asks
+`current_user_role()`. During the migration that function returns the role's
+*legacy* enum value. The six built-in roles map to themselves. A configured role
+names the legacy role whose database rights it borrows until its areas are
+converted: Maintenance and Medical borrow `staff`. So an unconverted table
+treats the Head of Maintenance as staff, which is what that person is today,
+while the app, already on `can()`, shows them their own menu, home screen and
+pages. Each area that is converted stops asking `current_user_role()` and the
+borrowed rights fall away there.
+
+| Stage | What | Behaviour change |
+|---|---|---|
+| 0 | This paper and the Director's table agreed; decision files written | none |
+| 1 | **Schema, `0132`:** the three tables, `user_roles.role_id` filled from the enum and kept in step by a trigger, the six roles seeded with today's cells, `has_permission()`, `my_permissions()`. Read by nothing | none |
+| 2 | **App:** the catalogue file, `can()`, `requirePermission()`, the route registry; predicates replaced area by area; the manual's `roles` tags and the acceptance matrix read activities. Parity layers 2 and 3 green | none |
+| 3 | **The two roles exist:** Maintenance and Medical as rows with `legacy_role = 'staff'`; Security lists roles from the table; their home screens | the two Heads get their own menu and home. Database rights still staff's |
+| 4 | **Database, area by area**, one schema PR each, parity check before and after: photos and moves · stock · maintenance and projects · medical · residents and housing · contacts, clinics, friends · management lists and reports · settings and setup lists · the 17 function guards with their area | each area: the listed tightenings, then Lanna's cells for it (the volunteer narrowed, the Heads narrowed from staff) |
+| 5 | **Remove the bridge:** nothing calls `current_user_role()`; drop `legacy_role`, `user_roles.role` and the `app_role` type | none |
+| 6 | **Settings → Roles and permissions:** the matrix, editable by Admin with 2-step, audited, exportable | Admin can change a cell |
+| 7 | **Roles a shelter adds:** create, rename, archive, set scopes, layout and home | a shelter can add a role |
+
+**What the bridge does not do, said plainly.** Between stage 3 and the end of
+stage 4, a configured role's *database* boundary in an unconverted area is its
+legacy role's. The Head of Maintenance's screens will not offer a prescription
+form, and the database would still accept one from that login until the medical
+area is converted. That is no worse than today, when that person is staff, and
+it is why the areas where the Director wants a real boundary are converted
+first. It is also why stage 7 comes after stage 5: a role a shelter invents must
+not need a legacy role.
+
+**The order inside stage 4** puts the volunteer's areas first (photos and moves,
+then stock), because that is the one change in the Director's list that removes
+a right, and only the database makes it real.
+
+**New tables skip the bridge.** Anything created after stage 1, the medication
+round first, is written against `has_permission()` from its first migration and
+never names a role.
+
 <!-- next-section -->
