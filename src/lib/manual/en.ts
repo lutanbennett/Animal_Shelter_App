@@ -78,7 +78,7 @@ const manual: Manual = {
             "Enter your email and password and tap Sign in — or tap Continue with Google if your account was set up with Google.",
             "You land on My tasks, the app's home page: what's assigned to you today (a vet lands on Appointments instead). Sign out any time with the Sign out button at the top right.",
             "Forgotten your password? Tap Forgot password? under the Sign in button, enter your email, and follow the link in the message to choose a new one — it's valid for an hour. If you were given a temporary password and it's lost, ask an admin to issue another instead.",
-            "To change your password at any time, pick Change password from the bottom of the menu.",
+            "To change your password at any time, pick Change password from the bottom of the menu. You'll be asked for your current password first, and once it's changed every other phone or computer signed in as you is signed out — you stay signed in on this one. If you've forgotten the current one, sign out and use Forgot password? instead.",
             "New here and don't have an account? Tap Request access under Continue with Google, then Continue with Google and choose the Google account you want to use. You'll be told you don't have access yet — that is the request being sent. An administrator sees it under Access requests and approves you; try signing in again later. Without a Google account, the same page gives the shelter's email: email and password logins are created by an administrator, not requested.",
           ],
           screenshot: {

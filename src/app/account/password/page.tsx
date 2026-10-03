@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { MIN_PASSWORD_LENGTH, mustChangePassword } from "@/lib/auth/password-change";
+import { MIN_PASSWORD_LENGTH, mustChangePassword, requiresCurrentPassword } from "@/lib/auth/password-change";
 import { ChangePasswordForm } from "./ChangePasswordForm";
 
 /**
@@ -23,6 +23,10 @@ export default async function ChangePasswordPage(props: PageProps<"/account/pass
   const { t } = await getT();
   const p = t.account.password;
   const forced = mustChangePassword(user);
+  const needsCurrent = requiresCurrentPassword(
+    user,
+    (await supabase.auth.getSession()).data.session?.access_token,
+  );
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
@@ -35,7 +39,9 @@ export default async function ChangePasswordPage(props: PageProps<"/account/pass
         </p>
         <p className="mt-1 text-xs text-muted">{user.email}</p>
       </div>
-      <ChangePasswordForm minLength={MIN_PASSWORD_LENGTH} continueAfter={forced || fromReset} />
+      <ChangePasswordForm minLength={MIN_PASSWORD_LENGTH} continueAfter={forced || fromReset}
+        askCurrent={needsCurrent}
+      />
     </main>
   );
 }

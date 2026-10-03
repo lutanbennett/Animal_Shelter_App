@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
-import { changeOwnPassword } from "./actions";
+import { startTransition, useActionState, useState, type FormEvent } from "react";
+import { changeOwnPassword, type ChangePasswordState } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
 const inputClass =
@@ -10,18 +10,62 @@ const inputClass =
 export function ChangePasswordForm({
   minLength,
   continueAfter,
+  askCurrent,
 }: {
   minLength: number;
   /** Go on to the app after saving (forced change, recovery) rather than staying here. */
   continueAfter: boolean;
+  /** The server wants the current password (a change by choice); the action re-checks this itself. */
+  askCurrent: boolean;
 }) {
-  const [state, formAction, pending] = useActionState(changeOwnPassword, undefined);
+  // Controlled and submitted from onSubmit: <form action> resets its fields
+  // after every submit, controlled or not, so a refused change would empty
+  // all three boxes (backlog F-10).
+  const [current, setCurrent] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [state, formAction, pending] = useActionState(
+    async (prev: ChangePasswordState, formData: FormData) => {
+      const next = await changeOwnPassword(prev, formData);
+      if (next && "success" in next) {
+        setCurrent("");
+        setPassword("");
+        setConfirm("");
+      }
+      return next;
+    },
+    undefined,
+  );
   const { t } = useI18n();
   const p = t.account.password;
 
+  function onSubmit(ev: FormEvent<HTMLFormElement>) {
+    ev.preventDefault();
+    const data = new FormData(ev.currentTarget);
+    startTransition(() => formAction(data));
+  }
+
   return (
-    <form action={formAction} className="flex max-w-md flex-col gap-4">
+    <form method="post" onSubmit={onSubmit} className="flex max-w-md flex-col gap-4">
       {continueAfter && <input type="hidden" name="continue" value="1" />}
+      {askCurrent && (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="current" className="text-sm font-medium text-muted">
+            {p.currentPassword}
+          </label>
+          <input
+            id="current"
+            name="current"
+            type="password"
+            value={current}
+            onChange={(ev) => setCurrent(ev.target.value)}
+            required
+            autoComplete="current-password"
+            autoFocus
+            className={inputClass}
+          />
+        </div>
+      )}
       <div className="flex flex-col gap-1">
         <label htmlFor="password" className="text-sm font-medium text-muted">
           {p.newPassword}
@@ -30,10 +74,12 @@ export function ChangePasswordForm({
           id="password"
           name="password"
           type="password"
+          value={password}
+          onChange={(ev) => setPassword(ev.target.value)}
           required
           minLength={minLength}
           autoComplete="new-password"
-          autoFocus
+          autoFocus={!askCurrent}
           className={inputClass}
         />
         <p className="text-xs text-muted">{p.hint(minLength)}</p>
@@ -46,6 +92,8 @@ export function ChangePasswordForm({
           id="confirm"
           name="confirm"
           type="password"
+          value={confirm}
+          onChange={(ev) => setConfirm(ev.target.value)}
           required
           minLength={minLength}
           autoComplete="new-password"
