@@ -4,10 +4,11 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { parseBahtAmount } from "@/lib/format";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { resolveEntered } from "@/lib/units";
 import { loadConversions } from "@/lib/units-server";
 import {
-  canRecordDelivery,
   parseDeliveryQuantity,
   receivedAtFor,
   type DeliveryKind,
@@ -52,8 +53,7 @@ export async function recordDelivery(input: DeliveryInput): Promise<DeliveryResu
   const e = t.deliveries.errors;
   const supabase = await createClient();
 
-  const { data: role } = await supabase.rpc("current_user_role");
-  if (!canRecordDelivery(role)) return { ok: false, error: e.notAuthorized };
+  if (!can(await loadPermissions(), "stock.delivery")) return { ok: false, error: e.notAuthorized };
 
   if (input.kind !== "medication" && input.kind !== "diet") return { ok: false, error: e.itemRequired };
   if (!input.itemId) return { ok: false, error: e.itemRequired };
@@ -119,8 +119,7 @@ export async function deleteDelivery(id: string): Promise<DeliveryResult> {
   const e = t.deliveries.errors;
   const supabase = await createClient();
 
-  const { data: role } = await supabase.rpc("current_user_role");
-  if (!canRecordDelivery(role)) return { ok: false, error: e.notAuthorized };
+  if (!can(await loadPermissions(), "stock.delivery")) return { ok: false, error: e.notAuthorized };
 
   const { error, count } = await supabase
     .from("stock_receipts")

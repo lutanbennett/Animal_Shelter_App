@@ -9,7 +9,7 @@
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-const { rowOutcome, isBigChange, summarise, canStocktake } = await import(
+const { rowOutcome, isBigChange, summarise } = await import(
   pathToFileURL(join(process.cwd(), "src/lib/management/stocktake.ts")).href
 );
 
@@ -74,10 +74,7 @@ eq("confirmed kept apart", summary.lines.filter((l) => l.outcome.kind === "confi
 const bad = summarise(items, { medication: { blank: { value: "x", same: false } }, diet: {} });
 eq("invalid row is reported and not sent", [bad.invalid.map((r) => r.item.id), bad.medication], [["blank"], []]);
 
-// Roles (0091)
-eq("roles", ["admin", "management", "staff", "volunteer", "vet", "public_viewer", null].map(canStocktake), [
-  true, true, true, true, false, false, false,
-]);
+// Who may count is the stock.count activity now: scripts/check-permission-catalogue.mjs.
 
 console.log(fails ? `\n${fails} FAILED` : "\nall ok");
 process.exitCode = fails ? 1 : 0;

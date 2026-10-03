@@ -15,13 +15,6 @@
 
 import { defaultUnit, resolveEntered, type UnitConversion } from "@/lib/units";
 
-/** Admin and management as for the single stock cell, plus the people who walk the shelves (0091). */
-export const STOCKTAKE_ROLES = ["admin", "management", "staff", "volunteer"] as const;
-
-export function canStocktake(role: string | null | undefined): boolean {
-  return role != null && (STOCKTAKE_ROLES as readonly string[]).includes(role);
-}
-
 export type StocktakeKind = "medication" | "diet";
 
 export type StocktakeItem = {

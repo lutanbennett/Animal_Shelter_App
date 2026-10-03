@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { canStocktake } from "@/lib/management/stocktake";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { resolveEntered, type EnteredLine } from "@/lib/units";
 import { loadConversions } from "@/lib/units-server";
 
@@ -37,8 +38,7 @@ export async function saveStocktake(
   const e = t.stocktake.errors;
   const supabase = await createClient();
 
-  const { data: role } = await supabase.rpc("current_user_role");
-  if (!canStocktake(role)) return { ok: false, error: e.notAuthorized };
+  if (!can(await loadPermissions(), "stock.count")) return { ok: false, error: e.notAuthorized };
 
   // The function checks all of this too; checked here so a bad payload
   // gets the sheet's own wording.

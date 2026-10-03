@@ -22,7 +22,7 @@ register(
       }`),
 );
 const lib = await import(pathToFileURL(join(process.cwd(), "src/lib/management/stock-receipts.ts")).href);
-const { receivedAtFor, sideOfCount, countDaysByItem, parseDeliveryQuantity, packTotal, canRecordDelivery } = lib;
+const { receivedAtFor, sideOfCount, countDaysByItem, parseDeliveryQuantity, packTotal } = lib;
 
 let fails = 0;
 const eq = (name, got, want) => {
@@ -83,7 +83,7 @@ eq("quantity text refused", parseDeliveryQuantity("ten").ok, false);
 eq("2 boxes of 50", packTotal("2", "50"), 100);
 eq("3 x 0.1 has no float noise", packTotal("3", "0.1"), 0.3);
 eq("pack helper half-filled", packTotal("2", ""), null);
-eq("roles", ["admin", "management", "staff", "volunteer", "vet", null].map(canRecordDelivery), [true, true, true, false, false, false]);
+// Who may record a delivery is the stock.delivery activity now: scripts/check-permission-catalogue.mjs.
 
 console.log(fails ? `\n${fails} FAILED` : "\nall ok");
 process.exitCode = fails ? 1 : 0;

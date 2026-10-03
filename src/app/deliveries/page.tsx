@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Scale } from "lucide-react";
-import { requireRole } from "@/lib/auth/require-role";
+import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import { dietUnitLabel, doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { formatBahtPrice, formatDateTime, todayIso } from "@/lib/format";
@@ -8,7 +8,6 @@ import { formatQuantity } from "@/lib/diets/options";
 import { appUserLabel, loadAppUsersById } from "@/lib/auth/app-users";
 import { canManage } from "@/lib/auth/require-management";
 import {
-  canRecordDelivery,
   countDaysByItem,
   sideOfCount,
   type DeliveryKind,
@@ -49,7 +48,7 @@ type ReceiptRow = {
 const RECENT = 50;
 
 export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
-  const { supabase, role } = await requireRole(canRecordDelivery);
+  const { supabase, perms } = await requirePermission("stock.delivery");
 
   const { t, locale } = await getT();
   const d = t.deliveries;
@@ -133,7 +132,7 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
       <div>
         <h1 className="text-2xl font-semibold text-foreground">{d.title}</h1>
         <p className="text-sm text-muted">{d.subtitle}</p>
-        {canManage(role) && (
+        {canManage(perms.role.key) && (
           <Link
             href="/management/stock-usage"
             className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"

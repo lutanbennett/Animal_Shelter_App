@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { Truck } from "lucide-react";
-import { requireRole } from "@/lib/auth/require-role";
+import { requirePermission } from "@/lib/permissions/require";
+import { can } from "@/lib/permissions/can";
 import { getT } from "@/lib/i18n/get-t";
 import { dietUnitLabel, doseUnitLabel } from "@/lib/i18n/enum-labels";
-import { canStocktake, type StocktakeItem, type StocktakeKind } from "@/lib/management/stocktake";
+import { type StocktakeItem, type StocktakeKind } from "@/lib/management/stocktake";
 import { CONVERSION_COLUMNS, groupConversions, type ConversionRow } from "@/lib/units";
-import { canRecordDelivery } from "@/lib/management/stock-receipts";
 import { StocktakeSheet } from "./StocktakeSheet";
 
 type StockRow = {
@@ -30,7 +30,7 @@ type StockRow = {
  * shelter can describe it.
  */
 export default async function StocktakePage(props: PageProps<"/stocktake">) {
-  const { supabase, role } = await requireRole(canStocktake);
+  const { supabase, perms } = await requirePermission("stock.count");
 
   const { t } = await getT();
   const searchParams = await props.searchParams;
@@ -72,7 +72,7 @@ export default async function StocktakePage(props: PageProps<"/stocktake">) {
         <h1 className="text-2xl font-semibold text-foreground">{s.title}</h1>
         <p className="text-sm text-muted">{s.subtitle}</p>
         {/* Volunteers count but don't record deliveries (0096). */}
-        {canRecordDelivery(role) && (
+        {can(perms, "stock.delivery") && (
           <Link
             href={initialTab === "diet" ? "/deliveries?tab=diets" : "/deliveries"}
             className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
