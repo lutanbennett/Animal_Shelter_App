@@ -69,6 +69,7 @@ export const unreleased: ReleaseNote[] = [
     roles: ["admin", "management", "staff"],
   },
   "Pages now fit a phone screen instead of sliding sideways. On a resident's page the Edit pencil and the Record death heart are back on screen (they were cut off the right edge), and the Enclosures, Vets, Contacts, Deliveries, Book vet visit and Move/Return forms no longer push their buttons and boxes out of view; long enclosure and clinic names wrap instead of stretching the page. In Thai, Sign out no longer runs off the edge: on a phone it is a small door-and-arrow icon in the header (the words still show on a larger screen).",
+  "Changing your password now asks for your current password first, and signs you out everywhere else once it's changed. Before, anyone holding your phone while you were signed in could set a new password without knowing the old one and take over your account. If you've forgotten the current password, sign out and use Forgot password? on the sign-in page instead. If you still sign in with a temporary password, or arrive from a reset link, nothing changes: you just choose a new one.",
 ];
 
 /** Newest first. */
