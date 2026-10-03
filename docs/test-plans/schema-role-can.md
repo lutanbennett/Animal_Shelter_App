@@ -158,7 +158,7 @@ Manual verification by: n/a: no UI surface, nothing a person would look at
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR
+- [x] Checklist pasted into the PR
 - [ ] Handed to the production release manager
 
 Result: pass
