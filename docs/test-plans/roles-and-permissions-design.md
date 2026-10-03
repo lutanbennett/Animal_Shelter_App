@@ -31,11 +31,11 @@ behaviour, because there is none.
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (it brought in the `password-change-current` merge; no conflict, including in `docs/backlog.md`)
-- [x] `node scripts/gates.mjs` closing lines, as printed:
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly. The first sync brought in the `password-change-current` merge with no conflict, including in `docs/backlog.md`; the second, after Lutan's answers were integrated, printed "Already up to date."
+- [x] `node scripts/gates.mjs` closing lines, as printed by the run on the final tree (`74879969`); the earlier run, before Lutan's answers, ended the same way after 148s:
 
 ```
-=== gates: build exited 0 after 148s
+=== gates: build exited 0 after 27s
 
 gates: typecheck=0 lint=0 build=0
 ```
@@ -160,7 +160,7 @@ inserted 47 rows
 | 3 | medium | The draft followed the backlog item in treating the 2IC as the Management role. Lutan corrected it mid-stream: they are separate, and the Director does Management by day and Admin at night | fixed: the paper, the Director's table and the decision file were reworked around his answer (commit `fe4e9e9b`) |
 | 4 | low | The brief and the first draft called the Director "he". Lutan's own message says "her" | fixed throughout |
 | 5 | low | The printed Director's table ran three rows onto a second page | fixed: one page for the table, the questions on the second |
-| 6 | medium | The first complete draft scoped a medication round that recorded each dose, guessed most of the 2IC's and the Heads' cells, and staged the database work by area. Lutan's answers changed all three: nothing is recorded, the three roles are far narrower than guessed, and the build goes role by role | fixed: the paper, the table and the PDF were reworked (commits `bf76df46` and the one after it); the cells that are still guesses dropped from most of the table to six |
+| 6 | medium | The first complete draft scoped a medication round that recorded each dose, guessed most of the 2IC's and the Heads' cells, and staged the database work by area. Lutan's answers changed all three: nothing is recorded, the three roles are far narrower than guessed, and the build goes role by role | fixed: the paper, the table and the PDF were reworked (commits `bf76df46` and `74879969`); the cells that are still guesses dropped from most of the table to six |
 | 7 | info | Found in the system, not in this PR: Management cannot record a microchip though the manual says so; a volunteer can read prices and a vet the other clinics | deferred to backlog: filed on the `backlog` branch under Auth and Security |
 
 ## Left for manual verification
