@@ -72,7 +72,9 @@ export async function changeOwnPassword(
       }
       return { error: e.cannotVerify };
     }
-    await verifier.auth.signOut();
+    // Local scope: the default is global, which would end every session this
+    // person has — including the one making this request.
+    await verifier.auth.signOut({ scope: "local" });
   }
 
   const { error } = await supabase.auth.updateUser({ password });
