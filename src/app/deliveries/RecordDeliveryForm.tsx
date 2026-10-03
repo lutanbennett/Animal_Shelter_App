@@ -325,7 +325,11 @@ export function RecordDeliveryForm({
           />
           <span className="text-xs text-muted">{f.costHint}</span>
         </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
+        {/* basis-48, not a min-width on the input: the box wraps onto its own
+            line when Cost leaves under 12rem (a phone), then takes the row.
+            With min-w-0 flex-1 it stayed beside Cost and its input
+            overflowed the form by 76px (114 in Thai). */}
+        <div className="flex min-w-0 flex-1 basis-48 flex-col gap-1">
           <label htmlFor="delivery-note" className="text-sm font-medium text-muted">
             {f.note}
           </label>
@@ -334,7 +338,7 @@ export function RecordDeliveryForm({
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder={f.notePlaceholder}
-            className={`${inputClass} w-full min-w-48`}
+            className={`${inputClass} w-full`}
           />
         </div>
       </div>

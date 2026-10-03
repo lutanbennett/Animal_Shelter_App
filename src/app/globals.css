@@ -207,6 +207,31 @@ body {
   font-family: var(--font-sans), var(--font-thai), Arial, Helvetica, sans-serif;
 }
 
+/* Phone width. Two browser defaults made pages scroll sideways at 375px
+   (docs/decisions/2026-10-03-phone-width.md):
+
+   - A grid with no column template has one implicit `auto` column, and an
+     auto track never shrinks below its widest item's min-content. So a
+     `grid gap-3 sm:grid-cols-2` card list stayed a single column below sm
+     and grew to its longest title, whatever `truncate` the card carried.
+     `minmax(0, 1fr)` is the same column with a floor of 0. Written in the
+     base layer so every `grid-cols-*` utility, at any breakpoint, still
+     wins; a new grid cannot forget the `grid-cols-1` this stands in for.
+   - A <select> is as wide as its longest option, so the Enclosure picker
+     grew to "Blue Enclosure 3 (Hallway Small Dogs Only)". Capping every
+     form control at its container's width lets a long option clip inside
+     the box instead of widening the page. */
+@layer base {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  select,
+  input,
+  textarea {
+    max-width: 100%;
+  }
+}
+
 /* Puppy loader (src/components/PuppyLoader.tsx). The puppy's own colours are
    fixed — fur is fur, and the orange pyjamas are the reference's — while
    the laptop, screen and progress bar come from the site tokens, so the

@@ -405,7 +405,7 @@ export function ResidentHub({
       </Link>
 
       <div className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex gap-4">
+        <div className="flex min-w-0 gap-4">
           {resident.profile_photo_drive_file_id ? (
             <img
               src={driveImageUrl(resident.profile_photo_drive_file_id)}
@@ -417,9 +417,13 @@ export function ResidentHub({
               {t.residents.hub.noPhoto}
             </div>
           )}
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-semibold text-foreground">
+          {/* min-w-0 on the text column and wrap on the name row: at 375px
+              the column was as wide as its widest line (423px of content),
+              which left the edit pencil 8px on screen and Record death off
+              it. Now the icons drop under the name when there is no room. */}
+          <div className="flex min-w-0 flex-col gap-1">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <h1 className="min-w-0 break-words text-2xl font-semibold text-foreground">
                 {displayName}
               </h1>
               <span className="rounded-full bg-surface-hover px-2 py-0.5 text-xs font-medium text-muted">
