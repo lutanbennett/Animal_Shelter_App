@@ -29,6 +29,7 @@ type MedicationQueryRow = {
   stock_counted_at: string | null;
   reorder_lead_days: number | null;
   safety_stock: number | string | null;
+  label_drive_file_id: string | null;
 };
 
 type ForecastRow = {
@@ -55,7 +56,7 @@ export default async function MedicationsAdminPage(props: PageProps<"/management
       supabase
         .from("medication")
         .select(
-          "id, name, dose_unit, cost_per_unit, stock_on_hand, stock_counted_at, reorder_lead_days, safety_stock",
+          "id, name, dose_unit, cost_per_unit, stock_on_hand, stock_counted_at, reorder_lead_days, safety_stock, label_drive_file_id",
         )
         .order("name")
         .returns<MedicationQueryRow[]>(),
@@ -127,6 +128,7 @@ export default async function MedicationsAdminPage(props: PageProps<"/management
       ),
       purchaseUnit: inPurchaseUnit(stock.stock_on_hand, conversions.data[medication.id] ?? []),
       safetyStock: medication.safety_stock == null ? null : Number(medication.safety_stock),
+      labelFileId: medication.label_drive_file_id,
       unitOptions: (conversions.data[medication.id] ?? []).map((c) => c.unit),
     };
   });

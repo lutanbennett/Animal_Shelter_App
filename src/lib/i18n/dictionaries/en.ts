@@ -2303,6 +2303,17 @@ const en = {
         `"${name}" has ${n} prescription${n === 1 ? "" : "s"} whose dose is recorded in ${from}. Changing the unit to ${to} changes what every one of those doses means — the numbers stay the same. Continue?`,
       mergeConfirm: (from: string, into: string, n: number) =>
         `Merge "${from}" into "${into}"? ${n} prescription${n === 1 ? "" : "s"} will move to "${into}" and "${from}" will be removed. This can't be undone.`,
+      label: {
+        heading: "Label",
+        alt: (name: string) => `Label of ${name}`,
+        none: "No photo",
+        upload: "Upload label",
+        replace: "Replace label",
+        remove: "Remove label",
+        removeConfirm: (name: string) => `Remove the label photo of "${name}"?`,
+        updated: "Label photo updated.",
+        removed: "Label photo removed.",
+      },
       createdMedication: (name: string) => `Created medication "${name}".`,
       errors: {
         nameRequired: "Name is required.",

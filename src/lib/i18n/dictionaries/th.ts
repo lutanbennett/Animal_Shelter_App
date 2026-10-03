@@ -2230,6 +2230,17 @@ const th: Dictionary = {
         `"${name}" มีใบสั่งยา ${n} ใบที่บันทึกปริมาณเป็น ${from} การเปลี่ยนหน่วยเป็น ${to} จะเปลี่ยนความหมายของปริมาณยาทุกใบ — ตัวเลขยังคงเดิม ดำเนินการต่อ?`,
       mergeConfirm: (from: string, into: string, n: number) =>
         `รวม "${from}" เข้ากับ "${into}"? ใบสั่งยา ${n} ใบจะย้ายไปยัง "${into}" และ "${from}" จะถูกลบ การกระทำนี้ไม่สามารถย้อนกลับได้`,
+      label: {
+        heading: "ฉลาก",
+        alt: (name: string) => `ฉลากของ ${name}`,
+        none: "ไม่มีรูป",
+        upload: "อัปโหลดฉลาก",
+        replace: "เปลี่ยนรูปฉลาก",
+        remove: "ลบรูปฉลาก",
+        removeConfirm: (name: string) => `ลบรูปฉลากของ "${name}" หรือไม่?`,
+        updated: "อัปเดตรูปฉลากแล้ว",
+        removed: "ลบรูปฉลากแล้ว",
+      },
       createdMedication: (name: string) => `เพิ่มยา "${name}" แล้ว`,
       errors: {
         nameRequired: "กรุณากรอกชื่อ",
