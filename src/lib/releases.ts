@@ -61,7 +61,12 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  {
+    text: "Staff and managers can now record a blood test. Until now, tapping Save blood test on a resident (or the Log blood test link on a vet visit) answered \"You don't have permission to do that\" and nothing was saved, even though the form was offered. It now saves, with or without a lab scan attached.",
+    roles: ["admin", "management", "staff"],
+  },
+];
 
 /** Newest first. */
 export const releases: Release[] = [
