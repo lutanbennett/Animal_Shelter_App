@@ -22,7 +22,7 @@
 
 ## 2. Automated gates
 
-- [ ] `node scripts/worktree.mjs sync` — n/a: not yet run at this commit; run before the PR
+- [x] `node scripts/worktree.mjs sync` — `origin/main` was already merged in ("Already up to date")
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`:
 
 ```
@@ -83,7 +83,7 @@ Not signed in as any role. Who may open the page changed from `requireManagement
 
 - [ ] The pages nearest the change still work — n/a: not driven; the desk table is the same markup inside a `hidden md:flex` wrapper (previously inside `LargerScreenNotice`)
 - [x] Any shared file touched (`manual/en.ts`, both dictionaries, `releases.ts`, `routes.ts`) checked from a second, unrelated page — the build compiled every route after the edits; `node scripts/acceptance-matrix.mjs --check` passes
-- [ ] Nothing merged from `main` during `sync` was broken by this branch — n/a: sync not run yet
+- [ ] Nothing merged from `main` during `sync` was broken by this branch — n/a: sync merged nothing
 
 ## 7. Documentation
 
