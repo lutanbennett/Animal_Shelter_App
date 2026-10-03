@@ -17,7 +17,7 @@ behaviour, because there is none.
 | Backlog item | `docs/backlog.md` → Auth: *The roles the shelter actually has, from the Director*; Architecture: *Roles and permissions each shelter configures* |
 | Branch / worktree | `claude/roles-and-permissions-design` @ `C:\Development\Animal_Shelter_roles-and-permissions-design` |
 | Dev server | not used: documents |
-| PR | linked from the PR itself |
+| PR | https://github.com/lutanbennett/Animal_Shelter_App/pull/323 |
 | Tested by / date | Claude, 2026-10-03 |
 | Carries a migration? | no |
 | Tested at SHA | the tip of this branch when the PR was opened |
