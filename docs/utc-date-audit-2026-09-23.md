@@ -8,6 +8,18 @@ changed **no data and no code under `src/`**.
 production needs correcting** — but read §5's second half before filing that as
 good news, because production is clean for a reason that expires.
 
+**Addendum 2026-10-03: not complete after all.** The staff dry run found the
+same fault where this audit was not looking, because it audited *stored dates*
+and defaults, not *comparisons*. Three server actions (immunizations, blood
+tests, procedures) parsed the picked date as UTC midnight and refused it when
+it was later than `Date.now()`, so between 00:00 and 07:00 Bangkok the form
+refused its own default; and a move on the day of intake was refused because
+intake stamps its placement at 00:00 UTC (07:00 Bangkok), later than `now`
+until 07:00. Both are fixed; the rule and the evidence are in
+`docs/decisions/2026-10-03-dry-run-bugs.md`, and
+`scripts/check-shelter-dates.mjs` fails if a date-only value is again compared
+with `Date.now()`. No stored row is affected: those refusals wrote nothing.
+
 ---
 
 ## 1. What to do with this
