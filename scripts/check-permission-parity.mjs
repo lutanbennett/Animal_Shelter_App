@@ -402,7 +402,82 @@ console.log(`\nActivities probed: ${probed.size} of 55. Not probed, with the rea
 for (const [a, why] of uncovered) console.log(`  ${a}: ${why}`);
 if (unaccounted.length) console.log(`\nNEITHER PROBED NOR EXPLAINED: ${unaccounted.join(", ")}`);
 
-const red = mismatches.length > 0 || faults.length > 0 || zReport.length > 0 || unaccounted.length > 0;
+// ---- Layer 2: the app's predicates ----------------------------------------------------------
+// Each activity paired with the predicate that guards it today. legacy(role) must equal the
+// default cell, for every role, null and public_viewer included. The truth table is also kept in
+// scripts/fixtures/legacy-predicates.json (written with --write-fixture), so that once the
+// predicates are deleted the check goes on comparing against what they said. While a predicate
+// still exists it is read live, and must agree with the fixture; if it has changed, regenerate.
+import { register } from "node:module";
+import { existsSync, writeFileSync } from "node:fs";
+const src = pathToFileURL(join(root, "src") + "/").href;
+register("data:text/javascript," + encodeURIComponent(`
+  export async function resolve(spec, ctx, next) {
+    // the predicates sit in modules that also import server-only plumbing, which is not under test
+    if (spec === "server-only") return { url: "data:text/javascript,export{}", shortCircuit: true };
+    if (spec.startsWith("next/") || spec === "react") return { url: "data:text/javascript," + encodeURIComponent("export const cookies=()=>{},headers=()=>{},redirect=()=>{},notFound=()=>{},cache=(f)=>f,revalidatePath=()=>{},revalidateTag=()=>{},unstable_cache=(f)=>f,createClient=()=>{};export default {}"), shortCircuit: true };
+    if (spec.startsWith("@/")) return next(${JSON.stringify(src)} + spec.slice(2) + ".ts", ctx);
+    if (spec.startsWith(".") && !/\\.[a-z]+$/.test(spec)) return next(spec + ".ts", ctx);
+    return next(spec, ctx);
+  }`));
+const PREDICATES = [
+  { id: "canManage", file: "src/lib/auth/require-management.ts", activity: "reports.dashboard", level: 2 },
+  { id: "canStocktake", file: "src/lib/management/stocktake.ts", activity: "stock.count", level: 2 },
+  { id: "canRecordDelivery", file: "src/lib/management/stock-receipts.ts", activity: "stock.delivery", level: 2 },
+  { id: "canArchiveMedical", file: "src/lib/medical-archive/kinds.ts", activity: "medical.archive", level: 2 },
+  { id: "canWriteMaintenance", file: "src/lib/maintenance/queries.ts", activity: "maintenance.jobs", level: 2 },
+  { id: "canReadMaintenance", file: "src/lib/maintenance/queries.ts", activity: "maintenance.jobs", level: 1 },
+  { id: "canWriteProjects", file: "src/lib/projects/queries.ts", activity: "projects.folders", level: 2 },
+  { id: "canUseAssistant", file: "src/lib/assistant/data.ts", activity: "assistant.ask", level: 2 },
+  { id: "canWriteWithAssistant", file: "src/lib/assistant/data.ts", activity: "assistant.record", level: 2 },
+];
+// Predicates with no single activity to pair with, and why (stated, not silently absent):
+const UNPAIRED = {
+  hasAppAccess: "'may sign in to the app at all': not an activity (§6 rule 5)",
+  isShelterRole: "a set of roles used by several pages, not one right",
+  canReadRecurringJobs: "every role reads recurring jobs because anyone can be given one; there is no 'read the rules' cell",
+  canDoJob: "takes the page a job links to; it is the eligibility rule for assignees, covered by check-recurring-job-eligibility.mjs",
+  assertPhotoWriteAccess: "photo uploads span photos.* and maintenance.photos; paired when the photo split is built",
+};
+const ROLES_FOR_TABLE = ["admin", "management", "staff", "vet", "volunteer", "public_viewer", null];
+const fixturePath = join(root, "scripts/fixtures/legacy-predicates.json");
+const fixture = existsSync(fixturePath) ? JSON.parse(readFileSync(fixturePath, "utf8")) : {};
+const live = {};
+const layer2 = [];
+for (const pr of PREDICATES) {
+  let fn = null;
+  try { fn = (await import(pathToFileURL(join(root, pr.file)).href))[pr.id]; } catch (e) { layer2.push({ pr, problem: "could not load " + pr.file + ": " + String(e.message).split("\n")[0] }); continue; }
+  if (typeof fn !== "function") {
+    if (!fixture[pr.id]) layer2.push({ pr, problem: `${pr.id} no longer exists and there is no fixture row for it` });
+    continue;
+  }
+  live[pr.id] = Object.fromEntries(ROLES_FOR_TABLE.map((r) => [String(r), fn(r)]));
+}
+if (process.argv.includes("--write-fixture")) {
+  writeFileSync(fixturePath, JSON.stringify({ ...fixture, ...live }, null, 2) + "\n");
+  console.log("wrote " + fixturePath);
+}
+let l2checked = 0;
+for (const pr of PREDICATES) {
+  const table = live[pr.id] ?? fixture[pr.id];
+  if (!table) continue;
+  if (live[pr.id] && fixture[pr.id] && JSON.stringify(live[pr.id]) !== JSON.stringify(fixture[pr.id])) {
+    layer2.push({ pr, problem: `${pr.id} now answers differently from scripts/fixtures/legacy-predicates.json. If that was intended, rerun with --write-fixture` });
+  }
+  for (const r of ROLES_FOR_TABLE) {
+    const want = r != null && (expectedLevel(r, pr.activity) >= pr.level);
+    const got = table[String(r)];
+    l2checked++;
+    if (got !== want) layer2.push({ pr, problem: `${pr.id}(${r}) is ${got}, the default for ${pr.activity} says ${want}` });
+  }
+}
+console.log(`
+== Layer 2: the app's predicates ==
+${l2checked} answers (${PREDICATES.length} predicates x 7 roles incl. no role)`);
+for (const [k, why] of Object.entries(UNPAIRED)) console.log(`  not paired: ${k}: ${why}`);
+for (const l of layer2) console.log(`  MISMATCH ${l.problem}`);
+
+const red = layer2.length > 0 || mismatches.length > 0 || faults.length > 0 || zReport.length > 0 || unaccounted.length > 0;
 console.log(red ? "\nRESULT: RED" : "\nRESULT: GREEN (matches and listed tightenings only)");
 // exitCode, not exit(): exiting straight after fetch trips a libuv assertion on Windows.
 process.exitCode = red ? 1 : 0;

@@ -1,0 +1,91 @@
+// §10 of docs/roles-and-permissions.md chose the live lookup (has_permission() asked from
+// each policy) over the token hook and committed to measuring it, not assuming it:
+// `explain (analyze, buffers)` on the residents list and the medication list, as a
+// volunteer and as staff, BEFORE and after the first converted table.
+//
+// No table is converted yet, so this takes the BEFORE: the policies still call
+// current_user_role(). It is the baseline for the perm-convert-* streams; rerun it
+// unchanged after the first conversion and put both sets in that PR's test plan.
+//
+//   node scripts/measure-permission-baseline.mjs     (from the repo root; dev only)
+//
+// Each query is the one the page sends (src/app/residents/page.tsx and
+// src/lib/medication-list/load.ts), run under a login's own JWT in a rolled-back
+// transaction. Five runs each; the first is discarded as cold and the median of the
+// rest is reported, with the buffers of that run. Writes nothing.
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+import { randomUUID } from "node:crypto";
+
+const root = process.cwd();
+const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
+const env = loadEnv("test");
+const ref = projectRef(env);
+if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
+
+const QUERIES = {
+  "residents list": `select resident_id, name, resident_code, thai_name, other_names, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_id, zone_name, zone_name_th, zone_internal from resident_list_view order by name`,
+  "medication list: prescriptions": `select p.id, p.resident_id, p.dose_quantity, p.start_date, p.end_date, m.name, m.dose_unit, m.label_drive_file_id, f.label, f.doses_per_day, r.name, r.thai_name, r.profile_photo_drive_file_id from prescriptions p left join medication m on m.id = p.medication_id left join frequency f on f.id = p.frequency_id left join residents r on r.id = p.resident_id where p.archived_at is null and p.start_date <= current_date and (p.end_date is null or p.end_date >= current_date)`,
+  "medication list: placements": `select resident_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th from resident_list_view`,
+};
+const WHO = ["staff", "volunteer"];
+const RUNS = 5;
+const ids = Object.fromEntries(WHO.map((w) => [w, randomUUID()]));
+
+const sql = `
+begin;
+create temp table harness_ids (who text primary key, id uuid not null);
+grant select on harness_ids to authenticated;
+insert into harness_ids values ${WHO.map((w) => `('${w}', '${ids[w]}')`).join(", ")};
+do $s$ declare r record; begin
+  for r in select * from harness_ids loop
+    insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+    values (r.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-baseline-' || r.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now());
+    insert into user_roles (user_id, role) values (r.id, r.who::app_role);
+  end loop;
+end $s$;
+create temp table out (who text, q text, run int, ms numeric, planning numeric, hit bigint, read bigint, rows bigint);
+grant all on out to authenticated;
+create function pg_temp.measure(p_uid uuid, p_who text, p_name text, p_sql text, p_run int) returns void language plpgsql as $f$
+declare l text; v_ms numeric; v_plan numeric; v_hit bigint := 0; v_read bigint := 0; v_rows bigint; v_first boolean := true;
+begin
+  perform set_config('request.jwt.claims', json_build_object('sub', p_uid, 'role', 'authenticated', 'aal', 'aal1')::text, true);
+  set local role authenticated;
+  for l in execute 'explain (analyze, buffers) ' || p_sql loop
+    if v_first then v_rows := substring(l from 'actual time=[0-9.]+\\.\\.[0-9.]+ rows=([0-9]+)')::bigint; v_first := false; end if;
+    if l like 'Execution Time:%' then v_ms := substring(l from '[0-9.]+')::numeric; end if;
+    if l like 'Planning Time:%' then v_plan := substring(l from '[0-9.]+')::numeric; end if;
+    if btrim(l) like 'Buffers:%' and v_hit = 0 and v_read = 0 then
+      v_hit := coalesce(substring(l from 'shared hit=([0-9]+)')::bigint, 0);
+      v_read := coalesce(substring(l from 'read=([0-9]+)')::bigint, 0);
+    end if;
+  end loop;
+  reset role;
+  insert into out values (p_who, p_name, p_run, v_ms, v_plan, v_hit, v_read, v_rows);
+end $f$;
+do $m$ begin
+${WHO.flatMap((w) => Object.entries(QUERIES).flatMap(([n, q]) => Array.from({ length: RUNS }, (_, i) => `  perform pg_temp.measure('${ids[w]}', '${w}', '${n}', $q$${q}$q$, ${i + 1});`))).join("\n")}
+end $m$;
+do $o$ begin raise exception 'HARNESS-RESULT %', (select json_agg(row_to_json(out)) from out); end $o$;
+rollback;`;
+
+const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
+  method: "POST",
+  headers: { Authorization: `Bearer ${env.SUPABASE_ACCESS_TOKEN}`, "Content-Type": "application/json" },
+  body: JSON.stringify({ query: sql }),
+});
+const text = await res.text();
+let msg = text;
+try { msg = JSON.parse(text).message ?? text; } catch {}
+const m = /HARNESS-RESULT (.*)/.exec(msg);
+if (!m) throw new Error(`no result (status ${res.status}): ${msg.slice(0, 1200)}`);
+const rows = JSON.parse(m[1]);
+const median = (a) => [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)];
+console.log(`BEFORE any policy calls has_permission(): policies still call current_user_role(). ${new Date().toISOString().slice(0, 10)}, dev.\n`);
+console.log("login      query                              rows   exec ms (median of 4)  planning ms  shared hit  read");
+for (const who of WHO) for (const q of Object.keys(QUERIES)) {
+  const rs = rows.filter((r) => r.who === who && r.q === q && r.run > 1);
+  const mid = rs.sort((a, b) => a.ms - b.ms)[Math.floor(rs.length / 2)];
+  console.log(`${who.padEnd(10)} ${q.padEnd(34)} ${String(mid.rows).padStart(4)}   ${String(median(rs.map((r) => Number(r.ms)))).padStart(8)}              ${String(mid.planning).padStart(8)}     ${String(mid.hit).padStart(8)}  ${mid.read}`);
+}
+process.exitCode = 0;

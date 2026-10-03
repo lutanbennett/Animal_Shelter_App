@@ -1,0 +1,83 @@
+{
+  "canStocktake": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": false,
+    "volunteer": true,
+    "public_viewer": false,
+    "null": false
+  },
+  "canRecordDelivery": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": false,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
+  },
+  "canArchiveMedical": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": false,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
+  },
+  "canWriteMaintenance": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": false,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
+  },
+  "canReadMaintenance": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": false,
+    "volunteer": true,
+    "public_viewer": false,
+    "null": false
+  },
+  "canWriteProjects": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": false,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
+  },
+  "canUseAssistant": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": false,
+    "volunteer": true,
+    "public_viewer": false,
+    "null": false
+  },
+  "canWriteWithAssistant": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": false,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
+  },
+  "canManage": {
+    "admin": true,
+    "management": true,
+    "staff": false,
+    "vet": false,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
+  }
+}
