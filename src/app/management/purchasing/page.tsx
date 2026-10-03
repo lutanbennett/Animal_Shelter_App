@@ -1,14 +1,14 @@
 import Link from "next/link";
-import { requireManagementUser } from "@/lib/auth/require-management";
-import { createClient } from "@/lib/supabase/server";
+import { requirePermission } from "@/lib/permissions/require";
+import { can } from "@/lib/permissions/can";
 import { getT } from "@/lib/i18n/get-t";
 import { dietUnitLabel, doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { formatDate } from "@/lib/format";
 import { toCsv } from "@/lib/csv";
 import { formatQuantity } from "@/lib/diets/options";
-import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { CsvDownloadButton } from "@/components/CsvDownloadButton";
 import { PrintButton } from "@/components/PrintButton";
+import { PurchasingSteps, type PhoneItem } from "./PurchasingSteps";
 import { loadConversions } from "@/lib/units-server";
 import { defaultUnit } from "@/lib/units";
 import { loadReceipts } from "@/lib/management/receipts-server";
@@ -66,14 +66,13 @@ type Item = {
 };
 
 export default async function PurchasingPage(props: PageProps<"/management/purchasing">) {
-  await requireManagementUser();
+  const { supabase, perms } = await requirePermission("stock.purchasing");
   const { t, locale } = await getT();
   const p = t.management.purchasing;
   const searchParams = await props.searchParams;
   const period = parsePeriod(searchParams.days);
   const includeLead = parseIncludeLead(searchParams.lead);
 
-  const supabase = await createClient();
   const [medResult, dietResult, vendorsResult] = await Promise.all([
     supabase
       .from("medication")
@@ -321,15 +320,44 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
   }
 
   return (
-    <main className="flex flex-1 flex-col gap-8 p-6">
+    <main className="flex min-w-0 flex-1 flex-col gap-8 p-6">
       <div className="print:hidden">
         <h1 className="text-2xl font-semibold text-foreground">{p.title}</h1>
         <p className="text-sm text-muted">{p.subtitle}</p>
       </div>
 
-      <LargerScreenNotice>
+      {loadError && (
+        <p className="text-sm text-danger md:hidden print:hidden">
+          {p.couldntLoad}: {loadError}
+        </p>
+      )}
+
+      {/* A phone gets three short steps; from md up, the table. Printing always
+          takes the desk list, so the two cannot disagree on paper. */}
+      <div className="md:hidden print:hidden">
+        <PurchasingSteps
+          items={[...medItems, ...dietItems].map(
+            (i): PhoneItem => ({
+              kind: i.kind,
+              row: i.row,
+              unitLabel: i.unitLabel,
+              isStandard: i.isStandard,
+              packUnit: i.pack?.unit ?? null,
+              countedOn: i.row.countedAt ? formatDate(shelterDate(i.row.countedAt), locale) : null,
+              leadDays: i.leadDays ?? 0,
+            }),
+          )}
+          groups={groups}
+          csv={csv}
+          period={period}
+          includeLead={includeLead}
+          canCount={can(perms, "stock.count")}
+        />
+      </div>
+
+      <div className="hidden flex-col gap-8 md:flex print:flex">
         {loadError && (
-          <p className="text-sm text-danger">
+          <p className="text-sm text-danger print:hidden">
             {p.couldntLoad}: {loadError}
           </p>
         )}
@@ -397,7 +425,7 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
           )}
           <p className="text-xs text-muted print:hidden">{p.note}</p>
         </section>
-      </LargerScreenNotice>
+      </div>
     </main>
   );
 }

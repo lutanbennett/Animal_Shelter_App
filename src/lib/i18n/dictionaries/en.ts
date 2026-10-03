@@ -1813,6 +1813,36 @@ const en = {
       note:
         "Buy = what is needed (forecast use over the period, plus safety stock) minus what is expected on the shelf now (the last count, minus forecast use since, plus deliveries recorded since), never below zero, rounded up to whole packs where the item has a purchase unit. The supplier is the one named on the item's most recent delivery.",
       couldntLoad: "Couldn't load everything",
+      // The phone version: three short steps over the same sums.
+      steps: {
+        wizard: {
+          stepOf: (current: number, total: number) => `Step ${current} of ${total}`,
+          goToStep: (n: number, title: string) => `Go to step ${n}: ${title}`,
+          back: "Back",
+          next: "Next",
+          edit: "Edit",
+          notProvided: "Not given",
+          reviewIntro: "This list is what to buy.",
+        },
+        titles: { low: "What is low", how: "How much", whom: "From whom" },
+        periodTitle: "How long should it last?",
+        lowIntro: (period: string) => `These will run short within ${period}.`,
+        lowNone: "Nothing is running low for this time.",
+        shelf: (expected: string, needed: string, unit: string) =>
+          `About ${expected} ${unit} left. Needed: ${needed} ${unit}.`,
+        shelfNone: (needed: string, unit: string) => `Probably none left. Needed: ${needed} ${unit}.`,
+        notCountedTitle: (n: number) => `Not counted yet (${n})`,
+        notCountedBody: "Nobody has counted these, so the app cannot tell how much to buy. Count them first.",
+        countThem: "Count them",
+        howIntro: "This is how much to buy of each. Tap “The working” to see how it was worked out.",
+        howNone: "Nothing to buy for this time.",
+        buy: "Buy",
+        theWorking: "The working",
+        whomIntro: "Take this list to the shop. The app does not place the order.",
+        whomNone: "Nothing to buy, so there is no list.",
+        itemCount: (n: number) => (n === 1 ? "1 item" : `${n} items`),
+        listTitle: (period: string) => `To buy — ${period}`,
+      },
     },
     medicationList: {
       title: "Medication list",

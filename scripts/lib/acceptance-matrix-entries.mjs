@@ -621,9 +621,9 @@ export const ENTRIES = {
   purchasing: [
     {
       activity: "Work out what to buy",
-      device: "desktop",
-      do: "Open Purchasing, pick 2 weeks, and tap Download CSV.",
-      expect: "Each row shows its working, and the list to buy is grouped by supplier.",
+      device: "phone",
+      do: "Open Purchasing, pick 2 weeks, tap Next to see how much, open The working under one item, tap Next again, and tap Download CSV.",
+      expect: "Three steps: what is low, how much, from whom. Each amount has its working, the final list is grouped by supplier, and Back never loses anything.",
     },
   ],
   deliveries: [
