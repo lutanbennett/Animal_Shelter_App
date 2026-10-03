@@ -63,6 +63,10 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "Ordering medicine and food is now one simple screen on a phone instead of a table. Pick how long it should last, then open Medicines or Food (they are bought at different shops) to see what to buy from each supplier, how much of each. Tap an item to see how it was worked out. Print the list or save it from the bottom. Nothing is ordered or saved by the app. Anything nobody has counted yet is assumed to have none on the shelf, so a newly prescribed medicine still gets bought; it is shown in yellow with a button to count it. The computer table is unchanged.",
+    roles: ["admin", "management"],
+  },
+  {
     text: "Counting medicines on a phone is now one card at a time. Each card shows a big photo of the box's label (or the name, if there isn't one), the last count, and a number keypad already open: type what's on the shelf and tap Save to move on, tap Same as last time to keep the old figure, or Skip to come back to it — skipped ones are offered again at the end. It tells you how far you are (23 of 100), and if you close the page, lock the phone or lose signal in the kennels, your counts are kept on the phone and it picks up where you left off. The computer's stocktake sheet is unchanged.",
     roles: ["admin", "management", "staff", "volunteer"],
   },

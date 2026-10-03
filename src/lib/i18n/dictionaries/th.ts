@@ -1701,7 +1701,7 @@ const th: Dictionary = {
       leadToggle: "รวมระยะเวลาจัดส่งของผู้จัดจำหน่าย",
       leadHint:
         "ของที่สั่งวันนี้จะมาถึงหลังจากระยะเวลาจัดส่งของรายการนั้น (ตั้งไว้ที่หน้ายาหรืออาหาร) จึงนับช่วงเวลาตั้งแต่วันที่ของมาถึง ปิดตัวเลือกนี้เพื่อนับช่วงเวลาตั้งแต่วันนี้",
-      neverCountedBanner: (n: number) => `มี ${n} รายการที่ใช้อยู่แต่ยังไม่เคยนับสต็อก จึงไม่แนะนำปริมาณที่ควรซื้อ`,
+      neverCountedBanner: (n: number) => `มี ${n} รายการที่ใช้อยู่แต่ยังไม่เคยนับสต็อก จึงแสดงโดยถือว่าบนชั้นไม่มีของ`,
       stocktakeLink: "นับสต็อกในการตรวจนับ",
       sections: { medication: "ยา", diet: "อาหาร" },
       standardBadge: "อาหารมาตรฐาน",
@@ -1717,10 +1717,11 @@ const th: Dictionary = {
           `ต้องใช้ ${use} ${unit} ใน ${days} วัน${lead}${safety} = ${total} ${unit}`,
         withLead: (period: number, lead: number) => ` (${period} + จัดส่ง ${lead})`,
         safety: (quantity: string) => ` + สต็อกสำรอง ${quantity}`,
-        neverCounted: "ยังไม่เคยนับ — ควรนับก่อนสั่งซื้อ",
+        neverCounted: "ยังไม่เคยนับ — ถือว่าบนชั้นไม่มีของ จึงซื้อตามปริมาณที่ต้องใช้ทั้งหมดจนกว่าจะนับ",
         stale: (days: number) => `นับเมื่อ ${days} วันก่อน — อาจไม่ตรงกับของจริงแล้ว ควรนับใหม่`,
       },
       cantTell: "ยังบอกไม่ได้ — ควรนับก่อน",
+      notCountedTag: "ยังไม่เคยนับ",
       nothingToBuy: "ไม่ต้องซื้อ",
       qty: (quantity: string, unit: string) => `${quantity} ${unit}`,
       equals: (quantity: string, unit: string) => `= ${quantity} ${unit}`,
@@ -1744,6 +1745,21 @@ const th: Dictionary = {
       note:
         "ควรซื้อ = ปริมาณที่ต้องใช้ (ปริมาณที่คาดว่าใช้ในช่วงเวลา บวกสต็อกสำรอง) ลบด้วยปริมาณที่คาดว่าเหลือบนชั้นตอนนี้ (ยอดนับล่าสุด หักปริมาณที่ใช้ไปตามการคาดการณ์ บวกของที่บันทึกว่ารับเข้ามาแล้ว) ไม่ต่ำกว่าศูนย์ ปัดขึ้นเป็นจำนวนแพ็กเต็มหากรายการนั้นมีหน่วยที่ใช้ซื้อ ผู้จัดจำหน่ายคือรายที่ระบุไว้ในการรับของล่าสุดของรายการนั้น",
       couldntLoad: "โหลดข้อมูลไม่ครบ",
+      steps: {
+        periodTitle: "ต้องการให้พอใช้นานแค่ไหน",
+        intro: "นำรายการนี้ไปที่ร้าน ระบบนี้ไม่ได้สั่งซื้อให้ แตะที่รายการเพื่อดูว่าคิดมาอย่างไร",
+        none: "ไม่มีอะไรต้องซื้อในช่วงนี้",
+        shelf: (expected: string, needed: string, unit: string) =>
+          `เหลือราว ${expected} ${unit} ต้องใช้ ${needed} ${unit}`,
+        shelfNone: (needed: string, unit: string) => `น่าจะหมดแล้ว ต้องใช้ ${needed} ${unit}`,
+        notCountedTitle: (n: number) => `ยังไม่ได้นับ (${n})`,
+        notCountedBody: "แสดงด้านล่างเป็นสีเหลือง โดยถือว่าบนชั้นไม่มีของ นับสต็อกเพื่อให้ได้ตัวเลขจริง",
+        shelfAssumed: (needed: string, unit: string) => `ยังไม่เคยนับ ถือว่าบนชั้นไม่มีของ ต้องใช้ ${needed} ${unit}`,
+        countThem: "ไปนับสต็อก",
+        buy: "ซื้อ",
+        theWorking: "วิธีคิด",
+        itemCount: (n: number) => `${n} รายการ`,
+      },
     },
     medicationList: {
       title: "รายการยา",

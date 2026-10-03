@@ -13,7 +13,7 @@
  * rest, and Settings and Management landing pages with their areas.
  */
 
-import { ClipboardCheck, Truck, type LucideIcon } from "lucide-react";
+import { ClipboardCheck, ShoppingCart, Truck, type LucideIcon } from "lucide-react";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can, type Permissions } from "./can";
 import type { ActivityKey, Level, LevelKey } from "./catalogue";
@@ -47,6 +47,15 @@ export const ROUTES: readonly RouteEntry[] = [
     activity: "stock.delivery",
     icon: Truck,
     label: (t) => t.deliveries.title,
+    device: "any",
+    menu: false,
+  },
+  {
+    path: "/management/purchasing",
+    activity: "stock.purchasing",
+    icon: ShoppingCart,
+    label: (t) => t.management.purchasing.title,
+    // Steps on a phone, the table from md up: one page, two layouts (§13).
     device: "any",
     menu: false,
   },

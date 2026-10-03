@@ -1770,7 +1770,7 @@ const en = {
       leadHint:
         "Stock ordered today arrives after the item's lead time (set on Medications or Diets), so the period is counted from the day it arrives. Turn it off to count the period from today.",
       neverCountedBanner: (n: number) =>
-        `${n} item${n === 1 ? "" : "s"} in use ${n === 1 ? "has" : "have"} never been counted, so no amount is recommended for ${n === 1 ? "it" : "them"}.`,
+        `${n} item${n === 1 ? "" : "s"} in use ${n === 1 ? "has" : "have"} never been counted, so ${n === 1 ? "it is" : "they are"} listed assuming none on the shelf.`,
       stocktakeLink: "Count them in a stocktake",
       sections: { medication: "Medicines", diet: "Food" },
       standardBadge: "Standard diet",
@@ -1786,10 +1786,11 @@ const en = {
           `Needs ${use} ${unit} over ${days} day${days === 1 ? "" : "s"}${lead}${safety} = ${total} ${unit}`,
         withLead: (period: number, lead: number) => ` (${period} + ${lead} lead time)`,
         safety: (quantity: string) => ` + ${quantity} safety stock`,
-        neverCounted: "Never counted — count it before ordering",
+        neverCounted: "Never counted — assuming none on the shelf, so the whole need is bought until it is counted",
         stale: (days: number) => `Counted ${days} days ago — probably out of date, count it again`,
       },
       cantTell: "Can't tell — count it first",
+      notCountedTag: "never counted",
       nothingToBuy: "Nothing to buy",
       qty: (quantity: string, unit: string) => `${quantity} ${unit}`,
       equals: (quantity: string, unit: string) => `= ${quantity} ${unit}`,
@@ -1813,6 +1814,23 @@ const en = {
       note:
         "Buy = what is needed (forecast use over the period, plus safety stock) minus what is expected on the shelf now (the last count, minus forecast use since, plus deliveries recorded since), never below zero, rounded up to whole packs where the item has a purchase unit. The supplier is the one named on the item's most recent delivery.",
       couldntLoad: "Couldn't load everything",
+      // The phone version: three short steps over the same sums.
+      // The phone version: one screen over the same sums.
+      steps: {
+        periodTitle: "How long should it last?",
+        intro: "Take this list to the shop. The app does not place the order. Tap an item to see how it was worked out.",
+        none: "Nothing to buy for this time.",
+        shelf: (expected: string, needed: string, unit: string) =>
+          `About ${expected} ${unit} left. Needed: ${needed} ${unit}.`,
+        shelfNone: (needed: string, unit: string) => `Probably none left. Needed: ${needed} ${unit}.`,
+        notCountedTitle: (n: number) => `Not counted yet (${n})`,
+        notCountedBody: "Listed below in yellow as if none were on the shelf. Count them to get a real figure.",
+        shelfAssumed: (needed: string, unit: string) => `Never counted, assuming none on the shelf. Needed: ${needed} ${unit}.`,
+        countThem: "Count them",
+        buy: "Buy",
+        theWorking: "The working",
+        itemCount: (n: number) => (n === 1 ? "1 item" : `${n} items`),
+      },
     },
     medicationList: {
       title: "Medication list",
