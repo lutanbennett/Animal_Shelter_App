@@ -196,4 +196,227 @@ statement rather than once per row. The app is fast enough today, so this is not
 a defect report. It is the reason §10 specifies the wrapped form for every
 converted policy.
 
+## 4. The catalogue
+
+### The rules it is built on
+
+1. **One activity is one power a person would name.** "Record a delivery", not
+   "insert into `stock_receipts`".
+2. **Two kinds of cell.** A thing you look at and change is **Edit / Read /
+   None**. An act with nothing to look at is **Yes / No** ("record a death").
+   Edit always includes Read.
+3. **Where one screen hid two powers, there are two activities**, never a
+   fourth level. Ten of the 55 exist for that reason: booking a visit apart from
+   writing it up, moving a job on apart from managing the board, publishing a
+   project apart from editing it, undoing a change apart from seeing it, marking
+   anyone's recurring job apart from your own, adding a contact apart from
+   managing contacts, adding a missing medication from a form apart from managing
+   the list, managing photos apart from adding one, correcting a stock figure
+   apart from counting, and giving a dose apart from prescribing it.
+4. **A lookup is not an activity.** A prescription form needs medication names;
+   a move form needs enclosure names. Those reads come with the activity that
+   needs them, through a view that carries only the columns the form shows, as
+   `0126` did for contacts. This is what closes findings C9 and C10: a volunteer
+   counting stock reads names and counts, not prices.
+5. **Some activities need another.** Moving a resident needs Read on residents
+   and on enclosures. The catalogue records each prerequisite, and the Settings
+   matrix refuses a combination that cannot work, so no column can be set to
+   something incoherent.
+6. **A key never changes; a name is translated.** `stock.delivery` is what code
+   and policies say. "Record a delivery" / its Thai is what people read, from the
+   dictionaries like every other label.
+7. **The device is not a permission.** Every activity a role other than the
+   Director holds has to work on a phone (§13).
+
+### What "today" means for a default cell
+
+The brief requires that the defaults reproduce today exactly. §3 showed that
+today is three things. The rule proposed:
+
+- **The cell is what the screens offer today.** That is what people experience
+  and what the manual and the acceptance matrix describe.
+- **Where the database allows more (C1–C12), the cell is the narrower value**,
+  and converting that table closes the gap. Each is a *known tightening*: listed
+  by name in the parity check (§11), invisible to anyone using the app, and a
+  change only for a request sent by hand.
+- **Where the manual promises more than the code (B), the cell is what the code
+  does**, until question L6 is answered.
+
+### The 55 activities, with today's five roles
+
+`E` Edit, `R` Read, `Y` Yes, `–` None/No. `°` means "within this role's scope"
+(§5): for a vet, the residents their clinic treats and their own clinic's
+records. **DT** is the row of the Director's table the activity belongs to.
+Admin is shown for completeness; it is never stored (§6).
+
+| Key | Activity | Kind | Admin | Mgmt | Staff | Vet | Vol | DT | Note |
+|---|---|---|---|---|---|---|---|---|---|
+| **Residents** | | | | | | | | | |
+| `resident.record` | A resident's details, housing and history | E/R | E | E | E | R° | R | 1 | Edit is the pencil: name, bio, flags. Reading includes placement history |
+| `resident.register` | Register a new resident (intake) | Y/N | Y | Y | Y | – | – | 2 | |
+| `resident.microchip` | Record or correct a microchip number | Y/N | Y | **–** | Y | Y° | – | 3 | Finding B: the manual says Management can |
+| `resident.adoption_news` | News from an adopter | E/R | E | E | E | R° | R | 4 | Edit includes delete (A8) |
+| **Housing** | | | | | | | | | |
+| `placement.move` | Move a resident to another enclosure | Y/N | Y | Y | Y | – | Y | 5 | |
+| `placement.hospital` | Send to hospital and bring back | Y/N | Y | Y | Y | – | – | 6 | |
+| `placement.rehome` | Foster, adopt, return to the shelter | Y/N | Y | Y | Y | – | – | 6 | |
+| `placement.death` | Record a death | Y/N | Y | Y | Y | – | – | 7 | |
+| `placement.death_withdraw` | Withdraw a death recorded in error | Y/N | Y | – | – | – | – | 8 | |
+| **Medical** | | | | | | | | | |
+| `visit.book` | Book a vet visit | Y/N | Y | Y | Y | Y° | – | 9 | *Split.* Today it is the same right as writing the visit up |
+| `medical.visits` | Vet visits and how they went | E/R | E | E | E | E° | R | 10 | |
+| `medical.procedures` | Procedures and their files | E/R | E | E | E | E° | R | 10 | |
+| `medical.blood_tests` | Blood tests and their reports | E/R | E | E | E | E° | R | 10 | Staff and Management since `0131` |
+| `medical.prescriptions` | Prescriptions: what should be given | E/R | E | E | E | E° | R | 11 | |
+| `medical.doses` | Giving medication: what was given | E/R | not built | | | | | 12 | *New.* The medication round, §14 |
+| `medical.immunizations` | Immunizations | E/R | E | E | E | E° | R | 13 | |
+| `medical.weight` | Weight | E/R | E | E | E | E° | R | 13 | |
+| `medical.diet` | A resident's diet | E/R | E | E | E | E° | R | 13 | |
+| `medical.archive` | Remove a medical record entered by mistake, and restore it | Y/N | Y | Y | Y | – | – | 14 | |
+| **Photos** | | | | | | | | | |
+| `photos.resident_add` | Add a photo to a resident | Y/N | Y | Y | Y | Y° | Y | 15 | A vet's go to the Medical folder only (scope). Finding A5: any other folder is public for a resident on the Adopt page |
+| `photos.resident_manage` | Refile or remove a photo, choose the profile photo | Y/N | Y | Y | Y | – | Y | 15 | *Split*, finding A3 |
+| **Enclosures** | | | | | | | | | |
+| `facility.enclosures` | Enclosures and zones | E/R | E | R | R | – | R | 16 | Edit is Settings → Zones and Enclosures |
+| `facility.map` | The facility map | Y/N | Y | Y | Y | – | Y | 16 | A prototype today |
+| **Maintenance** | | | | | | | | | |
+| `maintenance.jobs` | Maintenance jobs: log, edit, assign, cost, delete | E/R | E | E | E | – | R | 17 | |
+| `maintenance.progress` | Move a job on: in progress, blocked, completed | Y/N | Y | Y | Y | – | – | 17 | *Split.* Lets someone finish a job without managing the board |
+| `maintenance.photos` | Add and remove a job's photos | Y/N | Y | Y | Y | – | Y | 17 | Finding A4 |
+| **Projects** | | | | | | | | | |
+| `projects.folders` | Project folders and their stories | E/R | E | E | E | – | R | 18 | Edit includes delete (A8) |
+| `projects.photos` | Add and remove project photos | Y/N | Y | Y | Y | – | Y | 18 | |
+| `projects.publish` | Put a project on the public website | Y/N | Y | Y | Y | – | – | 19 | *Split* |
+| **Clinics, contacts, supporters** | | | | | | | | | |
+| `clinics.list` | The list of clinics | E/R | E | E | R | – | R | 20 | "Vets" today; the rename is parked |
+| `clinics.doctors` | A clinic's doctors: add, rename, merge, retire | Y/N | Y | Y | – | – | – | 20 | |
+| `contacts.directory` | Contacts | E/R | E | E | R | – | R° | 21 | A volunteer reads name and phone only (scope). A vet has no Contacts page; the carer's name on a resident's record is a lookup (rule 4) |
+| `contacts.add` | Add a new contact | Y/N | Y | Y | Y | – | – | 21 | *Split*, finding A2 |
+| `friends.manage` | Shelter Friends: add, publish, unpublish | Y/N | Y | Y | – | – | – | 22 | |
+| **Stock and ordering** | | | | | | | | | |
+| `stock.count` | Count the stock (stocktake) | Y/N | Y | Y | Y | – | Y | 23 | |
+| `stock.delivery` | Record a delivery | Y/N | Y | Y | Y | – | – | 24 | |
+| `stock.purchasing` | Work out what to buy | Y/N | Y | Y | – | – | – | 25 | |
+| `stock.usage` | Compare stock used with planned | Y/N | Y | Y | – | – | – | 25 | |
+| `stock.medications` | The medication list: prices, labels, reorder levels | E/R | E | E | – | – | – | 26 | |
+| `stock.diets` | The diet list and the food forecast | E/R | E | E | – | – | – | 26 | Includes units of measure |
+| `stock.correct` | Correct a stock figure | Y/N | Y | Y | – | – | – | 26 | *Split*, finding A7 |
+| **Management** | | | | | | | | | |
+| `reports.dashboard` | The dashboard | Y/N | Y | Y | – | – | – | 27 | |
+| `reports.cashflow` | Cashflow and fixed outgoings | E/R | E | E | – | – | – | 28 | |
+| `recurring.manage` | Set up recurring jobs and hand dates over | Y/N | Y | Y | – | – | – | 29 | |
+| `recurring.do_any` | Mark anyone's recurring job done or skipped | Y/N | Y | Y | – | – | – | 29 | *Split*, finding A6 |
+| `recurring.do_own` | Mark your own recurring jobs done or skipped | Y/N | Y | Y | Y | – | Y | 30 | |
+| `translations.manage` | Translate the public text | Y/N | Y | Y | – | – | – | 31 | |
+| **The assistant** | | | | | | | | | |
+| `assistant.ask` | Ask the assistant a question | Y/N | Y | Y | Y | – | Y | 32 | |
+| `assistant.record` | Record something through the assistant | Y/N | Y | Y | Y | – | – | 32 | Each thing it records is also checked against that thing's own activity |
+| **Settings** | | | | | | | | | |
+| `website.content` | The public website's content | E/R | E | – | – | – | – | 33 | |
+| `reference.types` | Setup lists: immunization, procedure and blood-test types, frequencies | E/R | E | – | – | – | – | 34 | |
+| `reference.add_while_recording` | Add a missing medication, frequency or procedure type from a form | Y/N | Y | Y | Y | Y | – | 34 | *Split*, finding A1 |
+| `audit.view` | See who changed what | Y/N | Y | – | – | – | – | 35 | |
+| `audit.undo` | Undo a change | Y/N | Y | – | – | – | – | 35 | *Split* |
+| `system.status` | The system status page | Y/N | Y | – | – | – | – | 36 | |
+
+Not in the table, because nobody sets them (§6): signing in and out, a forgotten
+password, changing your own password, the language switch, the manual, the
+release notes, My tasks or Appointments as a home page, the public website, and
+everything under Settings → Security.
+
+### From the 93 rows to the 55 activities
+
+The acceptance matrix keeps its 93 rows: they are *test cases*, and one activity
+often needs several ("Count the stock" and "Skip an item" are both
+`stock.count`). What changes is where its cells come from. Today each row takes
+its roles from the manual's `roles` tag. Under this design each manual topic and
+each matrix entry names an **activity and a level**, and the does / must-not
+cells are worked out from the matrix. Appendix A maps every manual topic to its
+activity, so that the next stream does not have to rediscover it.
+
+That is the "define the catalogue once" both backlog items ask for: one file,
+`src/lib/permissions/catalogue.ts`, with the key, kind, area, prerequisites and
+supporting lookups of each activity; the database seeded from it; and a check
+that fails when the two differ (§11).
+
+## 5. Scopes: which rows, as opposed to which powers
+
+A vet seeing only the residents their clinic treats is not a cell. Forcing it
+into Edit / Read / None would need a level per kind of limit. So a role has, next
+to its column of cells, a small fixed set of **scopes**. Each is a choice from a
+short list, and each option is backed by one SQL helper that already exists or
+nearly does. A shelter picks an option; it cannot write its own.
+
+| Scope | Options | Today | Backed by |
+|---|---|---|---|
+| Which residents | all · those the login's clinic treats | vet: clinic's; everyone else: all | `current_vet_resident_ids()` (`0108`) |
+| Whose clinical records it may change | any · its own clinic's | vet: own clinic's | `vet_owns_visit()`, `current_user_vet_ids()` (`0110`) |
+| How much of a contact | everything · name and phone · name and type | volunteer: name and phone; vet: name and type; others: everything | the `volunteer_contacts` and `vet_contacts` views (`0126`) |
+| Which photo folders | all · Medical only | vet: Medical only | `PHOTO_CATEGORIES`, `record_attachment()` |
+| Other people's login emails | shown · hidden | hidden for vet and volunteer | `private.app_users` (`0126`) |
+
+A scope narrows what an activity reaches; it never grants anything. A role with
+"clinic's residents" and Read on `resident.record` reads those residents and no
+others. The "own clinic" options need the login to be linked to a doctor record,
+which is the existing rule (`0127`), and a role using them with no link sees
+nothing, as a vet with no clinic does today.
+
+## 6. What nobody can configure
+
+1. **Admin has everything, always.** Admin's column is not stored and is not
+   editable; `has_permission()` answers yes for Admin before it looks at any
+   table. So no edit can take a power away from Admin.
+2. **There is always an Admin.** The existing rule that the last admin cannot be
+   removed, demoted or archived stays. Together with rule 1, a shelter can never
+   be left with nobody able to edit the matrix.
+3. **Security is Admin's and needs 2-step verification.** Creating people,
+   approving access requests, changing a person's role, archiving a person,
+   editing the matrix, adding or removing a role: Admin only, and only in a
+   session verified with the authenticator app, exactly as `user_roles` is
+   guarded today. None of it is a cell.
+4. **The public viewer and the signed-out visitor are fixed.** They see the
+   public website. They are not columns.
+5. **Everyone with a login can** sign in and out, reset and change their own
+   password, switch language, and read the manual and release notes for what
+   they can do.
+6. **A deceased resident's record is read-only**, whoever is asking. That is a
+   rule about the record, not about a role.
+7. **The audit log records regardless.** No role, Admin included, can switch off
+   `audit_log` or edit it. A change to a cell is itself recorded: who, which
+   role, which activity, from what to what, when.
+8. **A new activity starts at None** for every role but Admin, on every shelter,
+   until an Admin sets it. The six default roles' columns ship with a value for
+   it; a role the shelter made does not, and the matrix marks the row as new.
+9. **A cell never outranks a prerequisite** (§4, rule 5).
+
+## 7. Lanna's roles, proposed
+
+The template every shelter starts from is today's six roles with today's cells
+(§4). Lanna's own set is that template changed to match the Director:
+
+| Role | Kind | Who at Lanna | Home screen | Proposed change from today |
+|---|---|---|---|---|
+| Admin | fixed | The Director | My tasks | none |
+| Management | default | The 2IC / Manager | My tasks, in the simple layout (§8) | which Management pages it keeps is question D2 |
+| Maintenance | **new**, configured | Head of Maintenance | Maintenance | see the Director's table |
+| Medical | **new**, configured | Head of Medical | Today's medication round | see the Director's table |
+| Staff | default | open: question D1 | My tasks | kept in the template; whether anyone at Lanna holds it is the Director's call |
+| Volunteer | default, narrowed | Volunteers | Residents | read-only: every Yes and Edit in its column becomes No or Read, confirmed line by line first (L3) |
+| Vet | default | Clinics' doctors | Appointments | none now. The name becomes Doctor when the parked clinics item is taken up |
+| Public viewer | fixed | Test logins | the public site | none |
+
+The cell-by-cell proposal for those roles **is the Director's table**
+([`roles-director-table.md`](roles-director-table.md)): 37 rows, each one or
+more activities from §4, each cell marked as *stated by the Director*, *carried
+over from today*, or *a gap with a proposed answer*. It is kept as one file, not
+repeated here, so that there is one place to correct when he answers.
+
+On the vet's name: `doctor` is the target name for the role, per the parked
+*Clinics and doctors* item (Medical records, PARKED 2026-10-03). Nothing here
+starts that rename. What will need reconciling when it is unparked: the role key
+(`vet` → `doctor`), which under this design is a one-row rename in `roles`
+instead of an enum change; and the open question of which residents a doctor
+login sees, which is the "which residents" scope of §5 and should be answered
+there rather than with new policies.
+
 <!-- next-section -->
