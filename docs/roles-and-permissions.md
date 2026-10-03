@@ -590,13 +590,19 @@ admin at night at her desk. Three ways to give one person both:
 | | How it works | Cost |
 |---|---|---|
 | **One login, home follows the device** (recommended) | She is Admin. Admin includes everything Management can do (§6). On a phone she lands on the Management home; on a larger screen, on Settings. A switch at the top opens the other | nothing new in the data model |
-| Two logins | One Admin account, one Management account | two passwords and two 2-step set-ups for someone doing one job; records split between two names in Recent changes |
+| Two logins | One Admin account, one Management account | two passwords for someone doing one job, signing out and in to change hats; her changes split between two names in Recent changes |
 | Several roles per person | `user_roles` holds more than one row; rights are the union | "what can this person do" stops being one column of the matrix; scopes need a rule for when two roles disagree |
 
 **Recommended: one login.** It works because of a rule that is already fixed:
 Admin has everything. So the Director loses nothing by holding only Admin, and
 what she actually needs, a small daytime screen with no Settings clutter, is a
 *home screen*, which is what the whiteboard drew.
+
+Its one cost, said plainly: the phone she carries all day is signed in as Admin.
+Security still asks for the authenticator before anything about people or roles
+can be changed, and the inactivity timeout (2026-10-01) applies. If Lutan judges
+that not enough for a phone that leaves the house, two logins is the answer, and
+it costs her a sign-out and a sign-in each evening.
 
 The general form of that, so it is not a special case for one person:
 
