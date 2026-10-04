@@ -267,6 +267,9 @@ const en = {
     comingSoon: "This page is being written — check back soon.",
     getInTouch: "Get in touch",
     alsoSee: "See also:",
+    /** Shown above a page in Thai mode while its Thai text has not been entered. */
+    englishOnly:
+      "This page is in English for now — the Thai version is being prepared. For help in Thai, message us on LINE or call.",
     /**
      * /friends/join's contact card: the hint, and the email subject and
      * message (also the LINE message, where LINE can prefill one) a

@@ -77,7 +77,7 @@ export async function PublicHeader({
   ] = await Promise.all([supabase.auth.getUser(), hasPublicFriends(), loadSiteContent(supabase)]);
   // Staff get "Open the app". A public viewer (src/lib/auth/app-access.ts)
   // is a visitor here with nothing to open — only a way to sign out. A
-  // visitor who isn't signed in sees neither: Staff login is in the footer.
+  // visitor who isn't signed in sees neither here: Staff login is in the footer and, on a phone, the menu.
   const staff = user ? hasAppAccess(await loadCurrentRole(supabase)) : false;
   const n = t.publicNav;
 
@@ -154,6 +154,19 @@ export async function PublicHeader({
       <SignOutButton className="flex min-h-11 items-center whitespace-nowrap text-[15px] font-semibold text-site-ink-muted underline-offset-4 hover:text-site-ink hover:underline" />
     )
   ) : null;
+  // In the phone menu a signed-out visitor gets a quiet Staff login too: the
+  // footer link is ~6.7 screens down on a phone (dry run F-16). Same slot and
+  // weight as Open the app — below the language toggle, never beside Adopt
+  // or Donate. Laptops keep the footer link, which is a short scroll there.
+  const mobileAccount =
+    account ?? (
+      <Link
+        href="/login"
+        className="flex min-h-11 items-center whitespace-nowrap text-[15px] font-semibold text-site-ink-muted underline-offset-4 hover:text-site-ink hover:underline"
+      >
+        {t.publicFooter.staffLogin}
+      </Link>
+    );
 
   const hours = visitingHoursLines(locale, site);
   const social = socialLinks(site);
@@ -259,7 +272,7 @@ export async function PublicHeader({
             donate={donate}
             languageLabel={n.language}
             language={<LanguageSwitcher tone="site" />}
-            account={account}
+            account={mobileAccount}
             talk={{
               title: n.talkToUs,
               links: talkLinks,
