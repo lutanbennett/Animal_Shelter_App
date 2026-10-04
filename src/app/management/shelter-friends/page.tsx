@@ -2,6 +2,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { FriendsOrder, type FriendOrderRow } from "./FriendsOrder";
+import { ActionLink } from "@/components/ActionLink";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import { requirePermission } from "@/lib/permissions/require";
 
 /**
@@ -43,12 +45,13 @@ export default async function ShelterFriendsPage() {
             </Link>
           </p>
         </div>
-        <Link
+        <ActionLink
           href="/management/shelter-friends/new"
-          className="rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
-        >
-          {t.shelterFriends.wizard.addButton}
-        </Link>
+          label={t.shelterFriends.wizard.addButton}
+          icon={ACTION_ICONS.add}
+          variant="primary"
+          iconOnlyOnMobile={false}
+        />
       </div>
 
       {error && (

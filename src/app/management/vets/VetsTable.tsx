@@ -5,6 +5,8 @@ import { Fragment, useState, useTransition } from "react";
 import Link from "next/link";
 import { deleteVet, updateVet } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { RowActionButton } from "@/components/RowAction";
 
 export type VetRow = {
   id: string;
@@ -162,27 +164,26 @@ function VetRowItem({ vet }: { vet: VetRow }) {
                 </button>
               </>
             ) : (
-              <button
-                type="button"
+              <RowActionButton
                 onClick={() => setEditing(true)}
-                className="rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground"
-              >
-                {t.common.edit}
-              </button>
+                label={t.common.edit}
+                subject={vet.name}
+                icon={ACTION_ICONS.edit}
+              />
             )}
-            <button
-              type="button"
+            <RowActionButton
               disabled={isPending || vet.visit_count > 0}
-              title={
+              onClick={handleDelete}
+              label={t.common.delete}
+              hint={
                 vet.visit_count > 0
                   ? t.management.vets.errors.hasVisits(vet.visit_count)
                   : undefined
               }
-              onClick={handleDelete}
-              className="rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {t.common.delete}
-            </button>
+              subject={vet.name}
+              icon={ACTION_ICONS.delete}
+              tone="danger"
+            />
           </div>
         </td>
       </tr>

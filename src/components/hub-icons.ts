@@ -2,8 +2,10 @@ import {
   Ambulance,
   Archive,
   ArchiveRestore,
+  ArrowDown,
   ArrowLeft,
   ArrowRightLeft,
+  ArrowUp,
   BookOpen,
   BookUser,
   BriefcaseBusiness,
@@ -15,6 +17,8 @@ import {
   Droplet,
   Fence,
   Folder,
+  ImageOff,
+  ImageUp,
   HeartCrack,
   HeartHandshake,
   HeartPlus,
@@ -25,6 +29,7 @@ import {
   ListTodo,
   Mail,
   MapPin,
+  Merge,
   MessageCircle,
   MessageCircleHeart,
   MessageCircleMore,
@@ -42,12 +47,15 @@ import {
   Scissors,
   Settings,
   ShieldCheck,
+  Star,
   Stethoscope,
   Syringe,
   Trash2,
   Truck,
   Undo2,
   Users,
+  UserCheck,
+  UserMinus,
   UserRound,
   Utensils,
   Weight,
@@ -198,4 +206,19 @@ export const ACTION_ICONS = {
   back: ArrowLeft,
   /** Clear a search or filter. */
   clear: X,
+  /** Count what is on hand (stock). Same icon as the Stocktake nav entry. */
+  count: ClipboardCheck,
+  /** Fold one record into another (medications). */
+  merge: Merge,
+  /** Add or replace a photo on a record. */
+  uploadImage: ImageUp,
+  /** Take a photo off a record (the record stays). */
+  removeImage: ImageOff,
+  moveUp: ArrowUp,
+  moveDown: ArrowDown,
+  /** Make this the default / standard one. */
+  makeStandard: Star,
+  /** Mark a person as no longer active (a doctor who has left), and back. */
+  deactivate: UserMinus,
+  activate: UserCheck,
 } satisfies Record<string, LucideIcon>;

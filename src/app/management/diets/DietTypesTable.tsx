@@ -14,6 +14,8 @@ import {
   type StockReading,
 } from "@/lib/management/stock";
 import { DaysOfStockCell, StockOnHandCell } from "@/components/StockCells";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { RowActionButton } from "@/components/RowAction";
 import {
   deleteDietType,
   setStandardDietType,
@@ -330,31 +332,36 @@ function DietTypeRowItem({
               </>
             ) : (
               <>
-                <button type="button" onClick={() => setEditing(true)} className={smallButton}>
-                  {t.common.edit}
-                </button>
-                <button type="button" onClick={openCount} className={smallButton}>
-                  {t.management.stock.count}
-                </button>
+                <RowActionButton
+                  onClick={() => setEditing(true)}
+                  label={t.common.edit}
+                  subject={dietType.name}
+                  icon={ACTION_ICONS.edit}
+                />
+                <RowActionButton
+                  onClick={openCount}
+                  label={t.management.stock.count}
+                  subject={dietType.name}
+                  icon={ACTION_ICONS.count}
+                />
                 {!dietType.is_standard && (
-                  <button
-                    type="button"
+                  <RowActionButton
                     disabled={isPending}
                     onClick={handleMakeStandard}
-                    className={smallButton}
-                  >
-                    {m.standard.make}
-                  </button>
+                    label={m.standard.make}
+                    subject={dietType.name}
+                    icon={ACTION_ICONS.makeStandard}
+                  />
                 )}
-                <button
-                  type="button"
+                <RowActionButton
                   disabled={isPending || dietType.diet_count > 0}
-                  title={dietType.diet_count > 0 ? m.errors.hasDiets(dietType.diet_count) : undefined}
                   onClick={handleDelete}
-                  className="rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {t.common.delete}
-                </button>
+                  label={t.common.delete}
+                  hint={dietType.diet_count > 0 ? m.errors.hasDiets(dietType.diet_count) : undefined}
+                  subject={dietType.name}
+                  icon={ACTION_ICONS.delete}
+                  tone="danger"
+                />
               </>
             )}
           </div>

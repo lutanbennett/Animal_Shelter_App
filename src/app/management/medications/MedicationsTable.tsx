@@ -13,6 +13,8 @@ import {
   type StockReading,
 } from "@/lib/management/stock";
 import { DaysOfStockCell, StockOnHandCell } from "@/components/StockCells";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { RowActionButton } from "@/components/RowAction";
 import { MedicationLabelThumb } from "@/components/MedicationLabelThumb";
 import { runUploadAction } from "@/lib/uploads/run-upload-action";
 import {
@@ -393,28 +395,33 @@ function MedicationRowItem({
             )}
             {mode === "view" && (
               <>
-                <button
-                  type="button"
+                <RowActionButton
                   onClick={() => setMode("edit")}
-                  className={smallButton}
-                >
-                  {t.common.edit}
-                </button>
-                <button type="button" onClick={openCount} className={smallButton}>
-                  {t.management.stock.count}
-                </button>
-                <button
-                  type="button"
+                  label={t.common.edit}
+                  subject={medication.name}
+                  icon={ACTION_ICONS.edit}
+                />
+                <RowActionButton
+                  onClick={openCount}
+                  label={t.management.stock.count}
+                  subject={medication.name}
+                  icon={ACTION_ICONS.count}
+                />
+                <RowActionButton
                   disabled={isPending}
                   onClick={() => labelInput.current?.click()}
-                  className={smallButton}
-                >
-                  {isPending ? t.common.uploading : medication.labelFileId ? m.label.replace : m.label.upload}
-                </button>
+                  label={isPending ? t.common.uploading : medication.labelFileId ? m.label.replace : m.label.upload}
+                  subject={medication.name}
+                  icon={ACTION_ICONS.uploadImage}
+                />
                 {medication.labelFileId && (
-                  <button type="button" disabled={isPending} onClick={handleRemoveLabel} className={smallButton}>
-                    {m.label.remove}
-                  </button>
+                  <RowActionButton
+                    disabled={isPending}
+                    onClick={handleRemoveLabel}
+                    label={m.label.remove}
+                    subject={medication.name}
+                    icon={ACTION_ICONS.removeImage}
+                  />
                 )}
                 <input
                   ref={labelInput}
@@ -427,30 +434,27 @@ function MedicationRowItem({
                     if (file) uploadLabel(file);
                   }}
                 />
-                <button
-                  type="button"
+                <RowActionButton
                   disabled={mergeTargets.length === 0}
-                  title={
-                    mergeTargets.length === 0 ? m.merge.noTargets : undefined
-                  }
                   onClick={() => setMode("merge")}
-                  className={smallButton}
-                >
-                  {m.merge.open}
-                </button>
-                <button
-                  type="button"
+                  label={m.merge.open}
+                  hint={mergeTargets.length === 0 ? m.merge.noTargets : undefined}
+                  subject={medication.name}
+                  icon={ACTION_ICONS.merge}
+                />
+                <RowActionButton
                   disabled={isPending || medication.prescription_count > 0}
-                  title={
+                  onClick={handleDelete}
+                  label={t.common.delete}
+                  hint={
                     medication.prescription_count > 0
                       ? m.errors.hasPrescriptions(medication.prescription_count)
                       : undefined
                   }
-                  onClick={handleDelete}
-                  className="rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {t.common.delete}
-                </button>
+                  subject={medication.name}
+                  icon={ACTION_ICONS.delete}
+                  tone="danger"
+                />
               </>
             )}
           </div>

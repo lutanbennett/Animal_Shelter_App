@@ -6,6 +6,8 @@ import { formatDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { ActionResult } from "@/lib/action-result";
 import { likelyDuplicates } from "@/lib/vets/doctors";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { RowActionButton } from "@/components/RowAction";
 import {
   deleteDoctor,
   mergeDoctors,
@@ -228,49 +230,51 @@ function DoctorRowItem({
             )}
             {mode === "view" && (
               <>
-                <button type="button" disabled={isPending} onClick={() => setMode("edit")} className={smallButton}>
-                  {d.rename}
-                </button>
-                <button
-                  type="button"
+                <RowActionButton
+                  disabled={isPending}
+                  onClick={() => setMode("edit")}
+                  label={d.rename}
+                  subject={doctor.name}
+                  icon={ACTION_ICONS.edit}
+                />
+                <RowActionButton
                   disabled={isPending || mergeTargets.length === 0}
                   onClick={openMerge}
-                  className={smallButton}
-                >
-                  {d.merge.open}
-                </button>
-                <button
-                  type="button"
+                  label={d.merge.open}
+                  subject={doctor.name}
+                  icon={ACTION_ICONS.merge}
+                />
+                <RowActionButton
                   disabled={isPending || (doctor.hasLogin && !isAdmin)}
                   onClick={() =>
                     run(() => setDoctorActive(vetId, doctor.id, !doctor.active))
                   }
-                  title={
+                  label={doctor.active ? d.markLeft : d.markActive}
+                  hint={
                     doctor.hasLogin && !isAdmin
                       ? d.errors.loginLinksAdminOnly
                       : doctor.active
                         ? d.markLeftHint
                         : undefined
                   }
-                  className={smallButton}
-                >
-                  {doctor.active ? d.markLeft : d.markActive}
-                </button>
-                <button
-                  type="button"
+                  subject={doctor.name}
+                  icon={doctor.active ? ACTION_ICONS.deactivate : ACTION_ICONS.activate}
+                />
+                <RowActionButton
                   disabled={isPending || doctor.visit_count > 0 || (doctor.hasLogin && !isAdmin)}
-                  title={
+                  onClick={handleDelete}
+                  label={t.common.delete}
+                  hint={
                     doctor.visit_count > 0
                       ? d.errors.hasVisits(doctor.visit_count)
                       : doctor.hasLogin && !isAdmin
                         ? d.errors.loginLinksAdminOnly
                         : undefined
                   }
-                  onClick={handleDelete}
-                  className="rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {t.common.delete}
-                </button>
+                  subject={doctor.name}
+                  icon={ACTION_ICONS.delete}
+                  tone="danger"
+                />
               </>
             )}
           </div>
