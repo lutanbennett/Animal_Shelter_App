@@ -34,8 +34,9 @@ the flag: the rehome action now revalidates `/adopt` and `/`. Edge copies in
 other data centres still age out on their own; re-check after a purge or ten
 minutes, per the house note.
 
-## F-17 — not decided
+## F-17 — the contact
 
-The contact is not ours to invent. `SUPPORT_CONTACT` in
-`src/lib/manual/en.ts` is empty, so the topic keeps its general wording until
-a name and a phone or LINE are filled in.
+The contact is not ours to invent, so it was left empty until Lutan gave it:
+the manual's Getting help topic names Lutan Bennett, LINE `lutan1`. It reads
+`SUPPORT_CONTACT` in `src/lib/manual/en.ts`, so a change of person or a phone
+number is one edit there (null falls back to the general wording).

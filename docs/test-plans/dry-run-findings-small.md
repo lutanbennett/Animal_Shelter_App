@@ -9,8 +9,8 @@ or `n/a` with the reason.
 
 | | |
 |---|---|
-| Feature | Four small findings from the staff dry run: resident ID search tolerates `R0055` and the box gets its own row (F-13), the assistant closes after a link, scrolls a new turn into view and answers a fostered animal with its carer (F-14), the manual's Getting help topic reads its contact from one constant (F-17, awaiting the details), an adopted animal stops being Ready for adoption (F-20) |
-| Backlog item | `docs/backlog.md` → *Review the staff dry-run report* → F-13, F-14, F-20 ticked; F-17 left open; the parent item stays open |
+| Feature | Four small findings from the staff dry run: resident ID search tolerates `R0055` and the box gets its own row (F-13), the assistant closes after a link, scrolls a new turn into view and answers a fostered animal with its carer (F-14), the manual's Getting help topic names Lutan Bennett and LINE lutan1 (F-17), an adopted animal stops being Ready for adoption (F-20) |
+| Backlog item | `docs/backlog.md` → *Review the staff dry-run report* → F-13, F-14, F-20 ticked; F-17 ticked once the contact was given; the parent item stays open |
 | Branch / worktree | `claude/dry-run-findings-small` @ `C:\Development\Animal_Shelter_dry-run-findings-small` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3004` |
 | PR | linked from the PR itself |
@@ -20,7 +20,7 @@ or `n/a` with the reason.
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence, and it matches what the backlog item asked for: the four findings above, with F-17 only made ready for the contact, not answered
+- [x] Change is described in one sentence, and it matches what the backlog item asked for: the four findings above, with F-17 answered by naming Lutan Bennett and LINE lutan1
 - [x] Files/areas touched listed: `src/app/residents/page.tsx`, `src/lib/residents/code-search.ts`; `src/components/assistant/{AssistantPanel,AssistantMessages,AssistantConversation,AssistantAnswers}.tsx`, `src/app/assistant/lookups.ts`; `src/lib/placements/rehome.ts`, `src/app/residents/[id]/{ResidentHub.tsx,rehome/actions.ts}`; `src/lib/manual/en.ts`, `scripts/lib/acceptance-matrix-entries.mjs`; two strings in each of `src/lib/i18n/dictionaries/{en,th}.ts`; `scripts/check-resident-id-search.mjs`
 - [x] Roles affected identified: the residents search and the assistant for everyone who can open them (admin, management, staff, vet, volunteer); adoption for those who can foster or adopt (admin, staff)
 - [x] Out of scope written down: F-15, F-16 (navigation, `home-screens`), F-08 and F-09 (`icon-buttons`, batch 44); no migration (`volunteer-schema` holds 0134)
@@ -86,7 +86,7 @@ No permission changes. Only staff was signed in (throwaway login, banned afterwa
 ## 5. Cross-cutting
 
 - [ ] Nav entry correct — n/a: no navigation change (deliberately: `home-screens` owns nav)
-- [x] Manual updated: the Search topic and the matrix entry now write `R-0042`; the Getting help topic reads `SUPPORT_CONTACT` (empty for now — see Left for manual verification). The acceptance-matrix `--check` inside `npm run lint` passes
+- [x] Manual updated: the Search topic and the matrix entry now write `R-0042`; the Getting help topic names Lutan Bennett and LINE `lutan1` from `SUPPORT_CONTACT`. The acceptance-matrix `--check` inside `npm run lint` passes
 - [x] Translatable strings go through the translation path: `whereFostered` and `whereFosteredNoCarer` added to `en.ts` and `th.ts`; the Thai wording reuses the existing `fosteredWith` phrasing and has not been read by a Thai speaker
 - [x] Mobile viewport (375px): search box, assistant panel, fostered answer and the adopted hub checked, in English and Thai (above)
 - [ ] Browser console clean — n/a: not read; the pages rendered and every interaction completed, but `read_console_messages` was not called
@@ -101,7 +101,7 @@ No permission changes. Only staff was signed in (throwaway login, banned afterwa
 
 ## 7. Documentation
 
-- [x] Backlog items ticked in `docs/backlog.md` on this branch: F-13, F-14, F-20 ticked with a note each; F-17 left open with a status line (awaiting the contact details); the parent review item is left open
+- [x] Backlog items ticked in `docs/backlog.md` on this branch: F-13, F-14, F-20 ticked with a note each; F-17 ticked; the parent review item is left open
 - [x] Non-obvious design choices added as `docs/decisions/2026-10-04-dry-run-findings-small.md` (which ID format is right, the flag cleared in code not a migration, the cache half of F-20)
 - [ ] `README.md` still accurate — n/a: README does not describe ID search, the assistant or adoption
 - [x] **Release notes.** Three lines added to `unreleased` in `src/lib/releases.ts`: ID search and the search box, the assistant closing and answering fostered animals, and an adopted animal no longer advertising itself
@@ -153,7 +153,7 @@ No permission changes. Only staff was signed in (throwaway login, banned afterwa
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | **A question for Lutan (F-17):** who should the manual name for Getting help, and by phone or LINE? Fill `SUPPORT_CONTACT` in `src/lib/manual/en.ts` (name, and phone and/or line) and the topic names them. Until then it keeps the general wording | Manual → Getting help |
+| 1 | The Getting help topic shows "Lutan Bennett (LINE lutan1)" and that is how you want to be reached | Manual → Getting help |
 | 2 | Whether the Thai fostered answer ("…อยู่กับผู้อุปถัมภ์" plus the carer name) reads naturally | Assistant → "Where is the fostered resident?" |
 | 3 | On a real phone, open the assistant, ask "Move a resident to an enclosure today" and confirm Confirm is on screen without scrolling the page behind it | Assistant panel |
 | 4 | After the release is deployed and the public cache purged (or ten minutes): adopt a Ready resident and load `/adopt` straight after — it should not be listed | Public Adopt page |
@@ -171,7 +171,7 @@ Automated checks by: Claude (dry-run-findings-small session)  Date: 2026-10-04
 
 - [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — the list is not empty and no person has looked (see the pending signature below)
 
-Manual verification by: pending: the four items under *Left for manual verification*, chiefly the contact for the Getting help topic
+Manual verification by: pending: the four items under *Left for manual verification*
 
 ### Result
 

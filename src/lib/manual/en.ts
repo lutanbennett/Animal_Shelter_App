@@ -24,11 +24,13 @@ import type { Manual } from "./types";
  */
 /**
  * Who to tell when the app or this manual is wrong (dry run 2026-10-03, F-17).
- * The shelter has not yet said who that is, so it is left empty and the
- * topic falls back to the general wording; fill in the name and at least one
- * way to reach them and the topic names them. Do not guess.
+ * Set to null to fall back to the general wording; otherwise the topic names
+ * them with whichever of phone and LINE are given.
  */
-const SUPPORT_CONTACT: { name: string; phone?: string; line?: string } | null = null;
+const SUPPORT_CONTACT: { name: string; phone?: string; line?: string } | null = {
+  name: "Lutan Bennett",
+  line: "lutan1",
+};
 
 function supportContactLine(c: NonNullable<typeof SUPPORT_CONTACT>): string {
   const reach = [c.phone && `phone ${c.phone}`, c.line && `LINE ${c.line}`].filter(Boolean);
