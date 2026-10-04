@@ -172,6 +172,8 @@ export function FacilityMap({ data }: { data: FacilityMapData }) {
               key={item.id}
               item={item}
               plan={plan}
+              // A plan that is one enclosure (the Cat Zone) has nothing to tell apart: the card says it all.
+              showChip={items.length > 1}
               selected={item.id === pickedId}
               onPick={() => setPickedId(item.id)}
               ariaLabel={
@@ -244,7 +246,9 @@ function MapShape({
   selected,
   onPick,
   ariaLabel,
+  showChip,
 }: {
+  showChip: boolean;
   item: Item;
   plan: MapPlan;
   selected: boolean;
@@ -300,7 +304,7 @@ function MapShape({
         >
           {item.name}
         </text>
-      ) : (
+      ) : showChip ? (
         <g className="pointer-events-none">
           <rect x={chipX} y={chipY} width={chipW} height={3.5} rx={0.9} className="fill-white stroke-neutral-700" strokeWidth={0.15} />
           <text x={chipX + chipW / 2} y={chipY + 1.8} textAnchor="middle" dominantBaseline="middle" fontSize={2.4} fontWeight={700} className="fill-neutral-900">
@@ -317,7 +321,7 @@ function MapShape({
               return <MarkIcon key={i} x={chipX + chipW + 0.4 + i * 3.4} y={chipY + 0.2} width={3} height={3} className="text-neutral-900" strokeWidth={2.4} />;
             })}
         </g>
-      )}
+      ) : null}
     </g>
   );
 }
