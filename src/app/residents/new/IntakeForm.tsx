@@ -3,6 +3,7 @@
 import { useActionState, useCallback, useEffect, useRef, useState } from "react";
 import { recordIntake } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { localizedValidity } from "@/lib/i18n/validity";
 import { formatDate, todayIso } from "@/lib/format";
 import type { EnclosureOption, ZoneOption } from "@/lib/enclosures/options";
 import {
@@ -299,6 +300,7 @@ export function IntakeForm({
     <form
       ref={formRef}
       action={formAction}
+      {...localizedValidity(t, locale)}
       className="flex max-w-4xl flex-col gap-6"
     >
       <WizardProgress

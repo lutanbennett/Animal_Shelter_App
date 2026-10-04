@@ -78,6 +78,10 @@ export function placementTypeLabel(
   return enumLabel(t.enums.placementType, value);
 }
 
+export function photoFolderLabel(t: Dictionary, value: string | null | undefined) {
+  return enumLabel(t.enums.photoFolder, value);
+}
+
 export function doseUnitLabel(t: Dictionary, value: string | null | undefined) {
   return enumLabel(t.enums.doseUnit, value);
 }

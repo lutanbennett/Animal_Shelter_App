@@ -443,6 +443,10 @@ const en = {
       /** Email and password: no request exists (admins create these logins). */
       noRolePassword:
         "This account doesn’t have access. Ask an administrator to assign you a role, then try again.",
+      /** Email and password: wrong email or password (the auth service only says "Invalid login credentials"). */
+      badCredentials: "That email or password isn’t right. Try again, or tap Forgot password?",
+      /** Email and password: any other refusal from the auth service. */
+      signInFailed: "Couldn’t sign in just now. Please try again in a moment.",
       google: "Google sign-in didn’t complete. Please try again.",
       /** The session ended (long inactivity, or signed out elsewhere). */
       expired: "You were signed out because you haven’t used the app for a while. Sign in again and you’ll go back to where you were.",
@@ -2583,6 +2587,8 @@ const en = {
     pickResident: "Choose a resident",
     pickVet: "Choose a vet",
     unknown: "…",
+    /** Stored in the notes of whatever the assistant records, in the language of whoever confirmed it. */
+    stamp: (request: string) => `via the assistant — "${request}"`,
     notesStamp: (request: string) =>
       `Notes will read: via the assistant — "${request}"`,
     confirm: "Confirm",
@@ -2882,7 +2888,7 @@ const en = {
     noLinkedVisit: "No linked visit",
     results: "Results / notes",
     resultsPlaceholder:
-      "Free text for now — e.g. panel run, key values, vet's summary. Structured values from OCR are a future build.",
+      "Free text for now — e.g. which tests were run, key values, the vet’s summary.",
     resultsHint: "Optional — you can leave this blank and just attach the scan.",
     saving: "Saving...",
     saveButton: "Save blood test",
@@ -3394,6 +3400,7 @@ const en = {
         months === 1 ? "due monthly" : `due every ${months} months`,
       historyEntries: (n: number) => `${n} history entries`,
       carer: (name: string) => `Carer: ${name}`,
+      adopter: (name: string) => `Adopter: ${name}`,
       /** Keyed by PlacementActionKey (src/lib/placements/available.ts). */
       placementActions: {
         move: "Move enclosure",
@@ -4447,6 +4454,8 @@ const en = {
     pageTitle: "Meet Our Residents",
     pageSubtitle:
       "You're browsing as a guest — this is a read-only, public view of the residents we've made visible for adoption and outreach. Staff and volunteers see much more after signing in.",
+    pageSubtitleSignedIn:
+      "This is the public view of the residents we’ve made visible for adoption and outreach — what an adopter sees. The full list is under Residents in the app.",
     couldntLoad: "Couldn't load residents",
     noneListed: "No residents are listed publicly right now — check back soon.",
     noPhoto: "No photo yet",
@@ -4527,6 +4536,85 @@ const en = {
       subtitle: "Residents who found their forever homes recently.",
       adopted: (month: string) => `Adopted ${month}`,
     },
+  },
+
+  /** /releases: the page's own words. The notes themselves (src/lib/releases.ts) are written in English only. */
+  releases: {
+    title: "Release notes",
+    intro:
+      "What has changed in the system, newest first. Admins get an email when a major release goes live.",
+    englishOnly: "The notes themselves are in English for now.",
+    notReleasedYet: "Not released yet",
+    major: "Major",
+    roleNames: {
+      admin: "Admin",
+      management: "Management",
+      staff: "Staff",
+      vet: "Vet",
+      volunteer: "Volunteer",
+    },
+    showingAll: (role: string) =>
+      `Showing every change, greyed where it isn't for the ${role} role.`,
+    showingMine: (role: string) =>
+      `Showing the changes for the ${role} role, and the ones for everyone.`,
+    showEverything: "Show everything",
+    showOnlyMine: (role: string) => `Show only the ${role} role`,
+    keptInList:
+      "Every release stays in the list, so the numbers run in order; one with nothing for your role says so.",
+    nothingFor: (role: string) => `Nothing for ${role}`,
+    nothingInRelease: (role: string, count: number) =>
+      `Nothing in this release changes what the ${role} role does — ${
+        count === 1 ? "its one change is for other roles." : `its ${count} changes are for other roles.`
+      }`,
+    notForRole: (role: string) => `Not for the ${role} role`,
+  },
+
+  /**
+   * /manual: the page's own words. The manual's text (src/lib/manual/en.ts) is
+   * English only for now, and in Thai the page says so first; a Thai edition
+   * is its own piece of work.
+   */
+  manualPage: {
+    title: "User manual",
+    version: "Draft 1 · September 2026 · English only for now",
+    /** Shown in Thai only. */
+    englishNotice: "",
+    contents: "Contents",
+    contentsLabel: "Manual contents",
+    rolesAtAGlance: "Roles at a glance",
+    showingRole: (role: string, count: number) =>
+      `Showing the ${count} topics for the ${role} role.`,
+    showEverything: "Show everything",
+    showingEverything: (role: string) =>
+      `Showing everything. Topics outside the ${role} role are greyed.`,
+    showOnlyRole: (role: string) => `Show only the ${role} role`,
+    findHint:
+      "The rest are tucked away, not gone: Show everything lists them, greyed, to answer \"can I do this?\".",
+    printPdf: "Print this as a PDF",
+    withoutScreenshots: "Without screenshots",
+  },
+
+  /**
+   * The browser's own form messages ("Please fill in this field") follow the
+   * phone's language, not the app's. src/lib/i18n/validity.ts swaps them for
+   * these on the forms staff use most.
+   */
+  validation: {
+    required: "Please fill in this field.",
+    requiredChoice: "Please choose one.",
+    requiredCheck: "Please tick this box to continue.",
+    email: "Enter a valid email address.",
+    url: "Enter a web address, like https://example.org.",
+    number: "Enter a number.",
+    minLength: (min: number) => `Use at least ${min} characters.`,
+    maxLength: (max: number) => `Use no more than ${max} characters.`,
+    notAfter: (limit: string) => `Choose ${limit} or earlier.`,
+    notBefore: (limit: string) => `Choose ${limit} or later.`,
+    atMost: (limit: string) => `Enter ${limit} or less.`,
+    atLeast: (limit: string) => `Enter ${limit} or more.`,
+    step: "Enter a valid number.",
+    pattern: "That doesn't look right. Check it and try again.",
+    invalid: "That doesn't look right. Check it and try again.",
   },
 
   share: {
@@ -4879,7 +4967,7 @@ const en = {
     species: { Dog: "Dog", Cat: "Cat" },
     /** contacts.type — Vendor is shown as Supplier, which is what the shelter calls them. */
     contactType: {
-      Carer: "Carer",
+      Carer: "Foster or adopter",
       Volunteer: "Volunteer",
       Vendor: "Supplier",
     },
@@ -4910,6 +4998,8 @@ const en = {
     },
     mandatory: { mandatory: "Mandatory", optional: "Optional" },
     /** medication.dose_unit — what one unit of a medication is. */
+    /** Photo folders: stored (and named in Drive) in English, shown in the reader's language. */
+    photoFolder: { Shelter: "Shelter", Medical: "Medical", Foster: "Foster", Adoption: "Adoption" },
     doseUnit: {
       tablet: "tablet(s)",
       capsule: "capsule(s)",
