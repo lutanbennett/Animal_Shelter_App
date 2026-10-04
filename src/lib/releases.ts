@@ -63,23 +63,32 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   "When a save is refused (a date in the future, a move that starts before the last one), the form now keeps everything you chose and typed, so you fix the one thing and press Save again instead of starting over. On My tasks, a \"Done today\" list at the bottom shows what you marked done, skipped or completed today, still there after a reload, each with Undo. Marking a job done that is waiting for another job now asks first.",
-  "On the public website, a visitor reading in Thai who opens a page whose Thai text has not been written yet (Foster and Volunteer today) now sees a short Thai note saying the page is in English for now, instead of unexplained English. On a phone, the website's menu now has Staff login, just under the language switch, so staff no longer scroll to the very bottom of a page to sign in.",
-  { text: "Search on the Residents list now finds a resident by their ID however it is typed: R-0055, R0055, r 0055 or just 0055. On a phone the search box has its own full-width row instead of squeezing in beside the buttons. The manual now writes IDs the way the app does (R-0042).", roles: ["admin", "management", "staff", "volunteer", "vet"] },
-  { text: "The assistant now gets out of the way: tapping Open resident, Open enclosure or a resident in its answer closes the panel so you can see the page it opened. A new Confirm card scrolls into view instead of opening below the message box, and asking where a fostered animal is now answers with the foster carer rather than a place that does not exist.", roles: ["admin", "management", "staff", "volunteer", "vet"] },
-  { text: "Once a resident is adopted they no longer show the green Ready for adoption badge or the microchip warning on their page, and they drop off the public Adopt page straight away.", roles: ["admin", "management", "staff", "vet"] },
-  "Signing in now lands on a Home screen: big buttons, an icon and a word each, one for every job you can do (My tasks, Residents, Stocktake and so on), and nothing you cannot. Home is also the first link in the menu. A vet still lands on their appointments.",
-  {
-    text: "For the Director, who signs in as Admin: on a phone, sign-in opens the Management home; on a larger screen it opens Settings. Across the top of both is a row of buttons to open any other home, Settings, Management, Staff, Vet or Volunteer, to see exactly what that role sees when they ring to say something is wrong. Only Admin has the row, and typing one of those addresses as anyone else is refused.",
-    roles: ["admin"],
-  },
-  {
-    text: "There is now a Head of Medical login. It opens to one big button, Administer Medication, which shows the medication list for today: who needs which medicine, how much and how often, enclosure by enclosure, with a photo of each animal and each medicine's label. It shows nothing else about an animal and nothing can be changed or ticked off. Managers see the same list, and so does Staff, who could not before.",
-    roles: ["admin", "management", "staff"],
-  },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.18.0",
+    date: "2026-10-04",
+    title:
+      "A Home screen for everyone, a Head of Medical login, and volunteers narrowed to what they need",
+    major: true,
+    notes: [
+      "Signing in now lands on a Home screen: big buttons, an icon and a word each, one for every job you can do (My tasks, Residents, Stocktake and so on), and nothing you cannot. Home is also the first link in the menu. A vet still lands on their appointments.",
+      {
+        text: "There is now a Head of Medical login. It opens to one big button, Administer Medication, which shows the medication list for today: who needs which medicine, how much and how often, enclosure by enclosure, with a photo of each animal and each medicine's label. It shows nothing else about an animal and nothing can be changed or ticked off. Managers see the same list, and so does Staff, who could not before.",
+        roles: ["admin", "management", "staff"],
+      },
+      {
+        text: "For the Director, who signs in as Admin: on a phone, sign-in opens the Management home; on a larger screen it opens Settings. Across the top of both is a row of buttons to open any other home, Settings, Management, Staff, Vet or Volunteer, to see exactly what that role sees when they ring to say something is wrong. Only Admin has the row, and typing one of those addresses as anyone else is refused.",
+        roles: ["admin"],
+      },
+      { text: "Search on the Residents list now finds a resident by their ID however it is typed: R-0055, R0055, r 0055 or just 0055. On a phone the search box has its own full-width row instead of squeezing in beside the buttons. The manual now writes IDs the way the app does (R-0042).", roles: ["admin", "management", "staff", "volunteer", "vet"] },
+      { text: "The assistant now gets out of the way: tapping Open resident, Open enclosure or a resident in its answer closes the panel so you can see the page it opened. A new Confirm card scrolls into view instead of opening below the message box, and asking where a fostered animal is now answers with the foster carer rather than a place that does not exist.", roles: ["admin", "management", "staff", "volunteer", "vet"] },
+      { text: "Once a resident is adopted they no longer show the green Ready for adoption badge or the microchip warning on their page, and they drop off the public Adopt page straight away.", roles: ["admin", "management", "staff", "vet"] },
+      "On the public website, a visitor reading in Thai who opens a page whose Thai text has not been written yet (Foster and Volunteer today) now sees a short Thai note saying the page is in English for now, instead of unexplained English. On a phone, the website's menu now has Staff login, just under the language switch, so staff no longer scroll to the very bottom of a page to sign in.",
+    ],
+  },
   {
     version: "0.17.0",
     date: "2026-10-04",
