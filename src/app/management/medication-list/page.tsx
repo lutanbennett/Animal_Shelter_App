@@ -21,13 +21,12 @@ import { requirePermission } from "@/lib/permissions/require";
  *
  * A reference, not a record. There is deliberately nothing to tap — no
  * "given", no "skipped", no reason, no history (Lutan, 2026-10-03) — so the
- * page has no form, no action and no client component. It opens for
- * Management and Admin now; the Head of Medical gets it with their role, and
- * the home tile moves with the home screens (docs/decisions/2026-10-03-
- * medication-list.md).
+ * page has no form, no action and no client component. It opens for anyone
+ * holding Read on medical.prescriptions: Management, Admin, Staff and the Head
+ * of Medical, whose one home tile it is (docs/decisions/2026-10-04-medical-role.md).
  */
 export default async function MedicationListPage() {
-  await requirePermission("stock.medications", "read");
+  await requirePermission("medical.prescriptions", "read");
   const { t, locale } = await getT();
   const m = t.management.medicationList;
 

@@ -7,20 +7,22 @@ type Supabase = Awaited<ReturnType<typeof createClient>>;
 type PrescriptionRow = {
   id: string;
   resident_id: string;
+  medication_id: string;
+  frequency_id: string | null;
   dose_quantity: number | string | null;
   start_date: string;
   end_date: string | null;
-  medication: { name: string; dose_unit: string; label_drive_file_id: string | null } | null;
-  frequency: (DueSchedule & { label: string }) | null;
-  residents: {
-    name: string;
-    thai_name: string | null;
-    profile_photo_drive_file_id: string | null;
-  } | null;
 };
 
+type MedicationRow = { id: string; name: string; dose_unit: string; label_drive_file_id: string | null };
+type FrequencyRow = DueSchedule & { id: string; label: string };
+
+/** A row of `medication_list_residents` (0136): who a resident is and where it lives. */
 type PlacementRow = {
-  resident_id: string;
+  id: string;
+  name: string;
+  thai_name: string | null;
+  profile_photo_drive_file_id: string | null;
   current_status: string | null;
   enclosure_id: string | null;
   enclosure_name: string | null;
@@ -90,57 +92,79 @@ const natural = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
  * tablet is on the list on its day only. As-needed prescriptions have no day
  * to fall on and stay on the list.
  *
+ * Reads three views and two lists, never the tables behind them, so a login that holds only
+ * medical.prescriptions Read (the Head of Medical) gets exactly what the list shows and no price,
+ * stock level, breed, bio or note (0136; decisions/2026-10-04-medical-role.md). Prescriptions and
+ * frequency are read as tables, under their own policies; medicine and resident come through
+ * `medication_list_medications` and `medication_list_residents`.
+ *
  * Read-only by construction: nothing here, or on the page, writes.
  */
 export async function loadMedicationList(supabase: Supabase): Promise<MedicationList> {
   const today = todayIso();
 
-  const [prescriptions, placements] = await Promise.all([
+  const [prescriptions, medications, frequencies, placements] = await Promise.all([
     supabase
       .from("prescriptions")
-      .select(
-        "id, resident_id, dose_quantity, start_date, end_date, medication(name, dose_unit, label_drive_file_id), frequency(label, doses_per_day, interval_count, interval_unit), residents(name, thai_name, profile_photo_drive_file_id)",
-      )
+      .select("id, resident_id, medication_id, frequency_id, dose_quantity, start_date, end_date")
       .is("archived_at", null)
       .lte("start_date", today)
       .or(`end_date.is.null,end_date.gte.${today}`)
       .returns<PrescriptionRow[]>(),
     supabase
-      .from("resident_list_view")
+      .from("medication_list_medications")
+      .select("id, name, dose_unit, label_drive_file_id")
+      .returns<MedicationRow[]>(),
+    supabase
+      .from("frequency")
+      .select("id, label, doses_per_day, interval_count, interval_unit")
+      .returns<FrequencyRow[]>(),
+    supabase
+      .from("medication_list_residents")
       .select(
-        "resident_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th",
+        "id, name, thai_name, profile_photo_drive_file_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th",
       )
       .returns<PlacementRow[]>(),
   ]);
 
-  const error = prescriptions.error?.message ?? placements.error?.message ?? null;
+  const error =
+    prescriptions.error?.message ??
+    medications.error?.message ??
+    frequencies.error?.message ??
+    placements.error?.message ??
+    null;
   if (error) return { today, zones: [], apart: [], error };
 
-  const placeOf = new Map((placements.data ?? []).map((p) => [p.resident_id, p]));
+  const placeOf = new Map((placements.data ?? []).map((p) => [p.id, p]));
+  const medicationOf = new Map((medications.data ?? []).map((m) => [m.id, m]));
+  const frequencyOf = new Map((frequencies.data ?? []).map((f) => [f.id, f]));
 
   // Group the prescriptions that fall today by resident.
   const byResident = new Map<string, ListedResident>();
   for (const rx of prescriptions.data ?? []) {
-    if (!rx.medication || !rx.residents) continue;
-    if (doseDueState(rx.start_date, rx.frequency, today) === "notToday") continue;
+    const medication = medicationOf.get(rx.medication_id);
+    const frequency = rx.frequency_id ? (frequencyOf.get(rx.frequency_id) ?? null) : null;
+    const who = placeOf.get(rx.resident_id);
+    if (!medication || !who) continue;
+    if (doseDueState(rx.start_date, frequency, today) === "notToday") continue;
     const quantity = rx.dose_quantity == null ? null : Number(rx.dose_quantity);
     const resident =
       byResident.get(rx.resident_id) ??
       {
         id: rx.resident_id,
-        name: rx.residents.name,
-        thaiName: rx.residents.thai_name,
-        photoFileId: rx.residents.profile_photo_drive_file_id,
+        name: who.name,
+        thaiName: who.thai_name,
+        photoFileId: who.profile_photo_drive_file_id,
         medications: [],
       };
     resident.medications.push({
       prescriptionId: rx.id,
-      name: rx.medication.name,
-      doseUnit: rx.medication.dose_unit,
+      name: medication.name,
+      doseUnit: medication.dose_unit,
       quantity: quantity != null && Number.isFinite(quantity) ? quantity : null,
-      schedule: rx.frequency,
-      frequencyLabel: rx.frequency?.label ?? null,
-      labelFileId: rx.medication.label_drive_file_id,
+      schedule: frequency,
+      frequencyLabel: frequency?.label ?? null,
+      labelFileId: medication.label_drive_file_id,
       lastDay: rx.end_date === today,
     });
     byResident.set(rx.resident_id, resident);

@@ -169,7 +169,7 @@ export const ROUTES: readonly RouteEntry[] = [
   },
   {
     path: "/management/medication-list",
-    activity: "stock.medications",
+    activity: "medical.prescriptions",
     level: "read",
     icon: Pill,
     label: (t) => t.nav.medicationList,
