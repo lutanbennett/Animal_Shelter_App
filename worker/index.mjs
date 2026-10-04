@@ -51,7 +51,8 @@
 // the cached page list, so nothing here stores it.
 //
 // Besides requests, a cron trigger: `scheduled` below runs the status
-// alerts every 15 minutes (wrangler.jsonc, src/lib/status/alerts.ts).
+// alerts every 15 minutes (wrangler.jsonc, src/lib/status/alerts.ts) and then
+// the machine-drafted translations (worker/translations.mjs).
 //
 // `x-lanna-served-by` (pi | worker) and `x-lanna-cache` (HIT | MISS | BYPASS)
 // on every response say which path a request took.
@@ -61,6 +62,7 @@ import { handleReleaseRequest } from "./release-mail.mjs";
 import { originOrLocal } from "./origin.mjs";
 import { handleCspReport } from "./csp-report.mjs";
 import { withSecurityHeaders } from "./security-headers.mjs";
+import { runTranslations } from "./translations.mjs";
 
 // OpenNext's Durable Object classes must stay exported from the entry module.
 export { DOQueueHandler, DOShardedTagCache, BucketCachePurge } from "../.open-next/worker.js";
@@ -173,20 +175,31 @@ const worker = {
   // environment names its site in STATUS_ALERT_SITE: the links in the mail
   // point there, and an environment with no site has nothing to alert about.
   async scheduled(controller, env, ctx) {
-    if (!env.STATUS_ALERT_SITE) {
-      console.log("status-alerts: STATUS_ALERT_SITE is not set; not running.");
-      return;
+    try {
+      await runStatusAlerts(controller, env, ctx);
+    } catch (err) {
+      console.error(`status-alerts: ${err?.message ?? err}`);
     }
-    const request = new Request(`${env.STATUS_ALERT_SITE}/api/status/alerts`, {
-      method: "POST",
-      headers: { authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY ?? ""}` },
-    });
-    const response = await openNext.fetch(request, env, ctx);
-    const body = await response.text();
-    // The Worker's logs are where a run that could not remember shows first.
-    const log = response.ok ? console.log : console.error;
-    log(`status-alerts: ${controller.cron} → ${response.status} ${body}`);
+    // Machine-drafted translations (worker/translations.mjs) share the trigger.
+    // After the alerts so they can never delay one; runTranslations does not throw.
+    await runTranslations(env);
   },
 };
+
+async function runStatusAlerts(controller, env, ctx) {
+  if (!env.STATUS_ALERT_SITE) {
+    console.log("status-alerts: STATUS_ALERT_SITE is not set; not running.");
+    return;
+  }
+  const request = new Request(`${env.STATUS_ALERT_SITE}/api/status/alerts`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY ?? ""}` },
+  });
+  const response = await openNext.fetch(request, env, ctx);
+  const body = await response.text();
+  // The Worker's logs are where a run that could not remember shows first.
+  const log = response.ok ? console.log : console.error;
+  log(`status-alerts: ${controller.cron} → ${response.status} ${body}`);
+}
 
 export default worker;

@@ -4432,6 +4432,7 @@ const en = {
     editTranslation: "Edit translation",
     addTranslation: "Add translation",
     noTranslation: (lang: string) => `No ${lang} translation yet.`,
+    machineDraft: "Written by a machine. Read it against the original and fix anything wrong before you approve it.",
     translationLabel: (lang: string) => `${lang} translation`,
     openRecord: "Open record",
     errors: {

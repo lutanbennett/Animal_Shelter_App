@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Management → Translations: text waiting for its other-language version can now arrive with a machine-written draft already filled in, marked as machine-written, for a manager to read, correct and approve instead of writing from scratch. Nothing is shown to the public until a manager approves it. Drafts begin once the shelter's translation service is switched on, at about twenty a day.",
   "Signing in with a wrong password now says, in English or Thai, \"That email or password isn't right\" and keeps the email you typed, instead of the sign-in service's English message and two empty boxes.",
   "Release notes and the Manual now have their headings, buttons and intro in Thai when the app is in Thai, and the Manual says plainly that its text is still English. The Dev/UAT tag on each release is shown to admins only.",
   "On Intake, Change password and Deliveries, the \"please fill in this field\" style messages now follow the app's language (English or Thai) instead of the phone's.",
