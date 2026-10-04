@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import { CheckCircle2, PawPrint } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -11,6 +10,7 @@ import { requirePermission } from "@/lib/permissions/require";
 import { loadOneResident, loadPickableResidents } from "@/lib/medical/residents";
 import { ResidentPicker } from "../ResidentPicker";
 import { WeightKeypad } from "./WeightKeypad";
+import { BackLink } from "@/components/BackLink";
 
 /**
  * Record Weight, a job of the Head of Medical (docs/decisions/2026-10-04-medical-jobs-app.md).
@@ -43,9 +43,9 @@ export default async function RecordWeightPage(props: PageProps<"/medical/weight
   if (residentId) {
     const { resident, error } = await loadOneResident(supabase, residentId);
     const back = (
-      <Link href="/medical/weight" className="text-base font-medium text-primary hover:underline">
+      <BackLink href="/medical/weight" className="text-base">
         {w.back}
-      </Link>
+      </BackLink>
     );
     if (error || !resident) {
       return shell(

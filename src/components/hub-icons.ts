@@ -1,11 +1,15 @@
 import {
   Ambulance,
+  Archive,
+  ArchiveRestore,
+  ArrowLeft,
   ArrowRightLeft,
   BookOpen,
   BookUser,
   BriefcaseBusiness,
   Building2,
   CalendarClock,
+  CalendarX2,
   Camera,
   ClipboardCheck,
   Droplet,
@@ -31,13 +35,16 @@ import {
   Phone,
   Repeat,
   PhoneCall,
+  Pencil,
   Pill,
+  Plus,
   RotateCcw,
   Scissors,
   Settings,
   ShieldCheck,
   Stethoscope,
   Syringe,
+  Trash2,
   Truck,
   Undo2,
   Users,
@@ -45,6 +52,7 @@ import {
   Utensils,
   Weight,
   Wrench,
+  X,
   type LucideIcon,
 } from "lucide-react";
 
@@ -168,4 +176,24 @@ export const NAV_ICONS = {
   releaseNotes: Newspaper,
   changePassword: KeyRound,
   security: ShieldCheck,
+} satisfies Record<string, LucideIcon>;
+
+/**
+ * One icon per generic action meaning, wherever it appears on any page
+ * (src/components/RowAction.tsx, ActionLink). Extend this map rather than
+ * picking an icon per page, so a pencil always means Edit and a bin always
+ * means Delete. Domain actions (log a weight, book a visit, send to hospital)
+ * reuse SECTION_ICONS / PLACEMENT_ICONS instead of appearing here.
+ */
+export const ACTION_ICONS = {
+  add: Plus,
+  edit: Pencil,
+  delete: Trash2,
+  archive: Archive,
+  restore: ArchiveRestore,
+  /** Stop a running course (prescription, diet) as of today. */
+  endToday: CalendarX2,
+  back: ArrowLeft,
+  /** Clear a search or filter. */
+  clear: X,
 } satisfies Record<string, LucideIcon>;

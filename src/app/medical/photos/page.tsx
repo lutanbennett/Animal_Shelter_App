@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import { PawPrint } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -10,6 +9,7 @@ import { requirePermission } from "@/lib/permissions/require";
 import { loadOneResident, loadPickableResidents } from "@/lib/medical/residents";
 import { ResidentPicker } from "../ResidentPicker";
 import { MedicalPhotoUploader } from "./MedicalPhotoUploader";
+import { BackLink } from "@/components/BackLink";
 
 /**
  * Add Medical Photos, a job of the Head of Medical (docs/decisions/2026-10-04-medical-jobs-app.md).
@@ -41,9 +41,9 @@ export default async function AddMedicalPhotosPage(props: PageProps<"/medical/ph
   if (residentId) {
     const { resident, error } = await loadOneResident(supabase, residentId);
     const back = (
-      <Link href="/medical/photos" className="text-base font-medium text-primary hover:underline">
+      <BackLink href="/medical/photos" className="text-base">
         {p.back}
-      </Link>
+      </BackLink>
     );
     if (error || !resident) {
       return shell(
