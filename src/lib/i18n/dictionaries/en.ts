@@ -4538,6 +4538,37 @@ const en = {
     },
   },
 
+  /** /releases: the page's own words. The notes themselves (src/lib/releases.ts) are written in English only. */
+  releases: {
+    title: "Release notes",
+    intro:
+      "What has changed in the system, newest first. Admins get an email when a major release goes live.",
+    englishOnly: "The notes themselves are in English for now.",
+    notReleasedYet: "Not released yet",
+    major: "Major",
+    roleNames: {
+      admin: "Admin",
+      management: "Management",
+      staff: "Staff",
+      vet: "Vet",
+      volunteer: "Volunteer",
+    },
+    showingAll: (role: string) =>
+      `Showing every change, greyed where it isn't for the ${role} role.`,
+    showingMine: (role: string) =>
+      `Showing the changes for the ${role} role, and the ones for everyone.`,
+    showEverything: "Show everything",
+    showOnlyMine: (role: string) => `Show only the ${role} role`,
+    keptInList:
+      "Every release stays in the list, so the numbers run in order; one with nothing for your role says so.",
+    nothingFor: (role: string) => `Nothing for ${role}`,
+    nothingInRelease: (role: string, count: number) =>
+      `Nothing in this release changes what the ${role} role does — ${
+        count === 1 ? "its one change is for other roles." : `its ${count} changes are for other roles.`
+      }`,
+    notForRole: (role: string) => `Not for the ${role} role`,
+  },
+
   share: {
     share: "Share",
     copyLink: "Copy link",
