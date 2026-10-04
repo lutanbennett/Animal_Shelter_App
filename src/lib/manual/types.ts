@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import type { ActivityKey } from "@/lib/permissions/catalogue";
 
 /** The app_role values, as the manual's "who can do this" badges name them. */
 export type ManualRole = "admin" | "management" | "staff" | "vet" | "volunteer";
@@ -28,6 +29,14 @@ export type ManualTopic = {
   title: string;
   /** Roles that can perform this task; omitted = everyone who can sign in. */
   roles?: ManualRole[];
+  /**
+   * The activity whose holders do this task (edit level; the catalogue's key).
+   * The reader's "is this mine?" asks can() for it, so a role built later sees
+   * the right topics; `roles` stays for the "Who:" badge, which names the six
+   * roles that exist today, and scripts/acceptance-matrix.mjs fails when the
+   * two disagree. Omit it where the topic is everyone's.
+   */
+  activity?: ActivityKey;
   /** Where in the app it lives, e.g. "Residents → New resident (intake)". */
   path?: string;
   intro?: string;

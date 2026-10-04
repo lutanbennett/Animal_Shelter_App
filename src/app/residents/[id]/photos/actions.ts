@@ -8,12 +8,13 @@ import { driveErrorMessage } from "@/lib/google/drive-errors";
 import {
   PHOTO_CATEGORIES,
   dateToYymm,
-  photoCategoriesForRole,
+  photoCategoriesFor,
   type PhotoCategory,
 } from "@/lib/google/drive-client";
 import { refreshDeceasedArchiveIfNeeded } from "@/lib/archive/refresh-deceased-archive";
 import { getT } from "@/lib/i18n/get-t";
-import { assertPhotoWriteAccess } from "@/lib/auth/require-role";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { setResidentProfilePhoto } from "@/lib/residents/profile-photo";
 import { todayIso } from "@/lib/format";
 
@@ -106,12 +107,9 @@ export async function movePhotoToFolder(
   return runAction<{ archiveWarning?: string }>("residents.movePhotoToFolder", t.common.somethingWentWrong, async () => {
     const supabase = await createClient();
 
-    let role: string;
-    try {
-      role = await assertPhotoWriteAccess();
-    } catch (error) {
-      return { ok: false, error: error instanceof Error ? error.message : t.photos.errors.notAuthorized };
-    }
+    // Drive is not RLS-protected, so this runs before any Drive call.
+    const perms = await loadPermissions();
+    if (!can(perms, "photos.resident_add")) return { ok: false, error: t.photos.errors.notAuthorized };
 
     if (!PHOTO_CATEGORIES.includes(targetCategory)) {
       return { ok: false, error: t.photos.errors.notMovable };
@@ -119,7 +117,7 @@ export async function movePhotoToFolder(
 
     // A role with one folder (a vet: Medical) may only move a photo INTO it,
     // never out of it — the same restriction the upload route enforces.
-    const categories = photoCategoriesForRole(role);
+    const categories = photoCategoriesFor(perms);
     const onlyFolder = categories.length === 1 ? categories[0] : null;
     if (onlyFolder && targetCategory !== onlyFolder) {
       return { ok: false, error: t.photos.errors.onlyFolder(onlyFolder) };

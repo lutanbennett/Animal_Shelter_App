@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { runAction, type ActionRefusal } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { getT } from "@/lib/i18n/get-t";
 import { RESIDENT_SIZES, type ResidentSize } from "@/lib/i18n/enum-labels";
 import {
@@ -45,9 +47,8 @@ export async function updateResident(
     const supabase = await createClient();
 
     // RLS would silently match zero rows for a volunteer/vet rather than
-    // error, so check the role up front and give a real message.
-    const { data: role } = await supabase.rpc("current_user_role");
-    if (role !== "admin" && role !== "management" && role !== "staff") {
+    // error, so check the activity up front and give a real message.
+    if (!can(await loadPermissions(), "resident.record")) {
       return { ok: false, error: t.residents.edit.notAuthorized };
     }
 

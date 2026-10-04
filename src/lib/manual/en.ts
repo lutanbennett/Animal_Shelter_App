@@ -367,6 +367,7 @@ const manual: Manual = {
           id: "intake",
           title: "Registering a new resident (intake)",
           roles: ["admin", "management", "staff"],
+          activity: "resident.register",
           path: "Residents → New resident (intake)",
           intro:
             "Intake creates the resident record and their first placement in one go. The questions come a few at a time over five short steps and a final review, so it fits on a phone at the gate — and the whole record is written when you tap Register resident, never before.",
@@ -420,6 +421,7 @@ const manual: Manual = {
           id: "adoption-updates",
           title: "Adoption updates",
           roles: ["admin", "management", "staff"],
+          activity: "resident.adoption_news",
           path: "Resident hub → Adoption updates",
           intro:
             "When an adopter sends news — a message on LINE or Facebook, an email, or on a visit — record it on the animal's hub so it stays on their record, photos and all.",
@@ -450,6 +452,7 @@ const manual: Manual = {
           id: "edit",
           title: "Editing a resident's details",
           roles: ["admin", "management", "staff"],
+          activity: "resident.record",
           path: "Resident hub → pencil icon",
           steps: [
             "Tap the pencil next to the resident's name.",
@@ -480,6 +483,7 @@ const manual: Manual = {
           id: "move",
           title: "Moving between enclosures",
           roles: ["admin", "management", "staff", "volunteer"],
+          activity: "placement.move",
           path: "Resident hub → Housing & Status → Move enclosure",
           steps: [
             "Tap Move enclosure on the hub.",
@@ -497,6 +501,7 @@ const manual: Manual = {
           id: "hospital",
           title: "Sending to hospital and bringing them back",
           roles: ["admin", "management", "staff"],
+          activity: "placement.hospital",
           path: "Resident hub → Housing & Status → Send to hospital",
           steps: [
             "Tap Send to hospital, enter the date admitted and the reason, and tap Send to hospital. Their enclosure is remembered.",
@@ -513,6 +518,7 @@ const manual: Manual = {
           id: "foster-adopt",
           title: "Foster and adoption",
           roles: ["admin", "management", "staff"],
+          activity: "placement.rehome",
           path: "Resident hub → Housing & Status → Foster / adopt",
           steps: [
             "Tap Foster / adopt on the hub and choose what's happening: Foster (the shelter stays responsible for medical care) or Adopt (they leave the shelter's care for good).",
@@ -537,6 +543,7 @@ const manual: Manual = {
           id: "deceased",
           title: "Recording a death",
           roles: ["admin", "management", "staff"],
+          activity: "placement.death",
           path: "Resident hub → broken-heart icon next to the pencil",
           steps: [
             "Tap the broken-heart icon beside the pencil on the hub.",
@@ -560,6 +567,7 @@ const manual: Manual = {
           id: "undo-deceased",
           title: "Withdrawing a death recorded in error",
           roles: ["admin"],
+          activity: "placement.death_withdraw",
           path: "Resident hub → deceased banner → Withdraw this death",
           steps: [
             "On the hub of the resident recorded as deceased, tap Withdraw this death at the bottom of the banner.",

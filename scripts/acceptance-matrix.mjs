@@ -78,6 +78,13 @@ if (onlyRole && !ROLES.includes(onlyRole)) {
 
 const { default: manual } = await load("src/lib/manual/en.ts");
 const { isForRole } = await load("src/lib/manual/filter.ts");
+const { loadSeed } = await load("scripts/lib/permission-seed.mjs");
+const seed = loadSeed(repo);
+/** "placement.move" or "resident.record:read" -> the roles that hold it today, or null when the key is unknown. */
+const holders = (ref) => {
+  const [key, level] = String(ref).split(":");
+  return seed.has(key) && (level === undefined || level === "read" || level === "edit") ? seed.rolesHolding(key, level) : null;
+};
 const { ENTRIES, BOUNDARIES, VISITOR_BOUNDARIES } = await load(ENTRIES_FILE);
 const version = JSON.parse(readFileSync(path.join(repo, "package.json"), "utf8")).version;
 
@@ -158,6 +165,25 @@ for (const t of topics) {
   topicIds.add(t.id);
 }
 
+// A topic that names an activity: its `roles` tag (the "Who:" badge, which names the six roles that
+// exist today) must be exactly the roles that hold that activity by default, so the words cannot drift
+// from the cells. The manual page asks can() for the activity itself.
+for (const t of topics) {
+  if (!t.activity) continue;
+  const held = holders(t.activity);
+  if (!held) {
+    problem(`The manual topic "${t.id}" names the activity "${t.activity}", which the seeded catalogue does not have.`, []);
+    continue;
+  }
+  const got = held.filter((r) => SIGNED_IN_FIVE.includes(r)).join();
+  const want = SIGNED_IN_FIVE.filter((r) => (t.roles ?? SIGNED_IN_FIVE).includes(r)).join();
+  if (got !== want) {
+    problem(`The manual topic "${t.id}" has roles [${want}] but ${t.activity} is held by [${got}].`, [
+      "Either the `roles` tag or the activity is wrong: the cell is what the system does, so fix the tag unless the cell itself is to change.",
+    ]);
+  }
+}
+
 for (const t of topics) {
   if (!ENTRIES[t.id]?.length) {
     const roles = t.roles ? `roles: ${t.roles.join(", ")}` : "for everyone who signs in";
@@ -198,6 +224,17 @@ for (const t of topics) {
         ]);
       }
     }
+    // `needs`: the activity the row exercises. The does / must-not cells then come from who holds it,
+    // not from a list of roles; where the entry or topic also lists roles, they must say the same thing.
+    const needed = e.needs ? holders(e.needs) : null;
+    if (e.needs && !needed) {
+      problem(`${where} ("${e.activity}") needs "${e.needs}", which the seeded catalogue does not have.`, ['Use a key from src/lib/permissions/catalogue.ts, with ":read" for a read level.']);
+    }
+    if (needed) {
+      const want = SIGNED_IN_FIVE.filter((r) => (e.roles ?? t.roles ?? SIGNED_IN_FIVE).includes(r)).join();
+      const got = needed.filter((r) => SIGNED_IN_FIVE.includes(r)).join();
+      if (want !== got) problem(`${where} ("${e.activity}") needs ${e.needs}, held by [${got}], but its roles are [${want}].`, ["Fix whichever is wrong; the cell is what the system does."]);
+    }
     const key = i === 0 ? t.id : `${t.id}.${i + 1}`;
     if (usedKeys.has(key)) problem(`Duplicate matrix key ${key}.`, []);
     usedKeys.add(key);
@@ -209,7 +246,7 @@ for (const t of topics) {
       if (e.who) does = e.who.includes(role);
       else if (e.audience === "all") does = true;
       else if (e.audience === "signedin") does = role !== "visitor";
-      else if (SIGNED_IN_FIVE.includes(role)) does = isForRole(e.roles ?? t.roles, role);
+      else if (SIGNED_IN_FIVE.includes(role)) does = needed ? needed.includes(role) : isForRole(e.roles ?? t.roles, role);
       else does = false;
       cells[role] = does ? "does" : e.na?.includes(role) || e.naRest ? "n/a" : "must not";
     }

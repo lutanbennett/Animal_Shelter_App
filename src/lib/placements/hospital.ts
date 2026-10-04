@@ -1,6 +1,8 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { SYSTEM_ZONE } from "@/lib/enclosures/options";
 import { isFutureDate, isIsoDate, placementStartAfter, placementStartDate } from "./dates";
 
@@ -34,13 +36,6 @@ export type ReturnFromHospitalResult =
   | { ok: true; id: string };
 
 /**
- * Roles whose placement_history insert policy admits SendToHospital.
- * Volunteers may only record ChangeEnclosure and vets can't write
- * placements at all (docs/decisions.md, "Volunteer tier").
- */
-export const HOSPITAL_ROLES = new Set(["admin", "management", "staff"]);
-
-/**
  * Records a SendToHospital placement into the Lifecycle/Hospital
  * pseudo-enclosure. The resident's current enclosure is stored as
  * previous_enclosure_id so a later ReturnFromHospital can put them back;
@@ -59,8 +54,7 @@ export async function sendResidentToHospital(
 
   // RLS would reject the insert for a vet or volunteer with a raw policy
   // error — say why.
-  const { data: role } = await supabase.rpc("current_user_role");
-  if (typeof role !== "string" || !HOSPITAL_ROLES.has(role)) {
+  if (!can(await loadPermissions(), "placement.hospital")) {
     return { error: t.residents.hospital.notAuthorized };
   }
 
@@ -160,8 +154,7 @@ export async function returnResidentFromHospital(
 
   // RLS would reject the insert for a vet or volunteer with a raw policy
   // error — say why.
-  const { data: role } = await supabase.rpc("current_user_role");
-  if (typeof role !== "string" || !HOSPITAL_ROLES.has(role)) {
+  if (!can(await loadPermissions(), "placement.hospital")) {
     return { error: t.residents.hospitalReturn.notAuthorized };
   }
 
