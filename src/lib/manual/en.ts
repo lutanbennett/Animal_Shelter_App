@@ -59,7 +59,7 @@ const manual: Manual = {
       "Day-to-day resident work: intake, moves, hospital, foster and adoption, photos, maintenance, projects. Can read medical records.",
     vet: "Vet visits, procedures, blood tests, prescriptions and immunizations, for the residents their own clinic treats — any resident the clinic has a visit, prescription, procedure or blood test for, with that resident's whole history. Other residents are not shown at all. The menu is Appointments and Residents only — the shelter's enclosures, maintenance, projects, contacts and vet list are not part of a vet's access.",
     volunteer:
-      "Can see everything operational; can add photos and move residents between enclosures. In Contacts, sees each person’s name and phone number only.",
+      "Sees who each resident is and where they live, and browses the enclosures. Nothing else is read or changed: no medical records, notes or microchip numbers, no moving a resident, no photos to add, and no maintenance, projects, contacts, vets, stock or assistant. The menu is Home, Residents and Enclosures.",
   },
 
   filter: {
@@ -184,7 +184,7 @@ const manual: Manual = {
         {
           id: "assistant",
           title: "Asking the assistant",
-          roles: ["admin", "management", "staff", "volunteer"],
+          roles: ["admin", "management", "staff"],
           activity: "assistant.ask",
           path: "Assistant button in the header (any screen)",
           intro:
@@ -201,7 +201,7 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "The assistant can't do anything you couldn't do yourself on the page it stands in for. It runs the same checks and obeys the same permissions — so volunteers can ask it questions, but recording a change is for staff and management.",
+              text: "The assistant can't do anything you couldn't do yourself on the page it stands in for. It runs the same checks and obeys the same permissions — so recording a change is for staff and management, and it is not offered to a volunteer, who reads only who a resident is and where they live.",
             },
             {
               kind: "tip",
@@ -252,7 +252,7 @@ const manual: Manual = {
         {
           id: "my-tasks-page",
           title: "Seeing what's assigned to you",
-          roles: ["admin", "management", "staff", "volunteer"],
+          roles: ["admin", "management", "staff"],
           activity: "recurring.do_own",
           path: "My tasks (first in the menu)",
           steps: [
@@ -265,7 +265,7 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "Volunteers see the jobs they are on and their status, but can't change the status — ask a staff member, as on the board. Vets aren't given maintenance jobs.",
+              text: "Vets and volunteers aren't given maintenance jobs.",
             },
           ],
         },
@@ -284,11 +284,11 @@ const manual: Manual = {
         {
           id: "my-recurring-jobs",
           title: "Doing your recurring jobs",
-          roles: ["admin", "management", "staff", "volunteer"],
+          roles: ["admin", "management", "staff"],
           activity: "recurring.do_own",
           path: "My tasks → Recurring jobs",
           intro:
-            "Recurring jobs are the routine management has set to come round on a calendar — the Monday stocktake, ordering medication after it, the monthly worming. Each date appears on your list for its day: staff and volunteers can be given one as well as management. Vets are not given recurring jobs — a vet's work comes from their vet appointments.",
+            "Recurring jobs are the routine management has set to come round on a calendar — the Monday stocktake, ordering medication after it, the monthly worming. Each date appears on your list for its day: staff can be given one as well as management. Vets are not given recurring jobs — a vet's work comes from their vet appointments.",
           steps: [
             "Recurring jobs are listed first on My tasks, grouped like the rest: Overdue, Due today and Coming up (the next seven days). Each shows its time of day (morning, afternoon, evening or any time), its date, and who else is on it.",
             "When the job is done on a particular screen, tap its title to go there — a stocktake job opens the Stocktake page, on the right tab.",
@@ -335,7 +335,7 @@ const manual: Manual = {
           screenshot: {
             src: "/manual/residents-list.png",
             alt: "The residents list with search, zone and enclosure filters",
-            caption: "The residents list on a computer. Phones show just the name — staff and volunteers can browse by enclosure instead (see Enclosures).",
+            caption: "The residents list on a computer. Phones show just the name — browse by enclosure instead (see Enclosures).",
           },
           callouts: [
             {
@@ -345,6 +345,10 @@ const manual: Manual = {
             {
               kind: "tip",
               text: "Searching for an animal who has died still finds them: the count line says \"1 deceased resident matches — show\", and show adds them to the list.",
+            },
+            {
+              kind: "note",
+              text: "A volunteer's list is who and where only: name, ID, enclosure, zone and status. There is no microchip search or No microchip filter, no ticking residents, no new resident and no pencil, and no search by other names.",
             },
             {
               kind: "note",
@@ -434,6 +438,12 @@ const manual: Manual = {
             alt: "A resident hub with the details card, housing card and medical cards",
             caption: "A resident hub. Green, orange and red card colours mean fine, needs attention soon, and overdue or missing.",
           },
+          callouts: [
+            {
+              kind: "note",
+              text: "A volunteer's page for a resident is smaller: photo, name, ID, species, sex, status and the enclosure and zone, and a link to the enclosure. Everything else on the hub, and everything it links to, is not opened to a volunteer.",
+            },
+          ],
         },
         {
           id: "adoption-updates",
@@ -462,7 +472,7 @@ const manual: Manual = {
             },
             {
               kind: "note",
-              text: "A resident returned to the shelter keeps the updates from their time away, and the card stays on their hub. Volunteers and vets can read updates but not add them.",
+              text: "A resident returned to the shelter keeps the updates from their time away, and the card stays on their hub. Vets can read updates but not add them.",
             },
           ],
         },
@@ -500,7 +510,7 @@ const manual: Manual = {
         {
           id: "move",
           title: "Moving between enclosures",
-          roles: ["admin", "management", "staff", "volunteer"],
+          roles: ["admin", "management", "staff"],
           activity: "placement.move",
           path: "Resident hub → Housing & Status → Move enclosure",
           steps: [
@@ -603,6 +613,7 @@ const manual: Manual = {
         {
           id: "placement-history",
           title: "Placement history",
+          roles: ["admin", "management", "staff", "vet"],
           path: "Resident hub → Housing & Status card",
           steps: [
             "Tap the Housing & Status card title to open Housing & Placement History.",
@@ -779,7 +790,7 @@ const manual: Manual = {
             "A removed record leaves the list and everything built from it: the weight chart, the medication and cost forecasts, stock usage, the vaccinated and in-treatment counts, and the public website. It is not gone. If you remove the newest dose of a vaccine, the resident's next-due date goes back to the dose before it.",
             "Under each list, 'N removed hidden' appears when something has been removed. Tap Show removed to see those records below the live ones, greyed out with the reason, and Restore to bring one back. Hide removed puts the list back as it was.",
             "A removed weight or immunization no longer holds its day, so you can enter the correct one straight away. If you then restore the old one while a new one has taken its day, Restore says so and does nothing; remove or correct the new one first.",
-            "Vets and volunteers don't see Remove. A vet who enters something by mistake asks the shelter to remove it. A deceased resident's record is closed, so nothing on it can be removed or restored.",
+            "Vets don't see Remove. A vet who enters something by mistake asks the shelter to remove it. A deceased resident's record is closed, so nothing on it can be removed or restored.",
             "Photos and other attachments are not removed this way — they are still deleted from their own row.",
           ],
         },
@@ -797,6 +808,7 @@ const manual: Manual = {
         {
           id: "resident-photos",
           title: "Adding resident photos",
+          roles: ["admin", "management", "staff", "vet"],
           path: "Resident hub → Photos",
           steps: [
             "Open the Photos card on the hub.",
@@ -893,12 +905,12 @@ const manual: Manual = {
         {
           id: "maintenance-board",
           title: "Tracking jobs on the board",
-          roles: ["admin", "management", "staff", "volunteer"],
+          roles: ["admin", "management", "staff"],
           activity: "maintenance.jobs",
           activityLevel: "read",
           path: "Maintenance",
           steps: [
-            "Staff and volunteers open on the jobs assigned to them; switch Assigned to from Me to Everyone to see the whole board (management and admin start there). Filter by zone or enclosure. Completed jobs from the last 30 days are shown; tick Show all completed jobs for older ones.",
+            "Staff open on the jobs assigned to them; switch Assigned to from Me to Everyone to see the whole board (management and admin start there). Filter by zone or enclosure. Completed jobs from the last 30 days are shown; tick Show all completed jobs for older ones.",
             "On a computer, drag a job card to another column to change its status. On a phone, tap Move job on under the job, choose where it goes (Move to In progress, Blocked, Completed or Not started), and confirm — the question says in words what will happen. Use the status chips at the top to look at one status, such as Completed, and move a job back from there. Cards are coloured when a job is overdue, due soon, or blocked.",
             "Tap a card to open the job: edit its details, record the actual cost, and add Before and After photos. Who it's assigned to is shown under the title and on the card.",
             "A job logged by mistake can be deleted from its page (Delete job, bottom right). Its photos and Drive folder go with it and it can't be undone — for a job that was real but is finished, mark it Completed instead.",
@@ -910,7 +922,7 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "Volunteers can view jobs and add photos, but not create or move them.",
+              text: "The board, its jobs and their photos are for staff and management; a volunteer does not see them.",
             },
           ],
         },
@@ -928,7 +940,7 @@ const manual: Manual = {
         {
           id: "browse-projects",
           title: "Browsing and adding photos",
-          roles: ["admin", "management", "staff", "volunteer"],
+          roles: ["admin", "management", "staff"],
           activity: "projects.folders",
           activityLevel: "read",
           path: "Projects",
@@ -973,7 +985,7 @@ const manual: Manual = {
         {
           id: "vets",
           title: "Vets",
-          roles: ["admin", "management", "staff", "volunteer"],
+          roles: ["admin", "management", "staff"],
           activity: "clinics.list",
           activityLevel: "read",
           path: "Vets",
@@ -989,12 +1001,12 @@ const manual: Manual = {
         {
           id: "contacts",
           title: "Contacts",
-          roles: ["admin", "management", "staff", "volunteer"],
+          roles: ["admin", "management", "staff"],
           activity: "contacts.directory",
           activityLevel: "read",
           path: "Contacts",
           steps: [
-            "Open Contacts to find carers, volunteers and suppliers. Search by name, phone, email or chat ID, and filter by type. Volunteers see each contact’s name and phone number only, so the list has no type filter and a contact’s page has no address, email or notes: ask staff if you need more.",
+            "Open Contacts to find carers, volunteers and suppliers. Search by name, phone, email or chat ID, and filter by type. Contacts is for staff and management; a volunteer is not given the address book.",
             "Each contact has one-tap buttons: Call, LINE, Messenger, WhatsApp, Email and Map — handy on a phone.",
             "Tap a contact for their page, including the residents currently fostered or adopted with them and past placements.",
             "Contacts the shelter no longer works with are archived rather than deleted. They're hidden from the list; tap Show archived under the search box to see them, greyed out with an Archived badge and the reason. A search always finds them, so you can still look up an old number.",
@@ -1019,7 +1031,7 @@ const manual: Manual = {
       title: "Management",
       icon: ClipboardList,
       intro:
-        "Mostly for the management and admin roles: the monthly reporting dashboard and the reference lists the rest of the app picks from. Stocktake is here too for staff and volunteers, and staff record deliveries.",
+        "Mostly for the management and admin roles: the monthly reporting dashboard and the reference lists the rest of the app picks from. Stocktake and recording deliveries are here too, for staff.",
       topics: [
         {
           id: "dashboard",
@@ -1201,7 +1213,7 @@ const manual: Manual = {
         {
           id: "stocktake",
           title: "Doing a stocktake",
-          roles: ["admin", "management", "staff", "volunteer"],
+          roles: ["admin", "management", "staff"],
           activity: "stock.count",
           path: "Stocktake",
           intro:
@@ -1298,7 +1310,7 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "Volunteers can do a stocktake but can't record deliveries.",
+              text: "Stocktake and deliveries are both for staff and above; a volunteer does neither.",
             },
           ],
         },
@@ -1314,7 +1326,7 @@ const manual: Manual = {
             "Tap New recurring job. Say what to do, the time of day, and optionally instructions and the screen it is done on (for a stocktake, Stocktake — Medications or — Diets; Other page… takes any page of this app, starting with /).",
             "Choose how it repeats: weekly on the days you tick (every 2 weeks for fortnightly), monthly on a day of the month, or monthly on a weekday such as the first Monday or the last Friday. Every 3 months makes it quarterly. Set the start date and, if it stops, an end date.",
             "Check Next dates under the rule before saving. It is worked out by the same rule My tasks uses, so if the first date isn't the one you expect, the rule needs changing. Fortnightly counts from the week the job starts in: a fortnightly Monday job starting on a Wednesday first falls twelve days later, not five.",
-            "Tick who does it. Several people make a team: all of them see it, and any one can mark it done. Only people who can still sign in are offered — and never vets, whose work comes from their vet appointments rather than the shelter's routine. The screen the job is done on narrows it further: a maintenance job or a delivery lists admin, management and staff; a Management or Settings page lists only those who can open it; a stocktake, or a job with no screen, lists admin, management, staff and volunteers. The line under Assigned to says which roles are listed.",
+            "Tick who does it. Several people make a team: all of them see it, and any one can mark it done. Only people who can still sign in are offered — and never vets, whose work comes from their vet appointments rather than the shelter's routine. The screen the job is done on narrows it further: a maintenance job or a delivery lists admin, management and staff; a Management or Settings page lists only those who can open it; a stocktake lists the same three; a job with no screen lists admin, management, staff and volunteers. The line under Assigned to says which roles are listed.",
             "To make one job follow another the same day — order medication after the stocktake — choose the first under Do after. On a day both fall, the second shows “Waiting for …” until the first is done or skipped.",
             "Each job in the list shows its rule, who it is with, its next three dates, and how many missed dates are still open. Pause stops it showing anywhere, missed dates included; Resume starts again from today, so the paused weeks don't come back as missed. Changing when it repeats also starts the missed-dates count again from today.",
             "Someone off sick or on leave: under Hand over, choose them, These dates only, the dates, who covers, and a reason. Every one of their dates in that range goes to the cover (anyone else on the job stays on it), and the jobs themselves don't change, so the week after goes back to normal. Handed-over dates are listed under Handed to someone else, where Give back undoes one.",

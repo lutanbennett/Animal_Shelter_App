@@ -463,18 +463,20 @@ const UNPAIRED = {
   canDoJob: "takes the page a job links to and the database's answer; the stock pages are paired above by fixture row, /admin /management /maintenance by check-recurring-job-eligibility.mjs",
   assertPhotoWriteAccess: "photo uploads span photos.* and maintenance.photos; paired when the photo split is built",
 };
-// 0134 narrowed the volunteer in the database and in the cells. The app's predicates still say what the volunteer
-// could do before, until volunteer-read-only (R1's app half) moves them onto can(). Each entry is a predicate that
-// is EXPECTED to still disagree for that role, so layer 2 stays honest meanwhile; like the `known` list in layer 1
-// it fails when an entry no longer differs (STALE), so it empties as that stream lands and cannot rot.
-const APP_PENDING = {
+// R1 narrowed the volunteer on purpose: 0134 in the database and the cells, volunteer-read-only in the app. The
+// predicates below are gone from the code (every page and action asks can() or role_can() now), so what is compared
+// is the fixture, which holds what they said before, against the cell. For the volunteer the two differ by design;
+// each entry is a predicate EXPECTED to differ for that role. Like the `known` list in layer 1 it fails when an
+// entry no longer differs (STALE), so a cell that is widened again cannot hide behind it. It does not empty: the
+// fixture is the record of what the volunteer could do before R1, and the cells are what they can do now.
+const NARROWED_BY_R1 = {
   canStocktake: ["volunteer"], canReadMaintenance: ["volunteer"], canUseAssistant: ["volunteer"], MOVE_ROLES: ["volunteer"],
   assertPhotoWriteAccess_residentPhotos: ["volunteer"], photoFullFolders: ["volunteer"],
   "isShelterRole(maintenance.jobs)": ["volunteer"], "isShelterRole(projects.folders)": ["volunteer"],
   "isShelterRole(contacts.directory)": ["volunteer"], "isShelterRole(clinics.list)": ["volunteer"],
   "canDoJob(/stocktake)": ["volunteer"],
 };
-const appPendingSeen = [];
+const narrowedSeen = [];
 const ROLES_FOR_TABLE = ["admin", "management", "staff", "vet", "volunteer", "public_viewer", null];
 const fixturePath = join(root, "scripts/fixtures/legacy-predicates.json");
 const fixture = existsSync(fixturePath) ? JSON.parse(readFileSync(fixturePath, "utf8")) : {};
@@ -506,18 +508,18 @@ for (const pr of PREDICATES) {
     const want = pr.expect ? pr.expect(r) : r != null && (expectedLevel(r, pr.activity) >= pr.level);
     const got = table[String(r)];
     l2checked++;
-    const pending = (APP_PENDING[pr.id] ?? []).includes(String(r));
+    const pending = (NARROWED_BY_R1[pr.id] ?? []).includes(String(r));
     if (got !== want) {
-      if (pending) appPendingSeen.push(`${pr.id}(${r})`);
+      if (pending) narrowedSeen.push(`${pr.id}(${r})`);
       else layer2.push({ pr, problem: `${pr.id}(${r}) is ${got}, the default for ${pr.activity} says ${want}` });
-    } else if (pending) layer2.push({ pr, problem: `${pr.id}(${r}) is listed in APP_PENDING but now matches the default for ${pr.activity}. Remove the entry` });
+    } else if (pending) layer2.push({ pr, problem: `${pr.id}(${r}) is listed in NARROWED_BY_R1 but now matches the default for ${pr.activity}. Remove the entry` });
   }
 }
 console.log(`
 == Layer 2: the app's predicates ==
 ${l2checked} answers (${PREDICATES.length} predicates x 7 roles incl. no role)`);
-for (const id of Object.keys(APP_PENDING)) if (!PREDICATES.some((x) => x.id === id)) layer2.push({ pr: null, problem: `APP_PENDING names ${id}, which is not a predicate of this check` });
-if (appPendingSeen.length) console.log(`  pending the app half (volunteer-read-only), expected: ${appPendingSeen.join(", ")}`);
+for (const id of Object.keys(NARROWED_BY_R1)) if (!PREDICATES.some((x) => x.id === id)) layer2.push({ pr: null, problem: `NARROWED_BY_R1 names ${id}, which is not a predicate of this check` });
+if (narrowedSeen.length) console.log(`  narrowed on purpose by R1 (the volunteer's cells are fewer than the old predicates said), expected: ${narrowedSeen.join(", ")}`);
 for (const [k, why] of Object.entries(UNPAIRED)) console.log(`  not paired: ${k}: ${why}`);
 
 // Two truth tables are scope tests, not activities: "is this a clinic-scoped login" (loadVetScope, and

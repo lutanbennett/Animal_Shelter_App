@@ -17,6 +17,12 @@ export function loadSeed(repo) {
     if (!/permission_activities|role_permissions/.test(sql)) continue;
     for (const m of sql.matchAll(/\('([a-z_]+\.[a-z_]+)', '(?:level|yesno)', '[a-z]+', \d+\)/g)) keys.add(m[1]);
     for (const m of sql.matchAll(/\('([a-z_]+)', '([a-z_]+\.[a-z_]+)', ([12])\)/g)) cells.push([m[1], m[2], Number(m[3])]);
+    // A later file that narrows a role ("delete … where role_id = (select id from roles where key = 'volunteer')
+    // and activity not in (…)", 0134) takes the cells it deletes out of what the role holds, in file order.
+    for (const m of sql.matchAll(/delete from role_permissions\s+where role_id = \(select id from roles where key = '([a-z_]+)'\)\s+and activity not in \(([^)]*)\)/g)) {
+      const kept = new Set([...m[2].matchAll(/'([a-z_]+\.[a-z_]+)'/g)].map((k) => k[1]));
+      for (let i = cells.length - 1; i >= 0; i--) if (cells[i][0] === m[1] && !kept.has(cells[i][1])) cells.splice(i, 1);
+    }
   }
   return {
     has: (activity) => keys.has(activity),

@@ -40,7 +40,7 @@
 
 const MENU = {
   vet: "The menu shows only Appointments and Residents, then Manual, Release notes and Change password.",
-  volunteer: "The menu has Stocktake and the Assistant button, but no Management and no Settings.",
+  volunteer: "The menu is Home, Residents and Enclosures, then Manual, Release notes and Change password: no Stocktake, no Assistant button, no Maintenance, Projects, Contacts or Vets, no Management and no Settings.",
   staff: "The menu has Stocktake and the Assistant button, but no Management, no Settings and no Security.",
   management: "The menu has Management, but no Settings and no Security.",
   admin: "The menu has Management, Settings, and Security at the bottom.",
@@ -143,7 +143,6 @@ export const ENTRIES = {
       roles: ["admin", "management", "staff"],
       do: "Ask the assistant to record a weight for a resident, check the card, and press Confirm.",
       expect: "The weight really appears on that resident's Weight page. Cancel writes nothing.",
-      notes: { volunteer: "The volunteer's assistant answers questions only: asked to record something, it refuses and writes nothing." },
     },
   ],
   roles: [
@@ -184,7 +183,6 @@ export const ENTRIES = {
       na: ["vet"],
       do: "Tap In progress, then Completed on one of your jobs, then tap Undo.",
       expect: "The status changes each time, and the completed job comes back with Undo.",
-      notes: { volunteer: "A volunteer sees no status buttons and cannot change a status; the manual says to ask a staff member." },
     },
   ],
   "my-access-requests": [
@@ -215,7 +213,10 @@ export const ENTRIES = {
       device: "both",
       do: "Open Residents and search by name (English or Thai), by ID such as R-0042, then try the On-site / Off-site choice and a zone chip.",
       expect: "The list narrows each time and a name opens that resident's hub. Residents who have died are hidden, with a count.",
-      notes: { vet: "A vet's list names the clinic at the top and shows only that clinic's residents; any other resident is absent." },
+      notes: {
+        vet: "A vet's list names the clinic at the top and shows only that clinic's residents; any other resident is absent.",
+        volunteer: "A volunteer's list is name, ID, enclosure, zone and status only: no Scan a chip box, no No microchip chip, no ticking residents, no New resident and no pencil; searching by another name finds nothing.",
+      },
     },
   ],
   microchip: [
@@ -248,7 +249,10 @@ export const ENTRIES = {
       device: "both",
       do: "Open a resident and look at every card; on a phone, switch between Overview and Medical.",
       expect: "Photo, details, housing, adoption updates and the medical cards all load, and nothing says an error.",
-      notes: { vet: "The vet sees the info, medical and placement parts, but no New resident, Edit, Move, Hospital, Foster, Adopt or Record a death controls." },
+      notes: {
+        vet: "The vet sees the info, medical and placement parts, but no New resident, Edit, Move, Hospital, Foster, Adopt or Record a death controls.",
+        volunteer: "A volunteer's page for a resident is smaller: photo, name, ID, species, sex, status, enclosure and zone, and a link to the enclosure. There are no cards, no tabs and no medical part.",
+      },
     },
   ],
   "adoption-updates": [
@@ -340,7 +344,6 @@ export const ENTRIES = {
   "placement-history": [
     {
       activity: "Read a resident's placement history",
-      needs: "resident.record:read",
       device: "both",
       do: "Tap the Housing & Status title on a resident's hub.",
       expect: "Every placement is listed newest first with its type, dates, carer and notes.",
@@ -432,7 +435,7 @@ export const ENTRIES = {
       needs: "medical.archive",
       device: "both",
       do: "Tap Remove on a weight reading, then Show removed, then Restore.",
-      expect: "The record leaves the list and charts when removed and returns when restored. Vets and volunteers are not offered Remove.",
+      expect: "The record leaves the list and charts when removed and returns when restored. Vets are not offered Remove.",
     },
   ],
 
@@ -456,6 +459,7 @@ export const ENTRIES = {
       device: "phone",
       do: "Open Enclosures, tap a zone chip, and tick Has open maintenance.",
       expect: "The cards narrow each time and show residents against capacity. The page does not scroll sideways.",
+      notes: { volunteer: "A volunteer has no Has open maintenance tick: they cannot read maintenance." },
     },
   ],
   "enclosure-hub": [
@@ -465,6 +469,7 @@ export const ENTRIES = {
       device: "phone",
       do: "Tap an enclosure card.",
       expect: "Its notes, its residents and its open maintenance jobs show, and a resident opens that resident's hub.",
+      notes: { volunteer: "A volunteer sees the residents who live there and opens each one's who-and-where page; there is no maintenance part." },
     },
   ],
 
@@ -493,7 +498,6 @@ export const ENTRIES = {
       roles: ["admin", "management", "staff"],
       do: "On a phone, tap Move job on under a job, choose Move to In progress, and confirm; then do the same to reach Completed and to go back a column. On a desktop, drag the card to another column.",
       expect: "The confirmation says in words what will happen; the status changes and stays after a refresh.",
-      notes: { volunteer: "A volunteer sees no way to change a status on the board, and the change is refused if tried." },
     },
     {
       activity: "Edit a job, record its cost, add before and after photos",
@@ -549,7 +553,6 @@ export const ENTRIES = {
       device: "phone",
       do: "Open Contacts, search for a carer, and tap Call or LINE.",
       expect: "The right app opens with that person's number or LINE ID.",
-      notes: { volunteer: "A volunteer sees each person's name and phone number only." },
     },
   ],
 
@@ -929,13 +932,14 @@ export const BOUNDARIES = [
   { role: "management", starts: "/admin and /admin/ — redirected", text: "Type the address of Settings and any page under it: refused." },
   { role: "management", starts: "/admin/security — redirected", text: "Type the address of Security: refused." },
   { role: "management", starts: "Cannot withdraw a death", text: "On a deceased resident there is no Withdraw this death. Only admin can." },
-  // Pass 5 — Volunteer
-  { role: "volunteer", starts: "Change a maintenance job's status", text: "Change a maintenance job's status: no buttons on My tasks or the board, and the change is refused if reached another way." },
-  { role: "volunteer", starts: "Log or edit a maintenance job", text: "Log or edit a maintenance job: not offered, and refused if reached." },
-  { role: "volunteer", starts: "Intake, edit, hospital, foster", text: "Register, edit, send to hospital, foster, adopt or record a death: controls absent, and the pages refused when typed." },
-  { role: "volunteer", starts: "Any medical write", text: "Record an immunization, vet visit, prescription, diet, weight, procedure or blood test: all seven refused. A volunteer reads medical records but does not write them." },
-  { role: "volunteer", starts: "Assistant cannot write", text: "Ask the assistant to record something: it refuses and writes nothing." },
-  { role: "volunteer", starts: "/deliveries — redirected", text: "Type the address of Deliveries: refused. Volunteers count stock but do not record deliveries." },
+  // Pass 5 — Volunteer (rewritten for R1, 2026-10-04)
+  { role: "volunteer", starts: "Anything else on a resident", text: "Look for a resident's breed, age, bio, notes, microchip, carer or dates, on the page or in the list, or find one by a chip number: none of it is shown, and a chip search finds nothing." },
+  { role: "volunteer", starts: "Intake, edit, move, hospital", text: "Register, edit, move, send to hospital, foster, adopt or record a death: controls absent, and the pages refused when typed." },
+  { role: "volunteer", starts: "Any medical page", text: "Open a medical tab of a resident, or any of the seven new-record pages (immunization, vet visit, prescription, diet, weight, procedure, blood test): all refused. A volunteer neither reads nor writes medical records." },
+  { role: "volunteer", starts: "Add or set a photo", text: "Add or set a photo on a resident, a project or a maintenance job, or attach a file to a record: no control, and the upload is refused." },
+  { role: "volunteer", starts: "/stocktake and /deliveries", text: "Type the address of Stocktake and of Deliveries: refused. A volunteer does not count stock." },
+  { role: "volunteer", starts: "/maintenance, /projects", text: "Type the address of Maintenance, Projects, Contacts and Vets: each refused, and none is in the menu or on Home." },
+  { role: "volunteer", starts: "Assistant", text: "Look for the Assistant button in the header, and open the assistant's page by its address: no button, and no answers." },
   { role: "volunteer", starts: "/management/, /admin/", text: "Type the address of any Management or Settings page: refused." },
   // Pass 6 — Public viewer
   { role: "public_viewer", starts: "No app menu at all", text: "After signing in there is no app menu at all." },
