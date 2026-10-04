@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
+import { residentCodeTerm } from "@/lib/residents/code-search";
 import { chipFromSearch } from "@/lib/residents/microchip";
 import { ScanChipBox } from "./ScanChipBox";
 import { createClient } from "@/lib/supabase/server";
@@ -60,7 +61,7 @@ function applyFilters<
   if (q) {
     const term = q.replace(/[,()%]/g, "");
     next = next.or(
-      `name.ilike.%${term}%,thai_name.ilike.%${term}%,other_names.ilike.%${term}%,resident_code.ilike.%${term}%`,
+      `name.ilike.%${term}%,thai_name.ilike.%${term}%,other_names.ilike.%${term}%,resident_code.ilike.%${residentCodeTerm(term)}%`,
     );
   }
   // By status rather than zone: Unassigned is on site and Hospital /
@@ -423,7 +424,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
           {showAll && <input type="hidden" name="all" value="1" />}
           {noChip && <input type="hidden" name="nochip" value="1" />}
           {adopted && <input type="hidden" name="adopted" value="1" />}
-          <div className="flex min-w-0 flex-1 flex-col gap-1 md:flex-none">
+          <div className="flex min-w-0 basis-full flex-col gap-1 md:flex-none md:basis-auto">
             <label htmlFor="q" className="text-sm font-medium text-muted">
               {t.residents.list.search}
             </label>

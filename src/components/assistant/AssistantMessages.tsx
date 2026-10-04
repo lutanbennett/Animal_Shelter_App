@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+
 /**
  * The chat's furniture: the scrolling list and the two kinds of bubble.
  *
@@ -12,8 +14,29 @@ export function AssistantMessageList({ children }: { children: React.ReactNode }
   return <ol className="flex flex-col gap-4">{children}</ol>;
 }
 
-export function AssistantTurn({ children }: { children: React.ReactNode }) {
-  return <li className="flex flex-col gap-2">{children}</li>;
+/**
+ * One request and its reply. It scrolls itself into view when it appears and
+ * again when its reply changes (`settled`): a confirm card opens below the
+ * message box, and on a phone Confirm sat off-screen (dry run 2026-10-03,
+ * F-14). `nearest` brings the bottom edge up and leaves the panel alone when
+ * the turn is already visible.
+ */
+export function AssistantTurn({
+  children,
+  settled,
+}: {
+  children: React.ReactNode;
+  settled?: string;
+}) {
+  const ref = useRef<HTMLLIElement>(null);
+  useEffect(() => {
+    ref.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [settled]);
+  return (
+    <li ref={ref} className="flex flex-col gap-2">
+      {children}
+    </li>
+  );
 }
 
 /** What the person said. */

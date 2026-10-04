@@ -57,6 +57,10 @@ export async function rehome(
     revalidatePath(`/residents/${residentId}/housing`);
     // Occupancy on the enclosure browser and both enclosure hubs changes too.
     revalidatePath("/enclosures", "layout");
+    // The animal drops off the public adoption pages and the home page's
+    // counts; without this the Adopt page kept listing it (F-20).
+    revalidatePath("/adopt", "layout");
+    revalidatePath("/");
     redirect(`/residents/${residentId}`);
   });
 }

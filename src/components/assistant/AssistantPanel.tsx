@@ -92,6 +92,13 @@ export function AssistantPanel() {
               role="dialog"
               aria-modal="true"
               aria-label={a.panel.title}
+              // Following any link in the conversation (Open resident, Open
+              // enclosure, a tile) leaves the panel covering the page it just
+              // opened, so it closes on the way (dry run 2026-10-03, F-14).
+              onClick={(e) => {
+                const link = (e.target as HTMLElement).closest("a[href]");
+                if (link && link.getAttribute("target") !== "_blank") setOpen(false);
+              }}
               className="flex h-full w-full flex-col gap-4 overflow-y-auto border-l border-border bg-background p-4 shadow-xl sm:max-w-lg"
             >
               <div className="flex items-start justify-between gap-3">

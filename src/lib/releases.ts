@@ -61,7 +61,11 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  { text: "Search on the Residents list now finds a resident by their ID however it is typed: R-0055, R0055, r 0055 or just 0055. On a phone the search box has its own full-width row instead of squeezing in beside the buttons. The manual now writes IDs the way the app does (R-0042).", roles: ["admin", "management", "staff", "volunteer", "vet"] },
+  { text: "The assistant now gets out of the way: tapping Open resident, Open enclosure or a resident in its answer closes the panel so you can see the page it opened. A new Confirm card scrolls into view instead of opening below the message box, and asking where a fostered animal is now answers with the foster carer rather than a place that does not exist.", roles: ["admin", "management", "staff", "volunteer", "vet"] },
+  { text: "Once a resident is adopted they no longer show the green Ready for adoption badge or the microchip warning on their page, and they drop off the public Adopt page straight away.", roles: ["admin", "management", "staff", "vet"] },
+];
 
 /** Newest first. */
 export const releases: Release[] = [

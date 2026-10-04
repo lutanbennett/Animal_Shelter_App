@@ -179,7 +179,7 @@ export function AssistantConversation({
 
       <AssistantMessageList>
         {turns.map((turn) => (
-          <AssistantTurn key={turn.id}>
+          <AssistantTurn key={turn.id} settled={turn.state.kind}>
             <RequestBubble text={turn.request} />
             <TurnReply turn={turn} context={context} onSettle={settle} />
           </AssistantTurn>

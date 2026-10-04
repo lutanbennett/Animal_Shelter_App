@@ -22,6 +22,19 @@ import type { Manual } from "./types";
  * scripts/manual-screenshots.mjs into public/manual/, so after a screen
  * changes, re-run that script rather than editing images by hand.
  */
+/**
+ * Who to tell when the app or this manual is wrong (dry run 2026-10-03, F-17).
+ * The shelter has not yet said who that is, so it is left empty and the
+ * topic falls back to the general wording; fill in the name and at least one
+ * way to reach them and the topic names them. Do not guess.
+ */
+const SUPPORT_CONTACT: { name: string; phone?: string; line?: string } | null = null;
+
+function supportContactLine(c: NonNullable<typeof SUPPORT_CONTACT>): string {
+  const reach = [c.phone && `phone ${c.phone}`, c.line && `LINE ${c.line}`].filter(Boolean);
+  return reach.length ? `${c.name} (${reach.join(", ")})` : c.name;
+}
+
 const manual: Manual = {
   title: "User manual",
   subtitle:
@@ -308,7 +321,7 @@ const manual: Manual = {
           steps: [
             "Open Residents from the menu. Every resident is listed by name with their ID, enclosure, zone and status.",
             "Residents who have died are left out. The line under the heading says how many are hidden — \"212 residents · 38 deceased hidden\" — and Show all brings them back, dimmed, with Deceased in the Status column. Tap Hide deceased to put them away again.",
-            "Type part of a name (English, Thai or an \"also known as\" name) or an ID such as R0042 in Search and tap Filter.",
+            "Type part of a name (English, Thai or an \"also known as\" name) or an ID such as R-0042 in Search and tap Filter.",
             "Choose On-site or Off-site at the top to see only the residents at the shelter, or only those away from it; Everywhere shows everyone. On-site includes residents still waiting for an enclosure (Unassigned). Off-site includes residents in hospital or with a foster carer as well as those in off-site zones, since none of them are at the shelter. Adopted and deceased residents are in neither, so they only show under Everywhere.",
             "The zone chips beneath list just that place's zones, and work as on the Enclosures page: tap a chip to add it, tap it again to take it off, All zones clears them. Switching between On-site and Off-site clears the zones you had picked. The Location column shows the same On-site / Off-site each resident is filtered by.",
             "Show all and Hide deceased are offered under Everywhere only. Under On-site or Off-site, a name search that matches a resident who has died still says so, with a link that shows them under Everywhere.",
@@ -1597,8 +1610,9 @@ const manual: Manual = {
         {
           id: "getting-help",
           title: "Getting help",
-          intro:
-            "This manual is a first draft and will change as the app does. If a screen doesn't match what's described here, or something is missing, tell the person looking after the app so it can be corrected.",
+          intro: SUPPORT_CONTACT
+            ? `This manual is a first draft and will change as the app does. If a screen doesn't match what's described here, or something is missing, tell ${supportContactLine(SUPPORT_CONTACT)} so it can be corrected.`
+            : "This manual is a first draft and will change as the app does. If a screen doesn't match what's described here, or something is missing, tell the person looking after the app so it can be corrected.",
         },
       ],
     },

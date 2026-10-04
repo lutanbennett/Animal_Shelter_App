@@ -2524,6 +2524,10 @@ const th: Dictionary = {
       whereAnswer: (resident: string, place: string) => `${resident} อยู่ที่ ${place}`,
       whereNowhere: (resident: string) => `ตอนนี้ ${resident} ไม่ได้อยู่ในกรงใด`,
       whereStatus: (status: string) => `สถานะ: ${status}`,
+      whereFostered: (resident: string, carer: string) =>
+        `${resident} อยู่กับผู้อุปถัมภ์ ${carer}`,
+      whereFosteredNoCarer: (resident: string) =>
+        `${resident} อยู่กับผู้อุปถัมภ์`,
       whoAnswer: (enclosure: string, count: number) => `มี ${count} ตัวอยู่ใน ${enclosure}:`,
       whoEmpty: (enclosure: string) => `${enclosure} ว่างอยู่`,
       openEnclosure: "เปิดหน้ากรง",
