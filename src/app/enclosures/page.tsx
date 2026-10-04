@@ -12,7 +12,11 @@ import {
 import { getTagOrigin } from "@/lib/tags/origin";
 import { loadOccupants } from "@/lib/residents/who-and-where";
 import { loadSpecialDiets } from "@/lib/diets/special";
+import { parseShape } from "@/lib/facility-map/geometry";
+import { planImageUrl, type FacilityMapData } from "@/lib/facility-map/types";
 import { EnclosureFilters } from "./EnclosureFilters";
+import { FacilityMap } from "./map/FacilityMap";
+import { ViewToggle } from "./ViewToggle";
 import {
   EnclosureGrid,
   type EnclosureSummary,
@@ -26,7 +30,17 @@ type EnclosureRow = {
   capacity: number | null;
   notes: string | null;
   zone_id: string;
+  map_shape: unknown;
   zones: { name: string; name_th: string | null; internal: boolean } | null;
+};
+
+type PlanRow = {
+  id: string;
+  kind: "overview" | "zone";
+  zone_id: string | null;
+  image_path: string;
+  width: number;
+  height: number;
 };
 
 /** The Lifecycle pseudo-zone holds status buckets, not physical enclosures. */
@@ -67,11 +81,13 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   // Resident counts come from resident_list_view rather than a dedicated
   // occupancy view so no migration is needed; the shelter's headcount is
   // small enough that pulling one row per resident is cheap.
-  const [zonesResult, enclosuresResult, residentsResult, jobsResult, tagOrigin, specialDiets] = await Promise.all([
-    supabase.from("zones").select("id, name, name_th, internal").order("name"),
+  // The map is for whoever holds facility.map (0132), and reads the same rows as the list.
+  const canMap = can(perms, "facility.map");
+  const [zonesResult, enclosuresResult, residentsResult, jobsResult, tagOrigin, specialDiets, plansResult] = await Promise.all([
+    supabase.from("zones").select("id, name, name_th, internal, map_shape").order("name"),
     supabase
       .from("enclosures")
-      .select("id, name, name_th, capacity, notes, zone_id, zones(name, name_th, internal)")
+      .select("id, name, name_th, capacity, notes, zone_id, map_shape, zones(name, name_th, internal)")
       .order("name")
       .returns<EnclosureRow[]>(),
     loadOccupants(supabase),
@@ -86,6 +102,9 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
     getTagOrigin(),
     // Who is on a special diet, for the marker on each card (0087).
     loadSpecialDiets(supabase),
+    canMap
+      ? supabase.from("facility_maps").select("id, kind, zone_id, image_path, width, height").returns<PlanRow[]>()
+      : Promise.resolve({ data: [] as PlanRow[] }),
   ]);
 
   // The open-maintenance filter is hidden from vets, and a ?maint=open link
@@ -127,7 +146,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   const zoneIds = zonesKeptIn(zones, parseZoneIds(searchParams.zone), place);
 
   const term = q.toLowerCase();
-  const enclosures: EnclosureSummary[] = (enclosuresResult.data ?? [])
+  const summaries: EnclosureSummary[] = (enclosuresResult.data ?? [])
     .map((row) => ({
       id: row.id,
       name: row.name,
@@ -142,7 +161,8 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       resident_count: counts.get(row.id) ?? 0,
       open_jobs: openJobs.get(row.id) ?? 0,
       special_diet_residents: specialByEnclosure.get(row.id) ?? [],
-    }))
+    }));
+  const enclosures = summaries
     .filter((e) => !e.is_system || PINNED_STATUSES.includes(e.name))
     // On-site / Off-site leaves the Lifecycle cards out, as ?maint=open does.
     .filter((e) => place === "all" || (!e.is_system && zoneInPlace(e.zone_internal, place)))
@@ -184,15 +204,70 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
         ? [...physical].sort(compareOccupancy)
         : undefined;
 
+  // The map shows the whole on-site shelter, unfiltered: it is its own way in (overview → zone →
+  // enclosure), and a place or zone filter would only leave it empty. The Map toggle is offered
+  // only once a plan image exists, so a shelter that has none yet sees no empty map.
+  const plans = plansResult.data ?? [];
+  const hasMap = canMap && plans.length > 0;
+  const showMap = hasMap && searchParams.view === "map";
+  let mapData: FacilityMapData | null = null;
+  if (showMap) {
+    const onSite = summaries.filter((e) => !e.is_system && e.zone_internal);
+    const shapeOf = new Map((enclosuresResult.data ?? []).map((row) => [row.id, parseShape(row.map_shape)]));
+    mapData = {
+      plans: plans.map((p) => ({
+        id: p.id,
+        kind: p.kind,
+        zone_id: p.zone_id,
+        image_url: planImageUrl(p.image_path),
+        width: p.width,
+        height: p.height,
+      })),
+      zones: zones
+        .filter((zone) => !zone.is_system && zone.internal)
+        .map((zone) => {
+          const inZone = onSite.filter((e) => e.zone_id === zone.id);
+          const capacities = inZone.filter((e) => e.capacity != null);
+          return {
+            id: zone.id,
+            name: zone.name,
+            name_th: zone.name_th,
+            shape: parseShape(zone.map_shape),
+            enclosure_count: inZone.length,
+            resident_count: inZone.reduce((n, e) => n + e.resident_count, 0),
+            capacity: capacities.length ? capacities.reduce((n, e) => n + (e.capacity ?? 0), 0) : null,
+          };
+        }),
+      enclosures: onSite.map((e) => ({
+        id: e.id,
+        name: e.name,
+        name_th: e.name_th,
+        zone_id: e.zone_id,
+        shape: shapeOf.get(e.id) ?? null,
+        capacity: e.capacity,
+        resident_count: e.resident_count,
+        open_jobs: e.open_jobs,
+        special_diet_count: e.special_diet_residents.length,
+      })),
+    };
+  }
+
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">
-          {t.enclosures.pageTitle}
-        </h1>
-        <p className="text-sm text-muted">{t.enclosures.pageSubtitle}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">
+            {t.enclosures.pageTitle}
+          </h1>
+          <p className="text-sm text-muted">{t.enclosures.pageSubtitle}</p>
+        </div>
+        {hasMap && <ViewToggle map={showMap} />}
       </div>
 
+      {mapData ? (
+        <FacilityMap data={mapData} />
+      ) : (
+        <>
       <EnclosureFilters
         zones={zones}
         place={place}
@@ -215,6 +290,8 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       )}
 
       <EnclosureGrid pinned={pinned} groups={groups} flat={flat} tagOrigin={tagOrigin} />
+        </>
+      )}
     </main>
   );
 }

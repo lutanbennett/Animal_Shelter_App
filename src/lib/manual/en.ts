@@ -857,6 +857,22 @@ const manual: Manual = {
           },
         },
         {
+          id: "enclosure-map",
+          title: "Finding your way round on the map",
+          roles: ["admin", "management", "staff", "volunteer"],
+          activity: "facility.map",
+          path: "Enclosures → Map",
+          steps: [
+            "Open Enclosures and tap Map, next to List at the top. The Map button only appears once the shelter's hand-drawn plan has been loaded for at least one zone.",
+            "The first plan is the whole shelter, with each zone outlined. Tap a zone, then Open this zone, to go to that zone's own plan; the buttons above the plan take you back to the overview or across to another zone.",
+            "On a zone's plan, each enclosure is a coloured shape with its count beside it, such as \"3/4\". The colour is how full it is — green for space available, orange for nearly full or full, red for over capacity, grey when no capacity is set. A spanner means an open maintenance job; the bowl-and-cutlery icon means a resident on a special diet.",
+            "Tap a shape to see it in a card under the plan — its residents against capacity, open jobs and special diets — then tap Open enclosure to go to its page. Tapping only selects, so a slip of the finger never takes you away from the plan.",
+            "To zoom, pinch with two fingers, double-tap, or use the + and − buttons on the plan; drag to move round when zoomed in, and the button with the arrows fits the whole plan again. On a computer, hold Ctrl and scroll to zoom.",
+            "Enclosures that have not been placed on a plan yet are listed under it as \"Not on this plan yet\", each one a link to its page, so nothing is lost while the plans are being filled in. The List view is always there too, with its search, zone filters and sorting.",
+            "The map is for staff and volunteers. Visitors never see it: the QR code on each enclosure already shows them who lives there.",
+          ],
+        },
+        {
           id: "enclosure-hub",
           title: "The enclosure page",
           roles: ["admin", "management", "staff", "volunteer"],
