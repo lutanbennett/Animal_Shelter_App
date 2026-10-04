@@ -630,7 +630,13 @@ export const ENTRIES = {
       activity: "Read today's medication list",
       device: "phone",
       do: "Management → Medication list (the Head of Medical: Home → Administer Medication), then scroll down the page.",
-      expect: "Animals with medicine due today are grouped by zone and enclosure, each with a photo, name, the medicine's label photo, the amount and how often. Nothing is tappable and the page does not slide sideways.",
+      expect: "Animals with medicine due in the chosen round (Morning, Lunch or Evening) are grouped by zone and enclosure, each with a photo, name, the medicine's label photo, the amount drawn as tablets or a syringe, and the day's rounds as sunrise, sun and moon. Nothing is ticked off and the page does not slide sideways.",
+    },
+    {
+      activity: "Choose the round, then read the stock-room pick list",
+      device: "phone",
+      do: "Open the medication list at a time that is not the round you are preparing, tap the round you are doing (for example Lunch in the morning), then tap Stock-room pick list.",
+      expect: "The round you tapped stays selected whatever the clock says. The list shows, per zone and then per enclosure, each medicine and how many doses to bag, and anything with no round set is called out rather than left out.",
     },
   ],
   "manage-diets": [
