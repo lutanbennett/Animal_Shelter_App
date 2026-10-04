@@ -631,22 +631,19 @@ One-time setup on the machine that runs it:
 3. **The administrator's public key** — `BACKUP_AGE_RECIPIENT` in
    `.env.deploy.production` (see above). No `age` program is needed on the
    backup machine: the script encrypts itself (the `age-encryption` package).
-4. **The weekly schedule** — on the Pi, the cron line above. The Windows
-   laptop's task is being retired once the Pi's first scheduled Sunday run is
-   confirmed; until then `scripts/backup-schedule.ps1` registers a
-   Task Scheduler job, "Lanna Care production backup", for Sundays at
-   03:00 (run as soon as the machine is next awake if it missed the time),
-   appending to `backup.log` in the repo:
+4. **The weekly schedule** — on the Pi, the cron line above, and nowhere
+   else. The Windows laptop also ran one until **2026-10-04**, when the Pi's
+   first scheduled Sunday run was confirmed (both machines backed up that
+   morning, which is why Drive holds two files for it) and the laptop's task
+   was unregistered. `scripts/backup-schedule.ps1` stays in the repo for
+   registering it again on a machine that needs it, with `-Remove` to
+   unregister and
+   `Get-ScheduledTaskInfo -TaskName "Lanna Care production backup"` to show
+   the last run and its result (0 is success).
 
-   ```bash
-   powershell -ExecutionPolicy Bypass -File scripts\backup-schedule.ps1
-   ```
-
-   `Get-ScheduledTaskInfo -TaskName "Lanna Care production backup"` shows
-   the last run and its result (0 is success); `-Remove` unregisters it.
-   The task runs only while Lutan is logged on, so a laptop that stays
-   shut for a fortnight simply has no backup that fortnight.
-   **Settings → System status** makes that visible: its Weekly backup tile
+   A scheduled run can still be missed — the Pi can be off, as it was for an
+   hour on 2026-10-02. **Settings → System status** makes that visible: its
+   Weekly backup tile
    reads the newest `lannacare-production-*.dump.age` in `Backups/` and turns
    amber after 8 days, red after 15. The Drive file's own creation time is
    the record of the run, so nothing else needs storing.
