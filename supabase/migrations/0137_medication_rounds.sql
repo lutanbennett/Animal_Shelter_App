@@ -145,6 +145,9 @@ as $$
   select case when p_meals_per_day >= 2 then array['morning', 'evening'] else array['morning'] end;
 $$;
 
+revoke all on function default_frequency_round_keys(integer, integer), default_diet_round_keys(integer) from public, anon;
+grant execute on function default_frequency_round_keys(integer, integer), default_diet_round_keys(integer) to authenticated, service_role;
+
 -- Replace a frequency's rounds with the defaults. SECURITY DEFINER so that an inline add by staff
 -- or a vet (0027) is not left roundless for lack of a write policy; it writes only default rows.
 create or replace function reset_frequency_rounds(p_frequency_id uuid)
