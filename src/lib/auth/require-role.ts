@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { getT } from "@/lib/i18n/get-t";
 import { hasAppAccess, loadCurrentRole, signedInLandingPath } from "./app-access";
 
@@ -13,19 +15,14 @@ import { hasAppAccess, loadCurrentRole, signedInLandingPath } from "./app-access
  * resident photos go to Medical only).
  */
 export async function assertPhotoWriteAccess(): Promise<string> {
-  const supabase = await createClient();
-  const { data: role } = await supabase.rpc("current_user_role");
-  if (
-    role !== "admin" &&
-    role !== "management" &&
-    role !== "staff" &&
-    role !== "vet" &&
-    role !== "volunteer"
-  ) {
+  const perms = await loadPermissions();
+  // photos.resident_add, as the resident photo route asks it: a volunteer no longer holds it (0134,
+  // and record_attachment() refuses them), so a Drive upload is refused here, before it can orphan a file.
+  if (!perms || !can(perms, "photos.resident_add")) {
     const { t } = await getT();
     throw new Error(t.photos.errors.notAuthorized);
   }
-  return role;
+  return perms.role.key;
 }
 
 /**

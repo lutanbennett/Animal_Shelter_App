@@ -1,3 +1,4 @@
+import { requirePermission } from "@/lib/permissions/require";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { NOT_DECEASED } from "@/lib/residents/status";
@@ -12,6 +13,7 @@ import {
 export default async function NewImmunizationPage(
   props: PageProps<"/immunizations/new">,
 ) {
+  await requirePermission("medical.immunizations");
   const searchParams = await props.searchParams;
   const { t } = await getT();
 

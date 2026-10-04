@@ -1,3 +1,4 @@
+import { requirePermission } from "@/lib/permissions/require";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -12,6 +13,7 @@ import { VetVisitEditForm, type VetVisitInitial } from "./VetVisitEditForm";
 
 /** Reached from a row's Edit link on the resident's Vet Appointments tab. */
 export default async function EditVetVisitPage(props: PageProps<"/vet-visits/[id]/edit">) {
+  await requirePermission("medical.visits", "read");
   const { id } = await props.params;
   const { t } = await getT();
   const supabase = await createClient();

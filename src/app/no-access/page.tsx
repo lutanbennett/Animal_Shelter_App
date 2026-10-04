@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CalendarClock, ListTodo } from "lucide-react";
+import { CalendarClock, Home } from "lucide-react";
 import { ActionLink } from "@/components/ActionLink";
 import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
@@ -31,8 +31,8 @@ export default async function NoAccessPage() {
       <div>
         <ActionLink
           href={isVet ? VET_HOME_PATH : DEFAULT_SIGNED_IN_PATH}
-          label={isVet ? n.goToAppointments : n.goToMy}
-          icon={isVet ? CalendarClock : ListTodo}
+          label={isVet ? n.goToAppointments : t.nav.home}
+          icon={isVet ? CalendarClock : Home}
           variant="primary"
           iconOnlyOnMobile={false}
         />

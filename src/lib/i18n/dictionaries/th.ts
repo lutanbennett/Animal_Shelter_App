@@ -3180,6 +3180,7 @@ const th: Dictionary = {
       pageTitle: "สัตว์ในความดูแล",
       search: "ค้นหา",
       searchPlaceholder: "ชื่อ ชื่อไทย ชื่ออื่น หรือรหัส",
+      searchPlaceholderWhoAndWhere: "ชื่อ ชื่อไทย หรือรหัส",
       scanChip: "สแกนไมโครชิป",
       scanChipPlaceholder: "สแกนหรือพิมพ์ 15 หลัก",
       chipNotFound: (digits: string) => `ไม่มีสัตว์ตัวใดใช้ไมโครชิป ${digits}`,
@@ -3224,6 +3225,14 @@ const th: Dictionary = {
         selectAriaLabel: (name: string) => `เลือก ${name}`,
         editAriaLabel: (name: string) => `แก้ไข ${name}`,
       },
+    },
+    whoAndWhere: {
+      where: "อยู่ที่ไหน",
+      status: "สถานะ",
+      enclosure: "กรง",
+      zone: "โซน",
+      notInEnclosure: "ตอนนี้ไม่ได้อยู่ในกรง",
+      scope: "คุณดูได้ว่าตัวนี้คือใครและอยู่ที่ไหน",
     },
     hub: {
       backToResidents: "← กลับไปหน้าสัตว์ในความดูแล",

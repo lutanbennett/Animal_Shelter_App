@@ -1,3 +1,4 @@
+import { requireFullResident } from "@/lib/residents/who-and-where";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -18,6 +19,7 @@ import {
 export default async function EditResidentPage(
   props: PageProps<"/residents/[id]/edit">,
 ) {
+  await requireFullResident();
   const { id } = await props.params;
   const { t, locale } = await getT();
   const supabase = await createClient();

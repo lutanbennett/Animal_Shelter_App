@@ -1,3 +1,4 @@
+import { requirePermission } from "@/lib/permissions/require";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { NOT_DECEASED } from "@/lib/residents/status";
@@ -8,6 +9,7 @@ import { VetVisitForm, type ResidentOption, type VetOption } from "./VetVisitFor
 export default async function NewVetVisitPage(
   props: PageProps<"/vet-visits/new">,
 ) {
+  await requirePermission("medical.visits");
   const searchParams = await props.searchParams;
   const { t } = await getT();
 

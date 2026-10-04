@@ -22,6 +22,7 @@ import { loadVetScope } from "@/lib/vets/scope";
 import { ADOPTED, DECEASED, NOT_DECEASED } from "@/lib/residents/status";
 import { STATUSES_IN_PLACE } from "@/lib/residents/place";
 import { PlaceZoneChips } from "@/components/PlaceZoneChips";
+import { asListRow, readsWhoAndWhereOnly, WHO_AND_WHERE_COLUMNS, type WhoAndWhere } from "@/lib/residents/who-and-where";
 import { ResidentsTable, type ResidentRow } from "./ResidentsTable";
 
 /**
@@ -47,6 +48,11 @@ type Filters = {
    * applied — the chip is offered only where none of them is set.
    */
   adopted: boolean;
+  /**
+   * A volunteer's list reads `resident_who_and_where`, which has no other names (0134): the search
+   * matches name, Thai name and code only.
+   */
+  limited: boolean;
 };
 
 function applyFilters<
@@ -56,12 +62,12 @@ function applyFilters<
     in(column: string, values: readonly string[]): Q;
     not(column: string, operator: string, value: string): Q;
   },
->(query: Q, { q, place, zoneIds, enclosureId, chippedIds, adopted }: Filters): Q {
+>(query: Q, { q, place, zoneIds, enclosureId, chippedIds, adopted, limited }: Filters): Q {
   let next = query;
   if (q) {
     const term = q.replace(/[,()%]/g, "");
     next = next.or(
-      `name.ilike.%${term}%,thai_name.ilike.%${term}%,other_names.ilike.%${term}%,resident_code.ilike.%${residentCodeTerm(term)}%`,
+      `name.ilike.%${term}%,thai_name.ilike.%${term}%,${limited ? "" : `other_names.ilike.%${term}%,`}resident_code.ilike.%${residentCodeTerm(term)}%`,
     );
   }
   // By status rather than zone: Unassigned is on site and Hospital /
@@ -114,12 +120,15 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   const place = parseEnclosurePlace(searchParams.place);
 
   const supabase = await createClient();
+  // A volunteer reads who and where and nothing else of a resident (0134): no chip search, no
+  // chip filter, and the list comes from `resident_who_and_where`.
+  const limited = await readsWhoAndWhereOnly();
 
   // A chip scanner types 15 digits and presses Enter. An exact match goes
   // straight to that resident whatever the place, zone or deceased filters
   // say (RLS still limits a vet to their clinic's residents); an unknown
   // chip offers a new resident. Anything else is the usual name search.
-  const chipQuery = chipFromSearch(q);
+  const chipQuery = limited ? null : chipFromSearch(q);
   if (chipQuery) {
     const { data: hit } = await supabase
       .from("residents")
@@ -173,7 +182,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   const showAll = place === "all" && searchParams.all === "1";
   // "No microchip" (the encouraging-chipping nudge): kept across every
   // other filter, like the search.
-  const noChip = searchParams.nochip === "1";
+  const noChip = !limited && searchParams.nochip === "1";
   // The Adopted chip belongs to Everywhere with no zone or enclosure picked,
   // like Show all: adopted animals are in no place and in the Lifecycle
   // zone, so any of those would empty the list.
@@ -191,7 +200,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
           .returns<{ id: string }[]>()
       ).data ?? []).map((row) => row.id)
     : null;
-  const filters: Filters = { q, place, zoneIds, enclosureId, chippedIds, adopted };
+  const filters: Filters = { q, place, zoneIds, enclosureId, chippedIds, adopted, limited };
 
   /**
    * The list with a different place or zone set, everything else kept that
@@ -240,11 +249,15 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
     });
   }
 
+  const listTable = limited ? "resident_who_and_where" : "resident_list_view";
+  const idColumn = limited ? "id" : "resident_id";
+  // A plain string: the typed select parser cannot follow a column list that depends on the view.
+  const listColumns: string = limited
+    ? WHO_AND_WHERE_COLUMNS
+    : "resident_id, name, resident_code, thai_name, other_names, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_id, zone_name, zone_name_th, zone_internal";
   let residentsQuery = supabase
-    .from("resident_list_view")
-    .select(
-      "resident_id, name, resident_code, thai_name, other_names, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_id, zone_name, zone_name_th, zone_internal",
-    )
+    .from(listTable as "resident_list_view")
+    .select(listColumns)
     .order("name");
   if (!showAll) {
     residentsQuery = residentsQuery.or(NOT_DECEASED);
@@ -261,22 +274,22 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   // those filters, and only when one of them is hiding them.
   const adoptedHidden = Boolean(q) && !adopted && (place !== "all" || zoneIds.length > 0 || Boolean(enclosureId));
   const adoptedCountQuery = supabase
-    .from("resident_list_view")
-    .select("resident_id", { count: "exact", head: true })
+    .from(listTable as "resident_list_view")
+    .select(idColumn, { count: "exact", head: true })
     .eq("current_status", ADOPTED);
   const deceasedCountQuery = supabase
-    .from("resident_list_view")
-    .select("resident_id", { count: "exact", head: true })
+    .from(listTable as "resident_list_view")
+    .select(idColumn, { count: "exact", head: true })
     .eq("current_status", DECEASED);
 
   const [tagOrigin, vetScope, residentsResult, deceased, adoptedMatch] = await Promise.all([
     getTagOrigin(),
     loadVetScope(supabase),
-    applyFilters(residentsQuery, filters).returns<ResidentRow[]>(),
+    applyFilters(residentsQuery, filters).returns<(ResidentRow | WhoAndWhere)[]>(),
     countDeceased
       ? applyFilters(
           deceasedCountQuery,
-          place === "all" ? filters : { q, place: "all", zoneIds: [], enclosureId: "", chippedIds, adopted: false },
+          place === "all" ? filters : { q, place: "all", zoneIds: [], enclosureId: "", chippedIds, adopted: false, limited },
         )
       : Promise.resolve({ count: 0 }),
     adoptedHidden
@@ -287,6 +300,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
           enclosureId: "",
           chippedIds,
           adopted: false,
+          limited,
         })
       : Promise.resolve({ count: 0 }),
   ]);
@@ -302,7 +316,12 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
           .join(", ") || null
       : null;
 
-  const { data: residents, error } = residentsResult;
+  const { error } = residentsResult;
+  // The who-and-where view names the id "id" and has no zone_internal; the zones read above has it.
+  const zoneInternal = new Map(zones.map((zone) => [zone.id, zone.internal as boolean | null]));
+  const residents: ResidentRow[] = (residentsResult.data ?? []).map((row) =>
+    limited ? asListRow(row as WhoAndWhere, zoneInternal.get((row as WhoAndWhere).zone_id ?? "") ?? null) : (row as ResidentRow),
+  );
   const shown = residents?.length ?? 0;
   const deceasedCount = deceased.count ?? 0;
   // Where a deceased name match is shown from: this list with the toggle
@@ -374,7 +393,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
         )}
       </div>
 
-      <ScanChipBox />
+      {!limited && <ScanChipBox />}
       {chipQuery && (
         <p className="flex flex-wrap items-center gap-3 rounded border border-border bg-surface px-3 py-2 text-sm text-foreground">
           {t.residents.list.chipNotFound(chipQuery)}
@@ -432,7 +451,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
               id="q"
               name="q"
               defaultValue={q}
-              placeholder={t.residents.list.searchPlaceholder}
+              placeholder={limited ? t.residents.list.searchPlaceholderWhoAndWhere : t.residents.list.searchPlaceholder}
               className="w-full rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40 md:w-64"
             />
           </div>
@@ -496,16 +515,18 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
               {t.residents.list.adoptedFilter}
             </Link>
           )}
-          <Link
-            href={noChipHref(!noChip)}
-            className={`rounded-full border px-3 py-2 text-sm font-medium ${
-              noChip
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-border bg-surface text-muted hover:text-foreground"
-            }`}
-          >
-            {t.residents.list.noMicrochip}
-          </Link>
+          {!limited && (
+            <Link
+              href={noChipHref(!noChip)}
+              className={`rounded-full border px-3 py-2 text-sm font-medium ${
+                noChip
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-surface text-muted hover:text-foreground"
+              }`}
+            >
+              {t.residents.list.noMicrochip}
+            </Link>
+          )}
           {(q || place !== "all" || zoneIds.length > 0 || enclosureId || noChip || adopted) && (
             <Link
               href="/residents"
@@ -523,7 +544,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
         </p>
       )}
 
-      <ResidentsTable residents={residents ?? []} tagOrigin={tagOrigin} />
+      <ResidentsTable residents={residents} tagOrigin={tagOrigin} limited={limited} />
     </main>
   );
 }

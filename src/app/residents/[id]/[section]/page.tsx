@@ -17,6 +17,8 @@ import { PhotoUploader } from "@/components/PhotoUploader";
 import { photoCategoriesFor } from "@/lib/google/drive-client";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
+import type { LevelKey } from "@/lib/permissions/catalogue";
+import { requireFullResident } from "@/lib/residents/who-and-where";
 import { PhotoGallery, type PhotoRow } from "@/components/PhotoGallery";
 import {
   residentPhotoSelect,
@@ -76,6 +78,21 @@ function RecordList<T extends { id: string }>({
   );
 }
 
+/**
+ * The activity each tab of the record is read under. Housing, photos and adoption updates are the
+ * resident's own record (resident.record); the medical tabs each have their cell, so a login with no
+ * read of that part is refused, not shown an empty list.
+ */
+const SECTION_READS: Partial<Record<string, LevelKey>> = {
+  immunizations: "medical.immunizations",
+  "vet-appointments": "medical.visits",
+  prescriptions: "medical.prescriptions",
+  diet: "medical.diet",
+  weight: "medical.weight",
+  procedures: "medical.procedures",
+  "blood-tests": "medical.blood_tests",
+};
+
 export default async function ResidentSectionPage(
   props: PageProps<"/residents/[id]/[section]">,
 ) {
@@ -85,6 +102,7 @@ export default async function ResidentSectionPage(
     t.residents.sections.titles as Record<string, string | undefined>
   )[section];
   if (!title) notFound();
+  await requireFullResident(SECTION_READS[section]);
   const SectionIcon = SECTION_ICONS[section as HubSection];
 
   const supabase = await createClient();

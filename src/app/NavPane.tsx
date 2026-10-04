@@ -45,6 +45,7 @@ export async function NavPane() {
       canSettings={opensAnyUnder("/admin")}
       canManagement={opensAnyUnder("/management")}
       hasTasks={can(perms, "recurring.do_own")}
+      canAppointments={opens("/appointments")}
       canEnclosures={opens("/enclosures")}
       canMaintenance={opens("/maintenance")}
       canVets={opens("/vets")}

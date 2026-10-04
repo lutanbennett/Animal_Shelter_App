@@ -1,3 +1,4 @@
+import { requirePermission } from "@/lib/permissions/require";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -14,6 +15,7 @@ import { PrescriptionForm, type PrescriptionInitial } from "../../PrescriptionFo
 export default async function EditPrescriptionPage(
   props: PageProps<"/prescriptions/[id]/edit">,
 ) {
+  await requirePermission("medical.prescriptions", "read");
   const { id } = await props.params;
   const { t } = await getT();
   const supabase = await createClient();

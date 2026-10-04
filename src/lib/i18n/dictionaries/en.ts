@@ -3278,6 +3278,8 @@ const en = {
       pageTitle: "Residents",
       search: "Search",
       searchPlaceholder: "Name, Thai name, other name or ID",
+      /** A volunteer's list has no other names to search (0134). */
+      searchPlaceholderWhoAndWhere: "Name, Thai name or ID",
       scanChip: "Scan a chip",
       scanChipPlaceholder: "Scan or type 15 digits",
       chipNotFound: (digits: string) => `No resident has microchip ${digits}.`,
@@ -3336,6 +3338,15 @@ const en = {
         selectAriaLabel: (name: string) => `Select ${name}`,
         editAriaLabel: (name: string) => `Edit ${name}`,
       },
+    },
+    // What a volunteer sees of a resident: who it is and where it lives (0134, §5).
+    whoAndWhere: {
+      where: "Where",
+      status: "Status",
+      enclosure: "Enclosure",
+      zone: "Zone",
+      notInEnclosure: "Not in an enclosure right now",
+      scope: "You can see who this is and where they live.",
     },
     hub: {
       backToResidents: "← Back to residents",

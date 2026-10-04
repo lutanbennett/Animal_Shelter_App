@@ -327,32 +327,35 @@ to be wrong in ways only arithmetic shows.
 
 ## Pass 5 — Volunteer
 
-Sees nearly everything and may change almost nothing. Short pass, high value:
-this is where an over-permissive write is most likely to be sitting.
+Rewritten 2026-10-04 for R1 (`0134` and `volunteer-read-only`): the volunteer used to see
+nearly everything and change almost nothing; now they see **who each resident
+is and where they live**, and the enclosures, and nothing else. Short pass; the
+must-nots matter most, because every one of them is a right that used to
+exist.
 
-**Switch:** test account → **volunteer**. Hard refresh.
-**Menu:** Stocktake present (volunteers walk the shelves), Management and
-Settings absent. Assistant button **present** — but read-only.
+**Switch:** test account → **volunteer**. Hard refresh. On a phone, 375 px, in
+English and then Thai: there are no PCs on site.
+**Menu:** Home, Residents, Enclosures, then Manual, Release notes and Change
+password. **No** Stocktake, Assistant button, Maintenance, Projects, Contacts,
+Vets, Management or Settings.
 
 ### Can do
 
-- [ ] `/residents` reads; a hub opens and its tabs read, including medical
-- [ ] **Move a resident between enclosures** — one of only two things a volunteer writes
-- [ ] **Add a photo** to a resident and to a project — the other one
-- [ ] **Stocktake**: count items and submit
-- [ ] **My tasks** lists the maintenance jobs they are on, and the Pass-0 recurring job
-- [ ] **Mark a recurring job done** — volunteers can, even though they cannot write maintenance status
-- [ ] **Assistant** opens and answers a question
-- [ ] `/enclosures`, `/vets`, `/contacts`, `/projects` all read
+- [ ] **Home** is two tiles, Residents and Enclosures, and each opens
+- [ ] `/residents` lists name, ID, enclosure, zone and status; search by name or ID; On-site / Off-site and the zone chips narrow it
+- [ ] A **resident's page** shows photo, name, ID, species, sex, status, enclosure and zone, with a link to the enclosure, and nothing more
+- [ ] `/enclosures` and an enclosure's page read, with the residents who live there; a resident opens its who-and-where page
+- [ ] **Manual** and **Release notes** open, and the manual's volunteer topics say the same
 
 ### Must not be able to
 
-- [ ] **Change a maintenance job's status** — buttons absent on My tasks *and* on the board, and the action refused if reached. The manual promises "ask a staff member"; check the app agrees
-- [ ] **Log or edit a maintenance job**
-- [ ] **Intake**, edit, hospital, foster, adopt, record a death — controls absent, routes refused
-- [ ] Any **medical write** — immunization, vet visit, prescription, diet, weight, procedure, blood test. All seven refused; volunteers *read* medical records
-- [ ] **Assistant cannot write** — ask it to record something and confirm it refuses rather than writing
-- [ ] `/deliveries` — redirected. Volunteers count stock but do not record deliveries
+- [ ] **Anything else on a resident** — breed, age, bio, notes, flags, microchip, carer, dates, photos, adoption news: not on the page, not in the list, not found by a chip search
+- [ ] **Intake**, edit, move, hospital, foster, adopt, record a death — controls absent, routes refused when typed
+- [ ] Any **medical** page, read or write — the tabs of the record and the seven "new" pages (immunization, vet visit, prescription, diet, weight, procedure, blood test): refused
+- [ ] **Add or set a photo** on a resident, a project or a maintenance job, or attach a file to a record: no control, and the upload refused
+- [ ] `/stocktake` and `/deliveries` — refused. A volunteer does not count stock
+- [ ] `/maintenance`, `/projects`, `/contacts`, `/vets` — refused, and none of them is in the menu or on Home
+- [ ] **Assistant** — no button in the header, and no answers from `/assistant`
 - [ ] `/management/*`, `/admin/*` — redirected
 
 **Anything odd:**

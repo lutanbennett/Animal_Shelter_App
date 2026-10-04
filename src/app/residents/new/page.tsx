@@ -1,3 +1,4 @@
+import { requirePermission } from "@/lib/permissions/require";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { loadEnclosureOptions } from "@/lib/enclosures/options";
@@ -12,6 +13,7 @@ import { parseStepParam } from "./steps";
 export default async function NewResidentPage(
   props: PageProps<"/residents/new">,
 ) {
+  await requirePermission("resident.register");
   const supabase = await createClient();
   const { t } = await getT();
   const searchParams = await props.searchParams;

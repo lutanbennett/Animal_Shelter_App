@@ -1,3 +1,4 @@
+import { requirePermission } from "@/lib/permissions/require";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -15,6 +16,7 @@ import {
  * the visit and defaults the date to it) — same shape as /weight/new.
  */
 export default async function NewProcedurePage(props: PageProps<"/procedures/new">) {
+  await requirePermission("medical.procedures");
   const searchParams = await props.searchParams;
   const { t } = await getT();
 
