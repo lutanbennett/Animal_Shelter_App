@@ -182,7 +182,7 @@ export function PanZoom({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
         onClickCapture={(e) => {
-          if (swallowClick.current) {
+          if (swallowClick.current && !(e.target as Element).closest("[data-map-controls]")) {
             e.stopPropagation();
             e.preventDefault();
           }
@@ -196,6 +196,7 @@ export function PanZoom({
           {children}
         </div>
         <div
+          data-map-controls
           className="absolute bottom-2 right-2 flex flex-col gap-1.5"
           onPointerDown={(e) => e.stopPropagation()}
           onPointerUp={(e) => e.stopPropagation()}

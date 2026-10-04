@@ -4116,6 +4116,8 @@ const en = {
       zoneAria: (name: string, residents: number) => `${name}, ${residents} resident${residents === 1 ? "" : "s"}`,
       enclosureAria: (name: string, count: number, capacity: number | null, level: string) =>
         `${name}, ${capacity ? `${count} of ${capacity}` : `${count} resident${count === 1 ? "" : "s"}`}, ${level}`,
+      medicationLabel: "On medication",
+      medications: (n: number) => `${n} on medication`,
       noCapacity: "No capacity set",
       unplacedHeading: (n: number) => `Not on this plan yet (${n})`,
       close: "Close",

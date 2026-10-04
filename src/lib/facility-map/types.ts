@@ -34,6 +34,8 @@ export type MapEnclosure = {
   resident_count: number;
   open_jobs: number;
   special_diet_count: number;
+  /** Residents here on a current prescription; 0 for a role that cannot read prescriptions. */
+  medication_count: number;
 };
 
 export type FacilityMapData = {

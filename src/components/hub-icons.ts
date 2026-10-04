@@ -113,6 +113,8 @@ export const ENCLOSURE_ICONS = {
   move: PLACEMENT_ICONS.move,
   /** A resident on something other than the standard diet (0087). */
   specialDiet: SECTION_ICONS.diet,
+  /** A resident on a current prescription (the facility map's marker). */
+  medication: Pill,
 } satisfies Record<string, LucideIcon>;
 
 /**

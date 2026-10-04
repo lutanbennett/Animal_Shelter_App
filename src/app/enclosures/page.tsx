@@ -12,6 +12,7 @@ import {
 import { getTagOrigin } from "@/lib/tags/origin";
 import { loadOccupants } from "@/lib/residents/who-and-where";
 import { loadSpecialDiets } from "@/lib/diets/special";
+import { todayIso } from "@/lib/format";
 import { parseShape } from "@/lib/facility-map/geometry";
 import { planImageUrl, type FacilityMapData } from "@/lib/facility-map/types";
 import { EnclosureFilters } from "./EnclosureFilters";
@@ -212,6 +213,21 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   const showMap = hasMap && searchParams.view === "map";
   let mapData: FacilityMapData | null = null;
   if (showMap) {
+    // Residents on a current prescription (archived_at null, started, not yet ended: the hub's rule),
+    // counted per enclosure. A role that cannot read prescriptions gets an empty list from RLS, so no marker.
+    const today = todayIso();
+    const { data: rx } = await supabase
+      .from("prescriptions")
+      .select("resident_id")
+      .is("archived_at", null)
+      .lte("start_date", today)
+      .or(`end_date.is.null,end_date.gte.${today}`)
+      .returns<{ resident_id: string }[]>();
+    const onMedication = new Set((rx ?? []).map((r) => r.resident_id));
+    const medicatedIn = new Map<string, number>();
+    for (const row of residentsResult.data) {
+      if (onMedication.has(row.resident_id)) medicatedIn.set(row.enclosure_id, (medicatedIn.get(row.enclosure_id) ?? 0) + 1);
+    }
     const onSite = summaries.filter((e) => !e.is_system && e.zone_internal);
     const shapeOf = new Map((enclosuresResult.data ?? []).map((row) => [row.id, parseShape(row.map_shape)]));
     mapData = {
@@ -248,6 +264,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
         resident_count: e.resident_count,
         open_jobs: e.open_jobs,
         special_diet_count: e.special_diet_residents.length,
+        medication_count: medicatedIn.get(e.id) ?? 0,
       })),
     };
   }

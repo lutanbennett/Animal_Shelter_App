@@ -3994,6 +3994,8 @@ const th: Dictionary = {
       zoneAria: (name: string, residents: number) => `${name} สัตว์ ${residents} ตัว`,
       enclosureAria: (name: string, count: number, capacity: number | null, level: string) =>
         `${name} ${capacity ? `${count} จาก ${capacity}` : `สัตว์ ${count} ตัว`} ${level}`,
+      medicationLabel: "กำลังได้รับยา",
+      medications: (n: number) => `กำลังได้รับยา ${n} ตัว`,
       noCapacity: "ยังไม่ได้กำหนดความจุ",
       unplacedHeading: (n: number) => `ยังไม่อยู่บนแผนผังนี้ (${n})`,
       close: "ปิด",

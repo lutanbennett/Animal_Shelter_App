@@ -54,6 +54,7 @@ type Item = {
   capacity: number | null;
   jobs: number;
   diet: number;
+  meds: number;
 };
 
 export function FacilityMap({ data }: { data: FacilityMapData }) {
@@ -95,6 +96,7 @@ export function FacilityMap({ data }: { data: FacilityMapData }) {
             capacity: z.capacity,
             jobs: 0,
             diet: 0,
+            meds: 0,
           });
       }
       return { items: placed, unplaced: { zones: rest, enclosures: [] as FacilityMapData["enclosures"] } };
@@ -115,6 +117,7 @@ export function FacilityMap({ data }: { data: FacilityMapData }) {
           capacity: e.capacity,
           jobs: e.open_jobs,
           diet: e.special_diet_count,
+          meds: e.medication_count,
         });
     }
     rest.sort((a, b) => a.name.localeCompare(b.name));
@@ -254,7 +257,7 @@ function MapShape({
   const [cx, cy] = centroid(item.shape);
   const isZone = item.kind === "zone";
   const chip = item.capacity ? `${item.count}/${item.capacity}` : String(item.count);
-  const chipW = 1.2 + chip.length * 1.15;
+  const chipW = 1.4 + chip.length * 1.45;
   const chipX = b.minX + 0.5;
   const chipY = b.minY * k + 0.5;
 
@@ -299,21 +302,20 @@ function MapShape({
         </text>
       ) : (
         <g className="pointer-events-none">
-          <rect x={chipX} y={chipY} width={chipW} height={2.9} rx={0.8} className="fill-white stroke-neutral-700" strokeWidth={0.15} />
-          <text x={chipX + chipW / 2} y={chipY + 1.5} textAnchor="middle" dominantBaseline="middle" fontSize={1.9} fontWeight={700} className="fill-neutral-900">
+          <rect x={chipX} y={chipY} width={chipW} height={3.5} rx={0.9} className="fill-white stroke-neutral-700" strokeWidth={0.15} />
+          <text x={chipX + chipW / 2} y={chipY + 1.8} textAnchor="middle" dominantBaseline="middle" fontSize={2.4} fontWeight={700} className="fill-neutral-900">
             {chip}
           </text>
-          {item.jobs > 0 && <ENCLOSURE_ICONS.maintenance x={chipX + chipW + 0.4} y={chipY + 0.2} width={2.5} height={2.5} className="text-neutral-900" strokeWidth={2.4} />}
-          {item.diet > 0 && (
-            <ENCLOSURE_ICONS.specialDiet
-              x={chipX + chipW + (item.jobs > 0 ? 3.1 : 0.4)}
-              y={chipY + 0.2}
-              width={2.5}
-              height={2.5}
-              className="text-neutral-900"
-              strokeWidth={2.4}
-            />
-          )}
+          {[
+            [item.jobs, ENCLOSURE_ICONS.maintenance],
+            [item.diet, ENCLOSURE_ICONS.specialDiet],
+            [item.meds, ENCLOSURE_ICONS.medication],
+          ]
+            .filter(([n]) => (n as number) > 0)
+            .map(([, Icon], i) => {
+              const MarkIcon = Icon as typeof ENCLOSURE_ICONS.medication;
+              return <MarkIcon key={i} x={chipX + chipW + 0.4 + i * 3.4} y={chipY + 0.2} width={3} height={3} className="text-neutral-900" strokeWidth={2.4} />;
+            })}
         </g>
       )}
     </g>
@@ -322,7 +324,8 @@ function MapShape({
 
 function Legend() {
   const { t } = useI18n();
-  const levels: OccupancyLevel[] = ["ok", "near", "over", "unknown"];
+  // Capacity is mandatory on an enclosure, so "no capacity" is not worth a legend entry.
+  const levels: OccupancyLevel[] = ["ok", "near", "over"];
   const words: Record<OccupancyLevel, string> = {
     ok: t.enclosures.levels.ok,
     near: `${t.enclosures.levels.near} / ${t.enclosures.levels.full}`,
@@ -345,6 +348,10 @@ function Legend() {
       <li className="flex items-center gap-1.5">
         <ENCLOSURE_ICONS.specialDiet aria-hidden="true" className="h-3.5 w-3.5" />
         {t.enclosures.specialDietLabel}
+      </li>
+      <li className="flex items-center gap-1.5">
+        <ENCLOSURE_ICONS.medication aria-hidden="true" className="h-3.5 w-3.5" />
+        {t.enclosures.map.medicationLabel}
       </li>
     </ul>
   );
@@ -376,7 +383,7 @@ function PickedCard({
         </button>
       </div>
       <OccupancyIndicator count={item.count} capacity={item.capacity} />
-      {item.kind === "enclosure" && (item.jobs > 0 || item.diet > 0) && (
+      {item.kind === "enclosure" && (item.jobs > 0 || item.diet > 0 || item.meds > 0) && (
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-foreground">
           {item.jobs > 0 && (
             <span className="flex items-center gap-1.5">
@@ -388,6 +395,12 @@ function PickedCard({
             <span className="flex items-center gap-1.5">
               <ENCLOSURE_ICONS.specialDiet aria-hidden="true" className="h-4 w-4" />
               {t.enclosures.specialDiets(item.diet)}
+            </span>
+          )}
+          {item.meds > 0 && (
+            <span className="flex items-center gap-1.5">
+              <ENCLOSURE_ICONS.medication aria-hidden="true" className="h-4 w-4" />
+              {m.medications(item.meds)}
             </span>
           )}
         </div>
