@@ -16,7 +16,7 @@
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence, and it matches what the backlog item asked for: a `head_of_maintenance` role (borrowing `volunteer`) whose home is one Do Maintenance tile over the maintenance board, with the cells and policies that let her log, assign, move on and complete jobs and mark her own recurring tasks done, and nothing else
-- [x] Files/areas touched listed (routes, `worker/`, `supabase/migrations/`, shared libs): `supabase/migrations/0141_maintenance_role.sql`, `src/lib/permissions/jobs.ts` and `can.ts` (`canAt`), `src/lib/home/tiles.ts`, both dictionaries (`appHome.jobs.doMaintenance`), `src/lib/releases.ts`, `scripts/check-maintenance-role.mjs` (new), `docs/decisions/2026-10-04-maintenance-role.md`, `docs/backlog.md`. No `worker/`, no page or route change
+- [x] Files/areas touched listed (routes, `worker/`, `supabase/migrations/`, shared libs): `supabase/migrations/0141_maintenance_role.sql`, `src/lib/permissions/jobs.ts`, `src/lib/home/tiles.ts`, both dictionaries (`appHome.jobs.doMaintenance`), `src/lib/releases.ts`, `scripts/check-maintenance-role.mjs` (new), `docs/decisions/2026-10-04-maintenance-role.md`, `docs/backlog.md`. No `worker/`, no page or route change
 - [x] Roles affected identified: the new Head of Maintenance; admin, management, staff, vet, volunteer and a login with no role were probed to show nothing changed for them
 - [x] Anything explicitly **out of scope** written down: photos on a job and deleting a job (not hers; the screens still offer both, see Defects), `recurring.manage` (P2), the 2IC, a login-creation UI for the role, the legacy-role bridge's effect on `/my` eligibility for a task linked to a page
 
@@ -133,7 +133,7 @@
 | 1 | Medium | The new-job form offers Photos and the job page offers Add before/after photos to her; the upload route refuses (403) because she holds no `maintenance.photos` | deferred to backlog: give her the cell (a policy on `maintenance_photos` and a branch in `record_attachment`) or gate the controls; the brief says not to rebuild the board |
 | 2 | Low | The job page offers Delete job to her; the database refuses it and the message reads "You don't have permission to change maintenance jobs", which is odd after she just changed one | deferred to backlog: gate the control on the narrower fact, or give her delete |
 | 3 | Medium | `/my` passes `current_user_role()` (`volunteer`) to `role_can()`, which refuses any role but the caller's own key, so a recurring task that links to a page errors on her `/my`; the rota picker likewise will not offer her a task linked to `/maintenance` | deferred to backlog: the legacy-role bridge; pass the role key, or fix with the enum. Unlinked tasks, which were tested, work |
-| 4 | Low | The typecheck failed on the first gates run: a job bundle could not hold a yes/no activity | fixed: `ActivityKey` in the bundle, `canAt` for the tile |
+| 4 | Low | The typecheck failed on the first gates run: a job bundle could not hold a yes/no activity | fixed: superseded at the merge with `main`, whose `BundleEntry` (a level optional for yes/no cells) solves it; my `canAt` was removed |
 
 ## Left for manual verification
 

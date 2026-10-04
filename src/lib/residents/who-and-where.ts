@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { refuse } from "@/lib/auth/require-role";
+import { refuseFor } from "@/lib/auth/require-role";
 import { can } from "@/lib/permissions/can";
 import type { Level, LevelKey } from "@/lib/permissions/catalogue";
 import { requirePermission } from "@/lib/permissions/require";
@@ -78,7 +78,7 @@ export function asListRow(row: WhoAndWhere, zoneInternal: boolean | null = null)
 export async function requireFullResident(activity?: LevelKey, level: Level = "read") {
   const guarded = await requirePermission("resident.record", "read");
   if ((await readsWhoAndWhereOnly()) || (activity && !can(guarded.perms, activity, level))) {
-    refuse(guarded.perms.role.key);
+    refuseFor(guarded.perms);
   }
   return guarded;
 }

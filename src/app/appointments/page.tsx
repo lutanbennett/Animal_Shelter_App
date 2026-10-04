@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { refuse } from "@/lib/auth/require-role";
+import { refuseFor } from "@/lib/auth/require-role";
 import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import { formatDateTime, todayIso } from "@/lib/format";
@@ -24,7 +24,7 @@ import { loadClinicAppointments, type ClinicAppointment } from "@/lib/vets/appoi
 export default async function AppointmentsPage() {
   const { supabase, perms } = await requirePermission("medical.visits", "read");
   // The scope is what makes this a vet's page: shelter staff hold the activity too and book from the hub.
-  if (perms.scopes.clinical !== "own_clinic") refuse(perms.role.key);
+  if (perms.scopes.clinical !== "own_clinic") refuseFor(perms);
   const { t, locale } = await getT();
   const a = t.vetAppointments;
   const scope = await loadVetScope(supabase);

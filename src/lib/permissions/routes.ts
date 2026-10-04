@@ -13,7 +13,7 @@
  * rest, and Settings and Management landing pages with their areas.
  */
 
-import { Activity, ClipboardCheck, Coins, Globe, HeartHandshake, History, LayoutDashboard, Languages, Pill, Scale, ShoppingCart, Truck, type LucideIcon } from "lucide-react";
+import { Activity, Camera, ClipboardCheck, Coins, Globe, HeartHandshake, History, LayoutDashboard, Languages, Pill, Scale, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
 import { CONTACT_ICONS, ENCLOSURE_ICONS, NAV_ICONS, SECTION_ICONS, VET_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can, type Permissions } from "./can";
@@ -177,6 +177,38 @@ export const ROUTES: readonly RouteEntry[] = [
     menu: false,
     // A vet holds the cell but reads only its own clinic's residents, which the list's views do
     // not carry (sees_all_clinical(), 0136): the page would open empty, so it is not offered.
+    scope: { clinical: "any" },
+  },
+  {
+    path: "/medical/weight",
+    activity: "medical.weight",
+    icon: Scale,
+    label: (t) => t.appHome.jobs.recordWeight,
+    device: "any",
+    menu: false,
+    // A phone page for the Head of Medical, who cannot open /residents/...: it reads who-and-where.
+    // A vet holds the cell but would find an empty picker (sees_all_clinical(), 0135).
+    scope: { clinical: "any" },
+  },
+  {
+    path: "/medical/photos",
+    activity: "photos.resident_add",
+    icon: Camera,
+    label: (t) => t.appHome.jobs.addMedicalPhotos,
+    device: "any",
+    menu: false,
+    // Reads who-and-where and medical_photo_residents, both for a login that sees every clinic.
+    scope: { clinical: "any" },
+  },
+  {
+    path: "/medical/diets",
+    activity: "medical.diet",
+    level: "read",
+    icon: Utensils,
+    label: (t) => t.appHome.jobs.feedSpecialDiets,
+    device: "any",
+    menu: false,
+    // special_diet_list rows are for a login that sees every clinic (sees_all_clinical(), 0140).
     scope: { clinical: "any" },
   },
   {

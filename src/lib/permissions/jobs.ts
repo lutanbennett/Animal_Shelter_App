@@ -17,16 +17,19 @@
  * Pure and client-safe.
  */
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
-import type { ActivityKey, Level } from "./catalogue";
+import type { ActivityKey, Level, LevelKey, YesNoKey } from "./catalogue";
 
-export type JobKey = "administer_medication" | "do_maintenance";
+export type JobKey = "administer_medication" | "record_weight" | "add_medical_photos" | "feed_special_diets" | "do_maintenance";
+
+/** A level activity at the level the job needs, or a yes/no activity (no level: the cell is Yes). */
+export type BundleEntry = { activity: LevelKey; level: Level } | { activity: YesNoKey; level?: undefined };
 
 export type Job = {
   key: JobKey;
   /** The person's own words, from the dictionary. */
   label: (t: Dictionary) => string;
   /** The activities the job expands to, at the level it needs. Not a promise of a page. */
-  bundle: readonly { activity: ActivityKey; level: Level }[];
+  bundle: readonly BundleEntry[];
   /** The one page the job's tile opens; it is a route in the registry. */
   opens: string;
 };
@@ -43,16 +46,49 @@ export const JOBS: Record<JobKey, Job> = {
     ],
     opens: "/management/medication-list",
   },
-  // The whiteboard's Maintenance column: one tile, "Maint tasks" (§8, §12 R3). Her job is Edit, not
-  // Read: she creates, assigns, moves on and completes jobs. Setting up a recurring task stays
-  // Management's (P2), so recurring.manage is not here; recurring.do_own is "mark your own done" (/my).
+  // Second job of the Head of Medical. She cannot open a resident's record, so the page is her
+  // own (/medical/weight), reading who-and-where and writing the flat `weight` table.
+  record_weight: {
+    key: "record_weight",
+    label: (t) => t.appHome.jobs.recordWeight,
+    bundle: [
+      { activity: "medical.weight", level: "edit" },
+      { activity: "resident.record", level: "read" }, // the picker: who and where (0134)
+    ],
+    opens: "/medical/weight",
+  },
+  // Third. The upload is hers because record_attachment() now takes a login that holds the cell
+  // (0140); the page and its route read who-and-where and medical_photo_residents, not residents.
+  add_medical_photos: {
+    key: "add_medical_photos",
+    label: (t) => t.appHome.jobs.addMedicalPhotos,
+    bundle: [
+      { activity: "photos.resident_add" },
+      { activity: "resident.record", level: "read" }, // the picker: who and where (0134)
+    ],
+    opens: "/medical/photos",
+  },
+  // Fourth. Read only, like the first: a list of the non-standard diets, nothing recorded as fed
+  // (Lutan, 2026-10-04: "a non standard diet is anything where that field is FALSE").
+  feed_special_diets: {
+    key: "feed_special_diets",
+    label: (t) => t.appHome.jobs.feedSpecialDiets,
+    bundle: [
+      { activity: "medical.diet", level: "read" },
+      { activity: "resident.record", level: "read" }, // who and where, nothing more (0134)
+    ],
+    opens: "/medical/diets",
+  },
+  // The whiteboard's Maintenance column: one tile (§8, §12 R3). Her job is Edit, not Read. Setting up a
+  // recurring task stays Management's (P2): recurring.manage is not here; recurring.do_own is "mark your
+  // own done" (/my).
   do_maintenance: {
     key: "do_maintenance",
     label: (t) => t.appHome.jobs.doMaintenance,
     bundle: [
       { activity: "maintenance.jobs", level: "edit" },
-      { activity: "maintenance.progress", level: "edit" },
-      { activity: "recurring.do_own", level: "edit" },
+      { activity: "maintenance.progress" },
+      { activity: "recurring.do_own" },
       { activity: "resident.record", level: "read" }, // who and where, nothing more (0134)
       { activity: "facility.enclosures", level: "read" }, // the board names and picks them
     ],
@@ -66,7 +102,7 @@ export const JOBS: Record<JobKey, Job> = {
  * from its cells, as every role's was before.
  */
 export const JOBS_OF_ROLE: Readonly<Record<string, readonly JobKey[]>> = {
-  head_of_medical: ["administer_medication"],
+  head_of_medical: ["administer_medication", "record_weight", "add_medical_photos", "feed_special_diets"],
   head_of_maintenance: ["do_maintenance"],
 };
 
@@ -76,9 +112,10 @@ export function jobsOfRole(roleKey: string): readonly Job[] {
 
 /** The union of a role's jobs: each activity once, at the highest level any job asks. */
 export function bundleOfRole(roleKey: string): Map<ActivityKey, Level> {
+  // A yes/no activity is held at "edit" (cell 2), the way role_permissions stores a Yes.
   const union = new Map<ActivityKey, Level>();
   for (const job of jobsOfRole(roleKey)) {
-    for (const { activity, level } of job.bundle) {
+    for (const { activity, level = "edit" } of job.bundle) {
       if (union.get(activity) !== "edit") union.set(activity, level);
     }
   }
