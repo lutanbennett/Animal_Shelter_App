@@ -129,6 +129,7 @@ const en = {
     /** A job's name, in the Director's words: the tile a role with jobs sees (src/lib/permissions/jobs.ts). */
     jobs: {
       administerMedication: "Administer Medication",
+      doMaintenance: "Do Maintenance",
     },
   },
 

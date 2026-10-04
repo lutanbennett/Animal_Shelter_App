@@ -19,7 +19,7 @@
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { Level, LevelKey } from "./catalogue";
 
-export type JobKey = "administer_medication";
+export type JobKey = "administer_medication" | "do_maintenance";
 
 export type Job = {
   key: JobKey;
@@ -43,6 +43,21 @@ export const JOBS: Record<JobKey, Job> = {
     ],
     opens: "/management/medication-list",
   },
+  // The whiteboard's Maintenance column: one tile, "Maint tasks" (§8, §12 R3). Her job is Edit, not
+  // Read: she creates, assigns, moves on and completes jobs. Setting up a recurring task stays
+  // Management's (P2), so recurring.manage is not here; recurring.do_own is "mark your own done" (/my).
+  do_maintenance: {
+    key: "do_maintenance",
+    label: (t) => t.appHome.jobs.doMaintenance,
+    bundle: [
+      { activity: "maintenance.jobs", level: "edit" },
+      { activity: "maintenance.progress", level: "edit" },
+      { activity: "recurring.do_own", level: "edit" },
+      { activity: "resident.record", level: "read" }, // who and where, nothing more (0134)
+      { activity: "facility.enclosures", level: "read" }, // the board names and picks them
+    ],
+    opens: "/maintenance",
+  },
 };
 
 /**
@@ -52,6 +67,7 @@ export const JOBS: Record<JobKey, Job> = {
  */
 export const JOBS_OF_ROLE: Readonly<Record<string, readonly JobKey[]>> = {
   head_of_medical: ["administer_medication"],
+  head_of_maintenance: ["do_maintenance"],
 };
 
 export function jobsOfRole(roleKey: string): readonly Job[] {

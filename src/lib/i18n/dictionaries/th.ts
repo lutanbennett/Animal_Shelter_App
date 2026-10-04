@@ -121,6 +121,7 @@ const th: Dictionary = {
     /** A job's name, in the Director's words: the tile a role with jobs sees (src/lib/permissions/jobs.ts). */
     jobs: {
       administerMedication: "ให้ยา",
+      doMaintenance: "ทำงานซ่อมบำรุง",
     },
   },
 
