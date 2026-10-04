@@ -1,7 +1,7 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { refuse } from "@/lib/auth/require-role";
+import { refuseFor } from "@/lib/auth/require-role";
 import { can, type Permissions } from "./can";
 import { loadPermissions } from "./load";
 import type { Level, LevelKey, YesNoKey } from "./catalogue";
@@ -30,7 +30,7 @@ export async function requirePermission(activity: YesNoKey | LevelKey, level: Le
   if (!user) redirect("/login");
 
   const perms = await loadPermissions();
-  if (!perms || !can(perms, activity as LevelKey, level)) refuse(perms?.role.key);
+  if (!perms || !can(perms, activity as LevelKey, level)) refuseFor(perms);
 
   return { supabase, user, perms };
 }
@@ -51,7 +51,7 @@ export async function requireAnyPageUnder(prefix: string): Promise<Guarded> {
   if (!user) redirect("/login");
 
   const perms = await loadPermissions();
-  if (!perms || !ROUTES.some((r) => r.path.startsWith(prefix + "/") && canOpen(perms, r))) refuse(perms?.role.key);
+  if (!perms || !ROUTES.some((r) => r.path.startsWith(prefix + "/") && canOpen(perms, r))) refuseFor(perms);
 
   return { supabase, user, perms };
 }

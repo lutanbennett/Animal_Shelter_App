@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { refuse } from "@/lib/auth/require-role";
+import { refuseFor } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
 import { loadPermissions } from "@/lib/permissions/load";
 import { listHomeRoles, loadRolePermissions } from "@/lib/home/roles";
@@ -29,7 +29,7 @@ export default async function RoleHomePage(props: PageProps<"/home/[role]">) {
   if (!user) redirect("/login");
 
   const mine = await loadPermissions();
-  if (!mine?.isAdmin) refuse(mine?.role.key);
+  if (!mine?.isAdmin) refuseFor(mine);
   if (roleKey === "admin") redirect("/admin");
 
   const [roles, perms, { t, locale }] = await Promise.all([

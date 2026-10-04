@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { refuse } from "@/lib/auth/require-role";
+import { refuseFor } from "@/lib/auth/require-role";
 import { safeNextPath, VET_HOME_PATH } from "@/lib/auth/next-path";
 import { loadPermissions } from "@/lib/permissions/load";
 import { deviceFrom } from "@/lib/home/device";
@@ -30,7 +30,7 @@ export default async function HomePage() {
   if (!user) redirect("/login");
 
   const perms = await loadPermissions();
-  if (!perms?.role.opensApp) refuse(perms?.role.key);
+  if (!perms?.role.opensApp) refuseFor(perms);
 
   if (perms.isAdmin) {
     const h = await headers();

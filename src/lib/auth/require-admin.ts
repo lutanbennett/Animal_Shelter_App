@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { loadPermissions } from "@/lib/permissions/load";
-import { refuse } from "./require-role";
+import { refuseFor } from "./require-role";
 
 /**
  * What only an Admin may do and no activity names: who can sign in, and as what (Settings → Security).
@@ -18,7 +18,7 @@ export async function requireAdminUser() {
   if (!user) redirect("/login");
 
   const perms = await loadPermissions();
-  if (!perms?.isAdmin) refuse(perms?.role.key);
+  if (!perms?.isAdmin) refuseFor(perms);
   return user;
 }
 
