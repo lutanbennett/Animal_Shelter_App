@@ -16,8 +16,9 @@
 //      missing cell; Admin yes for every known key; a read cell is not edit
 //   D  stock, the pattern area: every role's answer for stock.count and
 //      stock.delivery from the seeded cells equals what the predicates it
-//      replaced (canStocktake, canRecordDelivery) said, and the two lists
-//      recurring-job eligibility still carries agree with the seed
+//      replaced (canStocktake, canRecordDelivery) said; recurring-job
+//      eligibility holds no role list of its own (it asks role_can(), 0133)
+//      and every cell it asks about is in the catalogue
 //   E  the route registry: unique paths, a level only where the activity has
 //      one, and every entry's page file guards with the same activity
 import { readdirSync, readFileSync, existsSync } from "node:fs";
@@ -40,7 +41,7 @@ const imp = (p) => import(pathToFileURL(join(root, p)).href);
 const { ACTIVITIES, isActivityKey } = await imp("src/lib/permissions/catalogue.ts");
 const { can, parsePermissions } = await imp("src/lib/permissions/can.ts");
 const { ROUTES } = await imp("src/lib/permissions/routes.ts");
-const { STOCK_COUNT_ROLES, STOCK_DELIVERY_ROLES } = await imp("src/lib/recurring-jobs/eligibility.ts");
+const { JOB_NEEDS } = await imp("src/lib/recurring-jobs/eligibility.ts");
 
 let fails = 0;
 const eq = (name, got, want) => {
@@ -135,9 +136,8 @@ const LEGACY_DELIVERY = [true, true, true, false, false, false];
 eq("D stock.count: each role as canStocktake said", ROLES.map((r) => can(forRole(r), "stock.count")), LEGACY_COUNT);
 eq("D stock.delivery: each role as canRecordDelivery said", ROLES.map((r) => can(forRole(r), "stock.delivery")), LEGACY_DELIVERY);
 eq("D no role at all: no to both", [can(null, "stock.count"), can(null, "stock.delivery")], [false, false]);
-const rolesWith = (activity) => ROLES.filter((r) => r === "admin" || seededCells.some(([role, a]) => role === r && a === activity));
-eq("D eligibility's count list equals the seed", [...STOCK_COUNT_ROLES], rolesWith("stock.count"));
-eq("D eligibility's delivery list equals the seed", [...STOCK_DELIVERY_ROLES], rolesWith("stock.delivery"));
+eq("D eligibility asks only about catalogue activities", JOB_NEEDS.filter((n) => !isActivityKey(n.activity)).map((n) => n.activity), []);
+eq("D eligibility asks about both stock pages", ["stock.count", "stock.delivery"].filter((a) => !JOB_NEEDS.some((n) => n.activity === a)), []);
 
 // ---- E ----
 eq("E route paths are unique", new Set(ROUTES.map((r) => r.path)).size, ROUTES.length);

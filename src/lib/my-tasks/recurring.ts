@@ -10,6 +10,7 @@ import {
 } from "@/lib/recurring-jobs/queries";
 import { timeOfDayRank } from "@/lib/recurring-jobs/rule";
 import { canDoJob } from "@/lib/recurring-jobs/eligibility";
+import { loadEligibility } from "@/lib/recurring-jobs/eligibility-load";
 import type { MyTask, MyTaskSection } from "./types";
 
 /**
@@ -71,6 +72,11 @@ export async function loadMyRecurringTasks(
   );
   const r = t.my.recurring;
 
+  // Only the reader's own role is asked about: role_can() answers anyone about
+  // their own role and refuses them about any other (0133).
+  const { eligibility, error: eligibilityError } = await loadEligibility(supabase, [role]);
+  if (eligibilityError) return { ...section, error: eligibilityError };
+
   // A job the reader's role isn't given (a vet on any recurring job, or a
   // job on a page their role can't open — assigned before the picker
   // filtered by role, or the link changed since) keeps its place on the list,
@@ -90,12 +96,12 @@ export async function loadMyRecurringTasks(
       about: [
         t.management.recurringJobs.timesOfDay[o.job.time_of_day],
         o.cover ? (o.cover.note ? r.handedToYouBecause(o.cover.note) : r.handedToYou) : null,
-        canDoJob(role, o.job.link_path) ? null : r.cannotDo,
+        canDoJob(role, o.job.link_path, eligibility) ? null : r.cannotDo,
       ]
         .filter(Boolean)
         .join(" · "),
       due: o.occurs_on,
-      href: canDoJob(role, o.job.link_path) ? o.job.link_path : null,
+      href: canDoJob(role, o.job.link_path, eligibility) ? o.job.link_path : null,
       others: o.team
         .filter((id) => id !== userId)
         .map((id) => appUserLabel(users.get(id)))

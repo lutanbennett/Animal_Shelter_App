@@ -431,13 +431,19 @@ const PREDICATES = [
   { id: "canWriteProjects", file: "src/lib/projects/queries.ts", activity: "projects.folders", level: 2 },
   { id: "canUseAssistant", file: "src/lib/assistant/data.ts", activity: "assistant.ask", level: 2 },
   { id: "canWriteWithAssistant", file: "src/lib/assistant/data.ts", activity: "assistant.record", level: 2 },
+  // canDoJob now takes the database's answer (role_can, 0133), so its old role-string truth tables
+  // live only in the fixture (written before the conversion); check-recurring-job-eligibility.mjs
+  // holds the new canDoJob to them. Only the pages with a single activity are paired here.
+  { id: "canDoJob(/stocktake)", file: "src/lib/recurring-jobs/eligibility.ts", activity: "stock.count", level: 2 },
+  { id: "canDoJob(/deliveries)", file: "src/lib/recurring-jobs/eligibility.ts", activity: "stock.delivery", level: 2 },
+  { id: "canDoJob(/management/purchasing)", file: "src/lib/recurring-jobs/eligibility.ts", activity: "stock.purchasing", level: 2 },
 ];
 // Predicates with no single activity to pair with, and why (stated, not silently absent):
 const UNPAIRED = {
   hasAppAccess: "'may sign in to the app at all': not an activity (§6 rule 5)",
   isShelterRole: "a set of roles used by several pages, not one right",
   canReadRecurringJobs: "every role reads recurring jobs because anyone can be given one; there is no 'read the rules' cell",
-  canDoJob: "takes the page a job links to; it is the eligibility rule for assignees, covered by check-recurring-job-eligibility.mjs",
+  canDoJob: "takes the page a job links to and the database's answer; the stock pages are paired above by fixture row, /admin /management /maintenance by check-recurring-job-eligibility.mjs",
   assertPhotoWriteAccess: "photo uploads span photos.* and maintenance.photos; paired when the photo split is built",
 };
 const ROLES_FOR_TABLE = ["admin", "management", "staff", "vet", "volunteer", "public_viewer", null];
