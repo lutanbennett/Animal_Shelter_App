@@ -13,7 +13,7 @@
 //   the floor    the Head of Medical reads NOTHING else: not medication (prices), not residents,
 //                not resident_list_view, not a weight, a visit, a procedure or a stock count;
 //                the list views carry no price, stock, breed or bio column
-//   writes       refused on prescriptions (update and insert) and on weight
+//   writes       refused on prescriptions (update and insert); weight is hers since 0140
 //   controls     admin, management and staff still read what they read before
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -36,6 +36,10 @@ const READ_ALL = { ...NONE, hom: 1, admin: 1, management: 1, staff: 1 };
 const STAFF_UP = { ...NONE, admin: 1, management: 1, staff: 1 };
 // the harness resident has a visit at the vet's own clinic, so the vet_* policies (untouched) let that vet in
 const OWN_CLINIC = { ...STAFF_UP, vet: 1 };
+// 0140 gave the role medical.weight (Edit), so a weight is one of its own reads and writes now
+const OWN_CLINIC_AND_HOM = { ...OWN_CLINIC, hom: 1 };
+// cells granted ahead of the screens that make them jobs (0140); check-medical-jobs.mjs holds the behaviour
+const AHEAD = new Map([["medical.weight", 2], ["photos.resident_add", 2], ["medical.diet", 1]]);
 
 // [name, sql, expectation]: a table of who may (1) or may not (0); "error" = the statement must fail;
 // "hom-zero" = only the Head of Medical is asserted, and it must see nothing
@@ -48,7 +52,7 @@ const probes = [
   ["medication", `select 1 from medication limit 1`, { ...STAFF_UP, vet: 1 }],
   ["residents", `select 1 from residents where id = '${R}'`, OWN_CLINIC],
   ["resident_list_view", `select 1 from resident_list_view where resident_id = '${R}'`, OWN_CLINIC],
-  ["weight", `select 1 from weight where resident_id = '${R}'`, OWN_CLINIC],
+  ["weight", `select 1 from weight where resident_id = '${R}'`, OWN_CLINIC_AND_HOM],
   ["vet_appointments", `select 1 from vet_appointments where resident_id = '${R}'`, OWN_CLINIC],
   ["procedures", `select 1 from procedures where resident_id = '${R}'`, null],
   ["stock_counts", `select 1 from stock_counts limit 1`, "hom-zero"],
@@ -64,7 +68,7 @@ const probes = [
   // writes
   ["update prescriptions", `update prescriptions set notes = 'probe' where resident_id = '${R}'`, OWN_CLINIC],
   ["insert prescriptions", `insert into prescriptions (resident_id, medication_id, start_date) values ('${R}', (select id from medication order by id limit 1), current_date)`, OWN_CLINIC],
-  ["insert weight", `insert into weight (resident_id, date, weight_kg) values ('${R}', current_date - 500, 5)`, OWN_CLINIC],
+  ["insert weight", `insert into weight (resident_id, date, weight_kg) values ('${R}', current_date - 500, 5)`, OWN_CLINIC_AND_HOM],
 ];
 
 const lines = [];
@@ -159,6 +163,7 @@ for (const [name, , exp] of probes) {
 if (get("role", "row") === 0) pass("role row: custom, borrows volunteer, opens the app, has a Thai name"); else fail("role row head_of_medical missing or wrong shape");
 const have = new Map(rows.filter((r) => r.who === "role" && r.tbl.startsWith("cell:")).map((r) => r.tbl.split(":").slice(1)).map(([a, l]) => [a, Number(l)]));
 const want = new Map([...bundleOfRole("head_of_medical")].map(([a, l]) => [a, l === "edit" ? 2 : 1]));
+for (const [a, l] of AHEAD) if (!want.has(a)) want.set(a, l);
 const same = have.size === want.size && [...want].every(([a, l]) => have.get(a) === l);
 if (same) pass(`bundle: role_permissions = the union of its jobs (${[...want.keys()].join(", ")})`);
 else fail(`bundle: role_permissions ${JSON.stringify([...have])} differ from jobs.ts ${JSON.stringify([...want])}`);
