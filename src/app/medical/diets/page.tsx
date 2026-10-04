@@ -11,7 +11,7 @@ import { driveImageUrl } from "@/lib/google/drive-client";
 import { RoundIcon, RoundStrip } from "@/components/medication/RoundIcons";
 import { loadSpecialDiets, type DietResident, type SpecialDiet } from "@/lib/diets/special-list";
 import { roundsFor, suggestRound, type RoundKey } from "@/lib/rounds/suggest";
-import { refuse } from "@/lib/auth/require-role";
+import { refuseFor } from "@/lib/auth/require-role";
 import { requirePermission } from "@/lib/permissions/require";
 
 /**
@@ -27,7 +27,7 @@ import { requirePermission } from "@/lib/permissions/require";
 export default async function SpecialDietsPage(props: PageProps<"/medical/diets">) {
   const { perms } = await requirePermission("medical.diet", "read");
   // The view is for a login that sees every clinic (0140); a vet would get an empty page.
-  if (perms.scopes.clinical !== "any") refuse(perms.role.key);
+  if (perms.scopes.clinical !== "any") refuseFor(perms);
   const { t, locale } = await getT();
   const d = t.medicalJobs.diets;
 

@@ -6,7 +6,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { formatDate, formatWeightKg, todayIso } from "@/lib/format";
 import { placeName } from "@/lib/enclosures/names";
-import { refuse } from "@/lib/auth/require-role";
+import { refuseFor } from "@/lib/auth/require-role";
 import { requirePermission } from "@/lib/permissions/require";
 import { loadOneResident, loadPickableResidents } from "@/lib/medical/residents";
 import { ResidentPicker } from "../ResidentPicker";
@@ -23,7 +23,7 @@ import { WeightKeypad } from "./WeightKeypad";
  */
 export default async function RecordWeightPage(props: PageProps<"/medical/weight">) {
   const { perms } = await requirePermission("medical.weight");
-  if (perms.scopes.clinical !== "any") refuse(perms.role.key);
+  if (perms.scopes.clinical !== "any") refuseFor(perms);
   const { t, locale } = await getT();
   const w = t.medicalJobs.weight;
   const sp = await props.searchParams;

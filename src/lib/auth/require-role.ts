@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { can } from "@/lib/permissions/can";
+import { can, type Permissions } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { getT } from "@/lib/i18n/get-t";
 import { hasAppAccess, loadCurrentRole, signedInLandingPath } from "./app-access";
@@ -51,6 +51,18 @@ export function refusedPath(role: string | null | undefined): string {
  */
 export function refuse(role: string | null | undefined): never {
   redirect(refusedPath(role));
+}
+
+/**
+ * Refuses a request whose permissions are already loaded. Use this, not `refuse(perms.role.key)`:
+ * the key of a configured role ("head_of_medical") is not in the legacy allow-list, so
+ * hasAppAccess() says no and `refuse()` would send her to "/", the public website. What decides
+ * whether someone is in the app is the role's own `opensApp`
+ * (docs/decisions/2026-10-04-medical-jobs-app.md).
+ */
+export function refuseFor(perms: Permissions | null | undefined): never {
+  if (perms?.role.opensApp) redirect(NO_ACCESS_PATH);
+  refuse(perms?.role.key);
 }
 
 /**
