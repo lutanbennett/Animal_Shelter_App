@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { localizedValidity } from "@/lib/i18n/validity";
 import { formatQuantity } from "@/lib/diets/options";
 import { defaultUnit, resolveEntered, type UnitConversion } from "@/lib/units";
 import { packTotal, parseDeliveryQuantity, type DeliveryKind, type DeliveryTiming } from "@/lib/management/stock-receipts";
@@ -42,7 +43,7 @@ export function RecordDeliveryForm({
   countDays: Record<DeliveryKind, Record<string, string[]>>;
   suppliers: { id: string; name: string }[];
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const d = t.deliveries;
   const f = d.form;
 
@@ -117,7 +118,7 @@ export function RecordDeliveryForm({
   };
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-4 rounded border border-border bg-surface p-4">
+    <form onSubmit={submit} {...localizedValidity(t, locale)} className="flex flex-col gap-4 rounded border border-border bg-surface p-4">
       <div role="tablist" aria-label={f.kind} className="flex gap-2">
         {(["medication", "diet"] as const).map((k) => (
           <button

@@ -4594,6 +4594,29 @@ const en = {
     withoutScreenshots: "Without screenshots",
   },
 
+  /**
+   * The browser's own form messages ("Please fill in this field") follow the
+   * phone's language, not the app's. src/lib/i18n/validity.ts swaps them for
+   * these on the forms staff use most.
+   */
+  validation: {
+    required: "Please fill in this field.",
+    requiredChoice: "Please choose one.",
+    requiredCheck: "Please tick this box to continue.",
+    email: "Enter a valid email address.",
+    url: "Enter a web address, like https://example.org.",
+    number: "Enter a number.",
+    minLength: (min: number) => `Use at least ${min} characters.`,
+    maxLength: (max: number) => `Use no more than ${max} characters.`,
+    notAfter: (limit: string) => `Choose ${limit} or earlier.`,
+    notBefore: (limit: string) => `Choose ${limit} or later.`,
+    atMost: (limit: string) => `Enter ${limit} or less.`,
+    atLeast: (limit: string) => `Enter ${limit} or more.`,
+    step: "Enter a valid number.",
+    pattern: "That doesn't look right. Check it and try again.",
+    invalid: "That doesn't look right. Check it and try again.",
+  },
+
   share: {
     share: "Share",
     copyLink: "Copy link",

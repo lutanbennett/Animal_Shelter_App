@@ -4449,6 +4449,24 @@ const th: Dictionary = {
     withoutScreenshots: "ไม่มีภาพหน้าจอ",
   },
 
+  validation: {
+    required: "กรุณากรอกช่องนี้",
+    requiredChoice: "กรุณาเลือกหนึ่งรายการ",
+    requiredCheck: "กรุณาติ๊กช่องนี้เพื่อดำเนินการต่อ",
+    email: "กรุณากรอกอีเมลให้ถูกต้อง",
+    url: "กรุณากรอกที่อยู่เว็บ เช่น https://example.org",
+    number: "กรุณากรอกตัวเลข",
+    minLength: (min: number) => `กรุณากรอกอย่างน้อย ${min} ตัวอักษร`,
+    maxLength: (max: number) => `กรอกได้ไม่เกิน ${max} ตัวอักษร`,
+    notAfter: (limit: string) => `กรุณาเลือกวันที่ ${limit} หรือก่อนหน้านั้น`,
+    notBefore: (limit: string) => `กรุณาเลือกวันที่ ${limit} หรือหลังจากนั้น`,
+    atMost: (limit: string) => `กรุณากรอก ${limit} หรือน้อยกว่า`,
+    atLeast: (limit: string) => `กรุณากรอก ${limit} หรือมากกว่า`,
+    step: "กรุณากรอกตัวเลขให้ถูกต้อง",
+    pattern: "รูปแบบไม่ถูกต้อง กรุณาตรวจสอบแล้วลองอีกครั้ง",
+    invalid: "รูปแบบไม่ถูกต้อง กรุณาตรวจสอบแล้วลองอีกครั้ง",
+  },
+
   share: {
     share: "แชร์",
     copyLink: "คัดลอกลิงก์",
