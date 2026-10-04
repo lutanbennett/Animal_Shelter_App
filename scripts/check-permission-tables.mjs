@@ -126,7 +126,7 @@ end $f$;
 
 create temp table harness_baseline as
 select count(*)::bigint as audit_rows,
-       count(*) filter (where actor is not null or op <> 'DELETE' or table_name <> 'role_permissions')::bigint as not_0134
+       count(*) filter (where actor is not null or (op <> 'DELETE' and op <> 'INSERT') or (op = 'INSERT' and table_name not in ('roles', 'role_permissions')) or (op = 'DELETE' and table_name <> 'role_permissions'))::bigint as not_0134
 from audit_log where table_name in ('roles', 'role_permissions');
 grant select on harness_baseline to authenticated, service_role;
 
@@ -407,7 +407,8 @@ begin
 
   -- F: audit.
   -- 0132's seed logged nothing. 0134 deleted 21 of the volunteer's cells with the triggers live, so the log holds exactly
-  -- those rows (no actor, a DELETE of a role_permissions row) and nothing else.
+  -- those rows (no actor, a DELETE of a role_permissions row) and, since R2, the INSERTs of a configured role's own
+  -- migration (no actor: 0136, 0141, 0143 add a roles row and its cells) and nothing else.
   perform pg_temp.eq('F seed left no audit rows but 0134''s deletions', (select not_0134 from harness_baseline)::text, '0');
   perform pg_temp.eq('F three cell writes logged', (select count(*) from audit_log where table_name = 'role_permissions' and actor is not null)::text, '3');
   perform pg_temp.eq('F by whom', (select count(*) from audit_log where table_name = 'role_permissions' and actor = v_admin)::text, '3');

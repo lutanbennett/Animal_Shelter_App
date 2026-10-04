@@ -19,7 +19,15 @@
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { ActivityKey, Level, LevelKey, YesNoKey } from "./catalogue";
 
-export type JobKey = "administer_medication" | "record_weight" | "add_medical_photos" | "feed_special_diets" | "do_maintenance";
+export type JobKey =
+  | "administer_medication"
+  | "record_weight"
+  | "add_medical_photos"
+  | "feed_special_diets"
+  | "do_maintenance"
+  | "do_stocktaking"
+  | "do_purchasing"
+  | "record_delivery";
 
 /** A level activity at the level the job needs, or a yes/no activity (no level: the cell is Yes). */
 export type BundleEntry = { activity: LevelKey; level: Level } | { activity: YesNoKey; level?: undefined };
@@ -94,6 +102,31 @@ export const JOBS: Record<JobKey, Job> = {
     ],
     opens: "/maintenance",
   },
+  // The 2IC's three stock jobs (R4, 0143). Each is one yes/no cell: there is no "read stock" activity,
+  // so what a job reads of the stock figures (last count, receipts since, safety stock) is answered by
+  // the database for a holder of ANY of the three (stock_medications, stock_diet_types, stock_counts,
+  // stock_receipts, item_unit_conversions), and not by listing the other two cells here. That keeps the
+  // jobs separable: a role given only Do the Purchasing can read all it needs, and removing one job does
+  // not take a figure out from under another. check-2ic-role.mjs proves it with a role that holds one
+  // cell. The union is not a partition, so do not build removal that assumes it is.
+  do_stocktaking: {
+    key: "do_stocktaking",
+    label: (t) => t.appHome.jobs.doStocktaking,
+    bundle: [{ activity: "stock.count" }],
+    opens: "/stocktake",
+  },
+  do_purchasing: {
+    key: "do_purchasing",
+    label: (t) => t.appHome.jobs.doPurchasing,
+    bundle: [{ activity: "stock.purchasing" }],
+    opens: "/management/purchasing",
+  },
+  record_delivery: {
+    key: "record_delivery",
+    label: (t) => t.appHome.jobs.recordDelivery,
+    bundle: [{ activity: "stock.delivery" }],
+    opens: "/deliveries",
+  },
 };
 
 /**
@@ -104,6 +137,8 @@ export const JOBS: Record<JobKey, Job> = {
 export const JOBS_OF_ROLE: Readonly<Record<string, readonly JobKey[]>> = {
   head_of_medical: ["administer_medication", "record_weight", "add_medical_photos", "feed_special_diets"],
   head_of_maintenance: ["do_maintenance"],
+  // The whiteboard's three tiles plus a delivery (P1). Her maintenance is the Head of Maintenance's job.
+  second_in_command: ["do_stocktaking", "do_purchasing", "record_delivery", "do_maintenance"],
 };
 
 export function jobsOfRole(roleKey: string): readonly Job[] {

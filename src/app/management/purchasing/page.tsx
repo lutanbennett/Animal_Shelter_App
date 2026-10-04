@@ -75,17 +75,17 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
 
   const [medResult, dietResult, vendorsResult] = await Promise.all([
     supabase
-      .from("medication")
+      .from("stock_medications")
       .select("id, name, unit:dose_unit, stock_on_hand, stock_counted_at, reorder_lead_days, safety_stock")
       .order("name")
       .returns<ItemQueryRow[]>(),
     supabase
-      .from("diet_types")
+      .from("stock_diet_types")
       .select("id, name, unit, stock_on_hand, stock_counted_at, reorder_lead_days, safety_stock, is_standard")
       .order("name")
       .returns<ItemQueryRow[]>(),
     // Archived too: an old delivery still names its supplier.
-    supabase.from("contacts").select("id, name").eq("type", "Vendor").returns<{ id: string; name: string }[]>(),
+    supabase.from("stock_vendors").select("id, name").returns<{ id: string; name: string }[]>(),
   ]);
   const meds = medResult.data ?? [];
   const diets = dietResult.data ?? [];
@@ -99,8 +99,8 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
   const forecastCalls = [...windowDays].map(async (days) => {
     const w = purchaseWindow(days);
     const [m, d] = await Promise.all([
-      supabase.rpc("medication_forecast", { p_from: w.from, p_to: w.to }),
-      supabase.rpc("diet_forecast", { p_from: w.from, p_to: w.to }),
+      supabase.rpc("stock_medication_forecast", { p_from: w.from, p_to: w.to }),
+      supabase.rpc("stock_diet_forecast", { p_from: w.from, p_to: w.to }),
     ]);
     return { days, m, d };
   });
