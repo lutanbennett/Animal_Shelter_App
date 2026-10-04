@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { requireRole } from "@/lib/auth/require-role";
+import { refuse } from "@/lib/auth/require-role";
+import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import { formatDateTime, todayIso } from "@/lib/format";
 import { loadVetScope } from "@/lib/vets/scope";
@@ -16,11 +17,14 @@ import { loadClinicAppointments, type ClinicAppointment } from "@/lib/vets/appoi
  * resident's visits whatever their status, so marking a visit completed
  * while a vet has a form open does not lose what they are typing.
  *
- * Vets only — the shelter's own people book and read visits from the
+ * Clinic-scoped logins only (a vet: `medical.visits` read with the "own
+ * clinic" scope, Appendix A) — the shelter's own people book and read visits from the
  * resident hub. Tasks stay shelter operations (Lutan, 2026-09-29).
  */
 export default async function AppointmentsPage() {
-  const { supabase } = await requireRole((role) => role === "vet");
+  const { supabase, perms } = await requirePermission("medical.visits", "read");
+  // The scope is what makes this a vet's page: shelter staff hold the activity too and book from the hub.
+  if (perms.scopes.clinical !== "own_clinic") refuse(perms.role.key);
   const { t, locale } = await getT();
   const a = t.vetAppointments;
   const scope = await loadVetScope(supabase);

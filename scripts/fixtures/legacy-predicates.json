@@ -241,5 +241,23 @@
     "volunteer": true,
     "public_viewer": false,
     "null": false
+  },
+  "loadVetScope_isVet": {
+    "admin": false,
+    "management": false,
+    "staff": false,
+    "vet": true,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
+  },
+  "appointmentsPage": {
+    "admin": false,
+    "management": false,
+    "staff": false,
+    "vet": true,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
   }
 }

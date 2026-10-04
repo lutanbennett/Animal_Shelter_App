@@ -28,7 +28,7 @@ import { ProcedureList, type ProcedureRow } from "@/components/ProcedureList";
 import { RecordRowActions } from "@/components/RecordRowActions";
 import { ArchiveRecordControl } from "@/components/ArchiveRecordControl";
 import { ShowArchivedToggle } from "@/components/ShowArchivedToggle";
-import { canArchiveMedical, type MedicalArchiveKind } from "@/lib/medical-archive/kinds";
+import { type MedicalArchiveKind } from "@/lib/medical-archive/kinds";
 import { endPrescriptionToday } from "@/app/prescriptions/actions";
 import { endDietToday } from "@/app/diets/actions";
 import { defaultDailyQuantity, formatQuantity } from "@/lib/diets/options";
@@ -112,8 +112,8 @@ export default async function ResidentSectionPage(
       .eq("resident_id", id)
       .limit(1)
       .returns<{ current_status: string | null; is_deceased: boolean }[]>(),
-    // The role is only for the contact views and the medical archive button,
-    // which the contacts and medical sweeps convert; the rest asks can().
+    // The role is only for the contact views and the photo select,
+    // which the contacts sweep converts; the rest asks can().
     supabase.rpc("current_user_role"),
     loadPermissions(),
   ]);
@@ -134,14 +134,14 @@ export default async function ResidentSectionPage(
   // Archive (0124): a second list of archived rows behind ?archived=1, as on
   // contacts. The live queries below already skip archived rows; this only
   // adds the way to see and restore them. Who gets the button is
-  // canArchiveMedical: admin, management and staff, never a vet or
+  // medical.archive: admin, management and staff, never a vet or
   // volunteer, and nobody on a deceased resident.
   const showArchived = (await props.searchParams).archived === "1";
   const role = (roleResult.data as string | null) ?? null;
   // A vet or volunteer reads a carer or sender name through a narrow view (0126).
   const photoSelect = residentPhotoSelect(role);
   const contactEmbed = (withArchive = false) => contactNameEmbed(role, withArchive);
-  const canArchive = (kind: MedicalArchiveKind) => !isDeceased && canArchiveMedical(role);
+  const canArchive = (kind: MedicalArchiveKind) => !isDeceased && can(perms, "medical.archive");
   const archivedCount = async (
     table: "weight" | "prescriptions" | "vet_appointments" | "immunization_records",
   ) =>
