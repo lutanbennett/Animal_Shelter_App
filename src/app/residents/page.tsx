@@ -451,7 +451,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
               id="q"
               name="q"
               defaultValue={q}
-              placeholder={t.residents.list.searchPlaceholder}
+              placeholder={limited ? t.residents.list.searchPlaceholderWhoAndWhere : t.residents.list.searchPlaceholder}
               className="w-full rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40 md:w-64"
             />
           </div>
