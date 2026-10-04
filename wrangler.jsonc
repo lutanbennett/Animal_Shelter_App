@@ -53,8 +53,18 @@
         "STATUS_ALERT_FROM": "alerts@lannacare.org",
         // The puppy loader showcase pause on /adopt's first load
         // (docs/decisions.md, 2026-09-28). Clamped to 3000ms regardless.
-        "SHOWCASE_LOADER_MS": "1800"
+        "SHOWCASE_LOADER_MS": "1800",
+        // Machine-drafted translations (worker/translations.mjs): the cron below
+        // reads and writes this database over REST with SUPABASE_SERVICE_ROLE_KEY
+        // (a secret) and asks the AI binding for the text. TRANSLATE_BATCH is
+        // rows per 15-minute run; TRANSLATE_REVIEWED_DAILY caps the drafts handed
+        // to managers a day. Unset TRANSLATE_ENGINE = Workers AI.
+        "SUPABASE_URL": "https://qxkmhwybjggxvsfxsxbd.supabase.co",
+        "TRANSLATE_BATCH": "2",
+        "TRANSLATE_REVIEWED_DAILY": "20"
       },
+      // Workers AI: no key, billed to the account's free daily allowance.
+      "ai": { "binding": "AI" },
       "send_email": [{ "name": "STATUS_ALERT_MAIL" }],
       // Every 15 minutes: ALERT_INTERVAL_MINUTES in src/lib/status/alerts.ts.
       "triggers": { "crons": ["*/15 * * * *"] }
@@ -116,8 +126,17 @@
         // The puppy loader showcase pause on /adopt's first load — Lutan
         // chose to keep it live for real visitors too (docs/decisions.md,
         // 2026-09-28). Clamped to 3000ms regardless.
-        "SHOWCASE_LOADER_MS": "1800"
+        "SHOWCASE_LOADER_MS": "1800",
+        // Machine-drafted translations (worker/translations.mjs): the cron below
+        // reads and writes this database over REST with SUPABASE_SERVICE_ROLE_KEY
+        // (a secret) and asks the AI binding for the text. TRANSLATE_BATCH is
+        // rows per 15-minute run; TRANSLATE_REVIEWED_DAILY caps the drafts handed
+        // to managers a day. Unset TRANSLATE_ENGINE = Workers AI.
+        "SUPABASE_URL": "https://dbkodyyxxhtygxcxmfcu.supabase.co",
+        "TRANSLATE_BATCH": "2",
+        "TRANSLATE_REVIEWED_DAILY": "20"
       },
+      "ai": { "binding": "AI" },
       "send_email": [{ "name": "RELEASE_MAIL" }, { "name": "STATUS_ALERT_MAIL" }],
       "triggers": { "crons": ["*/15 * * * *"] }
     }

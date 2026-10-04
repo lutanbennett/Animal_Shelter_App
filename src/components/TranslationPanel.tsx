@@ -58,11 +58,14 @@ export function TranslationPanel({
   const sourceName = tr.language[current.source_lang];
   const readsTranslation = locale === current.target_lang;
   const isStale = current.status === "stale";
+  // Written by the translation worker (worker/translations.mjs), not yet read by a person.
+  const isMachineDraft = current.status === "draft" && !!current.engine && current.engine !== "human";
 
   // A reader who can't edit sees the panel only when there is a
   // translation in their language to show: the original is already on
   // the page, and whether one is still owed is a manager's concern.
-  if (!canManage && (!readsTranslation || !current.text)) return null;
+  // A machine draft is the managers' to check; nobody else is shown it as if it were settled.
+  if (!canManage && (!readsTranslation || !current.text || isMachineDraft)) return null;
 
   function save() {
     setError(null);
@@ -113,6 +116,8 @@ export function TranslationPanel({
           </button>
         )}
       </div>
+
+      {isMachineDraft && <p className="text-xs text-muted">{tr.machineDraft}</p>}
 
       {showOriginal && (
         <div className="flex flex-col gap-1">
