@@ -149,6 +149,7 @@ export const VET_ICONS = {
  * children use.
  */
 export const NAV_ICONS = {
+  home: House,
   my: ListTodo,
   appointments: VET_ICONS.upcoming,
   residents: CONTACT_ICONS.residents,

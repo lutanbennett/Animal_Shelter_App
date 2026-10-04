@@ -77,7 +77,9 @@ export function NavLinks({
   // those children under chevrons.
   const groups: NavItem[][] = [
     [
-      // First for every role: "what do I need to do today" (my-dashboard).
+      // Home leads for everyone: the screen of jobs the sign-in lands on (home-screens, §8).
+      { href: "/home", label: t.nav.home, icon: NAV_ICONS.home },
+      // "What do I need to do today" (my-dashboard).
       // A vet has no tasks: theirs is the clinic's appointments (Lutan,
       // 2026-09-29).
       hasTasks

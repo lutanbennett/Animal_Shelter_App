@@ -5,6 +5,8 @@ import { can } from "@/lib/permissions/can";
 import { canOpen, routeFor } from "@/lib/permissions/routes";
 import { requireAnyPageUnder } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
+import { listHomeRoles } from "@/lib/home/roles";
+import { HomeSwitch } from "@/components/HomeSwitch";
 import { SectionTiles, type SectionTile } from "@/components/SectionTiles";
 import {
   ENCLOSURE_ICONS,
@@ -27,7 +29,7 @@ import {
  * which today is Admin alone.
  */
 export default async function AdminPage() {
-  const { perms } = await requireAnyPageUnder("/admin");
+  const { perms, supabase } = await requireAnyPageUnder("/admin");
   const { t } = await getT();
 
   const allTiles: SectionTile[] = [
@@ -102,8 +104,11 @@ export default async function AdminPage() {
     return !!route && canOpen(perms, route);
   });
 
+  const homeRoles = perms.isAdmin ? await listHomeRoles(supabase) : [];
+
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
+      {perms.isAdmin && <HomeSwitch roles={homeRoles} current="settings" />}
       <div>
         <h1 className="text-2xl font-semibold text-foreground">
           {t.admin.landing.title}
