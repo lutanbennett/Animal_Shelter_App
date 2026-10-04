@@ -42,7 +42,7 @@ export type RouteEntry = {
    * still be refused (a vet's appointments). canOpen() honours it, so routesFor() never offers a
    * tile the page would refuse. Only the clinical scope has a page gated by it today.
    */
-  scope?: { clinical: "own_clinic" };
+  scope?: { clinical: "own_clinic" | "any" };
 };
 
 export const ROUTES: readonly RouteEntry[] = [
@@ -175,6 +175,9 @@ export const ROUTES: readonly RouteEntry[] = [
     label: (t) => t.nav.medicationList,
     device: "any",
     menu: false,
+    // A vet holds the cell but reads only its own clinic's residents, which the list's views do
+    // not carry (sees_all_clinical(), 0136): the page would open empty, so it is not offered.
+    scope: { clinical: "any" },
   },
   {
     path: "/management/medications",

@@ -13,6 +13,7 @@ import {
   type ListedMedication,
   type ListedResident,
 } from "@/lib/medication-list/load";
+import { refuse } from "@/lib/auth/require-role";
 import { requirePermission } from "@/lib/permissions/require";
 
 /**
@@ -26,7 +27,9 @@ import { requirePermission } from "@/lib/permissions/require";
  * of Medical, whose one home tile it is (docs/decisions/2026-10-04-medical-role.md).
  */
 export default async function MedicationListPage() {
-  await requirePermission("medical.prescriptions", "read");
+  const { perms } = await requirePermission("medical.prescriptions", "read");
+  // The list's views are for a login that sees every clinic (0136); a vet would get an empty page.
+  if (perms.scopes.clinical !== "any") refuse(perms.role.key);
   const { t, locale } = await getT();
   const m = t.management.medicationList;
 

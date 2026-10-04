@@ -1190,13 +1190,12 @@ const manual: Manual = {
         {
           id: "medication-list",
           title: "The medication list",
-          roles: ["admin", "management"],
-          activity: "stock.medications",
-          path: "Management → Medication list",
+          roles: ["admin", "management", "staff"],
+          path: "Home → Administer Medication (Head of Medical), or Management → Medication list",
           intro:
             "One list of who needs medicine today and how much, built for a phone while you walk round the enclosures. It is for reading: nothing on it is ticked off, and the app does not record that a dose was given.",
           steps: [
-            "Open Management and tap Medication list. The date at the top is today at the shelter.",
+            "The Head of Medical signs in to a Home with one button, Administer Medication, and taps it. Everyone else opens Management and taps Medication list. The date at the top is today at the shelter.",
             "The list is grouped by zone, then by enclosure, in the order you would walk them, and each enclosure shows its animals. Each animal has a photo and name at the top, so you treat the right one.",
             "Under the animal, each medicine shows a photo of its box or bottle label (added under Management → Medications), the amount to give, and how often. If a medicine has no label photo, only its name shows.",
             "A medicine given every other day, weekly or monthly shows only on the days it falls due, counted from the day the prescription started. A medicine marked as needed is always shown. Last day of the course appears on a medicine whose prescription ends today.",
