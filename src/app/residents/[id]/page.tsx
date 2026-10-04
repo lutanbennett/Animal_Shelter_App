@@ -41,7 +41,7 @@ export default async function ResidentPage(
     proceduresResult,
     bloodTestsResult,
     attachmentsCountResult,
-    roleResult,
+    perms,
     adoptionUpdatesResult,
     adoptCountResult,
   ] = await Promise.all([
@@ -144,10 +144,9 @@ export default async function ResidentPage(
       .select("id", { count: "exact", head: true })
       .eq("owner_type", "resident")
       .eq("owner_id", id),
-    // Only to pick the address-book relation the carer's name is read
-    // through (contacts/visibility.ts, still keyed on the role: the
-    // contacts sweep's to convert). Which controls the hub offers asks can().
-    supabase.rpc("current_user_role"),
+    // The permissions: the controls the hub offers ask can(), and the contacts scope picks the
+    // address-book view the carer's name is read through (contacts/visibility.ts).
+    loadPermissions(),
     // Newest first; the card shows how many and the latest (0097).
     supabase
       .from("adoption_updates")
@@ -177,10 +176,10 @@ export default async function ResidentPage(
     currentState?.current_status === "Hospitalised"
       ? currentState.active_hospital_previous_enclosure
       : null;
-  const [carerResult, previousEnclosureResult, translations, tagOrigin, perms] = await Promise.all([
+  const [carerResult, previousEnclosureResult, translations, tagOrigin] = await Promise.all([
     carerId
       ? supabase
-          .from(contactRelation(roleResult.data as string | null))
+          .from(contactRelation(perms?.scopes.contacts))
           .select("name")
           .eq("id", carerId)
           .limit(1)
@@ -197,9 +196,6 @@ export default async function ResidentPage(
     // The other-language versions of the public profile fields (0056).
     loadTranslations(supabase, "residents", [id]),
     getTagOrigin(),
-    // Which of the record-death / retry-archive controls the hub offers;
-    // each server action asks again before writing.
-    loadPermissions(),
   ]);
 
   return (

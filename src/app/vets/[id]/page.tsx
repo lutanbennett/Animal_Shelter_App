@@ -24,7 +24,6 @@ export default async function VetPage(props: PageProps<"/vets/[id]">) {
     proceduresResult,
     bloodTestsResult,
     prescriptionsResult,
-    roleResult,
     doctorsResult,
   ] =
     await Promise.all([
@@ -62,7 +61,6 @@ export default async function VetPage(props: PageProps<"/vets/[id]">) {
         .is("vet_appointments.archived_at", null)
         .is("archived_at", null)
         .returns<LinkedRecord[]>(),
-      supabase.rpc("current_user_role"),
       // The clinic's doctor list (0102, links 0125). Read-only here; corrected
       // under Management → Vets → Doctors. `active` is the link's: a doctor
       // who left this clinic may still work at another.

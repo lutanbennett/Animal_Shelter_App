@@ -139,8 +139,8 @@ export default async function ResidentSectionPage(
   const showArchived = (await props.searchParams).archived === "1";
   const role = (roleResult.data as string | null) ?? null;
   // A vet or volunteer reads a carer or sender name through a narrow view (0126).
-  const photoSelect = residentPhotoSelect(role);
-  const contactEmbed = (withArchive = false) => contactNameEmbed(role, withArchive);
+  const photoSelect = residentPhotoSelect(perms?.scopes.contacts);
+  const contactEmbed = (withArchive = false) => contactNameEmbed(perms?.scopes.contacts, withArchive);
   const canArchive = (kind: MedicalArchiveKind) => !isDeceased && canArchiveMedical(role);
   const archivedCount = async (
     table: "weight" | "prescriptions" | "vet_appointments" | "immunization_records",
