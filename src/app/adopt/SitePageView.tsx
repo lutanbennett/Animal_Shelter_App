@@ -91,7 +91,12 @@ export async function SitePageView({
     // /donate points at the Shelter Friends — only once there are some.
     slug === "donate" ? hasPublicFriends() : false,
   ]);
-  const text = pageText(t, slug, page ? sitePageText(page, locale) : null);
+  const raw = page ? sitePageText(page, locale) : null;
+  const text = pageText(t, slug, raw);
+  // A Thai reader on a page nobody has translated yet: say so, once, in Thai
+  // (the same honesty as the Release notes and Manual, docs/decisions/
+  // 2026-10-04-staff-wording-and-thai.md), instead of English that looks like a mistake.
+  const englishOnly = !!raw?.bodyIsOriginal;
   // A business asking to join gets the message already started, where the
   // channel can take one (email, LINE, WhatsApp). The channels come in the
   // shelter's order, and the card offers the first three.
@@ -136,6 +141,11 @@ export async function SitePageView({
           <h1 className="text-3xl font-semibold text-foreground">
             {text.title || t.header.appName}
           </h1>
+        )}
+        {englishOnly && (
+          <p role="note" className="rounded-lg border border-border bg-surface p-4 text-sm text-muted">
+            {t.sitePages.englishOnly}
+          </p>
         )}
         {text.body ? (
           <div data-reveal>

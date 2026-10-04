@@ -79,8 +79,11 @@ export async function loadSitePages(
 
 /** Title and body in the reader's language, falling back to the original. */
 export function sitePageText(page: PublicSitePage, locale: Locale) {
+  const body = localizedField(locale, page.body, page.translations, "body");
   return {
     title: localizedField(locale, page.title, page.translations, "title"),
-    body: localizedField(locale, page.body, page.translations, "body"),
+    body,
+    /** The reader is not on English and the body shown is still the original. */
+    bodyIsOriginal: locale !== "en" && body !== "" && body === page.body.trim(),
   };
 }

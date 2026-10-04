@@ -89,7 +89,7 @@ const manual: Manual = {
           title: "Signing in",
           path: "Home page → Staff & Volunteer Login",
           steps: [
-            "Open the app's address in your browser and tap Staff & Volunteer Login — or, once the website is open to the public, Staff login at the very bottom of any public page (or go straight to /login). Already signed in? The public pages have Open the app at the top instead, which takes you to the same place.",
+            "Open the app's address in your browser and tap Staff & Volunteer Login — or, once the website is open to the public, Staff login at the very bottom of any public page, or in the menu on a phone (or go straight to /login). Already signed in? The public pages have Open the app at the top instead, which takes you to the same place.",
             "Enter your email and password and tap Sign in — or tap Continue with Google if your account was set up with Google.",
             "You land on My tasks, the app's home page: what's assigned to you today (a vet lands on Appointments instead). Sign out any time with the Sign out button at the top right.",
             "Forgotten your password? Tap Forgot password? under the Sign in button, enter your email, and follow the link in the message to choose a new one — it's valid for an hour. If you were given a temporary password and it's lost, ask an admin to issue another instead.",
