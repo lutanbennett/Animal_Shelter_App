@@ -27,9 +27,9 @@ const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 const { bundleOfRole } = await import(pathToFileURL(join(process.cwd(), "src/lib/permissions/jobs.ts")).href);
 
-// Cells 0140 grants ahead of the screens (batch 47) that will turn them into jobs. When a job in jobs.ts
-// takes one over, delete it here: bundleOfRole() then carries it.
-const AHEAD = new Map([["photos.resident_add", 2], ["medical.diet", 1]]);
+// Cells a migration grants ahead of the screen that turns them into a job. Empty since batch 47: all three
+// of 0140's cells are now jobs in jobs.ts, so bundleOfRole() carries them. Add one here only if a cell lands first.
+const AHEAD = new Map();
 
 const lit = (id) => `'${id}'::uuid`;
 const P = ["hom", "admin", "management", "staff", "volunteer", "vet", "norole"];

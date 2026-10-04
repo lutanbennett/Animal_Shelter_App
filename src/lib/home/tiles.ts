@@ -49,7 +49,7 @@ export function homeTilesFor(perms: Permissions, t: Dictionary): HomeTile[] {
   if (jobs.length > 0) {
     return jobs.flatMap((job) => {
       const route = routeFor(job.opens);
-      const covered = job.bundle.every((b) => can(perms, b.activity, b.level));
+      const covered = job.bundle.every((b) => (b.level ? can(perms, b.activity, b.level) : can(perms, b.activity)));
       return route && covered && canOpen(perms, route)
         ? [{ href: route.path, label: job.label(t), icon: route.icon }]
         : [];
