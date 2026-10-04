@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ClipboardCheck, Scale, ShoppingCart, Truck } from "lucide-react";
-import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { CreateMedicationForm } from "./CreateMedicationForm";
@@ -16,6 +15,7 @@ import { inPurchaseUnit } from "@/lib/units";
 import { loadConversions } from "@/lib/units-server";
 import { loadReceipts } from "@/lib/management/receipts-server";
 import { receivedSinceCount } from "@/lib/management/purchasing";
+import { requirePermission } from "@/lib/permissions/require";
 
 type MedicationQueryRow = {
   id: string;
@@ -41,7 +41,7 @@ type ForecastRow = {
 };
 
 export default async function MedicationsAdminPage(props: PageProps<"/management/medications">) {
-  await requireManagementUser();
+  await requirePermission("stock.medications");
   const { t, locale } = await getT();
   const searchParams = await props.searchParams;
 

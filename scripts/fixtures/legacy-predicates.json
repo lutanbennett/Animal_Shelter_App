@@ -241,5 +241,41 @@
     "volunteer": true,
     "public_viewer": false,
     "null": false
+  },
+  "isShelterRole": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": false,
+    "volunteer": true,
+    "public_viewer": false,
+    "null": false
+  },
+  "canReadRecurringJobs": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": true,
+    "volunteer": true,
+    "public_viewer": false,
+    "null": false
+  },
+  "isAdminRole": {
+    "admin": true,
+    "management": false,
+    "staff": false,
+    "vet": false,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
+  },
+  "contactRelation": {
+    "admin": "contacts",
+    "management": "contacts",
+    "staff": "contacts",
+    "vet": "vet_contacts",
+    "volunteer": "volunteer_contacts",
+    "public_viewer": "contacts",
+    "null": "contacts"
   }
 }

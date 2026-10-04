@@ -6,7 +6,6 @@ import {
   type ActionRefusal,
   type ActionResult,
 } from "@/lib/action-result";
-import { hasAdminRole } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
@@ -34,6 +33,8 @@ import {
   uploadImageToFolder,
 } from "@/lib/google/drive";
 import { driveErrorMessage } from "@/lib/google/drive-errors";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 
 export type SiteContentFormState = ActionResult<{ success: string }> | undefined;
 
@@ -65,7 +66,7 @@ export async function unpublishProject(
 ): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
   return runAction("website.unpublishProject", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -92,7 +93,7 @@ export async function updateSiteContent(
 ): Promise<SiteContentFormState> {
   const { t } = await getT();
   return runAction("website.updateSiteContent", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const text = (name: string) => (formData.get(name) as string | null)?.trim() ?? "";
     const optional = (name: string) => text(name) || null;
@@ -175,7 +176,7 @@ export async function updateVetVisitEstimate(
 ): Promise<SiteContentFormState> {
   const { t } = await getT();
   return runAction("website.updateVetVisitEstimate", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const estimate = parseBahtAmount(formData.get("vetVisitEstimate") as string | null);
     if (!estimate.ok) return refuse(t.admin.website.vetVisit.invalid);
@@ -216,7 +217,7 @@ export async function updateSitePage(
 ): Promise<SiteContentFormState> {
   const { t } = await getT();
   return runAction("website.updateSitePage", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
     if (!isSitePageSlug(slug)) return refuse(t.admin.website.pages.unknownPage);
 
     const supabase = await createClient();
@@ -256,7 +257,7 @@ export async function setFeaturedResident(
 ): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
   return runAction("website.setFeaturedResident", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const supabase = await createClient();
 
@@ -353,7 +354,7 @@ async function trashInDrive(fileId: string) {
 export async function uploadHeroPhoto(formData: FormData): Promise<SiteContentFormState> {
   const { t } = await getT();
   return runAction("website.uploadHeroPhoto", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const file = formData.get("file");
     if (!(file instanceof File) || file.size === 0) {
@@ -393,7 +394,7 @@ export async function uploadHeroPhoto(formData: FormData): Promise<SiteContentFo
 export async function removeHeroPhoto(): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("website.removeHeroPhoto", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const supabase = await createClient();
     const { data: current } = await supabase
@@ -421,7 +422,7 @@ export async function removeHeroPhoto(): Promise<ActionResult> {
 export async function uploadGalleryPhoto(formData: FormData): Promise<SiteContentFormState> {
   const { t } = await getT();
   return runAction("website.uploadGalleryPhoto", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const file = formData.get("file");
     if (!(file instanceof File) || file.size === 0) {
@@ -465,7 +466,7 @@ export async function uploadGalleryPhoto(formData: FormData): Promise<SiteConten
 export async function deleteGalleryPhoto(photoId: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("website.deleteGalleryPhoto", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const supabase = await createClient();
     const { data: photo } = await supabase
@@ -500,7 +501,7 @@ export async function moveGalleryPhoto(
 ): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("website.moveGalleryPhoto", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const supabase = await createClient();
     const { data: photos } = await supabase

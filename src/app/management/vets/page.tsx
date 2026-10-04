@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { CreateVetForm } from "./CreateVetForm";
 import { VetsTable, type VetRow } from "./VetsTable";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
+import { requirePermission } from "@/lib/permissions/require";
 
 export default async function VetsAdminPage() {
-  await requireManagementUser();
+  await requirePermission("clinics.list");
   const { t } = await getT();
 
   const supabase = await createClient();

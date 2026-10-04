@@ -1,8 +1,8 @@
-import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { loadTranslationQueue } from "@/lib/translations/queries";
 import { TranslationQueue } from "./TranslationQueue";
+import { requirePermission } from "@/lib/permissions/require";
 
 /**
  * Management → Translations: every public-facing text whose other-language
@@ -14,7 +14,7 @@ import { TranslationQueue } from "./TranslationQueue";
 export default async function TranslationsPage(
   props: PageProps<"/management/translations">,
 ) {
-  await requireManagementUser();
+  await requirePermission("translations.manage");
   const { t } = await getT();
   const searchParams = await props.searchParams;
   const includeApproved = searchParams.all === "1";

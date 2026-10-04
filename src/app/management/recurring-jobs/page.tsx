@@ -1,4 +1,3 @@
-import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { addDaysIso, todayIso } from "@/lib/format";
@@ -13,6 +12,7 @@ import { ASSIGNABLE_ROLES, canDoJob } from "@/lib/recurring-jobs/eligibility";
 import { loadEligibility } from "@/lib/recurring-jobs/eligibility-load";
 import { RecurringJobsView, type JobSummary, type PersonOption, type CoveredDate, type RecordEntry } from "./RecurringJobsView";
 import type { TeamMember } from "./RecurringJobForm";
+import { requirePermission } from "@/lib/permissions/require";
 
 /** How far ahead the list looks for each job's next dates: far enough for a yearly job. */
 const NEXT_DATES_DAYS = 400;
@@ -28,7 +28,7 @@ const RECORD_LIMIT = 30;
  * someone else when they are off; and see the record of what was done.
  */
 export default async function RecurringJobsPage() {
-  await requireManagementUser();
+  await requirePermission("recurring.manage");
   const { t } = await getT();
   const supabase = await createClient();
   const today = todayIso();

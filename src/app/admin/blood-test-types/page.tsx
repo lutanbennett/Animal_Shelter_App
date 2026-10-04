@@ -1,4 +1,3 @@
-import { requireAdminUser } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { CreateBloodTestTypeForm } from "./CreateBloodTestTypeForm";
@@ -6,9 +5,10 @@ import {
   BloodTestTypesTable,
   type BloodTestTypeRow,
 } from "./BloodTestTypesTable";
+import { requirePermission } from "@/lib/permissions/require";
 
 export default async function BloodTestTypesPage() {
-  await requireAdminUser();
+  await requirePermission("reference.types");
   const { t } = await getT();
 
   const supabase = await createClient();

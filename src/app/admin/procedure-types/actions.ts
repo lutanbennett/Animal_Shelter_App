@@ -6,9 +6,10 @@ import {
   type ActionRefusal,
   type ActionResult,
 } from "@/lib/action-result";
-import { hasAdminRole } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 
 export type ProcedureTypeFormState = ActionResult<{ success: string }> | undefined;
 
@@ -42,7 +43,7 @@ export async function createProcedureType(
 ): Promise<ProcedureTypeFormState> {
   const { t } = await getT();
   return runAction("procedureTypes.createProcedureType", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const name = (formData.get("name") as string | null)?.trim();
     if (!name) return refuse(t.admin.procedureTypes.errors.nameRequired);
@@ -63,7 +64,7 @@ export async function updateProcedureType(
 ): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("procedureTypes.updateProcedureType", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const name = fields.name.trim();
     if (!name) return refuse(t.admin.procedureTypes.errors.nameRequired);
@@ -83,7 +84,7 @@ export async function updateProcedureType(
 export async function deleteProcedureType(id: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("procedureTypes.deleteProcedureType", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     // procedures.procedure_type_id has no cascade: a type that has ever been
     // logged is part of a resident's medical record. Say so instead of
@@ -115,7 +116,7 @@ export async function mergeProcedureType(
 ): Promise<ActionResult<{ count: number }>> {
   const { t } = await getT();
   return runAction("procedureTypes.mergeProcedureType", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
     if (fromId === intoId) {
       return refuse(t.admin.procedureTypes.errors.mergeSelf);
     }

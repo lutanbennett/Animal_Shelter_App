@@ -1,4 +1,3 @@
-import { requireAdminUser } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { CreateImmunizationTypeForm } from "./CreateImmunizationTypeForm";
@@ -7,9 +6,10 @@ import {
   type ImmunizationTypeRow,
 } from "./ImmunizationTypesTable";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
+import { requirePermission } from "@/lib/permissions/require";
 
 export default async function ImmunizationTypesPage() {
-  await requireAdminUser();
+  await requirePermission("reference.types");
   const { t } = await getT();
 
   const supabase = await createClient();

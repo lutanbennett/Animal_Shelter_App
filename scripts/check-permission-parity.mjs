@@ -445,6 +445,14 @@ const PREDICATES = [
   // canDoJob now takes the database's answer (role_can, 0133), so its old role-string truth tables
   // live only in the fixture (written before the conversion); check-recurring-job-eligibility.mjs
   // holds the new canDoJob to them. Only the pages with a single activity are paired here.
+  // One list, several pages: its single truth table is paired with each activity the pages now ask.
+  ...[["facility.enclosures", 1], ["maintenance.jobs", 1], ["projects.folders", 1], ["contacts.directory", 1], ["clinics.list", 1], ["facility.map", 2]].map(([activity, level]) => (
+    { id: `isShelterRole(${activity})`, row: "isShelterRole", fn: "isShelterRole", file: "src/lib/auth/app-access.ts", activity, level })),
+  // requireAdminUser, hasAdminRole and the inline role === "admin" were never one function; one table, paired with every admin-only activity.
+  ...["website.content", "reference.types", "audit.view", "audit.undo", "system.status"].map((activity) => (
+    { id: `isAdminRole(${activity})`, row: "isAdminRole", fixtureOnly: true, activity, level: 2 })),
+  // Not an activity: "every role that opens the app", asked of my_permissions().role.opensApp. Seed: opens_app is true for all but public_viewer.
+  { id: "canReadRecurringJobs", file: "src/lib/recurring-jobs/access.ts", expect: (r) => r != null && r !== "public_viewer" },
   { id: "canDoJob(/stocktake)", file: "src/lib/recurring-jobs/eligibility.ts", activity: "stock.count", level: 2 },
   { id: "canDoJob(/deliveries)", file: "src/lib/recurring-jobs/eligibility.ts", activity: "stock.delivery", level: 2 },
   { id: "canDoJob(/management/purchasing)", file: "src/lib/recurring-jobs/eligibility.ts", activity: "stock.purchasing", level: 2 },
@@ -452,8 +460,6 @@ const PREDICATES = [
 // Predicates with no single activity to pair with, and why (stated, not silently absent):
 const UNPAIRED = {
   hasAppAccess: "'may sign in to the app at all': not an activity (§6 rule 5)",
-  isShelterRole: "a set of roles used by several pages, not one right",
-  canReadRecurringJobs: "every role reads recurring jobs because anyone can be given one; there is no 'read the rules' cell",
   canDoJob: "takes the page a job links to and the database's answer; the stock pages are paired above by fixture row, /admin /management /maintenance by check-recurring-job-eligibility.mjs",
   assertPhotoWriteAccess: "photo uploads span photos.* and maintenance.photos; paired when the photo split is built",
 };
@@ -464,12 +470,13 @@ const live = {};
 const layer2 = [];
 for (const pr of PREDICATES) {
   let fn = null;
-  try { fn = (await import(pathToFileURL(join(root, pr.file)).href))[pr.id]; } catch (e) { layer2.push({ pr, problem: "could not load " + pr.file + ": " + String(e.message).split("\n")[0] }); continue; }
+  if (pr.fixtureOnly) { if (!fixture[pr.row ?? pr.id]) layer2.push({ pr, problem: `no fixture row ${pr.row ?? pr.id}` }); continue; }
+  try { fn = (await import(pathToFileURL(join(root, pr.file)).href))[pr.fn ?? pr.id]; } catch (e) { layer2.push({ pr, problem: "could not load " + pr.file + ": " + String(e.message).split("\n")[0] }); continue; }
   if (typeof fn !== "function") {
-    if (!fixture[pr.id]) layer2.push({ pr, problem: `${pr.id} no longer exists and there is no fixture row for it` });
+    if (!fixture[pr.row ?? pr.id]) layer2.push({ pr, problem: `${pr.id} no longer exists and there is no fixture row for it` });
     continue;
   }
-  live[pr.id] = Object.fromEntries(ROLES_FOR_TABLE.map((r) => [String(r), fn(r)]));
+  live[pr.row ?? pr.id] = Object.fromEntries(ROLES_FOR_TABLE.map((r) => [String(r), fn(r)]));
 }
 if (process.argv.includes("--write-fixture")) {
   writeFileSync(fixturePath, JSON.stringify({ ...fixture, ...live }, null, 2) + "\n");
@@ -477,13 +484,14 @@ if (process.argv.includes("--write-fixture")) {
 }
 let l2checked = 0;
 for (const pr of PREDICATES) {
-  const table = live[pr.id] ?? fixture[pr.id];
+  const key = pr.row ?? pr.id;
+  const table = live[key] ?? fixture[key];
   if (!table) continue;
-  if (live[pr.id] && fixture[pr.id] && JSON.stringify(live[pr.id]) !== JSON.stringify(fixture[pr.id])) {
+  if (live[key] && fixture[key] && JSON.stringify(live[key]) !== JSON.stringify(fixture[key])) {
     layer2.push({ pr, problem: `${pr.id} now answers differently from scripts/fixtures/legacy-predicates.json. If that was intended, rerun with --write-fixture` });
   }
   for (const r of ROLES_FOR_TABLE) {
-    const want = r != null && (expectedLevel(r, pr.activity) >= pr.level);
+    const want = pr.expect ? pr.expect(r) : r != null && (expectedLevel(r, pr.activity) >= pr.level);
     const got = table[String(r)];
     l2checked++;
     if (got !== want) layer2.push({ pr, problem: `${pr.id}(${r}) is ${got}, the default for ${pr.activity} says ${want}` });
@@ -495,6 +503,17 @@ ${l2checked} answers (${PREDICATES.length} predicates x 7 roles incl. no role)`)
 for (const [k, why] of Object.entries(UNPAIRED)) console.log(`  not paired: ${k}: ${why}`);
 for (const l of layer2) console.log(`  MISMATCH ${l.problem}`);
 
+// contactRelation(role) chose which view of the address book a role reads; it is now read from the role's
+// contacts scope (my_permissions().scopes.contacts), seeded by 0132. The fixture holds what the function said.
+{
+  const seed = readFileSync(join(root, "supabase/migrations/0132_permission_tables.sql"), "utf8");
+  const VIEW = { full: "contacts", name_phone: "volunteer_contacts", name_type: "vet_contacts" };
+  for (const m of seed.matchAll(/\('([a-z_]+)',\s+'[A-Za-z ]+',\s+'(?:fixed|default)',\s+(?:true|false),\s+'[a-z_]+',\s+'[a-z_]+',\s+'[a-z_]+',\s+'(full|name_phone|name_type)'/g)) {
+    l2checked++;
+    if (fixture.contactRelation?.[m[1]] !== VIEW[m[2]]) layer2.push({ pr: { id: "contactRelation" }, problem: `contactRelation(${m[1]}) was ${fixture.contactRelation?.[m[1]]}, the seeded contacts scope ${m[2]} reads ${VIEW[m[2]]}` });
+  }
+  if (fixture.contactRelation?.null !== "contacts") layer2.push({ pr: { id: "contactRelation" }, problem: "contactRelation(null) row missing" });
+}
 const red = layer2.length > 0 || mismatches.length > 0 || faults.length > 0 || zReport.length > 0 || unaccounted.length > 0;
 console.log(red ? "\nRESULT: RED" : "\nRESULT: GREEN (matches and listed tightenings only)");
 // exitCode, not exit(): exiting straight after fetch trips a libuv assertion on Windows.

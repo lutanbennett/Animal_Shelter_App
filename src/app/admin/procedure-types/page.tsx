@@ -1,4 +1,3 @@
-import { requireAdminUser } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { CreateProcedureTypeForm } from "./CreateProcedureTypeForm";
@@ -6,9 +5,10 @@ import {
   ProcedureTypesTable,
   type ProcedureTypeRow,
 } from "./ProcedureTypesTable";
+import { requirePermission } from "@/lib/permissions/require";
 
 export default async function ProcedureTypesPage() {
-  await requireAdminUser();
+  await requirePermission("reference.types");
   const { t } = await getT();
 
   const supabase = await createClient();

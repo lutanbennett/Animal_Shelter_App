@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { AddDoctorForm } from "./AddDoctorForm";
 import { DoctorsTable, type DoctorRow, type ElsewhereDoctor } from "./DoctorsTable";
+import { requirePermission } from "@/lib/permissions/require";
 
 type PersonRow = {
   id: string;
@@ -26,7 +26,7 @@ type PersonRow = {
 export default async function VetDoctorsPage(
   props: PageProps<"/management/vets/[id]/doctors">,
 ) {
-  await requireManagementUser();
+  await requirePermission("clinics.doctors");
   const { id } = await props.params;
   const { t } = await getT();
   const d = t.management.vetDoctors;

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { requireAdminUser } from "@/lib/auth/require-admin";
 import { listAllUsers } from "@/lib/auth/access-requests";
 import {
   AUDITED_TABLES,
@@ -18,6 +17,7 @@ import { formatDateTime } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requirePermission } from "@/lib/permissions/require";
 
 type T = Awaited<ReturnType<typeof getT>>["t"];
 
@@ -33,7 +33,7 @@ type T = Awaited<ReturnType<typeof getT>>["t"];
  * for one opened row only and why the paging has no total.
  */
 export default async function RecentChangesPage(props: PageProps<"/admin/recent-changes">) {
-  await requireAdminUser();
+  await requirePermission("audit.view");
   const { t, locale } = await getT();
   const s = t.admin.recentChanges;
   const filters = parseFilters(await props.searchParams);

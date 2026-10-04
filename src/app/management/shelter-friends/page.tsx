@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { FriendsOrder, type FriendOrderRow } from "./FriendsOrder";
+import { requirePermission } from "@/lib/permissions/require";
 
 /**
  * Management → Shelter Friends: every profile in the order /friends shows
@@ -11,7 +11,7 @@ import { FriendsOrder, type FriendOrderRow } from "./FriendsOrder";
  * is the running order, not a second editor.
  */
 export default async function ShelterFriendsPage() {
-  await requireManagementUser();
+  await requirePermission("friends.manage");
   const { t } = await getT();
   const m = t.shelterFriends.manage;
 

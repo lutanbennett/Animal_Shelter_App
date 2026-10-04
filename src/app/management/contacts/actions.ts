@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { runAction, type ActionResult } from "@/lib/action-result";
-import { hasManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { insertContact } from "@/lib/contacts/create";
@@ -11,6 +10,8 @@ import {
   isContactType,
   type ContactType,
 } from "@/lib/contacts/contacts";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
@@ -48,7 +49,7 @@ export async function createContact(
 ): Promise<ContactFormState> {
   const { t } = await getT();
   return runAction("contacts.createContact", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "contacts.directory")) return refuse(t.management.errors.managementAccessRequired);
     const text = (key: string) => {
       const value = formData.get(key);
       return typeof value === "string" ? value : null;
@@ -88,7 +89,7 @@ async function countPlacements(
 export async function updateContact(id: string, fields: ContactFields): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("contacts.updateContact", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "contacts.directory")) return refuse(t.management.errors.managementAccessRequired);
     const name = optional(fields.name);
     if (!name) return refuse(t.management.contacts.errors.nameRequired);
     if (!isContactType(fields.type)) {
@@ -142,7 +143,7 @@ export async function updateContact(id: string, fields: ContactFields): Promise<
 export async function archiveContact(id: string, reason: string | null): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("contacts.archiveContact", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "contacts.directory")) return refuse(t.management.errors.managementAccessRequired);
     const a = t.contacts.archive;
 
     const supabase = await createClient();
@@ -188,7 +189,7 @@ export async function archiveContact(id: string, reason: string | null): Promise
 export async function restoreContact(id: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("contacts.restoreContact", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "contacts.directory")) return refuse(t.management.errors.managementAccessRequired);
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("contacts")
@@ -207,7 +208,7 @@ export async function restoreContact(id: string): Promise<ActionResult> {
 export async function deleteContact(id: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("contacts.deleteContact", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "contacts.directory")) return refuse(t.management.errors.managementAccessRequired);
     const supabase = await createClient();
 
     // placement_history.carer_id doesn't cascade, and it's history worth

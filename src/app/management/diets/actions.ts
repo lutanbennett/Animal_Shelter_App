@@ -2,7 +2,6 @@
 
 import { refresh, revalidatePath } from "next/cache";
 import { runAction, type ActionResult } from "@/lib/action-result";
-import { hasManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -10,6 +9,8 @@ import { DIET_UNITS, type DietUnit } from "@/lib/i18n/enum-labels";
 import { parseLeadDays, parseSafetyStock, parseStockCount } from "@/lib/management/stock";
 import { resolveSafetyStock } from "@/lib/management/purchasing";
 import { loadConversions } from "@/lib/units-server";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
@@ -135,7 +136,7 @@ export async function createDietType(
 ): Promise<DietTypeFormState> {
   const { t } = await getT();
   return runAction("diets.createDietType", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "stock.diets")) return refuse(t.management.errors.managementAccessRequired);
     const parsed = parseFields(fieldsFromForm(formData), t);
     if (parsed.error !== undefined) return refuse(parsed.error);
 
@@ -157,7 +158,7 @@ export async function createDietType(
 export async function updateDietType(id: string, fields: DietTypeFields): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("diets.updateDietType", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "stock.diets")) return refuse(t.management.errors.managementAccessRequired);
     const parsed = parseFields(fields, t);
     if (parsed.error !== undefined) return refuse(parsed.error);
 
@@ -198,7 +199,7 @@ export async function updateDietType(id: string, fields: DietTypeFields): Promis
 export async function updateDietTypeStock(id: string, count: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("diets.updateDietTypeStock", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "stock.diets")) return refuse(t.management.errors.managementAccessRequired);
     const parsed = parseStockCount(count);
     if (!parsed.ok) return refuse(t.management.stock.errors.countInvalid);
 
@@ -224,7 +225,7 @@ export async function updateDietTypeStock(id: string, count: string): Promise<Ac
 export async function setStandardDietType(id: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("diets.setStandardDietType", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "stock.diets")) return refuse(t.management.errors.managementAccessRequired);
     const supabase = await createClient();
     const { error } = await supabase.rpc("set_standard_diet", { p_diet_type_id: id });
     if (error) return refuse(error.message);
@@ -238,7 +239,7 @@ export async function setStandardDietType(id: string): Promise<ActionResult> {
 export async function deleteDietType(id: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("diets.deleteDietType", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "stock.diets")) return refuse(t.management.errors.managementAccessRequired);
     // resident_diets.diet_type_id has no cascade: a diet that has ever been
     // recorded is part of a resident's history. Say so instead of surfacing
     // the foreign-key error.

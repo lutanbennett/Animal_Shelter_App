@@ -1,4 +1,3 @@
-import { requireAdminUser } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { loadSiteContent, loadVetVisitEstimate } from "@/lib/site/content";
@@ -15,6 +14,7 @@ import { FeaturedResident, type FeaturedResidentOption } from "./FeaturedResiden
 import { WebsiteTabs } from "./WebsiteTabs";
 import { PagesAccordion } from "./PagesAccordion";
 import { PublishedProjects, type PublishedProjectRow } from "./PublishedProjects";
+import { requirePermission } from "@/lib/permissions/require";
 
 type PublicResidentRow = {
   id: string;
@@ -29,7 +29,7 @@ export default async function WebsitePage({
 }: {
   searchParams: Promise<{ tab?: string }>;
 }) {
-  await requireAdminUser();
+  await requirePermission("website.content");
   const { tab } = await searchParams;
   const { t } = await getT();
 

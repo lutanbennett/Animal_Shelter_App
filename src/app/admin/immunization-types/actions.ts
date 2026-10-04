@@ -6,10 +6,11 @@ import {
   type ActionRefusal,
   type ActionResult,
 } from "@/lib/action-result";
-import { hasAdminRole } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { parseBahtAmount } from "@/lib/format";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 
 export type ImmunizationTypeFormState = ActionResult<{ success: string }> | undefined;
 
@@ -32,7 +33,7 @@ export async function createImmunizationType(
 ): Promise<ImmunizationTypeFormState> {
   const { t } = await getT();
   return runAction("immunizationTypes.createImmunizationType", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const name = (formData.get("name") as string | null)?.trim();
     const isMandatory = formData.get("isMandatory") === "on";
@@ -74,7 +75,7 @@ export async function updateImmunizationType(
 ): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("immunizationTypes.updateImmunizationType", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
     if (!fields.name.trim()) {
       return refuse(t.admin.immunizationTypes.errors.nameRequired);
     }
@@ -106,7 +107,7 @@ export async function updateImmunizationType(
 export async function deleteImmunizationType(id: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("immunizationTypes.deleteImmunizationType", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const supabase = await createClient();
     const { error } = await supabase

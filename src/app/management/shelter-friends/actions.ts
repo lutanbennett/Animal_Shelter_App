@@ -2,7 +2,6 @@
 
 import { refresh, revalidatePath } from "next/cache";
 import { runAction, type ActionRefusal, type ActionResult } from "@/lib/action-result";
-import { hasManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
@@ -23,6 +22,8 @@ import {
   uploadImageToFolder,
 } from "@/lib/google/drive";
 import { driveErrorMessage } from "@/lib/google/drive-errors";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 
 /**
  * Writes to shelter_friends (0076). Admin and management only, which is
@@ -136,7 +137,7 @@ async function nextSortOrder(supabase: Awaited<ReturnType<typeof createClient>>)
 export async function createFriend(contactId: string): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
   return runAction("shelterFriends.createFriend", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "friends.manage")) return refuse(t.management.errors.managementAccessRequired);
     const e = t.shelterFriends.errors;
     const supabase = await createClient();
 
@@ -173,7 +174,7 @@ export async function updateFriend(
 ): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
   return runAction("shelterFriends.updateFriend", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "friends.manage")) return refuse(t.management.errors.managementAccessRequired);
 
     const checked = checkFriendFields(t, fields);
     if (!checked.columns) return refuse(checked.error);
@@ -236,7 +237,7 @@ export async function addShelterFriend(input: {
 }): Promise<ActionResult<{ success: string; friendId: string; contactId: string; name: string }>> {
   const { t } = await getT();
   return runAction("shelterFriends.addShelterFriend", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "friends.manage")) return refuse(t.management.errors.managementAccessRequired);
     const e = t.shelterFriends.errors;
 
     const checked = checkFriendFields(t, input.fields);
@@ -337,7 +338,7 @@ export async function setFriendPublished(
 ): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
   return runAction("shelterFriends.setFriendPublished", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "friends.manage")) return refuse(t.management.errors.managementAccessRequired);
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -364,7 +365,7 @@ export async function setFriendPublished(
 export async function moveFriend(id: string, direction: "up" | "down"): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("shelterFriends.moveFriend", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "friends.manage")) return refuse(t.management.errors.managementAccessRequired);
     const supabase = await createClient();
 
     const { data: rows, error: loadError } = await supabase
@@ -419,7 +420,7 @@ export async function uploadFriendLogo(
 ): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
   return runAction("shelterFriends.uploadFriendLogo", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "friends.manage")) return refuse(t.management.errors.managementAccessRequired);
     const w = t.admin.website.errors;
 
     const file = formData.get("file");
@@ -484,7 +485,7 @@ export async function uploadFriendLogo(
 export async function removeFriendLogo(id: string): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
   return runAction("shelterFriends.removeFriendLogo", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "friends.manage")) return refuse(t.management.errors.managementAccessRequired);
     const supabase = await createClient();
 
     const current = await friendContactId(supabase, id);
@@ -510,7 +511,7 @@ export async function removeFriendLogo(id: string): Promise<ActionResult<{ succe
 export async function deleteFriend(id: string): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
   return runAction("shelterFriends.deleteFriend", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "friends.manage")) return refuse(t.management.errors.managementAccessRequired);
     const supabase = await createClient();
 
     const current = await friendContactId(supabase, id);

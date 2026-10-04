@@ -2,9 +2,10 @@
 
 import { refresh, revalidatePath } from "next/cache";
 import { runAction, type ActionResult } from "@/lib/action-result";
-import { hasManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
@@ -48,7 +49,7 @@ export async function addDoctor(
 ): Promise<DoctorFormState> {
   const { t } = await getT();
   return runAction("vetDoctors.addDoctor", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "clinics.doctors")) return refuse(t.management.errors.managementAccessRequired);
     const d = t.management.vetDoctors;
 
     const name = tidy(formData.get("name") as string | null);
@@ -77,7 +78,7 @@ export async function addExistingDoctor(
 ): Promise<DoctorFormState> {
   const { t } = await getT();
   return runAction("vetDoctors.addExistingDoctor", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "clinics.doctors")) return refuse(t.management.errors.managementAccessRequired);
     const d = t.management.vetDoctors;
 
     const doctorId = formData.get("doctorId");
@@ -117,7 +118,7 @@ export async function renameDoctor(
 ): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("vetDoctors.renameDoctor", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "clinics.doctors")) return refuse(t.management.errors.managementAccessRequired);
     const d = t.management.vetDoctors;
 
     const name = tidy(rawName);
@@ -146,7 +147,7 @@ export async function setDoctorActive(
 ): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("vetDoctors.setDoctorActive", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "clinics.doctors")) return refuse(t.management.errors.managementAccessRequired);
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("vet_doctor_clinics")
@@ -178,7 +179,7 @@ export async function mergeDoctors(
 ): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("vetDoctors.mergeDoctors", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "clinics.doctors")) return refuse(t.management.errors.managementAccessRequired);
     if (fromId === intoId) return refuse(t.management.vetDoctors.errors.mergeSelf);
 
     const supabase = await createClient();
@@ -201,7 +202,7 @@ export async function mergeDoctors(
 export async function deleteDoctor(vetId: string, id: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("vetDoctors.deleteDoctor", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "clinics.doctors")) return refuse(t.management.errors.managementAccessRequired);
     const supabase = await createClient();
     const { count, error: countError } = await supabase
       .from("vet_appointments")

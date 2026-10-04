@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { runAction, type ActionResult } from "@/lib/action-result";
-import { hasManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { addDaysIso, todayIso } from "@/lib/format";
@@ -22,6 +21,8 @@ import {
   loadOpenOccurrences,
   loadRecurringJobs,
 } from "@/lib/recurring-jobs/queries";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
@@ -72,7 +73,7 @@ export async function previewRecurrence(
 ): Promise<ActionResult<{ dates: string[] }>> {
   const { t } = await getT();
   return runAction("recurringJobs.previewRecurrence", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "recurring.manage")) return refuse(t.management.errors.managementAccessRequired);
     const normalized = normalizeRule(rule);
     const problem = ruleProblem(normalized);
     if (problem) return refuse(t.management.recurringJobs.errors[problem]);
@@ -237,7 +238,7 @@ export async function saveRecurringJob(
 ): Promise<SaveResult> {
   const { t } = await getT();
   return runAction("recurringJobs.saveRecurringJob", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "recurring.manage")) return refuse(t.management.errors.managementAccessRequired);
     const e = t.management.recurringJobs.errors;
 
     const title = fields.title.trim();
@@ -296,7 +297,7 @@ export async function saveRecurringJob(
 export async function setRecurringJobActive(id: string, active: boolean): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("recurringJobs.setRecurringJobActive", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "recurring.manage")) return refuse(t.management.errors.managementAccessRequired);
     const supabase = await createClient();
     const { error } = await supabase.from("recurring_jobs").update({ active }).eq("id", id);
     if (error) return refuse(error.message);
@@ -309,7 +310,7 @@ export async function setRecurringJobActive(id: string, active: boolean): Promis
 export async function deleteRecurringJob(id: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("recurringJobs.deleteRecurringJob", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "recurring.manage")) return refuse(t.management.errors.managementAccessRequired);
     const supabase = await createClient();
     const { error } = await supabase.from("recurring_jobs").delete().eq("id", id);
     if (error) return refuse(await explain(error.message));
@@ -326,7 +327,7 @@ export async function deleteRecurringJob(id: string): Promise<ActionResult> {
 export async function handBackRecurringJob(jobId: string, occursOn: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("recurringJobs.handBackRecurringJob", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "recurring.manage")) return refuse(t.management.errors.managementAccessRequired);
     const supabase = await createClient();
     const { error } = await supabase.rpc("reassign_recurring_job", {
       p_job_id: jobId,
@@ -366,7 +367,7 @@ export type HandOverInput = {
 export async function handOverRecurringJobs(input: HandOverInput): Promise<ActionResult<{ changed: number; failed: string[] }>> {
   const { t } = await getT();
   return runAction("recurringJobs.handOverRecurringJobs", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "recurring.manage")) return refuse(t.management.errors.managementAccessRequired);
     const e = t.management.recurringJobs.errors;
     const toIds = [...new Set(input.toUserIds)].filter((id) => id !== input.fromUserId);
     if (!input.fromUserId) return refuse(e.handOverFromRequired);

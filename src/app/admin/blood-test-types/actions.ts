@@ -6,9 +6,10 @@ import {
   type ActionRefusal,
   type ActionResult,
 } from "@/lib/action-result";
-import { hasAdminRole } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 
 export type BloodTestTypeFormState = ActionResult<{ success: string }> | undefined;
 
@@ -42,7 +43,7 @@ export async function createBloodTestType(
 ): Promise<BloodTestTypeFormState> {
   const { t } = await getT();
   return runAction("bloodTestTypes.createBloodTestType", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const name = (formData.get("name") as string | null)?.trim();
     if (!name) return refuse(t.admin.bloodTestTypes.errors.nameRequired);
@@ -63,7 +64,7 @@ export async function updateBloodTestType(
 ): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("bloodTestTypes.updateBloodTestType", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const name = fields.name.trim();
     if (!name) return refuse(t.admin.bloodTestTypes.errors.nameRequired);
@@ -83,7 +84,7 @@ export async function updateBloodTestType(
 export async function deleteBloodTestType(id: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("bloodTestTypes.deleteBloodTestType", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     // blood_tests.blood_test_type_id has no cascade: a type that has ever been
     // logged is part of a resident's medical record. Say so instead of
@@ -115,7 +116,7 @@ export async function mergeBloodTestType(
 ): Promise<ActionResult<{ count: number }>> {
   const { t } = await getT();
   return runAction("bloodTestTypes.mergeBloodTestType", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
     if (fromId === intoId) {
       return refuse(t.admin.bloodTestTypes.errors.mergeSelf);
     }

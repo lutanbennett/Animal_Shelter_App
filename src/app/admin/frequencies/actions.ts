@@ -6,7 +6,6 @@ import {
   type ActionRefusal,
   type ActionResult,
 } from "@/lib/action-result";
-import { hasAdminRole } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import {
@@ -14,6 +13,8 @@ import {
   type ScheduleError,
   type ScheduleFields,
 } from "@/lib/prescriptions/frequency";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 
 export type FrequencyFormState = ActionResult<{ success: string }> | undefined;
 
@@ -69,7 +70,7 @@ export async function createFrequency(
 ): Promise<FrequencyFormState> {
   const { t } = await getT();
   return runAction("frequencies.createFrequency", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const label = optional(formData.get("label"));
     if (!label) return refuse(t.admin.frequencies.errors.labelRequired);
@@ -94,7 +95,7 @@ export async function updateFrequency(
 ): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("frequencies.updateFrequency", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const label = optional(fields.label);
     if (!label) return refuse(t.admin.frequencies.errors.labelRequired);
@@ -116,7 +117,7 @@ export async function updateFrequency(
 export async function deleteFrequency(id: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("frequencies.deleteFrequency", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     // prescriptions.frequency_id has no cascade: a prescription is part of the
     // resident's medical record. Say so instead of surfacing the FK error.
@@ -144,7 +145,7 @@ export async function mergeFrequency(
 ): Promise<ActionResult<{ count: number }>> {
   const { t } = await getT();
   return runAction("frequencies.mergeFrequency", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
     if (fromId === intoId) {
       return refuse(t.admin.frequencies.errors.mergeSelf);
     }
