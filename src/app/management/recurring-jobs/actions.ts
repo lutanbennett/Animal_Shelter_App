@@ -15,6 +15,7 @@ import {
   type TimeOfDay,
 } from "@/lib/recurring-jobs/rule";
 import { ASSIGNABLE_ROLES, canDoJob } from "@/lib/recurring-jobs/eligibility";
+import { loadEligibility } from "@/lib/recurring-jobs/eligibility-load";
 import { appUserLabel, type AppUser } from "@/lib/auth/app-users";
 import {
   MAX_SPAN_DAYS,
@@ -189,8 +190,15 @@ async function whoCannotDo(
     .is("archived_at", null)
     .returns<AppUser[]>();
   if (error) return { names: [], error: error.message };
+  const { eligibility, error: eligibilityError } = await loadEligibility(
+    supabase,
+    (data ?? []).map((user) => user.role),
+  );
+  if (eligibilityError) return { names: [], error: eligibilityError };
   return {
-    names: (data ?? []).filter((user) => !canDoJob(user.role, linkPath)).map((user) => appUserLabel(user)),
+    names: (data ?? [])
+      .filter((user) => !canDoJob(user.role, linkPath, eligibility))
+      .map((user) => appUserLabel(user)),
     error: null,
   };
 }

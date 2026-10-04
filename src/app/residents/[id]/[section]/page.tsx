@@ -264,7 +264,7 @@ export default async function ResidentSectionPage(
                       row.previous_enclosure?.name
                         ? `${placeName(locale, row.previous_enclosure.name, row.previous_enclosure.name_th)} → ${placeName(locale, row.enclosure.name, row.enclosure.name_th)}`
                         : placeName(locale, row.enclosure.name, row.enclosure.name_th),
-                      row.carer?.name && t.residents.hub.carer(row.carer.name),
+                      row.carer?.name && (row.placement_type === "Adopt" ? t.residents.hub.adopter(row.carer.name) : t.residents.hub.carer(row.carer.name)),
                     ]
                       .filter(Boolean)
                       .join(" · ")}

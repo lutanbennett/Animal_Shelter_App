@@ -11,6 +11,7 @@ import { roleLabel } from "@/lib/i18n/enum-labels";
 import { addDaysIso, formatDate, formatDateTime } from "@/lib/format";
 import { describeRule, describeSpan, isoWeekday } from "@/lib/recurring-jobs/rule";
 import type { RecurringJob } from "@/lib/recurring-jobs/queries";
+import type { Eligibility } from "@/lib/recurring-jobs/eligibility";
 import { RecurringJobForm, type PersonOption, type TeamMember } from "./RecurringJobForm";
 import {
   deleteRecurringJob,
@@ -61,6 +62,7 @@ const smallButton =
 export function RecurringJobsView({
   jobs,
   people,
+  eligibility,
   handOverFrom,
   covered,
   record,
@@ -68,6 +70,7 @@ export function RecurringJobsView({
 }: {
   jobs: JobSummary[];
   people: PersonOption[];
+  eligibility: Eligibility;
   handOverFrom: TeamMember[];
   covered: CoveredDate[];
   record: RecordEntry[];
@@ -132,6 +135,7 @@ export function RecurringJobsView({
             job={null}
             team={[]}
             people={people}
+            eligibility={eligibility}
             otherJobs={jobs.map((s) => ({ id: s.job.id, title: s.job.title }))}
             onDone={close}
           />
@@ -148,6 +152,7 @@ export function RecurringJobsView({
                     job={summary.job}
                     team={summary.team}
                     people={people}
+                    eligibility={eligibility}
                     otherJobs={jobs
                       .filter((s) => s.job.id !== summary.job.id)
                       .map((s) => ({ id: s.job.id, title: s.job.title }))}

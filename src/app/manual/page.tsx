@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AlertTriangle, Info, Lightbulb } from "lucide-react";
 import manual from "@/lib/manual/en";
+import { getT } from "@/lib/i18n/get-t";
 import { asManualRole } from "@/lib/manual/filter";
 import { isForTopic } from "@/lib/manual/for-topic";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -18,9 +19,10 @@ import type {
   ManualTopic,
 } from "@/lib/manual/types";
 
-export const metadata: Metadata = {
-  title: `${manual.title} · Lanna Care for Animals`,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return { title: `${t.manualPage.title} · ${t.header.appName}` };
+}
 
 /** Pixel size of each PNG, written by scripts/manual-screenshots.mjs. */
 const SCREENSHOT_SIZES: Record<string, { width: number; height: number } | undefined> =
@@ -62,11 +64,13 @@ const CALLOUT_STYLES: Record<
  * greyed answer rather than none (backlog, "A role-based manual").
  */
 export default async function ManualPage({ searchParams }: PageProps<"/manual">) {
-  const [{ view }, role, perms] = await Promise.all([
+  const [{ view }, role, perms, { t }] = await Promise.all([
     searchParams,
     createClient().then(loadCurrentRole).then(asManualRole),
     loadPermissions(),
+    getT(),
   ]);
+  const c = t.manualPage;
   const showAll = view === "all";
   const sections: ViewSection[] = manual.sections.map((section) => ({
     section,
@@ -76,7 +80,7 @@ export default async function ManualPage({ searchParams }: PageProps<"/manual">)
     (n, { topics }) => n + topics.filter((t) => t.mine).length,
     0,
   );
-  const roleName = role ? manual.roleNames[role] : null;
+  const roleName = role ? t.releases.roleNames[role] : null;
   // The last topic on show cannot reach the top of the window unless the page
   // runs on below it, so it alone gets a minimum height: the empty space is
   // only what that topic is short of a screen, not a flat screenful.
@@ -89,37 +93,42 @@ export default async function ManualPage({ searchParams }: PageProps<"/manual">)
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-6">
       <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold text-foreground">{manual.title}</h1>
+        <h1 className="text-2xl font-semibold text-foreground">{c.title}</h1>
+        {c.englishNotice ? (
+          <p className="max-w-3xl rounded-lg border border-border bg-surface px-4 py-3 text-sm text-foreground">
+            {c.englishNotice}
+          </p>
+        ) : null}
         <p className="max-w-3xl text-sm text-muted">{manual.subtitle}</p>
-        <p className="text-xs text-muted">{manual.version}</p>
+        <p className="text-xs text-muted">{c.version}</p>
       </header>
 
       <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
         {/* Phone: collapsible contents above the text. */}
         <details className="rounded-lg border border-border bg-surface lg:hidden">
           <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-foreground">
-            Contents
+            {c.contents}
           </summary>
           <div className="border-t border-border px-4 py-3">
-            <Toc sections={sections} showAll={showAll} />
+            <Toc sections={sections} showAll={showAll} c={c} />
           </div>
         </details>
 
         {/* Desktop: sticky contents beside the text, with their own scroll bar. */}
         <aside className="hidden w-56 shrink-0 lg:sticky lg:top-6 lg:flex lg:max-h-[calc(100dvh-3rem)] lg:flex-col">
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">
-            Contents
+            {c.contents}
           </h2>
           <TocScroller>
-            <Toc sections={sections} showAll={showAll} />
+            <Toc sections={sections} showAll={showAll} c={c} />
           </TocScroller>
         </aside>
 
         <div className="flex min-w-0 max-w-3xl flex-1 flex-col gap-12">
           {roleName && (
-            <FilterBar roleName={roleName} showAll={showAll} count={myTopicCount} />
+            <FilterBar roleName={roleName} showAll={showAll} count={myTopicCount} c={c} />
           )}
-          <RolesTable role={role} />
+          <RolesTable role={role} c={c} />
           {sections.map(({ section, topics }) => {
             const Icon = section.icon;
             const tucked = !showAll && !topics.some((t) => t.mine);
@@ -163,54 +172,58 @@ type ViewSection = {
   topics: { topic: ManualTopic; mine: boolean }[];
 };
 
+type Words = Awaited<ReturnType<typeof getT>>["t"]["manualPage"];
+
 function FilterBar({
   roleName,
   showAll,
   count,
+  c,
 }: {
   roleName: string;
   showAll: boolean;
   count: number;
+  c: Words;
 }) {
   return (
     <div className="flex flex-col gap-1 rounded-lg border border-border bg-surface px-4 py-3 text-sm">
       <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-foreground">
         <span>
           {showAll
-            ? manual.filter.showingEverything(roleName)
-            : manual.filter.showingRole(roleName, count)}
+            ? c.showingEverything(roleName)
+            : c.showingRole(roleName, count)}
         </span>
         <Link
           href={showAll ? "/manual" : "/manual?view=all"}
           className="font-medium text-primary underline-offset-2 hover:underline"
         >
-          {showAll ? manual.filter.showOnlyRole(roleName) : manual.filter.showEverything}
+          {showAll ? c.showOnlyRole(roleName) : c.showEverything}
         </Link>
       </p>
-      {!showAll && <p className="text-xs text-muted">{manual.filter.findHint}</p>}
+      {!showAll && <p className="text-xs text-muted">{c.findHint}</p>}
       <p className="flex flex-wrap gap-x-3 text-xs">
         <a
           href={showAll ? "/manual/pdf?view=all" : "/manual/pdf"}
           className="font-medium text-primary underline-offset-2 hover:underline"
         >
-          Print this as a PDF
+          {c.printPdf}
         </a>
         <a
           href={showAll ? "/manual/pdf?view=all&images=0" : "/manual/pdf?images=0"}
           className="text-muted underline-offset-2 hover:underline"
         >
-          Without screenshots
+          {c.withoutScreenshots}
         </a>
       </p>
     </div>
   );
 }
 
-function Toc({ sections, showAll }: { sections: ViewSection[]; showAll: boolean }) {
+function Toc({ sections, showAll, c }: { sections: ViewSection[]; showAll: boolean; c: Words }) {
   return (
-    <nav aria-label="Manual contents" className="flex flex-col gap-1 text-sm">
+    <nav aria-label={c.contentsLabel} className="flex flex-col gap-1 text-sm">
       <a href="#roles-table" className="rounded px-2 py-1 text-muted hover:bg-surface-hover hover:text-foreground aria-[current=location]:bg-surface-hover aria-[current=location]:text-foreground">
-        Roles at a glance
+        {c.rolesAtAGlance}
       </a>
       {sections.map(({ section, topics }) => {
         const shown = showAll ? topics : topics.filter((t) => t.mine);
@@ -243,10 +256,10 @@ function Toc({ sections, showAll }: { sections: ViewSection[]; showAll: boolean 
   );
 }
 
-function RolesTable({ role }: { role: ManualRole | null }) {
+function RolesTable({ role, c }: { role: ManualRole | null; c: Words }) {
   return (
     <section id="roles-table" className="flex scroll-mt-6 flex-col gap-3">
-      <h2 className="text-lg font-semibold text-foreground">Roles at a glance</h2>
+      <h2 className="text-lg font-semibold text-foreground">{c.rolesAtAGlance}</h2>
       <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
           <tbody>

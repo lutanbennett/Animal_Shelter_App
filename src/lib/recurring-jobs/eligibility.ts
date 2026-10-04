@@ -1,5 +1,7 @@
 import { APP_ACCESS_ROLES } from "@/lib/auth/app-access";
 import { canWriteMaintenance } from "@/lib/maintenance/queries";
+import type { ActivityKey, Level } from "@/lib/permissions/catalogue";
+import { ROUTES } from "@/lib/permissions/routes";
 
 /**
  * Who can actually do a recurring job, worked out from where it is done:
@@ -10,9 +12,15 @@ import { canWriteMaintenance } from "@/lib/maintenance/queries";
  * stocktake while the link says maintenance. docs/decisions.md (2026-09-27)
  * has the reasoning.
  *
- * Each rule borrows the predicate the target page itself uses, where that
- * predicate is client-safe, so a page's guard and this list can only drift
- * if someone changes one and not the other in the same file. A path no rule
+ * A rule is one of two shapes. A page registered in the route registry
+ * (permissions/routes.ts) is decided by the activity that registry names:
+ * "may this role do it" is a question for the database, asked as role_can()
+ * (0133) and carried here as an `Eligibility`, because can() answers only
+ * about the caller and an assignee is someone else. The rest still borrow the
+ * predicate the target page uses, where it is client-safe, and move to the
+ * first shape when their page is registered (decisions/2026-10-04-role-can-app.md).
+ * Either way a page's guard and this list can only drift if someone changes
+ * one and not the other in the same file. A path no rule
  * matches — no link at all, /residents, /my — can be done by any assignable
  * role.
  *
@@ -31,33 +39,45 @@ import { canWriteMaintenance } from "@/lib/maintenance/queries";
  */
 export const ASSIGNABLE_ROLES = APP_ACCESS_ROLES.filter((role) => role !== "vet");
 
-type Rule = { prefix: string; allows: (role: string) => boolean };
+/** The cell a page asks for: the activity its route registers, at the level that opens it. */
+export type Need = { activity: ActivityKey; level: Level };
+
+/**
+ * The database's answers, for the roles that were asked: need (`needKey`) →
+ * the roles that hold it. Built on the server by loadEligibility()
+ * (eligibility-load.ts) from role_can(), and handed to the form and to
+ * canDoJob, which stay pure. A role or a need that was not asked about is
+ * absent, so it reads as "cannot": a missing answer never grants anything.
+ */
+export type Eligibility = Readonly<Record<string, readonly string[]>>;
+
+export const needKey = (need: Need): string => `${need.activity}:${need.level}`;
+
+type Rule = { prefix: string; need: Need } | { prefix: string; allows: (role: string) => boolean };
 
 /** canManage (require-management.ts), which lives beside server-only code. */
 const isManager = (role: string) => role === "admin" || role === "management";
 
-/**
- * The two stock pages' rules. They ask about ANOTHER person's role (an
- * assignee), which can() cannot answer: it reads the caller's own cells, and
- * a non-admin cannot read role_permissions. Answering for any role needs a
- * database function that does not exist yet, so until it does these two lists
- * stay as they were, equal to the seeded cells of stock.count and
- * stock.delivery (0132). The permissions-catalogue decision names the
- * follow-up; scripts/check-permission-catalogue.mjs fails if they drift from
- * the seed.
- */
-export const STOCK_COUNT_ROLES: readonly string[] = ["admin", "management", "staff", "volunteer"];
-export const STOCK_DELIVERY_ROLES: readonly string[] = ["admin", "management", "staff"];
-
 /** Longest prefix wins, so /management/… is decided by /management, not by nothing. */
 const RULES: Rule[] = [
+  // Every registered page, from its route entry (a yes/no activity opens at edit).
+  ...ROUTES.map((route): Rule => ({
+    prefix: route.path,
+    need: { activity: route.activity, level: route.level ?? "edit" },
+  })),
+  // Not registered yet: each keeps the predicate its page uses, until a sweep registers the page.
   { prefix: "/admin", allows: (role) => role === "admin" },
   { prefix: "/management", allows: isManager },
-  { prefix: "/stocktake", allows: (role) => STOCK_COUNT_ROLES.includes(role) },
-  { prefix: "/deliveries", allows: (role) => STOCK_DELIVERY_ROLES.includes(role) },
   // The work on the board is logging and updating jobs; a volunteer reads it
   // and adds photos, but cannot move a job on.
   { prefix: "/maintenance", allows: canWriteMaintenance },
+];
+
+/** Every cell the rules ask role_can() about, once each: what loadEligibility has to fetch. */
+export const JOB_NEEDS: readonly Need[] = [
+  ...new Map(
+    RULES.flatMap((rule) => ("need" in rule ? [rule.need] : [])).map((need) => [needKey(need), need]),
+  ).values(),
 ];
 
 /** The path part of a link: no query, no fragment, no trailing slash. */
@@ -78,19 +98,24 @@ function ruleFor(linkPath: string | null | undefined): Rule | null {
   return best;
 }
 
-/** Can someone with `role` do a job that links to `linkPath`? */
-export function canDoJob(role: string | null | undefined, linkPath: string | null | undefined): boolean {
+/** Can someone with `role` do a job that links to `linkPath`? `eligibility` is the database's answer for their role. */
+export function canDoJob(
+  role: string | null | undefined,
+  linkPath: string | null | undefined,
+  eligibility: Eligibility,
+): boolean {
   if (!role || !(ASSIGNABLE_ROLES as readonly string[]).includes(role)) return false;
   const rule = ruleFor(linkPath);
-  return rule ? rule.allows(role) : true;
+  if (!rule) return true;
+  return "need" in rule ? (eligibility[needKey(rule.need)]?.includes(role) ?? false) : rule.allows(role);
 }
 
 /** The roles that can do it, in the usual order — for "only … are listed". */
-export function rolesForJob(linkPath: string | null | undefined): string[] {
-  return ASSIGNABLE_ROLES.filter((role) => canDoJob(role, linkPath));
+export function rolesForJob(linkPath: string | null | undefined, eligibility: Eligibility): string[] {
+  return ASSIGNABLE_ROLES.filter((role) => canDoJob(role, linkPath, eligibility));
 }
 
 /** True when the link narrows who can do the job below every assignable role. */
-export function jobIsRestricted(linkPath: string | null | undefined): boolean {
-  return rolesForJob(linkPath).length < ASSIGNABLE_ROLES.length;
+export function jobIsRestricted(linkPath: string | null | undefined, eligibility: Eligibility): boolean {
+  return rolesForJob(linkPath, eligibility).length < ASSIGNABLE_ROLES.length;
 }

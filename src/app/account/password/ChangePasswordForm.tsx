@@ -3,6 +3,7 @@
 import { startTransition, useActionState, useState, type FormEvent } from "react";
 import { changeOwnPassword, type ChangePasswordState } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { localizedValidity } from "@/lib/i18n/validity";
 
 const inputClass =
   "rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
@@ -36,7 +37,7 @@ export function ChangePasswordForm({
     },
     undefined,
   );
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const p = t.account.password;
 
   function onSubmit(ev: FormEvent<HTMLFormElement>) {
@@ -46,7 +47,7 @@ export function ChangePasswordForm({
   }
 
   return (
-    <form method="post" onSubmit={onSubmit} className="flex max-w-md flex-col gap-4">
+    <form method="post" onSubmit={onSubmit} {...localizedValidity(t, locale)} className="flex max-w-md flex-col gap-4">
       {continueAfter && <input type="hidden" name="continue" value="1" />}
       {askCurrent && (
         <div className="flex flex-col gap-1">

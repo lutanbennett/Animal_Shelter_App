@@ -5,6 +5,11 @@ import type { Locale } from "@/lib/i18n/locales";
  * English key — unique, the Drive folder name, what the placement logic
  * matches — and `name_th` is display only, so a Thai reader gets it when
  * it is set and the English otherwise. Empty strings count as unset.
+ *
+ * The system zone's key is "Lifecycle" — a developer's word, and the
+ * placement logic matches it, so it cannot be renamed. Where nobody has
+ * given it a Thai name it is shown as "Status": what its enclosures
+ * (Hospital, Fostered, Adopted…) are.
  */
 export function placeName(
   locale: Locale,
@@ -12,5 +17,6 @@ export function placeName(
   nameTh: string | null | undefined,
 ): string {
   if (locale === "th" && nameTh?.trim()) return nameTh.trim();
+  if (name === "Lifecycle") return locale === "th" ? "สถานะ" : "Status";
   return name ?? "";
 }

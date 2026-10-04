@@ -52,7 +52,7 @@ const manual: Manual = {
       `Showing the ${count} topics for the ${role} role.`,
     showEverything: "Show everything",
     findHint:
-      "The rest are tucked away, not gone: Find on page (Ctrl+F) still finds them, greyed, to answer \"can I do this?\".",
+      "The rest are tucked away, not gone: Show everything lists them, greyed, to answer \"can I do this?\".",
     showingEverything: (role) =>
       `Showing everything. Topics outside the ${role} role are greyed.`,
     showOnlyRole: (role) => `Show only the ${role} role`,

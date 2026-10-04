@@ -62,6 +62,10 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Signing in with a wrong password now says, in English or Thai, \"That email or password isn't right\" and keeps the email you typed, instead of the sign-in service's English message and two empty boxes.",
+  "Release notes and the Manual now have their headings, buttons and intro in Thai when the app is in Thai, and the Manual says plainly that its text is still English. The Dev/UAT tag on each release is shown to admins only.",
+  "On Intake, Change password and Deliveries, the \"please fill in this field\" style messages now follow the app's language (English or Thai) instead of the phone's.",
+  "Wording fixes on staff screens: the blood-test notes hint no longer mentions a future feature, the zone named Lifecycle shows as Status (สถานะ), a placement with an adopter says Adopter instead of Carer, photo folders and dates read in the app's language, a medication whose name already says tablet no longer repeats it in brackets, and the Adopt page no longer tells a signed-in person they are browsing as a guest.",
   {
     text: "Ordering medicine and food is now one simple screen on a phone instead of a table. Pick how long it should last, then open Medicines or Food (they are bought at different shops) to see what to buy from each supplier, how much of each. Tap an item to see how it was worked out. Print the list or save it from the bottom. Nothing is ordered or saved by the app. Anything nobody has counted yet is assumed to have none on the shelf, so a newly prescribed medicine still gets bought; it is shown in yellow with a button to count it. The computer table is unchanged.",
     roles: ["admin", "management"],

@@ -17,7 +17,7 @@ import {
   type TimeOfDay,
 } from "@/lib/recurring-jobs/rule";
 import type { RecurringJob } from "@/lib/recurring-jobs/queries";
-import { canDoJob, jobIsRestricted, rolesForJob } from "@/lib/recurring-jobs/eligibility";
+import { canDoJob, jobIsRestricted, rolesForJob, type Eligibility } from "@/lib/recurring-jobs/eligibility";
 import { previewRecurrence, saveRecurringJob } from "./actions";
 import { OptionalDateInput } from "@/components/OptionalDateInput";
 
@@ -46,12 +46,15 @@ export function RecurringJobForm({
   job,
   team,
   people,
+  eligibility,
   otherJobs,
   onDone,
 }: {
   job: RecurringJob | null;
   team: TeamMember[];
   people: PersonOption[];
+  /** The database's answer for each assignable role (role_can, via eligibility-load.ts). */
+  eligibility: Eligibility;
   /** Jobs this one can be set to wait for (every job but itself). */
   otherJobs: { id: string; title: string }[];
   onDone: (message: string | null) => void;
@@ -128,7 +131,7 @@ export function RecurringJobForm({
   // on the job who can't — given it before this filter, or the link has just
   // changed — or who has since left stays listed and flagged, so they can be
   // taken off rather than silently kept. Saving refuses the first kind.
-  const eligible = (role: string | null | undefined) => canDoJob(role, linkPath);
+  const eligible = (role: string | null | undefined) => canDoJob(role, linkPath, eligibility);
   type Option = TeamMember & { cannotDo: boolean };
   const options: Option[] = [
     ...people
@@ -147,7 +150,7 @@ export function RecurringJobForm({
         cannotDo: !m.archived && !eligible(m.role),
       })),
   ];
-  const restricted = jobIsRestricted(linkPath);
+  const restricted = jobIsRestricted(linkPath, eligibility);
 
   function toggle<T>(set: Set<T>, value: T): Set<T> {
     const next = new Set(set);
@@ -410,7 +413,7 @@ export function RecurringJobForm({
           <span className={hintClass}>{f.assigneesNoVets}</span>
           {restricted && (
             <span className={hintClass}>
-              {f.assigneesRestricted(rolesForJob(linkPath).map((role) => roleLabel(t, role)).join(", "))}
+              {f.assigneesRestricted(rolesForJob(linkPath, eligibility).map((role) => roleLabel(t, role)).join(", "))}
             </span>
           )}
           <div className="mt-1 flex max-h-56 flex-col gap-1 overflow-y-auto rounded border border-border p-2">

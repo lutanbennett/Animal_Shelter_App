@@ -10,6 +10,7 @@ import {
   type OccurrenceRow,
 } from "@/lib/recurring-jobs/queries";
 import { ASSIGNABLE_ROLES, canDoJob } from "@/lib/recurring-jobs/eligibility";
+import { loadEligibility } from "@/lib/recurring-jobs/eligibility-load";
 import { RecurringJobsView, type JobSummary, type PersonOption, type CoveredDate, type RecordEntry } from "./RecurringJobsView";
 import type { TeamMember } from "./RecurringJobForm";
 
@@ -32,8 +33,10 @@ export default async function RecurringJobsPage() {
   const supabase = await createClient();
   const today = todayIso();
 
-  const [{ jobs, error }, peopleResult, staffingResult, recordResult] = await Promise.all([
+  const [{ jobs, error }, eligibilityResult, peopleResult, staffingResult, recordResult] = await Promise.all([
     loadRecurringJobs(supabase),
+    // May each assignable role do the page a job links to? role_can() (0133), for the whole team.
+    loadEligibility(supabase, ASSIGNABLE_ROLES),
     supabase
       .from("app_users")
       .select("id, email, display_name, role, archived_at")
@@ -75,10 +78,11 @@ export default async function RecurringJobsPage() {
   // Someone who can still sign in but whose role cannot open the job's page:
   // given it before the picker filtered, or the link changed since. Shown as a
   // problem here rather than left to fail on their My tasks.
+  const { eligibility } = eligibilityResult;
   const cannotDo = (ids: string[], linkPath: string | null) =>
     ids.filter((id) => {
       const user = users.get(id);
-      return !!user && !user.archived_at && !canDoJob(user.role, linkPath);
+      return !!user && !user.archived_at && !canDoJob(user.role, linkPath, eligibility);
     });
 
   const staffing = new Map((staffingResult.data ?? []).map((row) => [row.job_id, row]));
@@ -140,6 +144,7 @@ export default async function RecurringJobsPage() {
 
   const errors = [
     error,
+    eligibilityResult.error,
     peopleResult.error?.message,
     staffingResult.error?.message,
     recordResult.error?.message,
@@ -163,6 +168,7 @@ export default async function RecurringJobsPage() {
       <RecurringJobsView
         jobs={summaries}
         people={people}
+        eligibility={eligibility}
         handOverFrom={handOverFrom}
         covered={covered}
         record={record}

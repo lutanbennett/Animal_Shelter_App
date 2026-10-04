@@ -58,6 +58,7 @@ export default async function AdoptPage(props: PageProps<"/adopt">) {
   await showcaseAdoptPause(searchParams);
   const supabase = await createClient();
   const { t, locale } = await getT();
+  const signedIn = Boolean((await supabase.auth.getUser()).data.user);
 
   const [residentsResult, recentResult, content, howTo] = await Promise.all([
     supabase
@@ -134,7 +135,7 @@ export default async function AdoptPage(props: PageProps<"/adopt">) {
           <h1 className="text-2xl font-semibold text-foreground">
             {t.adopt.pageTitle}
           </h1>
-          <p className="max-w-2xl text-sm text-muted">{t.adopt.pageSubtitle}</p>
+          <p className="max-w-2xl text-sm text-muted">{signedIn ? t.adopt.pageSubtitleSignedIn : t.adopt.pageSubtitle}</p>
         </div>
 
         {error && (

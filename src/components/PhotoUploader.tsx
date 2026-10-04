@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { photoFolderLabel } from "@/lib/i18n/enum-labels";
 import { PHOTO_CATEGORIES, type PhotoCategory } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -190,7 +191,7 @@ export function PhotoUploader({
         </div>
         {onlyFolder ? (
           <p className="pb-2 text-sm text-foreground">
-            {t.photos.uploader.goesIn(onlyFolder)}
+            {t.photos.uploader.goesIn(photoFolderLabel(t, onlyFolder))}
           </p>
         ) : (
         <>
@@ -212,7 +213,7 @@ export function PhotoUploader({
             </option>
             {categories.map((option) => (
               <option key={option} value={option}>
-                {option}
+                {photoFolderLabel(t, option)}
               </option>
             ))}
           </select>

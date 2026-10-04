@@ -28,9 +28,10 @@ type T = Awaited<ReturnType<typeof getT>>["t"];
 /**
  * Stamped into the notes so the hub history shows where a row came from.
  * The demo said "(demo)"; version 1 is the real tool, so it doesn't.
+ * Worded in the confirming user's language, as the card previewed it.
  */
-function stamp(request: string) {
-  return `via the assistant — "${request.trim()}"`;
+function stamp(t: T, request: string) {
+  return t.assistant.stamp(request.trim());
 }
 
 /** What every write action is handed on top of its own fields. */
@@ -109,7 +110,7 @@ export async function assistantMove(
         residentId: input.residentId,
         enclosureId: input.enclosureId,
         moveDate: input.moveDate,
-        notes: stamp(input.request),
+        notes: stamp(t, input.request),
       }),
     () => {
       revalidateResident(input.residentId);
@@ -150,7 +151,7 @@ export async function assistantBookVetVisit(
         p_vet_id: input.vetId,
         p_appointment_date: appointment.toISOString(),
         p_reason: input.reason?.trim() || null,
-        p_notes: stamp(input.request),
+        p_notes: stamp(t, input.request),
         // Mirrors the booking form's default: a visit already in the past
         // is being logged, not scheduled.
         p_status: appointment.getTime() <= Date.now() ? "completed" : "scheduled",
@@ -184,7 +185,7 @@ export async function assistantSendToHospital(
       sendResidentToHospital(supabase, t, {
         residentId: input.residentId,
         date: input.date,
-        notes: stamp(input.request),
+        notes: stamp(t, input.request),
       }),
     () => {
       revalidateResident(input.residentId);
@@ -209,7 +210,7 @@ export async function assistantReturnFromHospital(
         residentId: input.residentId,
         enclosureId: input.enclosureId,
         date: input.date,
-        notes: stamp(input.request),
+        notes: stamp(t, input.request),
       }),
     () => {
       revalidateResident(input.residentId);
@@ -233,7 +234,7 @@ export async function assistantLogWeight(
         residentId: input.residentId,
         date: input.date,
         weightKg: input.weightKg,
-        notes: stamp(input.request),
+        notes: stamp(t, input.request),
       }),
     () => {
       revalidatePath(`/residents/${input.residentId}`);
