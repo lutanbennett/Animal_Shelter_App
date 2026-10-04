@@ -12,7 +12,8 @@ import type { LucideIcon } from "lucide-react";
 import { NAV_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can, type Permissions } from "@/lib/permissions/can";
-import { routesFor, type RouteEntry } from "@/lib/permissions/routes";
+import { jobsOfRole } from "@/lib/permissions/jobs";
+import { canOpen, routeFor, routesFor, type RouteEntry } from "@/lib/permissions/routes";
 
 export type HomeTile = {
   href: string;
@@ -41,6 +42,20 @@ const ORDER: Record<string, readonly string[]> = {
 const rank = (r: RouteEntry) => (r.level === "read" ? 1 : 2);
 
 export function homeTilesFor(perms: Permissions, t: Dictionary): HomeTile[] {
+  // A role that is given jobs (src/lib/permissions/jobs.ts) shows its jobs, one tile each, and
+  // nothing else: that is what "a home of named jobs" means. A job whose bundle the role's cells
+  // do not cover, or whose page it may not open, draws no tile rather than a tile that refuses.
+  const jobs = jobsOfRole(perms.role.key);
+  if (jobs.length > 0) {
+    return jobs.flatMap((job) => {
+      const route = routeFor(job.opens);
+      const covered = job.bundle.every((b) => can(perms, b.activity, b.level));
+      return route && covered && canOpen(perms, route)
+        ? [{ href: route.path, label: job.label(t), icon: route.icon }]
+        : [];
+    });
+  }
+
   let routes = routesFor(perms).filter((r) => r.device !== "desk");
   // Settings pages are Admin's night home (/admin), not a role's tasks; a role that holds only
   // those still gets a home rather than an empty one.
