@@ -76,7 +76,7 @@ export function FriendsOrder({ friends }: { friends: FriendOrderRow[] }) {
                   </span>
                 )}
               </div>
-              <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <div className="flex min-w-[10rem] flex-1 flex-col gap-1">
                 <Link
                   href={`/contacts/${friend.contact_id}`}
                   className="truncate font-medium text-foreground hover:underline"
@@ -94,7 +94,7 @@ export function FriendsOrder({ friends }: { friends: FriendOrderRow[] }) {
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="ml-auto flex items-center gap-2">
                 <RowActionButton
                   disabled={isPending}
                   onClick={() => run(() => setFriendPublished(friend.id, !friend.published))}

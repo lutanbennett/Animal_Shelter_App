@@ -339,7 +339,7 @@ function MedicationRowItem({
           {m.table.prescriptionCount(medication.prescription_count)}
         </td>
         <td className="px-4 py-2">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 md:min-w-[16rem]">
             {(mode === "edit" || mode === "count") && (
               <>
                 <button

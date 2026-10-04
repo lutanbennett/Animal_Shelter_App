@@ -189,7 +189,7 @@ function DoctorRowItem({
           </div>
         </td>
         <td className="px-4 py-2">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 md:min-w-[11rem]">
             {mode === "edit" && (
               <>
                 <button type="button" disabled={isPending} onClick={handleRename} className={primaryButton}>
