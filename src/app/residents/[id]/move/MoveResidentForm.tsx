@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import Link from "next/link";
 import { moveResident } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -36,7 +37,7 @@ export function MoveResidentForm({
 }) {
   const { t, locale } = useI18n();
   const m = t.residents.move;
-  const [state, formAction, pending] = useActionState(
+  const [state, submit, pending] = useKeptForm(
     moveResident.bind(null, residentId),
     undefined,
   );
@@ -52,15 +53,17 @@ export function MoveResidentForm({
     <>
       <form
         ref={formRef}
-        action={formAction}
         onSubmit={(e) => {
           if (confirmedRef.current) {
             confirmedRef.current = false;
+            submit(e);
             return;
           }
           if (target && capacityWarningLevel(target)) {
             e.preventDefault();
             setWarningFor(target);
+          } else {
+            submit(e);
           }
         }}
         className="flex max-w-2xl flex-col gap-6"

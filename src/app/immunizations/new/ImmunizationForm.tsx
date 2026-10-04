@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import { ResidentPicker } from "@/components/ResidentPicker";
 import { formatDate, todayIso } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -39,7 +40,7 @@ export function ImmunizationForm({
   enclosures: EnclosureOption[];
   preselectedResidentIds: string[];
 }) {
-  const [state, formAction, pending] = useActionState(
+  const [state, onSubmit, pending] = useKeptForm(
     recordImmunizations,
     undefined,
   );
@@ -131,7 +132,7 @@ export function ImmunizationForm({
         </div>
       )}
 
-      <form action={formAction} className="flex flex-col gap-6">
+      <form onSubmit={onSubmit} className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium text-muted">
             {t.immunizations.residentsLabel}

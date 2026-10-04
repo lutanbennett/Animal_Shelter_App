@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { TranslationPanel } from "@/components/TranslationPanel";
 import type { SitePageSlug } from "@/lib/site/pages";
@@ -45,7 +45,7 @@ export function SitePageForm({
    */
   starterBody?: string;
 }) {
-  const [state, formAction, pending] = useActionState(
+  const [state, onSubmit, pending] = useKeptForm(
     updateSitePage.bind(null, page.slug),
     undefined,
   );
@@ -105,7 +105,7 @@ export function SitePageForm({
         )}
       </div>
 
-      <form id={formId} action={formAction} className="flex items-center gap-3">
+      <form id={formId} onSubmit={onSubmit} className="flex items-center gap-3">
         <button
           type="submit"
           disabled={pending}

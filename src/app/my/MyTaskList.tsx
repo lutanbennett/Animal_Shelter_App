@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { CalendarClock, Check, Clock, Hourglass, MessageSquarePlus, SkipForward, UserPlus, Users } from "lucide-react";
 import { ENCLOSURE_ICONS, NAV_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatDateTime } from "@/lib/format";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import {
   MAINTENANCE_STATUSES,
   STATUS_TONE,
@@ -18,6 +19,7 @@ import {
   DUE_BUCKETS,
   dueBucket,
   type DueBucket,
+  type MyDoneToday,
   type MyTask,
   type MyTaskSection,
   type MyTaskSource,
@@ -70,19 +72,28 @@ type Undoable =
  */
 export function MyTaskList({
   sections,
+  doneToday,
   today,
   canManage,
+  canEditMaintenance,
 }: {
   sections: MyTaskSection[];
+  /** What the reader marked done or skipped today, from the server. */
+  doneToday: MyDoneToday[];
   today: string;
   canManage: boolean;
+  canEditMaintenance: boolean;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [driveWarning, setDriveWarning] = useState<string | null>(null);
   const [undoable, setUndoable] = useState<Undoable | null>(null);
+  // A job that waits for another one, asked about before it is finished.
+  const [askingAbout, setAskingAbout] = useState<{ task: MyTask; note: string | null } | null>(null);
+  // Rows of the Done-today strip taken back, until the refresh drops them.
+  const [takenBack, setTakenBack] = useState<string[]>([]);
 
   const [rows, setOptimistic] = useOptimistic(
     sections,
@@ -120,8 +131,15 @@ export function MyTaskList({
   }
 
   /** Done / skipped for one date, or null to clear it again (Undo). */
-  function record(task: MyTask, outcome: Outcome | null, note: string | null) {
+  function record(task: MyTask, outcome: Outcome | null, note: string | null, confirmed = false) {
     if (task.action?.kind !== "recurringOutcome") return;
+    // "Waiting for …" is advice, not a lock: the shelter sometimes does the
+    // second job first, so Done asks once rather than refusing. Skip does not
+    // ask (a deliberate choice already) and neither does Undo.
+    if (outcome === "done" && task.waitingFor && !confirmed) {
+      setAskingAbout({ task, note });
+      return;
+    }
     const { jobId, occursOn } = task.action;
     setError(null);
     setUndoable(outcome ? { kind: "recurring", task, outcome } : null);
@@ -148,6 +166,25 @@ export function MyTaskList({
     }
   }
 
+  /** Take back a row of the Done-today strip. */
+  function takeBack(item: MyDoneToday) {
+    setError(null);
+    setTakenBack((keys) => [...keys, item.key]);
+    if (undoable?.task.key === item.key) setUndoable(null);
+    startTransition(async () => {
+      const result =
+        item.kind === "recurring" && item.occursOn
+          ? await recordRecurringJob(item.jobId, item.occursOn, null, null)
+          : await setMaintenanceStatus(item.jobId, "In Progress");
+      if (!result.ok) {
+        setError(result.error);
+        setTakenBack((keys) => keys.filter((key) => key !== item.key));
+      }
+      router.refresh();
+    });
+  }
+
+  const doneRows = doneToday.filter((item) => !takenBack.includes(item.key));
   const visible = rows.map((section) => ({
     ...section,
     tasks: section.tasks.filter((task) => task.status !== "Completed"),
@@ -181,6 +218,20 @@ export function MyTaskList({
         </div>
       )}
 
+      <ConfirmDialog
+        open={askingAbout !== null}
+        title={t.my.recurring.waitingConfirm.title(askingAbout?.task.waitingFor ?? "")}
+        body={t.my.recurring.waitingConfirm.body(askingAbout?.task.title ?? "", askingAbout?.task.waitingFor ?? "")}
+        confirmLabel={t.my.recurring.waitingConfirm.confirm}
+        icon={Hourglass}
+        onCancel={() => setAskingAbout(null)}
+        onConfirm={() => {
+          const ask = askingAbout;
+          setAskingAbout(null);
+          if (ask) record(ask.task, "done", ask.note, true);
+        }}
+      />
+
       {total === 0 && errors.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted">
           {t.my.empty}
@@ -198,6 +249,52 @@ export function MyTaskList({
               onRecord={record}
             />
           ))
+      )}
+
+      {doneRows.length > 0 && (
+        <section aria-labelledby="done-today-heading" className="flex flex-col gap-2">
+          <h2
+            id="done-today-heading"
+            className="flex items-center gap-2 border-b border-border pb-2 text-lg font-semibold text-foreground"
+          >
+            <Check aria-hidden="true" className="h-5 w-5 text-success" />
+            {t.my.doneToday.heading}
+            <span className="text-sm font-normal text-muted">({doneRows.length})</span>
+          </h2>
+          <ul className="flex flex-col gap-2">
+            {doneRows.map((item) => (
+              <li
+                key={item.key}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm"
+              >
+                <div className="flex min-w-0 flex-col">
+                  <span className="font-medium text-foreground">
+                    {item.title}
+                    {item.code && <span className="ml-2 font-mono text-[10px] text-muted">{item.code}</span>}
+                  </span>
+                  <span className="text-xs text-muted">
+                    {item.kind === "maintenance"
+                      ? t.my.doneToday.completed
+                      : item.outcome === "skipped"
+                        ? t.my.doneToday.skipped
+                        : t.my.doneToday.done}
+                    {item.at && ` · ${formatDateTime(item.at, locale)}`}
+                  </span>
+                </div>
+                {(item.kind === "recurring" || canEditMaintenance) && (
+                  <button
+                    type="button"
+                    onClick={() => takeBack(item)}
+                    aria-label={t.my.doneToday.undoFor(item.title)}
+                    className="rounded px-2 py-1 text-sm font-medium text-primary hover:underline"
+                  >
+                    {t.my.undo}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import {
   EMPTY_SCHEDULE_FIELDS,
@@ -9,7 +10,7 @@ import {
 import { createFrequency } from "./actions";
 
 export function CreateFrequencyForm() {
-  const [state, formAction, pending] = useActionState(createFrequency, undefined);
+  const [state, onSubmit, pending] = useKeptForm(createFrequency, undefined);
   const [schedule, setSchedule] = useState(EMPTY_SCHEDULE_FIELDS);
   const { t } = useI18n();
   const f = t.admin.frequencies;
@@ -25,7 +26,7 @@ export function CreateFrequencyForm() {
 
   return (
     <form
-      action={formAction}
+      onSubmit={onSubmit}
       className="flex flex-wrap items-end gap-3 rounded border border-border bg-surface p-4"
     >
       <div className="flex flex-col gap-1">

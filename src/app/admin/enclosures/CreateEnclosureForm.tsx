@@ -1,13 +1,13 @@
 "use client";
 
-import { useActionState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { createEnclosure } from "./actions";
 
 type ZoneOption = { id: string; name: string };
 
 export function CreateEnclosureForm({ zones }: { zones: ZoneOption[] }) {
-  const [state, formAction, pending] = useActionState(
+  const [state, onSubmit, pending] = useKeptForm(
     createEnclosure,
     undefined,
   );
@@ -15,7 +15,7 @@ export function CreateEnclosureForm({ zones }: { zones: ZoneOption[] }) {
 
   return (
     <form
-      action={formAction}
+      onSubmit={onSubmit}
       className="flex flex-wrap items-end gap-3 rounded border border-border bg-surface p-4"
     >
       <div className="flex flex-col gap-1">

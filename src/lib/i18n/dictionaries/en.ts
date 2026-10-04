@@ -4078,6 +4078,19 @@ const en = {
       handedToYouBecause: (note: string) => `handed to you: ${note}`,
       notYet: "Can be marked done on the day",
       cannotDo: "your role isn’t given this job — ask management to reassign it",
+      waitingConfirm: {
+        title: (waitingFor: string) => `“${waitingFor}” is still open`,
+        body: (title: string, waitingFor: string) =>
+          `“${title}” is meant to follow “${waitingFor}”, which is not done yet today. Mark it done anyway?`,
+        confirm: "Mark done anyway",
+      },
+    },
+    doneToday: {
+      heading: "Done today",
+      done: "Done",
+      skipped: "Skipped",
+      completed: "Completed",
+      undoFor: (title: string) => `Undo ${title}`,
     },
     buckets: {
       overdue: "Overdue",

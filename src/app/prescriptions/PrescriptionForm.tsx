@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import { createPrescription, updatePrescription } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate, todayIso } from "@/lib/format";
@@ -72,7 +73,7 @@ export function PrescriptionForm({
   initial?: PrescriptionInitial | null;
   cancelHref: string;
 }) {
-  const [state, formAction, pending] = useActionState(
+  const [state, onSubmit, pending] = useKeptForm(
     mode === "create" ? createPrescription : updatePrescription,
     undefined,
   );
@@ -116,7 +117,7 @@ export function PrescriptionForm({
   }
 
   return (
-    <form action={formAction} className="flex max-w-2xl flex-col gap-6">
+    <form onSubmit={onSubmit} className="flex max-w-2xl flex-col gap-6">
       <input type="hidden" name="residentId" value={residentId} />
       {mode === "edit" && initial && (
         <input type="hidden" name="prescriptionId" value={initial.id} />

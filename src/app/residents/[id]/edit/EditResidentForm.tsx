@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { updateResident } from "./actions";
@@ -82,7 +83,7 @@ export function EditResidentForm({
   /** Current computed age (server-side, so it matches what the hub shows). */
   ageNow: number | null;
 }) {
-  const [state, formAction, pending] = useActionState(
+  const [state, submit, pending] = useKeptForm(
     updateResident.bind(null, resident.id),
     undefined,
   );
@@ -119,15 +120,17 @@ export function EditResidentForm({
     <>
     <form
       ref={formRef}
-      action={formAction}
       onSubmit={(e) => {
         if (confirmedRef.current) {
           confirmedRef.current = false;
+          submit(e);
           return;
         }
         if (moveTarget && capacityWarningLevel(moveTarget)) {
           e.preventDefault();
           setWarningFor(moveTarget);
+        } else {
+          submit(e);
         }
       }}
       className="flex max-w-4xl flex-col gap-8"

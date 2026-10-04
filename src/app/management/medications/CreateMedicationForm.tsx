@@ -1,18 +1,18 @@
 "use client";
 
-import { useActionState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { DOSE_UNITS, doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { createMedication } from "./actions";
 
 export function CreateMedicationForm() {
-  const [state, formAction, pending] = useActionState(createMedication, undefined);
+  const [state, onSubmit, pending] = useKeptForm(createMedication, undefined);
   const { t } = useI18n();
   const m = t.management.medications;
 
   return (
     <form
-      action={formAction}
+      onSubmit={onSubmit}
       className="flex flex-wrap items-end gap-3 rounded border border-border bg-surface p-4"
     >
       <div className="flex flex-col gap-1">

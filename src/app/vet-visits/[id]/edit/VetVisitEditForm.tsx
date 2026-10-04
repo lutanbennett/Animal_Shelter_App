@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import { updateVetVisit } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { vetOptionLabel, type VetOption } from "@/app/vet-visits/new/VetVisitForm";
@@ -58,13 +59,13 @@ export function VetVisitEditForm({
   residentDisplayName: string;
   cancelHref: string;
 }) {
-  const [state, formAction, pending] = useActionState(updateVetVisit, undefined);
+  const [state, onSubmit, pending] = useKeptForm(updateVetVisit, undefined);
   const { t } = useI18n();
   const v = t.vetVisits;
   const [vetId, setVetId] = useState(fixedVet?.id ?? visit.vet_id ?? "");
 
   return (
-    <form action={formAction} className="flex max-w-3xl flex-col gap-6">
+    <form onSubmit={onSubmit} className="flex max-w-3xl flex-col gap-6">
       <input type="hidden" name="visitId" value={visit.id} />
       <input type="hidden" name="residentId" value={visit.resident_id} />
 

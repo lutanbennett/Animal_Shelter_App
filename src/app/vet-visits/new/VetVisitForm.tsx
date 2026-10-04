@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import { bookVetVisit } from "./actions";
 import { ResidentPicker, type ResidentOption } from "@/components/ResidentPicker";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -40,7 +41,7 @@ export function VetVisitForm({
   doctorNamesByVet: DoctorNamesByVet;
   preselectedResidentIds: string[];
 }) {
-  const [state, formAction, pending] = useActionState(bookVetVisit, undefined);
+  const [state, onSubmit, pending] = useKeptForm(bookVetVisit, undefined);
   const { t } = useI18n();
   const [selectedIds, setSelectedIds] = useState<string[]>(
     preselectedResidentIds,
@@ -57,7 +58,7 @@ export function VetVisitForm({
   }
 
   return (
-    <form action={formAction} className="flex max-w-3xl flex-col gap-6">
+    <form onSubmit={onSubmit} className="flex max-w-3xl flex-col gap-6">
       <div className="flex flex-col gap-2">
         <label className="text-sm font-medium text-muted">
           {t.vetVisits.residentsLabel}

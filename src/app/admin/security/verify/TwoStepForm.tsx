@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import { confirmTwoStep, startTwoStepSetup } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
@@ -20,7 +21,7 @@ type Setup = { factorId: string; qrCode: string; secret: string };
 export function TwoStepForm({ enrolled }: { enrolled: boolean }) {
   const { t } = useI18n();
   const s = t.admin.security.twoStep;
-  const [state, formAction, confirming] = useActionState(confirmTwoStep, undefined);
+  const [state, onSubmit, confirming] = useKeptForm(confirmTwoStep, undefined);
   const [setup, setSetup] = useState<Setup | null>(null);
   const [setupError, setSetupError] = useState<string | null>(null);
   const [starting, startTransition] = useTransition();
@@ -78,7 +79,7 @@ export function TwoStepForm({ enrolled }: { enrolled: boolean }) {
         </div>
       )}
 
-      <form action={formAction} className="flex flex-col gap-2">
+      <form onSubmit={onSubmit} className="flex flex-col gap-2">
         {setup && <input type="hidden" name="factorId" value={setup.factorId} />}
         <label htmlFor="code" className="text-sm font-medium text-muted">
           {s.codeLabel}

@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "When a save is refused (a date in the future, a move that starts before the last one), the form now keeps everything you chose and typed, so you fix the one thing and press Save again instead of starting over. On My tasks, a \"Done today\" list at the bottom shows what you marked done, skipped or completed today, still there after a reload, each with Undo. Marking a job done that is waiting for another job now asks first.",
   { text: "Recording a delivery is now a few short steps on a phone, one question at a time: what arrived, which one, how much, when, and who sent it. The last screen says in words what will be recorded, and Back never loses what you typed. After a save, Record another item keeps the day and supplier. Deliveries now has its own place in the menu, next to Stocktake, instead of being a small link at the top of Stocktake.", roles: ["admin", "management", "staff"] },
 ];
 

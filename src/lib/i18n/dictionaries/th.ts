@@ -3956,6 +3956,19 @@ const th: Dictionary = {
       handedToYouBecause: (note: string) => `มอบให้คุณทำแทน: ${note}`,
       notYet: "ทำเครื่องหมายว่าเสร็จได้ในวันนั้น",
       cannotDo: "บทบาทของคุณไม่ได้รับงานนี้ — ขอให้ฝ่ายบริหารมอบหมายใหม่",
+      waitingConfirm: {
+        title: (waitingFor: string) => `“${waitingFor}” ยังไม่เสร็จ`,
+        body: (title: string, waitingFor: string) =>
+          `“${title}” ควรทำต่อจาก “${waitingFor}” ซึ่งวันนี้ยังไม่เสร็จ ต้องการทำเครื่องหมายว่าเสร็จเลยหรือไม่`,
+        confirm: "ทำเครื่องหมายว่าเสร็จเลย",
+      },
+    },
+    doneToday: {
+      heading: "ทำเสร็จวันนี้",
+      done: "เสร็จแล้ว",
+      skipped: "ข้ามแล้ว",
+      completed: "เสร็จสิ้นแล้ว",
+      undoFor: (title: string) => `เลิกทำ ${title}`,
     },
     buckets: {
       overdue: "เลยกำหนด",
