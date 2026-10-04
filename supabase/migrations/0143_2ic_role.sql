@@ -36,6 +36,8 @@
 --                    since the last count); insert and delete on stock.delivery. Its cost column is
 --                    visible to a holder, which is fine: she types it.
 --   record_stocktake()  the guard also admits a login holding stock.count.
+--   stock_receipts_stamp()  security definer, so the unit it copies from the item is found for a login
+--                    that reads the item only through a view (section 6).
 --   stock_medication_forecast(), stock_diet_forecast()   what the purchasing page asked of
 --                    medication_forecast / diet_forecast, which are security invoker, read
 --                    prescriptions and diets she must not see, and go through a resident view that is
@@ -43,7 +45,7 @@
 --                    stock.purchasing, returning the same rows and, for diets, WITHOUT the cost column.
 --
 -- Written to be safely re-runnable. To undo: drop the three views, the two functions and the
--- five policies below, restore record_stocktake() from 0134, delete the role's role_permissions
+-- five policies below, restore record_stocktake() from 0134 and stock_receipts_stamp() from 0096 (security invoker), delete the role's role_permissions
 -- rows and the role row.
 
 -- ---------------------------------------------------------------------------
@@ -318,3 +320,41 @@ $$;
 
 revoke all on function stock_medication_forecast(date, date), stock_diet_forecast(date, date) from public, anon;
 grant execute on function stock_medication_forecast(date, date), stock_diet_forecast(date, date) to authenticated, service_role;
+
+-- ---------------------------------------------------------------------------
+-- 6. A delivery's unit is stamped from the item, whoever records it
+-- ---------------------------------------------------------------------------
+-- stock_receipts_stamp() read `medication` / `diet_types` as the caller to copy the item's unit onto the
+-- row. For a login that reads those tables only through the price-free views (this role) it found
+-- nothing and left `unit` null: found in the browser, a delivery recorded as the 2IC listed without its
+-- unit. Same body, now security definer. The caller still cannot write the table beyond what the
+-- policies say, and recorded_by is still auth.uid() (a JWT claim, not the function owner).
+create or replace function stock_receipts_stamp()
+returns trigger
+language plpgsql
+security definer
+set search_path to 'public'
+as $$
+begin
+  if tg_op = 'INSERT'
+     or new.medication_id is distinct from old.medication_id
+     or new.diet_type_id is distinct from old.diet_type_id then
+    new.unit := case new.item_kind
+      when 'medication' then (select m.dose_unit from medication m where m.id = new.medication_id)
+      else (select d.unit from diet_types d where d.id = new.diet_type_id)
+    end;
+  else
+    new.unit := old.unit;
+  end if;
+
+  if tg_op = 'INSERT' then
+    new.recorded_by := auth.uid();
+    new.created_at := now();
+  else
+    new.recorded_by := old.recorded_by;
+    new.created_at := old.created_at;
+  end if;
+
+  return new;
+end;
+$$;

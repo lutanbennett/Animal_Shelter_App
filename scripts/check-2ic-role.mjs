@@ -55,7 +55,7 @@ const probes = [
   ["item_unit_conversions", `select 1 from item_unit_conversions limit 1`, ANY_STOCK],
   ["stock_receipts read", `select 1 from stock_receipts limit 1`, BUYERS],
   // her screens: the writes
-  ["record a delivery", `insert into stock_receipts (item_kind, medication_id, quantity) select 'medication', id, 1 from stock_medications limit 1`, DELIVERERS],
+  ["record a delivery (its unit is stamped)", `with i as (insert into stock_receipts (item_kind, medication_id, quantity) select 'medication', id, 1 from stock_medications limit 1 returning unit) select 1 from i where unit is not null`, DELIVERERS],
   ["delete a delivery", `delete from stock_receipts where id = (select id from stock_receipts limit 1)`, DELIVERERS],
   ["record_stocktake", `select * from record_stocktake('[]'::jsonb, '[]'::jsonb)`, COUNTERS],
   ["purchasing forecast, medicines", `select count(*) from stock_medication_forecast(current_date, current_date + 30)`, PURCHASERS],
