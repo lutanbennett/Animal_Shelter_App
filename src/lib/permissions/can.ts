@@ -64,6 +64,15 @@ export function can(
 }
 
 /**
+ * can() for a caller that holds an activity key and a level as data, not as literals: a job's bundle
+ * (src/lib/permissions/jobs.ts) mixes level and yes/no activities, and a yes/no cell is held at "edit" (2).
+ * The same answer as can(); only the overloads' compile-time refusal of "read" on a yes/no key is not applied.
+ */
+export function canAt(perms: Permissions | null | undefined, activity: ActivityKey, level: Level): boolean {
+  return can(perms, activity as LevelKey, level);
+}
+
+/**
  * Reads my_permissions()'s jsonb defensively. Null for null or anything that
  * is not the expected object. Cells for keys this build does not know are
  * dropped (the database can be a release ahead), and so is any cell that is

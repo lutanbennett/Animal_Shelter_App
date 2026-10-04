@@ -11,7 +11,7 @@
 import type { LucideIcon } from "lucide-react";
 import { NAV_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
-import { can, type Permissions } from "@/lib/permissions/can";
+import { can, canAt, type Permissions } from "@/lib/permissions/can";
 import { jobsOfRole } from "@/lib/permissions/jobs";
 import { canOpen, routeFor, routesFor, type RouteEntry } from "@/lib/permissions/routes";
 
@@ -49,7 +49,7 @@ export function homeTilesFor(perms: Permissions, t: Dictionary): HomeTile[] {
   if (jobs.length > 0) {
     return jobs.flatMap((job) => {
       const route = routeFor(job.opens);
-      const covered = job.bundle.every((b) => can(perms, b.activity, b.level));
+      const covered = job.bundle.every((b) => canAt(perms, b.activity, b.level));
       return route && covered && canOpen(perms, route)
         ? [{ href: route.path, label: job.label(t), icon: route.icon }]
         : [];

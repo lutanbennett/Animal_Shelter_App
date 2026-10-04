@@ -17,7 +17,7 @@
  * Pure and client-safe.
  */
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
-import type { Level, LevelKey } from "./catalogue";
+import type { ActivityKey, Level } from "./catalogue";
 
 export type JobKey = "administer_medication" | "do_maintenance";
 
@@ -26,7 +26,7 @@ export type Job = {
   /** The person's own words, from the dictionary. */
   label: (t: Dictionary) => string;
   /** The activities the job expands to, at the level it needs. Not a promise of a page. */
-  bundle: readonly { activity: LevelKey; level: Level }[];
+  bundle: readonly { activity: ActivityKey; level: Level }[];
   /** The one page the job's tile opens; it is a route in the registry. */
   opens: string;
 };
@@ -75,8 +75,8 @@ export function jobsOfRole(roleKey: string): readonly Job[] {
 }
 
 /** The union of a role's jobs: each activity once, at the highest level any job asks. */
-export function bundleOfRole(roleKey: string): Map<LevelKey, Level> {
-  const union = new Map<LevelKey, Level>();
+export function bundleOfRole(roleKey: string): Map<ActivityKey, Level> {
+  const union = new Map<ActivityKey, Level>();
   for (const job of jobsOfRole(roleKey)) {
     for (const { activity, level } of job.bundle) {
       if (union.get(activity) !== "edit") union.set(activity, level);
