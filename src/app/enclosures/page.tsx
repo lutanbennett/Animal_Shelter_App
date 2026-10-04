@@ -1,5 +1,5 @@
-import { isShelterRole } from "@/lib/auth/app-access";
-import { requireRole } from "@/lib/auth/require-role";
+import { can } from "@/lib/permissions/can";
+import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import { occupancyLevel } from "@/lib/enclosures/occupancy";
 import { parseEnclosureSort } from "@/lib/enclosures/sort";
@@ -10,7 +10,6 @@ import {
   zonesKeptIn,
 } from "@/lib/enclosures/place";
 import { getTagOrigin } from "@/lib/tags/origin";
-import { canReadMaintenance } from "@/lib/maintenance/queries";
 import { loadSpecialDiets } from "@/lib/diets/special";
 import { EnclosureFilters } from "./EnclosureFilters";
 import {
@@ -62,12 +61,12 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   const place = parseEnclosurePlace(searchParams.place);
   const sort = parseEnclosureSort(searchParams.sort);
 
-  const { supabase } = await requireRole(isShelterRole);
+  const { supabase, perms } = await requirePermission("facility.enclosures", "read");
 
   // Resident counts come from resident_list_view rather than a dedicated
   // occupancy view so no migration is needed; the shelter's headcount is
   // small enough that pulling one row per resident is cheap.
-  const [zonesResult, enclosuresResult, residentsResult, jobsResult, tagOrigin, roleResult, specialDiets] = await Promise.all([
+  const [zonesResult, enclosuresResult, residentsResult, jobsResult, tagOrigin, specialDiets] = await Promise.all([
     supabase.from("zones").select("id, name, name_th, internal").order("name"),
     supabase
       .from("enclosures")
@@ -89,14 +88,13 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       .neq("status", "Completed")
       .returns<{ enclosure_id: string | null; zone_id: string }[]>(),
     getTagOrigin(),
-    supabase.rpc("current_user_role"),
     // Who is on a special diet, for the marker on each card (0087).
     loadSpecialDiets(supabase),
   ]);
 
   // The open-maintenance filter is hidden from vets, and a ?maint=open link
   // is ignored for them, since RLS would leave it showing nothing at all.
-  const canFilterMaintenance = canReadMaintenance(roleResult.data);
+  const canFilterMaintenance = can(perms, "maintenance.jobs", "read");
   const maintOpen = canFilterMaintenance && searchParams.maint === "open";
 
   const counts = new Map<string, number>();

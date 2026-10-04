@@ -87,14 +87,15 @@ function ResidentThumbnail({ resident }: { resident: EnclosureResident }) {
 export function EnclosureHub({
   enclosure,
   residents,
-  isAdmin,
+  canEditEnclosures,
   canWriteMaintenance,
   maintenanceJobs,
   tagOrigin,
 }: {
   enclosure: Enclosure;
   residents: EnclosureResident[];
-  isAdmin: boolean;
+  /** facility.enclosures at Edit: offers the Settings link to manage this enclosure. */
+  canEditEnclosures: boolean;
   /** Staff/admin may log jobs; volunteers only see them. */
   canWriteMaintenance: boolean;
   maintenanceJobs: MaintenanceJob[];
@@ -139,7 +140,7 @@ export function EnclosureHub({
                 ? t.enclosures.hub.internal
                 : t.enclosures.hub.external}
           </p>
-          {isAdmin && !enclosure.isSystem && (
+          {canEditEnclosures && !enclosure.isSystem && (
             <Link
               href="/admin/enclosures"
               className="text-xs font-medium text-primary hover:underline"

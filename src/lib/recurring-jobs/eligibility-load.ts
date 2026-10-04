@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { ASSIGNABLE_ROLES, JOB_NEEDS, needKey, type Eligibility } from "./eligibility";
+import { ASSIGNABLE_ROLES, JOB_NEEDS, needKey, type Eligibility, type Need } from "./eligibility";
 
 /**
  * The database's answer to "may this role do the page a job links to", for
@@ -16,13 +16,14 @@ import { ASSIGNABLE_ROLES, JOB_NEEDS, needKey, type Eligibility } from "./eligib
 export async function loadEligibility(
   supabase: SupabaseClient,
   roles: readonly (string | null | undefined)[],
+  needs: readonly Need[] = JOB_NEEDS,
 ): Promise<{ eligibility: Eligibility; error: string | null }> {
   // A vet or an unknown role is never assignable (canDoJob says no first), so it is not asked.
   const asked = [...new Set(roles)].filter(
     (role): role is string => !!role && (ASSIGNABLE_ROLES as readonly string[]).includes(role),
   );
   const answers = await Promise.all(
-    JOB_NEEDS.flatMap((need) =>
+    needs.flatMap((need) =>
       asked.map(async (role) => {
         const { data, error } = await supabase.rpc("role_can", {
           p_role_key: role,
@@ -36,7 +37,7 @@ export async function loadEligibility(
   const failed = answers.find((a) => a.error);
   if (failed) return { eligibility: {}, error: failed.error };
   const eligibility: Record<string, string[]> = {};
-  for (const need of JOB_NEEDS) {
+  for (const need of needs) {
     eligibility[needKey(need)] = answers.filter((a) => a.need === need && a.yes).map((a) => a.role);
   }
   return { eligibility, error: null };

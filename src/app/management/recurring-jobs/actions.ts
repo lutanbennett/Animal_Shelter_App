@@ -13,7 +13,7 @@ import {
   type RecurrenceRule,
   type TimeOfDay,
 } from "@/lib/recurring-jobs/rule";
-import { ASSIGNABLE_ROLES, canDoJob } from "@/lib/recurring-jobs/eligibility";
+import { ASSIGNABLE_ROLES, canDoJob, needsForLinks } from "@/lib/recurring-jobs/eligibility";
 import { loadEligibility } from "@/lib/recurring-jobs/eligibility-load";
 import { appUserLabel, type AppUser } from "@/lib/auth/app-users";
 import {
@@ -194,6 +194,7 @@ async function whoCannotDo(
   const { eligibility, error: eligibilityError } = await loadEligibility(
     supabase,
     (data ?? []).map((user) => user.role),
+    needsForLinks([linkPath]),
   );
   if (eligibilityError) return { names: [], error: eligibilityError };
   return {

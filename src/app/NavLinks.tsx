@@ -31,21 +31,36 @@ function activeHref(pathname: string, items: NavItem[]): string | undefined {
 }
 
 export function NavLinks({
-  isAdmin,
-  canManage,
-  isShelter,
+  canSecurity,
+  canSettings,
+  canManagement,
+  hasTasks,
+  canEnclosures,
+  canMaintenance,
+  canVets,
+  canContacts,
+  canProjects,
   canStocktake,
   urgentCount,
 }: {
-  isAdmin: boolean;
-  /** Admin or management: shows the Management link. */
-  canManage: boolean;
+  /** Whoever may change who can sign in: the Security link. Not an activity (an Admin rule). */
+  canSecurity: boolean;
+  /** Holds any activity a Settings page asks for: the Settings link. */
+  canSettings: boolean;
+  /** Holds any activity a Management page asks for: the Management link. */
+  canManagement: boolean;
   /**
-   * Everyone but a vet (isShelterRole): shows Enclosures, Maintenance, Vets,
-   * Contacts and Projects. A vet's menu is Appointments and Residents.
+   * Has recurring jobs of their own (recurring.do_own): My tasks leads the menu.
+   * Without it the menu leads with Appointments, as a vet's does.
    */
-  isShelter: boolean;
-  /** Admin, management, staff, volunteer: shows Stocktake (0091). */
+  hasTasks: boolean;
+  /** Each of these is the page's own guard, asked of the route registry (NavPane). */
+  canEnclosures: boolean;
+  canMaintenance: boolean;
+  canVets: boolean;
+  canContacts: boolean;
+  canProjects: boolean;
+  /** stock.count: shows Stocktake (0091). */
   canStocktake: boolean;
   /** My tasks due today or overdue, shown on the My tasks link when > 0. */
   urgentCount: number;
@@ -65,7 +80,7 @@ export function NavLinks({
       // First for every role: "what do I need to do today" (my-dashboard).
       // A vet has no tasks: theirs is the clinic's appointments (Lutan,
       // 2026-09-29).
-      isShelter
+      hasTasks
         ? {
             href: "/my",
             label: t.nav.my,
@@ -79,19 +94,11 @@ export function NavLinks({
             icon: NAV_ICONS.appointments,
           },
       { href: "/residents", label: t.nav.residents, icon: NAV_ICONS.residents },
-      ...(isShelter
-        ? [
-            {
-              href: "/enclosures",
-              label: t.nav.enclosures,
-              icon: NAV_ICONS.enclosures,
-            },
-            {
-              href: "/maintenance",
-              label: t.nav.maintenance,
-              icon: NAV_ICONS.maintenance,
-            },
-          ]
+      ...(canEnclosures
+        ? [{ href: "/enclosures", label: t.nav.enclosures, icon: NAV_ICONS.enclosures }]
+        : []),
+      ...(canMaintenance
+        ? [{ href: "/maintenance", label: t.nav.maintenance, icon: NAV_ICONS.maintenance }]
         : []),
       // A field job, done walking the shelves — with the daily pages, not
       // under Management, because staff and volunteers do it (0091).
@@ -101,18 +108,16 @@ export function NavLinks({
     ],
     // The shelter's reference lists — not a vet's, who is an outside clinic
     // and should not browse the other clinics the shelter uses (2026-09-27).
-    isShelter
-      ? [
-          { href: "/vets", label: t.nav.vets, icon: NAV_ICONS.vets },
-          { href: "/contacts", label: t.nav.contacts, icon: NAV_ICONS.contacts },
-          { href: "/projects", label: t.nav.projects, icon: NAV_ICONS.projects },
-        ]
-      : [],
+    [
+      ...(canVets ? [{ href: "/vets", label: t.nav.vets, icon: NAV_ICONS.vets }] : []),
+      ...(canContacts ? [{ href: "/contacts", label: t.nav.contacts, icon: NAV_ICONS.contacts }] : []),
+      ...(canProjects ? [{ href: "/projects", label: t.nav.projects, icon: NAV_ICONS.projects }] : []),
+    ],
     // No Assistant entry: the header button opens it on every screen, and
     // its slide-over links through to the full /assistant page
     // (docs/decisions.md, 2026-09-25).
     [
-      ...(canManage
+      ...(canManagement
         ? [
             {
               href: "/management",
@@ -123,7 +128,7 @@ export function NavLinks({
         : []),
       // "Settings" is the menu's name for the /admin pages; the URL and the
       // admin role keep their names (docs/decisions.md, 2026-09-23).
-      ...(isAdmin
+      ...(canSettings
         ? [{ href: "/admin", label: t.nav.settings, icon: NAV_ICONS.settings }]
         : []),
     ],
@@ -145,7 +150,7 @@ export function NavLinks({
       label: t.nav.changePassword,
       icon: NAV_ICONS.changePassword,
     },
-    ...(isAdmin
+    ...(canSecurity
       ? [
           {
             href: "/admin/security",

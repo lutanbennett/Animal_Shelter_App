@@ -1,5 +1,4 @@
 import { APP_ACCESS_ROLES } from "@/lib/auth/app-access";
-import { canWriteMaintenance } from "@/lib/maintenance/queries";
 import type { ActivityKey, Level } from "@/lib/permissions/catalogue";
 import { ROUTES } from "@/lib/permissions/routes";
 
@@ -12,17 +11,16 @@ import { ROUTES } from "@/lib/permissions/routes";
  * stocktake while the link says maintenance. docs/decisions.md (2026-09-27)
  * has the reasoning.
  *
- * A rule is one of two shapes. A page registered in the route registry
- * (permissions/routes.ts) is decided by the activity that registry names:
- * "may this role do it" is a question for the database, asked as role_can()
- * (0133) and carried here as an `Eligibility`, because can() answers only
- * about the caller and an assignee is someone else. The rest still borrow the
- * predicate the target page uses, where it is client-safe, and move to the
- * first shape when their page is registered (decisions/2026-10-04-role-can-app.md).
- * Either way a page's guard and this list can only drift if someone changes
- * one and not the other in the same file. A path no rule
- * matches — no link at all, /residents, /my — can be done by any assignable
- * role.
+ * Every rule is one or more cells asked of the database. A page registered in
+ * the route registry (permissions/routes.ts) is decided by the activity that
+ * registry names: "may this role do it" is a question for the database, asked
+ * as role_can() (0133) and carried here as an `Eligibility`, because can()
+ * answers only about the caller and an assignee is someone else. Nothing here
+ * names a role. The two landing pages, /management and /admin, are not
+ * registered (a landing opens for anyone who may open one of its pages), so
+ * they are decided by "any of the pages under it"
+ * (decisions/2026-10-04-permissions-sweep-rest.md). A path no rule matches —
+ * no link at all, /residents, /my — can be done by any assignable role.
  *
  * Vets are not assignable at all (Lutan, 2026-09-27): a vet's work comes
  * from their vet appointments and the residents on them, not from the
@@ -53,32 +51,42 @@ export type Eligibility = Readonly<Record<string, readonly string[]>>;
 
 export const needKey = (need: Need): string => `${need.activity}:${need.level}`;
 
-type Rule = { prefix: string; need: Need } | { prefix: string; allows: (role: string) => boolean };
+/** A role can do a job under `prefix` when it holds any one of `needs`. */
+type Rule = { prefix: string; needs: readonly Need[] };
 
-/** canManage (require-management.ts), which lives beside server-only code. */
-const isManager = (role: string) => role === "admin" || role === "management";
+/** The cell a job linked to this page needs: Edit unless the entry says the page opens lower than the work does. */
+const jobNeed = (route: (typeof ROUTES)[number]): Need => ({
+  activity: route.activity,
+  level: route.jobLevel ?? route.level ?? "edit",
+});
 
-/** Longest prefix wins, so /management/… is decided by /management, not by nothing. */
+/** Longest prefix wins, so a page is decided by its own entry before its landing's. */
 const RULES: Rule[] = [
-  // Every registered page, from its route entry (a yes/no activity opens at edit).
-  ...ROUTES.map((route): Rule => ({
-    prefix: route.path,
-    need: { activity: route.activity, level: route.level ?? "edit" },
+  // Every registered page, from its route entry.
+  ...ROUTES.map((route): Rule => ({ prefix: route.path, needs: [jobNeed(route)] })),
+  // The landings: open for whoever can open any page under them.
+  ...["/management", "/admin"].map((prefix): Rule => ({
+    prefix,
+    needs: ROUTES.filter((r) => r.path.startsWith(prefix + "/")).map(jobNeed),
   })),
-  // Not registered yet: each keeps the predicate its page uses, until a sweep registers the page.
-  { prefix: "/admin", allows: (role) => role === "admin" },
-  { prefix: "/management", allows: isManager },
-  // The work on the board is logging and updating jobs; a volunteer reads it
-  // and adds photos, but cannot move a job on.
-  { prefix: "/maintenance", allows: canWriteMaintenance },
 ];
 
 /** Every cell the rules ask role_can() about, once each: what loadEligibility has to fetch. */
 export const JOB_NEEDS: readonly Need[] = [
-  ...new Map(
-    RULES.flatMap((rule) => ("need" in rule ? [rule.need] : [])).map((need) => [needKey(need), need]),
-  ).values(),
+  ...new Map(RULES.flatMap((rule) => rule.needs).map((need) => [needKey(need), need])).values(),
 ];
+
+/**
+ * The cells a set of links needs, for a caller that knows which pages it cares about (My tasks asks
+ * about its own jobs' pages, not the whole registry). A link no rule matches needs nothing.
+ */
+export function needsForLinks(linkPaths: readonly (string | null | undefined)[]): readonly Need[] {
+  return [
+    ...new Map(
+      linkPaths.flatMap((link) => ruleFor(link)?.needs ?? []).map((need) => [needKey(need), need]),
+    ).values(),
+  ];
+}
 
 /** The path part of a link: no query, no fragment, no trailing slash. */
 function pathOf(linkPath: string): string {
@@ -107,7 +115,7 @@ export function canDoJob(
   if (!role || !(ASSIGNABLE_ROLES as readonly string[]).includes(role)) return false;
   const rule = ruleFor(linkPath);
   if (!rule) return true;
-  return "need" in rule ? (eligibility[needKey(rule.need)]?.includes(role) ?? false) : rule.allows(role);
+  return rule.needs.some((need) => eligibility[needKey(need)]?.includes(role) ?? false);
 }
 
 /** The roles that can do it, in the usual order — for "only … are listed". */

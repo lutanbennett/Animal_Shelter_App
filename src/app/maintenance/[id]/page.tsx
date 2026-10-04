@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
-import { isShelterRole } from "@/lib/auth/app-access";
-import { requireRole } from "@/lib/auth/require-role";
-import { canWriteMaintenance, loadMaintenanceJob } from "@/lib/maintenance/queries";
-import { canManage } from "@/lib/auth/require-management";
+import { can } from "@/lib/permissions/can";
+import { requirePermission } from "@/lib/permissions/require";
+import { loadMaintenanceJob } from "@/lib/maintenance/queries";
 import { loadTranslations } from "@/lib/translations/queries";
 import { MaintenanceJobView } from "./MaintenanceJobView";
 
@@ -15,10 +14,9 @@ import { MaintenanceJobView } from "./MaintenanceJobView";
  */
 export default async function MaintenanceJobPage(props: PageProps<"/maintenance/[id]">) {
   const { id } = await props.params;
-  const { supabase } = await requireRole(isShelterRole);
+  const { supabase, perms } = await requirePermission("maintenance.jobs", "read");
 
-  const [{ data: role }, job, translations] = await Promise.all([
-    supabase.rpc("current_user_role"),
+  const [job, translations] = await Promise.all([
     loadMaintenanceJob(supabase, id),
     // The job's title and description in the other language (0057).
     loadTranslations(supabase, "maintenance", [id]),
@@ -28,8 +26,8 @@ export default async function MaintenanceJobPage(props: PageProps<"/maintenance/
   return (
     <MaintenanceJobView
       job={job}
-      canWrite={canWriteMaintenance(role)}
-      canManageTranslations={canManage(role)}
+      canWrite={can(perms, "maintenance.jobs")}
+      canManageTranslations={can(perms, "translations.manage")}
       translations={Array.from(translations.values())}
     />
   );

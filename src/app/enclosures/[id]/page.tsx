@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { isShelterRole } from "@/lib/auth/app-access";
-import { requireRole } from "@/lib/auth/require-role";
-import { canWriteMaintenance, loadMaintenanceJobs } from "@/lib/maintenance/queries";
+import { can } from "@/lib/permissions/can";
+import { requirePermission } from "@/lib/permissions/require";
+import { loadMaintenanceJobs } from "@/lib/maintenance/queries";
 import { getTagOrigin } from "@/lib/tags/origin";
 import { loadSpecialDiets } from "@/lib/diets/special";
 import {
@@ -24,9 +24,9 @@ export default async function EnclosurePage(
   props: PageProps<"/enclosures/[id]">,
 ) {
   const { id } = await props.params;
-  const { supabase } = await requireRole(isShelterRole);
+  const { supabase, perms } = await requirePermission("facility.enclosures", "read");
 
-  const [enclosureResult, occupantsResult, roleResult, maintenanceResult, tagOrigin] = await Promise.all([
+  const [enclosureResult, occupantsResult, maintenanceResult, tagOrigin] = await Promise.all([
     supabase
       .from("enclosures")
       .select("id, name, name_th, capacity, notes, zone_id, zones(name, name_th, internal)")
@@ -40,7 +40,6 @@ export default async function EnclosurePage(
       .select("resident_id")
       .eq("enclosure_id", id)
       .returns<{ resident_id: string }[]>(),
-    supabase.rpc("current_user_role"),
     loadMaintenanceJobs(supabase, { enclosureId: id }),
     getTagOrigin(),
   ]);
@@ -82,8 +81,8 @@ export default async function EnclosurePage(
     <EnclosureHub
       enclosure={enclosure}
       residents={residents}
-      isAdmin={roleResult.data === "admin"}
-      canWriteMaintenance={canWriteMaintenance(roleResult.data)}
+      canEditEnclosures={can(perms, "facility.enclosures")}
+      canWriteMaintenance={can(perms, "maintenance.jobs")}
       maintenanceJobs={maintenanceResult.jobs}
       tagOrigin={tagOrigin}
     />

@@ -1,8 +1,8 @@
-import { isShelterRole } from "@/lib/auth/app-access";
-import { requireRole } from "@/lib/auth/require-role";
+import { can } from "@/lib/permissions/can";
+import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import { loadEnclosureOptions } from "@/lib/enclosures/options";
-import { canWriteMaintenance, loadMaintenanceJobs } from "@/lib/maintenance/queries";
+import { loadMaintenanceJobs } from "@/lib/maintenance/queries";
 import { loadTranslations } from "@/lib/translations/queries";
 import { MaintenanceBoard } from "./MaintenanceBoard";
 
@@ -13,17 +13,17 @@ import { MaintenanceBoard } from "./MaintenanceBoard";
  * open job count is dozens, not thousands, and it keeps the filters
  * instant.
  *
- * Staff and volunteers open on their own jobs ("what do I need to work
- * on"), management and admin on everyone's; a link that names a zone or
+ * Whoever cannot mark anyone's recurring job (recurring.do_any: today staff
+ * and volunteers) opens on their own jobs ("what do I need to work on"),
+ * everyone else on everyone's; a link that names a zone or
  * enclosure shows everything there. `assignee=` overrides either way.
  */
 export default async function MaintenancePage(props: PageProps<"/maintenance">) {
   const searchParams = await props.searchParams;
   const { t } = await getT();
-  const { supabase } = await requireRole(isShelterRole);
+  const { supabase, perms } = await requirePermission("maintenance.jobs", "read");
 
-  const [{ data: role }, { data: auth }, { jobs, error }, options] = await Promise.all([
-    supabase.rpc("current_user_role"),
+  const [{ data: auth }, { jobs, error }, options] = await Promise.all([
     supabase.auth.getUser(),
     loadMaintenanceJobs(supabase),
     loadEnclosureOptions(supabase),
@@ -53,7 +53,7 @@ export default async function MaintenancePage(props: PageProps<"/maintenance">) 
     (assignee !== "all" &&
       !param("zone") &&
       !param("enclosure") &&
-      (role === "staff" || role === "volunteer"));
+      !can(perms, "recurring.do_any"));
 
   return (
     // min-w-0: the phone layout's status chips scroll sideways inside their
@@ -76,7 +76,7 @@ export default async function MaintenancePage(props: PageProps<"/maintenance">) 
         titles={titles}
         zones={options.zones}
         enclosures={options.enclosures}
-        canWrite={canWriteMaintenance(role)}
+        canWrite={can(perms, "maintenance.jobs")}
         currentUserId={auth.user?.id ?? null}
         initialFilters={{
           zoneId: param("zone"),

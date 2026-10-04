@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { isShelterRole } from "@/lib/auth/app-access";
-import { requireRole } from "@/lib/auth/require-role";
+import { can } from "@/lib/permissions/can";
+import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import { placeName } from "@/lib/enclosures/names";
 import { loadEnclosureOptions } from "@/lib/enclosures/options";
 import { loadAssignableUsers } from "@/lib/auth/app-users";
-import { canWriteMaintenance } from "@/lib/maintenance/queries";
 import { MaintenanceForm } from "../MaintenanceForm";
 
 /**
@@ -17,15 +16,14 @@ import { MaintenanceForm } from "../MaintenanceForm";
 export default async function NewMaintenancePage(props: PageProps<"/maintenance/new">) {
   const searchParams = await props.searchParams;
   const { t, locale } = await getT();
-  const { supabase } = await requireRole(isShelterRole);
+  const { supabase, perms } = await requirePermission("maintenance.jobs", "read");
 
-  const [{ data: role }, options, assignees] = await Promise.all([
-    supabase.rpc("current_user_role"),
+  const [options, assignees] = await Promise.all([
     loadEnclosureOptions(supabase),
     loadAssignableUsers(supabase),
   ]);
 
-  if (!canWriteMaintenance(role)) {
+  if (!can(perms, "maintenance.jobs")) {
     return (
       <main className="flex flex-1 flex-col gap-4 p-6">
         <h1 className="text-2xl font-semibold text-foreground">{t.maintenance.newJob}</h1>

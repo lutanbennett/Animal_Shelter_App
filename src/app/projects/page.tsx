@@ -1,8 +1,7 @@
-import { isShelterRole } from "@/lib/auth/app-access";
-import { requireRole } from "@/lib/auth/require-role";
+import { can } from "@/lib/permissions/can";
+import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import {
-  canWriteProjects,
   loadAllProjectFolders,
   loadProjectCategories,
 } from "@/lib/projects/queries";
@@ -19,14 +18,13 @@ export default async function ProjectsPage(props: PageProps<"/projects">) {
   const searchParams = await props.searchParams;
   const q = typeof searchParams.q === "string" ? searchParams.q.trim() : "";
   const { t } = await getT();
-  const { supabase } = await requireRole(isShelterRole);
+  const { supabase, perms } = await requirePermission("projects.folders", "read");
 
-  const [{ data: role }, categories, all] = await Promise.all([
-    supabase.rpc("current_user_role"),
+  const [categories, all] = await Promise.all([
     loadProjectCategories(supabase),
     q ? loadAllProjectFolders(supabase) : Promise.resolve(null),
   ]);
-  const canWrite = canWriteProjects(role);
+  const canWrite = can(perms, "projects.folders");
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-6">
