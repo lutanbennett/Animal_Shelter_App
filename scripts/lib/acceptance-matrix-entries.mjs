@@ -213,7 +213,7 @@ export const ENTRIES = {
       activity: "Find a resident",
       needs: "resident.record:read",
       device: "both",
-      do: "Open Residents and search by name (English or Thai), by ID such as R0042, then try the On-site / Off-site choice and a zone chip.",
+      do: "Open Residents and search by name (English or Thai), by ID such as R-0042, then try the On-site / Off-site choice and a zone chip.",
       expect: "The list narrows each time and a name opens that resident's hub. Residents who have died are hidden, with a count.",
       notes: { vet: "A vet's list names the clinic at the top and shows only that clinic's residents; any other resident is absent." },
     },

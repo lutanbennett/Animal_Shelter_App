@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { logAssistantAction } from "@/lib/assistant/audit";
+import { contactRelation } from "@/lib/contacts/visibility";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import type { DueDraft, WhereDraft, WhoDraft } from "@/lib/assistant/types";
@@ -40,6 +41,11 @@ export type WhereAnswer = {
   enclosureNameTh: string | null;
   zoneName: string | null;
   zoneNameTh: string | null;
+  /**
+   * A fostered resident is not at the shelter; the answer is the carer
+   * (null name: the placement has none recorded). Absent otherwise.
+   */
+  fosterCarer?: { name: string | null };
 };
 
 export type WhoAnswer = {
@@ -112,6 +118,29 @@ async function photosById(
   return new Map((data ?? []).map((r) => [r.id, r.profile_photo_drive_file_id]));
 }
 
+/** The carer on a resident's current placement, through the contact view the asker may read. */
+async function carerName(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  residentId: string,
+): Promise<string | null> {
+  const perms = await loadPermissions();
+  const { data: state } = await supabase
+    .from("resident_current_state")
+    .select("current_carer_id")
+    .eq("resident_id", residentId)
+    .limit(1)
+    .returns<{ current_carer_id: string | null }[]>();
+  const carerId = state?.[0]?.current_carer_id;
+  if (!carerId) return null;
+  const { data } = await supabase
+    .from(contactRelation(perms?.scopes.contacts))
+    .select("name")
+    .eq("id", carerId)
+    .limit(1)
+    .returns<{ name: string }[]>();
+  return data?.[0]?.name ?? null;
+}
+
 async function answerWhere(
   supabase: Awaited<ReturnType<typeof createClient>>,
   residentId: string,
@@ -128,6 +157,10 @@ async function answerWhere(
   if (!row) return { error: t.assistant.lookups.residentNotFound };
 
   const photos = await photosById(supabase, [row.resident_id]);
+  const fosterCarer =
+    row.current_status === "Fostered"
+      ? { name: await carerName(supabase, row.resident_id) }
+      : undefined;
   return {
     answer: {
       kind: "where",
@@ -144,6 +177,7 @@ async function answerWhere(
       enclosureNameTh: row.enclosure_name_th,
       zoneName: row.zone_name,
       zoneNameTh: row.zone_name_th,
+      fosterCarer,
     },
   };
 }

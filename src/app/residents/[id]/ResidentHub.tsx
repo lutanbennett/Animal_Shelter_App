@@ -243,6 +243,10 @@ export function ResidentHub({
   // that (and where they'll come back to, or who they're with) instead of
   // naming the Lifecycle pseudo-enclosure as if it were a kennel.
   const currentStatus = status?.current_status ?? "Unknown";
+  // The flag is cleared on adoption and death, but older rows still carry it:
+  // an adopted or deceased resident is not waiting for a home (F-20).
+  const waitingForHome =
+    resident.ready_for_adoption && !isDeceased && currentStatus !== "Adopted";
   const isHospitalised = currentStatus === "Hospitalised";
   const isWithCarer = currentStatus === "Fostered" || currentStatus === "Adopted";
   const housingTone = STATUS_TONE[currentStatus] ?? "neutral";
@@ -467,14 +471,14 @@ export function ResidentHub({
             )}
             {/* A deceased record is closed (0026), so no pencil; the
                 function would refuse it anyway. */}
-            {(resident.microchip_number || resident.ready_for_adoption || canSetMicrochip) && (
+            {(resident.microchip_number || waitingForHome || canSetMicrochip) && (
               <MicrochipLine
                 residentId={resident.id}
                 number={resident.microchip_number}
                 implantedOn={resident.microchip_implanted_on}
                 canEdit={canSetMicrochip && !isDeceased}
                 nudge={
-                  resident.ready_for_adoption && !isDeceased ? t.residents.hub.microchipNudge : null
+                  waitingForHome ? t.residents.hub.microchipNudge : null
                 }
               />
             )}
@@ -502,7 +506,7 @@ export function ResidentHub({
           >
             {statusLabel(t, currentStatus)}
           </span>
-          {resident.ready_for_adoption && (
+          {waitingForHome && (
             <span className="rounded-full bg-success/15 px-3 py-1 text-xs font-medium text-success">
               {t.residents.hub.readyForAdoption}
             </span>

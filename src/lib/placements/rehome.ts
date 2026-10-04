@@ -212,6 +212,19 @@ export async function rehomeResident(
   });
   if (error) return { error: error.message };
 
+  // An adopted resident is no longer waiting for a home. Death clears the
+  // flag in a trigger (0002); adoption never did, so the hub kept its green
+  // badge and the microchip nudge (dry run 2026-10-03, F-20). Done here rather
+  // than in a migration; the placement is already recorded, so a failure to
+  // clear it is not reported as a failed adoption — the hub and the public
+  // pages ignore the flag on an adopted resident anyway.
+  if (input.kind === "adopt") {
+    await supabase
+      .from("residents")
+      .update({ ready_for_adoption: false })
+      .eq("id", input.residentId);
+  }
+
   return { ok: true };
 }
 

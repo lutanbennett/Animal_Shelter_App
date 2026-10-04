@@ -2623,6 +2623,10 @@ const en = {
       whereNowhere: (resident: string) =>
         `${resident} isn't in an enclosure at the moment.`,
       whereStatus: (status: string) => `Status: ${status}`,
+      whereFostered: (resident: string, carer: string) =>
+        `${resident} is with foster carer ${carer}.`,
+      whereFosteredNoCarer: (resident: string) =>
+        `${resident} is with a foster carer.`,
       whoAnswer: (enclosure: string, count: number) =>
         count === 1 ? `1 resident is in ${enclosure}:` : `${count} residents are in ${enclosure}:`,
       whoEmpty: (enclosure: string) => `${enclosure} is empty.`,

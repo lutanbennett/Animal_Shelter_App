@@ -73,17 +73,21 @@ function WhereBody({ answer }: { answer: WhereAnswer }) {
   return (
     <div className="flex flex-col gap-2">
       <p>
-        {where
-          ? a.whereAnswer(displayName, zone ? `${where} (${zone})` : where)
-          : a.whereNowhere(displayName)}
+        {answer.fosterCarer
+          ? answer.fosterCarer.name
+            ? a.whereFostered(displayName, answer.fosterCarer.name)
+            : a.whereFosteredNoCarer(displayName)
+          : where
+            ? a.whereAnswer(displayName, zone ? `${where} (${zone})` : where)
+            : a.whereNowhere(displayName)}
       </p>
-      {answer.status && (
+      {answer.status && !answer.fosterCarer && (
         <p className="text-muted">{a.whereStatus(statusLabel(t, answer.status))}</p>
       )}
       <div className="flex flex-wrap gap-2">
         <ResidentTile id={r.id} name={displayName} code={r.code} photoFileId={r.photoFileId} />
       </div>
-      {answer.enclosureId && (
+      {answer.enclosureId && !answer.fosterCarer && (
         <Link
           href={`/enclosures/${answer.enclosureId}`}
           className="text-primary hover:underline"
