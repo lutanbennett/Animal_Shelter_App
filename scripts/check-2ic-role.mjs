@@ -151,6 +151,26 @@ do $run$ begin
 ${lines.join("\n")}
 end $run$;
 
+-- the forecast wrappers carry copies of the two forecast queries: as the 2IC they must give what management's
+-- originals give (they read private.resident_current_state because the public view is empty to a volunteer floor)
+do $cmp$
+declare m_orig numeric; m_orig_n bigint; d_orig numeric; d_orig_n bigint; m_sic numeric; m_sic_n bigint; d_sic numeric; d_sic_n bigint;
+begin
+  perform set_config('request.jwt.claims', json_build_object('sub', ${lit(ID.management)}, 'role', 'authenticated', 'aal', 'aal1')::text, true);
+  set local role authenticated;
+  select coalesce(sum(quantity), 0), count(*) into m_orig, m_orig_n from medication_forecast(current_date, current_date + 26);
+  select coalesce(sum(quantity), 0), count(*) into d_orig, d_orig_n from diet_forecast(current_date, current_date + 26);
+  reset role;
+  perform set_config('request.jwt.claims', json_build_object('sub', ${lit(ID.sic)}, 'role', 'authenticated', 'aal', 'aal1')::text, true);
+  set local role authenticated;
+  select coalesce(sum(quantity), 0), count(*) into m_sic, m_sic_n from stock_medication_forecast(current_date, current_date + 26);
+  select coalesce(sum(quantity), 0), count(*) into d_sic, d_sic_n from stock_diet_forecast(current_date, current_date + 26);
+  reset role;
+  insert into res values ('cmp', 'medication forecast equals the original', case when m_orig = m_sic and m_orig_n = m_sic_n then 0 else 1 end);
+  insert into res values ('cmp', 'diet forecast equals the original', case when d_orig = d_sic and d_orig_n = d_sic_n then 0 else 1 end);
+  insert into res values ('cmp', 'forecasts are not trivially empty', case when m_orig_n > 0 and d_orig_n > 0 then 0 else 1 end);
+end $cmp$;
+
 do $role$ begin
   insert into res select 'role', 'row', 0 where exists (select 1 from roles where key = 'second_in_command' and kind = 'custom' and legacy_role = 'volunteer' and opens_app and name_th is not null and archived_at is null);
   insert into res select 'role', 'cell:' || rp.activity || ':' || rp.level, 0 from role_permissions rp join roles r on r.id = rp.role_id where r.key = 'second_in_command';
@@ -190,6 +210,12 @@ for (const [name, , exp] of probes) {
   }
 }
 
+for (const name of ["medication forecast equals the original", "diet forecast equals the original"]) {
+  if (get("cmp", name) === 0) pass(`${name} (as the 2IC, against management's original)`);
+  else fail(`${name}: the wrapper and the original differ`);
+}
+if (get("cmp", "forecasts are not trivially empty") === 0) pass("the forecasts compared hold rows");
+else console.log("NOTE  the dev forecasts are empty, so the comparison above proves little");
 if (get("role", "row") === 0) pass("role row: custom, borrows volunteer, opens the app, has a Thai name"); else fail("role row second_in_command missing or wrong shape");
 if (get("role", "diet-forecast-has-no-cost") === 0) pass("stock_diet_forecast() returns no cost column"); else fail("stock_diet_forecast() returns a cost column");
 const have = new Map(rows.filter((r) => r.who === "role" && r.tbl.startsWith("cell:")).map((r) => r.tbl.split(":").slice(1)).map(([a, l]) => [a, Number(l)]));

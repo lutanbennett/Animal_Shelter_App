@@ -37,9 +37,10 @@
 --                    visible to a holder, which is fine: she types it.
 --   record_stocktake()  the guard also admits a login holding stock.count.
 --   stock_medication_forecast(), stock_diet_forecast()   what the purchasing page asked of
---                    medication_forecast / diet_forecast, which are security invoker and read
---                    prescriptions and diets she must not see. Definer wrappers on stock.purchasing,
---                    returning the same rows and, for diets, WITHOUT the cost column.
+--                    medication_forecast / diet_forecast, which are security invoker, read
+--                    prescriptions and diets she must not see, and go through a resident view that is
+--                    empty to a volunteer floor. Definer copies of the two queries behind
+--                    stock.purchasing, returning the same rows and, for diets, WITHOUT the cost column.
 --
 -- Written to be safely re-runnable. To undo: drop the three views, the two functions and the
 -- five policies below, restore record_stocktake() from 0134, delete the role's role_permissions
@@ -230,6 +231,12 @@ $function$;
 -- ---------------------------------------------------------------------------
 -- 5. What an order is forecast from
 -- ---------------------------------------------------------------------------
+-- medication_forecast() and diet_forecast() are security invoker and read public.resident_current_state,
+-- which answers nothing to a volunteer-based login (it filters on current_user_role()), so wrapping them
+-- would still be empty for her. These two carry the same queries, over private.resident_current_state (the
+-- unfiltered view the medication list reads, 0136), behind the stock.purchasing cell. A change to either
+-- original's arithmetic must be made here too; check-2ic-role.mjs compares the two as management and goes
+-- red if they differ.
 create or replace function stock_medication_forecast(p_from date, p_to date)
 returns table (medication_id uuid, medication_name text, dose_unit text, prescription_count bigint,
                resident_count bigint, dose_count bigint, quantity numeric)
@@ -242,11 +249,30 @@ begin
   if not has_permission('stock.purchasing') then
     raise exception 'Not authorized to read the purchasing forecast.' using errcode = 'insufficient_privilege';
   end if;
-  return query select * from medication_forecast(p_from, p_to);
+  return query
+  select
+    m.id,
+    m.name,
+    m.dose_unit,
+    count(p.id),
+    count(distinct p.resident_id),
+    coalesce(sum(d.doses), 0),
+    coalesce(sum(d.doses * p.dose_quantity), 0)
+  from medication m
+  join prescriptions p on p.medication_id = m.id
+  join private.resident_current_state s on s.resident_id = p.resident_id
+  cross join lateral (
+    select prescription_doses_between(p, p_from, p_to) as doses
+  ) d
+  where p.archived_at is null  -- 0124: an archived prescription is a deleted one
+    and p.start_date <= p_to
+    and (p.end_date is null or p.end_date >= p_from)
+    and s.current_status not in ('Deceased', 'Adopted')
+  group by m.id, m.name, m.dose_unit;
 end;
 $$;
 
--- Same rows as diet_forecast() without its cost column: the price of a diet is Management's.
+-- diet_forecast() without its cost column: the price of a diet is Management's.
 create or replace function stock_diet_forecast(p_from date, p_to date)
 returns table (diet_type_id uuid, diet_type_name text, unit text, diet_count bigint,
                resident_count bigint, quantity numeric)
@@ -259,8 +285,34 @@ begin
   if not has_permission('stock.purchasing') then
     raise exception 'Not authorized to read the purchasing forecast.' using errcode = 'insufficient_privilege';
   end if;
-  return query select f.diet_type_id, f.diet_type_name, f.unit, f.diet_count, f.resident_count, f.quantity
-                 from diet_forecast(p_from, p_to) f;
+  return query
+  select
+    dt.id,
+    dt.name,
+    dt.unit,
+    count(rd.id),
+    count(distinct rd.resident_id),
+    coalesce(sum(q.days * q.per_day), 0)
+  from diet_types dt
+  join resident_diets rd on rd.diet_type_id = dt.id
+  join residents r on r.id = rd.resident_id
+  join private.resident_current_state s on s.resident_id = rd.resident_id
+  cross join lateral (
+    select
+      (least(p_to, coalesce(rd.end_date, p_to)) - greatest(p_from, rd.start_date) + 1)::numeric as days,
+      coalesce(
+        rd.daily_quantity,
+        case coalesce(r.size, 'Medium'::resident_size)
+          when 'Small' then dt.daily_qty_small
+          when 'Large' then dt.daily_qty_large
+          else dt.daily_qty_medium
+        end
+      ) as per_day
+  ) q
+  where rd.start_date <= p_to
+    and (rd.end_date is null or rd.end_date >= p_from)
+    and s.current_status not in ('Deceased', 'Adopted', 'Fostered')
+  group by dt.id, dt.name, dt.unit;
 end;
 $$;
 
