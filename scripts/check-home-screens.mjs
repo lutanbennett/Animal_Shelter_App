@@ -97,10 +97,21 @@ eq("C a vet's home is its appointments, and staff are not offered them", [
   homeTilesFor(roles.management, t).some((x) => x.href === "/appointments"),
 ], [true, false, false]);
 eq("C a vet has no tasks tile", homeTilesFor(roles.vet, t).some((x) => x.href === "/my"), false);
+// No seeded role reads Contacts without editing it since 0134 took the address book from the volunteer, so the
+// read-only case is a role built for the purpose: one cell, contacts.directory at Read.
+const contactsReader = parsePermissions({
+  role: { key: "reader", name: "reader", opens_app: true },
+  is_admin: false,
+  scopes: {},
+  permissions: { "contacts.directory": 1 },
+});
 eq("C Contacts is one tile, and opens the manager for the role that may use it", [
   homeTilesFor(roles.management, t).filter((x) => x.label === t.nav.contacts).map((x) => x.href),
-  homeTilesFor(roles.volunteer, t).filter((x) => x.label === t.nav.contacts).map((x) => x.href),
+  homeTilesFor(contactsReader, t).filter((x) => x.label === t.nav.contacts).map((x) => x.href),
 ], [["/management/contacts"], ["/contacts"]]);
+// R1 (volunteer-read-only): a tile that survives its page is the clearest sign the app is out of step with
+// the cells. The volunteer holds three cells and its home is exactly the two pages they open.
+eq("C a volunteer's home is Residents and Enclosures, and nothing else", homeTilesFor(roles.volunteer, t).map((x) => x.href), ["/residents", "/enclosures"]);
 
 eq("C Enclosures is the menu's page, not the map prototype that shares its word", [
   homeTilesFor(roles.volunteer, t).filter((x) => x.label === t.nav.enclosures).map((x) => x.href),
