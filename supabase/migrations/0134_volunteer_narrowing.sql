@@ -497,6 +497,11 @@ create or replace view translation_queue as
    FROM private.translation_queue
   WHERE (private.has_app_access() AND (current_user_role() IS DISTINCT FROM 'volunteer'::app_role) AND ((current_user_role() IS DISTINCT FROM 'vet'::app_role) OR (table_name <> 'residents'::text) OR (row_id IN ( SELECT current_vet_resident_ids() AS current_vet_resident_ids))));
 
+-- The grants are already what they were (create or replace keeps them); restated because the
+-- migration-grants lint wants every view this file creates to say who reads it.
+grant select on current_placement, immunization_compliance, immunization_duplicate_check,
+  resident_current_state, translation_queue to authenticated, service_role;
+
 -- ---------------------------------------------------------------------------
 -- 5. The address book
 -- ---------------------------------------------------------------------------
