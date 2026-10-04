@@ -452,6 +452,15 @@ export const ENTRIES = {
   ],
 
   // ── Enclosures ───────────────────────────────────────────────────────────
+  "enclosure-map": [
+    {
+      activity: "Find an enclosure on the map",
+      needs: "facility.map",
+      device: "phone",
+      do: "Open Enclosures, tap Map, tap a zone and Open this zone, pinch to zoom, tap an enclosure and then Open enclosure.",
+      expect: "The plan zooms and moves, the enclosure shows its count, and Open enclosure goes to its page. Enclosures not drawn yet are listed under the plan. The page does not scroll sideways.",
+    },
+  ],
   "browse-enclosures": [
     {
       activity: "Browse enclosures and see how full they are",
