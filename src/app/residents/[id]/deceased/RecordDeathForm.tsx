@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import Link from "next/link";
 import { HeartCrack } from "lucide-react";
 import { recordDeath } from "./actions";
@@ -27,7 +28,7 @@ export function RecordDeathForm({
 }) {
   const { t, locale } = useI18n();
   const d = t.residents.deceased;
-  const [state, formAction, pending] = useActionState(
+  const [state, submit, pending] = useKeptForm(
     recordDeath.bind(null, residentId),
     undefined,
   );
@@ -40,10 +41,10 @@ export function RecordDeathForm({
     <>
       <form
         ref={formRef}
-        action={formAction}
         onSubmit={(e) => {
           if (confirmedRef.current) {
             confirmedRef.current = false;
+            submit(e);
             return;
           }
           // Nothing about this can be undone from the app, so it never

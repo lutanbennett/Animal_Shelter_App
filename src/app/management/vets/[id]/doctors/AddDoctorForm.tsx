@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { addDoctor, addExistingDoctor } from "./actions";
 import type { ElsewhereDoctor } from "./DoctorsTable";
@@ -15,8 +15,8 @@ import type { ElsewhereDoctor } from "./DoctorsTable";
  * stay one person.
  */
 export function AddDoctorForm({ vetId, elsewhere }: { vetId: string; elsewhere: ElsewhereDoctor[] }) {
-  const [state, formAction, pending] = useActionState(addDoctor.bind(null, vetId), undefined);
-  const [existingState, existingAction, existingPending] = useActionState(
+  const [state, onSubmit, pending] = useKeptForm(addDoctor.bind(null, vetId), undefined);
+  const [existingState, existingSubmit, existingPending] = useKeptForm(
     addExistingDoctor.bind(null, vetId),
     undefined,
   );
@@ -26,7 +26,7 @@ export function AddDoctorForm({ vetId, elsewhere }: { vetId: string; elsewhere: 
   return (
     <div className="flex flex-col gap-3">
     <form
-      action={formAction}
+      onSubmit={onSubmit}
       className="flex flex-wrap items-end gap-3 rounded border border-border bg-surface p-4"
     >
       <div className="flex flex-col gap-1">
@@ -57,7 +57,7 @@ export function AddDoctorForm({ vetId, elsewhere }: { vetId: string; elsewhere: 
     </form>
     {elsewhere.length > 0 && (
       <form
-        action={existingAction}
+        onSubmit={existingSubmit}
         className="flex flex-wrap items-end gap-3 rounded border border-border bg-surface p-4"
       >
         <div className="flex flex-col gap-1">

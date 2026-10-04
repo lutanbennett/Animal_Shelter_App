@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import Link from "next/link";
 import { FileText, FolderOpen, Globe, HeartCrack } from "lucide-react";
 import { retryDeceasedArchive, retryDeceasedRestore } from "./actions";
@@ -47,7 +47,7 @@ export function DeceasedBanner({
 }) {
   const { t, locale } = useI18n();
   const d = t.residents.deceased;
-  const [state, formAction, pending] = useActionState(
+  const [state, onSubmit, pending] = useKeptForm(
     retryDeceasedArchive.bind(null, residentId),
     undefined,
   );
@@ -110,7 +110,7 @@ export function DeceasedBanner({
       </div>
 
       {archived ? (
-        <form action={formAction} className="flex flex-wrap items-center gap-3">
+        <form onSubmit={onSubmit} className="flex flex-wrap items-center gap-3">
           <p className="text-xs text-muted">
             {d.banner.archivedAt(formatDate(archive.archivedAt, locale))}
           </p>
@@ -134,7 +134,7 @@ export function DeceasedBanner({
           <p className="basis-full text-xs text-muted">{d.banner.refreshHint}</p>
         </form>
       ) : (
-        <form action={formAction} className="flex flex-wrap items-center gap-3">
+        <form onSubmit={onSubmit} className="flex flex-wrap items-center gap-3">
           <p className="text-xs text-danger">{d.banner.archiveIncomplete}</p>
           <p className="basis-full text-xs text-muted">{d.banner.notArchivedYet}</p>
           {canRetryArchive && (
@@ -183,14 +183,14 @@ export function DeceasedRestoreNotice({
 }) {
   const { t } = useI18n();
   const u = t.residents.deceased.undo;
-  const [state, formAction, pending] = useActionState(
+  const [state, onSubmit, pending] = useKeptForm(
     retryDeceasedRestore.bind(null, residentId),
     undefined,
   );
 
   return (
     <form
-      action={formAction}
+      onSubmit={onSubmit}
       className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-surface-hover p-4"
     >
       <p className="text-xs text-danger">{u.restoreIncomplete}</p>

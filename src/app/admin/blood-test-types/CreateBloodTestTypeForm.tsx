@@ -1,11 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { createBloodTestType } from "./actions";
 
 export function CreateBloodTestTypeForm() {
-  const [state, formAction, pending] = useActionState(
+  const [state, onSubmit, pending] = useKeptForm(
     createBloodTestType,
     undefined,
   );
@@ -13,7 +13,7 @@ export function CreateBloodTestTypeForm() {
 
   return (
     <form
-      action={formAction}
+      onSubmit={onSubmit}
       className="flex flex-wrap items-end gap-3 rounded border border-border bg-surface p-4"
     >
       <div className="flex flex-col gap-1">

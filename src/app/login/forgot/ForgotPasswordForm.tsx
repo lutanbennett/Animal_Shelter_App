@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import { requestPasswordReset } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
@@ -8,7 +8,7 @@ const inputClass =
   "rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
 
 export function ForgotPasswordForm() {
-  const [state, formAction, pending] = useActionState(requestPasswordReset, undefined);
+  const [state, onSubmit, pending] = useKeptForm(requestPasswordReset, undefined);
   const { t } = useI18n();
   const f = t.login.forgot;
 
@@ -17,7 +17,7 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <label htmlFor="email" className="text-sm font-medium text-muted">
           {t.login.email}

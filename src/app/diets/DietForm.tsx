@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import { createDiet, updateDiet } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { dietUnitLabel, sizeLabel } from "@/lib/i18n/enum-labels";
@@ -51,7 +52,7 @@ export function DietForm({
   initial?: DietInitial | null;
   cancelHref: string;
 }) {
-  const [state, formAction, pending] = useActionState(
+  const [state, onSubmit, pending] = useKeptForm(
     mode === "create" ? createDiet : updateDiet,
     undefined,
   );
@@ -74,7 +75,7 @@ export function DietForm({
     : null;
 
   return (
-    <form action={formAction} className="flex max-w-2xl flex-col gap-6">
+    <form onSubmit={onSubmit} className="flex max-w-2xl flex-col gap-6">
       <input type="hidden" name="residentId" value={residentId} />
       {mode === "edit" && initial && <input type="hidden" name="dietId" value={initial.id} />}
 

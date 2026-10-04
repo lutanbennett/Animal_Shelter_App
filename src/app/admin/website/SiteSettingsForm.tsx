@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { SiteContent } from "@/lib/site/content";
 import {
@@ -27,7 +28,7 @@ const inputClass =
  * ways are language-neutral. The long-form pages are SitePageForm.
  */
 export function SiteSettingsForm({ content }: { content: SiteContent }) {
-  const [state, formAction, pending] = useActionState(updateSiteContent, undefined);
+  const [state, onSubmit, pending] = useKeptForm(updateSiteContent, undefined);
   const { t } = useI18n();
   const s = t.admin.website.settings;
 
@@ -145,7 +146,7 @@ export function SiteSettingsForm({ content }: { content: SiteContent }) {
 
   return (
     <form
-      action={formAction}
+      onSubmit={onSubmit}
       className="flex flex-col gap-5 rounded border border-border bg-surface p-4"
     >
       <div>

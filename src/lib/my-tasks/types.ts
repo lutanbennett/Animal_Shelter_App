@@ -67,6 +67,24 @@ export type MyTaskSection = {
   error: string | null;
 };
 
+/**
+ * Something the reader finished today, shown in the "Done today" strip with
+ * an Undo. A recurring job is done or skipped for one date; a maintenance
+ * job is Completed (its completion time is only a date, so `at` is null).
+ */
+export type MyDoneToday = {
+  key: string;
+  kind: "recurring" | "maintenance";
+  title: string;
+  code?: string;
+  outcome: "done" | "skipped";
+  jobId: string;
+  /** The recurring job's shelter date; null for maintenance. */
+  occursOn: string | null;
+  /** When it was marked, ISO timestamp; null when the source only keeps the day. */
+  at: string | null;
+};
+
 export type DueBucket = "overdue" | "today" | "later" | "none";
 
 /** In the order the page shows them: most urgent first, undated last. */

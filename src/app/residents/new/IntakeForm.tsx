@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import { recordIntake } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { localizedValidity } from "@/lib/i18n/validity";
@@ -196,7 +197,7 @@ export function IntakeForm({
   initialStep?: number;
   chip?: string | null;
 }) {
-  const [state, formAction, pending] = useActionState(recordIntake, undefined);
+  const [state, onSubmit, pending] = useKeptForm(recordIntake, undefined);
   const { t, locale } = useI18n();
   const [enclosureId, setEnclosureId] = useState("");
   const [warningFor, setWarningFor] = useState<EnclosureOption | null>(null);
@@ -299,7 +300,7 @@ export function IntakeForm({
   return (
     <form
       ref={formRef}
-      action={formAction}
+      onSubmit={onSubmit}
       {...localizedValidity(t, locale)}
       className="flex max-w-4xl flex-col gap-6"
     >

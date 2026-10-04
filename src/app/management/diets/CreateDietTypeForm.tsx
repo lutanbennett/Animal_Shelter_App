@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { DIET_UNITS, dietUnitLabel } from "@/lib/i18n/enum-labels";
 import { createDietType } from "./actions";
@@ -9,13 +9,13 @@ const inputClass =
   "rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
 
 export function CreateDietTypeForm() {
-  const [state, formAction, pending] = useActionState(createDietType, undefined);
+  const [state, onSubmit, pending] = useKeptForm(createDietType, undefined);
   const { t } = useI18n();
   const m = t.management.diets;
 
   return (
     <form
-      action={formAction}
+      onSubmit={onSubmit}
       className="flex flex-col gap-3 rounded border border-border bg-surface p-4"
     >
       <div className="flex flex-wrap items-end gap-3">

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import { useFormStatus } from "react-dom";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { login, signInWithGoogle } from "./actions";
@@ -20,12 +20,12 @@ export function LoginForm({
   error?: string;
   next?: string | null;
 }) {
-  const [state, formAction, pending] = useActionState(login, undefined);
+  const [state, onSubmit, pending] = useKeptForm(login, undefined);
   const { t } = useI18n();
 
   return (
     <div className="flex w-full max-w-sm flex-col gap-4">
-      <form action={formAction} className="flex flex-col gap-4">
+      <form onSubmit={onSubmit} className="flex flex-col gap-4">
         {next && <input type="hidden" name="next" value={next} />}
         <div className="flex flex-col gap-1">
           <label htmlFor="email" className="text-sm font-medium text-muted">

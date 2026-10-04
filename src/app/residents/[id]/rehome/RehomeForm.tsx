@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import Link from "next/link";
 import { rehome } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -55,7 +56,7 @@ export function RehomeForm({
 }) {
   const { t, locale } = useI18n();
   const r = t.residents.rehome;
-  const [state, formAction, pending] = useActionState(
+  const [state, onSubmit, pending] = useKeptForm(
     rehome.bind(null, residentId),
     undefined,
   );
@@ -79,7 +80,7 @@ export function RehomeForm({
         statusLabel(t, current.status);
 
   return (
-    <form action={formAction} className="flex max-w-2xl flex-col gap-6">
+    <form onSubmit={onSubmit} className="flex max-w-2xl flex-col gap-6">
       <div className="rounded-lg border border-border bg-surface p-4">
         <h2 className="mb-1 text-sm font-medium text-muted">
           {t.residents.move.currentLocation}

@@ -1,12 +1,12 @@
 "use client";
 
-import { useActionState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { createUser } from "./actions";
 import { TemporaryPasswordNotice } from "@/components/TemporaryPasswordNotice";
 
 export function CreateUserForm() {
-  const [state, formAction, pending] = useActionState(createUser, undefined);
+  const [state, onSubmit, pending] = useKeptForm(createUser, undefined);
   const { t } = useI18n();
 
   const ROLES = [
@@ -20,7 +20,7 @@ export function CreateUserForm() {
 
   return (
     <form
-      action={formAction}
+      onSubmit={onSubmit}
       className="flex flex-wrap items-end gap-3 rounded border border-border bg-surface p-4"
     >
       <div className="flex flex-col gap-1">

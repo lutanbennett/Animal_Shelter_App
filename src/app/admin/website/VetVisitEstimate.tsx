@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useKeptForm } from "@/lib/use-kept-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { updateVetVisitEstimate } from "./actions";
 
@@ -15,7 +15,7 @@ import { updateVetVisitEstimate } from "./actions";
  * and the forecast then shows vet visits as a gap rather than as zero.
  */
 export function VetVisitEstimate({ estimate }: { estimate: number | null }) {
-  const [state, formAction, pending] = useActionState(
+  const [state, onSubmit, pending] = useKeptForm(
     updateVetVisitEstimate,
     undefined,
   );
@@ -24,7 +24,7 @@ export function VetVisitEstimate({ estimate }: { estimate: number | null }) {
 
   return (
     <form
-      action={formAction}
+      onSubmit={onSubmit}
       className="flex flex-col gap-4 rounded border border-border bg-surface p-4"
     >
       <div>

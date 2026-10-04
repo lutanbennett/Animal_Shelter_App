@@ -10,6 +10,7 @@ import { loadPermissions } from "@/lib/permissions/load";
 import { loadMyAccessRequestTasks } from "@/lib/my-tasks/access-requests";
 import { loadMyMaintenanceTasks } from "@/lib/my-tasks/maintenance";
 import { loadMyRecurringTasks } from "@/lib/my-tasks/recurring";
+import { loadMyDoneToday } from "@/lib/my-tasks/done-today";
 import type { MyTaskSection } from "@/lib/my-tasks/types";
 import { MyTaskList } from "./MyTaskList";
 
@@ -50,6 +51,10 @@ export default async function MyPage() {
       ])
     : [];
 
+  const done = userId
+    ? await loadMyDoneToday(supabase, userId, today, locale)
+    : { items: [], error: null };
+
   // An admin whose login has no authenticator app is prompted until it does.
   const needsTwoStep = !!perms?.isAdmin && !(await getAssuranceLevel()).enrolled;
 
@@ -70,7 +75,13 @@ export default async function MyPage() {
         </section>
       )}
 
-      <MyTaskList sections={sections} today={today} canManage={can(perms, "recurring.manage")} />
+      <MyTaskList
+        sections={sections}
+        doneToday={done.items}
+        today={today}
+        canManage={can(perms, "recurring.manage")}
+        canEditMaintenance={can(perms, "maintenance.jobs")}
+      />
     </main>
   );
 }
