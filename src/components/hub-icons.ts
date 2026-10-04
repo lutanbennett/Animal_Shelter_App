@@ -17,6 +17,8 @@ import {
   Droplet,
   Fence,
   Folder,
+  Globe,
+  GlobeLock,
   ImageOff,
   ImageUp,
   HeartCrack,
@@ -36,12 +38,14 @@ import {
   MessageSquare,
   Navigation,
   Newspaper,
+  Pause,
   PawPrint,
   Phone,
   Repeat,
   PhoneCall,
   Pencil,
   Pill,
+  Play,
   Plus,
   RotateCcw,
   Scissors,
@@ -221,4 +225,12 @@ export const ACTION_ICONS = {
   /** Mark a person as no longer active (a doctor who has left), and back. */
   deactivate: UserMinus,
   activate: UserCheck,
+  /** Put a recurring thing on hold, and start it again. */
+  pause: Pause,
+  resume: Play,
+  /** Put a profile on the public website, and take it off. */
+  publish: Globe,
+  unpublish: GlobeLock,
+  /** Give a job back to the person it was lifted from. */
+  handBack: Undo2,
 } satisfies Record<string, LucideIcon>;

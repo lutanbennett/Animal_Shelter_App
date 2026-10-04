@@ -197,7 +197,7 @@ export default async function ManagementDashboardPage(
     .join(" · ");
 
   const monthNavClass =
-    "inline-flex h-8 w-8 items-center justify-center rounded border border-border text-muted hover:bg-surface-hover hover:text-foreground";
+    "inline-flex h-11 w-11 items-center justify-center rounded border md:h-8 md:w-8 border-border text-muted hover:bg-surface-hover hover:text-foreground";
 
   return (
     <main className="flex flex-1 flex-col gap-8 p-4 md:p-6">

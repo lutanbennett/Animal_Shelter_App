@@ -3,11 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { ArrowDown, ArrowUp } from "lucide-react";
 import { FriendBadge } from "@/components/FriendBadge";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import type { ActionResult } from "@/lib/action-result";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { RowActionButton } from "@/components/RowAction";
 import { moveFriend, setFriendPublished } from "./actions";
 
 export type FriendOrderRow = {
@@ -19,9 +20,6 @@ export type FriendOrderRow = {
   help_kind: string | null;
   contacts: { name: string; archived_at: string | null } | null;
 };
-
-const iconButton =
-  "flex h-9 w-9 items-center justify-center rounded border border-border text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-30";
 
 /**
  * The running order of /friends, one row per profile: move up / down,
@@ -97,34 +95,25 @@ export function FriendsOrder({ friends }: { friends: FriendOrderRow[] }) {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
+                <RowActionButton
                   disabled={isPending}
                   onClick={() => run(() => setFriendPublished(friend.id, !friend.published))}
-                  className="rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-50"
-                >
-                  {friend.published ? f.card.unpublish : f.card.publish}
-                </button>
-                <button
-                  type="button"
-                  aria-label={f.manage.moveUp(name)}
-                  title={f.manage.moveUp(name)}
+                  label={friend.published ? f.card.unpublish : f.card.publish}
+                  subject={name}
+                  icon={friend.published ? ACTION_ICONS.unpublish : ACTION_ICONS.publish}
+                />
+                <RowActionButton
                   disabled={isPending || index === 0}
                   onClick={() => run(() => moveFriend(friend.id, "up"))}
-                  className={iconButton}
-                >
-                  <ArrowUp aria-hidden="true" className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  aria-label={f.manage.moveDown(name)}
-                  title={f.manage.moveDown(name)}
+                  label={f.manage.moveUp(name)}
+                  icon={ACTION_ICONS.moveUp}
+                />
+                <RowActionButton
                   disabled={isPending || index === friends.length - 1}
                   onClick={() => run(() => moveFriend(friend.id, "down"))}
-                  className={iconButton}
-                >
-                  <ArrowDown aria-hidden="true" className="h-4 w-4" />
-                </button>
+                  label={f.manage.moveDown(name)}
+                  icon={ACTION_ICONS.moveDown}
+                />
               </div>
             </li>
           );

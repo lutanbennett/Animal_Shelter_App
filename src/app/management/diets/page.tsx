@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ActionLink } from "@/components/ActionLink";
 import { ClipboardCheck, Scale, ShoppingCart, Truck } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -149,34 +149,32 @@ export default async function DietsManagementPage(props: PageProps<"/management/
         <h1 className="text-2xl font-semibold text-foreground">{m.title}</h1>
         <p className="text-sm text-muted">{m.subtitle}</p>
         {/* Outside LargerScreenNotice: the sheet is built for a phone. */}
-        <Link
-          href="/stocktake?tab=diets"
-          className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-        >
-          <ClipboardCheck aria-hidden="true" className="h-4 w-4" />
-          {t.management.stock.stocktakeLink}
-        </Link>
-        <Link
-          href="/management/stock-usage"
-          className="mt-2 ml-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-        >
-          <Scale aria-hidden="true" className="h-4 w-4" />
-          {t.management.stockUsage.link}
-        </Link>
-        <Link
-          href="/management/purchasing"
-          className="mt-2 ml-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-        >
-          <ShoppingCart aria-hidden="true" className="h-4 w-4" />
-          {t.management.purchasing.link}
-        </Link>
-        <Link
-          href="/deliveries?tab=diets"
-          className="mt-2 ml-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-        >
-          <Truck aria-hidden="true" className="h-4 w-4" />
-          {t.management.stock.deliveriesLink}
-        </Link>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <ActionLink
+            href="/stocktake?tab=diets"
+            label={t.management.stock.stocktakeLink}
+            icon={ClipboardCheck}
+            iconOnlyOnMobile={false}
+          />
+          <ActionLink
+            href="/management/stock-usage"
+            label={t.management.stockUsage.link}
+            icon={Scale}
+            iconOnlyOnMobile={false}
+          />
+          <ActionLink
+            href="/management/purchasing"
+            label={t.management.purchasing.link}
+            icon={ShoppingCart}
+            iconOnlyOnMobile={false}
+          />
+          <ActionLink
+            href="/deliveries?tab=diets"
+            label={t.management.stock.deliveriesLink}
+            icon={Truck}
+            iconOnlyOnMobile={false}
+          />
+        </div>
       </div>
 
       <LargerScreenNotice>
