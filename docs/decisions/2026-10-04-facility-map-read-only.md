@@ -60,12 +60,13 @@ question for the Director, and a render-only change here.
 ## The plan image
 
 `image_path` is a **file name under `public/facility-maps/`**, resolved by one function, `planImageUrl`, so the
-editor can move the files to storage with signed URLs without touching the map. **Where the real image lives
-is Lutan's call and is still open** (Drive, or a tracked path in the repo): the Main Zone – Blue photograph is
-**not committed by this PR**. In dev it sits untracked at `public/facility-maps/main-zone-blue.webp` with
-`facility_maps` rows pointing at it. Until a plan is loaded the toggle is not offered, so nothing breaks
-whichever he picks. A file in `public/` is fetchable by anyone who knows the name — the plan has no visitor
-value and the enclosure positions are mild, but step 3 should weigh storage with signed URLs against that.
+editor can move the files to storage with signed URLs without touching the map. **Lutan chose the repo
+(2026-10-04):** the Main Zone – Blue photograph (1492×1054 WebP, 86 KB) is committed at
+`public/facility-maps/main-zone-blue.webp`; the original stays in Drive. The `facility_maps` rows that point
+at it are data, not migration, so they are not in this PR: the Map button stays hidden everywhere until an
+admin or the step-3 editor adds one (dev has rows for the Main and Cat Zone and the overview). A file in
+`public/` is fetchable by anyone who knows the name — the plan has no visitor value and enclosure positions
+are a mild secret — so step 3 should weigh storage with signed URLs against that before it takes uploads.
 
 ## The public side: no
 
