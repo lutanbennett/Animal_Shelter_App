@@ -11,7 +11,7 @@
 | PR | recorded in the follow-up commit that ticks CI |
 | Tested by / date | Claude (automated) / 2026-10-04 |
 | Carries a migration? | no |
-| Tested at SHA | 307813c6 |
+| Tested at SHA | b21dbe42 |
 
 ## 1. Scope and risk
 
