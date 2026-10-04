@@ -695,8 +695,8 @@ export const ENTRIES = {
       activity: "Record a delivery",
       needs: "stock.delivery",
       device: "phone",
-      do: "Open Record a delivery, pick a medication, enter the quantity and cost, and record it.",
-      expect: "It appears under Recent deliveries with your name. A delivery dated in the future is refused.",
+      do: "Open Deliveries from the menu, tap Medicine, pick a medication, type the amount, tap Next three times, and tap Record this delivery. Then tap Back from the last screen to check the amount is still there.",
+      expect: "One question per screen, each with a Back button that keeps what you typed; the last screen says in words what will be recorded. It appears under Recent deliveries with your name. A delivery dated in the future cannot be chosen.",
     },
   ],
   "recurring-jobs": [

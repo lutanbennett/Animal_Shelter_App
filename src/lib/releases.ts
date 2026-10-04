@@ -61,7 +61,10 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  { text: "Recording a delivery is now a few short steps on a phone, one question at a time: what arrived, which one, how much, when, and who sent it. The last screen says in words what will be recorded, and Back never loses what you typed. After a save, Record another item keeps the day and supplier. Deliveries now has its own place in the menu, next to Stocktake, instead of being a small link at the top of Stocktake.", roles: ["admin", "management", "staff"] },
+];
+
 
 /** Newest first. */
 export const releases: Release[] = [

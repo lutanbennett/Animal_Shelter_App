@@ -70,7 +70,7 @@ export const ROUTES: readonly RouteEntry[] = [
     icon: Truck,
     label: (t) => t.deliveries.title,
     device: "any",
-    menu: false,
+    menu: true,
   },
   {
     path: "/management/purchasing",
