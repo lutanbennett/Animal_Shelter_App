@@ -48,9 +48,9 @@ export const PROBES = [
   { activity: "resident.record", level: "read", scoped: true, sql: `select 1 from residents where id = $R`, byRole: { volunteer: `select 1 from resident_who_and_where where id = $R` } },
   { activity: "resident.record", level: "read", scoped: true, sql: `select 1 from placement_history where resident_id = $R`, expect: ["admin", "management", "staff", "vet"] },
   {
-    // C2: nobody deletes a resident from a screen. Default: Admin only.
+    // C2 (closed by 0144): nobody deletes a resident from a screen. Admin only.
     activity: "resident.record", level: "edit", sql: `delete from residents where id = $BARE`,
-    expect: ["admin"], known: [{ id: "C2", roles: ["management", "staff"] }],
+    expect: ["admin"],
   },
   { activity: "resident.register", level: "edit", fn: true, sql: `select record_intake('Probe pup', current_date, p_diet_type_id => $DIET)` },
   { activity: "resident.microchip", level: "edit", scoped: true, fn: true, sql: `select set_resident_microchip($R, '981000000000001', null)` },
