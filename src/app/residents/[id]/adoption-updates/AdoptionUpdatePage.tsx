@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { todayIso } from "@/lib/format";
 import { loadCurrentRole } from "@/lib/auth/app-access";
 import { SECTION_ICONS } from "@/components/hub-icons";
-import { ADOPTION_UPDATE_ROLES } from "@/lib/adoption-updates/options";
 import { loadSenderOptions } from "@/lib/adoption-updates/queries";
 import { AdoptionUpdateForm } from "./AdoptionUpdateForm";
 
@@ -21,7 +22,7 @@ export async function AdoptionUpdatePage({
   const a = t.adoptionUpdates;
   const supabase = await createClient();
 
-  const [residentResult, updateResult, roleResult, senders] = await Promise.all([
+  const [residentResult, updateResult, perms, senders] = await Promise.all([
     supabase
       .from("residents")
       .select("id, name, thai_name, resident_code")
@@ -45,7 +46,7 @@ export async function AdoptionUpdatePage({
             }[]
           >()
       : null,
-    supabase.rpc("current_user_role"),
+    loadPermissions(),
     loadCurrentRole(supabase).then((role) => loadSenderOptions(supabase, residentId, role)),
   ]);
 
@@ -59,7 +60,7 @@ export async function AdoptionUpdatePage({
     ? `${resident.name} (${resident.thai_name})`
     : resident.name;
   const Icon = SECTION_ICONS["adoption-updates"];
-  const blocked = !ADOPTION_UPDATE_ROLES.has(roleResult.data ?? "")
+  const blocked = !can(perms, "resident.adoption_news")
     ? a.errors.notAuthorized
     : senders.adoptionCount === 0
       ? a.errors.neverAdopted
