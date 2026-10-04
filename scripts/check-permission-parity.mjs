@@ -493,6 +493,19 @@ console.log(`
 == Layer 2: the app's predicates ==
 ${l2checked} answers (${PREDICATES.length} predicates x 7 roles incl. no role)`);
 for (const [k, why] of Object.entries(UNPAIRED)) console.log(`  not paired: ${k}: ${why}`);
+
+// Two truth tables are scope tests, not activities: "is this a clinic-scoped login" (loadVetScope, and
+// /appointments which only such a login may open). Their stand-in is roles.scope_clinical = 'own_clinic'
+// in the 0132 seed, so the fixture row must equal "the seed gives this role the own-clinic scope".
+const seedSql = readFileSync(join(root, "supabase/migrations/0132_permission_tables.sql"), "utf8");
+const ownClinic = new Set([...seedSql.matchAll(/\('(\w+)',\s*'[^']*',\s*'\w+',\s*(?:true|false),\s*'\w+',\s*'\w+',\s*'(any|own_clinic)'/g)].filter((m) => m[2] === "own_clinic").map((m) => m[1]));
+if (!ownClinic.has("vet")) layer2.push({ pr: null, problem: "could not read the own_clinic scope from the 0132 seed" });
+for (const id of ["loadVetScope_isVet", "appointmentsPage"]) {
+  for (const r of ROLES_FOR_TABLE) {
+    l2checked++;
+    if (fixture[id]?.[String(r)] !== (r != null && ownClinic.has(r))) layer2.push({ pr: null, problem: `${id}(${r}) is ${fixture[id]?.[String(r)]}, the seed's scope_clinical says ${r != null && ownClinic.has(r)}` });
+  }
+}
 for (const l of layer2) console.log(`  MISMATCH ${l.problem}`);
 
 const red = layer2.length > 0 || mismatches.length > 0 || faults.length > 0 || zReport.length > 0 || unaccounted.length > 0;
