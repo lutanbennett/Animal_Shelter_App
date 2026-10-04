@@ -1,7 +1,8 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { canManage } from "@/lib/auth/require-management";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 
 /**
  * How many Shelter Friend profiles are drafts — saved but unpublished, on
@@ -23,14 +24,14 @@ export async function staffDraftFriends(
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [{ count, error }, { data: role }] = await Promise.all([
+  const [{ count, error }, perms] = await Promise.all([
     supabase
       .from("shelter_friends")
       .select("id, contacts!inner(archived_at)", { count: "exact", head: true })
       .eq("published", false)
       .is("contacts.archived_at", null),
-    supabase.rpc("current_user_role"),
+    loadPermissions(),
   ]);
   if (error || !count) return null;
-  return { count, canPublish: canManage(role as string | null) };
+  return { count, canPublish: can(perms, "friends.manage") };
 }

@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { canManage } from "@/lib/auth/require-management";
-import { isShelterRole } from "@/lib/auth/app-access";
-import { requireRole } from "@/lib/auth/require-role";
+import { can } from "@/lib/permissions/can";
+import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import {
   CONTACT_COLUMNS,
@@ -16,14 +15,15 @@ export default async function ContactsPage(props: PageProps<"/contacts">) {
   // Archived contacts are loaded either way — a search still finds them —
   // and ContactList hides them unless this is set.
   const showArchived = (await props.searchParams).archived === "1";
-  const { supabase, role } = await requireRole(isShelterRole);
+  const { supabase, perms } = await requirePermission("contacts.directory", "read");
 
   // The list is open to every shelter role, but a volunteer reads only name
   // and phone (0126, volunteer_contacts) — a volunteer doing a foster pick-up
   // needs the carer's number, not their address or notes. Open placements
   // give each carer their "N in care" badge.
-  const [contactsResult, placementsResult, roleResult, friendsResult] = await Promise.all([
-    role === "volunteer"
+  const [contactsResult, placementsResult, friendsResult] = await Promise.all([
+    // The contacts scope says which view of the address book this role reads (0126).
+    perms.scopes.contacts === "name_phone"
       ? supabase
           .from("volunteer_contacts")
           .select("id, name, phone")
@@ -44,7 +44,6 @@ export default async function ContactsPage(props: PageProps<"/contacts">) {
       .not("carer_id", "is", null)
       .is("end_date", null)
       .returns<{ carer_id: string }[]>(),
-    supabase.rpc("current_user_role"),
     // Which contacts are Shelter Friends (0076), for the badge and the chip.
     // A failed query just means no badges, not a broken list.
     supabase
@@ -78,7 +77,7 @@ export default async function ContactsPage(props: PageProps<"/contacts">) {
           </h1>
           <p className="text-sm text-muted">{t.contacts.pageSubtitle}</p>
         </div>
-        {canManage(roleResult.data) && (
+        {can(perms, "contacts.directory") && (
           <Link
             href="/management/contacts"
             className="shrink-0 text-sm font-medium text-primary hover:underline"

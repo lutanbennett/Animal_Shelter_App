@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { LogIn } from "lucide-react";
-import { isShelterRole, loadCurrentRole } from "@/lib/auth/app-access";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
@@ -62,8 +63,8 @@ export default async function EnclosureTagPage(props: PageProps<"/e/[id]">) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  // Staff go on to the enclosure page; a vet or a public viewer sees the card.
-  if (user && isShelterRole(await loadCurrentRole(supabase))) redirect(`/enclosures/${id}`);
+  // Staff go on to the enclosure page; whoever may not open Enclosures (a vet, a public viewer) sees the card.
+  if (user && can(await loadPermissions(), "facility.enclosures", "read")) redirect(`/enclosures/${id}`);
 
   const [enclosure, { t, locale }] = await Promise.all([
     loadPublicEnclosure(supabase, id),

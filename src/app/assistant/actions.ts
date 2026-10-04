@@ -9,13 +9,12 @@ import {
   sendResidentToHospital,
 } from "@/lib/placements/hospital";
 import { recordWeight } from "@/lib/weight/record";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { logAssistantAction, type AssistantActionStatus } from "@/lib/assistant/audit";
 import {
-  canUseAssistant,
-  canWriteWithAssistant,
   emptyAssistantContext,
   loadAssistantContext,
-  loadAssistantRole,
   type AssistantContext,
 } from "@/lib/assistant/data";
 import type { Draft, Intent } from "@/lib/assistant/types";
@@ -60,8 +59,7 @@ async function runWrite(
   const { t } = await getT();
   const supabase = await createClient();
 
-  const { data: role } = await supabase.rpc("current_user_role");
-  if (!canWriteWithAssistant(role)) {
+  if (!can(await loadPermissions(), "assistant.record")) {
     const error = t.assistant.notAuthorized;
     await logAssistantAction(supabase, {
       requestText: input.request,
@@ -277,10 +275,10 @@ export async function recordAssistantTurn(input: {
  */
 export async function fetchAssistantContext(): Promise<AssistantContext> {
   const supabase = await createClient();
-  const role = await loadAssistantRole(supabase);
-  if (!canUseAssistant(role)) {
+  const perms = await loadPermissions();
+  if (!perms || !can(perms, "assistant.ask")) {
     const { t } = await getT();
-    return emptyAssistantContext(role, t.assistant.notAuthorized);
+    return emptyAssistantContext(t.assistant.notAuthorized);
   }
-  return loadAssistantContext(supabase, role);
+  return loadAssistantContext(supabase, perms);
 }

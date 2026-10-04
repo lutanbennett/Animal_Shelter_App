@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
-import { canManage } from "@/lib/auth/require-management";
-import { isShelterRole } from "@/lib/auth/app-access";
-import { requireRole } from "@/lib/auth/require-role";
+import { can } from "@/lib/permissions/can";
+import { requirePermission } from "@/lib/permissions/require";
 import {
   CONTACT_COLUMNS,
   toVolunteerContact,
@@ -15,14 +14,14 @@ import { ContactHub, type CarerPlacement } from "./ContactHub";
 
 export default async function ContactPage(props: PageProps<"/contacts/[id]">) {
   const { id } = await props.params;
-  const { supabase, role } = await requireRole(isShelterRole);
+  const { supabase, perms } = await requirePermission("contacts.directory", "read");
 
   // Every placement that named this contact as carer, newest first. The
   // open ones (end_date null) are the residents living with them now; the
   // rest is their history. One query covers both.
-  const [contactResult, placementsResult, roleResult, friendResult] = await Promise.all([
-    // A volunteer reads name and phone only (0126).
-    role === "volunteer"
+  const [contactResult, placementsResult, friendResult] = await Promise.all([
+    // The contacts scope says which view of the address book this role reads (0126).
+    perms.scopes.contacts === "name_phone"
       ? supabase
           .from("volunteer_contacts")
           .select("id, name, phone")
@@ -47,7 +46,6 @@ export default async function ContactPage(props: PageProps<"/contacts/[id]">) {
       .eq("carer_id", id)
       .order("start_date", { ascending: false })
       .returns<CarerPlacement[]>(),
-    supabase.rpc("current_user_role"),
     // Its Shelter Friend profile, if any (0076) — every signed-in role reads it.
     supabase
       .from("shelter_friends")
@@ -78,7 +76,8 @@ export default async function ContactPage(props: PageProps<"/contacts/[id]">) {
     <ContactHub
       contact={contact}
       placements={placementsResult.data ?? []}
-      canManage={canManage(roleResult.data)}
+      canManage={can(perms, "contacts.directory")}
+      canManageFriends={can(perms, "friends.manage")}
       mapSrc={mapSrc}
       friend={friend}
       friendTranslations={{

@@ -73,6 +73,7 @@ export function ContactHub({
   contact,
   placements,
   canManage,
+  canManageFriends,
   mapSrc,
   friend,
   friendTranslations,
@@ -80,6 +81,8 @@ export function ContactHub({
   contact: Contact | VolunteerContact;
   placements: CarerPlacement[];
   canManage: boolean;
+  /** friends.manage: the Shelter Friend card's controls. */
+  canManageFriends: boolean;
   /** Embed URL for the address, resolved by the page (map-preview.ts); null hides the map. */
   mapSrc: string | null;
   /** The contact's Shelter Friend profile (0076), or null. */
@@ -221,7 +224,7 @@ export function ContactHub({
         <ShelterFriendCard
           contact={contact}
           friend={friend}
-          canManage={canManage}
+          canManage={canManageFriends}
           mapSrc={mapSrc}
           translations={friendTranslations}
         />

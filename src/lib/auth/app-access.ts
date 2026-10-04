@@ -23,21 +23,6 @@ export function hasAppAccess(role: string | null | undefined): boolean {
   return !!role && (APP_ACCESS_ROLES as readonly string[]).includes(role);
 }
 
-/**
- * The shelter's own people — everyone with app access except a vet. A vet is
- * an outside clinic with a clinical job: Residents and My tasks are theirs,
- * but the shelter's operations (Enclosures, Maintenance), its programme
- * (Projects), its address book (Contacts) and its list of other clinics
- * (Vets) are not (backlog, "Cut the vet's world down to residents and their
- * own tasks", 2026-09-27). Gates those five menu entries and their pages.
- * An allow-list, so a role added later is kept out until someone decides.
- */
-export const SHELTER_ROLES = ["admin", "management", "staff", "volunteer"] as const;
-
-export function isShelterRole(role: string | null | undefined): boolean {
-  return !!role && (SHELTER_ROLES as readonly string[]).includes(role);
-}
-
 export async function loadCurrentRole(supabase: SupabaseClient): Promise<string | null> {
   const { data } = await supabase.rpc("current_user_role");
   return (data as string | null) ?? null;

@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
-import { canManage } from "@/lib/auth/require-management";
-import { isShelterRole } from "@/lib/auth/app-access";
-import { requireRole } from "@/lib/auth/require-role";
+import { can } from "@/lib/permissions/can";
+import { requirePermission } from "@/lib/permissions/require";
 import {
   VetHub,
   type HubDoctor,
@@ -12,7 +11,7 @@ import {
 
 export default async function VetPage(props: PageProps<"/vets/[id]">) {
   const { id } = await props.params;
-  const { supabase } = await requireRole(isShelterRole);
+  const { supabase, perms } = await requirePermission("clinics.list", "read");
 
   // Records logged against this vet's visits are counted on the hub. Each
   // is fetched through its vet_appointment_id with an inner join filtered
@@ -96,7 +95,7 @@ export default async function VetPage(props: PageProps<"/vets/[id]">) {
         prescriptions: prescriptionsResult.data ?? [],
       }}
       doctors={doctorsResult.data ?? []}
-      canManage={canManage(roleResult.data)}
+      canManage={can(perms, "clinics.list")}
       now={new Date().toISOString()}
     />
   );

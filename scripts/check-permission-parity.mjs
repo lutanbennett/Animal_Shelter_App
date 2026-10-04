@@ -422,7 +422,7 @@ register("data:text/javascript," + encodeURIComponent(`
     return next(spec, ctx);
   }`));
 const PREDICATES = [
-  { id: "canManage", file: "src/lib/auth/require-management.ts", activity: "reports.dashboard", level: 2 },
+  { id: "canManage", fixtureOnly: true, activity: "reports.dashboard", level: 2 },
   { id: "canStocktake", file: "src/lib/management/stocktake.ts", activity: "stock.count", level: 2 },
   { id: "canRecordDelivery", file: "src/lib/management/stock-receipts.ts", activity: "stock.delivery", level: 2 },
   { id: "canArchiveMedical", file: "src/lib/medical-archive/kinds.ts", activity: "medical.archive", level: 2 },
@@ -452,7 +452,7 @@ const PREDICATES = [
   ...["website.content", "reference.types", "audit.view", "audit.undo", "system.status"].map((activity) => (
     { id: `isAdminRole(${activity})`, row: "isAdminRole", fixtureOnly: true, activity, level: 2 })),
   // Not an activity: "every role that opens the app", asked of my_permissions().role.opensApp. Seed: opens_app is true for all but public_viewer.
-  { id: "canReadRecurringJobs", file: "src/lib/recurring-jobs/access.ts", expect: (r) => r != null && r !== "public_viewer" },
+  { id: "canReadRecurringJobs", fixtureOnly: true, expect: (r) => r != null && r !== "public_viewer" },
   { id: "canDoJob(/stocktake)", file: "src/lib/recurring-jobs/eligibility.ts", activity: "stock.count", level: 2 },
   { id: "canDoJob(/deliveries)", file: "src/lib/recurring-jobs/eligibility.ts", activity: "stock.delivery", level: 2 },
   { id: "canDoJob(/management/purchasing)", file: "src/lib/recurring-jobs/eligibility.ts", activity: "stock.purchasing", level: 2 },
@@ -508,9 +508,11 @@ for (const l of layer2) console.log(`  MISMATCH ${l.problem}`);
 {
   const seed = readFileSync(join(root, "supabase/migrations/0132_permission_tables.sql"), "utf8");
   const VIEW = { full: "contacts", name_phone: "volunteer_contacts", name_type: "vet_contacts" };
-  for (const m of seed.matchAll(/\('([a-z_]+)',\s+'[A-Za-z ]+',\s+'(?:fixed|default)',\s+(?:true|false),\s+'[a-z_]+',\s+'[a-z_]+',\s+'[a-z_]+',\s+'(full|name_phone|name_type)'/g)) {
+  const OPENS_APP = (role) => role !== "public_viewer"; // the seed's opens_app, which replaced canReadRecurringJobs
+  for (const m of seed.matchAll(/\('([a-z_]+)',\s+'[A-Za-z ]+',\s+'(?:fixed|default)',\s+(true|false),\s+'[a-z_]+',\s+'[a-z_]+',\s+'[a-z_]+',\s+'(full|name_phone|name_type)'/g)) {
     l2checked++;
-    if (fixture.contactRelation?.[m[1]] !== VIEW[m[2]]) layer2.push({ pr: { id: "contactRelation" }, problem: `contactRelation(${m[1]}) was ${fixture.contactRelation?.[m[1]]}, the seeded contacts scope ${m[2]} reads ${VIEW[m[2]]}` });
+    if ((m[2] === "true") !== OPENS_APP(m[1])) layer2.push({ pr: { id: "canReadRecurringJobs" }, problem: `the seeded opens_app for ${m[1]} is ${m[2]}, canReadRecurringJobs said ${OPENS_APP(m[1])}` });
+    if (fixture.contactRelation?.[m[1]] !== VIEW[m[3]]) layer2.push({ pr: { id: "contactRelation" }, problem: `contactRelation(${m[1]}) was ${fixture.contactRelation?.[m[1]]}, the seeded contacts scope ${m[3]} reads ${VIEW[m[3]]}` });
   }
   if (fixture.contactRelation?.null !== "contacts") layer2.push({ pr: { id: "contactRelation" }, problem: "contactRelation(null) row missing" });
 }
