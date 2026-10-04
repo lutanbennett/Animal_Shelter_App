@@ -1,3 +1,4 @@
+import { requireFullResident } from "@/lib/residents/who-and-where";
 import Link from "next/link";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -12,6 +13,7 @@ import { todayIso } from "@/lib/format";
 export default async function ReturnFromHospitalPage(
   props: PageProps<"/residents/[id]/hospital/return">,
 ) {
+  await requireFullResident();
   const { id } = await props.params;
   const { t } = await getT();
   const supabase = await createClient();

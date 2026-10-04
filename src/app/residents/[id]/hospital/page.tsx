@@ -1,3 +1,4 @@
+import { requireFullResident } from "@/lib/residents/who-and-where";
 import Link from "next/link";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -20,6 +21,7 @@ type VetAppointment = {
 export default async function SendToHospitalPage(
   props: PageProps<"/residents/[id]/hospital">,
 ) {
+  await requireFullResident();
   const { id } = await props.params;
   const searchParams = await props.searchParams;
   const { t, locale } = await getT();

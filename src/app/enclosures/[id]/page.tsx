@@ -4,6 +4,7 @@ import { requirePermission } from "@/lib/permissions/require";
 import { loadMaintenanceJobs } from "@/lib/maintenance/queries";
 import { getTagOrigin } from "@/lib/tags/origin";
 import { loadSpecialDiets } from "@/lib/diets/special";
+import { loadOccupants, readsWhoAndWhereOnly } from "@/lib/residents/who-and-where";
 import {
   EnclosureHub,
   type Enclosure,
@@ -35,11 +36,7 @@ export default async function EnclosurePage(
       .returns<EnclosureRow[]>(),
     // Who's here now, per the same view the residents list uses; the
     // profile photo isn't in that view so it's fetched in a second step.
-    supabase
-      .from("resident_list_view")
-      .select("resident_id")
-      .eq("enclosure_id", id)
-      .returns<{ resident_id: string }[]>(),
+    loadOccupants(supabase, id),
     loadMaintenanceJobs(supabase, { enclosureId: id }),
     getTagOrigin(),
   ]);
@@ -47,11 +44,13 @@ export default async function EnclosurePage(
   const row = enclosureResult.data?.[0];
   if (!row) notFound();
 
-  const residentIds = (occupantsResult.data ?? []).map((r) => r.resident_id);
+  const limited = await readsWhoAndWhereOnly();
+  const residentIds = occupantsResult.data.map((r) => r.resident_id);
   const [residentsResult, specialDiets] = await Promise.all([
     residentIds.length > 0
       ? supabase
-          .from("residents")
+          // A volunteer's second step reads who and where too: it has the same five columns (0134).
+          .from((limited ? "resident_who_and_where" : "residents") as "residents")
           .select("id, name, thai_name, resident_code, profile_photo_drive_file_id")
           .in("id", residentIds)
           .order("name")

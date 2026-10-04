@@ -39,8 +39,11 @@ function fullName(resident: Pick<ResidentRow, "name" | "thai_name">) {
 export function ResidentsTable({
   residents,
   tagOrigin,
+  limited = false,
 }: {
   residents: ResidentRow[];
+  /** A volunteer's list (who and where): no selecting, no booking, no new resident, no card link, no pencil. */
+  limited?: boolean;
   /** Origin for each row's RFID-card link (src/lib/tags/origin.ts). */
   tagOrigin: string | null;
 }) {
@@ -91,12 +94,13 @@ export function ResidentsTable({
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
         <p
-          className={`text-sm text-muted ${selected.size > 0 ? "" : "hidden md:block"}`}
+          className={`text-sm text-muted ${limited ? "hidden" : selected.size > 0 ? "" : "hidden md:block"}`}
         >
           {selected.size > 0
             ? t.residents.list.selectedCount(selected.size)
             : t.residents.list.selectPrompt}
         </p>
+        {!limited && (
         <div className="ml-auto flex gap-2">
           <ActionLink
             href={immunizationHref}
@@ -123,6 +127,7 @@ export function ResidentsTable({
             variant="primary"
           />
         </div>
+        )}
       </div>
 
       {/* Phones show only the name (the R-code is on the resident's hub, and
@@ -135,7 +140,7 @@ export function ResidentsTable({
         <table className="w-full text-left text-sm">
           <thead className="bg-surface text-muted">
             <tr>
-              <th className="hidden w-10 px-4 py-2 md:table-cell" />
+              {!limited && <th className="hidden w-10 px-4 py-2 md:table-cell" />}
               <th className="hidden px-4 py-2 font-medium md:table-cell">
                 {t.residents.list.table.id}
               </th>
@@ -156,7 +161,7 @@ export function ResidentsTable({
               </th>
               {/* Copy link (for the RFID card) and edit. The copy button
                   stays on phones: NFC cards are usually written from one. */}
-              <th className="w-20 px-2 py-2" />
+              {!limited && <th className="w-20 px-2 py-2" />}
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -171,6 +176,7 @@ export function ResidentsTable({
                   resident.current_status === "Deceased" ? "opacity-70" : ""
                 }`}
               >
+                {!limited && (
                 <td className="hidden px-4 py-2 md:table-cell">
                   <input
                     type="checkbox"
@@ -182,6 +188,7 @@ export function ResidentsTable({
                     )}
                   />
                 </td>
+                )}
                 <td className="hidden px-4 py-2 text-muted md:table-cell">
                   {resident.resident_code}
                 </td>
@@ -215,6 +222,7 @@ export function ResidentsTable({
                       off it, Adopted and Deceased neither. */}
                   {whereLabel(resident.current_status)}
                 </td>
+                {!limited && (
                 <td className="w-20 px-2 py-2 text-right whitespace-nowrap">
                   <CopyTagLink
                     path={residentTagPath(resident.resident_code)}
@@ -232,11 +240,12 @@ export function ResidentsTable({
                     <Pencil aria-hidden="true" className="h-4 w-4" />
                   </Link>
                 </td>
+                )}
               </tr>
             ))}
             {residents.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-muted">
+                <td colSpan={limited ? 6 : 8} className="px-4 py-6 text-center text-muted">
                   {t.residents.list.table.noMatches}
                 </td>
               </tr>

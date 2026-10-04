@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { contactRelation } from "@/lib/contacts/visibility";
+import { readsWhoAndWhereOnly } from "@/lib/residents/who-and-where";
+import { ResidentWhoAndWhere } from "./ResidentWhoAndWhere";
 import { getTagOrigin } from "@/lib/tags/origin";
 import { loadTranslations } from "@/lib/translations/queries";
 import {
@@ -25,6 +27,9 @@ export default async function ResidentPage(
   const { id } = await props.params;
   const { archive: archiveFlag } = await props.searchParams;
   const supabase = await createClient();
+
+  // A volunteer's page for a resident is who it is and where it lives and nothing more (0134).
+  if (await readsWhoAndWhereOnly()) return <ResidentWhoAndWhere id={id} />;
 
   const [
     residentResult,

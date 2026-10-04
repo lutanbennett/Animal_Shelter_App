@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { requirePermission } from "@/lib/permissions/require";
+import { loadOccupants } from "@/lib/residents/who-and-where";
 import { MapPrototype, type Shape } from "./MapPrototype";
 
 /**
@@ -27,13 +28,9 @@ export default async function MapPrototypePage() {
     .limit(POLYGONS.length)
     .returns<{ id: string; name: string; capacity: number | null }[]>();
 
-  const { data: residents } = await supabase
-    .from("resident_list_view")
-    .select("enclosure_id")
-    .not("enclosure_id", "is", null)
-    .returns<{ enclosure_id: string }[]>();
+  const { data: residents } = await loadOccupants(supabase);
   const counts = new Map<string, number>();
-  for (const r of residents ?? []) counts.set(r.enclosure_id, (counts.get(r.enclosure_id) ?? 0) + 1);
+  for (const r of residents) counts.set(r.enclosure_id, (counts.get(r.enclosure_id) ?? 0) + 1);
 
   const shapes: Shape[] = (data ?? []).map((e, i) => ({
     id: e.id,

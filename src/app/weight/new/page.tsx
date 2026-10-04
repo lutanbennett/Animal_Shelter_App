@@ -1,3 +1,4 @@
+import { requirePermission } from "@/lib/permissions/require";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -7,6 +8,7 @@ import { loadLinkableVisits } from "@/lib/vets/linkable";
 import { WeightForm, type ExistingReading } from "../WeightForm";
 
 export default async function NewWeightPage(props: PageProps<"/weight/new">) {
+  await requirePermission("medical.weight");
   const searchParams = await props.searchParams;
   const { t, locale } = await getT();
 

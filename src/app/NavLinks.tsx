@@ -35,6 +35,7 @@ export function NavLinks({
   canSettings,
   canManagement,
   hasTasks,
+  canAppointments,
   canEnclosures,
   canMaintenance,
   canVets,
@@ -54,6 +55,11 @@ export function NavLinks({
    * Without it the menu leads with Appointments, as a vet's does.
    */
   hasTasks: boolean;
+  /**
+   * May open /appointments (the clinic scope's page). Without tasks, a login that cannot open it
+   * either gets no second entry: a volunteer's menu is Home, Residents and Enclosures.
+   */
+  canAppointments: boolean;
   /** Each of these is the page's own guard, asked of the route registry (NavPane). */
   canEnclosures: boolean;
   canMaintenance: boolean;
@@ -82,19 +88,25 @@ export function NavLinks({
       // "What do I need to do today" (my-dashboard).
       // A vet has no tasks: theirs is the clinic's appointments (Lutan,
       // 2026-09-29).
-      hasTasks
-        ? {
-            href: "/my",
-            label: t.nav.my,
-            icon: NAV_ICONS.my,
-            badge: urgentCount > 0 ? String(urgentCount) : undefined,
-            badgeTitle: urgentCount > 0 ? t.my.navBadge(urgentCount) : undefined,
-          }
-        : {
-            href: "/appointments",
-            label: t.nav.appointments,
-            icon: NAV_ICONS.appointments,
-          },
+      ...(hasTasks
+        ? [
+            {
+              href: "/my",
+              label: t.nav.my,
+              icon: NAV_ICONS.my,
+              badge: urgentCount > 0 ? String(urgentCount) : undefined,
+              badgeTitle: urgentCount > 0 ? t.my.navBadge(urgentCount) : undefined,
+            },
+          ]
+        : canAppointments
+          ? [
+              {
+                href: "/appointments",
+                label: t.nav.appointments,
+                icon: NAV_ICONS.appointments,
+              },
+            ]
+          : []),
       { href: "/residents", label: t.nav.residents, icon: NAV_ICONS.residents },
       ...(canEnclosures
         ? [{ href: "/enclosures", label: t.nav.enclosures, icon: NAV_ICONS.enclosures }]

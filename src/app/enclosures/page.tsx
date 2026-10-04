@@ -10,6 +10,7 @@ import {
   zonesKeptIn,
 } from "@/lib/enclosures/place";
 import { getTagOrigin } from "@/lib/tags/origin";
+import { loadOccupants } from "@/lib/residents/who-and-where";
 import { loadSpecialDiets } from "@/lib/diets/special";
 import { EnclosureFilters } from "./EnclosureFilters";
 import {
@@ -73,12 +74,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       .select("id, name, name_th, capacity, notes, zone_id, zones(name, name_th, internal)")
       .order("name")
       .returns<EnclosureRow[]>(),
-    supabase
-      .from("resident_list_view")
-      .select("enclosure_id, resident_id, name")
-      .not("enclosure_id", "is", null)
-      .order("name")
-      .returns<{ enclosure_id: string; resident_id: string; name: string }[]>(),
+    loadOccupants(supabase),
     // Open maintenance per enclosure, and per zone for zone-wide jobs
     // (enclosure_id null). A vet can't read maintenance (0001) and simply
     // gets zeros — no error, RLS filters.
@@ -99,7 +95,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
 
   const counts = new Map<string, number>();
   const specialByEnclosure = new Map<string, string[]>();
-  for (const row of residentsResult.data ?? []) {
+  for (const row of residentsResult.data) {
     counts.set(row.enclosure_id, (counts.get(row.enclosure_id) ?? 0) + 1);
     if (specialDiets.has(row.resident_id)) {
       specialByEnclosure.set(row.enclosure_id, [

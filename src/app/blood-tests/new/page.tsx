@@ -1,3 +1,4 @@
+import { requirePermission } from "@/lib/permissions/require";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -10,6 +11,7 @@ import {
 export default async function NewBloodTestPage(
   props: PageProps<"/blood-tests/new">,
 ) {
+  await requirePermission("medical.blood_tests");
   const searchParams = await props.searchParams;
   const { t } = await getT();
 

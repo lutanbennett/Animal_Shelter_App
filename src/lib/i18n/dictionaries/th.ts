@@ -3223,6 +3223,14 @@ const th: Dictionary = {
         editAriaLabel: (name: string) => `แก้ไข ${name}`,
       },
     },
+    whoAndWhere: {
+      where: "อยู่ที่ไหน",
+      status: "สถานะ",
+      enclosure: "กรง",
+      zone: "โซน",
+      notInEnclosure: "ตอนนี้ไม่ได้อยู่ในกรง",
+      scope: "คุณดูได้ว่าตัวนี้คือใครและอยู่ที่ไหน",
+    },
     hub: {
       backToResidents: "← กลับไปหน้าสัตว์ในความดูแล",
       microchip: "ไมโครชิป",

@@ -3334,6 +3334,15 @@ const en = {
         editAriaLabel: (name: string) => `Edit ${name}`,
       },
     },
+    // What a volunteer sees of a resident: who it is and where it lives (0134, §5).
+    whoAndWhere: {
+      where: "Where",
+      status: "Status",
+      enclosure: "Enclosure",
+      zone: "Zone",
+      notInEnclosure: "Not in an enclosure right now",
+      scope: "You can see who this is and where they live.",
+    },
     hub: {
       backToResidents: "← Back to residents",
       microchip: "Microchip",

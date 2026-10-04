@@ -1,3 +1,4 @@
+import { requireFullResident } from "@/lib/residents/who-and-where";
 import Link from "next/link";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -25,6 +26,7 @@ type PlacementRow = {
 export default async function UndoDeathPage(
   props: PageProps<"/residents/[id]/deceased/undo">,
 ) {
+  await requireFullResident();
   const { id } = await props.params;
   const { t, locale } = await getT();
   const supabase = await createClient();

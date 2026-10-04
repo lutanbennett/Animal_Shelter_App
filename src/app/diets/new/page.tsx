@@ -1,3 +1,4 @@
+import { requirePermission } from "@/lib/permissions/require";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -7,6 +8,7 @@ import { loadDietResident } from "../resident";
 
 /** Reached from the resident's Diet tab or the hub's Diet card. */
 export default async function NewDietPage(props: PageProps<"/diets/new">) {
+  await requirePermission("medical.diet");
   const searchParams = await props.searchParams;
   const { t } = await getT();
 
