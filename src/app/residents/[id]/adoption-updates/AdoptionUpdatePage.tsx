@@ -5,7 +5,6 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { todayIso } from "@/lib/format";
-import { loadCurrentRole } from "@/lib/auth/app-access";
 import { SECTION_ICONS } from "@/components/hub-icons";
 import { loadSenderOptions } from "@/lib/adoption-updates/queries";
 import { AdoptionUpdateForm } from "./AdoptionUpdateForm";

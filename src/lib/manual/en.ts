@@ -170,6 +170,7 @@ const manual: Manual = {
           id: "assistant",
           title: "Asking the assistant",
           roles: ["admin", "management", "staff", "volunteer"],
+          activity: "assistant.ask",
           path: "Assistant button in the header (any screen)",
           intro:
             "The assistant turns one typed sentence into a filled-in form, shows it to you, and writes nothing until you press Confirm. It is not a chatbot and it does not guess: it recognises the requests listed below, in English or Thai, and leaves blank whatever your sentence didn't say. Anything else gets a polite \"I didn't understand that one\" — so the list below is the whole of what it knows.",
@@ -237,6 +238,7 @@ const manual: Manual = {
           id: "my-tasks-page",
           title: "Seeing what's assigned to you",
           roles: ["admin", "management", "staff", "volunteer"],
+          activity: "recurring.do_own",
           path: "My tasks (first in the menu)",
           steps: [
             "My tasks is the page you land on when you sign in or tap Open the app on the public website; get back to it any time from the top of the menu. Every maintenance job you are on that isn't Completed is listed, grouped as Overdue, Due today, Coming up and No due date — most urgent first.",
@@ -268,6 +270,7 @@ const manual: Manual = {
           id: "my-recurring-jobs",
           title: "Doing your recurring jobs",
           roles: ["admin", "management", "staff", "volunteer"],
+          activity: "recurring.do_own",
           path: "My tasks → Recurring jobs",
           intro:
             "Recurring jobs are the routine management has set to come round on a calendar — the Monday stocktake, ordering medication after it, the monthly worming. Each date appears on your list for its day: staff and volunteers can be given one as well as management. Vets are not given recurring jobs — a vet's work comes from their vet appointments.",
@@ -801,6 +804,8 @@ const manual: Manual = {
           id: "browse-enclosures",
           title: "Browsing by zone and enclosure",
           roles: ["admin", "management", "staff", "volunteer"],
+          activity: "facility.enclosures",
+          activityLevel: "read",
           path: "Enclosures",
           steps: [
             "Open Enclosures. Tap a zone chip to show only that zone, search by enclosure name, or sort by zone, name or Fullest first.",
@@ -819,6 +824,8 @@ const manual: Manual = {
           id: "enclosure-hub",
           title: "The enclosure page",
           roles: ["admin", "management", "staff", "volunteer"],
+          activity: "facility.enclosures",
+          activityLevel: "read",
           path: "Enclosures → (an enclosure)",
           steps: [
             "The occupancy bar and notes are at the top; tap a resident to jump to their hub.",
@@ -847,6 +854,7 @@ const manual: Manual = {
           id: "log-maintenance",
           title: "Logging a job",
           roles: ["admin", "management", "staff"],
+          activity: "maintenance.jobs",
           path: "Maintenance → Log maintenance (or from an enclosure page)",
           steps: [
             "Step 1, What is wrong: give the job a title, e.g. \"Gate latch broken\", describe what needs doing, and add photos of the problem as it is now. They upload when you save.",
@@ -863,6 +871,8 @@ const manual: Manual = {
           id: "maintenance-board",
           title: "Tracking jobs on the board",
           roles: ["admin", "management", "staff", "volunteer"],
+          activity: "maintenance.jobs",
+          activityLevel: "read",
           path: "Maintenance",
           steps: [
             "Staff and volunteers open on the jobs assigned to them; switch Assigned to from Me to Everyone to see the whole board (management and admin start there). Filter by zone or enclosure. Completed jobs from the last 30 days are shown; tick Show all completed jobs for older ones.",
@@ -896,6 +906,8 @@ const manual: Manual = {
           id: "browse-projects",
           title: "Browsing and adding photos",
           roles: ["admin", "management", "staff", "volunteer"],
+          activity: "projects.folders",
+          activityLevel: "read",
           path: "Projects",
           steps: [
             "Open Projects and tap a category, then a folder. Search folders by name from any level, and sort by name, newest or project date.",
@@ -911,6 +923,7 @@ const manual: Manual = {
           id: "manage-projects",
           title: "Creating folders and writing the story",
           roles: ["admin", "management", "staff"],
+          activity: "projects.folders",
           path: "Projects → (a category or folder)",
           steps: [
             "Tap New folder, give it a name (this is also its Drive folder name) and, optionally, a Thai name.",
@@ -938,6 +951,8 @@ const manual: Manual = {
           id: "vets",
           title: "Vets",
           roles: ["admin", "management", "staff", "volunteer"],
+          activity: "clinics.list",
+          activityLevel: "read",
           path: "Vets",
           steps: [
             "Open Vets to see every vet and clinic with their visit count, residents seen, last visit and what's upcoming or overdue.",
@@ -952,6 +967,8 @@ const manual: Manual = {
           id: "contacts",
           title: "Contacts",
           roles: ["admin", "management", "staff", "volunteer"],
+          activity: "contacts.directory",
+          activityLevel: "read",
           path: "Contacts",
           steps: [
             "Open Contacts to find carers, volunteers and suppliers. Search by name, phone, email or chat ID, and filter by type. Volunteers see each contact’s name and phone number only, so the list has no type filter and a contact’s page has no address, email or notes: ask staff if you need more.",
@@ -985,6 +1002,7 @@ const manual: Manual = {
           id: "dashboard",
           title: "The dashboard",
           roles: ["admin", "management"],
+          activity: "reports.dashboard",
           path: "Management → Dashboard",
           steps: [
             "Right now: residents in care (in the shelter, in hospital, fostered), ready for adoption, vet visits in the next 7 days, and open maintenance jobs.",
@@ -1001,6 +1019,7 @@ const manual: Manual = {
           id: "manage-contacts",
           title: "Managing contacts",
           roles: ["admin", "management"],
+          activity: "contacts.directory",
           path: "Management → Contacts",
           steps: [
             "Add a contact with their type (Carer, Volunteer or Supplier), phone, email, LINE ID, Messenger, WhatsApp, address and notes — what a supplier sells, when a volunteer is free, a carer's home set-up. Notes show on the contact's page and are searched from the contact list.",
@@ -1018,6 +1037,7 @@ const manual: Manual = {
           id: "shelter-friends",
           title: "Shelter Friends — thanking the businesses that help",
           roles: ["admin", "management"],
+          activity: "friends.manage",
           path: "Management → Shelter Friends → Add a Shelter Friend",
           intro:
             "Local businesses that donate goods or give a discount to the shelter's supporters can be thanked on the public website's Shelter Friends page — a card each, with what they do for the shelter and how to find them. Add one with the Add a Shelter Friend wizard: it takes a business from nothing to a published card in five short steps. Everyone who signs in sees the Shelter Friend badge on a contact; only admin and management can add or change a profile.",
@@ -1051,6 +1071,7 @@ const manual: Manual = {
           id: "manage-vets",
           title: "Managing vets",
           roles: ["admin", "management"],
+          activity: "clinics.list",
           path: "Management → Vets",
           steps: [
             "Add a vet with the name staff will pick when booking, the clinic, free-text contact details, and notes — specialities, opening hours, an emergency line — which show on their hub.",
@@ -1065,6 +1086,7 @@ const manual: Manual = {
           id: "vet-doctors",
           title: "A clinic's doctors",
           roles: ["admin", "management"],
+          activity: "clinics.doctors",
           path: "Management → Vets → Doctors",
           intro:
             "Each vet or clinic has a list of its doctors, which the visit forms suggest from. Nobody has to type the list in: every doctor's name typed on a visit is added to that clinic's list, and \"dr ploy\" or \"Dr  Ploy\" find the \"Dr Ploy\" already there. What it can't tell is that \"Somchai\" and \"Dr Somchai\" are the same person — that is what this page is for.",
@@ -1089,6 +1111,7 @@ const manual: Manual = {
           id: "manage-medications",
           title: "Managing medications",
           roles: ["admin", "management"],
+          activity: "stock.medications",
           path: "Management → Medications",
           steps: [
             "The medications table is the product list the prescription form offers. Add one with its unit (tablet vs suspension are two medications); rename or fix a unit in place. That unit is the medication's base unit: doses, prescriptions and the forecast stay in it.",
@@ -1111,6 +1134,7 @@ const manual: Manual = {
           id: "manage-diets",
           title: "Managing diets and the food forecast",
           roles: ["admin", "management"],
+          activity: "stock.diets",
           path: "Management → Diets",
           steps: [
             "The diets table is the food list the diet form offers. Add one with its unit (g, ml, can, sachet…), the cost per unit in baht, and the daily quantity for a small, medium and large animal. That unit is the diet's base unit: portions, the forecast and Cashflow stay in it.",
@@ -1132,6 +1156,7 @@ const manual: Manual = {
           id: "medication-list",
           title: "The medication list",
           roles: ["admin", "management"],
+          activity: "stock.medications",
           path: "Management → Medication list",
           intro:
             "One list of who needs medicine today and how much, built for a phone while you walk round the enclosures. It is for reading: nothing on it is ticked off, and the app does not record that a dose was given.",
@@ -1154,6 +1179,7 @@ const manual: Manual = {
           id: "stocktake",
           title: "Doing a stocktake",
           roles: ["admin", "management", "staff", "volunteer"],
+          activity: "stock.count",
           path: "Stocktake",
           intro:
             "One sheet for counting every medication and diet, built to be used on a phone while you walk the shelves. Nothing is saved until you tap Save at the end, and everything saved together gets the same time.",
@@ -1180,6 +1206,7 @@ const manual: Manual = {
           id: "stock-usage",
           title: "Stock between counts",
           roles: ["admin", "management"],
+          activity: "stock.usage",
           path: "Management → Stock between counts",
           intro:
             "Shows what each medication and food was used between two stocktakes, beside what the prescriptions and diets planned for the same dates, so that big gaps stand out. Used is the earlier count, plus the deliveries recorded in between, minus the later count — so it is only as good as the delivery records (see the warning below).",
@@ -1205,6 +1232,7 @@ const manual: Manual = {
           id: "purchasing",
           title: "Purchasing: what to buy",
           roles: ["admin", "management"],
+          activity: "stock.purchasing",
           path: "Management → Purchasing",
           intro:
             "Works out how much of each medicine and food to buy for a week, two weeks or a month, so whoever orders does not do the arithmetic by hand. Every row shows its working, so nobody has to trust a bare number.",
@@ -1233,6 +1261,7 @@ const manual: Manual = {
           id: "deliveries",
           title: "Recording a delivery",
           roles: ["admin", "management", "staff"],
+          activity: "stock.delivery",
           path: "Deliveries",
           intro:
             "Record each medication or food as it arrives, so Stock between counts can work out what was actually used. Recording a delivery doesn't change the stock count — the next stocktake does.",
@@ -1254,6 +1283,7 @@ const manual: Manual = {
           id: "recurring-jobs",
           title: "Setting up recurring jobs",
           roles: ["admin", "management"],
+          activity: "recurring.manage",
           path: "Management → Recurring jobs",
           intro:
             "A recurring job is a rule — “stocktake of on-hand medication, every Monday morning, Anna” — that puts the job on the assignee's My tasks on every date it falls on. Nothing is created ahead: each date is worked out from the rule, and only what happened (done or skipped, by whom, when, and any note) is kept.",
@@ -1284,6 +1314,7 @@ const manual: Manual = {
           id: "cashflow",
           title: "The cashflow forecast",
           roles: ["admin", "management"],
+          activity: "reports.cashflow",
           path: "Management → Cashflow",
           intro:
             "Food, medication, vaccinations, vet visits and maintenance are each forecast on their own page in their own unit. This is the one page where they add up, in baht — together with the shelter's fixed monthly costs (rent, electricity, salaries and the like).",
@@ -1324,6 +1355,7 @@ const manual: Manual = {
           id: "translations",
           title: "Translating public text",
           roles: ["admin", "management"],
+          activity: "translations.manage",
           path: "Management → Translations",
           steps: [
             "The app's own labels are in both languages already; this page is for text one person types and another reads in the other language: a resident's hook line, bio, temperament, past story and ideal home on the adoption pages, a project's story and photo captions under Our work, and the title and description of every maintenance job. Whichever language it was written in, the other language needs a version, and that is written by hand here.",
@@ -1365,6 +1397,7 @@ const manual: Manual = {
           id: "recent-changes",
           title: "Who changed what (Recent changes)",
           roles: ["admin"],
+          activity: "audit.view",
           path: "Settings → Recent changes",
           steps: [
             "Every add, edit, archive and delete on residents, contacts, prescriptions, vet visits, weights, files and vaccinations is recorded automatically, with who did it and when. Recent changes lists them newest first, 50 at a time. Tap Older changes for the next page.",
@@ -1401,6 +1434,7 @@ const manual: Manual = {
           id: "website",
           title: "The public website",
           roles: ["admin"],
+          activity: "website.content",
           path: "Settings → Website",
           steps: [
             "The page has five tabs across the top: Home page (hero photo and Pet of the week), Contact & settings (labels, contact details, preferred way to contact us and the typical vet visit figure), Pages (the wording of each information page), Gallery and Our work. The tab you are on is in the web address, so a reload, the Back button or a shared link comes back to the same place. Text you have typed in one tab is still there when you come back to it, but each section still has its own Save button.",
@@ -1426,6 +1460,7 @@ const manual: Manual = {
           id: "zones-enclosures",
           title: "Zones and enclosures",
           roles: ["admin"],
+          activity: "facility.enclosures",
           path: "Settings → Zones, Settings → Enclosures",
           steps: [
             "Zones are the physical areas of the shelter (marked Internal) plus off-site ones (External). Add a zone with a name and, optionally, a Thai name.",
@@ -1442,6 +1477,7 @@ const manual: Manual = {
           id: "immunization-types",
           title: "Immunization types",
           roles: ["admin"],
+          activity: "reference.types",
           path: "Settings → Immunization Types",
           steps: [
             "Add each vaccine with how many months until it must be repeated (leave blank for a one-off) and whether it's mandatory.",
@@ -1456,6 +1492,7 @@ const manual: Manual = {
           id: "procedure-types",
           title: "Procedure types",
           roles: ["admin"],
+          activity: "reference.types",
           path: "Settings → Procedure Types",
           steps: [
             "The list the procedure form offers — X-ray, ultrasound, teeth cleaning, nail clipping. Staff and vets can add a type inline when logging a procedure, so this is where duplicates and misspellings get tidied up.",
@@ -1470,6 +1507,7 @@ const manual: Manual = {
           id: "blood-test-types",
           title: "Blood test types",
           roles: ["admin"],
+          activity: "reference.types",
           path: "Settings → Blood Test Types",
           steps: [
             "The panels the blood test form offers — CBC, Blood Chemistry Panel, Thyroid Panel, Heartworm Test, Tick Borne Disease Panel, Cortisol Test, Urinary Analysis. Add one here when the vet starts running a new panel; the form defaults to CBC.",
@@ -1484,6 +1522,7 @@ const manual: Manual = {
           id: "frequencies",
           title: "Frequencies",
           roles: ["admin"],
+          activity: "reference.types",
           path: "Settings → Frequencies",
           steps: [
             "The \"how often\" choices the prescription form offers — Twice daily, Weekly, Monthly. Each is a label staff see plus a schedule the medication forecast counts: so many times a day, or one dose every so many days, weeks or months from the prescription's start date. As needed can't be forecast.",
@@ -1494,6 +1533,7 @@ const manual: Manual = {
           id: "system-status",
           title: "System status",
           roles: ["admin"],
+          activity: "system.status",
           path: "Settings → System status",
           intro:
             "One page that says whether everything behind the app is working, and how much it is being used — and the alert mail that tells admins when something breaks, so nobody has to keep looking. Apart from the two alert buttons, nothing on it changes anything.",

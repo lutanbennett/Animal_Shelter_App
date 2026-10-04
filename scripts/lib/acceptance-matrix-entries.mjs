@@ -131,12 +131,14 @@ export const ENTRIES = {
   assistant: [
     {
       activity: "Ask the assistant a question",
+      needs: "assistant.ask",
       device: "both",
       do: "Tap Assistant in the header and ask \"Where is <a resident's name>?\"",
       expect: "It answers straight away with no card to confirm, and the screen behind it stays where it was.",
     },
     {
       activity: "Record something with the assistant",
+      needs: "assistant.record",
       device: "both",
       roles: ["admin", "management", "staff"],
       do: "Ask the assistant to record a weight for a resident, check the card, and press Confirm.",
@@ -167,6 +169,7 @@ export const ENTRIES = {
   "my-tasks-page": [
     {
       activity: "See the maintenance jobs assigned to you",
+      needs: "maintenance.jobs:read",
       device: "phone",
       na: ["vet"],
       do: "Open My tasks and look at the list.",
@@ -175,6 +178,7 @@ export const ENTRIES = {
     },
     {
       activity: "Change a maintenance job's status from My tasks",
+      needs: "maintenance.jobs",
       device: "phone",
       roles: ["admin", "management", "staff"],
       na: ["vet"],
@@ -195,6 +199,7 @@ export const ENTRIES = {
   "my-recurring-jobs": [
     {
       activity: "Mark a recurring job done or skipped",
+      needs: "recurring.do_own",
       device: "phone",
       na: ["vet"],
       do: "On My tasks tap Done on a recurring job due today, and Skip with a note on another.",
@@ -437,6 +442,7 @@ export const ENTRIES = {
   "browse-enclosures": [
     {
       activity: "Browse enclosures and see how full they are",
+      needs: "facility.enclosures:read",
       device: "phone",
       do: "Open Enclosures, tap a zone chip, and tick Has open maintenance.",
       expect: "The cards narrow each time and show residents against capacity. The page does not scroll sideways.",
@@ -445,6 +451,7 @@ export const ENTRIES = {
   "enclosure-hub": [
     {
       activity: "Open an enclosure and see who lives in it",
+      needs: "facility.enclosures:read",
       device: "phone",
       do: "Tap an enclosure card.",
       expect: "Its notes, its residents and its open maintenance jobs show, and a resident opens that resident's hub.",
@@ -455,6 +462,7 @@ export const ENTRIES = {
   "log-maintenance": [
     {
       activity: "Log a maintenance job with photos",
+      needs: "maintenance.jobs",
       device: "phone",
       do: "Tap Log maintenance and go through the steps: what is wrong (title, photo), where, who and when (assign it), then check the Review and Save job.",
       expect: "The job is on the board and on the assignee's My tasks.",
@@ -463,12 +471,14 @@ export const ENTRIES = {
   "maintenance-board": [
     {
       activity: "See the maintenance board",
+      needs: "maintenance.jobs:read",
       device: "both",
       do: "Open Maintenance and switch Assigned to between Me and Everyone.",
       expect: "The jobs show in columns by status, coloured when overdue or blocked.",
     },
     {
       activity: "Change a job's status on the board",
+      needs: "maintenance.jobs",
       device: "both",
       roles: ["admin", "management", "staff"],
       do: "On a phone, tap Move job on under a job, choose Move to In progress, and confirm; then do the same to reach Completed and to go back a column. On a desktop, drag the card to another column.",
@@ -477,6 +487,7 @@ export const ENTRIES = {
     },
     {
       activity: "Edit a job, record its cost, add before and after photos",
+      needs: "maintenance.jobs",
       device: "both",
       roles: ["admin", "management", "staff"],
       do: "Open a job, enter the actual cost, and add an After photo.",
@@ -488,6 +499,7 @@ export const ENTRIES = {
   "browse-projects": [
     {
       activity: "Add photos to a project folder",
+      needs: "projects.photos",
       device: "phone",
       do: "Open Projects, tap a category and a folder, and tap Add photos.",
       expect: "The photos appear in the folder.",
@@ -496,12 +508,14 @@ export const ENTRIES = {
   "manage-projects": [
     {
       activity: "Create a project folder and write its story",
+      needs: "projects.folders",
       device: "both",
       do: "Tap New folder, give it a name, then Edit details and write the story.",
       expect: "The folder and its story are saved.",
     },
     {
       activity: "Put a project on the public website",
+      needs: "projects.publish",
       device: "both",
       do: "Turn on Show on website for the folder, then open the public Our work page.",
       expect: "The folder's title, story and photos show there; turning it off removes them.",
@@ -512,6 +526,7 @@ export const ENTRIES = {
   vets: [
     {
       activity: "Look up a vet or clinic",
+      needs: "clinics.list:read",
       device: "both",
       do: "Open Vets and tap a vet.",
       expect: "Visit counts and the clinic's doctors show.",
@@ -520,6 +535,7 @@ export const ENTRIES = {
   contacts: [
     {
       activity: "Look up a contact and reach them",
+      needs: "contacts.directory:read",
       device: "phone",
       do: "Open Contacts, search for a carer, and tap Call or LINE.",
       expect: "The right app opens with that person's number or LINE ID.",
@@ -531,6 +547,7 @@ export const ENTRIES = {
   dashboard: [
     {
       activity: "Read the dashboard",
+      needs: "reports.dashboard",
       device: "both",
       do: "Open Management, then Dashboard.",
       expect: "The counts for right now, this month and the last twelve months show, and they match what you know about the shelter.",
@@ -539,6 +556,7 @@ export const ENTRIES = {
   "manage-contacts": [
     {
       activity: "Add, edit, archive and restore a contact",
+      needs: "contacts.directory",
       device: "desktop",
       do: "Add a contact, change its phone number, archive it, then Show archived and Restore it.",
       expect: "An archived contact drops out of the pickers; a restored one returns.",
@@ -547,12 +565,14 @@ export const ENTRIES = {
   "shelter-friends": [
     {
       activity: "Add a Shelter Friend and publish it",
+      needs: "friends.manage",
       device: "desktop",
       do: "Tap Add a Shelter Friend, go through the steps with a made-up business, and publish.",
       expect: "The business's card appears on the public Shelter Friends page showing only the details you ticked.",
     },
     {
       activity: "Unpublish a Shelter Friend",
+      needs: "friends.manage",
       device: "desktop",
       do: "On Management → Shelter Friends tap Unpublish on that card.",
       expect: "The card leaves the public page but the profile is kept.",
@@ -561,6 +581,7 @@ export const ENTRIES = {
   "manage-vets": [
     {
       activity: "Add a vet or clinic",
+      needs: "clinics.list",
       device: "desktop",
       do: "Management → Vets: add a vet with a clinic name.",
       expect: "It is offered in the vet visit form.",
@@ -569,6 +590,7 @@ export const ENTRIES = {
   "vet-doctors": [
     {
       activity: "Manage a clinic's doctors",
+      needs: "clinics.doctors",
       device: "desktop",
       do: "Open a clinic's Doctors list, add a doctor, then rename or merge one.",
       expect: "The doctor is suggested on the visit form; renaming or merging also changes past visits and says so first.",
@@ -577,12 +599,14 @@ export const ENTRIES = {
   "manage-medications": [
     {
       activity: "Add a medication and set its stock",
+      needs: "stock.medications",
       device: "desktop",
       do: "Management → Medications: add one with its unit, tap Count and enter what is in the cupboard.",
       expect: "It is offered on the prescription form and the stock figure shows. A blank count means \"not counted\".",
     },
     {
       activity: "Add a label photo to a medication",
+      needs: "stock.medications",
       device: "both",
       do: "Tap Upload label on a medication and take or choose a picture.",
       expect: "The picture shows beside its name here and on the stocktake sheet.",
@@ -591,6 +615,7 @@ export const ENTRIES = {
   "medication-list": [
     {
       activity: "Read today's medication list",
+      needs: "stock.medications:read",
       device: "phone",
       do: "Management → Medication list, then scroll down the page.",
       expect: "Animals with medicine due today are grouped by zone and enclosure, each with a photo, name, the medicine's label photo, the amount and how often. Nothing is tappable and the page does not slide sideways.",
@@ -599,6 +624,7 @@ export const ENTRIES = {
   "manage-diets": [
     {
       activity: "Add a diet and read the food forecast",
+      needs: "stock.diets",
       device: "desktop",
       do: "Management → Diets: add a diet with its cost and portions, then read the Next 30 days forecast.",
       expect: "The forecast shows how much food and money the residents will need.",
@@ -607,24 +633,28 @@ export const ENTRIES = {
   stocktake: [
     {
       activity: "Count the stock and save the count",
+      needs: "stock.count",
       device: "phone",
       do: "Open Stocktake, type what is on the shelf for several items, tap Review and save, and save.",
       expect: "Big changes are listed first for checking; after saving, the counts show as new.",
     },
     {
       activity: "Count the medicines one card at a time",
+      needs: "stock.count",
       device: "phone",
       do: "Open Stocktake on a phone. On each medicine card type what is on the shelf and tap Save; tap Same as last time on one and Skip on another. At the end choose Count them now for the skipped one, then Review and save.",
       expect: "Each card shows the box's photo (or the name), the keypad is open, the top says how far you are, and nothing is saved until Review and save.",
     },
     {
       activity: "Close the page half-way and come back",
+      needs: "stock.count",
       device: "phone",
       do: "Count a few medicines on the cards, close the tab, then open Stocktake again.",
       expect: "It says it picked up where you left off, with the same counts and the same card.",
     },
     {
       activity: "Skip an item, or keep its figure with \"Same as last time\"",
+      needs: "stock.count",
       device: "phone",
       do: "Leave one row blank and tick Same as last time on another, then save.",
       expect: "The blank one is left exactly as it was; the ticked one is recorded as counted now.",
@@ -633,6 +663,7 @@ export const ENTRIES = {
   "stock-usage": [
     {
       activity: "Compare stock used with what was planned",
+      needs: "stock.usage",
       device: "desktop",
       do: "Open Stock between counts and tap Download CSV.",
       expect: "Used, Planned and Difference add up for each item, and the CSV opens in a spreadsheet.",
@@ -641,6 +672,7 @@ export const ENTRIES = {
   purchasing: [
     {
       activity: "Work out what to buy",
+      needs: "stock.purchasing",
       device: "phone",
       do: "Open Purchasing, pick 2 weeks, open the Medicines fold, tap an item to open its working, and tap Download CSV.",
       expect: "One screen: Medicines and Food in separate folds, each grouped by supplier, each item opens to show its working.",
@@ -649,6 +681,7 @@ export const ENTRIES = {
   deliveries: [
     {
       activity: "Record a delivery",
+      needs: "stock.delivery",
       device: "phone",
       do: "Open Record a delivery, pick a medication, enter the quantity and cost, and record it.",
       expect: "It appears under Recent deliveries with your name. A delivery dated in the future is refused.",
@@ -657,12 +690,14 @@ export const ENTRIES = {
   "recurring-jobs": [
     {
       activity: "Set up a recurring job for a person or a team",
+      needs: "recurring.manage",
       device: "desktop",
       do: "Tap New recurring job, set a weekly rule, tick who does it, and check Next dates before saving.",
       expect: "The job lists its next dates and shows on the assignees' My tasks on those days. A vet is not offered as an assignee.",
     },
     {
       activity: "Hand a date over to someone else",
+      needs: "recurring.manage",
       device: "desktop",
       do: "Use Hand over, choose these dates only, who covers, and a reason.",
       expect: "The covering person sees the job marked \"handed to you\" with the reason, and only for those dates.",
@@ -671,6 +706,7 @@ export const ENTRIES = {
   cashflow: [
     {
       activity: "Read the cashflow forecast",
+      needs: "reports.cashflow:read",
       device: "both",
       do: "Open Cashflow, pick Next 90 days, and tap Download CSV.",
       expect: "Totals, the monthly chart and the table show; items with no price read \"not priced yet\".",
@@ -679,6 +715,7 @@ export const ENTRIES = {
   translations: [
     {
       activity: "Translate a public text and see it on the website",
+      needs: "translations.manage",
       device: "both",
       do: "Open Translations, write and approve a translation, then open the public site in that language.",
       expect: "The approved text shows to visitors in that language; until approved they see the original.",
@@ -715,6 +752,7 @@ export const ENTRIES = {
   "recent-changes": [
     {
       activity: "Find who changed a record, and undo the change",
+      needs: "audit.view",
       device: "desktop",
       do: "Open Recent changes, filter by who and date, open a line and tap Undo this change.",
       expect: "The record goes back to its old values. Undo is offered only on the newest change to a record.",
@@ -731,12 +769,14 @@ export const ENTRIES = {
   website: [
     {
       activity: "Change something on the public website",
+      needs: "website.content",
       device: "both",
       do: "Open Settings → Website, change the tagline or add a gallery photo, and save.",
       expect: "The change shows on the public site straight away.",
     },
     {
       activity: "Choose the Pet of the week",
+      needs: "website.content",
       device: "desktop",
       do: "On the Home page tab choose a resident who is on the Adopt page.",
       expect: "That resident is featured on the home page.",
@@ -745,6 +785,7 @@ export const ENTRIES = {
   "zones-enclosures": [
     {
       activity: "Add a zone and an enclosure",
+      needs: "facility.enclosures",
       device: "desktop",
       do: "Settings → Zones: add a zone; Settings → Enclosures: add an enclosure with a capacity.",
       expect: "The enclosure is on the Enclosures page and offered when moving a resident.",
@@ -753,6 +794,7 @@ export const ENTRIES = {
   "immunization-types": [
     {
       activity: "Add an immunization type",
+      needs: "reference.types",
       device: "desktop",
       do: "Add a vaccine with a repeat interval and tick Mandatory.",
       expect: "It is offered on the immunization form and counted in the \"missing\" check on the hub.",
@@ -761,6 +803,7 @@ export const ENTRIES = {
   "procedure-types": [
     {
       activity: "Add or merge a procedure type",
+      needs: "reference.types",
       device: "both",
       do: "Add a type, then merge a duplicate into it.",
       expect: "The type is offered on the procedure form; a type with logged procedures cannot be deleted, only merged.",
@@ -769,6 +812,7 @@ export const ENTRIES = {
   "blood-test-types": [
     {
       activity: "Add or merge a blood test type",
+      needs: "reference.types",
       device: "both",
       do: "Add a type, then merge a duplicate into it.",
       expect: "The type is offered on the blood test form; a type with logged tests cannot be deleted, only merged.",
@@ -777,6 +821,7 @@ export const ENTRIES = {
   frequencies: [
     {
       activity: "Add a frequency",
+      needs: "reference.types",
       device: "desktop",
       do: "Add \"Every 6 hours\" with its schedule.",
       expect: "It is offered on the prescription form.",
@@ -785,6 +830,7 @@ export const ENTRIES = {
   "system-status": [
     {
       activity: "Read the system status",
+      needs: "system.status",
       device: "desktop",
       do: "Open Settings → System status and tap Check now.",
       expect: "Every health tile is green or says plainly what is wrong, and the Usage numbers are plausible.",
