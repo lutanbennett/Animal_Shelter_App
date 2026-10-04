@@ -43,6 +43,8 @@ const { isFutureDate, placementStartAfter, placementStartDate } = await import(
   "../src/lib/placements/dates.ts"
 );
 
+const { suggestRound, shelterHour } = await import("../src/lib/rounds/suggest.ts");
+
 let failed = 0;
 function check(label, got, want) {
   const ok = JSON.stringify(got) === JSON.stringify(want);
@@ -113,6 +115,28 @@ for (const tz of ["UTC", "Asia/Bangkok", "America/Los_Angeles", "Pacific/Kiritim
     placementStartAfter("2026-10-02", at("2026-10-03T03:00:00Z"), "2026-10-02T18:30:00+00:00"),
     null,
   );
+}
+
+// Rounds (0137): the clock only suggests, on the shelter's clock. Both sides of each edge
+// (Bangkok is UTC+7: 10:59 ICT = 03:59Z, 11:00 = 04:00Z, 15:59 = 08:59Z, 16:00 = 09:00Z), the 00:00
+// and 06:59 ICT ends where UTC is still yesterday, and 23:59, under every process zone.
+for (const tz of ["UTC", "Asia/Bangkok", "America/Los_Angeles", "Pacific/Kiritimati"]) {
+  process.env.TZ = tz;
+  const edges = [
+    ["2026-10-02T17:00:00Z", 0, "morning", "morning"], // 00:00 ICT 3 Oct, UTC still 2 Oct
+    ["2026-10-02T23:59:59Z", 6, "morning", "morning"], // 06:59:59 ICT
+    ["2026-10-03T03:59:59Z", 10, "morning", "morning"], // 10:59:59 ICT
+    ["2026-10-03T04:00:00Z", 11, "lunch", "evening"], // 11:00:00 ICT
+    ["2026-10-03T08:59:59Z", 15, "lunch", "evening"], // 15:59:59 ICT
+    ["2026-10-03T09:00:00Z", 16, "evening", "evening"], // 16:00:00 ICT
+    ["2026-10-03T16:59:59Z", 23, "evening", "evening"], // 23:59:59 ICT
+  ];
+  for (const [iso, hour, med, food] of edges) {
+    const at = new Date(iso);
+    check(`[${tz}] ${iso} is ${hour}h at the shelter`, shelterHour(at), hour);
+    check(`[${tz}] ${iso} suggests ${med} for medication`, suggestRound("medication", at), med);
+    check(`[${tz}] ${iso} suggests ${food} for food`, suggestRound("food", at), food);
+  }
 }
 
 // F-03's shape: a "YYYY-MM-DD" string is UTC midnight when parsed by Date, so
