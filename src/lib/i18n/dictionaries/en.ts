@@ -4454,6 +4454,8 @@ const en = {
     pageTitle: "Meet Our Residents",
     pageSubtitle:
       "You're browsing as a guest — this is a read-only, public view of the residents we've made visible for adoption and outreach. Staff and volunteers see much more after signing in.",
+    pageSubtitleSignedIn:
+      "This is the public view of the residents we’ve made visible for adoption and outreach — what an adopter sees. The full list is under Residents in the app.",
     couldntLoad: "Couldn't load residents",
     noneListed: "No residents are listed publicly right now — check back soon.",
     noPhoto: "No photo yet",
