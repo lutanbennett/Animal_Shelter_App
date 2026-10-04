@@ -178,5 +178,68 @@
     "volunteer": true,
     "public_viewer": false,
     "null": false
+  },
+  "canDoJob(/stocktake)": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": false,
+    "volunteer": true,
+    "public_viewer": false,
+    "null": false
+  },
+  "canDoJob(/deliveries)": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": false,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
+  },
+  "canDoJob(/management/purchasing)": {
+    "admin": true,
+    "management": true,
+    "staff": false,
+    "vet": false,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
+  },
+  "canDoJob(/management)": {
+    "admin": true,
+    "management": true,
+    "staff": false,
+    "vet": false,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
+  },
+  "canDoJob(/admin)": {
+    "admin": true,
+    "management": false,
+    "staff": false,
+    "vet": false,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
+  },
+  "canDoJob(/maintenance)": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": false,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
+  },
+  "canDoJob(/residents)": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": false,
+    "volunteer": true,
+    "public_viewer": false,
+    "null": false
   }
 }
