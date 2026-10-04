@@ -2,12 +2,13 @@
 
 import { refresh, revalidatePath } from "next/cache";
 import { runAction, type ActionResult } from "@/lib/action-result";
-import { hasManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { dietUnitLabel, doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { costPerBaseUnit, defaultUnit, parseConversion, type ItemKind } from "@/lib/units";
 import { loadConversions } from "@/lib/units-server";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
@@ -66,7 +67,7 @@ export async function saveConversion(
   const { t } = await getT();
   const e = t.units.errors;
   return runAction("units.saveConversion", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(e.notAuthorized);
+    if (!can(await loadPermissions(), "stock.diets")) return refuse(e.notAuthorized);
     if (kind !== "medication" && kind !== "diet") return refuse(e.failed);
 
     const base = await baseUnitOf(kind, itemId);
@@ -114,7 +115,7 @@ export async function deleteConversion(id: string): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.units.errors;
   return runAction("units.deleteConversion", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(e.notAuthorized);
+    if (!can(await loadPermissions(), "stock.diets")) return refuse(e.notAuthorized);
     const supabase = await createClient();
     const { error, count } = await supabase
       .from("item_unit_conversions")
@@ -141,7 +142,7 @@ export async function setPricePerPurchaseUnit(
   const { t } = await getT();
   const e = t.units.errors;
   return runAction("units.setPricePerPurchaseUnit", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(e.notAuthorized);
+    if (!can(await loadPermissions(), "stock.diets")) return refuse(e.notAuthorized);
     if (kind !== "medication" && kind !== "diet") return refuse(e.failed);
     const typed = price.trim();
     const amount = Number(typed);

@@ -11,6 +11,6 @@ import type { ManualRole, ManualTopic } from "./types";
  * scripts/acceptance-matrix.mjs loads that file directly, without the `@/` alias.
  */
 export function isForTopic(topic: ManualTopic, role: ManualRole | null, perms: Permissions | null | undefined): boolean {
-  if (topic.activity && perms) return can(perms, topic.activity as LevelKey);
+  if (topic.activity && perms) return can(perms, topic.activity as LevelKey, topic.activityLevel);
   return isForRole(topic.roles, role);
 }

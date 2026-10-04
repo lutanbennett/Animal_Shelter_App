@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { addDaysIso, formatDate, todayIso } from "@/lib/format";
@@ -13,6 +12,7 @@ import {
 import { fixedOutgoingRows, type FixedOutgoing } from "@/lib/management/fixed-outgoings";
 import { VET_HISTORY_DAYS, vetForecast, type VetVisit } from "@/lib/management/vet-forecast";
 import { CashflowView } from "./CashflowView";
+import { requirePermission } from "@/lib/permissions/require";
 
 type VetRow = { appointment_date: string; cost: number | string | null };
 
@@ -29,7 +29,7 @@ type VetRow = { appointment_date: string; cost: number | string | null };
  * volunteer seeing the page frame at all.
  */
 export default async function CashflowPage(props: PageProps<"/management/cashflow">) {
-  await requireManagementUser();
+  await requirePermission("reports.cashflow");
   const { t, locale } = await getT();
   const searchParams = await props.searchParams;
   const c = t.management.cashflow;

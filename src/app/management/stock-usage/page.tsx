@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Truck } from "lucide-react";
-import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { dietUnitLabel, doseUnitLabel } from "@/lib/i18n/enum-labels";
@@ -30,6 +29,7 @@ import {
   type IntervalRow,
   type UsageReading,
 } from "@/lib/management/stock-usage";
+import { requirePermission } from "@/lib/permissions/require";
 
 /**
  * Management → Stock between counts. Each item's count history (0093) and
@@ -93,7 +93,7 @@ type Line = {
 };
 
 export default async function StockUsagePage(props: PageProps<"/management/stock-usage">) {
-  await requireManagementUser();
+  await requirePermission("stock.usage");
   const { t, locale } = await getT();
   const u = t.management.stockUsage;
   const searchParams = await props.searchParams;

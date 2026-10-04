@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { getAppEnv } from "@/lib/app-env";
 import { loadCurrentRole } from "@/lib/auth/app-access";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { formatDate } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
 import { asManualRole, isForRole } from "@/lib/manual/filter";
@@ -44,9 +46,10 @@ type ViewNote = { text: string; mine: boolean };
  * reader's (docs/decisions.md, "Release notes by role").
  */
 export default async function ReleasesPage({ searchParams }: PageProps<"/releases">) {
-  const [{ view }, role, { t, locale }] = await Promise.all([
+  const [{ view }, role, perms, { t, locale }] = await Promise.all([
     searchParams,
     createClient().then(loadCurrentRole).then(asManualRole),
+    loadPermissions(),
     getT(),
   ]);
   const r = t.releases;
@@ -54,7 +57,7 @@ export default async function ReleasesPage({ searchParams }: PageProps<"/release
   const envLabel = ENV_LABEL[appEnv];
   // The environment tag is for whoever runs the system: to everyone else
   // "Dev" on every release is a developer's word on a staff screen.
-  const showEnv = role === "admin";
+  const showEnv = can(perms, "system.status");
   const roleName = role ? r.roleNames[role] : null;
   const showAll = view === "all" || !roleName;
   /** The notes this view lists: the reader's, or all of them under Show everything. */

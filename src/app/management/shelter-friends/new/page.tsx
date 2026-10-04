@@ -1,4 +1,3 @@
-import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { CONTACT_COLUMNS, type Contact } from "@/lib/contacts/contacts";
@@ -6,6 +5,7 @@ import { canBecomeFriend } from "@/lib/shelter-friends/friends";
 import { parseStepParam } from "@/app/residents/new/steps";
 import { FriendWizard } from "./FriendWizard";
 import { FRIEND_STEPS } from "./steps";
+import { requirePermission } from "@/lib/permissions/require";
 
 /**
  * Management → Shelter Friends → Add a Shelter Friend: the guided way to
@@ -16,7 +16,7 @@ import { FRIEND_STEPS } from "./steps";
 export default async function AddShelterFriendPage(
   props: PageProps<"/management/shelter-friends/new">,
 ) {
-  await requireManagementUser();
+  await requirePermission("friends.manage");
   const { t } = await getT();
   const w = t.shelterFriends.wizard;
   const searchParams = await props.searchParams;

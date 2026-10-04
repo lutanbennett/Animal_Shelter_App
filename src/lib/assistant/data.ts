@@ -1,21 +1,9 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { loadEnclosureOptions, type EnclosureOption, type ZoneOption } from "@/lib/enclosures/options";
+import { can, type Permissions } from "@/lib/permissions/can";
 import { NOT_DECEASED } from "@/lib/residents/status";
 import { loadDoctorNamesByVet, type DoctorNamesByVet } from "@/lib/vets/doctors";
-
-/** Roles that may confirm a write. Volunteers get the lookups only. */
-export const ASSISTANT_WRITE_ROLES = new Set(["admin", "management", "staff"]);
-/** Roles the assistant opens for at all. The vet role is external (0070). */
-export const ASSISTANT_ROLES = new Set([...ASSISTANT_WRITE_ROLES, "volunteer"]);
-
-export function canUseAssistant(role: unknown): boolean {
-  return typeof role === "string" && ASSISTANT_ROLES.has(role);
-}
-
-export function canWriteWithAssistant(role: unknown): boolean {
-  return typeof role === "string" && ASSISTANT_WRITE_ROLES.has(role);
-}
 
 /** A resident as the parser matches it and the cards display it. */
 export type AssistantResident = {
@@ -42,7 +30,9 @@ export type AssistantContext = {
   vets: AssistantVet[];
   /** Each clinic's active doctors, for the vet card's optional Doctor field. */
   doctors: DoctorNamesByVet;
-  role: string | null;
+  /** assistant.ask: the assistant opens at all (the vet's role is external, 0070). */
+  canAsk: boolean;
+  /** assistant.record: may confirm a write; without it, lookups only. */
   canWrite: boolean;
   error: string | null;
 };
@@ -64,16 +54,9 @@ type ListRow = {
  * through the assistant anyway. `error` is the caller's to fill in.
  */
 export function emptyAssistantContext(
-  role: string | null,
   error: string | null = null,
 ): AssistantContext {
-  return { residents: [], zones: [], enclosures: [], vets: [], doctors: {}, role, canWrite: false, error };
-}
-
-/** The caller's role as `current_user_role` reports it, or null. */
-export async function loadAssistantRole(supabase: SupabaseClient): Promise<string | null> {
-  const { data } = await supabase.rpc("current_user_role");
-  return typeof data === "string" ? data : null;
+  return { residents: [], zones: [], enclosures: [], vets: [], doctors: {}, canAsk: false, canWrite: false, error };
 }
 
 /**
@@ -90,14 +73,13 @@ export async function loadAssistantRole(supabase: SupabaseClient): Promise<strin
  * resident id — the same two-step the enclosure hub does for its
  * thumbnails.
  *
- * It does no role check of its own: the caller fetches the role with
- * `loadAssistantRole`, checks `canUseAssistant` and only then loads, so a
- * vet never gets the rows by asking directly (docs/decisions.md,
- * 2026-09-25).
+ * It does no check of its own: the caller checks `can(perms, "assistant.ask")`
+ * and only then loads, so a vet never gets the rows by asking directly
+ * (docs/decisions.md, 2026-09-25).
  */
 export async function loadAssistantContext(
   supabase: SupabaseClient,
-  role: string | null,
+  perms: Permissions,
 ): Promise<AssistantContext> {
   const [listResult, vetsResult, options, doctors] = await Promise.all([
     supabase
@@ -173,8 +155,8 @@ export async function loadAssistantContext(
     enclosures: options.enclosures,
     vets: vetsResult.data ?? [],
     doctors,
-    role,
-    canWrite: canWriteWithAssistant(role),
+    canAsk: true,
+    canWrite: can(perms, "assistant.record"),
     error:
       listResult.error?.message ??
       vetsResult.error?.message ??

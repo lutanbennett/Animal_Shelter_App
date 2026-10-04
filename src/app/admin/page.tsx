@@ -1,7 +1,9 @@
 import { Suspense } from "react";
 import { Activity, Globe, History } from "lucide-react";
 import { DriveStatus } from "./DriveStatus";
-import { requireAdminUser } from "@/lib/auth/require-admin";
+import { can } from "@/lib/permissions/can";
+import { canOpen, routeFor } from "@/lib/permissions/routes";
+import { requireAnyPageUnder } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import { SectionTiles, type SectionTile } from "@/components/SectionTiles";
 import {
@@ -19,14 +21,16 @@ import {
  * Security is also pinned to the bottom of the sidebar (2026-09-22), but it
  * is still admin configuration and belongs on this page too — its tile
  * says where else to find it. Every page
- * listed, Security included, is admin-gated, so the one check covers the
- * whole grid; a manager never reaches this page at all.
+ * listed asks its own activity (the route registry), and the grid shows only
+ * the tiles this person may open; Security is the one that is an Admin rule
+ * rather than an activity. The page opens for whoever can open one of them,
+ * which today is Admin alone.
  */
 export default async function AdminPage() {
-  await requireAdminUser();
+  const { perms } = await requireAnyPageUnder("/admin");
   const { t } = await getT();
 
-  const tiles: SectionTile[] = [
+  const allTiles: SectionTile[] = [
     {
       href: "/admin/website",
       label: t.nav.website,
@@ -92,6 +96,11 @@ export default async function AdminPage() {
       icon: Activity,
     },
   ];
+  const tiles = allTiles.filter((tile) => {
+    if (tile.href === "/admin/security") return perms.isAdmin;
+    const route = routeFor(tile.href);
+    return !!route && canOpen(perms, route);
+  });
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
@@ -102,9 +111,11 @@ export default async function AdminPage() {
         <p className="text-sm text-muted">{t.admin.landing.subtitle}</p>
       </div>
 
-      <Suspense fallback={<p className="text-sm text-muted">{t.admin.landing.drive.checking}</p>}>
-        <DriveStatus />
-      </Suspense>
+      {can(perms, "system.status") && (
+        <Suspense fallback={<p className="text-sm text-muted">{t.admin.landing.drive.checking}</p>}>
+          <DriveStatus />
+        </Suspense>
+      )}
 
       <SectionTiles tiles={tiles} />
     </main>

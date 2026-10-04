@@ -3,7 +3,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { getAppEnv } from "@/lib/app-env";
-import { canUseAssistant } from "@/lib/assistant/data";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { AssistantPanel } from "@/components/assistant/AssistantPanel";
 import { SignOutButton } from "./login/SignOutButton";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -20,7 +21,7 @@ export async function AppHeader() {
   const { t } = await getT();
   // The assistant opens from here so it is reachable from every screen,
   // including the phone. The vet role does not get it (0070).
-  const { data: role } = await supabase.rpc("current_user_role");
+  const perms = await loadPermissions();
 
   // Production has no badge. UAT has nothing else: it keeps production's
   // colours so the customer tests the real thing (src/lib/app-env.ts).
@@ -72,7 +73,7 @@ export async function AppHeader() {
       {/* Tighter on a phone: this row gained the assistant button, and at
           375px the old gap-4 pushed "Sign out" off the edge. */}
       <div className="flex items-center gap-2 sm:gap-4">
-        {canUseAssistant(role) && <AssistantPanel />}
+        {can(perms, "assistant.ask") && <AssistantPanel />}
         <LanguageSwitcher />
         <span className="hidden text-sm text-muted md:inline">
           {user.email}

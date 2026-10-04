@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { AddDoctorForm } from "./AddDoctorForm";
 import { DoctorsTable, type DoctorRow, type ElsewhereDoctor } from "./DoctorsTable";
+import { requirePermission } from "@/lib/permissions/require";
 
 type PersonRow = {
   id: string;
@@ -26,13 +26,13 @@ type PersonRow = {
 export default async function VetDoctorsPage(
   props: PageProps<"/management/vets/[id]/doctors">,
 ) {
-  await requireManagementUser();
+  const { perms } = await requirePermission("clinics.doctors");
   const { id } = await props.params;
   const { t } = await getT();
   const d = t.management.vetDoctors;
 
   const supabase = await createClient();
-  const [vetResult, doctorsResult, visitsResult, roleResult] = await Promise.all([
+  const [vetResult, doctorsResult, visitsResult] = await Promise.all([
     supabase
       .from("vets")
       .select("id, name, clinic_name")
@@ -52,7 +52,6 @@ export default async function VetDoctorsPage(
       .eq("vet_id", id)
       .not("doctor_id", "is", null)
       .returns<{ doctor_id: string; appointment_date: string }[]>(),
-    supabase.rpc("current_user_role"),
   ]);
 
   if (vetResult.error) throw new Error(vetResult.error.message);
@@ -126,7 +125,7 @@ export default async function VetDoctorsPage(
           vetId={vet.id}
           doctors={doctors}
           elsewhere={elsewhere}
-          isAdmin={roleResult.data === "admin"}
+          isAdmin={perms.isAdmin}
         />
       </LargerScreenNotice>
     </main>

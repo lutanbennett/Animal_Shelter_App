@@ -170,7 +170,7 @@ for (const t of topics) {
 // from the cells. The manual page asks can() for the activity itself.
 for (const t of topics) {
   if (!t.activity) continue;
-  const held = holders(t.activity);
+  const held = holders(t.activityLevel === "read" ? `${t.activity}:read` : t.activity);
   if (!held) {
     problem(`The manual topic "${t.id}" names the activity "${t.activity}", which the seeded catalogue does not have.`, []);
     continue;

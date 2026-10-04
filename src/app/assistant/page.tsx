@@ -1,11 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import {
-  canUseAssistant,
-  emptyAssistantContext,
-  loadAssistantContext,
-  loadAssistantRole,
-} from "@/lib/assistant/data";
+import { emptyAssistantContext, loadAssistantContext } from "@/lib/assistant/data";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { AssistantConversation } from "@/components/assistant/AssistantConversation";
 
 /**
@@ -24,10 +21,10 @@ import { AssistantConversation } from "@/components/assistant/AssistantConversat
 export default async function AssistantPage() {
   const { t } = await getT();
   const supabase = await createClient();
-  const role = await loadAssistantRole(supabase);
-  const context = canUseAssistant(role)
-    ? await loadAssistantContext(supabase, role)
-    : emptyAssistantContext(role);
+  const perms = await loadPermissions();
+  const context = perms && can(perms, "assistant.ask")
+    ? await loadAssistantContext(supabase, perms)
+    : emptyAssistantContext();
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-4 sm:p-6">
@@ -44,7 +41,7 @@ export default async function AssistantPage() {
         </p>
       )}
 
-      {canUseAssistant(context.role) ? (
+      {context.canAsk ? (
         <div className="flex max-w-2xl flex-1 flex-col">
           <AssistantConversation context={context} />
         </div>

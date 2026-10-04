@@ -2,9 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { runAction, type ActionResult } from "@/lib/action-result";
-import { hasManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
@@ -34,7 +35,7 @@ export async function createVet(
 ): Promise<VetFormState> {
   const { t } = await getT();
   return runAction("vets.createVet", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "clinics.list")) return refuse(t.management.errors.managementAccessRequired);
     const name = optional(formData.get("name"));
     if (!name) return refuse(t.management.vets.errors.nameRequired);
 
@@ -56,7 +57,7 @@ export async function createVet(
 export async function updateVet(id: string, fields: VetFields): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("vets.updateVet", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "clinics.list")) return refuse(t.management.errors.managementAccessRequired);
     const name = optional(fields.name);
     if (!name) return refuse(t.management.vets.errors.nameRequired);
 
@@ -80,7 +81,7 @@ export async function updateVet(id: string, fields: VetFields): Promise<ActionRe
 export async function deleteVet(id: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("vets.deleteVet", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "clinics.list")) return refuse(t.management.errors.managementAccessRequired);
     const supabase = await createClient();
 
     // vet_appointments.vet_id has no cascade, so a vet with history can't go:

@@ -6,9 +6,10 @@ import {
   type ActionRefusal,
   type ActionResult,
 } from "@/lib/action-result";
-import { hasAdminRole } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 
 export type ZoneFormState = ActionResult<{ success: string }> | undefined;
 
@@ -20,7 +21,7 @@ export async function createZone(
 ): Promise<ZoneFormState> {
   const { t } = await getT();
   return runAction("zones.createZone", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const name = (formData.get("name") as string | null)?.trim();
     const nameTh = (formData.get("nameTh") as string | null)?.trim() || null;
@@ -46,7 +47,7 @@ export async function updateZone(
 ): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("zones.updateZone", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
     if (!name.trim()) return refuse(t.admin.zones.errors.nameRequired);
 
     const supabase = await createClient();
@@ -64,7 +65,7 @@ export async function updateZone(
 export async function deleteZone(id: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("zones.deleteZone", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const supabase = await createClient();
     const { error } = await supabase.from("zones").delete().eq("id", id);

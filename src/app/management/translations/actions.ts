@@ -2,10 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { runAction, type ActionResult } from "@/lib/action-result";
-import { hasManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { ROW_COLUMNS, type TranslationRow } from "@/lib/translations/types";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
@@ -55,7 +56,7 @@ export async function approveTranslation(
 ): Promise<ActionResult<{ row: TranslationRow }>> {
   const { t } = await getT();
   return runAction("translations.approveTranslation", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "translations.manage")) return refuse(t.management.errors.managementAccessRequired);
     const trimmed = text.trim();
     if (!trimmed) return refuse(t.translations.errors.textRequired);
 
@@ -106,7 +107,7 @@ export async function clearTranslation(
 ): Promise<ActionResult<{ row: TranslationRow }>> {
   const { t } = await getT();
   return runAction("translations.clearTranslation", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "translations.manage")) return refuse(t.management.errors.managementAccessRequired);
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("translations")

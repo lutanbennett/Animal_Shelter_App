@@ -1,6 +1,5 @@
 import { Suspense, type ReactNode } from "react";
 import Link from "next/link";
-import { requireAdminUser } from "@/lib/auth/require-admin";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
 import { getWaitingAccessRequests } from "@/lib/status/access-requests";
@@ -10,6 +9,7 @@ import { type CheckResult, type CheckState, runCheck } from "@/lib/status/run";
 import { USAGE_PERIODS, getUsageReport, parsePeriod, type UsagePeriod } from "@/lib/status/usage";
 import { checkNow } from "./actions";
 import { AlertActions } from "./AlertActions";
+import { requirePermission } from "@/lib/permissions/require";
 
 type T = Awaited<ReturnType<typeof getT>>["t"];
 type Locale = Awaited<ReturnType<typeof getT>>["locale"];
@@ -23,7 +23,7 @@ type Locale = Awaited<ReturnType<typeof getT>>["locale"];
  * it — the page names where secrets live and what's misconfigured.
  */
 export default async function SystemStatusPage(props: PageProps<"/admin/status">) {
-  await requireAdminUser();
+  await requirePermission("system.status");
   const { t, locale } = await getT();
   const s = t.admin.status;
   const days = parsePeriod((await props.searchParams).days);

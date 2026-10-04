@@ -9,7 +9,7 @@ import {
   type OpenOccurrence,
 } from "@/lib/recurring-jobs/queries";
 import { timeOfDayRank } from "@/lib/recurring-jobs/rule";
-import { canDoJob } from "@/lib/recurring-jobs/eligibility";
+import { canDoJob, needsForLinks } from "@/lib/recurring-jobs/eligibility";
 import { loadEligibility } from "@/lib/recurring-jobs/eligibility-load";
 import type { MyTask, MyTaskSection } from "./types";
 
@@ -73,8 +73,13 @@ export async function loadMyRecurringTasks(
   const r = t.my.recurring;
 
   // Only the reader's own role is asked about: role_can() answers anyone about
-  // their own role and refuses them about any other (0133).
-  const { eligibility, error: eligibilityError } = await loadEligibility(supabase, [role]);
+  // their own role and refuses them about any other (0133), and only about the pages
+  // their own jobs link to, not the whole registry.
+  const { eligibility, error: eligibilityError } = await loadEligibility(
+    supabase,
+    [role],
+    needsForLinks(open.map((o) => o.job.link_path)),
+  );
   if (eligibilityError) return { ...section, error: eligibilityError };
 
   // A job the reader's role isn't given (a vet on any recurring job, or a

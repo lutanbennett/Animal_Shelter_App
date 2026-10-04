@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ClipboardCheck, Scale, ShoppingCart, Truck } from "lucide-react";
-import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { CreateDietTypeForm } from "./CreateDietTypeForm";
@@ -16,6 +15,7 @@ import { inPurchaseUnit } from "@/lib/units";
 import { loadConversions } from "@/lib/units-server";
 import { loadReceipts } from "@/lib/management/receipts-server";
 import { receivedSinceCount } from "@/lib/management/purchasing";
+import { requirePermission } from "@/lib/permissions/require";
 
 type DietTypeQueryRow = Omit<
   DietTypeRow,
@@ -43,7 +43,7 @@ type ForecastRow = {
  * and what that costs (0051 diet_forecast).
  */
 export default async function DietsManagementPage(props: PageProps<"/management/diets">) {
-  await requireManagementUser();
+  await requirePermission("stock.diets");
   const { t, locale } = await getT();
   const searchParams = await props.searchParams;
 

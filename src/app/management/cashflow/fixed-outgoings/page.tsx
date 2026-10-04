@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { MAX_FIXED_OUTGOINGS, type FixedOutgoing } from "@/lib/management/fixed-outgoings";
 import { FixedOutgoingsEditor } from "./FixedOutgoingsEditor";
+import { requirePermission } from "@/lib/permissions/require";
 
 /**
  * Management → Cashflow → Fixed outgoings: the named monthly costs the
@@ -18,7 +18,7 @@ import { FixedOutgoingsEditor } from "./FixedOutgoingsEditor";
  * (0114, docs/decisions/2026-09-29-fixed-outgoings-not-payroll.md).
  */
 export default async function FixedOutgoingsPage() {
-  await requireManagementUser();
+  await requirePermission("reports.cashflow");
   const { t } = await getT();
   const m = t.management.fixedOutgoings;
 

@@ -1,16 +1,16 @@
 import Link from "next/link";
-import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { CONTACT_COLUMNS, type Contact } from "@/lib/contacts/contacts";
 import { CreateContactForm } from "./CreateContactForm";
 import { ContactsTable, type ContactRow } from "./ContactsTable";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
+import { requirePermission } from "@/lib/permissions/require";
 
 export default async function ContactsAdminPage(
   props: PageProps<"/management/contacts">,
 ) {
-  await requireManagementUser();
+  await requirePermission("contacts.directory");
   const { t } = await getT();
   const a = t.contacts.archive;
   // Archived contacts are hidden unless ?archived=1 — the same link toggle

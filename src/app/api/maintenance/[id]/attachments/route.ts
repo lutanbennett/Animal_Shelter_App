@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { getT } from "@/lib/i18n/get-t";
-import { assertPhotoWriteAccess } from "@/lib/auth/require-role";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import {
   getDriveClient,
   syncMaintenanceJobFolder,
@@ -56,13 +57,9 @@ async function handlePost(
 
   const { id: jobId } = await params;
 
-  try {
-    await assertPhotoWriteAccess();
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Not authorized." },
-      { status: 403 },
-    );
+  if (!can(await loadPermissions(), "maintenance.photos")) {
+    const { t } = await getT();
+    return NextResponse.json({ error: t.photos.errors.notAuthorized }, { status: 403 });
   }
 
   const phaseParam = new URL(request.url).searchParams.get("phase");

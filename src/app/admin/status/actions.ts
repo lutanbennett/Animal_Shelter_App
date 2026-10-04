@@ -2,11 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { type ActionResult, runAction } from "@/lib/action-result";
-import { hasAdminRole } from "@/lib/auth/require-admin";
 import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { runStatusAlerts, sendTestAlert, type Skipped } from "@/lib/status/alerts";
 import { clearStatusCache } from "@/lib/status/run";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 
 /**
  * "Check now": forget the minute's cached results and render again. Called
@@ -18,7 +19,7 @@ import { clearStatusCache } from "@/lib/status/run";
 export async function checkNow(): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("status.checkNow", t.common.somethingWentWrong, async () => {
-    if (!(await hasAdminRole())) {
+    if (!can(await loadPermissions(), "system.status")) {
       return { ok: false, error: t.admin.security.errors.adminAccessRequired };
     }
     clearStatusCache();
@@ -47,7 +48,7 @@ export type AlertActionResult = ActionResult<AlertOutcome>;
 export async function runAlertCheckNow(): Promise<AlertActionResult> {
   const { t } = await getT();
   const a = t.admin.status.alerts;
-  if (!(await hasAdminRole())) return { ok: false, error: t.admin.security.errors.adminAccessRequired };
+  if (!can(await loadPermissions(), "system.status")) return { ok: false, error: t.admin.security.errors.adminAccessRequired };
   return runAction<AlertOutcome>("status.runAlertCheckNow", t.common.somethingWentWrong, async () => {
     const r = await runStatusAlerts("manual", await origin());
     clearStatusCache();
@@ -65,7 +66,7 @@ export async function runAlertCheckNow(): Promise<AlertActionResult> {
 export async function sendTestAlertNow(): Promise<AlertActionResult> {
   const { t } = await getT();
   const a = t.admin.status.alerts;
-  if (!(await hasAdminRole())) return { ok: false, error: t.admin.security.errors.adminAccessRequired };
+  if (!can(await loadPermissions(), "system.status")) return { ok: false, error: t.admin.security.errors.adminAccessRequired };
   return runAction<AlertOutcome>("status.sendTestAlert", t.common.somethingWentWrong, async () => {
     const r = await sendTestAlert(await origin());
     revalidatePath("/admin/status");

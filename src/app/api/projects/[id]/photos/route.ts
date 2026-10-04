@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { getT } from "@/lib/i18n/get-t";
-import { assertPhotoWriteAccess } from "@/lib/auth/require-role";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { getDriveClient, uploadImageToFolder } from "@/lib/google/drive";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { withDriveErrors } from "@/lib/google/drive-errors";
@@ -40,13 +41,9 @@ async function handlePost(
 
   const { id: folderId } = await params;
 
-  try {
-    await assertPhotoWriteAccess();
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Not authorized." },
-      { status: 403 },
-    );
+  if (!can(await loadPermissions(), "projects.photos")) {
+    const { t } = await getT();
+    return NextResponse.json({ error: t.photos.errors.notAuthorized }, { status: 403 });
   }
 
   const formData = await request.formData();

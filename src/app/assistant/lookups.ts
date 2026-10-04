@@ -3,7 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { logAssistantAction } from "@/lib/assistant/audit";
-import { canUseAssistant } from "@/lib/assistant/data";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import type { DueDraft, WhereDraft, WhoDraft } from "@/lib/assistant/types";
 import { addDaysIso, todayIso } from "@/lib/format";
 
@@ -301,8 +302,7 @@ export async function assistantLookup(input: {
   const { t } = await getT();
   const supabase = await createClient();
 
-  const { data: role } = await supabase.rpc("current_user_role");
-  if (!canUseAssistant(role)) return { error: t.assistant.notAuthorized };
+  if (!can(await loadPermissions(), "assistant.ask")) return { error: t.assistant.notAuthorized };
 
   const { draft } = input;
   const result =

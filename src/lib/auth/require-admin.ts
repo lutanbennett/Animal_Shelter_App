@@ -1,10 +1,24 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { requireRole } from "./require-role";
+import { loadPermissions } from "@/lib/permissions/load";
+import { refuse } from "./require-role";
 
-/** Sends non-admins to the no-access page (require-role.ts). Returns the current user. */
+/**
+ * What only an Admin may do and no activity names: who can sign in, and as what (Settings → Security).
+ * An Admin rule, not a cell (§6: a role nobody else holds cannot be an activity everyone may be given),
+ * so it asks `perms.isAdmin` and never a role's name. Everything else under Settings is an activity.
+ * Sends anyone else to the no-access page (require-role.ts). Returns the current user.
+ */
 export async function requireAdminUser() {
-  const { user } = await requireRole((role) => role === "admin");
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const perms = await loadPermissions();
+  if (!perms?.isAdmin) refuse(perms?.role.key);
   return user;
 }
 
@@ -13,9 +27,7 @@ export async function requireAdminUser() {
  * returns its refusal rather than throwing (src/lib/action-result.ts).
  */
 export async function hasAdminRole() {
-  const supabase = await createClient();
-  const { data: role } = await supabase.rpc("current_user_role");
-  return role === "admin";
+  return (await loadPermissions())?.isAdmin === true;
 }
 
 /** Same check for use inside a server action, where redirect() can't be used. */

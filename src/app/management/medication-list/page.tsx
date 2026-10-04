@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { PawPrint } from "lucide-react";
-import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { formatDate } from "@/lib/format";
@@ -14,6 +13,7 @@ import {
   type ListedMedication,
   type ListedResident,
 } from "@/lib/medication-list/load";
+import { requirePermission } from "@/lib/permissions/require";
 
 /**
  * Management → Medication list (docs/roles-and-permissions.md §14): who
@@ -27,7 +27,7 @@ import {
  * medication-list.md).
  */
 export default async function MedicationListPage() {
-  await requireManagementUser();
+  await requirePermission("stock.medications", "read");
   const { t, locale } = await getT();
   const m = t.management.medicationList;
 

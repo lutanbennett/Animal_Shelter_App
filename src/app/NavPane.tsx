@@ -1,14 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
-import { hasAppAccess, isShelterRole } from "@/lib/auth/app-access";
-import { canManage } from "@/lib/auth/require-management";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
+import { ROUTES, canOpen, routeFor } from "@/lib/permissions/routes";
 import { todayIso } from "@/lib/format";
-import { canReadMaintenance } from "@/lib/maintenance/queries";
 import { countMyUrgentAccessRequests } from "@/lib/my-tasks/access-requests";
 import { countMyUrgentMaintenance } from "@/lib/my-tasks/maintenance";
 import { countMyUrgentRecurring } from "@/lib/my-tasks/recurring";
-import { canReadRecurringJobs } from "@/lib/recurring-jobs/access";
 import { NavLinks } from "./NavLinks";
 
 export async function NavPane() {
@@ -19,27 +16,41 @@ export async function NavPane() {
 
   if (!user) return null;
 
-  const { data: role } = await supabase.rpc("current_user_role");
+  const perms = await loadPermissions();
 
   // A public viewer reaches an app-chrome page only to change a temporary
   // password; a menu of pages it would be bounced from is no use to it.
-  if (!hasAppAccess(role)) return null;
+  if (!perms?.role.opensApp) return null;
+
+  // Whether the menu offers a registered page: the same question its guard asks.
+  const opens = (path: string) => {
+    const route = routeFor(path);
+    return !!route && canOpen(perms, route);
+  };
+  // A landing page (Management, Settings) opens for whoever may open one page under it.
+  const opensAnyUnder = (prefix: string) => ROUTES.some((r) => r.path.startsWith(prefix + "/") && canOpen(perms, r));
 
   // The My tasks badge: what is due today or overdue across its sources.
   const today = todayIso();
   const [accessCount, maintenanceCount, recurringCount] = await Promise.all([
-    role === "admin" ? countMyUrgentAccessRequests() : 0,
-    canReadMaintenance(role) ? countMyUrgentMaintenance(supabase, user.id, today) : 0,
-    canReadRecurringJobs(role) ? countMyUrgentRecurring(supabase, user.id, today) : 0,
+    perms.isAdmin ? countMyUrgentAccessRequests() : 0,
+    opens("/maintenance") ? countMyUrgentMaintenance(supabase, user.id, today) : 0,
+    countMyUrgentRecurring(supabase, user.id, today),
   ]);
   const urgentCount = accessCount + maintenanceCount + recurringCount;
 
   return (
     <NavLinks
-      isAdmin={role === "admin"}
-      canManage={canManage(role)}
-      isShelter={isShelterRole(role)}
-      canStocktake={can(await loadPermissions(), "stock.count")}
+      canSecurity={perms.isAdmin}
+      canSettings={opensAnyUnder("/admin")}
+      canManagement={opensAnyUnder("/management")}
+      hasTasks={can(perms, "recurring.do_own")}
+      canEnclosures={opens("/enclosures")}
+      canMaintenance={opens("/maintenance")}
+      canVets={opens("/vets")}
+      canContacts={opens("/contacts")}
+      canProjects={opens("/projects")}
+      canStocktake={can(perms, "stock.count")}
       urgentCount={urgentCount}
     />
   );

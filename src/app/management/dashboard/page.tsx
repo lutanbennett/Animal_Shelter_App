@@ -11,7 +11,6 @@ import {
   Scissors,
   Stethoscope,
 } from "lucide-react";
-import { requireManagementUser } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { speciesLabel } from "@/lib/i18n/enum-labels";
@@ -36,6 +35,7 @@ import {
 } from "@/lib/management/report";
 import { ReportCard } from "./ReportCard";
 import { TrendChart } from "./TrendChart";
+import { requirePermission } from "@/lib/permissions/require";
 
 const TREND_MONTHS = 12;
 
@@ -52,7 +52,7 @@ const REPORTED_PLACEMENTS = [
 export default async function ManagementDashboardPage(
   props: PageProps<"/management/dashboard">,
 ) {
-  await requireManagementUser();
+  await requirePermission("reports.dashboard");
   const searchParams = await props.searchParams;
   const { t, locale } = await getT();
   const d = t.management.dashboard;

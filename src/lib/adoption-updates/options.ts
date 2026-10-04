@@ -41,9 +41,9 @@ export type PhotoProvenance = {
  * keeps it on another. The embed names the composite foreign key
  * (adoption_update_id, owner_id) → adoption_updates (id, resident_id).
  */
-export function residentPhotoSelect(role: string | null | undefined): string {
-  return `id, drive_file_id, file_name, sub_folder, date_taken, adoption_update:adoption_updates!attachments_adoption_update_fk(id, received_on, channel, sender:${contactNameEmbed(role)})`;
+export function residentPhotoSelect(contactsScope: string | null | undefined): string {
+  return `id, drive_file_id, file_name, sub_folder, date_taken, adoption_update:adoption_updates!attachments_adoption_update_fk(id, received_on, channel, sender:${contactNameEmbed(contactsScope)})`;
 }
 
 /** The staff view of it, for the pages only staff reach. */
-export const RESIDENT_PHOTO_SELECT = residentPhotoSelect("staff");
+export const RESIDENT_PHOTO_SELECT = residentPhotoSelect("full");

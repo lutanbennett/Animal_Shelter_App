@@ -23,12 +23,13 @@ export type SenderOptions = {
 export async function loadSenderOptions(
   supabase: SupabaseClient,
   residentId: string,
-  role: string | null,
+  /** The caller's contacts scope (perms.scopes.contacts): which view of the address book they read. */
+  contactsScope: string | null | undefined,
 ): Promise<SenderOptions> {
   const [adoptions, contacts] = await Promise.all([
     supabase
       .from("placement_history")
-      .select(`carer_id, carer:${contactRelation(role)}(id, name)`)
+      .select(`carer_id, carer:${contactRelation(contactsScope)}(id, name)`)
       .eq("resident_id", residentId)
       .eq("placement_type", "Adopt")
       .order("start_date", { ascending: false })
@@ -37,7 +38,7 @@ export async function loadSenderOptions(
     // choose a sender from; a vet or volunteer reads names through a narrow
     // view (0126) with no archive state, and is shown the "not allowed"
     // message instead of the form.
-    contactRelation(role) === "contacts"
+    contactRelation(contactsScope) === "contacts"
       ? supabase
           .from("contacts")
           .select("id, name")

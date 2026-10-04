@@ -5,9 +5,8 @@ import { getT } from "@/lib/i18n/get-t";
 import { todayIso } from "@/lib/format";
 import { VET_HOME_PATH } from "@/lib/auth/next-path";
 import { TWO_STEP_PATH, getAssuranceLevel } from "@/lib/auth/two-step";
-import { canManage } from "@/lib/auth/require-management";
-import { canReadMaintenance } from "@/lib/maintenance/queries";
-import { canReadRecurringJobs } from "@/lib/recurring-jobs/access";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { loadMyAccessRequestTasks } from "@/lib/my-tasks/access-requests";
 import { loadMyMaintenanceTasks } from "@/lib/my-tasks/maintenance";
 import { loadMyRecurringTasks } from "@/lib/my-tasks/recurring";
@@ -31,24 +30,28 @@ export default async function MyPage() {
   const supabase = await createClient();
   const today = todayIso();
 
-  const [{ data: role }, { data: auth }] = await Promise.all([
+  const [{ data: role }, { data: auth }, perms] = await Promise.all([
     supabase.rpc("current_user_role"),
     supabase.auth.getUser(),
+    loadPermissions(),
   ]);
-  // Tasks are shelter operations; a vet's home is their appointments.
+  // Tasks are shelter operations; a vet's home is their appointments. Which role lands where is
+  // home-screens' (roles.home_path); until it is built a vet is still told by name.
   if (role === "vet") redirect(VET_HOME_PATH);
   const userId = auth.user?.id;
 
   const sections: MyTaskSection[] = userId
     ? await Promise.all([
-        ...(role === "admin" ? [loadMyAccessRequestTasks(t)] : []),
-        ...(canReadRecurringJobs(role) ? [loadMyRecurringTasks(supabase, userId, role, t, today)] : []),
-        ...(canReadMaintenance(role) ? [loadMyMaintenanceTasks(supabase, userId, role, t, locale)] : []),
+        ...(perms?.isAdmin ? [loadMyAccessRequestTasks(t)] : []),
+        ...(perms?.role.opensApp ? [loadMyRecurringTasks(supabase, userId, role, t, today)] : []),
+        ...(can(perms, "maintenance.jobs", "read")
+          ? [loadMyMaintenanceTasks(supabase, userId, can(perms, "maintenance.jobs"), t, locale)]
+          : []),
       ])
     : [];
 
   // An admin whose login has no authenticator app is prompted until it does.
-  const needsTwoStep = role === "admin" && !(await getAssuranceLevel()).enrolled;
+  const needsTwoStep = !!perms?.isAdmin && !(await getAssuranceLevel()).enrolled;
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-6">
@@ -67,7 +70,7 @@ export default async function MyPage() {
         </section>
       )}
 
-      <MyTaskList sections={sections} today={today} canManage={canManage(role)} />
+      <MyTaskList sections={sections} today={today} canManage={can(perms, "recurring.manage")} />
     </main>
   );
 }

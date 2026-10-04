@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { runAction, type ActionResult } from "@/lib/action-result";
-import { hasManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { DOSE_UNITS, type DoseUnit } from "@/lib/i18n/enum-labels";
@@ -19,6 +18,8 @@ import {
   uploadImageToFolder,
 } from "@/lib/google/drive";
 import { driveErrorMessage } from "@/lib/google/drive-errors";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
@@ -85,7 +86,7 @@ export async function createMedication(
 ): Promise<MedicationFormState> {
   const { t } = await getT();
   return runAction("medications.createMedication", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "stock.medications")) return refuse(t.management.errors.managementAccessRequired);
     const name = optional(formData.get("name"));
     if (!name) return refuse(t.management.medications.errors.nameRequired);
     const doseUnit = optional(formData.get("doseUnit"));
@@ -121,7 +122,7 @@ export async function createMedication(
 export async function updateMedication(id: string, fields: MedicationFields): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("medications.updateMedication", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "stock.medications")) return refuse(t.management.errors.managementAccessRequired);
     const name = optional(fields.name);
     if (!name) return refuse(t.management.medications.errors.nameRequired);
     const doseUnit = optional(fields.doseUnit);
@@ -179,7 +180,7 @@ export async function updateMedication(id: string, fields: MedicationFields): Pr
 export async function updateMedicationStock(id: string, count: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("medications.updateMedicationStock", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "stock.medications")) return refuse(t.management.errors.managementAccessRequired);
     const parsed = parseStockCount(count);
     if (!parsed.ok) return refuse(t.management.stock.errors.countInvalid);
 
@@ -201,7 +202,7 @@ export async function updateMedicationStock(id: string, count: string): Promise<
 export async function deleteMedication(id: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("medications.deleteMedication", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "stock.medications")) return refuse(t.management.errors.managementAccessRequired);
     // prescriptions.medication_id has no cascade: a medication that has ever
     // been prescribed is part of a resident's medical record. Say so instead
     // of surfacing the foreign-key error.
@@ -235,7 +236,7 @@ export async function mergeMedication(
 ): Promise<ActionResult<{ count: number }>> {
   const { t } = await getT();
   return runAction("medications.mergeMedication", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "stock.medications")) return refuse(t.management.errors.managementAccessRequired);
     if (fromId === intoId) {
       return refuse(t.management.medications.errors.mergeSelf);
     }
@@ -303,7 +304,7 @@ export async function uploadMedicationLabel(
 ): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
   return runAction("medications.uploadMedicationLabel", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "stock.medications")) return refuse(t.management.errors.managementAccessRequired);
     const w = t.admin.website.errors;
 
     const file = formData.get("file");
@@ -368,7 +369,7 @@ export async function uploadMedicationLabel(
 export async function removeMedicationLabel(id: string): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
   return runAction("medications.removeMedicationLabel", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "stock.medications")) return refuse(t.management.errors.managementAccessRequired);
     const supabase = await createClient();
 
     const current = await currentLabel(supabase, id);

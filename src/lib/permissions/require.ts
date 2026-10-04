@@ -5,6 +5,7 @@ import { refuse } from "@/lib/auth/require-role";
 import { can, type Permissions } from "./can";
 import { loadPermissions } from "./load";
 import type { Level, LevelKey, YesNoKey } from "./catalogue";
+import { ROUTES, canOpen } from "./routes";
 
 /**
  * The page guard: one activity, one guard, no role name anywhere (§8).
@@ -30,6 +31,27 @@ export async function requirePermission(activity: YesNoKey | LevelKey, level: Le
 
   const perms = await loadPermissions();
   if (!perms || !can(perms, activity as LevelKey, level)) refuse(perms?.role.key);
+
+  return { supabase, user, perms };
+}
+
+/**
+ * The guard for a landing page (Management, Settings): a page that is a grid of the pages under
+ * it, so it has no activity of its own. It opens for whoever may open at least one page under
+ * `prefix` in the route registry, and the grid then shows only the tiles that person may open.
+ * Signed out → /login; nothing to open → refused, as every guard here refuses.
+ *
+ *   const { perms } = await requireAnyPageUnder("/management");
+ */
+export async function requireAnyPageUnder(prefix: string): Promise<Guarded> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const perms = await loadPermissions();
+  if (!perms || !ROUTES.some((r) => r.path.startsWith(prefix + "/") && canOpen(perms, r))) refuse(perms?.role.key);
 
   return { supabase, user, perms };
 }

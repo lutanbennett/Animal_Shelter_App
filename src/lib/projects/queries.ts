@@ -177,12 +177,3 @@ export function projectFolderPathLabel(
   }
   return names;
 }
-
-/**
- * Who may create, rename, move, describe, publish and delete folders.
- * Volunteers can read the tree and add photos (RLS in 0001); the folder
- * itself is staff/admin work.
- */
-export function canWriteProjects(role: string | null | undefined): boolean {
-  return role === "admin" || role === "management" || role === "staff";
-}

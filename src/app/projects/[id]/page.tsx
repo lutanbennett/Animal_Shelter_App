@@ -1,9 +1,8 @@
 import { notFound } from "next/navigation";
-import { isShelterRole } from "@/lib/auth/app-access";
-import { requireRole } from "@/lib/auth/require-role";
+import { can } from "@/lib/permissions/can";
+import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import {
-  canWriteProjects,
   loadAllProjectFolders,
   loadProjectChildren,
   loadProjectFolder,
@@ -11,7 +10,6 @@ import {
   loadProjectPhotos,
 } from "@/lib/projects/queries";
 import { loadTranslations } from "@/lib/translations/queries";
-import { canManage } from "@/lib/auth/require-management";
 import { FolderView } from "./FolderView";
 
 /**
@@ -23,13 +21,12 @@ import { FolderView } from "./FolderView";
 export default async function ProjectFolderPage(props: PageProps<"/projects/[id]">) {
   const { id } = await props.params;
   const { t } = await getT();
-  const { supabase } = await requireRole(isShelterRole);
+  const { supabase, perms } = await requirePermission("projects.folders", "read");
 
   const folder = await loadProjectFolder(supabase, id);
   if (!folder) notFound();
 
-  const [{ data: role }, path, children, photos, all] = await Promise.all([
-    supabase.rpc("current_user_role"),
+  const [path, children, photos, all] = await Promise.all([
     loadProjectFolderPath(supabase, id),
     loadProjectChildren(supabase, id),
     loadProjectPhotos(supabase, id),
@@ -58,8 +55,8 @@ export default async function ProjectFolderPage(props: PageProps<"/projects/[id]
         childFolders={children.folders}
         photos={photos.photos}
         allFolders={all}
-        canWrite={canWriteProjects(role)}
-        canManageTranslations={canManage(role)}
+        canWrite={can(perms, "projects.folders")}
+        canManageTranslations={can(perms, "translations.manage")}
         translations={[...folderTranslations.values(), ...photoTranslations.values()]}
       />
     </main>

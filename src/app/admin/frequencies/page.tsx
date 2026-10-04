@@ -1,13 +1,13 @@
-import { requireAdminUser } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { compareSchedules, type FrequencySchedule } from "@/lib/prescriptions/frequency";
 import { CreateFrequencyForm } from "./CreateFrequencyForm";
 import { FrequenciesTable, type FrequencyRow } from "./FrequenciesTable";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
+import { requirePermission } from "@/lib/permissions/require";
 
 export default async function FrequenciesPage() {
-  await requireAdminUser();
+  await requirePermission("reference.types");
   const { t } = await getT();
 
   const supabase = await createClient();

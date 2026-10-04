@@ -30,13 +30,15 @@ export type ManualTopic = {
   /** Roles that can perform this task; omitted = everyone who can sign in. */
   roles?: ManualRole[];
   /**
-   * The activity whose holders do this task (edit level; the catalogue's key).
+   * The activity whose holders do this task (edit level unless `activityLevel` says read; the catalogue's key).
    * The reader's "is this mine?" asks can() for it, so a role built later sees
    * the right topics; `roles` stays for the "Who:" badge, which names the six
    * roles that exist today, and scripts/acceptance-matrix.mjs fails when the
    * two disagree. Omit it where the topic is everyone's.
    */
   activity?: ActivityKey;
+  /** "read" when the topic is for whoever can look at the activity, not only change it (Enclosures, Maintenance board…). */
+  activityLevel?: "read";
   /** Where in the app it lives, e.g. "Residents → New resident (intake)". */
   path?: string;
   intro?: string;

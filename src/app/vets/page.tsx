@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { canManage } from "@/lib/auth/require-management";
-import { isShelterRole } from "@/lib/auth/app-access";
-import { requireRole } from "@/lib/auth/require-role";
+import { can } from "@/lib/permissions/can";
+import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import {
   lastVisit,
@@ -22,11 +21,11 @@ type VisitRow = VetVisit & { vet_id: string };
 
 export default async function VetsPage() {
   const { t } = await getT();
-  const { supabase } = await requireRole(isShelterRole);
+  const { supabase, perms } = await requirePermission("clinics.list", "read");
 
   // Every visit is loaded once and bucketed per vet here — the same rows
   // the hub reads, so the numbers on the cards match the numbers inside.
-  const [vetsResult, visitsResult, roleResult] = await Promise.all([
+  const [vetsResult, visitsResult] = await Promise.all([
     supabase
       .from("vets")
       .select("id, name, clinic_name, contact_info")
@@ -38,7 +37,6 @@ export default async function VetsPage() {
       .is("archived_at", null)
       .not("vet_id", "is", null)
       .returns<VisitRow[]>(),
-    supabase.rpc("current_user_role"),
   ]);
 
   const now = new Date();
@@ -72,7 +70,7 @@ export default async function VetsPage() {
           </h1>
           <p className="text-sm text-muted">{t.vets.pageSubtitle}</p>
         </div>
-        {canManage(roleResult.data) && (
+        {can(perms, "clinics.list") && (
           <Link
             href="/management/vets"
             className="shrink-0 text-sm font-medium text-primary hover:underline"

@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
-import { isShelterRole } from "@/lib/auth/app-access";
-import { requireRole } from "@/lib/auth/require-role";
+import { requirePermission } from "@/lib/permissions/require";
 import { MapPrototype, type Shape } from "./MapPrototype";
 
 /**
@@ -17,7 +16,7 @@ const POLYGONS = [
 
 export default async function MapPrototypePage() {
   if (process.env.NODE_ENV === "production") notFound();
-  const { supabase } = await requireRole(isShelterRole);
+  const { supabase } = await requirePermission("facility.map");
 
   const { data } = await supabase
     .from("enclosures")

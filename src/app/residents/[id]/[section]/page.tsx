@@ -89,7 +89,7 @@ export default async function ResidentSectionPage(
 
   const supabase = await createClient();
 
-  const [residentResult, residentStateResult, roleResult, perms] = await Promise.all([
+  const [residentResult, residentStateResult, perms] = await Promise.all([
     supabase
       .from("residents")
       .select("id, name, thai_name, size, profile_photo_drive_file_id, microchip_number, microchip_implanted_on")
@@ -112,9 +112,6 @@ export default async function ResidentSectionPage(
       .eq("resident_id", id)
       .limit(1)
       .returns<{ current_status: string | null; is_deceased: boolean }[]>(),
-    // The role is only for the contact views and the photo select,
-    // which the contacts sweep converts; the rest asks can().
-    supabase.rpc("current_user_role"),
     loadPermissions(),
   ]);
 
@@ -137,10 +134,9 @@ export default async function ResidentSectionPage(
   // medical.archive: admin, management and staff, never a vet or
   // volunteer, and nobody on a deceased resident.
   const showArchived = (await props.searchParams).archived === "1";
-  const role = (roleResult.data as string | null) ?? null;
-  // A vet or volunteer reads a carer or sender name through a narrow view (0126).
-  const photoSelect = residentPhotoSelect(role);
-  const contactEmbed = (withArchive = false) => contactNameEmbed(role, withArchive);
+  // A vet or volunteer reads a carer or sender name through a narrow view (0126): the contacts scope says which.
+  const photoSelect = residentPhotoSelect(perms?.scopes.contacts);
+  const contactEmbed = (withArchive = false) => contactNameEmbed(perms?.scopes.contacts, withArchive);
   const canArchive = (kind: MedicalArchiveKind) => !isDeceased && can(perms, "medical.archive");
   const archivedCount = async (
     table: "weight" | "prescriptions" | "vet_appointments" | "immunization_records",

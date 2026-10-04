@@ -1,12 +1,12 @@
-import { requireAdminUser } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { CreateZoneForm } from "./CreateZoneForm";
 import { ZonesTable, type ZoneRow } from "./ZonesTable";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
+import { requirePermission } from "@/lib/permissions/require";
 
 export default async function ZonesPage() {
-  await requireAdminUser();
+  await requirePermission("facility.enclosures");
   const { t } = await getT();
 
   const supabase = await createClient();

@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { Locale } from "@/lib/i18n/locales";
 import { placeName } from "@/lib/enclosures/names";
-import { canWriteMaintenance, loadMaintenanceJobs } from "@/lib/maintenance/queries";
+import { loadMaintenanceJobs } from "@/lib/maintenance/queries";
 import { localizedFromRow } from "@/lib/translations/localize";
 import { loadTranslations, translationKey } from "@/lib/translations/queries";
 import type { MyTask, MyTaskSection } from "./types";
@@ -17,7 +17,8 @@ import type { MyTask, MyTaskSection } from "./types";
 export async function loadMyMaintenanceTasks(
   supabase: SupabaseClient,
   userId: string,
-  role: string | null,
+  /** maintenance.jobs at Edit: whether a task offers the status control. */
+  canWrite: boolean,
   t: Dictionary,
   locale: Locale,
 ): Promise<MyTaskSection> {
@@ -44,7 +45,6 @@ export async function loadMyMaintenanceTasks(
   const titleFor = (id: string, original: string) =>
     localizedFromRow(locale, original, translations.get(translationKey(id, "title")));
 
-  const canWrite = canWriteMaintenance(role);
 
   const tasks: MyTask[] = open.map((job) => ({
     key: `maintenance:${job.id}`,

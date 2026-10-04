@@ -134,19 +134,3 @@ export async function loadMaintenanceJob(
   return jobs[0] ?? null;
 }
 
-/**
- * Who may log and update jobs. Volunteers can read maintenance but not
- * write it (RLS in 0001); they may still add photos, which the
- * `volunteer_rw_attachments` policy allows and the upload route honours.
- */
-export function canWriteMaintenance(role: string | null | undefined): boolean {
-  return role === "admin" || role === "management" || role === "staff";
-}
-
-/**
- * Who can see jobs at all. Vets have no maintenance policy (0001, 0039), so
- * anything that filters on jobs would silently come back empty for them.
- */
-export function canReadMaintenance(role: string | null | undefined): boolean {
-  return canWriteMaintenance(role) || role === "volunteer";
-}

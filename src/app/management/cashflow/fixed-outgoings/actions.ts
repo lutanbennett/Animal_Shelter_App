@@ -2,7 +2,6 @@
 
 import { refresh, revalidatePath } from "next/cache";
 import { runAction, type ActionResult } from "@/lib/action-result";
-import { hasManagementRole } from "@/lib/auth/require-management";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import {
@@ -10,6 +9,8 @@ import {
   parseFixedOutgoing,
   type FixedOutgoingFields,
 } from "@/lib/management/fixed-outgoings";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 
 /**
  * Writes to fixed_outgoings (0114). Admin and management only, which is also
@@ -33,7 +34,7 @@ export async function createFixedOutgoing(
   const { t } = await getT();
   const m = t.management.fixedOutgoings;
   return runAction<{ success: string }>("fixedOutgoings.create", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) {
+    if (!can(await loadPermissions(), "reports.cashflow")) {
       return { ok: false, error: t.management.errors.managementAccessRequired };
     }
     const parsed = parseFixedOutgoing(fields);
@@ -70,7 +71,7 @@ export async function updateFixedOutgoing(
   const { t } = await getT();
   const m = t.management.fixedOutgoings;
   return runAction<{ success: string }>("fixedOutgoings.update", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) {
+    if (!can(await loadPermissions(), "reports.cashflow")) {
       return { ok: false, error: t.management.errors.managementAccessRequired };
     }
     const parsed = parseFixedOutgoing(fields);
@@ -93,7 +94,7 @@ export async function deleteFixedOutgoing(id: string): Promise<ActionResult<{ su
   const { t } = await getT();
   const m = t.management.fixedOutgoings;
   return runAction<{ success: string }>("fixedOutgoings.delete", t.common.somethingWentWrong, async () => {
-    if (!(await hasManagementRole())) {
+    if (!can(await loadPermissions(), "reports.cashflow")) {
       return { ok: false, error: t.management.errors.managementAccessRequired };
     }
     const supabase = await createClient();

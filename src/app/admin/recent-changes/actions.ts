@@ -2,11 +2,12 @@
 
 import { refresh, revalidatePath } from "next/cache";
 import { runAction, unexpectedFailure, type ActionResult } from "@/lib/action-result";
-import { hasAdminRole } from "@/lib/auth/require-admin";
 import { changedColumns, kindOf, type AuditedTable, type Image } from "@/lib/audit/recent-changes";
 import { editPlan, undoKind } from "@/lib/audit/undo";
 import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
@@ -42,7 +43,7 @@ export async function undoChange(auditId: number): Promise<ActionResult> {
   return runAction("recentChanges.undo", t.common.somethingWentWrong, async () => {
     const u = t.admin.recentChanges.undo;
     if (!Number.isSafeInteger(auditId) || auditId <= 0) return refuse(u.errors.gone);
-    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "audit.undo")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const writeFailure = (step: string, error: { code?: string }) => {
       if (error.code === "23505") return refuse(u.errors.slotTaken);
