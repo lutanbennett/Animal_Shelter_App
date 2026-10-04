@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint && node scripts/check-migration-grants.mjs && node scripts/check-permission-catalogue.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/acceptance-matrix.mjs --check",
+    "lint": "eslint && node scripts/check-migration-grants.mjs && node scripts/check-permission-catalogue.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/acceptance-matrix.mjs --check && node scripts/check-backlog-sections.mjs",
     "typecheck": "next typegen && tsc --noEmit -p tsconfig.build.json",
     "opennext:build": "node -r ./scripts/win-junction-symlinks.cjs node_modules/@opennextjs/cloudflare/dist/cli/index.js build",
     "preview": "npm run opennext:build && opennextjs-cloudflare preview",
