@@ -80,6 +80,105 @@
     "public_viewer": false,
     "null": false
   },
+  "canRegisterResident": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": false,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
+  },
+  "canEditResident": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": false,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
+  },
+  "ADOPTION_UPDATE_ROLES": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": false,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
+  },
+  "DECEASED_ROLES": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": false,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
+  },
+  "UNDO_DECEASED_ROLES": {
+    "admin": true,
+    "management": false,
+    "staff": false,
+    "vet": false,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
+  },
+  "HOSPITAL_ROLES": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": false,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
+  },
+  "REHOME_ROLES": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": false,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
+  },
+  "MOVE_ROLES": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": false,
+    "volunteer": true,
+    "public_viewer": false,
+    "null": false
+  },
+  "MICROCHIP_WRITE_ROLES": {
+    "admin": true,
+    "management": false,
+    "staff": true,
+    "vet": true,
+    "volunteer": false,
+    "public_viewer": false,
+    "null": false
+  },
+  "assertPhotoWriteAccess_residentPhotos": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": true,
+    "volunteer": true,
+    "public_viewer": false,
+    "null": false
+  },
+  "photoFullFolders": {
+    "admin": true,
+    "management": true,
+    "staff": true,
+    "vet": false,
+    "volunteer": true,
+    "public_viewer": false,
+    "null": false
+  },
   "canDoJob(/stocktake)": {
     "admin": true,
     "management": true,

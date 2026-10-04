@@ -1,19 +1,13 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { SYSTEM_ZONE } from "@/lib/enclosures/options";
 import { isFutureDate, isIsoDate, placementStartAfter, placementStartDate } from "./dates";
 
 /** Name of the Lifecycle pseudo-enclosure that holds deceased residents. */
 export const DECEASED_ENCLOSURE = "Deceased";
-
-/**
- * Recording a death is admin/staff work — the same roles that may send a
- * resident to hospital. It also locks the resident's whole record, and only
- * an admin can withdraw it (UNDO_DECEASED_ROLES), which is the other reason
- * not to widen this to volunteers.
- */
-export const DECEASED_ROLES = new Set(["admin", "management", "staff"]);
 
 export type RecordDeathInput = {
   residentId: string;
@@ -45,8 +39,7 @@ export async function recordResidentDeath(
 
   // RLS would reject the insert for a vet or volunteer with a raw policy
   // error — say why.
-  const { data: role } = await supabase.rpc("current_user_role");
-  if (typeof role !== "string" || !DECEASED_ROLES.has(role)) {
+  if (!can(await loadPermissions(), "placement.death")) {
     return { error: t.residents.deceased.notAuthorized };
   }
 
@@ -118,13 +111,6 @@ export async function recordResidentDeath(
   return { ok: true };
 }
 
-/**
- * Withdrawing a recorded death is admin-only, deliberately narrower than
- * recording one: the staff member who made the mistake asks an admin,
- * which is the friction wanted around a correction of this size.
- */
-export const UNDO_DECEASED_ROLES = new Set(["admin"]);
-
 export type UndoDeathInput = {
   residentId: string;
   /** Why the death was recorded in error — kept as the reversal's notes. */
@@ -153,8 +139,7 @@ export async function undoResidentDeath(
 
   // The function checks the role again; this just turns a policy error
   // into a sentence.
-  const { data: role } = await supabase.rpc("current_user_role");
-  if (typeof role !== "string" || !UNDO_DECEASED_ROLES.has(role)) {
+  if (!can(await loadPermissions(), "placement.death_withdraw")) {
     return { error: u.notAuthorized };
   }
 

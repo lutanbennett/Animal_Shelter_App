@@ -4,7 +4,8 @@ import type { ComponentProps } from "react";
 import { NOTO_SANS_THAI_REGULAR } from "@/lib/archive/fonts/noto-sans-thai-regular";
 import { NOTO_SANS_THAI_BOLD } from "@/lib/archive/fonts/noto-sans-thai-bold";
 import screenshotSizes from "./screenshot-sizes.json";
-import { isForRole } from "./filter";
+import { isForTopic } from "./for-topic";
+import type { Permissions } from "@/lib/permissions/can";
 import type { Manual, ManualCallout, ManualRole, ManualTopic } from "./types";
 
 /**
@@ -72,14 +73,14 @@ export type ManualImages = Map<string, Uint8Array>;
 const SIZES: Record<string, { width: number; height: number } | undefined> = screenshotSizes;
 
 /** Whether a topic is in the copy: everything, or the reader's own. */
-export function topicInCopy(topic: ManualTopic, role: ManualRole | null, all: boolean) {
-  return all || isForRole(topic.roles, role);
+export function topicInCopy(topic: ManualTopic, role: ManualRole | null, all: boolean, perms?: Permissions | null) {
+  return all || isForTopic(topic, role, perms);
 }
 
 /** The `src`s the copy will draw, so the caller can fetch just those. */
-export function screenshotSrcs(manual: Manual, role: ManualRole | null, all: boolean): string[] {
+export function screenshotSrcs(manual: Manual, role: ManualRole | null, all: boolean, perms?: Permissions | null): string[] {
   return manual.sections.flatMap((s) =>
-    s.topics.filter((t) => t.screenshot && topicInCopy(t, role, all)).map((t) => t.screenshot!.src),
+    s.topics.filter((t) => t.screenshot && topicInCopy(t, role, all, perms)).map((t) => t.screenshot!.src),
   );
 }
 
@@ -103,7 +104,7 @@ function Shot({ topic, images }: { topic: ManualTopic; images: ManualImages }) {
   );
 }
 
-function ManualDocument({ manual, role, all, images }: { manual: Manual; role: ManualRole | null; all: boolean; images: ManualImages }) {
+function ManualDocument({ manual, role, all, images, perms }: { manual: Manual; role: ManualRole | null; all: boolean; images: ManualImages; perms?: Permissions | null }) {
   const roleName = role ? manual.roleNames[role] : null;
   const scope = all || !roleName ? "Full edition" : `${roleName} edition`;
   return (
@@ -125,7 +126,7 @@ function ManualDocument({ manual, role, all, images }: { manual: Manual; role: M
         </View>
 
         {manual.sections.map((section) => {
-          const topics = section.topics.filter((t) => topicInCopy(t, role, all));
+          const topics = section.topics.filter((t) => topicInCopy(t, role, all, perms));
           if (topics.length === 0) return null;
           return (
             <View key={section.id} break>
@@ -180,7 +181,7 @@ function ManualDocument({ manual, role, all, images }: { manual: Manual; role: M
 /** Renders the manual to PDF bytes. `role` null = no role known, so everything. */
 export async function renderManualPdf(
   manual: Manual,
-  options: { role: ManualRole | null; all: boolean; images: ManualImages },
+  options: { role: ManualRole | null; all: boolean; images: ManualImages; perms?: Permissions | null },
 ): Promise<Uint8Array> {
   const buffer = await renderToBuffer(<ManualDocument manual={manual} {...options} />);
   return new Uint8Array(buffer);

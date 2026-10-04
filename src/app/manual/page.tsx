@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AlertTriangle, Info, Lightbulb } from "lucide-react";
 import manual from "@/lib/manual/en";
-import { asManualRole, isForRole } from "@/lib/manual/filter";
+import { asManualRole } from "@/lib/manual/filter";
+import { isForTopic } from "@/lib/manual/for-topic";
+import { loadPermissions } from "@/lib/permissions/load";
 import { createClient } from "@/lib/supabase/server";
 import { loadCurrentRole } from "@/lib/auth/app-access";
 import screenshotSizes from "@/lib/manual/screenshot-sizes.json";
@@ -60,14 +62,15 @@ const CALLOUT_STYLES: Record<
  * greyed answer rather than none (backlog, "A role-based manual").
  */
 export default async function ManualPage({ searchParams }: PageProps<"/manual">) {
-  const [{ view }, role] = await Promise.all([
+  const [{ view }, role, perms] = await Promise.all([
     searchParams,
     createClient().then(loadCurrentRole).then(asManualRole),
+    loadPermissions(),
   ]);
   const showAll = view === "all";
   const sections: ViewSection[] = manual.sections.map((section) => ({
     section,
-    topics: section.topics.map((topic) => ({ topic, mine: isForRole(topic.roles, role) })),
+    topics: section.topics.map((topic) => ({ topic, mine: isForTopic(topic, role, perms) })),
   }));
   const myTopicCount = sections.reduce(
     (n, { topics }) => n + topics.filter((t) => t.mine).length,

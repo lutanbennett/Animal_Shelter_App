@@ -1,12 +1,10 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { DECEASED_ROLES, UNDO_DECEASED_ROLES } from "@/lib/placements/deceased";
-import { canManage } from "@/lib/auth/require-management";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { contactRelation } from "@/lib/contacts/visibility";
 import { getTagOrigin } from "@/lib/tags/origin";
 import { loadTranslations } from "@/lib/translations/queries";
-import { ADOPTION_UPDATE_ROLES } from "@/lib/adoption-updates/options";
-import { MICROCHIP_WRITE_ROLES } from "@/lib/residents/microchip";
 import {
   ResidentHub,
   type BloodTestRow,
@@ -146,8 +144,9 @@ export default async function ResidentPage(
       .select("id", { count: "exact", head: true })
       .eq("owner_type", "resident")
       .eq("owner_id", id),
-    // Drives which of the record-death / retry-archive controls the hub
-    // offers; the server action checks the role again before writing.
+    // Only to pick the address-book relation the carer's name is read
+    // through (contacts/visibility.ts, still keyed on the role: the
+    // contacts sweep's to convert). Which controls the hub offers asks can().
     supabase.rpc("current_user_role"),
     // Newest first; the card shows how many and the latest (0097).
     supabase
@@ -178,7 +177,7 @@ export default async function ResidentPage(
     currentState?.current_status === "Hospitalised"
       ? currentState.active_hospital_previous_enclosure
       : null;
-  const [carerResult, previousEnclosureResult, translations, tagOrigin] = await Promise.all([
+  const [carerResult, previousEnclosureResult, translations, tagOrigin, perms] = await Promise.all([
     carerId
       ? supabase
           .from(contactRelation(roleResult.data as string | null))
@@ -198,6 +197,9 @@ export default async function ResidentPage(
     // The other-language versions of the public profile fields (0056).
     loadTranslations(supabase, "residents", [id]),
     getTagOrigin(),
+    // Which of the record-death / retry-archive controls the hub offers;
+    // each server action asks again before writing.
+    loadPermissions(),
   ]);
 
   return (
@@ -215,10 +217,10 @@ export default async function ResidentPage(
         // Set by the after-death edit when Drive could not be refreshed.
         notRefreshed: archiveFlag === "stale",
       }}
-      canRecordDeath={DECEASED_ROLES.has(roleResult.data ?? "")}
-      canUndoDeath={UNDO_DECEASED_ROLES.has(roleResult.data ?? "")}
-      canManageTranslations={canManage(roleResult.data)}
-      canSetMicrochip={MICROCHIP_WRITE_ROLES.has(roleResult.data ?? "")}
+      canRecordDeath={can(perms, "placement.death")}
+      canUndoDeath={can(perms, "placement.death_withdraw")}
+      canManageTranslations={can(perms, "translations.manage")}
+      canSetMicrochip={can(perms, "resident.microchip")}
       translations={Array.from(translations.values())}
       currentPlacementSince={currentPlacementResult.data?.[0]?.start_date ?? null}
       carerName={carerResult?.data?.[0]?.name ?? null}
@@ -238,7 +240,7 @@ export default async function ResidentPage(
         latest: adoptionUpdatesResult.data?.[0] ?? null,
         everAdopted: (adoptCountResult.count ?? 0) > 0,
         canAdd:
-          ADOPTION_UPDATE_ROLES.has(roleResult.data ?? "") && (adoptCountResult.count ?? 0) > 0,
+          can(perms, "resident.adoption_news") && (adoptCountResult.count ?? 0) > 0,
       }}
       now={new Date().toISOString()}
       tagOrigin={tagOrigin}

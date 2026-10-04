@@ -1,6 +1,8 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { SYSTEM_ZONE } from "@/lib/enclosures/options";
 import { CARER_CONTACT_TYPE } from "@/lib/contacts/carers";
 import { isFutureDate, isIsoDate, placementStartAfter, placementStartDate } from "./dates";
@@ -43,13 +45,6 @@ export type ReturnToShelterInput = {
 
 export type ReturnToShelterResult = { error: string } | { ok: true };
 
-/**
- * Roles whose placement_history insert policy admits Foster / Adopt /
- * ReturnToShelter — the same boundary as hospital placements
- * (docs/decisions.md, "Volunteer tier").
- */
-export const REHOME_ROLES = new Set(["admin", "management", "staff"]);
-
 const KIND_ENCLOSURE: Record<RehomeKind, string> = {
   foster: FOSTERED_ENCLOSURE,
   adopt: ADOPTED_ENCLOSURE,
@@ -87,8 +82,7 @@ export async function rehomeResident(
 
   // RLS would reject the insert for a vet or volunteer with a raw policy
   // error — say why.
-  const { data: role } = await supabase.rpc("current_user_role");
-  if (typeof role !== "string" || !REHOME_ROLES.has(role)) {
+  if (!can(await loadPermissions(), "placement.rehome")) {
     return { error: t.residents.rehome.notAuthorized };
   }
 
@@ -239,8 +233,7 @@ export async function returnResidentToShelter(
 
   // RLS would reject the insert for a vet or volunteer with a raw policy
   // error — say why.
-  const { data: role } = await supabase.rpc("current_user_role");
-  if (typeof role !== "string" || !REHOME_ROLES.has(role)) {
+  if (!can(await loadPermissions(), "placement.rehome")) {
     return { error: t.residents.shelterReturn.notAuthorized };
   }
 

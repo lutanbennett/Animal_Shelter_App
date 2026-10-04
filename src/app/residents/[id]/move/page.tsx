@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -17,7 +19,7 @@ export default async function MoveResidentPage(
   const { t, locale } = await getT();
   const supabase = await createClient();
 
-  const [residentResult, statusResult, stateResult, placementResult, roleResult, options] =
+  const [residentResult, statusResult, stateResult, placementResult, perms, options] =
     await Promise.all([
       supabase
         .from("residents")
@@ -55,7 +57,7 @@ export default async function MoveResidentPage(
         .is("end_date", null)
         .limit(1)
         .returns<{ start_date: string }[]>(),
-      supabase.rpc("current_user_role"),
+      loadPermissions(),
       loadEnclosureOptions(supabase),
     ]);
 
@@ -70,7 +72,7 @@ export default async function MoveResidentPage(
     : resident.name;
   const status = statusResult.data?.[0];
   const state = stateResult.data?.[0];
-  const canMove = MOVE_ROLES.has(roleResult.data ?? "");
+  const canMove = can(perms, "placement.move");
   // The hub only links here for residents in (or unassigned to) a physical
   // enclosure, but the URL is guessable — mirror moveResidentToEnclosure().
   const blocked = !canMove

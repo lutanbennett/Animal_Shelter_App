@@ -42,7 +42,7 @@ export function DeceasedBanner({
   causeOfDeath: string | null;
   archive: DeceasedArchive;
   canRetryArchive: boolean;
-  /** Admin only — the roles in UNDO_DECEASED_ROLES. */
+  /** Admin only — whoever holds placement.death_withdraw. */
   canUndo: boolean;
 }) {
   const { t, locale } = useI18n();

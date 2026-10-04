@@ -430,6 +430,17 @@ const PREDICATES = [
   { id: "canReadMaintenance", file: "src/lib/maintenance/queries.ts", activity: "maintenance.jobs", level: 1 },
   { id: "canWriteProjects", file: "src/lib/projects/queries.ts", activity: "projects.folders", level: 2 },
   { id: "canUseAssistant", file: "src/lib/assistant/data.ts", activity: "assistant.ask", level: 2 },
+  { id: "canRegisterResident", file: "src/lib/residents/microchip.ts", activity: "resident.register", level: 2 },
+  { id: "canEditResident", file: "src/lib/residents/microchip.ts", activity: "resident.record", level: 2 },
+  { id: "ADOPTION_UPDATE_ROLES", file: "src/lib/adoption-updates/options.ts", activity: "resident.adoption_news", level: 2 },
+  { id: "DECEASED_ROLES", file: "src/lib/placements/deceased.ts", activity: "placement.death", level: 2 },
+  { id: "UNDO_DECEASED_ROLES", file: "src/lib/placements/deceased.ts", activity: "placement.death_withdraw", level: 2 },
+  { id: "HOSPITAL_ROLES", file: "src/lib/placements/hospital.ts", activity: "placement.hospital", level: 2 },
+  { id: "REHOME_ROLES", file: "src/lib/placements/rehome.ts", activity: "placement.rehome", level: 2 },
+  { id: "MOVE_ROLES", file: "src/lib/placements/move.ts", activity: "placement.move", level: 2 },
+  { id: "MICROCHIP_WRITE_ROLES", file: "src/lib/residents/microchip.ts", activity: "resident.microchip", level: 2 },
+  { id: "assertPhotoWriteAccess_residentPhotos", file: "src/lib/auth/require-role.ts", activity: "photos.resident_add", level: 2 },
+  { id: "photoFullFolders", file: "src/lib/google/drive-client.ts", activity: "photos.resident_publish", level: 2 },
   { id: "canWriteWithAssistant", file: "src/lib/assistant/data.ts", activity: "assistant.record", level: 2 },
   // canDoJob now takes the database's answer (role_can, 0133), so its old role-string truth tables
   // live only in the fixture (written before the conversion); check-recurring-job-eligibility.mjs
