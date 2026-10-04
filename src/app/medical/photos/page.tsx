@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import { PawPrint } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";

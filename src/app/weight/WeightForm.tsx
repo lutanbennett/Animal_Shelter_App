@@ -2,7 +2,6 @@
 
 import { ActionLink } from "@/components/ActionLink";
 import { ACTION_ICONS } from "@/components/hub-icons";
-import Link from "next/link";
 import { useState } from "react";
 import { useKeptForm } from "@/lib/use-kept-form";
 import { createWeight, saveWeightEdit } from "./actions";
