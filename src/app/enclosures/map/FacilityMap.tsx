@@ -254,9 +254,9 @@ function MapShape({
   const [cx, cy] = centroid(item.shape);
   const isZone = item.kind === "zone";
   const chip = item.capacity ? `${item.count}/${item.capacity}` : String(item.count);
-  const chipW = 1.8 + chip.length * 1.9;
-  const chipX = b.minX + 0.8;
-  const chipY = b.minY * k + 0.8;
+  const chipW = 1.2 + chip.length * 1.15;
+  const chipX = b.minX + 0.5;
+  const chipY = b.minY * k + 0.5;
 
   return (
     <g
@@ -299,17 +299,17 @@ function MapShape({
         </text>
       ) : (
         <g className="pointer-events-none">
-          <rect x={chipX} y={chipY} width={chipW} height={4.6} rx={1.2} className="fill-white stroke-neutral-700" strokeWidth={0.25} />
-          <text x={chipX + chipW / 2} y={chipY + 2.4} textAnchor="middle" dominantBaseline="middle" fontSize={3} fontWeight={700} className="fill-neutral-900">
+          <rect x={chipX} y={chipY} width={chipW} height={2.9} rx={0.8} className="fill-white stroke-neutral-700" strokeWidth={0.15} />
+          <text x={chipX + chipW / 2} y={chipY + 1.5} textAnchor="middle" dominantBaseline="middle" fontSize={1.9} fontWeight={700} className="fill-neutral-900">
             {chip}
           </text>
-          {item.jobs > 0 && <ENCLOSURE_ICONS.maintenance x={chipX + chipW + 0.8} y={chipY + 0.4} width={3.8} height={3.8} className="text-neutral-900" strokeWidth={2.4} />}
+          {item.jobs > 0 && <ENCLOSURE_ICONS.maintenance x={chipX + chipW + 0.4} y={chipY + 0.2} width={2.5} height={2.5} className="text-neutral-900" strokeWidth={2.4} />}
           {item.diet > 0 && (
             <ENCLOSURE_ICONS.specialDiet
-              x={chipX + chipW + (item.jobs > 0 ? 5.2 : 0.8)}
-              y={chipY + 0.4}
-              width={3.8}
-              height={3.8}
+              x={chipX + chipW + (item.jobs > 0 ? 3.1 : 0.4)}
+              y={chipY + 0.2}
+              width={2.5}
+              height={2.5}
               className="text-neutral-900"
               strokeWidth={2.4}
             />

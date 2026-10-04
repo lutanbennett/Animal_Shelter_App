@@ -62,7 +62,7 @@ question for the Director, and a render-only change here.
 `image_path` is a **file name under `public/facility-maps/`**, resolved by one function, `planImageUrl`, so the
 editor can move the files to storage with signed URLs without touching the map. **Lutan chose the repo
 (2026-10-04):** the Main Zone – Blue photograph (1492×1054 WebP, 86 KB) is committed at
-`public/facility-maps/main-zone-blue.webp`; the original stays in Drive. The `facility_maps` rows that point
+`public/facility-maps/main-zone-blue.webp`; the original stays in Drive. **Two files from one drawing (Lutan, 2026-10-04):** the full image serves the shelter overview and the Cat Zone, and `main-zone-blue-crop.webp` (870×1020, cut from it at 60,0) serves the Blue zone's own plan, without the House Zone and the three unnumbered rooms on the right. Both are `facility_maps` rows pointing at different files, so shapes on each are percent of *that* file. The `facility_maps` rows that point
 at it are data, not migration, so they are not in this PR: the Map button stays hidden everywhere until an
 admin or the step-3 editor adds one (dev has rows for the Main and Cat Zone and the overview). A file in
 `public/` is fetchable by anyone who knows the name — the plan has no visitor value and enclosure positions
