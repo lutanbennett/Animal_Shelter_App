@@ -52,6 +52,7 @@ export async function NavPane() {
       canContacts={opens("/contacts")}
       canProjects={opens("/projects")}
       canStocktake={can(perms, "stock.count")}
+      canDeliveries={can(perms, "stock.delivery")}
       urgentCount={urgentCount}
     />
   );

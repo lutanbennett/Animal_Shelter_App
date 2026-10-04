@@ -42,6 +42,7 @@ export function NavLinks({
   canContacts,
   canProjects,
   canStocktake,
+  canDeliveries,
   urgentCount,
 }: {
   /** Whoever may change who can sign in: the Security link. Not an activity (an Admin rule). */
@@ -68,6 +69,8 @@ export function NavLinks({
   canProjects: boolean;
   /** stock.count: shows Stocktake (0091). */
   canStocktake: boolean;
+  /** stock.delivery: shows Deliveries, beside Stocktake (F-15). */
+  canDeliveries: boolean;
   /** My tasks due today or overdue, shown on the My tasks link when > 0. */
   urgentCount: number;
 }) {
@@ -118,6 +121,10 @@ export function NavLinks({
       // under Management, because staff and volunteers do it (0091).
       ...(canStocktake
         ? [{ href: "/stocktake", label: t.nav.stocktake, icon: NAV_ICONS.stocktake }]
+        : []),
+      // Recording a delivery is hers, as part of ordering: it had been a link at the top of Stocktake.
+      ...(canDeliveries
+        ? [{ href: "/deliveries", label: t.nav.deliveries, icon: NAV_ICONS.deliveries }]
         : []),
     ],
     // The shelter's reference lists — not a vet's, who is an outside clinic
