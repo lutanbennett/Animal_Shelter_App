@@ -34,6 +34,8 @@ const { canDoJob, rolesForJob, jobIsRestricted, ASSIGNABLE_ROLES, JOB_NEEDS, nee
   pathToFileURL(join(process.cwd(), "src/lib/recurring-jobs/eligibility.ts")).href
 );
 
+const { ROUTES } = await import(pathToFileURL(join(process.cwd(), "src/lib/permissions/routes.ts")).href);
+
 let fails = 0;
 const eq = (name, got, want) => {
   const ok = JSON.stringify(got) === JSON.stringify(want);
@@ -56,11 +58,11 @@ const holds = (role, need) =>
 const eligibility = Object.fromEntries(
   JOB_NEEDS.map((need) => [needKey(need), ASSIGNABLE_ROLES.filter((role) => holds(role, need))]),
 );
-eq("S1 the rules ask about the stock pages and purchasing, from the registry", JOB_NEEDS.map(needKey), [
-  "stock.count:edit",
-  "stock.delivery:edit",
-  "stock.purchasing:edit",
-]);
+// Every cell comes from the registry (the sweeps registered every page): a page's own entry, at the level a
+// job linking there needs (jobLevel, else the level that opens it), plus the two landings' any-of.
+const wanted = [...new Set(ROUTES.map((r) => needKey({ activity: r.activity, level: r.jobLevel ?? r.level ?? "edit" })))];
+eq("S1 the rules ask about exactly what the registry registers", [...JOB_NEEDS.map(needKey)].sort(), wanted.sort());
+eq("S1 the maintenance board's work is Edit although the page opens at Read", needKey(JOB_NEEDS.find((n) => n.activity === "maintenance.jobs")), "maintenance.jobs:edit");
 
 // Vets are never given a recurring job (Lutan, 2026-09-27): their work comes
 // from vet appointments.
