@@ -4569,6 +4569,31 @@ const en = {
     notForRole: (role: string) => `Not for the ${role} role`,
   },
 
+  /**
+   * /manual: the page's own words. The manual's text (src/lib/manual/en.ts) is
+   * English only for now, and in Thai the page says so first; a Thai edition
+   * is its own piece of work.
+   */
+  manualPage: {
+    title: "User manual",
+    version: "Draft 1 · September 2026 · English only for now",
+    /** Shown in Thai only. */
+    englishNotice: "",
+    contents: "Contents",
+    contentsLabel: "Manual contents",
+    rolesAtAGlance: "Roles at a glance",
+    showingRole: (role: string, count: number) =>
+      `Showing the ${count} topics for the ${role} role.`,
+    showEverything: "Show everything",
+    showingEverything: (role: string) =>
+      `Showing everything. Topics outside the ${role} role are greyed.`,
+    showOnlyRole: (role: string) => `Show only the ${role} role`,
+    findHint:
+      "The rest are tucked away, not gone: Show everything lists them, greyed, to answer \"can I do this?\".",
+    printPdf: "Print this as a PDF",
+    withoutScreenshots: "Without screenshots",
+  },
+
   share: {
     share: "Share",
     copyLink: "Copy link",
