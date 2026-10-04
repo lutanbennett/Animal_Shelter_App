@@ -7,7 +7,8 @@ import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { createClient } from "@/lib/supabase/server";
 
-export type LoginState = { error: string } | undefined;
+/** `email` comes back with an error so the box is not emptied (a form action resets uncontrolled fields). */
+export type LoginState = { error: string; email?: string } | undefined;
 
 export async function login(
   _state: LoginState,
@@ -20,7 +21,14 @@ export async function login(
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    return { error: error.message };
+    const { t } = await getT();
+    return {
+      error:
+        error.code === "invalid_credentials"
+          ? t.login.errors.badCredentials
+          : t.login.errors.signInFailed,
+      email,
+    };
   }
 
   // An archived login, or one never given a role, is refused here as
@@ -31,7 +39,7 @@ export async function login(
   if (!role) {
     await supabase.auth.signOut();
     const { t } = await getT();
-    return { error: t.login.errors.noRolePassword };
+    return { error: t.login.errors.noRolePassword, email };
   }
 
   // Back to the page that sent them to sign in, if any (the form carries

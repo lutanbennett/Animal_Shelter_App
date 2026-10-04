@@ -443,6 +443,10 @@ const en = {
       /** Email and password: no request exists (admins create these logins). */
       noRolePassword:
         "This account doesn’t have access. Ask an administrator to assign you a role, then try again.",
+      /** Email and password: wrong email or password (the auth service only says "Invalid login credentials"). */
+      badCredentials: "That email or password isn’t right. Try again, or tap Forgot password?",
+      /** Email and password: any other refusal from the auth service. */
+      signInFailed: "Couldn’t sign in just now. Please try again in a moment.",
       google: "Google sign-in didn’t complete. Please try again.",
       /** The session ended (long inactivity, or signed out elsewhere). */
       expired: "You were signed out because you haven’t used the app for a while. Sign in again and you’ll go back to where you were.",
