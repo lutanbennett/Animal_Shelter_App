@@ -173,7 +173,7 @@ been evidence for anything.
 
 - [ ] Deployed to test: `npm run deploy:test` — deferred: release manager
 - [ ] Smoke-tested on `test.lannacare.org` — deferred: release manager
-- [ ] **Timezone-sensitive behaviour proved** — n/a *for this PR*: nothing here derives a date at runtime. **Note for the release manager:** note 4 is about the medication list choosing Morning, Lunch or Evening "to suit the time of day", which is a clock-dependent behaviour shipping in this release; its own plan (`medical-round-screens`) owns that check
+- [ ] **Timezone-sensitive behaviour proved** — n/a: nothing in this PR derives a date at runtime. **Note for the release manager:** note 4 is about the medication list choosing Morning, Lunch or Evening "to suit the time of day", which is a clock-dependent behaviour shipping in this release; its own plan (`medical-round-screens`) owns that check
 - [ ] **Boundary or banding change** — n/a: no boundary in this PR. The round windows in note 4 are #357's
 - [ ] **Evidence pasted into this plan is the tool's actual output, unedited** — deferred: release manager, for the deploy output. Everything pasted above is unedited
 - [ ] Public pages re-checked after a cache purge or a 10-minute wait — deferred: release manager
