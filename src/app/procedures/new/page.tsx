@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { MICROCHIP_WRITE_ROLES } from "@/lib/residents/microchip";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import {
   ProcedureForm,
   type ProcedureTypeOption,
@@ -39,7 +40,7 @@ export default async function NewProcedurePage(props: PageProps<"/procedures/new
 
   const supabase = await createClient();
 
-  const [residentResult, typesResult, vetAppointmentsResult, stateResult, roleResult] =
+  const [residentResult, typesResult, vetAppointmentsResult, stateResult, perms] =
     await Promise.all([
       supabase
         .from("residents")
@@ -74,7 +75,7 @@ export default async function NewProcedurePage(props: PageProps<"/procedures/new
         .limit(1)
         .returns<{ is_deceased: boolean }[]>(),
       // Who is offered "Record the chip number?" after a Microchipping.
-      supabase.rpc("current_user_role"),
+      loadPermissions(),
     ]);
 
   const resident = residentResult.data?.[0];
@@ -143,7 +144,7 @@ export default async function NewProcedurePage(props: PageProps<"/procedures/new
         residentId={residentId}
         residentDisplayName={displayName}
         microchip={
-          MICROCHIP_WRITE_ROLES.has(roleResult.data ?? "")
+          can(perms, "resident.microchip")
             ? { number: resident.microchip_number, implantedOn: resident.microchip_implanted_on }
             : null
         }

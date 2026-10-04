@@ -440,7 +440,7 @@ const PREDICATES = [
   { id: "MOVE_ROLES", file: "src/lib/placements/move.ts", activity: "placement.move", level: 2 },
   { id: "MICROCHIP_WRITE_ROLES", file: "src/lib/residents/microchip.ts", activity: "resident.microchip", level: 2 },
   { id: "assertPhotoWriteAccess_residentPhotos", file: "src/lib/auth/require-role.ts", activity: "photos.resident_add", level: 2 },
-  { id: "photoFullFolders", file: "src/lib/google/drive-client.ts", activity: "photos.resident_manage", level: 2 },
+  { id: "photoFullFolders", file: "src/lib/google/drive-client.ts", activity: "photos.resident_publish", level: 2 },
   { id: "canWriteWithAssistant", file: "src/lib/assistant/data.ts", activity: "assistant.record", level: 2 },
 ];
 // Predicates with no single activity to pair with, and why (stated, not silently absent):

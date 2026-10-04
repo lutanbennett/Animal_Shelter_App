@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { getT } from "@/lib/i18n/get-t";
-import { assertPhotoWriteAccess } from "@/lib/auth/require-role";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { refreshDeceasedArchiveIfNeeded } from "@/lib/archive/refresh-deceased-archive";
 import {
   ensureResidentAdoptionUpdateFolder,
@@ -15,7 +16,7 @@ import {
   dateToYymm,
   dateToYyyymmdd,
   driveImageUrl,
-  photoCategoriesForRole,
+  photoCategoriesFor,
   type PhotoCategory,
 } from "@/lib/google/drive-client";
 import { withDriveErrors } from "@/lib/google/drive-errors";
@@ -38,14 +39,11 @@ async function handlePost(
 
   const { id } = await params;
 
-  let role: string;
-  try {
-    role = await assertPhotoWriteAccess();
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Not authorized." },
-      { status: 403 },
-    );
+  // Drive is not RLS-protected, so this runs before any Drive call.
+  const perms = await loadPermissions();
+  if (!can(perms, "photos.resident_add")) {
+    const { t } = await getT();
+    return NextResponse.json({ error: t.photos.errors.notAuthorized }, { status: 403 });
   }
 
   const formData = await request.formData();
@@ -88,7 +86,7 @@ async function handlePost(
   // (a vet: Medical) files there and nowhere else — so not an adopter's
   // photo either, which has no category and a folder of its own; the hub
   // never offers a vet one.
-  const categories = photoCategoriesForRole(role);
+  const categories = photoCategoriesFor(perms);
   const onlyFolder = categories.length === 1 ? categories[0] : null;
   const category = formData.get("category");
   if (

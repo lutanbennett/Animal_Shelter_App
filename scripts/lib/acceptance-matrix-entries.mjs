@@ -16,6 +16,11 @@
 //              where the work is genuinely done either way
 //   do         the one-line instruction
 //   expect     what the tester should see, in plain words
+//   needs      (optional) the catalogue activity the row exercises, e.g. "placement.move", with
+//              ":read" for a read level ("resident.record:read"). The does / must-not cells then
+//              come from who holds it by default, and the generator fails if the roles above it
+//              (this entry's or the manual topic's) say something else. The residents area
+//              names its rows this way; the other areas follow as their sweeps land.
 //   roles      (optional) narrows the manual's roles, where the topic mixes
 //              activities — e.g. everyone may read the maintenance board, only
 //              staff and up may change a job's status
@@ -201,6 +206,7 @@ export const ENTRIES = {
   "residents-list": [
     {
       activity: "Find a resident",
+      needs: "resident.record:read",
       device: "both",
       do: "Open Residents and search by name (English or Thai), by ID such as R0042, then try the On-site / Off-site choice and a zone chip.",
       expect: "The list narrows each time and a name opens that resident's hub. Residents who have died are hidden, with a count.",
@@ -224,6 +230,7 @@ export const ENTRIES = {
   intake: [
     {
       activity: "Register a new resident (intake)",
+      needs: "resident.register",
       device: "phone",
       do: "Tap New resident (intake) and go through the steps with an obviously made-up name, then tap Register resident.",
       expect: "You are taken to the new resident's hub, which shows the name, enclosure and intake date you entered.",
@@ -232,6 +239,7 @@ export const ENTRIES = {
   hub: [
     {
       activity: "Open a resident's hub and read its cards",
+      needs: "resident.record:read",
       device: "both",
       do: "Open a resident and look at every card; on a phone, switch between Overview and Medical.",
       expect: "Photo, details, housing, adoption updates and the medical cards all load, and nothing says an error.",
@@ -241,6 +249,7 @@ export const ENTRIES = {
   "adoption-updates": [
     {
       activity: "Record news from an adopter, with a photo",
+      needs: "resident.adoption_news",
       device: "both",
       do: "On an adopted resident tap Add update, fill in who sent it and how, choose a photo, and Save update.",
       expect: "The update shows with its date, how it came in, the note and the photo.",
@@ -249,6 +258,7 @@ export const ENTRIES = {
   edit: [
     {
       activity: "Edit a resident's details",
+      needs: "resident.record",
       device: "phone",
       do: "Tap the pencil next to a resident's name, change the bio, and Save changes.",
       expect: "The hub and the resident's page show the change.",
@@ -259,6 +269,7 @@ export const ENTRIES = {
   move: [
     {
       activity: "Move a resident to another enclosure",
+      needs: "placement.move",
       device: "phone",
       do: "Tap Move enclosure, pick a zone and enclosure, and tap Move resident.",
       expect: "The hub shows the new enclosure and Placement history records the move. A nearly full enclosure asks you to confirm first.",
@@ -267,12 +278,14 @@ export const ENTRIES = {
   hospital: [
     {
       activity: "Send a resident to hospital",
+      needs: "placement.hospital",
       device: "phone",
       do: "Tap Send to hospital, enter the date and reason, and confirm.",
       expect: "The housing card reads \"In hospital\" and Move enclosure is hidden.",
     },
     {
       activity: "Bring a resident back from hospital",
+      needs: "placement.hospital",
       device: "phone",
       do: "Tap Return from hospital and choose the enclosure.",
       expect: "The resident is back in that enclosure and both steps show in Placement history.",
@@ -281,18 +294,21 @@ export const ENTRIES = {
   "foster-adopt": [
     {
       activity: "Record a foster placement",
+      needs: "placement.rehome",
       device: "phone",
       do: "Tap Foster / adopt, choose Foster, pick a carer, and Record foster.",
       expect: "The housing card shows the carer and the placement is in the history.",
     },
     {
       activity: "Record an adoption",
+      needs: "placement.rehome",
       device: "phone",
       do: "Tap Foster / adopt, choose Adopt, pick the adopter, and Record adoption.",
       expect: "The resident is shown as adopted and no longer appears on the public Adopt page.",
     },
     {
       activity: "Bring a fostered or adopted resident back to the shelter",
+      needs: "placement.rehome",
       device: "phone",
       do: "Tap Return to shelter and choose the enclosure.",
       expect: "The resident is in that enclosure again, and the history shows it.",
@@ -301,6 +317,7 @@ export const ENTRIES = {
   deceased: [
     {
       activity: "Record a death",
+      needs: "placement.death",
       device: "phone",
       do: "Tap the broken-heart icon, enter the date and cause, and confirm. Use a made-up resident.",
       expect: "The status becomes Deceased, the resident leaves the public pages, and only the bio and photos can still be changed.",
@@ -309,6 +326,7 @@ export const ENTRIES = {
   "undo-deceased": [
     {
       activity: "Withdraw a death recorded in error",
+      needs: "placement.death_withdraw",
       device: "both",
       do: "On the deceased resident, tap Withdraw this death, give the reason, and confirm.",
       expect: "The resident is back where they were and reappears on the public Adopt page if they were listed.",
@@ -317,6 +335,7 @@ export const ENTRIES = {
   "placement-history": [
     {
       activity: "Read a resident's placement history",
+      needs: "resident.record:read",
       device: "both",
       do: "Tap the Housing & Status title on a resident's hub.",
       expect: "Every placement is listed newest first with its type, dates, carer and notes.",
@@ -406,6 +425,7 @@ export const ENTRIES = {
   "resident-photos": [
     {
       activity: "Add photos to a resident",
+      needs: "photos.resident_add",
       device: "phone",
       do: "Open Photos on a resident, choose a folder, and add a photo from the phone.",
       expect: "The photo appears in the gallery under the folder you chose.",
