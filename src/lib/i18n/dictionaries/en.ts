@@ -109,6 +109,22 @@ const en = {
     menu: "Menu",
     openMenu: "Open menu",
     closeMenu: "Close menu",
+    home: "Home",
+  },
+
+  /** The signed-in home screens (/home): tiles for a role, and Admin's switch between homes. */
+  appHome: {
+    pageTitle: "Home",
+    subtitle: "Tap a job to start it.",
+    /** The heading over Admin's switch. */
+    switchLabel: "Open the home screen for",
+    /** Settings is Admin's own home, listed first in the switch. */
+    settings: "Settings",
+    /** Under the title when Admin looks at another role's home: what that role sees. */
+    viewing: (role: string) =>
+      `This is the ${role} home screen, as the ${role} role sees it. You are signed in as Admin.`,
+    emptyTitle: "Nothing here yet",
+    empty: "This role has no jobs on its home screen yet. They appear when the role is given something to do.",
   },
 
   home: {

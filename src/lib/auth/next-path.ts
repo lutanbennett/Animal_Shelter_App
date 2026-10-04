@@ -26,11 +26,12 @@ export function safeNextPath(next: string | null | undefined): string | null {
 
 /**
  * The app side's home page: where a fresh sign-in lands when nothing asked
- * for somewhere else, and where "Open the app" on the public site goes. My
- * tasks rather than the residents list, since 2026-09-26 (Lutan): "/" is the
- * public home for everyone, and "/my" is the home of the app.
+ * for somewhere else, and where "Open the app" on the public site goes. "/" is
+ * the public home for everyone; "/home" is the home of the app and works out
+ * which home the signed-in person gets (My tasks was the landing from
+ * 2026-09-26, Lutan; it is now a tile on the home, and `/my` still opens it).
  */
-export const DEFAULT_SIGNED_IN_PATH = "/my";
+export const DEFAULT_SIGNED_IN_PATH = "/home";
 
 /** A vet's home: /my sends them here, since they have no tasks (2026-09-29). */
 export const VET_HOME_PATH = "/appointments";

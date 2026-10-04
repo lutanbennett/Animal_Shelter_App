@@ -37,9 +37,25 @@ export type RouteEntry = {
   device: "any" | "phone" | "desk";
   /** Listed in the sidebar. False is still guarded and reachable; a home tile may show it. */
   menu: boolean;
+  /**
+   * A scope the page also requires, beside the activity: shelter staff may hold the activity and
+   * still be refused (a vet's appointments). canOpen() honours it, so routesFor() never offers a
+   * tile the page would refuse. Only the clinical scope has a page gated by it today.
+   */
+  scope?: { clinical: "own_clinic" };
 };
 
 export const ROUTES: readonly RouteEntry[] = [
+  {
+    path: "/appointments",
+    activity: "medical.visits",
+    level: "read",
+    icon: NAV_ICONS.appointments,
+    label: (t) => t.nav.appointments,
+    device: "any",
+    menu: false,
+    scope: { clinical: "own_clinic" },
+  },
   {
     path: "/stocktake",
     activity: "stock.count",
@@ -284,6 +300,7 @@ export const ROUTES: readonly RouteEntry[] = [
 
 /** Whether `perms` opens this entry. */
 export function canOpen(perms: Permissions | null | undefined, route: RouteEntry): boolean {
+  if (route.scope && perms?.scopes.clinical !== route.scope.clinical) return false;
   return can(perms, route.activity as LevelKey, route.level);
 }
 
