@@ -102,11 +102,10 @@ roles, the matrix and the home check all agreed with a database that no longer e
 - Server actions under `/residents/:id/…` and the medical forms still rely on the database to
   refuse (a volunteer's attempt fails at the policy or the function, which the script proves),
   not on a check of their own. Only the Drive routes had to check first, and they all do now.
-- **A red the parity check showed in the middle of this work was not this branch's:** layer 1
-  went from GREEN to a STALE on `medical.weight edit (in scope): delete from weight` partway
-  through, with no migration on this branch. `perm-convert-medical` (`0135`) is applied to the
-  shared dev database from its own worktree, and C5 closed. It will need the same one-line edit
-  to the known list that stream makes.
+- **A red the parity check showed in the middle of this work was not this branch's:** layer 1 went from GREEN
+  to a STALE on `medical.weight edit (in scope): delete from weight`, with no migration here. `perm-convert-medical`
+  (`0135`) was applied to the shared dev database from its own worktree and closed C5. It merged as #348 and the
+  merge into this branch is green again (1,924 match, 36 known, 0 mismatch).
 
 ## What was and was not tested
 
