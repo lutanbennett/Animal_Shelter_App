@@ -463,6 +463,18 @@ const UNPAIRED = {
   canDoJob: "takes the page a job links to and the database's answer; the stock pages are paired above by fixture row, /admin /management /maintenance by check-recurring-job-eligibility.mjs",
   assertPhotoWriteAccess: "photo uploads span photos.* and maintenance.photos; paired when the photo split is built",
 };
+// 0134 narrowed the volunteer in the database and in the cells. The app's predicates still say what the volunteer
+// could do before, until volunteer-read-only (R1's app half) moves them onto can(). Each entry is a predicate that
+// is EXPECTED to still disagree for that role, so layer 2 stays honest meanwhile; like the `known` list in layer 1
+// it fails when an entry no longer differs (STALE), so it empties as that stream lands and cannot rot.
+const APP_PENDING = {
+  canStocktake: ["volunteer"], canReadMaintenance: ["volunteer"], canUseAssistant: ["volunteer"], MOVE_ROLES: ["volunteer"],
+  assertPhotoWriteAccess_residentPhotos: ["volunteer"], photoFullFolders: ["volunteer"],
+  "isShelterRole(maintenance.jobs)": ["volunteer"], "isShelterRole(projects.folders)": ["volunteer"],
+  "isShelterRole(contacts.directory)": ["volunteer"], "isShelterRole(clinics.list)": ["volunteer"],
+  "canDoJob(/stocktake)": ["volunteer"],
+};
+const appPendingSeen = [];
 const ROLES_FOR_TABLE = ["admin", "management", "staff", "vet", "volunteer", "public_viewer", null];
 const fixturePath = join(root, "scripts/fixtures/legacy-predicates.json");
 const fixture = existsSync(fixturePath) ? JSON.parse(readFileSync(fixturePath, "utf8")) : {};
@@ -494,12 +506,18 @@ for (const pr of PREDICATES) {
     const want = pr.expect ? pr.expect(r) : r != null && (expectedLevel(r, pr.activity) >= pr.level);
     const got = table[String(r)];
     l2checked++;
-    if (got !== want) layer2.push({ pr, problem: `${pr.id}(${r}) is ${got}, the default for ${pr.activity} says ${want}` });
+    const pending = (APP_PENDING[pr.id] ?? []).includes(String(r));
+    if (got !== want) {
+      if (pending) appPendingSeen.push(`${pr.id}(${r})`);
+      else layer2.push({ pr, problem: `${pr.id}(${r}) is ${got}, the default for ${pr.activity} says ${want}` });
+    } else if (pending) layer2.push({ pr, problem: `${pr.id}(${r}) is listed in APP_PENDING but now matches the default for ${pr.activity}. Remove the entry` });
   }
 }
 console.log(`
 == Layer 2: the app's predicates ==
 ${l2checked} answers (${PREDICATES.length} predicates x 7 roles incl. no role)`);
+for (const id of Object.keys(APP_PENDING)) if (!PREDICATES.some((x) => x.id === id)) layer2.push({ pr: null, problem: `APP_PENDING names ${id}, which is not a predicate of this check` });
+if (appPendingSeen.length) console.log(`  pending the app half (volunteer-read-only), expected: ${appPendingSeen.join(", ")}`);
 for (const [k, why] of Object.entries(UNPAIRED)) console.log(`  not paired: ${k}: ${why}`);
 
 // Two truth tables are scope tests, not activities: "is this a clinic-scoped login" (loadVetScope, and

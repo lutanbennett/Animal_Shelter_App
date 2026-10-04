@@ -77,7 +77,7 @@ begin
   end if;
   v_report := v_report || ' | A1 staff writes, created_by forced to caller, channel sms / LINE / empty refused';
 
-  -- A2 a volunteer reads updates and cannot write one, but tags a photo to one.
+  -- A2 a volunteer reads no updates, cannot write one and cannot tag a photo to one (0134); staff tags the photo.
   perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'volunteer'), 'role', 'authenticated')::text, true);
   set local role authenticated;
   select count(*) into v_n from adoption_updates where resident_id in (v_res, v_other_res);
@@ -87,18 +87,28 @@ begin
     raise exception 'A2 volunteer wrote an update';
   exception when insufficient_privilege then null;
   end;
+  begin
+    perform record_attachment(p_owner_type => 'resident', p_owner_id => v_res, p_drive_file_id => 'harness-0097-vol');
+    reset role;
+    raise exception 'A2 volunteer added a photo';
+  exception when sqlstate 'P0001' then
+    if sqlerrm not like 'Not authorized%' then raise; end if;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'staff'), 'role', 'authenticated')::text, true);
+  set local role authenticated;
   select (x.attachment).id, x.is_profile into v_att, v_profile
     from record_attachment(p_owner_type => 'resident', p_owner_id => v_res, p_drive_file_id => 'harness-0097-a',
                            p_file_name => 'a.jpg', p_sub_folder => 'Adoption', p_date_taken => '2026-09-20',
                            p_adoption_update_id => v_update) x;
   reset role;
-  if v_n <> 2 then raise exception 'A2 volunteer reads % updates', v_n; end if;
+  if v_n <> 0 then raise exception 'A2 volunteer reads % updates', v_n; end if;
   select a.adoption_update_id, a.owner_id, u.channel, u.received_on, u.sender_contact_id into r
     from attachments a join adoption_updates u on u.id = a.adoption_update_id where a.id = v_att;
   if r.adoption_update_id is distinct from v_update or r.channel <> 'line' or r.sender_contact_id is distinct from v_adopter or not v_profile then
     raise exception 'A2 tagged photo wrong: %', row_to_json(r);
   end if;
-  v_report := v_report || ' | A2 volunteer reads, cannot write an update, tags a photo; photo reaches sender, date, channel in one join; first photo still becomes profile';
+  v_report := v_report || ' | A2 volunteer reads nothing, cannot write an update or add a photo (0134); staff tags a photo; photo reaches sender, date, channel in one join; first photo still becomes profile';
 
   -- A3 the existing six-argument call shape (the live route) still works, untagged.
   perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'staff'), 'role', 'authenticated')::text, true);

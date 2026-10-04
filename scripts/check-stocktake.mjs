@@ -177,9 +177,9 @@ begin
     raise exception 'FAIL K2: refused calls wrote % history rows', (select count(*) from stock_counts) - v_hist;
   end if;
 
-  -- I. staff and volunteers may save a stocktake (0091) — through the
+  -- I. staff may save a stocktake (0091; volunteers stopped in 0134) — through the
   -- definer function, both tables, same stamp as any other caller
-  foreach v_who in array array['staff', 'volunteer'] loop
+  foreach v_who in array array['staff'] loop
     v := pg_temp.as_login(v_who, jsonb_build_array(jsonb_build_object('id', m1, 'count', 7)),
                           jsonb_build_array(jsonb_build_object('id', d1, 'count', 5)));
     if v not like '{"medication_updated":1,"diet_types_updated":1,"counted_at":%' then raise exception 'FAIL I %: %', v_who, v; end if;
@@ -199,9 +199,9 @@ begin
     v_report := v_report || ' | ' || v_who || ' ok';
   end loop;
   select count(*) into v_hist from stock_counts;
-  -- and still a refusal before anything is written
+  -- and still a refusal before anything is written (a volunteer is refused outright, 0134)
   v := pg_temp.as_login('volunteer', jsonb_build_array(jsonb_build_object('id', m1, 'count', 99), jsonb_build_object('id', m2, 'count', -1)), null);
-  if v <> 'ERR P0001 A stock count cannot be negative.' or (select stock_on_hand from medication where id = m1) <> 7 then
+  if v <> 'ERR P0001 Not authorized to record a stocktake.' or (select stock_on_hand from medication where id = m1) <> 7 then
     raise exception 'FAIL I volunteer refusal: %', v;
   end if;
   if (select count(*) from stock_counts) <> v_hist then raise exception 'FAIL K2: the volunteer refusal wrote history'; end if;
