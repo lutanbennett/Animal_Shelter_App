@@ -29,9 +29,11 @@ export const MEDICAL_ARCHIVE_SECTIONS = {
 } as const satisfies Record<MedicalArchiveKind, readonly string[]>;
 
 /**
- * Who is offered Archive (docs/decisions/2026-10-02-medical-archive-roles.md):
- * admin, management and staff, on all four kinds. Never a vet and never a
- * volunteer.
+ * Who is offered Archive is `can(perms, "medical.archive")`
+ * (docs/decisions/2026-10-02-medical-archive-roles.md): by default admin,
+ * management and staff, on all four kinds; never a vet, never a volunteer.
+ * The predicate that said so, canArchiveMedical, is gone; its truth table is
+ * in scripts/fixtures/legacy-predicates.json.
  *
  * Archive is an UPDATE, so the ceiling is what RLS lets each role update,
  * and a vet could (their own clinic's visits and the prescriptions on them,
@@ -41,6 +43,3 @@ export const MEDICAL_ARCHIVE_SECTIONS = {
  * cannot restore it (found by scripts/check-medical-archive-roles.mjs).
  * A volunteer cannot update any of the four.
  */
-export function canArchiveMedical(role: string | null | undefined): boolean {
-  return role === "admin" || role === "management" || role === "staff";
-}

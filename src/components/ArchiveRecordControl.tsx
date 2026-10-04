@@ -14,7 +14,7 @@ const buttonClass =
  * Archive (with an optional reason) or Restore on a weight reading,
  * prescription, vet visit or immunization record. The same inline reason
  * form as ArchiveContactControl, so staff who learned one learned both.
- * The page only renders this where canArchiveMedical says the role may.
+ * The page only renders this where can(perms, "medical.archive") says the person may.
  */
 export function ArchiveRecordControl({
   kind,

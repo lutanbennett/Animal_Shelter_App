@@ -4302,6 +4302,7 @@ const th: Dictionary = {
     editTranslation: "แก้ไขคำแปล",
     addTranslation: "เพิ่มคำแปล",
     noTranslation: (lang: string) => `ยังไม่มีคำแปลภาษา${lang}`,
+    machineDraft: "แปลโดยเครื่อง โปรดอ่านเทียบกับต้นฉบับและแก้ส่วนที่ผิดก่อนอนุมัติ",
     translationLabel: (lang: string) => `คำแปลภาษา${lang}`,
     openRecord: "เปิดรายการ",
     errors: {

@@ -613,6 +613,7 @@ const manual: Manual = {
           id: "immunizations",
           title: "Logging immunizations",
           roles: ["admin", "management", "staff", "vet"],
+          activity: "medical.immunizations",
           path: "Resident hub → Immunizations → Log immunization, or tick residents on the list",
           intro:
             "One form records any number of vaccines for any number of residents — a litter's first shots, or a whole enclosure's rabies boosters.",
@@ -638,6 +639,7 @@ const manual: Manual = {
           id: "vet-visits",
           title: "Booking and recording vet visits",
           roles: ["admin", "management", "staff", "vet"],
+          activity: "medical.visits",
           path: "Resident hub → Vet Appointments → Book vet visit",
           steps: [
             "Choose one or more residents and the vet or clinic (vets are set up under Management → Vets). If you know which doctor will see them, type their name in Doctor — it is optional. The doctors on that clinic's list are offered as you type, so pick one rather than spelling it a new way. A name that isn't offered is added to the clinic's list when you book.",
@@ -666,6 +668,7 @@ const manual: Manual = {
           id: "prescriptions",
           title: "Adding a prescription",
           roles: ["admin", "management", "staff", "vet"],
+          activity: "medical.prescriptions",
           path: "Resident hub → Prescriptions → Add prescription",
           steps: [
             "Pick the medication from the list (or add a new one, giving what one unit is — tablet, ml, drop…). Management keeps this list tidy under Management → Medications.",
@@ -684,6 +687,7 @@ const manual: Manual = {
           id: "diet",
           title: "Recording a resident's diet",
           roles: ["admin", "management", "staff", "vet"],
+          activity: "medical.diet",
           path: "Resident hub → Diet → Add diet",
           steps: [
             "Pick the diet from the list (dry kibble, wet food, a prescription diet…). Management keeps this list, with its costs and portion sizes, under Management → Diets.",
@@ -701,6 +705,7 @@ const manual: Manual = {
           id: "weight",
           title: "Logging weight",
           roles: ["admin", "management", "staff", "vet"],
+          activity: "medical.weight",
           path: "Resident hub → Weight → Log weight",
           steps: [
             "Enter the weight in kg and the date weighed. The last reading is shown for comparison.",
@@ -719,6 +724,7 @@ const manual: Manual = {
           id: "procedures",
           title: "Logging a procedure",
           roles: ["admin", "management", "staff", "vet"],
+          activity: "medical.procedures",
           path: "Resident hub → Procedures → Log procedure",
           steps: [
             "Pick the procedure type — X-ray, ultrasound, spay/neuter, dental… — or add a new type.",
@@ -734,6 +740,7 @@ const manual: Manual = {
           id: "blood-tests",
           title: "Logging a blood test",
           roles: ["admin", "management", "staff", "vet"],
+          activity: "medical.blood_tests",
           path: "Resident hub → Blood Tests → Log blood test",
           steps: [
             "Pick the test type — CBC is preselected as the routine panel; the list (chemistry, thyroid, heartworm, tick-borne, cortisol, urinalysis) is kept under Settings → Blood Test Types.",
@@ -750,6 +757,7 @@ const manual: Manual = {
           id: "archive-records",
           title: "Removing a medical record",
           roles: ["admin", "management", "staff"],
+          activity: "medical.archive",
           path: "Resident hub → Weight, Prescriptions, Vet appointments or Immunizations",
           steps: [
             "A weight reading, a prescription, a vet visit or an immunization that was entered by mistake is removed rather than deleted. Tap Remove on its row and, if you like, say why — for example that it was entered on the wrong resident.",

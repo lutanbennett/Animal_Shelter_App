@@ -2,13 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { runAction, type ActionResult } from "@/lib/action-result";
-import { loadCurrentRole } from "@/lib/auth/app-access";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import {
   MEDICAL_ARCHIVE_SECTIONS,
   MEDICAL_ARCHIVE_TABLES,
-  canArchiveMedical,
   isMedicalArchiveKind,
   type MedicalArchiveKind,
 } from "@/lib/medical-archive/kinds";
@@ -31,7 +31,7 @@ function revalidate(kind: MedicalArchiveKind, residentId: string) {
  * readers skip it). The audit trigger (0121) writes the one audit row for
  * the update; nothing here does.
  *
- * canArchiveMedical decides who may, here and in the page; the database is
+ * `medical.archive` decides who may, here and in the page; the database is
  * the backstop. An update RLS filters out comes
  * back with no rows, which is reported as not allowed rather than as a
  * mystery.
@@ -46,9 +46,8 @@ export async function archiveMedicalRecord(
   return runAction("medicalArchive.archive", t.common.somethingWentWrong, async () => {
     const a = t.recordArchive;
     if (!isMedicalArchiveKind(kind)) return refuse(a.errors.notAllowed);
+    if (!can(await loadPermissions(), "medical.archive")) return refuse(a.errors.notAllowed);
     const supabase = await createClient();
-    const role = await loadCurrentRole(supabase);
-    if (!canArchiveMedical(role)) return refuse(a.errors.notAllowed);
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -90,9 +89,8 @@ export async function restoreMedicalRecord(
   return runAction("medicalArchive.restore", t.common.somethingWentWrong, async () => {
     const a = t.recordArchive;
     if (!isMedicalArchiveKind(kind)) return refuse(a.errors.notAllowed);
+    if (!can(await loadPermissions(), "medical.archive")) return refuse(a.errors.notAllowed);
     const supabase = await createClient();
-    const role = await loadCurrentRole(supabase);
-    if (!canArchiveMedical(role)) return refuse(a.errors.notAllowed);
 
     const { data, error } = await supabase
       .from(MEDICAL_ARCHIVE_TABLES[kind])

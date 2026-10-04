@@ -1,10 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { loadCurrentRole } from "@/lib/auth/app-access";
+import { loadPermissions } from "@/lib/permissions/load";
 
 /**
  * Which clinics this session may record a vet visit against. The shelter's
- * own people book against any clinic. A vet account books against the
- * clinics of the doctor its login is linked to (vet_doctors.user_id, 0125),
+ * own people book against any clinic. A login whose role has the "own
+ * clinic" clinical scope (a vet) books against the clinics of the doctor
+ * it is linked to (vet_doctors.user_id, 0125),
  * set by an admin in Settings → Security; a doctor may work at several. A
  * vet account linked to no clinic is refused rather than shown every
  * clinic: Lutan's call, 2026-09-27 (docs/decisions.md).
@@ -25,7 +26,7 @@ export type VetScope =
   | { kind: "unlinked" };
 
 export async function loadVetScope(supabase: SupabaseClient): Promise<VetScope> {
-  if ((await loadCurrentRole(supabase)) !== "vet") return { kind: "any" };
+  if ((await loadPermissions())?.scopes.clinical !== "own_clinic") return { kind: "any" };
   const { data } = await supabase.rpc("current_user_vet_ids");
   const vetIds = Array.isArray(data) ? (data as string[]) : [];
   if (vetIds.length === 0) return { kind: "unlinked" };

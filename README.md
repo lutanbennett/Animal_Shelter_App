@@ -798,6 +798,12 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
   lookups ("where is …", "who is in …", "what is due this week").
 - `worker/index.mjs` — the Worker entry: edge cache → Pi through its tunnel
   → OpenNext render (`docs/pi-hosting.md`).
+- `worker/translations.mjs`, `worker/translate-engines.mjs` — machine-drafted
+  translations: on the Worker's 15-minute cron, pending `translations` rows get a
+  `draft` from Workers AI (or M2M100 / Ollama, via `TRANSLATE_ENGINE`) for a
+  manager to check; never `approved`. Needs the `AI` binding and
+  `SUPABASE_SERVICE_ROLE_KEY`; `node scripts/check-translate-worker.mjs` tests it.
+  `docs/decisions/2026-10-04-translations-worker.md`.
 - `scripts/pi/` — the Pi origin: one-time `setup.sh`, `deploy-pi.sh`, the
   systemd unit and cloudflared config.
 - `scripts/` — one-off tooling: `apply-migrations.mjs` (migration runner),

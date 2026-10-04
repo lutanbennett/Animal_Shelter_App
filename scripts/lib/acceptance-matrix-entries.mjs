@@ -351,6 +351,7 @@ export const ENTRIES = {
   immunizations: [
     {
       activity: "Log immunizations for one or several residents",
+      needs: "medical.immunizations",
       device: "both",
       do: "Open Log immunization, choose residents (or Add all in enclosure), tick the vaccines given, enter the date, and tap the button.",
       expect: "A table shows each resident, vaccine and next-due date, and the records appear on each resident's Immunizations page.",
@@ -359,6 +360,7 @@ export const ENTRIES = {
   "vet-visits": [
     {
       activity: "Book a vet visit",
+      needs: "visit.book",
       device: "both",
       do: "On a resident tap Book vet visit, choose the clinic, date and reason, and save.",
       expect: "The visit is listed on the resident's Vet Appointments page.",
@@ -366,6 +368,7 @@ export const ENTRIES = {
     },
     {
       activity: "Record how a visit went",
+      needs: "medical.visits",
       device: "both",
       do: "Tap Edit on the visit, mark it Completed, add the doctor and the cost, and save.",
       expect: "The visit shows as Completed with the doctor's name.",
@@ -374,12 +377,14 @@ export const ENTRIES = {
   prescriptions: [
     {
       activity: "Add a prescription",
+      needs: "medical.prescriptions",
       device: "phone",
       do: "Open Prescriptions on a resident, tap Add prescription, pick the medication, dose, frequency and start date, and save.",
       expect: "It appears under Current. Linking it to a visit in the future is refused.",
     },
     {
       activity: "Stop a prescription early",
+      needs: "medical.prescriptions",
       device: "phone",
       do: "Tap End today on a current prescription.",
       expect: "It moves to Expired and drops out of the medication forecast from tomorrow.",
@@ -388,6 +393,7 @@ export const ENTRIES = {
   diet: [
     {
       activity: "Record a resident's diet",
+      needs: "medical.diet",
       device: "both",
       do: "Open Diet on a resident, tap Add diet, pick the diet and meals a day, and save. Then clear the end date on a phone.",
       expect: "The diet shows as Current; the end date can be emptied on a phone and stays empty.",
@@ -396,6 +402,7 @@ export const ENTRIES = {
   weight: [
     {
       activity: "Log a resident's weight",
+      needs: "medical.weight",
       device: "phone",
       do: "Open Weight on a resident, tap Log weight, enter kg and the date, and save.",
       expect: "The weight chart updates. Weighing the same resident twice on one day corrects the first reading instead of adding a second.",
@@ -404,6 +411,7 @@ export const ENTRIES = {
   procedures: [
     {
       activity: "Log a procedure",
+      needs: "medical.procedures",
       device: "both",
       do: "Open Procedures on a resident, tap Log procedure, pick the type and date, drop in a file, and save.",
       expect: "The procedure appears with its file.",
@@ -412,6 +420,7 @@ export const ENTRIES = {
   "blood-tests": [
     {
       activity: "Log a blood test with its report",
+      needs: "medical.blood_tests",
       device: "both",
       do: "Open Blood Tests on a resident, tap Log blood test, pick the type, and attach a PDF report.",
       expect: "The test is listed and the PDF shows a file icon, not a broken picture.",
@@ -420,6 +429,7 @@ export const ENTRIES = {
   "archive-records": [
     {
       activity: "Remove a medical record entered by mistake, then bring it back",
+      needs: "medical.archive",
       device: "both",
       do: "Tap Remove on a weight reading, then Show removed, then Restore.",
       expect: "The record leaves the list and charts when removed and returns when restored. Vets and volunteers are not offered Remove.",
