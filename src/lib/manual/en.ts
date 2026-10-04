@@ -261,6 +261,7 @@ const manual: Manual = {
             "Change a job's status with the buttons beside it: Not started, In progress, Blocked or Completed. A job marked Completed leaves the list, with Undo in case you tapped the wrong one.",
             "The number beside My tasks in the menu is how many of your jobs are due today or overdue. It disappears when there are none.",
             "Open the board takes you to the maintenance board showing only your jobs.",
+            "Done today, at the bottom, lists what you marked done, skipped or completed today. It is still there after you reload the page, and Undo on a row puts the job back. If a job says Waiting for another job, Done asks you to confirm before it goes through.",
           ],
           callouts: [
             {
