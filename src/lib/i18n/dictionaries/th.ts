@@ -4786,6 +4786,7 @@ const th: Dictionary = {
       Completed: "เสร็จสิ้น",
     },
     mandatory: { mandatory: "จำเป็น", optional: "ไม่บังคับ" },
+    photoFolder: { Shelter: "ศูนย์พักพิง", Medical: "การแพทย์", Foster: "อุปถัมภ์ชั่วคราว", Adoption: "รับเลี้ยง" },
     doseUnit: {
       tablet: "เม็ด",
       capsule: "แคปซูล",

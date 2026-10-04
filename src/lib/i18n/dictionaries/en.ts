@@ -4950,6 +4950,8 @@ const en = {
     },
     mandatory: { mandatory: "Mandatory", optional: "Optional" },
     /** medication.dose_unit — what one unit of a medication is. */
+    /** Photo folders: stored (and named in Drive) in English, shown in the reader's language. */
+    photoFolder: { Shelter: "Shelter", Medical: "Medical", Foster: "Foster", Adoption: "Adoption" },
     doseUnit: {
       tablet: "tablet(s)",
       capsule: "capsule(s)",

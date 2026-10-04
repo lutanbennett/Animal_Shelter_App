@@ -41,6 +41,16 @@ const inputClass =
  * `initial` and submits `updatePrescription` instead; the inline "add a new
  * medication / frequency" affordances stay available either way.
  */
+/**
+ * The name, with the unit it is dosed in after it — unless the name already
+ * says so ("Amoxicillin 250mg tablet" does not need "(tablet(s))" after it).
+ */
+function medicationOptionLabel(t: Parameters<typeof doseUnitLabel>[0], m: { name: string; dose_unit: string }) {
+  return m.name.toLowerCase().includes(m.dose_unit.toLowerCase())
+    ? m.name
+    : `${m.name} (${doseUnitLabel(t, m.dose_unit)})`;
+}
+
 export function PrescriptionForm({
   mode = "create",
   residentId,
@@ -186,7 +196,7 @@ export function PrescriptionForm({
             <option value="">{t.prescriptions.selectMedication}</option>
             {medications.map((m) => (
               <option key={m.id} value={m.id}>
-                {m.name} ({doseUnitLabel(t, m.dose_unit)})
+                {medicationOptionLabel(t, m)}
               </option>
             ))}
             <option value="__new__">{t.prescriptions.addNewMedication}</option>

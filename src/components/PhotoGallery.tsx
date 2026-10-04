@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { formatDate } from "@/lib/format";
+import { photoFolderLabel } from "@/lib/i18n/enum-labels";
 import type { PhotoProvenance } from "@/lib/adoption-updates/options";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { Locale } from "@/lib/i18n/locales";
@@ -227,7 +228,7 @@ export function PhotoGallery({
               ) : (
                 (photo.sub_folder || photo.date_taken) && (
                   <span className="absolute inset-x-0 bottom-0 truncate bg-black/60 px-1.5 py-1 text-[10px] text-white">
-                    {[photo.sub_folder, photo.date_taken].filter(Boolean).join(" · ")}
+                    {[photoFolderLabel(t, photo.sub_folder), photo.date_taken && formatDate(photo.date_taken, locale)].filter(Boolean).join(" · ")}
                   </span>
                 )
               )}
@@ -275,7 +276,7 @@ export function PhotoGallery({
                   ) : (
                     (openPhoto.sub_folder || openPhoto.date_taken) && (
                       <p className="text-xs text-muted">
-                        {[openPhoto.sub_folder, openPhoto.date_taken].filter(Boolean).join(" · ")}
+                        {[photoFolderLabel(t, openPhoto.sub_folder), openPhoto.date_taken && formatDate(openPhoto.date_taken, locale)].filter(Boolean).join(" · ")}
                       </p>
                     )
                   )}
@@ -375,7 +376,7 @@ export function PhotoGallery({
                     </option>
                     {moveOptions.map((c) => (
                       <option key={c} value={c}>
-                        {c}
+                        {photoFolderLabel(t, c)}
                       </option>
                     ))}
                   </select>
@@ -385,7 +386,7 @@ export function PhotoGallery({
                     onClick={handleMove}
                     className="rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-60"
                   >
-                    {moveTarget === "" ? t.photos.moveToFolder : t.photos.moveButton(moveTarget)}
+                    {moveTarget === "" ? t.photos.moveToFolder : t.photos.moveButton(photoFolderLabel(t, moveTarget))}
                   </button>
                 </div>
               )}
