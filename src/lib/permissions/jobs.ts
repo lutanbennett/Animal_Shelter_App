@@ -19,7 +19,7 @@
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { ActivityKey, Level, LevelKey, YesNoKey } from "./catalogue";
 
-export type JobKey = "administer_medication" | "record_weight" | "add_medical_photos" | "feed_special_diets";
+export type JobKey = "administer_medication" | "record_weight" | "add_medical_photos" | "feed_special_diets" | "do_maintenance";
 
 /** A level activity at the level the job needs, or a yes/no activity (no level: the cell is Yes). */
 export type BundleEntry = { activity: LevelKey; level: Level } | { activity: YesNoKey; level?: undefined };
@@ -79,6 +79,21 @@ export const JOBS: Record<JobKey, Job> = {
     ],
     opens: "/medical/diets",
   },
+  // The whiteboard's Maintenance column: one tile (§8, §12 R3). Her job is Edit, not Read. Setting up a
+  // recurring task stays Management's (P2): recurring.manage is not here; recurring.do_own is "mark your
+  // own done" (/my).
+  do_maintenance: {
+    key: "do_maintenance",
+    label: (t) => t.appHome.jobs.doMaintenance,
+    bundle: [
+      { activity: "maintenance.jobs", level: "edit" },
+      { activity: "maintenance.progress" },
+      { activity: "recurring.do_own" },
+      { activity: "resident.record", level: "read" }, // who and where, nothing more (0134)
+      { activity: "facility.enclosures", level: "read" }, // the board names and picks them
+    ],
+    opens: "/maintenance",
+  },
 };
 
 /**
@@ -88,6 +103,7 @@ export const JOBS: Record<JobKey, Job> = {
  */
 export const JOBS_OF_ROLE: Readonly<Record<string, readonly JobKey[]>> = {
   head_of_medical: ["administer_medication", "record_weight", "add_medical_photos", "feed_special_diets"],
+  head_of_maintenance: ["do_maintenance"],
 };
 
 export function jobsOfRole(roleKey: string): readonly Job[] {
