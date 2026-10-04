@@ -6,6 +6,7 @@ import { placeName } from "@/lib/enclosures/names";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { Locale } from "@/lib/i18n/locales";
 import { groupByPlace, matchesQuery, type PickableResident } from "@/lib/medical/residents";
+import { ACTION_ICONS } from "@/components/hub-icons";
 
 /**
  * "Who?" for the Head of Medical's phone jobs: residents as big photo tiles, by zone then
@@ -58,7 +59,11 @@ export function ResidentPicker({
           </button>
         </div>
         {query && (
-          <Link href={base} className="text-sm font-medium text-primary hover:underline">
+          <Link
+            href={base}
+            className="inline-flex min-h-11 items-center gap-1.5 self-start text-sm font-medium text-primary hover:underline"
+          >
+            <ACTION_ICONS.clear aria-hidden="true" className="h-4 w-4 shrink-0" />
             {p.clear}
           </Link>
         )}

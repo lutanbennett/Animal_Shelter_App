@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { RowActionButton, RowActionLink } from "@/components/RowAction";
 import { deleteAdoptionUpdate } from "./actions";
 
 /** Edit and Delete on one update; the confirm says how many photos go with it. */
@@ -10,10 +11,13 @@ export function AdoptionUpdateActions({
   residentId,
   updateId,
   photoCount,
+  subject,
 }: {
   residentId: string;
   updateId: string;
   photoCount: number;
+  /** Names the update for screen readers, e.g. its date. */
+  subject?: string;
 }) {
   const { t } = useI18n();
   const a = t.adoptionUpdates;
@@ -57,20 +61,20 @@ export function AdoptionUpdateActions({
           </button>
         </div>
       ) : (
-        <div className="flex gap-3">
-          <Link
+        <div className="flex gap-2">
+          <RowActionLink
             href={`/residents/${residentId}/adoption-updates/${updateId}/edit`}
-            className="text-xs font-medium text-primary hover:underline"
-          >
-            {a.editOrAddPhotos}
-          </Link>
-          <button
-            type="button"
+            label={a.editOrAddPhotos}
+            subject={subject}
+            icon={ACTION_ICONS.edit}
+          />
+          <RowActionButton
             onClick={() => setConfirming(true)}
-            className="text-xs font-medium text-danger hover:underline"
-          >
-            {t.common.delete}
-          </button>
+            label={t.common.delete}
+            subject={subject}
+            tone="danger"
+            icon={ACTION_ICONS.delete}
+          />
         </div>
       )}
       {error && <p className="text-xs text-danger">{error}</p>}
