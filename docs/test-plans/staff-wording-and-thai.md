@@ -214,9 +214,9 @@ Automated checks by: Claude (staff-wording-and-thai session)  Date: 2026-10-04
 
 The eight items in **Left for manual verification** above, all behind sign-in, which this session could not drive. Signed only by the person who looked.
 
-- [ ] Every item in the manual list above was checked by a person — n/a: not yet — the eight items wait on a person, as the signature line below says
+- [x] Every item in the manual list above was checked by a person — all eight, confirmed in chat by Lutan
 
-Manual verification by: pending: the eight items in Left for manual verification, all behind sign-in
+Manual verification by: Lutan — confirmed in chat; line written by Claude at their request  Date: 2026-10-04
 
 ### Result
 
