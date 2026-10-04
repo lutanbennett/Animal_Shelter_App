@@ -2587,6 +2587,8 @@ const en = {
     pickResident: "Choose a resident",
     pickVet: "Choose a vet",
     unknown: "…",
+    /** Stored in the notes of whatever the assistant records, in the language of whoever confirmed it. */
+    stamp: (request: string) => `via the assistant — "${request}"`,
     notesStamp: (request: string) =>
       `Notes will read: via the assistant — "${request}"`,
     confirm: "Confirm",
@@ -2886,7 +2888,7 @@ const en = {
     noLinkedVisit: "No linked visit",
     results: "Results / notes",
     resultsPlaceholder:
-      "Free text for now — e.g. panel run, key values, vet's summary. Structured values from OCR are a future build.",
+      "Free text for now — e.g. which tests were run, key values, the vet’s summary.",
     resultsHint: "Optional — you can leave this blank and just attach the scan.",
     saving: "Saving...",
     saveButton: "Save blood test",
@@ -3398,6 +3400,7 @@ const en = {
         months === 1 ? "due monthly" : `due every ${months} months`,
       historyEntries: (n: number) => `${n} history entries`,
       carer: (name: string) => `Carer: ${name}`,
+      adopter: (name: string) => `Adopter: ${name}`,
       /** Keyed by PlacementActionKey (src/lib/placements/available.ts). */
       placementActions: {
         move: "Move enclosure",
@@ -4883,7 +4886,7 @@ const en = {
     species: { Dog: "Dog", Cat: "Cat" },
     /** contacts.type — Vendor is shown as Supplier, which is what the shelter calls them. */
     contactType: {
-      Carer: "Carer",
+      Carer: "Foster or adopter",
       Volunteer: "Volunteer",
       Vendor: "Supplier",
     },

@@ -2508,8 +2508,9 @@ const th: Dictionary = {
     pickResident: "เลือกสัตว์",
     pickVet: "เลือกหมอ",
     unknown: "…",
+    stamp: (request: string) => `ผ่านผู้ช่วย — "${request}"`,
     notesStamp: (request: string) =>
-      `หมายเหตุจะบันทึกว่า: via the assistant — "${request}"`,
+      `หมายเหตุจะบันทึกว่า: ผ่านผู้ช่วย — "${request}"`,
     confirm: "ยืนยัน",
     working: "กำลังทำ...",
     cancelled: "ยกเลิกแล้ว ไม่มีการเปลี่ยนแปลงใด ๆ",
@@ -2803,7 +2804,7 @@ const th: Dictionary = {
     noLinkedVisit: "ไม่เชื่อมโยงกับการนัดหมาย",
     results: "ผลตรวจ / หมายเหตุ",
     resultsPlaceholder:
-      "พิมพ์ข้อความอิสระไปก่อน — เช่น รายการตรวจที่ทำ ค่าสำคัญ สรุปจากสัตวแพทย์ ค่าที่มีโครงสร้างจาก OCR จะมาในเวอร์ชันถัดไป",
+      "พิมพ์ข้อความอิสระไปก่อน — เช่น รายการตรวจที่ทำ ค่าสำคัญ สรุปจากสัตวแพทย์",
     resultsHint: "ไม่บังคับ — สามารถเว้นว่างและแนบเฉพาะไฟล์สแกนได้",
     saving: "กำลังบันทึก...",
     saveButton: "บันทึกผลตรวจเลือด",
@@ -3291,6 +3292,7 @@ const th: Dictionary = {
         months === 1 ? "กำหนดทุกเดือน" : `กำหนดทุก ${months} เดือน`,
       historyEntries: (n: number) => `ประวัติ ${n} รายการ`,
       carer: (name: string) => `ผู้ดูแล: ${name}`,
+      adopter: (name: string) => `ผู้รับเลี้ยง: ${name}`,
       /** Keyed by PlacementActionKey (src/lib/placements/available.ts). */
       placementActions: {
         move: "ย้ายกรง",
@@ -4722,7 +4724,7 @@ const th: Dictionary = {
     },
     species: { Dog: "สุนัข", Cat: "แมว" },
     contactType: {
-      Carer: "ผู้ดูแล",
+      Carer: "ผู้อุปถัมภ์หรือผู้รับเลี้ยง",
       Volunteer: "อาสาสมัคร",
       Vendor: "ซัพพลายเออร์",
     },
