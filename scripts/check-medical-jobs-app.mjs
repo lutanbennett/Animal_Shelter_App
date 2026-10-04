@@ -2,7 +2,7 @@
 // head_of_medical role, against DEV and a running dev server.
 //
 //   node scripts/worktree.mjs dev                         (in another terminal)
-//   node scripts/check-medical-jobs-app.mjs [http://localhost:<port>]
+//   node scripts/check-medical-jobs-app.mjs [http://localhost:<port>] [--upload]
 //
 // It checks three things the screens cannot show on their own:
 //   1. HOME   her home is exactly her five jobs, each a tile that opens.
@@ -26,7 +26,7 @@ const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/l
 const env = loadEnv("test");
 if (projectRef(env) !== "qxkmhwybjggxvsfxsxbd") throw new Error("refusing: not the dev project");
 
-const base = process.argv[2] ?? `http://localhost:${readFileSync(join(root, ".port"), "utf8").trim()}`;
+const base = process.argv.slice(2).find((a) => !a.startsWith("--")) ?? `http://localhost:${readFileSync(join(root, ".port"), "utf8").trim()}`;
 const url = env.NEXT_PUBLIC_SUPABASE_URL;
 const anon = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const service = createClient(url, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { autoRefreshToken: false, persistSession: false } });
@@ -65,6 +65,7 @@ const text = (html) =>
 
 let userId = null;
 const madeWeights = [];
+const madeAttachments = [];
 try {
   const { data: u, error } = await service.auth.admin.createUser({ email, password, email_confirm: true });
   if (error) throw error;
@@ -168,6 +169,44 @@ try {
   const sib = await page("/api/medical/residents/" + live.id + "/photos");
   expect(sib.status === 405 || sib.status === 404, `the photo route answers a GET with no photo (${sib.status})`);
 
+  // --upload: really files one 1x1 JPEG through the sibling route into DEV's Google Drive, then reads
+  // the attachment row back (service role: she cannot read attachments) and checks the folder, the
+  // date and who filed it. Off by default because it touches Drive.
+  if (process.argv.includes("--upload")) {
+    console.log("\nADD MEDICAL PHOTOS, a real upload");
+    const jpeg = Buffer.from(
+      "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=",
+      "base64",
+    );
+    const cookie = [...jar].map(([n, v]) => `${n}=${v}`).join("; ");
+    const send = async (id) => {
+      const form = new FormData();
+      form.append("file", new File([jpeg], `harness-${tag}.jpg`, { type: "image/jpeg" }));
+      const res = await fetch(`${base}/api/medical/residents/${id}/photos`, {
+        method: "POST",
+        headers: { cookie, origin: base },
+        body: form,
+      });
+      return { status: res.status, body: await res.json().catch(() => ({})) };
+    };
+    const up = await send(live.id);
+    expect(up.status === 200 && up.body.attachmentId, `a photo is filed (${up.status} ${up.body.error ?? ""})`);
+    if (up.body.attachmentId) {
+      const { data: att } = await service.from("attachments").select("sub_folder, date_taken, uploaded_by, owner_id").eq("id", up.body.attachmentId).single();
+      expect(att?.sub_folder === "Medical" && att.owner_id === live.id, `filed in the Medical folder against the resident (${att?.sub_folder})`);
+      expect(att?.uploaded_by === userId, "uploaded_by is her");
+      const { data: res } = await service.from("residents").select("drive_folder_id").eq("id", live.id).single();
+      expect(!!res?.drive_folder_id, "the resident has a Drive folder id afterwards");
+      madeAttachments.push(up.body.attachmentId);
+    }
+    if (deadId) {
+      const dead = await send(deadId);
+      expect(dead.status === 409, `a deceased resident's photo is refused with the closed sentence (${dead.status})`);
+    }
+    const nobody = await send("00000000-0000-0000-0000-000000000000");
+    expect(nobody.status === 404, `an unknown resident is a 404 (${nobody.status})`);
+  }
+
   console.log("\nTHE DATABASE FLOOR, under her JWT");
   const reads = await Promise.all([
     her.from("residents").select("id").limit(1),
@@ -185,6 +224,7 @@ try {
   expect(!specialView.error, `special_diet_list reads for her (${specialView.error?.message ?? "ok"})`);
 } finally {
   if (madeWeights.length) await service.from("weight").delete().in("id", madeWeights);
+  if (madeAttachments.length) await service.from("attachments").delete().in("id", madeAttachments);
   if (userId) {
     await service.from("user_roles").delete().eq("user_id", userId);
     const { error } = await service.auth.admin.deleteUser(userId);
