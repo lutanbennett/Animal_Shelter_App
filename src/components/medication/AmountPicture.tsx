@@ -7,11 +7,11 @@ function Tablet({ half = false }: { half?: boolean }) {
   return (
     <svg viewBox="0 0 24 24" className="h-9 w-9 shrink-0" aria-hidden>
       {half ? (
-        <path d="M12 3a9 9 0 0 0 0 18z" className="fill-background stroke-foreground" strokeWidth="2" />
+        <path d="M12 3a9 9 0 0 0 0 18z" className="fill-foreground/15 stroke-foreground" strokeWidth="2" />
       ) : (
         <>
-          <circle cx="12" cy="12" r="9" className="fill-background stroke-foreground" strokeWidth="2" />
-          <line x1="5" y1="12" x2="19" y2="12" className="stroke-foreground" strokeWidth="1.5" />
+          <circle cx="12" cy="12" r="9" className="fill-foreground/15 stroke-foreground" strokeWidth="2" />
+          <path d="M7.5 9.5a5 5 0 0 1 3-2.2" className="fill-none stroke-foreground" strokeWidth="1.5" strokeLinecap="round" />
         </>
       )}
     </svg>

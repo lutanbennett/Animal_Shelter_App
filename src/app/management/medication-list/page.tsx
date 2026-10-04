@@ -50,7 +50,8 @@ export default async function MedicationListPage(props: PageProps<"/management/m
   const sp = await props.searchParams;
   const chosen = ROUND_KEYS.find((k) => k === sp.round) ?? null;
   const round: RoundKey = chosen ?? suggestRound("medication");
-  const view = sp.view === "pick" ? "pick" : "list";
+  // The round starts at the stock room, so the pick list is the front door and by-resident the second tab.
+  const view = sp.view === "list" ? "list" : "pick";
   const href = (r: RoundKey, v: string) => `/management/medication-list?round=${r}&view=${v}`;
 
   const supabase = await createClient();
@@ -175,7 +176,7 @@ export default async function MedicationListPage(props: PageProps<"/management/m
         </ul>
         {!chosen && <p className="text-sm text-muted">{m.suggested}</p>}
         <div className="grid grid-cols-2 gap-2">
-          {(["list", "pick"] as const).map((v) => (
+          {(["pick", "list"] as const).map((v) => (
             <Link
               key={v}
               href={href(round, v)}
@@ -186,7 +187,7 @@ export default async function MedicationListPage(props: PageProps<"/management/m
                   : "rounded-lg border border-border px-2 py-2 text-center text-sm text-muted"
               }
             >
-              {v === "list" ? m.viewList : m.viewPick}
+              {v === "pick" ? m.viewPick : m.viewList}
             </Link>
           ))}
         </div>
