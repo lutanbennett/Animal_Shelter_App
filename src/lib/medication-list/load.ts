@@ -1,6 +1,7 @@
 import type { createClient } from "@/lib/supabase/server";
 import { todayIso } from "@/lib/format";
 import { doseDueState, type DueSchedule } from "./due";
+import { ROUND_KEYS, type RoundKey } from "@/lib/rounds/suggest";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
@@ -31,8 +32,19 @@ type PlacementRow = {
   zone_name_th: string | null;
 };
 
+/**
+ * Why a prescription is on the list for the chosen round: it holds that round, it is as needed
+ * (no round by design, shown in every round), or it has no round ticked (0138's `none`: shown and
+ * flagged, never dropped — decisions/2026-10-04-medication-rounds.md).
+ */
+export type MedicationPlace = "round" | "asNeeded" | "noRound";
+
 export type ListedMedication = {
   prescriptionId: string;
+  medicationId: string;
+  place: MedicationPlace;
+  /** Every round the prescription is given in, in day order. */
+  rounds: RoundKey[];
   name: string;
   doseUnit: string;
   /** Null when the prescription has no amount recorded. */
@@ -72,6 +84,7 @@ export type ApartResident = ListedResident & {
 
 export type MedicationList = {
   today: string;
+  round: RoundKey;
   zones: ZoneGroup[];
   /** In hospital, fostered, out in the community: listed apart (decisions/2026-10-03-medication-list.md). */
   apart: ApartResident[];
@@ -100,10 +113,13 @@ const natural = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
  *
  * Read-only by construction: nothing here, or on the page, writes.
  */
-export async function loadMedicationList(supabase: Supabase): Promise<MedicationList> {
+export async function loadMedicationList(
+  supabase: Supabase,
+  round: RoundKey,
+): Promise<MedicationList> {
   const today = todayIso();
 
-  const [prescriptions, medications, frequencies, placements] = await Promise.all([
+  const [prescriptions, medications, frequencies, placements, roundRows] = await Promise.all([
     supabase
       .from("prescriptions")
       .select("id, resident_id, medication_id, frequency_id, dose_quantity, start_date, end_date")
@@ -125,6 +141,11 @@ export async function loadMedicationList(supabase: Supabase): Promise<Medication
         "id, name, thai_name, profile_photo_drive_file_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th",
       )
       .returns<PlacementRow[]>(),
+    // Read as the rounds table and its join table (0137/0138): visible exactly when the prescription is.
+    supabase
+      .from("prescription_rounds")
+      .select("prescription_id, rounds(key)")
+      .returns<{ prescription_id: string; rounds: { key: string } | { key: string }[] | null }[]>(),
   ]);
 
   const error =
@@ -132,8 +153,17 @@ export async function loadMedicationList(supabase: Supabase): Promise<Medication
     medications.error?.message ??
     frequencies.error?.message ??
     placements.error?.message ??
+    roundRows.error?.message ??
     null;
-  if (error) return { today, zones: [], apart: [], error };
+  if (error) return { today, round, zones: [], apart: [], error };
+
+  const roundsOf = new Map<string, Set<string>>();
+  for (const row of roundRows.data ?? []) {
+    const joined = Array.isArray(row.rounds) ? row.rounds : row.rounds ? [row.rounds] : [];
+    const set = roundsOf.get(row.prescription_id) ?? new Set<string>();
+    for (const j of joined) set.add(j.key);
+    roundsOf.set(row.prescription_id, set);
+  }
 
   const placeOf = new Map((placements.data ?? []).map((p) => [p.id, p]));
   const medicationOf = new Map((medications.data ?? []).map((m) => [m.id, m]));
@@ -146,7 +176,14 @@ export async function loadMedicationList(supabase: Supabase): Promise<Medication
     const frequency = rx.frequency_id ? (frequencyOf.get(rx.frequency_id) ?? null) : null;
     const who = placeOf.get(rx.resident_id);
     if (!medication || !who) continue;
-    if (doseDueState(rx.start_date, frequency, today) === "notToday") continue;
+    const due = doseDueState(rx.start_date, frequency, today);
+    if (due === "notToday") continue;
+    const held = roundsOf.get(rx.id) ?? new Set<string>();
+    const rounds = ROUND_KEYS.filter((k) => held.has(k));
+    // As needed has no round by design; anything else with none is flagged, not hidden.
+    const place: MedicationPlace =
+      due === "asNeeded" ? "asNeeded" : rounds.length === 0 ? "noRound" : "round";
+    if (place === "round" && !rounds.includes(round)) continue;
     const quantity = rx.dose_quantity == null ? null : Number(rx.dose_quantity);
     const resident =
       byResident.get(rx.resident_id) ??
@@ -159,6 +196,9 @@ export async function loadMedicationList(supabase: Supabase): Promise<Medication
       };
     resident.medications.push({
       prescriptionId: rx.id,
+      medicationId: rx.medication_id,
+      place,
+      rounds,
       name: medication.name,
       doseUnit: medication.dose_unit,
       quantity: quantity != null && Number.isFinite(quantity) ? quantity : null,
@@ -218,5 +258,5 @@ export async function loadMedicationList(supabase: Supabase): Promise<Medication
   }
   apart.sort((a, b) => natural.compare(a.name, b.name));
 
-  return { today, zones: zoneGroups, apart, error: null };
+  return { today, round, zones: zoneGroups, apart, error: null };
 }
