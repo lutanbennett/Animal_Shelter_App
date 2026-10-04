@@ -628,9 +628,8 @@ export const ENTRIES = {
   "medication-list": [
     {
       activity: "Read today's medication list",
-      needs: "stock.medications:read",
       device: "phone",
-      do: "Management → Medication list, then scroll down the page.",
+      do: "Management → Medication list (the Head of Medical: Home → Administer Medication), then scroll down the page.",
       expect: "Animals with medicine due today are grouped by zone and enclosure, each with a photo, name, the medicine's label photo, the amount and how often. Nothing is tappable and the page does not slide sideways.",
     },
   ],

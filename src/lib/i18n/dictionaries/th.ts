@@ -117,6 +117,10 @@ const th: Dictionary = {
       `นี่คือหน้าหลักของบทบาท ${role} ตามที่บทบาทนั้นเห็น คุณเข้าสู่ระบบในฐานะผู้ดูแลระบบ`,
     emptyTitle: "ยังไม่มีอะไรที่นี่",
     empty: "บทบาทนี้ยังไม่มีงานบนหน้าหลัก งานจะปรากฏเมื่อบทบาทนี้ได้รับมอบหมายหน้าที่",
+    /** A job's name, in the Director's words: the tile a role with jobs sees (src/lib/permissions/jobs.ts). */
+    jobs: {
+      administerMedication: "ให้ยา",
+    },
   },
 
   home: {

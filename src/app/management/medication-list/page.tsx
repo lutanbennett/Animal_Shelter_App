@@ -13,6 +13,7 @@ import {
   type ListedMedication,
   type ListedResident,
 } from "@/lib/medication-list/load";
+import { refuse } from "@/lib/auth/require-role";
 import { requirePermission } from "@/lib/permissions/require";
 
 /**
@@ -21,13 +22,14 @@ import { requirePermission } from "@/lib/permissions/require";
  *
  * A reference, not a record. There is deliberately nothing to tap — no
  * "given", no "skipped", no reason, no history (Lutan, 2026-10-03) — so the
- * page has no form, no action and no client component. It opens for
- * Management and Admin now; the Head of Medical gets it with their role, and
- * the home tile moves with the home screens (docs/decisions/2026-10-03-
- * medication-list.md).
+ * page has no form, no action and no client component. It opens for anyone
+ * holding Read on medical.prescriptions: Management, Admin, Staff and the Head
+ * of Medical, whose one home tile it is (docs/decisions/2026-10-04-medical-role.md).
  */
 export default async function MedicationListPage() {
-  await requirePermission("stock.medications", "read");
+  const { perms } = await requirePermission("medical.prescriptions", "read");
+  // The list's views are for a login that sees every clinic (0136); a vet would get an empty page.
+  if (perms.scopes.clinical !== "any") refuse(perms.role.key);
   const { t, locale } = await getT();
   const m = t.management.medicationList;
 

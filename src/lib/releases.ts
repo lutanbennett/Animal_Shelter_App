@@ -71,6 +71,10 @@ export const unreleased: ReleaseNote[] = [
     text: "For the Director, who signs in as Admin: on a phone, sign-in opens the Management home; on a larger screen it opens Settings. Across the top of both is a row of buttons to open any other home, Settings, Management, Staff, Vet or Volunteer, to see exactly what that role sees when they ring to say something is wrong. Only Admin has the row, and typing one of those addresses as anyone else is refused.",
     roles: ["admin"],
   },
+  {
+    text: "There is now a Head of Medical login. It opens to one big button, Administer Medication, which shows the medication list for today: who needs which medicine, how much and how often, enclosure by enclosure, with a photo of each animal and each medicine's label. It shows nothing else about an animal and nothing can be changed or ticked off. Managers see the same list, and so does Staff, who could not before.",
+    roles: ["admin", "management", "staff"],
+  },
 ];
 
 /** Newest first. */
