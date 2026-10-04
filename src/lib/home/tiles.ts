@@ -47,13 +47,19 @@ export function homeTilesFor(perms: Permissions, t: Dictionary): HomeTile[] {
   const outsideSettings = routes.filter((r) => !r.path.startsWith("/admin/"));
   if (outsideSettings.length > 0) routes = outsideSettings;
 
-  // Two pages with one word (Contacts, the directory and its manager) are one tile, and it opens
-  // the one that does more: the page this role can use at the higher level.
+  // Two pages with one word are one tile. Of one activity (Contacts, the directory and its
+  // manager) it opens the one that does more: the page this role holds at the higher level. Of two
+  // activities (Enclosures, and the map prototype under the same word) it opens the menu's page.
   const byLabel = new Map<string, { route: RouteEntry; label: string }>();
   for (const route of routes) {
     const label = route.label(t);
     const held = byLabel.get(label);
-    if (!held || rank(route) > rank(held.route)) byLabel.set(label, { route, label });
+    const wins =
+      !held ||
+      (route.activity === held.route.activity
+        ? rank(route) > rank(held.route)
+        : route.menu && !held.route.menu);
+    if (wins) byLabel.set(label, { route, label });
   }
 
   const order = ORDER[perms.role.key] ?? [];
