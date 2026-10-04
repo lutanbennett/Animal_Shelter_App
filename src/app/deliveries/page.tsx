@@ -61,8 +61,8 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
   const initialKind: DeliveryKind = searchParams.tab === "diets" ? "diet" : "medication";
 
   const [medicationResult, dietResult, countsResult, suppliersResult, receiptsResult, conversionsResult] = await Promise.all([
-    supabase.from("medication").select("id, name, unit:dose_unit, label_drive_file_id").order("name").returns<ItemRow[]>(),
-    supabase.from("diet_types").select("id, name, unit").order("name").returns<ItemRow[]>(),
+    supabase.from("stock_medications").select("id, name, unit:dose_unit, label_drive_file_id").order("name").returns<ItemRow[]>(),
+    supabase.from("stock_diet_types").select("id, name, unit").order("name").returns<ItemRow[]>(),
     supabase
       .from("stock_counts")
       .select("medication_id, diet_type_id, counted_at")
@@ -71,9 +71,8 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
     // Every vendor, archived too: an old delivery still names its supplier.
     // The form offers only the live ones.
     supabase
-      .from("contacts")
+      .from("stock_vendors")
       .select("id, name, archived_at")
-      .eq("type", "Vendor")
       .order("name")
       .returns<{ id: string; name: string; archived_at: string | null }[]>(),
     supabase

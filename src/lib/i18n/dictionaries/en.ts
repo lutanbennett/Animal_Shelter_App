@@ -130,6 +130,9 @@ const en = {
     jobs: {
       administerMedication: "Administer Medication",
       doMaintenance: "Do Maintenance",
+      doStocktaking: "Do Stocktaking",
+      doPurchasing: "Do the Purchasing",
+      recordDelivery: "Record a Delivery",
       recordWeight: "Record Weight",
       addMedicalPhotos: "Add Medical Photos",
       feedSpecialDiets: "Feed Special Diets",

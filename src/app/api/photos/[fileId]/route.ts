@@ -83,6 +83,8 @@ async function canSeeInternalFile(supabase: Supabase, fileId: string) {
     supabase.from("maintenance_photos").select("id").eq("drive_file_id", fileId).limit(1),
     supabase.from("shelter_friends").select("id").eq("logo_drive_file_id", fileId).limit(1),
     supabase.from("medication").select("id").eq("label_drive_file_id", fileId).limit(1),
+    // The stock screens read a label through this view, never the table (0143: the table carries a price).
+    supabase.from("stock_medications").select("id").eq("label_drive_file_id", fileId).limit(1),
   ];
   const results = await Promise.all(lookups);
   return results.some(({ data }) => (data?.length ?? 0) > 0);

@@ -122,6 +122,9 @@ const th: Dictionary = {
     jobs: {
       administerMedication: "ให้ยา",
       doMaintenance: "ทำงานซ่อมบำรุง",
+      doStocktaking: "ตรวจนับสต็อก",
+      doPurchasing: "จัดซื้อ",
+      recordDelivery: "บันทึกการรับของ",
       recordWeight: "บันทึกน้ำหนัก",
       addMedicalPhotos: "เพิ่มรูปทางการแพทย์",
       feedSpecialDiets: "ให้อาหารพิเศษ",
