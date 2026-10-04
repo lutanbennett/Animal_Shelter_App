@@ -818,6 +818,22 @@ export const ENTRIES = {
       expect: "The enclosure is on the Enclosures page and offered when moving a resident.",
     },
   ],
+  "facility-map-editor": [
+    {
+      activity: "Place an enclosure on the facility map",
+      needs: "facility.enclosures",
+      device: "desktop",
+      do: "Settings → Facility map: pick a plan, pick an enclosure, click two opposite corners on the plan, then drag a corner to adjust it.",
+      expect: "The shape is saved at once and the next unplaced enclosure is picked. It shows on the Map under Enclosures, and the Not on this plan yet list there is one shorter.",
+    },
+    {
+      activity: "Add a plan to the facility map",
+      needs: "facility.enclosures",
+      device: "desktop",
+      do: "Settings → Facility map → Add a plan: choose the zone or the overview, type the file name of a plan picture, check it appears, tap Add this plan.",
+      expect: "The plan is offered in the buttons above the editor and the Map button appears on Enclosures. A name with no picture behind it cannot be added.",
+    },
+  ],
   "immunization-types": [
     {
       activity: "Add an immunization type",

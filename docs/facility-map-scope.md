@@ -1,9 +1,12 @@
 # Facility map — scope and recommendation
 
-Status: **scope agreed in part, 2026-10-01; step 1 (schema, #360) and step 2 (read-only map) built 2026-10-04; step 3 (editor) not started.**
-Written 2026-10-01 on `claude/facility-map-scope`. Prototype: `/enclosures/map-prototype`
-(dev only, hidden in production builds). This is a recommendation, not a choice made;
-a `docs/decisions/` entry follows when one is picked.
+Status: **scope agreed in part, 2026-10-01; step 1 (schema, #360) and step 2 (read-only map) built 2026-10-04; step 3 (the place-on-map editor, Settings → Facility map) built 2026-10-05
+(`docs/decisions/2026-10-05-facility-map-editor.md`).**
+Written 2026-10-01 on `claude/facility-map-scope`. The dev-only prototype it describes
+(`/enclosures/map-prototype`) was deleted with step 3; the findings below are kept as history.
+The scope's choices are now decisions: `docs/decisions/2026-10-04-facility-maps-schema.md`,
+`2026-10-04-facility-map-read-only.md` and `2026-10-05-facility-map-editor.md`. Where this paper and those differ
+(plans are committed files and not uploads; no "you are here"; an editor with Rectangle and Polygon tools), the decisions win.
 
 ## Recommendation
 

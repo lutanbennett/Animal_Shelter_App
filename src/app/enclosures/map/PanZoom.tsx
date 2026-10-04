@@ -27,11 +27,14 @@ type Pt = { x: number; y: number };
 export function PanZoom({
   aspect,
   controlLabels,
+  doubleTapZoom = true,
   children,
 }: {
   /** The image's width ÷ height. */
   aspect: number;
   controlLabels: { zoomIn: string; zoomOut: string; fit: string };
+  /** Off for the editor, where two quick taps are two points, not a zoom. */
+  doubleTapZoom?: boolean;
   children: ReactNode;
 }) {
   const frame = useRef<HTMLDivElement>(null);
@@ -145,6 +148,7 @@ export function PanZoom({
       lastTap.current = null;
       return;
     }
+    if (!doubleTapZoom) return;
     const now = Date.now();
     const prev = lastTap.current;
     if (prev && now - prev.at < DOUBLE_TAP_MS && Math.hypot(pt.x - prev.pt.x, pt.y - prev.pt.y) < 30) {

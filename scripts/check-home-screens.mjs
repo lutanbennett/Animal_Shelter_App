@@ -113,7 +113,7 @@ eq("C Contacts is one tile, and opens the manager for the role that may use it",
 // the cells. The volunteer holds three cells and its home is exactly the two pages they open.
 eq("C a volunteer's home is Residents and Enclosures, and nothing else", homeTilesFor(roles.volunteer, t).map((x) => x.href), ["/residents", "/enclosures"]);
 
-eq("C Enclosures is the menu's page, not the map prototype that shares its word", [
+eq("C Enclosures is the menu's page", [
   homeTilesFor(roles.volunteer, t).filter((x) => x.label === t.nav.enclosures).map((x) => x.href),
   homeTilesFor(roles.staff, t).filter((x) => x.label === t.nav.enclosures).map((x) => x.href),
 ], [["/enclosures"], ["/enclosures"]]);

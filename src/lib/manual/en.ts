@@ -1525,6 +1525,23 @@ const manual: Manual = {
           },
         },
         {
+          id: "facility-map-editor",
+          title: "Placing enclosures on the facility map",
+          roles: ["admin"],
+          activity: "facility.enclosures",
+          path: "Settings → Facility map",
+          steps: [
+            "This is the page that fills the Map on Enclosures. It is best on a computer: drawing a shape accurately wants a mouse and a big screen, so on a phone it shows the \"Best on a larger screen\" note first.",
+            "A plan is a picture of the shelter's drawing. The pictures are put in the app's facility-maps folder by a developer, once per plan — there are only four or five for the whole site. To use one, open Add a plan, choose what it is for (the whole shelter, or one zone), type the picture's file name and check it appears, then tap Add this plan. The Map button on Enclosures shows up as soon as there is one plan.",
+            "Pick a plan with the buttons above the editor, then choose an enclosure on the left (on the whole-shelter plan you place the zones instead). A tick means it is placed already.",
+            "Draw it on the plan. With Rectangle, click one corner and then the opposite corner — the quick way for a kennel. With Polygon, click each corner in turn, then click the first point, press Enter or tap Done. Backspace or Undo point takes the last point back and Escape starts again. It is saved the moment you finish, and the next enclosure that is not on the plan is picked for you, so a whole zone is one run of drawing.",
+            "To fix a shape, pick it (from the list or by clicking it on the plan) and drag one of its corner dots. Draw again starts it over; the bin takes it off the plan, which does not touch the enclosure or its residents.",
+            "Zoom in with the + button (or Ctrl and scroll) for small enclosures, and drag the plan to move round it. Clicking only puts a point down; dragging never does.",
+            "Every enclosure in the zone is listed, including rooms such as the medical room or the kitchen, because they are enclosures too. Leave out any you do not want on the map. A new enclosure appears in the list by itself, and shows under the plan on the Map as \"Not on this plan yet\" until you draw it. The Lifecycle statuses and off-site zones are never listed.",
+            "Remove plan takes a plan off the Map but keeps the shapes drawn on it.",
+          ],
+        },
+        {
           id: "immunization-types",
           title: "Immunization types",
           roles: ["admin"],

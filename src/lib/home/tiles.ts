@@ -64,7 +64,7 @@ export function homeTilesFor(perms: Permissions, t: Dictionary): HomeTile[] {
 
   // Two pages with one word are one tile. Of one activity (Contacts, the directory and its
   // manager) it opens the one that does more: the page this role holds at the higher level. Of two
-  // activities (Enclosures, and the map prototype under the same word) it opens the menu's page.
+  // activities (two pages sharing a word) it opens the menu's page.
   const byLabel = new Map<string, { route: RouteEntry; label: string }>();
   for (const route of routes) {
     const label = route.label(t);
