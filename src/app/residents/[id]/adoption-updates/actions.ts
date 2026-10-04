@@ -2,13 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { getT } from "@/lib/i18n/get-t";
 import { getDriveClient } from "@/lib/google/drive";
 import { refreshDeceasedArchiveIfNeeded } from "@/lib/archive/refresh-deceased-archive";
 import { runAction, type ActionResult } from "@/lib/action-result";
 import { isIsoDate, isFutureDate } from "@/lib/placements/dates";
 import {
-  ADOPTION_UPDATE_ROLES,
   isAdoptionUpdateChannel,
 } from "@/lib/adoption-updates/options";
 
@@ -47,15 +48,15 @@ export async function saveAdoptionUpdate(
   const e = t.adoptionUpdates.errors;
   return runAction<{ id: string }>("adoptionUpdates.save", t.common.somethingWentWrong, async () => {
     const supabase = await createClient();
-    const [{ data: role }, { count: adoptCount, error: adoptError }] = await Promise.all([
-      supabase.rpc("current_user_role"),
+    const [perms, { count: adoptCount, error: adoptError }] = await Promise.all([
+      loadPermissions(),
       supabase
         .from("placement_history")
         .select("id", { count: "exact", head: true })
         .eq("resident_id", residentId)
         .eq("placement_type", "Adopt"),
     ]);
-    if (!ADOPTION_UPDATE_ROLES.has(role ?? "")) return { ok: false, error: e.notAuthorized };
+    if (!can(perms, "resident.adoption_news")) return { ok: false, error: e.notAuthorized };
     if (adoptError) throw adoptError;
     if (!adoptCount) return { ok: false, error: e.neverAdopted };
 
@@ -106,8 +107,7 @@ export async function deleteAdoptionUpdate(
   const e = t.adoptionUpdates.errors;
   return runAction("adoptionUpdates.delete", t.common.somethingWentWrong, async () => {
     const supabase = await createClient();
-    const { data: role } = await supabase.rpc("current_user_role");
-    if (!ADOPTION_UPDATE_ROLES.has(role ?? "")) return { ok: false, error: e.notAuthorized };
+    if (!can(await loadPermissions(), "resident.adoption_news")) return { ok: false, error: e.notAuthorized };
 
     const { data: photos, error: photosError } = await supabase
       .from("attachments")

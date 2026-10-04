@@ -4,12 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { runAction, type ActionRefusal, type ActionResult } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { getT } from "@/lib/i18n/get-t";
 import {
   recordResidentDeath,
   undoResidentDeath,
-  DECEASED_ROLES,
-  UNDO_DECEASED_ROLES,
 } from "@/lib/placements/deceased";
 import { archiveDeceasedResident } from "@/lib/archive/archive-deceased-resident";
 import { restoreDeceasedResident } from "@/lib/archive/restore-deceased-resident";
@@ -89,8 +89,7 @@ export async function retryDeceasedArchive(
   return runAction("residents.retryDeceasedArchive", t.common.somethingWentWrong, async () => {
     const supabase = await createClient();
 
-    const { data: role } = await supabase.rpc("current_user_role");
-    if (typeof role !== "string" || !DECEASED_ROLES.has(role)) {
+    if (!can(await loadPermissions(), "placement.death")) {
       return { ok: false, error: t.residents.deceased.notAuthorized };
     }
 
@@ -148,8 +147,7 @@ export async function retryDeceasedRestore(
   return runAction("residents.retryDeceasedRestore", t.common.somethingWentWrong, async () => {
     const supabase = await createClient();
 
-    const { data: role } = await supabase.rpc("current_user_role");
-    if (typeof role !== "string" || !UNDO_DECEASED_ROLES.has(role)) {
+    if (!can(await loadPermissions(), "placement.death_withdraw")) {
       return { ok: false, error: t.residents.deceased.undo.notAuthorized };
     }
 
