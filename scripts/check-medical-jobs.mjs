@@ -29,7 +29,7 @@ const { bundleOfRole } = await import(pathToFileURL(join(process.cwd(), "src/lib
 
 // Cells 0140 grants ahead of the screens (batch 47) that will turn them into jobs. When a job in jobs.ts
 // takes one over, delete it here: bundleOfRole() then carries it.
-const AHEAD = new Map([["medical.weight", 2], ["photos.resident_add", 2], ["medical.diet", 1]]);
+const AHEAD = new Map([["photos.resident_add", 2], ["medical.diet", 1]]);
 
 const lit = (id) => `'${id}'::uuid`;
 const P = ["hom", "admin", "management", "staff", "volunteer", "vet", "norole"];

@@ -39,7 +39,7 @@ const OWN_CLINIC = { ...STAFF_UP, vet: 1 };
 // 0140 gave the role medical.weight (Edit), so a weight is one of its own reads and writes now
 const OWN_CLINIC_AND_HOM = { ...OWN_CLINIC, hom: 1 };
 // cells granted ahead of the screens that make them jobs (0140); check-medical-jobs.mjs holds the behaviour
-const AHEAD = new Map([["medical.weight", 2], ["photos.resident_add", 2], ["medical.diet", 1]]);
+const AHEAD = new Map([["photos.resident_add", 2], ["medical.diet", 1]]);
 
 // [name, sql, expectation]: a table of who may (1) or may not (0); "error" = the statement must fail;
 // "hom-zero" = only the Head of Medical is asserted, and it must see nothing

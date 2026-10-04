@@ -19,7 +19,7 @@
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { Level, LevelKey } from "./catalogue";
 
-export type JobKey = "administer_medication";
+export type JobKey = "administer_medication" | "record_weight";
 
 export type Job = {
   key: JobKey;
@@ -43,6 +43,17 @@ export const JOBS: Record<JobKey, Job> = {
     ],
     opens: "/management/medication-list",
   },
+  // Second job of the Head of Medical. She cannot open a resident's record, so the page is her
+  // own (/medical/weight), reading who-and-where and writing the flat `weight` table.
+  record_weight: {
+    key: "record_weight",
+    label: (t) => t.appHome.jobs.recordWeight,
+    bundle: [
+      { activity: "medical.weight", level: "edit" },
+      { activity: "resident.record", level: "read" }, // the picker: who and where (0134)
+    ],
+    opens: "/medical/weight",
+  },
 };
 
 /**
@@ -51,7 +62,7 @@ export const JOBS: Record<JobKey, Job> = {
  * from its cells, as every role's was before.
  */
 export const JOBS_OF_ROLE: Readonly<Record<string, readonly JobKey[]>> = {
-  head_of_medical: ["administer_medication"],
+  head_of_medical: ["administer_medication", "record_weight"],
 };
 
 export function jobsOfRole(roleKey: string): readonly Job[] {

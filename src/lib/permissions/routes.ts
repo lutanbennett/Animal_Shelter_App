@@ -180,6 +180,17 @@ export const ROUTES: readonly RouteEntry[] = [
     scope: { clinical: "any" },
   },
   {
+    path: "/medical/weight",
+    activity: "medical.weight",
+    icon: Scale,
+    label: (t) => t.appHome.jobs.recordWeight,
+    device: "any",
+    menu: false,
+    // A phone page for the Head of Medical, who cannot open /residents/...: it reads who-and-where.
+    // A vet holds the cell but would find an empty picker (sees_all_clinical(), 0135).
+    scope: { clinical: "any" },
+  },
+  {
     path: "/management/medications",
     activity: "stock.medications",
     icon: SECTION_ICONS.prescriptions,
