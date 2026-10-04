@@ -1,6 +1,8 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { SYSTEM_ZONE } from "@/lib/enclosures/options";
 import { isFutureDate, isIsoDate, placementStartAfter, placementStartDate } from "./dates";
 
@@ -16,9 +18,6 @@ export type MoveResidentResult =
   | { error: string }
   /** id is the placement_history row that was written. */
   | { ok: true; id: string };
-
-/** Roles whose placement_history insert policy admits ChangeEnclosure. */
-const MOVE_ROLES = new Set(["admin", "management", "staff", "volunteer"]);
 
 /**
  * Records a ChangeEnclosure placement for the resident. The
@@ -40,8 +39,7 @@ export async function moveResidentToEnclosure(
   const errors = t.residents.move.errors;
 
   // RLS would reject the insert for a vet with a raw policy error — say why.
-  const { data: role } = await supabase.rpc("current_user_role");
-  if (typeof role !== "string" || !MOVE_ROLES.has(role)) {
+  if (!can(await loadPermissions(), "placement.move")) {
     return { error: t.residents.move.notAuthorized };
   }
 
