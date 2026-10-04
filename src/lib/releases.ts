@@ -61,7 +61,13 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  "Signing in now lands on a Home screen: big buttons, an icon and a word each, one for every job you can do (My tasks, Residents, Stocktake and so on), and nothing you cannot. Home is also the first link in the menu. A vet still lands on their appointments.",
+  {
+    text: "For the Director, who signs in as Admin: on a phone, sign-in opens the Management home; on a larger screen it opens Settings. Across the top of both is a row of buttons to open any other home, Settings, Management, Staff, Vet or Volunteer, to see exactly what that role sees when they ring to say something is wrong. Only Admin has the row, and typing one of those addresses as anyone else is refused.",
+    roles: ["admin"],
+  },
+];
 
 /** Newest first. */
 export const releases: Release[] = [
