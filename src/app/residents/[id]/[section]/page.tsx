@@ -40,10 +40,12 @@ import { ActionLink } from "@/components/ActionLink";
 import { MicrochipLine } from "@/components/MicrochipForm";
 import { ArchivedBadge } from "@/components/ArchivedBadge";
 import {
+  ACTION_ICONS,
   PLACEMENT_ICONS,
   SECTION_ICONS,
   type HubSection,
 } from "@/components/hub-icons";
+import { RowActionLink } from "@/components/RowAction";
 import {
   PLACEMENT_ACTION_PATHS,
   availablePlacementActions,
@@ -431,6 +433,7 @@ export default async function ResidentSectionPage(
                           residentId={id}
                           updateId={update.id}
                           photoCount={updatePhotos.length}
+                          subject={formatDate(update.received_on, locale)}
                         />
                       )}
                     </div>
@@ -510,6 +513,7 @@ export default async function ResidentSectionPage(
                 residentId={id}
                 id={row.id}
                 archived={archived}
+                subject={`${row.immunization_types?.name ?? t.residents.sections.unknownVaccine} · ${formatDate(row.date_administered, locale)}`}
               />
             )}
           </span>
@@ -650,6 +654,8 @@ export default async function ResidentSectionPage(
       const canSendToHospital = availablePlacementActions(
         isDeceased ? "Deceased" : residentState?.current_status,
       ).includes("hospital");
+      const visitSubject = (row: { reason: string | null; appointment_date: string }) =>
+        `${row.reason ?? t.residents.sections.vetVisitFallback} · ${formatDate(row.appointment_date, locale)}`;
       body = (
         <div className="flex flex-col gap-4">
           {!isDeceased && (
@@ -686,61 +692,61 @@ export default async function ResidentSectionPage(
                     {appointmentStatusLabel(t, row.status)}
                     {row.cost != null && ` · ${formatBaht(Number(row.cost), locale)}`}
                   </span>
-                  <div className="flex flex-wrap justify-end gap-x-3 gap-y-1">
+                  <div className="flex flex-wrap justify-end gap-2">
                     {!isDeceased && (
                       <>
-                        <Link
+                        <RowActionLink
                           href={`/vet-visits/${row.id}/edit`}
-                          className="text-xs font-medium text-primary hover:underline"
-                        >
-                          {t.common.edit}
-                        </Link>
-                        <Link
+                          label={t.common.edit}
+                          subject={visitSubject(row)}
+                          icon={ACTION_ICONS.edit}
+                        />
+                        <RowActionLink
                           href={`/blood-tests/new?residentId=${id}&vetAppointmentId=${row.id}`}
-                          className="text-xs font-medium text-primary hover:underline"
-                        >
-                          {t.residents.sections.logBloodTest}
-                        </Link>
+                          label={t.residents.sections.logBloodTest}
+                          subject={visitSubject(row)}
+                          icon={SECTION_ICONS["blood-tests"]}
+                        />
                         {visitDate(row) <= today && (
-                          <Link
+                          <RowActionLink
                             href={`/prescriptions/new?residentId=${id}&vetAppointmentId=${row.id}`}
-                            className="text-xs font-medium text-primary hover:underline"
-                          >
-                            {t.residents.sections.addPrescription}
-                          </Link>
+                            label={t.residents.sections.addPrescription}
+                            subject={visitSubject(row)}
+                            icon={SECTION_ICONS.prescriptions}
+                          />
                         )}
                         {weightByVisit.has(row.id) ? (
-                          <Link
+                          <RowActionLink
                             href={`/weight/${weightByVisit.get(row.id)}/edit`}
-                            className="text-xs font-medium text-primary hover:underline"
-                          >
-                            {t.residents.sections.editWeight}
-                          </Link>
+                            label={t.residents.sections.editWeight}
+                            subject={visitSubject(row)}
+                            icon={SECTION_ICONS.weight}
+                          />
                         ) : (
                           visitDate(row) <= today && (
-                            <Link
+                            <RowActionLink
                               href={`/weight/new?residentId=${id}&vetAppointmentId=${row.id}`}
-                              className="text-xs font-medium text-primary hover:underline"
-                            >
-                              {t.residents.sections.logWeight}
-                            </Link>
+                              label={t.residents.sections.logWeight}
+                              subject={visitSubject(row)}
+                              icon={SECTION_ICONS.weight}
+                            />
                           )
                         )}
-                        <Link
+                        <RowActionLink
                           href={`/procedures/new?residentId=${id}&vetAppointmentId=${row.id}`}
-                          className="text-xs font-medium text-primary hover:underline"
-                        >
-                          {t.residents.sections.logProcedure}
-                        </Link>
+                          label={t.residents.sections.logProcedure}
+                          subject={visitSubject(row)}
+                          icon={SECTION_ICONS.procedures}
+                        />
                       </>
                     )}
                     {canSendToHospital && (
-                      <Link
+                      <RowActionLink
                         href={`/residents/${id}/hospital?vetAppointmentId=${row.id}`}
-                        className="text-xs font-medium text-primary hover:underline"
-                      >
-                        {t.residents.hub.placementActions.hospital}
-                      </Link>
+                        label={t.residents.hub.placementActions.hospital}
+                        subject={visitSubject(row)}
+                        icon={PLACEMENT_ICONS.hospital}
+                      />
                     )}
                   </div>
                   {canArchive("visit") && (
@@ -749,6 +755,7 @@ export default async function ResidentSectionPage(
                       residentId={id}
                       id={row.id}
                       archived={false}
+                      subject={visitSubject(row)}
                     />
                   )}
                 </div>
@@ -779,6 +786,7 @@ export default async function ResidentSectionPage(
                     residentId={id}
                     id={row.id}
                     archived
+                    subject={`${row.reason ?? t.residents.sections.vetVisitFallback} · ${formatDate(row.appointment_date, locale)}`}
                   />
                 )}
               </div>
@@ -887,6 +895,7 @@ export default async function ResidentSectionPage(
             {!isDeceased && !archived && (
               <RecordRowActions
                 editHref={`/prescriptions/${row.id}/edit`}
+                subject={`${row.medication?.name ?? t.residents.sections.unknownMedication} · ${formatDate(row.start_date, locale)}`}
                 endToday={
                   isCurrent && row.start_date <= today
                     ? endPrescriptionToday.bind(null, id, row.id)
@@ -905,6 +914,7 @@ export default async function ResidentSectionPage(
                   residentId={id}
                   id={row.id}
                   archived={archived}
+                  subject={`${row.medication?.name ?? t.residents.sections.unknownMedication} · ${formatDate(row.start_date, locale)}`}
                 />
               </div>
             )}
@@ -1036,6 +1046,7 @@ export default async function ResidentSectionPage(
             {!isDeceased && (
               <RecordRowActions
                 editHref={`/diets/${row.id}/edit`}
+                subject={`${type?.name ?? t.residents.sections.unknownDietType} · ${formatDate(row.start_date, locale)}`}
                 endToday={
                   isCurrent && row.start_date <= today
                     ? endDietToday.bind(null, id, row.id)
@@ -1217,12 +1228,12 @@ export default async function ResidentSectionPage(
                 {(!isDeceased || canArchive("weight")) && (
                   <div className="flex items-start justify-end gap-3">
                     {!isDeceased && (
-                      <Link
+                      <RowActionLink
                         href={`/weight/${row.id}/edit`}
-                        className="text-xs font-medium text-primary hover:underline"
-                      >
-                        {t.common.edit}
-                      </Link>
+                        label={t.common.edit}
+                        subject={`${formatWeightKg(row.weight_kg, locale)} · ${formatDate(row.date, locale)}`}
+                        icon={ACTION_ICONS.edit}
+                      />
                     )}
                     {canArchive("weight") && (
                       <ArchiveRecordControl
@@ -1230,6 +1241,7 @@ export default async function ResidentSectionPage(
                         residentId={id}
                         id={row.id}
                         archived={false}
+                        subject={`${formatWeightKg(row.weight_kg, locale)} · ${formatDate(row.date, locale)}`}
                       />
                     )}
                   </div>
@@ -1253,7 +1265,13 @@ export default async function ResidentSectionPage(
               {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
               {canArchive("weight") && (
                 <div className="flex justify-end">
-                  <ArchiveRecordControl kind="weight" residentId={id} id={row.id} archived />
+                  <ArchiveRecordControl
+                    kind="weight"
+                    residentId={id}
+                    id={row.id}
+                    archived
+                    subject={`${formatWeightKg(row.weight_kg, locale)} · ${formatDate(row.date, locale)}`}
+                  />
                 </div>
               )}
             </div>

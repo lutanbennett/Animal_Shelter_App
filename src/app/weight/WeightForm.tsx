@@ -1,5 +1,7 @@
 "use client";
 
+import { ActionLink } from "@/components/ActionLink";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import Link from "next/link";
 import { useState } from "react";
 import { useKeptForm } from "@/lib/use-kept-form";
@@ -153,12 +155,14 @@ export function WeightForm({
                 formatDate(sameDay.date, locale),
               )}
             </p>
-            <Link
-              href={`/weight/${sameDay.id}/edit`}
-              className="text-xs font-medium text-primary hover:underline"
-            >
-              {t.weight.sameDay.editThat}
-            </Link>
+            <div>
+              <ActionLink
+                href={`/weight/${sameDay.id}/edit`}
+                label={t.weight.sameDay.editThat}
+                icon={ACTION_ICONS.edit}
+                iconOnlyOnMobile={false}
+              />
+            </div>
           </div>
         )}
 
