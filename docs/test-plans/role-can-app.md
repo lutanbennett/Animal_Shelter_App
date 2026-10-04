@@ -151,7 +151,7 @@ Automated checks by: Claude  Date: 2026-10-04
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: the two rows above are for a person to look at
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — rows 1 and 2 wait for someone signed in as Management and as a volunteer or staff member
 
 Manual verification by: pending: rota picker as Management and My tasks as volunteer/staff (rows 1 and 2 above)
 
