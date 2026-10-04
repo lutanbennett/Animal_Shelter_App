@@ -13,6 +13,7 @@ import {
   type DeliveryKind,
 } from "@/lib/management/stock-receipts";
 import { CONVERSION_COLUMNS, groupConversions, type ConversionRow, type EnteredLine } from "@/lib/units";
+import { DeliverySteps } from "./DeliverySteps";
 import { RecordDeliveryForm, type DeliveryFormItem } from "./RecordDeliveryForm";
 import { DeleteDeliveryButton } from "./DeleteDeliveryButton";
 
@@ -22,8 +23,12 @@ import { DeleteDeliveryButton } from "./DeleteDeliveryButton";
  * between counts can state usage"; schema 0096). Outside /management, as
  * /stocktake is, because the people who take a delivery at the door are
  * staff (0096's write policy: admin, management, staff — not volunteers).
- * Reached from Management → Medications / Diets, the Stocktake page and
- * Management → Stock between counts.
+ * Reached from the menu (F-15: it had been a 20 px link at the top of
+ * Stocktake), the Stocktake page's Record a delivery button, and Home.
+ *
+ * Two layouts of one screen, as Purchasing is: a phone gets one question
+ * per screen (DeliverySteps), md and up the single form. Same server action,
+ * same fields.
  */
 
 type ItemRow = { id: string; name: string; unit: string; label_drive_file_id?: string | null };
@@ -124,6 +129,17 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
     receipts.flatMap((r) => (r.recorded_by ? [r.recorded_by] : [])),
   );
 
+  const formProps = {
+    initialKind,
+    today: todayIso(),
+    items: {
+      medication: medications.map(toItem((u) => doseUnitLabel(t, u))),
+      diet: diets.map(toItem((u) => dietUnitLabel(t, u))),
+    },
+    countDays,
+    suppliers: suppliers.filter((s) => s.archived_at == null).map(({ id, name }) => ({ id, name })),
+  };
+
   const loadError =
     medicationResult.error ?? dietResult.error ?? countsResult.error ?? suppliersResult.error ?? conversionsResult.error;
 
@@ -131,7 +147,7 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
       <div>
         <h1 className="text-2xl font-semibold text-foreground">{d.title}</h1>
-        <p className="text-sm text-muted">{d.subtitle}</p>
+        <p className="hidden text-sm text-muted md:block">{d.subtitle}</p>
         {can(perms, "stock.usage") && (
           <Link
             href="/management/stock-usage"
@@ -149,16 +165,12 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
         </p>
       )}
 
-      <RecordDeliveryForm
-        initialKind={initialKind}
-        today={todayIso()}
-        items={{
-          medication: medications.map(toItem((u) => doseUnitLabel(t, u))),
-          diet: diets.map(toItem((u) => dietUnitLabel(t, u))),
-        }}
-        countDays={countDays}
-        suppliers={suppliers.filter((s) => s.archived_at == null).map(({ id, name }) => ({ id, name }))}
-      />
+      <div className="md:hidden">
+        <DeliverySteps {...formProps} />
+      </div>
+      <div className="hidden md:block">
+        <RecordDeliveryForm {...formProps} />
+      </div>
 
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold text-foreground">{d.recent.title}</h2>

@@ -75,9 +75,9 @@ export default async function StocktakePage(props: PageProps<"/stocktake">) {
         {can(perms, "stock.delivery") && (
           <Link
             href={initialTab === "diet" ? "/deliveries?tab=diets" : "/deliveries"}
-            className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+            className="mt-2 inline-flex min-h-12 items-center gap-2 rounded border border-border bg-surface px-4 text-base font-medium text-foreground hover:bg-surface-hover"
           >
-            <Truck aria-hidden="true" className="h-4 w-4" />
+            <Truck aria-hidden="true" className="h-5 w-5" />
             {s.deliveriesLink}
           </Link>
         )}
