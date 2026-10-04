@@ -11,7 +11,7 @@
 // that is archived; a login whose configured role has been archived.
 //
 // It checks
-//   A  the seed: six roles, 55 activities, 48 / 37 / 13 / 24 cells for
+//   A  the seed: six roles, 55 activities, 48 / 37 / 13 / 3 cells for
 //      management / staff / vet / volunteer and none for admin or public_viewer,
 //      every Yes/No cell at level 2, and every real login on dev has a role_id
 //      that agrees with its enum value
@@ -29,7 +29,7 @@
 //      at commit, so a swap in one transaction is fine)
 //   E  RLS: an admin at aal2 reads and writes the matrix, at aal1 only reads;
 //      no other role and not anon reaches it; permission_activities is read only
-//   F  audit: the seed left no audit rows, and a cell edit logs one with its actor
+//   F  audit: the seed left no audit rows (but 0134's 21 deletions of the volunteer's cells, logged with no actor), and a cell edit logs one with its actor
 //   H  every role x every activity x read and edit under that role's own login (660
 //      answers) equals the cell in the paper's §4 table, which the script reads itself
 //   G  the file replays: same rows afterwards, a shelter's edit to a cell kept
@@ -125,7 +125,9 @@ begin
 end $f$;
 
 create temp table harness_baseline as
-select count(*)::bigint as audit_rows from audit_log where table_name in ('roles', 'role_permissions');
+select count(*)::bigint as audit_rows,
+       count(*) filter (where actor is not null or op <> 'DELETE' or table_name <> 'role_permissions')::bigint as not_0134
+from audit_log where table_name in ('roles', 'role_permissions');
 grant select on harness_baseline to authenticated, service_role;
 
 create temp table harness_ids (who text primary key, id uuid not null);
@@ -194,7 +196,7 @@ begin
   perform pg_temp.eq('A roles', (select count(*) from roles where key in ('admin','management','staff','vet','volunteer','public_viewer'))::text, '6');
   perform pg_temp.eq('A activities', (select count(*) from permission_activities)::text, '55');
   perform pg_temp.eq('A yesno+level', (select count(*) filter (where kind = 'yesno') || '/' || count(*) filter (where kind = 'level') from permission_activities), '36/19');
-  for t in select unnest(array['management:48', 'staff:37', 'vet:13', 'volunteer:24', 'admin:0', 'public_viewer:0']) loop
+  for t in select unnest(array['management:48', 'staff:37', 'vet:13', 'volunteer:3', 'admin:0', 'public_viewer:0']) loop
     perform pg_temp.eq('A cells ' || split_part(t, ':', 1),
       (select count(*) from role_permissions rp join roles r on r.id = rp.role_id where r.key = split_part(t, ':', 1))::text,
       split_part(t, ':', 2));
@@ -205,7 +207,7 @@ begin
   perform pg_temp.eq('A real logins agree with the enum', (select count(*) from user_roles ur join roles r on r.id = ur.role_id where r.legacy_role is distinct from ur.role)::text, '0');
   perform pg_temp.eq('A scopes vet', (select scope_residents || '/' || scope_clinical || '/' || scope_contacts || '/' || scope_photos || '/' || sees_login_emails from roles where key = 'vet'), 'own_clinic/own_clinic/name_type/medical_only/false');
   perform pg_temp.eq('A scopes volunteer', (select scope_contacts || '/' || sees_login_emails from roles where key = 'volunteer'), 'name_phone/false');
-  v_report := v_report || 'A: 6 roles, 55 activities, cells 48/37/13/24/0/0, role_id agrees with the enum on every real login | ';
+  v_report := v_report || 'A: 6 roles, 55 activities, cells 48/37/13/3/0/0, role_id agrees with the enum on every real login | ';
 
   -- B: has_permission().
   -- the four answers-no cases
@@ -225,9 +227,11 @@ begin
   perform pg_temp.eq('B mistyped level, admin', pg_temp.q(v_admin, 'has_permission(''stock.count'', ''raed'')'), 'false');
   -- seeded yes, and read apart from edit
   perform pg_temp.eq('B staff delivery', pg_temp.q(v_staff, 'has_permission(''stock.delivery'')'), 'true');
-  perform pg_temp.eq('B volunteer stocktake', pg_temp.q(v_vol, 'has_permission(''stock.count'')'), 'true');
-  perform pg_temp.eq('B volunteer weight read', pg_temp.q(v_vol, 'has_permission(''medical.weight'', ''read'')'), 'true');
-  perform pg_temp.eq('B volunteer weight edit', pg_temp.q(v_vol, 'has_permission(''medical.weight'')'), 'false');
+  -- 0134 narrowed the volunteer to who and where, the enclosures and the map
+  perform pg_temp.eq('B volunteer stocktake (taken away in 0134)', pg_temp.q(v_vol, 'has_permission(''stock.count'')'), 'false');
+  perform pg_temp.eq('B volunteer weight read (taken away in 0134)', pg_temp.q(v_vol, 'has_permission(''medical.weight'', ''read'')'), 'false');
+  perform pg_temp.eq('B volunteer resident read', pg_temp.q(v_vol, 'has_permission(''resident.record'', ''read'')'), 'true');
+  perform pg_temp.eq('B volunteer resident edit', pg_temp.q(v_vol, 'has_permission(''resident.record'')'), 'false');
   perform pg_temp.eq('B staff clinics read', pg_temp.q(v_staff, 'has_permission(''clinics.list'', ''read'')'), 'true');
   perform pg_temp.eq('B staff clinics edit', pg_temp.q(v_staff, 'has_permission(''clinics.list'')'), 'false');
   perform pg_temp.eq('B management microchip (finding B: none today)', pg_temp.q(v_mgmt, 'has_permission(''resident.microchip'')'), 'false');
@@ -271,7 +275,7 @@ begin
     end loop;
   end loop;
   perform pg_temp.eq('H answers checked', v_checked::text, '660');
-  perform pg_temp.eq('H expected cells', (select count(*) from harness_expected)::text, '122');
+  perform pg_temp.eq('H expected cells', (select count(*) from harness_expected)::text, '101');
   v_report := v_report || 'H: 660 answers, six roles x 55 activities x read and edit, equal the paper''s §4 table | ';
 
   n := pg_temp.try(null, format('insert into role_permissions (role_id, activity, level) values (%L, ''stock.count'', 2)', v_role_admin), 'aal1', 'service_role');
@@ -286,7 +290,7 @@ begin
   if n <> -2 then raise exception 'HARNESS-FAIL D: a cell for an unknown activity was accepted (%)', n; end if;
   n := pg_temp.try(null, format('insert into role_permissions (role_id, activity, level) values (%L, ''stock.delivery'', 2)', v_role_staff), 'aal1', 'service_role');
   if n <> -2 then raise exception 'HARNESS-FAIL D: a duplicate cell was accepted (%)', n; end if;
-  n := pg_temp.try(null, 'update permission_activities set kind = ''yesno'' where key = ''medical.weight''', 'aal1', 'service_role');
+  n := pg_temp.try(null, 'update permission_activities set kind = ''yesno'' where key = ''facility.enclosures''', 'aal1', 'service_role');
   if n <> -2 then raise exception 'HARNESS-FAIL D: an activity with Read cells became Yes/No (%)', n; end if;
   n := pg_temp.try(null, 'delete from roles where key in (''admin'', ''public_viewer'')', 'aal1', 'service_role');
   if n <> -2 then raise exception 'HARNESS-FAIL D: a fixed role was deleted (%)', n; end if;
@@ -402,7 +406,9 @@ begin
   v_report := v_report || 'E: matrix readable and writable by an admin at aal2 only; aal1, other roles and anon refused; catalogue read only | ';
 
   -- F: audit.
-  perform pg_temp.eq('F seed left no audit rows', v_before::text, '0');
+  -- 0132's seed logged nothing. 0134 deleted 21 of the volunteer's cells with the triggers live, so the log holds exactly
+  -- those rows (no actor, a DELETE of a role_permissions row) and nothing else.
+  perform pg_temp.eq('F seed left no audit rows but 0134''s deletions', (select not_0134 from harness_baseline)::text, '0');
   perform pg_temp.eq('F three cell writes logged', (select count(*) from audit_log where table_name = 'role_permissions' and actor is not null)::text, '3');
   perform pg_temp.eq('F by whom', (select count(*) from audit_log where table_name = 'role_permissions' and actor = v_admin)::text, '3');
   perform pg_temp.eq('F ops', (select string_agg(op, ',' order by id) from audit_log where table_name = 'role_permissions' and actor = v_admin), 'INSERT,UPDATE,DELETE');
@@ -411,7 +417,7 @@ begin
 
   -- G: the file replays.
   update role_permissions set level = 2
-   where activity = 'medical.weight' and role_id = (select id from roles where key = 'volunteer');
+   where activity = 'facility.enclosures' and role_id = (select id from roles where key = 'volunteer');
   update permission_activities set area = 'tampered' where key = 'stock.delivery';
   -- the replay alters user_roles, which Postgres refuses while deferred events are pending
   set constraints user_roles_keep_an_admin immediate;
@@ -425,12 +431,14 @@ do $h2$
 begin
   perform pg_temp.eq('G roles after replay', (select count(*) from roles where key in ('admin','management','staff','vet','volunteer','public_viewer'))::text, '6');
   perform pg_temp.eq('G activities after replay', (select count(*) from permission_activities)::text, '55');
+  -- replaying 0132 alone puts back the 21 volunteer cells 0134 deleted (48+37+13+24); that is what the seed file says
   perform pg_temp.eq('G cells after replay', (select count(*) from role_permissions rp join roles r on r.id = rp.role_id where r.key in ('management','staff','vet','volunteer'))::text, '122');
-  perform pg_temp.eq('G a shelter edit survives the replay', (select level::text from role_permissions rp join roles r on r.id = rp.role_id where r.key = 'volunteer' and rp.activity = 'medical.weight'), '2');
+  perform pg_temp.eq('G a shelter edit survives the replay', (select level::text from role_permissions rp join roles r on r.id = rp.role_id where r.key = 'volunteer' and rp.activity = 'facility.enclosures'), '2');
   perform pg_temp.eq('G the catalogue is restored', (select area from permission_activities where key = 'stock.delivery'), 'stock');
-  perform pg_temp.eq('G replay logged nothing', (select count(*) from audit_log where table_name in ('roles', 'role_permissions'))::text, (select audit_rows::text from harness_pre));
+  -- 0132 alone writes nothing it did not already hold, EXCEPT the 21 volunteer cells 0134 deleted: those come back as 21 logged inserts
+  perform pg_temp.eq('G replay logged only the 21 restored volunteer cells', (select count(*) from audit_log where table_name in ('roles', 'role_permissions'))::text, (select audit_rows + 21 from harness_pre)::text);
 
-  raise exception '%', format('HARNESS-OK %s asserted live | A: 6 roles, 55 activities, cells 48/37/13/24/0/0 | B: four answers-no cases, archived person, signed out, anon, null, mistyped level, seeded yes, read vs edit, admin yes | C: my_permissions | D: guards, role_id bridge, last admin | E: RLS at aal1/aal2, anon | F: audit | H: 660 answers (6 roles x 55 activities x read/edit) equal section 4 of the paper | G: replay keeps a shelter edit',
+  raise exception '%', format('HARNESS-OK %s asserted live | A: 6 roles, 55 activities, cells 48/37/13/3/0/0 | B: four answers-no cases, archived person, signed out, anon, null, mistyped level, seeded yes, read vs edit, admin yes | C: my_permissions | D: guards, role_id bridge, last admin | E: RLS at aal1/aal2, anon | F: audit | H: 660 answers (6 roles x 55 activities x read/edit) equal section 4 of the paper | G: replay keeps a shelter edit',
     ${JSON.stringify(file).replace(/"/g, "'")});
 end;
 $h2$;

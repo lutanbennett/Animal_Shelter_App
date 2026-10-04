@@ -175,8 +175,10 @@ begin
     n := pg_temp.try(v_uid, format('delete from blood_tests where id = %L', v_bt));
     if n <> 0 then raise exception 'HARNESS-FAIL: % deleted % rows', v_who, n; end if;
     n := pg_temp.try(v_uid, format('select 1 from blood_tests where id = %L', v_bt));
-    if n < 1 then raise exception 'HARNESS-FAIL: % read % rows', v_who, n; end if;
-    v_report := v_report || v_who || (case when v_who = 'volunteer' then ' read only' else ' insert+update+file, no delete' end) || ' | ';
+    -- 0134: a volunteer reads no blood tests at all
+    if v_who = 'volunteer' and n <> 0 then raise exception 'HARNESS-FAIL: volunteer read % rows', n; end if;
+    if v_who <> 'volunteer' and n < 1 then raise exception 'HARNESS-FAIL: % read % rows', v_who, n; end if;
+    v_report := v_report || v_who || (case when v_who = 'volunteer' then ' refused, reads nothing' else ' insert+update+file, no delete' end) || ' | ';
   end loop;
 
   raise exception '%', 'HARNESS-OK blood_tests: ' || v_report;

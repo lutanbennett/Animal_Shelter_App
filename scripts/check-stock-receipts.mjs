@@ -173,7 +173,7 @@ begin
   exception when insufficient_privilege then null;
   end;
   reset role;
-  if v_n <> 3 then raise exception 'S4 volunteer cannot read intervals: %', v_n; end if;
+  if v_n <> 0 then raise exception 'S4 volunteer reads % intervals (0134 took them away)', v_n; end if;
 
   perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'vet'), 'role', 'authenticated')::text, true);
   set local role authenticated;
@@ -196,7 +196,7 @@ begin
   exception when insufficient_privilege then null;
   end;
   reset role;
-  v_report := v_report || ' | S4 staff records (recorded_by forced to caller), management edits, volunteer reads but cannot record, vet sees nothing, anon refused by the grant';
+  v_report := v_report || ' | S4 staff records (recorded_by forced to caller), management edits, volunteer reads nothing and cannot record (0134), vet sees nothing, anon refused by the grant';
 
   -- S5 cascade.
   delete from diet_types where id = v_kibble;

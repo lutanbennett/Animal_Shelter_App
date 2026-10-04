@@ -91,9 +91,13 @@ begin
   values (a, 'Intake', t0, v_life, v_un);
 
   -- P1
+  -- 0134: a volunteer no longer moves a resident; staff makes the first move
   v_r := pg_temp.run(v_vol, format($q$insert into placement_history (resident_id, placement_type, start_date, zone_id, enclosure_id, previous_enclosure_id)
     values (%L, 'ChangeEnclosure', %L, %L, %L, %L)$q$, a, t0 + interval '1 day', v_zone, v_e1, v_un));
-  if v_r <> 'ok' then raise exception 'FAIL P1 volunteer ChangeEnclosure between ordinary enclosures: %', v_r; end if;
+  if v_r not like '%row-level security%' then raise exception 'FAIL P1 volunteer ChangeEnclosure should be refused by RLS: %', v_r; end if;
+  v_r := pg_temp.run(v_staff, format($q$insert into placement_history (resident_id, placement_type, start_date, zone_id, enclosure_id, previous_enclosure_id)
+    values (%L, 'ChangeEnclosure', %L, %L, %L, %L)$q$, a, t0 + interval '1 day', v_zone, v_e1, v_un));
+  if v_r <> 'ok' then raise exception 'FAIL P1 staff ChangeEnclosure between ordinary enclosures: %', v_r; end if;
   v_r := pg_temp.run(v_staff, format($q$insert into placement_history (resident_id, placement_type, start_date, zone_id, enclosure_id, previous_enclosure_id)
     values (%L, 'ChangeEnclosure', %L, %L, %L, %L)$q$, a, t0 + interval '2 days', v_zone, v_e2, v_e1));
   if v_r <> 'ok' then raise exception 'FAIL P1 staff ChangeEnclosure: %', v_r; end if;
@@ -133,12 +137,12 @@ begin
   -- R3: B starts in E1 (Intake into a physical enclosure is ordinary)
   insert into placement_history (resident_id, placement_type, start_date, zone_id, enclosure_id)
   values (b, 'Intake', t0, v_zone, v_e1);
-  v_r := pg_temp.run(v_vol, format($q$insert into placement_history (resident_id, placement_type, start_date, zone_id, enclosure_id)
+  v_r := pg_temp.run(v_staff, format($q$insert into placement_history (resident_id, placement_type, start_date, zone_id, enclosure_id)
     values (%L, 'ChangeEnclosure', %L, %L, %L)$q$, b, t0 + interval '1 day', v_life, v_dead));
-  if v_r not like '%cannot target the Lifecycle pseudo-enclosure "Deceased"%' then raise exception 'FAIL R3 volunteer ChangeEnclosure -> Deceased: %', v_r; end if;
-  v_r := pg_temp.run(v_vol, format($q$insert into placement_history (resident_id, placement_type, start_date, zone_id, enclosure_id)
+  if v_r not like '%cannot target the Lifecycle pseudo-enclosure "Deceased"%' then raise exception 'FAIL R3 staff ChangeEnclosure -> Deceased: %', v_r; end if;
+  v_r := pg_temp.run(v_staff, format($q$insert into placement_history (resident_id, placement_type, start_date, zone_id, enclosure_id)
     values (%L, 'ChangeEnclosure', %L, %L, %L)$q$, b, t0 + interval '1 day', v_life, v_adop));
-  if v_r not like '%cannot target the Lifecycle pseudo-enclosure "Adopted"%' then raise exception 'FAIL R3 volunteer ChangeEnclosure -> Adopted: %', v_r; end if;
+  if v_r not like '%cannot target the Lifecycle pseudo-enclosure "Adopted"%' then raise exception 'FAIL R3 staff ChangeEnclosure -> Adopted: %', v_r; end if;
   v_r := pg_temp.run(v_staff, format($q$insert into placement_history (resident_id, placement_type, start_date, zone_id, enclosure_id)
     values (%L, 'ChangeEnclosure', %L, %L, %L)$q$, b, t0 + interval '1 day', v_life, v_hosp));
   if v_r not like '%cannot target the Lifecycle pseudo-enclosure "Hospital"%' then raise exception 'FAIL R3 ChangeEnclosure -> Hospital: %', v_r; end if;
@@ -221,7 +225,7 @@ begin
    where resident_id = c and end_date is null and placement_type = 'DeceasedInError' and enclosure_id = v_hosp;
   if v_n <> 1 then raise exception 'FAIL P4 undo did not return C to Hospital'; end if;
 
-  raise exception 'HARNESS-OK file ran twice | R1 end_date cannot be set, cleared or changed by hand (staff, admin, owner); a refused update changes nothing | R2 notes still editable | R3 refused: volunteer ChangeEnclosure -> Deceased and -> Adopted, ChangeEnclosure -> Hospital, Adopt -> Hospital, Deceased -> Adopted, Intake -> Deceased, zone-only Lifecycle row; a refused insert leaves the prior placement open | P1 ChangeEnclosure between ordinary enclosures (volunteer and staff) closes the prior row via close_prior_placement() | P2 Deceased cascade snapshots and undo_deceased_placement() restores | P3 Intake, SendToHospital, ReturnFromHospital, Foster, Adopt, ReturnToShelter each into its own target | P4 death from hospital and undo back to Hospital | P5 flag not left on';
+  raise exception 'HARNESS-OK file ran twice | R1 end_date cannot be set, cleared or changed by hand (staff, admin, owner); a refused update changes nothing | R2 notes still editable | R3 refused: staff ChangeEnclosure -> Deceased and -> Adopted, ChangeEnclosure -> Hospital, Adopt -> Hospital, Deceased -> Adopted, Intake -> Deceased, zone-only Lifecycle row; a refused insert leaves the prior placement open | P1 ChangeEnclosure between ordinary enclosures (volunteer and staff) closes the prior row via close_prior_placement() | P2 Deceased cascade snapshots and undo_deceased_placement() restores | P3 Intake, SendToHospital, ReturnFromHospital, Foster, Adopt, ReturnToShelter each into its own target | P4 death from hospital and undo back to Hospital | P5 flag not left on';
 end
 $h$;
 rollback;

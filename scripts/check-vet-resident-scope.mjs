@@ -227,7 +227,7 @@ begin
   v_report := v_report || 'E: unlinked vet reads 0 from residents, both views, current_placement, visits, weights | ';
 
   -- F: every other role unchanged.
-  foreach v_who in array array['admin', 'mgmt', 'staff', 'volunteer'] loop
+  foreach v_who in array array['admin', 'mgmt', 'staff'] loop
     n := pg_temp.try((select id from harness_ids h where h.who = v_who), 'select 1 from residents');
     if n <> v_total then raise exception 'HARNESS-FAIL F: % read % of % residents', v_who, n, v_total; end if;
     n := pg_temp.try((select id from harness_ids h where h.who = v_who), 'select 1 from resident_current_state');
@@ -235,9 +235,14 @@ begin
     n := pg_temp.try((select id from harness_ids h where h.who = v_who), format('select 1 from weight where resident_id = %L', v_other));
     if n <> 1 then raise exception 'HARNESS-FAIL F: % read % of other''s weight', v_who, n; end if;
   end loop;
+  -- 0134: a volunteer reads no residents, views or weights at all; who and where is its own view
+  foreach v_who in array array['select 1 from residents', 'select 1 from resident_current_state', 'select 1 from weight'] loop
+    n := pg_temp.try((select id from harness_ids h where h.who = 'volunteer'), v_who);
+    if n <> 0 then raise exception 'HARNESS-FAIL F: volunteer read % rows of (%)', n, v_who; end if;
+  end loop;
   n := pg_temp.try(null, 'select 1 from resident_current_state');
   if n <> v_total then raise exception 'HARNESS-FAIL F: service role read % of %', n, v_total; end if;
-  v_report := v_report || format('F: admin/management/staff/volunteer and service role read all %s | ', v_total);
+  v_report := v_report || format('F: admin/management/staff and service role read all %s, a volunteer none (0134) | ', v_total);
 
   -- G: translations of other's bio.
   n := pg_temp.try(v_vet, format('select 1 from translations where table_name = ''residents'' and row_id = %L', v_other));

@@ -230,7 +230,7 @@ disagree.
 | C6 | `contacts` | staff update and delete | staff can only add one (A2); editing is Management's |
 | C7 | `vet_doctors`, `vet_doctor_clinics`, `merge_vet_doctors()` | staff and vet insert, update, delete, merge | Management only (`/management/vets/…/doctors`) |
 | C8 | `stock_receipts` | staff update | the app only inserts and deletes |
-| C9 | `stock_receipts`, `stock_counts`, `medication`, `diet_types` | **volunteer** reads every row and every column, prices and delivery costs included | Stocktake needs the names and the counts, not the prices; Deliveries and both Management lists are refused to a volunteer |
+| C9 | `stock_receipts`, `stock_counts`, `medication`, `diet_types` | **volunteer** (closed by `0134`, 2026-10-04) reads every row and every column, prices and delivery costs included | Stocktake needs the names and the counts, not the prices; Deliveries and both Management lists are refused to a volunteer |
 | C10 | `enclosures`, `zones`, `vets`, `diet_types`, `shelter_friends`, `bulk_appointments` | **vet** reads every row, every other clinic and its bulk bookings included | all refused to a vet as pages. A resident's page needs the enclosure's name; nothing a vet opens needs the list of other clinics |
 | C11 | `record_recurring_job()`, `reassign_recurring_job()` | a vet may hold and record a recurring job | vets are never offered as assignees |
 | C12 | `resident_list_view` | the view carries insert, update, delete and truncate grants to `authenticated` | read only. Whether any of those grants can do anything depends on the view being updatable, which was not tested here |
@@ -304,49 +304,49 @@ Admin is shown for completeness; it is never stored (§6).
 | Key | Activity | Kind | Admin | Mgmt | Staff | Vet | Vol | DT | Note |
 |---|---|---|---|---|---|---|---|---|---|
 | **Residents** | | | | | | | | | |
-| `resident.record` | A resident's details, housing and history | E/R | E | E | E | R° | R | 1 | Edit is the pencil: name, bio, flags. Reading includes placement history |
+| `resident.record` | A resident's details, housing and history | E/R | E | E | E | R° | R | 1 | Edit is the pencil: name, bio, flags. Reading includes placement history, except for a volunteer, who reads only who and where through `resident_who_and_where` (`0134`) |
 | `resident.register` | Register a new resident (intake) | Y/N | Y | Y | Y | – | – | 2 | |
 | `resident.microchip` | Record or correct a microchip number | Y/N | Y | **–** | Y | Y° | – | 3 | Finding B: the manual says Management can |
-| `resident.adoption_news` | News from an adopter | E/R | E | E | E | R° | R | 4 | Edit includes delete (A8) |
+| `resident.adoption_news` | News from an adopter | E/R | E | E | E | R° | – | 4 | Edit includes delete (A8) |
 | **Housing** | | | | | | | | | |
-| `placement.move` | Move a resident to another enclosure | Y/N | Y | Y | Y | – | Y | 5 | |
+| `placement.move` | Move a resident to another enclosure | Y/N | Y | Y | Y | – | – | 5 | |
 | `placement.hospital` | Send to hospital and bring back | Y/N | Y | Y | Y | – | – | 6 | |
 | `placement.rehome` | Foster, adopt, return to the shelter | Y/N | Y | Y | Y | – | – | 6 | |
 | `placement.death` | Record a death | Y/N | Y | Y | Y | – | – | 7 | |
 | `placement.death_withdraw` | Withdraw a death recorded in error | Y/N | Y | – | – | – | – | 8 | |
 | **Medical** | | | | | | | | | |
 | `visit.book` | Book a vet visit | Y/N | Y | Y | Y | Y° | – | 9 | *Split.* Today it is the same right as writing the visit up |
-| `medical.visits` | Vet visits and how they went | E/R | E | E | E | E° | R | 10 | |
-| `medical.procedures` | Procedures and their files | E/R | E | E | E | E° | R | 10 | |
-| `medical.blood_tests` | Blood tests and their reports | E/R | E | E | E | E° | R | 10 | Staff and Management since `0131` |
-| `medical.prescriptions` | Prescriptions: what should be given | E/R | E | E | E | E° | R | 11, 12 | Read also opens the medication list (§14), which is a new screen over the same records and not a new activity |
-| `medical.immunizations` | Immunizations | E/R | E | E | E | E° | R | 13 | |
-| `medical.weight` | Weight | E/R | E | E | E | E° | R | 13 | |
-| `medical.diet` | A resident's diet | E/R | E | E | E | E° | R | 13 | |
+| `medical.visits` | Vet visits and how they went | E/R | E | E | E | E° | – | 10 | |
+| `medical.procedures` | Procedures and their files | E/R | E | E | E | E° | – | 10 | |
+| `medical.blood_tests` | Blood tests and their reports | E/R | E | E | E | E° | – | 10 | Staff and Management since `0131` |
+| `medical.prescriptions` | Prescriptions: what should be given | E/R | E | E | E | E° | – | 11, 12 | Read also opens the medication list (§14), which is a new screen over the same records and not a new activity |
+| `medical.immunizations` | Immunizations | E/R | E | E | E | E° | – | 13 | |
+| `medical.weight` | Weight | E/R | E | E | E | E° | – | 13 | |
+| `medical.diet` | A resident's diet | E/R | E | E | E | E° | – | 13 | |
 | `medical.archive` | Remove a medical record entered by mistake, and restore it | Y/N | Y | Y | Y | – | – | 14 | |
 | **Photos** | | | | | | | | | |
-| `photos.resident_add` | Add a photo to a resident | Y/N | Y | Y | Y | Y° | Y | 15 | A vet's go to the Medical folder only (scope) |
-| `photos.resident_manage` | Refile or remove a photo, choose the profile photo | Y/N | Y | Y | Y | – | Y | 15 | *Split*, finding A3 |
-| `photos.resident_publish` | Put a resident's photo on the public website | Y/N | Y | Y | Y | – | Y | 15 | *Split*, finding A5. Today it is not a separate act: filing a photo anywhere but Medical publishes it. Lutan's answer 8: at Lanna, Management and Admin only |
+| `photos.resident_add` | Add a photo to a resident | Y/N | Y | Y | Y | Y° | – | 15 | A vet's go to the Medical folder only (scope) |
+| `photos.resident_manage` | Refile or remove a photo, choose the profile photo | Y/N | Y | Y | Y | – | – | 15 | *Split*, finding A3 |
+| `photos.resident_publish` | Put a resident's photo on the public website | Y/N | Y | Y | Y | – | – | 15 | *Split*, finding A5. Today it is not a separate act: filing a photo anywhere but Medical publishes it. Lutan's answer 8: at Lanna, Management and Admin only |
 | **Enclosures** | | | | | | | | | |
 | `facility.enclosures` | Enclosures and zones | E/R | E | R | R | – | R | 16 | Edit is Settings → Zones and Enclosures |
 | `facility.map` | The facility map | Y/N | Y | Y | Y | – | Y | 16 | A prototype today |
 | **Maintenance** | | | | | | | | | |
-| `maintenance.jobs` | Maintenance jobs: log, edit, assign, cost, delete | E/R | E | E | E | – | R | 17 | |
+| `maintenance.jobs` | Maintenance jobs: log, edit, assign, cost, delete | E/R | E | E | E | – | – | 17 | |
 | `maintenance.progress` | Move a job on: in progress, blocked, completed | Y/N | Y | Y | Y | – | – | 17 | *Split.* Lets someone finish a job without managing the board |
-| `maintenance.photos` | Add and remove a job's photos | Y/N | Y | Y | Y | – | Y | 17 | Finding A4 |
+| `maintenance.photos` | Add and remove a job's photos | Y/N | Y | Y | Y | – | – | 17 | Finding A4 |
 | **Projects** | | | | | | | | | |
-| `projects.folders` | Project folders and their stories | E/R | E | E | E | – | R | 18 | Edit includes delete (A8) |
-| `projects.photos` | Add and remove project photos | Y/N | Y | Y | Y | – | Y | 18 | |
+| `projects.folders` | Project folders and their stories | E/R | E | E | E | – | – | 18 | Edit includes delete (A8) |
+| `projects.photos` | Add and remove project photos | Y/N | Y | Y | Y | – | – | 18 | |
 | `projects.publish` | Put a project on the public website | Y/N | Y | Y | Y | – | – | 19 | *Split* |
 | **Clinics, contacts, supporters** | | | | | | | | | |
-| `clinics.list` | The list of clinics | E/R | E | E | R | – | R | 20 | "Vets" today; the rename is parked |
+| `clinics.list` | The list of clinics | E/R | E | E | R | – | – | 20 | "Vets" today; the rename is parked |
 | `clinics.doctors` | A clinic's doctors: add, rename, merge, retire | Y/N | Y | Y | – | – | – | 20 | |
-| `contacts.directory` | Contacts | E/R | E | E | R | – | R° | 21 | A volunteer reads name and phone only (scope). A vet has no Contacts page; the carer's name on a resident's record is a lookup (rule 4) |
+| `contacts.directory` | Contacts | E/R | E | E | R | – | – | 21 | A volunteer reads nothing since `0134` (the name-and-phone view stays, ungranted, for a role given that scope later). A vet has no Contacts page; the carer's name on a resident's record is a lookup (rule 4) |
 | `contacts.add` | Add a new contact | Y/N | Y | Y | Y | – | – | 21 | *Split*, finding A2 |
 | `friends.manage` | Shelter Friends: add, publish, unpublish | Y/N | Y | Y | – | – | – | 22 | |
 | **Stock and ordering** | | | | | | | | | |
-| `stock.count` | Count the stock (stocktake) | Y/N | Y | Y | Y | – | Y | 23 | |
+| `stock.count` | Count the stock (stocktake) | Y/N | Y | Y | Y | – | – | 23 | |
 | `stock.delivery` | Record a delivery | Y/N | Y | Y | Y | – | – | 24 | |
 | `stock.purchasing` | Work out what to buy | Y/N | Y | Y | – | – | – | 25 | |
 | `stock.usage` | Compare stock used with planned | Y/N | Y | Y | – | – | – | 25 | |
@@ -358,10 +358,10 @@ Admin is shown for completeness; it is never stored (§6).
 | `reports.cashflow` | Cashflow and fixed outgoings | E/R | E | E | – | – | – | 28 | |
 | `recurring.manage` | Set up recurring jobs and hand dates over | Y/N | Y | Y | – | – | – | 29 | |
 | `recurring.do_any` | Mark anyone's recurring job done or skipped | Y/N | Y | Y | – | – | – | 29 | *Split*, finding A6 |
-| `recurring.do_own` | Mark your own recurring jobs done or skipped | Y/N | Y | Y | Y | – | Y | 30 | |
+| `recurring.do_own` | Mark your own recurring jobs done or skipped | Y/N | Y | Y | Y | – | – | 30 | |
 | `translations.manage` | Translate the public text | Y/N | Y | Y | – | – | – | 31 | |
 | **The assistant** | | | | | | | | | |
-| `assistant.ask` | Ask the assistant a question | Y/N | Y | Y | Y | – | Y | 32 | |
+| `assistant.ask` | Ask the assistant a question | Y/N | Y | Y | Y | – | – | 32 | |
 | `assistant.record` | Record something through the assistant | Y/N | Y | Y | Y | – | – | 32 | Each thing it records is also checked against that thing's own activity |
 | **Settings** | | | | | | | | | |
 | `website.content` | The public website's content | E/R | E | – | – | – | – | 33 | |

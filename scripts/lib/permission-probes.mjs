@@ -44,8 +44,9 @@ const ENC = "(select id from enclosures order by id limit 1)";
 export const PROBES = [
   // --- Residents
   { activity: "resident.record", level: "edit", scoped: true, sql: `update residents set bio = 'probe' where id = $R` },
-  { activity: "resident.record", level: "read", scoped: true, sql: `select 1 from residents where id = $R` },
-  { activity: "resident.record", level: "read", scoped: true, sql: `select 1 from placement_history where resident_id = $R` },
+  // 0134: a volunteer reads a resident only through resident_who_and_where (name, photo, species, sex, status, enclosure), and no placement history
+  { activity: "resident.record", level: "read", scoped: true, sql: `select 1 from residents where id = $R`, byRole: { volunteer: `select 1 from resident_who_and_where where id = $R` } },
+  { activity: "resident.record", level: "read", scoped: true, sql: `select 1 from placement_history where resident_id = $R`, expect: ["admin", "management", "staff", "vet"] },
   {
     // C2: nobody deletes a resident from a screen. Default: Admin only.
     activity: "resident.record", level: "edit", sql: `delete from residents where id = $BARE`,
@@ -115,16 +116,16 @@ export const PROBES = [
   { activity: "contacts.directory", level: "read", sql: `select 1 from contacts where id = $CONTACT`, byRole: { volunteer: `select 1 from volunteer_contacts where id = $CONTACT` } },
   { activity: "contacts.add", level: "edit", sql: `insert into contacts (name, type) values ('Probe contact', 'Vendor')` },
   { activity: "friends.manage", level: "edit", sql: `update shelter_friends set published = published where id = $FRIEND` },
-  { activity: "friends.manage", level: "read", sql: `select 1 from shelter_friends where id = $FRIEND`, known: [{ id: "C10", roles: ["vet"] }, { id: "N3", roles: ["staff", "volunteer"] }] },
+  { activity: "friends.manage", level: "read", sql: `select 1 from shelter_friends where id = $FRIEND`, known: [{ id: "C10", roles: ["vet"] }, { id: "N3", roles: ["staff"] }] },
 
   // --- Stock and ordering
   { activity: "stock.count", level: "edit", fn: true, sql: `select record_stocktake('[]'::jsonb, '[]'::jsonb)` },
   { activity: "stock.delivery", level: "edit", sql: `insert into stock_receipts (item_kind, medication_id, quantity) values ('medication', ${MED}, 1)` },
-  { activity: "stock.delivery", level: "read", sql: `select 1 from stock_receipts where id = $RECEIPT`, known: [{ id: "C9", roles: ["volunteer"] }] },
+  { activity: "stock.delivery", level: "read", sql: `select 1 from stock_receipts where id = $RECEIPT` },
   { activity: "stock.medications", level: "edit", sql: `update medication set cost_per_unit = cost_per_unit where id = ${MED}` },
-  { activity: "stock.medications", level: "read", sql: `select cost_per_unit from medication where id = ${MED}`, known: [{ id: "C9", roles: ["volunteer"] }, { id: "N1", roles: ["staff", "vet"] }] },
+  { activity: "stock.medications", level: "read", sql: `select cost_per_unit from medication where id = ${MED}`, known: [{ id: "N1", roles: ["staff", "vet"] }] },
   { activity: "stock.diets", level: "edit", sql: `update diet_types set notes = 'probe' where id = $DIET` },
-  { activity: "stock.diets", level: "read", sql: `select cost_per_unit from diet_types where id = $DIET`, known: [{ id: "C9", roles: ["volunteer"] }, { id: "C10", roles: ["vet"] }, { id: "N2", roles: ["staff"] }] },
+  { activity: "stock.diets", level: "read", sql: `select cost_per_unit from diet_types where id = $DIET`, known: [{ id: "C10", roles: ["vet"] }, { id: "N2", roles: ["staff"] }] },
   { activity: "stock.correct", level: "edit", fn: true, sql: `select record_stock_correction('medication', ${MED}, 1)` },
 
   // --- Management

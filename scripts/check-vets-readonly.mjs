@@ -167,10 +167,10 @@ begin
   n := pg_temp.try(v_staff, 'select * from vets');
   if n <> v_total then raise exception 'HARNESS-FAIL D: staff read % of %', n, v_total; end if;
   n := pg_temp.try(v_vol, 'select * from vets');
-  if n <> v_total then raise exception 'HARNESS-FAIL D: volunteer read % of %', n, v_total; end if;
+  if n <> 0 then raise exception 'HARNESS-FAIL D: volunteer read % clinics (0134 took them away)', n; end if;
   n := pg_temp.try(v_staff, format('update vets set name = ''x'' where id = %L', v_other));
   if n <> 0 then raise exception 'HARNESS-FAIL D: staff update touched % rows', n; end if;
-  v_report := v_report || 'D: management insert/update/delete 1, admin update 1, staff+volunteer read all, staff update 0 | ';
+  v_report := v_report || 'D: management insert/update/delete 1, admin update 1, staff read all, volunteer none (0134), staff update 0 | ';
 
   -- E: the service role.
   n := pg_temp.try(null, format('update vets set clinic_name = ''Service'' where id = %L', v_other));

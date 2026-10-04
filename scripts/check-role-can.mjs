@@ -136,7 +136,7 @@ begin
   perform pg_temp.eq('A null activity', pg_temp.q(v_admin, 'role_can(''staff'', null, ''edit'')'), 'false');
   perform pg_temp.eq('A null level', pg_temp.q(v_admin, 'role_can(''staff'', ''stock.count'', null)'), 'false');
   perform pg_temp.eq('A mistyped level', pg_temp.q(v_admin, 'role_can(''staff'', ''stock.count'', ''write'')'), 'false');
-  perform pg_temp.eq('A default level is edit', pg_temp.q(v_admin, 'role_can(''volunteer'', ''stock.count'')'), 'true');
+  perform pg_temp.eq('A default level is edit', pg_temp.q(v_admin, 'role_can(''staff'', ''stock.count'')'), 'true');
   perform pg_temp.eq('A read-only cell is no for edit', pg_temp.q(v_admin, 'role_can(''volunteer'', ''resident.record'', ''edit'')'), 'false');
   perform pg_temp.eq('A read-only cell is yes for read', pg_temp.q(v_admin, 'role_can(''volunteer'', ''resident.record'', ''read'')'), 'true');
   v_report := v_report || 'A: 660 answers equal has_permission() under each role''s own login; missing cell, unknown activity, archived role, no-role person, unknown key, nulls, mistyped level all no | ';
@@ -150,10 +150,10 @@ begin
   v_report := v_report || 'B: Admin yes without a row, unknown activity included; no for bad level or null | ';
 
   -- C: who may ask.
-  perform pg_temp.eq('C management asks about volunteer', pg_temp.q(v_mgmt, 'role_can(''volunteer'', ''stock.count'', ''edit'')'), 'true');
+  perform pg_temp.eq('C management asks about volunteer', pg_temp.q(v_mgmt, 'role_can(''volunteer'', ''resident.record'', ''read'')'), 'true');
   perform pg_temp.eq('C management asks about admin', pg_temp.q(v_mgmt, 'role_can(''admin'', ''stock.count'', ''edit'')'), 'true');
   perform pg_temp.eq('C management asks about vet', pg_temp.q(v_mgmt, 'role_can(''vet'', ''stock.count'', ''edit'')'), 'false');
-  perform pg_temp.eq('C service role', pg_temp.q(null, 'role_can(''volunteer'', ''stock.count'', ''edit'')', 'aal1', 'service_role'), 'true');
+  perform pg_temp.eq('C service role', pg_temp.q(null, 'role_can(''volunteer'', ''resident.record'', ''read'')', 'aal1', 'service_role'), 'true');
   perform pg_temp.eq('C anon refused', pg_temp.q(null, 'role_can(''volunteer'', ''stock.count'', ''edit'')', 'aal1', 'anon'), 'ERR:42501');
   for v_who in select unnest(array['staff','vet','volunteer','public_viewer','norole','archperson','archrole']) loop
     v_uid := (select id from harness_ids where who = v_who);
@@ -182,8 +182,8 @@ begin
   -- D: the door follows the matrix.
   delete from role_permissions rp using roles r
    where rp.role_id = r.id and r.key = 'management' and rp.activity = 'recurring.manage';
-  perform pg_temp.eq('D management loses the door', pg_temp.q(v_mgmt, 'role_can(''volunteer'', ''stock.count'', ''edit'')'), 'ERR:42501');
-  perform pg_temp.eq('D admin keeps it', pg_temp.q(v_admin, 'role_can(''volunteer'', ''stock.count'', ''edit'')'), 'true');
+  perform pg_temp.eq('D management loses the door', pg_temp.q(v_mgmt, 'role_can(''staff'', ''stock.count'', ''edit'')'), 'ERR:42501');
+  perform pg_temp.eq('D admin keeps it', pg_temp.q(v_admin, 'role_can(''staff'', ''stock.count'', ''edit'')'), 'true');
   insert into role_permissions (role_id, activity, level)
   select id, 'recurring.manage', 2 from roles where key = 'volunteer';
   perform pg_temp.eq('D volunteer given the cell is let in', pg_temp.q(v_vol, 'role_can(''staff'', ''stock.count'', ''edit'')'), 'true');
@@ -202,7 +202,7 @@ ${migration}
 
 do $h2$
 begin
-  perform pg_temp.eq('E replay still answers', pg_temp.q((select id from harness_ids where who = 'management'), 'role_can(''volunteer'', ''stock.count'', ''edit'')'), 'true');
+  perform pg_temp.eq('E replay still answers', pg_temp.q((select id from harness_ids where who = 'management'), 'role_can(''volunteer'', ''resident.record'', ''read'')'), 'true');
   perform pg_temp.eq('E replay still refuses', pg_temp.q((select id from harness_ids where who = 'volunteer'), 'role_can(''staff'', ''stock.count'', ''edit'')'), 'ERR:42501');
   perform pg_temp.eq('E one function', (select count(*) from pg_proc where proname = 'role_can')::text, '1');
   perform pg_temp.eq('E anon cannot execute', (select has_function_privilege('anon', 'public.role_can(text,text,text)', 'execute'))::text, 'false');
