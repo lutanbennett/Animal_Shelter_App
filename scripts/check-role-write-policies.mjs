@@ -84,7 +84,27 @@ const EFFECTIVE = `
     then array['SELECT','INSERT','UPDATE','DELETE'] else array[p.cmd] end) as cmd) c
   cross join (values ('staff'),('management'),('vet'),('volunteer'),('admin')) r(role)
   where p.schemaname = 'public' and p.permissive = 'PERMISSIVE'
-    and (coalesce(p.qual, '') || ' ' || coalesce(p.with_check, '')) like '%''' || r.role || '''::app_role%'`;
+    and (coalesce(p.qual, '') || ' ' || coalesce(p.with_check, '')) like '%''' || r.role || '''::app_role%'
+  union
+  -- Converted tables (perm-convert-*): a policy that asks has_permission('<activity>')
+  -- grants the role whose seeded cell reaches it (read = 1, anything else = 2); Admin
+  -- always. A policy that also asks sees_all_clinical() grants only a role whose
+  -- scope_clinical is 'any', as the function does. Mirrors the two functions, not the cells' meaning.
+  select p.tablename, c.cmd, r.key as role
+  from pg_policies p
+  cross join lateral (select unnest(case when p.cmd = 'ALL'
+    then array['SELECT','INSERT','UPDATE','DELETE'] else array[p.cmd] end) as cmd) c
+  cross join public.roles r
+  where p.schemaname = 'public' and p.permissive = 'PERMISSIVE'
+    and r.key in ('staff','management','vet','volunteer','admin') and r.archived_at is null
+    and (coalesce(p.qual, '') || ' ' || coalesce(p.with_check, '')) like '%has\\_permission(%'
+    and (r.key = 'admin' or exists (
+          select 1 from public.role_permissions rp
+           where rp.role_id = r.id
+             and rp.activity = substring(coalesce(p.qual, p.with_check) from 'has_permission\\(''([a-z_.]+)''')
+             and rp.level >= case when c.cmd = 'SELECT' then 1 else 2 end))
+    and ((coalesce(p.qual, '') || coalesce(p.with_check, '')) not like '%sees\\_all\\_clinical()%'
+         or r.scope_clinical = 'any')`;
 
 let failures = 0;
 const fail = (msg) => { failures++; console.log(`FAIL  ${msg}`); };

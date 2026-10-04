@@ -164,7 +164,7 @@ function table(activity, name, update, insert, del, flags) {
   // it to a role are the known tightenings (C4, C5).
   const delProbe = { activity, level: "edit", scoped: true, sql: del, expect: ["admin"] };
   if (flags.c4) delProbe.known = [{ id: "C4", roles: ["vet"] }];
-  if (flags.c5) delProbe.known = [{ id: "C5", roles: ["management", "staff", "vet"] }];
+  if (flags.c5) delProbe.known = [{ id: "C5", roles: ["vet"] }]; // management and staff closed by 0135 (perm-convert-medical); the vet half closes when Vet converts
   out.push(delProbe);
   return out;
 }
