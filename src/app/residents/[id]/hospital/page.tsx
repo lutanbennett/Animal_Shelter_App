@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { placeName } from "@/lib/enclosures/names";
 import { formatDate, todayIso } from "@/lib/format";
 import { visitDate } from "@/lib/vets/linkable";
-import { HOSPITAL_ROLES } from "@/lib/placements/hospital";
 import { PLACEMENT_ICONS } from "@/components/hub-icons";
 import { SendToHospitalForm } from "./SendToHospitalForm";
 
@@ -31,7 +32,7 @@ export default async function SendToHospitalPage(
       ? searchParams.vetAppointmentId
       : null;
 
-  const [residentResult, statusResult, placementResult, roleResult, visitResult] =
+  const [residentResult, statusResult, placementResult, perms, visitResult] =
     await Promise.all([
       supabase
         .from("residents")
@@ -64,7 +65,7 @@ export default async function SendToHospitalPage(
         .is("end_date", null)
         .limit(1)
         .returns<{ start_date: string }[]>(),
-      supabase.rpc("current_user_role"),
+      loadPermissions(),
       vetAppointmentId
         ? supabase
             .from("vet_appointments")
@@ -88,7 +89,7 @@ export default async function SendToHospitalPage(
     : resident.name;
   const status = statusResult.data?.[0];
   const currentStatus = status?.current_status ?? null;
-  const canSend = HOSPITAL_ROLES.has(roleResult.data ?? "");
+  const canSend = can(perms, "placement.hospital");
   const Icon = PLACEMENT_ICONS.hospital;
 
   const visit = visitResult.data?.[0] ?? null;

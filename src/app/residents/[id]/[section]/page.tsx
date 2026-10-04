@@ -14,10 +14,11 @@ import {
   sizeLabel,
 } from "@/lib/i18n/enum-labels";
 import { PhotoUploader } from "@/components/PhotoUploader";
-import { photoCategoriesForRole } from "@/lib/google/drive-client";
+import { photoCategoriesFor } from "@/lib/google/drive-client";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { PhotoGallery, type PhotoRow } from "@/components/PhotoGallery";
 import {
-  ADOPTION_UPDATE_ROLES,
   residentPhotoSelect,
   type PhotoProvenance,
 } from "@/lib/adoption-updates/options";
@@ -35,7 +36,6 @@ import { WeightChart } from "@/components/WeightChart";
 import { visitDate } from "@/lib/vets/linkable";
 import { ActionLink } from "@/components/ActionLink";
 import { MicrochipLine } from "@/components/MicrochipForm";
-import { MICROCHIP_WRITE_ROLES } from "@/lib/residents/microchip";
 import { ArchivedBadge } from "@/components/ArchivedBadge";
 import {
   PLACEMENT_ICONS,
@@ -89,7 +89,7 @@ export default async function ResidentSectionPage(
 
   const supabase = await createClient();
 
-  const [residentResult, residentStateResult, roleResult] = await Promise.all([
+  const [residentResult, residentStateResult, roleResult, perms] = await Promise.all([
     supabase
       .from("residents")
       .select("id, name, thai_name, size, profile_photo_drive_file_id, microchip_number, microchip_implanted_on")
@@ -112,7 +112,10 @@ export default async function ResidentSectionPage(
       .eq("resident_id", id)
       .limit(1)
       .returns<{ current_status: string | null; is_deceased: boolean }[]>(),
+    // The role is only for the contact views and the medical archive button,
+    // which the contacts and medical sweeps convert; the rest asks can().
     supabase.rpc("current_user_role"),
+    loadPermissions(),
   ]);
 
   const resident = residentResult.data?.[0];
@@ -291,7 +294,7 @@ export default async function ResidentSectionPage(
       break;
     }
     case "photos": {
-      const [{ data: photos }, { data: role }] = await Promise.all([
+      const [{ data: photos }] = await Promise.all([
         supabase
           .from("attachments")
           .select(photoSelect)
@@ -299,18 +302,17 @@ export default async function ResidentSectionPage(
           .eq("owner_id", id)
           .order("uploaded_at", { ascending: true })
           .returns<PhotoRow[]>(),
-        supabase.rpc("current_user_role"),
       ]);
       body = (
         <div className="flex flex-col gap-6">
           {/* Photos stay open after death (0052); the archive is refreshed
               by the upload route and the photo actions. */}
-          <PhotoUploader residentId={id} categories={photoCategoriesForRole(role)} />
+          <PhotoUploader residentId={id} categories={photoCategoriesFor(perms)} />
           <PhotoGallery
             residentId={id}
             photos={photos ?? []}
             profilePhotoDriveFileId={resident.profile_photo_drive_file_id}
-            moveCategories={photoCategoriesForRole(role)}
+            moveCategories={photoCategoriesFor(perms)}
           />
         </div>
       );
@@ -321,7 +323,7 @@ export default async function ResidentSectionPage(
       // adopted now: a resident returned to the shelter keeps the news from
       // their time away, and it can still arrive late (0097 leaves where
       // the section shows to the hub; docs/decisions.md, 2026-09-27).
-      const [updatesResult, photosResult, adoptCountResult, roleResult] = await Promise.all([
+      const [updatesResult, photosResult, adoptCountResult] = await Promise.all([
         supabase
           .from("adoption_updates")
           .select(`id, received_on, channel, note, created_at, sender:${contactEmbed()}`)
@@ -351,12 +353,11 @@ export default async function ResidentSectionPage(
           .select("id", { count: "exact", head: true })
           .eq("resident_id", id)
           .eq("placement_type", "Adopt"),
-        supabase.rpc("current_user_role"),
       ]);
       const updates = updatesResult.data ?? [];
       const photos = photosResult.data ?? [];
       const canWrite =
-        ADOPTION_UPDATE_ROLES.has(roleResult.data ?? "") && (adoptCountResult.count ?? 0) > 0;
+        can(perms, "resident.adoption_news") && (adoptCountResult.count ?? 0) > 0;
       const a = t.adoptionUpdates;
       const channelLabel = (code: string) =>
         (a.channels as Record<string, string>)[code] ?? code;
@@ -1404,7 +1405,7 @@ export default async function ResidentSectionPage(
           residentId={id}
           number={resident.microchip_number}
           implantedOn={resident.microchip_implanted_on}
-          canEdit={!isDeceased && MICROCHIP_WRITE_ROLES.has(roleResult.data ?? "")}
+          canEdit={!isDeceased && can(perms, "resident.microchip")}
         />
       )}
       {body}

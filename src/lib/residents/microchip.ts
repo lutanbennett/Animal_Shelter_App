@@ -79,9 +79,4 @@ export function isDuplicateChipError(error: { code?: string; message?: string })
   return error.code === "23505" && /microchip/i.test(error.message ?? "");
 }
 
-/**
- * The roles set_resident_microchip() (0116) lets through: admin, staff, and
- * a vet whose clinic holds the resident. Management may not. The function
- * checks scope itself; this only decides who is offered the form.
- */
-export const MICROCHIP_WRITE_ROLES: ReadonlySet<string> = new Set(["admin", "staff", "vet"]);
+

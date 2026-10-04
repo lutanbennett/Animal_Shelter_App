@@ -4,6 +4,8 @@
  * must stay server-only.
  */
 
+import { can, type Permissions } from "@/lib/permissions/can";
+
 /**
  * URL for displaying a Drive-backed photo — routes through this app's own
  * image proxy (src/app/api/photos/[fileId]/route.ts) rather than hitting
@@ -50,13 +52,15 @@ export const PHOTO_CATEGORIES = ["Shelter", "Medical", "Foster", "Adoption"] as 
 export type PhotoCategory = (typeof PHOTO_CATEGORIES)[number];
 
 /**
- * The folders a role may file a resident photo under. A vet adds clinical
- * photos and nothing else, so theirs go to Medical only (backlog, Pass 1
- * Vet, 2026-09-27); the form shows no picker when there is one choice, and
- * the upload route refuses anything else.
+ * The folders this person may file a resident photo under. Filing anywhere
+ * but Medical is what publishes a photo (parity finding A5), so a person who
+ * holds photos.resident_add and not photos.resident_publish — a vet adds
+ * clinical photos and nothing else (backlog, Pass 1 Vet, 2026-09-27) — files
+ * to Medical only. The form shows no picker when there is one choice, and the
+ * upload route refuses anything else.
  */
-export function photoCategoriesForRole(role: string | null | undefined): readonly PhotoCategory[] {
-  return role === "vet" ? ["Medical"] : PHOTO_CATEGORIES;
+export function photoCategoriesFor(perms: Permissions | null | undefined): readonly PhotoCategory[] {
+  return can(perms, "photos.resident_publish") ? PHOTO_CATEGORIES : ["Medical"];
 }
 
 /**

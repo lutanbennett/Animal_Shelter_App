@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { placeName } from "@/lib/enclosures/names";
-import { DECEASED_ROLES } from "@/lib/placements/deceased";
 import { PLACEMENT_ICONS } from "@/components/hub-icons";
 import { RecordDeathForm } from "./RecordDeathForm";
 import { todayIso } from "@/lib/format";
@@ -15,7 +16,7 @@ export default async function RecordDeathPage(
   const { t, locale } = await getT();
   const supabase = await createClient();
 
-  const [residentResult, statusResult, placementResult, roleResult] =
+  const [residentResult, statusResult, placementResult, perms] =
     await Promise.all([
       supabase
         .from("residents")
@@ -48,7 +49,7 @@ export default async function RecordDeathPage(
         .is("end_date", null)
         .limit(1)
         .returns<{ start_date: string }[]>(),
-      supabase.rpc("current_user_role"),
+      loadPermissions(),
     ]);
 
   // A query error (e.g. a migration not yet applied) must not look like a
@@ -61,7 +62,7 @@ export default async function RecordDeathPage(
     ? `${resident.name} (${resident.thai_name})`
     : resident.name;
   const status = statusResult.data?.[0];
-  const canRecord = DECEASED_ROLES.has(roleResult.data ?? "");
+  const canRecord = can(perms, "placement.death");
   const Icon = PLACEMENT_ICONS.deceased;
 
   const blocked = !canRecord

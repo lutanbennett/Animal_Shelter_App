@@ -18,13 +18,6 @@ export function isAdoptionUpdateChannel(value: unknown): value is AdoptionUpdate
   return (ADOPTION_UPDATE_CHANNELS as readonly unknown[]).includes(value);
 }
 
-/**
- * Who may add, correct or delete an update: record_keepers_write_adoption_updates
- * (0097). Volunteers and vets read them, and may still add a photo to an
- * existing update through the ordinary photo route.
- */
-export const ADOPTION_UPDATE_ROLES = new Set(["admin", "management", "staff"]);
-
 /** Residents/<Name> (<ID>)/Adoption updates/<YYYYMMDD>/ in Drive. */
 export const ADOPTION_UPDATES_FOLDER = "Adoption updates";
 

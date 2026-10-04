@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { SYSTEM_ZONE, loadEnclosureOptions } from "@/lib/enclosures/options";
-import { REHOME_ROLES } from "@/lib/placements/rehome";
 import { PLACEMENT_ICONS } from "@/components/hub-icons";
 import { ReturnToShelterForm } from "./ReturnToShelterForm";
 import { todayIso } from "@/lib/format";
@@ -20,7 +21,7 @@ export default async function ReturnToShelterPage(
     stateResult,
     placementResult,
     lastPhysicalResult,
-    roleResult,
+    perms,
     options,
   ] = await Promise.all([
       supabase
@@ -58,7 +59,7 @@ export default async function ReturnToShelterPage(
         .order("start_date", { ascending: false })
         .limit(1)
         .returns<{ enclosure_id: string }[]>(),
-      supabase.rpc("current_user_role"),
+      loadPermissions(),
       loadEnclosureOptions(supabase),
     ]);
 
@@ -74,7 +75,7 @@ export default async function ReturnToShelterPage(
   const state = stateResult.data?.[0];
   const currentStatus = state?.current_status ?? null;
   const withCarer = currentStatus === "Fostered" || currentStatus === "Adopted";
-  const canReturn = REHOME_ROLES.has(roleResult.data ?? "");
+  const canReturn = can(perms, "placement.rehome");
   const Icon = PLACEMENT_ICONS.returnToShelter;
   const today = todayIso();
 

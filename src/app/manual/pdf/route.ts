@@ -5,6 +5,7 @@ import { asManualRole } from "@/lib/manual/filter";
 import { renderManualPdf, screenshotSrcs, type ManualImages } from "@/lib/manual/manual-pdf";
 import { createClient } from "@/lib/supabase/server";
 import { loadCurrentRole } from "@/lib/auth/app-access";
+import { loadPermissions } from "@/lib/permissions/load";
 
 /**
  * GET /manual/pdf — the manual as a printable PDF.
@@ -72,16 +73,17 @@ export async function GET(request: NextRequest) {
 
   const role = asManualRole(await loadCurrentRole(supabase));
   const all = asked || !role;
+  const perms = await loadPermissions();
 
   const images: ManualImages = new Map();
   if (withImages) {
-    for (const src of new Set(screenshotSrcs(manual, role, all))) {
+    for (const src of new Set(screenshotSrcs(manual, role, all, perms))) {
       const bytes = await loadImage(src, request.nextUrl.origin);
       if (bytes) images.set(src, bytes);
     }
   }
 
-  const pdf = await renderManualPdf(manual, { role, all, images });
+  const pdf = await renderManualPdf(manual, { role, all, images, perms });
   return new NextResponse(Buffer.from(pdf), {
     headers: {
       "Content-Type": "application/pdf",

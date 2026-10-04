@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { chipFromSearch } from "@/lib/residents/microchip";
 import { ScanChipBox } from "./ScanChipBox";
 import { createClient } from "@/lib/supabase/server";
@@ -126,8 +128,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
       .returns<{ id: string }[]>();
     if (hit?.[0]) redirect(`/residents/${hit[0].id}`);
   }
-  const { data: role } = chipQuery ? await supabase.rpc("current_user_role") : { data: null };
-  const canRegister = role === "admin" || role === "management" || role === "staff";
+  const canRegister = chipQuery ? can(await loadPermissions(), "resident.register") : false;
 
   // Zones and enclosures come first: which ?zone= and ?enclosure= ids are
   // honoured depends on the place, and the list query needs the survivors.

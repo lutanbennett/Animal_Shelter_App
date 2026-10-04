@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { placeName } from "@/lib/enclosures/names";
-import { UNDO_DECEASED_ROLES } from "@/lib/placements/deceased";
 import { PLACEMENT_ICONS } from "@/components/hub-icons";
 import { UndoDeathForm } from "./UndoDeathForm";
 
@@ -28,7 +29,7 @@ export default async function UndoDeathPage(
   const { t, locale } = await getT();
   const supabase = await createClient();
 
-  const [residentResult, deathResult, roleResult] = await Promise.all([
+  const [residentResult, deathResult, perms] = await Promise.all([
     supabase
       .from("residents")
       .select("id, name, thai_name, resident_code")
@@ -47,7 +48,7 @@ export default async function UndoDeathPage(
       .is("end_date", null)
       .limit(1)
       .returns<PlacementRow[]>(),
-    supabase.rpc("current_user_role"),
+    loadPermissions(),
   ]);
 
   // A query error (e.g. a migration not yet applied) must not look like a
@@ -77,7 +78,7 @@ export default async function UndoDeathPage(
   const displayName = resident.thai_name
     ? `${resident.name} (${resident.thai_name})`
     : resident.name;
-  const canUndo = UNDO_DECEASED_ROLES.has(roleResult.data ?? "");
+  const canUndo = can(perms, "placement.death_withdraw");
   const u = t.residents.deceased.undo;
   const Icon = PLACEMENT_ICONS.deceasedInError;
 

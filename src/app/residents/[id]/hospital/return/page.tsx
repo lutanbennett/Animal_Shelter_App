@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { loadEnclosureOptions } from "@/lib/enclosures/options";
-import { HOSPITAL_ROLES } from "@/lib/placements/hospital";
 import { PLACEMENT_ICONS } from "@/components/hub-icons";
 import { ReturnFromHospitalForm } from "./ReturnFromHospitalForm";
 import { todayIso } from "@/lib/format";
@@ -15,7 +16,7 @@ export default async function ReturnFromHospitalPage(
   const { t } = await getT();
   const supabase = await createClient();
 
-  const [residentResult, stateResult, placementResult, roleResult, options] =
+  const [residentResult, stateResult, placementResult, perms, options] =
     await Promise.all([
       supabase
         .from("residents")
@@ -43,7 +44,7 @@ export default async function ReturnFromHospitalPage(
         .is("end_date", null)
         .limit(1)
         .returns<{ start_date: string }[]>(),
-      supabase.rpc("current_user_role"),
+      loadPermissions(),
       loadEnclosureOptions(supabase),
     ]);
 
@@ -58,7 +59,7 @@ export default async function ReturnFromHospitalPage(
     : resident.name;
   const state = stateResult.data?.[0];
   const currentStatus = state?.current_status ?? null;
-  const canReturn = HOSPITAL_ROLES.has(roleResult.data ?? "");
+  const canReturn = can(perms, "placement.hospital");
   const Icon = PLACEMENT_ICONS.hospitalReturn;
   const today = todayIso();
 

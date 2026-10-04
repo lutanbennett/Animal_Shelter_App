@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -6,7 +8,6 @@ import { placeName } from "@/lib/enclosures/names";
 import { loadCarerOptions } from "@/lib/contacts/carers";
 import {
   FOSTERED_ENCLOSURE,
-  REHOME_ROLES,
   type RehomeKind,
 } from "@/lib/placements/rehome";
 import { PLACEMENT_ICONS } from "@/components/hub-icons";
@@ -25,7 +26,7 @@ export default async function RehomePage(props: PageProps<"/residents/[id]/rehom
     stateResult,
     placementResult,
     previousResult,
-    roleResult,
+    perms,
     carerOptions,
   ] = await Promise.all([
     supabase
@@ -74,7 +75,7 @@ export default async function RehomePage(props: PageProps<"/residents/[id]/rehom
       .order("end_date", { ascending: false })
       .limit(1)
       .returns<{ carer_id: string | null; enclosure: { name: string } | null }[]>(),
-    supabase.rpc("current_user_role"),
+    loadPermissions(),
     loadCarerOptions(supabase),
   ]);
 
@@ -90,7 +91,7 @@ export default async function RehomePage(props: PageProps<"/residents/[id]/rehom
   const status = statusResult.data?.[0];
   const currentStatus = status?.current_status ?? null;
   const state = stateResult.data?.[0];
-  const canRehome = REHOME_ROLES.has(roleResult.data ?? "");
+  const canRehome = can(perms, "placement.rehome");
   const Icon = PLACEMENT_ICONS.rehome;
   const today = todayIso();
 

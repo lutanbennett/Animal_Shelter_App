@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { getT } from "@/lib/i18n/get-t";
 import { placeName } from "@/lib/enclosures/names";
 import { estimatedAgeNow } from "@/lib/format";
@@ -23,7 +25,7 @@ export default async function EditResidentPage(
   const [
     residentResult,
     photosResult,
-    roleResult,
+    perms,
     statusResult,
     stateResult,
     options,
@@ -43,7 +45,7 @@ export default async function EditResidentPage(
       .eq("owner_id", id)
       .order("uploaded_at", { ascending: true })
       .returns<PhotoRow[]>(),
-    supabase.rpc("current_user_role"),
+    loadPermissions(),
     supabase
       .from("resident_list_view")
       .select("enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th")
@@ -77,9 +79,7 @@ export default async function EditResidentPage(
   const displayName = resident.thai_name
     ? `${resident.name} (${resident.thai_name})`
     : resident.name;
-  const role = roleResult.data;
-  const canEdit =
-    role === "admin" || role === "management" || role === "staff";
+  const canEdit = can(perms, "resident.record");
   const status = statusResult.data?.[0];
   const currentStatus = stateResult.data?.[0]?.current_status ?? null;
   const housing: HousingState = {
