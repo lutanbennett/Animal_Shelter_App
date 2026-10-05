@@ -618,7 +618,7 @@
         49
       ],
       "notes": [
-        "Her sheet gives her own recurring jobs (row 47). Like the 2IC, Head of Medical and Volunteers, she is built on the volunteer login type, so the recurring-jobs tile only works once the rota-eligibility fix is live."
+        "Her sheet gives her own recurring jobs (row 47). That works now: the rota fix that stopped the 2IC and the Heads being treated as volunteers has been merged and is on the test site."
       ]
     },
     "head_of_medical": {
@@ -644,7 +644,7 @@
       ],
       "notes": [
         "Volunteers were decided as \"who and where\", read-only. Her sheet gives them the map, own recurring jobs and the assistant, but row 1 (view residents) is a dot, not a tick, so it is loaded as no: they lose the residents list.",
-        "Own recurring jobs (row 47) is loaded as ticked, but today the database refuses to record one for a volunteer. That is a separate question for Lutan."
+        "Own recurring jobs (row 47) is ticked and loaded. Until now the database refused a volunteer a recurring job only because no cell gave it; with the cell it allows it. Whether a volunteer should hold it is Lutan's question."
       ]
     },
     "vet": {
