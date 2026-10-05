@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, CalendarClock, Camera, Plus, UserRound } from "lucide-react";
 import { useConfirm } from "@/components/ConfirmProvider";
-import { ENCLOSURE_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
+import { ACTION_ICONS, ENCLOSURE_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
 import { addDaysIso, formatBaht, formatDate, todayIso } from "@/lib/format";
@@ -273,20 +274,19 @@ export function MaintenanceBoard({
           {m.filters.showAllCompleted}
         </label>
         {filtered && (
-          <button
-            type="button"
+          <ActionButton
+            icon={ACTION_ICONS.clear}
             onClick={() =>
               setFilters((f) => ({ ...f, zoneId: null, enclosureId: null, allCompleted: false }))
             }
-            className="py-2 text-left text-sm text-muted hover:text-foreground"
           >
             {m.filters.clear}
-          </button>
+          </ActionButton>
         )}
         {canWrite && (
           <Link
             href={newJobHref}
-            className="flex items-center justify-center gap-1 rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover md:ml-auto"
+            className="flex min-h-11 items-center justify-center gap-1 rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover md:ml-auto md:min-h-9"
           >
             <Plus aria-hidden="true" className="h-4 w-4" />
             {m.newJob}
@@ -321,13 +321,9 @@ export function MaintenanceBoard({
         <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted">
           <p>{filters.mine ? m.emptyMine : m.emptyFiltered}</p>
           {filters.mine && (
-            <button
-              type="button"
-              onClick={() => setFilters((f) => ({ ...f, mine: false }))}
-              className="text-sm font-medium text-primary hover:underline"
-            >
+            <ActionButton icon={ACTION_ICONS.clear} onClick={() => setFilters((f) => ({ ...f, mine: false }))}>
               {m.filters.everyonesJobs}
-            </button>
+            </ActionButton>
           )}
         </div>
       ) : (

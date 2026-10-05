@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { ActionLink } from "@/components/ActionLink";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
@@ -28,9 +30,9 @@ export default async function NewMaintenancePage(props: PageProps<"/maintenance/
       <main className="flex flex-1 flex-col gap-4 p-6">
         <h1 className="text-2xl font-semibold text-foreground">{t.maintenance.newJob}</h1>
         <p className="text-sm text-muted">{t.maintenance.detail.readOnly}</p>
-        <Link href="/maintenance" className="text-sm font-medium text-primary hover:underline">
-          {t.maintenance.backToBoard}
-        </Link>
+        <div>
+          <ActionLink href="/maintenance" label={t.maintenance.backToBoard} icon={ACTION_ICONS.back} iconOnlyOnMobile={false} />
+        </div>
       </main>
     );
   }

@@ -2,6 +2,8 @@
 
 import { useConfirm } from "@/components/ConfirmProvider";
 import { useState, useTransition } from "react";
+import { RowActionButton } from "@/components/RowAction";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { deleteDelivery } from "./actions";
 
@@ -15,8 +17,11 @@ export function DeleteDeliveryButton({ id, label }: { id: string; label: string 
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <button
-        type="button"
+      <RowActionButton
+        icon={ACTION_ICONS.delete}
+        tone="danger"
+        label={pending ? d.recent.deleting : t.common.delete}
+        subject={label}
         disabled={pending}
         onClick={async () => {
           if (!await confirm({ body: d.recent.deleteConfirm(label), confirmLabel: t.common.delete })) return;
@@ -26,10 +31,7 @@ export function DeleteDeliveryButton({ id, label }: { id: string; label: string 
             if (!result.ok) setError(result.error);
           });
         }}
-        className="rounded border border-border px-3 py-1 text-xs font-medium text-danger hover:bg-surface-hover disabled:opacity-50"
-      >
-        {pending ? d.recent.deleting : t.common.delete}
-      </button>
+      />
       {error && <p className="max-w-64 text-xs text-danger">{error}</p>}
     </div>
   );

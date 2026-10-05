@@ -11,9 +11,9 @@ import {
   Globe,
   Lock,
   MapPin,
-  Pencil,
-  Trash2,
 } from "lucide-react";
+import { ActionButton } from "@/components/ActionButton";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import type { ActionResult } from "@/lib/action-result";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { TranslationPanel } from "@/components/TranslationPanel";
@@ -165,24 +165,21 @@ export function FolderView({
 
               {canWrite && !isCategory && (
                 <div className="flex flex-wrap gap-2">
-                  <button type="button" onClick={() => setMode("rename")} disabled={isPending} className="flex items-center gap-1 rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-50">
-                    <Pencil aria-hidden="true" className="h-4 w-4" />
+                  <ActionButton icon={ACTION_ICONS.edit} onClick={() => setMode("rename")} disabled={isPending}>
                     {f.rename}
-                  </button>
-                  <button type="button" onClick={() => setMoveOpen(true)} disabled={isPending} className="flex items-center gap-1 rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-50">
-                    <FolderInput aria-hidden="true" className="h-4 w-4" />
+                  </ActionButton>
+                  <ActionButton icon={FolderInput} onClick={() => setMoveOpen(true)} disabled={isPending}>
                     {f.move}
-                  </button>
-                  <button
-                    type="button"
+                  </ActionButton>
+                  <ActionButton
+                    icon={ACTION_ICONS.delete}
+                    variant="danger"
                     onClick={() => setDeleteOpen(true)}
                     disabled={isPending || !isEmpty}
                     title={isEmpty ? undefined : f.deleteHint}
-                    className="flex items-center gap-1 rounded border border-border px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
                   >
-                    <Trash2 aria-hidden="true" className="h-4 w-4" />
                     {f.deleteFolder}
-                  </button>
+                  </ActionButton>
                 </div>
               )}
             </div>
@@ -240,10 +237,9 @@ export function FolderView({
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-sm font-medium text-muted">{info.heading}</h3>
                 {canWrite && mode !== "info" && (
-                  <button type="button" onClick={() => setMode("info")} className="flex items-center gap-1 text-xs font-medium text-primary hover:underline">
-                    <Pencil aria-hidden="true" className="h-3.5 w-3.5" />
+                  <ActionButton icon={ACTION_ICONS.edit} compact onClick={() => setMode("info")}>
                     {info.edit}
-                  </button>
+                  </ActionButton>
                 )}
               </div>
 

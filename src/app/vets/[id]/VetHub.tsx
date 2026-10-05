@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { StatCard, type StatCardTone } from "@/components/StatCard";
-import { VET_ICONS } from "@/components/hub-icons";
+import { ActionLink } from "@/components/ActionLink";
+import { ACTION_ICONS, VET_ICONS } from "@/components/hub-icons";
 import { formatBaht, formatDate, formatDateTime } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { appointmentStatusLabel } from "@/lib/i18n/enum-labels";
@@ -199,12 +200,7 @@ export function VetHub({
             <p className="whitespace-pre-line text-sm text-muted">{vet.notes}</p>
           )}
           {canManage && (
-            <Link
-              href="/management/vets"
-              className="text-xs font-medium text-primary hover:underline"
-            >
-              {t.vets.manageInAdmin}
-            </Link>
+            <ActionLink href="/management/vets" label={t.vets.manageInAdmin} icon={ACTION_ICONS.manage} iconOnlyOnMobile={false} />
           )}
         </div>
 
@@ -327,12 +323,7 @@ export function VetHub({
             <span className="text-muted">({activeDoctors.length})</span>
           </h2>
           {canManage && (
-            <Link
-              href={`/management/vets/${vet.id}/doctors`}
-              className="text-xs font-medium text-primary hover:underline"
-            >
-              {t.vets.manageDoctors}
-            </Link>
+            <ActionLink href={`/management/vets/${vet.id}/doctors`} label={t.vets.manageDoctors} icon={ACTION_ICONS.manage} iconOnlyOnMobile={false} />
           )}
         </div>
         {activeDoctors.length > 0 ? (

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { CopyTagLink } from "@/components/CopyTagLink";
-import { ENCLOSURE_ICONS } from "@/components/hub-icons";
+import { ActionLink } from "@/components/ActionLink";
+import { ACTION_ICONS, ENCLOSURE_ICONS } from "@/components/hub-icons";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
@@ -141,12 +142,7 @@ export function EnclosureHub({
                 : t.enclosures.hub.external}
           </p>
           {canEditEnclosures && !enclosure.isSystem && (
-            <Link
-              href="/admin/enclosures"
-              className="text-xs font-medium text-primary hover:underline"
-            >
-              {t.enclosures.hub.manageInAdmin}
-            </Link>
+            <ActionLink href="/admin/enclosures" label={t.enclosures.hub.manageInAdmin} icon={ACTION_ICONS.manage} iconOnlyOnMobile={false} />
           )}
           {/* The address for the QR code on the kennel door; status
               buckets have no door. */}
@@ -272,12 +268,13 @@ export function EnclosureHub({
 
               <div className="flex flex-wrap items-center gap-3 text-xs font-medium">
                 {canWriteMaintenance && (
-                  <Link
+                  <ActionLink
                     href={`/maintenance/new?enclosureId=${enclosure.id}`}
-                    className="rounded bg-primary px-3 py-1.5 text-primary-foreground hover:bg-primary-hover"
-                  >
-                    {t.enclosures.hub.maintenanceLog}
-                  </Link>
+                    label={t.enclosures.hub.maintenanceLog}
+                    icon={ACTION_ICONS.add}
+                    variant="primary"
+                    iconOnlyOnMobile={false}
+                  />
                 )}
                 <Link
                   href={`/maintenance?enclosure=${enclosure.id}`}
