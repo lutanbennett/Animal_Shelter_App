@@ -40,7 +40,7 @@ gates: typecheck=0 lint=0 build=0
 ```
 
 - [x] `node scripts/check-script-integrity.mjs` — exit 0; the new `.mjs` parses under `node --check` and no `.service` exec bit is involved
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — all 6 checks passing on #369, `mergeStateStatus: CLEAN`, read from the PR status rather than assumed
 
 ## 3. Schema and data — *skip if no migration*
 
