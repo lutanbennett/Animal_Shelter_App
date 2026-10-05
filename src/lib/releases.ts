@@ -61,7 +61,9 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  { text: "On Maintenance, Projects, Deliveries, Contacts, Vets and Enclosures, the actions that were plain words are now buttons with an icon beside the word, at least 44 px tall on a phone: Edit details, Delete job, Rename, Move, Delete folder, the Manage links to Management and Settings, Log a job on an enclosure, the Friend profile's Publish, Edit, Remove and logo buttons, and the Back links on pages you cannot edit. Deleting a delivery is now a small bin button with the word showing when you hold over it, and on a project's photos the caption, cover and remove actions are icon buttons that are easy to tap. Adding or editing a translation is a button too. The sign-in page's links are easier to tap. Deleting still asks first.", roles: ["admin", "management", "staff", "volunteer", "vet"] },
+];
 
 
 /** Newest first. */
