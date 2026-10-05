@@ -135,12 +135,16 @@ eq("F1 no answers at all: a stocktake is nobody's", rolesForJob("/stocktake", {}
 eq("F2 no answers: an unregistered page is still everyone's", rolesForJob("/residents", {}, ROLES), ALLK);
 eq("F3 asked only about volunteer: only volunteer", rolesForJob("/stocktake", { "stock.count:edit": ["volunteer"] }, ROLES), ["volunteer"]);
 
-// Held to what the conversion replaced.
+// Held to what the conversion replaced, except where a later change to the cells moved the answer on
+// purpose. The /management landing opens for anyone who may open a page under it; staff and volunteers
+// were given contacts.directory (0144), so it now opens for them. Listed here, so the drift is on the
+// record rather than a red that has been failing since (found on a clean main, 2026-10-05).
+const MOVED_BY_CELLS = { "canDoJob(/management)": { staff: true, volunteer: true } };
 const fixture = JSON.parse(readFileSync(join(process.cwd(), "scripts/fixtures/legacy-predicates.json"), "utf8"));
 for (const [id, table] of Object.entries(fixture).filter(([id]) => id.startsWith("canDoJob("))) {
   const link = id.slice("canDoJob(".length, -1);
   const got = Object.fromEntries(Object.keys(table).map((r) => [r, canDoJob(r === "null" ? null : r, link, eligibility)]));
-  eq(`L ${id} equals the table written before the conversion`, got, table);
+  eq(`L ${id} equals the table written before the conversion`, got, { ...table, ...MOVED_BY_CELLS[id] });
 }
 
 if (fails) {
