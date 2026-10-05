@@ -8,8 +8,11 @@ import type { Locale } from "@/lib/i18n/locales";
 
 const TONES = {
   app: {
-    group: "gap-0.5 border-border bg-background p-0.5 text-xs font-medium",
-    button: "rounded-full px-2.5 py-1",
+    // 44px segments on a phone, 36px with a mouse (the rule ActionButton and
+    // RowAction settled); the pill has no padding, so it is the segments.
+    group: "border-border bg-background text-xs font-medium",
+    button:
+      "flex min-h-11 min-w-11 items-center justify-center rounded-full px-3 md:min-h-9",
     on: "bg-primary text-primary-foreground",
     off: "text-muted hover:text-foreground",
   },

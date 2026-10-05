@@ -69,7 +69,7 @@ export function WizardProgress({
                 aria-current={isCurrent ? "step" : undefined}
                 aria-label={w.goToStep(i + 1, title)}
                 onClick={() => onGo(i)}
-                className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                className={`flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border px-2.5 text-xs font-medium transition-colors md:min-h-9 md:min-w-9 ${
                   isCurrent
                     ? "border-primary bg-primary text-primary-foreground"
                     : visited
