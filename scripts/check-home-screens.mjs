@@ -83,13 +83,14 @@ for (const [role, perms] of Object.entries(roles)) {
   const tiles = homeTilesFor(perms, t);
   const hrefs = tiles.map((x) => x.href);
   eq(`B ${role}: no tile twice, none without a word`, [new Set(hrefs).size === hrefs.length, tiles.every((x) => x.label)], [true, true]);
-  eq(`B ${role}: every tile is a registered page, My tasks or Residents`, hrefs.filter((h) => !registered.has(h) && h !== "/my" && h !== "/residents"), []);
+  eq(`B ${role}: every tile is a registered page, My tasks or Residents`, hrefs.filter((h) => !registered.has(h) && h !== "/my" && h !== "/residents" && h !== "/residents/new"), []);
   eq(`B ${role}: no tile has a record id in it`, hrefs.filter((h) => h.includes("[")), []);
   eq(`B ${role}: every registered tile opens for the role`, hrefs.filter((h) => registered.has(h) && !canOpen(perms, ROUTES.find((r) => r.path === h))), []);
   eq(`B ${role}: the labels are one word each (no two tiles read alike)`, new Set(tiles.map((x) => x.label)).size, tiles.length);
   eq(`C ${role}: Residents is on the home`, hrefs.includes("/residents"), true);
   eq(`C ${role}: no Settings page (a role's home is its tasks)`, hrefs.filter((h) => h.startsWith("/admin/")), []);
 }
+eq("C Management's phone home is the whiteboard's: recurring jobs, intake, residents, then my tasks", homeTilesFor(roles.management, t).map((x) => x.href).filter((h) => h !== "/my"), ["/management/recurring-jobs", "/residents/new", "/residents"]);
 eq("C staff leads with My tasks, Residents, then the whiteboard order of what staff hold", homeTilesFor(roles.staff, t).slice(0, 5).map((x) => x.href), ["/my", "/residents", "/stocktake", "/maintenance", "/deliveries"]);
 eq("C a vet's home is its appointments, and staff are not offered them", [
   homeTilesFor(roles.vet, t).some((x) => x.href === "/appointments"),
@@ -105,8 +106,14 @@ const contactsReader = parsePermissions({
   scopes: {},
   permissions: { "contacts.directory": 1 },
 });
+const contactsEditor = parsePermissions({
+  role: { key: "editor", name: "editor", opens_app: true },
+  is_admin: false,
+  scopes: {},
+  permissions: { "contacts.directory": 2 },
+});
 eq("C Contacts is one tile, and opens the manager for the role that may use it", [
-  homeTilesFor(roles.management, t).filter((x) => x.label === t.nav.contacts).map((x) => x.href),
+  homeTilesFor(contactsEditor, t).filter((x) => x.label === t.nav.contacts).map((x) => x.href),
   homeTilesFor(contactsReader, t).filter((x) => x.label === t.nav.contacts).map((x) => x.href),
 ], [["/management/contacts"], ["/contacts"]]);
 // R1 (volunteer-read-only): a tile that survives its page is the clearest sign the app is out of step with

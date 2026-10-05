@@ -119,6 +119,8 @@ const th: Dictionary = {
     emptyTitle: "ยังไม่มีอะไรที่นี่",
     empty: "บทบาทนี้ยังไม่มีงานบนหน้าหลัก งานจะปรากฏเมื่อบทบาทนี้ได้รับมอบหมายหน้าที่",
     /** A job's name, in the Director's words: the tile a role with jobs sees (src/lib/permissions/jobs.ts). */
+    /** The Director's Intake tile: registering a new resident (the whiteboard's Management column). */
+    intake: "รับสัตว์เข้า",
     jobs: {
       administerMedication: "ให้ยา",
       doMaintenance: "ทำงานซ่อมบำรุง",
