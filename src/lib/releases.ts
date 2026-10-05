@@ -61,17 +61,25 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [
-  { text: "The English / Thai switch at the top of every page, and the sign-in screens, is now a full-size button on a phone (it was only 24 px tall), and so are the numbered step buttons when logging a maintenance job, registering a resident or adding a Shelter Friend. On a computer they are slightly smaller than on a phone.", roles: ["admin", "management", "staff", "volunteer", "vet"] },
-  { text: "On a phone, the Rehome / foster form no longer slides sideways because of a long carer name, and the Medications and Diets pages no longer slide sideways because of the \"Stock between counts\" link, which now wraps onto a second line.", roles: ["admin", "management", "staff"] },
-  { text: "On Maintenance, Projects, Deliveries, Contacts, Vets and Enclosures, the actions that were plain words are now buttons with an icon beside the word, at least 44 px tall on a phone: Edit details, Delete job, Rename, Move, Delete folder, the Manage links to Management and Settings, Log a job on an enclosure, the Friend profile's Publish, Edit, Remove and logo buttons, and the Back links on pages you cannot edit. Deleting a delivery is now a small bin button with the word showing when you hold over it, and on a project's photos the caption, cover and remove actions are icon buttons that are easy to tap. Adding or editing a translation is a button too. The sign-in page's links are easier to tap. Deleting still asks first.", roles: ["admin", "management", "staff", "volunteer", "vet"] },
-  { text: "On a phone, the Hand over section of Recurring jobs no longer makes the whole page scroll sideways when a person's name or email is long.", roles: ["admin", "management"] },
-  { text: "A weekly job that links to a page, such as the stocktake, can now be given to the 2IC from Recurring jobs, and it keeps its link on her My tasks. The same goes for the Head of Medical and the Head of Maintenance: they are judged by what their own role may open, not by the plain Volunteer role they share a login type with.", roles: ["admin", "management", "volunteer"] },
-];
+export const unreleased: ReleaseNote[] = [];
 
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.19.2",
+    date: "2026-10-05",
+    title:
+      "Phones get bigger buttons and stop sliding sideways, and a weekly job can go to the 2IC",
+    major: false,
+    notes: [
+      { text: "A weekly job that links to a page, such as the stocktake, can now be given to the 2IC from Recurring jobs, and it keeps its link on her My tasks. The same goes for the Head of Medical and the Head of Maintenance: they are judged by what their own role may open, not by the plain Volunteer role they share a login type with.", roles: ["admin", "management", "volunteer"] },
+      { text: "The English / Thai switch at the top of every page, and the sign-in screens, is now a full-size button on a phone (it was only 24 px tall), and so are the numbered step buttons when logging a maintenance job, registering a resident or adding a Shelter Friend. On a computer they are slightly smaller than on a phone.", roles: ["admin", "management", "staff", "volunteer", "vet"] },
+      { text: "On Maintenance, Projects, Deliveries, Contacts, Vets and Enclosures, the actions that were plain words are now buttons with an icon beside the word, at least 44 px tall on a phone: Edit details, Delete job, Rename, Move, Delete folder, the Manage links to Management and Settings, Log a job on an enclosure, the Friend profile's Publish, Edit, Remove and logo buttons, and the Back links on pages you cannot edit. Deleting a delivery is now a small bin button with the word showing when you hold over it, and on a project's photos the caption, cover and remove actions are icon buttons that are easy to tap. Adding or editing a translation is a button too. The sign-in page's links are easier to tap. Deleting still asks first.", roles: ["admin", "management", "staff", "volunteer", "vet"] },
+      { text: "On a phone, the Rehome / foster form no longer slides sideways because of a long carer name, and the Medications and Diets pages no longer slide sideways because of the \"Stock between counts\" link, which now wraps onto a second line.", roles: ["admin", "management", "staff"] },
+      { text: "On a phone, the Hand over section of Recurring jobs no longer makes the whole page scroll sideways when a person's name or email is long.", roles: ["admin", "management"] },
+    ],
+  },
   {
     version: "0.19.1",
     date: "2026-10-05",
