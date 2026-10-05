@@ -31,10 +31,11 @@
 -- Behaviour changes, all of them hand-built requests the app never makes (so no release note):
 --   enclosures, zones         management and staff can no longer write (C1 closes). They hold Read.
 --   group_origins             management and staff can no longer write.
+--   stock_receipts            management and staff can no longer UPDATE one (C8): a wrong delivery is
+--                             deleted and recorded again (0096), the app does only that, and
+--                             check-2ic-role.mjs (0143) already asserts the 2IC cannot change one.
 --   frequency_rounds          management can no longer write it by hand (the app writes it through a
 --                             security definer function; frequencies are Admin's, reference.types).
---   stock_receipts            management and staff can no longer UPDATE one (C8): a wrong delivery is
---                             deleted and recorded again (0096), and the app does only that.
 -- Everything else answers exactly as before, which is what check-permission-parity.mjs is for.
 --
 -- Written to be safely re-runnable. To undo: drop the *_perm policies and vet_read_recurring_* named
