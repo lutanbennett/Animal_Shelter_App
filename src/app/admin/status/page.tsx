@@ -81,8 +81,8 @@ export default async function SystemStatusPage(props: PageProps<"/admin/status">
                 aria-current={p === days ? "page" : undefined}
                 className={
                   p === days
-                    ? "rounded bg-primary px-3 py-1 text-sm font-medium text-primary-foreground"
-                    : "rounded border border-border px-3 py-1 text-sm text-foreground hover:bg-surface-hover"
+                    ? "inline-flex min-h-11 items-center rounded bg-primary px-3 py-1 text-sm font-medium text-primary-foreground md:min-h-0"
+                    : "inline-flex min-h-11 items-center rounded border border-border px-3 py-1 text-sm text-foreground hover:bg-surface-hover md:min-h-0"
                 }
               >
                 {s.periodDays({ days: p })}

@@ -1,0 +1,27 @@
+import { randomBytes } from "node:crypto";
+import http from "node:http";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
+const root = process.cwd();
+const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
+const env = loadEnv("test");
+if (projectRef(env) !== "qxkmhwybjggxvsfxsxbd") throw new Error("not dev");
+const url = env.NEXT_PUBLIC_SUPABASE_URL;
+const service = createClient(url, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { autoRefreshToken: false, persistSession: false } });
+const tag = randomBytes(3).toString("hex");
+const email = `dryrun-admin-icons-${tag}@example.test`;
+const password = randomBytes(18).toString("base64url");
+const { data: a, error } = await service.auth.admin.createUser({ email, password, email_confirm: true });
+if (error) throw error;
+await service.from("user_roles").insert({ user_id: a.user.id, role: "admin" });
+const jar = new Map();
+const ssr = createServerClient(url, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, { cookies: { getAll: () => [...jar].map(([name, value]) => ({ name, value })), setAll: (l) => l.forEach(({ name, value }) => (value ? jar.set(name, value) : jar.delete(name))) } });
+const r = await ssr.auth.signInWithPassword({ email, password });
+if (r.error) throw r.error;
+http.createServer((req, res) => {
+  res.writeHead(302, { Location: "http://localhost:3021/admin", "Set-Cookie": [...jar].map(([n, v]) => `${n}=${v}; Path=/; Max-Age=3000`) });
+  res.end();
+}).listen(3099, () => console.log("helper up as", email));
+process.on("SIGTERM", async () => { await service.auth.admin.deleteUser(a.user.id); process.exit(0); });

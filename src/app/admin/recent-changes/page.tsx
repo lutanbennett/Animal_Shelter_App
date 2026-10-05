@@ -159,7 +159,7 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
         </label>
         <button
           type="submit"
-          className="rounded border border-border px-4 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover"
+          className="min-h-11 rounded border border-border px-4 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover md:min-h-0"
         >
           {s.filters.apply}
         </button>
