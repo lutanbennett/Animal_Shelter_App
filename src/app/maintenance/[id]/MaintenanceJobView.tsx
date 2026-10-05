@@ -4,8 +4,10 @@ import { useConfirm } from "@/components/ConfirmProvider";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CalendarClock, Pencil, UserRound } from "lucide-react";
-import { ENCLOSURE_ICONS } from "@/components/hub-icons";
+import { CalendarClock, UserRound } from "lucide-react";
+import { ActionButton } from "@/components/ActionButton";
+import { ActionLink } from "@/components/ActionLink";
+import { ACTION_ICONS, ENCLOSURE_ICONS } from "@/components/hub-icons";
 import { AttachmentUploader } from "@/components/AttachmentUploader";
 import { TranslationPanel } from "@/components/TranslationPanel";
 import { localizedFromRow } from "@/lib/translations/localize";
@@ -110,7 +112,7 @@ export function MaintenanceJobView({
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
-      <Link href="/maintenance" className="text-sm text-muted hover:text-foreground">
+      <Link href="/maintenance" className="inline-flex min-h-11 items-center text-sm text-muted hover:text-foreground md:min-h-0">
         {t.maintenance.backToBoard}
       </Link>
 
@@ -258,13 +260,12 @@ export function MaintenanceJobView({
                 {t.maintenance.fields.description}
               </h3>
               {canWrite && (
-                <Link
+                <ActionLink
                   href={`/maintenance/${job.id}/edit`}
-                  className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                >
-                  <Pencil aria-hidden="true" className="h-3.5 w-3.5" />
-                  {d.editDetails}
-                </Link>
+                  label={d.editDetails}
+                  icon={ACTION_ICONS.edit}
+                  iconOnlyOnMobile={false}
+                />
               )}
             </div>
             {description ? (
@@ -298,14 +299,14 @@ export function MaintenanceJobView({
 
           {canWrite && (
             <div className="flex flex-col gap-1">
-              <button
-                type="button"
+              <ActionButton
+                icon={ACTION_ICONS.delete}
+                variant="danger"
                 disabled={isPending}
                 onClick={removeJob}
-                className="rounded border border-danger/40 px-3 py-2 text-sm font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
               >
                 {isPending && deleting ? d.deleting : d.deleteJob}
-              </button>
+              </ActionButton>
               <p className="text-xs text-muted">{d.deleteHint}</p>
             </div>
           )}
@@ -353,13 +354,9 @@ function PhotoSection({
           </h2>
           <span className="text-xs text-muted">{hint}</span>
         </div>
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="shrink-0 rounded border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
-        >
+        <ActionButton icon={open ? ACTION_ICONS.clear : ACTION_ICONS.uploadImage} onClick={() => setOpen((v) => !v)}>
           {open ? t.common.close : addLabel}
-        </button>
+        </ActionButton>
       </div>
 
       {open && (

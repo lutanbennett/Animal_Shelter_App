@@ -2,7 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { Languages } from "lucide-react";
+import { ActionButton } from "@/components/ActionButton";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { TranslationRow, TranslationStatus } from "@/lib/translations/types";
 import {
@@ -107,13 +109,15 @@ export function TranslationPanel({
         </span>
         <StatusChip status={current.status} />
         {canManage && !editing && (
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="ml-auto text-xs font-medium text-primary hover:underline"
-          >
-            {current.text ? tr.editTranslation : tr.addTranslation}
-          </button>
+          <span className="ml-auto">
+            <ActionButton
+              icon={current.text ? ACTION_ICONS.edit : ACTION_ICONS.add}
+              compact
+              onClick={() => setEditing(true)}
+            >
+              {current.text ? tr.editTranslation : tr.addTranslation}
+            </ActionButton>
+          </span>
         )}
       </div>
 
@@ -165,14 +169,17 @@ export function TranslationPanel({
           {error && <p className="text-xs text-danger">{error}</p>}
           <div className="flex flex-wrap justify-end gap-2">
             {current.text && (
-              <button
-                type="button"
-                onClick={() => setConfirmClear(true)}
-                disabled={isPending}
-                className="mr-auto rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
-              >
-                {tr.clear}
-              </button>
+              <span className="mr-auto">
+                <ActionButton
+                  icon={ACTION_ICONS.clear}
+                  variant="danger"
+                  compact
+                  onClick={() => setConfirmClear(true)}
+                  disabled={isPending}
+                >
+                  {tr.clear}
+                </ActionButton>
+              </span>
             )}
             <button
               type="button"

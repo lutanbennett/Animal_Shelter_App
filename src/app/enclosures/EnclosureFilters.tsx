@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import { ActionLink } from "@/components/ActionLink";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import { useRef } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { PlaceZoneChips } from "@/components/PlaceZoneChips";
@@ -169,17 +170,12 @@ export function EnclosureFilters({
         )}
         <button
           type="submit"
-          className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
+          className="min-h-11 rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover md:min-h-0"
         >
           {t.enclosures.filter}
         </button>
         {hasFilters && (
-          <Link
-            href="/enclosures"
-            className="py-2 text-sm font-medium text-muted hover:text-foreground"
-          >
-            {t.enclosures.clear}
-          </Link>
+          <ActionLink href="/enclosures" label={t.enclosures.clear} icon={ACTION_ICONS.clear} iconOnlyOnMobile={false} />
         )}
       </form>
     </div>

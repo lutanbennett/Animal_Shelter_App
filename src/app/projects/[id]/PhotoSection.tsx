@@ -2,7 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Star } from "lucide-react";
+import { Star, Trash2 } from "lucide-react";
+import { RowActionButton } from "@/components/RowAction";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import type { ActionResult } from "@/lib/action-result";
 import { AttachmentUploader } from "@/components/AttachmentUploader";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -130,9 +132,9 @@ export function PhotoSection({
                       disabled={isPending}
                       onClick={() => setRemoving(photo)}
                       aria-label={p.remove}
-                      className="absolute right-1 top-1 rounded-full bg-black/60 px-1.5 text-xs text-white hover:bg-danger disabled:opacity-60 md:hidden md:group-hover:block"
+                      className="absolute right-1 top-1 inline-flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white hover:bg-danger disabled:opacity-60 md:hidden md:h-9 md:w-9 md:group-hover:inline-flex"
                     >
-                      &times;
+                      <Trash2 aria-hidden="true" className="h-5 w-5 md:h-4 md:w-4" />
                     </button>
                   )}
                 </div>
@@ -181,36 +183,26 @@ export function PhotoSection({
                       {caption ? (
                         <span className="line-clamp-2 text-xs text-foreground">{caption}</span>
                       ) : canWrite ? (
-                        <button
-                          type="button"
-                          onClick={() => setEditing(photo.id)}
-                          className="text-left text-xs text-muted hover:text-foreground"
-                        >
-                          {p.captionPlaceholder}
-                        </button>
+                        <span className="text-xs text-muted">{p.captionPlaceholder}</span>
                       ) : null}
                       {canWrite && (
-                        <span className="flex flex-wrap gap-x-2 text-xs">
-                          {caption && (
-                            <button
-                              type="button"
-                              onClick={() => setEditing(photo.id)}
-                              className="text-muted hover:text-foreground"
-                            >
-                              {p.editCaption}
-                            </button>
-                          )}
+                        <span className="flex flex-wrap gap-2">
+                          <RowActionButton
+                            icon={caption ? ACTION_ICONS.edit : ACTION_ICONS.add}
+                            label={caption ? p.editCaption : p.captionPlaceholder}
+                            subject={caption ?? photo.file_name ?? p.fileFallback}
+                            onClick={() => setEditing(photo.id)}
+                          />
                           {kind === "image" && (
-                            <button
-                              type="button"
+                            <RowActionButton
+                              icon={ACTION_ICONS.makeStandard}
+                              label={isCover ? p.clearCover : p.setCover}
+                              subject={caption ?? photo.file_name ?? p.fileFallback}
                               disabled={isPending}
                               onClick={() =>
                                 run(() => setProjectCoverPhoto(folder.id, isCover ? null : photo.id))
                               }
-                              className="text-muted hover:text-foreground disabled:opacity-50"
-                            >
-                              {isCover ? p.clearCover : p.setCover}
-                            </button>
+                            />
                           )}
                         </span>
                       )}

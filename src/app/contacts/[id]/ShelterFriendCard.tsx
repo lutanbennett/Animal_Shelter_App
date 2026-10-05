@@ -34,11 +34,13 @@ import {
 } from "@/app/management/shelter-friends/actions";
 import type { ActionResult } from "@/lib/action-result";
 import { OptionalDateInput } from "@/components/OptionalDateInput";
+import { ActionButton } from "@/components/ActionButton";
+import { ACTION_ICONS } from "@/components/hub-icons";
 
 const inputClass =
   "w-full rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary";
 const buttonClass =
-  "inline-flex items-center gap-1.5 rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-50";
+  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-50 md:min-h-9";
 
 /** Which contact detail each opt-in releases — the view's CASE columns (0076). */
 const OPT_IN_SOURCE: Record<FriendOptIn, (c: Contact) => string | null> = {
@@ -237,29 +239,24 @@ export function ShelterFriendCard({
       <div className="flex flex-wrap gap-2">
         {canManage && !editing && (
           <>
-            <button
-              type="button"
+            <ActionButton
+              icon={friend.published ? ACTION_ICONS.unpublish : ACTION_ICONS.publish}
+              variant={friend.published ? "secondary" : "primary"}
               disabled={isPending}
               onClick={() => run(() => setFriendPublished(friend.id, !friend.published))}
-              className={
-                friend.published
-                  ? buttonClass
-                  : "rounded bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-              }
             >
               {friend.published ? c.unpublish : c.publish}
-            </button>
-            <button
-              type="button"
+            </ActionButton>
+            <ActionButton
+              icon={ACTION_ICONS.edit}
               disabled={isPending}
               onClick={() => {
                 setDraft(fieldsFrom(friend));
                 setEditing(true);
               }}
-              className={buttonClass}
             >
               {c.editProfile}
-            </button>
+            </ActionButton>
           </>
         )}
         <button
@@ -288,18 +285,20 @@ export function ShelterFriendCard({
         {/* Beside Unpublish rather than inside the edit form, so "hide for
             now" and "no longer a Friend" are read side by side. */}
         {canManage && !editing && (
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={async () => {
-              if (await confirm({ body: c.removeConfirm(contact.name) })) {
-                run(() => deleteFriend(friend.id), () => setDraft(null));
-              }
-            }}
-            className="rounded border border-danger/40 px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger/10 disabled:opacity-50 sm:ml-auto"
-          >
-            {c.removeProfile}
-          </button>
+          <span className="sm:ml-auto">
+            <ActionButton
+              icon={ACTION_ICONS.delete}
+              variant="danger"
+              disabled={isPending}
+              onClick={async () => {
+                if (await confirm({ body: c.removeConfirm(contact.name) })) {
+                  run(() => deleteFriend(friend.id), () => setDraft(null));
+                }
+              }}
+            >
+              {c.removeProfile}
+            </ActionButton>
+          </span>
         )}
       </div>
       {canManage && !editing && <p className="text-xs text-muted">{c.actionsHint}</p>}
@@ -392,28 +391,27 @@ export function ShelterFriendCard({
                   <span className="text-xs text-muted">{c.noLogo}</span>
                 )}
               </div>
-              <button
-                type="button"
+              <ActionButton
+                icon={ACTION_ICONS.uploadImage}
                 disabled={isPending}
                 onClick={() => logoInput.current?.click()}
-                className={buttonClass}
               >
                 {isPending && <PendingPuppy />}
                 {isPending ? t.common.uploading : friend.logo_drive_file_id ? c.replaceLogo : c.uploadLogo}
-              </button>
+              </ActionButton>
               {friend.logo_drive_file_id && (
-                <button
-                  type="button"
+                <ActionButton
+                  icon={ACTION_ICONS.removeImage}
+                  variant="danger"
                   disabled={isPending}
                   onClick={async () => {
                     if (await confirm({ body: c.removeLogoConfirm })) {
                       run(() => removeFriendLogo(friend.id), undefined, "logo");
                     }
                   }}
-                  className="rounded border border-danger/40 px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
                 >
                   {c.removeLogo}
-                </button>
+                </ActionButton>
               )}
               <input
                 ref={logoInput}

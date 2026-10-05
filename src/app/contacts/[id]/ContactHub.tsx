@@ -5,7 +5,8 @@ import Link from "next/link";
 import { ArchiveContactControl } from "@/components/ArchiveContactControl";
 import { ArchivedBadge } from "@/components/ArchivedBadge";
 import { ContactActions } from "@/components/ContactActions";
-import { CONTACT_ICONS } from "@/components/hub-icons";
+import { ActionLink } from "@/components/ActionLink";
+import { ACTION_ICONS, CONTACT_ICONS } from "@/components/hub-icons";
 import { formatDate } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -111,7 +112,7 @@ export function ContactHub({
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-4 md:p-6">
-      <Link href="/contacts" className="text-sm text-muted hover:text-foreground">
+      <Link href="/contacts" className="inline-flex min-h-11 items-center text-sm text-muted hover:text-foreground md:min-h-0">
         {h.backToContacts}
       </Link>
 
@@ -138,12 +139,12 @@ export function ContactHub({
             )}
           </div>
           {canManage && (
-            <Link
+            <ActionLink
               href={archived ? "/management/contacts?archived=1" : "/management/contacts"}
-              className="text-xs font-medium text-primary hover:underline"
-            >
-              {t.contacts.manageInAdmin}
-            </Link>
+              label={t.contacts.manageInAdmin}
+              icon={ACTION_ICONS.manage}
+              iconOnlyOnMobile={false}
+            />
           )}
         </div>
 

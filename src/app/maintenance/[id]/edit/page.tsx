@@ -1,3 +1,5 @@
+import { ActionLink } from "@/components/ActionLink";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { can } from "@/lib/permissions/can";
@@ -27,19 +29,16 @@ export default async function EditMaintenancePage(
       <main className="flex flex-1 flex-col gap-4 p-6">
         <h1 className="text-2xl font-semibold text-foreground">{t.maintenance.editJob}</h1>
         <p className="text-sm text-muted">{t.maintenance.detail.readOnly}</p>
-        <Link
-          href={`/maintenance/${job.id}`}
-          className="text-sm font-medium text-primary hover:underline"
-        >
-          {t.maintenance.backToJob}
-        </Link>
+        <div>
+          <ActionLink href={`/maintenance/${job.id}`} label={t.maintenance.backToJob} icon={ACTION_ICONS.back} iconOnlyOnMobile={false} />
+        </div>
       </main>
     );
   }
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
-      <Link href={`/maintenance/${job.id}`} className="text-sm text-muted hover:text-foreground">
+      <Link href={`/maintenance/${job.id}`} className="inline-flex min-h-11 items-center text-sm text-muted hover:text-foreground md:min-h-0">
         {t.maintenance.backToJob}
       </Link>
       <div>

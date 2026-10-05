@@ -60,11 +60,11 @@ export function LoginForm({
         <button
           type="submit"
           disabled={pending}
-          className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
+          className="min-h-11 rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
         >
           {pending ? t.login.signingIn : t.login.signIn}
         </button>
-        <Link href="/login/forgot" className="text-center text-sm text-muted hover:text-foreground">
+        <Link href="/login/forgot" className="flex min-h-11 items-center justify-center text-sm text-muted hover:text-foreground">
           {t.login.forgotPassword}
         </Link>
       </form>
@@ -80,7 +80,7 @@ export function LoginForm({
         {next && <input type="hidden" name="next" value={next} />}
         <GoogleButton label={t.login.continueWithGoogle} />
       </form>
-      <Link href="/login/request" className="text-center text-sm font-medium text-primary hover:underline">
+      <Link href="/login/request" className="flex min-h-11 items-center justify-center text-sm font-medium text-primary hover:underline">
         {t.login.requestAccess}
       </Link>
     </div>
@@ -93,7 +93,7 @@ export function GoogleButton({ label }: { label: string }) {
     <button
       type="submit"
       disabled={pending}
-      className="flex w-full items-center justify-center gap-3 rounded border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-background disabled:opacity-50"
+      className="flex min-h-11 w-full items-center justify-center gap-3 rounded border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-background disabled:opacity-50"
     >
       <GoogleLogo />
       {label}

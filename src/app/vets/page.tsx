@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { ActionLink } from "@/components/ActionLink";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
@@ -71,12 +72,7 @@ export default async function VetsPage() {
           <p className="text-sm text-muted">{t.vets.pageSubtitle}</p>
         </div>
         {can(perms, "clinics.list") && (
-          <Link
-            href="/management/vets"
-            className="shrink-0 text-sm font-medium text-primary hover:underline"
-          >
-            {t.vets.manageInAdmin}
-          </Link>
+          <ActionLink href="/management/vets" label={t.vets.manageInAdmin} icon={ACTION_ICONS.manage} iconOnlyOnMobile={false} />
         )}
       </div>
 

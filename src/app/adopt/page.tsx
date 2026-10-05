@@ -112,7 +112,7 @@ export default async function AdoptPage(props: PageProps<"/adopt">) {
     return qs ? `/adopt?${qs}` : "/adopt";
   };
   const chipClass = (active: boolean) =>
-    `rounded-full border px-3 py-1 text-sm font-medium transition ${
+    `inline-flex min-h-11 items-center rounded-full border px-3 py-1 text-sm font-medium transition ${
       active
         ? "border-primary bg-primary text-primary-foreground"
         : "border-border bg-surface text-muted hover:border-primary hover:text-foreground"
