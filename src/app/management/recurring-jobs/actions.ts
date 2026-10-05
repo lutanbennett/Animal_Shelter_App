@@ -186,20 +186,20 @@ async function whoCannotDo(
   if (userIds.length === 0) return { names: [], error: null };
   const { data, error } = await supabase
     .from("app_users")
-    .select("id, email, display_name, role, archived_at")
+    .select("id, email, display_name, role, archived_at, role_key")
     .in("id", userIds)
     .is("archived_at", null)
     .returns<AppUser[]>();
   if (error) return { names: [], error: error.message };
   const { eligibility, error: eligibilityError } = await loadEligibility(
     supabase,
-    (data ?? []).map((user) => user.role),
+    (data ?? []).map((user) => user.role_key),
     needsForLinks([linkPath]),
   );
   if (eligibilityError) return { names: [], error: eligibilityError };
   return {
     names: (data ?? [])
-      .filter((user) => !canDoJob(user.role, linkPath, eligibility))
+      .filter((user) => !canDoJob(user.role_key, linkPath, eligibility))
       .map((user) => appUserLabel(user)),
     error: null,
   };
