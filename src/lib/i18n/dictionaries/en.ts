@@ -128,6 +128,8 @@ const en = {
     emptyTitle: "Nothing here yet",
     empty: "This role has no jobs on its home screen yet. They appear when the role is given something to do.",
     /** A job's name, in the Director's words: the tile a role with jobs sees (src/lib/permissions/jobs.ts). */
+    /** The Director's Intake tile: registering a new resident (the whiteboard's Management column). */
+    intake: "Intake",
     jobs: {
       administerMedication: "Administer Medication",
       doMaintenance: "Do Maintenance",
