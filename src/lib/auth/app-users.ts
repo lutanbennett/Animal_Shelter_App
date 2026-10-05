@@ -6,11 +6,13 @@ export type AppUser = {
   email: string | null;
   display_name: string | null;
   role: string;
+  /** The role's own key (0146): what role_can() and the rota ask about. `role` is the legacy enum, which every configured role borrows as `volunteer`. */
+  role_key: string;
   /** Set when the person has left (0063): kept for past work, never offered for new. */
   archived_at: string | null;
 };
 
-const APP_USER_COLUMNS = "id, email, display_name, role, archived_at";
+const APP_USER_COLUMNS = "id, email, display_name, role, archived_at, role_key";
 
 /** The name to show for a login: Google's display name, else the email. */
 export function appUserLabel(user: Pick<AppUser, "email" | "display_name"> | null | undefined): string {

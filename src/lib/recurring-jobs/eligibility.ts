@@ -31,11 +31,19 @@ import { ROUTES } from "@/lib/permissions/routes";
  */
 
 /**
- * The roles that can be given a recurring job at all: everyone with app
+ * The built-in roles that can be given a recurring job: everyone with app
  * access but vets. 0095 lets any app role be an assignee (and read the
- * rules); this is narrower, and the actions enforce it.
+ * rules); this is narrower, and the actions enforce it. It is the ENUM gate
+ * for queries over app_users.role, which every configured role also passes
+ * (each borrows a legacy value); it is not the list of keys eligibility is
+ * asked about. Those are the keys of the people concerned (app_users.role_key,
+ * 0146), because a configured role's enum value is not its key
+ * (decisions/2026-10-05-rota-eligibility.md).
  */
 export const ASSIGNABLE_ROLES = APP_ACCESS_ROLES.filter((role) => role !== "vet");
+
+/** Keys that are never assignable whatever they hold: a vet's work comes from vet appointments, and a public viewer is not staff. */
+const NEVER_ASSIGNABLE = ["vet", "public_viewer"];
 
 /** The cell a page asks for: the activity its route registers, at the level that opens it. */
 export type Need = { activity: ActivityKey; level: Level };
@@ -106,24 +114,32 @@ function ruleFor(linkPath: string | null | undefined): Rule | null {
   return best;
 }
 
-/** Can someone with `role` do a job that links to `linkPath`? `eligibility` is the database's answer for their role. */
+/** Can someone whose role KEY is `role` do a job that links to `linkPath`? `eligibility` is the database's answer for that key. */
 export function canDoJob(
   role: string | null | undefined,
   linkPath: string | null | undefined,
   eligibility: Eligibility,
 ): boolean {
-  if (!role || !(ASSIGNABLE_ROLES as readonly string[]).includes(role)) return false;
+  if (!role || NEVER_ASSIGNABLE.includes(role)) return false;
   const rule = ruleFor(linkPath);
   if (!rule) return true;
   return rule.needs.some((need) => eligibility[needKey(need)]?.includes(role) ?? false);
 }
 
-/** The roles that can do it, in the usual order — for "only … are listed". */
-export function rolesForJob(linkPath: string | null | undefined, eligibility: Eligibility): string[] {
-  return ASSIGNABLE_ROLES.filter((role) => canDoJob(role, linkPath, eligibility));
+/** Which of `roles` (keys) can do it, in the given order — for "only … are listed". */
+export function rolesForJob(
+  linkPath: string | null | undefined,
+  eligibility: Eligibility,
+  roles: readonly string[],
+): string[] {
+  return roles.filter((role) => canDoJob(role, linkPath, eligibility));
 }
 
-/** True when the link narrows who can do the job below every assignable role. */
-export function jobIsRestricted(linkPath: string | null | undefined, eligibility: Eligibility): boolean {
-  return rolesForJob(linkPath, eligibility).length < ASSIGNABLE_ROLES.length;
+/** True when the link narrows who can do the job below every one of `roles`. */
+export function jobIsRestricted(
+  linkPath: string | null | undefined,
+  eligibility: Eligibility,
+  roles: readonly string[],
+): boolean {
+  return rolesForJob(linkPath, eligibility, roles).length < roles.length;
 }

@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate, todayIso } from "@/lib/format";
-import { roleLabel } from "@/lib/i18n/enum-labels";
+import { roleKeyLabel } from "@/lib/i18n/enum-labels";
 import {
   REPEATS,
   TIMES_OF_DAY,
@@ -138,7 +138,7 @@ export function RecurringJobForm({
       .filter((p) => eligible(p.role) || assigneeIds.has(p.id))
       .map((p) => ({
         id: p.id,
-        name: `${p.name} — ${roleLabel(t, p.role)}`,
+        name: `${p.name} — ${roleKeyLabel(t, p.role)}`,
         archived: false,
         cannotDo: !eligible(p.role),
       })),
@@ -146,11 +146,13 @@ export function RecurringJobForm({
       .filter((m) => !people.some((p) => p.id === m.id))
       .map((m) => ({
         ...m,
-        name: !m.archived && m.role ? `${m.name} — ${roleLabel(t, m.role)}` : m.name,
+        name: !m.archived && m.role ? `${m.name} — ${roleKeyLabel(t, m.role)}` : m.name,
         cannotDo: !m.archived && !eligible(m.role),
       })),
   ];
-  const restricted = jobIsRestricted(linkPath, eligibility);
+  // Roles in play, by key: the people offered and anyone already on the job.
+  const roleKeys = [...new Set([...people.map((p) => p.role), ...team.flatMap((m) => (m.role ? [m.role] : []))])];
+  const restricted = jobIsRestricted(linkPath, eligibility, roleKeys);
 
   function toggle<T>(set: Set<T>, value: T): Set<T> {
     const next = new Set(set);
@@ -413,7 +415,7 @@ export function RecurringJobForm({
           <span className={hintClass}>{f.assigneesNoVets}</span>
           {restricted && (
             <span className={hintClass}>
-              {f.assigneesRestricted(rolesForJob(linkPath, eligibility).map((role) => roleLabel(t, role)).join(", "))}
+              {f.assigneesRestricted(rolesForJob(linkPath, eligibility, roleKeys).map((role) => roleKeyLabel(t, role)).join(", "))}
             </span>
           )}
           <div className="mt-1 flex max-h-56 flex-col gap-1 overflow-y-auto rounded border border-border p-2">
