@@ -13,6 +13,7 @@
 // src/lib/medication-list/load.ts), run under a login's own JWT in a rolled-back
 // transaction. Five runs each; the first is discarded as cold and the median of the
 // rest is reported, with the buffers of that run. Writes nothing.
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
@@ -32,8 +33,11 @@ const WHO = ["staff", "volunteer"];
 const RUNS = 5;
 const ids = Object.fromEntries(WHO.map((w) => [w, randomUUID()]));
 
+// MEASURE_PRE_SQL=<file>: SQL run first inside the rolled-back transaction, to measure a policy shape the database no longer has.
+const preSql = process.env.MEASURE_PRE_SQL ? readFileSync(process.env.MEASURE_PRE_SQL, "utf8") : "";
 const sql = `
 begin;
+${preSql}
 create temp table harness_ids (who text primary key, id uuid not null);
 grant select on harness_ids to authenticated;
 insert into harness_ids values ${WHO.map((w) => `('${w}', '${ids[w]}')`).join(", ")};
