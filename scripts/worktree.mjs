@@ -31,6 +31,7 @@
 
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, copyFileSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -311,6 +312,50 @@ function writeLaunch(dir, { quiet = false } = {}) {
   if (!quiet) console.log(`.claude/launch.json: dev on port ${port}`);
 }
 
+// --------------------------------------------------------------- folder trust
+
+// Opening a Claude session on a folder for the first time asks whether you
+// trust the files in it. The answer is stored per folder path in
+// ~/.claude.json, under `projects`, as hasTrustDialogAccepted — which is why
+// it is asked once per path and why every new worktree asks again.
+//
+// A worktree this script just created holds origin/main's files in a folder
+// this script chose, so the prompt is answering for files the main checkout
+// is already trusted with. Writing the entry here answers it in advance.
+//
+// The file belongs to the app and other sessions write it too, so this is
+// deliberately timid: it only ADDS a missing key (never edits an existing
+// entry), matches the shape and 2-space formatting the app itself writes,
+// goes through a temp file and a rename so the file is never left
+// half-written, and gives up with a note on any error. A stream that is
+// otherwise ready must not fail over a convenience. If the app happens to
+// rewrite the file from memory in the same moment, the prompt comes back
+// once — it is not harmful, just the thing this avoids.
+function trustFolder(dir) {
+  const file = path.join(os.homedir(), ".claude.json");
+  const key = dir.replace(/\\/g, "/");
+  try {
+    if (!existsSync(file)) return;
+    const config = JSON.parse(readFileSync(file, "utf8"));
+    if (!config.projects || Object.hasOwn(config.projects, key)) return;
+    config.projects[key] = {
+      allowedTools: [],
+      mcpContextUris: [],
+      enabledMcpjsonServers: [],
+      disabledMcpjsonServers: [],
+      hasTrustDialogAccepted: true,
+      hasClaudeMdExternalIncludesApproved: false,
+      hasClaudeMdExternalIncludesWarningShown: false,
+    };
+    const temp = `${file}.worktree-${process.pid}`;
+    writeFileSync(temp, JSON.stringify(config, null, 2));
+    renameSync(temp, file);
+    console.log(`trusted the folder (no "do you trust the files in this folder?" prompt)`);
+  } catch (error) {
+    console.log(`could not pre-trust the folder (${error.message}) — Claude will ask once`);
+  }
+}
+
 // ---------------------------------------------------------------- commands
 
 function cmdNew(args) {
@@ -341,6 +386,7 @@ function cmdNew(args) {
   writeFileSync(path.join(dir, ".port"), `${port}\n`);
   console.log(`dev-server port ${port} (.port)`);
   writeLaunch(dir);
+  trustFolder(dir);
 
   if (install) {
     console.log(`npm ci`);

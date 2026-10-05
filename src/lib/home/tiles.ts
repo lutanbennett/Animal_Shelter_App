@@ -8,7 +8,7 @@
  * app). A record-scoped page is never here: the registry does not hold one, and that is the
  * contract.
  */
-import type { LucideIcon } from "lucide-react";
+import { UserPlus, type LucideIcon } from "lucide-react";
 import { NAV_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can, type Permissions } from "@/lib/permissions/can";
@@ -41,6 +41,16 @@ const ORDER: Record<string, readonly string[]> = {
 
 const rank = (r: RouteEntry) => (r.level === "read" ? 1 : 2);
 
+function managementDay(perms: Permissions, t: Dictionary): HomeTile[] {
+  const tiles: HomeTile[] = [];
+  const recurring = routeFor("/management/recurring-jobs");
+  if (recurring && canOpen(perms, recurring)) tiles.push({ href: recurring.path, label: recurring.label(t), icon: recurring.icon });
+  if (can(perms, "resident.register")) tiles.push({ href: "/residents/new", label: t.appHome.intake, icon: UserPlus });
+  if (perms.role.opensApp) tiles.push({ href: "/residents", label: t.nav.residents, icon: NAV_ICONS.residents });
+  if (can(perms, "recurring.do_own")) tiles.push({ href: "/my", label: t.nav.my, icon: NAV_ICONS.my });
+  return tiles;
+}
+
 export function homeTilesFor(perms: Permissions, t: Dictionary): HomeTile[] {
   // A role that is given jobs (src/lib/permissions/jobs.ts) shows its jobs, one tile each, and
   // nothing else: that is what "a home of named jobs" means. A job whose bundle the role's cells
@@ -55,6 +65,11 @@ export function homeTilesFor(perms: Permissions, t: Dictionary): HomeTile[] {
         : [];
     });
   }
+
+  // The Director's daytime screen (the whiteboard's Management column, 2026-10-03): a few big tiles on a
+  // phone, not every page Management can open. Vet visits, medical records and a resident's details are
+  // tabs on a resident, so they are reached through the Residents tile and need no tile of their own.
+  if (perms.role.key === "management") return managementDay(perms, t);
 
   let routes = routesFor(perms).filter((r) => r.device !== "desk");
   // Settings pages are Admin's night home (/admin), not a role's tasks; a role that holds only

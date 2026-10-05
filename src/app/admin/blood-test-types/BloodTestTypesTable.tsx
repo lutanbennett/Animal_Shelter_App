@@ -3,6 +3,8 @@
 import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { RowActionButton } from "@/components/RowAction";
 import {
   deleteBloodTestType,
   mergeBloodTestType,
@@ -169,34 +171,30 @@ function BloodTestTypeRowItem({
             )}
             {mode === "view" && (
               <>
-                <button
-                  type="button"
+                <RowActionButton
                   onClick={() => setMode("edit")}
-                  className={smallButton}
-                >
-                  {t.common.edit}
-                </button>
-                <button
-                  type="button"
+                  label={t.common.edit}
+                  subject={bloodTestType.name}
+                  icon={ACTION_ICONS.edit}
+                />
+                <RowActionButton
                   disabled={mergeTargets.length === 0}
                   onClick={() => setMode("merge")}
-                  className={smallButton}
-                >
-                  {p.merge.open}
-                </button>
-                <button
-                  type="button"
+                  label={p.merge.open}
+                  subject={bloodTestType.name}
+                  icon={ACTION_ICONS.merge}
+                />
+                <RowActionButton
                   disabled={isPending || bloodTestType.blood_test_count > 0}
-                  title={
-                    bloodTestType.blood_test_count > 0
+                  hint={bloodTestType.blood_test_count > 0
                       ? p.errors.hasBloodTests(bloodTestType.blood_test_count)
-                      : undefined
-                  }
+                      : undefined}
                   onClick={handleDelete}
-                  className="min-h-11 rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {t.common.delete}
-                </button>
+                  label={t.common.delete}
+                  subject={bloodTestType.name}
+                  icon={ACTION_ICONS.delete}
+                  tone="danger"
+                />
               </>
             )}
           </div>

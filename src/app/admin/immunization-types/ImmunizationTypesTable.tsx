@@ -4,6 +4,8 @@ import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useState, useTransition } from "react";
 import { deleteImmunizationType, updateImmunizationType } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { RowActionButton } from "@/components/RowAction";
 import { formatBahtPrice, parseBahtAmount } from "@/lib/format";
 
 export type ImmunizationTypeRow = {
@@ -193,22 +195,21 @@ function ImmunizationTypeRowItem({
                 </button>
               </>
             ) : (
-              <button
-                type="button"
-                onClick={() => setEditing(true)}
-                className="min-h-11 rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground"
-              >
-                {t.common.edit}
-              </button>
+              <RowActionButton
+                  onClick={() => setEditing(true)}
+                  label={t.common.edit}
+                  subject={immunizationType.name}
+                  icon={ACTION_ICONS.edit}
+                />
             )}
-            <button
-              type="button"
-              disabled={isPending}
-              onClick={handleDelete}
-              className="min-h-11 rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
-            >
-              {t.common.delete}
-            </button>
+            <RowActionButton
+                disabled={isPending}
+                onClick={handleDelete}
+                label={t.common.delete}
+                subject={immunizationType.name}
+                icon={ACTION_ICONS.delete}
+                tone="danger"
+              />
           </div>
         </td>
       </tr>

@@ -1,6 +1,8 @@
 "use client";
 
 import { useConfirm } from "@/components/ConfirmProvider";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { RowActionButton } from "@/components/RowAction";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useTransition } from "react";
@@ -98,14 +100,13 @@ export function PublishedProjects({ projects }: { projects: PublishedProjectRow[
                   >
                     {p.view}
                   </Link>
-                  <button
-                    type="button"
+                  <RowActionButton
                     onClick={() => handleRemove(project)}
                     disabled={isPending}
-                    className="rounded border border-border px-3 py-1.5 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
-                  >
-                    {p.remove}
-                  </button>
+                    label={p.remove}
+                    subject={project.name}
+                    icon={ACTION_ICONS.unpublish}
+                  />
                 </div>
               </li>
             );

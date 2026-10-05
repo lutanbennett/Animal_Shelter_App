@@ -4,6 +4,7 @@ import {
   ArchiveRestore,
   ArrowDown,
   ArrowLeft,
+  ArrowRight,
   ArrowRightLeft,
   ArrowUp,
   BookOpen,
@@ -12,7 +13,9 @@ import {
   Building2,
   CalendarClock,
   CalendarX2,
+  Ban,
   Camera,
+  Check,
   ClipboardCheck,
   Droplet,
   Fence,
@@ -28,6 +31,7 @@ import {
   House,
   Info,
   KeyRound,
+  Link2,
   ListTodo,
   Mail,
   Map as MapIcon,
@@ -48,16 +52,20 @@ import {
   Pill,
   Play,
   Plus,
+  RefreshCw,
   RotateCcw,
   Scissors,
   Settings,
+  Send,
   ShieldCheck,
+  ShieldOff,
   Star,
   Stethoscope,
   Syringe,
   Trash2,
   Truck,
   Undo2,
+  Unlink,
   Users,
   UserCheck,
   UserMinus,
@@ -236,4 +244,23 @@ export const ACTION_ICONS = {
   unpublish: GlobeLock,
   /** Give a job back to the person it was lifted from. */
   handBack: Undo2,
+  /** Reverse a change in the audit log. */
+  undo: Undo2,
+  /** Move left / right, for a row of photos rather than a list. */
+  moveLeft: ArrowLeft,
+  moveRight: ArrowRight,
+  /** Run a check or job again right now. */
+  refresh: RefreshCw,
+  /** Send a test message. */
+  send: Send,
+  /** Let a request in, or turn it away. */
+  approve: Check,
+  deny: Ban,
+  /** Tie two records together, and cut them apart. */
+  link: Link2,
+  unlink: Unlink,
+  /** Sign-in security: a temporary password; two-step reset, and opening its setup. */
+  issuePassword: KeyRound,
+  resetTwoStep: ShieldOff,
+  allowTwoStep: ShieldCheck,
 } satisfies Record<string, LucideIcon>;

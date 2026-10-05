@@ -1,6 +1,8 @@
 "use client";
 
 import { useConfirm } from "@/components/ConfirmProvider";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 import { useState, useTransition } from "react";
 import { approveAccessRequest, dismissAccessRequest } from "./actions";
 import type { ActionResult } from "@/lib/action-result";
@@ -87,22 +89,12 @@ function RequestRow({ request }: { request: AccessRequest }) {
               </option>
             ))}
           </select>
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={approve}
-            className="rounded bg-primary px-3 py-1 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-          >
+          <ActionButton variant="primary" icon={ACTION_ICONS.approve} disabled={isPending} onClick={approve}>
             {isPending ? r.approving : r.approve}
-          </button>
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={deny}
-            className="rounded border border-danger/40 px-3 py-1 text-sm font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
-          >
+          </ActionButton>
+          <ActionButton variant="danger" icon={ACTION_ICONS.deny} disabled={isPending} onClick={deny}>
             {r.deny}
-          </button>
+          </ActionButton>
         </div>
       </div>
       {error && <p className="text-xs text-danger">{error}</p>}

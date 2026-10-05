@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 import { undoChange } from "./actions";
 
 type Words = {
@@ -22,16 +24,16 @@ export function UndoButton({ id, confirmText, words }: { id: number; confirmText
 
   if (!asking) {
     return (
-      <button
-        type="button"
-        className="text-xs underline"
+      <ActionButton
+        compact
+        icon={ACTION_ICONS.undo}
         onClick={() => {
           setError(null);
           setAsking(true);
         }}
       >
         {words.button}
-      </button>
+      </ActionButton>
     );
   }
 

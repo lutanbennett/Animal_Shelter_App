@@ -1,6 +1,8 @@
 "use client";
 
 import { useKeptForm } from "@/lib/use-kept-form";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { createZone } from "./actions";
 
@@ -44,13 +46,9 @@ export function CreateZoneForm() {
         />
         {t.admin.zones.createForm.internal}
       </label>
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-      >
+      <ActionButton type="submit" variant="primary" icon={ACTION_ICONS.add} disabled={pending}>
         {pending ? t.common.creating : t.admin.zones.createForm.addButton}
-      </button>
+      </ActionButton>
       {state && !state.ok && (
         <p className="w-full text-sm text-danger">{state.error}</p>
       )}

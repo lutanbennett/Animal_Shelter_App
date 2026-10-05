@@ -1,6 +1,9 @@
 "use client";
 
 import { useConfirm } from "@/components/ConfirmProvider";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
+import { RowActionButton } from "@/components/RowAction";
 import { Fragment, useState, useTransition } from "react";
 import {
   allowTwoStepSetup,
@@ -205,28 +208,18 @@ function UserRow({
         </td>
         <td className="px-4 py-2">
           {!isSelf && !archived && (
-            <button
-              type="button"
-              disabled={isPending}
-              onClick={handleIssuePassword}
-              className="min-h-11 rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
-            >
+            <ActionButton compact icon={ACTION_ICONS.issuePassword} disabled={isPending} onClick={handleIssuePassword}>
               {t.admin.security.table.issueTemporaryPassword}
-            </button>
+            </ActionButton>
           )}
         </td>
         <td className="px-4 py-2">
           {user.twoStep ? (
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs text-foreground">{t.admin.security.table.twoStepOn}</span>
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={handleResetTwoStep}
-                className="min-h-11 rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
-              >
+              <ActionButton compact icon={ACTION_ICONS.resetTwoStep} disabled={isPending} onClick={handleResetTwoStep}>
                 {t.admin.security.table.resetTwoStep}
-              </button>
+              </ActionButton>
             </div>
           ) : (
             <div className="flex flex-wrap items-center gap-2">
@@ -246,16 +239,11 @@ function UserRow({
                 </span>
               )}
               {user.role === "admin" && !isSelf && !archived && (
-                <button
-                  type="button"
-                  disabled={isPending}
-                  onClick={handleAllowTwoStepSetup}
-                  className="min-h-11 rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
-                >
+                <ActionButton compact icon={ACTION_ICONS.allowTwoStep} disabled={isPending} onClick={handleAllowTwoStepSetup}>
                   {user.twoStepSetupUntil
                     ? t.admin.security.table.renewTwoStepSetup
                     : t.admin.security.table.allowTwoStepSetup}
-                </button>
+                </ActionButton>
               )}
             </div>
           )}
@@ -264,32 +252,30 @@ function UserRow({
           {!isSelf && (
             <div className="flex flex-wrap gap-2">
               {archived ? (
-                <button
-                  type="button"
+                <RowActionButton
                   disabled={isPending}
                   onClick={handleRestore}
-                  className="min-h-11 rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
-                >
-                  {t.admin.security.table.restore}
-                </button>
+                  label={t.admin.security.table.restore}
+                  subject={user.email}
+                  icon={ACTION_ICONS.restore}
+                />
               ) : (
-                <button
-                  type="button"
+                <RowActionButton
                   disabled={isPending}
                   onClick={handleArchive}
-                  className="min-h-11 rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
-                >
-                  {t.admin.security.table.archive}
-                </button>
+                  label={t.admin.security.table.archive}
+                  subject={user.email}
+                  icon={ACTION_ICONS.archive}
+                />
               )}
-              <button
-                type="button"
+              <RowActionButton
                 disabled={isPending}
                 onClick={handleDelete}
-                className="min-h-11 rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
-              >
-                {t.common.delete}
-              </button>
+                label={t.common.delete}
+                subject={user.email}
+                icon={ACTION_ICONS.delete}
+                tone="danger"
+              />
             </div>
           )}
         </td>

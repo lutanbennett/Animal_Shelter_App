@@ -161,7 +161,8 @@ begin
   update stock_receipts set note = 'fixed by management' where id = v_id;
   get diagnostics v_n = row_count;
   reset role;
-  if v_n <> 1 then raise exception 'S4 management could not edit a receipt'; end if;
+  -- 0145 (C8): there is no update policy; a wrong delivery is deleted and recorded again
+  if v_n <> 0 then raise exception 'S4 management edited a receipt (%): no policy offers update', v_n; end if;
 
   perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'volunteer'), 'role', 'authenticated')::text, true);
   set local role authenticated;
@@ -196,7 +197,7 @@ begin
   exception when insufficient_privilege then null;
   end;
   reset role;
-  v_report := v_report || ' | S4 staff records (recorded_by forced to caller), management edits, volunteer reads nothing and cannot record (0134), vet sees nothing, anon refused by the grant';
+  v_report := v_report || ' | S4 staff records (recorded_by forced to caller), management cannot edit (C8, 0145), volunteer reads nothing and cannot record (0134), vet sees nothing, anon refused by the grant';
 
   -- S5 cascade.
   delete from diet_types where id = v_kibble;

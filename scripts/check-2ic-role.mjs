@@ -71,7 +71,7 @@ const probes = [
   ["change a stock figure directly", `update medication set stock_on_hand = 1 where id = (select id from medication limit 1)`, MANAGERS],
   ["add a medicine", `insert into medication (name, dose_unit) values ('probe', 'tablet')`, who("admin", "management", "staff", "vet")],
   ["change a conversion", `update item_unit_conversions set note = 'probe' where id = (select id from item_unit_conversions limit 1)`, MANAGERS],
-  ["change a delivery", `update stock_receipts set note = 'probe' where id = (select id from stock_receipts limit 1)`, who(...OLD)],
+  ["change a delivery", `update stock_receipts set note = 'probe' where id = (select id from stock_receipts limit 1)`, who()],  // 0145 (C8): no update policy on stock_receipts for anyone; a wrong delivery is deleted and recorded again
   // her limits: nothing outside the whiteboard
   ["residents", `select 1 from residents where id = '${R}'`, ONLY_SIC],
   ["resident_list_view", `select 1 from resident_list_view where resident_id = '${R}'`, ONLY_SIC],

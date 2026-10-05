@@ -223,14 +223,14 @@ disagree.
 
 | # | Table or function | The database lets | The screens let |
 |---|---|---|---|
-| C1 | `enclosures`, `zones` | admin, management, staff insert, update, delete | admin only (Settings) |
+| C1 | `enclosures`, `zones` | admin, management, staff insert, update, delete | admin only (Settings). **Closed by `0145`:** management and staff now hold Read only |
 | C2 | `residents` | admin, management, staff **delete** | nobody: the app never deletes a resident |
 | C3 | `immunization_types` | **vet** insert, update, delete | admin only (Settings) |
 | C4 | `blood_tests`, `procedures`, `prescriptions`, `immunization_records`, `vet_appointments` | **vet** delete outright (own clinic's) | Remove is not offered to a vet at all |
 | C5 | `weight` | management, staff, vet delete outright | Remove is a soft archive, and not for vets |
 | C6 | `contacts` | staff update and delete | staff can only add one (A2); editing is Management's |
 | C7 | `vet_doctors`, `vet_doctor_clinics`, `merge_vet_doctors()` | staff and vet insert, update, delete, merge | Management only (`/management/vets/…/doctors`) |
-| C8 | `stock_receipts` | staff update | the app only inserts and deletes |
+| C8 | `stock_receipts` | staff update | the app only inserts and deletes. **Closed by `0145`:** no update policy at all |
 | C9 | `stock_receipts`, `stock_counts`, `medication`, `diet_types` | **volunteer** (closed by `0134`, 2026-10-04) reads every row and every column, prices and delivery costs included | Stocktake needs the names and the counts, not the prices; Deliveries and both Management lists are refused to a volunteer |
 | C10 | `enclosures`, `zones`, `vets`, `diet_types`, `shelter_friends`, `bulk_appointments` | **vet** reads every row, every other clinic and its bulk bookings included | all refused to a vet as pages. A resident's page needs the enclosure's name; nothing a vet opens needs the list of other clinics |
 | C11 | `record_recurring_job()`, `reassign_recurring_job()` | a vet may hold and record a recurring job | vets are never offered as assignees |
@@ -1144,6 +1144,8 @@ beside them.
 | **R5 Management** | | | |
 | `management-phone-home`, `recurring-jobs-phone` | app | `home-screens` | The Director's daytime screen from the whiteboard |
 | `perm-convert-medical`, `-residents`, `-people`, `-stock-and-lists` | schema, four in turn | the parity check | Management's policies on `has_permission()`, which converts those tables for every role |
+| `perm-convert-orphans` | schema, `0145` | `-residents` | The tables no row above owned, and who owns the rest: "Where the orphans landed" below. **Built, 2026-10-05** |
+| `perm-convert-work` | schema | `-orphans` | `maintenance`, `maintenance_assignees`, `project_folders`: the role-named half of tables that already have cell policies. **New row, 2026-10-05** |
 | **R6 Admin, and the finish** | | | |
 | `perm-convert-settings` | schema | the four above | The Settings tables and setup lists |
 | `perm-drop-enum` | schema | every table converted, vets and staff included | The bridge and the enum removed |
@@ -1151,6 +1153,46 @@ beside them.
 | `custom-roles` | schema + app | the matrix | A shelter adds a role |
 
 **§15 is authoritative on order, not complete on prerequisites.** It has now omitted one twice: the parity check's probes, and `role_can()` (`0133`), the schema piece that recurring-job eligibility needs before any sweep touches `eligibility.ts` because `can()` answers only about the caller. Read the backlog's Architecture items and `docs/decisions/` for the permission streams before planning from this table.
+
+### Where the orphans landed (`perm-convert-orphans`, `0145`, 2026-10-05)
+
+The four conversion rows above name tables by *area*, and a table that sits between areas had no
+owner: `perm-convert-residents` found some, and the first sweep of the database for them
+(`scripts/check-policy-role-names.mjs`, which asks `pg_policies` for policy *text* naming
+`'management'::app_role` or `'staff'::app_role`, not a name prefix) found more: `frequency_rounds`, the maintenance and project tables and four recurring reads. **Every
+table that still has such a policy is below, with its owner.** The check script fails if one is
+missing here or listed here after it has been converted, so this table cannot drift.
+
+**Converted in `0145`.**
+
+| Table | Activity | Note |
+|---|---|---|
+| `enclosures`, `zones` | `facility.enclosures` | Read / Edit. **Closes C1**: management and staff hold Read, so they can no longer write by hand. `admin_all_*`, `vet_read_*` (C10) and `volunteer_read_*` stay |
+| `group_origins` | `resident.register` (read only) | **No activity of its own, on purpose.** The only reads are the intake form (register) and the resident archive; the app never writes it (the import script uses the service role). Writes are Admin's through `admin_all_group_origins`. Add an activity the day a screen edits origins |
+| `resident_diet_rounds`, `prescription_rounds` | `medical.diet`, `medical.prescriptions` | Insert / update / delete, and the parent row must be visible to the caller, which is what limits a vet to their clinic |
+| `frequency_rounds` | read `medical.prescriptions`; write `reference.types` | Not in the original item; `0137` post-dated `perm-convert-medical`. A write is now Admin's, as the frequency list is |
+| `item_unit_conversions` | read: the three stock cells (`0143`); write `stock.diets` | The app asks `stock.diets` for every unit edit |
+| `stock_receipts`, `stock_counts` | `stock.delivery`, `stock.count` and `stock.purchasing` | `0143` had already added the cell policies beside the role-named ones; `0145` drops the role-named ones. **No update policy, answering C8**: a wrong delivery is deleted and recorded again |
+| `recurring_jobs`, `recurring_job_assignees` | write `recurring.manage`; read `recurring.do_own` (`0141`) | |
+| `recurring_job_occurrences`, `recurring_job_occurrence_assignees` | read `recurring.do_own` (`0141`) | |
+
+A vet's read of the four recurring tables was inside the dropped role list, so it is kept as
+`vet_read_recurring_*` until Vet converts (C11).
+
+**Not converted, with an owner.**
+
+| Table | Owner | Why it waits |
+|---|---|---|
+| `attachments` | the photo split (A3 / A5) | Its owner types span `photos.*`, `maintenance.photos`, `projects.photos` and the two medical file routes, which stay on `assertPhotoWriteAccess` until that split (`2026-10-04-permissions-sweep-rest.md`). There is no single activity to ask |
+| `maintenance_photos`, `project_photos` | the photo split | `maintenance.photos` and `projects.photos`, the same split |
+| `contacts`, `vets`, `vet_doctors`, `vet_doctor_clinics`, `bulk_appointments`, `shelter_friends` | `perm-convert-people` | `contacts.*`, `clinics.*`, `friends.manage`; `bulk_appointments` is the clinic bookings, filed here |
+| `medication`, `diet_types`, `frequency`, `procedure_types`, `blood_test_types`, `immunization_types` | `perm-convert-stock-and-lists` | The lists. The 2IC's price-free views (`stock_medications`, `stock_diet_types`, `0143`) must survive it |
+| `facility_maps`, `fixed_outgoings`, `translations`, `assistant_actions` | `perm-convert-settings` | `facility.map`, `reports.cashflow`, `translations.manage`, `assistant.record` |
+| `maintenance`, `maintenance_assignees`, `project_folders` | **`perm-convert-work`, a new row**: schema, needs only this stream; runs beside the others | `maintenance.jobs` and `projects.folders`. `0141` added the cell policies beside the role-named ones, as `0143` did for stock; dropping the old pair is all that is left for the first two |
+
+**The end state is a query.** `node scripts/check-policy-role-names.mjs --final` must report no
+row. The stream that empties the last entry from `OWNERS` in that script runs it, and
+`perm-drop-enum` does not start until it is green.
 
 **What can start now that the fork is decided**, three abreast: `permissions-schema`
 in the schema lane, and two of the app streams marked *nothing here*. The
