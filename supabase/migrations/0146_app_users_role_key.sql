@@ -44,5 +44,6 @@ select * from private.app_users where private.has_app_access();
 comment on view public.app_users is
   'private.app_users for a session with a staff role; empty for anyone else (0086). role is the legacy enum; role_key is the role''s own key (0146). Edit private.app_users, not this.';
 
+grant select on public.app_users to authenticated, service_role;
 
 notify pgrst, 'reload schema';
