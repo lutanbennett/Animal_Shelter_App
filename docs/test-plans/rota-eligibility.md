@@ -26,7 +26,7 @@
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Closing line, as printed:
 
   ```
-  GATES_LINE
+  gates: typecheck=0 lint=0 build=0
   ```
 - [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
 
