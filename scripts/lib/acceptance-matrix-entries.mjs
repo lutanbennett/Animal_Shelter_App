@@ -54,8 +54,8 @@ export const ENTRIES = {
       device: "both",
       audience: "all",
       do: "Open the app's address, tap Staff & Volunteer Login, sign in with your own email and password, then sign out.",
-      expect: "You land on your home page — Appointments for a vet, My tasks for everyone else — and Sign out brings you back to the public site.",
-      notes: { public_viewer: "You land on the public home page; there is no app menu.", visitor: "Signing in is how a visitor becomes one of the roles; test it with any account." },
+      expect: "You land on your home page — Appointments for a vet, a screen of big job tiles for most other roles — and Sign out brings you back to the public site.",
+      notes: { management: "On a phone your home has four tiles: Recurring jobs, Intake, Residents and My tasks. Every other page is in the menu. If a tile is missing, the role no longer holds what it needs; it should never be a tile that refuses.", public_viewer: "You land on the public home page; there is no app menu.", visitor: "Signing in is how a visitor becomes one of the roles; test it with any account." },
     },
     {
       activity: "Choose a new password after forgetting the old one",
