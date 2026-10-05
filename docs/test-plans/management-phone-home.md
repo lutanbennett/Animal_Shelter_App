@@ -6,7 +6,7 @@
 |---|---|
 | Feature | `management-phone-home`: the Director's daytime phone screen (Recurring jobs, Intake, Residents, My tasks) |
 | Backlog item | `docs/backlog.md` → Auth → the roles item (R5); not ticked |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/management-phone-home` @ `C:DevelopmentAnimal_Shelter_management-phone-home` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3007` |
 | PR | recorded in the follow-up commit |
 | Tested by / date | Claude (automated) / 2026-10-05 |
@@ -201,33 +201,7 @@ Automated checks by: Claude  Date: 2026-10-05
 
 ### Manual verification
 
-The items in **Left for manual verification** above. Signed by the person who
-looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
-Three valid states:
-
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
-- `n/a: <reason>` — there was nothing to look at.
-- `pending: <what is outstanding>` — the work is done and something genuinely
-  needs a person who has not got to it yet. **This does not fail the check**
-  (changed 2026-09-24): it is the normal state for most of a PR's life, and a
-  check that is permanently red is one people learn to filter. The checker prints
-  *awaiting manual verification: <what>* and exits 0, so the outstanding item is
-  on the record without drowning the signal. What still fails is a plan that is
-  missing, incomplete or self-contradictory. Use `pending:` rather than reaching
-  for `n/a` — green is no longer something you have to buy, and an `n/a` over a
-  real outstanding item is a false assurance about the one thing you could not
-  verify. **Nothing ships on a `pending:`** — the release manager's pre-deploy
-  pass is what holds that line, not CI.
-
-`n/a:` and `pending:` take **no `Date:` segment** — there is no date to record, so
-write the line and stop. A trailing `Date: —` is accepted too, since existing
-plans use it. A bare *name* with no date is still rejected, which is what stops an
-empty signature quietly passing.
-
-A red `test-plan` that says what it is waiting for is a red people act on. An
-illegible one is a red people learn to ignore.
+The items in **Left for manual verification** above, signed by the person who looked; none has yet.
 
 - [x] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the plan may tick this** and write `n/a: <reason>` on the signature below — there is nothing for a person to look at, so nothing is being signed for. If the list is not empty, only the person who looked may tick it
 
