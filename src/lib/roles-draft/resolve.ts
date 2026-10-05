@@ -10,7 +10,7 @@ export type DraftRow = { row: number; label: string; keys: DraftKey[] };
 export type Draft = {
   draft: number;
   rows: DraftRow[];
-  roles: Record<string, { label: string; ticks: number[] }>;
+  roles: Record<string, { label: string; ticks: number[]; notes?: string[] }>;
   unclear: { role: string; row: number; mark: string; loadedAs: "no" }[];
   implied: { activity: string; level: "read"; whenTicked: number[]; because: string }[];
 };

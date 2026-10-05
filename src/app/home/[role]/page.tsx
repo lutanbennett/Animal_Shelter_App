@@ -7,6 +7,7 @@ import { homeTilesFor } from "@/lib/home/tiles";
 import { getT } from "@/lib/i18n/get-t";
 import { HomeTiles } from "@/components/HomeTiles";
 import { HomeSwitch } from "@/components/HomeSwitch";
+import Link from "next/link";
 
 /**
  * /home/<role> — another role's home screen, as that role sees it. Admin only (§8): it is how the
@@ -50,6 +51,10 @@ export default async function RoleHomePage(props: PageProps<"/home/[role]">) {
       <div>
         <h1 className="text-2xl font-semibold text-foreground [overflow-wrap:anywhere]">{name}</h1>
         <p className="text-sm text-muted">{t.appHome.viewing(name)}</p>
+        {/* The Director's first-draft review (docs/decisions/2026-10-05-director-draft-roles.md): English only, goes when the draft is signed. */}
+        <Link href={`/admin/role-draft#${roleKey}`} className="inline-flex min-h-11 items-center text-sm font-medium text-primary underline">
+          What this role can and cannot do, in words
+        </Link>
       </div>
       {tiles.length > 0 ? (
         <HomeTiles tiles={tiles} />
