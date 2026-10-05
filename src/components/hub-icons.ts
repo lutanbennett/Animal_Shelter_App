@@ -17,6 +17,7 @@ import {
   Camera,
   Check,
   ClipboardCheck,
+  Copy,
   Droplet,
   Fence,
   Folder,
@@ -263,6 +264,8 @@ export const ACTION_ICONS = {
   issuePassword: KeyRound,
   resetTwoStep: ShieldOff,
   allowTwoStep: ShieldCheck,
+  /** Copy an address or text to the clipboard. */
+  copy: Copy,
   /** Go to the screen where a list is managed (the Management or Admin editor for it). */
   manage: Settings,
 } satisfies Record<string, LucideIcon>;

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { RowActionButton } from "@/components/RowAction";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
 /**
@@ -47,19 +49,11 @@ export function CopyTagLink({
 
   if (!field) {
     return (
-      <button
-        type="button"
+      <RowActionButton
+        icon={copied ? Check : ACTION_ICONS.copy}
+        label={copied ? t.tagLinks.copiedFor(name) : t.tagLinks.copyFor(name)}
         onClick={copy}
-        title={copied ? t.tagLinks.copiedFor(name) : t.tagLinks.copyFor(name)}
-        aria-label={copied ? t.tagLinks.copiedFor(name) : t.tagLinks.copyFor(name)}
-        className="inline-flex rounded p-1 text-muted hover:bg-surface-hover hover:text-foreground"
-      >
-        {copied ? (
-          <Check aria-hidden="true" className="h-4 w-4 text-success" />
-        ) : (
-          <Copy aria-hidden="true" className="h-4 w-4" />
-        )}
-      </button>
+      />
     );
   }
 
