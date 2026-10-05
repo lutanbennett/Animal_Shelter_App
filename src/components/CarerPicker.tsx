@@ -41,7 +41,7 @@ export function CarerPicker({
   );
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex min-w-0 flex-col gap-3">
       <input type="hidden" name="carerMode" value={mode} />
 
       {mode === "existing" ? (
