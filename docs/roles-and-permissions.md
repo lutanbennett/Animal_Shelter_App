@@ -977,6 +977,15 @@ stock (last count, receipts since, safety stock) is answered by any one of the t
 the other cells in the bundle, because there is no "read stock" activity. Done-when still stands: **she has not
 yet been watched.**
 
+**R5, Management (2026-10-05, `management-role`, no migration).** Management is the template role that already exists
+(`roles.key = 'management'`, 48 cells, `legacy_role = 'management'`), not a fifth configured one: its floor is the enum value
+its own policies name, so there is no bridge to build, and the curated phone home (`management-phone-home`) is keyed on that key.
+What the stream did was drive the screen as a real login and fix what it found (Recurring jobs' Hand over picker scrolled
+sideways at 375 px), and pin "an edited Management loses a tile, never gains one that refuses" in `check-home-screens.mjs`.
+Findings for `rota-eligibility`, the trap for a shelter-made manager role (the home is keyed on the string), and what R6
+inherits are in `docs/decisions/2026-10-05-management-role.md`. Done-when ("the Director has run a day from her phone") is
+**not met**: nobody has watched her.
+
 **The order is a recommendation.** Volunteer first, because the three new roles
 stand on it. Then smallest first: Medical is one read-only screen, and proves
 the whole chain (a role row, a home, a page, a policy) on the least that can go

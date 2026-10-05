@@ -61,7 +61,9 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  { text: "On a phone, the Hand over section of Recurring jobs no longer makes the whole page scroll sideways when a person's name or email is long.", roles: ["admin", "management"] },
+];
 
 
 /** Newest first. */
