@@ -161,9 +161,10 @@ to mean Staff is unused at Lanna: the role stays in the product's template (§16
 and each of today's staff logins becomes one of the roles above or is archived.
 Which login becomes which is the one part still to be asked (L5).
 
-**"The map" does not exist yet.** The facility map is a prototype at
-`/enclosures/map-prototype`. Until the Facility item is built, a volunteer's
-"map" is the enclosures list.
+**"The map" exists since 2026-10-04.** It is the Map toggle on `/enclosures`
+(`facility.map`, held by a volunteer since 0132/0134); this paragraph once said it was a
+prototype at `/enclosures/map-prototype`, which has been deleted. Placing enclosures on it is
+the admin's Settings → Facility map page, under `facility.enclosures`.
 
 ## 3. What the system does today
 

@@ -84,3 +84,40 @@ export function zoomAbout(view: View, scale: number, px: number, py: number, fra
   const k = next / view.scale;
   return clampView({ scale: next, x: px - (px - view.x) * k, y: py - (py - view.y) * k }, frameW, frameH);
 }
+
+/** Two decimals of a percent is about 0.1 px on a 1500 px plan: plenty, and keeps the stored jsonb short. */
+export function roundPct(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+/** A point in the SVG's drawing space (x 0–100, y 0–planHeight) as a percent of the image, clamped onto it. */
+export function drawingToPercent(x: number, y: number, width: number, height: number): Point {
+  const clamp = (n: number) => Math.min(100, Math.max(0, n));
+  return [roundPct(clamp(x)), roundPct(clamp((y * width) / height))];
+}
+
+/** The four corners, clockwise from the top left, of the box two opposite corners span. */
+export function rectShape(a: Point, b: Point): Point[] {
+  const [x0, x1] = [Math.min(a[0], b[0]), Math.max(a[0], b[0])];
+  const [y0, y1] = [Math.min(a[1], b[1]), Math.max(a[1], b[1])];
+  return [
+    [x0, y0],
+    [x1, y0],
+    [x1, y1],
+    [x0, y1],
+  ];
+}
+
+/** Twice the polygon's signed area, in percent²; 0 for a line or a pile of points. */
+export function shapeArea(shape: Point[]): number {
+  let a = 0;
+  for (let i = 0; i < shape.length; i++) {
+    const [x0, y0] = shape[i];
+    const [x1, y1] = shape[(i + 1) % shape.length];
+    a += x0 * y1 - x1 * y0;
+  }
+  return Math.abs(a) / 2;
+}
+
+/** Shapes smaller than this (percent², about 3×3 px on a 1500 px plan) are a slip of the finger, not a place. */
+export const MIN_SHAPE_AREA = 0.04;

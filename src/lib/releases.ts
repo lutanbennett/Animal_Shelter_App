@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "Settings now has a Facility map page where an admin places the enclosures on the shelter's plans: pick an enclosure, click two corners (or each corner of an odd shape) on the plan, and it is saved and the next one is picked for you. Corners can be dragged to fix a shape, and a plan picture is added to a zone or to the overview from the same page. Everything placed shows at once on the Map under Enclosures, and the enclosures not yet drawn there are still listed beneath it. Best on a computer.", roles: ["admin"] },
   { text: "On the Management pages, the actions that repeat on every row (edit, count, merge, delete, archive, restore, make standard, pause, resume, publish, unpublish, move up and down, mark a doctor as left) are now small icon buttons, each at least 44 px square on a phone, with the word showing when you hold or hover over it. A delete that is not allowed says why when you hold over it. Add buttons carry a plus, the stock shortcuts at the top of Medications and Diets are real buttons, and Print and Download CSV are easier to tap. The phone screens for purchasing and the medication list were already big icon-and-word buttons and are unchanged.", roles: ["admin", "management"] },
 ];
 

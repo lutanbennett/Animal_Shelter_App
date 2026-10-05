@@ -30,6 +30,7 @@ import {
   KeyRound,
   ListTodo,
   Mail,
+  Map as MapIcon,
   MapPin,
   Merge,
   MessageCircle,
@@ -120,6 +121,8 @@ export const PLACEMENT_ICONS = {
 export const ENCLOSURE_ICONS = {
   enclosure: Fence,
   zone: MapPin,
+  /** The facility plan, and the editor that places enclosures on it. */
+  map: MapIcon,
   residents: Users,
   maintenance: Wrench,
   move: PLACEMENT_ICONS.move,
