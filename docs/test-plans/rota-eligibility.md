@@ -158,7 +158,7 @@ Manual verification by: pending: the round trip in Left for manual verification 
 
 - [ ] Open defects are either fixed or explicitly accepted above — n/a: not ticked until the manual round trip is done
 - [ ] Checklist pasted into the PR — n/a: the PR does not exist at this commit
-- [ ] Handed to the production release manager — deferred: production release manager
+- [ ] Handed to the production release manager — n/a: not yet — handed over after the manual round trip is signed
 
 Result: pass with accepted defects
 
