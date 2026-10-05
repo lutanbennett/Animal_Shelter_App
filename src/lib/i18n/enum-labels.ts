@@ -71,6 +71,19 @@ export function roleLabel(t: Dictionary, value: string | null | undefined) {
   return enumLabel(t.admin.security.roles, value);
 }
 
+/**
+ * A role KEY's label (app_users.role_key, 0146): the dictionary's for a built-in role, else the key set
+ * out as words ("second_in_command" → "Second in command"). The configured role's own name lives in
+ * `roles`, which only Admin may read, so a page for Management has the key and not the name.
+ */
+export function roleKeyLabel(t: Dictionary, key: string | null | undefined) {
+  if (!key) return "";
+  const known = (t.admin.security.roles as Record<string, string>)[key];
+  if (known) return known;
+  const words = key.replace(/_/g, " ");
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
 export function placementTypeLabel(
   t: Dictionary,
   value: string | null | undefined,

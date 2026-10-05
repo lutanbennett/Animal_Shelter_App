@@ -41,12 +41,12 @@ export function CarerPicker({
   );
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex min-w-0 flex-col gap-3">
       <input type="hidden" name="carerMode" value={mode} />
 
       {mode === "existing" ? (
         <>
-          <div className="flex flex-col gap-1">
+          <div className="flex min-w-0 flex-col gap-1">
             <label htmlFor="carerId" className="text-sm font-medium text-muted">
               {r.carer} <span className="text-danger">*</span>
             </label>

@@ -9,7 +9,7 @@ import type { ActionResult } from "@/lib/action-result";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { RowActionButton } from "@/components/RowAction";
-import { roleLabel } from "@/lib/i18n/enum-labels";
+import { roleKeyLabel } from "@/lib/i18n/enum-labels";
 import { addDaysIso, formatDate, formatDateTime } from "@/lib/format";
 import { describeRule, describeSpan, isoWeekday } from "@/lib/recurring-jobs/rule";
 import type { RecurringJob } from "@/lib/recurring-jobs/queries";
@@ -384,7 +384,7 @@ function HandOver({ people, from, today }: { people: PersonOption[]; from: TeamM
               {from.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
-                  {p.archived ? ` (${t.management.recurringJobs.left})` : p.role ? ` — ${roleLabel(t, p.role)}` : ""}
+                  {p.archived ? ` (${t.management.recurringJobs.left})` : p.role ? ` — ${roleKeyLabel(t, p.role)}` : ""}
                 </option>
               ))}
             </select>
@@ -459,7 +459,7 @@ function HandOver({ people, from, today }: { people: PersonOption[]; from: TeamM
                       })
                     }
                   />
-                  {p.name} — {roleLabel(t, p.role)}
+                  {p.name} — {roleKeyLabel(t, p.role)}
                 </label>
               ))}
           </div>

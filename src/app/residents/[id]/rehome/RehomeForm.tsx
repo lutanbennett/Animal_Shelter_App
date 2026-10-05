@@ -93,7 +93,7 @@ export function RehomeForm({
         )}
       </div>
 
-      <fieldset className="flex flex-col gap-2">
+      <fieldset className="flex min-w-0 flex-col gap-2">
         <legend className="text-base font-semibold text-foreground">
           {r.kind}
         </legend>
@@ -119,7 +119,7 @@ export function RehomeForm({
         <p className="text-sm text-muted">{r.kindHints[kind]}</p>
       </fieldset>
 
-      <fieldset className="flex flex-col gap-4">
+      <fieldset className="flex min-w-0 flex-col gap-4">
         <legend className="text-base font-semibold text-foreground">
           {r.carer}
         </legend>
@@ -140,7 +140,7 @@ export function RehomeForm({
         />
       </fieldset>
 
-      <fieldset className="flex flex-col gap-4">
+      <fieldset className="flex min-w-0 flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1">
             <label htmlFor="date" className="text-sm font-medium text-muted">

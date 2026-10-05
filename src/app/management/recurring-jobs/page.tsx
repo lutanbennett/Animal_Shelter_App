@@ -33,13 +33,12 @@ export default async function RecurringJobsPage() {
   const supabase = await createClient();
   const today = todayIso();
 
-  const [{ jobs, error }, eligibilityResult, peopleResult, staffingResult, recordResult] = await Promise.all([
+  const [{ jobs, error }, peopleResult, staffingResult, recordResult] = await Promise.all([
     loadRecurringJobs(supabase),
-    // May each assignable role do the page a job links to? role_can() (0133), for the whole team.
-    loadEligibility(supabase, ASSIGNABLE_ROLES),
+    // The enum gates who can be given a job at all; eligibility is asked of each person's role KEY (0146).
     supabase
       .from("app_users")
-      .select("id, email, display_name, role, archived_at")
+      .select("id, email, display_name, role, archived_at, role_key")
       .in("role", [...ASSIGNABLE_ROLES])
       .is("archived_at", null)
       .returns<AppUser[]>(),
@@ -73,8 +72,18 @@ export default async function RecurringJobsPage() {
     id,
     name: appUserLabel(users.get(id)),
     archived: !!users.get(id)?.archived_at || !users.get(id),
-    role: users.get(id)?.role ?? null,
+    role: users.get(id)?.role_key ?? null,
   });
+  // May each role in play do the page a job links to? role_can() (0133), asked in keys because a
+  // configured role's enum value is a borrowed one (0146): the people who can be picked, plus anyone
+  // already on a job or its cover, so a stranded one is judged by their own role too.
+  const roleKeys = [
+    ...new Set([
+      ...(peopleResult.data ?? []).map((user) => user.role_key),
+      ...[...users.values()].map((user) => user.role_key),
+    ]),
+  ];
+  const eligibilityResult = await loadEligibility(supabase, roleKeys);
   // Someone who can still sign in but whose role cannot open the job's page:
   // given it before the picker filtered, or the link changed since. Shown as a
   // problem here rather than left to fail on their My tasks.
@@ -82,7 +91,7 @@ export default async function RecurringJobsPage() {
   const cannotDo = (ids: string[], linkPath: string | null) =>
     ids.filter((id) => {
       const user = users.get(id);
-      return !!user && !user.archived_at && !canDoJob(user.role, linkPath, eligibility);
+      return !!user && !user.archived_at && !canDoJob(user.role_key, linkPath, eligibility);
     });
 
   const staffing = new Map((staffingResult.data ?? []).map((row) => [row.job_id, row]));
@@ -135,7 +144,7 @@ export default async function RecurringJobsPage() {
   }));
 
   const people: PersonOption[] = (peopleResult.data ?? [])
-    .map((user) => ({ id: user.id, name: appUserLabel(user), role: user.role }))
+    .map((user) => ({ id: user.id, name: appUserLabel(user), role: user.role_key }))
     .sort((a, b) => a.name.localeCompare(b.name));
   // Anyone on a job's usual team, archived or not, can be handed over *from*.
   const onJobs = new Map<string, TeamMember>();
