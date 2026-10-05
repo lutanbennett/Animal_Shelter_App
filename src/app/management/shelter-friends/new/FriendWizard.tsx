@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type ReactNode } from "react";
 import { FriendCard } from "@/components/FriendCard";
 import { PendingPuppy } from "@/components/PuppyLoader";
+import { ACTION_ICONS, CONTACT_ICONS } from "@/components/hub-icons";
 import {
   mapEmbedSrc,
   mapQueryFromUrl,
@@ -28,7 +29,7 @@ import { FRIEND_REVIEW_STEP, FRIEND_STEPS } from "./steps";
 const inputClass =
   "w-full rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
 const buttonClass =
-  "inline-flex items-center gap-1.5 rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-50";
+  "inline-flex min-h-11 items-center gap-1.5 rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-50 md:min-h-0";
 
 /** Kept per tab so a refresh (or a phone locking itself) keeps the typing, not just the step. */
 const STORAGE_KEY = "shelter-friend-wizard-draft";
@@ -479,14 +480,17 @@ function FriendWizardForm({
         <div className="flex flex-wrap gap-2">
           <Link
             href={`/contacts/${result.contactId}`}
-            className="rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover md:min-h-0"
           >
+            <CONTACT_ICONS.contact aria-hidden="true" className="h-4 w-4" />
             {w.done.openCard}
           </Link>
           <Link href="/management/shelter-friends" className={buttonClass}>
+            <ACTION_ICONS.back aria-hidden="true" className="h-4 w-4" />
             {w.done.viewList}
           </Link>
           <button type="button" onClick={startOver} className={buttonClass}>
+            <ACTION_ICONS.add aria-hidden="true" className="h-4 w-4" />
             {w.done.addAnother}
           </button>
         </div>
@@ -734,6 +738,7 @@ function FriendWizardForm({
                 )}
               </div>
               <button type="button" onClick={() => logoInput.current?.click()} className={buttonClass}>
+                <ACTION_ICONS.uploadImage aria-hidden="true" className="h-4 w-4" />
                 {logo ? w.links.replaceLogo : w.links.chooseLogo}
               </button>
               {logo && (
@@ -743,8 +748,9 @@ function FriendWizardForm({
                     setLogo(null);
                     setLogoError(null);
                   }}
-                  className="rounded border border-danger/40 px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger/10"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded border border-danger/40 px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger/10 md:min-h-0"
                 >
+                  <ACTION_ICONS.removeImage aria-hidden="true" className="h-4 w-4" />
                   {w.links.removeLogo}
                 </button>
               )}
