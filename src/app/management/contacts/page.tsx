@@ -4,6 +4,8 @@ import { getT } from "@/lib/i18n/get-t";
 import { CONTACT_COLUMNS, type Contact } from "@/lib/contacts/contacts";
 import { CreateContactForm } from "./CreateContactForm";
 import { ContactsTable, type ContactRow } from "./ContactsTable";
+import { ActionLink } from "@/components/ActionLink";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { requirePermission } from "@/lib/permissions/require";
 
@@ -108,12 +110,12 @@ export default async function ContactsAdminPage(
             </Link>
           </p>
         </div>
-        <Link
+        <ActionLink
           href="/management/shelter-friends/new"
-          className="rounded border border-primary px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/10"
-        >
-          {t.shelterFriends.wizard.addButton}
-        </Link>
+          label={t.shelterFriends.wizard.addButton}
+          icon={ACTION_ICONS.add}
+          iconOnlyOnMobile={false}
+        />
       </div>
 
       <LargerScreenNotice>

@@ -19,12 +19,14 @@ type Common = {
    * "Panda's weight on 2 Oct". The accessible name becomes "Edit: Panda's …".
    */
   subject?: string;
+  /** Tooltip when it should say more than the word, e.g. why a button is disabled. */
+  hint?: string;
   icon: LucideIcon;
   tone?: keyof typeof TONE_CLASSES;
 };
 
-function names({ label, subject }: Pick<Common, "label" | "subject">) {
-  return { title: label, "aria-label": subject ? `${label}: ${subject}` : label };
+function names({ label, subject, hint }: Pick<Common, "label" | "subject" | "hint">) {
+  return { title: hint ?? label, "aria-label": subject ? `${label}: ${subject}` : label };
 }
 
 /**
@@ -52,13 +54,14 @@ export function RowActionButton({
   tone = "default",
   label,
   subject,
+  hint,
   ...buttonProps
 }: Common & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "title" | "aria-label" | "className" | "children">) {
   return (
     <button
       type="button"
       {...buttonProps}
-      {...names({ label, subject })}
+      {...names({ label, subject, hint })}
       className={`${BASE} ${TONE_CLASSES[tone]}`}
     >
       <Icon aria-hidden="true" className="h-5 w-5 md:h-4 md:w-4" />

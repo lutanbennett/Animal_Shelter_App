@@ -61,7 +61,9 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  { text: "On the Management pages, the actions that repeat on every row (edit, count, merge, delete, archive, restore, make standard, pause, resume, publish, unpublish, move up and down, mark a doctor as left) are now small icon buttons, each at least 44 px square on a phone, with the word showing when you hold or hover over it. A delete that is not allowed says why when you hold over it. Add buttons carry a plus, the stock shortcuts at the top of Medications and Diets are real buttons, and Print and Download CSV are easier to tap. The phone screens for purchasing and the medication list were already big icon-and-word buttons and are unchanged.", roles: ["admin", "management"] },
+];
 
 
 /** Newest first. */

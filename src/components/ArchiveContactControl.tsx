@@ -6,6 +6,8 @@ import { archiveContact, restoreContact } from "@/app/management/contacts/action
 import type { ActionResult } from "@/lib/action-result";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { isArchived } from "@/lib/contacts/contacts";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { RowActionButton } from "@/components/RowAction";
 
 const inputClass =
   "w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary";
@@ -25,9 +27,12 @@ const inputClass =
 export function ArchiveContactControl({
   contact,
   residentsInCare = [],
+  iconOnly = false,
 }: {
   contact: { id: string; name: string; archived_at: string | null };
   residentsInCare?: { id: string; name: string }[];
+  /** A table row: Archive / Restore as icon buttons named for the contact. */
+  iconOnly?: boolean;
 }) {
   const { t } = useI18n();
   const a = t.contacts.archive;
@@ -58,14 +63,24 @@ export function ArchiveContactControl({
   return (
     <div className="flex flex-col items-start gap-2">
       {archived ? (
-        <button
-          type="button"
-          disabled={isPending}
-          onClick={() => run(() => restoreContact(contact.id))}
-          className={buttonClass}
-        >
-          {a.restore}
-        </button>
+        iconOnly ? (
+          <RowActionButton
+            disabled={isPending}
+            onClick={() => run(() => restoreContact(contact.id))}
+            label={a.restore}
+            subject={contact.name}
+            icon={ACTION_ICONS.restore}
+          />
+        ) : (
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={() => run(() => restoreContact(contact.id))}
+            className={buttonClass}
+          >
+            {a.restore}
+          </button>
+        )
       ) : open ? (
         <form
           className="flex min-w-56 flex-col gap-2 rounded border border-border bg-surface p-2"
@@ -107,6 +122,15 @@ export function ArchiveContactControl({
             </button>
           </div>
         </form>
+      ) : iconOnly ? (
+        <RowActionButton
+          disabled={isPending || Boolean(blocker)}
+          onClick={() => setOpen(true)}
+          label={a.archive}
+          hint={blocker ?? undefined}
+          subject={contact.name}
+          icon={ACTION_ICONS.archive}
+        />
       ) : (
         <button
           type="button"
