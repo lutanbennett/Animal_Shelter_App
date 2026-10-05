@@ -254,7 +254,7 @@ export function MaintenanceBoard({
                 role="radio"
                 aria-checked={filters.mine === mine}
                 onClick={() => setFilters((f) => ({ ...f, mine }))}
-                className={`rounded px-3 py-1.5 text-sm font-medium transition ${
+                className={`min-h-11 rounded px-3 py-1.5 text-sm font-medium transition md:min-h-0 ${
                   filters.mine === mine
                     ? "bg-primary text-primary-foreground"
                     : "text-muted hover:text-foreground"
@@ -439,7 +439,7 @@ function Chip({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium ${
+      className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium md:min-h-0 ${
         active
           ? "border-primary bg-primary text-primary-foreground"
           : "border-border bg-surface text-muted hover:bg-surface-hover"

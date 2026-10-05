@@ -317,7 +317,7 @@ export function FolderView({
             </div>
 
             {parent && (
-              <Link href={`/projects/${parent.id}`} className="text-sm text-muted hover:text-foreground">
+              <Link href={`/projects/${parent.id}`} className="inline-flex min-h-11 items-center text-sm text-muted hover:text-foreground md:min-h-0">
                 {t.projects.backToParent(
                   path.length === 2
                     ? projectCategoryLabel(t, parent.name)

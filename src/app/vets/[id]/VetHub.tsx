@@ -172,7 +172,7 @@ export function VetHub({
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
-      <Link href="/vets" className="text-sm text-muted hover:text-foreground">
+      <Link href="/vets" className="inline-flex min-h-11 items-center text-sm text-muted hover:text-foreground md:min-h-0">
         {t.vets.hub.backToVets}
       </Link>
 

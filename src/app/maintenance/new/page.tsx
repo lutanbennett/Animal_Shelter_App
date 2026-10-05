@@ -48,7 +48,7 @@ export default async function NewMaintenancePage(props: PageProps<"/maintenance/
     <main className="flex flex-1 flex-col gap-6 p-6">
       <Link
         href={enclosure ? `/enclosures/${enclosure.id}` : "/maintenance"}
-        className="text-sm text-muted hover:text-foreground"
+        className="inline-flex min-h-11 items-center text-sm text-muted hover:text-foreground md:min-h-0"
       >
         {enclosure
           ? t.maintenance.backToEnclosure(placeName(locale, enclosure.name, enclosure.name_th))

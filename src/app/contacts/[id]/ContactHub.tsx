@@ -112,7 +112,7 @@ export function ContactHub({
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-4 md:p-6">
-      <Link href="/contacts" className="text-sm text-muted hover:text-foreground">
+      <Link href="/contacts" className="inline-flex min-h-11 items-center text-sm text-muted hover:text-foreground md:min-h-0">
         {h.backToContacts}
       </Link>
 

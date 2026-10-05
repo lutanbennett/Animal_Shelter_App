@@ -7,6 +7,7 @@ import type { ActionResult } from "@/lib/action-result";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { isArchived } from "@/lib/contacts/contacts";
 import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 import { RowActionButton } from "@/components/RowAction";
 
 const inputClass =
@@ -72,14 +73,13 @@ export function ArchiveContactControl({
             icon={ACTION_ICONS.restore}
           />
         ) : (
-          <button
-            type="button"
+          <ActionButton
+            icon={ACTION_ICONS.restore}
             disabled={isPending}
             onClick={() => run(() => restoreContact(contact.id))}
-            className={buttonClass}
           >
             {a.restore}
-          </button>
+          </ActionButton>
         )
       ) : open ? (
         <form
@@ -132,15 +132,14 @@ export function ArchiveContactControl({
           icon={ACTION_ICONS.archive}
         />
       ) : (
-        <button
-          type="button"
+        <ActionButton
+          icon={ACTION_ICONS.archive}
           disabled={isPending || Boolean(blocker)}
           title={blocker ?? undefined}
           onClick={() => setOpen(true)}
-          className={buttonClass}
         >
           {a.archive}
-        </button>
+        </ActionButton>
       )}
       {!archived && blocker && (
         <div className="flex max-w-64 flex-col gap-1 text-xs text-muted">

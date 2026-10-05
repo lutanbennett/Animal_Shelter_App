@@ -112,7 +112,7 @@ export function MaintenanceJobView({
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
-      <Link href="/maintenance" className="text-sm text-muted hover:text-foreground">
+      <Link href="/maintenance" className="inline-flex min-h-11 items-center text-sm text-muted hover:text-foreground md:min-h-0">
         {t.maintenance.backToBoard}
       </Link>
 
@@ -354,13 +354,9 @@ function PhotoSection({
           </h2>
           <span className="text-xs text-muted">{hint}</span>
         </div>
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="shrink-0 rounded border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
-        >
+        <ActionButton icon={open ? ACTION_ICONS.clear : ACTION_ICONS.uploadImage} onClick={() => setOpen((v) => !v)}>
           {open ? t.common.close : addLabel}
-        </button>
+        </ActionButton>
       </div>
 
       {open && (

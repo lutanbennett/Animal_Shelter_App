@@ -100,7 +100,7 @@ export default async function EditVetVisitPage(props: PageProps<"/vet-visits/[id
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
-      <Link href={tabHref} className="text-sm text-muted hover:text-foreground">
+      <Link href={tabHref} className="inline-flex min-h-11 items-center text-sm text-muted hover:text-foreground md:min-h-0">
         {t.residents.sections.backTo(displayName)}
       </Link>
       <div>

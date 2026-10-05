@@ -93,7 +93,7 @@ export function GoogleButton({ label }: { label: string }) {
     <button
       type="submit"
       disabled={pending}
-      className="flex w-full items-center justify-center gap-3 rounded border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-background disabled:opacity-50"
+      className="flex min-h-11 w-full items-center justify-center gap-3 rounded border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-background disabled:opacity-50"
     >
       <GoogleLogo />
       {label}
