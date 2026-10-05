@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { redirect } from "next/navigation";
 import { requireAdminUser } from "@/lib/auth/require-admin";
 import { getAssuranceLevel } from "@/lib/auth/two-step";
@@ -41,9 +42,7 @@ export default async function TwoStepPage() {
 
       <p className="max-w-prose text-xs text-muted">{s.lostPhone}</p>
       <div>
-        <Link href="/admin" className="text-sm text-muted underline hover:text-foreground">
-          {s.backToSettings}
-        </Link>
+        <BackLink href="/admin">{s.backToSettings}</BackLink>
       </div>
     </main>
   );

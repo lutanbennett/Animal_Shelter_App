@@ -1,6 +1,8 @@
 "use client";
 
 import { useConfirm } from "@/components/ConfirmProvider";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 import { useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { type AlertActionResult, runAlertCheckNow, sendTestAlertNow } from "./actions";
@@ -29,25 +31,21 @@ export function AlertActions() {
     });
   }
 
-  const button =
-    "rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-50";
-
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-2">
-        <button type="button" className={button} disabled={isPending} onClick={() => run(runAlertCheckNow)}>
+        <ActionButton icon={ACTION_ICONS.refresh} disabled={isPending} onClick={() => run(runAlertCheckNow)}>
           {a.runNow}
-        </button>
-        <button
-          type="button"
-          className={button}
+        </ActionButton>
+        <ActionButton
+          icon={ACTION_ICONS.send}
           disabled={isPending}
           onClick={async () => {
             if (await confirm({ body: a.testConfirm })) run(sendTestAlertNow);
           }}
         >
           {a.sendTest}
-        </button>
+        </ActionButton>
       </div>
       {isPending && <p className="text-xs text-muted">{t.admin.status.checking}</p>}
       {result && !result.ok && <p className="text-xs text-danger">{result.error}</p>}
