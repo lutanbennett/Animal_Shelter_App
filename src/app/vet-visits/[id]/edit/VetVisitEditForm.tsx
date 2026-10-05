@@ -196,7 +196,7 @@ export function VetVisitEditForm({
         >
           {pending ? t.common.saving : t.common.saveChanges}
         </button>
-        <Link href={cancelHref} className="text-sm text-muted hover:text-foreground">
+        <Link href={cancelHref} className="inline-flex min-h-11 items-center text-sm text-muted hover:text-foreground md:min-h-0">
           {t.common.cancel}
         </Link>
       </div>

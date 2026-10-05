@@ -91,6 +91,23 @@ for (const [role, perms] of Object.entries(roles)) {
   eq(`C ${role}: no Settings page (a role's home is its tasks)`, hrefs.filter((h) => h.startsWith("/admin/")), []);
 }
 eq("C Management's phone home is the whiteboard's: recurring jobs, intake, residents, then my tasks", homeTilesFor(roles.management, t).map((x) => x.href).filter((h) => h !== "/my"), ["/management/recurring-jobs", "/residents/new", "/residents"]);
+// R5 (management-role): Management is the template role, not a configured one, and her screen is keyed on
+// that key. The property the screen was built for is that a role edited in Settings loses a tile rather than
+// getting one that refuses, so each cell is taken away in turn.
+const mgmtWithout = (...gone) => {
+  const cells = {};
+  for (const a of ACTIVITIES) {
+    if (gone.includes(a.key)) continue;
+    if (seed.rolesHolding(a.key, "edit").includes("management")) cells[a.key] = 2;
+    else if (a.kind === "level" && seed.rolesHolding(a.key, "read").includes("management")) cells[a.key] = 1;
+  }
+  return parsePermissions({ role: { key: "management", name: "Management", opens_app: true }, is_admin: false, scopes: {}, permissions: cells });
+};
+const hrefsOf = (p) => homeTilesFor(p, t).map((x) => x.href);
+eq("C Management without recurring.manage loses Recurring jobs only", hrefsOf(mgmtWithout("recurring.manage")), ["/residents/new", "/residents", "/my"]);
+eq("C Management without resident.register loses Intake only", hrefsOf(mgmtWithout("resident.register")), ["/management/recurring-jobs", "/residents", "/my"]);
+eq("C Management without recurring.do_own loses My tasks only", hrefsOf(mgmtWithout("recurring.do_own")), ["/management/recurring-jobs", "/residents/new", "/residents"]);
+eq("C Management with all three taken away still has Residents", hrefsOf(mgmtWithout("recurring.manage", "resident.register", "recurring.do_own")), ["/residents"]);
 eq("C staff leads with My tasks, Residents, then the whiteboard order of what staff hold", homeTilesFor(roles.staff, t).slice(0, 5).map((x) => x.href), ["/my", "/residents", "/stocktake", "/maintenance", "/deliveries"]);
 eq("C a vet's home is its appointments, and staff are not offered them", [
   homeTilesFor(roles.vet, t).some((x) => x.href === "/appointments"),

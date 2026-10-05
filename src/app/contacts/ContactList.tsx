@@ -242,7 +242,7 @@ export function ContactList({
                 role="radio"
                 aria-checked={active}
                 onClick={() => setType(filter)}
-                className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+                className={`inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full border px-3 py-1.5 text-sm font-medium transition md:min-h-0 ${
                   active
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border bg-surface text-muted hover:text-foreground"

@@ -50,7 +50,7 @@ export default async function LoginPage({
         <LoginForm error={errorMessage} next={safeNextPath(next)} />
         <Link
           href="/"
-          className="flex items-center justify-center gap-1.5 text-sm font-medium text-muted hover:text-foreground"
+          className="flex min-h-11 items-center justify-center gap-1.5 text-sm font-medium text-muted hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           {t.login.backToHome}

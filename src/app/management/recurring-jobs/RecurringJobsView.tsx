@@ -368,10 +368,10 @@ function HandOver({ people, from, today }: { people: PersonOption[]; from: TeamM
       </div>
       <form onSubmit={submit} className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 text-sm">
         <div className="flex flex-wrap gap-4">
-          <label className="flex flex-col gap-1 font-medium text-foreground">
+          <label className="flex min-w-0 max-w-full flex-col gap-1 font-medium text-foreground">
             {h.from}
             <select
-              className={inputClass}
+              className={`${inputClass} min-w-0 max-w-full`}
               value={fromId}
               onChange={(e) => {
                 const id = e.target.value;

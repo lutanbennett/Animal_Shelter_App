@@ -58,7 +58,7 @@ export default async function RequestAccessPage() {
         </p>
         <Link
           href="/login"
-          className="flex items-center justify-center gap-1.5 text-sm font-medium text-muted hover:text-foreground"
+          className="flex min-h-11 items-center justify-center gap-1.5 text-sm font-medium text-muted hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           {r.backToLogin}

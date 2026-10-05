@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { ActionLink } from "@/components/ActionLink";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
@@ -78,12 +79,7 @@ export default async function ContactsPage(props: PageProps<"/contacts">) {
           <p className="text-sm text-muted">{t.contacts.pageSubtitle}</p>
         </div>
         {can(perms, "contacts.directory") && (
-          <Link
-            href="/management/contacts"
-            className="shrink-0 text-sm font-medium text-primary hover:underline"
-          >
-            {t.contacts.manageInAdmin}
-          </Link>
+          <ActionLink href="/management/contacts" label={t.contacts.manageInAdmin} icon={ACTION_ICONS.manage} iconOnlyOnMobile={false} />
         )}
       </div>
 
