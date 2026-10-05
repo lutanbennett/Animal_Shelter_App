@@ -61,16 +61,24 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [
-  { text: "The Management home on a phone is now a short screen instead of every page: Recurring jobs, Intake and Residents, with My tasks after them. Booking a vet visit, a resident's medical records and their details are on the resident, one tap from Residents. Everything else is still in the menu.", roles: ["admin", "management"] },
-  { text: "Settings now has a Facility map page where an admin places the enclosures on the shelter's plans: pick an enclosure, click two corners (or each corner of an odd shape) on the plan, and it is saved and the next one is picked for you. Corners can be dragged to fix a shape, and a plan picture is added to a zone or to the overview from the same page. Everything placed shows at once on the Map under Enclosures, and the enclosures not yet drawn there are still listed beneath it. Best on a computer.", roles: ["admin"] },
-  { text: "On the Management pages, the actions that repeat on every row (edit, count, merge, delete, archive, restore, make standard, pause, resume, publish, unpublish, move up and down, mark a doctor as left) are now small icon buttons, each at least 44 px square on a phone, with the word showing when you hold or hover over it. A delete that is not allowed says why when you hold over it. Add buttons carry a plus, the stock shortcuts at the top of Medications and Diets are real buttons, and Print and Download CSV are easier to tap. The phone screens for purchasing and the medication list were already big icon-and-word buttons and are unchanged.", roles: ["admin", "management"] },
-  { text: "On the Settings pages, the actions that repeat on every row (edit, delete, merge, archive, restore, move a photo earlier or later, take a project off the website) are now small icon buttons, each at least 44 px square on a phone, with the word showing when you hold or hover over it. Add buttons carry a plus; Replace photo, Issue temporary password, Approve and Deny, Check now, Send a test and Undo this change now show an icon beside the word, and Clear on Recent changes is easier to tap. Deleting a gallery photo, a user or a type still asks first.", roles: ["admin"] },
-];
+export const unreleased: ReleaseNote[] = [];
 
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.19.1",
+    date: "2026-10-05",
+    title:
+      "A facility map an admin can draw, a shorter Management home on a phone, and icon buttons across Management and Settings",
+    major: false,
+    notes: [
+      { text: "Settings now has a Facility map page where an admin places the enclosures on the shelter's plans: pick an enclosure, click two corners (or each corner of an odd shape) on the plan, and it is saved and the next one is picked for you. Corners can be dragged to fix a shape, and a plan picture is added to a zone or to the overview from the same page. Everything placed shows at once on the Map under Enclosures, and the enclosures not yet drawn there are still listed beneath it. Best on a computer.", roles: ["admin"] },
+      { text: "The Management home on a phone is now a short screen instead of every page: Recurring jobs, Intake and Residents, with My tasks after them. Booking a vet visit, a resident's medical records and their details are on the resident, one tap from Residents. Everything else is still in the menu.", roles: ["admin", "management"] },
+      { text: "On the Management pages, the actions that repeat on every row (edit, count, merge, delete, archive, restore, make standard, pause, resume, publish, unpublish, move up and down, mark a doctor as left) are now small icon buttons, each at least 44 px square on a phone, with the word showing when you hold or hover over it. A delete that is not allowed says why when you hold over it. Add buttons carry a plus, the stock shortcuts at the top of Medications and Diets are real buttons, and Print and Download CSV are easier to tap. The phone screens for purchasing and the medication list were already big icon-and-word buttons and are unchanged.", roles: ["admin", "management"] },
+      { text: "On the Settings pages, the actions that repeat on every row (edit, delete, merge, archive, restore, move a photo earlier or later, take a project off the website) are now small icon buttons, each at least 44 px square on a phone, with the word showing when you hold or hover over it. Add buttons carry a plus; Replace photo, Issue temporary password, Approve and Deny, Check now, Send a test and Undo this change now show an icon beside the word, and Clear on Recent changes is easier to tap. Deleting a gallery photo, a user or a type still asks first.", roles: ["admin"] },
+    ],
+  },
   {
     version: "0.19.0",
     date: "2026-10-04",
