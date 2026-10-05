@@ -1,4 +1,6 @@
 import { Suspense, type ReactNode } from "react";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 import Link from "next/link";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
@@ -41,12 +43,9 @@ export default async function SystemStatusPage(props: PageProps<"/admin/status">
             await checkNow();
           }}
         >
-          <button
-            type="submit"
-            className="rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
-          >
+          <ActionButton type="submit" icon={ACTION_ICONS.refresh}>
             {s.checkNow}
-          </button>
+          </ActionButton>
         </form>
       </div>
 

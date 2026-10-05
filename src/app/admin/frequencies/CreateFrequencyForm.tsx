@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 import { useKeptForm } from "@/lib/use-kept-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import {
@@ -46,13 +48,9 @@ export function CreateFrequencyForm() {
         <FrequencyScheduleFields value={schedule} onChange={setSchedule} idPrefix="new-frequency" />
         <span className="text-xs text-muted">{f.createForm.scheduleHint}</span>
       </div>
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-      >
+      <ActionButton type="submit" variant="primary" icon={ACTION_ICONS.add} disabled={pending}>
         {pending ? t.common.creating : f.createForm.addButton}
-      </button>
+      </ActionButton>
       {state && !state.ok && (
         <p className="w-full text-sm text-danger">{state.error}</p>
       )}

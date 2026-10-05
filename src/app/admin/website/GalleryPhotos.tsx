@@ -1,6 +1,9 @@
 "use client";
 
 import { useConfirm } from "@/components/ConfirmProvider";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
+import { RowActionButton } from "@/components/RowAction";
 import Image from "next/image";
 import { useRef, useState, useTransition } from "react";
 import { driveImageUrl } from "@/lib/google/drive-client";
@@ -74,33 +77,26 @@ export function GalleryPhotos({ photos }: { photos: GalleryPhotoRow[] }) {
               </div>
               <div className="flex items-center justify-between gap-1">
                 <div className="flex gap-1">
-                  <button
-                    type="button"
+                  <RowActionButton
                     disabled={isPending || index === 0}
                     onClick={() => handleMove(photo.id, "up")}
-                    aria-label={t.admin.website.gallery.moveEarlier}
-                    className="rounded border border-border px-2 py-1 text-xs text-foreground hover:bg-surface-hover disabled:opacity-30"
-                  >
-                    ←
-                  </button>
-                  <button
-                    type="button"
+                    label={t.admin.website.gallery.moveEarlier}
+                    icon={ACTION_ICONS.moveLeft}
+                  />
+                  <RowActionButton
                     disabled={isPending || index === photos.length - 1}
                     onClick={() => handleMove(photo.id, "down")}
-                    aria-label={t.admin.website.gallery.moveLater}
-                    className="rounded border border-border px-2 py-1 text-xs text-foreground hover:bg-surface-hover disabled:opacity-30"
-                  >
-                    →
-                  </button>
+                    label={t.admin.website.gallery.moveLater}
+                    icon={ACTION_ICONS.moveRight}
+                  />
                 </div>
-                <button
-                  type="button"
+                <RowActionButton
                   disabled={isPending}
                   onClick={() => handleDelete(photo.id)}
-                  className="rounded border border-danger/40 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
-                >
-                  {t.admin.website.gallery.remove}
-                </button>
+                  label={t.admin.website.gallery.remove}
+                  icon={ACTION_ICONS.delete}
+                  tone="danger"
+                />
               </div>
             </div>
           ))}
@@ -108,15 +104,10 @@ export function GalleryPhotos({ photos }: { photos: GalleryPhotoRow[] }) {
       )}
 
       <div>
-        <button
-          type="button"
-          disabled={isPending}
-          onClick={() => inputRef.current?.click()}
-          className="inline-flex items-center gap-2 rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-50"
-        >
+        <ActionButton icon={ACTION_ICONS.uploadImage} disabled={isPending} onClick={() => inputRef.current?.click()}>
           {isPending && <PendingPuppy />}
           {isPending ? t.common.uploading : t.admin.website.gallery.addPhoto}
-        </button>
+        </ActionButton>
         <input
           ref={inputRef}
           type="file"

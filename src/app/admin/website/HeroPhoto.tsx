@@ -1,6 +1,8 @@
 "use client";
 
 import { useConfirm } from "@/components/ConfirmProvider";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 import Image from "next/image";
 import { useRef, useState, useTransition } from "react";
 import { driveImageUrl } from "@/lib/google/drive-client";
@@ -75,24 +77,14 @@ export function HeroPhoto({
       </div>
 
       <div className="flex items-center gap-3">
-        <button
-          type="button"
-          disabled={isPending}
-          onClick={() => inputRef.current?.click()}
-          className="inline-flex items-center gap-2 rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-50"
-        >
+        <ActionButton icon={ACTION_ICONS.uploadImage} disabled={isPending} onClick={() => inputRef.current?.click()}>
           {isPending && <PendingPuppy />}
           {isPending ? t.common.uploading : t.admin.website.hero.replace}
-        </button>
+        </ActionButton>
         {heroDriveFileId && (
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={handleRemove}
-            className="rounded border border-danger/40 px-4 py-2 text-sm font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
-          >
+          <ActionButton variant="danger" icon={ACTION_ICONS.removeImage} disabled={isPending} onClick={handleRemove}>
             {t.admin.website.hero.remove}
-          </button>
+          </ActionButton>
         )}
         <input
           ref={inputRef}

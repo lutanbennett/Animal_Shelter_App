@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionLink } from "@/components/ActionLink";
 import { listAllUsers } from "@/lib/auth/access-requests";
 import {
   AUDITED_TABLES,
@@ -162,9 +164,7 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
           {s.filters.apply}
         </button>
         {filtered && (
-          <Link href="/admin/recent-changes" className="py-2 text-sm text-muted underline">
-            {s.filters.clear}
-          </Link>
+          <ActionLink href="/admin/recent-changes" label={s.filters.clear} icon={ACTION_ICONS.clear} iconOnlyOnMobile={false} />
         )}
       </form>
 

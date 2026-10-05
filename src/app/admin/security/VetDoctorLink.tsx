@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 import { useConfirm } from "@/components/ConfirmProvider";
 import type { ActionResult } from "@/lib/action-result";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -8,9 +10,6 @@ import { createVetDoctorForLogin, linkVetDoctor, unlinkVetDoctor } from "./actio
 import type { ClinicOption, SecurityUser } from "./UsersTable";
 
 export type DoctorOption = { id: string; name: string; clinics: string[] };
-
-const smallButton =
-  "min-h-11 rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50";
 
 /**
  * A vet login's clinics (Settings → Security). They are not set here: they
@@ -76,9 +75,9 @@ export function VetDoctorLink({
           </span>
           <span>{v.editClinicsHint}</span>
           <div>
-            <button type="button" disabled={disabled || isPending} onClick={handleUnlink} className={smallButton}>
+            <ActionButton compact icon={ACTION_ICONS.unlink} disabled={disabled || isPending} onClick={handleUnlink}>
               {v.unlink}
-            </button>
+            </ActionButton>
           </div>
         </div>
       ) : (
@@ -101,22 +100,22 @@ export function VetDoctorLink({
                 ))}
               </select>
               <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
+                <ActionButton
+                  compact
+                  icon={ACTION_ICONS.link}
                   disabled={disabled || isPending || !pick}
                   onClick={() => run(() => linkVetDoctor(user.id, pick), v.linked, () => setPick(""))}
-                  className={smallButton}
                 >
                   {v.link}
-                </button>
-                <button
-                  type="button"
+                </ActionButton>
+                <ActionButton
+                  compact
+                  icon={ACTION_ICONS.add}
                   disabled={disabled || isPending}
                   onClick={() => setCreating(true)}
-                  className={smallButton}
                 >
                   {v.createOpen}
-                </button>
+                </ActionButton>
               </div>
             </>
           )}
@@ -146,19 +145,19 @@ export function VetDoctorLink({
                 ))}
               </fieldset>
               <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
+                <ActionButton
+                  compact
+                  icon={ACTION_ICONS.add}
                   disabled={isPending || !name.trim()}
                   onClick={() =>
                     run(() => createVetDoctorForLogin(user.id, name, picked), v.created, () => setCreating(false))
                   }
-                  className={smallButton}
                 >
                   {v.createButton}
-                </button>
-                <button type="button" disabled={isPending} onClick={() => setCreating(false)} className={smallButton}>
+                </ActionButton>
+                <ActionButton compact icon={ACTION_ICONS.clear} disabled={isPending} onClick={() => setCreating(false)}>
                   {t.common.cancel}
-                </button>
+                </ActionButton>
               </div>
             </div>
           )}

@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowDown, ArrowUp } from "lucide-react";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { RowActionButton } from "@/components/RowAction";
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { CONTACT_CHANNELS, isContactChannel, type ContactChannel } from "@/lib/site/channels";
@@ -41,9 +42,6 @@ export function ContactChannelPicker({
     setOrder(next);
   }
 
-  const button =
-    "flex h-9 w-9 items-center justify-center rounded border border-border text-foreground hover:bg-surface-hover disabled:opacity-30";
-
   return (
     <fieldset className="flex flex-col gap-2">
       <legend className="text-sm font-medium text-muted">{s.preferredHeading}</legend>
@@ -67,24 +65,18 @@ export function ContactChannelPicker({
                     {s.preferredFirst}
                   </span>
                 )}
-                <button
-                  type="button"
-                  className={button}
+                <RowActionButton
                   disabled={i === 0}
-                  aria-label={s.moveUp(name)}
+                  label={s.moveUp(name)}
+                  icon={ACTION_ICONS.moveUp}
                   onClick={() => move(channel, -1)}
-                >
-                  <ArrowUp aria-hidden="true" className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  className={button}
+                />
+                <RowActionButton
                   disabled={i === visible.length - 1}
-                  aria-label={s.moveDown(name)}
+                  label={s.moveDown(name)}
+                  icon={ACTION_ICONS.moveDown}
                   onClick={() => move(channel, 1)}
-                >
-                  <ArrowDown aria-hidden="true" className="h-4 w-4" />
-                </button>
+                />
               </li>
             );
           })}

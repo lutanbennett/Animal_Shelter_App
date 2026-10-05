@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Check, Square, Hexagon, Undo2, X } from "lucide-react";
 import { PanZoom } from "@/app/enclosures/map/PanZoom";
 import { useConfirm } from "@/components/ConfirmProvider";
-import { ACTION_ICONS, ENCLOSURE_ICONS } from "@/components/hub-icons";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import { RowActionButton } from "@/components/RowAction";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
@@ -336,8 +336,7 @@ export function MapEditor({
                             <RowActionButton
                               label={m.clear}
                               subject={item.name}
-                              icon={ACTION_ICONS.delete}
-                              tone="danger"
+                              icon={ACTION_ICONS.clear}
                               onClick={() => void clearShape(item)}
                             />
                           </>
@@ -614,7 +613,7 @@ function AddPlan({
               }
             }}
           >
-            <ENCLOSURE_ICONS.zone aria-hidden="true" className="h-4 w-4" />
+            <ACTION_ICONS.add aria-hidden="true" className="h-4 w-4" />
             {m.addPlanButton}
           </button>
         </div>
