@@ -104,7 +104,9 @@ const EFFECTIVE = `
              and rp.activity = substring(coalesce(p.qual, p.with_check) from 'has_permission\\(''([a-z_.]+)''')
              and rp.level >= case when c.cmd = 'SELECT' then 1 else 2 end))
     and ((coalesce(p.qual, '') || coalesce(p.with_check, '')) not like '%sees\\_all\\_clinical()%'
-         or r.scope_clinical = 'any')`;
+         or r.scope_clinical = 'any')
+    and ((coalesce(p.qual, '') || coalesce(p.with_check, '')) not like '%sees\\_all\\_residents()%'
+         or (r.scope_residents = 'all' and r.legacy_role is not null and r.legacy_role <> 'volunteer'))`;
 
 let failures = 0;
 const fail = (msg) => { failures++; console.log(`FAIL  ${msg}`); };
