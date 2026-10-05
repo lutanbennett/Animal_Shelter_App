@@ -1,4 +1,5 @@
 import { requirePermission } from "@/lib/permissions/require";
+import { BackLink } from "@/components/BackLink";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -18,9 +19,9 @@ export default async function NewDietPage(props: PageProps<"/diets/new">) {
       <main className="flex flex-1 flex-col gap-4 p-6">
         <h1 className="text-2xl font-semibold text-foreground">{t.diets.pageTitle}</h1>
         <p className="text-sm text-muted">{t.diets.noResidentSelected}</p>
-        <Link href="/residents" className="text-sm font-medium text-primary hover:underline">
+        <BackLink href="/residents">
           {t.residents.hub.backToResidents}
-        </Link>
+        </BackLink>
       </main>
     );
   }
@@ -49,9 +50,9 @@ export default async function NewDietPage(props: PageProps<"/diets/new">) {
       <main className="flex flex-1 flex-col gap-4 p-6">
         <h1 className="text-2xl font-semibold text-foreground">{t.diets.pageTitle}</h1>
         <p className="text-sm text-muted">{t.residents.deceased.recordClosed}</p>
-        <Link href={`/residents/${residentId}`} className="text-sm font-medium text-primary hover:underline">
+        <BackLink href={`/residents/${residentId}`}>
           {t.residents.sections.backTo(resident.displayName)}
-        </Link>
+        </BackLink>
       </main>
     );
   }

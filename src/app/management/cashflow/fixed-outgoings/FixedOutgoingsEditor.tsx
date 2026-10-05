@@ -4,6 +4,8 @@ import { useConfirm } from "@/components/ConfirmProvider";
 import { useState, useTransition } from "react";
 import { formatBaht, formatMonth } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { RowActionButton } from "@/components/RowAction";
 import type { FixedOutgoing, FixedOutgoingFields } from "@/lib/management/fixed-outgoings";
 import { createFixedOutgoing, deleteFixedOutgoing, updateFixedOutgoing } from "./actions";
 
@@ -202,8 +204,9 @@ export function FixedOutgoingsEditor({ lines, max }: { lines: FixedOutgoing[]; m
             type="button"
             onClick={() => open(NEW, BLANK)}
             disabled={full || pending}
-            className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
+            className="inline-flex min-h-11 items-center gap-2 rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50 md:min-h-0"
           >
+            <ACTION_ICONS.add aria-hidden="true" className="h-4 w-4" />
             {m.form.addLine}
           </button>
         )}
@@ -253,22 +256,21 @@ export function FixedOutgoingsEditor({ lines, max }: { lines: FixedOutgoing[]; m
                   <span className="text-sm font-medium tabular-nums text-foreground">
                     {m.perMonth(formatBaht(Number(line.monthly_amount), locale))}
                   </span>
-                  <button
-                    type="button"
+                  <RowActionButton
                     onClick={() => open(line.id, toFields(line))}
                     disabled={pending}
-                    className="text-sm text-primary hover:underline disabled:opacity-50"
-                  >
-                    {t.common.edit}
-                  </button>
-                  <button
-                    type="button"
+                    label={t.common.edit}
+                    subject={line.label}
+                    icon={ACTION_ICONS.edit}
+                  />
+                  <RowActionButton
                     onClick={() => remove(line)}
                     disabled={pending}
-                    className="text-sm text-danger hover:underline disabled:opacity-50"
-                  >
-                    {t.common.delete}
-                  </button>
+                    label={t.common.delete}
+                    subject={line.label}
+                    icon={ACTION_ICONS.delete}
+                    tone="danger"
+                  />
                 </div>
               </li>
             ),

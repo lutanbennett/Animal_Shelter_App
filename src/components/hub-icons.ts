@@ -1,16 +1,26 @@
 import {
   Ambulance,
+  Archive,
+  ArchiveRestore,
+  ArrowDown,
+  ArrowLeft,
   ArrowRightLeft,
+  ArrowUp,
   BookOpen,
   BookUser,
   BriefcaseBusiness,
   Building2,
   CalendarClock,
+  CalendarX2,
   Camera,
   ClipboardCheck,
   Droplet,
   Fence,
   Folder,
+  Globe,
+  GlobeLock,
+  ImageOff,
+  ImageUp,
   HeartCrack,
   HeartHandshake,
   HeartPlus,
@@ -20,31 +30,42 @@ import {
   KeyRound,
   ListTodo,
   Mail,
+  Map as MapIcon,
   MapPin,
+  Merge,
   MessageCircle,
   MessageCircleHeart,
   MessageCircleMore,
   MessageSquare,
   Navigation,
   Newspaper,
+  Pause,
   PawPrint,
   Phone,
   Repeat,
   PhoneCall,
+  Pencil,
   Pill,
+  Play,
+  Plus,
   RotateCcw,
   Scissors,
   Settings,
   ShieldCheck,
+  Star,
   Stethoscope,
   Syringe,
+  Trash2,
   Truck,
   Undo2,
   Users,
+  UserCheck,
+  UserMinus,
   UserRound,
   Utensils,
   Weight,
   Wrench,
+  X,
   type LucideIcon,
 } from "lucide-react";
 
@@ -100,11 +121,15 @@ export const PLACEMENT_ICONS = {
 export const ENCLOSURE_ICONS = {
   enclosure: Fence,
   zone: MapPin,
+  /** The facility plan, and the editor that places enclosures on it. */
+  map: MapIcon,
   residents: Users,
   maintenance: Wrench,
   move: PLACEMENT_ICONS.move,
   /** A resident on something other than the standard diet (0087). */
   specialDiet: SECTION_ICONS.diet,
+  /** A resident on a current prescription (the facility map's marker). */
+  medication: Pill,
 } satisfies Record<string, LucideIcon>;
 
 /**
@@ -168,4 +193,47 @@ export const NAV_ICONS = {
   releaseNotes: Newspaper,
   changePassword: KeyRound,
   security: ShieldCheck,
+} satisfies Record<string, LucideIcon>;
+
+/**
+ * One icon per generic action meaning, wherever it appears on any page
+ * (src/components/RowAction.tsx, ActionLink). Extend this map rather than
+ * picking an icon per page, so a pencil always means Edit and a bin always
+ * means Delete. Domain actions (log a weight, book a visit, send to hospital)
+ * reuse SECTION_ICONS / PLACEMENT_ICONS instead of appearing here.
+ */
+export const ACTION_ICONS = {
+  add: Plus,
+  edit: Pencil,
+  delete: Trash2,
+  archive: Archive,
+  restore: ArchiveRestore,
+  /** Stop a running course (prescription, diet) as of today. */
+  endToday: CalendarX2,
+  back: ArrowLeft,
+  /** Clear a search or filter. */
+  clear: X,
+  /** Count what is on hand (stock). Same icon as the Stocktake nav entry. */
+  count: ClipboardCheck,
+  /** Fold one record into another (medications). */
+  merge: Merge,
+  /** Add or replace a photo on a record. */
+  uploadImage: ImageUp,
+  /** Take a photo off a record (the record stays). */
+  removeImage: ImageOff,
+  moveUp: ArrowUp,
+  moveDown: ArrowDown,
+  /** Make this the default / standard one. */
+  makeStandard: Star,
+  /** Mark a person as no longer active (a doctor who has left), and back. */
+  deactivate: UserMinus,
+  activate: UserCheck,
+  /** Put a recurring thing on hold, and start it again. */
+  pause: Pause,
+  resume: Play,
+  /** Put a profile on the public website, and take it off. */
+  publish: Globe,
+  unpublish: GlobeLock,
+  /** Give a job back to the person it was lifted from. */
+  handBack: Undo2,
 } satisfies Record<string, LucideIcon>;

@@ -54,6 +54,13 @@ export default async function AdminPage() {
       phoneNote: t.largerScreen.tileLabel,
     },
     {
+      href: "/admin/facility-map",
+      label: t.nav.facilityMap,
+      description: t.admin.landing.tiles.facilityMap,
+      icon: ENCLOSURE_ICONS.map,
+      phoneNote: t.largerScreen.tileLabel,
+    },
+    {
       href: "/admin/immunization-types",
       label: t.nav.immunizationTypes,
       description: t.admin.landing.tiles.immunizationTypes,

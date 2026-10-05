@@ -24,6 +24,8 @@ import { STATUSES_IN_PLACE } from "@/lib/residents/place";
 import { PlaceZoneChips } from "@/components/PlaceZoneChips";
 import { asListRow, readsWhoAndWhereOnly, WHO_AND_WHERE_COLUMNS, type WhoAndWhere } from "@/lib/residents/who-and-where";
 import { ResidentsTable, type ResidentRow } from "./ResidentsTable";
+import { ActionLink } from "@/components/ActionLink";
+import { ACTION_ICONS } from "@/components/hub-icons";
 
 /**
  * The name / place / zone / enclosure filters from the URL, applied the same
@@ -398,12 +400,13 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
         <p className="flex flex-wrap items-center gap-3 rounded border border-border bg-surface px-3 py-2 text-sm text-foreground">
           {t.residents.list.chipNotFound(chipQuery)}
           {canRegister && (
-            <Link
+            <ActionLink
               href={`/residents/new?chip=${chipQuery}`}
-              className="font-medium text-primary hover:underline"
-            >
-              {t.residents.list.chipNewResident}
-            </Link>
+              label={t.residents.list.chipNewResident}
+              icon={ACTION_ICONS.add}
+              variant="primary"
+              iconOnlyOnMobile={false}
+            />
           )}
         </p>
       )}

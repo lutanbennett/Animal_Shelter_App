@@ -38,12 +38,12 @@ export default async function StocktakePage(props: PageProps<"/stocktake">) {
 
   const [medicationResult, dietResult, conversionsResult] = await Promise.all([
     supabase
-      .from("medication")
+      .from("stock_medications")
       .select("id, name, unit:dose_unit, stock_on_hand, stock_counted_at, label_drive_file_id")
       .order("name")
       .returns<StockRow[]>(),
     supabase
-      .from("diet_types")
+      .from("stock_diet_types")
       .select("id, name, unit, stock_on_hand, stock_counted_at")
       .order("name")
       .returns<StockRow[]>(),

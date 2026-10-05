@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { BackLink } from "@/components/BackLink";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { MAX_FIXED_OUTGOINGS, type FixedOutgoing } from "@/lib/management/fixed-outgoings";
@@ -32,13 +31,7 @@ export default async function FixedOutgoingsPage() {
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
       <div className="flex flex-col gap-1">
-        <Link
-          href="/management/cashflow"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-        >
-          <ArrowLeft aria-hidden className="h-4 w-4" />
-          {m.backToCashflow}
-        </Link>
+        <BackLink href="/management/cashflow">{m.backToCashflow}</BackLink>
         <h1 className="text-2xl font-semibold text-foreground">{m.title}</h1>
         <p className="text-sm text-muted">{m.subtitle}</p>
       </div>

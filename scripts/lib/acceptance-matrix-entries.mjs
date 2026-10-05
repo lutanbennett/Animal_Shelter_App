@@ -452,6 +452,15 @@ export const ENTRIES = {
   ],
 
   // ── Enclosures ───────────────────────────────────────────────────────────
+  "enclosure-map": [
+    {
+      activity: "Find an enclosure on the map",
+      needs: "facility.map",
+      device: "phone",
+      do: "Open Enclosures, tap Map, tap a zone and Open this zone, pinch to zoom, tap an enclosure and then Open enclosure.",
+      expect: "The plan zooms and moves, the enclosure shows its count, and Open enclosure goes to its page. Enclosures not drawn yet are listed under the plan. The page does not scroll sideways.",
+    },
+  ],
   "browse-enclosures": [
     {
       activity: "Browse enclosures and see how full they are",
@@ -653,7 +662,7 @@ export const ENTRIES = {
       activity: "Count the stock and save the count",
       needs: "stock.count",
       device: "phone",
-      do: "Open Stocktake, type what is on the shelf for several items, tap Review and save, and save.",
+      do: "Open Stocktake (the 2IC: tap Do Stocktaking on Home), type what is on the shelf for several items, tap Review and save, and save.",
       expect: "Big changes are listed first for checking; after saving, the counts show as new.",
     },
     {
@@ -692,7 +701,7 @@ export const ENTRIES = {
       activity: "Work out what to buy",
       needs: "stock.purchasing",
       device: "phone",
-      do: "Open Purchasing, pick 2 weeks, open the Medicines fold, tap an item to open its working, and tap Download CSV.",
+      do: "Open Purchasing (the 2IC: tap Do the Purchasing on Home), pick 2 weeks, open the Medicines fold, tap an item to open its working, and tap Download CSV.",
       expect: "One screen: Medicines and Food in separate folds, each grouped by supplier, each item opens to show its working.",
     },
   ],
@@ -701,7 +710,7 @@ export const ENTRIES = {
       activity: "Record a delivery",
       needs: "stock.delivery",
       device: "phone",
-      do: "Open Deliveries from the menu, tap Medicine, pick a medication, type the amount, tap Next three times, and tap Record this delivery. Then tap Back from the last screen to check the amount is still there.",
+      do: "Open Deliveries from the menu (the 2IC: tap Record a Delivery on Home), tap Medicine, pick a medication, type the amount, tap Next three times, and tap Record this delivery. Then tap Back from the last screen to check the amount is still there.",
       expect: "One question per screen, each with a Back button that keeps what you typed; the last screen says in words what will be recorded. It appears under Recent deliveries with your name. A delivery dated in the future cannot be chosen.",
     },
   ],
@@ -807,6 +816,22 @@ export const ENTRIES = {
       device: "desktop",
       do: "Settings → Zones: add a zone; Settings → Enclosures: add an enclosure with a capacity.",
       expect: "The enclosure is on the Enclosures page and offered when moving a resident.",
+    },
+  ],
+  "facility-map-editor": [
+    {
+      activity: "Place an enclosure on the facility map",
+      needs: "facility.enclosures",
+      device: "desktop",
+      do: "Settings → Facility map: pick a plan, pick an enclosure, click two opposite corners on the plan, then drag a corner to adjust it.",
+      expect: "The shape is saved at once and the next unplaced enclosure is picked. It shows on the Map under Enclosures, and the Not on this plan yet list there is one shorter.",
+    },
+    {
+      activity: "Add a plan to the facility map",
+      needs: "facility.enclosures",
+      device: "desktop",
+      do: "Settings → Facility map → Add a plan: choose the zone or the overview, type the file name of a plan picture, check it appears, tap Add this plan.",
+      expect: "The plan is offered in the buttons above the editor and the Map button appears on Enclosures. A name with no picture behind it cannot be added.",
     },
   ],
   "immunization-types": [

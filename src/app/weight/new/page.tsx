@@ -1,4 +1,5 @@
 import { requirePermission } from "@/lib/permissions/require";
+import { BackLink } from "@/components/BackLink";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -22,12 +23,10 @@ export default async function NewWeightPage(props: PageProps<"/weight/new">) {
           {t.weight.pageTitle}
         </h1>
         <p className="text-sm text-muted">{t.weight.noResidentSelected}</p>
-        <Link
-          href="/residents"
-          className="text-sm font-medium text-primary hover:underline"
-        >
+        <BackLink
+          href="/residents">
           {t.residents.hub.backToResidents}
-        </Link>
+        </BackLink>
       </main>
     );
   }
@@ -98,12 +97,10 @@ export default async function NewWeightPage(props: PageProps<"/weight/new">) {
           {t.weight.pageTitle}
         </h1>
         <p className="text-sm text-muted">{t.residents.deceased.recordClosed}</p>
-        <Link
-          href={`/residents/${residentId}`}
-          className="text-sm font-medium text-primary hover:underline"
-        >
+        <BackLink
+          href={`/residents/${residentId}`}>
           {t.residents.sections.backTo(displayName)}
-        </Link>
+        </BackLink>
       </main>
     );
   }

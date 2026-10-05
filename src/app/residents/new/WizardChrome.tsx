@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { REVIEW_STEP } from "./steps";
 
@@ -202,8 +203,9 @@ export function ReviewSummary({
             <button
               type="button"
               onClick={() => onEdit(group.step)}
-              className="text-sm font-medium text-primary hover:underline"
+              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover md:min-h-0"
             >
+              <ACTION_ICONS.edit aria-hidden="true" className="h-4 w-4 shrink-0" />
               {w.edit}
             </button>
           </div>

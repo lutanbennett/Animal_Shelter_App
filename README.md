@@ -807,6 +807,9 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
 - `scripts/pi/` — the Pi origin: one-time `setup.sh`, `deploy-pi.sh`, the
   systemd unit and cloudflared config.
 - `scripts/` — one-off tooling: `apply-migrations.mjs` (migration runner),
+  `load-residents.mjs` (bulk resident loads from a reviewed CSV — dry run by
+  default, `--apply` to write; see
+  `docs/decisions/2026-10-05-bulk-resident-loader.md`),
   `check-public-views.mjs` (go-live check), `manual-screenshots.mjs`
   (user-manual screenshots), `appsheet-export.mjs` + `import-appsheet.mjs`
   (the legacy data migration — see `docs/data-migration.md`), the Google

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { BackLink } from "@/components/BackLink";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { AddDoctorForm } from "./AddDoctorForm";
 import { DoctorsTable, type DoctorRow, type ElsewhereDoctor } from "./DoctorsTable";
@@ -94,9 +95,7 @@ export default async function VetDoctorsPage(
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
-      <Link href="/management/vets" className="text-sm text-muted hover:text-foreground">
-        {d.back}
-      </Link>
+      <BackLink href="/management/vets">{d.back}</BackLink>
       <div>
         <h1 className="text-2xl font-semibold text-foreground">{d.title(vet.name)}</h1>
         {vet.clinic_name && <p className="text-sm text-muted">{vet.clinic_name}</p>}

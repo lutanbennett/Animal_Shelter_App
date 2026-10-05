@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, CalendarClock, Clock, Hourglass, Link2, Plus, Users } from "lucide-react";
 import type { ActionResult } from "@/lib/action-result";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { RowActionButton } from "@/components/RowAction";
 import { roleLabel } from "@/lib/i18n/enum-labels";
 import { addDaysIso, formatDate, formatDateTime } from "@/lib/format";
 import { describeRule, describeSpan, isoWeekday } from "@/lib/recurring-jobs/rule";
@@ -55,9 +57,6 @@ export type RecordEntry = {
   at: string;
   note: string | null;
 };
-
-const smallButton =
-  "rounded border border-border px-2.5 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50";
 
 export function RecurringJobsView({
   jobs,
@@ -122,7 +121,7 @@ export function RecurringJobsView({
                 setMessage(null);
                 setEditing("new");
               }}
-              className="ml-auto flex items-center gap-1.5 rounded bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
+              className="ml-auto flex min-h-11 items-center gap-1.5 rounded bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover md:min-h-0"
             >
               <Plus aria-hidden="true" className="h-4 w-4" />
               {rj.newJob}
@@ -223,27 +222,30 @@ function JobCard({ summary, onEdit }: { summary: JobSummary; onEdit: () => void 
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-1">
-          <button type="button" className={smallButton} onClick={onEdit} disabled={isPending}>
-            {rj.edit}
-          </button>
-          <button
-            type="button"
-            className={smallButton}
+          <RowActionButton
+            onClick={onEdit}
+            disabled={isPending}
+            label={rj.edit}
+            subject={job.title}
+            icon={ACTION_ICONS.edit}
+          />
+          <RowActionButton
             disabled={isPending}
             onClick={() => run(() => setRecurringJobActive(job.id, !job.active))}
-          >
-            {job.active ? rj.pause : rj.resume}
-          </button>
-          <button
-            type="button"
-            className={`${smallButton} hover:border-danger hover:text-danger`}
+            label={job.active ? rj.pause : rj.resume}
+            subject={job.title}
+            icon={job.active ? ACTION_ICONS.pause : ACTION_ICONS.resume}
+          />
+          <RowActionButton
             disabled={isPending}
             onClick={async () => {
               if (await confirm({ body: rj.confirmDelete(job.title), confirmLabel: t.common.delete })) run(async () => deleteRecurringJob(job.id));
             }}
-          >
-            {rj.delete}
-          </button>
+            label={rj.delete}
+            subject={job.title}
+            icon={ACTION_ICONS.delete}
+            tone="danger"
+          />
         </div>
       </div>
 
@@ -521,9 +523,7 @@ function Covered({ covered }: { covered: CoveredDate[] }) {
                   </span>
                 )}
               </span>
-              <button
-                type="button"
-                className={smallButton}
+              <RowActionButton
                 disabled={isPending}
                 onClick={() =>
                   startTransition(async () => {
@@ -533,9 +533,10 @@ function Covered({ covered }: { covered: CoveredDate[] }) {
                     router.refresh();
                   })
                 }
-              >
-                {c.handBack}
-              </button>
+                label={c.handBack}
+                subject={row.title}
+                icon={ACTION_ICONS.handBack}
+              />
             </li>
           ))}
         </ul>

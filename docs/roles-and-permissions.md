@@ -161,9 +161,10 @@ to mean Staff is unused at Lanna: the role stays in the product's template (§16
 and each of today's staff logins becomes one of the roles above or is archived.
 Which login becomes which is the one part still to be asked (L5).
 
-**"The map" does not exist yet.** The facility map is a prototype at
-`/enclosures/map-prototype`. Until the Facility item is built, a volunteer's
-"map" is the enclosures list.
+**"The map" exists since 2026-10-04.** It is the Map toggle on `/enclosures`
+(`facility.map`, held by a volunteer since 0132/0134); this paragraph once said it was a
+prototype at `/enclosures/map-prototype`, which has been deleted. Placing enclosures on it is
+the admin's Settings → Facility map page, under `facility.enclosures`.
 
 ## 3. What the system does today
 
@@ -964,6 +965,17 @@ volunteer, and show them a volunteer's pages.
 | R6 | **Admin** (the Director at her desk) | Settings unchanged | The Settings tables and setup lists on `has_permission()`. `user_roles` keeps its own fixed rule (§6) | Parity green |
 | Last | **Staff and Vet**, behaviour unchanged | none | Whatever still names `staff` or `vet` is replaced; a vet's clinic limits become the scopes of §5, one for one. Then nothing calls `current_user_role()`: drop `legacy_role`, `user_roles.role` and the `app_role` type | Parity green; the enum is gone |
 | Then | **The matrix, and roles a shelter adds** | Settings → Roles and permissions, editable by Admin with 2-step, audited, exportable; then create, rename and archive a role, set its scopes and home | none new | An Admin has changed a cell and seen it bite |
+
+**Built so far (2026-10-04).** R1 `0134`, R2 `0136`, R3 `0141`, and **R4, the 2IC, `0143`**
+(`second_in_command`; `docs/decisions/2026-10-04-2ic-role.md`). Her slice differed from the row above in
+three ways. (1) She keeps the volunteer floor, not `staff`'s: the cells are the whole grant, and the stock tables
+needed price-free views (`stock_medications`, `stock_diet_types`, `stock_vendors`), cell policies, a widened
+`record_stocktake()` and two forecast functions (the originals read a view that is empty to a volunteer floor).
+(2) "`record_stocktake()`, `stock_receipts` and the forecasts ask `has_permission()`" was true of the first and
+second only in part, and the stamp trigger on `stock_receipts` also had to become definer. (3) What a job reads of
+stock (last count, receipts since, safety stock) is answered by any one of the three stock cells, not by listing
+the other cells in the bundle, because there is no "read stock" activity. Done-when still stands: **she has not
+yet been watched.**
 
 **The order is a recommendation.** Volunteer first, because the three new roles
 stand on it. Then smallest first: Medical is one read-only screen, and proves

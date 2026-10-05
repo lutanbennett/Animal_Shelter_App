@@ -1,9 +1,12 @@
 # Facility map — scope and recommendation
 
-Status: **scope agreed in part, 2026-10-01** — Lutan confirmed staff-only, the Map / List toggle on `/enclosures`, and on-site zones only on the overview. The drawings are still to come; nothing is built.
-Written 2026-10-01 on `claude/facility-map-scope`. Prototype: `/enclosures/map-prototype`
-(dev only, hidden in production builds). This is a recommendation, not a choice made;
-a `docs/decisions/` entry follows when one is picked.
+Status: **scope agreed in part, 2026-10-01; step 1 (schema, #360) and step 2 (read-only map) built 2026-10-04; step 3 (the place-on-map editor, Settings → Facility map) built 2026-10-05
+(`docs/decisions/2026-10-05-facility-map-editor.md`).**
+Written 2026-10-01 on `claude/facility-map-scope`. The dev-only prototype it describes
+(`/enclosures/map-prototype`) was deleted with step 3; the findings below are kept as history.
+The scope's choices are now decisions: `docs/decisions/2026-10-04-facility-maps-schema.md`,
+`2026-10-04-facility-map-read-only.md` and `2026-10-05-facility-map-editor.md`. Where this paper and those differ
+(plans are committed files and not uploads; no "you are here"; an editor with Rectangle and Polygon tools), the decisions win.
 
 ## Recommendation
 
@@ -17,18 +20,20 @@ toggle on `/enclosures`**. Build it in three steps, each its own PR:
 Do not start with real map coordinates (overkill for one site) or a traced SVG
 (see "If the drawings turn out to be CAD").
 
-## 1. The drawings — answered by Lutan, 2026-10-01
+## 1. The drawings — answered by Lutan, 2026-10-01; first one arrived 2026-10-04
 
 Hand-drawn on paper; **one picture per zone**, plus **one of the whole shelter outlining
-each zone**. The director has not sent them yet; they will be loaded when they arrive.
-Lutan will ask Claude to turn the paper drawings into something usable.
+each zone** — roughly four or five images for the site, ever, and one image per `facility_maps` row,
+not one per enclosure. **The first real drawing, Main Zone – Blue (1492×1054 WebP), arrived on
+2026-10-04** and is what the read-only map is built and tested against; the others will be loaded
+as they come. There are no placeholder images any more.
 
 So the format is settled: **raster**. The pipeline is photograph/scan → straighten and
 crop → clean up (contrast, background) → resize to ≤2000 px wide WebP/PNG → upload. A
 later optional step is tracing the cleaned drawing to a themeable SVG; that is a
 nice-to-have per drawing, not a prerequisite, and the data model below does not change
-if a map's image is swapped for an SVG. Keep the originals in Drive. Until the
-drawings arrive the work uses placeholder images.
+if a map's image is swapped for an SVG. Keep the originals in Drive. Where the served copy lives
+is still Lutan's call (see `docs/decisions/2026-10-04-facility-map-read-only.md`).
 
 **Navigation model (Lutan's):** *site overview → tap a zone → that zone's plan → tap an
 enclosure → `/enclosures/[id]`.* Two levels, so two kinds of shape: zone shapes on the

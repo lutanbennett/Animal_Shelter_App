@@ -857,6 +857,22 @@ const manual: Manual = {
           },
         },
         {
+          id: "enclosure-map",
+          title: "Finding your way round on the map",
+          roles: ["admin", "management", "staff", "volunteer"],
+          activity: "facility.map",
+          path: "Enclosures → Map",
+          steps: [
+            "Open Enclosures and tap Map, next to List at the top. The Map button only appears once the shelter's hand-drawn plan has been loaded for at least one zone.",
+            "The first plan is the whole shelter, with each zone outlined. Tap a zone, then Open this zone, to go to that zone's own plan; the buttons above the plan take you back to the overview or across to another zone.",
+            "On a zone's plan, each enclosure is a coloured shape with its count beside it, such as \"3/4\". The colour is how full it is — green for space available, orange for nearly full or full, red for over capacity. A spanner means an open maintenance job, the bowl-and-cutlery icon a resident on a special diet, and the pill a resident on medication (staff and managers only).",
+            "Tap a shape to see it in a card under the plan — its residents against capacity, open jobs and special diets — then tap Open enclosure to go to its page. Tapping only selects, so a slip of the finger never takes you away from the plan.",
+            "To zoom, pinch with two fingers, double-tap, or use the + and − buttons on the plan; drag to move round when zoomed in, and the button with the arrows fits the whole plan again. On a computer, hold Ctrl and scroll to zoom.",
+            "Enclosures that have not been placed on a plan yet are listed under it as \"Not on this plan yet\", each one a link to its page, so nothing is lost while the plans are being filled in. The List view is always there too, with its search, zone filters and sorting.",
+            "The map is for staff and volunteers. Visitors never see it: the QR code on each enclosure already shows them who lives there.",
+          ],
+        },
+        {
           id: "enclosure-hub",
           title: "The enclosure page",
           roles: ["admin", "management", "staff", "volunteer"],
@@ -1215,11 +1231,11 @@ const manual: Manual = {
           title: "Doing a stocktake",
           roles: ["admin", "management", "staff"],
           activity: "stock.count",
-          path: "Stocktake",
+          path: "Stocktake, or Home → Do Stocktaking (the 2IC)",
           intro:
             "One sheet for counting every medication and diet, built to be used on a phone while you walk the shelves. Nothing is saved until you tap Save at the end, and everything saved together gets the same time.",
           steps: [
-            "Open Stocktake from the menu (managers can also use the link at the top of Management → Medications or → Diets). Switch between Medications and Food with the tabs at the top; counts you have typed on one tab are kept while you look at the other.",
+            "Open Stocktake from the menu — the 2IC taps Do Stocktaking on Home — (managers can also use the link at the top of Management → Medications or → Diets). Switch between Medications and Food with the tabs at the top; counts you have typed on one tab are kept while you look at the other.",
             "Each row shows the item, its unit and the last count with how long ago it was taken. Type what is on the shelf now, in that unit — or, if the item has a count unit set up (bags, say), in that one: it is chosen for you, and the row shows what it comes to in the item's own unit. Pick another unit from the box beside the figure if you counted that way. One unit per row, so 3 bags and 4 kg is counted as 3.2 bags or as 64 kg. Press Enter (Next on a phone keyboard) to move to the next row. Use the search box to jump to an item.",
             "On a phone, the Medications tab is one card at a time: the box's label photo large at the top (the name instead, when there is no photo), then the name, the last count and when it was taken. Type what is on the shelf — the number keypad is already open — and tap Save to move to the next medicine. Same as last time confirms the old figure; Skip leaves the medicine for later. The top shows how far you are (23 of 100), Previous goes back one card, and See the whole list opens the full list instead.",
             "Your counts stay on the phone until you save them, so a closed tab, a locked screen or no signal in the kennels loses nothing: open Stocktake again and it picks up where you left off (counts older than two days are not kept). When the cards run out, anything you skipped is offered again — “5 skipped — count them now?” — and then Review and save sends everything at once, as on the computer.",
@@ -1268,12 +1284,12 @@ const manual: Manual = {
           title: "Purchasing: what to buy",
           roles: ["admin", "management"],
           activity: "stock.purchasing",
-          path: "Management → Purchasing",
+          path: "Management → Purchasing, or Home → Do the Purchasing (the 2IC)",
           intro:
             "Works out how much of each medicine and food to buy for a week, two weeks or a month, so whoever orders does not do the arithmetic by hand. Every row shows its working, so nobody has to trust a bare number.",
           steps: [
             "On a phone it is one screen. At the top, pick how long the stock should last (1 week, 2 weeks or 1 month). Anything never counted is assumed to have none on the shelf, is shown in yellow, and a box above has a button to the stocktake. Below that are two folds, Medicines and Food, because they are bought at different shops: open one and it lists what to buy from each supplier, the amount (in whole bags or boxes where the item has them). Each item shows just its name and amount; tap it to open what is left against what is needed and The working, which shows how the amount was worked out. Print and Download CSV are at the bottom. Nothing is typed or saved, and the app does not place the order. The rest of this topic describes the table that a computer shows, which works the same way.",
-            "Open it from the Management page, or from the Purchasing link at the top of Management → Medications or → Diets. Pick the Period: 1 week, 2 weeks or 1 month, counted from today.",
+            "Open it from the Management page, or from the Purchasing link at the top of Management → Medications or → Diets; the 2IC taps Do the Purchasing on Home. Pick the Period: 1 week, 2 weeks or 1 month, counted from today.",
             "Each row is one medicine or food. The working says what was counted and when, how much has probably been used since (the prescriptions' and diets' forecast, the same one Days of stock uses), how much has been received since (the deliveries recorded under Deliveries), and so how much should be on the shelf now. The second line says what the period needs: the forecast use over the period, plus the item's safety stock.",
             "Buy is what is needed minus what should be on the shelf now, never below zero. If the item has a unit it is bought in (set under Units of measure on Management → Medications or → Diets, e.g. a 20 kg bag), the amount is rounded up to whole packs, and the amount in the item's own unit is shown beside it.",
             "Include supplier lead time is on by default. Stock ordered today only arrives after the item's reorder lead time (set on Management → Medications or → Diets), and the period should be covered from the day it arrives, so those days of use are added. Turn it off to count the period from today.",
@@ -1297,11 +1313,11 @@ const manual: Manual = {
           title: "Recording a delivery",
           roles: ["admin", "management", "staff"],
           activity: "stock.delivery",
-          path: "Deliveries",
+          path: "Deliveries, or Home → Record a Delivery (the 2IC)",
           intro:
             "Record each medication or food as it arrives, so Stock between counts can work out what was actually used. Recording a delivery doesn't change the stock count — the next stocktake does.",
           steps: [
-            "Open Deliveries from the menu (it is next to Stocktake), or from Home. The Stocktake page also has a Record a delivery button at the top.",
+            "Open Deliveries from the menu (it is next to Stocktake), or from Home (the 2IC taps Record a Delivery). The Stocktake page also has a Record a delivery button at the top.",
             "On a phone it is one question at a time, with a Back button on every screen that keeps what you have typed: what arrived (Medicine or Food), which one (type part of the name; a medicine with a label photo shows it, to match the box in your hand), how much, when, then a few optional details, and last a sentence saying what will be recorded. Tap Record this delivery only when that sentence is right. When it is saved, Record another item starts the next one with the day and supplier already as they were. On a larger screen the same questions are one form: pick Medication or Food, then the item. Enter the quantity. If the item has other units set up under Management → Medications or → Diets (bags, boxes), pick the unit the delivery came in — the one it is bought in is chosen for you — and the amount in the item's own unit is shown beside it and saved with it. With no other units, the quantity is in the item's own unit, as before. If it came in packs, fill in Came in packs? (2 × 50, say) and the quantity is worked out for you.",
             "Arrived on is today unless you change it; a delivery can't be dated in the future. If the item was counted in a stocktake that day, you are asked whether the delivery was already on the shelf when it was counted, so it is set against the right stocktake.",
             "Supplier (a Vendor from Contacts), the total cost in baht (0 for a donation) and a note are optional. Tap Record delivery. The day and supplier stay filled in, so the rest of the same delivery can be entered one item after another.",
@@ -1310,7 +1326,7 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "Stocktake and deliveries are both for staff and above; a volunteer does neither.",
+              text: "Stocktake and deliveries are both for staff and above, and for the 2IC; a volunteer does neither. The 2IC sees the stock figures, and never the price of a medicine or a diet.",
             },
           ],
         },
@@ -1507,6 +1523,23 @@ const manual: Manual = {
             src: "/manual/admin-enclosures.png",
             alt: "The enclosures admin page",
           },
+        },
+        {
+          id: "facility-map-editor",
+          title: "Placing enclosures on the facility map",
+          roles: ["admin"],
+          activity: "facility.enclosures",
+          path: "Settings → Facility map",
+          steps: [
+            "This is the page that fills the Map on Enclosures. It is best on a computer: drawing a shape accurately wants a mouse and a big screen, so on a phone it shows the \"Best on a larger screen\" note first.",
+            "A plan is a picture of the shelter's drawing. The pictures are put in the app's facility-maps folder by a developer, once per plan — there are only four or five for the whole site. To use one, open Add a plan, choose what it is for (the whole shelter, or one zone), type the picture's file name and check it appears, then tap Add this plan. The Map button on Enclosures shows up as soon as there is one plan.",
+            "Pick a plan with the buttons above the editor, then choose an enclosure on the left (on the whole-shelter plan you place the zones instead). A tick means it is placed already.",
+            "Draw it on the plan. With Rectangle, click one corner and then the opposite corner — the quick way for a kennel. With Polygon, click each corner in turn, then click the first point, press Enter or tap Done. Backspace or Undo point takes the last point back and Escape starts again. It is saved the moment you finish, and the next enclosure that is not on the plan is picked for you, so a whole zone is one run of drawing.",
+            "To fix a shape, pick it (from the list or by clicking it on the plan) and drag one of its corner dots. Draw again starts it over; the bin takes it off the plan, which does not touch the enclosure or its residents.",
+            "Zoom in with the + button (or Ctrl and scroll) for small enclosures, and drag the plan to move round it. Clicking only puts a point down; dragging never does.",
+            "Every enclosure in the zone is listed, including rooms such as the medical room or the kitchen, because they are enclosures too. Leave out any you do not want on the map. A new enclosure appears in the list by itself, and shows under the plan on the Map as \"Not on this plan yet\" until you draw it. The Lifecycle statuses and off-site zones are never listed.",
+            "Remove plan takes a plan off the Map but keeps the shapes drawn on it.",
+          ],
         },
         {
           id: "immunization-types",

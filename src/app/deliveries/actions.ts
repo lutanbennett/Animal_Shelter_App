@@ -68,7 +68,7 @@ export async function recordDelivery(input: DeliveryInput): Promise<DeliveryResu
   const conversions = await loadConversions(supabase, itemKind, [input.itemId]);
   if (conversions.error) return { ok: false, error: `${e.failed}: ${conversions.error}` };
   const baseUnit = await supabase
-    .from(itemKind === "medication" ? "medication" : "diet_types")
+    .from(itemKind === "medication" ? "stock_medications" : "stock_diet_types")
     .select(itemKind === "medication" ? "unit:dose_unit" : "unit")
     .eq("id", input.itemId)
     .maybeSingle<{ unit: string }>();

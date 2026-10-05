@@ -8,6 +8,7 @@ import { toCsv } from "@/lib/csv";
 import { formatQuantity } from "@/lib/diets/options";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { CsvDownloadButton } from "@/components/CsvDownloadButton";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import {
   correctionsBetween,
   departedDuring,
@@ -532,7 +533,11 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
                 {u.picker.show}
               </button>
               {(fromId || toId) && (
-                <Link href="/management/stock-usage" className="text-sm text-muted hover:text-foreground">
+                <Link
+                  href="/management/stock-usage"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded border border-border px-3 text-sm font-medium text-foreground hover:bg-surface-hover md:min-h-0 md:py-2"
+                >
+                  <ACTION_ICONS.clear aria-hidden="true" className="h-4 w-4" />
                   {u.picker.clear}
                 </Link>
               )}
