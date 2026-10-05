@@ -5,8 +5,10 @@
 //   node scripts/worktree.mjs dev                                  (another terminal)
 //   node scripts/check-phone-width.mjs [http://localhost:<port>]   (defaults to this checkout's .port)
 //   node scripts/check-phone-width.mjs --roles=admin,staff --locales=en --pages=/vets,/enclosures
+//   (In Git Bash a leading /path in --pages is rewritten to C:/Program Files/Git/…; prefix the command with MSYS_NO_PATHCONV=1.)
 //   node scripts/check-phone-width.mjs --keep      (leave the seeded rows and the throwaway logins in dev)
 //   node scripts/check-phone-width.mjs --verbose   (also list every page that passed)
+//   node scripts/check-phone-width.mjs --clean     (remove what a killed run left behind, and stop)
 //
 // Run it by hand, or in the release smoke test. It is deliberately NOT in
 // `npm run lint` or scripts/gates.mjs: it needs a server, a browser and seeded
@@ -142,6 +144,11 @@ let exitCode = 0;
 function fail(message) {
   console.error(`check-phone-width: ${message}`);
   process.exit(2);
+}
+
+if (args.includes("--clean")) {
+  await sweep();
+  process.exit(0);
 }
 
 try {
@@ -441,5 +448,21 @@ async function cleanup() {
     await service.from("user_roles").delete().eq("user_id", id);
     const { error } = await service.auth.admin.deleteUser(id);
     if (error) console.warn(`  cleanup: could not delete login ${id}: ${error.message}`);
+  }
+}
+
+/** --clean: everything a run made carries "ZZ Width" or "phonewidth-", so a killed run can be swept. */
+async function sweep() {
+  const { data: residents } = await service.from("residents").select("id").like("name", "ZZ Width %");
+  for (const { id } of residents ?? []) await service.from("placement_history").delete().eq("resident_id", id);
+  for (const table of ["residents", "contacts", "vets", "enclosures", "zones"]) {
+    const { data, error } = await service.from(table).delete().like("name", "ZZ Width %").select("id");
+    console.log(`  ${table}: ${error ? error.message : `${data.length} removed`}`);
+  }
+  const { data } = await service.auth.admin.listUsers({ perPage: 200 });
+  for (const user of data?.users.filter((u) => u.email?.startsWith("phonewidth-")) ?? []) {
+    await service.from("user_roles").delete().eq("user_id", user.id);
+    await service.auth.admin.deleteUser(user.id);
+    console.log(`  login ${user.email} removed`);
   }
 }
