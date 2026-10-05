@@ -11,7 +11,7 @@
 | PR | (opened after this commit) |
 | Tested by / date | Claude (automated and browser-driven checks) / 2026-10-05 |
 | Carries a migration? | no |
-| Tested at SHA | GATES_SHA |
+| Tested at SHA | c4d57a41 |
 
 ## 1. Scope and risk
 
@@ -40,7 +40,9 @@ indistinguishable from one that passed.
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
 
 ```
-GATES_OUT
+=== gates: build exited 0 after 75s
+
+gates: typecheck=0 lint=0 build=0
 ```
 - [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
 
