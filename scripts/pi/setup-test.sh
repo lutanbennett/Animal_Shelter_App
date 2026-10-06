@@ -10,6 +10,23 @@
 # not hold .env.deploy.production or .env.deploy.uat: test uses the dev database
 # and dev Drive and nothing else. Idempotent.
 set -euo pipefail
+# Never run as root: this script already calls sudo for the steps that need it, and
+# running all of it under sudo leaves node_modules, .next and the env file root-owned
+# (docs/decisions/2026-10-06-setup-test-sudo-guard.md).
+if [[ "$(id -u)" -eq 0 ]]; then
+  OWNER="${SUDO_USER:-<your user>}"
+  {
+    echo "setup-test: REFUSING to run as root."
+    echo "  Run it as your own user. It calls sudo itself, for the systemd steps only, and"
+    echo "  will ask for your password there:"
+    echo "    cd ~/Animal_Shelter_App_test && ./scripts/pi/setup-test.sh"
+    echo "  Run as root, everything it builds (node_modules, .next, the env file) would belong to"
+    echo "  root and every later deploy would fail with EACCES."
+    echo "  Already ran it under sudo? Hand the folder back, then run it again as above:"
+    echo "    sudo chown -R $OWNER:$OWNER $(cd "$(dirname "$0")/../.." && pwd)"
+  } >&2
+  exit 2
+fi
 cd "$(dirname "$0")/../.."
 REPO="$(pwd)"
 RUN_USER="$(id -un)"
