@@ -1224,12 +1224,14 @@ A vet's read of the four recurring tables was inside the dropped role list, so i
 | `facility_maps` | write `facility.enclosures` Edit; read stays open | **Not `facility.map`**, which this table first named: that cell is "see the map" and staff and volunteers hold it. **Management loses the write** (it holds `facility.enclosures` Read, and the page never let it): a known tightening |
 | `fixed_outgoings` | `reports.cashflow` | Read for read, Edit for write; only management holds it |
 
-**Not converted, with an owner.**
+**Converted in `0152` (`photo-split`), the last of them. No policy in the database names a role any more.**
 
-| Table | Owner | Why it waits |
+| Table | Activity | Note |
 |---|---|---|
-| `attachments` | the photo split (A3 / A5) | Its owner types span `photos.*`, `maintenance.photos`, `projects.photos` and the two medical file routes, which stay on `assertPhotoWriteAccess` until that split (`2026-10-04-permissions-sweep-rest.md`). There is no single activity to ask |
-| `maintenance_photos`, `project_photos` | the photo split | `maintenance.photos` and `projects.photos`, the same split |
+| `attachments` | by the row's `owner_type`: resident `resident.record` read / `photos.resident_add` insert / `photos.resident_manage` update and delete; blood_test `medical.blood_tests`; procedure `medical.procedures`; maintenance `maintenance.photos`; project `projects.photos` | The per-type shape of `0144`. A3 closes: adding a photo and managing one are different cells, and `delete_resident_photo()` and `set_resident_profile_photo()` ask `photos.resident_manage`. The volunteer's half of A3 and A4 had already closed in `0134` |
+| `attachments` (folder guard) | `can_publish_resident_photos()`: `photos.resident_publish` and not `scope_photos = medical_only` | A5: a restrictive insert and update policy, and `record_attachment()`, refuse a resident photo outside the Medical folder to anyone who may not publish. Closes the vet's Medical-only gap, which the app enforced and the database did not |
+| `maintenance_photos` | `maintenance.photos` | All four commands |
+| `project_photos` | `projects.photos` | All four commands |
 
 **The end state is a query.** `node scripts/check-policy-role-names.mjs --final` must report no
 row. The stream that empties the last entry from `OWNERS` in that script runs it, and
