@@ -5,7 +5,7 @@ type Supabase = Awaited<ReturnType<typeof createClient>>;
 
 type SpecialDietRow = {
   resident_id: string;
-  diet_types: { name: string } | null;
+  diet_type_id: string;
 };
 
 /**
@@ -29,24 +29,28 @@ export async function loadSpecialDiets(
   const special = new Map<string, string[]>();
   if (residentIds && residentIds.length === 0) return special;
 
-  const { count } = await supabase
-    .from("diet_types")
-    .select("id", { count: "exact", head: true })
-    .eq("is_standard", true);
-  if (!count) return special;
+  // The type names come from the price-free picker view (0151), not an embed
+  // on diet_types: an embed reads the table, which a login without the price
+  // cell no longer sees, and an inner join would then drop every row.
+  const { data: types } = await supabase
+    .from("picker_diet_types")
+    .select("id, name, is_standard")
+    .returns<{ id: string; name: string; is_standard: boolean }[]>();
+  if (!types?.some((t) => t.is_standard)) return special;
+  const nameOf = new Map(types.filter((t) => !t.is_standard).map((t) => [t.id, t.name]));
 
   const today = todayIso();
   let query = supabase
     .from("resident_diets")
-    .select("resident_id, diet_types!inner(name)")
-    .eq("diet_types.is_standard", false)
+    .select("resident_id, diet_type_id")
+    .in("diet_type_id", [...nameOf.keys()])
     .lte("start_date", today)
     .or(`end_date.is.null,end_date.gte.${today}`);
   if (residentIds) query = query.in("resident_id", residentIds);
 
   const { data } = await query.returns<SpecialDietRow[]>();
   for (const row of data ?? []) {
-    const name = row.diet_types?.name;
+    const name = nameOf.get(row.diet_type_id);
     if (!name) continue;
     const names = special.get(row.resident_id) ?? [];
     if (!names.includes(name)) names.push(name);

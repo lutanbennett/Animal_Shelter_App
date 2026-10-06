@@ -142,15 +142,14 @@ async function ensureReferenceRows(
   let { medicationId, frequencyId } = fields;
 
   if (!medicationId) {
-    const { data, error } = await supabase
+    // The id is made here, not read back with .select(): a login holding only
+    // the add cell cannot read the table (0151), and RETURNING needs to.
+    const newId = crypto.randomUUID();
+    const { error } = await supabase
       .from("medication")
-      .insert({ name: fields.newMedicationName, dose_unit: fields.newMedicationUnit })
-      .select("id")
-      .limit(1)
-      .returns<{ id: string }[]>();
+      .insert({ id: newId, name: fields.newMedicationName, dose_unit: fields.newMedicationUnit });
     if (error) return { error: error.message };
-    medicationId = data?.[0]?.id ?? null;
-    if (!medicationId) return { error: t.prescriptions.errors.saveFailed };
+    medicationId = newId;
   }
 
   if (!frequencyId && fields.newFrequencyLabel) {

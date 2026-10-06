@@ -164,7 +164,7 @@ async function loadExtras(supabase: Supabase, ids: string[], scope: ExportScope)
         (
           await supabase
             .from("resident_diets")
-            .select("resident_id, diet_types(name)")
+            .select("resident_id, diet_types:picker_diet_types(name)")
             .in("resident_id", chunk)
             .lte("start_date", today)
             .or(`end_date.is.null,end_date.gte.${today}`)

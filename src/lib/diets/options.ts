@@ -14,7 +14,7 @@ type Supabase = Awaited<ReturnType<typeof createClient>>;
 
 export function loadDietTypeOptions(supabase: Supabase) {
   return supabase
-    .from("diet_types")
+    .from("picker_diet_types")
     .select("id, name, unit, daily_qty_small, daily_qty_medium, daily_qty_large")
     .order("name")
     .returns<DietTypeOption[]>();

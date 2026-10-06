@@ -33,7 +33,7 @@ export default async function NewResidentPage(
       .order("date", { ascending: false })
       .returns<OriginOption[]>(),
     supabase
-      .from("diet_types")
+      .from("picker_diet_types")
       .select("id, name, is_standard")
       .order("name")
       .returns<DietTypeOption[]>(),

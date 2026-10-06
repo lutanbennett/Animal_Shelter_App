@@ -24,7 +24,7 @@ export async function loadPrescriptionOptions(
 ) {
   const [medications, frequencies, linkable] = await Promise.all([
     supabase
-      .from("medication")
+      .from("picker_medications")
       .select("id, name, dose_unit")
       .order("name")
       .returns<MedicationOption[]>(),
