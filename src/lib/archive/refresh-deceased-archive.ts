@@ -18,7 +18,7 @@ import { archiveDeceasedResident } from "./archive-deceased-resident";
 export async function refreshDeceasedArchiveIfNeeded(
   supabase: SupabaseClient,
   residentId: string,
-): Promise<{ refreshed: boolean; error?: string }> {
+): Promise<{ refreshed: boolean; error?: string; photoMissing?: boolean }> {
   const [{ data: state }, { data: resident }] = await Promise.all([
     supabase
       .from("resident_current_state")
@@ -39,5 +39,5 @@ export async function refreshDeceasedArchiveIfNeeded(
 
   const result = await archiveDeceasedResident(supabase, residentId);
   if ("error" in result) return { refreshed: false, error: result.error };
-  return { refreshed: true };
+  return { refreshed: true, photoMissing: result.photoMissing };
 }

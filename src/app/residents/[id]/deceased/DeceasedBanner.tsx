@@ -16,6 +16,8 @@ export type DeceasedArchive = {
   driveFolderId: string | null;
   /** The edit just saved could not be copied to Drive (arrives as ?archive=stale). */
   notRefreshed?: boolean;
+  /** The profile photo could not be put in the PDF (arrives as ?archive=nophoto). */
+  photoMissing?: boolean;
 };
 
 const linkClass =
@@ -129,6 +131,11 @@ export function DeceasedBanner({
           {archive.notRefreshed && (
             <p role="alert" className="basis-full text-xs text-danger">
               {d.banner.archiveNotRefreshed}
+            </p>
+          )}
+          {archive.photoMissing && (
+            <p role="alert" className="basis-full text-xs text-danger">
+              {d.banner.photoNotInPdf}
             </p>
           )}
           <p className="basis-full text-xs text-muted">{d.banner.refreshHint}</p>
