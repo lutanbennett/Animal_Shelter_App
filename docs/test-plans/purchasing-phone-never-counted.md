@@ -152,7 +152,7 @@ Automated checks by: Claude  Date: 2026-10-06
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: the three rows above need a person
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty; the three rows are Lutan's to look at
 
 Manual verification by: pending: Lutan to look at the three rows above
 
