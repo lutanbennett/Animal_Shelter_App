@@ -35,6 +35,7 @@ const RJ_MINE = randomUUID(), RJ_OTHER = randomUUID();
 const NONE = { hm: 0, admin: 0, management: 0, staff: 0, volunteer: 0, vet: 0, norole: 0 };
 const STAFF_UP = { ...NONE, admin: 1, management: 1, staff: 1 };
 const WITH_HM = { ...STAFF_UP, hm: 1 };
+const WITH_HM_VET = { ...WITH_HM, vet: 1 }; // a vet reaches a job's attachments by vet_*_attachments, unchanged by 0152
 const MANAGERS = { ...NONE, admin: 1, management: 1 };
 
 // [name, sql, expectation]: a table of who may (1) or may not (0); "hm-one" = she must reach at least a row
@@ -60,8 +61,9 @@ const probes = [
   ["unassign a job", `delete from maintenance_assignees where maintenance_id = '${JOB}'`, WITH_HM],
   // her limits
   ["delete a job", `delete from maintenance where id = '${JOB}'`, STAFF_UP],
-  ["add a job photo", `insert into maintenance_photos (maintenance_id, drive_file_id) values ('${JOB}', 'probe')`, STAFF_UP],
-  ["file a job attachment", `insert into attachments (owner_type, owner_id, drive_file_id, file_name) values ('maintenance', '${JOB}', 'probe', 'probe.jpg')`, "hm-zero"],
+  // RE-BASELINED 2026-10-07 (photo-split, 0152): the draft gives her maintenance.photos and the policies now follow the cell
+  ["add a job photo", `insert into maintenance_photos (maintenance_id, drive_file_id) values ('${JOB}', 'probe')`, WITH_HM],
+  ["file a job attachment", `insert into attachments (owner_type, owner_id, drive_file_id, file_name) values ('maintenance', '${JOB}', 'probe', 'probe.jpg')`, WITH_HM_VET],
   ["set up a recurring task", `insert into recurring_jobs (title, repeat, weekdays) values ('probe', 'weekly', '{1}')`, MANAGERS],
   ["change a recurring task", `update recurring_jobs set title = 'probe' where id = '${RJ_MINE}'`, MANAGERS],
   ["assign a recurring task", `insert into recurring_job_assignees (job_id, user_id) values ('${RJ_MINE}', '${ID.volunteer}')`, MANAGERS],
@@ -72,7 +74,7 @@ const probes = [
   ["prescriptions", `select 1 from prescriptions where resident_id = '${R}'`, "hm-zero"],
   ["medication", `select 1 from medication limit 1`, "hm-zero"],
   ["diet_types", `select 1 from diet_types limit 1`, "hm-zero"],
-  ["attachments", `select 1 from attachments limit 1`, "hm-zero"],
+  ["attachments", `select 1 from attachments limit 1`, WITH_HM_VET], // her own maintenance.photos cell reads a job's attachments (0152)
   ["stock_counts", `select 1 from stock_counts limit 1`, "hm-zero"],
   ["contacts", `select 1 from contacts limit 1`, "hm-zero"],
   ["assistant_actions", `select 1 from assistant_actions limit 1`, "hm-zero"],
