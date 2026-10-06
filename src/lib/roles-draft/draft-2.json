@@ -1,0 +1,736 @@
+{
+  "draft": 2,
+  "source": "Draft 1 (docs/roles/directors-first-draft-2026-10-05.pdf, a scan of docs/roles/who-does-what-blank-sheet.pdf) with Lutan's answers of 2026-10-06 applied. draft-1.json stays as what she actually sent.",
+  "how": "A third draft is a diff of this file: edit `roles.<role>.ticks`, `unclear`, `implied` or `added`, then run scripts/load-role-draft.mjs --draft 3. `level` on a row is what one tick on it means: read, edit (includes read) or yes (a yes/no activity). `added` cells are NOT her ticks: they are cells her jobs need that her sheet did not give, loaded at the level the job needs, and shown to her as 'added, not ticked'. The Director column and row 54 are not loaded: Admin is a rule, not data.",
+  "rows": [
+    {
+      "row": 1,
+      "label": "View residents and their records",
+      "keys": [
+        {
+          "activity": "resident.record",
+          "level": "read"
+        }
+      ]
+    },
+    {
+      "row": 2,
+      "label": "Edit a resident's details",
+      "keys": [
+        {
+          "activity": "resident.record",
+          "level": "edit"
+        }
+      ]
+    },
+    {
+      "row": 3,
+      "label": "Register a new resident (intake)",
+      "keys": [
+        {
+          "activity": "resident.register",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 4,
+      "label": "Record or correct a microchip number",
+      "keys": [
+        {
+          "activity": "resident.microchip",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 5,
+      "label": "Record news from an adopter",
+      "keys": [
+        {
+          "activity": "resident.adoption_news",
+          "level": "edit"
+        }
+      ]
+    },
+    {
+      "row": 6,
+      "label": "Move a resident to another enclosure",
+      "keys": [
+        {
+          "activity": "placement.move",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 7,
+      "label": "Send a resident to hospital, and bring them back",
+      "keys": [
+        {
+          "activity": "placement.hospital",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 8,
+      "label": "Foster, adopt, or return a resident to the shelter",
+      "keys": [
+        {
+          "activity": "placement.rehome",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 9,
+      "label": "Mark a resident as deceased",
+      "keys": [
+        {
+          "activity": "placement.death",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 10,
+      "label": "Withdraw a death recorded in error",
+      "keys": [
+        {
+          "activity": "placement.death_withdraw",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 11,
+      "label": "Book a vet visit",
+      "keys": [
+        {
+          "activity": "visit.book",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 12,
+      "label": "Record a vet visit and its outcome",
+      "keys": [
+        {
+          "activity": "medical.visits",
+          "level": "edit"
+        }
+      ]
+    },
+    {
+      "row": 13,
+      "label": "Record procedures, with their files",
+      "keys": [
+        {
+          "activity": "medical.procedures",
+          "level": "edit"
+        }
+      ]
+    },
+    {
+      "row": 14,
+      "label": "Record blood tests, with their reports",
+      "keys": [
+        {
+          "activity": "medical.blood_tests",
+          "level": "edit"
+        }
+      ]
+    },
+    {
+      "row": 15,
+      "label": "Prescribe medication (what should be given)",
+      "keys": [
+        {
+          "activity": "medical.prescriptions",
+          "level": "edit"
+        }
+      ]
+    },
+    {
+      "row": 16,
+      "label": "Record immunizations",
+      "keys": [
+        {
+          "activity": "medical.immunizations",
+          "level": "edit"
+        }
+      ]
+    },
+    {
+      "row": 17,
+      "label": "Record weights",
+      "keys": [
+        {
+          "activity": "medical.weight",
+          "level": "edit"
+        }
+      ]
+    },
+    {
+      "row": 18,
+      "label": "Set a resident's diet",
+      "keys": [
+        {
+          "activity": "medical.diet",
+          "level": "edit"
+        }
+      ]
+    },
+    {
+      "row": 19,
+      "label": "Remove a medical record entered by mistake, and restore it",
+      "keys": [
+        {
+          "activity": "medical.archive",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 20,
+      "label": "Add a photo to a resident",
+      "keys": [
+        {
+          "activity": "photos.resident_add",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 21,
+      "label": "Refile or remove a resident's photos, and choose the profile photo",
+      "keys": [
+        {
+          "activity": "photos.resident_manage",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 22,
+      "label": "Put a resident's photo on the public website",
+      "keys": [
+        {
+          "activity": "photos.resident_publish",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 23,
+      "label": "Manage enclosures and zones",
+      "keys": [
+        {
+          "activity": "facility.enclosures",
+          "level": "edit"
+        }
+      ]
+    },
+    {
+      "row": 24,
+      "label": "View the facility map",
+      "keys": [
+        {
+          "activity": "facility.map",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 25,
+      "label": "Manage maintenance jobs: log, assign, cost, delete",
+      "keys": [
+        {
+          "activity": "maintenance.jobs",
+          "level": "edit"
+        }
+      ]
+    },
+    {
+      "row": 26,
+      "label": "Move a job on: in progress, blocked, completed",
+      "keys": [
+        {
+          "activity": "maintenance.progress",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 27,
+      "label": "Add and remove a job's photos",
+      "keys": [
+        {
+          "activity": "maintenance.photos",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 28,
+      "label": "Manage project folders and their stories",
+      "keys": [
+        {
+          "activity": "projects.folders",
+          "level": "edit"
+        }
+      ]
+    },
+    {
+      "row": 29,
+      "label": "Add and remove project photos",
+      "keys": [
+        {
+          "activity": "projects.photos",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 30,
+      "label": "Publish a project to the public website",
+      "keys": [
+        {
+          "activity": "projects.publish",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 31,
+      "label": "Manage the list of clinics",
+      "keys": [
+        {
+          "activity": "clinics.list",
+          "level": "edit"
+        }
+      ]
+    },
+    {
+      "row": 32,
+      "label": "Manage a clinic's doctors",
+      "keys": [
+        {
+          "activity": "clinics.doctors",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 33,
+      "label": "View and manage contacts",
+      "keys": [
+        {
+          "activity": "contacts.directory",
+          "level": "edit"
+        }
+      ]
+    },
+    {
+      "row": 34,
+      "label": "Add a new contact",
+      "keys": [
+        {
+          "activity": "contacts.add",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 35,
+      "label": "Manage Shelter Friends: add, publish, unpublish",
+      "keys": [
+        {
+          "activity": "friends.manage",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 36,
+      "label": "Count the stock (stocktake)",
+      "keys": [
+        {
+          "activity": "stock.count",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 37,
+      "label": "Record a delivery",
+      "keys": [
+        {
+          "activity": "stock.delivery",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 38,
+      "label": "Work out what to buy",
+      "keys": [
+        {
+          "activity": "stock.purchasing",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 39,
+      "label": "Compare stock used with what was planned",
+      "keys": [
+        {
+          "activity": "stock.usage",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 40,
+      "label": "Manage the medication list: prices, labels, reorder levels",
+      "keys": [
+        {
+          "activity": "stock.medications",
+          "level": "edit"
+        }
+      ]
+    },
+    {
+      "row": 41,
+      "label": "Manage the diet list and the food forecast",
+      "keys": [
+        {
+          "activity": "stock.diets",
+          "level": "edit"
+        }
+      ]
+    },
+    {
+      "row": 42,
+      "label": "Correct a stock figure",
+      "keys": [
+        {
+          "activity": "stock.correct",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 43,
+      "label": "View the management dashboard",
+      "keys": [
+        {
+          "activity": "reports.dashboard",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 44,
+      "label": "Manage cashflow and fixed outgoings",
+      "keys": [
+        {
+          "activity": "reports.cashflow",
+          "level": "edit"
+        }
+      ]
+    },
+    {
+      "row": 45,
+      "label": "Set up recurring jobs and hand dates over",
+      "keys": [
+        {
+          "activity": "recurring.manage",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 46,
+      "label": "Mark anyone's recurring job done or skipped",
+      "keys": [
+        {
+          "activity": "recurring.do_any",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 47,
+      "label": "Mark your own recurring jobs done or skipped",
+      "keys": [
+        {
+          "activity": "recurring.do_own",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 48,
+      "label": "Translate the public website text",
+      "keys": [
+        {
+          "activity": "translations.manage",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 49,
+      "label": "Ask the assistant a question",
+      "keys": [
+        {
+          "activity": "assistant.ask",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 50,
+      "label": "Record something through the assistant",
+      "keys": [
+        {
+          "activity": "assistant.record",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 51,
+      "label": "Edit the public website's content",
+      "keys": [
+        {
+          "activity": "website.content",
+          "level": "edit"
+        }
+      ]
+    },
+    {
+      "row": 52,
+      "label": "Manage setup lists: immunization, procedure and blood-test types, frequencies",
+      "keys": [
+        {
+          "activity": "reference.types",
+          "level": "edit"
+        }
+      ]
+    },
+    {
+      "row": 53,
+      "label": "Add a missing medication, frequency or procedure type while filling in a form",
+      "keys": [
+        {
+          "activity": "reference.add_while_recording",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 54,
+      "label": "Manage users and roles (always the Director; not a cell)",
+      "keys": []
+    },
+    {
+      "row": 55,
+      "label": "See who changed what",
+      "keys": [
+        {
+          "activity": "audit.view",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 56,
+      "label": "Undo a change",
+      "keys": [
+        {
+          "activity": "audit.undo",
+          "level": "yes"
+        }
+      ]
+    },
+    {
+      "row": 57,
+      "label": "View the system status",
+      "keys": [
+        {
+          "activity": "system.status",
+          "level": "yes"
+        }
+      ]
+    }
+  ],
+  "roles": {
+    "second_in_command": {
+      "label": "2IC / Manager",
+      "ticks": [
+        1,
+        2,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        15,
+        16,
+        17,
+        18,
+        20,
+        24,
+        25,
+        26,
+        27,
+        33,
+        34,
+        36,
+        37,
+        38,
+        42,
+        43,
+        47,
+        49,
+        50
+      ],
+      "notes": [
+        "She may prescribe, record immunizations, weights and diets, but not book or record a vet visit, procedures or blood tests, and not register a new resident. Flagged as worth a second look, not as an error.",
+        "Two marks on her column were not ticks (rows 11 and 39); Lutan answered no to both."
+      ]
+    },
+    "head_of_maintenance": {
+      "label": "Head of Maintenance",
+      "ticks": [
+        6,
+        24,
+        25,
+        26,
+        27,
+        47,
+        49
+      ],
+      "notes": [
+        "Her sheet gives her own recurring jobs (row 47). That works now: the rota fix that stopped the 2IC and the Heads being treated as volunteers has been merged and is on the test site."
+      ]
+    },
+    "head_of_medical": {
+      "label": "Head of Medical",
+      "ticks": [
+        6,
+        17,
+        20,
+        24,
+        36,
+        47
+      ],
+      "notes": [
+        "Her sheet has no \"view residents\", no prescriptions and no diet tick, yet her jobs are the medication list, special diets, weights and medical photos. Lutan: she needs them, because her work relies on giving out medication. All five jobs are kept.",
+        "Photos (row 20) is ticked on her sheet's row, so it loads as ticked. Prescriptions and diet are loaded at Read, not Edit, as 'added' cells: rows 15 and 18 would let her write prescriptions and change diets, which the shelter gives to a vet.",
+        "Row 49 (ask the assistant) was a faint stroke; Lutan answered no."
+      ]
+    },
+    "volunteer": {
+      "label": "Volunteers",
+      "ticks": [
+        1,
+        24,
+        47,
+        49
+      ],
+      "notes": [
+        "Volunteers are \"who and where\", read-only. Row 1 (view residents) was a dot on her sheet; Lutan answered yes, with no medical, so they get the residents list and nothing clinical.",
+        "Own recurring jobs (row 47) is ticked and loaded. The database lets a volunteer record a job only if it is assigned to them (record_recurring_job, 0141): that rule already exists and needed no change."
+      ]
+    },
+    "vet": {
+      "label": "Vets",
+      "ticks": [
+        4
+      ],
+      "notes": [
+        "Vets get only the microchip. No booking, visits, prescriptions, procedures or blood tests, so a doctor login can set a microchip and see nothing clinical. Vets are on hold on purpose: Lutan, \"it is something that may be turned on in the future but is not a specific need right now.\""
+      ]
+    }
+  },
+  "unclear": [
+    {
+      "role": "volunteer",
+      "row": 1,
+      "mark": "a dot, not a tick",
+      "loadedAs": "yes",
+      "answer": "yes, with no medical",
+      "answeredBy": "Lutan, in chat, 2026-10-06"
+    },
+    {
+      "role": "second_in_command",
+      "row": 11,
+      "mark": "a dot, not a tick",
+      "loadedAs": "no",
+      "answer": "no",
+      "answeredBy": "Lutan, in chat, 2026-10-06"
+    },
+    {
+      "role": "second_in_command",
+      "row": 39,
+      "mark": "scribbled out",
+      "loadedAs": "no",
+      "answer": "no",
+      "answeredBy": "Lutan, in chat, 2026-10-06"
+    },
+    {
+      "role": "head_of_medical",
+      "row": 49,
+      "mark": "a faint stroke, not a tick",
+      "loadedAs": "no",
+      "answer": "no",
+      "answeredBy": "Lutan, in chat, 2026-10-06"
+    }
+  ],
+  "implied": [
+    {
+      "activity": "resident.record",
+      "level": "read",
+      "whenTicked": [
+        4,
+        6,
+        17
+      ],
+      "because": "recording a weight, moving a resident or setting a microchip all start from a resident, who and where"
+    },
+    {
+      "activity": "facility.enclosures",
+      "level": "read",
+      "whenTicked": [
+        6,
+        24
+      ],
+      "because": "the facility map is drawn on the enclosures page, and moving a resident picks an enclosure from that list"
+    }
+  ],
+  "added": [
+    {
+      "role": "head_of_medical",
+      "activity": "medical.prescriptions",
+      "level": "read",
+      "rowNotTicked": 15,
+      "because": "the medication list and the round's pick list (0136). Her sheet has no prescriptions tick, and row 15 would grant edit, which is prescribing.",
+      "answeredBy": "Lutan, in chat, 2026-10-06"
+    },
+    {
+      "role": "head_of_medical",
+      "activity": "medical.diet",
+      "level": "read",
+      "rowNotTicked": 18,
+      "because": "Feed Special Diets, through the special_diet_list view (0140). Row 18 would grant edit, which is setting a resident's diet.",
+      "answeredBy": "Lutan, in chat, 2026-10-06"
+    }
+  ]
+}
