@@ -27,7 +27,7 @@ or `n/a` with the reason.
 
 ## 2. Automated gates
 
-Run in the feature worktree, after `node scripts/worktree.mjs sync`, with
+- [x] `node scripts/worktree.mjs sync` — `origin/main` (`0fa6b009`) merged in cleanly and pushed
 `node scripts/gates.mjs`. It exists because of the traps below: it runs all three
 gates even when one fails, prints each one's own exit code, and refuses to start
 on a half-installed `node_modules`.
@@ -42,7 +42,7 @@ because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
 - [ ] `node scripts/worktree.mjs sync` — n/a: run immediately before the PR and reported in it, not at this commit
-- [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — n/a: lint exits 1 on a backlog line this branch did not write (`check-backlog-sections`: the advisory item below `## Completed`); as printed: `gates: typecheck=0 lint=1 build=0`
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`, after syncing `origin/main` (`0fa6b009`): `gates: typecheck=0 lint=0 build=0`
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
@@ -108,7 +108,7 @@ out of it for a day.
 
 - [x] Nearest pages: `next build` compiled the resident page, sections, intake and prescription routes, and their queries were run as staff and management
 - [ ] Shared file touched — n/a: none of `NavLinks.tsx`, `manual/en.ts` or `releases.ts` touched
-- [ ] Nothing merged from `main` during `sync` was broken — n/a: sync is run at PR time and reported there
+- [x] Nothing merged from `main` during `sync` was broken: gates and `check-price-free-pickers` re-run green after it
 
 ## 7. Documentation
 

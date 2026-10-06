@@ -77,6 +77,6 @@ draft is applied to production as it stands, this surfaces there; the fix is a c
   with the same vet lines.
 - Driven as a throwaway staff and management login: staff read names through both views and both embeds, read no price
   directly, and insert a medication without a read-back; management reads prices.
-- `gates`: typecheck=0 build=0 lint=1, from `check-backlog-sections` on a backlog line that is not this branch's.
+- `gates` after syncing `main`: typecheck=0 lint=0 build=0.
 
 **Production apply is Lutan's**, before the deploy (the app reads the views): `--dry-run` then apply `0151`.
