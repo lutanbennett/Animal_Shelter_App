@@ -163,6 +163,34 @@ async function through(host, method, extraEnv = {}) {
   check("POST with ORIGIN_HOST empty: rendered locally with its body",
     post.servedBy === "worker" && post.rendered[0] === "name=Cooper", JSON.stringify(post.rendered));
 }
+{
+  // An upload at the body ceiling (MAX_UPLOAD_BODY_BYTES, 16 MB) — the largest
+  // thing originOrLocal ever clones. The clone is a tee: the Pi leg drains the
+  // stream and the local leg holds it, so the Worker holds one body at most,
+  // and a write the Pi takes costs it no render.
+  const big = "x".repeat(16 * 1024 * 1024);
+  const sizeThrough = async (host) => {
+    const rendered = [];
+    const { response, servedBy } = await originOrLocal(
+      new Request("http://lannacare.test/api/upload", { method: "POST", body: big }),
+      { ORIGIN_HOST: host, ORIGIN_KEY: "k" },
+      async (forLocal) => { rendered.push((await forLocal.text()).length); return new Response("rendered locally"); },
+    );
+    return { response, servedBy, rendered };
+  };
+  const pi = await origin((_req, res) => res.writeHead(303, { location: "/ok" }).end());
+  const viaPi = await sizeThrough(pi.host);
+  check("16 MB POST, the Pi answers: the Pi got every byte and nothing rendered locally",
+    viaPi.servedBy === "pi" && viaPi.rendered.length === 0 && pi.seen[0]?.body.length === big.length,
+    JSON.stringify({ by: viaPi.servedBy, rendered: viaPi.rendered, got: pi.seen[0]?.body.length }));
+  await pi.close();
+  const down = await origin((_req, res) => res.writeHead(530).end("error code: 1033"));
+  const viaLocal = await sizeThrough(down.host);
+  check("16 MB POST, origin answers 530: the local render got every byte, once",
+    viaLocal.servedBy === "worker" && viaLocal.rendered.length === 1 && viaLocal.rendered[0] === big.length,
+    JSON.stringify(viaLocal.rendered));
+  await down.close();
+}
 
 globalThis.fetch = realFetch;
 if (failures) {
