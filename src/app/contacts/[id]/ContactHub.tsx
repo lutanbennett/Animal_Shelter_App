@@ -202,7 +202,7 @@ export function ContactHub({
                       title={h.mapPreview(contact.name)}
                       loading="lazy"
                       referrerPolicy="no-referrer-when-downgrade"
-                      className="h-[200px] w-full rounded-lg border border-border bg-surface-hover"
+                      className="h-[200px] w-full max-w-lg rounded-lg border border-border bg-surface-hover"
                     />
                   )}
                 </div>
