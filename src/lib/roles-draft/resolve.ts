@@ -11,16 +11,18 @@ export type Draft = {
   draft: number;
   rows: DraftRow[];
   roles: Record<string, { label: string; ticks: number[]; notes?: string[] }>;
-  unclear: { role: string; row: number; mark: string; loadedAs: "no" }[];
+  unclear: { role: string; row: number; mark: string; loadedAs: "yes" | "no"; answer?: string; answeredBy?: string }[];
   implied: { activity: string; level: "read"; whenTicked: number[]; because: string }[];
+  /** Cells beyond her sheet because a built job needs them; not her ticks, so shown to her as such. */
+  added?: { role: string; activity: string; level: "read" | "edit" | "yes"; rowNotTicked?: number; because: string; answeredBy?: string }[];
 };
 
 /** 1 = read, 2 = edit / yes, as stored in role_permissions.level. */
 export type Cell = {
   activity: string;
   level: 1 | 2;
-  /** "tick": she ticked it. "implied": added so a ticked job has the read it starts from. */
-  source: "tick" | "implied";
+  /** "tick": she ticked it. "implied": added so a ticked job has the read it starts from. "added": beyond her sheet, because a built job needs it. */
+  source: "tick" | "implied" | "added";
   rows: number[];
   because?: string;
 };
@@ -58,6 +60,17 @@ export function cellsFor(draft: Draft, roleKey: string, kinds: Record<string, "l
     const have = cells.get(imp.activity);
     if (have && have.level >= 1) continue;
     cells.set(imp.activity, { activity: imp.activity, level: 1, source: "implied", rows: why, because: imp.because });
+  }
+
+  for (const add of draft.added ?? []) {
+    if (add.role !== roleKey) continue;
+    const kind = kinds[add.activity];
+    if (!kind) throw new Error(`"added" names "${add.activity}", which is not in the catalogue.`);
+    if ((kind === "yesno") !== (add.level === "yes")) throw new Error(`"added": ${add.activity} is ${kind}, so it cannot be "${add.level}".`);
+    const level = add.level === "read" ? 1 : 2;
+    const have = cells.get(add.activity);
+    if (have && have.level >= level) continue; // her ticks already give it
+    cells.set(add.activity, { activity: add.activity, level, source: "added", rows: add.rowNotTicked ? [add.rowNotTicked] : [], because: add.because });
   }
 
   return [...cells.values()].sort((a, b) => a.activity.localeCompare(b.activity));

@@ -113,13 +113,20 @@ for (const role of keys) {
   if (mine.length === 0) console.log("  no change");
   for (const c of mine) {
     const kind = kinds[c.activity];
-    const note = c.source === "implied" ? `  [implied: ${c.because}]` : c.rows ? `  [sheet row ${c.rows.join(", ")}]` : "";
+    const note = c.source === "added" ? `  [ADDED, NOT TICKED (sheet row ${c.rows.join(", ") || "none"} not ticked): ${c.because}]` : c.source === "implied" ? `  [implied: ${c.because}]` : c.rows ? `  [sheet row ${c.rows.join(", ")}]` : "";
     console.log(`  ${c.activity.padEnd(32)} ${word(c.before, kind).padEnd(5)} -> ${word(c.after, kind).padEnd(5)}${note}`);
   }
 }
 
-console.log("\nMarks on the sheet that were not ticks (each loaded as no; the Director's call, not ours):");
-for (const u of draft.unclear) console.log(`  ${draft.roles[u.role].label}, row ${u.row} (${draft.rows.find((r) => r.row === u.row).label}): ${u.mark}`);
+console.log("\nMarks on the sheet that were not ticks:");
+for (const u of draft.unclear) {
+  const answer = u.answer ? `answered "${u.answer}" (${u.answeredBy})` : "not answered";
+  console.log(`  ${draft.roles[u.role].label}, row ${u.row} (${draft.rows.find((r) => r.row === u.row).label}): ${u.mark}; loaded as ${u.loadedAs}; ${answer}`);
+}
+if ((draft.added ?? []).length) {
+  console.log("\nCells ADDED beyond her ticks, because a built job needs them (her sheet is overridden here; to confirm with her):");
+  for (const a of draft.added) console.log(`  ${draft.roles[a.role].label}: ${a.activity} at ${a.level}; row ${a.rowNotTicked ?? "-"} not ticked. ${a.because}`);
+}
 
 const gained = changes.filter((c) => c.before == null).length;
 const lost = changes.filter((c) => c.after == null).length;

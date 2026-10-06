@@ -61,6 +61,17 @@ for (const line of paper.slice(start + 2)) {
 }
 if (Object.keys(cells).length !== 55) throw new Error(`expected 55 activities in §4, parsed ${Object.keys(cells).length}`);
 
+// RE-BASELINED 2026-10-06 (director-draft-apply): the volunteer's expected cells are the Director's draft 2 (3 cells on the paper, 5
+// under the draft), not the paper's R1 column. The VET column is deliberately NOT overridden: the paper gives vets 13 cells, the draft
+// gives them the microchip only (on hold, per Lutan), and every vet MISMATCH below is that disagreement, recorded and left red.
+{
+  const { cellsFor } = await import(pathToFileURL(join(root, "src/lib/roles-draft/resolve.ts")).href);
+  const { ACTIVITIES } = await import(pathToFileURL(join(root, "src/lib/permissions/catalogue.ts")).href);
+  const draft = JSON.parse(readFileSync(join(root, "src/lib/roles-draft/draft-2.json"), "utf8"));
+  for (const a of Object.keys(cells)) cells[a].volunteer = 0;
+  for (const c of cellsFor(draft, "volunteer", Object.fromEntries(ACTIVITIES.map((x) => [x.key, x.kind])))) cells[c.activity].volunteer = c.level;
+}
+
 // Deliberately flip a cell to prove the check can fail.
 const flip = process.env.PARITY_FLIP;
 if (flip) {
@@ -469,8 +480,9 @@ const UNPAIRED = {
 // each entry is a predicate EXPECTED to differ for that role. Like the `known` list in layer 1 it fails when an
 // entry no longer differs (STALE), so a cell that is widened again cannot hide behind it. It does not empty: the
 // fixture is the record of what the volunteer could do before R1, and the cells are what they can do now.
+// canUseAssistant(volunteer) left this list 2026-10-06: the draft ticks assistant.ask for volunteers, so the predicate matches the cell again
 const NARROWED_BY_R1 = {
-  canStocktake: ["volunteer"], canReadMaintenance: ["volunteer"], canUseAssistant: ["volunteer"], MOVE_ROLES: ["volunteer"],
+  canStocktake: ["volunteer"], canReadMaintenance: ["volunteer"], MOVE_ROLES: ["volunteer"],
   assertPhotoWriteAccess_residentPhotos: ["volunteer"], photoFullFolders: ["volunteer"],
   "isShelterRole(maintenance.jobs)": ["volunteer"], "isShelterRole(projects.folders)": ["volunteer"],
   "isShelterRole(contacts.directory)": ["volunteer"], "isShelterRole(clinics.list)": ["volunteer"],

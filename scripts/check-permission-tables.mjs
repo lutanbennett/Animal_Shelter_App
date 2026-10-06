@@ -70,6 +70,16 @@ for (const line of paper.slice(start + 2)) {
     if (v !== "–") expected.push(`('${role}', '${m[1]}', ${LEVEL[v]})`);
   }
 }
+// RE-BASELINED 2026-10-06 (director-draft-apply): the volunteer's expected cells are the Director's draft 2, not the paper's R1 column
+// (3 cells -> 5). The paper is not rewritten; the vet column is NOT overridden, see eq_known() below.
+{
+  const { cellsFor } = await import(pathToFileURL(join(root, "src/lib/roles-draft/resolve.ts")).href);
+  const { ACTIVITIES } = await import(pathToFileURL(join(root, "src/lib/permissions/catalogue.ts")).href);
+  const draft = JSON.parse(readFileSync(join(root, "src/lib/roles-draft/draft-2.json"), "utf8"));
+  const kept = expected.filter((e) => !e.startsWith("('volunteer',"));
+  expected.length = 0;
+  expected.push(...kept, ...cellsFor(draft, "volunteer", Object.fromEntries(ACTIVITIES.map((a) => [a.key, a.kind]))).map((c) => `('volunteer', '${c.activity}', ${c.level})`));
+}
 if (activityCount !== 55) throw new Error(`expected 55 activities in §4, parsed ${activityCount}`);
 
 const sql = `
@@ -124,9 +134,20 @@ begin
   end if;
 end $f$;
 
+-- A disagreement we are deliberately NOT flattening (director-draft-apply, 2026-10-06): the check carries on past it and the
+-- run still ends RED, naming it. See eq_known() and the end of the run.
+create temp table harness_known_red (label text, got text, want text);
+create function pg_temp.eq_known(p_label text, p_got text, p_want text) returns void language plpgsql as $f$
+begin
+  if p_got is distinct from p_want then
+    insert into harness_known_red values (p_label, coalesce(p_got, 'null'), coalesce(p_want, 'null'));
+  end if;
+end $f$;
+
 create temp table harness_baseline as
 select count(*)::bigint as audit_rows,
-       count(*) filter (where actor is not null or (op <> 'DELETE' and op <> 'INSERT') or (op = 'INSERT' and table_name not in ('roles', 'role_permissions')) or (op = 'DELETE' and table_name <> 'role_permissions'))::bigint as not_0134
+       -- an actor-less UPDATE of a cell is scripts/load-role-draft.mjs changing a level (draft 1, 2026-10-05; RE-BASELINED director-draft-apply): a script, not a person in Settings
+count(*) filter (where actor is not null or (op <> 'DELETE' and op <> 'INSERT' and not (op = 'UPDATE' and table_name = 'role_permissions')) or (op = 'INSERT' and table_name not in ('roles', 'role_permissions')) or (op = 'DELETE' and table_name <> 'role_permissions'))::bigint as not_0134
 from audit_log where table_name in ('roles', 'role_permissions');
 grant select on harness_baseline to authenticated, service_role;
 
@@ -196,18 +217,24 @@ begin
   perform pg_temp.eq('A roles', (select count(*) from roles where key in ('admin','management','staff','vet','volunteer','public_viewer'))::text, '6');
   perform pg_temp.eq('A activities', (select count(*) from permission_activities)::text, '55');
   perform pg_temp.eq('A yesno+level', (select count(*) filter (where kind = 'yesno') || '/' || count(*) filter (where kind = 'level') from permission_activities), '36/19');
-  for t in select unnest(array['management:48', 'staff:37', 'vet:13', 'volunteer:3', 'admin:0', 'public_viewer:0']) loop
+  -- RE-BASELINED 2026-10-06 (director-draft-apply): the Director's draft 2 is the agreed state of the volunteer (3 -> 5: the
+  -- residents list, who and where, the map and its enclosures read, own recurring jobs, the assistant). The VET stays at the
+  -- paper's 13 and is checked with eq_known(): the draft gives vets only the microchip (2 cells) and Lutan said vets are on hold,
+  -- so the paper and the draft genuinely disagree. That is recorded, not flattened: the run stays RED until someone decides.
+  for t in select unnest(array['management:48', 'staff:37', 'volunteer:5', 'admin:0', 'public_viewer:0']) loop
     perform pg_temp.eq('A cells ' || split_part(t, ':', 1),
       (select count(*) from role_permissions rp join roles r on r.id = rp.role_id where r.key = split_part(t, ':', 1))::text,
       split_part(t, ':', 2));
   end loop;
+  perform pg_temp.eq_known('A cells vet (paper 13, draft gives the microchip only)',
+    (select count(*) from role_permissions rp join roles r on r.id = rp.role_id where r.key = 'vet')::text, '13');
   perform pg_temp.eq('A yesno cells at level 2', (select count(*) from role_permissions rp join permission_activities a on a.key = rp.activity where a.kind = 'yesno' and rp.level <> 2)::text, '0');
   perform pg_temp.eq('A requires all empty', (select count(*) from permission_activities where requires <> '[]'::jsonb)::text, '0');
   perform pg_temp.eq('A real logins have role_id', (select count(*) from user_roles where role_id is null)::text, '0');
   perform pg_temp.eq('A real logins agree with the enum', (select count(*) from user_roles ur join roles r on r.id = ur.role_id where r.legacy_role is distinct from ur.role)::text, '0');
   perform pg_temp.eq('A scopes vet', (select scope_residents || '/' || scope_clinical || '/' || scope_contacts || '/' || scope_photos || '/' || sees_login_emails from roles where key = 'vet'), 'own_clinic/own_clinic/name_type/medical_only/false');
   perform pg_temp.eq('A scopes volunteer', (select scope_contacts || '/' || sees_login_emails from roles where key = 'volunteer'), 'name_phone/false');
-  v_report := v_report || 'A: 6 roles, 55 activities, cells 48/37/13/3/0/0, role_id agrees with the enum on every real login | ';
+  v_report := v_report || 'A: 6 roles, 55 activities, cells 48/37/13/5/0/0, role_id agrees with the enum on every real login | ';
 
   -- B: has_permission().
   -- the four answers-no cases
@@ -265,17 +292,25 @@ begin
     for v_act in select key from permission_activities order by sort loop
       v_exp := case v_who when 'admin' then 2 else coalesce(
                  (select level from harness_expected e where e.role_key = v_who and e.activity = v_act.key), 0) end;
+      -- the vet is the paper-versus-draft disagreement: recorded by eq_known, not flattened
+      if v_who = 'vet' then
+        perform pg_temp.eq_known('H vet ' || v_act.key || ' read',
+          pg_temp.q((select id from harness_ids where who = v_who), format('has_permission(%L, ''read'')', v_act.key)), (v_exp >= 1)::text);
+        perform pg_temp.eq_known('H vet ' || v_act.key || ' edit',
+          pg_temp.q((select id from harness_ids where who = v_who), format('has_permission(%L)', v_act.key)), (v_exp >= 2)::text);
+      else
       perform pg_temp.eq('H ' || v_who || ' ' || v_act.key || ' read',
         pg_temp.q((select id from harness_ids where who = v_who), format('has_permission(%L, ''read'')', v_act.key)),
         (v_exp >= 1)::text);
       perform pg_temp.eq('H ' || v_who || ' ' || v_act.key || ' edit',
         pg_temp.q((select id from harness_ids where who = v_who), format('has_permission(%L)', v_act.key)),
         (v_exp >= 2)::text);
+      end if;
       v_checked := v_checked + 2;
     end loop;
   end loop;
   perform pg_temp.eq('H answers checked', v_checked::text, '660');
-  perform pg_temp.eq('H expected cells', (select count(*) from harness_expected)::text, '101');
+  perform pg_temp.eq('H expected cells', (select count(*) from harness_expected)::text, '103'); -- 101 on the paper; the volunteer is 5 under the draft
   v_report := v_report || 'H: 660 answers, six roles x 55 activities x read and edit, equal the paper''s §4 table | ';
 
   n := pg_temp.try(null, format('insert into role_permissions (role_id, activity, level) values (%L, ''stock.count'', 2)', v_role_admin), 'aal1', 'service_role');
@@ -422,7 +457,7 @@ begin
   update permission_activities set area = 'tampered' where key = 'stock.delivery';
   -- the replay alters user_roles, which Postgres refuses while deferred events are pending
   set constraints user_roles_keep_an_admin immediate;
-  execute 'create temp table harness_pre as select count(*)::bigint as audit_rows from audit_log where table_name in (''roles'', ''role_permissions'')';
+  execute 'create temp table harness_pre as select count(*)::bigint as audit_rows, (select count(*) from role_permissions rp join roles r on r.id = rp.role_id where r.key in (''management'', ''staff'', ''vet'', ''volunteer''))::bigint as live_cells from audit_log where table_name in (''roles'', ''role_permissions'')';
 end;
 $h$;
 
@@ -436,9 +471,14 @@ begin
   perform pg_temp.eq('G cells after replay', (select count(*) from role_permissions rp join roles r on r.id = rp.role_id where r.key in ('management','staff','vet','volunteer'))::text, '122');
   perform pg_temp.eq('G a shelter edit survives the replay', (select level::text from role_permissions rp join roles r on r.id = rp.role_id where r.key = 'volunteer' and rp.activity = 'facility.enclosures'), '2');
   perform pg_temp.eq('G the catalogue is restored', (select area from permission_activities where key = 'stock.delivery'), 'stock');
-  -- 0132 alone writes nothing it did not already hold, EXCEPT the 21 volunteer cells 0134 deleted: those come back as 21 logged inserts
-  perform pg_temp.eq('G replay logged only the 21 restored volunteer cells', (select count(*) from audit_log where table_name in ('roles', 'role_permissions'))::text, (select audit_rows + 21 from harness_pre)::text);
+  -- 0132 alone writes nothing it did not already hold, EXCEPT the seed cells missing from the live roles: those come back as logged inserts
+  -- RE-BASELINED 2026-10-06 (director-draft-apply): the replay restores every seed cell the live roles no longer hold, so it logs 122 minus
+  -- the live cells it found (21 on a pristine post-0134 database; more once the Director's draft has narrowed the vet and widened the volunteer)
+  perform pg_temp.eq('G replay logged exactly the seed cells the live roles lacked', (select count(*) from audit_log where table_name in ('roles', 'role_permissions'))::text, (select audit_rows + (122 - live_cells) from harness_pre)::text);
 
+  if exists (select 1 from harness_known_red) then
+    raise exception '%', 'HARNESS-KNOWN-RED every other check held; recorded disagreements with the draft: ' || (select string_agg(label || ': got ' || got || ', paper wants ' || want, '; ') from harness_known_red);
+  end if;
   raise exception '%', format('HARNESS-OK %s asserted live | A: 6 roles, 55 activities, cells 48/37/13/3/0/0 | B: four answers-no cases, archived person, signed out, anon, null, mistyped level, seeded yes, read vs edit, admin yes | C: my_permissions | D: guards, role_id bridge, last admin | E: RLS at aal1/aal2, anon | F: audit | H: 660 answers (6 roles x 55 activities x read/edit) equal section 4 of the paper | G: replay keeps a shelter edit',
     ${JSON.stringify(file).replace(/"/g, "'")});
 end;
