@@ -191,7 +191,7 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
     notCounted: i.row.state === "notCounted",
   }));
   const groups = groupBySupplier(lines);
-  const notCounted = [...medItems, ...dietItems].filter((i) => i.row.state === "notCounted" && i.row.needed > 0);
+  const notCounted = [...medItems, ...dietItems].filter((i) => i.row.state === "notCounted");
 
   const csv = toCsv([
     [p.csv.supplier, p.csv.kind, p.csv.item, p.csv.buy, p.csv.unit, p.csv.inBase, p.csv.baseUnit],
