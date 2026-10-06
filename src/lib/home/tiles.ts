@@ -51,6 +51,18 @@ function managementDay(perms: Permissions, t: Dictionary): HomeTile[] {
   return tiles;
 }
 
+/**
+ * Curated homes: a role whose phone screen is chosen, not derived. This is the whole list, and it
+ * is keyed on the role's key on purpose (docs/decisions/2026-10-06-home-screen-belongs-to-a-role.md):
+ * a home is a property of the role, and a role a shelter creates has none until someone curates
+ * one, so it gets the derived home below, which already shows a tile only for a page its cells open.
+ * Not `roles.home_path`, which names one page and cannot say "these four tiles"; not a job list,
+ * which Management's cells are wider than.
+ */
+const CURATED_HOME: Record<string, (perms: Permissions, t: Dictionary) => HomeTile[]> = {
+  management: managementDay,
+};
+
 export function homeTilesFor(perms: Permissions, t: Dictionary): HomeTile[] {
   // A role that is given jobs (src/lib/permissions/jobs.ts) shows its jobs, one tile each, and
   // nothing else: that is what "a home of named jobs" means. A job whose bundle the role's cells
@@ -69,7 +81,8 @@ export function homeTilesFor(perms: Permissions, t: Dictionary): HomeTile[] {
   // The Director's daytime screen (the whiteboard's Management column, 2026-10-03): a few big tiles on a
   // phone, not every page Management can open. Vet visits, medical records and a resident's details are
   // tabs on a resident, so they are reached through the Residents tile and need no tile of their own.
-  if (perms.role.key === "management") return managementDay(perms, t);
+  const curated = CURATED_HOME[perms.role.key];
+  if (curated) return curated(perms, t);
 
   let routes = routesFor(perms).filter((r) => r.device !== "desk");
   // Settings pages are Admin's night home (/admin), not a role's tasks; a role that holds only
