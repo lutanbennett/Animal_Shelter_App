@@ -78,11 +78,11 @@ const probes = [
   // RE-BASELINED 2026-10-06 (director-draft-apply): the draft ticks row 17 (weights) and 15 (prescribe) for the 2IC
   ["weight", `select 1 from weight where resident_id = '${R}'`, SIC_ONE],
   ["prescriptions", `select 1 from prescriptions where resident_id = '${R}'`, SIC_ONE],
-  ["attachments", `select 1 from attachments limit 1`, ONLY_SIC],
+  ["attachments", `select 1 from attachments limit 1`, who("sic", "vet", ...OLD)], // RE-BASELINED 2026-10-07 (0152): her maintenance.photos cell reads a job's attachments
   ["assistant_actions", `select 1 from assistant_actions limit 1`, ONLY_SIC],
   ["insert placement", `insert into placement_history (resident_id, placement_type, start_date) values ('${R}', 'SendToHospital', now() + interval '1 minute')`, ONLY_SIC],
   ["delete a job", `delete from maintenance where id = '${JOB}'`, who(...OLD)],
-  ["add a job photo", `insert into maintenance_photos (maintenance_id, drive_file_id) values ('${JOB}', 'probe')`, who(...OLD)],
+  ["add a job photo", `insert into maintenance_photos (maintenance_id, drive_file_id) values ('${JOB}', 'probe')`, who("sic", ...OLD)], // RE-BASELINED 2026-10-07 (0152): the draft gives her maintenance.photos
   ["set up a recurring task", `insert into recurring_jobs (title, repeat, weekdays) values ('probe', 'weekly', '{1}')`, MANAGERS],
   // what she can do beyond stock: who and where, the board, her own tasks (0141's cells, 0141's policies)
   ["resident_who_and_where", `select 1 from resident_who_and_where where id = '${R}'`, who("sic", "volunteer", "po", "co", "dl")], // the borrowed volunteer floor

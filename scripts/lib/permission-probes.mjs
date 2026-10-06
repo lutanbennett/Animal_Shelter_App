@@ -82,6 +82,9 @@ export const PROBES = [
   // --- Photos
   { activity: "photos.resident_add", level: "edit", scoped: true, fn: true, sql: `select record_attachment('resident', $R, 'harness-probe-file', 'probe.jpg', 'Medical', null, null)` },
   { activity: "photos.resident_manage", level: "edit", fn: true, sql: `select delete_resident_photo((select id from attachments where owner_type = 'resident' and owner_id = $R limit 1))` },
+  // A5 (0152): filing outside Medical is what publishes, and the cell now says who may.
+  { activity: "photos.resident_publish", level: "edit", fn: true, sql: `select record_attachment('resident', $R, 'harness-probe-file', 'probe.jpg', 'Shelter', null, null)` },
+  { activity: "photos.resident_manage", level: "edit", fn: true, sql: `select set_resident_profile_photo($R, (select drive_file_id from attachments where owner_type = 'resident' and owner_id = $R limit 1))` },
 
   // --- Enclosures
   { activity: "facility.enclosures", level: "edit", sql: `update enclosures set notes = 'probe' where id = $ENC` },
@@ -173,7 +176,6 @@ function table(activity, name, update, insert, del, flags) {
 // runner prints this list so the gap is read, not inferred.
 export const NO_DB_PROBE = {
   "placement.death_withdraw": undefined, // probed above; kept out of this list on purpose
-  "photos.resident_publish": "Finding A5: publishing is a side effect of filing a photo anywhere but Medical, so there is no statement to separate it from photos.resident_add until the split is built",
   "facility.map": "a page over data the facility.enclosures probes already cover; no table of its own",
   "projects.publish": undefined,
   "stock.purchasing": "a page over medication_forecast / diet_forecast, which read what stock.medications and stock.diets probes already cover",

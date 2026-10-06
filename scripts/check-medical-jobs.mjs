@@ -51,8 +51,8 @@ const probes = [
   // 2. photos
   ["file a Medical photo", `select 1 from record_attachment('resident', '${R}', 'f-med', 'a.jpg', 'Medical', current_date, null)`, HOM_UP_VET],
   ["file a ' medical ' photo (case and spaces)", `select 1 from record_attachment('resident', '${R}', 'f-med2', 'a.jpg', ' medical ', current_date, null)`, HOM_UP_VET],
-  ["file a photo in another folder", `select 1 from record_attachment('resident', '${R}', 'f-oth', 'a.jpg', 'Cats at play', current_date, null)`, { ...STAFF_UP, vet: 1 }],
-  ["file a photo with no folder", `select 1 from record_attachment('resident', '${R}', 'f-nof', 'a.jpg', null, current_date, null)`, { ...STAFF_UP, vet: 1 }],
+  ["file a photo in another folder", `select 1 from record_attachment('resident', '${R}', 'f-oth', 'a.jpg', 'Cats at play', current_date, null)`, STAFF_UP /* 0152: a vet files to Medical only, in the database now */],
+  ["file a photo with no folder", `select 1 from record_attachment('resident', '${R}', 'f-nof', 'a.jpg', null, current_date, null)`, STAFF_UP],
   ["file an adopter's photo", `select 1 from record_attachment('resident', '${R}', 'f-ado', 'a.jpg', '20260101', current_date, '${randomUUID()}')`, "hom-zero"],
   ["file a procedure file", `select 1 from record_attachment('procedure', '${randomUUID()}', 'f-proc', 'a.jpg', 'Medical', current_date, null)`, "hom-zero"],
   ["photo resident view", `select 1 from medical_photo_residents where id = '${R}'`, NOT_VET],
