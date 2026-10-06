@@ -1947,6 +1947,7 @@ const en = {
       cantTell: "Can't tell — count it first",
       notCountedTag: "never counted",
       nothingToBuy: "Nothing to buy",
+      fold: (n: number) => `${n} item${n === 1 ? "" : "s"} need${n === 1 ? "s" : ""} nothing for this period`,
       qty: (quantity: string, unit: string) => `${quantity} ${unit}`,
       equals: (quantity: string, unit: string) => `= ${quantity} ${unit}`,
       empty: "Nothing listed yet.",

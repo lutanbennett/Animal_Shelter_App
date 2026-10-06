@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronDown } from "lucide-react";
 import { requirePermission } from "@/lib/permissions/require";
 import { can } from "@/lib/permissions/can";
 import { getT } from "@/lib/i18n/get-t";
@@ -275,14 +276,55 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
     return <span className="font-medium text-foreground">{p.qty(formatQuantity(r.buy), item.unitLabel)}</span>;
   }
 
+  /**
+   * What the table shows and what it folds. A row folds only when there is
+   * nothing to buy AND the figure behind that is trustworthy: a never-counted
+   * item is assumed to have none on the shelf, and a stale count may be out of
+   * date, so "nothing to buy" there is a guess and the warning must stay on
+   * the page. Order: to buy, then never-counted / stale, then the fold.
+   */
+  function split(items: Item[]) {
+    const toBuy = (i: Item) => (i.row.buy ?? 0) > 0;
+    const untrusted = (i: Item) => i.row.state === "notCounted" || i.row.stale;
+    return {
+      shown: [...items.filter(toBuy), ...items.filter((i) => !toBuy(i) && untrusted(i))],
+      folded: items.filter((i) => !toBuy(i) && !untrusted(i)),
+    };
+  }
+
+  function itemRow(item: Item) {
+    return (
+      <tr key={item.row.id} className="align-top">
+        <td className="px-4 py-2">
+          <span className="font-medium text-foreground">{item.row.name}</span>
+          {item.isStandard && (
+            <span className="ml-2 rounded-full bg-surface px-2 py-0.5 text-xs text-muted">{p.standardBadge}</span>
+          )}
+        </td>
+        <td className="px-4 py-2 text-muted">{working(item)}</td>
+        <td className="px-4 py-2">{buyCell(item)}</td>
+      </tr>
+    );
+  }
+
+  const columns = (
+    <colgroup>
+      <col className="w-[24%]" />
+      <col className="w-[56%]" />
+      <col className="w-[20%]" />
+    </colgroup>
+  );
+
   function section(kind: Kind, items: Item[]) {
+    const { shown, folded } = split(items);
     return (
       <section className="flex flex-col gap-3 print:hidden" aria-labelledby={`purchasing-${kind}`}>
         <h2 id={`purchasing-${kind}`} className="text-lg font-semibold text-foreground">
           {p.sections[kind]}
         </h2>
         <div className="overflow-x-auto rounded border border-border">
-          <table className="w-full text-left text-sm">
+          <table className="w-full table-fixed text-left text-sm">
+            {columns}
             <thead className="bg-surface text-muted">
               <tr>
                 <th className="px-4 py-2 font-medium">{p.table.item}</th>
@@ -291,29 +333,29 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {items.map((item) => (
-                <tr key={item.row.id} className="align-top">
-                  <td className="px-4 py-2">
-                    <span className="font-medium text-foreground">{item.row.name}</span>
-                    {item.isStandard && (
-                      <span className="ml-2 rounded-full bg-surface px-2 py-0.5 text-xs text-muted">
-                        {p.standardBadge}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-2 text-muted">{working(item)}</td>
-                  <td className="px-4 py-2">{buyCell(item)}</td>
-                </tr>
-              ))}
-              {items.length === 0 && (
+              {shown.map(itemRow)}
+              {shown.length === 0 && (
                 <tr>
                   <td colSpan={3} className="px-4 py-6 text-center text-muted">
-                    {p.empty}
+                    {items.length === 0 ? p.empty : p.list.empty}
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
+          {/* Native <details>, closed on every visit: nothing is remembered. */}
+          {folded.length > 0 && (
+            <details className="group border-t border-border">
+              <summary className="flex cursor-pointer items-center gap-2 bg-surface px-4 py-3 text-sm font-medium text-foreground hover:bg-surface-hover [&::-webkit-details-marker]:hidden">
+                <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 text-muted transition-transform group-open:rotate-180" />
+                {p.fold(folded.length)}
+              </summary>
+              <table className="w-full table-fixed text-left text-sm">
+                {columns}
+                <tbody className="divide-y divide-border border-t border-border">{folded.map(itemRow)}</tbody>
+              </table>
+            </details>
+          )}
         </div>
       </section>
     );
