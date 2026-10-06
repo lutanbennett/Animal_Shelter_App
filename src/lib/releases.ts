@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "On Management → Purchasing, the medicines and food that need nothing for the period are now folded into one line under each table (\"12 items need nothing for this period\"), so the page shows what to buy. Tap the line to see them, with the working that shows why. An item that has never been counted, or was counted long ago, is never folded, even when the sum says nothing to buy.", roles: ["admin", "management"] },
   "On the Residents list, a new Download spreadsheet button saves the residents you are looking at (the same place, zone, search and Show all as the list) as a file for Excel or Google Sheets, with more than the list shows: sex, age and estimated birth year, size, colour, whether chipped, prescriptions running today, the next vet visit, diet and latest weight. On a computer, tick residents first to save only those. The page says where the file went, and a volunteer's file holds only who and where.",
 ];
 

@@ -1870,6 +1870,7 @@ const th: Dictionary = {
       cantTell: "ยังบอกไม่ได้ — ควรนับก่อน",
       notCountedTag: "ยังไม่เคยนับ",
       nothingToBuy: "ไม่ต้องซื้อ",
+      fold: (n: number) => `${n} รายการไม่ต้องซื้อในช่วงนี้`,
       qty: (quantity: string, unit: string) => `${quantity} ${unit}`,
       equals: (quantity: string, unit: string) => `= ${quantity} ${unit}`,
       empty: "ยังไม่มีรายการ",
