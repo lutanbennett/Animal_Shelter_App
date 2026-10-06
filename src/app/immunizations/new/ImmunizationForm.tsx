@@ -1,7 +1,7 @@
-import { ACTION_ICONS } from "@/components/hub-icons";
-import { ActionButton } from "@/components/ActionButton";
 "use client";
 
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 import { useMemo, useState } from "react";
 import { useKeptForm } from "@/lib/use-kept-form";
 import { ResidentPicker } from "@/components/ResidentPicker";
@@ -158,14 +158,9 @@ export function ImmunizationForm({
                 ))}
               </select>
             </div>
-            <button
-              type="button"
-              onClick={addByZone}
-              disabled={!zoneFilter}
-              className="rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-50"
-            >
+            <ActionButton onClick={addByZone} disabled={!zoneFilter} icon={ACTION_ICONS.add} compact>
               {t.immunizations.addZone}
-            </button>
+            </ActionButton>
 
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-muted">
@@ -184,14 +179,9 @@ export function ImmunizationForm({
                 ))}
               </select>
             </div>
-            <button
-              type="button"
-              onClick={addByEnclosure}
-              disabled={!enclosureFilter}
-              className="rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-50"
-            >
+            <ActionButton onClick={addByEnclosure} disabled={!enclosureFilter} icon={ACTION_ICONS.add} compact>
               {t.immunizations.addEnclosure}
-            </button>
+            </ActionButton>
           </div>
 
           <ResidentPicker
