@@ -52,7 +52,9 @@ export function PurchasingPhone({
   const s = p.steps;
 
   const byKey = new Map(items.map((i) => [`${i.kind}|${i.row.name}`, i]));
-  const notCounted = items.filter((i) => i.row.state === "notCounted" && i.row.needed > 0);
+  const notCounted = items.filter((i) => i.row.state === "notCounted");
+  // Never counted and nothing to buy: not on the list, so the box has to name them.
+  const notCountedZero = notCounted.filter((i) => i.row.needed <= 0);
 
   return (
     <div className="flex flex-col gap-4">
@@ -82,7 +84,14 @@ export function PurchasingPhone({
             <TriangleAlert aria-hidden="true" className="h-5 w-5 shrink-0" />
             {s.notCountedTitle(notCounted.length)}
           </h3>
-          <p className="text-sm text-foreground">{s.notCountedBody}</p>
+          <p className="text-sm text-foreground">
+            {notCountedZero.length < notCounted.length ? s.notCountedBody : s.notCountedBodyZeroOnly}
+          </p>
+          {notCountedZero.length > 0 && (
+            <p className="break-words text-sm text-foreground">
+              {s.notCountedZero(notCountedZero.map((i) => i.row.name).join(", "))}
+            </p>
+          )}
           {canCount && (
             <Link
               href="/stocktake"

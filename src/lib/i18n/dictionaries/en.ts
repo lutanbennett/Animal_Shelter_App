@@ -1925,7 +1925,7 @@ const en = {
       leadHint:
         "Stock ordered today arrives after the item's lead time (set on Medications or Diets), so the period is counted from the day it arrives. Turn it off to count the period from today.",
       neverCountedBanner: (n: number) =>
-        `${n} item${n === 1 ? "" : "s"} in use ${n === 1 ? "has" : "have"} never been counted, so ${n === 1 ? "it is" : "they are"} listed assuming none on the shelf.`,
+        `${n} item${n === 1 ? "" : "s"} ${n === 1 ? "has" : "have"} never been counted, so ${n === 1 ? "it is" : "they are"} listed assuming none on the shelf.`,
       stocktakeLink: "Count them in a stocktake",
       sections: { medication: "Medicines", diet: "Food" },
       standardBadge: "Standard diet",
@@ -1981,6 +1981,8 @@ const en = {
         shelfNone: (needed: string, unit: string) => `Probably none left. Needed: ${needed} ${unit}.`,
         notCountedTitle: (n: number) => `Not counted yet (${n})`,
         notCountedBody: "Listed below in yellow as if none were on the shelf. Count them to get a real figure.",
+        notCountedBodyZeroOnly: "Nobody has counted these, so we cannot tell what is on the shelf. Count them to get a real figure.",
+        notCountedZero: (names: string) => `Not on the list below, but do not trust "nothing to buy" until they are counted: ${names}`,
         shelfAssumed: (needed: string, unit: string) => `Never counted, assuming none on the shelf. Needed: ${needed} ${unit}.`,
         countThem: "Count them",
         buy: "Buy",
