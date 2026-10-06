@@ -36,9 +36,6 @@ export const OWNERS = {
   fixed_outgoings: "perm-convert-settings",
   translations: "perm-convert-settings",
   assistant_actions: "perm-convert-settings",
-  maintenance: "perm-convert-work",
-  maintenance_assignees: "perm-convert-work",
-  project_folders: "perm-convert-work",
 };
 
 const query = `
