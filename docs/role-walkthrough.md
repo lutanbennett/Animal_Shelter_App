@@ -2,8 +2,8 @@
 
 A full pass over the app **one role at a time**: sign in once as a Vet, do
 everything a Vet does end to end, then change role and do the next one. Copy
-this to `docs/uat/<yyyy-mm-dd>.md`, fill it in as you go, and commit it on
-whatever branch is to hand.
+this to `docs/uat/<yyyy-mm-dd>.md`, fill it in as you go, and commit it on a
+feature branch and open a PR — no exceptions to the branch-and-PR route.
 
 It is **not** under `docs/test-plans/`, and must not be moved there. That
 directory is the per-feature gate `scripts/check-test-plan.mjs` enforces, and a
