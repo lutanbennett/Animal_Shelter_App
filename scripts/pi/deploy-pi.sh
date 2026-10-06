@@ -24,6 +24,23 @@
 # takes a second or two, during which the Worker's fallback answers
 # (worker/index.mjs). Run from the repo root as the user the service runs as.
 set -euo pipefail
+# Never run as root: this script already calls sudo for the steps that need it, and
+# running all of it under sudo leaves node_modules, .next and the env file root-owned
+# (docs/decisions/2026-10-06-setup-test-sudo-guard.md).
+if [[ "$(id -u)" -eq 0 ]]; then
+  OWNER="${SUDO_USER:-<your user>}"
+  {
+    echo "deploy-pi: REFUSING to run as root."
+    echo "  Run it as your own user. It calls sudo itself, for the service restart only, and"
+    echo "  will ask for your password there:"
+    echo "    ./scripts/pi/deploy-pi.sh [--env test]"
+    echo "  Run as root, everything it builds (node_modules, .next, the env file) would belong to"
+    echo "  root and every later deploy would fail with EACCES."
+    echo "  Already ran it under sudo? Hand the folder back, then run it again as above:"
+    echo "    sudo chown -R $OWNER:$OWNER $(cd "$(dirname "$0")/../.." && pwd)"
+  } >&2
+  exit 2
+fi
 cd "$(dirname "$0")/../.."
 
 ENV_NAME=production
