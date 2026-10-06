@@ -222,7 +222,9 @@ async function handlePost(
     isProfile: row.is_profile,
     archiveWarning: archiveRefresh?.error
       ? t.residents.deceased.banner.archiveNotRefreshed
-      : undefined,
+      : archiveRefresh?.photoMissing
+        ? t.residents.deceased.banner.photoNotInPdf
+        : undefined,
     thumbnailUrl: driveImageUrl(driveFileId),
   });
 }

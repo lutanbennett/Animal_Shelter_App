@@ -3811,6 +3811,8 @@ const en = {
           "Photos and the bio can still change after a death; the PDF and index above are refreshed automatically. If a change shows a warning that the archive wasn't refreshed, use this to try again.",
         archiveNotRefreshed:
           "Saved — but the Drive archive couldn't be refreshed, so the summary PDF and index page are out of date. Open the resident's page and use \"Refresh archive\" to try again.",
+        photoNotInPdf:
+          "Saved — but the profile photo could not be put in the summary PDF, so it has no picture. Choose a JPEG or PNG photo as the profile, or use \"Refresh archive\" if Drive was slow.",
         notArchivedYet:
           "The first archive never finished, so edits are not copied to Drive yet. Use \"Retry archiving\" to produce it; it will include everything saved so far.",
       },

@@ -35,13 +35,13 @@ import {
  */
 
 export type ArchiveDeceasedResidentResult =
-  | { ok: true; alreadyArchived: boolean }
+  | { ok: true; alreadyArchived: boolean; photoMissing: boolean }
   | { error: string };
 
 /** Skip embedding a profile photo larger than this in the PDF. */
 const MAX_EMBEDDED_PHOTO_BYTES = 4 * 1024 * 1024;
 
-/** @react-pdf can only embed these. HEIC photos from phones can't go in. */
+/** @react-pdf can only embed these. A HEIC original can't, so Drive's JPEG thumbnail is tried first. */
 const EMBEDDABLE_IMAGE_TYPES = new Set(["image/jpeg", "image/png"]);
 
 /**
@@ -172,7 +172,10 @@ export async function archiveDeceasedResident(
     });
     if (error) return { error: error.message };
 
-    return { ok: true, alreadyArchived };
+    // A chosen profile photo that did not make it in is reported, not just
+    // logged: the PDF is the lasting record, and no picture looks like no photo.
+    const photoMissing = Boolean(resident.profile_photo_drive_file_id) && !profilePhotoDataUri;
+    return { ok: true, alreadyArchived, photoMissing };
   } catch (error) {
     // The hub shows only the message; the stack goes to the Worker log so a
     // Drive or PDF failure can be traced with `wrangler tail` rather than a

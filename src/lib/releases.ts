@@ -61,7 +61,9 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  "When a resident who has died has a profile photo that could not be put in their summary PDF, the page now says so as soon as you choose or save it, instead of leaving a PDF with no picture and no word. Phone (HEIC) photos are handled by Drive.",
+];
 
 
 /** Newest first. */
