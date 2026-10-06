@@ -1,3 +1,4 @@
+import { ActionButton } from "@/components/ActionButton";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { can } from "@/lib/permissions/can";
@@ -347,12 +348,9 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
               ))}
             </select>
           </div>
-          <button
-            type="submit"
-            className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
-          >
+          <ActionButton type="submit" variant="primary" icon={ACTION_ICONS.filter}>
             {t.residents.list.filter}
-          </button>
+          </ActionButton>
           {/* A link, not a checkbox: flipping it changes the list straight
               away rather than waiting for Filter. On phones too — it is the
               only way back to a resident who has died. Offered under

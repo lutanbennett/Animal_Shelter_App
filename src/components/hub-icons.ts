@@ -57,6 +57,8 @@ import {
   RotateCcw,
   Scissors,
   Settings,
+  Funnel,
+  Save,
   Send,
   ShieldCheck,
   ShieldOff,
@@ -268,4 +270,8 @@ export const ACTION_ICONS = {
   copy: Copy,
   /** Go to the screen where a list is managed (the Management or Admin editor for it). */
   manage: Settings,
+  /** Save a form (Save changes, Record, Book): the primary submit button. */
+  save: Save,
+  /** Apply a search or filter form. */
+  filter: Funnel,
 } satisfies Record<string, LucideIcon>;

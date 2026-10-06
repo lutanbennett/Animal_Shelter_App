@@ -1,3 +1,5 @@
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 "use client";
 
 import { useState, useTransition, type FormEvent } from "react";
@@ -212,13 +214,10 @@ export function BloodTestForm({
       {error && <p className="text-sm text-danger">{error}</p>}
 
       <div>
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-        >
+        <ActionButton type="submit" variant="primary" icon={ACTION_ICONS.save}
+          disabled={pending}>
           {pending ? t.bloodTests.saving : t.bloodTests.saveButton}
-        </button>
+        </ActionButton>
       </div>
     </form>
   );

@@ -1,3 +1,4 @@
+import { ActionButton } from "@/components/ActionButton";
 "use client";
 
 import { ActionLink } from "@/components/ActionLink";
@@ -205,11 +206,8 @@ export function WeightForm({
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
 
       <div>
-        <button
-          type="submit"
-          disabled={pending || (editing && !!sameDay)}
-          className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-        >
+        <ActionButton type="submit" variant="primary" icon={ACTION_ICONS.save}
+          disabled={pending || (editing && !!sameDay)}>
           {pending
             ? t.weight.saving
             : editing
@@ -217,7 +215,7 @@ export function WeightForm({
               : sameDay
                 ? t.weight.sameDay.replaceButton
                 : t.weight.saveButton}
-        </button>
+        </ActionButton>
       </div>
     </form>
   );

@@ -1,3 +1,5 @@
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
@@ -462,13 +464,10 @@ export function RecurringJobForm({
       {error && <p className="text-sm text-danger">{error}</p>}
 
       <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={isPending}
-          className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-        >
+        <ActionButton type="submit" variant="primary" icon={ACTION_ICONS.save}
+          disabled={isPending}>
           {isPending ? rj.saving : rj.save}
-        </button>
+        </ActionButton>
         <button
           type="button"
           onClick={() => onDone(null)}

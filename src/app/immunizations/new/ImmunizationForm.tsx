@@ -1,3 +1,5 @@
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 "use client";
 
 import { useMemo, useState } from "react";
@@ -312,19 +314,16 @@ export function ImmunizationForm({
         )}
 
         <div>
-          <button
-            type="submit"
+          <ActionButton type="submit" variant="primary" icon={ACTION_ICONS.save}
             disabled={
               pending ||
               selectedResidentIds.length === 0 ||
               selectedTypeIds.length === 0
-            }
-            className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-          >
+            }>
             {pending
               ? t.immunizations.recording
               : t.immunizations.recordButton(recordCount)}
-          </button>
+          </ActionButton>
         </div>
       </form>
     </div>
