@@ -11,7 +11,7 @@
 //   reads        the Head of Medical reads prescriptions, frequency and the two list views;
 //                a volunteer, a vet and a login with no role read none of them
 //   the floor    the Head of Medical reads NOTHING else: not medication (prices), not residents,
-//                not resident_list_view, not a weight, a visit, a procedure or a stock count;
+//                not resident_list_view, not a visit or a procedure (a weight and the stock count are hers by the draft);
 //                the list views carry no price, stock, breed or bio column
 //   writes       refused on prescriptions (update and insert); weight is hers since 0140
 //   controls     admin, management and staff still read what they read before
@@ -40,6 +40,15 @@ const OWN_CLINIC = { ...STAFF_UP, vet: 1 };
 const OWN_CLINIC_AND_HOM = { ...OWN_CLINIC, hom: 1 };
 // cells granted ahead of the screens that make them jobs (0140); check-medical-jobs.mjs holds the behaviour
 const AHEAD = new Map();
+// RE-BASELINED 2026-10-06 (director-draft-apply): the Director's draft, with Lutan's answers, is the agreed state
+// of this role, so the cells beyond jobs.ts are hers: the sheet's ticks (the map, moving a resident, stocktake, her own
+// recurring jobs) and what a ticked row starts from. Her ticks are an addition to the job cells, never a replacement.
+const { cellsFor } = await import(pathToFileURL(join(process.cwd(), "src/lib/roles-draft/resolve.ts")).href);
+const { ACTIVITIES } = await import(pathToFileURL(join(process.cwd(), "src/lib/permissions/catalogue.ts")).href);
+const { readFileSync } = await import("node:fs");
+const DRAFT = JSON.parse(readFileSync(join(process.cwd(), "src/lib/roles-draft/draft-2.json"), "utf8"));
+const DRAFT_CELLS = cellsFor(DRAFT, "head_of_medical", Object.fromEntries(ACTIVITIES.map((a) => [a.key, a.kind])));
+for (const c of DRAFT_CELLS) AHEAD.set(c.activity, Math.max(AHEAD.get(c.activity) ?? 0, c.level));
 
 // [name, sql, expectation]: a table of who may (1) or may not (0); "error" = the statement must fail;
 // "hom-zero" = only the Head of Medical is asserted, and it must see nothing
@@ -55,7 +64,8 @@ const probes = [
   ["weight", `select 1 from weight where resident_id = '${R}'`, OWN_CLINIC_AND_HOM],
   ["vet_appointments", `select 1 from vet_appointments where resident_id = '${R}'`, OWN_CLINIC],
   ["procedures", `select 1 from procedures where resident_id = '${R}'`, null],
-  ["stock_counts", `select 1 from stock_counts limit 1`, "hom-zero"],
+  // her sheet ticks the stocktake (row 36, stock.count), so she reads the counts: the draft's cell, not the old seed
+  ["stock_counts", `select 1 from stock_counts limit 1`, "hom-reads"],
   ["assistant_actions", `select 1 from assistant_actions limit 1`, "hom-zero"],
   ["contacts", `select 1 from contacts limit 1`, "hom-zero"],
   // who and where is still the volunteer view's, and still works for this role (borrowed rights)
@@ -147,6 +157,11 @@ for (const [name, , exp] of probes) {
     if (n === -2) pass(`${name}: refused as a missing column`); else fail(`${name}: expected an error, got ${n}`);
     continue;
   }
+  if (exp === "hom-reads") {
+    const n = get("hom", name);
+    if (n >= 1) pass(`${name} as hom: read (stock.count, draft row 36)`); else fail(`${name}: the Head of Medical should read it (draft row 36) and got ${n}`);
+    continue;
+  }
   if (exp === "hom-zero" || exp === null) {
     const n = get("hom", name);
     if (n <= 0) pass(`${name} as hom: refused or empty`); else fail(`${name}: the Head of Medical reads ${n} row(s)`);
@@ -165,7 +180,7 @@ const have = new Map(rows.filter((r) => r.who === "role" && r.tbl.startsWith("ce
 const want = new Map([...bundleOfRole("head_of_medical")].map(([a, l]) => [a, l === "edit" ? 2 : 1]));
 for (const [a, l] of AHEAD) if (!want.has(a)) want.set(a, l);
 const same = have.size === want.size && [...want].every(([a, l]) => have.get(a) === l);
-if (same) pass(`bundle: role_permissions = the union of its jobs (${[...want.keys()].join(", ")})`);
+if (same) pass(`bundle: role_permissions = the union of its jobs and the draft's cells (${[...want.keys()].join(", ")})`);
 else fail(`bundle: role_permissions ${JSON.stringify([...have])} differ from jobs.ts ${JSON.stringify([...want])}`);
 
 console.log(`\n${ok} checks held, ${fails} failed.`);

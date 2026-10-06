@@ -79,10 +79,11 @@ const EXPECT = {
   item_unit_conversions: { admin: A, management: A, staff: RO, c_stock: A },
   stock_receipts: { admin: "1011", management: "1011", staff: "1011", c_stock: "1011" },
   stock_counts: { admin: "1", management: "1", staff: "1", c_stock: "1" },
-  recurring_jobs: { admin: A, management: A, staff: RO, vet: RO, c_recur: A, c_manage_only: "0010" },
-  recurring_job_assignees: { admin: A, management: A, staff: RO, vet: RO, c_recur: A, c_manage_only: "0010" },
-  recurring_job_occurrences: { admin: "1", management: "1", staff: "1", vet: "1", c_recur: "1" },
-  recurring_job_occurrence_assignees: { admin: "1", management: "1", staff: "1", vet: "1", c_recur: "1" },
+  // RE-BASELINED 2026-10-06 (director-draft-apply): the volunteer holds recurring.do_own (draft row 47, confirmed by Lutan), so reads these
+  recurring_jobs: { admin: A, management: A, staff: RO, volunteer: RO, vet: RO, c_recur: A, c_manage_only: "0010" },
+  recurring_job_assignees: { admin: A, management: A, staff: RO, volunteer: RO, vet: RO, c_recur: A, c_manage_only: "0010" },
+  recurring_job_occurrences: { admin: "1", management: "1", staff: "1", volunteer: "1", vet: "1", c_recur: "1" },
+  recurring_job_occurrence_assignees: { admin: "1", management: "1", staff: "1", volunteer: "1", vet: "1", c_recur: "1" },
 };
 const CMDS = ["read", "update", "insert", "delete"];
 const expected = (tbl, who) => (EXPECT[tbl][who] ?? NO.padEnd(T[tbl].filter(Boolean).length, "0")).split("").map(Number);
