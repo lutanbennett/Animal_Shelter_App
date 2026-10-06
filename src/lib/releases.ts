@@ -61,17 +61,25 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [
-  "A project's Thai title is now easy to find and hard to forget. It shows under About this project (with the Thai title field in Edit details), and a published folder with no Thai title says that Thai visitors see the English title. Settings → Website marks those projects with an Add Thai title link, and Management → Translations lists them at the top, so visitors reading Thai see Thai project titles on Our work.",
-  { text: "On the Purchasing screen on a phone, the \"Not counted yet\" box now also names items nobody has ever counted that show nothing to buy. Before, they were left out, so \"nothing to buy\" looked safe when it was only a guess. The same items are now counted in the banner on the computer page.", roles: ["admin", "management"] },
-  { text: "On Management → Purchasing, the medicines and food that need nothing for the period are now folded into one line under each table (\"12 items need nothing for this period\"), so the page shows what to buy. Tap the line to see them, with the working that shows why. An item that has never been counted, or was counted long ago, is never folded, even when the sum says nothing to buy.", roles: ["admin", "management"] },
-  "On the Residents list, a new Download spreadsheet button saves the residents you are looking at (the same place, zone, search and Show all as the list) as a file for Excel or Google Sheets, with more than the list shows: sex, age and estimated birth year, size, colour, whether chipped, prescriptions running today, the next vet visit, diet and latest weight. On a computer, tick residents first to save only those. The page says where the file went, and a volunteer's file holds only who and where.",
-  "On a computer, the map under a contact's address is now a sensible size instead of stretching across the whole page.",
-];
+export const unreleased: ReleaseNote[] = [];
 
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.19.3",
+    date: "2026-10-06",
+    title:
+      "Download the residents you are looking at, and a Thai project title where you cannot miss it",
+    major: false,
+    notes: [
+      "On the Residents list, a new Download spreadsheet button saves the residents you are looking at (the same place, zone, search and Show all as the list) as a file for Excel or Google Sheets, with more than the list shows: sex, age and estimated birth year, size, colour, whether chipped, prescriptions running today, the next vet visit, diet and latest weight. On a computer, tick residents first to save only those. The page says where the file went, and a volunteer's file holds only who and where.",
+      "A project's Thai title is now easy to find and hard to forget. It shows under About this project (with the Thai title field in Edit details), and a published folder with no Thai title says that Thai visitors see the English title. Settings → Website marks those projects with an Add Thai title link, and Management → Translations lists them at the top, so visitors reading Thai see Thai project titles on Our work.",
+      { text: "On Management → Purchasing, the medicines and food that need nothing for the period are now folded into one line under each table (\"12 items need nothing for this period\"), so the page shows what to buy. Tap the line to see them, with the working that shows why. An item that has never been counted, or was counted long ago, is never folded, even when the sum says nothing to buy.", roles: ["admin", "management"] },
+      { text: "On the Purchasing screen on a phone, the \"Not counted yet\" box now also names items nobody has ever counted that show nothing to buy. Before, they were left out, so \"nothing to buy\" looked safe when it was only a guess. The same items are now counted in the banner on the computer page.", roles: ["admin", "management"] },
+      "On a computer, the map under a contact's address is now a sensible size instead of stretching across the whole page.",
+    ],
+  },
   {
     version: "0.19.2",
     date: "2026-10-05",
