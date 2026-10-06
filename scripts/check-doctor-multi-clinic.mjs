@@ -272,7 +272,8 @@ begin
   ----------------------------------------------------------------- E
   update vet_doctors set user_id = null where id = dm;
   n := pg_temp.try(stf, format('update vet_doctors set user_id = %L where id = %L', multi, dm));
-  if n <> -1 then raise exception 'HARNESS-FAIL E: staff set a doctor''s login: %', n; end if;
+  -- refused either way: an error from the login trigger (-1) or, since 0147, no row visible to update (0)
+  if n not in (-1, 0) then raise exception 'HARNESS-FAIL E: staff set a doctor''s login: %', n; end if;
   n := pg_temp.try(mgmt, format('update vet_doctors set user_id = %L where id = %L', multi, dm));
   if n <> -1 then raise exception 'HARNESS-FAIL E: management set a login: %', n; end if;
   n := pg_temp.try(legacy, format('update vet_doctors set user_id = %L where id = %L', legacy, dx));
@@ -347,7 +348,10 @@ begin
   insert into vet_doctors (id, vet_id, name) values (dz, c, 'Harness Dr Same');
   insert into vet_doctors (vet_id, name) values (b, 'Harness Dr Same') returning id into v_new;
   insert into vet_appointments (resident_id, vet_id, appointment_date, doctor_id) values (rc, c, now(), dz);
+  -- since 0147 staff, who hold no clinics.doctors cell, are refused; management merges
   n := pg_temp.try(stf, format('select merge_vet_doctors(%L, %L)', dz, v_new));
+  if n <> -4 then raise exception 'HARNESS-FAIL G: staff merged doctors: %', n; end if;
+  n := pg_temp.try(mgmt, format('select merge_vet_doctors(%L, %L)', dz, v_new));
   if n <> 1 then raise exception 'HARNESS-FAIL G: merging identical names across clinics gave %', n; end if;
   if (select count(*) from vet_doctor_clinics where doctor_id = v_new) <> 2
      or not exists (select 1 from vet_appointments where vet_id = c and doctor_id = v_new) then

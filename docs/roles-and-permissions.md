@@ -228,8 +228,8 @@ disagree.
 | C3 | `immunization_types` | **vet** insert, update, delete | admin only (Settings) |
 | C4 | `blood_tests`, `procedures`, `prescriptions`, `immunization_records`, `vet_appointments` | **vet** delete outright (own clinic's) | Remove is not offered to a vet at all |
 | C5 | `weight` | management, staff, vet delete outright | Remove is a soft archive, and not for vets |
-| C6 | `contacts` | staff update and delete | staff can only add one (A2); editing is Management's |
-| C7 | `vet_doctors`, `vet_doctor_clinics`, `merge_vet_doctors()` | staff and vet insert, update, delete, merge | Management only (`/management/vets/…/doctors`) |
+| C6 | `contacts` | staff update and delete | staff can only add one (A2); editing is Management's. **Closed by `0147`:** staff hold Read, so they can no longer update or delete |
+| C7 | `vet_doctors`, `vet_doctor_clinics`, `merge_vet_doctors()` | staff and vet insert, update, delete, merge | Management only (`/management/vets/…/doctors`). **Staff half closed by `0147`;** the vet half stays until Vet converts |
 | C8 | `stock_receipts` | staff update | the app only inserts and deletes. **Closed by `0145`:** no update policy at all |
 | C9 | `stock_receipts`, `stock_counts`, `medication`, `diet_types` | **volunteer** (closed by `0134`, 2026-10-04) reads every row and every column, prices and delivery costs included | Stocktake needs the names and the counts, not the prices; Deliveries and both Management lists are refused to a volunteer |
 | C10 | `enclosures`, `zones`, `vets`, `diet_types`, `shelter_friends`, `bulk_appointments` | **vet** reads every row, every other clinic and its bulk bookings included | all refused to a vet as pages. A resident's page needs the enclosure's name; nothing a vet opens needs the list of other clinics |
@@ -1188,13 +1188,22 @@ missing here or listed here after it has been converted, so this table cannot dr
 A vet's read of the four recurring tables was inside the dropped role list, so it is kept as
 `vet_read_recurring_*` until Vet converts (C11).
 
+**Converted in `0147` (`perm-convert-people`).**
+
+| Table | Activity | Note |
+|---|---|---|
+| `contacts` | read / edit `contacts.directory`, insert `contacts.add`, and `sees_all_contacts()` | The scope function is the `sees_all_residents()` of the address book: `0126` took vets and volunteers off the table and gave them views, so a cell alone would widen them. **Closes C6** |
+| `shelter_friends` | `friends.manage`; read also open to whoever reads contacts | The contacts pages show a friend's badge and card to every role that reads contacts, so **N3 stays open** until the app stops doing so |
+| `vets` | read `clinics.list` or `visit.book`; write `clinics.list` | The booking form lists clinics |
+| `vet_doctors`, `vet_doctor_clinics` | write `clinics.doctors`; read as `vets` plus `clinics.doctors` | A doctor with a login is still off limits to non-admins. **Closes C7 for staff** |
+| `bulk_appointments` | `visit.book` | The clinic bookings. Yes/No, so Edit includes delete |
+
 **Not converted, with an owner.**
 
 | Table | Owner | Why it waits |
 |---|---|---|
 | `attachments` | the photo split (A3 / A5) | Its owner types span `photos.*`, `maintenance.photos`, `projects.photos` and the two medical file routes, which stay on `assertPhotoWriteAccess` until that split (`2026-10-04-permissions-sweep-rest.md`). There is no single activity to ask |
 | `maintenance_photos`, `project_photos` | the photo split | `maintenance.photos` and `projects.photos`, the same split |
-| `contacts`, `vets`, `vet_doctors`, `vet_doctor_clinics`, `bulk_appointments`, `shelter_friends` | `perm-convert-people` | `contacts.*`, `clinics.*`, `friends.manage`; `bulk_appointments` is the clinic bookings, filed here |
 | `medication`, `diet_types`, `frequency`, `procedure_types`, `blood_test_types`, `immunization_types` | `perm-convert-stock-and-lists` | The lists. The 2IC's price-free views (`stock_medications`, `stock_diet_types`, `0143`) must survive it |
 | `facility_maps`, `fixed_outgoings`, `translations`, `assistant_actions` | `perm-convert-settings` | `facility.map`, `reports.cashflow`, `translations.manage`, `assistant.record` |
 | `maintenance`, `maintenance_assignees`, `project_folders` | **`perm-convert-work`, a new row**: schema, needs only this stream; runs beside the others | `maintenance.jobs` and `projects.folders`. `0141` added the cell policies beside the role-named ones, as `0143` did for stock; dropping the old pair is all that is left for the first two |
