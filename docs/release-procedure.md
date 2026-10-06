@@ -268,8 +268,10 @@ known open question, not a delivery failure.
 Copy `docs/release-smoke-test.md` into `docs/releases/<yyyy-mm-dd>.md` — or add a
 `## <version>` section to that day's file if one already exists, as 2026-10-02's
 holds four. Fill in the header (deployed SHA, PRs, migrations, run by), what was
-checked, and **what the record cannot say**. Commit it on whatever branch is to
-hand; it is a record, not a gate.
+checked, and **what the record cannot say**. Commit it on a feature branch and
+open a PR — never straight to `main`, the record included (Lutan, 2026-10-03;
+`0.15.0`'s record was pushed to `main` and had to be reverted). It is a record,
+not a gate.
 
 ---
 

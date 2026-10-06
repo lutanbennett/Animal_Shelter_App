@@ -2,8 +2,9 @@
 
 Run this **once per production release**, not per feature. Copy it to
 `docs/releases/<yyyy-mm-dd>.md`, fill it in against `lannacare.org` after the
-deploy, and commit it on whatever branch is to hand — it is a record, not a gate,
-and nothing in CI checks it.
+deploy, and commit it on a feature branch and open a PR like any other change —
+no exceptions, the record included (Lutan, 2026-10-03). It is a record, not a
+gate, and nothing in CI checks it.
 
 It deliberately lives outside `docs/test-plans/`, which holds per-feature
 checklists and is what `scripts/check-test-plan.mjs` enforces. A release record
