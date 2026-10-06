@@ -1198,13 +1198,22 @@ A vet's read of the four recurring tables was inside the dropped role list, so i
 | `vet_doctors`, `vet_doctor_clinics` | write `clinics.doctors`; read as `vets` plus `clinics.doctors` | A doctor with a login is still off limits to non-admins. **Closes C7 for staff** |
 | `bulk_appointments` | `visit.book` | The clinic bookings. Yes/No, so Edit includes delete |
 
+**Converted in `0148` (`perm-convert-stock-and-lists`).**
+
+| Table | Activity | Note |
+|---|---|---|
+| `medication` | read `stock.medications` Read or `reference.add_while_recording`; insert the same, with Edit; update and delete `stock.medications` Edit | The lookup cell, not the prescription cell: `medical.prescriptions` is held by the 2IC and Head of Medical, who read names and stock through price-free views and must not read the table. **N1 stays open** (staff read prices through the add-while-recording cell) |
+| `diet_types` | read `stock.diets` Read or `resident.register`; write `stock.diets` Edit | The intake form's diet picker is staff's way in. **N2 stays open** for the same reason |
+| `frequency` | read unchanged (`0136`); insert `reference.add_while_recording` or `reference.types` Edit; update and delete `reference.types` Edit | Management could update and delete a frequency by hand; it cannot now |
+| `procedure_types` | read `medical.procedures`, `reference.types` or `reference.add_while_recording`; insert the add cell or `reference.types` Edit; update and delete `reference.types` Edit | |
+| `blood_test_types`, `immunization_types` | read `medical.blood_tests` / `medical.immunizations` Read or `reference.types` Read; write `reference.types` Edit | The vet's own policies stay (C3, C10) |
+
 **Not converted, with an owner.**
 
 | Table | Owner | Why it waits |
 |---|---|---|
 | `attachments` | the photo split (A3 / A5) | Its owner types span `photos.*`, `maintenance.photos`, `projects.photos` and the two medical file routes, which stay on `assertPhotoWriteAccess` until that split (`2026-10-04-permissions-sweep-rest.md`). There is no single activity to ask |
 | `maintenance_photos`, `project_photos` | the photo split | `maintenance.photos` and `projects.photos`, the same split |
-| `medication`, `diet_types`, `frequency`, `procedure_types`, `blood_test_types`, `immunization_types` | `perm-convert-stock-and-lists` | The lists. The 2IC's price-free views (`stock_medications`, `stock_diet_types`, `0143`) must survive it |
 | `facility_maps`, `fixed_outgoings`, `translations`, `assistant_actions` | `perm-convert-settings` | `facility.map`, `reports.cashflow`, `translations.manage`, `assistant.record` |
 | `maintenance`, `maintenance_assignees`, `project_folders` | **`perm-convert-work`, a new row**: schema, needs only this stream; runs beside the others | `maintenance.jobs` and `projects.folders`. `0141` added the cell policies beside the role-named ones, as `0143` did for stock; dropping the old pair is all that is left for the first two |
 
