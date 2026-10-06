@@ -332,6 +332,8 @@ const manual: Manual = {
             "Adopted residents are in neither On-site nor Off-site, and a zone or enclosure filter leaves them out too. If your search matches adopted residents that a filter is hiding, the line under the heading says so, with a link that shows them. The Adopted chip, beside Show all under Everywhere, lists only adopted residents on purpose.",
             "Tap a resident's name to open their hub.",
             "Tap No microchip to list only residents with no chip number recorded; tap it again to show everyone. It works alongside the search and the other filters. To find one animal by their chip, see Scanning a microchip.",
+            "Tap Download spreadsheet (the arrow beside the buttons above the list) to save the residents you are looking at as a spreadsheet: the same place, zone, enclosure, search, Show all and Adopted choices as the list on screen, nothing more and nothing less. On a computer, tick some residents first and the button becomes Download spreadsheet (3) and saves only those. It is a CSV file, one row per resident, that opens in Excel or Google Sheets and sorts and filters there. It goes to your Downloads folder (on an iPhone, the Files app, under Downloads), and the page says the file name when it starts.",
+            "The spreadsheet has more than the list shows: R-code, name, Thai name, other names, species, breed, sex, age (worded as on the resident's hub) and the estimated birth year so it sorts, size, colour, microchipped (Yes or No, never the number), zone, enclosure, status, place (On-site or Off-site), intake date, ready for adoption, and, if your role can read them, the prescriptions running today, the next vet visit and its clinic, the current diet, and the latest weight with its date. Headings are in English for everyone. A column your role cannot read is left out of the file rather than left blank.",
           ],
           screenshot: {
             src: "/manual/residents-list.png",
@@ -349,7 +351,7 @@ const manual: Manual = {
             },
             {
               kind: "note",
-              text: "A volunteer's list is who and where only: name, ID, enclosure, zone and status. There is no microchip search or No microchip filter, no ticking residents, no new resident and no pencil, and no search by other names.",
+              text: "A volunteer's list is who and where only: name, ID, enclosure, zone and status. Their spreadsheet download holds only those columns (plus species and sex). There is no microchip search or No microchip filter, no ticking residents, no new resident and no pencil, and no search by other names.",
             },
             {
               kind: "note",
