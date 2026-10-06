@@ -26,7 +26,7 @@
 -- holds maintenance.jobs Edit, so the plain `maintenance.jobs` Edit test would hand it to her and to
 -- the 2IC. Dropping management_rw_maintenance and staff_rw_maintenance without a replacement would
 -- take delete from the people who have it. So delete asks maintenance.jobs Edit AND a login that is
--- not on the volunteer floor: it is the floor test, not an activity, and it names no role by name.
+-- not on the volunteer floor (has_shelter_floor()): it is the floor test, not an activity, and it names no role by name.
 -- It changes nobody's answer today (admin has admin_all_maintenance; management and staff are not on
 -- the volunteer floor; the Head of Maintenance and 2IC are). When delete gets an activity, this
 -- policy takes it and the floor test goes.
@@ -71,8 +71,25 @@ $drop$;
 -- ---------------------------------------------------------------------------
 -- 2. maintenance: delete is the one policy 0141 left out
 -- ---------------------------------------------------------------------------
+-- The floor test lives in a function so no policy names a role (check-volunteer-narrowing asserts that none
+-- names the volunteer). It is true for a live login whose floor (user_roles.role) is anything above the
+-- volunteer's: admin, management, staff, vet, and any configured role built on the staff floor.
+create or replace function has_shelter_floor() returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (
+    select 1 from public.user_roles ur
+     where ur.user_id = (select auth.uid())
+       and ur.archived_at is null
+       and ur.role <> 'volunteer'::public.app_role
+  );
+$$;
+comment on function has_shelter_floor() is
+  'Is the caller''s floor above the volunteer''s? A stopgap for deleting a maintenance job until delete has an activity of its own (role-gaps-sweep); 0149.';
+revoke all on function has_shelter_floor() from public, anon;
+grant execute on function has_shelter_floor() to authenticated, service_role;
+
 create policy maintenance_delete_perm on maintenance for delete to authenticated
-  using ((select has_permission('maintenance.jobs')) and (select current_user_role()) <> 'volunteer'::app_role);
+  using ((select has_permission('maintenance.jobs')) and (select has_shelter_floor()));
 
 -- ---------------------------------------------------------------------------
 -- 3. project_folders
