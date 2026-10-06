@@ -32,6 +32,9 @@ Nine runs (role × language), same dev server, same throwaway logins.
 | admin, en / th | 43 / 43 | 26 / 26 |
 | management, en | 35 | 18 |
 | vet, en | 4 | 2 |
+| volunteer, en | 6 | 3 |
+| head of medical, en | 5 | 2 |
+| head of maintenance, en | 6 | 3 |
 
 No page scrolls sideways, and every component action is at least 44 px, before
 and after. Thai produced **the same notes** as English, only with longer labels
