@@ -3556,6 +3556,10 @@ const en = {
         "Your account isn't linked to a clinic yet, so no residents are shown. Ask a shelter admin to set your clinic in Settings → Security.",
       selectedCount: (n: number) => `${n} selected`,
       selectPrompt: "Select residents to act on several at once.",
+      download: "Download spreadsheet",
+      downloadCount: (n: number) => `Download spreadsheet (${n})`,
+      downloadSaved: (filename: string) =>
+        `Downloading ${filename}. It goes to your Downloads folder (on an iPhone, the Files app under Downloads). Open it in Excel or Google Sheets.`,
       logImmunizations: "Log immunizations",
       logImmunizationsCount: (n: number) => `Log immunizations (${n})`,
       bookVetVisit: "Book vet visit",

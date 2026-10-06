@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { PawPrint, Pencil } from "lucide-react";
+import { Download, PawPrint, Pencil } from "lucide-react";
 import { ActionLink } from "@/components/ActionLink";
 import { CopyTagLink } from "@/components/CopyTagLink";
 import { SECTION_ICONS } from "@/components/hub-icons";
@@ -40,16 +40,23 @@ export function ResidentsTable({
   residents,
   tagOrigin,
   limited = false,
+  exportHref,
+  exportFilename,
 }: {
   residents: ResidentRow[];
   /** A volunteer's list (who and where): no selecting, no booking, no new resident, no card link, no pencil. */
   limited?: boolean;
   /** Origin for each row's RFID-card link (src/lib/tags/origin.ts). */
   tagOrigin: string | null;
+  /** The spreadsheet download for the list as filtered: `/residents/export` with the page's own query string. */
+  exportHref: string;
+  /** The name that download will save under, so the page can say where it went. */
+  exportFilename: string;
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [downloading, setDownloading] = useState<string | null>(null);
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -90,6 +97,30 @@ export function ResidentsTable({
       ? `/immunizations/new?residentIds=${[...selected].join(",")}`
       : "/immunizations/new";
 
+  // Ticked rows narrow the file to those residents (still inside the filters); none ticked is the
+  // whole list as shown. The server names the file; this mirrors it (src/lib/residents/export.ts).
+  const downloadHref =
+    selected.size > 0
+      ? `${exportHref}${exportHref.includes("?") ? "&" : "?"}ids=${[...selected].join(",")}`
+      : exportHref;
+  const downloadName =
+    selected.size > 0 ? exportFilename.replace("residents-", "residents-selected-") : exportFilename;
+  const downloadLabel =
+    selected.size > 0 ? t.residents.list.downloadCount(selected.size) : t.residents.list.download;
+  const downloadLink = (
+    <a
+      href={downloadHref}
+      download={downloadName}
+      onClick={() => setDownloading(downloadName)}
+      title={downloadLabel}
+      aria-label={downloadLabel}
+      className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-2 rounded border border-border p-2 text-sm font-medium text-foreground hover:bg-surface-hover md:min-h-0 md:min-w-0 md:px-4 md:py-2"
+    >
+      <Download aria-hidden="true" className="h-5 w-5 shrink-0 md:h-4 md:w-4" />
+      <span className="hidden md:inline">{downloadLabel}</span>
+    </a>
+  );
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
@@ -102,6 +133,7 @@ export function ResidentsTable({
         </p>
         {!limited && (
         <div className="ml-auto flex gap-2">
+          {downloadLink}
           <ActionLink
             href={immunizationHref}
             label={
@@ -128,7 +160,13 @@ export function ResidentsTable({
           />
         </div>
         )}
+        {limited && <div className="ml-auto flex gap-2">{downloadLink}</div>}
       </div>
+      {downloading && (
+        <p role="status" className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground">
+          {t.residents.list.downloadSaved(downloading)}
+        </p>
+      )}
 
       {/* Phones show only the name (the R-code is on the resident's hub, and
           it would push a long bilingual name into wrapping). The multi-select
