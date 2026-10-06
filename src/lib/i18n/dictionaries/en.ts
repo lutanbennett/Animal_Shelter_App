@@ -1356,6 +1356,8 @@ const en = {
           `Remove "${name}" from the public website? It can be shown again from its folder under Projects.`,
         removed: "Removed from the website.",
         notFound: "That project folder no longer exists.",
+        noThaiTitle: "No Thai title — Thai visitors see the English title.",
+        addThaiTitle: "Add Thai title",
       },
       errors: {
         noFile: "No file provided.",
@@ -4522,6 +4524,10 @@ const en = {
       noDate: "No date set",
       location: "Location",
       noLocation: "No location set",
+      thaiTitle: "Thai title",
+      noThaiTitle: "No Thai title yet",
+      thaiTitleHint: "What visitors reading Thai see as this project's title.",
+      thaiFallbackNote: "Thai visitors see the English title.",
       showOnWebsite: "Show on website",
       showOnWebsiteHint:
         "When on, this folder's title, story and photos can appear on the public site.",
@@ -4713,6 +4719,10 @@ const en = {
     showApproved: "Show approved too",
     hideApproved: "Hide approved",
     couldntLoad: "Couldn't load the translations",
+    titlesMissing: (n: number) =>
+      n === 1
+        ? "1 published project has no Thai title, so Thai visitors see its English title. Titles are typed on the folder (Rename), not here:"
+        : `${n} published projects have no Thai title, so Thai visitors see their English titles. Titles are typed on the folder (Rename), not here:`,
     status: {
       pending: "Needs translation",
       draft: "Draft — not yet approved",

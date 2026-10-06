@@ -54,6 +54,11 @@ if (!F.CATEGORY) throw new Error("no root project folder for 'Events' on dev");
 const lit = (id) => `'${id}'::uuid`;
 
 // ---- the cases ----------------------------------------------------------------------------
+// RE-BASELINED 2026-10-06 (director-draft-apply). The Director ticked row 47, "Mark your own recurring jobs done or skipped", for
+// volunteers (recurring.do_own) and Lutan confirmed it, so a volunteer now reads the recurring-job tables and may record a job
+// ASSIGNED TO THEM (record_recurring_job still raises 'Only the people this job is assigned to, or management' for any other).
+// These cases were removed rights under R1; they are kept rights under the draft, so the volunteer must be ALLOWED, not refused.
+const KEPT_BY_DRAFT = new Set(["read recurring_jobs", "read recurring_job_assignees", "read recurring_job_occurrences", "read recurring_job_occurrence_assignees", "fn record_recurring_job"]);
 const READ = (table, where = "true") => ({ key: `read ${table}`, kind: "read", sql: `select 1 from ${table} where ${where}` });
 const CASES = [
   // the resident, and everything about it but who and where
@@ -248,6 +253,11 @@ CASES.forEach((c, i) => {
   const needsRows = c.kind === "read" && Number(baseN.get(i)) === 0;
   if (!needsRows && adm !== true && c.others !== "none") { faults.push(`${c.key}: admin was not allowed (${got.get(`${i}:admin`).state ?? "0 rows"} ${got.get(`${i}:admin`).msg ?? ""}), so the case or its fixture is broken`); return; }
   if (vol === null) { faults.push(`${c.key}: volunteer hit an unexpected error ${v.state} ${v.msg}, a broken case and not a refusal`); return; }
+  if (KEPT_BY_DRAFT.has(c.key)) {
+    if (vol === true) { lines.push(`  ok    ${c.key}: volunteer allowed (recurring.do_own, draft row 47)`); }
+    else failures.push(`${c.key}: the draft gives the volunteer recurring.do_own, so this should be allowed and was refused`);
+    return;
+  }
   if (vol === true) { failures.push(`${c.key}: the VOLUNTEER WAS ALLOWED`); lines.push(`  FAIL  ${c.key}: volunteer allowed`); return; }
   refused++;
   if (c.others === "none") {
@@ -290,6 +300,7 @@ else lines.push("  ok    only has_app_access() (may sign in), has_shelter_floor(
 
 if (verbose) console.log(lines.join("\n") + "\n");
 console.log(`${CASES.length} removed rights, each under the volunteer's own JWT: ${refused} refused.`);
+console.log(`${KEPT_BY_DRAFT.size} of the cases above are kept rights under the draft (volunteer allowed on purpose).`);
 console.log(`${controls} of them also checked that management or staff still has the right (${inconclusive.length} tables had no rows on dev to check that against${inconclusive.length ? `: ${inconclusive.join(", ")}` : ""}).`);
 for (const f of faults) console.log(`  HARNESS FAULT ${f}`);
 for (const f of failures) console.log(`  FAIL ${f}`);

@@ -43,7 +43,7 @@ const COUNTERS = who("sic", "co", ...OLD); // stock.count
 const PURCHASERS = who("sic", "po", "admin", "management"); // stock.purchasing (staff does not hold it)
 const MANAGERS = who("admin", "management");
 const ONLY_SIC = "sic-zero"; // only she is asserted, and she must reach nothing
-const SIC_ONE = "sic-one";
+const SIC_ONE = "sic-one"; // only she is asserted, and she must reach it (her cell comes from the Director's draft)
 
 // [name, sql, expectation]
 const probes = [
@@ -75,8 +75,9 @@ const probes = [
   // her limits: nothing outside the whiteboard
   ["residents", `select 1 from residents where id = '${R}'`, ONLY_SIC],
   ["resident_list_view", `select 1 from resident_list_view where resident_id = '${R}'`, ONLY_SIC],
-  ["weight", `select 1 from weight where resident_id = '${R}'`, ONLY_SIC],
-  ["prescriptions", `select 1 from prescriptions where resident_id = '${R}'`, ONLY_SIC],
+  // RE-BASELINED 2026-10-06 (director-draft-apply): the draft ticks row 17 (weights) and 15 (prescribe) for the 2IC
+  ["weight", `select 1 from weight where resident_id = '${R}'`, SIC_ONE],
+  ["prescriptions", `select 1 from prescriptions where resident_id = '${R}'`, SIC_ONE],
   ["attachments", `select 1 from attachments limit 1`, ONLY_SIC],
   ["assistant_actions", `select 1 from assistant_actions limit 1`, ONLY_SIC],
   ["insert placement", `insert into placement_history (resident_id, placement_type, start_date) values ('${R}', 'SendToHospital', now() + interval '1 minute')`, ONLY_SIC],
@@ -202,6 +203,11 @@ for (const [name, , exp] of probes) {
     if (n <= 0) pass(`${name} as sic: refused or empty`); else fail(`${name}: the 2IC reaches ${n} row(s)`);
     continue;
   }
+  if (exp === SIC_ONE) {
+    const n = get("sic", name);
+    if (n >= 1) pass(`${name} as sic: reached (the draft gives it)`); else fail(`${name}: the 2IC should reach it by the draft and got ${n}`);
+    continue;
+  }
   for (const p of P) {
     const n = get(p, name), want = exp[p];
     const label = `${name} as ${p}: ${want ? "allowed" : "refused"}`;
@@ -220,8 +226,14 @@ if (get("role", "row") === 0) pass("role row: custom, borrows volunteer, opens t
 if (get("role", "diet-forecast-has-no-cost") === 0) pass("stock_diet_forecast() returns no cost column"); else fail("stock_diet_forecast() returns a cost column");
 const have = new Map(rows.filter((r) => r.who === "role" && r.tbl.startsWith("cell:")).map((r) => r.tbl.split(":").slice(1)).map(([a, l]) => [a, Number(l)]));
 const want = new Map([...bundleOfRole("second_in_command")].map(([a, l]) => [a, l === "edit" ? 2 : 1]));
+// RE-BASELINED 2026-10-06 (director-draft-apply): the cells beyond her jobs are the Director's ticks, draft 2
+const { cellsFor } = await import(pathToFileURL(join(process.cwd(), "src/lib/roles-draft/resolve.ts")).href);
+const { ACTIVITIES } = await import(pathToFileURL(join(process.cwd(), "src/lib/permissions/catalogue.ts")).href);
+const { readFileSync } = await import("node:fs");
+const DRAFT = JSON.parse(readFileSync(join(process.cwd(), "src/lib/roles-draft/draft-2.json"), "utf8"));
+for (const c of cellsFor(DRAFT, "second_in_command", Object.fromEntries(ACTIVITIES.map((a) => [a.key, a.kind])))) want.set(c.activity, Math.max(want.get(c.activity) ?? 0, c.level));
 const same = have.size === want.size && [...want].every(([a, l]) => have.get(a) === l);
-if (same) pass(`bundle: role_permissions = the union of its jobs (${[...want.keys()].join(", ")})`);
+if (same) pass(`bundle: role_permissions = the union of its jobs and the draft's cells (${[...want.keys()].join(", ")})`);
 else fail(`bundle: role_permissions ${JSON.stringify([...have])} differ from jobs.ts ${JSON.stringify([...want])}`);
 
 console.log(`\n${ok} checks held, ${fails} failed.`);

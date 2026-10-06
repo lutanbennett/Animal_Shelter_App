@@ -982,8 +982,9 @@ const manual: Manual = {
           steps: [
             "Tap New folder, give it a name (this is also its Drive folder name) and, optionally, a Thai name.",
             "Use Rename, Move or Delete on a folder's page. Only an empty folder can be deleted; the twelve categories can't be changed.",
-            "Under About this project tap Edit details to write the story, set the date and location.",
+            "Under About this project tap Edit details to write the story, set the date and location, and type the Thai title. The Thai title is also under Rename and in the New folder form.",
             "Turn on Show on website to publish the folder's title, story and photos on the public Our work page. Turn it off — or use Settings → Website — to take it down.",
+            "A published folder with no Thai title is still shown; visitors reading Thai simply see the English title. The folder says so under About this project, Settings → Website lists it with an Add Thai title link, and Management → Translations lists the published projects still missing one at the top.",
           ],
           screenshot: {
             src: "/manual/projects.png",

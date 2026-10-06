@@ -32,10 +32,6 @@ export const OWNERS = {
   attachments: "photo split (A3 / A5)",
   maintenance_photos: "photo split (A3 / A5)",
   project_photos: "photo split (A3 / A5)",
-  facility_maps: "perm-convert-settings",
-  fixed_outgoings: "perm-convert-settings",
-  translations: "perm-convert-settings",
-  assistant_actions: "perm-convert-settings",
 };
 
 const query = `

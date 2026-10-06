@@ -8,11 +8,11 @@ import { ACTIVITIES, type ActivityKey } from "@/lib/permissions/catalogue";
 import { loadRolePermissions } from "@/lib/home/roles";
 import { homeTilesFor } from "@/lib/home/tiles";
 import { cellsFor, type Draft } from "@/lib/roles-draft/resolve";
-import draftFile from "@/lib/roles-draft/draft-1.json";
+import draftFile from "@/lib/roles-draft/draft-2.json";
 import { getT } from "@/lib/i18n/get-t";
 
 /**
- * Settings → The Director's first draft, role by role. Admin only (the Director's own look at what
+ * Settings → The Director's draft (now draft 2), role by role. Admin only (the Director's own look at what
  * she asked for), and deliberately English-only: it is a review aid for one reader that goes away
  * when the draft is signed, not a page the shelter's people use, so its words are not in the
  * dictionaries. docs/decisions/2026-10-05-director-draft-roles.md says why.
@@ -63,9 +63,9 @@ export default async function RoleDraftPage() {
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">The first draft, role by role</h1>
+        <h1 className="text-2xl font-semibold text-foreground">The draft, role by role</h1>
         <p className="text-sm text-muted [overflow-wrap:anywhere]">
-          Your ticks from the sheet, shown as what each person can and cannot do. This is the test site only: nothing here is live for the shelter.
+          Your ticks from the sheet with the answers you gave, shown as what each person can and cannot do. This is the test site only: nothing here is live for the shelter.
         </p>
       </div>
 
@@ -94,6 +94,7 @@ export default async function RoleDraftPage() {
         const can_ = draft.rows.filter((row) => holds(r.perms, row));
         const cannot = draft.rows.filter((row) => row.keys.length > 0 && !holds(r.perms, row));
         const marks = draft.unclear.filter((u) => u.role === r.key);
+        const added = (draft.added ?? []).filter((a) => a.role === r.key);
         return (
           <section key={r.key} id={r.key} className="flex min-w-0 scroll-mt-4 flex-col gap-4 rounded-lg border border-border bg-surface p-4">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -133,13 +134,31 @@ export default async function RoleDraftPage() {
 
             {marks.length > 0 && (
               <div>
-                <h3 className="font-semibold text-foreground">Marked, but not a tick (loaded as no)</h3>
+                <h3 className="font-semibold text-foreground">Marked, but not a tick (answered)</h3>
                 <ul className="mt-1 flex flex-col gap-1 text-sm text-foreground">
                   {marks.map((m) => (
                     <li key={m.row} className="[overflow-wrap:anywhere]">
-                      Row {m.row}, {draft.rows.find((x) => x.row === m.row)?.label}: {m.mark}.
+                      Row {m.row}, {draft.rows.find((x) => x.row === m.row)?.label}: {m.mark}. Answered {m.answer ?? "not yet"}, so loaded as {m.loadedAs}.
                     </li>
                   ))}
+                </ul>
+              </div>
+            )}
+
+            {added.length > 0 && (
+              <div className="rounded-md border border-border p-3">
+                <h3 className="font-semibold text-foreground">Added, not ticked: confirm?</h3>
+                <p className="text-sm text-muted">Your sheet did not tick these. They were added because a job built for this role needs them.</p>
+                <ul className="mt-1 flex flex-col gap-2 text-sm text-foreground">
+                  {added.map((a) => {
+                    const row = draft.rows.find((x) => x.row === a.rowNotTicked);
+                    return (
+                      <li key={a.activity} className="[overflow-wrap:anywhere]">
+                        <span className="font-medium">{a.activity}, {a.level === "read" ? "view only" : a.level}</span>
+                        {row ? ` (row ${row.row}, ${row.label}, was not ticked)` : ""}: {a.because}
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             )}
