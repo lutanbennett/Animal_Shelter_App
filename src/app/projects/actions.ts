@@ -133,6 +133,7 @@ export async function updateProjectFolderInfo(
     const { data, error } = await supabase
       .from("project_folders")
       .update({
+        name_th: str(formData, "nameTh"),
         summary: str(formData, "summary"),
         project_date: projectDate,
         location: str(formData, "location"),

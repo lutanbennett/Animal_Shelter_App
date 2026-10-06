@@ -157,8 +157,10 @@ export function FolderView({
                 <Folder aria-hidden="true" className="h-8 w-8 shrink-0 text-primary" />
                 <div className="flex min-w-0 flex-col">
                   <h1 className="truncate text-2xl font-semibold text-foreground">{displayName}</h1>
-                  {!isCategory && locale === "th" && folder.name_th && (
-                    <span className="truncate text-sm text-muted">{folder.name}</span>
+                  {!isCategory && folder.name_th && (
+                    <span className="truncate text-sm text-muted">
+                      {locale === "th" ? folder.name : folder.name_th}
+                    </span>
                   )}
                 </div>
               </div>
@@ -253,6 +255,11 @@ export function FolderView({
                   }}
                 >
                   <label className="flex flex-col gap-1 text-xs font-medium text-muted">
+                    {info.thaiTitle}
+                    <input name="nameTh" defaultValue={folder.name_th ?? ""} maxLength={120} className={inputClass} />
+                    <span className="font-normal">{info.thaiTitleHint}</span>
+                  </label>
+                  <label className="flex flex-col gap-1 text-xs font-medium text-muted">
                     {info.summary}
                     <textarea name="summary" defaultValue={folder.summary ?? ""} rows={5} className={inputClass} />
                     <span className="font-normal">{info.summaryHint}</span>
@@ -283,6 +290,17 @@ export function FolderView({
                 </form>
               ) : (
                 <>
+                  <div className="flex flex-col gap-0.5 text-sm">
+                    <span className="text-xs font-medium text-muted">{info.thaiTitle}</span>
+                    {folder.name_th ? (
+                      <span className="text-foreground">{folder.name_th}</span>
+                    ) : (
+                      <span className="text-muted">{info.noThaiTitle}</span>
+                    )}
+                    {!folder.name_th && folder.is_public && (
+                      <span className="text-xs text-primary">{info.thaiFallbackNote}</span>
+                    )}
+                  </div>
                   {summary ? (
                     <p className="whitespace-pre-line text-sm text-foreground">{summary}</p>
                   ) : (
