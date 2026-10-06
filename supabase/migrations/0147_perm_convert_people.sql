@@ -7,8 +7,9 @@
 --
 --   contacts            contacts.directory (read / edit), insert: contacts.add, and sees_all_contacts()
 --   shelter_friends     friends.manage; the read also stays open to whoever reads contacts (see below)
---   vets                read clinics.list or visit.book; write clinics.list (Edit)
+--   vets                read clinics.list, clinics.doctors or visit.book; write clinics.list (Edit)
 --   vet_doctors         read clinics.list, clinics.doctors or visit.book; write clinics.doctors
+--                       (insert also visit.book: the booking trigger adds a typed doctor)
 --   vet_doctor_clinics  as vet_doctors, and a doctor with a login is still off limits to non-admins
 --   bulk_appointments   visit.book (the clinic bookings; Yes/No, so one cell answers all four commands)
 --
@@ -41,7 +42,8 @@
 --
 -- CLOSINGS (a hand-built request only; no button changes):
 --   C6  staff could update and delete any contact; they hold contacts.directory Read, so they now cannot.
---   C7  (staff half) staff could write vet_doctors and vet_doctor_clinics; the cell is Management's.
+--   C7  (staff half, update / delete / merge) staff could write vet_doctors and vet_doctor_clinics; the cell
+--       is Management's. INSERT stays open to staff through visit.book (see above), so C7 stays known for it.
 --
 -- Written to be safely re-runnable. To undo: drop the *_perm policies and sees_all_contacts(), then
 -- re-create the management_* / staff_* policies from 0001, 0102 and 0076.
@@ -93,6 +95,71 @@ end
 $drop$;
 
 -- ---------------------------------------------------------------------------
+-- 2b. merge_vet_doctors(), 0125's body with one check added (see the comment inside).
+-- ---------------------------------------------------------------------------
+create or replace function merge_vet_doctors(p_from uuid, p_into uuid)
+returns vet_doctors
+language plpgsql
+security invoker
+as $$
+declare
+  v_from vet_doctors;
+  v_into vet_doctors;
+  v_bypass text := coalesce(current_setting('app.deceased_lock_bypass', true), '');
+begin
+  if current_user_role() is null
+     or current_user_role() not in ('admin', 'management', 'staff', 'vet') then
+    raise exception 'Not allowed to merge doctors.' using errcode = 'insufficient_privilege';
+  end if;
+
+  select * into v_from from vet_doctors where id = p_from;
+  select * into v_into from vet_doctors where id = p_into;
+  if v_from.id is null or v_into.id is null then
+    raise exception 'Doctor not found.' using errcode = 'no_data_found';
+  end if;
+  if v_from.id = v_into.id then
+    return v_into;
+  end if;
+  if v_from.user_id is not null and v_into.user_id is not null then
+    raise exception 'Both doctors have a login; they cannot be merged.' using errcode = 'check_violation';
+  end if;
+  if (v_from.user_id is not null or v_into.user_id is not null)
+     and current_user_role() <> 'admin' then
+    raise exception 'Only an admin can merge a doctor who has a login.' using errcode = 'insufficient_privilege';
+  end if;
+
+  -- Two rows for one person usually share a name, and p_into's link at a
+  -- clinic p_from also works at would then clash with p_from's own on
+  -- (vet_id, name_key). p_from's links go in a placeholder key first; they are
+  -- deleted with p_from below.
+  update vet_doctor_clinics set name_key = 'merging ' || p_from where doctor_id = p_from;
+
+  insert into vet_doctor_clinics (vet_id, doctor_id, active)
+    select c.vet_id, p_into, c.active from vet_doctor_clinics c where c.doctor_id = p_from
+    on conflict (vet_id, doctor_id) do nothing;
+
+  perform set_config('app.deceased_lock_bypass', 'on', true);
+  update vet_appointments set doctor_id = p_into where doctor_id = p_from;
+  perform set_config('app.deceased_lock_bypass', v_bypass, true);
+
+  if v_from.user_id is not null then
+    update vet_doctors set user_id = null where id = p_from;
+    update vet_doctors set user_id = v_from.user_id where id = p_into;
+  end if;
+
+  delete from vet_doctors where id = p_from;
+  -- 0147: a delete the policy filters out is not an error, so without this a caller who may book a visit but not
+  -- remove a doctor (visit.book now lets them add one) would leave a half-merge: links copied, visits repointed,
+  -- p_from still listed. Raising rolls the whole merge back.
+  if not found then
+    raise exception 'Not allowed to merge doctors.' using errcode = 'insufficient_privilege';
+  end if;
+  select * into v_into from vet_doctors where id = p_into;
+  return v_into;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
 -- 3. contacts
 -- ---------------------------------------------------------------------------
 create policy contacts_select_perm on contacts for select to authenticated
@@ -125,7 +192,11 @@ create policy shelter_friends_delete_perm on shelter_friends for delete to authe
 -- 5. vets (the clinics)
 -- ---------------------------------------------------------------------------
 create policy vets_select_perm on vets for select to authenticated
-  using ((select has_permission('clinics.list', 'read')) or (select has_permission('visit.book')));
+  using (
+    (select has_permission('clinics.list', 'read'))
+    or (select has_permission('clinics.doctors'))
+    or (select has_permission('visit.book'))
+  );
 create policy vets_insert_perm on vets for insert to authenticated
   with check ((select has_permission('clinics.list')));
 create policy vets_update_perm on vets for update to authenticated
@@ -143,8 +214,11 @@ create policy vet_doctors_select_perm on vet_doctors for select to authenticated
     or (select has_permission('clinics.doctors'))
     or (select has_permission('visit.book'))
   );
+-- INSERT also answers visit.book: vet_appointments_link_doctor() (security invoker) finds or ADDS the
+-- clinic's doctor when a booking or an edit carries a typed name, so whoever may book a visit must be
+-- able to add the doctor it names, as staff could. Update, delete and merge stay clinics.doctors.
 create policy vet_doctors_insert_perm on vet_doctors for insert to authenticated
-  with check ((select has_permission('clinics.doctors')));
+  with check ((select has_permission('clinics.doctors')) or (select has_permission('visit.book')));
 create policy vet_doctors_update_perm on vet_doctors for update to authenticated
   using ((select has_permission('clinics.doctors')))
   with check ((select has_permission('clinics.doctors')));
@@ -162,7 +236,7 @@ create policy vet_doctor_clinics_select_perm on vet_doctor_clinics for select to
   );
 create policy vet_doctor_clinics_insert_perm on vet_doctor_clinics for insert to authenticated
   with check (
-    (select has_permission('clinics.doctors'))
+    ((select has_permission('clinics.doctors')) or (select has_permission('visit.book')))
     and not exists (select 1 from vet_doctors d where d.id = vet_doctor_clinics.doctor_id and d.user_id is not null)
   );
 create policy vet_doctor_clinics_update_perm on vet_doctor_clinics for update to authenticated

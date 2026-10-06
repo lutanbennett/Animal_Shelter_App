@@ -285,8 +285,8 @@ else lines.push("  ok    resident_who_and_where has exactly its fixed columns");
 // the structural sweeps
 if (result.policies !== "volunteer_read_enclosures,volunteer_read_zones") failures.push(`policies that still name the volunteer: ${result.policies}; expected only volunteer_read_enclosures and volunteer_read_zones`);
 else lines.push("  ok    only volunteer_read_enclosures and volunteer_read_zones still name the volunteer");
-if (result.functions !== "has_app_access,reassign_recurring_job,sees_all_residents") failures.push(`functions that still say 'volunteer': ${result.functions}; expected only has_app_access (may sign in), reassign_recurring_job (who a date may be handed to) and sees_all_residents (0144: excludes the volunteer floor from the whole record, grants nothing). None is a right`);
-else lines.push("  ok    only has_app_access() (may sign in), reassign_recurring_job() (who a date may be handed to) and sees_all_residents() (0144: a refusal, not a right) still say 'volunteer'");
+if (result.functions !== "has_app_access,reassign_recurring_job,sees_all_contacts,sees_all_residents") failures.push(`functions that still say 'volunteer': ${result.functions}; expected only has_app_access (may sign in), reassign_recurring_job (who a date may be handed to) sees_all_residents (0144) and sees_all_contacts (0147): each excludes the volunteer floor from the whole record, grants nothing. None is a right`);
+else lines.push("  ok    only has_app_access() (may sign in), reassign_recurring_job() (who a date may be handed to) sees_all_residents() (0144) and sees_all_contacts() (0147), both refusals, not rights, still say 'volunteer'");
 
 if (verbose) console.log(lines.join("\n") + "\n");
 console.log(`${CASES.length} removed rights, each under the volunteer's own JWT: ${refused} refused.`);

@@ -108,7 +108,7 @@ export const PROBES = [
   // --- Clinics, contacts, supporters
   { activity: "clinics.list", level: "edit", sql: `update vets set notes = 'probe' where id = $CLINIC` },
   { activity: "clinics.list", level: "read", sql: `select 1 from vets where id = $CLINIC`, known: [{ id: "C10", roles: ["vet"] }] },
-  { activity: "clinics.doctors", level: "edit", sql: `insert into vet_doctors (name, vet_id) values ('Probe doctor', $CLINIC)`, known: [{ id: "C7", roles: ["vet"] }] },
+  { activity: "clinics.doctors", level: "edit", sql: `insert into vet_doctors (name, vet_id) values ('Probe doctor', $CLINIC)`, known: [{ id: "C7", roles: ["staff", "vet"] }] },
   { activity: "clinics.doctors", level: "edit", sql: `update vet_doctors set active = active where id = $DOCTOR`, known: [{ id: "C7", roles: ["vet"] }] },
   { activity: "clinics.doctors", level: "edit", fn: true, sql: `select merge_vet_doctors($DOCTOR, $DOCTOR2)`, known: [{ id: "C7", roles: ["vet"] }] },
   { activity: "contacts.directory", level: "edit", sql: `update contacts set notes = 'probe' where id = $CONTACT` },
