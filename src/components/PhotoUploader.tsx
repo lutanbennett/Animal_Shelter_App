@@ -218,7 +218,10 @@ export function PhotoUploader({
             ))}
           </select>
         </div>
-        <p className="pb-2 text-xs text-muted">{t.photos.uploader.folderHint}</p>
+        <p className="pb-2 text-xs text-muted">
+          {t.photos.uploader.folderHint}{" "}
+          {category === "" ? null : category === "Medical" ? t.photos.uploader.privateNote : t.photos.uploader.publicNote}
+        </p>
         </>
         )}
       </div>

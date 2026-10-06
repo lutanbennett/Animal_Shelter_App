@@ -28,11 +28,8 @@ const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
 // table -> the stream that converts it. Remove an entry in the PR that converts the table.
-export const OWNERS = {
-  attachments: "photo split (A3 / A5)",
-  maintenance_photos: "photo split (A3 / A5)",
-  project_photos: "photo split (A3 / A5)",
-};
+// Empty since 0152 (the photo split): no policy names a role. A new one fails until someone owns it here and in §15.
+export const OWNERS = {};
 
 const query = `
 select tablename, policyname, cmd

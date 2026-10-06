@@ -110,7 +110,12 @@ export async function movePhotoToFolder(
 
     // Drive is not RLS-protected, so this runs before any Drive call.
     const perms = await loadPermissions();
-    if (!can(perms, "photos.resident_add")) return { ok: false, error: t.photos.errors.notAuthorized };
+    // Refiling is managing a photo (A3, 0152), not adding one. The one exception is filing INTO
+    // Medical, which takes a photo off the website: a role that only adds (a vet) may do that.
+    const mayRefile =
+      can(perms, "photos.resident_manage") ||
+      (can(perms, "photos.resident_add") && targetCategory === "Medical");
+    if (!mayRefile) return { ok: false, error: t.photos.errors.notAuthorized };
 
     if (!PHOTO_CATEGORIES.includes(targetCategory)) {
       return { ok: false, error: t.photos.errors.notMovable };

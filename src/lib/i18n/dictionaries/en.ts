@@ -4611,6 +4611,8 @@ const en = {
       selectFolder: "Select a folder…",
       goesIn: (folder: string) => `Photos you add go in the ${folder} folder.`,
       folderHint: "Applies to every photo in this batch.",
+      publicNote: "Photos in this folder can appear on the public website, on this resident's Adopt page.",
+      privateNote: "Photos in the Medical folder never appear on the website.",
       dropHere: "Drop photos here or tap to upload",
       selectFolderFirst: "Select a folder above to enable uploads",
       multipleHint:
