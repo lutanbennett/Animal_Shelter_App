@@ -1208,14 +1208,28 @@ A vet's read of the four recurring tables was inside the dropped role list, so i
 | `procedure_types` | read `medical.procedures`, `reference.types` or `reference.add_while_recording`; insert the add cell or `reference.types` Edit; update and delete `reference.types` Edit | |
 | `blood_test_types`, `immunization_types` | read `medical.blood_tests` / `medical.immunizations` Read or `reference.types` Read; write `reference.types` Edit | The vet's own policies stay (C3, C10) |
 
+**Converted in `0149` (`perm-convert-work`).**
+
+| Table | Activity | Note |
+|---|---|---|
+| `maintenance`, `maintenance_assignees` | `maintenance.jobs` | `0141` had written the cell policies beside the role-named ones; delete asks Edit **and** `has_shelter_floor()`, so the Head of Maintenance and the 2IC still cannot delete a job |
+| `project_folders` | `projects.folders` | `projects.publish` is a column on the same table and is not asked |
+
+**Converted in `0150` (`perm-convert-settings`), the last conversion bar the photo split.**
+
+| Table | Activity | Note |
+|---|---|---|
+| `assistant_actions` | insert and read `assistant.record`, on the caller's own row | **Management no longer reads other people's rows** (nothing reads them; admin still does): a known tightening, owned by the assistant-retention decision (DB-11) |
+| `translations` | write `translations.manage`; read that, or `sees_all_translations()` | A new scope function (`sees_all_residents()` and the role opens the app) that keeps staff reading every translation until a "see translations" cell exists. `sees_all_residents()` alone let `public_viewer` read all 76 rows: `check-app-access-gate` caught it |
+| `facility_maps` | write `facility.enclosures` Edit; read stays open | **Not `facility.map`**, which this table first named: that cell is "see the map" and staff and volunteers hold it. **Management loses the write** (it holds `facility.enclosures` Read, and the page never let it): a known tightening |
+| `fixed_outgoings` | `reports.cashflow` | Read for read, Edit for write; only management holds it |
+
 **Not converted, with an owner.**
 
 | Table | Owner | Why it waits |
 |---|---|---|
 | `attachments` | the photo split (A3 / A5) | Its owner types span `photos.*`, `maintenance.photos`, `projects.photos` and the two medical file routes, which stay on `assertPhotoWriteAccess` until that split (`2026-10-04-permissions-sweep-rest.md`). There is no single activity to ask |
 | `maintenance_photos`, `project_photos` | the photo split | `maintenance.photos` and `projects.photos`, the same split |
-| `facility_maps`, `fixed_outgoings`, `translations`, `assistant_actions` | `perm-convert-settings` | `facility.map`, `reports.cashflow`, `translations.manage`, `assistant.record` |
-| `maintenance`, `maintenance_assignees`, `project_folders` | **`perm-convert-work`, a new row**: schema, needs only this stream; runs beside the others | `maintenance.jobs` and `projects.folders`. `0141` added the cell policies beside the role-named ones, as `0143` did for stock; dropping the old pair is all that is left for the first two |
 
 **The end state is a query.** `node scripts/check-policy-role-names.mjs --final` must report no
 row. The stream that empties the last entry from `OWNERS` in that script runs it, and
