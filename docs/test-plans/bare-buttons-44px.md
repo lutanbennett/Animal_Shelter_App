@@ -160,8 +160,8 @@ Manual verification by: pending: Lutan to look at a converted form on a phone an
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — deferred: Claude, when the PR is opened
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Checklist pasted into the PR — n/a: not yet; Claude pastes it into PR #405 as a comment once the plan is final
+- [ ] Handed to the production release manager — n/a: not yet; the release manager reads it before the next deploy
 
 Result: pass
 

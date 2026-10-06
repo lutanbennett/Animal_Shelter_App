@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "The Save, Filter, Send, Move and Book buttons on resident, medical and account forms are now big enough to tap reliably on a phone, in English and Thai.",
   "Choosing a folder when you add resident photos now says whether the photo will appear on the public website (every folder except Medical) or never will (Medical). Only people allowed to publish photos can file one outside the Medical folder, and that is checked in the database as well as on the page.",
   "When a resident who has died has a profile photo that could not be put in their summary PDF, the page now says so as soon as you choose or save it, instead of leaving a PDF with no picture and no word. Phone (HEIC) photos are handled by Drive.",
 ];
