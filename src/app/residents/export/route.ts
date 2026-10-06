@@ -1,4 +1,6 @@
-import { requirePermission } from "@/lib/permissions/require";
+import { createClient } from "@/lib/supabase/server";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { asListRow, readsWhoAndWhereOnly, type WhoAndWhere } from "@/lib/residents/who-and-where";
 import { listQuery, resolveListView } from "@/lib/residents/list-view";
 import {
@@ -18,13 +20,25 @@ import type { ResidentRow } from "../ResidentsTable";
  * its own read, so the file holds what the person could already see on screen.
  */
 export async function GET(request: Request) {
-  const { supabase, perms } = await requirePermission("resident.record", "read");
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return new Response("Sign in to download the residents list.", { status: 401 });
+
+  // The list page itself has no guard beyond the database's own: a role that can open the list
+  // reads it, and a volunteer reads who-and-where through its own view whether or not the matrix
+  // holds a resident.record cell for them. The file is given to exactly that set.
+  const perms = await loadPermissions();
+  const limited = await readsWhoAndWhereOnly();
+  if (!limited && !can(perms, "resident.record", "read")) {
+    return new Response("Your role cannot read the residents list.", { status: 403 });
+  }
 
   const url = new URL(request.url);
   const params: Record<string, string> = {};
   for (const [key, value] of url.searchParams) params[key] = value;
 
-  const limited = await readsWhoAndWhereOnly();
   const view = await resolveListView(supabase, params, limited);
   const ticked = parseTickedIds(params.ids);
 
