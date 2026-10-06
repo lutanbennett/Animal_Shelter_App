@@ -1,5 +1,7 @@
 "use client";
 
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 import { startTransition, useActionState, useState, type FormEvent } from "react";
 import { changeOwnPassword, type ChangePasswordState } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -106,13 +108,10 @@ export function ChangePasswordForm({
       {state && "success" in state && <p className="text-sm text-success">{p.changed}</p>}
 
       <div>
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-        >
+        <ActionButton type="submit" variant="primary" icon={ACTION_ICONS.save}
+          disabled={pending}>
           {pending ? t.common.saving : p.submit}
-        </button>
+        </ActionButton>
       </div>
     </form>
   );

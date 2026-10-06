@@ -1,5 +1,7 @@
 "use client";
 
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createProcedure } from "./actions";
@@ -293,13 +295,10 @@ export function ProcedureForm({
       {error && <p className="text-sm text-danger">{error}</p>}
 
       <div>
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-        >
+        <ActionButton type="submit" variant="primary" icon={ACTION_ICONS.save}
+          disabled={pending}>
           {pending ? t.procedures.saving : t.procedures.saveButton}
-        </button>
+        </ActionButton>
       </div>
     </form>
   );

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ActionButton } from "@/components/ActionButton";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
 const inputClass =
@@ -40,12 +42,9 @@ export function ForecastWindowPicker({
         </label>
         <input id="forecast-to" name="to" type="date" required defaultValue={to} className={inputClass} />
       </div>
-      <button
-        type="submit"
-        className="rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
-      >
+      <ActionButton type="submit" icon={ACTION_ICONS.filter}>
         {w.show}
-      </button>
+      </ActionButton>
       {(from || to) && (
         <Link href={pathname} className="text-sm text-muted hover:text-foreground">
           {w.clear}

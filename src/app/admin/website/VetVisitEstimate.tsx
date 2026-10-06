@@ -1,5 +1,7 @@
 "use client";
 
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 import { useKeptForm } from "@/lib/use-kept-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { updateVetVisitEstimate } from "./actions";
@@ -50,13 +52,10 @@ export function VetVisitEstimate({ estimate }: { estimate: number | null }) {
             className="w-40 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
           />
         </label>
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-        >
+        <ActionButton type="submit" variant="primary" icon={ACTION_ICONS.save}
+          disabled={pending}>
           {pending ? t.common.saving : t.common.saveChanges}
-        </button>
+        </ActionButton>
       </div>
 
       <p className="text-xs text-muted">{v.hint}</p>

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy } from "lucide-react";
+import { Check } from "lucide-react";
 import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 import { RowActionButton } from "@/components/RowAction";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
@@ -69,19 +70,13 @@ export function CopyTagLink({
           onFocus={(event) => event.currentTarget.select()}
           className="min-w-0 flex-1 rounded border border-border bg-background px-3 py-1.5 font-mono text-xs text-foreground"
         />
-        <button
-          type="button"
+        <ActionButton
           onClick={copy}
           aria-label={copied ? t.tagLinks.copiedFor(name) : t.tagLinks.copyFor(name)}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover"
+          icon={copied ? Check : ACTION_ICONS.copy}
         >
-          {copied ? (
-            <Check aria-hidden="true" className="h-4 w-4 text-success" />
-          ) : (
-            <Copy aria-hidden="true" className="h-4 w-4" />
-          )}
           {copied ? t.tagLinks.copied : t.tagLinks.copy}
-        </button>
+        </ActionButton>
       </div>
     </div>
   );

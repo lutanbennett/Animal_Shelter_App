@@ -1,5 +1,7 @@
 "use client";
 
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 import { useRef, useState, useTransition, type FormEvent, type KeyboardEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -552,13 +554,10 @@ export function MaintenanceForm({
         </>
       ) : (
         <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-          >
+          <ActionButton type="submit" variant="primary" icon={ACTION_ICONS.save}
+            disabled={pending}>
             {pending ? fm.saving : t.common.saveChanges}
-          </button>
+          </ActionButton>
           <Link href={cancelHref} className="inline-flex min-h-11 items-center text-sm text-muted hover:text-foreground md:min-h-0">
             {t.common.cancel}
           </Link>

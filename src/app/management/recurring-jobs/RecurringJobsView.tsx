@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionButton } from "@/components/ActionButton";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { useState, useTransition } from "react";
 import Link from "next/link";
@@ -465,13 +466,10 @@ function HandOver({ people, from, today }: { people: PersonOption[]; from: TeamM
           </div>
         </fieldset>
         <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="submit"
-            disabled={isPending || !fromId || toIds.size === 0}
-            className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-          >
+          <ActionButton type="submit" variant="primary" icon={ACTION_ICONS.save}
+            disabled={isPending || !fromId || toIds.size === 0}>
             {h.submit}
-          </button>
+          </ActionButton>
           {result?.ok && <span className="text-success">{result.ok}</span>}
           {result?.error && <span className="text-danger">{result.error}</span>}
         </div>

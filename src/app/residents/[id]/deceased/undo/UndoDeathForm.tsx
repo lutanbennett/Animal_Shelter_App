@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionButton } from "@/components/ActionButton";
 import { useRef, useState } from "react";
 import { useKeptForm } from "@/lib/use-kept-form";
 import Link from "next/link";
@@ -7,7 +8,7 @@ import { undoDeath } from "../actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate } from "@/lib/format";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { PLACEMENT_ICONS } from "@/components/hub-icons";
+import { ACTION_ICONS, PLACEMENT_ICONS } from "@/components/hub-icons";
 
 const inputClass =
   "rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
@@ -111,13 +112,10 @@ export function UndoDeathForm({
         {state?.error && <p className="text-sm text-danger">{state.error}</p>}
 
         <div className="flex items-center gap-3">
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-          >
+          <ActionButton type="submit" variant="primary" icon={ACTION_ICONS.save}
+            disabled={pending}>
             {pending ? u.undoing : u.undoButton}
-          </button>
+          </ActionButton>
           <Link
             href={`/residents/${residentId}`}
             className="rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
