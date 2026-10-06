@@ -64,6 +64,7 @@ const ALL_ROLES = {
   vet: { legacy: "vet" },
   volunteer: { legacy: "volunteer" },
   head_of_medical: { legacy: "volunteer", configured: "head_of_medical" },
+  head_of_maintenance: { legacy: "volunteer", configured: "head_of_maintenance" },
 };
 const roleNames = opt("roles") ?? Object.keys(ALL_ROLES);
 const locales = opt("locales") ?? ["en", "th"];
