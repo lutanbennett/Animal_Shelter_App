@@ -108,6 +108,34 @@ eq("C Management without recurring.manage loses Recurring jobs only", hrefsOf(mg
 eq("C Management without resident.register loses Intake only", hrefsOf(mgmtWithout("resident.register")), ["/management/recurring-jobs", "/residents", "/my"]);
 eq("C Management without recurring.do_own loses My tasks only", hrefsOf(mgmtWithout("recurring.do_own")), ["/management/recurring-jobs", "/residents/new", "/residents"]);
 eq("C Management with all three taken away still has Residents", hrefsOf(mgmtWithout("recurring.manage", "resident.register", "recurring.do_own")), ["/residents"]);
+// 2026-10-06 (home-screen-belongs-to-a-role): a home is a property of the role, and a role a shelter makes has
+// no curated one. Given Management's exact cells under another key it gets the derived home: every tile a page
+// its cells open, Residents there, no Settings, and not the four-tile screen. Take a cell away and the tile goes.
+const shelterMade = (gone = []) => {
+  const cells = {};
+  for (const a of ACTIVITIES) {
+    if (gone.includes(a.key)) continue;
+    if (seed.rolesHolding(a.key, "edit").includes("management")) cells[a.key] = 2;
+    else if (a.kind === "level" && seed.rolesHolding(a.key, "read").includes("management")) cells[a.key] = 1;
+  }
+  return parsePermissions({ role: { key: "site_manager", name: "Site manager", opens_app: true }, is_admin: false, scopes: {}, permissions: cells });
+};
+{
+  const made = shelterMade();
+  const tiles = homeTilesFor(made, t);
+  const hrefs = tiles.map((x) => x.href);
+  eq("C a shelter-made role with Management's cells gets the derived home, not the curated one", hrefs.length > hrefs.filter((h) => ["/management/recurring-jobs", "/residents/new", "/residents", "/my"].includes(h)).length, true);
+  eq("C a shelter-made role: every tile opens for it, none twice, Residents is there, no Settings page", [
+    hrefs.filter((h) => registered.has(h) && !canOpen(made, ROUTES.find((r) => r.path === h))),
+    new Set(hrefs).size === hrefs.length,
+    hrefs.includes("/residents"),
+    hrefs.filter((h) => h.startsWith("/admin/")),
+  ], [[], true, true, []]);
+  eq("C a shelter-made role without recurring.manage loses Recurring jobs", hrefsOf(shelterMade(["recurring.manage"])).includes("/management/recurring-jobs"), false);
+  eq("C a shelter-made role without recurring.do_own loses My tasks", hrefsOf(shelterMade(["recurring.do_own"])).includes("/my"), false);
+  eq("C a shelter-made role with every cell taken away still has Residents", hrefsOf(shelterMade(ACTIVITIES.map((a) => a.key))), ["/residents"]);
+  eq("C a shelter-made role that is not Management is not given Intake as a tile (it is the curated screen's)", hrefs.includes("/residents/new"), false);
+}
 eq("C staff leads with My tasks, Residents, then the whiteboard order of what staff hold", homeTilesFor(roles.staff, t).slice(0, 5).map((x) => x.href), ["/my", "/residents", "/stocktake", "/maintenance", "/deliveries"]);
 eq("C a vet's home is its appointments, and staff are not offered them", [
   homeTilesFor(roles.vet, t).some((x) => x.href === "/appointments"),
