@@ -986,6 +986,8 @@ Findings for `rota-eligibility`, the trap for a shelter-made manager role (settl
 inherits are in `docs/decisions/2026-10-05-management-role.md`. Done-when ("the Director has run a day from her phone") is
 **not met**: nobody has watched her.
 
+**R6, Admin (2026-10-07, `admin-role`, no migration).** Nothing was built: Admin is a rule, not a row (§6), the Settings tables went in `0150`, and `check-policy-role-names.mjs --final` is green. "Parity green" cannot show while the vet disagreement stands (21 mismatch lines, all the vet's), so the done-when was written as if Admin's slice could be green alone and it cannot. **What was missed:** 42 `admin_*` and 2 `volunteer_*` policies still read the enum, and 71 `vet_*` policies on 29 tables remain, so `perm-drop-enum` has three prerequisites, not one. `docs/decisions/2026-10-07-admin-role.md`.
+
 **The order is a recommendation.** Volunteer first, because the three new roles
 stand on it. Then smallest first: Medical is one read-only screen, and proves
 the whole chain (a role row, a home, a page, a policy) on the least that can go
