@@ -30,12 +30,17 @@
 --
 -- FACILITY_MAPS asks facility.enclosures, NOT facility.map. §15 named facility.map, but that cell is "see
 -- the map" and the volunteer and staff hold it; writing a plan is /admin/facility-map, whose page and three
--- actions ask facility.enclosures. Asking facility.map would hand the write to staff and volunteers.
+-- actions ask facility.enclosures. Asking facility.map would hand the write to staff and volunteers. Management
+-- holds facility.enclosures Read only (0132), so it LOSES the write the old policy gave it: the page and its
+-- actions never let it, so only a hand-built request could. A known tightening, like 0148's frequency.
 --
 -- TRANSLATIONS. Management write; management and staff read everything. Reading has no activity of its own,
--- so the staff half is `sees_all_residents()` (0144): a login whose role reads every resident, which is
--- management and staff and not a vet or anything on the volunteer floor, so it is today's answer, with no
--- role named. It is a stand-in; a "see translations" cell would replace it.
+-- so the staff half is a new scope function, sees_all_translations(): a login whose role reads every resident
+-- (sees_all_residents(), 0144: management and staff, not a vet or anything on the volunteer floor) AND opens the
+-- app (roles.opens_app). The second half is not decoration: public_viewer has scope_residents = all and a
+-- legacy role other than volunteer, so sees_all_residents() alone is true for it, and check-app-access-gate
+-- caught it reading all 76 translation rows. It is today's answer with no role named, and a stand-in: a "see
+-- translations" cell would replace it.
 --
 -- FIXED_OUTGOINGS is the cashflow forecast's money: read is reports.cashflow Read, which only management
 -- holds, so nobody is given a wider read than before.
@@ -82,8 +87,30 @@ create policy assistant_actions_select_perm on assistant_actions for select to a
 -- ---------------------------------------------------------------------------
 -- 3. translations
 -- ---------------------------------------------------------------------------
+create or replace function sees_all_translations()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select (select public.sees_all_residents())
+     and exists (
+       select 1
+         from public.user_roles ur
+         join public.roles r on r.id = ur.role_id and r.archived_at is null
+        where ur.user_id = (select auth.uid())
+          and ur.archived_at is null
+          and r.opens_app
+     );
+$$;
+comment on function sees_all_translations() is
+  'Does the caller''s live role read every resident (sees_all_residents(), 0144) and open the app? False for no role, an archived person or role, a vet, anything on the volunteer floor and public_viewer. The read half of the translations policies until a see-translations cell exists (0150).';
+revoke all on function sees_all_translations() from public, anon;
+grant execute on function sees_all_translations() to authenticated, service_role;
+
 create policy translations_select_perm on translations for select to authenticated
-  using ((select has_permission('translations.manage', 'read')) or (select sees_all_residents()));
+  using ((select has_permission('translations.manage', 'read')) or (select sees_all_translations()));
 create policy translations_insert_perm on translations for insert to authenticated
   with check ((select has_permission('translations.manage')));
 create policy translations_update_perm on translations for update to authenticated
