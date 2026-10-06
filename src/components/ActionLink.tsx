@@ -31,6 +31,7 @@ export function ActionLink({
       href={href}
       title={label}
       aria-label={label}
+      data-action="ActionLink"
       className={`inline-flex items-center gap-2 rounded text-sm font-medium ${
         iconOnlyOnMobile ? "shrink-0 min-h-11 min-w-11 justify-center p-2 md:min-h-0 md:min-w-0 md:px-4 md:py-2" : "min-h-11 px-4 py-2 md:min-h-0"
       } ${VARIANT_CLASSES[variant]}`}

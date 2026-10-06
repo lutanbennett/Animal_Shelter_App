@@ -31,6 +31,7 @@ export function ActionButton({
     <button
       type={type}
       {...buttonProps}
+      data-action="ActionButton"
       className={`inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded font-medium transition disabled:cursor-not-allowed disabled:opacity-50 md:min-h-9 ${
         compact ? "px-2 py-1 text-xs" : "px-4 py-2 text-sm"
       } ${VARIANT_CLASSES[variant]}`}
