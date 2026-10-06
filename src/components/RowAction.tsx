@@ -42,7 +42,7 @@ export function RowActionLink({
   ...rest
 }: Common & { href: string }) {
   return (
-    <Link href={href} {...names(rest)} className={`${BASE} ${TONE_CLASSES[tone]}`}>
+    <Link href={href} {...names(rest)} data-action="RowActionLink" className={`${BASE} ${TONE_CLASSES[tone]}`}>
       <Icon aria-hidden="true" className="h-5 w-5 md:h-4 md:w-4" />
     </Link>
   );
@@ -62,6 +62,7 @@ export function RowActionButton({
       type="button"
       {...buttonProps}
       {...names({ label, subject, hint })}
+      data-action="RowActionButton"
       className={`${BASE} ${TONE_CLASSES[tone]}`}
     >
       <Icon aria-hidden="true" className="h-5 w-5 md:h-4 md:w-4" />

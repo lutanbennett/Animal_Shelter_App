@@ -1,6 +1,7 @@
-// The 375 px overflow check: opens each page at phone width, in English and
-// Thai, signed in as each of a few roles, and fails if the page scrolls
-// sideways — printing the element that sticks out.
+// The 375 px check: opens each page at phone width, in English and Thai,
+// signed in as each of a few roles, and fails if (1) the page scrolls sideways,
+// printing the element that sticks out, or (2) an action the app's shared
+// components render is smaller than 44 px, printing which component.
 //
 //   node scripts/worktree.mjs dev                                  (another terminal)
 //   node scripts/check-phone-width.mjs [http://localhost:<port>]   (defaults to this checkout's .port)
@@ -25,10 +26,21 @@
 //     long name and address, a resident in that enclosure, one at the hospital.
 // Everything is deleted at the end, whatever happened (--keep to look at it).
 //
-// Red means something really is scrolling sideways, never noise: a page a role
-// cannot open (redirected, 404), a page that errors, an element it cannot
-// measure, are printed as "skipped" or "warning" and do not fail the run.
-// Exit 0: no page overflowed. Exit 1: at least one did. Exit 2: could not run.
+// The 44 px rule (docs/decisions/2026-10-06-phone-width-44px.md). There is no
+// exemption list. An action is something a shared component renders —
+// ActionLink, ActionButton, RowActionLink, RowActionButton — and each stamps
+// data-action="<Component>" on what it renders. Only those are measured, so a
+// plain link in a sentence, a list or a table (navigation) is out by
+// construction. A bare <button> that bypasses the components is NOT failed,
+// because a button can be a stepper, a chip or a calendar cell as well as an
+// action: those under 44 px are printed as notes, once per page, so the blind
+// spot is visible without crying wolf.
+//
+// Red means something is really wrong, never noise: a page a role cannot open
+// (redirected, 404), a page that errors, an element it cannot measure, are
+// printed as "skipped" or "warning" and do not fail the run.
+// Exit 0: nothing overflowed and every component action is 44 px. Exit 1: at
+// least one is not. Exit 2: could not run.
 import { randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -48,6 +60,9 @@ const KEEP = args.includes("--keep");
 const WIDTH = 375;
 /** Slack for sub-pixel rounding: a 1 px nudge is not a page you can scroll. */
 const TOLERANCE = 1;
+/** The touch-target rule, in CSS px; half a pixel of slack for sub-pixel layout. */
+const TAP = 44;
+const TAP_TOLERANCE = 0.5;
 
 /**
  * Roles worth covering, and why (docs/decisions/2026-10-05-phone-width-check.md).
@@ -325,6 +340,47 @@ function measureInPage({ tolerance }) {
   return { overflow, inMain: main !== document.body, culprits: deepest.slice(0, 3).map(describe) };
 }
 
+/**
+ * Runs in the page. Every visible [data-action] under 44 px either way is a
+ * failure; every visible bare <button> under 44 px (not inside a component) is
+ * a note. Zero-size boxes are display:none or collapsed, so not on screen.
+ */
+function measureTapTargets({ tap, tolerance }) {
+  const shown = (el) => {
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) return null;
+    for (let p = el; p; p = p.parentElement) {
+      const s = getComputedStyle(p);
+      if (s.display === "none" || s.visibility === "hidden") return null;
+    }
+    return r;
+  };
+  const describe = (el, r) => {
+    const label = el.getAttribute("aria-label") || el.getAttribute("title") || (el.textContent ?? "").replace(/\s+/g, " ").trim();
+    const region = el.closest("main, header, nav, dialog, [role=dialog]")?.tagName.toLowerCase() ?? "page";
+    return { label: label.slice(0, 40), region, width: Math.round(r.width * 10) / 10, height: Math.round(r.height * 10) / 10 };
+  };
+  const small = (r) => r.width < tap - tolerance || r.height < tap - tolerance;
+  const failures = [];
+  let components = 0;
+  for (const el of document.querySelectorAll("[data-action]")) {
+    const r = shown(el);
+    if (!r) continue;
+    components += 1;
+    if (small(r)) failures.push({ component: el.getAttribute("data-action"), ...describe(el, r) });
+  }
+  const notes = [];
+  let bare = 0;
+  for (const el of document.querySelectorAll("button, input[type=submit], input[type=button]")) {
+    if (el.closest("[data-action]") || el.closest("nextjs-portal")) continue;
+    const r = shown(el);
+    if (!r) continue;
+    bare += 1;
+    if (small(r)) notes.push(describe(el, r));
+  }
+  return { components, bare, failures, notes };
+}
+
 async function settle(page) {
   await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
   await page.evaluate(() => document.fonts.ready).catch(() => {});
@@ -401,8 +457,16 @@ async function checkPage(page, { roleName, locale, target }) {
   } catch (error) {
     return { ...where, kind: "warning", why: `could not measure: ${error.message.split("\n")[0]}` };
   }
-  if (m.overflow > TOLERANCE) return { ...where, kind: "overflow", overflow: m.overflow, culprits: m.culprits };
-  return { ...where, kind: "ok" };
+  let t;
+  try {
+    t = await page.evaluate(measureTapTargets, { tap: TAP, tolerance: TAP_TOLERANCE });
+  } catch (error) {
+    return { ...where, kind: "warning", why: `could not measure tap targets: ${error.message.split("\n")[0]}` };
+  }
+  const tap = { components: t.components, bare: t.bare, small: t.failures, notes: t.notes };
+  if (m.overflow > TOLERANCE) return { ...where, kind: "overflow", overflow: m.overflow, culprits: m.culprits, ...tap };
+  if (t.failures.length) return { ...where, kind: "small", ...tap };
+  return { ...where, kind: "ok", ...tap };
 }
 
 // ---------------------------------------------------------------------------
@@ -424,12 +488,44 @@ function report(results) {
     for (const c of r.culprits) console.log(`      ${c.path}  — right edge ${c.right} px, ${c.width} px wide${c.text ? `  "${c.text}"` : ""}`);
   }
 
-  const measured = by("ok").length + bad.length;
+  // Tap targets, on every measured view (an overflowing page is measured too).
+  // Grouped by page + component + label, with the roles and languages that saw it.
+  const measuredViews = results.filter((r) => r.kind === "ok" || r.kind === "overflow" || r.kind === "small");
+  // `across`: fold the same control on many pages (the app header's buttons) into one entry.
+  const group = (pick, across = false) => {
+    const map = new Map();
+    for (const r of measuredViews)
+      for (const c of r[pick]) {
+        const key = `${across ? `${c.width}x${c.height}` : r.path}|${c.component ?? ""}|${c.region}|${c.label}`;
+        const g = map.get(key) ?? { path: r.path, paths: new Set(), c, views: [] };
+        g.paths.add(r.path);
+        g.views.push(`${r.role}/${r.locale}`);
+        map.set(key, g);
+      }
+    return [...map.values()];
+  };
+  const smallActions = group("small");
+  for (const g of smallActions) {
+    console.log(`\nFAIL  ${g.path}  ${g.c.component} "${g.c.label}" (in ${g.c.region}) is ${g.c.width} x ${g.c.height} px at ${WIDTH} px, under ${TAP}`);
+    console.log(`      seen by ${[...new Set(g.views)].join(", ")}`);
+  }
+  const notes = group("notes", true).sort((a, b) => b.paths.size - a.paths.size);
+  if (notes.length) {
+    console.log(`\nnote: ${notes.length} bare <button>(s) under ${TAP} px that no shared component renders (not failed: a button may be a stepper or a chip, not an action):`);
+    for (const g of notes.slice(0, VERBOSE ? notes.length : 25))
+      console.log(`      "${g.c.label}" (in ${g.c.region}) ${g.c.width} x ${g.c.height} px  on ${g.paths.size} page(s)${g.paths.size > 1 ? `, e.g. ${[...g.paths][0]}` : `: ${g.path}`}`);
+    if (!VERBOSE && notes.length > 25) console.log(`      … and ${notes.length - 25} more (--verbose lists them all)`);
+  }
+
+  const measured = measuredViews.length;
+  const components = measuredViews.reduce((n, r) => n + r.components, 0);
   console.log(
     `\n${measured} page view(s) measured (${roleNames.join(", ")}; ${locales.join(" + ")}), ${by("skipped").length} skipped because the role cannot open them, ${by("warning").length} warning(s).`,
   );
+  console.log(`${components} component action(s) measured for tap size.`);
   console.log(bad.length ? `${bad.length} page view(s) overflow.` : "No page scrolls sideways.");
-  return bad.length ? 1 : 0;
+  console.log(smallActions.length ? `${smallActions.length} component action(s) under ${TAP} px.` : `Every component action is at least ${TAP} px.`);
+  return bad.length || smallActions.length ? 1 : 0;
 }
 
 // ---------------------------------------------------------------------------
