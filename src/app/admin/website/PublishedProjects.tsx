@@ -90,6 +90,14 @@ export function PublishedProjects({ projects }: { projects: PublishedProjectRow[
                       .filter(Boolean)
                       .join(" · ")}
                   </span>
+                  {!project.name_th?.trim() && (
+                    <span className="text-xs text-primary">
+                      {p.noThaiTitle}{" "}
+                      <Link href={`/projects/${project.id}`} className="font-medium underline">
+                        {p.addThaiTitle}
+                      </Link>
+                    </span>
+                  )}
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <Link
