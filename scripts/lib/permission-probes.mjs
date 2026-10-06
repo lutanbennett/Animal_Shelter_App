@@ -123,9 +123,9 @@ export const PROBES = [
   { activity: "stock.delivery", level: "edit", sql: `insert into stock_receipts (item_kind, medication_id, quantity) values ('medication', ${MED}, 1)` },
   { activity: "stock.delivery", level: "read", sql: `select 1 from stock_receipts where id = $RECEIPT` },
   { activity: "stock.medications", level: "edit", sql: `update medication set cost_per_unit = cost_per_unit where id = ${MED}` },
-  { activity: "stock.medications", level: "read", sql: `select cost_per_unit from medication where id = ${MED}`, known: [{ id: "N1", roles: ["staff", "vet"] }] },
+  { activity: "stock.medications", level: "read", sql: `select cost_per_unit from medication where id = ${MED}`, known: [{ id: "N1", roles: ["vet"] }] },
   { activity: "stock.diets", level: "edit", sql: `update diet_types set notes = 'probe' where id = $DIET` },
-  { activity: "stock.diets", level: "read", sql: `select cost_per_unit from diet_types where id = $DIET`, known: [{ id: "C10", roles: ["vet"] }, { id: "N2", roles: ["staff"] }] },
+  { activity: "stock.diets", level: "read", sql: `select cost_per_unit from diet_types where id = $DIET`, known: [{ id: "C10", roles: ["vet"] }] },
   { activity: "stock.correct", level: "edit", fn: true, sql: `select record_stock_correction('medication', ${MED}, 1)` },
 
   // --- Management

@@ -800,7 +800,7 @@ export default async function ResidentSectionPage(
       const { data, error } = await supabase
         .from("prescriptions")
         .select(
-          "id, start_date, end_date, dose_quantity, notes, medication(name, dose_unit), frequency(label), vet_appointments(appointment_date)",
+          "id, start_date, end_date, dose_quantity, notes, medication:picker_medications(name, dose_unit), frequency(label), vet_appointments(appointment_date)",
         )
         .is("archived_at", null)
         .eq("resident_id", id)
@@ -822,7 +822,7 @@ export default async function ResidentSectionPage(
         ? await supabase
             .from("prescriptions")
             .select(
-              "id, start_date, end_date, dose_quantity, notes, archive_reason, medication(name, dose_unit), frequency(label), vet_appointments(appointment_date)",
+              "id, start_date, end_date, dose_quantity, notes, archive_reason, medication:picker_medications(name, dose_unit), frequency(label), vet_appointments(appointment_date)",
             )
             .not("archived_at", "is", null)
             .eq("resident_id", id)
@@ -973,7 +973,7 @@ export default async function ResidentSectionPage(
       const { data, error } = await supabase
         .from("resident_diets")
         .select(
-          "id, start_date, end_date, meals_per_day, daily_quantity, notes, diet_types(name, unit, daily_qty_small, daily_qty_medium, daily_qty_large)",
+          "id, start_date, end_date, meals_per_day, daily_quantity, notes, diet_types:picker_diet_types(name, unit, daily_qty_small, daily_qty_medium, daily_qty_large)",
         )
         .eq("resident_id", id)
         .order("start_date", { ascending: false })

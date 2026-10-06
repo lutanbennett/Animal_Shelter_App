@@ -403,7 +403,7 @@ export async function loadResidentArchiveRecord(
       .returns<AppointmentRow[]>(),
     supabase
       .from("prescriptions")
-      .select("id, start_date, end_date, dose_quantity, notes, medication(name, dose_unit), frequency(label)")
+      .select("id, start_date, end_date, dose_quantity, notes, medication:picker_medications(name, dose_unit), frequency(label)")
       .is("archived_at", null)
       .eq("resident_id", residentId)
       .order("start_date", { ascending: false })
@@ -411,7 +411,7 @@ export async function loadResidentArchiveRecord(
     supabase
       .from("resident_diets")
       .select(
-        "id, start_date, end_date, meals_per_day, daily_quantity, notes, diet_types(name, unit, daily_qty_small, daily_qty_medium, daily_qty_large)",
+        "id, start_date, end_date, meals_per_day, daily_quantity, notes, diet_types:picker_diet_types(name, unit, daily_qty_small, daily_qty_medium, daily_qty_large)",
       )
       .eq("resident_id", residentId)
       .order("start_date", { ascending: false })

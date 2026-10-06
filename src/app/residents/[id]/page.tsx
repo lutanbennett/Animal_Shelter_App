@@ -114,14 +114,14 @@ export default async function ResidentPage(
       .returns<VetAppointmentRow[]>(),
     supabase
       .from("prescriptions")
-      .select("id, start_date, end_date, medication(name)")
+      .select("id, start_date, end_date, medication:picker_medications(name)")
       .is("archived_at", null)
       .eq("resident_id", id)
       .order("start_date", { ascending: false })
       .returns<PrescriptionRow[]>(),
     supabase
       .from("resident_diets")
-      .select("id, start_date, end_date, diet_types(name)")
+      .select("id, start_date, end_date, diet_types:picker_diet_types(name)")
       .eq("resident_id", id)
       .order("start_date", { ascending: false })
       .returns<DietRow[]>(),
