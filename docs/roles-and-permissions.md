@@ -1220,8 +1220,8 @@ A vet's read of the four recurring tables was inside the dropped role list, so i
 | Table | Activity | Note |
 |---|---|---|
 | `assistant_actions` | insert and read `assistant.record`, on the caller's own row | **Management no longer reads other people's rows** (nothing reads them; admin still does): a known tightening, owned by the assistant-retention decision (DB-11) |
-| `translations` | write `translations.manage`; read that, or `sees_all_residents()` | The read stand-in keeps staff reading every translation until a "see translations" cell exists |
-| `facility_maps` | write `facility.enclosures` Edit; read stays open | **Not `facility.map`**, which this table first named: that cell is "see the map" and staff and volunteers hold it |
+| `translations` | write `translations.manage`; read that, or `sees_all_translations()` | A new scope function (`sees_all_residents()` and the role opens the app) that keeps staff reading every translation until a "see translations" cell exists. `sees_all_residents()` alone let `public_viewer` read all 76 rows: `check-app-access-gate` caught it |
+| `facility_maps` | write `facility.enclosures` Edit; read stays open | **Not `facility.map`**, which this table first named: that cell is "see the map" and staff and volunteers hold it. **Management loses the write** (it holds `facility.enclosures` Read, and the page never let it): a known tightening |
 | `fixed_outgoings` | `reports.cashflow` | Read for read, Edit for write; only management holds it |
 
 **Not converted, with an owner.**
