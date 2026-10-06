@@ -217,6 +217,7 @@ export default async function ResidentPage(
         driveFolderId: resident.drive_folder_id,
         // Set by the after-death edit when Drive could not be refreshed.
         notRefreshed: archiveFlag === "stale",
+        photoMissing: archiveFlag === "nophoto",
       }}
       canRecordDeath={can(perms, "placement.death")}
       canUndoDeath={can(perms, "placement.death_withdraw")}

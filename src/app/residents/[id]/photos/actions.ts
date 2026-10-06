@@ -27,7 +27,8 @@ async function archiveWarningFor(
   residentId: string,
 ): Promise<string | undefined> {
   const refresh = await refreshDeceasedArchiveIfNeeded(supabase, residentId);
-  return refresh.error ? t.residents.deceased.banner.archiveNotRefreshed : undefined;
+  if (refresh.error) return t.residents.deceased.banner.archiveNotRefreshed;
+  return refresh.photoMissing ? t.residents.deceased.banner.photoNotInPdf : undefined;
 }
 
 function revalidateResident(residentId: string) {

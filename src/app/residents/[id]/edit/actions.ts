@@ -269,5 +269,6 @@ async function updateDeceasedResident(
 
   revalidatePath(`/residents/${residentId}`);
   revalidatePath(`/residents/${residentId}/photos`);
-  redirect(`/residents/${residentId}${refresh.error ? "?archive=stale" : ""}`);
+  const archiveFlag = refresh.error ? "?archive=stale" : refresh.photoMissing ? "?archive=nophoto" : "";
+  redirect(`/residents/${residentId}${archiveFlag}`);
 }
