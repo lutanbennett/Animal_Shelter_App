@@ -23,7 +23,7 @@ const th: Dictionary = {
     uploading: "กำลังอัปโหลด...",
     loading: "กำลังโหลด…",
     add: "เพิ่ม",
-    addMore: "+ เพิ่มเติม",
+    addMore: "เพิ่มเติม",
     change: "เปลี่ยน",
     clearDate: "ล้าง",
     clearDateLabel: (field: string) => `ล้าง${field}`,

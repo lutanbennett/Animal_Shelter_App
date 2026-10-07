@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { Monitor } from "lucide-react";
+import { Eye, Monitor } from "lucide-react";
+import { ActionButton } from "@/components/ActionButton";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
 /**
@@ -34,13 +35,11 @@ export function LargerScreenNotice({ children }: { children: ReactNode }) {
             {t.largerScreen.title}
           </p>
           <p className="text-muted">{t.largerScreen.body}</p>
-          <button
-            type="button"
-            onClick={() => setShown(true)}
-            className="self-start rounded border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
-          >
-            {t.largerScreen.showAnyway}
-          </button>
+          <div className="self-start">
+            <ActionButton icon={Eye} onClick={() => setShown(true)}>
+              {t.largerScreen.showAnyway}
+            </ActionButton>
+          </div>
         </div>
       )}
       {/* display: contents, so the children stay items of the page's own

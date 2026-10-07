@@ -4,7 +4,6 @@ import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil } from "lucide-react";
 import { setResidentMicrochip } from "@/app/residents/[id]/microchip/actions";
 import { MicrochipFields } from "@/components/MicrochipFields";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -68,14 +67,9 @@ export function MicrochipForm({
           disabled={pending}>
           {pending ? f.saving : f.save}
         </ActionButton>
-        <button
-          type="button"
-          disabled={pending}
-          onClick={onDone}
-          className="rounded border border-border px-4 py-2 text-sm text-muted hover:bg-surface-hover disabled:opacity-50"
-        >
+        <ActionButton icon={ACTION_ICONS.clear} disabled={pending} onClick={onDone}>
           {cancelLabel ?? f.cancel}
-        </button>
+        </ActionButton>
       </div>
     </form>
   );
@@ -131,16 +125,9 @@ export function MicrochipLine({
         <span>{h.chipForm.noChip}</span>
       )}
       {canEdit && (
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          title={number ? h.chipForm.correct : h.chipForm.record}
-          aria-label={number ? h.chipForm.correct : h.chipForm.record}
-          className="inline-flex items-center gap-1 rounded px-1 text-xs font-medium text-primary hover:bg-surface-hover"
-        >
-          <Pencil aria-hidden="true" className="h-3 w-3" />
+        <ActionButton compact icon={ACTION_ICONS.edit} onClick={() => setEditing(true)}>
           {number ? h.chipForm.correct : h.chipForm.record}
-        </button>
+        </ActionButton>
       )}
     </p>
   );

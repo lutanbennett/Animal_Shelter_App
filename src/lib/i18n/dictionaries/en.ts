@@ -21,7 +21,7 @@ const en = {
     uploading: "Uploading...",
     loading: "Loading…",
     add: "Add",
-    addMore: "+ Add more",
+    addMore: "Add more",
     change: "Change",
     clearDate: "Clear",
     clearDateLabel: (field: string) => `Clear ${field}`,
