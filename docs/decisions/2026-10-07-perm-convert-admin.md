@@ -46,9 +46,11 @@ trigger on `role_permissions` is not touched. The harness asserts: an admin at *
 at **aal2** writes 1; a **management** login at aal2 writes 0. An `is_admin()` that forgot aal2 would have been the quiet way to widen who edits the
 matrix, which is the one place it matters most.
 
-`is_admin()` is `security definer`, `search_path = ''`, executable by `anon` as well as `authenticated`/`service_role`, the same grant as
-`current_user_role()`. **`anon` matters:** several of these are `to public` ALL policies on tables the signed-out site reads, and a policy whose
-function the caller may not run **errors instead of evaluating to false**.
+`is_admin()` is `security definer`, `search_path = ''`, executable by `authenticated` and `service_role` only. **Not `anon`, unlike
+`current_user_role()`:** a policy whose function the caller may not run errors instead of evaluating to false, so I checked whether any of these policies
+is ever evaluated for `anon`. It is not: `anon` holds no grant on any base table touched here (only on the `public_*` views, which run as their owner),
+and a direct `anon` read of `site_content`, tried by hand in a rolled-back block, was refused at the grant (`permission denied for table`). `check-migration-grants.mjs` (run by lint) refuses an `anon`
+grant on a function outside its allow-list, which is how this was caught: my first version granted it, on the reasoning that `current_user_role()` had it.
 
 ## 5. What the extended checker covers that it did not (this is the point)
 

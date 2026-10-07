@@ -10,9 +10,10 @@
 -- is_admin()  the enum-free admin rule (§6 rule 1). It is the first branch of has_permission(), taken alone:
 --   the caller holds a live (unarchived) user_roles row whose roles row is unarchived and has key 'admin'.
 --   It asks roles.key, never user_roles.role, so it keeps working the day the enum column goes.
---   Granted to anon as current_user_role() is: several of the policies below are `to public` ALL policies on
---   tables the signed-out site reads, and a policy whose function the caller may not run errors, it does not
---   evaluate to false.
+--   NOT executable by anon (current_user_role() is, historically). anon holds no grant on any base table
+--   below, only on public_* views, which run as the view's owner; so no policy here is ever evaluated for anon.
+--   (A policy whose function the caller may not run errors, it does not evaluate to false: that is why this
+--   was checked against the grants rather than assumed.)
 --
 -- GROUP 1, tables that already have _perm policies. has_permission() admits Admin, so admin_all_* is
 --   redundant WHERE a _perm policy exists for the command and does not narrow the row. Checked per table and
@@ -53,8 +54,8 @@ as $$
 $$;
 comment on function public.is_admin() is
   'True for the caller holding the Admin role: has_permission()''s first branch alone (§6 rule 1). Reads roles.key, not the app_role enum.';
-revoke all on function public.is_admin() from public;
-grant execute on function public.is_admin() to anon, authenticated, service_role;
+revoke all on function public.is_admin() from public, anon;
+grant execute on function public.is_admin() to authenticated, service_role;
 
 -- Group 1, covered: drop.
 drop policy if exists admin_all_attachments on attachments;

@@ -22,8 +22,14 @@
 
 ## 2. Automated gates
 
-- [ ] `node scripts/worktree.mjs sync` — n/a: filled in at the closing commit (see §2 below the table once it ran)
-- [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — n/a: filled in at the closing commit
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in: `Already up to date.` (`origin/main` was still @ `17085eec`), migration numbers `ok — 0153_perm_convert_admin.sql (highest 0152_perm_convert_photos.sql)`
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Closing line, as printed:
+
+  ```
+  gates: typecheck=0 lint=0 build=0
+  ```
+
+  (The first run printed `lint=1`: `check-migration-grants` refused the `anon` grant on `is_admin()`. Fixed, `0153` re-run on dev from the file, and everything above re-run green.)
 - [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data
@@ -86,7 +92,7 @@
 ## 7. Documentation
 
 - [x] Backlog item ticked in `docs/backlog.md` **on this branch** (follow-ups go on the `backlog` branch instead): `perm-convert-admin` ticked; foundation 3 not ticked, a NOTE appended. The `/admin/recent-changes` overflow goes on the `backlog` branch
-- [x] Non-obvious design choices added as a new file in `docs/decisions/` (`<date>-<slug>.md`): `docs/decisions/2026-10-07-perm-convert-admin.md` (the eleven tables where "just drop" is wrong, the aal2 gate, why `anon` can run `is_admin()`, what the checker now covers)
+- [x] Non-obvious design choices added as a new file in `docs/decisions/` (`<date>-<slug>.md`): `docs/decisions/2026-10-07-perm-convert-admin.md` (the eleven tables where "just drop" is wrong, the aal2 gate, why `is_admin()` is not executable by `anon`, what the checker now covers)
 - [x] `README.md` still accurate: it does not describe the role model
 - [ ] **Release notes.** n/a: nobody would notice: no `src/` file changed, every login's answer on every table is the same before and after (that is the whole claim, and the parity report and the harness are the measurement), and no page, string or manual topic changed
 - [x] Commit messages say why, not just what
