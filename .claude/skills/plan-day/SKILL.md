@@ -73,6 +73,19 @@ down. List any husks it prints so the user can clear them.
 user's priority; keep that as the default ordering. For each candidate
 note:
 
+- **Already done?** — **check this first, and trust it over the item's own
+  status notes.** Two commands settle it: `ls docs/decisions/ | grep -i
+  <subject>` and `git log -S "<a distinctive symbol the item names>"`. A
+  decision file or a commit dated before the item's status note means the work
+  shipped and nobody updated the item. **An open item is not proof the work is
+  undone, and a status note saying "still open" is not proof either.** On
+  2026-10-07 this cost four streams in two batches: three on a public-site
+  redesign built 2026-09-26, and one on a deceased-archive gap fixed
+  2026-09-24 whose item still read "still open: gap 4" eight days later.
+  **Testing the item's claim is not the same as finding a line that agrees
+  with it:** that second failure grepped the constant the item named, which
+  was real, while the fix sat on another code path. Ask whether the behaviour
+  the item describes still happens, not whether the code it names still exists.
 - **Who does it** — Claude-buildable, or user-driven (physical setup like
   the Pi, dashboard clicking, a guided walkthrough, "decide with the
   user" as the main content). User-driven items are reminders, not
