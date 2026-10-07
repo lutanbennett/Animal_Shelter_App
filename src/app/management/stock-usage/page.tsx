@@ -9,6 +9,7 @@ import { formatQuantity } from "@/lib/diets/options";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { CsvDownloadButton } from "@/components/CsvDownloadButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 import {
   correctionsBetween,
   departedDuring,
@@ -526,12 +527,9 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
                   ))}
                 </select>
               </div>
-              <button
-                type="submit"
-                className="rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
-              >
+              <ActionButton type="submit" icon={ACTION_ICONS.filter}>
                 {u.picker.show}
-              </button>
+              </ActionButton>
               {(fromId || toId) && (
                 <Link
                   href="/management/stock-usage"

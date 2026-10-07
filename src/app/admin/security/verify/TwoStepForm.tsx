@@ -4,12 +4,12 @@ import { useState, useTransition } from "react";
 import { useKeptForm } from "@/lib/use-kept-form";
 import { confirmTwoStep, startTwoStepSetup } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { ActionButton } from "@/components/ActionButton";
+import { ACTION_ICONS } from "@/components/hub-icons";
 
 const inputClass =
   "w-40 rounded border border-border bg-surface px-3 py-2 text-center font-mono text-lg tracking-widest text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
 
-const buttonClass =
-  "rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50";
 
 type Setup = { factorId: string; qrCode: string; secret: string };
 
@@ -49,9 +49,9 @@ export function TwoStepForm({ enrolled }: { enrolled: boolean }) {
         </ol>
         {setupError && <p className="text-sm text-danger">{setupError}</p>}
         <div>
-          <button type="button" onClick={begin} disabled={starting} className={buttonClass}>
+          <ActionButton icon={ACTION_ICONS.allowTwoStep} variant="primary" onClick={begin} disabled={starting}>
             {starting ? s.starting : s.start}
-          </button>
+          </ActionButton>
         </div>
       </div>
     );
@@ -96,9 +96,9 @@ export function TwoStepForm({ enrolled }: { enrolled: boolean }) {
             autoFocus
             className={inputClass}
           />
-          <button type="submit" disabled={confirming} className={buttonClass}>
+          <ActionButton type="submit" icon={ACTION_ICONS.approve} variant="primary" disabled={confirming}>
             {confirming ? s.checking : setup ? s.confirmSetup : s.confirm}
-          </button>
+          </ActionButton>
         </div>
         {state && !state.ok && !confirming && <p className="text-sm text-danger">{state.error}</p>}
       </form>

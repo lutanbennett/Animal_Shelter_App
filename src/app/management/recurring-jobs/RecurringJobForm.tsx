@@ -468,13 +468,9 @@ export function RecurringJobForm({
           disabled={isPending}>
           {isPending ? rj.saving : rj.save}
         </ActionButton>
-        <button
-          type="button"
-          onClick={() => onDone(null)}
-          className="rounded border border-border px-4 py-2 text-sm font-medium text-muted hover:bg-surface-hover hover:text-foreground"
-        >
+        <ActionButton icon={ACTION_ICONS.clear} onClick={() => onDone(null)}>
           {rj.cancel}
-        </button>
+        </ActionButton>
       </div>
     </form>
   );
