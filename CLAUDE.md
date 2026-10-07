@@ -192,6 +192,37 @@ before pushing.
 Everything merged up to `f32f2c1` (PRs #51–#54) is the agreed baseline and
 predates the rule.
 
+## A red `audit` check is not a blocker, and never has been
+
+CI's `audit` job (`npm run audit:prod`) reports known-vulnerable
+**production** dependencies. It is `continue-on-error: true`, so it **cannot
+fail a CI run and cannot block a merge** — verified 2026-10-07 across the last
+30 pull-request runs: not one concluded `failure` because of `audit`. Every
+failed run also had `test-plan`, `public-views` or `lint` red, and that was the
+cause. If `audit` is the only red on your PR, there is nothing to wait for.
+
+This needs saying here because the section above documents a red `test-plan` at
+length and said nothing about `audit`, so a session meeting one had no guidance
+and re-derived the answer from scratch. On 2026-10-07 that cost the production
+release manager 45 minutes of a stalled release, and it had been red on every
+PR for two days before anyone asked why.
+
+What a red `audit` actually asks for: read the advisory, establish whether the
+flaw is **reachable in this app**, and fix it if there is a fix that is not
+worse than the finding. Then write what you concluded on the PR and in
+`docs/decisions/`, so the next session does not start over. Worked examples:
+`docs/decisions/2026-10-01-next-og-advisory-handled-as-routine.md` and
+`docs/decisions/2026-10-07-sharp-override.md`.
+
+Two standing rules. **Do not change either audit workflow** to make the red go
+away: the PR job and the daily `advisories.yml` disagree about failing on
+purpose by design (`ci.yml`: "Do not 'tidy' the two to match";
+`docs/decisions/2026-10-02-scheduled-audit-fails-on-purpose.md`), and that was
+proposed and rejected on 2026-10-06. **Do not run `npm audit fix --force`**: it
+is free to move a dependency *backwards* across a major version, and on
+2026-10-07 the only fix it offered was dragging the entire Cloudflare build and
+deploy chain back to `wrangler@4.15.2`.
+
 ## The main checkout
 
 Once a day, before starting streams, in `C:\Development\Animal_Shelter_App`:
