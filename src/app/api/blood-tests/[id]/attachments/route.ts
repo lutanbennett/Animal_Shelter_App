@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { getT } from "@/lib/i18n/get-t";
-import { assertPhotoWriteAccess } from "@/lib/auth/require-role";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import {
   ensureResidentBloodTestFolder,
   getDriveClient,
@@ -31,13 +32,13 @@ async function handlePost(
 
   const { id: bloodTestId } = await params;
 
-  try {
-    await assertPhotoWriteAccess();
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Not authorized." },
-      { status: 403 },
-    );
+  // The activity 0152 asks of this owner_type, in the attachments policies and record_attachment().
+  // Asked here, before Drive is touched, so a refused upload cannot orphan a file. The clinic scope is
+  // left to the database (sees_all_clinical(); the vet has no cell rows yet, so is refused here as before).
+  const perms = await loadPermissions();
+  if (!can(perms, "medical.blood_tests")) {
+    const { t } = await getT();
+    return NextResponse.json({ error: t.photos.errors.notAuthorized }, { status: 403 });
   }
 
   const formData = await request.formData();
@@ -71,7 +72,7 @@ async function handlePost(
   const supabase = await createClient();
 
   // Every role with SELECT on blood_tests (all four — see 0001's RLS) can
-  // reach this lookup; the actual write gate is assertPhotoWriteAccess()
+  // reach this lookup; the actual write gate is the medical.blood_tests check
   // above plus record_attachment()'s own role check below, both of which
   // intentionally allow staff/volunteers to attach files to a blood test
   // even though only vet/admin can create the row itself (decisions.md:
