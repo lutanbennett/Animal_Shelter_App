@@ -130,7 +130,7 @@ export function AssistantPanel() {
                   onClick={() => setOpen(false)}
                   title={t.common.close}
                   aria-label={t.common.close}
-                  className="rounded p-1 text-muted hover:bg-surface-hover hover:text-foreground"
+                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded text-muted hover:bg-surface-hover hover:text-foreground md:h-8 md:w-8"
                 >
                   <X aria-hidden="true" className="h-5 w-5" />
                 </button>

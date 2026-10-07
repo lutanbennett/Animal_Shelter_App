@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { X } from "lucide-react";
 import { archiveContact, restoreContact } from "@/app/management/contacts/actions";
 import type { ActionResult } from "@/lib/action-result";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -58,9 +59,6 @@ export function ArchiveContactControl({
     });
   }
 
-  const buttonClass =
-    "rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50";
-
   return (
     <div className="flex flex-col items-start gap-2">
       {archived ? (
@@ -101,25 +99,21 @@ export function ArchiveContactControl({
           </label>
           <p className="text-xs text-muted">{a.explain}</p>
           <div className="flex gap-2">
-            <button
-              type="submit"
-              disabled={isPending}
-              className="rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-            >
+            <ActionButton type="submit" icon={ACTION_ICONS.archive} variant="primary" compact disabled={isPending}>
               {a.confirmArchive}
-            </button>
-            <button
-              type="button"
+            </ActionButton>
+            <ActionButton
+              icon={X}
+              compact
               disabled={isPending}
               onClick={() => {
                 setOpen(false);
                 setReason("");
                 setError(null);
               }}
-              className={buttonClass}
             >
               {t.common.cancel}
-            </button>
+            </ActionButton>
           </div>
         </form>
       ) : iconOnly ? (

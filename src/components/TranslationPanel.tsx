@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Languages } from "lucide-react";
+import { Languages, X } from "lucide-react";
 import { ActionButton } from "@/components/ActionButton";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ACTION_ICONS } from "@/components/hub-icons";
@@ -181,25 +181,21 @@ export function TranslationPanel({
                 </ActionButton>
               </span>
             )}
-            <button
-              type="button"
+            <ActionButton
+              icon={X}
+              compact
               onClick={() => {
                 setEditing(false);
                 setText(current.text ?? "");
                 setError(null);
               }}
               disabled={isPending}
-              className="rounded border border-border px-3 py-1 text-xs font-medium text-foreground hover:bg-surface-hover disabled:opacity-50"
             >
               {t.common.cancel}
-            </button>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="rounded bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-            >
+            </ActionButton>
+            <ActionButton type="submit" icon={ACTION_ICONS.approve} variant="primary" compact disabled={isPending}>
               {isPending ? t.common.saving : tr.approve}
-            </button>
+            </ActionButton>
           </div>
         </form>
       ) : current.text ? (
