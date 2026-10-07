@@ -31,7 +31,13 @@ export function SignOutButton({
       }}
       title={iconOnPhone ? t.header.signOut : undefined}
       aria-label={iconOnPhone ? t.header.signOut : undefined}
-      className={className ?? "whitespace-nowrap text-sm font-medium text-muted hover:text-foreground"}
+      {...(iconOnPhone ? { "data-action": "HeaderButton" } : {})}
+      className={
+        className ??
+        (iconOnPhone
+          ? "order-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center whitespace-nowrap rounded px-2 text-sm font-medium text-muted hover:bg-surface-hover hover:text-foreground sm:order-4 md:min-h-9"
+          : "whitespace-nowrap text-sm font-medium text-muted hover:text-foreground")
+      }
     >
       {iconOnPhone ? (
         <>

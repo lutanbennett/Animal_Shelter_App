@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "On a phone, the buttons across the top of every screen are now full-size: Sign out (it was the smallest button in the app, easy to miss and easy to hit by accident), the menu button and the Assistant button. The top bar now takes two lines on a phone so everything fits, and your full name and role show in Thai as well as English. On a computer nothing changes.",
   { text: "The Contacts page (the list of carers, volunteers and suppliers with their phone numbers and addresses) is now for Management and the 2IC only, as the Director decided. The 2IC sees each person's name and phone number, no address. Staff and volunteers no longer see Contacts in the menu: if you need a carer's number, ask Management. Choosing a carer when you take in or rehome a resident works as before.", roles: ["management", "staff", "volunteer"] },
   { text: "Management can now record or correct a resident's microchip number, as the handbook always said they could. Before, the chip form was refused for Management.", roles: ["management"] },
   { text: "The vaccine list on the Log immunizations form no longer shows what a vaccine costs to anyone: the 2IC can record vaccinations without seeing the price, and prices stay under Settings → Immunization Types.", roles: ["admin", "management", "staff", "vet"] },

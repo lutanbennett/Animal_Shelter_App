@@ -16,7 +16,8 @@ export function MobileNavToggle() {
       aria-expanded={open}
       aria-controls="mobile-nav"
       aria-label={open ? t.nav.closeMenu : t.nav.openMenu}
-      className="-ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded text-foreground hover:bg-surface-hover md:hidden"
+      data-action="HeaderButton"
+      className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded text-foreground hover:bg-surface-hover md:hidden"
     >
       <Icon aria-hidden="true" className="h-5 w-5" />
     </button>
