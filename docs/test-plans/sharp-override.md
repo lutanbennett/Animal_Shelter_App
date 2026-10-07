@@ -44,7 +44,17 @@ breaks the tool whose pin it overrode.
 - [x] `npm run opennext:build` completes, exit 0
 
 ```
-PENDING_OPENNEXT
+$ npm run opennext:build
+
+(esbuild printed pre-existing duplicate-object-key warnings from the vendored
+fontkit copy @react-pdf/renderer bundles — "Duplicate key \"axisIndex\" in object
+literal" — unrelated to this change and present before it. Closing lines:)
+
+Worker saved in `.open-next\worker.js` 🚀
+
+OpenNext build complete.
+
+[exited with code 0]
 ```
 
 - [x] `npm run audit:prod` reports no vulnerabilities, exit 0. This is the change's whole purpose, so before and after are both recorded
@@ -190,7 +200,7 @@ from one that was actually exercised.
 - [ ] Smoke-tested on `test.lannacare.org` — deferred: release manager
 - [ ] **Timezone-sensitive behaviour proved, not observed at a convenient hour.** — n/a: the PR contains no date, clock or timezone logic
 - [ ] **For a boundary or banding change, the assertions cover both edges of the band and both sides of the boundary** — n/a: no threshold, band, rounding rule, retry window, pagination limit or permission cutoff is touched
-- [ ] **Evidence pasted into this plan is the tool's actual output, unedited.** — n/a as a deploy-time gate; for the record, every block in section 2 is unedited tool output
+- [x] **Evidence pasted into this plan is the tool's actual output, unedited.** — every block in section 2 is tool output, pasted not retyped. **One trim, declared:** the `opennext:build` block keeps the closing lines and the exit code and elides a repeated esbuild `duplicate-object-key` warning from the vendored fontkit copy `@react-pdf/renderer` bundles, which is pre-existing and unrelated to this change; the elision is labelled inline rather than silent. Nothing else is shortened, reordered or reworded
 - [ ] Public pages re-checked after a cache purge or a 10-minute wait — deferred: release manager
 
 ### Deploy safety
@@ -251,4 +261,4 @@ Manual verification by: n/a: no human-visible surface — no screen, wording or 
 
 Result: pass
 
-Release manager acknowledgement: <name>  Date: <yyyy-mm-dd>
+Release manager acknowledgement: pending: not acknowledged yet — this changes the dependency tree production is built from, so it is not "tooling only" and it is the release manager's to sign, not Claude's  Date: —
