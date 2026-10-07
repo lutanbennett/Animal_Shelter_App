@@ -4818,6 +4818,8 @@ const th: Dictionary = {
     fullProfile: (name: string) => `ดูโปรไฟล์รับเลี้ยงของ ${name}`,
     staffHint: "เจ้าหน้าที่และอาสาสมัคร:",
     staffSignIn: "เข้าสู่ระบบเพื่อดูข้อมูลทั้งหมด",
+    livesIn: "อยู่ที่",
+    yourJobs: (name: string) => `งานของ ${name}`,
   },
 
   enclosureCard: {

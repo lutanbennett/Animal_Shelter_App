@@ -61,7 +61,9 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  "Tapping a resident's name card with your phone now always shows at least what a visitor would see. Before, the 2IC, the Heads of Medical and Maintenance and volunteers saw less than a stranger (just the name and where the resident lives), and a vet saw an error for a resident their clinic does not treat. Now they see the resident's card with photo, age and temperament, plus where the resident lives and buttons for the jobs they can do. Whether these roles also read the medical record from a card is the Director's choice and has not changed.",
+];
 
 
 /** Newest first. */

@@ -219,6 +219,14 @@ export const ENTRIES = {
       },
     },
   ],
+  "name-card": [
+    {
+      activity: "Tap a resident's name card with your phone",
+      device: "phone",
+      do: "Hold the top of your phone to a resident's name card.",
+      expect: "The resident's page opens. Admin, Management, Staff and a vet whose clinic treats that resident see the full page; everyone else signed in sees the public card (photo, name, age, temperament) plus where the resident lives and a button for each job they can do. Nobody sees an error or a page with less than a visitor sees.",
+    },
+  ],
   microchip: [
     {
       activity: "Find a resident by their microchip number",
