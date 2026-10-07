@@ -31,14 +31,14 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): #445, 7 passing, 0 failing, mergeable CLEAN (2026-10-08)
 
 ## 3. Schema and data
 
 - [x] Migration number is one above the highest on `main`, and no other in-flight branch carries one: `migration numbers: ok — 0160_view_write_grants.sql (against origin/main dd979395, highest 0159_place_capacity_and_names_th.sql)`; the only migration-carrying stream this batch
 - [x] `node scripts/apply-migrations.mjs --status` reviewed before applying: `159 applied, 0 pending`, no drift against `origin/main`
 - [x] `node scripts/apply-migrations.mjs --dry-run` reviewed: `dry-run 0160_view_write_grants.sql … ok`
-- [ ] Applied to **dev** and recorded in `schema_migrations` — n/a: not yet — the brief holds the apply until the merge is agreed; the file was proved in a rolled-back transaction instead (below), and this line is ticked in the commit that applies it
+- [x] Applied to **dev** and recorded in `schema_migrations` when Lutan said merge (2026-10-08): `applying 0160_view_write_grants.sql … ok`. Then the plain after-check on the applied database: `Write privileges authenticated or anon still hold on these views: none` / `260 statements, 0 failed.` / `RESULT: GREEN`; `check-app-access-gate` HARNESS-OK; `check-policy-role-names` GREEN
 - [x] File is re-runnable: a single `revoke`, which is idempotent
 - [x] Existing rows still read correctly after the change: every role's select on all six views returns the same count with the file run as without it (evidence below)
 - [x] **Exercised against real rows in a rolled-back harness**: `scripts/check-view-write-grants.mjs`, one live login per role under its own JWT, every statement in its own sub-block ending in `raise exception`. Asserted before: no write to the five non-updatable views touches a row for any role; every write through `project_folder_summary` touches exactly what the same write on `project_folders` touches. Asserted after (`--with` the file, same transaction, rolled back): `has_table_privilege` is false for all six privileges on all six views for `authenticated` and `anon`; no write touches a row; `project_folder_summary` writes refused `42501`; every select still succeeds. After the run, dev still showed the old grants, confirming the rollback
@@ -282,8 +282,8 @@ Manual verification by: n/a: no UI surface, database grants only
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
-- [ ] Handed to the production release manager — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR: linked from #445's description
+- [ ] Handed to the production release manager — n/a: not yet — read when the release is cut
 
 Result: pass with accepted defects
 
