@@ -366,7 +366,7 @@ const manual: Manual = {
           roles: ["admin", "management", "staff", "vet"],
           path: "Residents → Scan a chip, or a resident's hub",
           intro:
-            "A microchip number is exactly 15 digits, and no two residents can share one. It is for staff and vets only: the public website says only whether an animal is microchipped, never the number.",
+            "A microchip number is exactly 15 digits, and no two residents can share one. It is for staff, Management and vets only: the public website says only whether an animal is microchipped, never the number.",
           steps: [
             "To find an animal by their chip, open Residents. A USB or Bluetooth chip reader types the 15 digits and presses Enter, so click the Scan a chip box (it is already selected when the page opens) and scan. A known chip opens that resident straight away, whatever the place, zone or deceased filters say. An unknown chip says so and, for staff, offers New resident with this chip, which starts intake with the number filled in. Typing the 15 digits works just as well, spaces and dashes included. Phones cannot read the usual 134.2 kHz chips, so use a reader.",
             "The chip shows under the resident's name on their hub, and at the top of their Vet appointments and Procedures pages and a visit's Edit page, so it is in front of a vet wherever they work. It is also in the summary PDF and offline index filed when a resident dies.",
@@ -649,7 +649,7 @@ const manual: Manual = {
             "One form records any number of vaccines for any number of residents — a litter's first shots, or a whole enclosure's rabies boosters.",
           steps: [
             "Choose the residents: pick them individually, or use Add all in zone / Add all in enclosure.",
-            "Tick the immunization types given. Mandatory ones are marked; each type's repeat interval is set under Settings → Immunization Types.",
+            "Tick the immunization types given. Mandatory ones are marked; each type's repeat interval is set under Settings → Immunization Types. The list shows names only — what a vaccine costs is kept on that Settings page and is not shown on this form, even to people who can log immunizations.",
             "Enter the date administered, who gave it, and any notes. The notes apply to every record in the batch.",
             "The button tells you how many records will be created. Tap it, and a table shows each resident, vaccine, and its next-due date.",
           ],
@@ -1022,12 +1022,11 @@ const manual: Manual = {
         {
           id: "contacts",
           title: "Contacts",
-          roles: ["admin", "management", "staff"],
-          activity: "contacts.directory",
-          activityLevel: "read",
+          roles: ["admin", "management"],
+          activity: "contacts.browse",
           path: "Contacts",
           steps: [
-            "Open Contacts to find carers, volunteers and suppliers. Search by name, phone, email or chat ID, and filter by type. Contacts is for staff and management; a volunteer is not given the address book.",
+            "Open Contacts to find carers, volunteers and suppliers. Search by name, phone, email or chat ID, and filter by type. Contacts is for Management and the 2IC. The 2IC sees each person's name and phone number and nothing else — no address, email or notes. Staff and volunteers do not have the page: if you need a carer's number, ask Management. (Choosing a carer on intake or rehoming still works for staff.)",
             "Each contact has one-tap buttons: Call, LINE, Messenger, WhatsApp, Email and Map — handy on a phone.",
             "Tap a contact for their page, including the residents currently fostered or adopted with them and past placements.",
             "Contacts the shelter no longer works with are archived rather than deleted. They're hidden from the list; tap Show archived under the search box to see them, greyed out with an Archived badge and the reason. A search always finds them, so you can still look up an old number.",
