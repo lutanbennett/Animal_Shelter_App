@@ -8,7 +8,7 @@
 |---|---|
 | Feature | Durable home for the next/og advisory warning |
 | Backlog item | `docs/backlog.md` → Next 16.3.5 carries a Critical RCE advisory… |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/next-og-warning-durable` @ `C:DevelopmentAnimal_Shelter_next-og-warning-durable` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3008` (not started — no UI) |
 | PR | linked from the PR itself |
 | Tested by / date | Claude, 2026-10-07 |
