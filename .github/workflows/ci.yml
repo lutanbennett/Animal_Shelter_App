@@ -89,6 +89,25 @@ jobs:
           node-version: 22
       - run: node scripts/check-migration-numbers.mjs --base origin/${{ github.base_ref }}
 
+  # A migration added on this branch must not create a policy that names a role
+  # (current_user_role() or an app_role literal): policies ask what you may do,
+  # not who you are. Static, reads only the added SQL files, so it needs no
+  # Supabase token (the DB-backed check-policy-role-names.mjs would; see
+  # docs/decisions/2026-10-07-policy-enum-guard.md). A deliberate one carries
+  # "-- policy-role: deliberate — <why>". Pull requests only, like migration-numbers.
+  new-policy-role-names:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - run: node scripts/check-new-policy-role-names.mjs --base origin/${{ github.base_ref }}
+
   # scripts/ is loaded by nothing CI runs: typecheck, lint and build never
   # touch it, so a syntax error in deploy.mjs reached main with CI green
   # (#302), and spare-clone.sh was committed 100644 while its systemd unit runs
