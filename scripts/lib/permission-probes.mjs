@@ -195,5 +195,5 @@ for (const k of Object.keys(NO_DB_PROBE)) if (NO_DB_PROBE[k] === undefined) dele
 // the runner so that "twelve" is accounted for: ten are probed above, these two are not tightenings.
 export const NOT_A_DIFFERENCE = {
   C8: "stock_receipts update by staff: the delivery activity is Yes/No and staff hold Yes, so the default also lets staff update. The app only inserts and deletes; 0145 decided it: the converted policy offers no update, so a hand-built update is now refused to everyone, a tightening of the cell and not a difference to list",
-  C12: "resident_list_view carries insert/update/delete grants to authenticated, but information_schema.views reports it is_updatable = NO and is_insertable_into = NO: every statement fails for every role, Admin included. The grants are inert; the conversion can revoke them without any visible change",
+  C12: "resident_list_view's insert/update/delete grants to authenticated were inert (is_updatable = NO: every statement failed for every role, Admin included) and 0160 revoked them, with the same grants on five other views (scripts/check-view-write-grants.mjs)",
 };
