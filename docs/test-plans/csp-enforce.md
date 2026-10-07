@@ -27,7 +27,7 @@ or `n/a` with the reason.
 
 ## 2. Automated gates
 
-- [ ] `node scripts/worktree.mjs sync` — n/a: not yet run at this commit; run before the PR is opened
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly and pushed; the merge brought in only `docs/backlog.md`, so the gates above still stand
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` (run before the final `sync`, to be re-run if `main` has moved):
 
 ```
@@ -80,7 +80,7 @@ gates: typecheck=0 lint=0 build=0
 
 - [x] Nearest pages still work: `node scripts/check-worker-origin.mjs` still prints `all cases ok`. A deployed page was not loaded; see the manual table
 - [x] Shared file touched: `worker/security-headers.mjs` also sets HSTS, nosniff, framing and camera headers; `check-csp-report.mjs` asserts `camera=(self)` and the report endpoint wiring unchanged
-- [ ] Nothing merged from `main` during `sync` was broken — n/a: not yet synced at this commit
+- [x] Nothing merged from `main` during `sync` was broken: only `docs/backlog.md` changed
 
 ## 7. Documentation
 
