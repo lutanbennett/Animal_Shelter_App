@@ -497,7 +497,7 @@ async function checkPage(page, { roleName, locale, target }) {
   if (m.overflow > TOLERANCE) return { ...where, kind: "overflow", overflow: m.overflow, culprits: m.culprits, ...tap };
   // Only a page that fits unfocused is worth focusing: an overflowing one is already red.
   const f = await checkFocus(page);
-  const zoom = await page.evaluate(() => [...document.querySelectorAll("main textarea")].filter((el) => el.getBoundingClientRect().width > 0 && parseFloat(getComputedStyle(el).fontSize) < 16).map((el) => el.name || el.id || "textarea")).catch(() => []);
+  const zoom = await page.evaluate(() => [...document.querySelectorAll("main textarea, main select, main input:not([type=hidden]):not([type=file]):not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=button]):not([type=submit]):not([type=reset]):not([type=image])")].filter((el) => el.getBoundingClientRect().width > 0 && parseFloat(getComputedStyle(el).fontSize) < 16).map((el) => el.name || el.id || el.tagName.toLowerCase())).catch(() => []);
   tap.zoom = zoom;
   if (f.overflow > TOLERANCE) return { ...where, kind: "overflow", overflow: f.overflow, culprits: f.culprits, focused: f.field, ...tap };
   if (t.failures.length) return { ...where, kind: "small", ...tap };
@@ -542,7 +542,7 @@ function report(results) {
   const zooming = results.filter((r) => r.zoom?.length);
   for (const r of zooming)
     console.log(`
-FAIL  ${label(r)}  textarea ${r.zoom.join(", ")} has type under 16 px: iPhone Safari zooms the page in when it is tapped, and the page then scrolls sideways`);
+FAIL  ${label(r)}  ${r.zoom.join(", ")} has type under 16 px: iPhone Safari zooms the page in when it is tapped, and the page then scrolls sideways`);
   const smallActions = group("small");
   for (const g of smallActions) {
     console.log(`\nFAIL  ${g.path}  ${g.c.component} "${g.c.label}" (in ${g.c.region}) is ${g.c.width} x ${g.c.height} px at ${WIDTH} px, under ${TAP}`);
@@ -563,7 +563,7 @@ FAIL  ${label(r)}  textarea ${r.zoom.join(", ")} has type under 16 px: iPhone Sa
   );
   console.log(`${components} component action(s) measured for tap size.`);
   console.log(bad.length ? `${bad.length} page view(s) overflow.` : "No page scrolls sideways.");
-  console.log(zooming.length ? `${zooming.length} page view(s) have a textarea under 16 px.` : "No textarea is under 16 px (iPhone zoom on tap).");
+  console.log(zooming.length ? `${zooming.length} page view(s) have a text box, select or textarea under 16 px.` : "No text box, select or textarea is under 16 px (iPhone zoom on tap).");
   console.log(smallActions.length ? `${smallActions.length} component action(s) under ${TAP} px.` : `Every component action is at least ${TAP} px.`);
   return bad.length || smallActions.length || zooming.length ? 1 : 0;
 }
