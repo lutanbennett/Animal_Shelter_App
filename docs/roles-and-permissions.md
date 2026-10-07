@@ -224,7 +224,7 @@ disagree.
 | # | Table or function | The database lets | The screens let |
 |---|---|---|---|
 | C1 | `enclosures`, `zones` | admin, management, staff insert, update, delete | admin only (Settings). **Closed by `0145`:** management and staff now hold Read only |
-| C2 | `residents` | admin, management, staff **delete** | nobody: the app never deletes a resident |
+| C2 | `residents` | admin, management, staff **delete** | nobody: the app never deletes a resident. **Management and staff closed by `0144`;** Admin keeps it on purpose (`0144`, `0153`: `residents_admin_delete` on `is_admin()`), unused by any screen |
 | C3 | `immunization_types` | **vet** insert, update, delete | admin only (Settings) |
 | C4 | `blood_tests`, `procedures`, `prescriptions`, `immunization_records`, `vet_appointments` | **vet** delete outright (own clinic's) | Remove is not offered to a vet at all |
 | C5 | `weight` | management, staff, vet delete outright | Remove is a soft archive, and not for vets |
@@ -234,7 +234,7 @@ disagree.
 | C9 | `stock_receipts`, `stock_counts`, `medication`, `diet_types` | **volunteer** (closed by `0134`, 2026-10-04) reads every row and every column, prices and delivery costs included | Stocktake needs the names and the counts, not the prices; Deliveries and both Management lists are refused to a volunteer |
 | C10 | `enclosures`, `zones`, `vets`, `diet_types`, `shelter_friends`, `bulk_appointments` | **vet** reads every row, every other clinic and its bulk bookings included | all refused to a vet as pages. A resident's page needs the enclosure's name; nothing a vet opens needs the list of other clinics |
 | C11 | `record_recurring_job()`, `reassign_recurring_job()` | a vet may hold and record a recurring job | vets are never offered as assignees |
-| C12 | `resident_list_view` | the view carries insert, update, delete and truncate grants to `authenticated` | read only. Whether any of those grants can do anything depends on the view being updatable, which was not tested here |
+| C12 | `resident_list_view` | the view carries insert, update, delete and truncate grants to `authenticated` | read only. **Measured and closed by `0160` (2026-10-07):** the grants were inert (the view is not updatable), and five other views carried the same set; one of them, `project_folder_summary`, was writable but no wider than `project_folders` (`docs/decisions/2026-10-07-view-write-grants.md`) |
 
 C9 and C10 are the two worth a second look whatever is decided here, because
 they are reads: a volunteer can read what the shelter paid for a delivery, and a
@@ -1456,8 +1456,8 @@ foundation; each is needed by the time its role is built.
 - **Thai names** for the roles and the 55 activities. They go in the
   dictionaries with everything else, and nobody has written them.
 - **Whether a clinic's doctors use a phone or a PC.**
-- **`resident_list_view`'s write grants** (finding C12): whether they can do
-  anything.
+- ~~**`resident_list_view`'s write grants** (finding C12): whether they can do
+  anything.~~ Answered 2026-10-07: they could not; `0160` revoked them.
 
 ---
 
