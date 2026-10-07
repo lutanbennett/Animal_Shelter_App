@@ -313,3 +313,17 @@ Tick the item in `docs/backlog.md` (follow-ups you notice go on the
 `backlog` branch, not the PR), record non-obvious design
 choices as a new file in `docs/decisions/` (`<date>-<slug>.md`), and keep `README.md` accurate.
 Commit messages say why, not just what.
+
+**Then tick what else your work closed, not just your own item.** Search
+`docs/backlog.md` for the files, tables, functions and features you changed
+(`grep -n` on each name), and for every *other* open item, ask "can the
+outcome this item describes still happen?" If not, tick it in the same PR
+with a note saying what closed it (commit or PR, migration number, the line).
+If it is only partly closed, add a note saying which part. A stream ticks its
+own item and nothing else, and that is how the backlog fills with phantoms. On
+2026-10-07 `/plan-day` spent four streams on work that had already shipped,
+and a sweep then found five more open items that were already done, two of
+them closed by work in an unrelated area. One was finished on 2026-09-30 and
+cited by every Security item, yet still read open a week later. Finding a line
+that agrees with an item is not the test; whether the bad outcome can still
+happen is.
