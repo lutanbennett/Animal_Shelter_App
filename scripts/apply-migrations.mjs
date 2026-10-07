@@ -19,7 +19,8 @@
 // Each file runs in its own transaction together with its schema_migrations
 // insert, so a failing file leaves nothing behind and the run stops there;
 // fix the file and re-run. Files are applied in filename order and must
-// never be edited once applied — write a new one.
+// never be edited once applied — write a new one. Pending files must pass
+// check-migration-grants before any is applied (a dry-run reports and goes on).
 //
 // Two lists of files matter, and they are not the same thing. The working
 // tree's supabase/migrations/ is what gets *applied*; the files on
@@ -270,6 +271,33 @@ try {
   for (const n of notes) console.log(`  note: ${n}`);
 } catch (error) {
   console.log(`  note: consumer check skipped (${error.message.split("\n")[0]}).`);
+}
+
+// The grants check, on the pending files, before any of them reaches a
+// database. It already runs in lint, but lint runs after the apply, and the
+// dev database is shared by every branch's CI: on 2026-10-07 the first
+// version of 0153 granted is_admin() to anon, was applied at 00:19Z, and
+// turned public-views red on two unrelated branches until a corrected copy
+// was re-run some fifteen minutes later — while lint on its own branch was
+// already refusing the file (docs/decisions/2026-10-07-public-views-overnight.md).
+// A dry-run still runs, so the SQL can be tried, but nothing is applied.
+if (pending.length) {
+  const grants = spawnSync(
+    process.execPath,
+    [join("scripts", "check-migration-grants.mjs"), ...pending.map((name) => join(MIGRATIONS_DIR, name))],
+    { encoding: "utf8" },
+  );
+  if (grants.status !== 0) {
+    process.stderr.write(grants.stderr || grants.stdout);
+    if (!dryRun) {
+      console.error(
+        "\napply-migrations: check-migration-grants refuses the pending file(s) above, so nothing was applied." +
+          `\nThe ${envName} database is shared, and what it holds is what every other branch's CI checks against. Fix the file first.`,
+      );
+      process.exit(1);
+    }
+    console.log("Dry run continues; a real apply would refuse these files.");
+  }
 }
 
 for (const name of pending) {
