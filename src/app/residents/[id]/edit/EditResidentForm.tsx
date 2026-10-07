@@ -25,6 +25,7 @@ import {
 import { MicrochipFields } from "@/components/MicrochipFields";
 import { todayIso } from "@/lib/format";
 import { HOOK_LINE_MAX, IDEAL_HOME_MAX } from "@/lib/residents/adoption-profile";
+import { textareaClass } from "@/components/textareaClass";
 
 export type HousingState = {
   /** Current enclosure (physical or Lifecycle pseudo-enclosure), if any. */
@@ -66,8 +67,6 @@ export type EditableResident = {
 
 const inputClass =
   "rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
-// `rows` is the minimum; field-sizing-content lets the box grow with the text.
-const textareaClass = `${inputClass} field-sizing-content`;
 
 export function EditResidentForm({
   resident,

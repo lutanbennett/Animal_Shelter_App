@@ -12,10 +12,10 @@ import { statusLabel } from "@/lib/i18n/enum-labels";
 import type { CarerOption } from "@/lib/contacts/carers";
 import type { RehomeKind } from "@/lib/placements/rehome";
 import { CarerPicker } from "@/components/CarerPicker";
+import { textareaClass } from "@/components/textareaClass";
 
 const inputClass =
   "rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
-const textareaClass = `${inputClass} field-sizing-content`;
 
 export type RehomeCurrent = {
   status: string | null;
