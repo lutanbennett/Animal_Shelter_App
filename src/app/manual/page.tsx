@@ -50,9 +50,9 @@ const CALLOUT_STYLES: Record<
  * sections on wide screens, a collapsible one above them on a phone.
  *
  * The page scrolls on the window (nothing between here and <body> sets
- * overflow, and the app header scrolls away with it), so the sticky
- * contents are measured against the viewport: top-6 plus an equal gap at
- * the bottom is 100dvh - 3rem. The heading stays put and the list below it
+ * overflow), so the sticky contents are measured against the viewport, below
+ * the pinned app header: header height plus 1.5rem at the top and an equal
+ * gap at the bottom is 100dvh - header - 3rem. The heading stays put and the list below it
  * scrolls in its own box.
  *
  * It opens filtered to the reader's role: a topic tagged with other roles
@@ -115,7 +115,7 @@ export default async function ManualPage({ searchParams }: PageProps<"/manual">)
         </details>
 
         {/* Desktop: sticky contents beside the text, with their own scroll bar. */}
-        <aside className="hidden w-56 shrink-0 lg:sticky lg:top-6 lg:flex lg:max-h-[calc(100dvh-3rem)] lg:flex-col">
+        <aside className="hidden w-56 shrink-0 lg:sticky lg:top-[calc(var(--app-header-h)+1.5rem)] lg:flex lg:max-h-[calc(100dvh-var(--app-header-h)-3rem)] lg:flex-col">
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">
             {c.contents}
           </h2>

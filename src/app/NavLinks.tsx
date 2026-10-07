@@ -232,21 +232,13 @@ export function NavLinks({
   return (
     <>
       {/* Desktop: persistent sidebar */}
-      <nav className="hidden w-48 shrink-0 flex-col gap-1 border-r border-border bg-surface p-4 md:flex">
+      <nav className="hidden w-48 shrink-0 flex-col gap-1 border-r border-border bg-surface p-4 md:sticky md:top-[var(--app-header-h)] md:flex md:h-[calc(100dvh-var(--app-header-h))] md:self-start md:overflow-y-auto md:overscroll-contain">
         {renderGroups()}
-        {/* mt-auto pushes the group to the bottom of the sidebar — but the
-            sidebar is a flex item stretched to the height of the page, not
-            the window, so on a long list (residents) that bottom is
-            thousands of pixels down. sticky keeps it against the bottom of
-            the window until the real bottom scrolls into view, matching the
-            bottom-4 to the nav's own p-4 so it doesn't jump when it lands.
-            A pinned group floats over whatever links share the window with
-            it, so it is only pinned on a window tall enough for the header,
-            the whole list and the group together — an admin's needs ~690px
-            (measured 2026-09-23), which a 768px laptop screen does not
-            leave the page. Shorter than that it simply follows the list
-            behind its divider, as it does in the drawer. */}
-        <div className="mt-2 flex flex-col gap-1 border-t border-border bg-surface pt-3 [@media(min-height:44rem)]:sticky [@media(min-height:44rem)]:bottom-4 [@media(min-height:44rem)]:mt-auto">
+        {/* The sidebar is pinned under the header and exactly as tall as the
+            rest of the window, so mt-auto puts this group at the bottom of
+            the window; a menu longer than the window (an admin's on a small
+            laptop) scrolls inside the sidebar and the group follows the list. */}
+        <div className="mt-2 flex flex-col gap-1 border-t border-border bg-surface pt-3 md:mt-auto">
           {renderLinks(footerItems)}
         </div>
       </nav>

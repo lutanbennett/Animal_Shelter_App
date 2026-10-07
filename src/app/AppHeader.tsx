@@ -50,7 +50,7 @@ export async function AppHeader() {
         : null;
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-border bg-surface px-4 py-3 md:px-6">
+    <header className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-border bg-surface px-4 py-3 md:sticky md:top-0 md:z-30 md:h-[var(--app-header-h)] md:flex-nowrap md:px-6">
       <div className="flex items-center gap-3">
         <MobileNavToggle />
         {/* The logo is the way to the public website (it left the nav
