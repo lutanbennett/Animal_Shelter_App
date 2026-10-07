@@ -13,7 +13,7 @@
 //                       reference.types Edit; update and delete reference.types Edit
 //   procedure_types     read medical.procedures / reference.types Read / the add cell; insert the add cell or reference.types Edit
 //   blood_test_types    read medical.blood_tests or reference.types Read; write reference.types Edit
-//   immunization_types  read medical.immunizations or reference.types Read; write reference.types Edit
+//   immunization_types  read reference.types Read (0155; medical.immunizations reads picker_immunization_types); write reference.types Edit
 // The vet keeps what its own vet_* policies give it, unchanged (C3, C10). Then structural sweeps: no policy on these
 // tables names management or staff, every new policy wraps has_permission() in (select ...), the two price tables never
 // ask a medical.* cell, and 24 *_perm policies exist.
@@ -72,12 +72,12 @@ const T = {
 // expected "RUID" per principal; anything not listed is 0000
 const A = "1111", RO = "1000", RI = "1010", I = "0010";
 const EXPECT = {
-  medication: { admin: A, management: A, staff: RI, vet: RI, c_med_read: RO, c_med_edit: A, c_add: RI },
-  diet_types: { admin: A, management: A, staff: RO, vet: RO, c_diet_read: RO, c_diet_edit: A, c_register: RO },
+  medication: { admin: A, management: A, staff: I, vet: RI, c_med_read: RO, c_med_edit: A, c_add: I }, // 0151: the add cell no longer reads the table
+  diet_types: { admin: A, management: A, vet: RO, c_diet_read: RO, c_diet_edit: A }, // 0151: resident.register no longer reads the table
   frequency: { admin: A, management: RI, staff: RI, vet: RI, c_types_read: RO, c_types_edit: A, c_add: I, c_rx_read: RO, c_vol_medical: RO },
   procedure_types: { admin: A, management: RI, staff: RI, vet: RI, c_add: RI, c_proc_read: RO, c_types_read: RO, c_types_edit: A, c_vol_medical: RO },
   blood_test_types: { admin: A, management: RO, staff: RO, vet: RO, c_blood_read: RO, c_types_read: RO, c_types_edit: A, c_vol_medical: RO },
-  immunization_types: { admin: A, management: RO, staff: RO, vet: A, c_imm_read: RO, c_types_read: RO, c_types_edit: A, c_vol_medical: RO },
+  immunization_types: { admin: A, vet: A, c_types_read: RO, c_types_edit: A }, // 0155: medical.immunizations reads picker_immunization_types, not the table (it carries a price)
 };
 const CMDS = ["read", "update", "insert", "delete"];
 const expected = (tbl, who) => (EXPECT[tbl][who] ?? "0000").split("").map(Number);

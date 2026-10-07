@@ -8,7 +8,7 @@
 // It checks
 //   A  parity: role_can(role, activity, level) equals has_permission(activity,
 //      level) asked under a login of that role, for every role x every activity
-//      x read / edit (660 answers), and for the four "answers no" cases (a
+//      x read / edit (696 answers), and for the four "answers no" cases (a
 //      missing cell, an unknown activity, an archived role, a person with no
 //      role) plus an unknown role key, null arguments and a mistyped level
 //   B  Admin is yes for everything, an activity the catalogue does not know
@@ -124,7 +124,7 @@ begin
       end loop;
     end loop;
   end loop;
-  perform pg_temp.eq('A count', v_checked::text, '660');
+  perform pg_temp.eq('A count', v_checked::text, '696');
   -- the four "answers no" cases, from a caller who is allowed to ask
   perform pg_temp.eq('A missing cell', pg_temp.q(v_admin, 'role_can(''volunteer'', ''stock.purchasing'', ''edit'')'), 'false');
   perform pg_temp.eq('A unknown activity', pg_temp.q(v_admin, 'role_can(''management'', ''no.such_activity'', ''read'')'), 'false');
@@ -139,7 +139,7 @@ begin
   perform pg_temp.eq('A default level is edit', pg_temp.q(v_admin, 'role_can(''staff'', ''stock.count'')'), 'true');
   perform pg_temp.eq('A read-only cell is no for edit', pg_temp.q(v_admin, 'role_can(''volunteer'', ''resident.record'', ''edit'')'), 'false');
   perform pg_temp.eq('A read-only cell is yes for read', pg_temp.q(v_admin, 'role_can(''volunteer'', ''resident.record'', ''read'')'), 'true');
-  v_report := v_report || 'A: 660 answers equal has_permission() under each role''s own login; missing cell, unknown activity, archived role, no-role person, unknown key, nulls, mistyped level all no | ';
+  v_report := v_report || 'A: 696 answers equal has_permission() under each role''s own login; missing cell, unknown activity, archived role, no-role person, unknown key, nulls, mistyped level all no | ';
 
   -- B: Admin.
   perform pg_temp.eq('B admin unknown activity', pg_temp.q(v_admin, 'role_can(''admin'', ''no.such_activity'', ''edit'')'), 'true');

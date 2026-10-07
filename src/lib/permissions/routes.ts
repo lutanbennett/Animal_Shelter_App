@@ -102,8 +102,7 @@ export const ROUTES: readonly RouteEntry[] = [
   },
   {
     path: "/contacts",
-    activity: "contacts.directory",
-    level: "read",
+    activity: "contacts.browse",
     icon: NAV_ICONS.contacts,
     label: (t) => t.nav.contacts,
     device: "any",

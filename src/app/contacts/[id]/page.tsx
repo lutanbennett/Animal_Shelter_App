@@ -14,7 +14,7 @@ import { ContactHub, type CarerPlacement } from "./ContactHub";
 
 export default async function ContactPage(props: PageProps<"/contacts/[id]">) {
   const { id } = await props.params;
-  const { supabase, perms } = await requirePermission("contacts.directory", "read");
+  const { supabase, perms } = await requirePermission("contacts.browse");
 
   // Every placement that named this contact as carer, newest first. The
   // open ones (end_date null) are the residents living with them now; the
@@ -46,7 +46,7 @@ export default async function ContactPage(props: PageProps<"/contacts/[id]">) {
       .eq("carer_id", id)
       .order("start_date", { ascending: false })
       .returns<CarerPlacement[]>(),
-    // Its Shelter Friend profile, if any (0076) — every signed-in role reads it.
+    // Its Shelter Friend profile, if any (0076); friends.view or friends.manage reads it (0155), so the 2IC sees none.
     supabase
       .from("shelter_friends")
       .select(SHELTER_FRIEND_COLUMNS)

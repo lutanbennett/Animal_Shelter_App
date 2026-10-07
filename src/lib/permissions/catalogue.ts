@@ -104,6 +104,8 @@ export const ACTIVITIES = [
   { key: "audit.undo", kind: "yesno", area: "settings", sort: 54, requires: [], probes: [] },
   { key: "system.status", kind: "yesno", area: "settings", sort: 55, requires: [], probes: [] },
   { key: "translations.view", kind: "yesno", area: "management", sort: 56, requires: [], probes: [] },
+  { key: "contacts.browse", kind: "yesno", area: "contacts", sort: 57, requires: [], probes: [] },
+  { key: "friends.view", kind: "yesno", area: "contacts", sort: 58, requires: [], probes: [] },
 ] as const satisfies readonly ActivityDef[];
 
 export type Activity = (typeof ACTIVITIES)[number];

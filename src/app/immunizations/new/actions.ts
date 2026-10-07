@@ -102,7 +102,7 @@ export async function recordImmunizations(
   const { data: enrichedData, error: enrichError } = await supabase
     .from("immunization_records")
     .select(
-      "id, resident_id, date_administered, immunization_type_id, residents(name), immunization_types(name, interval_months)",
+      "id, resident_id, date_administered, immunization_type_id, residents(name), immunization_types:picker_immunization_types(name, interval_months)",
     )
     .in(
       "id",

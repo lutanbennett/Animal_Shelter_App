@@ -16,10 +16,10 @@ export default async function ContactsPage(props: PageProps<"/contacts">) {
   // Archived contacts are loaded either way — a search still finds them —
   // and ContactList hides them unless this is set.
   const showArchived = (await props.searchParams).archived === "1";
-  const { supabase, perms } = await requirePermission("contacts.directory", "read");
+  const { supabase, perms } = await requirePermission("contacts.browse");
 
-  // The list is open to every shelter role, but a volunteer reads only name
-  // and phone (0126, volunteer_contacts) — a volunteer doing a foster pick-up
+  // The list is Management's and the 2IC's (contacts.browse, 0155): staff and volunteers no longer browse it. The 2IC reads only name
+  // and phone (0126, volunteer_contacts) — someone doing a foster pick-up
   // needs the carer's number, not their address or notes. Open placements
   // give each carer their "N in care" badge.
   const [contactsResult, placementsResult, friendsResult] = await Promise.all([

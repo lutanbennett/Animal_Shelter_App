@@ -144,12 +144,12 @@ eq("C a vet's home is its appointments, and staff are not offered them", [
 ], [true, false, false]);
 eq("C a vet has no tasks tile", homeTilesFor(roles.vet, t).some((x) => x.href === "/my"), false);
 // No seeded role reads Contacts without editing it since 0134 took the address book from the volunteer, so the
-// read-only case is a role built for the purpose: one cell, contacts.directory at Read.
+// read-only case is a role built for the purpose: one cell. Since 0155 (q6/q7) the pages ask contacts.browse, not contacts.directory.
 const contactsReader = parsePermissions({
   role: { key: "reader", name: "reader", opens_app: true },
   is_admin: false,
   scopes: {},
-  permissions: { "contacts.directory": 1 },
+  permissions: { "contacts.browse": 2 },
 });
 const contactsEditor = parsePermissions({
   role: { key: "editor", name: "editor", opens_app: true },
