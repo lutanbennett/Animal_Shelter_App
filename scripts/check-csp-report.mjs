@@ -12,7 +12,7 @@
 import {
   handleCspReport, resetCspReportLimiter, CSP_REPORT_PATH, MAX_BODY_BYTES, MAX_LOGS_PER_WINDOW,
 } from "../worker/csp-report.mjs";
-import { SECURITY_HEADERS, CSP_REPORT_ONLY } from "../worker/security-headers.mjs";
+import { SECURITY_HEADERS, CSP } from "../worker/security-headers.mjs";
 
 let failures = 0;
 const check = (name, ok, detail = "") => {
@@ -73,7 +73,8 @@ check("next window reports the drop count", lines.some((l) => l.includes("470 mo
 
 console.log = realLog;
 
-check("CSP names both report mechanisms", CSP_REPORT_ONLY.includes(`report-uri ${CSP_REPORT_PATH}`) && CSP_REPORT_ONLY.includes("report-to csp"));
+check("CSP names both report mechanisms", CSP.includes(`report-uri ${CSP_REPORT_PATH}`) && CSP.includes("report-to csp"));
+check("CSP is enforced, not report-only", typeof SECURITY_HEADERS["content-security-policy"] === "string" && !("content-security-policy-report-only" in SECURITY_HEADERS));
 check("Reporting-Endpoints points at the endpoint", SECURITY_HEADERS["reporting-endpoints"] === `csp="${CSP_REPORT_PATH}"`);
 check("camera stays allowed", SECURITY_HEADERS["permissions-policy"].includes("camera=(self)"));
 
