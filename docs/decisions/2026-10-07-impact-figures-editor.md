@@ -8,3 +8,5 @@ Backlog: "Impact figures as a baseline plus a live count". The schema half is `2
 - **The band grows to up to six tiles.** With more than four it lays out three across on a wide screen so it does not end on a lone tile; on a phone it was already two across.
 - **The date cannot be in the future** (Asia/Bangkok today), since a baseline "to the future" would hide real adoptions from the live count. Count and date are required together, as the table's check requires.
 - **Management cannot use it yet.** The backlog and brief say Management, but only Admin holds `website.content` on dev, and nothing in the Director's role draft gives Management website content. Granting it would be a permission nobody decided, so this ships Admin-only; the grant is Lutan's/the Director's call, filed as a follow-up on the backlog branch.
+
+**Superseded in part, 2026-10-07:** the home page no longer marks these figures "About" or carries the estimate note; Lutan asked for both to go after seeing the live page. See `2026-10-07-impact-band-plain-figures.md`.

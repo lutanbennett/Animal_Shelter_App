@@ -165,9 +165,6 @@ const en = {
       adoptedThisYear: "adopted into new homes this year",
       inFoster: "living with foster families",
       inVetCare: "in vet care right now",
-      about: "About",
-      estimateNote:
-        "Our rehoming and village sterilisation totals include an estimate of the work done before we began keeping digital records.",
     },
     featured: {
       heading: "Pet of the week",
@@ -1329,7 +1326,7 @@ const en = {
           "Nothing in the system records these yet, so the public figure is this number alone.",
         notShown: "Not entered yet, so this figure is not shown on the public site.",
         hint:
-          "These are your best estimate of the work done before the system, not an audit, and the home page says so. Clear both boxes to take a figure off the public site.",
+          "Enter your best estimate of the work done before the system. The home page shows the figure as it is, without saying it is an estimate, so enter a number you are happy to stand behind. Clear both boxes to take a figure off the public site.",
         confirm:
           "This changes a figure on the public website, and the change is recorded. Save it?",
         bothOrNeither: "Enter both the number and the date, or leave both blank.",

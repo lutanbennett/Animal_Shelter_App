@@ -199,7 +199,6 @@ export default async function WelcomePage() {
     ...impactStats(t, statsResult.data?.[0] ?? null),
     ...impactFigureStats(figuresResult.data, locale === "th" ? "th" : "en"),
   ];
-  const hasEstimate = stats.some((s) => s.approximate);
 
   const h = t.home.howToHelp;
   // "Sponsor a resident" goes to /donate until the sponsor flow exists, as
@@ -270,15 +269,11 @@ export default async function WelcomePage() {
               <div key={stat.key} className="flex flex-col-reverse items-center gap-1.5 text-center">
                 <dt className="text-base leading-snug">{stat.label}</dt>
                 <dd className="font-display text-4xl font-bold tabular-nums lg:text-[44px]">
-                  {stat.approximate && `${t.home.stats.about} `}
                   {stat.value.toLocaleString(locale === "th" ? "th-TH" : "en-GB")}
                 </dd>
               </div>
             ))}
           </dl>
-          {hasEstimate && (
-            <p className="mt-3 text-center text-sm text-site-ink-soft">{t.home.stats.estimateNote}</p>
-          )}
         </section>
       )}
 

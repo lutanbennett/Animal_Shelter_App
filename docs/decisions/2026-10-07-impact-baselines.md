@@ -11,3 +11,5 @@ Backlog: "Impact figures as a baseline plus a live count" (decision brief q10). 
 - The public view exposes label, baseline, date, live count and total, which the page prints; not `set_by`.
 
 Checked by `scripts/check-impact-baselines.mjs` (the migration runs inside a rolled-back transaction).
+
+**Superseded in part, 2026-10-07:** the home page no longer marks these figures "About" or carries the estimate note; Lutan asked for both to go after seeing the live page. See `2026-10-07-impact-band-plain-figures.md`.
