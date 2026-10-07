@@ -44,8 +44,12 @@ const TONE_SWATCH: Record<OccupancyLevel, string> = {
   unknown: "bg-neutral-400",
 };
 
+// A room is deliberately not an occupancy colour: it holds no one, so it must not read as "empty" or "full".
+const ROOM_SHAPE = "fill-sky-500/20 stroke-sky-700";
+const ROOM_SHAPE_ON = "fill-sky-500/45 stroke-sky-800";
+
 type Item = {
-  kind: "zone" | "enclosure";
+  kind: "zone" | "enclosure" | "room";
   id: string;
   name: string;
   shape: NonNullable<FacilityMapData["enclosures"][number]["shape"]>;
@@ -124,7 +128,18 @@ export function FacilityMap({ data }: { data: FacilityMapData }) {
     return { items: placed, unplaced: { zones: [] as typeof data.zones, enclosures: rest } };
   }, [data, plan, planOf, locale]);
 
-  const picked = items.find((i) => i.id === pickedId) ?? null;
+  // The rooms drawn on this plan (Medical room, Kitchen, Storage). They are not enclosures: no count, no
+  // capacity, and nothing for a tap to open, so they are their own kind of item rather than a flavour of one.
+  const roomItems: Item[] = useMemo(
+    () =>
+      data.rooms
+        .filter((r) => r.map_id === plan.id)
+        .map((r) => ({ kind: "room" as const, id: r.id, name: m.roomKinds[r.kind], shape: r.shape, level: "unknown" as const, count: 0, capacity: null, jobs: 0, diet: 0, meds: 0 })),
+    [data.rooms, plan.id, m.roomKinds],
+  );
+  const drawn = [...items, ...roomItems];
+
+  const picked = drawn.find((i) => i.id === pickedId) ?? null;
 
   function goTo(next: MapPlan) {
     setPlanId(next.id);
@@ -160,14 +175,14 @@ export function FacilityMap({ data }: { data: FacilityMapData }) {
 
       <div className="flex flex-col gap-1">
         <h2 className="text-lg font-semibold text-foreground">{planTitle}</h2>
-        <p className="text-sm text-muted">{items.length > 0 ? m.hint : plan.kind === "overview" ? m.emptyOverview : m.emptyZone(planTitle)}</p>
+        <p className="text-sm text-muted">{drawn.length > 0 ? m.hint : plan.kind === "overview" ? m.emptyOverview : m.emptyZone(planTitle)}</p>
       </div>
 
       <PanZoom key={plan.id} aspect={plan.width / plan.height} controlLabels={{ zoomIn: m.zoomIn, zoomOut: m.zoomOut, fit: m.fit }}>
         {/* The drawing is a plain <img>, the shapes an inline SVG: no server-side image work. */}
         <img src={plan.image_url} alt={m.planAlt(planTitle)} draggable={false} className="pointer-events-none absolute inset-0 h-full w-full" />
         <svg viewBox={`0 0 100 ${planHeight(plan.width, plan.height)}`} className="absolute inset-0 h-full w-full" role="group" aria-label={planTitle}>
-          {items.map((item) => (
+          {drawn.map((item) => (
             <MapShape
               key={item.id}
               item={item}
@@ -177,7 +192,9 @@ export function FacilityMap({ data }: { data: FacilityMapData }) {
               selected={item.id === pickedId}
               onPick={() => setPickedId(item.id)}
               ariaLabel={
-                item.kind === "zone"
+                item.kind === "room"
+                  ? m.roomAria(item.name)
+                  : item.kind === "zone"
                   ? m.zoneAria(item.name, item.count)
                   : m.enclosureAria(item.name, item.count, item.capacity, item.level === "unknown" ? m.noCapacity : t.enclosures.levels[item.level])
               }
@@ -259,7 +276,8 @@ function MapShape({
   const pts = pointsAttr(item.shape, plan.width, plan.height);
   const b = bounds(item.shape);
   const [cx, cy] = centroid(item.shape);
-  const isZone = item.kind === "zone";
+  const isRoom = item.kind === "room";
+  const isZone = item.kind === "zone" || isRoom; // a room is labelled in its middle, like a zone
   const chip = item.capacity ? `${item.count}/${item.capacity}` : String(item.count);
   const chipW = 1.4 + chip.length * 1.45;
   const chipX = b.minX + 0.5;
@@ -267,7 +285,8 @@ function MapShape({
 
   return (
     <g
-      role="link"
+      // A room opens nothing, so it is a button that selects, not a link.
+      role={isRoom ? "button" : "link"}
       tabIndex={0}
       aria-label={ariaLabel}
       aria-current={selected ? "true" : undefined}
@@ -285,7 +304,8 @@ function MapShape({
         strokeWidth={selected ? 4 : 2}
         strokeLinejoin="round"
         vectorEffect="non-scaling-stroke"
-        className={selected ? TONE_SHAPE_ON[item.level] : TONE_SHAPE[item.level]}
+        strokeDasharray={isRoom ? "5 3" : undefined}
+        className={isRoom ? (selected ? ROOM_SHAPE_ON : ROOM_SHAPE) : selected ? TONE_SHAPE_ON[item.level] : TONE_SHAPE[item.level]}
       />
       {/* the hit area */}
       <polygon points={pts} fill="transparent" stroke="transparent" strokeWidth={22} strokeLinejoin="round" vectorEffect="non-scaling-stroke" style={{ pointerEvents: "all" }} />
@@ -386,7 +406,7 @@ function PickedCard({
           ✕
         </button>
       </div>
-      <OccupancyIndicator count={item.count} capacity={item.capacity} />
+      {item.kind === "room" ? <p className="text-sm text-muted">{m.roomNote}</p> : <OccupancyIndicator count={item.count} capacity={item.capacity} />}
       {item.kind === "enclosure" && (item.jobs > 0 || item.diet > 0 || item.meds > 0) && (
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-foreground">
           {item.jobs > 0 && (
@@ -409,7 +429,7 @@ function PickedCard({
           )}
         </div>
       )}
-      {item.kind === "enclosure" ? (
+      {item.kind === "room" ? null : item.kind === "enclosure" ? (
         <Link href={`/enclosures/${item.id}`} className={button}>
           {m.openEnclosure}
         </Link>
