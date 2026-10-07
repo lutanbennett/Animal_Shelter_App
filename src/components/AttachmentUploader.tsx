@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { X } from "lucide-react";
+import { ActionButton } from "@/components/ActionButton";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { RowActionButton } from "@/components/RowAction";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 
@@ -214,21 +218,15 @@ export function AttachmentUploader({
               {item.status === "error" ? (
                 <>
                   <span className="text-xs text-danger">{item.error}</span>
-                  <button
-                    type="button"
-                    onClick={() => retry(item)}
-                    className="rounded border border-border px-2 py-1 text-xs font-medium text-foreground hover:bg-surface-hover"
-                  >
+                  <ActionButton icon={ACTION_ICONS.refresh} compact onClick={() => retry(item)}>
                     {t.common.retry}
-                  </button>
-                  <button
-                    type="button"
+                  </ActionButton>
+                  <RowActionButton
+                    icon={X}
+                    label={t.common.dismiss}
+                    subject={item.file.name}
                     onClick={() => dismiss(item.key)}
-                    aria-label={t.common.dismiss}
-                    className="text-muted hover:text-foreground"
-                  >
-                    &times;
-                  </button>
+                  />
                 </>
               ) : item.status === "done" ? (
                 <span className="text-xs font-medium text-success">

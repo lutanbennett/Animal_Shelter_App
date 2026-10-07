@@ -3,13 +3,15 @@ import type { ButtonHTMLAttributes } from "react";
 import type { LucideIcon } from "lucide-react";
 
 const TONE_CLASSES = {
-  default: "text-primary hover:bg-primary/10",
-  danger: "text-danger hover:bg-danger/10",
+  default: "border-border text-primary hover:bg-primary/10",
+  danger: "border-border text-danger hover:bg-danger/10",
+  /** Over a photo or file thumbnail (the remove x): readable on any image. */
+  overlay: "border-transparent bg-black/60 text-white hover:bg-danger",
 } as const;
 
 // 44 px square on phones (the touch-target rule), a tighter 36 px with a mouse.
 const BASE =
-  "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded border border-border transition disabled:cursor-not-allowed disabled:opacity-50 md:h-9 md:w-9";
+  "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded border transition disabled:cursor-not-allowed disabled:opacity-50 md:h-9 md:w-9";
 
 type Common = {
   /** The action's word, e.g. "Edit". Shown as the tooltip. */
