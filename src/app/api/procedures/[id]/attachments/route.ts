@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { getT } from "@/lib/i18n/get-t";
-import { assertPhotoWriteAccess } from "@/lib/auth/require-role";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import {
   ensureResidentProcedureFolder,
   getDriveClient,
@@ -39,13 +40,13 @@ async function handlePost(
 
   const { id: procedureId } = await params;
 
-  try {
-    await assertPhotoWriteAccess();
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Not authorized." },
-      { status: 403 },
-    );
+  // The activity 0152 asks of this owner_type, in the attachments policies and record_attachment().
+  // Asked here, before Drive is touched, so a refused upload cannot orphan a file. The clinic scope is
+  // left to the database (sees_all_clinical(); the vet has no cell rows yet, so is refused here as before).
+  const perms = await loadPermissions();
+  if (!can(perms, "medical.procedures")) {
+    const { t } = await getT();
+    return NextResponse.json({ error: t.photos.errors.notAuthorized }, { status: 403 });
   }
 
   const formData = await request.formData();
@@ -79,7 +80,7 @@ async function handlePost(
   const supabase = await createClient();
 
   // Every role can read procedures (0001), so the lookup itself isn't the
-  // gate: assertPhotoWriteAccess() above and record_attachment()'s own role
+  // gate: the medical.procedures check above and record_attachment()'s own role
   // check are, and both let staff/volunteers attach files to a record a
   // vet created (decisions.md: volunteers may write "attachments/photos,
   // any owner type").

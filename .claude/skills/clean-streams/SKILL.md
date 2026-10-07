@@ -32,9 +32,19 @@ there is one.
   folder (`git rev-parse --show-toplevel` tells you which that is; if it
   would otherwise qualify, say so and suggest running the skill from
   another checkout once this session is closed).
-- **`HELD`** (or `?`): a session, terminal or dev server has it open.
-  Never propose it. Name it, with the session name when shown, so the
-  user can close that session and re-run the skill.
+- **`HELD — <session name>`**: a Claude session is in it. Never propose
+  it. Name it so the user can close that session and re-run the skill.
+- **`HELD by a dev server on port N`** (or `a dev server (port not shown)`):
+  `list` found a `next dev` server and **nothing else** — no session, no
+  terminal, no other process. This is the common leftover (a server a
+  session started and nobody stopped). If the folder otherwise qualifies
+  (nothing beyond `main`, PR `MERGED`, nothing dirty or unpushed), propose
+  it as a candidate **marked "will stop the dev server on port N"**, and let
+  the user's yes cover that. Never use `--stop-servers` on a folder whose
+  PR is not merged. It still goes through the multi-select in step 3.
+- **Any other `HELD`** (`HELD by node.exe (pid …)`, bare `HELD`) or `?`: a
+  terminal, editor or process `list` cannot place. Never propose it. Name
+  it, with what `list` printed, so the user can look.
 - **`nothing beyond main` and `free`:** a candidate. Check its PR:
 
   ```
@@ -93,8 +103,11 @@ node C:\Development\Animal_Shelter_App\scripts\worktree.mjs done <slug>
 
 It ends with `done — folder removed, …` when all of it happened, or
 exits non-zero saying what is left. On a refusal, report its message
-verbatim and move on to the next slug; do not retry with `--force` or
-`--stop-servers` unless the user says so for that slug.
+verbatim and move on to the next slug; do not retry with `--force`. Add
+`--stop-servers` only to a slug proposed as held by a dev server alone and
+confirmed in step 3, or one the user names for it. If `done` refuses with
+"held only by a dev server" for a slug that was not marked that way, `list`
+and `done` disagree — report it rather than adding the flag.
 
 Another session may be cleaning up at the same time. If `done` reports a
 folder half-deleted, a branch already gone, or "nothing called <slug>",
