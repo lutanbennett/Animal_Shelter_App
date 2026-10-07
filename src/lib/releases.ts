@@ -61,7 +61,9 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  "Enclosures: each zone now shows how many residents are in it and how many spaces are free, with a total for all zones above. A full or over-capacity enclosure never takes spaces away from the others.",
+];
 
 
 /** Newest first. */

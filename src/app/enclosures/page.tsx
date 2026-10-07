@@ -195,6 +195,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       name_th: zone.name_th,
       internal: zone.internal,
       enclosures: physical.filter((e) => e.zone_id === zone.id),
+      total_enclosures: summaries.filter((e) => e.zone_id === zone.id).length,
       zone_wide_jobs: zoneWideJobs.get(zone.id) ?? 0,
     }))
     .filter((zone) => zone.enclosures.length > 0);
