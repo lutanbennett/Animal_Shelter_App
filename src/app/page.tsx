@@ -14,7 +14,14 @@ import { loadPublicFriends } from "@/lib/shelter-friends/public";
 import { loadSiteContent, pairedText } from "@/lib/site/content";
 import { loadSitePages, sitePageText } from "@/lib/site/pages";
 import { bodyLead } from "@/lib/site/body";
-import { impactStats, SHELTER_STATS_COLUMNS, type ShelterStats } from "@/lib/site/impact";
+import {
+  impactFigureStats,
+  impactStats,
+  IMPACT_FIGURE_COLUMNS,
+  SHELTER_STATS_COLUMNS,
+  type ImpactFigure,
+  type ShelterStats,
+} from "@/lib/site/impact";
 import { SiteBody } from "@/components/SiteBody";
 import { PublicHeader } from "./adopt/PublicHeader";
 import { PublicFooter } from "./adopt/PublicFooter";
@@ -123,7 +130,7 @@ export default async function WelcomePage() {
   if (await showsLockedLanding(supabase)) return <LockedLanding />;
   const { t, locale } = await getT();
 
-  const [content, pages, photosResult, statsResult, friendsResult] = await Promise.all([
+  const [content, pages, photosResult, statsResult, figuresResult, friendsResult] = await Promise.all([
     loadSiteContent(supabase),
     loadSitePages(supabase),
     supabase
@@ -137,6 +144,12 @@ export default async function WelcomePage() {
       .select(SHELTER_STATS_COLUMNS)
       .limit(1)
       .returns<ShelterStats[]>(),
+    // Hand-entered baseline plus the live count since its date (0156).
+    supabase
+      .from("public_impact_figures")
+      .select(IMPACT_FIGURE_COLUMNS)
+      .order("key")
+      .returns<ImpactFigure[]>(),
     // The Shelter Friends band (0076) — the public view only.
     loadPublicFriends(supabase),
   ]);
@@ -182,7 +195,11 @@ export default async function WelcomePage() {
     : [];
 
   // The strip is a nice-to-have: a failed query drops it rather than the page.
-  const stats = impactStats(t, statsResult.data?.[0] ?? null);
+  const stats = [
+    ...impactStats(t, statsResult.data?.[0] ?? null),
+    ...impactFigureStats(figuresResult.data, locale === "th" ? "th" : "en"),
+  ];
+  const hasEstimate = stats.some((s) => s.approximate);
 
   const h = t.home.howToHelp;
   // "Sponsor a resident" goes to /donate until the sponsor flow exists, as
@@ -248,16 +265,20 @@ export default async function WelcomePage() {
           <h2 id="impact-heading" className="sr-only">
             {t.home.stats.heading}
           </h2>
-          <dl data-reveal className="grid grid-cols-2 gap-x-6 gap-y-8 rounded-[20px] bg-site-accent px-6 py-8 text-site-on-accent sm:px-10 sm:py-9 lg:grid-cols-4">
+          <dl data-reveal className={`grid grid-cols-2 gap-x-6 gap-y-8 rounded-[20px] bg-site-accent px-6 py-8 text-site-on-accent sm:px-10 sm:py-9 ${stats.length > 4 ? "lg:grid-cols-3" : "lg:grid-cols-4"}`}>
             {stats.map((stat) => (
               <div key={stat.key} className="flex flex-col-reverse items-center gap-1.5 text-center">
                 <dt className="text-base leading-snug">{stat.label}</dt>
                 <dd className="font-display text-4xl font-bold tabular-nums lg:text-[44px]">
+                  {stat.approximate && `${t.home.stats.about} `}
                   {stat.value.toLocaleString(locale === "th" ? "th-TH" : "en-GB")}
                 </dd>
               </div>
             ))}
           </dl>
+          {hasEstimate && (
+            <p className="mt-3 text-center text-sm text-site-ink-soft">{t.home.stats.estimateNote}</p>
+          )}
         </section>
       )}
 
