@@ -15,6 +15,13 @@ session waited on something that was never going to succeed. Prefer doing the
 step yourself where you are permitted to; when you must hand it over, give the
 exact form, in the shell he actually uses.
 
+**`0.20.0` added a third, and it is the cheapest of the three to avoid:** a
+two-step handover was written as `gh pr merge 414 --merge && gh pr merge 415
+--merge`, and `&&` is not a statement separator in Windows PowerShell 5.1. It
+died with `The token '&&' is not a valid statement separator in this version`
+before running *either* command. The same mistake went out a second time in the
+same message, on `apply-migrations` and `deploy.mjs`. See the trap below.
+
 ---
 
 ## Who does what
@@ -158,6 +165,25 @@ Both deploy paths refuse a commit whose database lacks a migration that is on
 columns. Re-run `--status` afterwards and read `0 pending` and a clean drift
 check before moving on.
 
+**Pull the main checkout before you apply, not after.** The step above assumes
+`main` is current and does not say so. On `0.20.0` the five migrations were
+applied and the deploy that should have followed within seconds was refused:
+
+```
+deploy: production deploys only from a clean, pushed main:
+  - main and origin/main differ (6 behind / 0 ahead)
+```
+
+The PRs had been merged **on GitHub** and the local checkout had not pulled, so
+production ran the old code against the new policies until someone noticed.
+Two of that release's files narrowed read policies, so the window was not
+cosmetic: empty medication, diet and vaccine lists, and an empty Contacts page.
+The guard behaved correctly — it refused to ship the old release — but the
+`Apply them first` line it prints one step earlier is generic, and in that state
+following it is what opens the window. **Merge, pull, apply, deploy, in that
+order**, and confirm `git status -sb` says neither ahead nor behind before the
+apply rather than after it.
+
 ## 6. Deploy
 
 Deploy **test first** where the release allows it. Check what is on test before
@@ -282,6 +308,20 @@ Every one of these cost real time. They are not hypothetical.
 **PowerShell blocks `npm` and `npx`.** `npm.ps1 cannot be loaded because running
 scripts is disabled on this system`. Hand over `node scripts/<script>.mjs`, or
 `npm.cmd` / `npx.cmd`. Never `npm run …`.
+
+**`&&` and `||` do not exist in Windows PowerShell 5.1.** Lutan's shell is
+`powershell.exe`, not PowerShell 7: `&&`, `||`, `?:` and `??` all belong to 7.
+A command joined with `&&` fails to parse, so **neither half runs** — and the
+half you will assume ran is the second one. Hand over **one command per line**,
+or `A; if ($?) { B }`. Two things that *do* work and are worth not
+second-guessing: `| tee` (an alias for `Tee-Object`, which is why the deploy
+line is safe, and why its log is **UTF-16** — `tr -d '\000'` before
+grepping), and `&&` **inside a quoted `ssh` argument**, because that is bash
+on the Pi parsing it, not PowerShell:
+
+```bash
+ssh lutan@lanna-pi.local "cd ~/Animal_Shelter_App && ./scripts/pi/deploy-pi.sh --ref <sha>"
+```
 
 **`ssh host 'sudo …'` cannot prompt for a password.** No TTY, so it dies with
 `sudo: a terminal is required to read the password`. Use `ssh -t` for anything
