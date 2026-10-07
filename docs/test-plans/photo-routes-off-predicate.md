@@ -27,7 +27,7 @@ or `n/a` with the reason.
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — merged below
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in: Already up to date
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Closing lines as printed:
 
 ```
