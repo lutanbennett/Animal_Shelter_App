@@ -18,6 +18,7 @@ import {
   trustedTotpFactors,
 } from "@/lib/auth/two-step";
 import { MUST_CHANGE_PASSWORD } from "@/lib/auth/password-change";
+import { normaliseName, withName } from "@/lib/auth/user-name";
 import { generateTemporaryPassword } from "@/lib/auth/temp-password";
 import { forgetWaitingAccessRequests } from "@/lib/status/access-requests";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -119,6 +120,7 @@ export async function createUser(
 
     const email = (formData.get("email") as string | null)?.trim();
     const role = formData.get("role") as string | null;
+    const name = normaliseName(formData.get("name"));
 
     if (!email) return refuse(e.emailRequired);
     if (!isValidRole(role)) return refuse(e.selectValidRole);
@@ -129,6 +131,7 @@ export async function createUser(
       email,
       password: temporaryPassword,
       email_confirm: true,
+      ...(name ? { user_metadata: { full_name: name } } : {}),
       app_metadata: {
         [MUST_CHANGE_PASSWORD]: true,
         ...(role === "admin" ? { [SETUP_OPEN_UNTIL]: setupWindowEnd() } : {}),
@@ -160,6 +163,37 @@ export async function createUser(
       temporaryPassword,
       email,
     };
+  });
+}
+
+/**
+ * Sets (or clears) a login's name: the Name field in the users table. It
+ * is `user_metadata.full_name`, which `app_users.display_name` reads, so
+ * the pickers and Recent changes show it with no other change. Merged into
+ * the existing user_metadata (the admin API replaces it wholesale), and an
+ * empty name clears it so the email shows again. A Google sign-in refreshes
+ * the name from the Google profile, so for a Google login the next sign-in
+ * may put Google's back; this is for password logins and test accounts.
+ */
+export async function setUserName(userId: string, rawName: string): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("security.setUserName", t.common.somethingWentWrong, async () => {
+    const denied = await refuseUnlessAdmin(t);
+    if (denied) return denied;
+
+    const admin = createAdminClient();
+    const { data, error: lookupError } = await admin.auth.admin.getUserById(userId);
+    if (lookupError || !data.user) {
+      if (!lookupError || isUserNotFound(lookupError)) return refuse(t.admin.security.errors.userNotFound);
+      return unexpectedFailure("security.setUserName", lookupError, t.common.somethingWentWrong);
+    }
+    const { error } = await admin.auth.admin.updateUserById(userId, {
+      user_metadata: withName(data.user.user_metadata, normaliseName(rawName)),
+    });
+    if (error) return unexpectedFailure("security.setUserName", error, t.common.somethingWentWrong);
+    revalidatePath("/", "layout");
+    revalidateSecurity();
+    return { ok: true };
   });
 }
 

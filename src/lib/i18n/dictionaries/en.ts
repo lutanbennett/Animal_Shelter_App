@@ -65,6 +65,9 @@ const en = {
     appName: "Lanna Care for Animals",
     shortName: "LCA",
     signOut: "Sign out",
+    accountMenu: "Account menu",
+    signedInAs: "Signed in as",
+    yourProfile: "Your name and password",
     devBadge: "Dev",
     devBadgeTitle: "Dev database — this is not the live site",
     uatBadge: "UAT",
@@ -406,6 +409,15 @@ const en = {
   },
 
   account: {
+    name: {
+      heading: "Your name",
+      hint: "Shown in the header and wherever your login is named. Leave it empty to show your email address instead.",
+      label: "Name",
+      placeholder: "For example Noi (night shift)",
+      submit: "Save name",
+      saved: "Name saved.",
+      failed: "Couldn't save your name. Try again in a moment.",
+    },
     password: {
       title: "Change password",
       subtitle: "Choose a new password for your login. Google sign-in is unaffected.",
@@ -778,6 +790,8 @@ const en = {
         email: "Email",
         password: "Password",
         passwordPlaceholder: "At least 12 characters",
+        name: "Name (optional)",
+        namePlaceholder: "Shown in the header",
         role: "Role",
         createButton: "Create user",
         tempPasswordNote:
@@ -815,6 +829,11 @@ const en = {
       },
       table: {
         email: "Email",
+        name: "Name",
+        noName: "No name — the email is shown",
+        saveName: "Save name",
+        nameSaved: "Name saved.",
+        failedToSaveName: "Failed to save the name.",
         created: "Created",
         lastSignIn: "Last sign-in",
         role: "Role",

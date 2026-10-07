@@ -12,8 +12,10 @@ import {
   issueTemporaryPassword,
   resetTwoStep,
   restoreUser,
+  setUserName,
   updateUserRole,
 } from "./actions";
+import { MAX_NAME_LENGTH } from "@/lib/auth/user-name";
 import { VetDoctorLink, type DoctorOption } from "./VetDoctorLink";
 import { TemporaryPasswordNotice } from "@/components/TemporaryPasswordNotice";
 import type { ActionResult } from "@/lib/action-result";
@@ -24,6 +26,8 @@ import { roleLabel } from "@/lib/i18n/enum-labels";
 export type SecurityUser = {
   id: string;
   email: string;
+  /** user_metadata.full_name (or Google's name); null when the login has none. */
+  name: string | null;
   role: string | null;
   /** Set when they've left (0063): no access, kept for past work. */
   archivedAt: string | null;
@@ -57,6 +61,7 @@ function UserRow({
   const { t, locale } = useI18n();
   const confirm = useConfirm();
   const [role, setRole] = useState(user.role ?? "");
+  const [name, setName] = useState(user.name ?? "");
   const [issuedPassword, setIssuedPassword] = useState<string | null>(null);
   const [message, setMessage] = useState<
     { type: "error" | "success"; text: string } | null
@@ -103,6 +108,14 @@ function UserRow({
         setMessage({ type: "success", text: t.admin.security.table.roleUpdated });
       },
       () => setRole(previous),
+    );
+  }
+
+  function handleSaveName() {
+    run(
+      () => setUserName(user.id, name),
+      t.admin.security.table.failedToSaveName,
+      () => setMessage({ type: "success", text: t.admin.security.table.nameSaved }),
     );
   }
 
@@ -174,6 +187,31 @@ function UserRow({
               {t.admin.security.table.temporaryPassword}
             </span>
           )}
+        </td>
+        <td className="px-4 py-2">
+          <form
+            onSubmit={(ev) => {
+              ev.preventDefault();
+              handleSaveName();
+            }}
+            className="flex items-center gap-2"
+          >
+            <input
+              type="text"
+              value={name}
+              onChange={(ev) => setName(ev.target.value)}
+              maxLength={MAX_NAME_LENGTH}
+              disabled={isPending}
+              placeholder={t.admin.security.table.noName}
+              aria-label={`${t.admin.security.table.name}: ${user.email}`}
+              className="w-44 rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary disabled:opacity-50"
+            />
+            {name.trim() !== (user.name ?? "") && (
+              <ActionButton compact type="submit" icon={ACTION_ICONS.save} disabled={isPending}>
+                {t.admin.security.table.saveName}
+              </ActionButton>
+            )}
+          </form>
         </td>
         <td className="px-4 py-2 text-muted">
           {formatDate(user.createdAt, locale)}
@@ -282,7 +320,7 @@ function UserRow({
       </tr>
       {issuedPassword && (
         <tr>
-          <td colSpan={7} className="px-4 pb-3">
+          <td colSpan={8} className="px-4 pb-3">
             <TemporaryPasswordNotice email={user.email} password={issuedPassword} />
           </td>
         </tr>
@@ -290,7 +328,7 @@ function UserRow({
       {message && (
         <tr>
           <td
-            colSpan={7}
+            colSpan={8}
             className={`px-4 pb-2 text-xs ${
               message.type === "error" ? "text-danger" : "text-success"
             }`}
@@ -325,6 +363,9 @@ export function UsersTable({
               {t.admin.security.table.email}
             </th>
             <th className="px-4 py-2 font-medium">
+              {t.admin.security.table.name}
+            </th>
+            <th className="px-4 py-2 font-medium">
               {t.admin.security.table.created}
             </th>
             <th className="px-4 py-2 font-medium">
@@ -354,7 +395,7 @@ export function UsersTable({
           ))}
           {users.length === 0 && (
             <tr>
-              <td colSpan={7} className="px-4 py-6 text-center text-muted">
+              <td colSpan={8} className="px-4 py-6 text-center text-muted">
                 {t.admin.security.table.noUsers}
               </td>
             </tr>

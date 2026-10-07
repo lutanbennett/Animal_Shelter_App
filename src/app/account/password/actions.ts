@@ -1,6 +1,8 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { normaliseName } from "@/lib/auth/user-name";
 import { DEFAULT_SIGNED_IN_PATH } from "@/lib/auth/next-path";
 import {
   MIN_PASSWORD_LENGTH,
@@ -100,5 +102,37 @@ export async function changeOwnPassword(
   // Forced change and recovery both go on into the app; a change by choice
   // stays on the page with a confirmation.
   if (formData.get("continue") === "1") redirect(DEFAULT_SIGNED_IN_PATH);
+  return { success: true };
+}
+
+export type ChangeNameState = { error: string } | { success: true } | undefined;
+
+/**
+ * The signed-in person sets their own name (or clears it, and the email
+ * shows instead). Their own user_metadata, which they may write through
+ * their own session, so no service role is needed. updateUser merges the
+ * data it is given into user_metadata and a null removes the key, so
+ * clearing sends null for both keys (Google's `name` would otherwise show
+ * straight back).
+ */
+export async function changeOwnName(
+  _state: ChangeNameState,
+  formData: FormData,
+): Promise<ChangeNameState> {
+  const { t } = await getT();
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const name = normaliseName(formData.get("name"));
+  const { error } = await supabase.auth.updateUser({ data: { full_name: name, name } });
+  if (error) {
+    console.error("[account.changeOwnName]", error);
+    return { error: t.account.name.failed };
+  }
+  // The header is in the root layout of every signed-in page.
+  revalidatePath("/", "layout");
   return { success: true };
 }
