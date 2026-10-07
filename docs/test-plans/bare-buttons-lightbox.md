@@ -15,7 +15,7 @@ Filled from `docs/test-plan-template.md`. Every line is ticked (run and passed) 
 | PR | linked from the PR itself |
 | Tested by / date | Claude (bare-buttons-lightbox session), 2026-10-07 |
 | Carries a migration? | no |
-| Tested at SHA | SHA_PLACEHOLDER |
+| Tested at SHA | `f563796b` |
 
 ## 1. Scope and risk
 
@@ -40,11 +40,13 @@ wait for `worktree.mjs new` to exit before trusting the tree. A gate ticked
 because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly — SYNC_PLACEHOLDER
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly — merged once mid-stream (dependabot-264's workflow and docs, no conflict), then "Already up to date" before the gates
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`
 
   ```
-  GATES_PLACEHOLDER
+  === gates: build exited 0 after 134s
+
+  gates: typecheck=0 lint=0 build=0
   ```
 - [ ] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so leave it `n/a: not yet — the PR does not exist at this commit` on the first push and tick it in a follow-up commit once the run is actually green. Every PR hits this; the first push is red on `test-plan` by construction. Do not pre-tick it — a green you have not seen is the exact failure this checklist exists to prevent — n/a: not yet — the PR does not exist at this commit
 
@@ -64,7 +66,17 @@ Per `CLAUDE.md`, schema lands as its own PR before the feature.
 
 ## 4. Functional checks
 
-- [x] Happy path works end to end — CHECK_PLACEHOLDER. Handlers are unchanged except the three attachment removes, which now await a confirm first; those were not clicked through (manual list)
+- [x] Happy path works end to end — `node scripts/check-phone-width.mjs` (all seven roles, en + th) exited 0. Its closing lines, unedited:
+
+  ```
+  326 page view(s) measured (admin, management, staff, vet, volunteer, head_of_medical, head_of_maintenance; en + th), 334 skipped because the role cannot open them, 0 warning(s).
+  2588 component action(s) measured for tap size.
+  No page scrolls sideways.
+  No text box, select or textarea is under 16 px (iPhone zoom on tap).
+  Every component action is at least 44 px.
+  ```
+
+  Bare-button notes: 34 (#411 recorded 38 by the same method; #413 and #432 ran in between, and no clean before-run was possible here, see the decision file). All 34 are tabs and filters ruled in #405/#432, plus the header's account menu at 15.9 × 44 px for the vet and Head of Medical logins, a width problem in the header, which is out of scope here and filed on the backlog branch Handlers are unchanged except the three attachment removes, which now await a confirm first; those were not clicked through (manual list)
 - [ ] Data persists — reload the page and the change is still there — n/a: no data change; element and class changes, same handlers
 - [ ] Create / edit / delete all exercised (whichever the feature has) — n/a: not exercised by hand; the one behaviour change (confirm before removing an attached file) is on the manual list
 - [ ] Empty state renders sensibly (no rows yet) — n/a: no empty-state code changed
