@@ -3,6 +3,8 @@
 import { useEffect, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
+import { Check, ChevronDown, ChevronUp, FolderInput, Star, Trash2, X } from "lucide-react";
+import { ActionButton } from "@/components/ActionButton";
 import { formatDate } from "@/lib/format";
 import { photoFolderLabel } from "@/lib/i18n/enum-labels";
 import type { PhotoProvenance } from "@/lib/adoption-updates/options";
@@ -238,14 +240,15 @@ export function PhotoGallery({
       </div>
 
       {filtered.length > INITIAL_TILE_COUNT && (
-        <button
-          type="button"
-          onClick={() => setShowAll((v) => !v)}
-          aria-expanded={showAll}
-          className="mt-3 w-full rounded border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
-        >
-          {showAll ? t.photos.showFewer : t.photos.showAll(filtered.length)}
-        </button>
+        <div className="mt-3 flex flex-col">
+          <ActionButton
+            icon={showAll ? ChevronUp : ChevronDown}
+            onClick={() => setShowAll((v) => !v)}
+            aria-expanded={showAll}
+          >
+            {showAll ? t.photos.showFewer : t.photos.showAll(filtered.length)}
+          </ActionButton>
+        </div>
       )}
 
       {openPhoto &&
@@ -285,9 +288,9 @@ export function PhotoGallery({
                   type="button"
                   onClick={close}
                   aria-label={t.common.close}
-                  className="text-muted hover:text-foreground"
+                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded text-muted hover:text-foreground md:h-8 md:w-8"
                 >
-                  &times;
+                  <X aria-hidden="true" className="h-5 w-5" />
                 </button>
               </div>
 
@@ -304,37 +307,24 @@ export function PhotoGallery({
               {readOnly ? (
                 <p className="text-sm text-muted">{t.photos.readOnly}</p>
               ) : (
-                <div className="flex items-center justify-between gap-2">
-                  <div>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-col">
                     {confirmingDelete ? (
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <span className="text-sm text-foreground">
                           {t.photos.removeConfirmPrompt}
                         </span>
-                        <button
-                          type="button"
-                          disabled={isPending}
-                          onClick={handleDelete}
-                          className="rounded bg-danger px-3 py-1.5 text-sm font-medium text-danger-foreground hover:brightness-110 disabled:opacity-60"
-                        >
+                        <ActionButton icon={Trash2} variant="danger" disabled={isPending} onClick={handleDelete}>
                           {t.photos.confirmRemove}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setConfirmingDelete(false)}
-                          className="rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover"
-                        >
+                        </ActionButton>
+                        <ActionButton icon={X} onClick={() => setConfirmingDelete(false)}>
                           {t.common.cancel}
-                        </button>
+                        </ActionButton>
                       </div>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => setConfirmingDelete(true)}
-                        className="rounded border border-border px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger/10"
-                      >
+                      <ActionButton icon={Trash2} variant="danger" onClick={() => setConfirmingDelete(true)}>
                         {t.photos.removePhoto}
-                      </button>
+                      </ActionButton>
                     )}
                   </div>
                   {/* A Medical photo is never on the website, so it is not
@@ -346,30 +336,30 @@ export function PhotoGallery({
                       {t.photos.medicalNotProfile}
                     </p>
                   ) : (
-                    <button
-                      type="button"
+                    <ActionButton
+                      icon={openPhoto.drive_file_id === profilePhotoDriveFileId ? Check : Star}
+                      variant="primary"
                       disabled={
                         isPending ||
                         openPhoto.drive_file_id === profilePhotoDriveFileId
                       }
                       onClick={handleSetProfile}
-                      className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-60"
                     >
                       {openPhoto.drive_file_id === profilePhotoDriveFileId
                         ? t.photos.currentProfile
                         : t.photos.setAsProfile}
-                    </button>
+                    </ActionButton>
                   )}
                 </div>
               )}
 
               {!readOnly && moveOptions.length > 0 && (
-                <div className="flex items-center justify-end gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                   <select
                     aria-label={t.photos.moveToFolder}
                     value={moveTarget}
                     onChange={(e) => setMoveTarget(e.target.value as PhotoCategory)}
-                    className="rounded border border-border bg-surface px-2 py-1.5 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+                    className="min-h-11 rounded border border-border bg-surface px-2 py-1.5 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40 md:min-h-0"
                   >
                     <option value="" disabled>
                       {t.photos.moveToFolder}
@@ -380,14 +370,9 @@ export function PhotoGallery({
                       </option>
                     ))}
                   </select>
-                  <button
-                    type="button"
-                    disabled={isPending || moveTarget === ""}
-                    onClick={handleMove}
-                    className="rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-60"
-                  >
+                  <ActionButton icon={FolderInput} disabled={isPending || moveTarget === ""} onClick={handleMove}>
                     {moveTarget === "" ? t.photos.moveToFolder : t.photos.moveButton(photoFolderLabel(t, moveTarget))}
-                  </button>
+                  </ActionButton>
                 </div>
               )}
             </div>
