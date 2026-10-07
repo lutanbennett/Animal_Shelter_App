@@ -84,7 +84,7 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
   };
 
   const filtered = !!(filters.table || filters.actor || filters.from || filters.to || filters.row);
-  const field = "rounded border border-border bg-surface px-2 py-1 text-sm text-foreground";
+  const field = "rounded border border-border bg-surface px-2 py-1 text-sm max-w-full min-w-0 text-foreground";
 
   const recordCell = (e: AuditEntry) => {
     const resident = e.table === "residents" ? e.rowId : e.residentId;
@@ -126,7 +126,7 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
 
       <form method="get" className="flex flex-wrap items-end gap-3">
         {filters.row && <input type="hidden" name="row" value={filters.row} />}
-        <label className="flex flex-col gap-1 text-sm text-muted">
+        <label className="flex min-w-0 max-w-full flex-col gap-1 text-sm text-muted">
           {s.filters.table}
           <select name="table" defaultValue={filters.table ?? ""} className={field}>
             <option value="">{s.filters.anyTable}</option>
@@ -137,7 +137,7 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
+        <label className="flex min-w-0 max-w-full flex-col gap-1 text-sm text-muted">
           {s.filters.actor}
           <select name="actor" defaultValue={filters.actor ?? ""} className={field}>
             <option value="">{s.filters.anyActor}</option>
@@ -149,11 +149,11 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
+        <label className="flex min-w-0 max-w-full flex-col gap-1 text-sm text-muted">
           {s.filters.from}
           <input type="date" name="from" defaultValue={filters.from ?? ""} className={field} />
         </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
+        <label className="flex min-w-0 max-w-full flex-col gap-1 text-sm text-muted">
           {s.filters.to}
           <input type="date" name="to" defaultValue={filters.to ?? ""} className={field} />
         </label>
