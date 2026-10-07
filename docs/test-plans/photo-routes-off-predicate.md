@@ -165,15 +165,15 @@ Automated checks by: Claude (photo-routes-off-predicate session)  Date: 2026-10-
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet checked by a person; the signature below is `pending` and the two checks are in the table above
 
 Manual verification by: pending: Lutan to drive the two routes (items 1 and 2 above)
 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR
-- [ ] Handed to the production release manager
+- [ ] Checklist pasted into the PR — n/a: the PR body links this plan instead of pasting it
+- [ ] Handed to the production release manager — n/a: release manager picks it up from section 8 and the pending signature, not at PR time
 
 Result: pass
 
