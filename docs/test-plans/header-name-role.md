@@ -172,9 +172,9 @@ Automated checks by: Claude (header-name-role session)  Date: 2026-10-07
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty; only the person who looked may tick it
+- [x] The manual list above is empty, or every item in it was checked by a person
 
-Manual verification by: pending: Lutan to check the four items above (tell his three accounts apart; Security name edit; phone in Thai; the account button's tap height)
+Manual verification by: Lutan — confirmed in chat ("Merge it - verified"); line written by Claude at their request  Date: 2026-10-07
 
 ### Result
 
