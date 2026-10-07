@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "Two `public-views` failures overnight on 2026-10-07 that nothing explains" |
 | Branch / worktree | `claude/public-views-overnight` @ `C:\Development\Animal_Shelter_public-views-overnight` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3002` (not used: no UI change) |
-| PR | opened after this commit |
+| PR | #442 |
 | Tested by / date | Claude (Opus 5.5), 2026-10-07 |
 | Carries a migration? | no |
 | Tested at SHA | `d32519e8` (the code change; later commits are documentation) |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — #442, run `37625781085`: all seven checks pass (`check`, `public-views`, `test-plan`, `audit`, `migration-numbers`, `new-policy-role-names`, `script-integrity`)
 
 ## 3. Schema and data — *skip if no migration*
 
