@@ -161,8 +161,8 @@ Manual verification by: n/a: no UI or visual surface; the behaviour is a table a
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR
-- [ ] Handed to the production release manager
+- [x] Checklist pasted into the PR (as a comment)
+- [ ] Handed to the production release manager — n/a: not yet — the release manager reads it from the PR before the deploy that carries this migration
 
 Result: pass with accepted defects
 
