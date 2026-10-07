@@ -361,6 +361,21 @@ const manual: Manual = {
           ],
         },
         {
+          id: "name-card",
+          title: "Scanning a name card",
+          roles: ["admin", "management", "staff", "vet", "volunteer"],
+          path: "Hold your phone to a resident's name card",
+          intro:
+            "Every resident has a name card with an NFC chip. Hold the top of your phone to it (an iPhone XS or later, or an Android phone with NFC on) and the resident's page opens. What you see depends on who you are, but never less than a visitor sees.",
+          steps: [
+            "Signed out, or signed in only to test the public website: you see the resident's public card, the same as any visitor: photo, name, age, temperament and the rest of what the website shows.",
+            "Admin, Management, Staff, and a vet whose clinic treats that resident: the tap opens the resident's full page, with the record your role may read.",
+            "The 2IC, the Heads and volunteers: you see the public card, plus where the resident lives and a button for each job you can do for that resident (for example Add Medical Photos or Record Weight). The medical record itself is not shown to these roles.",
+            "A vet looking at a resident their clinic does not treat sees the public card instead of an error.",
+            "If you are signed in on another browser, the card opens the public page in the one your phone uses. Sign in there once and stay signed in.",
+          ],
+        },
+        {
           id: "microchip",
           title: "Scanning a microchip",
           roles: ["admin", "management", "staff", "vet"],
