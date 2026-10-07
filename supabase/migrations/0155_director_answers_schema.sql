@@ -26,9 +26,9 @@
 -- given the form would have been refused by the database. It now asks the cell, which also removes a role name from a
 -- function body. The vet's clinic scope is not a cell and stays exactly as 0116 had it.
 insert into role_permissions (role_id, activity, level)
-select r.id, 'resident.microchip', 2
+select r.id, v.activity, v.level
   from roles r
- where r.key = 'management'
+  join (values ('management', 'resident.microchip', 2)) as v(rkey, activity, level) on v.rkey = r.key
 on conflict (role_id, activity) do nothing;
 
 create or replace function set_resident_microchip(
@@ -94,9 +94,10 @@ values ('contacts.browse', 'yesno', 'contacts', 57)
 on conflict (key) do update set kind = excluded.kind, area = excluded.area, sort = excluded.sort;
 
 insert into role_permissions (role_id, activity, level)
-select r.id, 'contacts.browse', 2
+select r.id, v.activity, v.level
   from roles r
- where r.key in ('management', 'second_in_command')
+  join (values ('management', 'contacts.browse', 2), ('second_in_command', 'contacts.browse', 2)) as v(rkey, activity, level)
+    on v.rkey = r.key
 on conflict (role_id, activity) do nothing;
 
 -- The 2IC reads name and phone and no address (q6). 0143 gave her scope name_type (a vet's id, name, type), which carries no
@@ -134,9 +135,9 @@ values ('friends.view', 'yesno', 'contacts', 58)
 on conflict (key) do update set kind = excluded.kind, area = excluded.area, sort = excluded.sort;
 
 insert into role_permissions (role_id, activity, level)
-select r.id, 'friends.view', 2
+select r.id, v.activity, v.level
   from roles r
- where r.key in ('management', 'staff')
+  join (values ('management', 'friends.view', 2), ('staff', 'friends.view', 2)) as v(rkey, activity, level) on v.rkey = r.key
 on conflict (role_id, activity) do nothing;
 
 drop policy if exists shelter_friends_select_perm on shelter_friends;
