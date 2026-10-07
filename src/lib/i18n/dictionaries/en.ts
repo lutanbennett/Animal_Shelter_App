@@ -164,6 +164,9 @@ const en = {
       adoptedThisYear: "adopted into new homes this year",
       inFoster: "living with foster families",
       inVetCare: "in vet care right now",
+      about: "About",
+      estimateNote:
+        "Our rehoming and village sterilisation totals include an estimate of the work done before we began keeping digital records.",
     },
     featured: {
       heading: "Pet of the week",
@@ -1309,6 +1312,28 @@ const en = {
           "Leave it blank if you would rather not guess — the forecast then shows vet visits as \"not priced yet\" instead of counting them as free. One figure for every vet: there isn't enough invoice history yet for a per-vet average to mean much.",
         invalid:
           "The estimate must be a number of baht, 0 or more. Leave it blank if you don't want one.",
+      },
+      impact: {
+        heading: "Impact figures",
+        subtitle:
+          "The starting numbers behind the figures on the home page. Each figure shown to the public is the number you enter here plus what the system has counted since the date you give. Changing one changes what the public site says, so it asks first and is kept in Recent changes.",
+        countLabel: "Starting number",
+        countPlaceholder: "e.g. 412",
+        dateLabel: "True up to and including",
+        countedNote:
+          "The system adds every adoption recorded after this date, so do not count those twice.",
+        baselineOnlyNote:
+          "Nothing in the system records these yet, so the public figure is this number alone.",
+        notShown: "Not entered yet, so this figure is not shown on the public site.",
+        hint:
+          "These are your best estimate of the work done before the system, not an audit, and the home page says so. Clear both boxes to take a figure off the public site.",
+        confirm:
+          "This changes a figure on the public website, and the change is recorded. Save it?",
+        bothOrNeither: "Enter both the number and the date, or leave both blank.",
+        invalidCount: "The starting number must be a whole number, 0 or more.",
+        invalidDate: "Enter the date as day, month and year.",
+        futureDate: "The date cannot be in the future.",
+        notFound: "That figure no longer exists. Reload the page.",
       },
       pages: {
         heading: "Pages",

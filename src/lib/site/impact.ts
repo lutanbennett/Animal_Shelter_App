@@ -25,7 +25,13 @@ export type ShelterStats = {
 export const SHELTER_STATS_COLUMNS =
   "in_care, in_foster, in_treatment, adopted_last_7_days, adopted_this_year";
 
-export type ImpactStat = { key: string; value: number; label: string };
+export type ImpactStat = {
+  key: string;
+  value: number;
+  label: string;
+  /** Includes a hand-entered baseline: the page says "about", never implies an audit. */
+  approximate?: boolean;
+};
 
 export function impactStats(t: Dictionary, stats: ShelterStats | null): ImpactStat[] {
   if (!stats) return [];
@@ -37,3 +43,40 @@ export function impactStats(t: Dictionary, stats: ShelterStats | null): ImpactSt
     { key: "in-vet-care", value: stats.in_treatment, label: s.inVetCare },
   ];
 }
+
+/**
+ * public_impact_figures (0156): a hand-entered baseline plus a live count
+ * since its date, added up by the view on every read. Only figures with a
+ * baseline entered are in it, so a figure nobody has set is simply absent.
+ */
+export type ImpactFigure = {
+  key: string;
+  label: string;
+  label_th: string | null;
+  total: number;
+};
+
+export const IMPACT_FIGURE_COLUMNS = "key, label, label_th, total";
+
+/** Tiles for the band, in the Thai label when the reader wants it and one exists. */
+export function impactFigureStats(
+  figures: ImpactFigure[] | null,
+  locale: "en" | "th",
+): ImpactStat[] {
+  return (figures ?? []).map((f) => ({
+    key: `figure-${f.key}`,
+    value: f.total,
+    label: (locale === "th" && f.label_th?.trim()) || f.label,
+    approximate: true,
+  }));
+}
+
+/** impact_baselines (0156), as the Settings editor reads them. */
+export type ImpactBaselineRow = {
+  key: string;
+  label: string;
+  label_th: string | null;
+  baseline_count: number | null;
+  baseline_date: string | null;
+  set_at: string;
+};

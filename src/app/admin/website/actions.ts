@@ -12,7 +12,7 @@ import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { getT } from "@/lib/i18n/get-t";
 import { isContactChannel } from "@/lib/site/channels";
 import { isSitePageSlug, type SitePageSlug } from "@/lib/site/pages";
-import { parseBahtAmount } from "@/lib/format";
+import { parseBahtAmount, todayIso } from "@/lib/format";
 import {
   checkFacebookUrl,
   checkHttpsUrl,
@@ -536,5 +536,64 @@ export async function moveGalleryPhoto(
 
     revalidateWebsitePages();
     return { ok: true };
+  });
+}
+
+/**
+ * One impact figure's baseline (0156): the starting number and the day it is
+ * true to. The public figure is that plus what the app counted after the day.
+ * Both blank clears it, which takes the figure off the public page. A change
+ * reaches audit_log through the table's own trigger; there is nothing to
+ * write here for that.
+ */
+export async function updateImpactBaseline(
+  _state: SiteContentFormState,
+  formData: FormData,
+): Promise<SiteContentFormState> {
+  const { t } = await getT();
+  return runAction("website.updateImpactBaseline", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+
+    const text = (name: string) => (formData.get(name) as string | null)?.trim() ?? "";
+    const key = text("key");
+    const rawCount = text("baseline_count");
+    const rawDate = text("baseline_date");
+    const i = t.admin.website.impact;
+
+    if (!rawCount && !rawDate) {
+      // Cleared: both null, which the table's pair check requires together.
+    } else if (!rawCount || !rawDate) {
+      return refuse(i.bothOrNeither);
+    }
+
+    let count: number | null = null;
+    if (rawCount) {
+      if (!/^\d{1,9}$/.test(rawCount)) return refuse(i.invalidCount);
+      count = Number(rawCount);
+    }
+    let date: string | null = null;
+    if (rawDate) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(rawDate) || Number.isNaN(Date.parse(rawDate))) {
+        return refuse(i.invalidDate);
+      }
+      // A baseline "to the future" would hide adoptions from the live count.
+      if (rawDate > todayIso()) return refuse(i.futureDate);
+      date = rawDate;
+    }
+
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("impact_baselines")
+      .update({ baseline_count: count, baseline_date: date })
+      .eq("key", key)
+      .select("key")
+      .returns<{ key: string }[]>();
+
+    if (error) return refuse(error.message);
+    if (!data?.length) return refuse(i.notFound);
+
+    revalidatePath("/admin/website");
+    revalidatePath("/");
+    return { ok: true, success: t.common.saved };
   });
 }

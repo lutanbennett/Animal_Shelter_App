@@ -11,6 +11,8 @@ import { SitePageForm, type SitePageRow } from "./SitePageForm";
 import { HeroPhoto } from "./HeroPhoto";
 import { GalleryPhotos, type GalleryPhotoRow } from "./GalleryPhotos";
 import { FeaturedResident, type FeaturedResidentOption } from "./FeaturedResident";
+import { ImpactBaselines } from "./ImpactBaselines";
+import type { ImpactBaselineRow } from "@/lib/site/impact";
 import { WebsiteTabs } from "./WebsiteTabs";
 import { PagesAccordion } from "./PagesAccordion";
 import { PublishedProjects, type PublishedProjectRow } from "./PublishedProjects";
@@ -43,6 +45,7 @@ export default async function WebsitePage({
     publicResidentsResult,
     thaiNamesResult,
     publishedResult,
+    baselinesResult,
   ] = await Promise.all([
       loadSiteContent(supabase),
       // Not part of loadSiteContent: it is an internal figure kept out of
@@ -85,6 +88,12 @@ export default async function WebsitePage({
         .not("parent_folder_id", "is", null)
         .order("updated_at", { ascending: false })
         .returns<PublishedProjectRow[]>(),
+      // The starting numbers behind the homepage band (0156).
+      supabase
+        .from("impact_baselines")
+        .select("key, label, label_th, baseline_count, baseline_date, set_at")
+        .order("key")
+        .returns<ImpactBaselineRow[]>(),
     ]);
 
   // In the app's order, not the table's; a page missing from the table
@@ -136,6 +145,7 @@ export default async function WebsitePage({
                   featuredResidentId={content.featured_resident_id}
                   residents={publicResidents}
                 />
+                <ImpactBaselines rows={baselinesResult.data ?? []} />
               </>
             ),
             contact: (
