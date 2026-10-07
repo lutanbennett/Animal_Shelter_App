@@ -1,5 +1,6 @@
 const en = {
   common: {
+    opensInNewTab: "opens in a new tab",
     yes: "Yes",
     no: "No",
     save: "Save",
@@ -1346,7 +1347,9 @@ const en = {
         title: "Heading",
         body: "Text",
         bodyHint:
-          "Separate paragraphs with a blank line. Start a line with \"## \" for a sub-heading and \"- \" for a bullet point.",
+          "Separate paragraphs with a blank line. Start a line with \"## \" for a sub-heading and \"- \" for a bullet point. Paste a web address and it becomes a link. For your own words: [words](https://…). Email and phone work too: [Email us](mailto:name@example.org), [Call us](tel:+66812345678).",
+        preview: "Preview",
+        previewHint: "How the text will look. Links do not open here until you save.",
         titleRequired: "The page needs a heading.",
         unknownPage: "That page doesn't exist.",
         slugs: {
@@ -4816,6 +4819,7 @@ const en = {
     openRecord: "Open record",
     errors: {
       textRequired: "Write the translation before approving it.",
+      linksDiffer: "The links in the translation must match the English exactly. Keep the address part of each [words](address) unchanged and translate only the words.",
       notFound: "That translation no longer exists — the original may have been cleared.",
     },
   },

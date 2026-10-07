@@ -1,12 +1,15 @@
 import { parseBody } from "@/lib/site/body";
+import { getT } from "@/lib/i18n/get-t";
+import { LinkedText } from "./LinkedText";
 
 /**
  * A site_pages body rendered for the public pages: paragraphs, "## "
- * sub-headings and "- " bullet lists (see lib/site/body.ts). `size`
+ * sub-headings and "- " bullet lists (see lib/site/body.ts). Links in the text are made clickable
+ * (lib/site/links.ts). `size`
  * picks the prose scale — the home page story reads larger than a
  * sidebar block.
  */
-export function SiteBody({
+export async function SiteBody({
   body,
   size = "base",
   className = "",
@@ -17,6 +20,10 @@ export function SiteBody({
 }) {
   const blocks = parseBody(body);
   if (blocks.length === 0) return null;
+  const { t } = await getT();
+  const link = (text: string) => (
+    <LinkedText text={text} newTabLabel={t.common.opensInNewTab} />
+  );
 
   const prose =
     size === "lg"
@@ -42,12 +49,12 @@ export function SiteBody({
             return (
               <ul key={index} className="flex list-disc flex-col gap-2 pl-6">
                 {block.items.map((item, i) => (
-                  <li key={i}>{item}</li>
+                  <li key={i}>{link(item)}</li>
                 ))}
               </ul>
             );
           default:
-            return <p key={index}>{block.text}</p>;
+            return <p key={index}>{link(block.text)}</p>;
         }
       })}
     </div>
