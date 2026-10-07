@@ -95,7 +95,7 @@ or `n/a` with the reason.
 ### Migration ordering
 
 - [x] **Does this PR contain both a migration and code that reads it?** No: migration only, filling columns that already exist and are already read
-- [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — deferred: Claude, from the main checkout after merge (the runner refuses production from a branch)
+- [x] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — run from the main checkout after merge, 2026-10-07: `0158_map_rooms_permission.sql … ok`, `0159_place_capacity_and_names_th.sql … ok`. `0158` was still pending on production and so was dry-run and applied in the same pass, ahead of `0159`; both then applied clean, leaving production at 159 applied, 0 pending, matching `origin/main`
 - [x] Rewriting migration: it rewrites `capacity` values only; the old values are in `appsheet-export/latest/Enclosures.csv` and the pre-change snapshot taken 2026-10-07, so no full backup is needed for one integer column
 - [x] Apply plan stated: `0159_place_capacity_and_names_th.sql` to production `dbkodyyxxhtygxcxmfcu` right after merge; no deploy involved
 
@@ -116,6 +116,9 @@ or `n/a` with the reason.
 | 1 | The Thai names read naturally to staff, in particular Blue as สีฟ้า rather than สีน้ำเงิน | Enclosures page and map with the locale set to Thai |
 | 2 | Occupied enclosures show as full | `/enclosures` on production |
 
+Both items were checked by Lutan on production on 2026-10-07, after `0159` was
+applied, and confirmed as expected.
+
 ## Sign-off
 
 ### Automated and scripted checks
@@ -127,6 +130,11 @@ Automated checks by: Claude  Date: 2026-10-07
 
 ### Manual verification
 
-Manual verification by: pending: Lutan to read the Thai names and the Enclosures page after the production apply
+Manual verification by: Lutan Bennett  Date: 2026-10-07
+
+Lutan read the Thai names and the Enclosures page on production after `0159`
+was applied and confirmed the data is as expected. He asked in chat for his
+confirmation to be recorded here, so Claude wrote this line; Claude did not
+perform this check.
 
 Result: pass
