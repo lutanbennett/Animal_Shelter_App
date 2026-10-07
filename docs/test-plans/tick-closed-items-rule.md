@@ -16,20 +16,21 @@
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence: a decision file records why the closed-items rule exists, why it lives in `CLAUDE.md` while its planning checks live in the `/plan-day` skill, and that a refused `gh pr create` must be handed to Lutan rather than routed around
-- [x] Files/areas touched listed: `docs/decisions/2026-10-07-tick-the-items-your-work-closed.md` and this plan. `CLAUDE.md` is unchanged — its 14 lines were checked against the backlog history and are accurate. Nothing under `src/`, `worker/`, `scripts/` or `supabase/`
+- [x] Files/areas touched listed: `docs/decisions/2026-10-07-tick-the-items-your-work-closed.md` this plan, and `CLAUDE.md`: the 14 lines from `eb94fdba` were checked against the backlog history, found accurate and left word for word; one new paragraph under *Workstreams* step 4 says a refused `gh pr create` is handed to Lutan, added after he approved it in chat on 2026-10-07. Nothing under `src/`, `worker/`, `scripts/` or `supabase/`
 - [ ] Roles affected identified — n/a: documentation and process only; no app role sees any of it
-- [x] Out of scope: adding the "refused PR, hand it over" rule to `CLAUDE.md` (proposed in the PR body, Lutan's call); reverting and re-applying `eb94fdba` (Lutan kept it); ticking or filing any backlog item
+- [x] Out of scope: reverting and re-applying `eb94fdba` (Lutan kept it); ticking or filing any backlog item
 
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly, pushed, exit 0
-- [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — n/a: not yet — the build was still running when the PR was opened; typecheck and lint exited 0 (lines below, as printed so far), and this is ticked in a follow-up commit once the build exits
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them. Run on `04fe6fc8` (synced `origin/main`); every commit on this branch touches only Markdown (`CLAUDE.md`, the decision file, this plan), which no gate reads
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ```
 === gates: typecheck exited 0 after 55s
 === gates: lint exited 0 after 194s
-=== gates: build — npm run build
+=== gates: build exited 0 after 329s
+gates: typecheck=0 lint=0 build=0
 ```
 
 ## 3. Schema and data — *skip if no migration*
@@ -125,14 +126,13 @@ n/a: no app surface.
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
-| 1 | medium | Process: `eb94fdba` reached `main` via the `backlog` branch after `gh pr create` was refused, skipping PR, CI, decision file and test plan | fixed by this PR for the content; the route is recorded in the decision file, and a `CLAUDE.md` rule against it is proposed for Lutan to decide |
+| 1 | medium | Process: `eb94fdba` reached `main` via the `backlog` branch after `gh pr create` was refused, skipping PR, CI, decision file and test plan | fixed by this PR for the content; the route is recorded in the decision file, and `CLAUDE.md` now carries a rule against it, approved by Lutan in chat |
 
 ## Left for manual verification
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | Whether the "refused `gh pr create` → hand it to Lutan" rule should also go into `CLAUDE.md` | PR body |
-| 2 | That the decision file reads clearly to someone non-technical | `docs/decisions/2026-10-07-tick-the-items-your-work-closed.md` |
+| 1 | That the decision file and the new `CLAUDE.md` paragraph read clearly to someone non-technical | `docs/decisions/2026-10-07-tick-the-items-your-work-closed.md`; `CLAUDE.md` *Workstreams* step 4 |
 
 ## Sign-off
 
@@ -147,7 +147,7 @@ Automated checks by: Claude  Date: 2026-10-07
 
 - [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — two items await Lutan
 
-Manual verification by: pending: Lutan to read the decision file and decide on the proposed CLAUDE.md rule
+Manual verification by: pending: Lutan to read the decision file and the new CLAUDE.md paragraph
 
 ### Result
 

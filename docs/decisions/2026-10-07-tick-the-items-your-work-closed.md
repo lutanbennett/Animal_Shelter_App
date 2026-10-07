@@ -85,6 +85,9 @@ surface, not a problem to engineer around. Committing to a branch that
 because it looks like nothing happened: the daily merge is meant to carry
 backlog edits only, so nobody reads it for anything else.
 
-Whether this also belongs in `CLAUDE.md` is Lutan's call. It is proposed in the
-PR, not added, because adding an unreviewed rule about unreviewed changes would
-repeat the fault it describes.
+This rule is now in `CLAUDE.md`, under step 4 of *Workstreams* ("Finish: the merge
+train"), next to `gh pr create`. It was proposed in PR #440 rather than added
+straight away, because adding an unreviewed rule about unreviewed changes would
+repeat the fault it describes. Lutan approved it in chat the same day, and it
+went in as a commit on that PR. It sits next to `gh pr create` rather than under
+*Finishing a feature* because that is the moment a session meets the refusal.

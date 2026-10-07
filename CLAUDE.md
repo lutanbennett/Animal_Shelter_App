@@ -73,6 +73,18 @@ two or three at once; more than that and merging becomes the bottleneck.
    next PR is already integrated. A branch that outlives its PR is how
    work gets stacked and lost.
 
+   **If `gh pr create` is refused, stop and hand it to Lutan.** Tell him
+   the exact refusal, leave the work committed and pushed on its branch,
+   and wait. Never get the change onto `main` by another path. A refused
+   step is something to report, not something to work around, and the
+   worst workaround is committing to the `backlog` branch: the daily
+   `git merge backlog` then carries the change into `main` with no PR,
+   no CI and no review, and it looks as if nothing happened. On
+   2026-10-07 a `CLAUDE.md` rule reached `main` exactly that way
+   (`docs/decisions/2026-10-07-tick-the-items-your-work-closed.md`).
+   "`gh` is missing" above means the command is not installed; a
+   refusal is not that.
+
    **Do not offer Auto-fix.** The desktop app's PR bar has an Auto-fix
    switch, and the harness prompts every session to offer it once the PR
    is open. Leave it off and say nothing about it: with three streams a
