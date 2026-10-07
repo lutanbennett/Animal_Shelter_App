@@ -37,3 +37,36 @@ export function occupancyPercent(count: number, capacity: number | null) {
   if (capacity == null || capacity <= 0) return 0;
   return Math.min(100, Math.round((count / capacity) * 100));
 }
+
+/**
+ * Places free in one enclosure: capacity minus residents, never below zero.
+ * An over-capacity enclosure is zero, so it neither adds spaces nor takes any
+ * from its neighbours. `null` when no capacity is recorded: there is nothing
+ * to count, and a guess could send someone to move an animal into a full kennel.
+ */
+export function spacesFree(count: number, capacity: number | null): number | null {
+  if (capacity == null || capacity <= 0) return null;
+  return Math.max(0, capacity - count);
+}
+
+export type OccupancyTotals = {
+  enclosures: number;
+  residents: number;
+  spacesFree: number;
+  /** Enclosures left out of spacesFree because they have no capacity set. */
+  noCapacity: number;
+};
+
+/** The figures for a zone (or all of them) over the enclosures given. */
+export function occupancyTotals(
+  rows: { resident_count: number; capacity: number | null }[],
+): OccupancyTotals {
+  const totals: OccupancyTotals = { enclosures: rows.length, residents: 0, spacesFree: 0, noCapacity: 0 };
+  for (const row of rows) {
+    totals.residents += row.resident_count;
+    const free = spacesFree(row.resident_count, row.capacity);
+    if (free == null) totals.noCapacity += 1;
+    else totals.spacesFree += free;
+  }
+  return totals;
+}

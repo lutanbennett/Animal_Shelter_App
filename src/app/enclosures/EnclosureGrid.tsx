@@ -5,6 +5,7 @@ import { CopyTagLink } from "@/components/CopyTagLink";
 import { ENCLOSURE_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
+import { occupancyTotals, type OccupancyTotals } from "@/lib/enclosures/occupancy";
 import { enclosureTagPath } from "@/lib/tags/links";
 import { OccupancyIndicator } from "./OccupancyIndicator";
 
@@ -33,6 +34,8 @@ export type ZoneGroup = {
   name_th: string | null;
   internal: boolean;
   enclosures: EnclosureSummary[];
+  /** Every enclosure in the zone, before the filters; the heading says so when fewer are shown. */
+  total_enclosures: number;
   /** Open jobs logged against the whole zone rather than one enclosure. */
   zone_wide_jobs: number;
 };
@@ -116,6 +119,21 @@ function EnclosureCard({
   );
 }
 
+/** "12 enclosures · 56 residents · 3 spaces free (2 enclosures have no capacity set)". */
+function TotalsText({ totals }: { totals: OccupancyTotals }) {
+  const { t } = useI18n();
+  return (
+    <>
+      {t.enclosures.enclosuresCount(totals.enclosures)}
+      {" · "}
+      {t.enclosures.residentsCount(totals.residents)}
+      {" · "}
+      {t.enclosures.spacesFree(totals.spacesFree)}
+      {totals.noCapacity > 0 && ` (${t.enclosures.noCapacityCount(totals.noCapacity)})`}
+    </>
+  );
+}
+
 /**
  * Enclosure cards, either grouped under zone headings (the default zone →
  * enclosure drill-down) or as one flat grid when sorted by name/occupancy.
@@ -146,6 +164,16 @@ export function EnclosureGrid({
     );
   }
 
+  // Figures describe what is shown: filters narrow them, and the zone line says so.
+  const physical = flat ?? groups.flatMap((g) => g.enclosures);
+  const allTotals = (
+    <p className="text-sm text-muted" data-testid="all-zones-summary">
+      <span className="font-medium text-foreground">{t.enclosures.allZones}</span>
+      {": "}
+      <TotalsText totals={occupancyTotals(physical)} />
+    </p>
+  );
+
   const pinnedGrid = pinned.length > 0 && (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {pinned.map((enclosure) => (
@@ -158,6 +186,7 @@ export function EnclosureGrid({
     return (
       <div className="flex flex-col gap-6">
         {pinnedGrid}
+        {allTotals}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {flat.map((enclosure) => (
             <EnclosureCard key={enclosure.id} enclosure={enclosure} tagOrigin={tagOrigin} />
@@ -170,26 +199,34 @@ export function EnclosureGrid({
   return (
     <div className="flex flex-col gap-6">
       {pinnedGrid}
+      {allTotals}
       {groups.map((zone) => (
         <section key={zone.id} className="flex flex-col gap-3">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <div className="flex flex-col gap-1">
             <h2 className="text-lg font-semibold text-foreground">
               {placeName(locale, zone.name, zone.name_th)}
             </h2>
-            <span className="text-xs text-muted">
-              {zone.internal ? t.enclosures.hub.internal : t.enclosures.hub.external}
-              {" · "}
-              {t.enclosures.enclosuresCount(zone.enclosures.length)}
-            </span>
-            {zone.zone_wide_jobs > 0 && (
-              <Link
-                href={`/maintenance?zone=${zone.id}`}
-                className="flex items-center gap-1 text-xs font-medium text-foreground hover:underline"
-              >
-                <ENCLOSURE_ICONS.maintenance aria-hidden="true" className="h-3.5 w-3.5" />
-                {t.enclosures.zoneWideJobs(zone.zone_wide_jobs)}
-              </Link>
-            )}
+            <p
+              className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm text-muted"
+              data-testid="zone-summary"
+            >
+              <span>
+                {zone.internal ? t.enclosures.hub.internal : t.enclosures.hub.external}
+                {" · "}
+                <TotalsText totals={occupancyTotals(zone.enclosures)} />
+                {zone.enclosures.length < zone.total_enclosures &&
+                  ` · ${t.enclosures.showingOf(zone.enclosures.length, zone.total_enclosures)}`}
+              </span>
+              {zone.zone_wide_jobs > 0 && (
+                <Link
+                  href={`/maintenance?zone=${zone.id}`}
+                  className="flex items-center gap-1 font-medium text-foreground hover:underline"
+                >
+                  <ENCLOSURE_ICONS.maintenance aria-hidden="true" className="h-3.5 w-3.5" />
+                  {t.enclosures.zoneWideJobs(zone.zone_wide_jobs)}
+                </Link>
+              )}
+            </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {zone.enclosures.map((enclosure) => (

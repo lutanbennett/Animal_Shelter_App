@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Enclosures: each zone now shows how many residents are in it and how many spaces are free, with a total for all zones above. A full or over-capacity enclosure never takes spaces away from the others.",
   "More buttons are now big enough to tap with a thumb on a phone: Undo, Skip, Add note and Done on My tasks, the buttons in the photo viewer (close, Remove photo, Set as profile, Move, Show all), the Units buttons, and the account menu at the top. On a computer they look as before.",
 ];
 
