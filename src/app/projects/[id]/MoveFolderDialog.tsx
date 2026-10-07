@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { ChevronRight, Folder, FolderInput } from "lucide-react";
+import { ActionButton } from "@/components/ActionButton";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { projectCategoryLabel } from "@/lib/i18n/enum-labels";
 import { PROJECT_CATEGORIES, type ProjectFolder } from "@/lib/projects/queries";
@@ -136,16 +138,12 @@ function MoveFolderDialogBody({ folder, allFolders, onClose, onMoved }: MoveFold
         {error && <p className="text-sm text-danger">{error}</p>}
 
         <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isPending}
-            className="rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-50"
-          >
+          <ActionButton icon={ACTION_ICONS.clear} onClick={onClose} disabled={isPending}>
             {t.common.cancel}
-          </button>
-          <button
-            type="button"
+          </ActionButton>
+          <ActionButton
+            icon={FolderInput}
+            variant="primary"
             disabled={isPending || !selected || selected === folder.parent_folder_id}
             onClick={() => {
               if (!selected) return;
@@ -159,10 +157,9 @@ function MoveFolderDialogBody({ folder, allFolders, onClose, onMoved }: MoveFold
                 onMoved(result.driveWarning ?? null);
               });
             }}
-            className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
           >
             {isPending ? t.common.saving : f.moveHere}
-          </button>
+          </ActionButton>
         </div>
       </div>
     </div>,

@@ -4,7 +4,8 @@ import { useKeptForm } from "@/lib/use-kept-form";
 import Link from "next/link";
 import { FileText, FolderOpen, Globe, HeartCrack } from "lucide-react";
 import { retryDeceasedArchive, retryDeceasedRestore } from "./actions";
-import { PLACEMENT_ICONS } from "@/components/hub-icons";
+import { ACTION_ICONS, PLACEMENT_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate } from "@/lib/format";
 import { driveFileUrl, driveFolderUrl } from "@/lib/google/drive-client";
@@ -117,13 +118,9 @@ export function DeceasedBanner({
             {d.banner.archivedAt(formatDate(archive.archivedAt, locale))}
           </p>
           {canRetryArchive && (
-            <button
-              type="submit"
-              disabled={pending}
-              className="rounded border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-surface-hover disabled:opacity-50"
-            >
+            <ActionButton type="submit" compact icon={ACTION_ICONS.refresh} disabled={pending}>
               {pending ? d.banner.archiving : d.banner.refreshArchive}
-            </button>
+            </ActionButton>
           )}
           {state && "error" in state && (
             <span className="text-xs text-danger">{state.error}</span>
@@ -145,13 +142,9 @@ export function DeceasedBanner({
           <p className="text-xs text-danger">{d.banner.archiveIncomplete}</p>
           <p className="basis-full text-xs text-muted">{d.banner.notArchivedYet}</p>
           {canRetryArchive && (
-            <button
-              type="submit"
-              disabled={pending}
-              className="rounded border border-primary/40 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 disabled:opacity-50"
-            >
+            <ActionButton type="submit" compact icon={ACTION_ICONS.refresh} disabled={pending}>
               {pending ? d.banner.archiving : d.banner.retryArchive}
-            </button>
+            </ActionButton>
           )}
           {state && "error" in state && (
             <span className="text-xs text-danger">{state.error}</span>
@@ -202,13 +195,9 @@ export function DeceasedRestoreNotice({
     >
       <p className="text-xs text-danger">{u.restoreIncomplete}</p>
       {canRetry && (
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded border border-primary/40 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 disabled:opacity-50"
-        >
+        <ActionButton type="submit" compact icon={ACTION_ICONS.refresh} disabled={pending}>
           {pending ? u.restoring : u.retryRestore}
-        </button>
+        </ActionButton>
       )}
       {state && "error" in state && (
         <span className="text-xs text-danger">{state.error}</span>
