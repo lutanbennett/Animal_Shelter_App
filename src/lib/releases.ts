@@ -63,21 +63,30 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   { text: "Settings → Recent changes now fits on a phone. The filter row (table, person, dates) used to push the page sideways because the person list was wider than the screen; it now stays inside it, so the audit log reads without side-scrolling.", roles: ["admin"] },
-  "On a phone, the buttons across the top of every screen are now full-size: Sign out (it was the smallest button in the app, easy to miss and easy to hit by accident), the menu button and the Assistant button. The top bar now takes two lines on a phone so everything fits, and your full name and role show in Thai as well as English. On a computer nothing changes.",
-  { text: "The Contacts page (the list of carers, volunteers and suppliers with their phone numbers and addresses) is now for Management and the 2IC only, as the Director decided. The 2IC sees each person's name and phone number, no address. Staff and volunteers no longer see Contacts in the menu: if you need a carer's number, ask Management. Choosing a carer when you take in or rehome a resident works as before.", roles: ["management", "staff", "volunteer"] },
-  { text: "Management can now record or correct a resident's microchip number, as the handbook always said they could. Before, the chip form was refused for Management.", roles: ["management"] },
-  { text: "The vaccine list on the Log immunizations form no longer shows what a vaccine costs to anyone: the 2IC can record vaccinations without seeing the price, and prices stay under Settings → Immunization Types.", roles: ["admin", "management", "staff", "vet"] },
-  { text: "Staff keep seeing a Shelter Friend's card; the Director agreed there is nothing to hide, since the Friends band is public on the website.", roles: ["management", "staff"] },
-  "The top of every screen now shows your name and role (for example \"Lutan · Admin\") instead of your email address. Tap it to see which account you are signed in to, change your name, or sign out. You can set your own name under Change password, and an admin can set anyone's under Settings → Security. Everyone with a name set is shown by it wherever people are picked or listed, in English and Thai.",
-  "On a phone, the small controls that were easy to mis-tap are now full-size buttons: the cross that removes a resident from a vet visit or immunization (it was 7 pixels wide), Record chip, Add a new carer, Select residents, Add more, Change, and Show anyway. The Cancel and Done buttons in the resident picker and in every confirmation box are bigger too.",
-  "The Save, Filter, Send, Move and Book buttons on resident, medical and account forms are now big enough to tap reliably on a phone, in English and Thai.",
-  "Choosing a folder when you add resident photos now says whether the photo will appear on the public website (every folder except Medical) or never will (Medical). Only people allowed to publish photos can file one outside the Medical folder, and that is checked in the database as well as on the page.",
-  "When a resident who has died has a profile photo that could not be put in their summary PDF, the page now says so as soon as you choose or save it, instead of leaving a PDF with no picture and no word. Phone (HEIC) photos are handled by Drive.",
 ];
 
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.20.0",
+    date: "2026-10-07",
+    title:
+      "Your name and role instead of your email, the Director’s answers on who sees what, and full-size buttons on a phone",
+    major: true,
+    notes: [
+      { text: "The Contacts page (the list of carers, volunteers and suppliers with their phone numbers and addresses) is now for Management and the 2IC only, as the Director decided. The 2IC sees each person's name and phone number, no address. Staff and volunteers no longer see Contacts in the menu: if you need a carer's number, ask Management. Choosing a carer when you take in or rehome a resident works as before.", roles: ["management", "staff", "volunteer"] },
+      "The top of every screen now shows your name and role (for example \"Lutan · Admin\") instead of your email address. Tap it to see which account you are signed in to, change your name, or sign out. You can set your own name under Change password, and an admin can set anyone's under Settings → Security. Everyone with a name set is shown by it wherever people are picked or listed, in English and Thai.",
+      "On a phone, the buttons across the top of every screen are now full-size: Sign out (it was the smallest button in the app, easy to miss and easy to hit by accident), the menu button and the Assistant button. The top bar now takes two lines on a phone so everything fits, and your full name and role show in Thai as well as English. On a computer nothing changes.",
+      "On a phone, the small controls that were easy to mis-tap are now full-size buttons: the cross that removes a resident from a vet visit or immunization (it was 7 pixels wide), Record chip, Add a new carer, Select residents, Add more, Change, and Show anyway. The Cancel and Done buttons in the resident picker and in every confirmation box are bigger too.",
+      "The Save, Filter, Send, Move and Book buttons on resident, medical and account forms are now big enough to tap reliably on a phone, in English and Thai.",
+      { text: "Management can now record or correct a resident's microchip number, as the handbook always said they could. Before, the chip form was refused for Management.", roles: ["management"] },
+      { text: "The vaccine list on the Log immunizations form no longer shows what a vaccine costs to anyone: the 2IC can record vaccinations without seeing the price, and prices stay under Settings → Immunization Types.", roles: ["admin", "management", "staff", "vet"] },
+      { text: "Staff keep seeing a Shelter Friend's card; the Director agreed there is nothing to hide, since the Friends band is public on the website.", roles: ["management", "staff"] },
+      "Choosing a folder when you add resident photos now says whether the photo will appear on the public website (every folder except Medical) or never will (Medical). Only people allowed to publish photos can file one outside the Medical folder, and that is checked in the database as well as on the page.",
+      "When a resident who has died has a profile photo that could not be put in their summary PDF, the page now says so as soon as you choose or save it, instead of leaving a PDF with no picture and no word. Phone (HEIC) photos are handled by Drive.",
+    ],
+  },
   {
     version: "0.19.3",
     date: "2026-10-06",

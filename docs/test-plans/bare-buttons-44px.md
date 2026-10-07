@@ -139,8 +139,8 @@ gates: typecheck=0 lint=0 build=0
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | **Decision for Lutan: the app header buttons** — Open menu 36×36, Assistant 34×30, Sign out 20×20. Recommendation in the decision: raise Sign out to 44×44 (the smallest control in the app, on every page); Open menu and Assistant are close and would fit. Not changed here | `docs/decisions/2026-10-07-bare-buttons-44px.md` |
-| 2 | Look at a converted form on a phone in English and Thai: the Save button should be 44 px tall with an icon and nothing else on the row should have shifted. Before/after screenshots were **not** taken; the measurements stand in for them | `/residents/<id>/edit`, `/residents/<id>/rehome`, `/diets/new` |
+| 1 | **Decision for Lutan: the app header buttons** — Open menu 36×36, Assistant 34×30, Sign out 20×20. Recommendation in the decision: raise Sign out to 44×44 (the smallest control in the app, on every page); Open menu and Assistant are close and would fit. Not changed here. **ANSWERED 2026-10-07** (decision brief part 2 q11, option A: *“make it 44 pixels, like the rest.”*) **and shipped in #413 `header-buttons-44px`**, which raised Sign out, Open menu and Assistant to 44 px on phones. Closed | `docs/decisions/2026-10-07-bare-buttons-44px.md`, `docs/decisions/2026-10-07-header-buttons-44px.md` |
+| 2 | Look at a converted form on a phone in English and Thai: the Save button should be 44 px tall with an icon and nothing else on the row should have shifted. Before/after screenshots were **not** taken; the measurements stand in for them. **LOOKED AT 2026-10-07 by Lutan on his own phone:** Rehome / foster, carrying Add a new carer (106×20 — `ActionButton`) and Foster / Adopt (156×36 — `ActionButton`). His verdict: *“functionally the form works and fits on the screen and is useable.”* **Not covered, and not claimed:** `/residents/<id>/edit`, `/diets/new`, and Thai on any of the three | `/residents/<id>/rehome` looked at; `/residents/<id>/edit`, `/diets/new` not |
 
 ## Sign-off
 
@@ -153,9 +153,9 @@ Automated checks by: Claude (bare-buttons-44px session)  Date: 2026-10-07
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: two items are listed, so only the person who looked may tick this
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: item 1 is answered and shipped in #413; item 2 was looked at on a phone by Lutan, but on Rehome / foster only — `/residents/<id>/edit`, `/diets/new` and Thai were not covered, so this is not ticked
 
-Manual verification by: pending: Lutan to look at a converted form on a phone and to decide the header buttons
+Manual verification by: Lutan — looked at Rehome / foster on his own phone, *“functionally the form works and fits on the screen and is useable”*, and answered the header decision as option A; line written by Claude at their request in chat (2026-10-07). Scope is item 2 on Rehome / foster only, as the table records  Date: 2026-10-07
 
 ### Result
 
@@ -165,7 +165,7 @@ Manual verification by: pending: Lutan to look at a converted form on a phone an
 
 Result: pass
 
-Release manager acknowledgement: pending
+Release manager acknowledgement: Claude (release manager), 2026-10-07 — read before the `0.20.0` deploy; item 2's uncovered forms and languages are carried into `docs/releases/2026-10-07.md`
 
 ## Evidence: check-phone-width.mjs, before
 
