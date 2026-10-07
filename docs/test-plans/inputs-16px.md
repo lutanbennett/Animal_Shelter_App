@@ -16,22 +16,22 @@ or `n/a` with the reason.
 | PR | linked from the PR itself |
 | Tested by / date | Claude (inputs-16px session), 2026-10-07 |
 | Carries a migration? | no |
-| Tested at SHA | `TBD` |
+| Tested at SHA | `0ea48116` |
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence, and it matches what the backlog item asked for: the ten Notes boxes that used `field-sizing-content` now share `src/components/textareaClass.ts` (16 px type below `md`, `w-full min-w-0`, `min-h-32` below `md`, `resize-y`), and `scripts/check-phone-width.mjs` focuses each field and fails any textarea under 16 px
-- [x] Files/areas touched listed: the ten resident forms (`IntakeForm`, `EditResidentForm`, `MoveResidentForm`, `RehomeForm`, `ReturnToShelterForm`, `SendToHospitalForm`, `ReturnFromHospitalForm`, `RecordDeathForm`, `UndoDeathForm`, `AdoptionUpdateForm`), the new `textareaClass.ts`, `scripts/check-phone-width.mjs`, `src/lib/releases.ts`, docs. No `worker/`, no `supabase/`
-- [x] Roles affected identified: everyone who opens these forms (admin, management, staff, vet where granted); signed-out public sees none of them
-- [x] Out of scope written down: single-line inputs and selects have the same 14 px type and will zoom the same way; filed on the `backlog` branch, not widened here
+- [x] Change is described in one sentence, and it matches what the backlog item asked for: below `md`, every typed-text input, select and textarea is 16 px via one rule in `src/app/globals.css`, so iPhone Safari does not zoom on tap; `scripts/check-phone-width.mjs` now measures inputs and selects too. One deviation: the rule is unlayered, not base-layer, because Tailwind v4 utilities (`text-sm`) beat `@layer base` (decision file)
+- [x] Files/areas touched listed: `src/app/globals.css`, `scripts/check-phone-width.mjs`, `src/lib/releases.ts`, `docs/backlog.md`, a decision file and this plan. No form file, route, `worker/` or migration touched
+- [x] Roles affected identified: everyone on a phone; the rule is global, so all forms and filter rows. Checked as admin, management, staff, vet, volunteer, head of medical, head of maintenance; signed-out pages are not in the check
+- [x] Out of scope written down: widths of the 44 px bare-button notes the check already prints (not failures); the facility map and the layout shell
 
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
-- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Closing lines as printed (the first run with a dev server and build competing for memory printed `typecheck=134`, a crash; `npm run typecheck` alone exited 0, and the rerun with the server stopped is below):
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Closing lines as printed:
 
 ```
-=== gates: build exited 0 after 37s
+=== gates: build exited 0 after 200s
 
 gates: typecheck=0 lint=0 build=0
 ```
@@ -57,8 +57,8 @@ gates: typecheck=0 lint=0 build=0
 - [ ] Create / edit / delete all exercised — n/a: no data path changed
 - [ ] Empty state — n/a: no list changed
 - [ ] Invalid input is rejected — n/a: no validation changed
-- [x] Boundary cases: the check runs with the guard's long-named resident, and the zoom rule was proved red then green: with the old class it failed Rehome (`notes`) and Edit (`idealHome, bio, temperamentNotes, pastStoryNotes, behaviourNotes`); with the new class it passed Intake, Edit, Rehome, Move, Hospital, Return from hospital, Deceased and Adoption updates
-- [ ] The sideways growth itself was reproduced — n/a: it did NOT reproduce in headless Edge at 375 px with the old class (focus check clean), so the cause is attributed to iPhone focus-zoom on type under 16 px and not measured; the decision file says so
+- [x] Boundary cases: before/after on the same pages (admin, English; /residents, /management/diets, /foster, /medical, /vet-visits, /contacts). Before the rule the check failed `/residents` (`q` under 16 px); after, exit 0. Full run, all roles, English: 163 page views, no sideways scroll, no field under 16 px, exit 0. Intake (`/residents/new`) as admin and staff, English and Thai, passes
+- [ ] The sideways growth itself was reproduced — n/a: it did NOT reproduce in headless Chromium, before or after: Chromium does not zoom on focus. Only the cause (fields under 16 px) is measured. The decision file records that the Notes-box item fixed textareas only
 
 ### Role access matrix
 
@@ -66,7 +66,7 @@ gates: typecheck=0 lint=0 build=0
 |---|---|---|---|
 | admin | the ten forms | unchanged access | n/a: no access rule changed |
 | management | the ten forms | unchanged access | n/a: no access rule changed |
-| staff | Intake, Edit, Rehome, Move, Hospital, Return, Deceased, Adoption updates | no sideways scroll, no textarea under 16 px | pass (check run as staff, English) |
+| staff | Intake and the pages the role can open | no sideways scroll, no field under 16 px | pass (full check, English; Intake also in Thai) |
 | vet | as before | unchanged | n/a: no access rule changed |
 | volunteer | as before | unchanged | n/a: no access rule changed |
 | signed out | none | unchanged | n/a: no access rule changed |
@@ -79,7 +79,7 @@ gates: typecheck=0 lint=0 build=0
 - [ ] Nav entry correct — n/a: no navigation change
 - [ ] Manual updated — n/a: no manual topic describes the box size
 - [ ] Translatable strings — n/a: no strings changed; class names only
-- [x] Mobile viewport (375px): measured by `scripts/check-phone-width.mjs` including focusing every field; whether the box now reads as somewhere to write is left for manual verification
+- [x] Mobile viewport (375px): measured by `scripts/check-phone-width.mjs`, which focuses every field; Intake included. Whether tapping stops zooming on a real iPhone is left for manual verification
 - [ ] Browser console clean — n/a: not driven in the browser pane (the pane needs a login); class names only
 - [ ] Network clean — n/a: not driven in the browser pane; no request changed
 
@@ -91,12 +91,12 @@ gates: typecheck=0 lint=0 build=0
 
 ## 7. Documentation
 
-- [x] Backlog item ticked in `docs/backlog.md` on this branch (both items; the follow-up went on the `backlog` branch)
-- [x] Non-obvious design choices added as `docs/decisions/2026-10-07-notes-box-phone.md`
+- [x] Backlog item ticked in `docs/backlog.md` on this branch
+- [x] Non-obvious design choices added as `docs/decisions/2026-10-07-inputs-16px.md`
 - [ ] `README.md` still accurate — n/a: it does not describe these forms or the check's internals
 - [x] **Release notes.** `unreleased` gained a line in `src/lib/releases.ts`, written for a shelter user
 - [x] Commit messages say why, not just what
-- [x] **Claims in commit messages and decision files were measured, not reasoned.** The one unmeasured claim (iPhone focus-zoom as the cause) is labelled as such in the decision file; the Chromium result that the old class did not widen the page is stated
+- [x] **Claims in commit messages and decision files were measured, not reasoned.** The unmeasured one (iPhone zoom as the cause of the sideways scroll) is labelled as such
 
 ## 8. Pre-production gate
 
@@ -135,14 +135,14 @@ gates: typecheck=0 lint=0 build=0
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
-| 1 | low | Single-line inputs and selects are also 14 px and will zoom on an iPhone | deferred to backlog (`backlog` branch, "16 px inputs and selects on phones") |
+| 1 | medium | The earlier Notes-box item fixed textareas only; inputs and selects were still 14 px and could have caused the same sideways scroll on other fields | fixed here; the iPhone confirmation is in the manual table |
 
 ## Left for manual verification
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | On your own iPhone, tap into the Notes box: the page does not zoom in or scroll sideways, and the box looks like somewhere to write a sentence | `/residents/{id}/rehome`, then the other nine forms |
-| 2 | Each form still saves with a note typed in, including Record a death and Undo a death | the ten forms, dev or test |
+| 1 | On your own iPhone, tap into a text box and a drop-down: the page does not zoom in or scroll sideways | Rehome / foster, Intake, a filter row |
+| 2 | Intake and the medical forms still look right at 16 px and still save | `/residents/new`, a medical form |
 
 ## Sign-off
 
@@ -157,7 +157,7 @@ Automated checks by: Claude  Date: 2026-10-07
 
 - [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — the two items are left for Lutan
 
-Manual verification by: pending: Lutan to try the Notes box on his iPhone and save one form
+Manual verification by: pending: Lutan to tap an input on his iPhone
 
 ### Result
 
