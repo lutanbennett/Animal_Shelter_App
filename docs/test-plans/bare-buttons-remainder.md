@@ -173,7 +173,7 @@ Automated checks by: Claude (bare-buttons-remainder session)  Date: 2026-10-07
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: Lutan has not looked yet
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty and nobody has looked yet
 
 Manual verification by: pending: the four items under Left for manual verification
 
