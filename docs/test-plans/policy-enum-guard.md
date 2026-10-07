@@ -31,7 +31,9 @@ or `n/a` with the reason.
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Closing lines:
 
 ```
-GATES_PLACEHOLDER
+=== gates: build exited 0 after 409s
+
+gates: typecheck=0 lint=0 build=0
 ```
 
 - [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
