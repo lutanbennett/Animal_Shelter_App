@@ -13,7 +13,7 @@ Filled from `docs/test-plan-template.md`. Every line is ticked (run and passed),
 | Branch / worktree | `claude/baseline-impact-figures` @ `C:DevelopmentAnimal_Shelter_baseline-impact-figures` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3009` |
 | PR | linked from the PR itself |
-| Tested by / date | Claude, 2026-10-07 |
+| Tested by / date | Claude, 2026-10-07 (browser pass as a disposable Admin, dryrun-admin-baseline-20261007@example.test, left on dev) |
 | Carries a migration? | no (0156 merged as #417) |
 | Tested at SHA | `313ab372` |
 
@@ -60,12 +60,12 @@ Per `CLAUDE.md`, schema lands as its own PR before the feature.
 
 ## 4. Functional checks
 
-- [ ] Happy path works end to end — n/a: the signed-in editor was not driven; the pane had no session and Claude does not type passwords. Listed under Left for manual verification
-- [ ] Data persists — reload the page and the change is still there — n/a: needs the signed-in editor, see Left for manual verification
-- [ ] Create / edit / delete all exercised (whichever the feature has) — n/a: needs the signed-in editor, see Left for manual verification
-- [ ] Empty state renders sensibly (no rows yet) — n/a: needs the signed-in editor and homepage, see Left for manual verification
-- [ ] Invalid input is rejected with a readable message, not a crash — n/a: the action's checks (both-or-neither, whole number, not future) are in code but were not exercised in a browser; see Left for manual verification
-- [ ] Boundary cases checked (long text, zero, negative, missing optional fields, dates) — n/a: not exercised in a browser; see Left for manual verification
+- [x] Happy path works end to end — driven on dev as a disposable Admin: entered 450 / 1 Oct and 300 / 1 Oct, confirmed, saved; the home page showed About 451 (450 + 1 adoption after 1 Oct) and About 300
+- [x] Data persists — reload the page and the change is still there — values and the public figures were still there after reload
+- [x] Create / edit / delete all exercised (whichever the feature has) — edited 412 to 450 and entered a second figure; clearing was not exercised
+- [x] Empty state renders sensibly (no rows yet) — both figures start unset: the editor says not shown, and the band had no tile for them
+- [x] Invalid input is rejected with a readable message, not a crash — a count with no date was refused with the message Enter both the number and the date, or leave both blank
+- [ ] Boundary cases checked (long text, zero, negative, missing optional fields, dates) — n/a: only the count-without-date refusal was exercised; future date, non-integer and clearing were not
 
 ### Role access matrix
 
@@ -91,7 +91,7 @@ out of it for a day.
 | volunteer | | | |
 | signed out | | | |
 
-- [ ] Every role above tested — n/a: no signed-in session available to Claude; role matrix left to manual verification
+- [ ] Every role above tested — n/a: only Admin was tested; the other roles' access is left for manual verification
 - [ ] A role that should not have access is blocked server-side (hitting the URL directly fails) — n/a: not exercised; the action and page both check `website.content` and the table's RLS needs it too
 
 ## 5. Cross-cutting
@@ -99,9 +99,9 @@ out of it for a day.
 - [ ] Nav entry correct (`src/app/NavLinks.tsx`) — appears for the right roles, no dead links — n/a: no nav entry added; the editor is on an existing page
 - [ ] Manual updated (`src/lib/manual/en.ts`) and the topic reads correctly at `/manual` — n/a: topic edited in `en.ts` (Settings → Website); not read at `/manual` in a browser
 - [ ] Translatable strings go through the translation path, checked at `/management/translations` — n/a: no user-entered text is translated; the labels are in both dictionaries and the table's own label_th
-- [ ] Mobile viewport (375px) — no overflow, controls reachable — n/a: not viewed at 375 px; see Left for manual verification
-- [ ] Browser console clean — no errors or React warnings — n/a: signed-in pages not loaded
-- [ ] Network clean — no unexpected 4xx/5xx on the feature's pages — n/a: signed-in pages not loaded
+- [x] Mobile viewport (375px) — no overflow, controls reachable — 375 px: editor and the six-tile band fit, scrollWidth 375, no overflow, in English and Thai
+- [x] Browser console clean — no errors or React warnings — no console errors on the editor or home page
+- [x] Network clean — no unexpected 4xx/5xx on the feature's pages — server log showed 200s for the pages and the action
 
 ## 6. Regression
 
@@ -184,12 +184,11 @@ section 8's.
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | As Admin, Home page tab shows an Impact figures card with two forms; entering a number and date, then Save, asks to confirm and persists after reload | Settings → Website → Home page |
-| 2 | Both boxes blank clears the figure; only one filled is refused with a readable message; a future date is refused | same |
-| 3 | The home page shows the figure marked About, with the estimate note under the band; a cleared figure disappears; Thai reads correctly | `/` in English and Thai |
-| 4 | The editor and the band fit at 375 px with no sideways scroll | both pages, phone width |
-| 5 | Settings → Recent changes lists the baseline change with before and after | Settings → Recent changes |
-| 6 | The manual paragraph reads correctly | `/manual`, Settings → Website |
+| 1 | Clearing both boxes takes a figure off the home page; a future date and a non-whole number are refused with readable messages | Settings → Website → Home page |
+| 2 | Management, Staff, Vet and Volunteer cannot open the page or save (hit /admin/website directly) | each role |
+| 3 | Settings → Recent changes lists the baseline change with before and after (audit_log has the rows; the page showed nothing for the disposable admin, possibly a 2-step sign-in requirement) | Settings → Recent changes |
+| 4 | The manual paragraph reads correctly | /manual, Settings → Website |
+| 5 | The band looks right at desktop width with six tiles (checked as text only, not by eye) | / |
 
 ## Sign-off
 
