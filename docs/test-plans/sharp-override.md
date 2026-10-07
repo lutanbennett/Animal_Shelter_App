@@ -8,10 +8,10 @@
 | Backlog item | `docs/backlog.md` → *"A high advisory in `sharp` reaches the production tree through the Cloudflare build chain, and the only fix npm offers is a breaking `wrangler` change."* (Security) |
 | Branch / worktree | `claude/sharp-override` @ `C:\Development\Animal_Shelter_sharp-override` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3005` |
-| PR | PENDING_PR |
+| PR | [#418](https://github.com/lutanbennett/Animal_Shelter_App/pull/418) |
 | Tested by / date | Claude (QA session) / 2026-10-07 |
 | Carries a migration? | no |
-| Tested at SHA | PENDING_SHA |
+| Tested at SHA | `ebd41fea` — the commit carrying the dependency change, which is what the gates and `opennext:build` ran against. The later commits on this branch touch only markdown (`CLAUDE.md`, the decision file, this plan, the backlog tick) and cannot move a build result |
 
 ## 1. Scope and risk
 
