@@ -60,7 +60,7 @@ export function AccountMenu({
         aria-haspopup="true"
         aria-label={`${t.header.accountMenu}: ${label}`}
         title={label}
-        className="flex max-w-full items-center gap-1 rounded text-sm text-muted hover:text-foreground sm:max-w-[16rem]"
+        className="flex min-h-11 max-w-full items-center gap-1 rounded text-sm md:min-h-9 text-muted hover:text-foreground sm:max-w-[16rem]"
       >
         <span className="truncate">{label}</span>
         <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0" />
