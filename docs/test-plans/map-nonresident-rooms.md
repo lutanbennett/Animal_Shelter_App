@@ -27,8 +27,14 @@ or `n/a` with the reason.
 
 ## 2. Automated gates
 
-- [ ] `node scripts/worktree.mjs sync` — n/a: filled in at the commit that ran it, see the gates block below
-- [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — n/a: filled in below
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Closing lines as printed:
+
+```
+=== gates: build exited 0 after 420s
+
+gates: typecheck=0 lint=0 build=0
+```
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data
