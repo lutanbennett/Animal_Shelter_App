@@ -61,19 +61,27 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [
-  "Tapping a text box or a drop-down on a phone no longer zooms the page in on an iPhone. Every box on every form now uses a size Safari leaves alone, so the page stays put and does not slide sideways after you tap.",
-  "Enclosures → Map now shows the Medical room, the Kitchen and Storage as blue dashed shapes with their names, so you can see where they are; tapping one shows its name and opens nothing. The Director places them under Settings → Facility map.",
-  { text: "Settings → Website → Home page now has Impact figures: enter how many animals were rehomed, and how many village sterilisations were done, before the system began, with the date that is true up to. The home page then shows that number plus every adoption recorded since, marked \"About\" with a note that the early part is an estimate. A figure with nothing entered is not shown, and every change is kept in Recent changes.", roles: ["admin"] },
-  "The Notes boxes on the resident forms (Rehome / foster, Return to shelter, Move, Send to hospital, Return from hospital, Record a death, Undo a death, Adoption updates, Edit a resident and Add a resident) are now taller on a phone, so they look like somewhere to write a sentence, and tapping into one no longer zooms the page in and lets it scroll sideways on an iPhone.",
-  { text: "Settings → Recent changes now fits on a phone. The filter row (table, person, dates) used to push the page sideways because the person list was wider than the screen; it now stays inside it, so the audit log reads without side-scrolling.", roles: ["admin"] },
-  "On a computer, the top bar and the menu on the left now stay in place while the page scrolls, so you can reach any other page without scrolling back to the top first. A long menu scrolls by itself inside its own column. On a phone nothing changes.",
-  "Tapping a resident's name card with your phone now always shows at least what a visitor would see. Before, the 2IC, the Heads of Medical and Maintenance and volunteers saw less than a stranger (just the name and where the resident lives), and a vet saw an error for a resident their clinic does not treat. Now they see the resident's card with photo, age and temperament, plus where the resident lives and buttons for the jobs they can do. Whether these roles also read the medical record from a card is the Director's choice and has not changed.",
-];
+export const unreleased: ReleaseNote[] = [];
 
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.20.1",
+    date: "2026-10-07",
+    title:
+      "Phones stop zooming in when you tap a box, the menu stays put on a computer, and the map shows three more rooms",
+    major: false,
+    notes: [
+      "Tapping a text box or a drop-down on a phone no longer zooms the page in on an iPhone. Every box on every form now uses a size Safari leaves alone, so the page stays put and does not slide sideways after you tap.",
+      "Enclosures → Map now shows the Medical room, the Kitchen and Storage as blue dashed shapes with their names, so you can see where they are; tapping one shows its name and opens nothing. The Director places them under Settings → Facility map.",
+      { text: "Settings → Website → Home page now has Impact figures: enter how many animals were rehomed, and how many village sterilisations were done, before the system began, with the date that is true up to. The home page then shows that number plus every adoption recorded since, marked \"About\" with a note that the early part is an estimate. A figure with nothing entered is not shown, and every change is kept in Recent changes.", roles: ["admin"] },
+      "The Notes boxes on the resident forms (Rehome / foster, Return to shelter, Move, Send to hospital, Return from hospital, Record a death, Undo a death, Adoption updates, Edit a resident and Add a resident) are now taller on a phone, so they look like somewhere to write a sentence, and tapping into one no longer zooms the page in and lets it scroll sideways on an iPhone.",
+      { text: "Settings → Recent changes now fits on a phone. The filter row (table, person, dates) used to push the page sideways because the person list was wider than the screen; it now stays inside it, so the audit log reads without side-scrolling.", roles: ["admin"] },
+      "On a computer, the top bar and the menu on the left now stay in place while the page scrolls, so you can reach any other page without scrolling back to the top first. A long menu scrolls by itself inside its own column. On a phone nothing changes.",
+      "Tapping a resident's name card with your phone now always shows at least what a visitor would see. Before, the 2IC, the Heads of Medical and Maintenance and volunteers saw less than a stranger (just the name and where the resident lives), and a vet saw an error for a resident their clinic does not treat. Now they see the resident's card with photo, age and temperament, plus where the resident lives and buttons for the jobs they can do. Whether these roles also read the medical record from a card is the Director's choice and has not changed.",
+    ],
+  },
   {
     version: "0.20.0",
     date: "2026-10-07",
