@@ -176,7 +176,7 @@ function sleep(ms) {
 /**
  * Processes running *from* one of `dirs` — an executable inside it, or a
  * node.exe running a script under its node_modules (next dev, wrangler) — as
- * Map<dir, [{pid, name}]>. Deliberately not "mentions the path": a shell
+ * Map<dir, [{pid, name, cmd}]>. Deliberately not "mentions the path": a shell
  * whose command line merely names the folder is somebody's session (a
  * Claude tool call, a terminal), and --stop-servers must never end one.
  */
@@ -203,7 +203,7 @@ function holders(dirs) {
       const needle = norm(d) + "\\";
       const nodeScript = p.Name?.toLowerCase() === "node.exe" && cmd.includes(needle + "node_modules\\");
       if (exe.startsWith(needle) || nodeScript) {
-        found.get(d).push({ pid: p.ProcessId, name: p.Name });
+        found.get(d).push({ pid: p.ProcessId, name: p.Name, cmd: p.CommandLine ?? "" });
       }
     }
   }
@@ -260,6 +260,29 @@ function sessionsIn(sessions, dir) {
     const c = s.cwd.toLowerCase();
     return c === d || c.startsWith(d + path.sep);
   });
+}
+
+/**
+ * What the non-session holders of a folder are, in words. A `next dev` server is
+ * the one holder that is safe to stop: node.exe running a script under the
+ * folder's own node_modules\next\. It is a pair — `next dev --port N` and the
+ * start-server.js child it spawns — and only the first names the port. If every
+ * holder is of that kind the folder is held *only* by a dev server; anything
+ * else (wrangler, a stray exe, a node we cannot place) is named as it is,
+ * because "cannot tell" is the honest answer and must not read as "safe to stop".
+ */
+function describeProcs(procs, dir) {
+  if (procs.length === 0) return { devServerOnly: false, text: "" };
+  // npm's shim launches it as `node_modules\.bin\\..\next\dist\bin\next`, so
+  // fold that and doubled backslashes before looking for the next package.
+  const flat = (s) => s.replaceAll("/", "\\").replace(/\\+/g, "\\").replace("\\.bin\\..\\", "\\").toLowerCase();
+  const nextDir = `${flat(dir)}\\node_modules\\next\\`;
+  const isNext = (p) => p.name?.toLowerCase() === "node.exe" && flat(p.cmd).includes(nextDir);
+  if (procs.every(isNext)) {
+    const port = procs.map((p) => /(?:--port[ =]|\s-p\s+)(\d+)/.exec(p.cmd)?.[1]).find(Boolean);
+    return { devServerOnly: true, text: port ? `a dev server on port ${port}` : "a dev server (port not shown)" };
+  }
+  return { devServerOnly: false, text: procs.map((p) => `${p.name} (pid ${p.pid})`).join(", ") };
 }
 
 /** Who holds the folder, by name — empty when nobody could be named. */
@@ -462,6 +485,12 @@ function cmdList() {
     if (t.branch.startsWith(BRANCH_PREFIX) && t.dir !== repo) {
       const v = held(t.dir);
       h = v === null ? "?" : v ? "HELD" : "free";
+      // A named session wins below, so only a folder nobody named is worth the
+      // process scan.
+      if (v && !who(t.dir)) {
+        const text = describeProcs(holders([t.dir]).get(t.dir), t.dir).text;
+        if (text) h = `HELD by ${text}`;
+      }
     } else if (t.dir === repo) {
       h = "(here)";
     }
@@ -479,10 +508,10 @@ function cmdList() {
   if (!fetched) console.log("could not reach origin — ahead/behind/unpushed are as of the last fetch");
   console.table(rows);
   if (WINDOWS) {
-    console.log("held: HELD = some process has the folder open (a Claude session, a terminal, a dev server) — do not 'done' it.");
-    console.log("      Named sessions come from ~/.claude/sessions. HELD with no name means the folder refused to be");
-    console.log("      renamed but no session could be found in it: a plain terminal or editor there, or a brief");
-    console.log("      handle from git or an indexer that is gone on the next run. Look before tearing it down.");
+    console.log("held: HELD — <name> = that Claude session (from ~/.claude/sessions) is in the folder: ask, do not 'done' it.");
+    console.log("      HELD by a dev server = only a next dev server, which 'done --stop-servers' can end; no session is in there.");
+    console.log("      HELD by <process> / bare HELD = something we cannot place (a terminal, editor, or a brief handle from");
+    console.log("      git or an indexer that is gone on the next run): look before tearing it down.");
     console.log("      free = nothing has it open right now. A session can still attach a moment later.");
   }
 
@@ -515,7 +544,15 @@ function removeFolder(dir) {
 // "close the session" there sends them closing unrelated sessions and then
 // reaching for --force, which is the habit these checks exist to prevent.
 function heldMessage(dir) {
-  const who = namedHolders(holders([dir]).get(dir), sessionsIn(liveSessions(), dir));
+  const procs = holders([dir]).get(dir);
+  const sessions = sessionsIn(liveSessions(), dir);
+  const who = namedHolders(procs, sessions);
+  if (sessions.length === 0 && describeProcs(procs, dir).devServerOnly) {
+    return (
+      `${dir} is held only by ${describeProcs(procs, dir).text} — no Claude session is in it.\n` +
+      `Nothing else needs closing: re-run with --stop-servers to end it, which also lets this folder go.`
+    );
+  }
   if (who.length) {
     return (
       `${dir} is in use by ${who.join(", ")}.\n` +
