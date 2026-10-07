@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { MIN_PASSWORD_LENGTH, mustChangePassword, requiresCurrentPassword } from "@/lib/auth/password-change";
+import { userNameOf } from "@/lib/auth/user-name";
+import { ChangeNameForm } from "./ChangeNameForm";
 import { ChangePasswordForm } from "./ChangePasswordForm";
 
 /**
@@ -39,6 +41,8 @@ export default async function ChangePasswordPage(props: PageProps<"/account/pass
         </p>
         <p className="mt-1 text-xs text-muted">{user.email}</p>
       </div>
+      {/* Not on the forced screens: nothing else is available there until the password is set. */}
+      {!forced && !fromReset && <ChangeNameForm initialName={userNameOf(user) ?? ""} />}
       <ChangePasswordForm minLength={MIN_PASSWORD_LENGTH} continueAfter={forced || fromReset}
         askCurrent={needsCurrent}
       />

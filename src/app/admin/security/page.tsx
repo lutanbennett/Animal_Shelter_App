@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { accessRequestsAmong, listAllUsers } from "@/lib/auth/access-requests";
 import { requireAdminUser } from "@/lib/auth/require-admin";
 import { TWO_STEP_PATH, SETUP_OPEN_UNTIL, hasTwoStep, isSetupOpen, trustedTotpFactors } from "@/lib/auth/two-step";
+import { userNameOf } from "@/lib/auth/user-name";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getT } from "@/lib/i18n/get-t";
 import { mustChangePassword } from "@/lib/auth/password-change";
@@ -103,6 +104,7 @@ export default async function SecurityPage() {
     .map((u) => ({
       id: u.id,
       email: u.email ?? "(no email)",
+      name: userNameOf(u),
       role: roleByUserId.get(u.id)?.role ?? null,
       archivedAt: roleByUserId.get(u.id)?.archivedAt ?? null,
       doctor: doctorByUserId.get(u.id)

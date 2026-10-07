@@ -61,6 +61,9 @@ const th: Dictionary = {
     appName: "Lanna Care for Animals",
     shortName: "LCA",
     signOut: "ออกจากระบบ",
+    accountMenu: "เมนูบัญชี",
+    signedInAs: "เข้าสู่ระบบในชื่อ",
+    yourProfile: "ชื่อและรหัสผ่านของคุณ",
     devBadge: "Dev",
     devBadgeTitle: "ฐานข้อมูลทดสอบ — ไม่ใช่เว็บไซต์จริง",
     uatBadge: "UAT",
@@ -353,6 +356,15 @@ const th: Dictionary = {
   },
 
   account: {
+    name: {
+      heading: "ชื่อของคุณ",
+      hint: "แสดงที่ส่วนหัวของหน้าและทุกที่ที่มีการระบุบัญชีของคุณ ปล่อยว่างไว้เพื่อแสดงอีเมลแทน",
+      label: "ชื่อ",
+      placeholder: "เช่น น้อย (กะดึก)",
+      submit: "บันทึกชื่อ",
+      saved: "บันทึกชื่อแล้ว",
+      failed: "บันทึกชื่อไม่สำเร็จ กรุณาลองอีกครั้ง",
+    },
     password: {
       title: "เปลี่ยนรหัสผ่าน",
       subtitle: "ตั้งรหัสผ่านใหม่สำหรับบัญชีของคุณ ไม่มีผลต่อการเข้าสู่ระบบด้วย Google",
@@ -717,6 +729,8 @@ const th: Dictionary = {
         email: "อีเมล",
         password: "รหัสผ่าน",
         passwordPlaceholder: "อย่างน้อย 12 ตัวอักษร",
+        name: "ชื่อ (ไม่บังคับ)",
+        namePlaceholder: "แสดงที่ส่วนหัวของหน้า",
         role: "สิทธิ์การใช้งาน",
         createButton: "สร้างผู้ใช้",
         tempPasswordNote:
@@ -754,6 +768,11 @@ const th: Dictionary = {
       },
       table: {
         email: "อีเมล",
+        name: "ชื่อ",
+        noName: "ไม่มีชื่อ — แสดงอีเมลแทน",
+        saveName: "บันทึกชื่อ",
+        nameSaved: "บันทึกชื่อแล้ว",
+        failedToSaveName: "บันทึกชื่อไม่สำเร็จ",
         created: "สร้างเมื่อ",
         lastSignIn: "เข้าสู่ระบบล่าสุด",
         role: "สิทธิ์",

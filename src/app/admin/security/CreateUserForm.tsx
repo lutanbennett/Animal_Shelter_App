@@ -5,6 +5,7 @@ import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { createUser } from "./actions";
+import { MAX_NAME_LENGTH } from "@/lib/auth/user-name";
 import { TemporaryPasswordNotice } from "@/components/TemporaryPasswordNotice";
 
 export function CreateUserForm() {
@@ -36,6 +37,20 @@ export function CreateUserForm() {
           required
           autoComplete="off"
           className="w-64 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="name" className="text-sm font-medium text-muted">
+          {t.admin.security.createForm.name}
+        </label>
+        <input
+          id="name"
+          name="name"
+          type="text"
+          maxLength={MAX_NAME_LENGTH}
+          autoComplete="off"
+          placeholder={t.admin.security.createForm.namePlaceholder}
+          className="w-48 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
         />
       </div>
       <div className="flex flex-col gap-1">

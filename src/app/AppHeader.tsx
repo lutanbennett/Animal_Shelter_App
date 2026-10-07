@@ -9,6 +9,9 @@ import { AssistantPanel } from "@/components/assistant/AssistantPanel";
 import { SignOutButton } from "./login/SignOutButton";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { MobileNavToggle } from "./MobileNavToggle";
+import { AccountMenu } from "./AccountMenu";
+import { userNameOf } from "@/lib/auth/user-name";
+import { roleKeyLabel } from "@/lib/i18n/enum-labels";
 
 export async function AppHeader() {
   const supabase = await createClient();
@@ -18,10 +21,23 @@ export async function AppHeader() {
 
   if (!user) return null;
 
-  const { t } = await getT();
+  const { t, locale } = await getT();
   // The assistant opens from here so it is reachable from every screen,
   // including the phone. The vet role does not get it (0070).
   const perms = await loadPermissions();
+
+  // Name · role, so two logins with the same first name (or one person's
+  // three test accounts) still read differently. The role is its display
+  // name: a built-in role from the dictionary, a configured one from
+  // roles.name / name_th. No name on the login shows the email (menu too).
+  const role = perms?.role;
+  const roleName = !role
+    ? null
+    : (role.key in t.admin.security.roles
+        ? roleKeyLabel(t, role.key)
+        : locale === "th" && role.nameTh
+          ? role.nameTh
+          : role.name) || null;
 
   // Production has no badge. UAT has nothing else: it keeps production's
   // colours so the customer tests the real thing (src/lib/app-env.ts).
@@ -75,9 +91,7 @@ export async function AppHeader() {
       <div className="flex items-center gap-2 sm:gap-4">
         {can(perms, "assistant.ask") && <AssistantPanel />}
         <LanguageSwitcher />
-        <span className="hidden text-sm text-muted md:inline">
-          {user.email}
-        </span>
+        <AccountMenu name={userNameOf(user)} role={roleName} email={user.email ?? "—"} />
         <SignOutButton iconOnPhone />
       </div>
     </header>
