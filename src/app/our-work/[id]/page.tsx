@@ -17,6 +17,7 @@ import {
   summaryParagraphs,
 } from "@/lib/projects/public";
 import { localizedField } from "@/lib/translations/localize";
+import { LinkedText } from "@/components/LinkedText";
 import { BackLink } from "../../adopt/BackLink";
 import { PublicHeader } from "../../adopt/PublicHeader";
 import { PublicFooter } from "../../adopt/PublicFooter";
@@ -150,7 +151,7 @@ export default async function PublicProjectPage(
           <div className="flex flex-col gap-4 text-base leading-relaxed text-foreground sm:text-lg">
             {paragraphs.map((paragraph, index) => (
               <p key={index} data-reveal>
-                {paragraph}
+                <LinkedText text={paragraph} newTabLabel={t.common.opensInNewTab} />
               </p>
             ))}
           </div>

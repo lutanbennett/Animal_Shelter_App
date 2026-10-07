@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import { LinkedText } from "@/components/LinkedText";
+import { parseBody } from "@/lib/site/body";
 import { useKeptForm } from "@/lib/use-kept-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { TranslationPanel } from "@/components/TranslationPanel";
@@ -54,6 +57,8 @@ export function SitePageForm({
   const formId = `page-${page.slug}-form`;
   const showStarter = !page.body && Boolean(starterBody);
   const body = showStarter ? starterBody! : page.body;
+  const [draft, setDraft] = useState(body);
+  const blocks = parseBody(draft);
 
   return (
     <div className="flex flex-col gap-4">
@@ -93,8 +98,30 @@ export function SitePageForm({
           form={formId}
           rows={Math.min(24, Math.max(8, body.split("\n").length + 2))}
           defaultValue={body}
+          onChange={(e) => setDraft(e.target.value)}
           className={inputClass}
         />
+        {blocks.length > 0 && (
+          <details className="rounded border border-border px-3 py-2 text-sm">
+            <summary className="cursor-pointer font-medium text-muted">{p.preview}</summary>
+            <p className="mt-1 text-xs text-muted">{p.previewHint}</p>
+            <div className="mt-2 flex flex-col gap-2 text-foreground">
+              {blocks.map((block, i) =>
+                block.type === "heading" ? (
+                  <h4 key={i} className="font-semibold">{block.text}</h4>
+                ) : block.type === "list" ? (
+                  <ul key={i} className="list-disc pl-5">
+                    {block.items.map((item, j) => (
+                      <li key={j}><LinkedText text={item} newTabLabel={t.common.opensInNewTab} /></li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p key={i}><LinkedText text={block.text} newTabLabel={t.common.opensInNewTab} /></p>
+                ),
+              )}
+            </div>
+          </details>
+        )}
         {translations.body && (
           <TranslationPanel
             key={translations.body.id + translations.body.updated_at}
