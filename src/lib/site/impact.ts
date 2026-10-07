@@ -29,8 +29,6 @@ export type ImpactStat = {
   key: string;
   value: number;
   label: string;
-  /** Includes a hand-entered baseline: the page says "about", never implies an audit. */
-  approximate?: boolean;
 };
 
 export function impactStats(t: Dictionary, stats: ShelterStats | null): ImpactStat[] {
@@ -67,7 +65,6 @@ export function impactFigureStats(
     key: `figure-${f.key}`,
     value: f.total,
     label: (locale === "th" && f.label_th?.trim()) || f.label,
-    approximate: true,
   }));
 }
 
