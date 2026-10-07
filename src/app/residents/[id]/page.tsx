@@ -1,10 +1,10 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { contactRelation } from "@/lib/contacts/visibility";
 import { readsWhoAndWhereOnly } from "@/lib/residents/who-and-where";
-import { ResidentWhoAndWhere } from "./ResidentWhoAndWhere";
+import { loadResidentCard } from "@/lib/residents/card";
 import { getTagOrigin } from "@/lib/tags/origin";
 import { loadTranslations } from "@/lib/translations/queries";
 import {
@@ -28,8 +28,9 @@ export default async function ResidentPage(
   const { archive: archiveFlag } = await props.searchParams;
   const supabase = await createClient();
 
-  // A volunteer's page for a resident is who it is and where it lives and nothing more (0134).
-  if (await readsWhoAndWhereOnly()) return <ResidentWhoAndWhere id={id} />;
+  // A login that may not open the record (a volunteer, the 2IC, the Heads: 0134) gets the name
+  // card's page: never less than a stranger sees, plus where it lives and their own jobs.
+  if (await readsWhoAndWhereOnly()) redirect(`/r/${id}`);
 
   const [
     residentResult,
@@ -171,7 +172,11 @@ export default async function ResidentPage(
   // missing resident — surface it instead of a 404.
   if (residentResult.error) throw new Error(residentResult.error.message);
   const resident = residentResult.data?.[0];
-  if (!resident) notFound();
+  if (!resident) {
+    // A vet sees only the residents their clinics treat (0108): the card, not a 404, for the rest.
+    if (await loadResidentCard(supabase, id)) redirect(`/r/${id}`);
+    notFound();
+  }
 
   const currentState = currentStateResult.data?.[0];
   const carerId = currentState?.current_carer_id ?? null;

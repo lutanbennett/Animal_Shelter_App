@@ -3,6 +3,13 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { LogIn } from "lucide-react";
 import { hasAppAccess, loadCurrentRole } from "@/lib/auth/app-access";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
+import { canOpen, routeFor } from "@/lib/permissions/routes";
+import { cardLanding } from "@/lib/residents/card-landing";
+import { readsWhoAndWhereOnly, WHO_AND_WHERE_COLUMNS, type WhoAndWhere } from "@/lib/residents/who-and-where";
+import { placeName } from "@/lib/enclosures/names";
+import { SYSTEM_ZONE } from "@/lib/enclosures/options";
 import { createClient } from "@/lib/supabase/server";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { getT } from "@/lib/i18n/get-t";
@@ -69,8 +76,53 @@ export default async function ResidentCardPage(props: PageProps<"/r/[code]">) {
   ] = await Promise.all([supabase.auth.getUser(), loadResidentCard(supabase, code), getT()]);
 
   if (!resident) notFound();
-  // Staff go on to the hub; a public viewer sees the card.
-  if (user && hasAppAccess(await loadCurrentRole(supabase))) redirect(`/residents/${resident.id}`);
+  // Never less than a stranger sees: the hub only for a login that can open the record, else the
+  // card with what their role adds (docs/decisions/2026-10-07-name-card-taps.md).
+  const appAccess = !!user && hasAppAccess(await loadCurrentRole(supabase));
+  const perms = appAccess ? await loadPermissions() : null;
+  const readsRecord = can(perms, "resident.record", "read");
+  let rowVisible = false;
+  if (appAccess && readsRecord) {
+    const { data } = await supabase.from("residents").select("id").eq("id", resident.id).limit(1);
+    rowVisible = (data?.length ?? 0) > 0;
+  }
+  const landing = cardLanding({
+    appAccess,
+    readsRecord,
+    whoAndWhereOnly: appAccess ? await readsWhoAndWhereOnly() : false,
+    rowVisible,
+  });
+  if (landing === "full") redirect(`/residents/${resident.id}`);
+
+  // The extras: where it lives (the view a volunteer reads) and this person's own jobs.
+  let place = "";
+  const jobs: { href: string; label: string }[] = [];
+  if (landing === "public-plus") {
+    const { data } = await supabase
+      .from("resident_who_and_where")
+      .select(WHO_AND_WHERE_COLUMNS)
+      .eq("id", resident.id)
+      .limit(1)
+      .returns<WhoAndWhere[]>();
+    const w = data?.[0];
+    if (w?.enclosure_name) {
+      const zone =
+        w.zone_name && w.zone_name !== SYSTEM_ZONE ? placeName(locale, w.zone_name, w.zone_name_th) : "";
+      place = [placeName(locale, w.enclosure_name, w.enclosure_name_th), zone].filter(Boolean).join(", ");
+    }
+    if (resident.status === "Resident") {
+      for (const [path, withResident, label] of [
+        ["/medical/photos", true, t.appHome.jobs.addMedicalPhotos],
+        ["/medical/weight", true, t.appHome.jobs.recordWeight],
+        ["/medical/diets", false, t.appHome.jobs.feedSpecialDiets],
+      ] as const) {
+        const route = routeFor(path);
+        if (route && canOpen(perms, route)) {
+          jobs.push({ href: withResident ? `${path}?resident=${resident.id}` : path, label });
+        }
+      }
+    }
+  }
 
   const c = t.residentCard;
   const d = t.adopt.details;
@@ -261,14 +313,41 @@ export default async function ResidentCardPage(props: PageProps<"/r/[code]">) {
           </div>
         </div>
 
-        {/* Staff who scanned while signed out: sign in and come straight back. */}
-        <p className="flex flex-wrap items-center gap-2 border-t border-border pt-6 text-sm text-muted">
-          <LogIn className="h-4 w-4" aria-hidden />
-          {c.staffHint}
-          <Link href={signInHref} className="font-medium text-foreground underline hover:text-primary">
-            {c.staffSignIn}
-          </Link>
-        </p>
+        {landing === "public-plus" ? (
+          // Signed in but not allowed the full record: the card above is what a stranger sees; this is the extra.
+          <section className="flex flex-col gap-3 border-t border-border pt-6">
+            {place && (
+              <p className="text-sm text-foreground">
+                <span className="text-muted">{c.livesIn}</span> {place}
+              </p>
+            )}
+            {jobs.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <h2 className="text-sm font-semibold text-foreground">{c.yourJobs(resident.name)}</h2>
+                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                  {jobs.map((j) => (
+                    <Link
+                      key={j.href}
+                      href={j.href}
+                      className="flex min-h-12 items-center justify-center rounded bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
+                    >
+                      {j.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        ) : (
+          /* Staff who scanned while signed out: sign in and come straight back. */
+          <p className="flex flex-wrap items-center gap-2 border-t border-border pt-6 text-sm text-muted">
+            <LogIn className="h-4 w-4" aria-hidden />
+            {c.staffHint}
+            <Link href={signInHref} className="font-medium text-foreground underline hover:text-primary">
+              {c.staffSignIn}
+            </Link>
+          </p>
+        )}
       </div>
 
       <PublicFooter />
