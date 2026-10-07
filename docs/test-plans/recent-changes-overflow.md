@@ -25,7 +25,7 @@
 - [x] `node scripts/worktree.mjs sync` — see PR
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`
   ```
-  GATES_PLACEHOLDER
+  gates: typecheck=0 lint=0 build=0
   ```
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
