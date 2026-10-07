@@ -2,6 +2,7 @@
 
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
+import { RowActionButton } from "@/components/RowAction";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -303,15 +304,13 @@ export function AdoptionUpdateForm({
                   </div>
                 ) : null}
                 {item.status !== "uploading" && item.status !== "done" && (
-                  <button
-                    type="button"
+                  <RowActionButton
+                    icon={ACTION_ICONS.clear}
+                    label={t.common.dismiss}
+                    subject={item.file.name}
                     disabled={pending}
                     onClick={() => setPhotos((prev) => prev.filter((p) => p.key !== item.key))}
-                    aria-label={t.common.dismiss}
-                    className="text-muted hover:text-foreground"
-                  >
-                    &times;
-                  </button>
+                  />
                 )}
               </li>
             ))}
