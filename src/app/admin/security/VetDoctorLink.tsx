@@ -37,7 +37,7 @@ export function VetDoctorLink({
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [creating, setCreating] = useState(false);
   const [pick, setPick] = useState("");
-  const [name, setName] = useState(user.email.split("@")[0]);
+  const [name, setName] = useState(user.name ?? user.email.split("@")[0]);
   const [picked, setPicked] = useState<string[]>([]);
 
   function run(action: () => Promise<ActionResult>, success: string, onOk?: () => void) {
