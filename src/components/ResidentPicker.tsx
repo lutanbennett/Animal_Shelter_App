@@ -4,6 +4,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { statusLabel } from "@/lib/i18n/enum-labels";
+import { ActionButton } from "@/components/ActionButton";
+import { RowActionButton } from "@/components/RowAction";
+import { ACTION_ICONS } from "@/components/hub-icons";
 
 export type ResidentOption = {
   id: string;
@@ -106,30 +109,27 @@ export function ResidentPicker({
         {selectedResidents.map((r) => (
           <span
             key={r.id}
-            className="flex items-center gap-1.5 rounded-full bg-surface-hover px-3 py-1 text-sm text-foreground"
+            className="flex items-center gap-2 rounded bg-surface-hover py-0.5 pl-3 pr-0.5 text-sm text-foreground"
           >
             {residentLabel(r)}
-            <button
-              type="button"
+            <RowActionButton
+              icon={ACTION_ICONS.clear}
+              tone="danger"
+              label={t.residents.picker.removeAriaLabel(residentLabel(r))}
               onClick={() => removeSelected(r.id)}
-              aria-label={t.residents.picker.removeAriaLabel(residentLabel(r))}
-              className="text-muted hover:text-danger"
-            >
-              &times;
-            </button>
+            />
           </span>
         ))}
-        <button
-          type="button"
+        <ActionButton
+          icon={single && selectedResidents.length > 0 ? ACTION_ICONS.edit : ACTION_ICONS.add}
           onClick={openPicker}
-          className="rounded border border-border bg-surface px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover"
         >
           {selectedResidents.length === 0
             ? resolvedTriggerLabel
             : single
               ? t.common.change
               : t.common.addMore}
-        </button>
+        </ActionButton>
       </div>
 
       {open &&
@@ -148,14 +148,11 @@ export function ResidentPicker({
                     ? resolvedTriggerLabel
                     : t.residents.picker.selectResidents}
                 </h2>
-                <button
-                  type="button"
+                <RowActionButton
+                  icon={ACTION_ICONS.clear}
+                  label={t.residents.picker.close}
                   onClick={() => setOpen(false)}
-                  aria-label={t.residents.picker.close}
-                  className="text-muted hover:text-foreground"
-                >
-                  &times;
-                </button>
+                />
               </div>
 
               <input
@@ -204,22 +201,14 @@ export function ResidentPicker({
               </div>
 
               <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  className="rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
-                >
+                <ActionButton icon={ACTION_ICONS.clear} onClick={() => setOpen(false)}>
                   {t.common.cancel}
-                </button>
-                <button
-                  type="button"
-                  onClick={confirm}
-                  className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
-                >
+                </ActionButton>
+                <ActionButton icon={ACTION_ICONS.approve} variant="primary" onClick={confirm}>
                   {single
                     ? t.common.done
                     : t.residents.picker.done(pending.size)}
-                </button>
+                </ActionButton>
               </div>
             </div>
           </div>,

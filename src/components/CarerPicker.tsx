@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { ActionButton } from "@/components/ActionButton";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { CarerOption } from "@/lib/contacts/carers";
 
@@ -73,13 +75,11 @@ export function CarerPicker({
             </select>
           </div>
           <p className="text-xs text-muted">{r.carersOnlyHint}</p>
-          <button
-            type="button"
-            onClick={() => setMode("new")}
-            className="self-start text-sm font-medium text-primary hover:underline"
-          >
-            {r.addNewCarer}
-          </button>
+          <div className="self-start">
+            <ActionButton icon={ACTION_ICONS.add} onClick={() => setMode("new")}>
+              {r.addNewCarer}
+            </ActionButton>
+          </div>
         </>
       ) : (
         <fieldset className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4">
@@ -142,13 +142,11 @@ export function CarerPicker({
           </div>
           <p className="text-xs text-muted">{r.newCarer.hint}</p>
           {carers.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setMode("existing")}
-              className="self-start text-sm font-medium text-primary hover:underline"
-            >
-              {r.chooseExisting}
-            </button>
+            <div className="self-start">
+              <ActionButton icon={ACTION_ICONS.back} onClick={() => setMode("existing")}>
+                {r.chooseExisting}
+              </ActionButton>
+            </div>
           )}
         </fieldset>
       )}

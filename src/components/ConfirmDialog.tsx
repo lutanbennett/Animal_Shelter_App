@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { TriangleAlert, type LucideIcon } from "lucide-react";
+import { ActionButton } from "@/components/ActionButton";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
 /**
@@ -87,23 +89,12 @@ export function ConfirmDialog({
           </div>
         </div>
         <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={pending}
-            autoFocus
-            className="rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-50"
-          >
+          <ActionButton icon={ACTION_ICONS.clear} onClick={onCancel} disabled={pending} autoFocus>
             {t.common.cancel}
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            disabled={pending}
-            className="rounded bg-danger px-4 py-2 text-sm font-medium text-danger-foreground hover:brightness-110 disabled:opacity-50"
-          >
+          </ActionButton>
+          <ActionButton icon={ACTION_ICONS.delete} variant="danger" onClick={onConfirm} disabled={pending}>
             {pending ? (pendingLabel ?? t.common.saving) : confirmLabel}
-          </button>
+          </ActionButton>
         </div>
       </div>
     </div>,
