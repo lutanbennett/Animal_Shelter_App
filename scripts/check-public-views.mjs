@@ -66,6 +66,11 @@ const PUBLIC_VIEWS = [
   "public_shelter_stats",
   "public_site_content",
   "public_site_content_photos",
+  // 0156. The lifetime impact figures the home page prints: label, baseline,
+  // live count and total. Owner-run like public_shelter_stats, and it selects
+  // no `set_by`, so anon reads the numbers without reaching impact_baselines
+  // or who last edited a figure. Granted at 0156:148.
+  "public_impact_figures",
 ];
 // No base tables: site_content, site_content_photos and site_pages were
 // readable by anon with select * until 0122, so a new column was public the
