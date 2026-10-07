@@ -164,7 +164,7 @@ here, which is stated rather than ticked.
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
 | 1 | high (CI, not product) | 0156 granted `select` on `public_impact_figures` to `anon` without declaring it in `check-public-views.mjs`, turning `public-views` red on every branch and every `main` push from 06:55 onwards — six runs, seven failure emails | fixed in this PR |
-| 2 | unknown | Two `public-views` failures overnight (runs at 00:24 and 00:31) predate 0156 and are **not** explained by this fix | deferred — not investigated here; flagged to Lutan rather than assumed to be the same cause |
+| 2 | low (dev only, no row exposed) | Two `public-views` failures overnight (runs at 00:24 and 00:31) predate 0156 and are **not** explained by this fix | **explained and fixed by `public-views-overnight`** (2026-10-07): both failed only on `is_admin(): anon EXECUTE is refused — HTTP 200: false`. 0153's first draft granted `is_admin()` to `anon`, was applied to dev at 00:19:57Z and corrected by hand by ~00:36Z; every run in that window failed, every run outside it passed. A real grant, not a flaky check; production never had it. `apply-migrations.mjs` now refuses a file `check-migration-grants` rejects. See `docs/decisions/2026-10-07-public-views-overnight.md` |
 
 ## Left for manual verification
 
@@ -201,4 +201,4 @@ Manual verification by: n/a: no human-visible surface — the only behaviour in 
 
 Result: pass with accepted defects
 
-Release manager acknowledgement: pending: not acknowledged yet — nothing in this PR deploys, but defect 2 (the unexplained overnight failures) is open and the release manager should know it is not covered  Date: —
+Release manager acknowledgement: pending: not acknowledged yet — nothing in this PR deploys; defect 2 (the overnight failures) was open when this was written and has since been explained and fixed by `public-views-overnight`  Date: —

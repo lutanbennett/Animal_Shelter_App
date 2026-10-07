@@ -44,11 +44,16 @@ if (!url || !key || !serviceKey) {
 const headers = { apikey: key, Authorization: `Bearer ${key}` };
 // A filter that can never match, so a permitted write still changes nothing.
 const noRow = "id=eq.00000000-0000-0000-0000-000000000000";
-let failed = false;
+// Every FAIL line, repeated at the end: one failure among ~200 ok lines is
+// easy to miss in a CI log whose tail shows only passes. On 2026-10-07 two
+// runs were recorded as "nothing explains" with the cause mid-log
+// (docs/decisions/2026-10-07-public-views-overnight.md).
+const failures = [];
 
 function report(ok, label, detail) {
-  console.log(`${ok ? "ok  " : "FAIL"}  ${label}${detail ? ` — ${detail}` : ""}`);
-  if (!ok) failed = true;
+  const line = `${ok ? "ok  " : "FAIL"}  ${label}${detail ? ` — ${detail}` : ""}`;
+  console.log(line);
+  if (!ok) failures.push(line);
 }
 
 // What anon may read. Each is granted SELECT to anon by a migration, and
@@ -304,4 +309,8 @@ if (publicNonImage) {
 }
 
 console.log(`\nProject: ${new URL(url).hostname}`);
-process.exit(failed ? 1 : 0);
+if (failures.length) {
+  console.log(`\n${failures.length} failure(s):`);
+  for (const line of failures) console.log(line);
+}
+process.exit(failures.length ? 1 : 0);
