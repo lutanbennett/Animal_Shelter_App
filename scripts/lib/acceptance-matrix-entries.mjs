@@ -558,7 +558,7 @@ export const ENTRIES = {
   contacts: [
     {
       activity: "Look up a contact and reach them",
-      needs: "contacts.directory:read",
+      needs: "contacts.browse",
       device: "phone",
       do: "Open Contacts, search for a carer, and tap Call or LINE.",
       expect: "The right app opens with that person's number or LINE ID.",

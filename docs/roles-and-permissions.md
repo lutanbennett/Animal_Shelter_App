@@ -307,7 +307,7 @@ Admin is shown for completeness; it is never stored (§6).
 | **Residents** | | | | | | | | | |
 | `resident.record` | A resident's details, housing and history | E/R | E | E | E | R° | R | 1 | Edit is the pencil: name, bio, flags. Reading includes placement history, except for a volunteer, who reads only who and where through `resident_who_and_where` (`0134`) |
 | `resident.register` | Register a new resident (intake) | Y/N | Y | Y | Y | – | – | 2 | |
-| `resident.microchip` | Record or correct a microchip number | Y/N | Y | **–** | Y | Y° | – | 3 | Finding B: the manual says Management can |
+| `resident.microchip` | Record or correct a microchip number | Y/N | Y | Y | Y | Y° | – | 3 | Finding B: the manual said Management can and the system refused; the Director ruled it should (2026-10-07, q8), `0155` |
 | `resident.adoption_news` | News from an adopter | E/R | E | E | E | R° | – | 4 | Edit includes delete (A8) |
 | **Housing** | | | | | | | | | |
 | `placement.move` | Move a resident to another enclosure | Y/N | Y | Y | Y | – | – | 5 | |
@@ -346,6 +346,8 @@ Admin is shown for completeness; it is never stored (§6).
 | `contacts.directory` | Contacts | E/R | E | E | R | – | – | 21 | A volunteer reads nothing since `0134` (the name-and-phone view stays, ungranted, for a role given that scope later). A vet has no Contacts page; the carer's name on a resident's record is a lookup (rule 4) |
 | `contacts.add` | Add a new contact | Y/N | Y | Y | Y | – | – | 21 | *Split*, finding A2 |
 | `friends.manage` | Shelter Friends: add, publish, unpublish | Y/N | Y | Y | – | – | – | 22 | |
+| `contacts.browse` | Browse the contacts directory (the pages) | Y/N | Y | Y | – | – | – | 21 | Added by `0155` (Director, 2026-10-07, q6/q7): Management and the 2IC only. The 2IC reads name and phone. It gates the two pages; the contacts policies still ask `contacts.directory`, so a staff login keeps the carer pickers on intake and rehome |
+| `friends.view` | See a Shelter Friend's card | Y/N | Y | Y | Y | – | – | 22 | Read only; added by `0155` (Director, 2026-10-07, q12) to close N3: staff may see it, the public site shows it anyway. Writing stays `friends.manage` |
 | **Stock and ordering** | | | | | | | | | |
 | `stock.count` | Count the stock (stocktake) | Y/N | Y | Y | Y | – | – | 23 | |
 | `stock.delivery` | Record a delivery | Y/N | Y | Y | Y | – | – | 24 | |
@@ -1198,7 +1200,7 @@ A vet's read of the four recurring tables was inside the dropped role list, so i
 | Table | Activity | Note |
 |---|---|---|
 | `contacts` | read / edit `contacts.directory`, insert `contacts.add`, and `sees_all_contacts()` | The scope function is the `sees_all_residents()` of the address book: `0126` took vets and volunteers off the table and gave them views, so a cell alone would widen them. **Closes C6** |
-| `shelter_friends` | `friends.manage`; read also open to whoever reads contacts | The contacts pages show a friend's badge and card to every role that reads contacts, so **N3 stays open** until the app stops doing so |
+| `shelter_friends` | write `friends.manage`; read `friends.view` or `friends.manage` | `0147` read through the full address-book read (N3 open on purpose); `0155` gave staff a Read cell and deleted N3 |
 | `vets` | read `clinics.list` or `visit.book`; write `clinics.list` | The booking form lists clinics |
 | `vet_doctors`, `vet_doctor_clinics` | write `clinics.doctors`; read as `vets` plus `clinics.doctors` | A doctor with a login is still off limits to non-admins. **Closes C7 for staff** |
 | `bulk_appointments` | `visit.book` | The clinic bookings. Yes/No, so Edit includes delete |
