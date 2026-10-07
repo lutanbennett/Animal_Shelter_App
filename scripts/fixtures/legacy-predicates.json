@@ -154,7 +154,7 @@
   },
   "MICROCHIP_WRITE_ROLES": {
     "admin": true,
-    "management": false,
+    "management": true,
     "staff": true,
     "vet": true,
     "volunteer": false,

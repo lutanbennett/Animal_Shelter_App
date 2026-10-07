@@ -119,7 +119,7 @@ export const PROBES = [
   { activity: "contacts.directory", level: "read", sql: `select 1 from contacts where id = $CONTACT`, byRole: { volunteer: `select 1 from volunteer_contacts where id = $CONTACT` } },
   { activity: "contacts.add", level: "edit", sql: `insert into contacts (name, type) values ('Probe contact', 'Vendor')` },
   { activity: "friends.manage", level: "edit", sql: `update shelter_friends set published = published where id = $FRIEND` },
-  { activity: "friends.manage", level: "read", sql: `select 1 from shelter_friends where id = $FRIEND`, known: [{ id: "C10", roles: ["vet"] }, { id: "N3", roles: ["staff"] }] },
+  { activity: "friends.view", level: "read", sql: `select 1 from shelter_friends where id = $FRIEND`, known: [{ id: "C10", roles: ["vet"] }] },
 
   // --- Stock and ordering
   { activity: "stock.count", level: "edit", fn: true, sql: `select record_stocktake('[]'::jsonb, '[]'::jsonb)` },
@@ -183,6 +183,7 @@ export const NO_DB_PROBE = {
   "system.status": "status_alert_runs is not granted to authenticated at all, Admin included: the page reads it with the service role, so the database has no per-role statement to test",
   "reports.dashboard": "a page that reads tables other activities own; it has no table",
   "translations.manage": "the translations table has no fixture row that is stable across runs; the policy is read by hand in Appendix C",
+  "contacts.browse": "a page gate only (0155): /contacts and /contacts/[id] ask it, the contacts policies still ask contacts.directory so the carer pickers keep working; the database has no statement that answers it",
   "translations.view": "management and staff read the table through this cell, but a vet and a volunteer still read it through their own legacy policies (vet_read_translations, volunteer_read_translations, perm-convert-vet's), so a read probe would report them as differences that are not this cell's; check-perm-convert-settings.mjs and check-app-access-gate.mjs read it under every login instead",
   "assistant.ask": "app code and the Anthropic call; no database statement",
   "assistant.record": "app code; each thing it records is checked against that thing's own activity",

@@ -8,7 +8,7 @@
 // For each table, each principal's read / update / insert / delete (1 = took effect, 0 = refused):
 //   contacts            contacts.directory read / edit, insert contacts.add, and sees_all_contacts(): a custom role on the
 //                       VOLUNTEER floor, or with scope_contacts below full, holding every contacts cell reads nothing
-//   shelter_friends     friends.manage writes; anyone who reads contacts reads (N3 stays open on purpose)
+//   shelter_friends     friends.manage writes; friends.view or friends.manage reads (0155: the address-book read is gone, N3 closed)
 //   vets                clinics.list / clinics.doctors / visit.book read; clinics.list Edit writes
 //   vet_doctors         clinics.doctors writes, visit.book inserts (the booking trigger adds a typed doctor)
 //   vet_doctor_clinics  as vet_doctors, with a login-linked doctor still off limits to non-admins
@@ -39,6 +39,7 @@ const CUSTOM = {
   c_dir_namephone: { scope: "name_phone", cells: [["contacts.directory", 2], ["contacts.add", 2]] },
   v_dir_all: { floor: "volunteer", cells: [["contacts.directory", 2], ["contacts.add", 2]] },
   c_friends: { cells: [["friends.manage", 2]] },
+  c_friends_view: { cells: [["friends.view", 2]] },
   c_clinics_read: { cells: [["clinics.list", 1]] },
   c_clinics_edit: { cells: [["clinics.list", 2]] },
   c_doctors: { cells: [["clinics.doctors", 2]] },
@@ -63,7 +64,7 @@ const T = {
 const A = "1111", RO = "1000";
 const EXPECT = {
   contacts: { admin: A, management: A, staff: "1010", c_dir_read: RO, c_dir_edit: "1101", c_add: "0010", c_dir_all: A },
-  shelter_friends: { admin: A, management: A, staff: RO, vet: RO, c_dir_read: RO, c_dir_edit: RO, c_dir_all: RO, c_friends: A },
+  shelter_friends: { admin: A, management: A, staff: RO, vet: RO, c_friends_view: RO, c_friends: A },
   vets: { admin: A, management: A, staff: RO, vet: RO, c_clinics_read: RO, c_clinics_edit: A, c_doctors: RO, c_book: RO },
   vet_doctors: { admin: A, management: A, staff: "1010", vet: A, c_clinics_read: RO, c_clinics_edit: RO, c_doctors: A, c_book: "1010" },
   vet_doctor_clinics: { admin: A, management: A, staff: "1010", vet: "1101", c_clinics_read: RO, c_clinics_edit: RO, c_doctors: A, c_book: "1010" },
