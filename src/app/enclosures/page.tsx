@@ -15,6 +15,7 @@ import { loadSpecialDiets } from "@/lib/diets/special";
 import { todayIso } from "@/lib/format";
 import { parseShape } from "@/lib/facility-map/geometry";
 import { planImageUrl, type FacilityMapData } from "@/lib/facility-map/types";
+import { isRoomKind } from "@/lib/facility-map/rooms";
 import { EnclosureFilters } from "./EnclosureFilters";
 import { FacilityMap } from "./map/FacilityMap";
 import { ViewToggle } from "./ViewToggle";
@@ -228,9 +229,20 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
     for (const row of residentsResult.data) {
       if (onMedication.has(row.resident_id)) medicatedIn.set(row.enclosure_id, (medicatedIn.get(row.enclosure_id) ?? 0) + 1);
     }
+    // The Medical room, Kitchen and Storage (0157): not enclosures, so read from their own table.
+    const { data: roomRows } = await supabase
+      .from("map_rooms")
+      .select("id, map_id, kind, shape")
+      .returns<{ id: string; map_id: string; kind: string; shape: unknown }[]>();
+    const rooms: FacilityMapData["rooms"] = [];
+    for (const r of roomRows ?? []) {
+      const shape = parseShape(r.shape);
+      if (shape && isRoomKind(r.kind)) rooms.push({ id: r.id, map_id: r.map_id, kind: r.kind, shape });
+    }
     const onSite = summaries.filter((e) => !e.is_system && e.zone_internal);
     const shapeOf = new Map((enclosuresResult.data ?? []).map((row) => [row.id, parseShape(row.map_shape)]));
     mapData = {
+      rooms,
       plans: plans.map((p) => ({
         id: p.id,
         kind: p.kind,

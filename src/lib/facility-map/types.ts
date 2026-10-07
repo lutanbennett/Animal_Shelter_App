@@ -1,4 +1,5 @@
 import type { Point } from "./geometry";
+import type { RoomKind } from "./rooms";
 
 /** One `facility_maps` row, with the file's URL resolved. */
 export type MapPlan = {
@@ -38,10 +39,19 @@ export type MapEnclosure = {
   medication_count: number;
 };
 
+/** A room that is not an enclosure (map_rooms): drawn on one plan, with nothing to open. */
+export type MapRoom = {
+  id: string;
+  map_id: string;
+  kind: RoomKind;
+  shape: Point[];
+};
+
 export type FacilityMapData = {
   plans: MapPlan[];
   zones: MapZone[];
   enclosures: MapEnclosure[];
+  rooms: MapRoom[];
 };
 
 /**

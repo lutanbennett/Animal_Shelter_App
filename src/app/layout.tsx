@@ -58,7 +58,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang={locale}
       data-env={getAppEnv()}
-      className={`${geistSans.variable} ${geistMono.variable} ${notoSansThai.variable} ${fraunces.variable} ${sourceSans.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${notoSansThai.variable} ${fraunces.variable} ${sourceSans.variable} h-full antialiased [--app-header-h:4.25rem] md:scroll-pt-[var(--app-header-h)]`}
     >
       <body className="min-h-full flex flex-col">
         <I18nProvider locale={locale}>

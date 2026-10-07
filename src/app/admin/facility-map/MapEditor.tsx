@@ -20,7 +20,8 @@ import {
   type Point,
 } from "@/lib/facility-map/geometry";
 import { planImageUrl, type MapPlan } from "@/lib/facility-map/types";
-import { addPlan, removePlan, saveShape } from "./actions";
+import { ROOM_KINDS, type RoomKind } from "@/lib/facility-map/rooms";
+import { addPlan, removePlan, saveRoom, saveShape } from "./actions";
 
 /**
  * The place-on-map editor (step 3 of 3, docs/decisions/2026-10-04-facility-map-editor.md): pick a
@@ -36,7 +37,12 @@ export type EditorZone = { id: string; name: string; name_th: string | null; sha
 export type EditorEnclosure = { id: string; name: string; name_th: string | null; zone_id: string; shape: Point[] | null };
 
 type Tool = "rect" | "poly";
-type Item = { id: string; name: string; target: "zone" | "enclosure" };
+export type EditorRoom = { kind: RoomKind; map_id: string; shape: Point[] };
+
+type Item = { id: string; name: string; target: "zone" | "enclosure" | "room" };
+
+/** A room's key in the editor's shape table. Rooms are not zones or enclosures, so no id of theirs exists. */
+const roomKey = (kind: RoomKind) => `room:${kind}`;
 
 // A dot that stays the same size on screen at any zoom: a zero-length segment with a round cap and a
 // non-scaling stroke. (A circle's radius would grow with the plan.)
@@ -46,10 +52,12 @@ export function MapEditor({
   plans,
   zones,
   enclosures,
+  rooms,
 }: {
   plans: MapPlan[];
   zones: EditorZone[];
   enclosures: EditorEnclosure[];
+  rooms: EditorRoom[];
 }) {
   const { t, locale } = useI18n();
   const m = t.admin.facilityMap;
@@ -64,9 +72,12 @@ export function MapEditor({
   const plan = planList.find((p) => p.id === planId) ?? planList[0] ?? null;
 
   // The shapes as the editor holds them; each is written to the database the moment it is finished.
-  const [shapes, setShapes] = useState<Record<string, Point[] | null>>(() =>
-    Object.fromEntries([...zones, ...enclosures].map((x) => [x.id, x.shape])),
-  );
+  const [rawShapes, setRawShapes] = useState<Record<string, Point[] | null>>(() => ({
+    ...Object.fromEntries([...zones, ...enclosures].map((x) => [x.id, x.shape])),
+    ...Object.fromEntries(rooms.map((r) => [roomKey(r.kind), r.shape])),
+  }));
+  // Which plan each room is on (one place for the whole site, so drawing it elsewhere moves it).
+  const [roomPlans, setRoomPlans] = useState<Partial<Record<RoomKind, string>>>(() => Object.fromEntries(rooms.map((r) => [r.kind, r.map_id])));
   const [activeId, setActiveId] = useState<string | null>(null);
   const [redraw, setRedraw] = useState(false);
   const [tool, setTool] = useState<Tool>("rect");
@@ -84,18 +95,29 @@ export function MapEditor({
   );
 
   // What can be drawn on this plan: the zones on the overview, a zone's enclosures on its own plan.
-  const items: Item[] = useMemo(() => {
+  const things: Item[] = useMemo(() => {
     if (!plan) return [];
     if (plan.kind === "overview") return zones.map((z) => ({ id: z.id, name: zoneName(z), target: "zone" as const }));
     return enclosures
       .filter((e) => e.zone_id === plan.zone_id)
       .map((e) => ({ id: e.id, name: placeName(locale, e.name, e.name_th), target: "enclosure" as const }));
   }, [plan, zones, enclosures, zoneName, locale]);
+  // The three rooms are offered on every plan; one drawn on another plan shows here as not placed.
+  const roomItems: Item[] = useMemo(
+    () => ROOM_KINDS.map((kind) => ({ id: roomKey(kind), name: t.enclosures.map.roomKinds[kind], target: "room" as const })),
+    [t],
+  );
+  const items = useMemo(() => [...things, ...roomItems], [things, roomItems]);
+  const shapes = useMemo(() => {
+    const here: Record<string, Point[] | null> = { ...rawShapes };
+    for (const kind of ROOM_KINDS) if (!plan || roomPlans[kind] !== plan.id) here[roomKey(kind)] = null;
+    return here;
+  }, [rawShapes, roomPlans, plan]);
 
   const active = items.find((i) => i.id === activeId) ?? null;
   const activeShape = active ? (dragging ? dragging.shape : shapes[active.id]) : null;
   const drawing = Boolean(active) && (!shapes[active!.id] || redraw);
-  const placedCount = items.filter((i) => shapes[i.id]).length;
+  const placedCount = things.filter((i) => shapes[i.id]).length;
 
   function reset() {
     setDraft([]);
@@ -118,9 +140,11 @@ export function MapEditor({
 
   /** The next item on this plan with nothing drawn, after `from` and wrapping round. */
   function nextUnplaced(from: string, now: Record<string, Point[] | null>): string | null {
-    const at = items.findIndex((i) => i.id === from);
-    for (let step = 1; step <= items.length; step++) {
-      const candidate = items[(at + step) % items.length];
+    // Stay in the same group: after the last enclosure the editor does not wander on to a room.
+    const pool = from.startsWith("room:") ? roomItems : things;
+    const at = pool.findIndex((i) => i.id === from);
+    for (let step = 1; step <= pool.length; step++) {
+      const candidate = pool[(at + step) % pool.length];
       if (candidate && !now[candidate.id]) return candidate.id;
     }
     return null;
@@ -129,14 +153,20 @@ export function MapEditor({
   async function save(item: Item, shape: Point[] | null) {
     setSaving(true);
     setMessage(null);
-    const result = await saveShape(item.target, item.id, shape);
+    const result =
+      item.target === "room" && plan
+        ? await saveRoom(item.id.slice("room:".length), plan.id, shape)
+        : await saveShape(item.target === "room" ? "enclosure" : item.target, item.id, shape);
     setSaving(false);
     if (!result.ok) {
       setMessage({ kind: "error", text: result.error });
       return false;
     }
-    const next = { ...shapes, [item.id]: result.shape };
-    setShapes(next);
+    setRawShapes((prev) => ({ ...prev, [item.id]: result.shape }));
+    if (item.target === "room" && plan) {
+      const kind = item.id.slice("room:".length) as RoomKind;
+      setRoomPlans((prev) => ({ ...prev, [kind]: result.shape ? plan.id : undefined }));
+    }
     setMessage({ kind: "ok", text: result.shape ? m.saved(item.name) : m.cleared(item.name) });
     return true;
   }
@@ -276,7 +306,7 @@ export function MapEditor({
 
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm text-muted">
-              {m.progress(placedCount, items.length)} · <span className="break-all">{plan.image_url.replace("/facility-maps/", "")}</span>
+              {m.progress(placedCount, things.length)} · <span className="break-all">{plan.image_url.replace("/facility-maps/", "")}</span>
             </p>
             <button
               type="button"
@@ -301,11 +331,11 @@ export function MapEditor({
             {/* The things to place */}
             <section aria-label={m.listLabel} className="flex flex-col gap-2">
               <h2 className="text-sm font-semibold text-foreground">{plan.kind === "overview" ? m.zonesHeading : m.enclosuresHeading}</h2>
-              {items.length === 0 ? (
+              {things.length === 0 ? (
                 <p className="text-sm text-muted">{plan.kind === "overview" ? m.noZones : m.noEnclosures}</p>
               ) : (
                 <ul className="flex flex-col gap-1.5">
-                  {items.map((item) => {
+                  {things.map((item) => {
                     const placed = Boolean(shapes[item.id]);
                     const on = item.id === activeId;
                     return (
@@ -346,7 +376,42 @@ export function MapEditor({
                   })}
                 </ul>
               )}
-              {plan.kind === "zone" && <p className="text-xs text-muted">{m.rooms}</p>}
+              {/* The rooms that are not enclosures: the same three on every plan. */}
+              <h2 className="mt-2 text-sm font-semibold text-foreground">{m.roomsHeading}</h2>
+              <p className="text-xs text-muted">{m.rooms}</p>
+              <ul className="flex flex-col gap-1.5">
+                {roomItems.map((item) => {
+                  const kind = item.id.slice("room:".length) as RoomKind;
+                  const placed = Boolean(shapes[item.id]);
+                  const elsewhere = !placed && Boolean(roomPlans[kind]);
+                  const on = item.id === activeId;
+                  return (
+                    <li key={item.id} className={`flex items-center gap-1.5 rounded-lg border p-1.5 ${on ? "border-primary bg-primary/10" : "border-border bg-surface"}`}>
+                      <button
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => pick(on ? null : item.id)}
+                        className="flex min-h-11 min-w-0 flex-1 items-center gap-2 px-1.5 text-left text-sm md:min-h-9"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${placed ? "bg-success text-white" : "border border-border text-transparent"}`}
+                        >
+                          <Check className="h-3 w-3" />
+                        </span>
+                        <span className="min-w-0 break-words font-medium text-foreground">{item.name}</span>
+                        <span className="ml-auto shrink-0 text-xs text-muted">{placed ? m.placed : elsewhere ? m.onAnotherPlan : m.notPlaced}</span>
+                      </button>
+                      {placed && (
+                        <>
+                          <RowActionButton label={m.redraw} subject={item.name} icon={ACTION_ICONS.edit} onClick={() => pick(item.id, true)} />
+                          <RowActionButton label={m.clear} subject={item.name} icon={ACTION_ICONS.clear} onClick={() => void clearShape(item)} />
+                        </>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
             </section>
 
             {/* The plan */}
