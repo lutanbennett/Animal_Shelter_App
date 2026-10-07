@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Dependabot PR #264 is stale enough to fail CI for reasons that are not its own |
 | Branch / worktree | `claude/dependabot-264` @ `C:\Development\Animal_Shelter_dependabot-264` |
 | Dev server | n/a — no app code changed |
-| PR | opened from this branch; supersedes #264 |
+| PR | #444; supersedes #264 |
 | Tested by / date | Claude, 2026-10-07 |
 | Carries a migration? | no |
 | Tested at SHA | c4640288 (the bump, cherry-picked from #264's 39b98b9f) |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — #444, run 37630184105: all 7 jobs pass on checkout v7.0.1 / setup-node v7.0.0 (`check`, `audit`, `migration-numbers`, `new-policy-role-names`, `public-views`, `script-integrity`, `test-plan`)
 
 ## 3. Schema and data — *skip if no migration*
 
