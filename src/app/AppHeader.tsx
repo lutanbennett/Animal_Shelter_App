@@ -50,7 +50,7 @@ export async function AppHeader() {
         : null;
 
   return (
-    <header className="flex items-start justify-between sm:items-center border-b border-border bg-surface px-4 py-3 md:px-6">
+    <header className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-border bg-surface px-4 py-3 md:px-6">
       <div className="flex items-center gap-3">
         <MobileNavToggle />
         {/* The logo is the way to the public website (it left the nav
@@ -86,16 +86,25 @@ export async function AppHeader() {
           </span>
         )}
       </div>
-      {/* Tighter on a phone: this row gained the assistant button, and at
-          375px the old gap-4 pushed "Sign out" off the edge. */}
-      <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-x-2 gap-y-1 sm:flex-none sm:flex-nowrap sm:gap-4">
-        {can(perms, "assistant.ask") && <AssistantPanel />}
-        <LanguageSwitcher />
+      {/* Phone: the wrapper dissolves (contents) so its four controls wrap
+          with the logo row. Row 1 is logo + Assistant + Sign out, row 2 is the
+          language switch + account menu; at 44 px each, Sign out beside the
+          switcher left it on a row of its own. From sm up it is one row, in
+          the order Assistant, language, account, Sign out. */}
+      <div className="contents sm:flex sm:min-w-0 sm:flex-none sm:flex-nowrap sm:items-center sm:justify-end sm:gap-4">
+        {can(perms, "assistant.ask") && (
+          <div className="order-1 ml-auto sm:ml-0">
+            <AssistantPanel />
+          </div>
+        )}
+        <div className="order-3 sm:order-2">
+          <LanguageSwitcher />
+        </div>
         <AccountMenu
           name={userNameOf(user)}
           role={roleName}
           email={user.email ?? "—"}
-          className="order-last flex basis-full justify-end sm:order-none sm:basis-auto"
+          className="order-4 flex min-w-0 flex-1 justify-end sm:order-3 sm:flex-none"
         />
         <SignOutButton iconOnPhone />
       </div>

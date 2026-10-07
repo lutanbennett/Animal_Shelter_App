@@ -73,7 +73,8 @@ export function AssistantPanel() {
         onClick={openPanel}
         title={a.panel.open}
         aria-label={a.panel.open}
-        className="flex items-center gap-2 rounded border border-border px-2 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover"
+        data-action="HeaderButton"
+        className="flex min-h-11 min-w-11 items-center justify-center gap-2 rounded border border-border px-2 text-sm font-medium text-foreground hover:bg-surface-hover md:min-h-9 md:min-w-9"
       >
         <MessagesSquare aria-hidden="true" className="h-4 w-4" />
         <span className="hidden sm:inline">{a.panel.open}</span>
