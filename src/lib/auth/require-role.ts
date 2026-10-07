@@ -1,29 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { can, type Permissions } from "@/lib/permissions/can";
-import { loadPermissions } from "@/lib/permissions/load";
-import { getT } from "@/lib/i18n/get-t";
+import { type Permissions } from "@/lib/permissions/can";
 import { hasAppAccess, loadCurrentRole, signedInLandingPath } from "./app-access";
-
-/**
- * Guards routes/actions that touch Google Drive directly, which isn't
- * RLS-protected the way DB writes are — this must run before any Drive
- * call, not just before the eventual DB insert. Shared by the resident
- * photos route and the blood test attachment route (both go through
- * record_attachment(), whose own role check matches this one).
- * Returns the role, for callers that also limit what it may do (a vet's
- * resident photos go to Medical only).
- */
-export async function assertPhotoWriteAccess(): Promise<string> {
-  const perms = await loadPermissions();
-  // photos.resident_add, as the resident photo route asks it: a volunteer no longer holds it (0134,
-  // and record_attachment() refuses them), so a Drive upload is refused here, before it can orphan a file.
-  if (!perms || !can(perms, "photos.resident_add")) {
-    const { t } = await getT();
-    throw new Error(t.photos.errors.notAuthorized);
-  }
-  return perms.role.key;
-}
 
 /**
  * The app page that says "you do not have access to this" — where a
