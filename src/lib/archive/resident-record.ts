@@ -388,7 +388,7 @@ export async function loadResidentArchiveRecord(
     supabase
       .from("immunization_records")
       .select(
-        "id, date_administered, administered_by, batch_number, notes, immunization_types(name)",
+        "id, date_administered, administered_by, batch_number, notes, immunization_types:picker_immunization_types(name)",
       )
       .is("archived_at", null)
       .eq("resident_id", residentId)

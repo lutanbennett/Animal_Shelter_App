@@ -95,7 +95,7 @@ export default async function ResidentPage(
       .eq("resident_id", id),
     supabase
       .from("immunization_records")
-      .select("id, date_administered, immunization_types(name)")
+      .select("id, date_administered, immunization_types:picker_immunization_types(name)")
       .is("archived_at", null)
       .eq("resident_id", id)
       .order("date_administered", { ascending: false })

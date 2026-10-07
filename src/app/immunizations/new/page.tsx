@@ -42,7 +42,7 @@ export default async function NewImmunizationPage(
         .or(NOT_DECEASED)
         .order("name"),
       supabase
-        .from("immunization_types")
+        .from("picker_immunization_types")
         .select("id, name, is_mandatory, interval_months")
         .order("name"),
       supabase.from("zones").select("id, name, name_th").order("name"),

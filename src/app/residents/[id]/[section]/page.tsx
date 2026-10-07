@@ -459,7 +459,7 @@ export default async function ResidentSectionPage(
     case "immunizations": {
       const { data } = await supabase
         .from("immunization_records")
-        .select("id, date_administered, administered_by, immunization_types(name)")
+        .select("id, date_administered, administered_by, immunization_types:picker_immunization_types(name)")
         .is("archived_at", null)
         .eq("resident_id", id)
         .order("date_administered", { ascending: false })
@@ -475,7 +475,7 @@ export default async function ResidentSectionPage(
       const { data: archivedImm } = showArchived
         ? await supabase
             .from("immunization_records")
-            .select("id, date_administered, administered_by, archive_reason, immunization_types(name)")
+            .select("id, date_administered, administered_by, archive_reason, immunization_types:picker_immunization_types(name)")
             .not("archived_at", "is", null)
             .eq("resident_id", id)
             .order("date_administered", { ascending: false })
