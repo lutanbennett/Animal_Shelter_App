@@ -2,14 +2,14 @@
 
 | | |
 |---|---|
-| Feature | |
-| Backlog item | `docs/backlog.md` → |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
-| Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
-| PR | |
-| Tested by / date | |
-| Carries a migration? | yes / no |
-| Tested at SHA | |
+| Feature | App header: Sign out, Open menu and Assistant at 44 px on phones (36 px with a mouse), header regrouped onto two rows at 375 px |
+| Backlog item | `docs/backlog.md` → Bare buttons under 44 px on phones (status added, item stays open) |
+| Branch / worktree | claude/header-buttons-44px @ C:/Development/Animal_Shelter_header-buttons-44px |
+| Dev server | node scripts/worktree.mjs dev, http://localhost:3013 |
+| PR | see PR description |
+| Tested by / date | Claude, 2026-10-07 |
+| Carries a migration? | no |
+| Tested at SHA | 67409dc1 |
 
 ## 1. Scope and risk
 
@@ -105,7 +105,7 @@ out of it for a day.
 
 ## 7. Documentation
 
-- [x] Backlog item ticked in `docs/backlog.md` **on this branch** (follow-ups go on the `backlog` branch instead)
+- [ ] Backlog item ticked … — n/a: the item stays open (PhotoGallery, UnitsPanel, MyTaskList and about 80 unread files remain); a status line saying the header is done was added instead
 - [x] Non-obvious design choices added as a new file in `docs/decisions/` (`<date>-<slug>.md`)
 - [x] `README.md` still accurate
 - [x] **Release notes.** Would a shelter user notice this change? If so, `unreleased` in `src/lib/releases.ts` has a line for it, **in this PR**, written for a shelter user and not as a commit message. If not, `n/a: <why nobody would notice>`: a refactor, a script, a fix to something no user reached. The checker holds this line to the diff. A tick fails if `unreleased` gained no line. A PR touching `src/app/`, `src/components/`, `src/lib/manual/`, `src/lib/i18n/` or `worker/` fails if this line is missing, and its `n/a` reason is printed for the reviewer. An empty `unreleased` looks exactly like "nothing visible shipped", so this line is the only place that difference gets written down. A PR that touches nothing but `docs/test-plans/` (a sign-off recorded after merge) has a tick checked against the merge that introduced the plan instead, so leave the feature's tick as it was. The checker finds this line by its bold **Release notes.** label, so keep the label as it is
@@ -154,7 +154,8 @@ database; `lannacare.org` runs **production** (`dbkodyyxxhtygxcxmfcu`).
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
-| | | | |
+| 1 | medium | First cut at 44 px pushed Sign out and the account name onto extra rows (header three rows tall at 375 px) | fixed: regrouped onto two rows, see decision file |
+| 2 | low | The account-menu button (from #410) is a bare 20 px button | deferred to backlog |
 
 ## Left for manual verification
 
@@ -178,7 +179,7 @@ section 8's.
 
 | # | What to check | Where |
 |---|---|---|
-| | | |
+| 1 | Look at the header at 375 px and desk width in English and Thai: does it read well? | docs/test-plans/shots/ (header-375, header-desk, header-login375) |
 
 ## Sign-off
 
@@ -195,41 +196,15 @@ driven rather than assumed. Signed by whoever ran them — Claude may sign this.
 - [x] Everything in this checklist that could be verified without human eyes was run, not assumed
 - [x] Nothing is ticked that was not actually executed
 
-Automated checks by: <name>  Date: <yyyy-mm-dd>
+Automated checks by: Claude  Date: 2026-10-07
 
 ### Manual verification
 
-The items in **Left for manual verification** above. Signed by the person who
-looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
-Three valid states:
-
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
-- `n/a: <reason>` — there was nothing to look at.
-- `pending: <what is outstanding>` — the work is done and something genuinely
-  needs a person who has not got to it yet. **This does not fail the check**
-  (changed 2026-09-24): it is the normal state for most of a PR's life, and a
-  check that is permanently red is one people learn to filter. The checker prints
-  *awaiting manual verification: <what>* and exits 0, so the outstanding item is
-  on the record without drowning the signal. What still fails is a plan that is
-  missing, incomplete or self-contradictory. Use `pending:` rather than reaching
-  for `n/a` — green is no longer something you have to buy, and an `n/a` over a
-  real outstanding item is a false assurance about the one thing you could not
-  verify. **Nothing ships on a `pending:`** — the release manager's pre-deploy
-  pass is what holds that line, not CI.
-
-`n/a:` and `pending:` take **no `Date:` segment** — there is no date to record, so
-write the line and stop. A trailing `Date: —` is accepted too, since existing
-plans use it. A bare *name* with no date is still rejected, which is what stops an
-empty signature quietly passing.
-
-A red `test-plan` that says what it is waiting for is a red people act on. An
-illegible one is a red people learn to ignore.
+Signed by the person who looked, or `pending:` until they have.
 
 - [ ] The manual list above is empty, or every item in it was checked by a … — n/a: not yet — the PR does not exist at this commit
 
-Manual verification by: <name>  Date: <yyyy-mm-dd>
+Manual verification by: pending: Lutan to look at the header screenshots in docs/test-plans/shots/ (375 px and desk, English and Thai)
 
 ### Result
 
@@ -237,6 +212,13 @@ Manual verification by: <name>  Date: <yyyy-mm-dd>
 - [ ] Checklist pasted into the … — n/a: not yet — the PR does not exist at this commit
 - [ ] Handed to the production release … — n/a: not yet — the PR does not exist at this commit
 
-Result: <pass | pass with accepted defects | fail>
+Result: pass
 
-Release manager acknowledgement: <name>  Date: <yyyy-mm-dd>
+Release manager acknowledgement: pending
+
+
+## Evidence
+
+node scripts/check-phone-width.mjs --roles=admin,management,staff,vet,volunteer --pages=/home,/vets (en + th): no overflow, every component action 44 px, 40 measured. The three header controls are now measured and no longer appear as bare-button notes; the only header note left is the account menu button. The full all-roles run (338 views) exceeded its time limit and was killed, so the all-roles count is not re-measured.
+
+    gates: typecheck=0 lint=0 build=0
