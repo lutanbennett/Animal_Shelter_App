@@ -28,6 +28,7 @@ import {
   WizardProgress,
   type ReviewGroup,
 } from "./WizardChrome";
+import { textareaClass } from "@/components/textareaClass";
 
 export type DietTypeOption = { id: string; name: string; is_standard: boolean };
 export type OriginOption = { id: string; name: string };
@@ -641,7 +642,7 @@ export function IntakeForm({
               id="bio"
               name="bio"
               rows={4}
-              className={`${inputClass} field-sizing-content`}
+              className={textareaClass}
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">

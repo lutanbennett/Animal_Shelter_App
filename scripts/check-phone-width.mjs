@@ -1,5 +1,6 @@
 // The 375 px check: opens each page at phone width, in English and Thai,
-// signed in as each of a few roles, and fails if (1) the page scrolls sideways,
+// signed in as each of a few roles, and fails if (1) the page scrolls sideways —
+// as loaded, or once any text box, select or textarea in it is focused —
 // printing the element that sticks out, or (2) an action the app's shared
 // components render is smaller than 44 px, printing which component.
 //
@@ -381,6 +382,35 @@ function measureTapTargets({ tap, tolerance }) {
   return { components, bare, failures, notes };
 }
 
+/**
+ * Focus each text box, select and textarea in turn and re-measure. A control
+ * can be fine as loaded and widen the page the moment it is tapped (a
+ * `field-sizing: content` textarea with a long placeholder did, 2026-10-07),
+ * which a measure of the untouched page cannot see. Returns the first field that
+ * pushes the page past the screen, or the widest overflow seen as 0.
+ */
+async function checkFocus(page) {
+  const count = await page
+    .evaluate(() => document.querySelectorAll("main textarea, main input:not([type=hidden]):not([type=file]):not([type=checkbox]):not([type=radio]), main select").length)
+    .catch(() => 0);
+  for (let i = 0; i < Math.min(count, 60); i++) {
+    const field = await page
+      .evaluate((n) => {
+        const el = document.querySelectorAll("main textarea, main input:not([type=hidden]):not([type=file]):not([type=checkbox]):not([type=radio]), main select")[n];
+        if (!el || el.disabled || el.getBoundingClientRect().width === 0) return null;
+        el.focus({ preventScroll: true });
+        return `${el.tagName.toLowerCase()}${el.name ? `[name=${el.name}]` : el.id ? `#${el.id}` : ""}`;
+      }, i)
+      .catch(() => null);
+    if (!field) continue;
+    await page.waitForTimeout(60);
+    const m = await page.evaluate(measureInPage, { tolerance: TOLERANCE }).catch(() => null);
+    if (m && m.overflow > TOLERANCE) return { overflow: m.overflow, culprits: m.culprits, field };
+  }
+  await page.evaluate(() => document.activeElement?.blur?.()).catch(() => {});
+  return { overflow: 0, culprits: [] };
+}
+
 async function settle(page) {
   await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
   await page.evaluate(() => document.fonts.ready).catch(() => {});
@@ -412,7 +442,7 @@ async function run(ids, accounts) {
           .catch(() => []);
         for (const href of navLinks) if (href && !href.startsWith("/api/") && !href.includes("#")) targets.add(href);
 
-        for (const target of onlyPages ?? targets) {
+        for (const target of onlyPages ? onlyPages.map((p) => fill(p, ids)).filter(Boolean) : targets) {
           results.push(await checkPage(page, { roleName, locale, target }));
         }
         await context.close();
@@ -465,6 +495,11 @@ async function checkPage(page, { roleName, locale, target }) {
   }
   const tap = { components: t.components, bare: t.bare, small: t.failures, notes: t.notes };
   if (m.overflow > TOLERANCE) return { ...where, kind: "overflow", overflow: m.overflow, culprits: m.culprits, ...tap };
+  // Only a page that fits unfocused is worth focusing: an overflowing one is already red.
+  const f = await checkFocus(page);
+  const zoom = await page.evaluate(() => [...document.querySelectorAll("main textarea")].filter((el) => el.getBoundingClientRect().width > 0 && parseFloat(getComputedStyle(el).fontSize) < 16).map((el) => el.name || el.id || "textarea")).catch(() => []);
+  tap.zoom = zoom;
+  if (f.overflow > TOLERANCE) return { ...where, kind: "overflow", overflow: f.overflow, culprits: f.culprits, focused: f.field, ...tap };
   if (t.failures.length) return { ...where, kind: "small", ...tap };
   return { ...where, kind: "ok", ...tap };
 }
@@ -483,7 +518,7 @@ function report(results) {
   // One line per page and overflow, not per role: the same page fails the same way for several roles.
   const bad = by("overflow");
   for (const r of bad) {
-    console.log(`\nFAIL  ${label(r)}  scrolls sideways by ${r.overflow} px at ${WIDTH} px`);
+    console.log(`\nFAIL  ${label(r)}  scrolls sideways by ${r.overflow} px at ${WIDTH} px${r.focused ? ` once ${r.focused} is focused` : ""}`);
     if (!r.culprits.length) console.log("      (no single element found: the overflow may come from a transform or a pseudo-element)");
     for (const c of r.culprits) console.log(`      ${c.path}  — right edge ${c.right} px, ${c.width} px wide${c.text ? `  "${c.text}"` : ""}`);
   }
@@ -504,6 +539,10 @@ function report(results) {
       }
     return [...map.values()];
   };
+  const zooming = results.filter((r) => r.zoom?.length);
+  for (const r of zooming)
+    console.log(`
+FAIL  ${label(r)}  textarea ${r.zoom.join(", ")} has type under 16 px: iPhone Safari zooms the page in when it is tapped, and the page then scrolls sideways`);
   const smallActions = group("small");
   for (const g of smallActions) {
     console.log(`\nFAIL  ${g.path}  ${g.c.component} "${g.c.label}" (in ${g.c.region}) is ${g.c.width} x ${g.c.height} px at ${WIDTH} px, under ${TAP}`);
@@ -524,8 +563,9 @@ function report(results) {
   );
   console.log(`${components} component action(s) measured for tap size.`);
   console.log(bad.length ? `${bad.length} page view(s) overflow.` : "No page scrolls sideways.");
+  console.log(zooming.length ? `${zooming.length} page view(s) have a textarea under 16 px.` : "No textarea is under 16 px (iPhone zoom on tap).");
   console.log(smallActions.length ? `${smallActions.length} component action(s) under ${TAP} px.` : `Every component action is at least ${TAP} px.`);
-  return bad.length || smallActions.length ? 1 : 0;
+  return bad.length || smallActions.length || zooming.length ? 1 : 0;
 }
 
 // ---------------------------------------------------------------------------
