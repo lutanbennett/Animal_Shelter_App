@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionButton } from "@/components/ActionButton";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useState, useTransition } from "react";
 import { deleteEnclosure, updateEnclosure } from "./actions";
@@ -169,16 +170,12 @@ function EnclosureRowItem({
             <div className="flex items-center gap-2">
               {editing ? (
                 <>
-                  <button
-                    type="button"
-                    disabled={isPending}
-                    onClick={handleSave}
-                    className="min-h-11 rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-                  >
+                  <ActionButton icon={ACTION_ICONS.save} variant="primary" compact disabled={isPending} onClick={handleSave}>
                     {t.common.save}
-                  </button>
-                  <button
-                    type="button"
+                  </ActionButton>
+                  <ActionButton
+                    icon={ACTION_ICONS.clear}
+                    compact
                     disabled={isPending}
                     onClick={() => {
                       setEditing(false);
@@ -188,10 +185,9 @@ function EnclosureRowItem({
                       setCapacity(enclosure.capacity?.toString() ?? "");
                       setNotes(enclosure.notes ?? "");
                     }}
-                    className="min-h-11 rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover"
                   >
                     {t.common.cancel}
-                  </button>
+                  </ActionButton>
                 </>
               ) : (
                 <RowActionButton

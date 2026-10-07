@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionButton } from "@/components/ActionButton";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useMemo, useState, useTransition } from "react";
 import { formatDate } from "@/lib/format";
@@ -39,12 +40,6 @@ export type ElsewhereDoctor = {
 
 const inputClass =
   "w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary";
-
-const smallButton =
-  "rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50";
-
-const primaryButton =
-  "rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50";
 
 const COLUMNS = 3;
 
@@ -192,12 +187,12 @@ function DoctorRowItem({
           <div className="flex flex-wrap items-center gap-2 md:min-w-[11rem]">
             {mode === "edit" && (
               <>
-                <button type="button" disabled={isPending} onClick={handleRename} className={primaryButton}>
+                <ActionButton icon={ACTION_ICONS.save} variant="primary" compact disabled={isPending} onClick={handleRename}>
                   {t.common.save}
-                </button>
-                <button type="button" disabled={isPending} onClick={reset} className={smallButton}>
+                </ActionButton>
+                <ActionButton icon={ACTION_ICONS.clear} compact disabled={isPending} onClick={reset}>
                   {t.common.cancel}
-                </button>
+                </ActionButton>
               </>
             )}
             {mode === "merge" && (
@@ -215,17 +210,12 @@ function DoctorRowItem({
                     </option>
                   ))}
                 </select>
-                <button
-                  type="button"
-                  disabled={isPending || !mergeInto}
-                  onClick={handleMerge}
-                  className={primaryButton}
-                >
+                <ActionButton icon={ACTION_ICONS.merge} variant="primary" compact disabled={isPending || !mergeInto} onClick={handleMerge}>
                   {d.merge.button}
-                </button>
-                <button type="button" disabled={isPending} onClick={reset} className={smallButton}>
+                </ActionButton>
+                <ActionButton icon={ACTION_ICONS.clear} compact disabled={isPending} onClick={reset}>
                   {t.common.cancel}
-                </button>
+                </ActionButton>
               </>
             )}
             {mode === "view" && (
