@@ -2,6 +2,8 @@
 
 import { useConfirm } from "@/components/ConfirmProvider";
 import { useState, useTransition } from "react";
+import { Check, Pencil, Plus, Save, Trash2, X } from "lucide-react";
+import { ActionButton } from "@/components/ActionButton";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatBahtPrice } from "@/lib/format";
 import { formatQuantity } from "@/lib/diets/options";
@@ -25,8 +27,6 @@ export type UnitsPanelItem = {
 
 const inputClass =
   "rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary";
-const smallButton =
-  "rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50";
 
 const EMPTY: ConversionFields = { unit: "", factor: "", note: "", isPurchase: false, isCount: false };
 
@@ -133,20 +133,20 @@ function ItemUnits({ kind, item }: { kind: ItemKind; item: UnitsPanelItem }) {
                   {c.note && <span className="text-xs text-muted">{c.note}</span>}
                 </span>
                 <span className="flex gap-2">
-                  <button type="button" disabled={pending} onClick={() => open(c)} className={smallButton}>
+                  <ActionButton icon={Pencil} compact disabled={pending} onClick={() => open(c)}>
                     {u.edit}
-                  </button>
-                  <button
-                    type="button"
+                  </ActionButton>
+                  <ActionButton
+                    icon={Trash2}
+                    compact
                     disabled={pending}
                     onClick={async () => {
                       if (!await confirm({ body: u.deleteConfirm(c.unit), confirmLabel: t.common.delete })) return;
                       run(() => deleteConversion(c.id));
                     }}
-                    className={smallButton}
                   >
                     {u.delete}
-                  </button>
+                  </ActionButton>
                 </span>
               </li>
             ),
@@ -164,9 +164,9 @@ function ItemUnits({ kind, item }: { kind: ItemKind; item: UnitsPanelItem }) {
           />
         ) : (
           <div>
-            <button type="button" disabled={pending} onClick={() => open(null)} className={smallButton}>
+            <ActionButton icon={Plus} compact disabled={pending} onClick={() => open(null)}>
               {u.add}
-            </button>
+            </ActionButton>
           </div>
         )}
 
@@ -195,14 +195,14 @@ function ItemUnits({ kind, item }: { kind: ItemKind; item: UnitsPanelItem }) {
                 placeholder={u.price.label(purchase.unit)}
                 className={`${inputClass} w-48`}
               />
-              <button
-                type="button"
+              <ActionButton
+                icon={Check}
+                compact
                 disabled={pending || !price.trim()}
                 onClick={() => run(() => setPricePerPurchaseUnit(kind, item.id, price), () => setPrice(""))}
-                className={smallButton}
               >
                 {u.price.set}
-              </button>
+              </ActionButton>
             </div>
             <span className="text-xs text-muted">{u.price.hint(item.baseUnit)}</span>
           </div>
@@ -284,17 +284,12 @@ function ConversionForm({
         </label>
       </div>
       <div className="flex gap-2">
-        <button
-          type="button"
-          disabled={pending}
-          onClick={onSave}
-          className="rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-        >
+        <ActionButton icon={Save} variant="primary" compact disabled={pending} onClick={onSave}>
           {pending ? u.saving : u.save}
-        </button>
-        <button type="button" disabled={pending} onClick={onCancel} className={smallButton}>
+        </ActionButton>
+        <ActionButton icon={X} compact disabled={pending} onClick={onCancel}>
           {u.cancel}
-        </button>
+        </ActionButton>
       </div>
     </div>
   );

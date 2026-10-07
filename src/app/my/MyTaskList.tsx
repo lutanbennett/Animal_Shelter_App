@@ -3,7 +3,8 @@
 import { useMemo, useOptimistic, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CalendarClock, Check, Clock, Hourglass, MessageSquarePlus, SkipForward, UserPlus, Users } from "lucide-react";
+import { CalendarClock, Check, Clock, Hourglass, MessageSquarePlus, SkipForward, Undo2, UserPlus, Users } from "lucide-react";
+import { ActionButton } from "@/components/ActionButton";
 import { ENCLOSURE_ICONS, NAV_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -212,9 +213,9 @@ export function MyTaskList({
                 ? t.my.recurring.markedDone(undoable.task.title)
                 : t.my.recurring.markedSkipped(undoable.task.title)}
           </span>
-          <button type="button" onClick={undo} className="font-medium text-primary hover:underline">
+          <ActionButton icon={Undo2} compact onClick={undo}>
             {t.my.undo}
-          </button>
+          </ActionButton>
         </div>
       )}
 
@@ -282,14 +283,14 @@ export function MyTaskList({
                   </span>
                 </div>
                 {(item.kind === "recurring" || canEditMaintenance) && (
-                  <button
-                    type="button"
+                  <ActionButton
+                    icon={Undo2}
+                    compact
                     onClick={() => takeBack(item)}
                     aria-label={t.my.doneToday.undoFor(item.title)}
-                    className="rounded px-2 py-1 text-sm font-medium text-primary hover:underline"
                   >
                     {t.my.undo}
-                  </button>
+                  </ActionButton>
                 )}
               </li>
             ))}
@@ -454,7 +455,7 @@ function TaskRow({
                 role="radio"
                 aria-checked={active}
                 onClick={() => onStatus(task, status)}
-                className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition ${
+                className={`flex min-h-11 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition md:min-h-0 md:px-2.5 ${
                   active ? tone.badge : "border-border text-muted hover:bg-surface-hover hover:text-foreground"
                 }`}
               >
@@ -491,35 +492,25 @@ function RecurringButtons({
 
   return (
     <div className="flex shrink-0 flex-col gap-2 lg:items-end">
-      <div role="group" aria-label={r.outcomeFor(task.title)} className="flex flex-wrap items-center gap-1">
+      <div role="group" aria-label={r.outcomeFor(task.title)} className="flex flex-wrap items-center gap-2">
         {!noteOpen && (
-          <button
-            type="button"
-            onClick={() => setNoteOpen(true)}
-            className="flex items-center gap-1 rounded-full px-2 py-1 text-xs text-muted hover:bg-surface-hover hover:text-foreground"
-          >
-            <MessageSquarePlus aria-hidden="true" className="h-3.5 w-3.5" />
+          <ActionButton icon={MessageSquarePlus} compact onClick={() => setNoteOpen(true)}>
             {r.addNote}
-          </button>
+          </ActionButton>
         )}
-        <button
-          type="button"
-          onClick={() => send("skipped")}
-          className="flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground"
-        >
-          <SkipForward aria-hidden="true" className="h-3.5 w-3.5" />
+        <ActionButton icon={SkipForward} compact onClick={() => send("skipped")}>
           {r.skip}
-        </button>
-        <button
-          type="button"
+        </ActionButton>
+        <ActionButton
+          icon={Check}
+          variant="success"
+          compact
           onClick={() => send("done")}
           disabled={!canMarkDone}
           title={canMarkDone ? undefined : r.notYet}
-          className="flex items-center gap-1.5 rounded-full border border-success/50 bg-success/10 px-2.5 py-1 text-xs font-medium text-success hover:bg-success/20 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          <Check aria-hidden="true" className="h-3.5 w-3.5" />
           {r.done}
-        </button>
+        </ActionButton>
       </div>
       {noteOpen && (
         <input

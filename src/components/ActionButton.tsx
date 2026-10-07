@@ -5,6 +5,7 @@ const VARIANT_CLASSES = {
   primary: "bg-primary text-primary-foreground hover:bg-primary-hover",
   secondary: "border border-border text-foreground hover:bg-surface-hover",
   danger: "border border-danger/40 text-danger hover:bg-danger/10",
+  success: "border border-success/50 bg-success/10 text-success hover:bg-success/20",
 } as const;
 
 /**
