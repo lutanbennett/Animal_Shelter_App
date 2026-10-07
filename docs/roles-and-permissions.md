@@ -47,7 +47,7 @@ says Management and Admin, which are the names in the system.
 
 ## 1. The short version
 
-1. **One catalogue.** 55 named activities (§4), seeded from the 93 rows of the
+1. **One catalogue.** 56 named activities (§4), seeded from the 93 rows of the
    acceptance matrix and then audited against the app's role checks and the 243
    row-level policies in the dev database. Each is **Edit / Read / None** or
    **Yes / No**. The acceptance matrix, the manual's per-role filter, the menu and
@@ -295,7 +295,7 @@ today is three things. The rule proposed:
 - **Where the manual promises more than the code (B), the cell is what the code
   does**, until question L6 is answered.
 
-### The 55 activities, with today's five roles
+### The 56 activities, with today's five roles
 
 `E` Edit, `R` Read, `Y` Yes, `–` None/No. `°` means "within this role's scope"
 (§5): for a vet, the residents their clinic treats and their own clinic's
@@ -371,6 +371,7 @@ Admin is shown for completeness; it is never stored (§6).
 | `audit.view` | See who changed what | Y/N | Y | – | – | – | – | 35 | |
 | `audit.undo` | Undo a change | Y/N | Y | – | – | – | – | 35 | *Split* |
 | `system.status` | The system status page | Y/N | Y | – | – | – | – | 36 | |
+| `translations.view` | See the public text's translations | Y/N | Y | Y | Y | – | – | – | Read only; added by `0154` to replace `sees_all_translations()`. Translating stays `translations.manage` |
 
 Not in the table, because nobody sets them (§6): signing in and out, a forgotten
 password, changing your own password, the language switch, the manual, the
@@ -1224,7 +1225,7 @@ A vet's read of the four recurring tables was inside the dropped role list, so i
 | Table | Activity | Note |
 |---|---|---|
 | `assistant_actions` | insert and read `assistant.record`, on the caller's own row | **Management no longer reads other people's rows** (nothing reads them; admin still does): a known tightening, owned by the assistant-retention decision (DB-11) |
-| `translations` | write `translations.manage`; read that, or `sees_all_translations()` | A new scope function (`sees_all_residents()` and the role opens the app) that keeps staff reading every translation until a "see translations" cell exists. `sees_all_residents()` alone let `public_viewer` read all 76 rows: `check-app-access-gate` caught it |
+| `translations` | write `translations.manage`; read `translations.view`, or `translations.manage` at Read | `0150` read through a stand-in, `sees_all_translations()`; `0154` replaced it with the `translations.view` cell (management, staff) and dropped the function. `public_viewer` stays out because it holds no cells, not because of a second condition (`sees_all_residents()` alone had let it read all 76 rows) |
 | `facility_maps` | write `facility.enclosures` Edit; read stays open | **Not `facility.map`**, which this table first named: that cell is "see the map" and staff and volunteers hold it. **Management loses the write** (it holds `facility.enclosures` Read, and the page never let it): a known tightening |
 | `fixed_outgoings` | `reports.cashflow` | Read for read, Edit for write; only management holds it |
 

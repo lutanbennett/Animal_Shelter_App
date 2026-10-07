@@ -103,6 +103,7 @@ export const ACTIVITIES = [
   { key: "audit.view", kind: "yesno", area: "settings", sort: 53, requires: [], probes: [] },
   { key: "audit.undo", kind: "yesno", area: "settings", sort: 54, requires: [], probes: [] },
   { key: "system.status", kind: "yesno", area: "settings", sort: 55, requires: [], probes: [] },
+  { key: "translations.view", kind: "yesno", area: "management", sort: 56, requires: [], probes: [] },
 ] as const satisfies readonly ActivityDef[];
 
 export type Activity = (typeof ACTIVITIES)[number];

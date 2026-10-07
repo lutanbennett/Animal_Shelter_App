@@ -7,7 +7,7 @@
 // For each table, each principal's four commands (1 = took effect, 0 = refused):
 //   assistant_actions  read mine / read someone else's / insert mine / insert in someone else's name
 //                      mine needs assistant.record; someone else's is Admin's alone (management lost it: 0150)
-//   translations       read / update / insert / delete: write translations.manage; read that or sees_all_residents();
+//   translations       read / update / insert / delete: write translations.manage; read that or translations.view (0154);
 //                      a vet reads through its own policy and writes nothing
 //   facility_maps      read / update / insert / delete: read is open to every login; write facility.enclosures Edit
 //                      (facility.map, which staff and volunteers hold, opens nothing)
@@ -29,6 +29,7 @@ const CUSTOM = {
   c_record: { cells: [["assistant.record", 2]] },
   c_ask: { cells: [["assistant.ask", 2]] },
   c_trans: { scope: "own_clinic", cells: [["translations.manage", 2]] },
+  c_view: { scope: "own_clinic", cells: [["translations.view", 2]] }, // the new cell alone: reads, writes nothing
   c_floor_all: { scope: "all", cells: [] }, // staff floor, reads every resident: the staff shape, no cell at all
   c_floor_scoped: { scope: "own_clinic", cells: [] }, // staff floor, scoped to a clinic
   c_closed: { scope: "all", opens: false, cells: [] }, // scope all but opens no app: the public_viewer shape, refused (check-app-access-gate caught it)
@@ -74,7 +75,7 @@ const ALL = "1111", NONE = "0000", READ_ONLY = "1000";
 const EXPECT = {
   // management and staff: their own rows only. Nobody but Admin reads or writes in someone else's name.
   assistant_actions: { admin: ALL, management: "1010", staff: "1010", c_record: "1010" },
-  translations: { admin: ALL, management: ALL, staff: READ_ONLY, vet: READ_ONLY, c_trans: ALL, c_floor_all: READ_ONLY },
+  translations: { admin: ALL, management: ALL, staff: READ_ONLY, vet: READ_ONLY, c_trans: ALL, c_view: READ_ONLY },
   // read is open to every login, even one with no role
   facility_maps: {
     ...Object.fromEntries(P.map((p) => [p, READ_ONLY])),
