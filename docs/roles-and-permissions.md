@@ -1159,6 +1159,8 @@ beside them.
 | `perm-convert-work` | schema | `-orphans` | `maintenance`, `maintenance_assignees`, `project_folders`: the role-named half of tables that already have cell policies. **New row, 2026-10-05** |
 | **R6 Admin, and the finish** | | | |
 | `perm-convert-settings` | schema | the four above | The Settings tables and setup lists |
+| `perm-convert-admin` | schema, `0153` | `-settings` | The 43 `admin_*` and 2 `volunteer_read_*` policies, and the checker extended to see them. **Built, 2026-10-07**; "Converted in `0153`" below |
+| `perm-convert-vet` | schema | Lutan's vet decision (§3 of `2026-10-07-admin-role.md`) | The vet's 54 policies on 29 tables, the last of the role-named ones |
 | `perm-drop-enum` | schema | every table converted, vets and staff included | The bridge and the enum removed |
 | `settings-permission-matrix` | app | `perm-drop-enum` | The matrix in Settings |
 | `custom-roles` | schema + app | the matrix | A shelter adds a role |
@@ -1235,8 +1237,32 @@ A vet's read of the four recurring tables was inside the dropped role list, so i
 | `maintenance_photos` | `maintenance.photos` | All four commands |
 | `project_photos` | `projects.photos` | All four commands |
 
+**Converted in `0153` (`perm-convert-admin`), 2026-10-07: the policies the checker could not see.** Until
+this file the script looked for `management` and `staff` only, so "no policy names a role" was true of
+those two and false of 43 `admin_*` policies and 2 `volunteer_read_*` ones. The script now counts all five
+role values and a bare `current_user_role()`, and `is_admin()` is the enum-free Admin rule (§6 rule 1:
+`roles.key = 'admin'`, the first branch of `has_permission()` alone).
+
+| Table | What `0153` did | Note |
+|---|---|---|
+| `attachments`, `blood_test_types`, `bulk_appointments`, `contacts`, `diet_types`, `enclosures`, `fixed_outgoings`, `frequency`, `immunization_types`, `maintenance`, `maintenance_assignees`, `maintenance_photos`, `medication`, `procedure_types`, `project_folders`, `project_photos`, `shelter_friends`, `translations`, `vets`, `zones` | dropped `admin_all_*` | A `_perm` policy covers every command and Admin passes it. `volunteer_read_enclosures` / `_zones` went with them: the volunteer holds `facility.enclosures` Read |
+| `blood_tests`, `immunization_records`, `placement_history`, `prescriptions`, `procedures`, `resident_diets`, `residents`, `weight` | `admin_all_*` replaced by `<table>_admin_delete` on `is_admin()` | **No policy anywhere granted DELETE**, so dropping `admin_all_*` outright would have taken Admin's delete away |
+| `assistant_actions`, `group_origins`, `rounds` | `admin_all_*` replaced by `is_admin()` policies for the commands the `_perm` side does not give | The `_perm` side is own-rows or select-only: Admin keeps every row, and every write |
+| `audit_log`, `permission_activities`, `role_permissions`, `roles`, `user_roles`, `site_content`, `site_content_photos`, `site_pages`, `translatable_fields` | the policy rewritten in place on `is_admin()` | Admin-only, no cell, on purpose (§6). `user_roles` keeps its fixed rule and is **not** given an activity. The `*_requires_aal2` restrictive policies are untouched: a write to the matrix still needs an admin **and** `aal2` |
+| `vet_appointments`, `vet_doctors`, `vet_doctor_clinics` | `admin_all_*` rewritten in place on `is_admin()` | The vet's own policies on these stay with `perm-convert-vet` |
+
+**Still on the enum, and the only thing left: the vet (`perm-convert-vet`).** 54 `vet_*` policies on 29
+tables, each of which names `'vet'::app_role`, never ask a cell (`0135`, "Last"), and are blocked on
+Lutan's decision: does the vet keep the paper's 13 reference-data cells while on hold, or is the paper
+rewritten to the draft's one? The tables, one owner each: `adoption_updates`, `attachments`,
+`blood_test_types`, `blood_tests`, `bulk_appointments`, `diet_types`, `enclosures`, `frequency`,
+`immunization_records`, `immunization_types`, `medication`, `placement_history`, `prescriptions`,
+`procedure_types`, `procedures`, `recurring_job_assignees`, `recurring_job_occurrence_assignees`,
+`recurring_job_occurrences`, `recurring_jobs`, `resident_diets`, `residents`, `shelter_friends`,
+`translations`, `vet_appointments`, `vet_doctor_clinics`, `vet_doctors`, `vets`, `weight`, `zones`.
+
 **The end state is a query.** `node scripts/check-policy-role-names.mjs --final` must report no
-row. The stream that empties the last entry from `OWNERS` in that script runs it, and
+row. The stream that empties the last entry from `OWNERS` in that script (`perm-convert-vet`) runs it, and
 `perm-drop-enum` does not start until it is green.
 
 **What can start now that the fork is decided**, three abreast: `permissions-schema`
