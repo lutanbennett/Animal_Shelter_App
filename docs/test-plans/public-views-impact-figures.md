@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none. A same-day follow-up to #417 (0156), which created a public view without declaring it; it turned `public-views` red on every branch. Not a backlog item because it was found and fixed inside the hour — the rule it teaches is recorded in `docs/decisions/2026-10-07-public-impact-figures-declared-public.md` |
 | Branch / worktree | `claude/public-views-impact-figures` @ `C:\Development\Animal_Shelter_public-views-impact-figures` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3008` |
-| PR | PENDING_PR |
+| PR | [#420](https://github.com/lutanbennett/Animal_Shelter_App/pull/420) |
 | Tested by / date | Claude (QA session) / 2026-10-07 |
 | Carries a migration? | no — 0156 is already on `main` |
 | Tested at SHA | `9d5970fa` |
