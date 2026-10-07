@@ -27,7 +27,7 @@ export function ImpactBaselines({ rows }: { rows: ImpactBaselineRow[] }) {
       </div>
       <div className="flex flex-col gap-4">
         {rows.map((row) => (
-          <BaselineForm key={`${row.key}-${row.set_at}`} row={row} />
+          <BaselineForm key={row.key} row={row} />
         ))}
       </div>
       <p className="text-xs text-muted">{i.hint}</p>
