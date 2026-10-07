@@ -23,7 +23,7 @@
 --       the app only ever reads it (src/lib/projects/queries.ts, src/app/projects/actions.ts,
 --       src/app/admin/website/page.tsx) and writes project_folders.
 --
--- Select stays. anon holds nothing on these views (revoked by the anon-view-grants work);
+-- Select stays. anon holds nothing on these views (0081 revoked it);
 -- the revoke below names it anyway so a rebuild cannot differ. service_role is left as it is:
 -- it bypasses RLS on the tables underneath, so a view grant gives it nothing it lacks.
 -- No policy is created or changed. Re-runnable: revoke is idempotent.

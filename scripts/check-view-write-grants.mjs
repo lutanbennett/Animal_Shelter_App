@@ -3,6 +3,9 @@
 //
 //   node scripts/check-view-write-grants.mjs            (from the repo root; dev only) after 0160: every write refused
 //   node scripts/check-view-write-grants.mjs --before   before 0160: what the grants could actually do
+//   node scripts/check-view-write-grants.mjs --with supabase/migrations/0160_view_write_grants.sql
+//        the after-check with the file run first in the same transaction, which the harness's closing
+//        `raise exception` rolls back: proof of a pending migration without applying it
 //
 // For one live login of every role, under that login's own JWT (set local role authenticated +
 // request.jwt.claims), it tries insert, update, delete and truncate on each view, and a select. Every attempt runs
@@ -11,12 +14,16 @@
 // writes is also tried straight on project_folders, the table underneath, for the same login.
 //
 // Asserted, after (default):
-//   1. every insert, update, delete and truncate on every view is refused for every role with 42501 (no grant);
-//   2. every select still succeeds.
+//   1. authenticated and anon hold no insert, update, delete, truncate, references or trigger on any of the six;
+//   2. no write on any view touches a row for any role. On project_folder_summary that is 42501 (no grant). On
+//      the other five the error does not change (55000, 42809): Postgres refuses a non-updatable view before it
+//      looks at grants, which is exactly why those grants were inert;
+//   3. every select still succeeds.
 // Asserted, --before:
 //   1. no write to the five non-updatable views changes a row, for any role (they error before any row);
 //   2. a write through project_folder_summary changes exactly as many rows as the same write on project_folders
 //      for that login: the grant was live there, but bounded by project_folders' own policies (security_invoker).
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -26,6 +33,8 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 const before = process.argv.includes("--before");
+const withIdx = process.argv.indexOf("--with");
+const withFile = withIdx > 0 ? readFileSync(join(root, process.argv[withIdx + 1]), "utf8") : "";
 
 const VIEWS = [
   "resident_list_view",
@@ -36,7 +45,7 @@ const VIEWS = [
   "resident_diet_round_status",
 ];
 
-const sql = `
+const sql = `${withFile ? `begin;\n${withFile}\n` : ""}
 do $$
 declare
   views text[] := array[${VIEWS.map((v) => `'${v}'`).join(",")}];
@@ -44,6 +53,12 @@ declare
   n int; out text := '';
   function_result text;
 begin
+  foreach v in array views loop
+    foreach kind in array array['INSERT', 'UPDATE', 'DELETE', 'TRUNCATE', 'REFERENCES', 'TRIGGER'] loop
+      out := out || format('grant|%s|%s|%s', v, kind,
+        has_table_privilege('authenticated', 'public.' || v, kind) or has_table_privilege('anon', 'public.' || v, kind)) || E'\\n';
+    end loop;
+  end loop;
   for u in
     select distinct on (r.key) r.key, ur.user_id
       from user_roles ur join roles r on r.id = ur.role_id
@@ -102,9 +117,9 @@ if (marker < 0) {
   });
   const fails = [];
   const at = (role, view, kind) => rows.find((r) => r.role === role && r.view === view && r.kind === kind)?.result;
-  const roles = [...new Set(rows.map((r) => r.role))];
+  const roles = [...new Set(rows.filter((r) => r.role !== "grant").map((r) => r.role))];
 
-  console.log(`${before ? "BEFORE" : "AFTER"} 0160, ${roles.length} roles x ${VIEWS.length} views (ROWS n = the statement ran and touched n rows; otherwise the SQLSTATE)\n`);
+  console.log(`${before ? "BEFORE" : withFile ? "AFTER (in a rolled-back transaction)" : "AFTER"} 0160, ${roles.length} roles x ${VIEWS.length} views (ROWS n = the statement ran and touched n rows; otherwise the SQLSTATE)\n`);
   for (const view of VIEWS) {
     console.log(view);
     for (const role of roles) {
@@ -116,14 +131,23 @@ if (marker < 0) {
     }
   }
 
+  const held = rows.filter((r) => r.role === "grant" && r.result === "t");
+  console.log(`
+Write privileges authenticated or anon still hold on these views: ${held.length ? held.map((r) => `${r.view} ${r.kind}`).join(", ") : "none"}`);
   for (const r of rows) {
+    if (r.role === "grant") {
+      if (!before && r.result === "t") fails.push(`authenticated or anon still holds ${r.kind} on ${r.view}`);
+      continue;
+    }
     if (r.kind === "select") {
       if (!r.result.startsWith("ROWS")) fails.push(`${r.role} cannot select ${r.view}: ${r.result}`);
       continue;
     }
     if (r.kind.startsWith("base-")) continue;
     if (!before) {
-      if (r.result !== "42501") fails.push(`${r.role} ${r.kind} on ${r.view}: ${r.result}, expected 42501`);
+      if (r.result.startsWith("ROWS")) fails.push(`${r.role} ${r.kind} on ${r.view} ran: ${r.result}`);
+      else if (r.view === "project_folder_summary" && r.kind !== "truncate" && r.result !== "42501")
+        fails.push(`${r.role} ${r.kind} on project_folder_summary: ${r.result}, expected 42501`);
     } else if (r.view !== "project_folder_summary") {
       if (r.result.startsWith("ROWS")) fails.push(`${r.role} ${r.kind} on ${r.view} ran: ${r.result}`);
     } else if (r.kind === "update" || r.kind === "delete") {
