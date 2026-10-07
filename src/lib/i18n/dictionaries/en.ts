@@ -13,6 +13,8 @@ const en = {
     edit: "Edit",
     delete: "Delete",
     remove: "Remove",
+    // The x on an attached file (blood tests, procedures); the file is deleted.
+    removeFileConfirm: (file: string) => `Remove ${file}? The file is deleted.`,
     retry: "Retry",
     dismiss: "Dismiss",
     close: "Close",

@@ -2,8 +2,9 @@
 
 import { useRef, useState } from "react";
 import { useKeptForm } from "@/lib/use-kept-form";
-import Link from "next/link";
-import { HeartCrack } from "lucide-react";
+import { HeartCrack, X } from "lucide-react";
+import { ActionButton } from "@/components/ActionButton";
+import { ActionLink } from "@/components/ActionLink";
 import { recordDeath } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate } from "@/lib/format";
@@ -129,19 +130,15 @@ export function RecordDeathForm({
         {state?.error && <p className="text-sm text-danger">{state.error}</p>}
 
         <div className="flex items-center gap-3">
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded bg-danger px-4 py-2 text-sm font-medium text-danger-foreground hover:brightness-110 disabled:opacity-50"
-          >
+          <ActionButton type="submit" icon={HeartCrack} variant="danger" disabled={pending}>
             {pending ? d.recording : d.recordButton}
-          </button>
-          <Link
+          </ActionButton>
+          <ActionLink
             href={`/residents/${residentId}`}
-            className="rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
-          >
-            {t.common.cancel}
-          </Link>
+            label={t.common.cancel}
+            icon={X}
+            iconOnlyOnMobile={false}
+          />
         </div>
       </form>
 

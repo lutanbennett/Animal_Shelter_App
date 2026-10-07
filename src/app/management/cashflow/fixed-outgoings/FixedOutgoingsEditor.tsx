@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { formatBaht, formatMonth } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 import { RowActionButton } from "@/components/RowAction";
 import type { FixedOutgoing, FixedOutgoingFields } from "@/lib/management/fixed-outgoings";
 import { createFixedOutgoing, deleteFixedOutgoing, updateFixedOutgoing } from "./actions";
@@ -173,22 +174,17 @@ export function FixedOutgoingsEditor({ lines, max }: { lines: FixedOutgoing[]; m
           />
           {m.form.active}
         </label>
-        <button
-          type="button"
+        <ActionButton
+          icon={editing === NEW ? ACTION_ICONS.add : ACTION_ICONS.save}
+          variant="primary"
           onClick={save}
           disabled={pending}
-          className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
         >
           {pending ? t.common.saving : editing === NEW ? m.form.add : t.common.save}
-        </button>
-        <button
-          type="button"
-          onClick={() => setEditing(null)}
-          disabled={pending}
-          className="rounded border border-border px-4 py-2 text-sm text-foreground hover:bg-surface-hover disabled:opacity-50"
-        >
+        </ActionButton>
+        <ActionButton icon={ACTION_ICONS.clear} onClick={() => setEditing(null)} disabled={pending}>
           {t.common.cancel}
-        </button>
+        </ActionButton>
       </div>
     </div>
   );

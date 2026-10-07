@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { ActionButton } from "@/components/ActionButton";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
 /**
@@ -36,13 +38,9 @@ export function TemporaryPasswordNotice({
         <code className="rounded bg-background px-3 py-1.5 font-mono text-base tracking-wide text-foreground">
           {password}
         </code>
-        <button
-          type="button"
-          onClick={copy}
-          className="rounded border border-border px-3 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground"
-        >
+        <ActionButton icon={ACTION_ICONS.copy} compact onClick={copy}>
           {copied ? s.copied : s.copy}
-        </button>
+        </ActionButton>
       </div>
       <span className="text-xs text-muted">{s.shownOnce}</span>
     </div>

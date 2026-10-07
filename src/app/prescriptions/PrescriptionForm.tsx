@@ -2,6 +2,7 @@
 
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
+import { RowActionButton } from "@/components/RowAction";
 import Link from "next/link";
 import { useState } from "react";
 import { useKeptForm } from "@/lib/use-kept-form";
@@ -145,14 +146,11 @@ export function PrescriptionForm({
                 className={`${inputClass} flex-1`}
               />
               {medications.length > 0 && (
-                <button
-                  type="button"
+                <RowActionButton
+                  icon={ACTION_ICONS.clear}
+                  label={t.prescriptions.chooseExistingMedication}
                   onClick={() => setIsAddingMedication(false)}
-                  title={t.prescriptions.chooseExistingMedication}
-                  className="rounded border border-border px-3 text-sm text-muted hover:bg-surface-hover"
-                >
-                  ×
-                </button>
+                />
               )}
             </div>
             <div className="flex flex-col gap-1">
@@ -252,14 +250,11 @@ export function PrescriptionForm({
                   placeholder={t.prescriptions.newFrequencyPlaceholder}
                   className={`${inputClass} flex-1`}
                 />
-                <button
-                  type="button"
+                <RowActionButton
+                  icon={ACTION_ICONS.clear}
+                  label={t.prescriptions.chooseExistingFrequency}
                   onClick={() => setIsAddingFrequency(false)}
-                  title={t.prescriptions.chooseExistingFrequency}
-                  className="rounded border border-border px-3 text-sm text-muted hover:bg-surface-hover"
-                >
-                  ×
-                </button>
+                />
               </div>
               <span className="text-sm font-medium text-muted">
                 {t.prescriptions.newFrequencySchedule}

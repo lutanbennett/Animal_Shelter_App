@@ -15,6 +15,7 @@ const th: Dictionary = {
     edit: "แก้ไข",
     delete: "ลบ",
     remove: "ลบออก",
+    removeFileConfirm: (file: string) => `ลบ ${file} ออกหรือไม่? ไฟล์จะถูกลบ`,
     retry: "ลองใหม่",
     dismiss: "ปิด",
     close: "ปิด",

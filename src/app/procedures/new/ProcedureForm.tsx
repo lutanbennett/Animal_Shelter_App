@@ -2,6 +2,7 @@
 
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
+import { RowActionButton } from "@/components/RowAction";
 import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createProcedure } from "./actions";
@@ -190,14 +191,11 @@ export function ProcedureForm({
               className={`${inputClass} flex-1`}
             />
             {procedureTypes.length > 0 && (
-              <button
-                type="button"
+              <RowActionButton
+                icon={ACTION_ICONS.clear}
+                label={t.procedures.chooseExistingType}
                 onClick={() => setIsAddingType(false)}
-                title={t.procedures.chooseExistingType}
-                className="rounded border border-border px-3 text-sm text-muted hover:bg-surface-hover"
-              >
-                ×
-              </button>
+              />
             )}
           </div>
         ) : (

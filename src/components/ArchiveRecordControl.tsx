@@ -4,7 +4,9 @@ import { useState, useTransition } from "react";
 import { archiveMedicalRecord, restoreMedicalRecord } from "@/app/residents/[id]/archive-actions";
 import type { MedicalArchiveKind } from "@/lib/medical-archive/kinds";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { X } from "lucide-react";
 import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 import { RowActionButton } from "@/components/RowAction";
 
 const inputClass =
@@ -80,25 +82,21 @@ export function ArchiveRecordControl({
           </label>
           <p className="text-xs text-muted">{a.explain}</p>
           <div className="flex gap-2">
-            <button
-              type="submit"
-              disabled={isPending}
-              className="rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-            >
+            <ActionButton type="submit" icon={ACTION_ICONS.archive} variant="primary" compact disabled={isPending}>
               {a.confirmArchive}
-            </button>
-            <button
-              type="button"
+            </ActionButton>
+            <ActionButton
+              icon={X}
+              compact
               disabled={isPending}
               onClick={() => {
                 setOpen(false);
                 setReason("");
                 setError(null);
               }}
-              className="rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
             >
               {t.common.cancel}
-            </button>
+            </ActionButton>
           </div>
         </form>
       ) : (

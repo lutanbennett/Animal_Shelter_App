@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { ActionButton } from "@/components/ActionButton";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import { LinkedText } from "@/components/LinkedText";
 import { parseBody } from "@/lib/site/body";
 import { useKeptForm } from "@/lib/use-kept-form";
@@ -133,13 +135,9 @@ export function SitePageForm({
       </div>
 
       <form id={formId} onSubmit={onSubmit} className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={pending}
-          className="w-fit rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-        >
+        <ActionButton type="submit" icon={ACTION_ICONS.save} variant="primary" disabled={pending}>
           {pending ? t.common.saving : t.common.saveChanges}
-        </button>
+        </ActionButton>
         {state && !state.ok && (
           <p className="text-sm text-danger">{state.error}</p>
         )}

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, CheckCircle2, ImagePlus, Loader2, RotateCcw, XCircle } from "lucide-react";
+import { ActionButton } from "@/components/ActionButton";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
 type Status = "queued" | "uploading" | "done" | "error";
@@ -189,14 +190,9 @@ export function MedicalPhotoUploader({ residentId }: { residentId: string }) {
                 {item.status === "error" && (
                   <>
                     <span className="break-words text-xs text-red-800">{item.error}</span>
-                    <button
-                      type="button"
-                      onClick={() => retry(item.key)}
-                      className="flex min-h-10 items-center justify-center gap-1 rounded border border-border text-sm font-medium text-foreground"
-                    >
-                      <RotateCcw aria-hidden className="h-4 w-4" />
+                    <ActionButton icon={RotateCcw} compact onClick={() => retry(item.key)}>
                       {p.retry}
-                    </button>
+                    </ActionButton>
                   </>
                 )}
               </li>

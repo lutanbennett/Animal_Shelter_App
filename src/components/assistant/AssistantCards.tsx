@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { X } from "lucide-react";
+import { ActionButton } from "@/components/ActionButton";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
@@ -124,22 +127,17 @@ function Card({
       <p className="text-xs text-muted">{notesStamp}</p>
       {error && <p className="text-sm text-danger">{error}</p>}
       <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
+        <ActionButton
+          icon={ACTION_ICONS.approve}
+          variant="primary"
           onClick={onConfirm}
           disabled={pending || !canConfirm}
-          className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
         >
           {pending ? a.working : a.confirm}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={pending}
-          className="rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-50"
-        >
+        </ActionButton>
+        <ActionButton icon={X} onClick={onCancel} disabled={pending}>
           {t.common.cancel}
-        </button>
+        </ActionButton>
       </div>
     </div>
   );

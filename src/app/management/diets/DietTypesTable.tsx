@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionButton } from "@/components/ActionButton";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -60,9 +61,6 @@ const FIXED_COLUMNS = 8;
 
 const inputClass =
   "w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary";
-
-const smallButton =
-  "rounded border border-border px-2 py-1 text-xs font-medium text-muted hover:bg-surface-hover hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50";
 
 function fieldsOf(row: DietTypeRow): DietTypeFields {
   return {
@@ -318,17 +316,12 @@ function DietTypeRowItem({
           <div className="flex flex-wrap items-center gap-2 md:min-w-[11rem]">
             {editing || counting ? (
               <>
-                <button
-                  type="button"
-                  disabled={isPending}
-                  onClick={editing ? handleSave : handleCount}
-                  className="rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-                >
+                <ActionButton icon={ACTION_ICONS.save} variant="primary" compact disabled={isPending} onClick={editing ? handleSave : handleCount}>
                   {t.common.save}
-                </button>
-                <button type="button" disabled={isPending} onClick={reset} className={smallButton}>
+                </ActionButton>
+                <ActionButton icon={ACTION_ICONS.clear} compact disabled={isPending} onClick={reset}>
                   {t.common.cancel}
-                </button>
+                </ActionButton>
               </>
             ) : (
               <>

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Star, Trash2 } from "lucide-react";
+import { ActionButton } from "@/components/ActionButton";
 import { RowActionButton } from "@/components/RowAction";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import type { ActionResult } from "@/lib/action-result";
@@ -69,13 +70,9 @@ export function PhotoSection({
         <h2 className="text-lg font-semibold text-foreground">
           {p.heading} <span className="text-sm text-muted">({photos.length})</span>
         </h2>
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="shrink-0 rounded border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
-        >
+        <ActionButton icon={open ? ACTION_ICONS.clear : ACTION_ICONS.add} onClick={() => setOpen((v) => !v)}>
           {open ? t.common.close : p.add}
-        </button>
+        </ActionButton>
       </div>
 
       {open && (
@@ -127,15 +124,16 @@ export function PhotoSection({
                     </span>
                   )}
                   {canWrite && (
-                    <button
-                      type="button"
-                      disabled={isPending}
-                      onClick={() => setRemoving(photo)}
-                      aria-label={p.remove}
-                      className="absolute right-1 top-1 inline-flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white hover:bg-danger disabled:opacity-60 md:hidden md:h-9 md:w-9 md:group-hover:inline-flex"
-                    >
-                      <Trash2 aria-hidden="true" className="h-5 w-5 md:h-4 md:w-4" />
-                    </button>
+                    <div className="absolute right-1 top-1 md:hidden md:group-hover:block">
+                      <RowActionButton
+                        icon={Trash2}
+                        tone="overlay"
+                        label={p.remove}
+                        subject={photo.file_name ?? undefined}
+                        disabled={isPending}
+                        onClick={() => setRemoving(photo)}
+                      />
+                    </div>
                   )}
                 </div>
 
@@ -161,21 +159,12 @@ export function PhotoSection({
                         className={inputClass}
                       />
                       <div className="flex justify-end gap-1">
-                        <button
-                          type="button"
-                          onClick={() => setEditing(null)}
-                          disabled={isPending}
-                          className="rounded border border-border px-2 py-0.5 text-xs text-foreground hover:bg-surface-hover disabled:opacity-50"
-                        >
+                        <ActionButton icon={ACTION_ICONS.clear} compact onClick={() => setEditing(null)} disabled={isPending}>
                           {t.common.cancel}
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={isPending}
-                          className="rounded bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-                        >
+                        </ActionButton>
+                        <ActionButton type="submit" icon={ACTION_ICONS.save} variant="primary" compact disabled={isPending}>
                           {t.common.save}
-                        </button>
+                        </ActionButton>
                       </div>
                     </form>
                   ) : (

@@ -41,10 +41,10 @@ export function UndoButton({ id, confirmText, words }: { id: number; confirmText
     <div className="mt-1 rounded border border-border bg-surface p-2 text-xs">
       <p className="text-foreground">{confirmText}</p>
       <div className="mt-2 flex gap-3">
-        <button
-          type="button"
+        <ActionButton
+          compact
+          icon={ACTION_ICONS.undo}
           disabled={pending}
-          className="rounded border border-border px-2 py-1 font-medium text-foreground hover:bg-surface-hover disabled:opacity-50"
           onClick={() =>
             start(async () => {
               const r = await undoChange(id);
@@ -54,10 +54,10 @@ export function UndoButton({ id, confirmText, words }: { id: number; confirmText
           }
         >
           {pending ? words.working : words.yes}
-        </button>
-        <button type="button" disabled={pending} className="underline" onClick={() => setAsking(false)}>
+        </ActionButton>
+        <ActionButton compact icon={ACTION_ICONS.clear} disabled={pending} onClick={() => setAsking(false)}>
           {words.cancel}
-        </button>
+        </ActionButton>
       </div>
       {error && (
         <p role="alert" className="mt-2 text-danger">

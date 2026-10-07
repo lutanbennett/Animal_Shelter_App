@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { CalendarClock, UserRound } from "lucide-react";
 import { ActionButton } from "@/components/ActionButton";
 import { ActionLink } from "@/components/ActionLink";
+import { RowActionButton } from "@/components/RowAction";
 import { ACTION_ICONS, ENCLOSURE_ICONS } from "@/components/hub-icons";
 import { AttachmentUploader } from "@/components/AttachmentUploader";
 import { TranslationPanel } from "@/components/TranslationPanel";
@@ -96,7 +97,8 @@ export function MaintenanceJobView({
     });
   }
 
-  function removeAttachment(attachmentId: string) {
+  async function removeAttachment(attachmentId: string, fileName: string) {
+    if (!await confirm({ body: t.common.removeFileConfirm(fileName), confirmLabel: t.common.remove })) return;
     setError(null);
     startTransition(async () => {
       const result = await deleteMaintenanceAttachment(job.id, attachmentId);
@@ -339,7 +341,7 @@ function PhotoSection({
   attachments: MaintenanceAttachment[];
   canRemove: boolean;
   disabled: boolean;
-  onRemove: (attachmentId: string) => void;
+  onRemove: (attachmentId: string, fileName: string) => Promise<void>;
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -395,15 +397,18 @@ function PhotoSection({
                   )}
                 </a>
                 {canRemove && (
-                  <button
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => onRemove(attachment.id)}
-                    aria-label={t.common.remove}
-                    className="absolute right-1 top-1 rounded-full bg-black/60 px-1.5 text-xs text-white hover:bg-danger disabled:opacity-60 md:hidden md:group-hover:block"
-                  >
-                    &times;
-                  </button>
+                  <div className="absolute right-1 top-1 md:hidden md:group-hover:block">
+                    <RowActionButton
+                      icon={ACTION_ICONS.clear}
+                      tone="overlay"
+                      label={t.common.remove}
+                      subject={attachment.file_name ?? t.maintenance.detail.fileFallback}
+                      disabled={disabled}
+                      onClick={() =>
+                        void onRemove(attachment.id, attachment.file_name ?? t.maintenance.detail.fileFallback)
+                      }
+                    />
+                  </div>
                 )}
               </div>
             );

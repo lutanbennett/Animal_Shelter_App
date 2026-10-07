@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useKeptForm } from "@/lib/use-kept-form";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { RowActionButton } from "@/components/RowAction";
 import { recordIntake } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { localizedValidity } from "@/lib/i18n/validity";
@@ -436,14 +438,11 @@ export function IntakeForm({
                     placeholder={t.residents.new.fields.newOriginPlaceholder}
                     className={`${inputClass} flex-1`}
                   />
-                  <button
-                    type="button"
+                  <RowActionButton
+                    icon={ACTION_ICONS.clear}
+                    label={t.residents.new.fields.chooseExistingOrigin}
                     onClick={() => setIsAddingOrigin(false)}
-                    title={t.residents.new.fields.chooseExistingOrigin}
-                    className="rounded border border-border px-3 text-sm text-muted hover:bg-surface-hover"
-                  >
-                    ×
-                  </button>
+                  />
                 </div>
               ) : (
                 <select

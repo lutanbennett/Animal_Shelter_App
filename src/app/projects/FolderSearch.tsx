@@ -39,14 +39,14 @@ export function FolderSearch({ initialQuery }: { initialQuery: string }) {
         onChange={(e) => setValue(e.target.value)}
         placeholder={t.projects.search.placeholder}
         aria-label={t.projects.search.placeholder}
-        className="w-full rounded border border-border bg-background py-2 pl-8 pr-8 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+        className="w-full rounded border border-border bg-background py-2 pl-8 pr-11 text-sm md:pr-8 text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
       />
       {value && (
         <button
           type="button"
           onClick={() => setValue("")}
           aria-label={t.projects.search.clear}
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted hover:text-foreground"
+          className="absolute right-0 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded text-muted hover:text-foreground md:h-8 md:w-8"
         >
           <X aria-hidden="true" className="h-4 w-4" />
         </button>

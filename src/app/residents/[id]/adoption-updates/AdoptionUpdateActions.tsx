@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { X } from "lucide-react";
+import { ActionButton } from "@/components/ActionButton";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { RowActionButton, RowActionLink } from "@/components/RowAction";
@@ -43,22 +45,12 @@ export function AdoptionUpdateActions({
       {confirming ? (
         <div className="flex flex-wrap items-center justify-end gap-2">
           <span className="text-xs text-foreground">{a.deleteConfirm(photoCount)}</span>
-          <button
-            type="button"
-            disabled={pending}
-            onClick={handleDelete}
-            className="rounded bg-danger px-2 py-1 text-xs font-medium text-danger-foreground hover:brightness-110 disabled:opacity-60"
-          >
+          <ActionButton icon={ACTION_ICONS.delete} variant="danger" compact disabled={pending} onClick={handleDelete}>
             {pending ? a.deleting : a.confirmDelete}
-          </button>
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() => setConfirming(false)}
-            className="rounded border border-border px-2 py-1 text-xs font-medium text-foreground hover:bg-surface-hover"
-          >
+          </ActionButton>
+          <ActionButton icon={X} compact disabled={pending} onClick={() => setConfirming(false)}>
             {t.common.cancel}
-          </button>
+          </ActionButton>
         </div>
       ) : (
         <div className="flex gap-2">

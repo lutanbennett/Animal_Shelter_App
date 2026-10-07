@@ -2,10 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Paperclip } from "lucide-react";
+import { Paperclip, X } from "lucide-react";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { deleteBloodTestAttachment } from "@/app/residents/[id]/blood-tests/actions";
+import { ActionButton } from "@/components/ActionButton";
 import { AttachmentUploader } from "@/components/AttachmentUploader";
+import { useConfirm } from "@/components/ConfirmProvider";
+import { RowActionButton } from "@/components/RowAction";
 import { FileTypeIcon } from "@/components/FileTypeIcon";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { fileKind } from "@/lib/uploads/file-kind";
@@ -44,9 +47,11 @@ export function BloodTestList({
   const { t, locale } = useI18n();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const confirm = useConfirm();
   const [attachingTo, setAttachingTo] = useState<string | null>(null);
 
-  function removeAttachment(attachmentId: string) {
+  async function removeAttachment(attachmentId: string, fileName: string) {
+    if (!await confirm({ body: t.common.removeFileConfirm(fileName), confirmLabel: t.common.remove })) return;
     startTransition(async () => {
       const result = await deleteBloodTestAttachment(residentId, attachmentId);
       if (result.ok) router.refresh();
@@ -120,15 +125,19 @@ export function BloodTestList({
                         )}
                       </a>
                       {!readOnly && (
-                        <button
-                          type="button"
-                          disabled={isPending}
-                          onClick={() => removeAttachment(attachment.id)}
-                          aria-label={t.common.remove}
-                          className="absolute right-0.5 top-0.5 hidden rounded-full bg-black/60 px-1.5 text-xs text-white hover:bg-danger group-hover:block disabled:opacity-60"
-                        >
-                          &times;
-                        </button>
+                        // Always shown on a phone (there is no hover); on hover with a mouse.
+                        <div className="absolute right-0.5 top-0.5 md:hidden md:group-hover:block">
+                          <RowActionButton
+                            icon={X}
+                            tone="overlay"
+                            label={t.common.remove}
+                            subject={attachment.file_name ?? t.bloodTests.fileFallback}
+                            disabled={isPending}
+                            onClick={() =>
+                              void removeAttachment(attachment.id, attachment.file_name ?? t.bloodTests.fileFallback)
+                            }
+                          />
+                        </div>
                       )}
                     </div>
                 );
@@ -147,23 +156,18 @@ export function BloodTestList({
                   hint={t.bloodTests.uploader.hint}
                   onUploaded={() => router.refresh()}
                 />
-                <button
-                  type="button"
-                  onClick={() => setAttachingTo(null)}
-                  className="self-start text-xs font-medium text-muted hover:text-foreground"
-                >
-                  {t.common.close}
-                </button>
+                <div className="self-start">
+                  <ActionButton icon={X} compact onClick={() => setAttachingTo(null)}>
+                    {t.common.close}
+                  </ActionButton>
+                </div>
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={() => setAttachingTo(test.id)}
-                className="flex items-center gap-1.5 self-start text-xs font-medium text-primary hover:underline"
-              >
-                <Paperclip aria-hidden="true" className="h-3.5 w-3.5" />
-                {t.bloodTests.attachFiles}
-              </button>
+              <div className="self-start">
+                <ActionButton icon={Paperclip} compact onClick={() => setAttachingTo(test.id)}>
+                  {t.bloodTests.attachFiles}
+                </ActionButton>
+              </div>
             ))}
           </li>
         );

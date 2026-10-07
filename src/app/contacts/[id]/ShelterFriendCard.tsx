@@ -146,14 +146,16 @@ export function ShelterFriendCard({
       <section className="flex flex-col gap-3 rounded-lg border border-dashed border-border bg-surface p-5">
         <h2 className="text-lg font-semibold text-foreground">{c.heading}</h2>
         <p className="text-sm text-muted">{c.intro}</p>
-        <button
-          type="button"
-          disabled={isPending}
-          onClick={() => run(() => createFriend(contact.id), () => setEditing(true))}
-          className="self-start rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-        >
-          {isPending ? c.making : c.make}
-        </button>
+        <div className="self-start">
+          <ActionButton
+            icon={ACTION_ICONS.add}
+            variant="primary"
+            disabled={isPending}
+            onClick={() => run(() => createFriend(contact.id), () => setEditing(true))}
+          >
+            {isPending ? c.making : c.make}
+          </ActionButton>
+        </div>
         {feedback}
       </section>
     );
@@ -527,13 +529,14 @@ export function ShelterFriendCard({
           </fieldset>
 
           <div className="flex flex-wrap items-center gap-2">
-            <button
+            <ActionButton
               type="submit"
+              icon={ACTION_ICONS.save}
+              variant="primary"
               disabled={isPending || Boolean(websiteError || facebookError)}
-              className="rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
             >
               {isPending ? t.common.saving : t.common.save}
-            </button>
+            </ActionButton>
             <button
               type="button"
               disabled={isPending}

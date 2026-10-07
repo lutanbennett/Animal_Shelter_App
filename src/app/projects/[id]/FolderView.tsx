@@ -142,12 +142,12 @@ export function FolderView({
               </label>
             </div>
             <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setMode("view")} disabled={isPending} className="rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-50">
+              <ActionButton icon={ACTION_ICONS.clear} onClick={() => setMode("view")} disabled={isPending}>
                 {t.common.cancel}
-              </button>
-              <button type="submit" disabled={isPending} className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50">
+              </ActionButton>
+              <ActionButton type="submit" icon={ACTION_ICONS.save} variant="primary" disabled={isPending}>
                 {isPending ? t.common.saving : t.common.save}
-              </button>
+              </ActionButton>
             </div>
           </form>
         ) : (
@@ -280,12 +280,12 @@ export function FolderView({
                     </span>
                   </label>
                   <div className="flex justify-end gap-2">
-                    <button type="button" onClick={() => setMode("view")} disabled={isPending} className="rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-50">
+                    <ActionButton icon={ACTION_ICONS.clear} onClick={() => setMode("view")} disabled={isPending}>
                       {t.common.cancel}
-                    </button>
-                    <button type="submit" disabled={isPending} className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50">
+                    </ActionButton>
+                    <ActionButton type="submit" icon={ACTION_ICONS.save} variant="primary" disabled={isPending}>
                       {isPending ? t.common.saving : t.common.save}
-                    </button>
+                    </ActionButton>
                   </div>
                 </form>
               ) : (

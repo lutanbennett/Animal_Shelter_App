@@ -3,7 +3,10 @@
 import { useCallback, useRef, useState, type ReactNode, type RefObject } from "react";
 import Link from "next/link";
 import { Camera, X } from "lucide-react";
+import { ActionButton } from "@/components/ActionButton";
 import { uploadAttachmentFile } from "@/components/AttachmentUploader";
+import { ACTION_ICONS } from "@/components/hub-icons";
+import { RowActionButton } from "@/components/RowAction";
 import { FileTypeIcon } from "@/components/FileTypeIcon";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { fileKind } from "@/lib/uploads/file-kind";
@@ -209,25 +212,25 @@ export function PendingFileList({
             <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1 bg-black/70 p-1.5">
               <span className="line-clamp-2 text-xs text-danger">{item.error}</span>
               {onRetry && (
-                <button
-                  type="button"
-                  onClick={() => onRetry(item)}
-                  className="rounded bg-surface px-2 py-1 text-xs font-medium text-foreground hover:bg-surface-hover"
-                >
-                  {t.common.retry}
-                </button>
+                // The surface behind it keeps the button readable on the dark overlay.
+                <div className="flex rounded bg-surface [&>button]:flex-1">
+                  <ActionButton icon={ACTION_ICONS.refresh} compact onClick={() => onRetry(item)}>
+                    {t.common.retry}
+                  </ActionButton>
+                </div>
               )}
             </div>
           )}
           {onRemove && item.status === "queued" && (
-            <button
-              type="button"
-              onClick={() => onRemove(item.key)}
-              aria-label={t.uploads.removeFile}
-              className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white hover:bg-danger"
-            >
-              <X aria-hidden="true" className="h-3.5 w-3.5" />
-            </button>
+            <div className="absolute right-1 top-1">
+              <RowActionButton
+                icon={X}
+                tone="overlay"
+                label={t.uploads.removeFile}
+                subject={item.file.name}
+                onClick={() => onRemove(item.key)}
+              />
+            </div>
           )}
         </li>
       ))}

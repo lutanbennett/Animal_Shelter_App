@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, type ComponentProps } from "react";
+import { ActionButton } from "@/components/ActionButton";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
 type InputProps = Omit<ComponentProps<"input">, "type" | "value" | "defaultValue" | "onChange" | "required">;
@@ -54,14 +56,9 @@ export function OptionalDateInput({
         className={`min-w-0 flex-1 ${className ?? ""}`}
       />
       {current !== "" && !rest.disabled && (
-        <button
-          type="button"
-          onClick={() => change("")}
-          aria-label={t.common.clearDateLabel(label)}
-          className="shrink-0 rounded border border-border px-3 py-2 text-sm text-muted hover:bg-surface-hover hover:text-foreground"
-        >
+        <ActionButton icon={ACTION_ICONS.clear} onClick={() => change("")} aria-label={t.common.clearDateLabel(label)}>
           {t.common.clearDate}
-        </button>
+        </ActionButton>
       )}
     </div>
   );
