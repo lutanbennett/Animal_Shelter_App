@@ -232,6 +232,21 @@ body {
   }
 }
 
+/* iPhone Safari zooms the page in when a text box, select or textarea under
+   16 px is focused, and the zoomed page then scrolls sideways (Notes box,
+   2026-10-07). Fixed once here rather than in every form. Deliberately NOT in
+   @layer base: Tailwind v4 puts utilities above base, so a field carrying
+   `text-sm` would keep its 14 px; an unlayered rule beats every layer. Below
+   md only — 768 px matches Tailwind's md, and desktop keeps its denser type.
+   Checkboxes, radios, files, ranges and buttons never trigger the zoom. */
+@media (max-width: 767.98px) {
+  textarea,
+  select,
+  input:not([type="checkbox"], [type="radio"], [type="file"], [type="range"], [type="color"], [type="button"], [type="submit"], [type="reset"], [type="image"], [type="hidden"]) {
+    font-size: 16px;
+  }
+}
+
 /* Puppy loader (src/components/PuppyLoader.tsx). The puppy's own colours are
    fixed — fur is fur, and the orange pyjamas are the reference's — while
    the laptop, screen and progress bar come from the site tokens, so the
