@@ -50,7 +50,7 @@ export async function AppHeader() {
         : null;
 
   return (
-    <header className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 md:px-6">
+    <header className="flex items-start justify-between sm:items-center border-b border-border bg-surface px-4 py-3 md:px-6">
       <div className="flex items-center gap-3">
         <MobileNavToggle />
         {/* The logo is the way to the public website (it left the nav
@@ -88,10 +88,15 @@ export async function AppHeader() {
       </div>
       {/* Tighter on a phone: this row gained the assistant button, and at
           375px the old gap-4 pushed "Sign out" off the edge. */}
-      <div className="flex items-center gap-2 sm:gap-4">
+      <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-x-2 gap-y-1 sm:flex-none sm:flex-nowrap sm:gap-4">
         {can(perms, "assistant.ask") && <AssistantPanel />}
         <LanguageSwitcher />
-        <AccountMenu name={userNameOf(user)} role={roleName} email={user.email ?? "—"} />
+        <AccountMenu
+          name={userNameOf(user)}
+          role={roleName}
+          email={user.email ?? "—"}
+          className="order-last flex basis-full justify-end sm:order-none sm:basis-auto"
+        />
         <SignOutButton iconOnPhone />
       </div>
     </header>

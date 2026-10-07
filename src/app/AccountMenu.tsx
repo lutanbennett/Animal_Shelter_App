@@ -18,12 +18,15 @@ export function AccountMenu({
   name,
   role,
   email,
+  className = "",
 }: {
   /** The login's name, or null when it has none (the email stands in). */
   name: string | null;
   /** The role as its display name, in the page's language. */
   role: string | null;
   email: string;
+  /** Where the header puts it: below sm it sits on its own row (a name and role will not fit beside the buttons at 375 px). */
+  className?: string;
 }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
@@ -49,7 +52,7 @@ export function AccountMenu({
   const label = role ? `${who} · ${role}` : who;
 
   return (
-    <div ref={root} className="relative min-w-0">
+    <div ref={root} className={`relative min-w-0 ${className}`}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -57,7 +60,7 @@ export function AccountMenu({
         aria-haspopup="true"
         aria-label={`${t.header.accountMenu}: ${label}`}
         title={label}
-        className="flex max-w-[7.5rem] items-center gap-1 rounded text-sm text-muted hover:text-foreground sm:max-w-[16rem]"
+        className="flex max-w-full items-center gap-1 rounded text-sm text-muted hover:text-foreground sm:max-w-[16rem]"
       >
         <span className="truncate">{label}</span>
         <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0" />
