@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Tapping a text box or a drop-down on a phone no longer zooms the page in on an iPhone. Every box on every form now uses a size Safari leaves alone, so the page stays put and does not slide sideways after you tap.",
   "Enclosures → Map now shows the Medical room, the Kitchen and Storage as blue dashed shapes with their names, so you can see where they are; tapping one shows its name and opens nothing. The Director places them under Settings → Facility map.",
   { text: "Settings → Website → Home page now has Impact figures: enter how many animals were rehomed, and how many village sterilisations were done, before the system began, with the date that is true up to. The home page then shows that number plus every adoption recorded since, marked \"About\" with a note that the early part is an estimate. A figure with nothing entered is not shown, and every change is kept in Recent changes.", roles: ["admin"] },
   "The Notes boxes on the resident forms (Rehome / foster, Return to shelter, Move, Send to hospital, Return from hospital, Record a death, Undo a death, Adoption updates, Edit a resident and Add a resident) are now taller on a phone, so they look like somewhere to write a sentence, and tapping into one no longer zooms the page in and lets it scroll sideways on an iPhone.",
