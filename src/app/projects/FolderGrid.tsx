@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Folder, FolderPlus, Globe, Image as ImageIcon } from "lucide-react";
+import { Folder, FolderPlus, Globe, Image as ImageIcon, X } from "lucide-react";
+import { ActionButton } from "@/components/ActionButton";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { projectCategoryLabel } from "@/lib/i18n/enum-labels";
@@ -164,24 +165,20 @@ export function NewFolderCard({ parentId }: { parentId: string }) {
       </label>
       {error && <p className="text-xs text-danger">{error}</p>}
       <div className="flex justify-end gap-2">
-        <button
-          type="button"
+        <ActionButton
+          icon={X}
+          compact
           onClick={() => {
             setOpen(false);
             setError(null);
           }}
           disabled={isPending}
-          className="rounded border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-surface-hover disabled:opacity-50"
         >
           {t.common.cancel}
-        </button>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
-        >
+        </ActionButton>
+        <ActionButton type="submit" icon={FolderPlus} variant="primary" compact disabled={isPending}>
           {isPending ? t.common.creating : f.create}
-        </button>
+        </ActionButton>
       </div>
     </form>
   );
