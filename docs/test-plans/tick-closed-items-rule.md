@@ -8,7 +8,7 @@
 | Backlog item | none: the rule came out of the 2026-10-07 backlog staleness sweep, and this PR reviews it after the fact |
 | Branch / worktree | `claude/tick-closed-items-rule` @ `C:\Development\Animal_Shelter_tick-closed-items-rule` |
 | Dev server | n/a: documentation only; no page is served |
-| PR | opened from this branch |
+| PR | #440 |
 | Tested by / date | Claude, 2026-10-07 |
 | Carries a migration? | no |
 | Tested at SHA | `04fe6fc8` (tip of `origin/main` after sync) plus this branch's docs commit |
@@ -24,7 +24,7 @@
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly, pushed, exit 0
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them. Run on `04fe6fc8` (synced `origin/main`); every commit on this branch touches only Markdown (`CLAUDE.md`, the decision file, this plan), which no gate reads
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: #440, all 7 checks passed on `29dfa3f8`
 
 ```
 === gates: typecheck exited 0 after 55s
@@ -152,7 +152,7 @@ Manual verification by: pending: Lutan to read the decision file and the new CLA
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [ ] Checklist pasted into the PR — n/a: the plan is in this PR's diff at `docs/test-plans/tick-closed-items-rule.md`; documentation only, nothing for the release manager to deploy
 - [ ] Handed to the production release manager — n/a: documentation only; nothing to deploy
 
 Result: pass
