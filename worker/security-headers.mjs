@@ -6,15 +6,18 @@
 // header set in next.config.ts would vanish exactly when the site is
 // degraded. docs/decisions/2026-09-30-security-headers-in-the-worker.md.
 
-// Report-only until a quiet week has shown nothing legitimate is blocked.
-// Broader than `default-src 'self'` alone because a policy that would flag
-// every page's own inline scripts and Supabase calls would bury real hits:
-// Next.js emits inline bootstrap scripts and styles, and the browser talks
-// to Supabase directly. Violations are reported to /api/csp-report, which the
-// Worker answers itself and logs (worker/csp-report.mjs): report-uri for
-// browsers that only know the old mechanism, report-to + Reporting-Endpoints
-// for the rest.
-export const CSP_REPORT_ONLY = [
+// Enforced since 2026-10-07, after a week of report-only collection showed one
+// blocked thing: Cloudflare's Web Analytics beacon, which the site never chose
+// to load (the dashboard's visitor counts come from Cloudflare's zone totals,
+// not from a script) and which /privacy's "no analytics tracking" rules out.
+// docs/decisions/2026-10-07-csp-enforced.md.
+// Broader than `default-src 'self'` alone because Next.js emits inline
+// bootstrap scripts and styles and the browser talks to Supabase directly, so
+// 'unsafe-inline' stays and `*.supabase.co` is allowed. Violations are still
+// reported to /api/csp-report, which the Worker answers itself and logs
+// (worker/csp-report.mjs): report-uri for browsers that only know the old
+// mechanism, report-to + Reporting-Endpoints for the rest.
+export const CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
@@ -40,7 +43,7 @@ export const SECURITY_HEADERS = {
   // ours to commit to HTTPS-only for a year from here.
   "strict-transport-security": "max-age=15552000",
   "reporting-endpoints": 'csp="/api/csp-report"',
-  "content-security-policy-report-only": CSP_REPORT_ONLY,
+  "content-security-policy": CSP,
 };
 
 /** A copy of `response` with the security headers set. */
