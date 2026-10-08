@@ -29,7 +29,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [x] CI green on the PR: all 7 checks passed on #467 at `bb6fdaa`
+- [x] CI green on the PR: all 7 checks passed on #467 at `18c664a9`
 
 ## 3. Schema and data — *skip if no migration*
 
