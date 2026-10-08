@@ -5029,6 +5029,10 @@ const en = {
     clearHint: "To remove the Thai, empty the box and press Save.",
     openScreen: "Where it's used",
     noScreen: "Its own list is not one you can open. Translating it here is enough.",
+    thaiName: "Thai name",
+    thaiNameHint: "What Thai readers see. Leave it empty and they see the English until someone translates it here or on Translations.",
+    thaiNameOptionalHint: "Only if it reads differently in Thai. A drug, brand or clinic name usually doesn't, and is shown as typed.",
+    thaiAlt: "Thai description",
     status: {
       pending: "Needs translation",
       draft: "Draft — not yet approved",

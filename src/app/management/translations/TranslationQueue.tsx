@@ -13,12 +13,12 @@ import {
   sortGroups,
   type LabelItem,
   type LabelStatus,
+  type Show,
+  SHOWS,
 } from "@/lib/translations/labels";
 import { fieldKey, type TranslationQueueRow, type TranslationRow, type TranslationStatus } from "@/lib/translations/types";
 import { saveLabelTranslation } from "./actions";
 
-export type Show = "missing" | "stale" | "all";
-export const SHOWS: Show[] = ["missing", "stale", "all"];
 
 /** Missing = nobody has written it yet (a draft is not written by a person). */
 const PROSE_MISSING: TranslationStatus[] = ["pending", "draft"];

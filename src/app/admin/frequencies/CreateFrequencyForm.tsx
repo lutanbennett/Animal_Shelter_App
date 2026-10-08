@@ -44,6 +44,12 @@ export function CreateFrequencyForm() {
         />
       </div>
       <div className="flex flex-col gap-1">
+        <label htmlFor="labelTh" className="text-sm font-medium text-muted">
+          {t.translations.thaiName}
+        </label>
+        <input id="labelTh" name="labelTh" lang="th" className="w-64 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+      <div className="flex flex-col gap-1">
         <span className="text-sm font-medium text-muted">{f.createForm.schedule}</span>
         <FrequencyScheduleFields value={schedule} onChange={setSchedule} idPrefix="new-frequency" />
         <span className="text-xs text-muted">{f.createForm.scheduleHint}</span>

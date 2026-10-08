@@ -12,6 +12,7 @@ import { formatBahtPrice, parseBahtAmount } from "@/lib/format";
 export type ImmunizationTypeRow = {
   id: string;
   name: string;
+  name_th: string | null;
   is_mandatory: boolean;
   interval_months: number | null;
   /** Baht for one dose (0071). Null means nobody has priced it yet. */
@@ -26,6 +27,7 @@ function ImmunizationTypeRowItem({
   const { t, locale } = useI18n();
   const confirm = useConfirm();
   const [name, setName] = useState(immunizationType.name);
+  const [nameTh, setNameTh] = useState(immunizationType.name_th ?? "");
   const [isMandatory, setIsMandatory] = useState(immunizationType.is_mandatory);
   const [intervalMonths, setIntervalMonths] = useState(
     immunizationType.interval_months?.toString() ?? "",
@@ -63,6 +65,7 @@ function ImmunizationTypeRowItem({
     startTransition(async () => {
       const result = await updateImmunizationType(immunizationType.id, {
         name,
+        nameTh,
         isMandatory,
         intervalMonths: parsedInterval,
         cost: parsedCost.value,
@@ -93,13 +96,30 @@ function ImmunizationTypeRowItem({
       <tr className="align-top hover:bg-surface-hover">
         <td className="px-4 py-2">
           {editing ? (
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-40 rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary"
-            />
+            <div className="flex flex-col gap-1">
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-40 rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary"
+              />
+              <input
+                value={nameTh}
+                onChange={(e) => setNameTh(e.target.value)}
+                placeholder={t.translations.thaiName}
+                aria-label={t.translations.thaiName}
+                lang="th"
+                className="w-40 rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary"
+              />
+            </div>
           ) : (
-            <span className="text-foreground">{immunizationType.name}</span>
+            <div className="flex flex-col">
+              <span className="text-foreground">{immunizationType.name}</span>
+              {immunizationType.name_th && (
+                <span lang="th" className="text-sm text-foreground">
+                  {immunizationType.name_th}
+                </span>
+              )}
+            </div>
           )}
         </td>
         <td className="px-4 py-2">
@@ -180,6 +200,7 @@ function ImmunizationTypeRowItem({
                   onClick={() => {
                     setEditing(false);
                     setName(immunizationType.name);
+                    setNameTh(immunizationType.name_th ?? "");
                     setIsMandatory(immunizationType.is_mandatory);
                     setIntervalMonths(
                       immunizationType.interval_months?.toString() ?? "",

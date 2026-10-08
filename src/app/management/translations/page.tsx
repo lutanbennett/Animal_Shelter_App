@@ -1,8 +1,8 @@
 import { getT } from "@/lib/i18n/get-t";
 import { loadTranslationQueue } from "@/lib/translations/queries";
-import { labelPath, loadLabelTranslations, localLabel, type LabelItem, type LabelRow } from "@/lib/translations/labels";
+import { labelPath, loadLabelTranslations, localLabel, SHOWS, type LabelItem, type LabelRow, type Show } from "@/lib/translations/labels";
 import { placeName } from "@/lib/enclosures/names";
-import { TranslationQueue, SHOWS, type Show } from "./TranslationQueue";
+import { TranslationQueue } from "./TranslationQueue";
 import { requirePermission } from "@/lib/permissions/require";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Locale } from "@/lib/i18n/locales";

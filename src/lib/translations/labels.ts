@@ -161,3 +161,7 @@ export function localLabel(
   if (locale === "th" && thai?.trim()) return thai.trim();
   return english ?? "";
 }
+
+/** The page's filters (`?show=`): what nobody has written, what is out of date, everything. */
+export type Show = "missing" | "stale" | "all";
+export const SHOWS: Show[] = ["missing", "stale", "all"];

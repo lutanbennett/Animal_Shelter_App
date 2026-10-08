@@ -21,6 +21,8 @@ export type DietTypeFormState = ActionResult<{ success: string }> | undefined;
 /** The option-list columns of a diet type, as strings from a form or a row editor. */
 export type DietDefinitionFields = {
   name: string;
+  /** Empty: Thai readers see the English (0166). */
+  nameTh: string;
   unit: string;
   dailyQtySmall: string;
   dailyQtyMedium: string;
@@ -30,6 +32,7 @@ export type DietDefinitionFields = {
 
 type DietDefinitionRow = {
   name: string;
+  name_th: string | null;
   unit: DietUnit;
   daily_qty_small: number;
   daily_qty_medium: number;
@@ -73,6 +76,7 @@ function fieldsFromForm(formData: FormData): DietDefinitionFields {
   const get = (key: string) => optional(formData.get(key)) ?? "";
   return {
     name: get("name"),
+    nameTh: get("nameTh"),
     unit: get("unit"),
     dailyQtySmall: get("dailyQtySmall"),
     dailyQtyMedium: get("dailyQtyMedium"),
@@ -102,6 +106,7 @@ function parseFields(
   return {
     row: {
       name,
+      name_th: optional(fields.nameTh),
       unit,
       daily_qty_small: quantities[0],
       daily_qty_medium: quantities[1],
