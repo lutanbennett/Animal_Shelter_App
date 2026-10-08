@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **A colour for each zone, shown as a coloured dot beside its name** (left open, status note added) |
 | Branch / worktree | `claude/zone-colour-schema` @ `C:\Development\Animal_Shelter_zone-colour-schema` |
 | Dev server | not started — no UI surface in this PR |
-| PR | opened from this branch |
+| PR | #456 |
 | Tested by / date | Claude / 2026-10-08 |
 | Carries a migration? | yes — `0162_zone_colour.sql` |
 | Tested at SHA | `95fa1b25` (after sync with `origin/main` `a9b8e6f6`) |
@@ -31,14 +31,14 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — all 7 checks passing on #456, read from the PR status before merging
 
 ## 3. Schema and data — *skip if no migration*
 
 - [x] Migration number is one above the highest on `main`, and no other in-flight branch carries one — `check-migration-numbers.mjs`: ok, `0162` against highest `0161`; the brief names this as the batch's only migration stream
 - [x] `node scripts/apply-migrations.mjs --status` reviewed before applying — dev 161 applied, 0 pending, no drift against `origin/main`
 - [x] `node scripts/apply-migrations.mjs --dry-run` reviewed — first run flagged the four views as lacking restated grants; grants restated as they stand, second run `ok`
-- [ ] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations` — n/a: not yet — per the brief it is applied from this branch only when Lutan says merge, and this line is ticked in that commit
+- [x] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations` — applied from this branch on Lutan’s "merge it", 2026-10-08: `applying 0162_zone_colour.sql … ok`; `--status` then 162 applied rows, the one extra being `0162`
 - [x] File is re-runnable — the harness below ran the whole file **twice** in one transaction before asserting
 - [x] Existing rows still read correctly after the change — the four views were rewritten from their **live** definitions (`pg_get_viewdef` on dev), column for column; `resident_list_view` now joins `private.resident_current_state`, which differs from the 0058 file text, and the rewrite follows the live one. `check-view-write-grants.mjs --with 0162`: 292 statements, 0 failed, every select still works for every role
 - [x] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness on dev. Asserted: grants on the four views identical before and after (from `information_schema.role_table_grants`); `resident_list_view` keeps `security_invoker=on`; a real zone accepts `#1E88e5`, null and `#1e88e5`; rejects `blue` and `#fff` with `check_violation`; the Lifecycle zone refuses a colour with "takes no colour"; renaming Lifecycle to itself (no colour) still passes the trigger; `resident_list_view.zone_colour` returns the set value for that zone's residents; `zone_colour` selectable from the other three views. Result: `ALL PASSED (rolled back)`
