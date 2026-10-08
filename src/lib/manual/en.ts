@@ -52,9 +52,9 @@ const manual: Manual = {
   },
   roleSummary: {
     admin:
-      "Everything, including the Settings section (users, website, zones, enclosures, immunization and procedure types, frequencies) and the Management section.",
+      "Everything, including the Settings section (users, zones, enclosures, immunization and procedure types, frequencies) and the Management section.",
     management:
-      "Everything staff can do, plus the Management section: the reporting dashboard, the contact, vet, medication and diet lists, and the translations of public text.",
+      "Everything staff can do, plus the Management section: the reporting dashboard, the public website, the contact, vet, medication and diet lists, and the translations of public text.",
     staff:
       "Day-to-day resident work: intake, moves, hospital, foster and adoption, photos, maintenance, projects. Can read medical records.",
     vet: "Vet visits, procedures, blood tests, prescriptions and immunizations, for the residents their own clinic treats — any resident the clinic has a visit, prescription, procedure or blood test for, with that resident's whole history. Other residents are not shown at all. The menu is Appointments and Residents only — the shelter's enclosures, maintenance, projects, contacts and vet list are not part of a vet's access.",
@@ -1533,7 +1533,7 @@ const manual: Manual = {
         {
           id: "website",
           title: "The public website",
-          roles: ["admin"],
+          roles: ["admin", "management"],
           activity: "website.content",
           path: "Management → Website",
           steps: [
