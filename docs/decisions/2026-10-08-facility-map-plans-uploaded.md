@@ -119,7 +119,7 @@ skipping the field lookup, and `facility_maps` has no `name`, so **every insert 
 `record "new" has no field "name"` — on `main`, before this branch, through the old file-name *Add a plan* too.
 Replacing a plan (an update of `image_path`) and adding the overview (no `zone_id`) are unaffected. The fix is a
 nested `if` in a new migration, which this stream may not write. Lutan (2026-10-08): it goes into the schema PR
-already in flight, #463 (`claude/contacts-address-map-schema`, `0164`, commit `ace66c3c`: the name check now sits inside the zones branch; tested on dev in a rollback, before and after). Until that is applied, *Add a plan* for a
+already in flight, #463 (`claude/contacts-address-map-schema`, `0164`, commit `ace66c3c`: the name check now sits inside the zones branch; tested on dev in a rollback, before and after; merged as `506df899` and applied to dev, where adding a zone plan through this screen then worked). Until that is applied, *Add a plan* for a
 zone with no plan yet (the House Zone) fails.
 
 ## Per-screen table

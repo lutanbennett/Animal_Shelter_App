@@ -49,7 +49,7 @@ gates: typecheck=0 lint=0 build=0
 
 Driven over HTTP against the dev server by a scratch script signed in as a disposable dev admin (`fmap-admin-20261008@example.test`), calling the real `uploadPlan` / `undoReplace` / `removePlan` Server Actions and the image route, and reading the rows and storage back with the service role. The browser pane could not be signed in (see Left for manual verification), so the picker and preview UI are not driven.
 
-- [x] Happy path works end to end — Main Zone plan (13 enclosures placed) moved into storage keeping shapes; replaced keeping shapes (row 1740×2040, all 13 shapes byte-identical); undone (row back to the moved picture, 870×1020); replaced with a 1200×800 new layout clearing shapes (0 placed, history records `replace/cleared` by "Facility map test admin" with 13 enclosures in the snapshot); undone (picture back and every shape restored exactly). Overview and Cat Zone moved into storage with zone outlines and rooms unchanged. A plan added for the Green zone was refused by the database (Defect 1)
+- [x] Happy path works end to end — Main Zone plan (13 enclosures placed) moved into storage keeping shapes; replaced keeping shapes (row 1740×2040, all 13 shapes byte-identical); undone (row back to the moved picture, 870×1020); replaced with a 1200×800 new layout clearing shapes (0 placed, history records `replace/cleared` by "Facility map test admin" with 13 enclosures in the snapshot); undone (picture back and every shape restored exactly). Overview and Cat Zone moved into storage with zone outlines and rooms unchanged. A plan added for the Green zone was refused by the database (Defect 1); after #463 was merged and applied, the same add succeeded, served its picture and was removed
 - [x] Data persists — reload the page and the change is still there — every check reads the row and the shapes back from the database after each call; the server-rendered editor shows "Replaced … by Facility map test admin"
 - [x] Create / edit / delete all exercised (whichever the feature has) — add (overview: refused as a duplicate, in words; zone: Defect 1), replace keep, replace clear, undo, undo with nothing to undo ("There is no replace to undo on this plan any more"), remove plan unchanged
 - [x] Empty state renders sensibly (no rows yet) — unchanged from 2026-10-05 ("There is no plan yet. Add one above"); the add form now offers a photo or file instead of a file name
@@ -131,7 +131,7 @@ Driven over HTTP against the dev server by a scratch script signed in as a dispo
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
-| 1 | major | Adding a plan for a **zone** fails with `record "new" has no field "name"`: `refuse_lifecycle_map()` since `0161`/`0162` reads `new.name`, which `facility_maps` lacks. Pre-existing on `main`, not caused by this branch; replace and the overview are unaffected. Blocks loading the House Zone plan if that zone has no plan yet | deferred: fixed in schema PR #463 (`0164`, `ace66c3c`) at Lutan’s request, 2026-10-08; closed when #463 is merged and applied |
+| 1 | major | Adding a plan for a **zone** fails with `record "new" has no field "name"`: `refuse_lifecycle_map()` since `0161`/`0162` reads `new.name`, which `facility_maps` lacks. Pre-existing on `main`, not caused by this branch; replace and the overview are unaffected. Blocks loading the House Zone plan if that zone has no plan yet | fixed: schema PR #463 (`0164`) merged as `506df899` and applied to dev; after syncing, a plan added for the Green zone inserted, its picture served 200, and it was removed again |
 | 2 | minor | A refused duplicate add stored its picture before the database refused the row | fixed (existing plan checked first) |
 
 ## Left for manual verification
@@ -140,7 +140,7 @@ Driven over HTTP against the dev server by a scratch script signed in as a dispo
 |---|---|---|
 | 1 | The picker and replace preview in a real browser: choose a picture, see it with the existing outlines over it and the count, Keep vs Clear (and the "different shape" warning picking Clear), Save, then Undo the replace | Settings → Facility map, signed in as admin |
 | 2 | On a phone (375 px): *Take a photo or choose a picture* offers the camera, a full-size phone photo uploads (made smaller first), and the page has no sideways scroll | a phone on dev or `test.lannacare.org` |
-| 3 | Load the House Zone and revised Main Zone plans, place their enclosures (zone numbers repeat: place against the right zone), decide whether the revised Main Zone becomes the overview, and check the Map on a phone. House Zone needs Defect 1 fixed first (#463 applied) if it has no plan yet | Lutan, after the release |
+| 3 | Load the House Zone and revised Main Zone plans, place their enclosures (zone numbers repeat: place against the right zone), decide whether the revised Main Zone becomes the overview, and check the Map on a phone. Defect 1 is fixed on dev (#463); production needs `0164` applied before a new zone plan can be added there | Lutan, after the release |
 | 4 | Thai wording of the new editor strings reads naturally | Settings → Facility map in ไทย |
 
 ## Sign-off
@@ -160,10 +160,10 @@ Manual verification by: pending: the picker and preview in a browser, a phone up
 
 ### Result
 
-- [ ] Open defects are either fixed or explicitly accepted above — n/a: Defect 1 is pre-existing and deferred to the backlog, not fixable without schema; Lutan to accept or hold
+- [x] Open defects are either fixed or explicitly accepted above
 - [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
 - [ ] Handed to the production release manager — n/a: not yet — handed over when the PR is merged
 
-Result: pass with accepted defects
+Result: pass
 
 Release manager acknowledgement: pending
