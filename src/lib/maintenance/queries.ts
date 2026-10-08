@@ -29,6 +29,8 @@ export type MaintenanceJob = {
   zone_name: string;
   /** Display only — Drive folders use zone_name (0058). */
   zone_name_th: string | null;
+  /** zones.colour (0162), for the dot. */
+  zone_colour: string | null;
   enclosure_id: string | null;
   enclosure_name: string | null;
   enclosure_name_th: string | null;
@@ -46,15 +48,15 @@ export type MaintenanceJob = {
 
 type JobRow = Omit<
   MaintenanceJob,
-  "zone_name" | "zone_name_th" | "enclosure_name" | "enclosure_name_th" | "assignees" | "attachments"
+  "zone_name" | "zone_name_th" | "zone_colour" | "enclosure_name" | "enclosure_name_th" | "assignees" | "attachments"
 > & {
-  zones: { name: string; name_th: string | null } | null;
+  zones: { name: string; name_th: string | null; colour: string | null } | null;
   enclosures: { name: string; name_th: string | null } | null;
   maintenance_assignees: { user_id: string }[];
 };
 
 const JOB_COLUMNS =
-  "id, job_code, title, description, status, zone_id, enclosure_id, estimated_cost, actual_cost, due_date, date_created, date_completed, updated_at, drive_folder_id, zones(name, name_th), enclosures(name, name_th), maintenance_assignees(user_id)";
+  "id, job_code, title, description, status, zone_id, enclosure_id, estimated_cost, actual_cost, due_date, date_created, date_completed, updated_at, drive_folder_id, zones(name, name_th, colour), enclosures(name, name_th), maintenance_assignees(user_id)";
 
 /**
  * Maintenance jobs with their files. `attachments` has no foreign key to
@@ -111,6 +113,7 @@ export async function loadMaintenanceJobs(
       ...row,
       zone_name: zones?.name ?? "—",
       zone_name_th: zones?.name_th ?? null,
+      zone_colour: zones?.colour ?? null,
       enclosure_name: enclosures?.name ?? null,
       enclosure_name_th: enclosures?.name_th ?? null,
       // Sorted by name so a team reads the same on every card.

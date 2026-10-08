@@ -16,6 +16,7 @@ import {
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
 import type { EnclosureOption, ZoneOption } from "@/lib/enclosures/options";
+import { ZoneSelectFrame } from "@/components/ZoneName";
 import { appUserLabel, type AppUser } from "@/lib/auth/app-users";
 import { roleLabel } from "@/lib/i18n/enum-labels";
 import type { MaintenanceJob } from "@/lib/maintenance/queries";
@@ -350,6 +351,7 @@ export function MaintenanceForm({
             <label htmlFor="zoneId" className="text-xs text-muted">
               {t.common.zone}
             </label>
+            <ZoneSelectFrame colour={zones.find((z) => z.id === zoneId)?.colour}>
             <select
               id="zoneId"
               name="zoneId"
@@ -368,6 +370,7 @@ export function MaintenanceForm({
                 </option>
               ))}
             </select>
+            </ZoneSelectFrame>
           </div>
           <div className="flex flex-col gap-1">
             <label htmlFor="enclosureId" className="text-xs text-muted">

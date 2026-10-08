@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
+import { ZoneSelectFrame } from "@/components/ZoneName";
 import {
   OCCUPANCY_TONE,
   occupancyLevel,
@@ -86,6 +87,7 @@ export function EnclosurePicker({
         <label htmlFor={`${idPrefix}-zone`} className="text-sm font-medium text-muted">
           {t.common.zone} {required && <span className="text-danger">*</span>}
         </label>
+        <ZoneSelectFrame colour={zones.find((z) => z.id === zoneId)?.colour}>
         <select
           id={`${idPrefix}-zone`}
           value={zoneId}
@@ -102,6 +104,7 @@ export function EnclosurePicker({
             </option>
           ))}
         </select>
+        </ZoneSelectFrame>
       </div>
       <div className="flex flex-col gap-1">
         <label

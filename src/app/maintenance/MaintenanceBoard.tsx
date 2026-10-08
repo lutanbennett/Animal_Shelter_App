@@ -11,6 +11,7 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
 import { addDaysIso, formatBaht, formatDate, todayIso } from "@/lib/format";
 import type { EnclosureOption, ZoneOption } from "@/lib/enclosures/options";
+import { ZoneDot, ZoneSelectFrame } from "@/components/ZoneName";
 import type { MaintenanceJob } from "@/lib/maintenance/queries";
 import {
   DUE_SOON_DAYS,
@@ -203,6 +204,7 @@ export function MaintenanceBoard({
           <label htmlFor="filter-zone" className="text-xs font-medium text-muted">
             {m.filters.zone}
           </label>
+          <ZoneSelectFrame colour={zones.find((z) => z.id === filters.zoneId)?.colour}>
           <select
             id="filter-zone"
             value={filters.zoneId ?? ""}
@@ -218,6 +220,7 @@ export function MaintenanceBoard({
               </option>
             ))}
           </select>
+          </ZoneSelectFrame>
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="filter-enclosure" className="text-xs font-medium text-muted">
@@ -554,6 +557,7 @@ function JobCard({
       </div>
       <span className="flex items-center gap-1 truncate text-xs text-muted">
         <ENCLOSURE_ICONS.zone aria-hidden="true" className="h-3 w-3 shrink-0" />
+        <ZoneDot colour={job.zone_colour} className="h-2 w-2" />
         {placeName(locale, job.zone_name, job.zone_name_th)}
         {" › "}
         {job.enclosure_name

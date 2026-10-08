@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { zoneColour } from "@/lib/zones/palette";
 
 /**
@@ -26,6 +27,30 @@ export function ZoneDot({
       className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-background ${className}`}
       style={{ backgroundColor: hex }}
     />
+  );
+}
+
+/**
+ * A zone <select> with the chosen zone's dot drawn inside it, left of the
+ * text. A native option cannot hold a dot, and the list stays native so a
+ * phone opens its own picker; once a zone is chosen, its colour shows.
+ */
+export function ZoneSelectFrame({
+  colour,
+  children,
+}: {
+  colour: string | null | undefined;
+  children: ReactNode;
+}) {
+  const shown = Boolean(zoneColour(colour));
+  return (
+    <div className={`relative flex flex-col ${shown ? "[&>select]:pl-8" : ""}`}>
+      {children}
+      <ZoneDot
+        colour={colour}
+        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
+      />
+    </div>
   );
 }
 
