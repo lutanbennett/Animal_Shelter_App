@@ -8,6 +8,7 @@ import { ScanChipBox } from "./ScanChipBox";
 import { FocusSearch } from "./FocusSearch";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { localLabel } from "@/lib/translations/labels";
 import { placeName } from "@/lib/enclosures/names";
 import { OFFSITE, tidiedQuery, toggleZone, zoneChipOrder } from "@/lib/enclosures/place";
 import { getTagOrigin } from "@/lib/tags/origin";
@@ -172,9 +173,9 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   const vetClinicName =
     vetScope.kind === "clinics"
       ? ((
-          await supabase.from("vets").select("name").in("id", vetScope.vetIds).order("name")
+          await supabase.from("vets").select("name, name_th").in("id", vetScope.vetIds).order("name")
         ).data ?? [])
-          .map((v) => v.name as string)
+          .map((v) => localLabel(locale, v.name as string, v.name_th as string | null))
           .join(", ") || null
       : null;
 
