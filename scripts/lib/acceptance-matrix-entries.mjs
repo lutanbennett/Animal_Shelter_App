@@ -39,11 +39,11 @@
 // tester tries both.
 
 const MENU = {
-  vet: "The menu shows only Appointments and Residents, then Manual, Release notes and Change password. No Shelter Operations.",
-  volunteer: "The menu is Home, Residents and Shelter Operations, then Manual, Release notes and Change password. Shelter Operations has one tile, Enclosures: no Stocktake, no Maintenance, Projects, Contacts or Vets. No Assistant button, no Management and no Settings.",
-  staff: "The menu has Shelter Operations, with Stocktake among its tiles, and the Assistant button, but no Management, no Settings and no Security.",
-  management: "The menu has Shelter Operations and Management, but no Settings and no Security. Website is a tile on Management.",
-  admin: "The menu has Shelter Operations, Management, Settings, and Security at the bottom.",
+  vet: "The menu shows only Appointments and Residents, then Manual, Release notes and Change password. No Operations.",
+  volunteer: "The menu is Home, Residents and Operations, then Manual, Release notes and Change password. Operations has one tile, Enclosures: no Stocktake, no Maintenance, Projects, Contacts or Vets. No Assistant button, no Management and no Settings.",
+  staff: "The menu has Operations, with Stocktake among its tiles, and the Assistant button, but no Management, no Settings and no Security.",
+  management: "The menu has Operations and Management, but no Settings and no Security. Website is a tile on Management.",
+  admin: "The menu has Operations, Management, Settings, and Security at the bottom.",
 };
 
 export const ENTRIES = {
@@ -122,10 +122,10 @@ export const ENTRIES = {
   ],
   "shelter-operations": [
     {
-      activity: "Open Shelter Operations and its tiles",
+      activity: "Open Operations and its tiles",
       device: "phone",
-      do: "Open the menu (the ☰ button), tap Shelter Operations, then tap each tile and come back.",
-      expect: "Only the tiles for pages your role can open are shown, each opens its page, and Shelter Operations stays lit in the menu while you are on one. A role that opens none of them has no Shelter Operations in its menu. The page does not slide sideways at 375 px.",
+      do: "Open the menu (the ☰ button), tap Operations, then tap each tile and come back.",
+      expect: "Only the tiles for pages your role can open are shown, each opens its page, and Operations stays lit in the menu while you are on one. A role that opens none of them has no Operations in its menu. The page does not slide sideways at 375 px.",
       notes: MENU,
     },
   ],
@@ -655,7 +655,7 @@ export const ENTRIES = {
     {
       activity: "Read today's medication list",
       device: "phone",
-      do: "Shelter Operations → Medication list (the Head of Medical: Home → Administer Medication), then scroll down the page.",
+      do: "Operations → Medication list (the Head of Medical: Home → Administer Medication), then scroll down the page.",
       expect: "Animals with medicine due in the chosen round (Morning, Lunch or Evening) are grouped by zone and enclosure, each with a photo, name, the medicine's label photo, the amount drawn as tablets or a syringe, and the day's rounds as sunrise, sun and moon. Nothing is ticked off and the page does not slide sideways.",
     },
     {
@@ -985,7 +985,7 @@ export const BOUNDARIES = [
   { role: "volunteer", starts: "Any medical page", text: "Open a medical tab of a resident, or any of the seven new-record pages (immunization, vet visit, prescription, diet, weight, procedure, blood test): all refused. A volunteer neither reads nor writes medical records." },
   { role: "volunteer", starts: "Add or set a photo", text: "Add or set a photo on a resident, a project or a maintenance job, or attach a file to a record: no control, and the upload is refused." },
   { role: "volunteer", starts: "/stocktake and /deliveries", text: "Type the address of Stocktake and of Deliveries: refused. A volunteer does not count stock." },
-  { role: "volunteer", starts: "/maintenance, /projects", text: "Type the address of Maintenance, Projects, Contacts and Vets: each refused, and none is a tile on Shelter Operations or on Home." },
+  { role: "volunteer", starts: "/maintenance, /projects", text: "Type the address of Maintenance, Projects, Contacts and Vets: each refused, and none is a tile on Operations or on Home." },
   { role: "volunteer", starts: "Assistant", text: "Look for the Assistant button in the header, and open the assistant's page by its address: no button, and no answers." },
   { role: "volunteer", starts: "/management/, /admin/", text: "Type the address of any Management or Settings page: refused." },
   // Pass 6 — Public viewer

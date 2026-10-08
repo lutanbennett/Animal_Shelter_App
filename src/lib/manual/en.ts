@@ -149,8 +149,8 @@ const manual: Manual = {
           id: "navigation",
           title: "Finding your way around",
           steps: [
-            "On a computer the menu is always visible down the left, each link with its own icon: Home and My tasks at the top, then Residents and Shelter Operations — and, depending on your role, Management and Settings. A vet's menu is just Appointments and Residents.",
-            "Shelter Operations, Management and Settings each open a front page of tiles, one for each page inside that you can open; Residents does the same for a resident's record. The same icons are used on the tiles and in the menu, and the menu entry stays lit while you are on any page inside it.",
+            "On a computer the menu is always visible down the left, each link with its own icon: Home and My tasks at the top, then Residents and Operations — and, depending on your role, Management and Settings. A vet's menu is just Appointments and Residents.",
+            "Operations, Management and Settings each open a front page of tiles, one for each page inside that you can open; Residents does the same for a resident's record. The same icons are used on the tiles and in the menu, and the menu entry stays lit while you are on any page inside it.",
             "Under a dividing line at the very bottom of the menu sit the things you only need now and then, so they are always in the same place: this manual, Release notes, Change password and — for admins — Security, where accounts and roles are managed.",
             "On a phone tap the ☰ button at the top left to open the same menu; tap outside it to close. The same links are the last entries in it, below the same line.",
             "The LCA logo and your email are in the header, with the Assistant button, the language switch and Sign out. Tap the logo to see the public website as a visitor does — it opens in a new tab so you don't lose your place.",
@@ -165,12 +165,12 @@ const manual: Manual = {
         },
         {
           id: "shelter-operations",
-          title: "Shelter Operations: the daily work",
-          path: "Shelter Operations (in the menu)",
+          title: "Operations: the daily work",
+          path: "Operations (in the menu)",
           intro:
             "One place for the jobs that keep the shelter running day to day. You only see the tiles for the pages your role can open, and if your role opens none of them the section is not in your menu.",
           steps: [
-            "Open Shelter Operations from the menu. Its tiles are Enclosures (who is where), Medication list (today's round), Maintenance, Stocktake, Deliveries, Projects, Vets and Contacts.",
+            "Open Operations from the menu. Its tiles are Enclosures (who is where), Medication list (today's round), Maintenance, Stocktake, Deliveries, Projects, Vets and Contacts.",
             "Vets and Contacts here are the lookups: find a vet or a person and call or message them. Changing their records — adding a contact, archiving one, a vet's doctors — is under Management → Contacts and Management → Vets.",
             "Every page kept its web address, so links in notifications, emails and your bookmarks still open it. Only the medication list has a new address, and its old one still takes you there.",
           ],
@@ -879,9 +879,9 @@ const manual: Manual = {
           roles: ["admin", "management", "staff", "volunteer"],
           activity: "facility.enclosures",
           activityLevel: "read",
-          path: "Shelter Operations → Enclosures",
+          path: "Operations → Enclosures",
           steps: [
-            "Open Shelter Operations from the menu and tap Enclosures. Tap a zone chip to show only that zone, search by enclosure name, or sort by zone, name or Fullest first. Zone shows the zones and their enclosures in the shelter's own order, set under Settings → Zones and Settings → Enclosures; Name is A-Z with numbers in order (2 before 10).",
+            "Open Operations from the menu and tap Enclosures. Tap a zone chip to show only that zone, search by enclosure name, or sort by zone, name or Fullest first. Zone shows the zones and their enclosures in the shelter's own order, set under Settings → Zones and Settings → Enclosures; Name is A-Z with numbers in order (2 before 10).",
             "Choose On-site or Off-site at the top to see only the enclosures at the shelter, or only those away from it; Everywhere shows both. The zone chips then list just that place's zones. You can pick more than one zone — tap a chip to add it and tap it again to take it off; All zones clears them. Switching between On-site and Off-site clears the zones you had picked, since they belong to the other place. Hospital, Unassigned and Fostered are statuses rather than places, so they only show under Everywhere.",
             "Under each zone's name is a line of figures: On-site or Off-site, how many enclosures, how many residents, and how many spaces are free. \"All zones\" above the list gives the same totals. Spaces free adds up capacity minus residents for each enclosure that has a capacity; a full or over-capacity enclosure counts as none, and enclosures with no capacity set are left out and mentioned. Hospital, Unassigned and Fostered are not counted. When a search, zone chip or the open-maintenance tick narrows the list, the figures cover only what is shown and the line says \"showing 4 of 12 enclosures\".",
             "Each card shows how many residents are in the enclosure against its capacity — green for space available, orange for nearly full or full, red for over capacity.",
@@ -899,7 +899,7 @@ const manual: Manual = {
           title: "Finding your way round on the map",
           roles: ["admin", "management", "staff", "volunteer"],
           activity: "facility.map",
-          path: "Shelter Operations → Enclosures → Map",
+          path: "Operations → Enclosures → Map",
           steps: [
             "Open Enclosures and tap Map, next to List at the top. The Map button only appears once the shelter's hand-drawn plan has been loaded for at least one zone. Plans are added and replaced under Settings → Facility map, and a new or replaced plan shows here the next time you open the map.",
             "The first plan is the whole shelter, with each zone outlined. Tap a zone, then Open this zone, to go to that zone's own plan; the buttons above the plan take you back to the overview or across to another zone.",
@@ -917,7 +917,7 @@ const manual: Manual = {
           roles: ["admin", "management", "staff", "volunteer"],
           activity: "facility.enclosures",
           activityLevel: "read",
-          path: "Shelter Operations → Enclosures → (an enclosure)",
+          path: "Operations → Enclosures → (an enclosure)",
           steps: [
             "The occupancy bar and notes are at the top; tap a resident to jump to their hub.",
             "Link for this enclosure's QR code: the address to program into the QR code on the enclosure. Tap Copy link, or select the address by hand. The enclosure browser has the same copy icon on every card, for doing a batch.",
@@ -946,7 +946,7 @@ const manual: Manual = {
           title: "Logging a job",
           roles: ["admin", "management", "staff"],
           activity: "maintenance.jobs",
-          path: "Shelter Operations → Maintenance → Log maintenance (or from an enclosure page)",
+          path: "Operations → Maintenance → Log maintenance (or from an enclosure page)",
           steps: [
             "Step 1, What is wrong: give the job a title, e.g. \"Gate latch broken\", describe what needs doing, and add photos of the problem as it is now. They upload when you save.",
             "Step 2, Where: pick the zone and enclosure, or tick Zone-wide for something like a fence line or drainage.",
@@ -964,7 +964,7 @@ const manual: Manual = {
           roles: ["admin", "management", "staff"],
           activity: "maintenance.jobs",
           activityLevel: "read",
-          path: "Shelter Operations → Maintenance",
+          path: "Operations → Maintenance",
           steps: [
             "Staff open on the jobs assigned to them; switch Assigned to from Me to Everyone to see the whole board (management and admin start there). Filter by zone or enclosure. Completed jobs from the last 30 days are shown; tick Show all completed jobs for older ones.",
             "On a computer, drag a job card to another column to change its status. On a phone, tap Move job on under the job, choose where it goes (Move to In progress, Blocked, Completed or Not started), and confirm — the question says in words what will happen. Use the status chips at the top to look at one status, such as Completed, and move a job back from there. Cards are coloured when a job is overdue, due soon, or blocked.",
@@ -999,9 +999,9 @@ const manual: Manual = {
           roles: ["admin", "management", "staff"],
           activity: "projects.folders",
           activityLevel: "read",
-          path: "Shelter Operations → Projects",
+          path: "Operations → Projects",
           steps: [
-            "Open Shelter Operations from the menu, tap Projects, then a category, then a folder. Search folders by name from any level, and sort by name, newest or project date.",
+            "Open Operations from the menu, tap Projects, then a category, then a folder. Search folders by name from any level, and sort by name, newest or project date.",
             "Inside a folder, tap Add photos and drop in photos or PDFs. They go straight into that folder in Drive.",
             "Tap a photo to give it a caption (English and Thai), make it the folder's cover, or remove it.",
           ],
@@ -1015,7 +1015,7 @@ const manual: Manual = {
           title: "Creating folders and writing the story",
           roles: ["admin", "management", "staff"],
           activity: "projects.folders",
-          path: "Shelter Operations → Projects → (a category or folder)",
+          path: "Operations → Projects → (a category or folder)",
           steps: [
             "Tap New folder, give it a name (this is also its Drive folder name) and, optionally, a Thai name.",
             "Use Rename, Move or Delete on a folder's page. Only an empty folder can be deleted; the twelve categories can't be changed.",
@@ -1045,9 +1045,9 @@ const manual: Manual = {
           roles: ["admin", "management", "staff"],
           activity: "clinics.list",
           activityLevel: "read",
-          path: "Shelter Operations → Vets",
+          path: "Operations → Vets",
           steps: [
-            "Open Shelter Operations from the menu and tap Vets to see every vet and clinic with their visit count, residents seen, last visit and what's upcoming or overdue.",
+            "Open Operations from the menu and tap Vets to see every vet and clinic with their visit count, residents seen, last visit and what's upcoming or overdue.",
             "Tap a vet for their hub: contact details and notes, visits per month, the clinic's doctors with how many visits each saw, the residents they've seen, spend on visits with a recorded cost, and the procedures, blood tests and prescriptions logged against their visits. Change the period (3, 6, 12 months or all time) at the top.",
           ],
           screenshot: {
@@ -1060,9 +1060,9 @@ const manual: Manual = {
           title: "Contacts",
           roles: ["admin", "management"],
           activity: "contacts.browse",
-          path: "Shelter Operations → Contacts",
+          path: "Operations → Contacts",
           steps: [
-            "Open Shelter Operations from the menu and tap Contacts to find carers, volunteers and suppliers. Search by name, phone, email or chat ID, and filter by type. Contacts is for Management and the 2IC. The 2IC sees each person's name and phone number and nothing else — no address, email or notes. Staff and volunteers do not have the page: if you need a carer's number, ask Management. (Choosing a carer on intake or rehoming still works for staff.)",
+            "Open Operations from the menu and tap Contacts to find carers, volunteers and suppliers. Search by name, phone, email or chat ID, and filter by type. Contacts is for Management and the 2IC. The 2IC sees each person's name and phone number and nothing else — no address, email or notes. Staff and volunteers do not have the page: if you need a carer's number, ask Management. (Choosing a carer on intake or rehoming still works for staff.)",
             "Each contact has one-tap buttons: Call, LINE, Messenger, WhatsApp, Email and Map — handy on a phone.",
             "A contact's page shows their written address with a small map under it. The map comes from their Map link; tap it to open the place in Google Maps — the Maps app on a phone. If the Map link no longer leads anywhere, there is no map and no Map button, and the page says so: paste a fresh link into Map link under Management → Contacts.",
             "Tap a contact for their page, including the residents currently fostered or adopted with them and past placements.",
@@ -1255,11 +1255,11 @@ const manual: Manual = {
           id: "medication-list",
           title: "The medication list",
           roles: ["admin", "management", "staff"],
-          path: "Home → Administer Medication (Head of Medical), or Shelter Operations → Medication list",
+          path: "Home → Administer Medication (Head of Medical), or Operations → Medication list",
           intro:
             "One list of who needs medicine today and how much, built for a phone while you walk round the enclosures. It is for reading: nothing on it is ticked off, and the app does not record that a dose was given.",
           steps: [
-            "The Head of Medical signs in to a Home with one button, Administer Medication, and taps it. Everyone else opens Shelter Operations from the menu and taps Medication list. The date at the top is today at the shelter.",
+            "The Head of Medical signs in to a Home with one button, Administer Medication, and taps it. Everyone else opens Operations from the menu and taps Medication list. The date at the top is today at the shelter.",
             "The list is grouped by zone, then by enclosure, in the order you would walk them, and each enclosure shows its animals. Each animal has a photo and name at the top, so you treat the right one.",
             "Under the animal, each medicine shows a photo of its box or bottle label (added under Management → Medication stock), the amount to give, and how often. If a medicine has no label photo, only its name shows.",
             "A medicine given every other day, weekly or monthly shows only on the days it falls due, counted from the day the prescription started. A medicine marked as needed is always shown. Last day of the course appears on a medicine whose prescription ends today.",
@@ -1278,11 +1278,11 @@ const manual: Manual = {
           title: "Doing a stocktake",
           roles: ["admin", "management", "staff"],
           activity: "stock.count",
-          path: "Shelter Operations → Stocktake, or Home → Do Stocktaking (the 2IC)",
+          path: "Operations → Stocktake, or Home → Do Stocktaking (the 2IC)",
           intro:
             "One sheet for counting every medication and diet, built to be used on a phone while you walk the shelves. Nothing is saved until you tap Save at the end, and everything saved together gets the same time.",
           steps: [
-            "Open Shelter Operations from the menu and tap Stocktake — the 2IC taps Do Stocktaking on Home — (managers can also use the link at the top of Management → Medication stock or → Diet stock). Switch between Medications and Food with the tabs at the top; counts you have typed on one tab are kept while you look at the other.",
+            "Open Operations from the menu and tap Stocktake — the 2IC taps Do Stocktaking on Home — (managers can also use the link at the top of Management → Medication stock or → Diet stock). Switch between Medications and Food with the tabs at the top; counts you have typed on one tab are kept while you look at the other.",
             "Items come in the order they sit in the cupboard, so you can walk the shelves from one end to the other. Management sets that order under Cupboard order on Management → Medication stock and → Diet stock; two items with the same place are in name order.",
             "Each row shows the item, its unit and the last count with how long ago it was taken. Type what is on the shelf now, in that unit — or, if the item has a count unit set up (bags, say), in that one: it is chosen for you, and the row shows what it comes to in the item's own unit. Pick another unit from the box beside the figure if you counted that way. One unit per row, so 3 bags and 4 kg is counted as 3.2 bags or as 64 kg. Press Enter (Next on a phone keyboard) to move to the next row. Use the search box to jump to an item.",
             "On a phone, the Medications tab is one card at a time: the box's label photo large at the top (the name instead, when there is no photo), then the name, the last count and when it was taken. Type what is on the shelf — the number keypad is already open — and tap Save to move to the next medicine. Same as last time confirms the old figure; Skip leaves the medicine for later. The top shows how far you are (23 of 100), Previous goes back one card, and See the whole list opens the full list instead.",
@@ -1361,11 +1361,11 @@ const manual: Manual = {
           title: "Recording a delivery",
           roles: ["admin", "management", "staff"],
           activity: "stock.delivery",
-          path: "Shelter Operations → Deliveries, or Home → Record a Delivery (the 2IC)",
+          path: "Operations → Deliveries, or Home → Record a Delivery (the 2IC)",
           intro:
             "Record each medication or food as it arrives, so Stock between counts can work out what was actually used. Recording a delivery doesn't change the stock count — the next stocktake does.",
           steps: [
-            "Open Shelter Operations from the menu and tap Deliveries (it is next to Stocktake), or start from Home (the 2IC taps Record a Delivery). The Stocktake page also has a Record a delivery button at the top.",
+            "Open Operations from the menu and tap Deliveries (it is next to Stocktake), or start from Home (the 2IC taps Record a Delivery). The Stocktake page also has a Record a delivery button at the top.",
             "On a phone it is one question at a time, with a Back button on every screen that keeps what you have typed: what arrived (Medicine or Food), which one (type part of the name; a medicine with a label photo shows it, to match the box in your hand), how much, when, then a few optional details, and last a sentence saying what will be recorded. Tap Record this delivery only when that sentence is right. When it is saved, Record another item starts the next one with the day and supplier already as they were. On a larger screen the same questions are one form: pick Medication or Food, then the item. Enter the quantity. If the item has other units set up under Settings → Medications or → Diets (bags, boxes), pick the unit the delivery came in — the one it is bought in is chosen for you — and the amount in the item's own unit is shown beside it and saved with it. With no other units, the quantity is in the item's own unit, as before. If it came in packs, fill in Came in packs? (2 × 50, say) and the quantity is worked out for you.",
             "Arrived on is today unless you change it; a delivery can't be dated in the future. If the item was counted in a stocktake that day, you are asked whether the delivery was already on the shelf when it was counted, so it is set against the right stocktake.",
             "Supplier (a Vendor from Contacts), the total cost in baht (0 for a donation) and a note are optional. Tap Record delivery. The day and supplier stay filled in, so the rest of the same delivery can be entered one item after another.",

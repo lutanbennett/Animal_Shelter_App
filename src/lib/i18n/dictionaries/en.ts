@@ -83,7 +83,7 @@ const en = {
     residents: "Residents",
     settings: "Settings",
     management: "Management",
-    shelterOperations: "Shelter Operations",
+    shelterOperations: "Operations",
     dashboard: "Dashboard",
     website: "Website",
     security: "Security",
@@ -1825,10 +1825,10 @@ const en = {
       failed: "Nothing was saved",
     },
   },
-  /** Shelter Operations (/operations): the landing of tiles for the daily work (agreed 2026-10-08). */
+  /** Operations (/operations): the landing of tiles for the daily work (agreed 2026-10-08). */
   operations: {
     landing: {
-      title: "Shelter Operations",
+      title: "Operations",
       subtitle: "The daily work of running the shelter. Pick a job to open it.",
       tiles: {
         enclosures: "Who is where: every zone and enclosure, with the residents in each.",

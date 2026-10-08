@@ -23,7 +23,7 @@ import { refuseFor } from "@/lib/auth/require-role";
 import { requirePermission } from "@/lib/permissions/require";
 
 /**
- * Shelter Operations → Medication list (docs/roles-and-permissions.md §14): who
+ * Operations → Medication list (docs/roles-and-permissions.md §14): who
  * needs what medicine today, for someone walking the enclosures with a phone.
  *
  * A reference, not a record. There is deliberately nothing to tap — no
