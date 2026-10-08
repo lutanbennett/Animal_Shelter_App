@@ -1,13 +1,13 @@
-import { Coins, HeartHandshake, LayoutDashboard, Languages, Pill, Scale, ShoppingCart } from "lucide-react";
+import { Coins, Globe, HeartHandshake, LayoutDashboard, Languages, Scale, ShoppingCart } from "lucide-react";
 import { canOpen, routeFor } from "@/lib/permissions/routes";
-import { requireAnyPageUnder } from "@/lib/permissions/require";
+import { requireAnyPageIn } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import { SectionTiles, type SectionTile } from "@/components/SectionTiles";
 import { CONTACT_ICONS, NAV_ICONS, SECTION_ICONS, VET_ICONS } from "@/components/hub-icons";
 
 /**
- * Management → the group's own landing page: a tile per page the Management
- * nav group lists, in the same order. The menus have grown past the point
+ * Management → the group's own landing page: a tile per page the route registry
+ * puts in the Management section (sectionOf), which includes /admin/website. The menus have grown past the point
  * where a nested accordion is a comfortable way in (user, 2026-09-23), so
  * the group label now opens this instead of redirecting to the dashboard.
  *
@@ -16,7 +16,7 @@ import { CONTACT_ICONS, NAV_ICONS, SECTION_ICONS, VET_ICONS } from "@/components
  * page itself opens for whoever can open at least one of them.
  */
 export default async function ManagementPage() {
-  const { perms } = await requireAnyPageUnder("/management");
+  const { perms } = await requireAnyPageIn("management");
   const { t } = await getT();
 
   const allTiles: SectionTile[] = [
@@ -39,18 +39,19 @@ export default async function ManagementPage() {
       description: t.management.landing.tiles.shelterFriends,
       icon: HeartHandshake,
     },
+    // Keeps its /admin address; the Director runs the website by day as Management (Lutan, 2026-10-08).
+    {
+      href: "/admin/website",
+      label: t.nav.website,
+      description: t.admin.landing.tiles.website,
+      icon: Globe,
+    },
     {
       href: "/management/vets",
       label: t.nav.vets,
       description: t.management.landing.tiles.vets,
       icon: VET_ICONS.vet,
       phoneNote: t.largerScreen.tileLabel,
-    },
-    {
-      href: "/management/medication-list",
-      label: t.nav.medicationList,
-      description: t.management.landing.tiles.medicationList,
-      icon: Pill,
     },
     {
       href: "/management/medications",

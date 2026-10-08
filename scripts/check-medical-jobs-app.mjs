@@ -95,7 +95,7 @@ try {
   const homeText = text(home.html);
   expect(home.status === 200, `her home opens (${home.status})`);
   for (const [job, href] of [
-    ["Administer Medication", "/management/medication-list"],
+    ["Administer Medication", "/operations/medication-list"],
     ["Record Weight", "/medical/weight"],
     ["Add Medical Photos", "/medical/photos"],
     ["Feed Special Diets", "/medical/diets"],

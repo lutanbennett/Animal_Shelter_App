@@ -35,8 +35,18 @@ export type RouteEntry = {
   label: (t: Dictionary) => string;
   /** "phone" and "desk" are two pages over one action (§8); "any" is one page for both. */
   device: "any" | "phone" | "desk";
-  /** Listed in the sidebar. False is still guarded and reachable; a home tile may show it. */
+  /**
+   * A page people reach for on their own: the sidebar until 2026-10-08, now mostly a tile on the
+   * Shelter Operations landing. False is still guarded and reachable; a home tile may show it.
+   * Where two pages share a word, the home screen opens the one with this set.
+   */
   menu: boolean;
+  /**
+   * The landing whose grid lists it, when that is not the one its URL says: a page that keeps its
+   * address and moves in the menu (docs/decisions/2026-10-07-management-settings-split.md). Omit
+   * for a page under /operations, /management or /admin that sits where its URL says.
+   */
+  section?: Section;
   /**
    * A scope the page also requires, beside the activity: shelter staff may hold the activity and
    * still be refused (a vet's appointments). canOpen() honours it, so routesFor() never offers a
@@ -44,6 +54,9 @@ export type RouteEntry = {
    */
   scope?: { clinical: "own_clinic" | "any" };
 };
+
+/** The three sections with a landing page of tiles (Lutan, 2026-10-08). */
+export type Section = "operations" | "management" | "settings";
 
 export const ROUTES: readonly RouteEntry[] = [
   {
@@ -63,6 +76,7 @@ export const ROUTES: readonly RouteEntry[] = [
     label: (t) => t.nav.stocktake,
     device: "any",
     menu: true,
+    section: "operations",
   },
   {
     path: "/deliveries",
@@ -71,6 +85,7 @@ export const ROUTES: readonly RouteEntry[] = [
     label: (t) => t.deliveries.title,
     device: "any",
     menu: true,
+    section: "operations",
   },
   {
     path: "/management/purchasing",
@@ -90,6 +105,7 @@ export const ROUTES: readonly RouteEntry[] = [
     label: (t) => t.nav.maintenance,
     device: "any",
     menu: true,
+    section: "operations",
   },
   {
     path: "/projects",
@@ -99,6 +115,7 @@ export const ROUTES: readonly RouteEntry[] = [
     label: (t) => t.nav.projects,
     device: "any",
     menu: true,
+    section: "operations",
   },
   {
     path: "/contacts",
@@ -107,6 +124,7 @@ export const ROUTES: readonly RouteEntry[] = [
     label: (t) => t.nav.contacts,
     device: "any",
     menu: true,
+    section: "operations",
   },
   {
     path: "/vets",
@@ -116,6 +134,7 @@ export const ROUTES: readonly RouteEntry[] = [
     label: (t) => t.nav.vets,
     device: "any",
     menu: true,
+    section: "operations",
   },
   {
     path: "/enclosures",
@@ -125,6 +144,7 @@ export const ROUTES: readonly RouteEntry[] = [
     label: (t) => t.nav.enclosures,
     device: "any",
     menu: true,
+    section: "operations",
   },
   {
     path: "/management/dashboard",
@@ -159,7 +179,7 @@ export const ROUTES: readonly RouteEntry[] = [
     menu: false,
   },
   {
-    path: "/management/medication-list",
+    path: "/operations/medication-list",
     activity: "medical.prescriptions",
     level: "read",
     icon: Pill,
@@ -257,6 +277,8 @@ export const ROUTES: readonly RouteEntry[] = [
     label: (t) => t.nav.website,
     device: "any",
     menu: false,
+    // The website is the Director's job, by day on her phone as Management (Lutan, 2026-10-08).
+    section: "management",
   },
   {
     path: "/admin/enclosures",
@@ -341,6 +363,20 @@ export function canOpen(perms: Permissions | null | undefined, route: RouteEntry
 /** The entries this person may open, in registry order; the caller groups and sorts. */
 export function routesFor(perms: Permissions | null | undefined): readonly RouteEntry[] {
   return ROUTES.filter((r) => canOpen(perms, r));
+}
+
+/** The landing that lists this entry: its own `section`, else the one its URL is under. */
+export function sectionOf(route: RouteEntry): Section | undefined {
+  if (route.section) return route.section;
+  if (route.path.startsWith("/operations/")) return "operations";
+  if (route.path.startsWith("/management/")) return "management";
+  if (route.path.startsWith("/admin/")) return "settings";
+  return undefined;
+}
+
+/** Whether `perms` opens at least one page in the section: what its landing and its menu entry ask. */
+export function opensAnyIn(perms: Permissions | null | undefined, section: Section): boolean {
+  return ROUTES.some((r) => sectionOf(r) === section && canOpen(perms, r));
 }
 
 /** The entry for a path (exact), or undefined. */

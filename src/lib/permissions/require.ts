@@ -5,7 +5,7 @@ import { refuseFor } from "@/lib/auth/require-role";
 import { can, type Permissions } from "./can";
 import { loadPermissions } from "./load";
 import type { Level, LevelKey, YesNoKey } from "./catalogue";
-import { ROUTES, canOpen } from "./routes";
+import { opensAnyIn, type Section } from "./routes";
 
 /**
  * The page guard: one activity, one guard, no role name anywhere (§8).
@@ -36,14 +36,15 @@ export async function requirePermission(activity: YesNoKey | LevelKey, level: Le
 }
 
 /**
- * The guard for a landing page (Management, Settings): a page that is a grid of the pages under
- * it, so it has no activity of its own. It opens for whoever may open at least one page under
- * `prefix` in the route registry, and the grid then shows only the tiles that person may open.
+ * The guard for a landing page (Shelter Operations, Management, Settings): a page that is a grid
+ * of the pages in its section, so it has no activity of its own. It opens for whoever may open at
+ * least one page the route registry puts in `section` (sectionOf: the entry's own `section`, else
+ * its URL), and the grid then shows only the tiles that person may open.
  * Signed out → /login; nothing to open → refused, as every guard here refuses.
  *
- *   const { perms } = await requireAnyPageUnder("/management");
+ *   const { perms } = await requireAnyPageIn("management");
  */
-export async function requireAnyPageUnder(prefix: string): Promise<Guarded> {
+export async function requireAnyPageIn(section: Section): Promise<Guarded> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -51,7 +52,7 @@ export async function requireAnyPageUnder(prefix: string): Promise<Guarded> {
   if (!user) redirect("/login");
 
   const perms = await loadPermissions();
-  if (!perms || !ROUTES.some((r) => r.path.startsWith(prefix + "/") && canOpen(perms, r))) refuseFor(perms);
+  if (!perms || !opensAnyIn(perms, section)) refuseFor(perms);
 
   return { supabase, user, perms };
 }

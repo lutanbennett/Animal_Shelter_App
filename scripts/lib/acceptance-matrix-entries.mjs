@@ -646,7 +646,7 @@ export const ENTRIES = {
     {
       activity: "Read today's medication list",
       device: "phone",
-      do: "Management → Medication list (the Head of Medical: Home → Administer Medication), then scroll down the page.",
+      do: "Shelter Operations → Medication list (the Head of Medical: Home → Administer Medication), then scroll down the page.",
       expect: "Animals with medicine due in the chosen round (Morning, Lunch or Evening) are grouped by zone and enclosure, each with a photo, name, the medicine's label photo, the amount drawn as tablets or a syringe, and the day's rounds as sunrise, sun and moon. Nothing is ticked off and the page does not slide sideways.",
     },
     {

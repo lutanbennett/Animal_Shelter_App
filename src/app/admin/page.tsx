@@ -1,9 +1,9 @@
 import { Suspense } from "react";
-import { Activity, Globe, History } from "lucide-react";
+import { Activity, History } from "lucide-react";
 import { DriveStatus } from "./DriveStatus";
 import { can } from "@/lib/permissions/can";
 import { canOpen, routeFor } from "@/lib/permissions/routes";
-import { requireAnyPageUnder } from "@/lib/permissions/require";
+import { requireAnyPageIn } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import { listHomeRoles } from "@/lib/home/roles";
 import { HomeSwitch } from "@/components/HomeSwitch";
@@ -29,16 +29,10 @@ import {
  * which today is Admin alone.
  */
 export default async function AdminPage() {
-  const { perms, supabase } = await requireAnyPageUnder("/admin");
+  const { perms, supabase } = await requireAnyPageIn("settings");
   const { t } = await getT();
 
   const allTiles: SectionTile[] = [
-    {
-      href: "/admin/website",
-      label: t.nav.website,
-      description: t.admin.landing.tiles.website,
-      icon: Globe,
-    },
     {
       href: "/admin/enclosures",
       label: t.nav.enclosures,
