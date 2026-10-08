@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "The menu's Shelter Operations is now called Operations. On the Residents list, the Status zone chip is replaced by Unallocated, which lists only residents waiting for an enclosure (it used to list the adopted too), and Fostered and Hospitalised chips now sit beside Adopted. On a computer the cursor starts in the Search box, and a chip reader works there too. Enclosure cards show the maintenance spanner only when there is open work, with just the number. In Thai too.",
   "Contacts now have two boxes, Address and Map link, instead of one. The address is printed as words on the contact's page, the contact list and the Shelter Friends card — never as a long web link — and the map comes from the Map link, which you get in Google Maps with Share, then Copy link. Both are on Management → Contacts (add and edit) and the Add a Shelter Friend wizard. A link pasted into Address by mistake moves to Map link when you save. In Thai too.",
 ];
 
