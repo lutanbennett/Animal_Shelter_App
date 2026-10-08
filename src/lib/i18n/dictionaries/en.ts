@@ -305,7 +305,7 @@ const en = {
     },
     /**
      * /friends/join's starter text, shown until an admin saves a body of
-     * their own on Settings → Website (which also offers it to edit).
+     * their own on Management → Website (which also offers it to edit).
      * From the Shelter Friends item's own description (docs/backlog.md);
      * no promises only the Director can make — fees, terms, how long a
      * profile stays up.
@@ -327,7 +327,7 @@ const en = {
     },
     /**
      * /adopt/international's starter text, shown until an admin saves a body
-     * of their own on Settings → Website (which also offers it to edit).
+     * of their own on Management → Website (which also offers it to edit).
      * Generic on purpose (docs/decisions.md, 2026-09-27): what an adoption
      * from abroad involves, in outline and our own words — no fees,
      * timelines, countries served, partner names or licence claims, which

@@ -95,8 +95,8 @@ running the place. The interesting lines are almost all negative.
 **Menu must show:** **Appointments** and **Residents**, then the footer group —
 Manual · Release notes · Change password. Nothing else (`src/app/NavLinks.tsx`).
 A vet's home is Appointments, not My tasks (#227, `docs/decisions/2026-09-29-vet-appointments-page.md`).
-**Menu must NOT show:** My tasks, Enclosures, Maintenance, Vets, Contacts, Projects,
-Stocktake, Management, Settings, Security.
+**Menu must NOT show:** My tasks, Shelter Operations (and so none of Enclosures,
+Maintenance, Vets, Contacts, Projects, Stocktake), Management, Settings, Security.
 **Header must NOT show:** the Assistant button — the vet role is external and
 the assistant is closed to it (`0070`).
 
@@ -220,7 +220,7 @@ The widest day-to-day role and the longest pass. Everything the shelter does to
 a resident, minus the reporting and the reference lists.
 
 **Switch:** profile A → Security → test account → **staff**. Hard refresh B.
-**Menu gains:** Stocktake, and the Assistant button in the header.
+**Menu gains:** Stocktake (a tile on Shelter Operations since 2026-10-08), and the Assistant button in the header.
 **Menu must still NOT show:** Management, Settings, Security.
 
 - [ ] Menu matches
@@ -268,7 +268,7 @@ this; do not re-tick it from memory.
 
 ### Can do
 
-- [ ] `/admin` opens and **every tile is reachable** — Security, Website, Zones, Enclosures, Immunization types, Procedure types, Blood test types, Frequencies, Contacts, Vets, System status
+- [ ] `/admin` opens and **every tile is reachable** — Security, Enclosures, Zones, Facility map, Immunization types, Procedure types, Blood test types, Frequencies, Recent changes, System status. Website is a tile on `/management` since 2026-10-08
 - [ ] **Security**: the user table lists accounts with roles; create a throwaway user and read its temporary password notice
 - [ ] Change that throwaway's role, then archive or remove it
 - [ ] **Access requests** section behaves, if any are pending
@@ -335,9 +335,9 @@ exist.
 
 **Switch:** test account → **volunteer**. Hard refresh. On a phone, 375 px, in
 English and then Thai: there are no PCs on site.
-**Menu:** Home, Residents, Enclosures, then Manual, Release notes and Change
-password. **No** Stocktake, Assistant button, Maintenance, Projects, Contacts,
-Vets, Management or Settings.
+**Menu:** Home, Residents, Shelter Operations (its page has one tile, Enclosures),
+then Manual, Release notes and Change password. **No** Stocktake, Assistant button,
+Maintenance, Projects, Contacts, Vets, Management or Settings.
 
 ### Can do
 
@@ -354,7 +354,7 @@ Vets, Management or Settings.
 - [ ] Any **medical** page, read or write — the tabs of the record and the seven "new" pages (immunization, vet visit, prescription, diet, weight, procedure, blood test): refused
 - [ ] **Add or set a photo** on a resident, a project or a maintenance job, or attach a file to a record: no control, and the upload refused
 - [ ] `/stocktake` and `/deliveries` — refused. A volunteer does not count stock
-- [ ] `/maintenance`, `/projects`, `/contacts`, `/vets` — refused, and none of them is in the menu or on Home
+- [ ] `/maintenance`, `/projects`, `/contacts`, `/vets` — refused, and none of them is a tile on Shelter Operations or on Home
 - [ ] **Assistant** — no button in the header, and no answers from `/assistant`
 - [ ] `/management/*`, `/admin/*` — redirected
 
