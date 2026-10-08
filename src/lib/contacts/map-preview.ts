@@ -7,34 +7,20 @@ import {
   splitAddress,
   type AddressMap,
 } from "./contacts";
+import { followShortLink } from "./short-link";
 
 const SHORT_LINK_HOSTS = new Set(MAP_SHORT_LINK_HOSTS);
 const RESOLVE_TIMEOUT_MS = 3000;
-const MAX_HOPS = 3;
 
 /** Resolved short links, per isolate — a shared pin doesn't change. */
 const resolved = new Map<string, Promise<string | null>>();
 
-async function followRedirects(url: string): Promise<string | null> {
-  let current = url;
-  for (let hop = 0; hop < MAX_HOPS; hop++) {
-    const res = await fetch(current, {
-      method: "HEAD",
-      redirect: "manual",
-      signal: AbortSignal.timeout(RESOLVE_TIMEOUT_MS),
-    });
-    const location = res.headers.get("location");
-    if (!location) return current === url ? null : current;
-    current = new URL(location, current).toString();
-    if (!SHORT_LINK_HOSTS.has(new URL(current).hostname)) return current;
-  }
-  return current;
-}
-
 function resolveShortLink(url: string): Promise<string | null> {
   let pending = resolved.get(url);
   if (!pending) {
-    pending = followRedirects(url).catch(() => null);
+    pending = followShortLink(url, MAP_SHORT_LINK_HOSTS)
+      .then((r) => r.target)
+      .catch(() => null);
     resolved.set(url, pending);
     // A failed lookup (timeout, Google hiccup) shouldn't be remembered
     // for the life of the isolate — let the next view try again.
