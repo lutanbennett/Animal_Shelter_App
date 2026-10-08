@@ -9,12 +9,7 @@ import { FocusSearch } from "./FocusSearch";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { placeName } from "@/lib/enclosures/names";
-import {
-  ENCLOSURE_PLACES,
-  offeredZones,
-  zonesKeptIn,
-  type EnclosurePlace,
-} from "@/lib/enclosures/place";
+import { OFFSITE, tidiedQuery, toggleZone, zoneChipOrder } from "@/lib/enclosures/place";
 import { getTagOrigin } from "@/lib/tags/origin";
 import { loadVetScope } from "@/lib/vets/scope";
 import { DECEASED } from "@/lib/residents/status";
@@ -34,7 +29,6 @@ import { ActionLink } from "@/components/ActionLink";
 import { ACTION_ICONS } from "@/components/hub-icons";
 
 function buildHref(params: {
-  place: EnclosurePlace;
   zones: string[];
   q: string;
   enclosure: string;
@@ -44,7 +38,6 @@ function buildHref(params: {
   unallocated: boolean;
 }) {
   const search = new URLSearchParams();
-  if (params.place !== "all") search.set("place", params.place);
   if (params.zones.length) search.set("zone", params.zones.join(","));
   if (params.unallocated) search.set("unallocated", "1");
   if (params.q) search.set("q", params.q);
@@ -84,49 +77,48 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   const canRegister = chipQuery ? can(await loadPermissions(), "resident.register") : false;
 
   const view = await resolveListView(supabase, searchParams, limited);
-  const { place, zones, physicalZones, enclosures, enclosuresIn, zoneIds, unallocated, enclosureId, showAll, noChip, status, chippedIds, filters } = view;
+  const { zones, physicalZones, enclosures, enclosuresIn, zoneIds, unallocated, enclosureId, showAll, noChip, status, chippedIds, filters } = view;
+
+  // An old ?place= link, an off-site zone's own id or the Lifecycle zone's is read as the chips
+  // that mean the same (resolveListView), and the URL is tidied to them (2026-10-08).
+  const tidied = tidiedQuery(searchParams, {
+    zone: zoneIds.join(","),
+    unallocated: unallocated ? "1" : "",
+  });
+  if (tidied !== null) redirect(tidied ? `/residents?${tidied}` : "/residents");
 
   /**
-   * The list with a different place or zone set, everything else kept that
-   * still applies: zones and enclosure only if they belong to the new
-   * place, the deceased toggle only under Everywhere.
+   * The list with a different set of zone chips, everything else kept that
+   * still applies: the enclosure only if it is under the new chips.
    */
-  function hrefFor(nextPlace: EnclosurePlace, nextZones: string[], nextUnallocated = unallocated) {
-    const kept = zonesKeptIn(physicalZones, nextZones, nextPlace);
-    // Unassigned residents are on site: Off-site drops the chip.
-    const keptUnallocated = nextUnallocated && nextPlace !== "external";
+  function hrefFor(nextZones: string[], nextUnallocated = unallocated) {
     return buildHref({
-      place: nextPlace,
-      zones: kept,
+      zones: nextZones,
       q,
-      enclosure: enclosuresIn(nextPlace, kept, keptUnallocated).some((e) => e.id === enclosureId)
+      enclosure: enclosuresIn(nextZones, nextUnallocated).some((e) => e.id === enclosureId)
         ? enclosureId
         : "",
-      all: showAll && nextPlace === "all",
+      all: showAll,
       noChip,
-      // Dropped with a place or zone: they would contradict it.
+      // Dropped with a zone: they would contradict it.
       status: null,
-      unallocated: keptUnallocated,
+      unallocated: nextUnallocated,
     });
   }
-  const placeHrefs = Object.fromEntries(
-    ENCLOSURE_PLACES.map((next) => [next, hrefFor(next, zoneIds)]),
-  ) as Record<EnclosurePlace, string>;
 
   /** The same list with the deceased toggle flipped, other filters kept. */
   function toggleHref(all: boolean) {
-    return buildHref({ place, zones: zoneIds, q, enclosure: enclosureId, all, noChip, status, unallocated });
+    return buildHref({ zones: zoneIds, q, enclosure: enclosureId, all, noChip, status, unallocated });
   }
 
   /** The same list with "No microchip" flipped, other filters kept. */
   function noChipHref(next: boolean) {
-    return buildHref({ place, zones: zoneIds, q, enclosure: enclosureId, all: showAll, noChip: next, status, unallocated });
+    return buildHref({ zones: zoneIds, q, enclosure: enclosureId, all: showAll, noChip: next, status, unallocated });
   }
 
-  /** A status chip picked (or, null, taken off); on, it clears place, zone, Unallocated and enclosure. */
+  /** A status chip picked (or, null, taken off); on, it clears the zones, Unallocated and enclosure. */
   function statusHref(next: StatusChip | null) {
     return buildHref({
-      place: "all",
       zones: [],
       q,
       enclosure: "",
@@ -140,23 +132,16 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   const { table: listTable, idColumn } = listSource(limited);
 
   // Counted in both modes: hidden, it is what the toggle would reveal; shown,
-  // it says how many of the rows on screen are past animals. Under a place
-  // the dead are never in the list, so only a name search counts them —
-  // matching the name alone, since "not on site" is exactly what they are.
-  const countDeceased = place === "all" || Boolean(q);
+  // it says how many of the rows on screen are past animals.
   // Adopted, fostered and hospitalised animals matching a search are in no
   // enclosure, so a filter can hide them without a word — the same silent
-  // miss the deceased count guards against. Any zone, Unallocated or
-  // enclosure hides all three; a place hides the adopted (in no place) and
-  // On-site the other two (they are Off-site); another status chip hides
-  // all but its own. Counted ignoring those filters, and only when hidden.
+  // miss the deceased count guards against. Any zone chip (Off-site too: they
+  // sit in the Lifecycle zone, not an off-site one), Unallocated or enclosure
+  // hides all three; another status chip hides all but its own. Counted
+  // ignoring those filters, and only when hidden.
   const narrowed = zoneIds.length > 0 || unallocated || Boolean(enclosureId);
   const hiddenStatuses = q
-    ? STATUS_CHIPS.filter(
-        (s) =>
-          s !== status &&
-          (status !== null || narrowed || (s === "Adopted" ? place !== "all" : place === "internal")),
-      )
+    ? STATUS_CHIPS.filter((s) => s !== status && (status !== null || narrowed))
     : [];
   const deceasedCountQuery = supabase
     .from(listTable as "resident_list_view")
@@ -167,12 +152,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
     getTagOrigin(),
     loadVetScope(supabase),
     listQuery(supabase, view, limited).returns<(ResidentRow | WhoAndWhere)[]>(),
-    countDeceased
-      ? applyFilters(
-          deceasedCountQuery,
-          place === "all" ? filters : { q, place: "all", zoneIds: [], enclosureId: "", chippedIds, status: null, unallocated: false, limited },
-        )
-      : Promise.resolve({ count: 0 }),
+    applyFilters(deceasedCountQuery, filters),
     Promise.all(
       hiddenStatuses.map(async (s) => {
         const { count } = await applyFilters(
@@ -180,7 +160,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
             .from(listTable as "resident_list_view")
             .select(idColumn, { count: "exact", head: true })
             .eq("current_status", s),
-          { q, place: "all", zoneIds: [], enclosureId: "", chippedIds, status: null, unallocated: false, limited },
+          { q, zoneIds: [], offsiteZoneIds: [], enclosureId: "", chippedIds, status: null, unallocated: false, limited },
         );
         return { status: s, count: count ?? 0 };
       }),
@@ -212,13 +192,8 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   const exportHref = `/residents/export${exportParams.size ? `?${exportParams}` : ""}`;
   const shown = residents?.length ?? 0;
   const deceasedCount = deceased.count ?? 0;
-  // Where a deceased name match is shown from: this list with the toggle
-  // on, or — under a place, where the dead never appear — Everywhere with
-  // just the search.
-  const deceasedMatchesHref =
-    place === "all"
-      ? toggleHref(true)
-      : buildHref({ place: "all", zones: [], q, enclosure: "", all: true, noChip, status: null, unallocated: false });
+  // Where a deceased name match is shown from: this list with the toggle on.
+  const deceasedMatchesHref = toggleHref(true);
   // Show all, the status chips and No microchip share a look: a pill, 44 px tall on a phone.
   const toggleChip = (on: boolean) =>
     `inline-flex min-h-11 items-center rounded-full border px-3 py-2 text-sm font-medium md:min-h-0 ${
@@ -308,45 +283,44 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
 
       <div className="flex flex-col gap-3">
         <PlaceZoneChips
-          place={place}
-          placeHrefs={placeHrefs}
-          allZonesHref={hrefFor(place, [], false)}
-          zones={offeredZones(physicalZones, place).map((zone) => ({
-            id: zone.id,
-            name: zone.name,
-            name_th: zone.name_th,
-            colour: zone.colour,
-            href: hrefFor(
-              place,
-              zoneIds.includes(zone.id)
-                ? zoneIds.filter((id) => id !== zone.id)
-                : [...zoneIds, zone.id],
-            ),
-            active: zoneIds.includes(zone.id),
-          }))}
-          // In place of the Lifecycle zone ("Status"), which listed the adopted too (2026-10-08).
-          // Unassigned residents are on site, so Off-site does not offer it.
-          extra={
-            place === "external"
-              ? undefined
-              : {
-                  label: t.residents.list.unallocatedFilter,
-                  href: hrefFor(place, zoneIds, !unallocated),
-                  active: unallocated,
+          allZonesHref={hrefFor([], false)}
+          // The same row as /enclosures: on-site zones, then Off-site for every off-site zone.
+          zones={zoneChipOrder(physicalZones).map((zone) =>
+            zone === OFFSITE
+              ? {
+                  id: OFFSITE,
+                  name: t.enclosures.offsiteChip,
+                  name_th: null,
+                  colour: null,
+                  href: hrefFor(toggleZone(zoneIds, OFFSITE)),
+                  active: zoneIds.includes(OFFSITE),
                 }
-          }
+              : {
+                  id: zone.id,
+                  name: zone.name,
+                  name_th: zone.name_th,
+                  colour: zone.colour,
+                  href: hrefFor(toggleZone(zoneIds, zone.id)),
+                  active: zoneIds.includes(zone.id),
+                },
+          )}
+          // In place of the Lifecycle zone ("Status"), which listed the adopted too (2026-10-08),
+          // last in the row as /enclosures' Status chip is.
+          extra={{
+            label: t.residents.list.unallocatedFilter,
+            href: hrefFor(zoneIds, !unallocated),
+            active: unallocated,
+          }}
         />
 
         {/* Keyed on the filters so a chip or Clear, which navigate on the
             client, remount the inputs instead of leaving their old values. */}
         <form
-          key={`${place}|${zoneIds.join(",")}|${unallocated}|${q}|${enclosureId}|${showAll}|${noChip}|${status}`}
+          key={`${zoneIds.join(",")}|${unallocated}|${q}|${enclosureId}|${showAll}|${noChip}|${status}`}
           className="flex flex-wrap items-end gap-3"
           method="get"
         >
-          {/* Keep the place, zones and deceased toggle when the form is
-              submitted. */}
-          {place !== "all" && <input type="hidden" name="place" value={place} />}
+          {/* Keep the zones and deceased toggle when the form is submitted. */}
           {zoneIds.length > 0 && (
             <input type="hidden" name="zone" value={zoneIds.join(",")} />
           )}
@@ -369,7 +343,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
           </div>
           {/* The enclosure filter is desktop-only; phones browse by
               zone → enclosure → residents at /enclosures instead. It lists
-              only the enclosures under the place and zones above. */}
+              only the enclosures under the zone chips above. */}
           <div className="hidden flex-col gap-1 md:flex">
             <label
               htmlFor="enclosure"
@@ -396,18 +370,14 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
           </ActionButton>
           {/* A link, not a checkbox: flipping it changes the list straight
               away rather than waiting for Filter. On phones too — it is the
-              only way back to a resident who has died. Offered under
-              Everywhere only, like /enclosures' Lifecycle chip. */}
-          {place === "all" && (
-            <Link href={toggleHref(!showAll)} className={toggleChip(showAll)}>
-              {showAll
-                ? t.residents.list.hideDeceased
-                : t.residents.list.showAllDeceased}
-            </Link>
-          )}
+              only way back to a resident who has died. */}
+          <Link href={toggleHref(!showAll)} className={toggleChip(showAll)}>
+            {showAll
+              ? t.residents.list.hideDeceased
+              : t.residents.list.showAllDeceased}
+          </Link>
           {/* One at a time; tapping the one that is on takes it off. */}
-          {place === "all" &&
-            zoneIds.length === 0 &&
+          {zoneIds.length === 0 &&
             !unallocated &&
             !enclosureId &&
             STATUS_CHIPS.map((s) => (
@@ -425,7 +395,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
               {t.residents.list.noMicrochip}
             </Link>
           )}
-          {(q || place !== "all" || zoneIds.length > 0 || unallocated || enclosureId || noChip || status) && (
+          {(q || zoneIds.length > 0 || unallocated || enclosureId || noChip || status) && (
             <Link
               href="/residents"
               className="text-sm font-medium text-muted hover:text-foreground"

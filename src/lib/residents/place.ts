@@ -1,11 +1,11 @@
-import type { EnclosurePlace } from "@/lib/enclosures/place";
-
 /**
- * Where a resident is, for /residents' On-site / Off-site filter and its
- * Location column (decisions.md, 2026-09-25).
+ * Where a resident is, for /residents' Location column and the spreadsheet's
+ * place column (decisions.md, 2026-09-25). It drove an On-site / Off-site
+ * filter until 2026-10-08; the zone chips replaced that (the Off-site chip is
+ * off-site zones, and Fostered and Hospitalised have chips of their own).
  *
- * On /enclosures the Lifecycle buckets are status cards and are offered only
- * under Everywhere. Here they are animals, and most of them are somewhere:
+ * On /enclosures the Lifecycle buckets are status cards. Here they are
+ * animals, and most of them are somewhere:
  *
  * - On-site: a resident in an internal zone ('Resident'), and 'Unassigned' —
  *   at the shelter, not yet given an enclosure (0065).
@@ -20,7 +20,7 @@ import type { EnclosurePlace } from "@/lib/enclosures/place";
  * `current_status` is itself derived from `zones.internal` (0066), so
  * filtering on it is exact and needs one column.
  */
-export const STATUSES_IN_PLACE: Record<Exclude<EnclosurePlace, "all">, readonly string[]> = {
+const STATUSES_IN_PLACE: Record<"internal" | "external", readonly string[]> = {
   internal: ["Resident", "Unassigned"],
   external: ["Outreach", "Hospitalised", "Fostered"],
 };
