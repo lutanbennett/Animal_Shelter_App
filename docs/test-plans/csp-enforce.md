@@ -140,6 +140,37 @@ gates: typecheck=0 lint=0 build=0
 | 4 | Camera still opens for resident photos and QR/microchip scan on a phone | Phone |
 | 5 | Management dashboard visitor count still shows a number (or stays grey for the same reason as before) | Browser |
 
+### What was checked at the `0.21.0` release, 2026-10-08
+
+Four of the five are closed. Recorded here rather than by deleting the rows, so
+what was looked at, and by whom, stays legible.
+
+- **1 — done, Claude.** `content-security-policy` present and
+  `content-security-policy-report-only` absent, on test before production and on
+  production after: `ENFORCING: 1 / report-only: 0`.
+- **2 — partly done, Claude.** `/` and `/login` on both environments with the
+  console open: the **only** violation is the Cloudflare beacon. The rest of the
+  row is still open; see the signature.
+- **3 — done, Lutan**, on test, signed in: a resident page with photos and the
+  Google map embed on a contact page, nothing blocked.
+- **4 — done, Lutan**, on a phone: the camera opens for resident photos and for
+  the QR/microchip scan.
+- **5 — `n/a`, and the row asked the wrong question.** The Management visitor
+  count is fetched **server-side** from Cloudflare's GraphQL API
+  (`countVisitors`, `src/lib/status/usage.ts`), so CSP — a browser policy —
+  cannot reach it. It has also never shown a number: the function opens
+  `if (!token || !zone) return { state: "off" }`, and neither
+  `CLOUDFLARE_ANALYTICS_TOKEN` nor `CLOUDFLARE_ZONE_ID` is set. Lutan said as
+  much from memory and the code agrees. The row's own wording allowed for this,
+  but it pointed a person at something the policy cannot affect — worth
+  remembering next time a CSP checklist is written: list only what the
+  **browser** fetches.
+
+The blocked beacon is expected, and arguably a fix rather than a fault: it is
+injected by Cloudflare at the edge, nothing in this repo loads it, and
+`/privacy` promises "no analytics tracking"
+(`docs/decisions/2026-10-07-csp-enforced.md`).
+
 ## Sign-off
 
 ### Automated and scripted checks
@@ -153,7 +184,7 @@ Automated checks by: Claude (csp-enforce session)  Date: 2026-10-07
 
 - [ ] The manual list above is empty, or every item in it was checked by a person — n/a: items remain in the table above; not ticked on anyone's behalf
 
-Manual verification by: pending: the five items under Left for manual verification
+Manual verification by: pending: item 2's remaining pages — `/adopt`, `/our-work`, `/donate` and a Shelter Friend page with the console open. Items 1, 3 and 4 are done and 5 is n/a; Lutan confirmed 3 and 4 in chat on 2026-10-08 and this line was written by Claude at his request
 
 ### Result
 
