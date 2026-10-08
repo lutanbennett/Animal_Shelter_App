@@ -4833,6 +4833,8 @@ const th: Dictionary = {
       "attachments.caption": "คำบรรยายภาพ",
       "maintenance.title": "ชื่องาน",
       "maintenance.description": "รายละเอียดงาน",
+      "recurring_jobs.title": "ชื่องานประจำ",
+      "recurring_jobs.description": "รายละเอียดงานประจำ",
       "site_pages.title": "หัวข้อหน้าเว็บ",
       "site_pages.body": "ข้อความหน้าเว็บ",
     } as Record<string, string>,
