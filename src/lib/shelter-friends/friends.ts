@@ -65,7 +65,8 @@ export const SHELTER_FRIEND_COLUMNS =
  * learn about a Friend. Each contact detail is already null unless its
  * box was ticked, and the row is absent unless the profile is published
  * and the contact isn't archived; the view does that, not the page.
- * `map_location` is the address again, gated by show_map instead.
+ * `map_location` is the contact's Map link (0164), or its address while it
+ * has none, gated by show_map instead.
  */
 export type PublicFriend = {
   id: string;
@@ -117,6 +118,7 @@ export function previewPublicFriend(
     email: string | null;
     line_id: string | null;
     address: string | null;
+    map_url: string | null;
   },
 ): PublicFriend {
   return {
@@ -134,7 +136,8 @@ export function previewPublicFriend(
     email: friend.show_email ? contact.email : null,
     line_id: friend.show_line ? contact.line_id : null,
     address: friend.show_address ? contact.address : null,
-    map_location: friend.show_map ? contact.address : null,
+    // coalesce(map_url, address), as the view has it since 0164.
+    map_location: friend.show_map ? (contact.map_url ?? contact.address) : null,
     translations: {},
   };
 }

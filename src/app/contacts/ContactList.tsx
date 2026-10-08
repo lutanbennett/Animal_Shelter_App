@@ -10,6 +10,7 @@ import { CONTACT_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { contactTypeLabel } from "@/lib/i18n/enum-labels";
 import {
+  addressText,
   CARER_CONTACT_TYPE,
   CONTACT_TYPES,
   isArchived,
@@ -47,7 +48,7 @@ function matches(contact: Contact | VolunteerContact, query: string) {
     contact.line_id,
     contact.messenger_id,
     contact.whatsapp,
-    contact.address,
+    addressText(contact.address),
     contact.notes,
   ]
     .filter((v): v is string => Boolean(v))

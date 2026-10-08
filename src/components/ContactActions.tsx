@@ -3,6 +3,8 @@
 import { CONTACT_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import {
+  addressText,
+  contactMapSource,
   lineHref,
   mailtoHref,
   mapHref,
@@ -14,7 +16,7 @@ import {
 
 type ContactDetails = Pick<
   Contact,
-  "phone" | "email" | "line_id" | "messenger_id" | "whatsapp" | "address"
+  "phone" | "email" | "line_id" | "messenger_id" | "whatsapp" | "address" | "map_url"
 >;
 
 /**
@@ -49,7 +51,8 @@ export function ContactActions({
     { key: "messenger", href: messengerHref(contact.messenger_id), label: a.messenger, value: contact.messenger_id, icon: CONTACT_ICONS.messenger, external: true },
     { key: "whatsapp", href: whatsappHref(contact.whatsapp), label: a.whatsapp, value: contact.whatsapp, icon: CONTACT_ICONS.whatsapp, external: true },
     { key: "email", href: mailtoHref(contact.email), label: a.email, value: contact.email, icon: CONTACT_ICONS.email, external: false },
-    { key: "map", href: mapLink === undefined ? mapHref(contact.address) : mapLink, label: a.map, value: contact.address, icon: CONTACT_ICONS.map, external: true },
+    // The tile's value is the written address only — never the link (0164).
+    { key: "map", href: mapLink === undefined ? mapHref(contactMapSource(contact)) : mapLink, label: a.map, value: addressText(contact.address) || null, icon: CONTACT_ICONS.map, external: true },
   ].filter((action): action is typeof action & { href: string } => action.href !== null);
 
   if (actions.length === 0) return null;

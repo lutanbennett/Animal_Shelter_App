@@ -5,6 +5,7 @@ import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import {
   CONTACT_COLUMNS,
+  contactMapSource,
   toVolunteerContact,
   type Contact,
   type VolunteerContact,
@@ -68,7 +69,7 @@ export default async function ContactsPage(props: PageProps<"/contacts">) {
       ...contact,
       inCareCount: inCare.get(contact.id) ?? 0,
       friendPublished: friends.get(contact.id) ?? null,
-      mapLink: (await addressMap(contact.address))?.href ?? null,
+      mapLink: (await addressMap(contactMapSource(contact)))?.href ?? null,
     })),
   );
 

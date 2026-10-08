@@ -54,7 +54,9 @@ export const hasPublicFriends = cache(async () => {
  */
 export async function friendMaps(friends: PublicFriend[]) {
   const entries = await Promise.all(
-    friends.map(async (f) => [f.id, await addressMap(f.map_location ?? f.address)] as const),
+    // Only the map the Friend agreed to show (show_map): the written
+    // address is never turned into a map here, nor added to the search.
+    friends.map(async (f) => [f.id, await addressMap(f.map_location)] as const),
   );
   return new Map(entries.filter((e): e is readonly [string, AddressMap] => e[1] !== null));
 }

@@ -14,8 +14,10 @@ import { formatDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { contactTypeLabel } from "@/lib/i18n/enum-labels";
 import {
+  addressText,
   CARER_CONTACT_TYPE,
   CONTACT_TYPES,
+  contactAddressFields,
   isArchived,
   type Contact,
   type ContactType,
@@ -31,6 +33,18 @@ export type ContactRow = Contact & {
   /** Shelter Friend profile (0076): null when there is none, else whether it is published. */
   friend_published: boolean | null;
 };
+
+/**
+ * The two boxes as they open for editing. A row from before 0164, with its
+ * link still at the front of the address, opens already split — the link in
+ * Map link, the words in Address — so saving it once moves the link.
+ */
+function placeFields(contact: Contact) {
+  const split = contactAddressFields(contact.address, contact.map_url);
+  return split.ok
+    ? { address: split.address ?? "", mapUrl: split.map_url ?? "" }
+    : { address: contact.address ?? "", mapUrl: contact.map_url ?? "" };
+}
 
 const inputClass =
   "w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary";
@@ -48,7 +62,8 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
   const [lineId, setLineId] = useState(contact.line_id ?? "");
   const [messengerId, setMessengerId] = useState(contact.messenger_id ?? "");
   const [whatsapp, setWhatsapp] = useState(contact.whatsapp ?? "");
-  const [address, setAddress] = useState(contact.address ?? "");
+  const [address, setAddress] = useState(() => placeFields(contact).address);
+  const [mapUrl, setMapUrl] = useState(() => placeFields(contact).mapUrl);
   const [notes, setNotes] = useState(contact.notes ?? "");
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState<
@@ -76,7 +91,9 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
     setLineId(contact.line_id ?? "");
     setMessengerId(contact.messenger_id ?? "");
     setWhatsapp(contact.whatsapp ?? "");
-    setAddress(contact.address ?? "");
+    const place = placeFields(contact);
+    setAddress(place.address);
+    setMapUrl(place.mapUrl);
     setNotes(contact.notes ?? "");
   }
 
@@ -92,6 +109,7 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
         messengerId,
         whatsapp,
         address,
+        mapUrl,
         notes,
       });
       if (!result.ok) {
@@ -265,16 +283,41 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
               <textarea
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
+                aria-label={c.createForm.address}
                 placeholder={c.createForm.addressPlaceholder}
                 rows={2}
                 className={`${inputClass} min-w-48`}
               />
               <span className="max-w-xs text-xs text-muted">{c.createForm.addressHint}</span>
+              <label className="mt-1 text-xs font-medium text-muted" htmlFor={`map-url-${contact.id}`}>
+                {c.createForm.mapUrl}
+              </label>
+              <input
+                id={`map-url-${contact.id}`}
+                inputMode="url"
+                value={mapUrl}
+                onChange={(e) => setMapUrl(e.target.value)}
+                placeholder={c.createForm.mapUrlPlaceholder}
+                className={`${inputClass} min-w-48`}
+              />
+              <span className="max-w-xs text-xs text-muted">{c.createForm.mapUrlHint}</span>
             </div>
           ) : (
-            <span className="line-clamp-2 max-w-xs whitespace-pre-line text-muted">
-              {contact.address ?? t.common.dash}
-            </span>
+            <div className="flex flex-col gap-0.5">
+              <span className="line-clamp-2 max-w-xs whitespace-pre-line text-muted">
+                {addressText(contact.address) || t.common.dash}
+              </span>
+              {contact.map_url && (
+                <a
+                  href={contact.map_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-primary underline-offset-2 hover:underline"
+                >
+                  {c.createForm.mapUrl} ↗
+                </a>
+              )}
+            </div>
           )}
         </td>
         <td className="px-4 py-2">

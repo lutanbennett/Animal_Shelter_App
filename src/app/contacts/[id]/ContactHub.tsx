@@ -19,6 +19,8 @@ import {
 import {
   CARER_CONTACT_TYPE,
   isArchived,
+  addressText as writtenAddress,
+  contactMapSource,
   splitAddress,
   type AddressMap,
   type Contact,
@@ -112,13 +114,17 @@ export function ContactHub({
       contact.messenger_id ||
       contact.whatsapp ||
       contact.email ||
-      contact.address,
+      contact.address ||
+      contact.map_url,
   );
-  const address = contact.address?.trim() || null;
-  // A pasted maps link prints on its own line, linked only when it leads
-  // to a map; one that doesn't says so, so staff know to re-paste it.
-  const { link: pastedLink, text: addressText } = splitAddress(address);
+  // The address prints as words only; the map link (0164's map_url, or one
+  // not yet moved out of the address) is never printed — the map under the
+  // address is what opens it. A link that leads nowhere says so, so staff
+  // know to re-paste it.
+  const addressText = writtenAddress(contact.address);
+  const { link: pastedLink } = splitAddress(contactMapSource(contact));
   const linkWorks = pastedLink !== null && map?.href === pastedLink.toString();
+  const address = Boolean(addressText || pastedLink || map);
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-4 md:p-6">
@@ -191,21 +197,6 @@ export function ContactHub({
                 <div className="flex min-w-0 flex-1 flex-col gap-2">
                   <div className="flex flex-col">
                     <span className="text-xs text-muted">{h.address}</span>
-                    {pastedLink &&
-                      (linkWorks ? (
-                        <a
-                          href={pastedLink.toString()}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="break-all text-sm text-primary hover:underline"
-                        >
-                          {pastedLink.toString()}
-                        </a>
-                      ) : (
-                        <span className="break-all text-sm text-muted">
-                          {pastedLink.toString()}
-                        </span>
-                      ))}
                     {addressText && (
                       <span className="whitespace-pre-line break-words text-sm text-foreground">
                         {addressText}

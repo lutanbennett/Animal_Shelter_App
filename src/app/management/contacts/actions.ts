@@ -7,6 +7,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { insertContact } from "@/lib/contacts/create";
 import {
   CARER_CONTACT_TYPE,
+  contactAddressFields,
   isContactType,
   type ContactType,
 } from "@/lib/contacts/contacts";
@@ -26,6 +27,7 @@ export type ContactFields = {
   messengerId: string | null;
   whatsapp: string | null;
   address: string | null;
+  mapUrl: string | null;
   notes: string | null;
 };
 
@@ -64,6 +66,7 @@ export async function createContact(
       messengerId: text("messengerId"),
       whatsapp: text("whatsapp"),
       address: text("address"),
+      mapUrl: text("mapUrl"),
       notes: text("notes"),
     });
     if (!created.ok) return refuse(created.error);
@@ -95,6 +98,8 @@ export async function updateContact(id: string, fields: ContactFields): Promise<
     if (!isContactType(fields.type)) {
       return refuse(t.management.contacts.errors.invalidType);
     }
+    const place = contactAddressFields(fields.address, fields.mapUrl);
+    if (!place.ok) return refuse(t.management.contacts.errors[place.error]);
 
     const supabase = await createClient();
 
@@ -119,7 +124,8 @@ export async function updateContact(id: string, fields: ContactFields): Promise<
         line_id: optional(fields.lineId),
         messenger_id: optional(fields.messengerId),
         whatsapp: optional(fields.whatsapp),
-        address: optional(fields.address),
+        address: place.address,
+        map_url: place.map_url,
         notes: optional(fields.notes),
       })
       .eq("id", id);

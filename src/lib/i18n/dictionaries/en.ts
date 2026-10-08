@@ -2797,9 +2797,11 @@ const en = {
         whatsappPlaceholder: "e.g. +66 81 234 5678",
         whatsappHint: "The number the WhatsApp account uses; a number starting with 0 is treated as Thai.",
         address: "Address",
-        addressPlaceholder: "Address or a pasted Google Maps link",
-        addressHint:
-          "For the map: in Google Maps, find the place, tap Share, copy the link and paste it here. You can type the written address after the link.",
+        addressPlaceholder: "e.g. 123 Moo 4, Mae Win, Mae Wang, Chiang Mai",
+        addressHint: "The written address, as you would put it on an envelope. The map link goes in Map link, below.",
+        mapUrl: "Map link",
+        mapUrlPlaceholder: "https://maps.app.goo.gl/…",
+        mapUrlHint: "In Google Maps, find the place, tap Share, copy the link and paste it here.",
         notes: "Notes",
         notesPlaceholder: "What they supply, availability, home set-up…",
         addButton: "Add contact",
@@ -2822,6 +2824,10 @@ const en = {
       errors: {
         nameRequired: "Name is required.",
         invalidType: "Choose a contact type.",
+        mapUrlInvalid:
+          "The Map link must be a link starting https://. In Google Maps, find the place, tap Share, copy the link and paste it here.",
+        addressIsLink:
+          "The Address box starts with a link. Put the link in Map link and keep Address for the written address.",
         hasPlacements: (n: number) =>
           `This contact has ${n} placement${n === 1 ? "" : "s"} recorded and can't be deleted — the placements are part of the residents' history. Archive them instead.`,
         typeLockedByPlacements: (n: number) =>
@@ -3175,7 +3181,7 @@ const en = {
       mapPreview: (name: string) => `Map of ${name}'s address`,
       openInMaps: "Open in Google Maps",
       mapLinkBroken:
-        "This map link doesn't open a map any more, so no map is shown. In Google Maps, find the place, tap Share, and paste the new link into the address under Management → Contacts.",
+        "This map link doesn't open a map any more, so no map is shown. In Google Maps, find the place, tap Share, and paste the new link into Map link under Management → Contacts.",
       notes: "Notes",
       noDetails: "No contact details recorded — a manager can add them under Management → Contacts.",
       residentsInCare: "Residents in care",

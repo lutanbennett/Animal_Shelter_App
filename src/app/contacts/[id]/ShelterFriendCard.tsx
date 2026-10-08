@@ -48,7 +48,7 @@ const OPT_IN_SOURCE: Record<FriendOptIn, (c: Contact) => string | null> = {
   show_email: (c) => c.email,
   show_line: (c) => c.line_id,
   show_address: (c) => c.address,
-  show_map: (c) => c.address,
+  show_map: (c) => c.map_url ?? c.address,
 };
 
 function fieldsFrom(friend: ShelterFriend): FriendFields {
