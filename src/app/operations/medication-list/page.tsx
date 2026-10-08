@@ -6,6 +6,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { formatDate } from "@/lib/format";
 import { formatDose, statusLabel } from "@/lib/i18n/enum-labels";
 import { placeName } from "@/lib/enclosures/names";
+import { ZoneName } from "@/components/ZoneName";
 import { describeSchedule } from "@/lib/prescriptions/frequency";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { MedicationLabelThumb } from "@/components/MedicationLabelThumb";
@@ -218,7 +219,7 @@ export default async function MedicationListPage(props: PageProps<"/operations/m
           {pick.zones.map((z) => (
             <div key={z.zone.name} className="flex flex-col gap-3">
               <h3 className="break-words border-b border-border pb-1 text-xl font-semibold text-foreground">
-                {placeName(locale, z.zone.name, z.zone.nameTh)}
+                <ZoneName name={placeName(locale, z.zone.name, z.zone.nameTh)} colour={z.zone.colour} />
               </h3>
               <ul className="flex flex-col gap-2 rounded-lg border-2 border-foreground bg-surface p-3">
                 {z.lines.map(pickLine)}
@@ -246,7 +247,7 @@ export default async function MedicationListPage(props: PageProps<"/operations/m
         list.zones.map((zone) => (
           <section key={zone.zone.name} className="flex flex-col gap-4">
             <h2 className="break-words border-b border-border pb-1 text-xl font-semibold text-foreground">
-              {placeName(locale, zone.zone.name, zone.zone.nameTh)}
+              <ZoneName name={placeName(locale, zone.zone.name, zone.zone.nameTh)} colour={zone.zone.colour} />
             </h2>
             {zone.enclosures.map((enclosure) => (
               <div key={enclosure.enclosure.name} className="flex flex-col gap-2">

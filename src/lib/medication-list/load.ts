@@ -31,6 +31,7 @@ type PlacementRow = {
   enclosure_name_th: string | null;
   zone_name: string | null;
   zone_name_th: string | null;
+  zone_colour: string | null;
 };
 
 /**
@@ -74,7 +75,7 @@ export type EnclosureGroup = {
 };
 
 export type ZoneGroup = {
-  zone: { name: string; nameTh: string | null };
+  zone: { name: string; nameTh: string | null; colour: string | null };
   enclosures: EnclosureGroup[];
 };
 
@@ -139,7 +140,7 @@ export async function loadMedicationList(
     supabase
       .from("medication_list_residents")
       .select(
-        "id, name, thai_name, profile_photo_drive_file_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th",
+        "id, name, thai_name, profile_photo_drive_file_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th, zone_colour",
       )
       .returns<PlacementRow[]>(),
     // Read as the rounds table and its join table (0137/0138): visible exactly when the prescription is.
@@ -233,7 +234,7 @@ export async function loadMedicationList(
     let zone = zones.get(place.zone_name);
     if (!zone) {
       zone = {
-        group: { zone: { name: place.zone_name, nameTh: place.zone_name_th }, enclosures: [] },
+        group: { zone: { name: place.zone_name, nameTh: place.zone_name_th, colour: place.zone_colour }, enclosures: [] },
         enclosures: new Map(),
       };
       zones.set(place.zone_name, zone);

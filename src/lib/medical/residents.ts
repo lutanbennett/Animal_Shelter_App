@@ -15,6 +15,7 @@ type WhoRow = {
   enclosure_name_th: string | null;
   zone_name: string | null;
   zone_name_th: string | null;
+  zone_colour: string | null;
 };
 
 export type PickableResident = {
@@ -24,11 +25,11 @@ export type PickableResident = {
   photoFileId: string | null;
   status: string | null;
   enclosure: { name: string; nameTh: string | null } | null;
-  zone: { name: string; nameTh: string | null } | null;
+  zone: { name: string; nameTh: string | null; colour: string | null } | null;
 };
 
 const COLUMNS =
-  "id, name, thai_name, profile_photo_drive_file_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th";
+  "id, name, thai_name, profile_photo_drive_file_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th, zone_colour";
 
 function shape(row: WhoRow): PickableResident {
   return {
@@ -38,7 +39,7 @@ function shape(row: WhoRow): PickableResident {
     photoFileId: row.profile_photo_drive_file_id,
     status: row.current_status,
     enclosure: row.enclosure_name ? { name: row.enclosure_name, nameTh: row.enclosure_name_th } : null,
-    zone: row.zone_name ? { name: row.zone_name, nameTh: row.zone_name_th } : null,
+    zone: row.zone_name ? { name: row.zone_name, nameTh: row.zone_name_th, colour: row.zone_colour } : null,
   };
 }
 
@@ -95,7 +96,7 @@ export function matchesQuery(r: PickableResident, q: string): boolean {
 }
 
 export type PickerZone = {
-  zone: { name: string; nameTh: string | null } | null;
+  zone: { name: string; nameTh: string | null; colour: string | null } | null;
   enclosures: { enclosure: { name: string; nameTh: string | null } | null; residents: PickableResident[] }[];
 };
 
