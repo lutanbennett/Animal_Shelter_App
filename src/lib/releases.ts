@@ -61,7 +61,9 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  "On a phone, your name and role at the top of the screen are a proper button again for vets and the head of medical. It had been squeezed to a sliver beside the logo; it now sits on its own line, so you can tap it to see which account you are on.",
+];
 
 
 /** Newest first. */
