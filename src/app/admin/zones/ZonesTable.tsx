@@ -8,6 +8,9 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { RowActionButton } from "@/components/RowAction";
 import { inShelterOrder } from "@/lib/enclosures/order";
+import { ZoneDot } from "@/components/ZoneName";
+import { swatchFor } from "@/lib/zones/palette";
+import { ZoneColourPicker } from "./ZoneColourPicker";
 
 export type ZoneRow = {
   id: string;
@@ -15,6 +18,7 @@ export type ZoneRow = {
   name_th: string | null;
   internal: boolean;
   sort_order: number | null;
+  colour: string | null;
 };
 
 function ZoneRowItem({
@@ -34,6 +38,7 @@ function ZoneRowItem({
   const [name, setName] = useState(zone.name);
   const [nameTh, setNameTh] = useState(zone.name_th ?? "");
   const [internal, setInternal] = useState(zone.internal);
+  const [colour, setColour] = useState(zone.colour ?? "");
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState<
     { type: "error" | "success"; text: string } | null
@@ -43,7 +48,7 @@ function ZoneRowItem({
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
-      const result = await updateZone(zone.id, name, nameTh || null, internal);
+      const result = await updateZone(zone.id, name, nameTh || null, internal, colour || null);
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
         return;
@@ -107,6 +112,23 @@ function ZoneRowItem({
           )}
         </td>
         <td className="px-4 py-2">
+          {isSystem ? (
+            <span className="text-xs text-muted">{t.admin.zones.lifecycleNoColour}</span>
+          ) : editing ? (
+            <ZoneColourPicker value={colour} onChange={setColour} />
+          ) : zone.colour ? (
+            <span className="inline-flex items-center gap-2 text-foreground">
+              <ZoneDot colour={zone.colour} />
+              {(() => {
+                const key = swatchFor(zone.colour);
+                return key ? t.admin.zones.swatches[key] : t.admin.zones.otherColour;
+              })()}
+            </span>
+          ) : (
+            <span className="text-muted">{t.admin.zones.noColour}</span>
+          )}
+        </td>
+        <td className="px-4 py-2">
           {editing ? (
             <label className="flex items-center gap-2 text-sm text-muted">
               <input
@@ -158,6 +180,7 @@ function ZoneRowItem({
                       setName(zone.name);
                       setNameTh(zone.name_th ?? "");
                       setInternal(zone.internal);
+                      setColour(zone.colour ?? "");
                     }}
                   >
                     {t.common.cancel}
@@ -186,7 +209,7 @@ function ZoneRowItem({
       {message && (
         <tr>
           <td
-            colSpan={5}
+            colSpan={6}
             className={`px-4 pb-2 text-xs ${
               message.type === "error" ? "text-danger" : "text-success"
             }`}
@@ -238,6 +261,7 @@ export function ZonesTable({ zones }: { zones: ZoneRow[] }) {
               <th className="px-4 py-2 text-right font-medium">{t.admin.placeOrder.orderColumn}</th>
               <th className="px-4 py-2 font-medium">{t.admin.zones.table.name}</th>
               <th className="px-4 py-2 font-medium">{t.admin.zones.table.nameTh}</th>
+              <th className="px-4 py-2 font-medium">{t.admin.zones.table.colour}</th>
               <th className="px-4 py-2 font-medium">
                 {t.admin.zones.table.location}
               </th>
@@ -258,7 +282,7 @@ export function ZonesTable({ zones }: { zones: ZoneRow[] }) {
             })}
             {zones.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-muted">
+                <td colSpan={6} className="px-4 py-6 text-center text-muted">
                   {t.admin.zones.table.noZones}
                 </td>
               </tr>

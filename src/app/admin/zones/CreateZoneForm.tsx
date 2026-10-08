@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { useKeptForm } from "@/lib/use-kept-form";
+import { ZoneColourPicker } from "./ZoneColourPicker";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -9,10 +11,13 @@ import { createZone } from "./actions";
 export function CreateZoneForm() {
   const [state, onSubmit, pending] = useKeptForm(createZone, undefined);
   const { t } = useI18n();
+  // Controlled, so the form's reset after a successful add has to clear it too.
+  const [colour, setColour] = useState("");
 
   return (
     <form
       onSubmit={onSubmit}
+      onReset={() => setColour("")}
       className="flex flex-wrap items-end gap-3 rounded border border-border bg-surface p-4"
     >
       <div className="flex flex-col gap-1">
@@ -37,6 +42,7 @@ export function CreateZoneForm() {
           className="w-56 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
         />
       </div>
+      <ZoneColourPicker name="colour" value={colour} onChange={setColour} />
       <label className="flex items-center gap-2 pb-2 text-sm text-muted">
         <input
           type="checkbox"
