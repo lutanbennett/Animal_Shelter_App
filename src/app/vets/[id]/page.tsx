@@ -36,7 +36,7 @@ export default async function VetPage(props: PageProps<"/vets/[id]">) {
       supabase
         .from("vet_appointments")
         .select(
-          "id, resident_id, appointment_date, status, reason, doctor_id, doctor_name, cost, residents(name, thai_name, resident_code)",
+          "id, resident_id, appointment_date, status, reason, doctor_id, doctor_name, cost, residents(name, thai_name, resident_code, profile_photo_drive_file_id)",
         )
         .is("archived_at", null)
         .eq("vet_id", id)
@@ -94,6 +94,7 @@ export default async function VetPage(props: PageProps<"/vets/[id]">) {
       }}
       doctors={doctorsResult.data ?? []}
       canManage={can(perms, "clinics.list")}
+      canOpenVisits={can(perms, "medical.visits", "read")}
       now={new Date().toISOString()}
     />
   );

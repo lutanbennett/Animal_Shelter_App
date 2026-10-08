@@ -64,23 +64,23 @@ export function visitsInPeriod<V extends VetVisit>(
   });
 }
 
-export type ScheduleSummary = {
+export type ScheduleSummary<V extends VetVisit = VetVisit> = {
   /** Scheduled and still in the future, soonest first. */
-  upcoming: VetVisit[];
-  /** Scheduled but the date has passed — needs a status update. */
-  overdue: VetVisit[];
+  upcoming: V[];
+  /** Scheduled but the date has passed — needs a status update. Oldest first. */
+  overdue: V[];
 };
 
-export function scheduleSummary(visits: VetVisit[], now: Date): ScheduleSummary {
+export function scheduleSummary<V extends VetVisit>(visits: V[], now: Date): ScheduleSummary<V> {
   const nowMs = now.getTime();
   const scheduled = visits.filter((v) => v.status === "scheduled");
   return {
     upcoming: scheduled
       .filter((v) => new Date(v.appointment_date).getTime() >= nowMs)
       .sort((a, b) => a.appointment_date.localeCompare(b.appointment_date)),
-    overdue: scheduled.filter(
-      (v) => new Date(v.appointment_date).getTime() < nowMs,
-    ),
+    overdue: scheduled
+      .filter((v) => new Date(v.appointment_date).getTime() < nowMs)
+      .sort((a, b) => a.appointment_date.localeCompare(b.appointment_date)),
   };
 }
 
