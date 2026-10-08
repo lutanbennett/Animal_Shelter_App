@@ -21,6 +21,7 @@ type Row = {
   zone_colour: string | null;
   diet_type_id: string;
   diet_name: string;
+  diet_name_th: string | null;
   diet_unit: string;
   meals_per_day: number | null;
   daily_quantity: number | string | null;
@@ -31,6 +32,8 @@ type Row = {
 export type SpecialDiet = {
   residentDietId: string;
   name: string;
+  /** Display only (0166); the page picks the language. */
+  nameTh: string | null;
   unit: string;
   mealsPerDay: number | null;
   /** The whole day's amount; null when neither the resident nor the type's size default has one. */
@@ -87,7 +90,7 @@ export async function loadSpecialDiets(supabase: Supabase, round: RoundKey): Pro
     supabase
       .from("special_diet_list")
       .select(
-        "resident_diet_id, resident_id, name, thai_name, profile_photo_drive_file_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th, zone_colour, diet_type_id, diet_name, diet_unit, meals_per_day, daily_quantity, notes, round_keys",
+        "resident_diet_id, resident_id, name, thai_name, profile_photo_drive_file_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th, zone_colour, diet_type_id, diet_name, diet_unit, meals_per_day, daily_quantity, notes, round_keys, diet_name_th",
       )
       .returns<Row[]>(),
     // The shelter's order of zones and enclosures (Settings), for the groups below.
@@ -119,6 +122,7 @@ export async function loadSpecialDiets(supabase: Supabase, round: RoundKey): Pro
     entry.resident.diets.push({
       residentDietId: row.resident_diet_id,
       name: row.diet_name,
+      nameTh: row.diet_name_th,
       unit: row.diet_unit,
       mealsPerDay: row.meals_per_day,
       dailyQuantity: quantity != null && Number.isFinite(quantity) ? quantity : null,

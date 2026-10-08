@@ -12,7 +12,7 @@ import { loadDietResident } from "../../resident";
 export default async function EditDietPage(props: PageProps<"/diets/[id]/edit">) {
   await requirePermission("medical.diet", "read");
   const { id } = await props.params;
-  const { t } = await getT();
+  const { t, locale } = await getT();
   const supabase = await createClient();
 
   const { data: rows, error } = await supabase
@@ -27,7 +27,7 @@ export default async function EditDietPage(props: PageProps<"/diets/[id]/edit">)
 
   const [resident, dietTypes] = await Promise.all([
     loadDietResident(supabase, diet.resident_id),
-    loadDietTypeOptions(supabase),
+    loadDietTypeOptions(supabase, locale),
   ]);
   if (!resident) notFound();
 

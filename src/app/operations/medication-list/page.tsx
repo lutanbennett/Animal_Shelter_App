@@ -56,7 +56,7 @@ export default async function MedicationListPage(props: PageProps<"/operations/m
   const href = (r: RoundKey, v: string) => `/operations/medication-list?round=${r}&view=${v}`;
 
   const supabase = await createClient();
-  const list = await loadMedicationList(supabase, round);
+  const list = await loadMedicationList(supabase, round, locale);
   const pick = view === "pick" ? buildPickList(list) : null;
   const roundsText = (rounds: readonly RoundKey[]) => rounds.map((k) => m.rounds[k]).join(", ");
 
