@@ -814,6 +814,10 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
   link is dead, missing or has words after it, in plain words for whoever
   fixes them — read-only, dev by default, `--env production` when asked; see
   `docs/decisions/2026-10-08-contact-map-link-audit.md`),
+  `move-contact-map-links.mjs` (moves a map link left at the front of a
+  contact's address into its Map link, `map_url` — dry run by default,
+  `--apply` to write, `--env production` when asked; see
+  `docs/decisions/2026-10-08-contacts-address-and-map-link.md`),
   `check-public-views.mjs` (go-live check), `manual-screenshots.mjs`
   (user-manual screenshots), `appsheet-export.mjs` + `import-appsheet.mjs`
   (the legacy data migration — see `docs/data-migration.md`), the Google
