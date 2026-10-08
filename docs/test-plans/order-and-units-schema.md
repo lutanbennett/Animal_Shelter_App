@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "Put zones and enclosures in the shelter's own order, set in Settings", "Stocktake in cupboard order", "Cost per unit keeps only 2 decimals, so a per-gram price cannot be stored" (schema half of each; all three stay open) |
 | Branch / worktree | `claude/order-and-units-schema` @ `C:\Development\Animal_Shelter_order-and-units-schema` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3005` (not started: no UI change) |
-| PR | opened from this commit |
+| PR | #447 |
 | Tested by / date | Claude, 2026-10-08 |
 | Carries a migration? | yes — `0161_place_and_stock_order_and_unit_prices.sql` |
 | Tested at SHA | 63b4c321 |
@@ -30,14 +30,14 @@
 === gates: build exited 0 after 174s
 gates: typecheck=0 lint=0 build=0
 ```
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): #447, 7 passing, 0 failing, mergeable CLEAN (2026-10-08)
 
 ## 3. Schema and data
 
 - [x] Migration number is one above the highest on `main`, and no other in-flight branch carries one: `migration numbers: ok — 0161_place_and_stock_order_and_unit_prices.sql (against origin/main 10bf3026, highest 0160_view_write_grants.sql)`; the only migration-carrying stream this batch (brief)
 - [x] `node scripts/apply-migrations.mjs --status` reviewed before applying: `160 applied, 0 pending`, no drift against `origin/main`
 - [x] `node scripts/apply-migrations.mjs --dry-run` reviewed: `dry-run 0161_place_and_stock_order_and_unit_prices.sql … ok`
-- [ ] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations` — n/a: not yet — applied only when Lutan says merge (CLAUDE.md: apply from the branch you are about to merge); this line is ticked in that commit
+- [x] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations` when Lutan said merge (2026-10-08): `applying 0161_place_and_stock_order_and_unit_prices.sql … ok`. Then the after-check on the applied database: `node scripts/check-order-and-units.mjs` 18 ok, `RESULT: GREEN`; `check-policy-role-names`, `check-app-access-gate`, `check-view-write-grants` all exit 0
 - [x] File is re-runnable: `add column if not exists`, `create or replace`, `drop trigger if exists`, seeds that only fill a list with no order yet, and an `alter … type` to the type it already has. Proved by the check below, which runs the file twice in one transaction
 - [x] Existing rows still read correctly after the change: every zone, enclosure, medicine and diet keeps its name and id; existing prices keep their value (35.50 reads back as 35.5); the stocktake page's own select (`id, name, unit:dose_unit, stock_on_hand, …`) names only columns the views still have, in the same places
 - [x] **Constraints and defaults exercised against real rows** in a rolled-back harness: `node scripts/check-order-and-units.mjs --with <the file>` (committed, repeatable). Asserted: every physical zone and enclosure has an order and no Lifecycle row does; within a zone no "x 10" sorts before "x 2"; a new zone, enclosure, medicine and diet each go last; an enclosure moved to another zone goes last there; the Lifecycle zone and its enclosures refuse an order and still refuse a map shape; a new Lifecycle pseudo-enclosure is still accepted, with no order; 0.035 and 0.0125 round-trip at full precision on the two tables; and one live login per role reads `sort_order` on every stock row it can see, under its own JWT. Evidence below
@@ -201,7 +201,7 @@ Manual verification by: n/a: no UI surface, no code reads these columns yet
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR: #447 description
 - [ ] Handed to the production release manager — n/a: not yet — handed over at release cut, after merge
 
 Result: pass
