@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { Plus, type LucideIcon } from "lucide-react";
 
 export type StatCardTone = "success" | "warning" | "danger" | "neutral";
@@ -30,6 +30,7 @@ const TONE_DOT_CLASSES: Record<StatCardTone, string> = {
 
 export function StatCard({
   href,
+  onClick,
   title,
   value,
   detail,
@@ -39,6 +40,11 @@ export function StatCard({
 }: {
   /** Where the whole card links to; a card with no href is a plain read-out. */
   href?: string;
+  /**
+   * Runs alongside href, for a card whose target is on the same page and
+   * needs state set on the way (the vet hub's visit filter).
+   */
+  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
   title: string;
   value: string;
   /** Text, or text with a zone's dot in it (ZoneName). */
@@ -78,6 +84,7 @@ export function StatCard({
         {href ? (
           <Link
             href={href}
+            onClick={onClick}
             title={title}
             aria-label={title}
             className={`${titleClass} after:absolute after:inset-0 after:content-['']`}
