@@ -19,9 +19,11 @@ import {
   shapeArea,
   type Point,
 } from "@/lib/facility-map/geometry";
-import { planImageUrl, type MapPlan } from "@/lib/facility-map/types";
+import type { MapPlan } from "@/lib/facility-map/types";
+import { formatDateTime } from "@/lib/format";
 import { ROOM_KINDS, type RoomKind } from "@/lib/facility-map/rooms";
-import { addPlan, removePlan, saveRoom, saveShape } from "./actions";
+import { removePlan, saveRoom, saveShape, undoReplace } from "./actions";
+import { AddPlan, ReplacePlan, preparePlanFile, sendPlan } from "./PlanUpload";
 
 /**
  * The place-on-map editor (step 3 of 3, docs/decisions/2026-10-04-facility-map-editor.md): pick a
@@ -37,6 +39,20 @@ export type EditorZone = { id: string; name: string; name_th: string | null; sha
 export type EditorEnclosure = { id: string; name: string; name_th: string | null; zone_id: string; shape: Point[] | null };
 
 type Tool = "rect" | "poly";
+
+/**
+ * A plan as the editor sees it: where its picture lives and what last happened to it, read from the
+ * plan's history in the store (docs/decisions/2026-10-08-facility-map-plans-uploaded.md).
+ */
+export type EditorPlan = MapPlan & {
+  /** False for a plan still committed under public/facility-maps/, which can be moved into the store. */
+  stored: boolean;
+  /** The committed file's name, for a plan not yet in the store. */
+  fileName: string | null;
+  lastChange: { at: string; by: string; action: "add" | "replace" | "undo" } | null;
+  /** The replace an Undo would reverse, when there is one. */
+  undo: { at: string; by: string; cleared: boolean } | null;
+};
 export type EditorRoom = { kind: RoomKind; map_id: string; shape: Point[] };
 
 type Item = { id: string; name: string; target: "zone" | "enclosure" | "room" };
@@ -54,7 +70,7 @@ export function MapEditor({
   enclosures,
   rooms,
 }: {
-  plans: MapPlan[];
+  plans: EditorPlan[];
   zones: EditorZone[];
   enclosures: EditorEnclosure[];
   rooms: EditorRoom[];
@@ -65,19 +81,28 @@ export function MapEditor({
   const confirm = useConfirm();
 
   const overview = plans.find((p) => p.kind === "overview") ?? null;
-  const zonePlans = zones.map((z) => plans.find((p) => p.zone_id === z.id)).filter((p): p is MapPlan => Boolean(p));
+  const zonePlans = zones.map((z) => plans.find((p) => p.zone_id === z.id)).filter((p): p is EditorPlan => Boolean(p));
   const planList = [...(overview ? [overview] : []), ...zonePlans];
 
   const [planId, setPlanId] = useState<string | null>(planList[0]?.id ?? null);
   const plan = planList.find((p) => p.id === planId) ?? planList[0] ?? null;
 
   // The shapes as the editor holds them; each is written to the database the moment it is finished.
-  const [rawShapes, setRawShapes] = useState<Record<string, Point[] | null>>(() => ({
+  const fromProps = () => ({
     ...Object.fromEntries([...zones, ...enclosures].map((x) => [x.id, x.shape])),
     ...Object.fromEntries(rooms.map((r) => [roomKey(r.kind), r.shape])),
-  }));
+  });
+  const [rawShapes, setRawShapes] = useState<Record<string, Point[] | null>>(fromProps);
   // Which plan each room is on (one place for the whole site, so drawing it elsewhere moves it).
   const [roomPlans, setRoomPlans] = useState<Partial<Record<RoomKind, string>>>(() => Object.fromEntries(rooms.map((r) => [r.kind, r.map_id])));
+  // A replace that cleared the shapes, or an undo that put them back, changes them on the server: take
+  // the fresh rows when the page sends them, without losing which plan is open.
+  const [seen, setSeen] = useState({ zones, enclosures, rooms });
+  if (seen.zones !== zones || seen.enclosures !== enclosures || seen.rooms !== rooms) {
+    setSeen({ zones, enclosures, rooms });
+    setRawShapes(fromProps());
+    setRoomPlans(Object.fromEntries(rooms.map((r) => [r.kind, r.map_id])));
+  }
   const [activeId, setActiveId] = useState<string | null>(null);
   const [redraw, setRedraw] = useState(false);
   const [tool, setTool] = useState<Tool>("rect");
@@ -118,6 +143,34 @@ export function MapEditor({
   const activeShape = active ? (dragging ? dragging.shape : shapes[active.id]) : null;
   const drawing = Boolean(active) && (!shapes[active!.id] || redraw);
   const placedCount = things.filter((i) => shapes[i.id]).length;
+  const roomsPlaced = roomItems.filter((i) => shapes[i.id]).length;
+  const overlay = items.flatMap((i) => (shapes[i.id] ? [{ id: i.id, name: i.name, shape: shapes[i.id]! }] : []));
+  const [planBusy, setPlanBusy] = useState(false);
+
+  /** Puts a committed plan into the store as it is: the same picture, so its shapes are kept. */
+  async function moveIntoStore(p: EditorPlan) {
+    setPlanBusy(true);
+    setMessage(null);
+    const blob = await fetch(p.image_url).then((r) => (r.ok ? r.blob() : null)).catch(() => null);
+    const prepared = blob ? await preparePlanFile(blob) : null;
+    const r = prepared
+      ? await sendPlan(prepared, { mode: "replace", planId: p.id, shapes: "keep" }, { fileTooLarge: m.errors.tooLarge, processingFailed: m.errors.uploadFailed })
+      : { ok: false as const, error: m.errors.unreadable };
+    setPlanBusy(false);
+    if (!r.ok) setMessage({ kind: "error", text: r.error });
+    else router.refresh();
+  }
+
+  async function undoLastReplace(p: EditorPlan) {
+    if (!p.undo) return;
+    if (!(await confirm({ body: p.undo.cleared ? m.undoConfirmCleared : m.undoConfirmKept, confirmLabel: m.undoReplace }))) return;
+    setPlanBusy(true);
+    setMessage(null);
+    const r = await undoReplace(p.id);
+    setPlanBusy(false);
+    if (!r.ok) setMessage({ kind: "error", text: r.error });
+    else router.refresh();
+  }
 
   function reset() {
     setDraft([]);
@@ -306,7 +359,14 @@ export function MapEditor({
 
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm text-muted">
-              {m.progress(placedCount, things.length)} · <span className="break-all">{plan.image_url.replace("/facility-maps/", "")}</span>
+              {m.progress(placedCount, things.length)} ·{" "}
+              <span className="break-all">
+                {!plan.stored
+                  ? m.committedFile(plan.fileName ?? "")
+                  : plan.lastChange
+                    ? m.lastChange[plan.lastChange.action](formatDateTime(plan.lastChange.at, locale), plan.lastChange.by)
+                    : m.pictureSize(plan.width, plan.height)}
+              </span>
             </p>
             <button
               type="button"
@@ -326,6 +386,53 @@ export function MapEditor({
               {m.removePlan}
             </button>
           </div>
+
+          <details key={plan.id} className="rounded-lg border border-border bg-surface p-3">
+            <summary className="cursor-pointer text-sm font-semibold text-foreground">{m.pictureHeading}</summary>
+            <div className="mt-3 flex flex-col gap-3 text-sm">
+              {!plan.stored ? (
+                <>
+                  <p className="text-muted">{m.committedHelp}</p>
+                  <div>
+                    <button type="button" className={btn} disabled={planBusy} onClick={() => void moveIntoStore(plan)}>
+                      {m.moveIntoStore}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-muted">{m.replaceHelp}</p>
+                  <ReplacePlan
+                    plan={plan}
+                    overlay={overlay}
+                    placed={placedCount}
+                    total={things.length}
+                    roomsPlaced={roomsPlaced}
+                    onReplaced={(text) => {
+                      setMessage({ kind: "ok", text });
+                      router.refresh();
+                    }}
+                  />
+                  {plan.undo && (
+                    <div className="flex flex-col gap-2 border-t border-border pt-3">
+                      <p className="text-muted">{m.undoHelp(formatDateTime(plan.undo.at, locale), plan.undo.by)}</p>
+                      <div>
+                        <button type="button" className={btn} disabled={planBusy} onClick={() => void undoLastReplace(plan)}>
+                          <Undo2 aria-hidden="true" className="h-4 w-4" />
+                          {m.undoReplace}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </details>
+          {message && !active && (
+            <p role={message.kind === "error" ? "alert" : "status"} className={`text-sm ${message.kind === "error" ? "text-danger" : "text-success"}`}>
+              {message.text}
+            </p>
+          )}
 
           <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
             {/* The things to place */}
@@ -450,7 +557,7 @@ export function MapEditor({
               <p className="text-sm text-muted" aria-live="polite">
                 {!active ? m.hintPick : drawing ? (tool === "rect" ? (draft.length === 0 ? m.hintRect1(active.name) : m.hintRect2(active.name)) : m.hintPoly(active.name, draft.length)) : m.hintEdit(active.name)}
               </p>
-              {message && (
+              {message && active && (
                 <p role={message.kind === "error" ? "alert" : "status"} className={`text-sm ${message.kind === "error" ? "text-danger" : "text-success"}`}>
                   {message.text}
                 </p>
@@ -573,116 +680,5 @@ export function MapEditor({
         <p className="rounded-lg border border-border bg-surface p-4 text-sm text-muted">{m.noPlans}</p>
       )}
     </div>
-  );
-}
-
-/**
- * Registers a plan image that is already in `public/facility-maps/`. The picture is loaded in the
- * browser to read its pixel size and prove the name is a real image; the server never touches it.
- */
-function AddPlan({
-  plans,
-  zones,
-  zoneName,
-  onAdded,
-}: {
-  plans: MapPlan[];
-  zones: EditorZone[];
-  zoneName: (z: EditorZone) => string;
-  onAdded: (id: string) => void;
-}) {
-  const { t } = useI18n();
-  const m = t.admin.facilityMap;
-  const hasOverview = plans.some((p) => p.kind === "overview");
-  const free = zones.filter((z) => !plans.some((p) => p.zone_id === z.id));
-  const targets = [...(hasOverview ? [] : [{ id: "", label: t.enclosures.map.overview }]), ...free.map((z) => ({ id: z.id, label: zoneName(z) }))];
-
-  const [target, setTarget] = useState(targets[0]?.id ?? "");
-  const [file, setFile] = useState("");
-  const [size, setSize] = useState<{ w: number; h: number } | "bad" | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  if (targets.length === 0) return null;
-  const chosen = targets.some((x) => x.id === target) ? target : targets[0].id;
-  const name = file.trim();
-
-  return (
-    <details className="rounded-lg border border-border bg-surface p-3" open={plans.length === 0}>
-      <summary className="cursor-pointer text-sm font-semibold text-foreground">{m.addPlan}</summary>
-      <div className="mt-3 flex flex-col gap-3 text-sm">
-        <p className="text-muted">{m.addPlanHelp}</p>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="flex flex-col gap-1">
-            <span className="font-medium text-foreground">{m.planFor}</span>
-            <select value={chosen} onChange={(e) => setTarget(e.target.value)} className="min-h-11 rounded border border-border bg-background px-2 text-foreground md:min-h-9">
-              {targets.map((x) => (
-                <option key={x.id || "overview"} value={x.id}>
-                  {x.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="font-medium text-foreground">{m.fileName}</span>
-            <input
-              value={file}
-              onChange={(e) => {
-                setFile(e.target.value);
-                setSize(null);
-                setError(null);
-              }}
-              placeholder="main-zone-blue.webp"
-              autoComplete="off"
-              spellCheck={false}
-              className="min-h-11 rounded border border-border bg-background px-2 text-foreground md:min-h-9"
-            />
-          </label>
-        </div>
-        {name && /\.(webp|png|jpe?g|svg)$/i.test(name) && (
-          <img
-            key={name}
-            src={planImageUrl(name)}
-            alt=""
-            className="max-h-48 w-auto self-start rounded border border-border"
-            onLoad={(e) => {
-              const img = e.currentTarget;
-              setSize(img.naturalWidth > 0 && img.naturalHeight > 0 ? { w: img.naturalWidth, h: img.naturalHeight } : "bad");
-            }}
-            onError={() => setSize("bad")}
-          />
-        )}
-        {size === "bad" && <p className="text-danger">{m.notFound(name)}</p>}
-        {size && size !== "bad" && <p className="text-muted">{m.sizeFound(size.w, size.h)}</p>}
-        {error && (
-          <p role="alert" className="text-danger">
-            {error}
-          </p>
-        )}
-        <div>
-          <button
-            type="button"
-            disabled={busy || !size || size === "bad"}
-            className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50 md:min-h-9"
-            onClick={async () => {
-              if (!size || size === "bad") return;
-              setBusy(true);
-              setError(null);
-              const r = await addPlan(chosen || null, name, size.w, size.h);
-              setBusy(false);
-              if (!r.ok) setError(r.error);
-              else {
-                setFile("");
-                setSize(null);
-                onAdded(r.id);
-              }
-            }}
-          >
-            <ACTION_ICONS.add aria-hidden="true" className="h-4 w-4" />
-            {m.addPlanButton}
-          </button>
-        </div>
-      </div>
-    </details>
   );
 }

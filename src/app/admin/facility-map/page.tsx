@@ -4,8 +4,9 @@ import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { requirePermission } from "@/lib/permissions/require";
 import { parseShape } from "@/lib/facility-map/geometry";
 import { isRoomKind } from "@/lib/facility-map/rooms";
-import { planImageUrl, type MapPlan } from "@/lib/facility-map/types";
-import { MapEditor, type EditorEnclosure, type EditorRoom, type EditorZone } from "./MapEditor";
+import { isStoredPlan, planImageUrl, type MapPlan } from "@/lib/facility-map/types";
+import { readHistory, undoableReplace } from "@/lib/facility-map/plan-store";
+import { MapEditor, type EditorEnclosure, type EditorPlan, type EditorRoom, type EditorZone } from "./MapEditor";
 
 type PlanRow = Omit<MapPlan, "image_url"> & { image_path: string };
 
@@ -32,9 +33,26 @@ export default async function FacilityMapAdminPage() {
   const enclosures: EditorEnclosure[] = inShelterOrder(enclosuresResult.data ?? [])
     .filter((e) => zoneIds.has(e.zone_id))
     .map((e) => ({ id: e.id, name: e.name, name_th: e.name_th, zone_id: e.zone_id, shape: parseShape(e.map_shape) }));
-  const plans: MapPlan[] = (plansResult.data ?? [])
-    .filter((p) => p.kind === "overview" || (p.zone_id && zoneIds.has(p.zone_id)))
-    .map(({ image_path, ...p }) => ({ ...p, image_url: planImageUrl(image_path) }));
+  // Each uploaded plan's history (who replaced it, and what an Undo would put back) is a small file
+  // beside its pictures in the store; a plan still committed under public/ has none.
+  const plans: EditorPlan[] = await Promise.all(
+    (plansResult.data ?? [])
+      .filter((p) => p.kind === "overview" || (p.zone_id && zoneIds.has(p.zone_id)))
+      .map(async ({ image_path, ...p }) => {
+        const stored = isStoredPlan(image_path);
+        const history = stored ? await readHistory(p.id) : [];
+        const last = history.at(-1);
+        const undo = undoableReplace(history, image_path);
+        return {
+          ...p,
+          image_url: planImageUrl(image_path),
+          stored,
+          fileName: stored ? null : image_path,
+          lastChange: last ? { at: last.at, by: last.by.name, action: last.action } : null,
+          undo: undo ? { at: undo.at, by: undo.by.name, cleared: undo.shapes === "cleared" } : null,
+        };
+      }),
+  );
 
   const rooms: EditorRoom[] = [];
   for (const r of roomsResult.data ?? []) {

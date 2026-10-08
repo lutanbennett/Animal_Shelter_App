@@ -8,11 +8,18 @@ import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { MIN_SHAPE_AREA, parseShape, shapeArea, type Point } from "@/lib/facility-map/geometry";
 import { isRoomKind } from "@/lib/facility-map/rooms";
+import { planImageProblem, type PlanImageProblem } from "@/lib/facility-map/plan-image";
+import {
+  appendHistory,
+  readHistory,
+  storePlanImage,
+  undoableReplace,
+  type HistoryEntry,
+  type ShapeSnapshot,
+} from "@/lib/facility-map/plan-store";
+import { userNameOf } from "@/lib/auth/user-name";
 
 const refuse = (error: string): ActionRefusal => ({ ok: false, error });
-
-/** A plain file name inside public/facility-maps/: no folders, no dots at the front, an image extension. */
-const PLAN_FILE = /^[A-Za-z0-9][A-Za-z0-9._ -]{0,120}\.(webp|png|jpe?g|svg)$/i;
 
 function refreshMapViews() {
   revalidatePath("/admin/facility-map");
@@ -95,43 +102,188 @@ export async function saveRoom(
   });
 }
 
+type Supabase = Awaited<ReturnType<typeof createClient>>;
+type PlanRow = { id: string; kind: "overview" | "zone"; zone_id: string | null; image_path: string; width: number; height: number };
+
+/** The shapes drawn on one plan: the zones on the overview, a zone's enclosures on its own, and any room on it. */
+async function shapesOn(supabase: Supabase, plan: PlanRow): Promise<ShapeSnapshot> {
+  type ShapeRow = { id: string; map_shape: unknown };
+  const [places, rooms] = await Promise.all([
+    plan.kind === "overview"
+      ? supabase.from("zones").select("id, map_shape").not("map_shape", "is", null).returns<ShapeRow[]>()
+      : supabase.from("enclosures").select("id, map_shape").eq("zone_id", plan.zone_id!).not("map_shape", "is", null).returns<ShapeRow[]>(),
+    supabase.from("map_rooms").select("kind, shape").eq("map_id", plan.id).returns<{ kind: string; shape: unknown }[]>(),
+  ]);
+  if (places.error) throw places.error;
+  if (rooms.error) throw rooms.error;
+  const list = (places.data ?? []).flatMap((r) => {
+    const shape = parseShape(r.map_shape);
+    return shape ? [{ id: r.id, shape }] : [];
+  });
+  return {
+    zones: plan.kind === "overview" ? list : [],
+    enclosures: plan.kind === "zone" ? list : [],
+    rooms: (rooms.data ?? []).flatMap((r) => {
+      const shape = parseShape(r.shape);
+      return shape ? [{ kind: r.kind, shape }] : [];
+    }),
+  };
+}
+
+/** Takes every shape off one plan (a replace that is a new layout, or an undo of one). */
+async function clearShapesOn(supabase: Supabase, plan: PlanRow) {
+  const places =
+    plan.kind === "overview"
+      ? await supabase.from("zones").update({ map_shape: null }).not("map_shape", "is", null)
+      : await supabase.from("enclosures").update({ map_shape: null }).eq("zone_id", plan.zone_id!).not("map_shape", "is", null);
+  if (places.error) throw places.error;
+  const rooms = await supabase.from("map_rooms").delete().eq("map_id", plan.id);
+  if (rooms.error) throw rooms.error;
+}
+
+/** Puts a snapshot's shapes back, one row each (a plan holds a few dozen at most). */
+async function restoreShapes(supabase: Supabase, planId: string, snap: ShapeSnapshot) {
+  const writes = [
+    ...snap.zones.map((z) => supabase.from("zones").update({ map_shape: z.shape }).eq("id", z.id)),
+    ...snap.enclosures.map((x) => supabase.from("enclosures").update({ map_shape: x.shape }).eq("id", x.id)),
+    ...snap.rooms
+      .filter((r) => isRoomKind(r.kind))
+      .map((r) => supabase.from("map_rooms").upsert({ kind: r.kind, map_id: planId, shape: r.shape }, { onConflict: "kind" })),
+  ];
+  for (const { error } of await Promise.all(writes)) if (error) throw error;
+}
+
+async function who(supabase: Supabase): Promise<HistoryEntry["by"]> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return { id: user?.id ?? "", name: userNameOf(user) ?? user?.email ?? "" };
+}
+
+async function readPlan(supabase: Supabase, planId: string) {
+  return supabase.from("facility_maps").select("id, kind, zone_id, image_path, width, height").eq("id", planId).maybeSingle<PlanRow>();
+}
+
 /**
- * Registers a plan image that is already in `public/facility-maps/`. The browser read `width` and
- * `height` off the loaded image, so a name that is not a picture never gets here; nothing about the
- * file is processed on the server (the Pi and the Worker only ever serve it).
+ * Adds a plan, or replaces the picture of one, from a file the editor uploads
+ * (docs/decisions/2026-10-08-facility-map-plans-uploaded.md).
+ *
+ *   mode=add      zoneId ("" for the overview)
+ *   mode=replace  planId, shapes=keep|clear
+ *
+ * The file's type and size come from its own bytes (WebP, PNG or JPEG, at most about 5 MB). The new
+ * image is stored under a name of its own before the row is touched, and the old one is never deleted,
+ * so a failure part-way leaves the plan as it was and a replace can be undone. With shapes=clear, the
+ * shapes on the plan are recorded in the plan's history first, then taken off.
  */
-export async function addPlan(
-  zoneId: string | null,
-  imagePath: string,
-  width: number,
-  height: number,
-): Promise<ActionResult<{ id: string }>> {
+export async function uploadPlan(form: FormData): Promise<ActionResult<{ id: string }>> {
   const { t } = await getT();
   const e = t.admin.facilityMap.errors;
-  return runAction("facilityMap.addPlan", t.common.somethingWentWrong, async () => {
+  return runAction("facilityMap.uploadPlan", t.common.somethingWentWrong, async () => {
     if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
 
-    const name = imagePath.trim();
-    if (!PLAN_FILE.test(name)) return refuse(e.badFileName);
-    if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width > 20000 || height > 20000) {
-      return refuse(e.badSize);
-    }
+    const file = form.get("file");
+    if (!(file instanceof Blob) || file.size === 0) return refuse(e.noFile);
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const checked = planImageProblem(bytes);
+    if ("problem" in checked) return refuse(problemText(e, checked.problem));
+    const { type, width, height } = checked.info;
 
     const supabase = await createClient();
-    const { data, error } = await supabase
+    const by = await who(supabase);
+    const mode = form.get("mode");
+
+    if (mode === "add") {
+      const zoneId = String(form.get("zoneId") ?? "") || null;
+      const id = crypto.randomUUID();
+      const imagePath = await storePlanImage(id, bytes, type);
+      const { error } = await supabase
+        .from("facility_maps")
+        .insert({ id, kind: zoneId ? "zone" : "overview", zone_id: zoneId, image_path: imagePath, width, height });
+      if (error) {
+        // 23505: that zone (or the overview) already has a plan.
+        if (error.code === "23505") return refuse(e.alreadyHasPlan);
+        return databaseFailure("facilityMap.uploadPlan", error, t.common);
+      }
+      await appendHistory(id, { at: new Date().toISOString(), by, action: "add", from: null, to: { image_path: imagePath, width, height }, shapes: "kept" });
+      refreshMapViews();
+      return { ok: true, id };
+    }
+
+    if (mode !== "replace") return refuse(e.notFound);
+    const clear = form.get("shapes") === "clear";
+    const { data: plan, error: readError } = await readPlan(supabase, String(form.get("planId") ?? ""));
+    if (readError) return databaseFailure("facilityMap.uploadPlan", readError, t.common);
+    if (!plan) return refuse(e.notFound);
+
+    const imagePath = await storePlanImage(plan.id, bytes, type);
+    const cleared = clear ? await shapesOn(supabase, plan) : undefined;
+    const { data: updated, error } = await supabase
       .from("facility_maps")
-      .insert({ kind: zoneId ? "zone" : "overview", zone_id: zoneId, image_path: name, width, height })
-      .select("id")
-      .single();
-    if (error) {
-      // 23505: that zone (or the overview) already has a plan.
-      if (error.code === "23505") return refuse(e.alreadyHasPlan);
-      return databaseFailure("facilityMap.addPlan", error, t.common);
+      .update({ image_path: imagePath, width, height })
+      .eq("id", plan.id)
+      .select("id");
+    if (error) return databaseFailure("facilityMap.uploadPlan", error, t.common);
+    if (!updated?.length) return refuse(e.notFound);
+    // Recorded before the shapes go, so what was taken off can always be put back.
+    await appendHistory(plan.id, {
+      at: new Date().toISOString(),
+      by,
+      action: "replace",
+      from: { image_path: plan.image_path, width: plan.width, height: plan.height },
+      to: { image_path: imagePath, width, height },
+      shapes: clear ? "cleared" : "kept",
+      cleared,
+    });
+    if (clear) await clearShapesOn(supabase, plan);
+
+    refreshMapViews();
+    return { ok: true, id: plan.id };
+  });
+}
+
+/**
+ * Puts back the picture a replace took away, and, if that replace cleared the shapes, the shapes too
+ * (anything placed on the new picture since is taken off, because it was placed on a layout that is
+ * no longer shown). Only the latest replace, and only while the plan still shows its picture.
+ */
+export async function undoReplace(planId: string): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.admin.facilityMap.errors;
+  return runAction("facilityMap.undoReplace", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
+
+    const supabase = await createClient();
+    const { data: plan, error: readError } = await readPlan(supabase, planId);
+    if (readError) return databaseFailure("facilityMap.undoReplace", readError, t.common);
+    if (!plan) return refuse(e.notFound);
+
+    const last = undoableReplace(await readHistory(plan.id), plan.image_path);
+    if (!last?.from) return refuse(e.nothingToUndo);
+
+    const { error } = await supabase.from("facility_maps").update(last.from).eq("id", plan.id);
+    if (error) return databaseFailure("facilityMap.undoReplace", error, t.common);
+    await appendHistory(plan.id, {
+      at: new Date().toISOString(),
+      by: await who(supabase),
+      action: "undo",
+      from: last.to,
+      to: last.from,
+      shapes: last.shapes,
+      cleared: last.shapes === "cleared" ? await shapesOn(supabase, plan) : undefined,
+    });
+    if (last.shapes === "cleared" && last.cleared) {
+      await clearShapesOn(supabase, plan);
+      await restoreShapes(supabase, plan.id, last.cleared);
     }
 
     refreshMapViews();
-    return { ok: true, id: data.id };
+    return { ok: true };
   });
+}
+
+function problemText(e: { wrongType: string; tooLarge: string; pictureTooSmall: string; pictureTooBig: string }, problem: PlanImageProblem) {
+  return { type: e.wrongType, tooLarge: e.tooLarge, tooSmall: e.pictureTooSmall, tooBig: e.pictureTooBig }[problem];
 }
 
 /** Drops a plan. The shapes drawn on it stay on their enclosures and come back if a plan is added again. */

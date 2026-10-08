@@ -56,11 +56,22 @@ export type FacilityMapData = {
   rooms: MapRoom[];
 };
 
+/** An `image_path` that names an object in the plan store rather than a file in `public/`. */
+export const STORED_PREFIX = "storage:";
+
+/** Whether a plan is in the plan store (uploaded) rather than a file committed under `public/facility-maps/`. */
+export function isStoredPlan(imagePath: string): boolean {
+  return imagePath.startsWith(STORED_PREFIX);
+}
+
 /**
- * Plan image files are served from `public/facility-maps/`, so `facility_maps.image_path` is the file
- * name inside it. One function so the place-on-map editor (step 3) can move them to storage with
- * signed URLs without touching the map.
+ * The URL of a plan image. An uploaded plan (`storage:plans/<id>/<name>`) is served by
+ * `/api/facility-maps/…` to signed-in users only (docs/decisions/2026-10-08-facility-map-plans-uploaded.md);
+ * a plain file name is one of the plans committed under `public/facility-maps/` before uploads existed,
+ * served from there until it is moved into the store. The map and the editor read this URL, never the path.
  */
 export function planImageUrl(imagePath: string): string {
-  return `/facility-maps/${imagePath.split("/").map(encodeURIComponent).join("/")}`;
+  const stored = isStoredPlan(imagePath);
+  const path = stored ? imagePath.slice(STORED_PREFIX.length) : imagePath;
+  return `${stored ? "/api/facility-maps" : "/facility-maps"}/${path.split("/").map(encodeURIComponent).join("/")}`;
 }
