@@ -148,9 +148,18 @@ what was looked at, and by whom, stays legible.
 - **1 — done, Claude.** `content-security-policy` present and
   `content-security-policy-report-only` absent, on test before production and on
   production after: `ENFORCING: 1 / report-only: 0`.
-- **2 — partly done, Claude.** `/` and `/login` on both environments with the
-  console open: the **only** violation is the Cloudflare beacon. The rest of the
-  row is still open; see the signature.
+- **2 — done, Claude.** `/` and `/login` on both environments with the
+  console open at the release: the **only** violation is the Cloudflare beacon.
+  The rest of the row was finished later on 2026-10-08, on **production**
+  (`0.21.0`, sha `9e74be1d`) in the browser pane with Lutan signed in, because
+  `PUBLIC_SITE: "locked"` sends a signed-out visitor from `/adopt`,
+  `/our-work` and `/donate` to `/login`. Opened: `/`, `/privacy`, `/adopt`,
+  one `/adopt/<id>` page, `/friends` (the Shelter Friend cards), `/our-work`,
+  `/donate`, plus three residents' `/photos` pages, `/residents`,
+  `/management` and all four `/contacts/<id>` pages (two carry the Google map;
+  both render, screenshot taken). No broken images on any page. The console
+  held 30 Content Security Policy messages and all 30 matched
+  `cloudflareinsights`: nothing else was blocked.
 - **3 — done, Lutan**, on test, signed in: a resident page with photos and the
   Google map embed on a contact page, nothing blocked.
 - **4 — done, Lutan**, on a phone: the camera opens for resident photos and for
@@ -178,13 +187,17 @@ injected by Cloudflare at the edge, nothing in this repo loads it, and
 - [x] Everything in this checklist that could be verified without human eyes was run, not assumed
 - [x] Nothing is ticked that was not actually executed
 
-Automated checks by: Claude (csp-enforce session)  Date: 2026-10-07
+Manual-table item 2 was finished by Claude (csp-signoff session) on production on 2026-10-08; the rest of this section was run on 2026-10-07.
+
+Automated checks by: Claude (csp-enforce and csp-signoff sessions)  Date: 2026-10-08
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: items remain in the table above; not ticked on anyone's behalf
+- [x] The manual list above is empty, or every item in it was checked by a person — items 3 and 4 by Lutan; items 1 and 2 were terminal and browser checks driven by Claude, signed above; 5 is n/a
 
-Manual verification by: pending: item 2's remaining pages — `/adopt`, `/our-work`, `/donate` and a Shelter Friend page with the console open. Items 1, 3 and 4 are done and 5 is n/a; Lutan confirmed 3 and 4 in chat on 2026-10-08 and this line was written by Claude at his request
+Lutan confirmed the phone camera in chat on 2026-10-08 and asked for the line below to be signed; Claude wrote it at his request.
+
+Manual verification by: Lutan Bennett (items 3 and 4)  Date: 2026-10-08
 
 ### Result
 
