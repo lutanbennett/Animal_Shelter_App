@@ -14,7 +14,7 @@ import type { ResidentRow } from "../ResidentsTable";
 
 /**
  * The residents list as a spreadsheet. It reads the same query string /residents does (place, zone,
- * enclosure, search, Show all, Adopted, No microchip) through the same resolver, so the file is the
+ * enclosure, Unallocated, search, Show all, the status chips, No microchip) through the same resolver, so the file is the
  * list above the button; `ids` narrows it to the ticked rows. Until the activity question is
  * settled (backlog, 2026-10-05) exporting follows `resident.record`, and each medical column needs
  * its own read, so the file holds what the person could already see on screen.

@@ -3751,10 +3751,31 @@ const en = {
           ? "1 deceased resident matches"
           : `${n} deceased residents match`,
       deceasedMatchesShow: "show",
-      adoptedMatches: (n: number) =>
-        n === 1 ? "1 adopted resident matches" : `${n} adopted residents match`,
-      adoptedFilter: "Adopted",
-      adoptedOnly: "Showing adopted residents only",
+      /**
+       * A name search whose matches a filter is hiding, by status (2026-10-08): "2 fostered
+       * residents match — show". Keyed by current_status, as are the chips below.
+       */
+      statusMatches: {
+        Adopted: (n: number) =>
+          n === 1 ? "1 adopted resident matches" : `${n} adopted residents match`,
+        Fostered: (n: number) =>
+          n === 1 ? "1 fostered resident matches" : `${n} fostered residents match`,
+        Hospitalised: (n: number) =>
+          n === 1 ? "1 resident in hospital matches" : `${n} residents in hospital match`,
+      },
+      /** The status chips beside Show all: one at a time, each clears place, zone and enclosure. */
+      statusFilter: {
+        Adopted: "Adopted",
+        Fostered: "Fostered",
+        Hospitalised: "Hospitalised",
+      },
+      statusOnly: {
+        Adopted: "Showing adopted residents only",
+        Fostered: "Showing fostered residents only",
+        Hospitalised: "Showing residents in hospital only",
+      },
+      /** With the zone chips: at the shelter, no enclosure yet (current_status 'Unassigned'). */
+      unallocatedFilter: "Unallocated",
       showAllDeceased: "Show all",
       noMicrochip: "No microchip",
       hideDeceased: "Hide deceased",
