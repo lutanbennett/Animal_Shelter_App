@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — #457, all 7 checks passing at head `18e8aa61`, mergeable CLEAN (read 2026-10-08 before merge)
 
 ## 3. Schema and data — *skip if no migration*
 
