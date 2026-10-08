@@ -1,6 +1,7 @@
 "use client";
 
 import { ACTION_ICONS } from "@/components/hub-icons";
+import { placeLine } from "@/components/ZoneName";
 import { ActionButton } from "@/components/ActionButton";
 import { useRef, useState } from "react";
 import { useKeptForm } from "@/lib/use-kept-form";
@@ -20,6 +21,7 @@ export type CurrentLocation = {
   enclosureId: string | null;
   enclosureName: string | null;
   zoneName: string | null;
+  zoneColour?: string | null;
   since: string | null;
 };
 
@@ -73,7 +75,7 @@ export function MoveResidentForm({
         <div className="rounded-lg border border-border bg-surface p-4">
           <h2 className="mb-1 text-sm font-medium text-muted">{m.currentLocation}</h2>
           <p className="text-base font-semibold text-foreground">
-            {[current.enclosureName, current.zoneName].filter(Boolean).join(" · ") ||
+            {placeLine(current) ||
               t.common.dash}
           </p>
           {current.since && (

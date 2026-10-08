@@ -10,6 +10,7 @@ import { SECTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
 import { SYSTEM_ZONE } from "@/lib/enclosures/options";
+import { ZoneName } from "@/components/ZoneName";
 import { statusLabel } from "@/lib/i18n/enum-labels";
 import { residentPlace } from "@/lib/residents/place";
 import { residentTagPath } from "@/lib/tags/links";
@@ -28,6 +29,7 @@ export type ResidentRow = {
   zone_name: string | null;
   zone_name_th: string | null;
   zone_internal: boolean | null;
+  zone_colour: string | null;
 };
 
 function fullName(resident: Pick<ResidentRow, "name" | "thai_name">) {
@@ -245,9 +247,14 @@ export function ResidentsTable({
                     Lifecycle pseudo-zone; that's the Status column's job,
                     so Zone stays blank rather than say "Lifecycle". */}
                 <td className="hidden px-4 py-2 text-muted md:table-cell">
-                  {resident.zone_name === SYSTEM_ZONE
-                    ? t.common.dash
-                    : placeName(locale, resident.zone_name, resident.zone_name_th) || t.common.dash}
+                  {resident.zone_name === SYSTEM_ZONE || !resident.zone_name ? (
+                    t.common.dash
+                  ) : (
+                    <ZoneName
+                      name={placeName(locale, resident.zone_name, resident.zone_name_th)}
+                      colour={resident.zone_colour}
+                    />
+                  )}
                 </td>
                 <td className="hidden px-4 py-2 text-muted md:table-cell">
                   {resident.current_status

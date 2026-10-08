@@ -8,6 +8,7 @@ import { placeName } from "@/lib/enclosures/names";
 import { occupancyTotals, type OccupancyTotals } from "@/lib/enclosures/occupancy";
 import { enclosureTagPath } from "@/lib/tags/links";
 import { OccupancyIndicator } from "./OccupancyIndicator";
+import { ZoneName } from "@/components/ZoneName";
 
 export type EnclosureSummary = {
   id: string;
@@ -19,6 +20,8 @@ export type EnclosureSummary = {
   zone_name: string;
   zone_name_th: string | null;
   zone_internal: boolean;
+  /** zones.colour (0162): the dot beside the zone's name. */
+  zone_colour: string | null;
   /** A Lifecycle status bucket (Hospital, Fostered…), not a kennel. */
   is_system: boolean;
   resident_count: number;
@@ -33,6 +36,7 @@ export type ZoneGroup = {
   name: string;
   name_th: string | null;
   internal: boolean;
+  colour: string | null;
   enclosures: EnclosureSummary[];
   /** Every enclosure in the zone, before the filters; the heading says so when fewer are shown. */
   total_enclosures: number;
@@ -43,9 +47,12 @@ export type ZoneGroup = {
 function EnclosureCard({
   enclosure,
   tagOrigin,
+  showZone = false,
 }: {
   enclosure: EnclosureSummary;
   tagOrigin: string | null;
+  /** In the flat grid there is no zone heading, so the card names its zone, dot and all. */
+  showZone?: boolean;
 }) {
   const { t, locale } = useI18n();
   const name = placeName(locale, enclosure.name, enclosure.name_th);
@@ -92,6 +99,13 @@ function EnclosureCard({
           </span>
         )}
       </div>
+      {showZone && !enclosure.is_system && (
+        <ZoneName
+          name={placeName(locale, enclosure.zone_name, enclosure.zone_name_th)}
+          colour={enclosure.zone_colour}
+          className="-mt-2 text-xs text-muted"
+        />
+      )}
       <OccupancyIndicator
         count={enclosure.resident_count}
         capacity={enclosure.capacity}
@@ -189,7 +203,7 @@ export function EnclosureGrid({
         {allTotals}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {flat.map((enclosure) => (
-            <EnclosureCard key={enclosure.id} enclosure={enclosure} tagOrigin={tagOrigin} />
+            <EnclosureCard key={enclosure.id} enclosure={enclosure} tagOrigin={tagOrigin} showZone />
           ))}
         </div>
       </div>
@@ -204,7 +218,7 @@ export function EnclosureGrid({
         <section key={zone.id} className="flex flex-col gap-3">
           <div className="flex flex-col gap-1">
             <h2 className="text-lg font-semibold text-foreground">
-              {placeName(locale, zone.name, zone.name_th)}
+              <ZoneName name={placeName(locale, zone.name, zone.name_th)} colour={zone.colour} />
             </h2>
             <p
               className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm text-muted"

@@ -8,6 +8,7 @@ import { ResidentPicker } from "@/components/ResidentPicker";
 import { formatDate, todayIso } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
+import { ZoneSelectFrame } from "@/components/ZoneName";
 import { recordImmunizations } from "./actions";
 
 export type ResidentOption = {
@@ -26,7 +27,7 @@ export type ImmunizationTypeOption = {
   interval_months: number | null;
 };
 
-export type ZoneOption = { id: string; name: string; name_th: string | null };
+export type ZoneOption = { id: string; name: string; name_th: string | null; colour: string | null };
 export type EnclosureOption = { id: string; name: string; name_th: string | null; zone_id: string };
 
 export function ImmunizationForm({
@@ -145,6 +146,7 @@ export function ImmunizationForm({
               <label className="text-xs font-medium text-muted">
                 {t.immunizations.addAllInZone}
               </label>
+              <ZoneSelectFrame colour={zones.find((z) => z.id === zoneFilter)?.colour}>
               <select
                 value={zoneFilter}
                 onChange={(e) => setZoneFilter(e.target.value)}
@@ -157,6 +159,7 @@ export function ImmunizationForm({
                   </option>
                 ))}
               </select>
+              </ZoneSelectFrame>
             </div>
             <ActionButton onClick={addByZone} disabled={!zoneFilter} icon={ACTION_ICONS.add} compact>
               {t.immunizations.addZone}

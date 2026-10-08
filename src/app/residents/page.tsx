@@ -286,6 +286,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
             id: zone.id,
             name: zone.name,
             name_th: zone.name_th,
+            colour: zone.colour,
             href: hrefFor(
               place,
               zoneIds.includes(zone.id)

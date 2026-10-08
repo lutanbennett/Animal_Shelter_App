@@ -17,6 +17,8 @@ export type MapZone = {
   id: string;
   name: string;
   name_th: string | null;
+  /** zones.colour (0162): a dot beside the zone's name in the plan list and card, never the outline's fill. */
+  colour: string | null;
   shape: Point[] | null;
   enclosure_count: number;
   resident_count: number;

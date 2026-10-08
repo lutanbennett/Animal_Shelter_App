@@ -17,6 +17,7 @@ import {
 } from "@/lib/maintenance/status";
 import { enclosureTagPath } from "@/lib/tags/links";
 import { OccupancyIndicator } from "../OccupancyIndicator";
+import { ZoneName } from "@/components/ZoneName";
 
 export type Enclosure = {
   id: string;
@@ -28,6 +29,7 @@ export type Enclosure = {
   zone_name: string;
   zone_name_th: string | null;
   zone_internal: boolean;
+  zone_colour: string | null;
   isSystem: boolean;
 };
 
@@ -133,7 +135,10 @@ export function EnclosureHub({
           </div>
           <p className="flex items-center gap-1 text-sm text-muted">
             <ENCLOSURE_ICONS.zone aria-hidden="true" className="h-4 w-4" />
-            {placeName(locale, enclosure.zone_name, enclosure.zone_name_th)}
+            <ZoneName
+              name={placeName(locale, enclosure.zone_name, enclosure.zone_name_th)}
+              colour={enclosure.zone_colour}
+            />
             {" · "}
             {enclosure.isSystem
               ? t.enclosures.hub.system

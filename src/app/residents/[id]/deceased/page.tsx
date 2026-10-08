@@ -30,7 +30,7 @@ export default async function RecordDeathPage(
         >(),
       supabase
         .from("resident_list_view")
-        .select("current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th")
+        .select("current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th, zone_colour")
         .eq("resident_id", id)
         .limit(1)
         .returns<
@@ -42,6 +42,7 @@ export default async function RecordDeathPage(
             enclosure_name_th: string | null;
             zone_name: string | null;
             zone_name_th: string | null;
+            zone_colour: string | null;
           }[]
         >(),
       supabase
@@ -104,6 +105,7 @@ export default async function RecordDeathPage(
             enclosureId: status?.enclosure_id ?? null,
             enclosureName: placeName(locale, status?.enclosure_name, status?.enclosure_name_th) || null,
             zoneName: placeName(locale, status?.zone_name, status?.zone_name_th) || null,
+            zoneColour: status?.zone_colour ?? null,
             since: placementResult.data?.[0]?.start_date ?? null,
           }}
           today={todayIso()}

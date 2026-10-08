@@ -8,6 +8,7 @@ import { placeName } from "@/lib/enclosures/names";
 import { occupancyLevel, type OccupancyLevel } from "@/lib/enclosures/occupancy";
 import { bounds, centroid, planHeight, pointsAttr } from "@/lib/facility-map/geometry";
 import type { FacilityMapData, MapPlan } from "@/lib/facility-map/types";
+import { ZoneName } from "@/components/ZoneName";
 import { OccupancyIndicator } from "../OccupancyIndicator";
 import { PanZoom } from "./PanZoom";
 
@@ -52,6 +53,8 @@ type Item = {
   kind: "zone" | "enclosure" | "room";
   id: string;
   name: string;
+  /** A zone's colour, for the dot beside its name in the card; the outline stays an occupancy colour. */
+  colour?: string | null;
   shape: NonNullable<FacilityMapData["enclosures"][number]["shape"]>;
   level: OccupancyLevel;
   count: number;
@@ -94,6 +97,7 @@ export function FacilityMap({ data }: { data: FacilityMapData }) {
             kind: "zone",
             id: z.id,
             name: placeName(locale, z.name, z.name_th),
+            colour: z.colour,
             shape: z.shape,
             level: occupancyLevel(z.resident_count, z.capacity),
             count: z.resident_count,
@@ -167,7 +171,11 @@ export function FacilityMap({ data }: { data: FacilityMapData }) {
                   : "border-border bg-surface text-muted hover:bg-surface-hover hover:text-foreground"
               }`}
             >
-              {p.kind === "overview" ? m.overview : zoneName(p.zone_id!)}
+              {p.kind === "overview" ? (
+                m.overview
+              ) : (
+                <ZoneName name={zoneName(p.zone_id!)} colour={zoneById.get(p.zone_id!)?.colour} />
+              )}
             </button>
           );
         })}
@@ -216,7 +224,7 @@ export function FacilityMap({ data }: { data: FacilityMapData }) {
               const label = placeName(locale, z.name, z.name_th);
               const body = (
                 <>
-                  <span className="min-w-0 break-words font-medium text-foreground">{label}</span>
+                  <ZoneName name={label} colour={z.colour} className="font-medium text-foreground" />
                   <span className="shrink-0 text-xs text-muted">{t.enclosures.enclosuresCount(z.enclosure_count)}</span>
                 </>
               );
@@ -401,7 +409,9 @@ function PickedCard({
   return (
     <section aria-live="polite" className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4" data-plan={plan.id}>
       <div className="flex items-start justify-between gap-2">
-        <h3 className="min-w-0 break-words text-base font-semibold text-foreground">{item.name}</h3>
+        <h3 className="min-w-0 break-words text-base font-semibold text-foreground">
+          <ZoneName name={item.name} colour={item.colour} />
+        </h3>
         <button type="button" onClick={onClose} className="-m-2 flex h-11 w-11 shrink-0 items-center justify-center text-sm text-muted hover:text-foreground" aria-label={m.close}>
           ✕
         </button>

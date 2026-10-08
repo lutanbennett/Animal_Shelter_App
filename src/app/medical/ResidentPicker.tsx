@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PawPrint, Search } from "lucide-react";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { placeName } from "@/lib/enclosures/names";
+import { ZoneName } from "@/components/ZoneName";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { Locale } from "@/lib/i18n/locales";
 import { groupByPlace, matchesQuery, type PickableResident } from "@/lib/medical/residents";
@@ -83,7 +84,11 @@ export function ResidentPicker({
       {groupByPlace(shown).map((zone) => (
         <section key={zone.zone?.name ?? "none"} className="flex flex-col gap-3">
           <h2 className="break-words border-b border-border pb-1 text-xl font-semibold text-foreground">
-            {zone.zone ? placeName(locale, zone.zone.name, zone.zone.nameTh) : p.elsewhere}
+            {zone.zone ? (
+              <ZoneName name={placeName(locale, zone.zone.name, zone.zone.nameTh)} colour={zone.zone.colour} />
+            ) : (
+              p.elsewhere
+            )}
           </h2>
           {zone.enclosures.map((e) => (
             <div key={e.enclosure?.name ?? "none"} className="flex flex-col gap-2">

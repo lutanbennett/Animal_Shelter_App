@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/format";
 import { dietUnitLabel } from "@/lib/i18n/enum-labels";
 import { statusLabel } from "@/lib/i18n/enum-labels";
 import { placeName } from "@/lib/enclosures/names";
+import { ZoneName } from "@/components/ZoneName";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { RoundIcon, RoundStrip } from "@/components/medication/RoundIcons";
 import { loadSpecialDiets, type DietResident, type SpecialDiet } from "@/lib/diets/special-list";
@@ -153,7 +154,7 @@ export default async function SpecialDietsPage(props: PageProps<"/medical/diets"
       {list.zones.map((zone) => (
         <section key={zone.zone.name} className="flex flex-col gap-4">
           <h2 className="break-words border-b border-border pb-1 text-xl font-semibold text-foreground">
-            {placeName(locale, zone.zone.name, zone.zone.nameTh)}
+            <ZoneName name={placeName(locale, zone.zone.name, zone.zone.nameTh)} colour={zone.zone.colour} />
           </h2>
           {zone.enclosures.map((e) => (
             <div key={e.enclosure.name} className="flex flex-col gap-2">

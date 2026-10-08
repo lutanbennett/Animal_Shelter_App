@@ -18,6 +18,7 @@ type Row = {
   enclosure_name_th: string | null;
   zone_name: string | null;
   zone_name_th: string | null;
+  zone_colour: string | null;
   diet_type_id: string;
   diet_name: string;
   diet_unit: string;
@@ -54,7 +55,7 @@ export type DietEnclosure = {
 };
 
 export type DietZone = {
-  zone: { name: string; nameTh: string | null };
+  zone: { name: string; nameTh: string | null; colour: string | null };
   enclosures: DietEnclosure[];
 };
 
@@ -86,7 +87,7 @@ export async function loadSpecialDiets(supabase: Supabase, round: RoundKey): Pro
     supabase
       .from("special_diet_list")
       .select(
-        "resident_diet_id, resident_id, name, thai_name, profile_photo_drive_file_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th, diet_type_id, diet_name, diet_unit, meals_per_day, daily_quantity, notes, round_keys",
+        "resident_diet_id, resident_id, name, thai_name, profile_photo_drive_file_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th, zone_colour, diet_type_id, diet_name, diet_unit, meals_per_day, daily_quantity, notes, round_keys",
       )
       .returns<Row[]>(),
     // The shelter's order of zones and enclosures (Settings), for the groups below.
@@ -138,7 +139,7 @@ export async function loadSpecialDiets(supabase: Supabase, round: RoundKey): Pro
     }
     let zone = zones.get(row.zone_name);
     if (!zone) {
-      zone = { zone: { name: row.zone_name, nameTh: row.zone_name_th }, enclosures: [] };
+      zone = { zone: { name: row.zone_name, nameTh: row.zone_name_th, colour: row.zone_colour }, enclosures: [] };
       zones.set(row.zone_name, zone);
     }
     let enclosure = zone.enclosures.find((e) => e.enclosure.name === row.enclosure_name);

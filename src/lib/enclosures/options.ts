@@ -5,7 +5,13 @@ import { enclosuresInShelterOrder, inShelterOrder } from "./order";
 export const SYSTEM_ZONE = "Lifecycle";
 
 /** `name` is the English key; `name_th` is display only (placeName()). */
-export type ZoneOption = { id: string; name: string; name_th: string | null };
+export type ZoneOption = {
+  id: string;
+  name: string;
+  name_th: string | null;
+  /** zones.colour (0162): the dot a picker shows once this zone is chosen. */
+  colour: string | null;
+};
 
 export type EnclosureOption = {
   id: string;
@@ -33,7 +39,7 @@ export async function loadEnclosureOptions(supabase: SupabaseClient) {
   const [zonesResult, enclosuresResult, residentsResult] = await Promise.all([
     supabase
       .from("zones")
-      .select("id, name, name_th, sort_order")
+      .select("id, name, name_th, sort_order, colour")
       .neq("name", SYSTEM_ZONE)
       .returns<(ZoneOption & { sort_order: number | null })[]>(),
     supabase
@@ -63,7 +69,7 @@ export async function loadEnclosureOptions(supabase: SupabaseClient) {
   }
 
   const ordered = inShelterOrder(zonesResult.data ?? []);
-  const zones: ZoneOption[] = ordered.map(({ id, name, name_th }) => ({ id, name, name_th }));
+  const zones: ZoneOption[] = ordered.map(({ id, name, name_th, colour }) => ({ id, name, name_th, colour }));
   const enclosures: EnclosureOption[] = enclosuresInShelterOrder(enclosuresResult.data ?? [], ordered)
     .map((e) => ({
       id: e.id,

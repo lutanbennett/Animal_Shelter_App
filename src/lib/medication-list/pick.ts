@@ -18,7 +18,7 @@ export type PickEnclosure = {
   lines: PickLine[];
 };
 export type PickZone = {
-  zone: { name: string; nameTh: string | null };
+  zone: { name: string; nameTh: string | null; colour: string | null };
   lines: PickLine[];
   enclosures: PickEnclosure[];
 };

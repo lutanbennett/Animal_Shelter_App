@@ -62,7 +62,7 @@ export default async function ResidentPage(
     supabase
       .from("resident_list_view")
       .select(
-        "current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_id, zone_name, zone_name_th, zone_internal",
+        "current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_id, zone_name, zone_name_th, zone_internal, zone_colour",
       )
       .eq("resident_id", id)
       .limit(1)

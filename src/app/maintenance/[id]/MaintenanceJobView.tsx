@@ -32,6 +32,7 @@ import {
   maintenanceStatusLabel,
   type MaintenanceStatus,
 } from "@/lib/maintenance/status";
+import { ZoneDot } from "@/components/ZoneName";
 import {
   deleteMaintenanceAttachment,
   deleteMaintenanceJob,
@@ -147,6 +148,7 @@ export function MaintenanceJobView({
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
           <span className="flex items-center gap-1">
             <ENCLOSURE_ICONS.zone aria-hidden="true" className="h-4 w-4" />
+            <ZoneDot colour={job.zone_colour} />
             {placeName(locale, job.zone_name, job.zone_name_th)}
           </span>
           {job.enclosure_id ? (
