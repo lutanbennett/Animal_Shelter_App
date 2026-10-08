@@ -367,7 +367,7 @@ Admin is shown for completeness; it is never stored (§6).
 | `assistant.ask` | Ask the assistant a question | Y/N | Y | Y | Y | – | – | 32 | |
 | `assistant.record` | Record something through the assistant | Y/N | Y | Y | Y | – | – | 32 | Each thing it records is also checked against that thing's own activity |
 | **Settings** | | | | | | | | | |
-| `website.content` | The public website's content | E/R | E | – | – | – | – | 33 | |
+| `website.content` | The public website's content | E/R | E | E | – | – | – | 33 | Management added by `0163` (Lutan, 2026-10-08): the Director runs the website by day as Management. The 2IC deliberately not. `site_content`, `site_content_photos` and `site_pages` write on this cell since `0163` |
 | `reference.types` | Setup lists: immunization, procedure and blood-test types, frequencies | E/R | E | – | – | – | – | 34 | |
 | `reference.add_while_recording` | Add a missing medication, frequency or procedure type from a form | Y/N | Y | Y | Y | Y | – | 34 | *Split*, finding A1 |
 | `audit.view` | See who changed what | Y/N | Y | – | – | – | – | 35 | |

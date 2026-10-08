@@ -488,7 +488,14 @@ const NARROWED_BY_R1 = {
   "isShelterRole(contacts.directory)": ["volunteer"], "isShelterRole(clinics.list)": ["volunteer"],
   "canDoJob(/stocktake)": ["volunteer"],
 };
+// The other direction: a role given a cell by a decision after the predicate was retired. The fixture keeps what the
+// predicate said; the cell is the decision. Same STALE rule as NARROWED_BY_R1.
+// isAdminRole(website.content)(management): 0163, Lutan 2026-10-08, the Director runs the website by day as Management.
+const WIDENED_BY_DECISION = {
+  "isAdminRole(website.content)": ["management"],
+};
 const narrowedSeen = [];
+const widenedSeen = [];
 const ROLES_FOR_TABLE = ["admin", "management", "staff", "vet", "volunteer", "public_viewer", null];
 const fixturePath = join(root, "scripts/fixtures/legacy-predicates.json");
 const fixture = existsSync(fixturePath) ? JSON.parse(readFileSync(fixturePath, "utf8")) : {};
@@ -521,10 +528,13 @@ for (const pr of PREDICATES) {
     const got = table[String(r)];
     l2checked++;
     const pending = (NARROWED_BY_R1[pr.id] ?? []).includes(String(r));
+    const widened = (WIDENED_BY_DECISION[pr.id] ?? []).includes(String(r));
     if (got !== want) {
       if (pending) narrowedSeen.push(`${pr.id}(${r})`);
+      else if (widened) widenedSeen.push(`${pr.id}(${r})`);
       else layer2.push({ pr, problem: `${pr.id}(${r}) is ${got}, the default for ${pr.activity} says ${want}` });
     } else if (pending) layer2.push({ pr, problem: `${pr.id}(${r}) is listed in NARROWED_BY_R1 but now matches the default for ${pr.activity}. Remove the entry` });
+    else if (widened) layer2.push({ pr, problem: `${pr.id}(${r}) is listed in WIDENED_BY_DECISION but now matches the default for ${pr.activity}. Remove the entry` });
   }
 }
 console.log(`
@@ -532,6 +542,8 @@ console.log(`
 ${l2checked} answers (${PREDICATES.length} predicates x 7 roles incl. no role)`);
 for (const id of Object.keys(NARROWED_BY_R1)) if (!PREDICATES.some((x) => x.id === id)) layer2.push({ pr: null, problem: `NARROWED_BY_R1 names ${id}, which is not a predicate of this check` });
 if (narrowedSeen.length) console.log(`  narrowed on purpose by R1 (the volunteer's cells are fewer than the old predicates said), expected: ${narrowedSeen.join(", ")}`);
+for (const id of Object.keys(WIDENED_BY_DECISION)) if (!PREDICATES.some((x) => x.id === id)) layer2.push({ pr: null, problem: `WIDENED_BY_DECISION names ${id}, which is not a predicate of this check` });
+if (widenedSeen.length) console.log(`  widened on purpose by a later decision (the role gained a cell the old predicate never gave), expected: ${widenedSeen.join(", ")}`);
 for (const [k, why] of Object.entries(UNPAIRED)) console.log(`  not paired: ${k}: ${why}`);
 
 // Two truth tables are scope tests, not activities: "is this a clinic-scoped login" (loadVetScope, and
