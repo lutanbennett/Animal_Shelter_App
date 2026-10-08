@@ -81,12 +81,13 @@ begin
       end;
     end loop;
 
-    -- Admin-only updates on the site tables
+    -- Updates on the site tables: Admin-only in 0153; since 0163 they ask website.content, which management
+    -- also holds (check-website-content-grant.mjs proves who else does not).
     foreach t in array array['site_content','site_pages'] loop
       execute format('with d as (update %I set updated_at = now() where ctid in (select ctid from %I limit 1) returning 1) select count(*) from d', t, t) into n;
       checks := checks + 1;
-      if who = 'admin' and n <> 1 then fails := fails || format('admin updated %s rows of %s', n, t) || E'\\n'; end if;
-      if who <> 'admin' and n <> 0 then fails := fails || format('%s updated %s rows of %s', who, n, t) || E'\\n'; end if;
+      if who in ('admin', 'management') and n <> 1 then fails := fails || format('%s updated %s rows of %s', who, n, t) || E'\\n'; end if;
+      if who not in ('admin', 'management') and n <> 0 then fails := fails || format('%s updated %s rows of %s', who, n, t) || E'\\n'; end if;
     end loop;
 
     -- 6: the volunteer's reads

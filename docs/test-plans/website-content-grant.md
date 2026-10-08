@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **Let Management edit the impact figures: decide whether Management holds `website.content`** (ticked) |
 | Branch / worktree | `claude/website-content-grant` @ `C:\Development\Animal_Shelter_website-content-grant` |
 | Dev server | not started — the change is a permission cell and three policies; the page and its actions are unchanged code, proved under each role's own login in the database |
-| PR | opened from this commit |
+| PR | #460 |
 | Tested by / date | Claude / 2026-10-08 |
 | Carries a migration? | yes — `0163_management_website_content.sql` |
 | Tested at SHA | `90ce89bb` (after sync with `origin/main` `52b7f02a`) |
@@ -31,14 +31,14 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — all 7 checks passing on #460, read from the PR status before merging
 
 ## 3. Schema and data — *skip if no migration*
 
 - [x] Migration number is one above the highest on `main`, and no other in-flight branch carries one — the commit hook's `migration numbers: ok — 0163 (against origin/main 52b7f02a, highest 0162_zone_colour.sql)`; the brief names this as the batch's only migration stream
 - [x] `node scripts/apply-migrations.mjs --status` reviewed before applying — dev 162 applied, 0 pending, no drift against `origin/main`
 - [x] `node scripts/apply-migrations.mjs --dry-run` reviewed — `dry-run 0163_management_website_content.sql … ok`; the consumer warning names `routes.ts` as differing from release 0.21.0, which is expected (the menu entry is #448's, and reads the cell)
-- [ ] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations` — n/a: not yet — applied from this branch only on Lutan's go to merge (CLAUDE.md), and this line is ticked in that commit
+- [x] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations` — applied from this branch on Lutan's "merge it", 2026-10-08: `applying 0163_management_website_content.sql … ok`; `--status` then shows `0163` applied. After the apply: `check-website-content-grant.mjs` HARNESS-OK, `check-perm-convert-admin.mjs` GREEN (135 checks, its site-tables check updated to expect management), `check-policy-role-names.mjs` GREEN, `check-app-access-gate.mjs` HARNESS-OK, `check-role-can.mjs` HARNESS-OK, and parity reports `isAdminRole(website.content)(management)` as widened on purpose with no website mismatch
 - [x] File is re-runnable — `on conflict do nothing` for the cell; `alter policy` sets the same expression each time. The harness replays the file on a dev that already has the "before" state put back, then asserts
 - [x] Existing rows still read correctly after the change — no table or row changes; public reads (`public_read_*`) are untouched. `check-app-access-gate.mjs` HARNESS-OK: every login reads the 12 public objects exactly as anon
 - [x] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness on dev — `node scripts/check-website-content-grant.mjs`. Asserted, under each role's own JWT, against the real `site_content`, `site_pages` and `impact_baselines` rows: *before* (no cell, the three `is_admin()` policies put back) only admin holds the cell and writes `site_content`, `site_pages` and `site_content_photos`, and management is refused all three; *after* (the 0163 file replayed) admin and management hold the cell (read and edit) and write all three plus `impact_baselines`; the 2IC, staff, volunteer, vet and public viewer hold nothing and write 0 rows in both phases; anon refused. Unedited output:
@@ -137,6 +137,7 @@ The 2IC and the public viewer were also run: no cell and 0 rows in both phases.
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
 | 1 | info | `check-permission-parity.mjs` is RED on dev before this change (vet mismatches recorded and left red by design, plus nine broken probes); not caused here | not this PR — with the paper updated and 0163 not yet applied it shows the expected website rows until the apply; `WIDENED_BY_DECISION` covers the retired `isAdminRole` predicate after it |
+| 3 | info | `check-impact-baselines.mjs` reports 7 failures on dev: it assumes the two seeded impact figures are still blank, but both were set on dev on 2026-10-07 (450 / 300, dated 2026-10-01). Management write/update checks in it pass | not this PR — stale harness assumption about dev data; the management rows it checks pass |
 | 2 | info | Accepted consequence: anyone holding the Management role can change the public site | accepted — Lutan, 2026-10-08 |
 
 ## Left for manual verification
