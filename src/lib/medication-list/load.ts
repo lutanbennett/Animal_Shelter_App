@@ -1,5 +1,6 @@
 import type { createClient } from "@/lib/supabase/server";
 import { todayIso } from "@/lib/format";
+import { loadPlaceOrder } from "@/lib/enclosures/order";
 import { doseDueState, type DueSchedule } from "./due";
 import { ROUND_KEYS, type RoundKey } from "@/lib/rounds/suggest";
 
@@ -119,7 +120,7 @@ export async function loadMedicationList(
 ): Promise<MedicationList> {
   const today = todayIso();
 
-  const [prescriptions, medications, frequencies, placements, roundRows] = await Promise.all([
+  const [prescriptions, medications, frequencies, placements, roundRows, order] = await Promise.all([
     supabase
       .from("prescriptions")
       .select("id, resident_id, medication_id, frequency_id, dose_quantity, start_date, end_date")
@@ -146,6 +147,8 @@ export async function loadMedicationList(
       .from("prescription_rounds")
       .select("prescription_id, rounds(key)")
       .returns<{ prescription_id: string; rounds: { key: string } | { key: string }[] | null }[]>(),
+    // The shelter's order of zones and enclosures (Settings), for the groups below.
+    loadPlaceOrder(supabase),
   ]);
 
   const error =
@@ -212,6 +215,7 @@ export async function loadMedicationList(
 
   const zones = new Map<string, { group: ZoneGroup; enclosures: Map<string, EnclosureGroup> }>();
   const apart: ApartResident[] = [];
+  const enclosureIdOf = new Map<EnclosureGroup, string | null>();
 
   for (const resident of byResident.values()) {
     resident.medications.sort((a, b) => natural.compare(a.name, b.name));
@@ -243,15 +247,21 @@ export async function loadMedicationList(
       };
       zone.enclosures.set(key, enclosure);
       zone.group.enclosures.push(enclosure);
+      enclosureIdOf.set(enclosure, place.enclosure_id);
     }
     enclosure.residents.push(resident);
   }
 
   const zoneGroups = [...zones.values()]
     .map(({ group }) => group)
-    .sort((a, b) => natural.compare(a.zone.name, b.zone.name));
+    .sort((a, b) => order.compareZones(a.zone.name, b.zone.name));
   for (const zone of zoneGroups) {
-    zone.enclosures.sort((a, b) => natural.compare(a.enclosure.name, b.enclosure.name));
+    zone.enclosures.sort((a, b) =>
+      order.compareEnclosures(
+        { id: enclosureIdOf.get(a), name: a.enclosure.name },
+        { id: enclosureIdOf.get(b), name: b.enclosure.name },
+      ),
+    );
     for (const enclosure of zone.enclosures) {
       enclosure.residents.sort((a, b) => natural.compare(a.name, b.name));
     }

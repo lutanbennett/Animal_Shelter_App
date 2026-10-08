@@ -1014,6 +1014,22 @@ const en = {
       createdZone: (name: string) => `Created zone "${name}".`,
       errors: { nameRequired: "Name is required." },
     },
+    placeOrder: {
+      zonesNote:
+        "Zones appear in this order everywhere in the app: the Enclosures page, the zone and enclosure pickers, the residents list and every list grouped by place. A new zone goes last.",
+      enclosuresNote:
+        "Enclosures appear in this order within their zone, everywhere in the app. Moving one only changes its place in its own zone; a new one goes last in its zone.",
+      moveUp: (name: string) => `Move ${name} up`,
+      moveDown: (name: string) => `Move ${name} down`,
+      sortByName: "Sort A-Z (numbers in order)",
+      sortZonesConfirm:
+        "Put every zone in A-Z order, with numbers in order (2 before 10)? The order you have set is replaced; you can move them again afterwards.",
+      sortEnclosuresConfirm: (zone: string) =>
+        `Put the enclosures in ${zone} in A-Z order, with numbers in order (2 before 10)? The order you have set is replaced; you can move them again afterwards.`,
+      lifecycleFixed: "Keeps its fixed place: the status cards at the top of the Enclosures page.",
+      lifecycleRefused: "The Lifecycle zone keeps its fixed place and takes no order.",
+      orderColumn: "Order",
+    },
     facilityMap: {
       title: "Facility map",
       subtitle: "Draw each enclosure, and each zone on the overview, on the shelter's plans. Nobody types a coordinate.",

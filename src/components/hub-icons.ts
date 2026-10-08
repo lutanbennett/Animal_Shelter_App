@@ -3,6 +3,7 @@ import {
   Archive,
   ArchiveRestore,
   ArrowDown,
+  ArrowDownAZ,
   ArrowLeft,
   ArrowRight,
   ArrowRightLeft,
@@ -236,6 +237,8 @@ export const ACTION_ICONS = {
   removeImage: ImageOff,
   moveUp: ArrowUp,
   moveDown: ArrowDown,
+  /** Put a list in A-Z order with numbers in order, as a starting point to move from. */
+  sortByName: ArrowDownAZ,
   /** Make this the default / standard one. */
   makeStandard: Star,
   /** Mark a person as no longer active (a doctor who has left), and back. */

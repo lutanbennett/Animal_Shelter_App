@@ -881,7 +881,7 @@ const manual: Manual = {
           activityLevel: "read",
           path: "Shelter Operations → Enclosures",
           steps: [
-            "Open Shelter Operations from the menu and tap Enclosures. Tap a zone chip to show only that zone, search by enclosure name, or sort by zone, name or Fullest first.",
+            "Open Shelter Operations from the menu and tap Enclosures. Tap a zone chip to show only that zone, search by enclosure name, or sort by zone, name or Fullest first. Zone shows the zones and their enclosures in the shelter's own order, set under Settings → Zones and Settings → Enclosures; Name is A-Z with numbers in order (2 before 10).",
             "Choose On-site or Off-site at the top to see only the enclosures at the shelter, or only those away from it; Everywhere shows both. The zone chips then list just that place's zones. You can pick more than one zone — tap a chip to add it and tap it again to take it off; All zones clears them. Switching between On-site and Off-site clears the zones you had picked, since they belong to the other place. Hospital, Unassigned and Fostered are statuses rather than places, so they only show under Everywhere.",
             "Under each zone's name is a line of figures: On-site or Off-site, how many enclosures, how many residents, and how many spaces are free. \"All zones\" above the list gives the same totals. Spaces free adds up capacity minus residents for each enclosure that has a capacity; a full or over-capacity enclosure counts as none, and enclosures with no capacity set are left out and mentioned. Hospital, Unassigned and Fostered are not counted. When a search, zone chip or the open-maintenance tick narrows the list, the figures cover only what is shown and the line says \"showing 4 of 12 enclosures\".",
             "Each card shows how many residents are in the enclosure against its capacity — green for space available, orange for nearly full or full, red for over capacity.",
@@ -1560,8 +1560,12 @@ const manual: Manual = {
           steps: [
             "Zones are the physical areas of the shelter (marked Internal) plus off-site ones (External). Add a zone with a name and, optionally, a Thai name.",
             "Enclosures belong to a zone and have a capacity and notes. The capacity drives the occupancy colours and the nearly-full warning when moving a resident.",
+            "The order the zones are listed in on Settings → Zones is the order they appear everywhere in the app: the Enclosures page and its zone chips, every zone and enclosure picker (moving a resident, intake, back from hospital, maintenance), the residents list's filters, the facility map's lists, and the medical and special-diet lists grouped by place. Use the up and down arrows on a row to move a zone one place; they work with a finger on a phone, where dragging does not.",
+            "Settings → Enclosures lists the enclosures under their zone, in the zone's order. The arrows move an enclosure up or down within its own zone only; to put it in another zone, edit it and choose the zone, and it goes to the end of that zone's list.",
+            "Sort A-Z (numbers in order) puts a list in alphabetical order with numbers read as numbers, so Enclosure 2 comes before Enclosure 10. It is a starting point to move things from, and asks first because it replaces the order you have set. On Settings → Enclosures each zone has its own.",
+            "A new zone goes to the end of the zones, and a new enclosure to the end of its zone, until you move it.",
             "The Thai name is what staff reading the app in Thai see everywhere a zone or enclosure is shown — the residents list, the hub, the enclosure browser, the maintenance board and every picker. Leave it blank and the English name is used. The English name stays the one Google Drive folders and the app's own logic go by, so renaming in Thai never moves anything.",
-            "The Lifecycle zone and its pseudo-enclosures (Hospital, Fostered, Adopted, Deceased, Unassigned) are used by the app's status logic and can't be edited; their Thai names are built in.",
+            "The Lifecycle zone and its pseudo-enclosures (Hospital, Fostered, Adopted, Deceased, Unassigned) are used by the app's status logic and can't be edited; their Thai names are built in. They take no place in the order either: they are always last on these pages and keep their fixed place as the status cards at the top of the Enclosures page.",
           ],
           screenshot: {
             src: "/manual/admin-enclosures.png",
