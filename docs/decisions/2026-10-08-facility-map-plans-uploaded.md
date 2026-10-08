@@ -118,8 +118,9 @@ picture works on a phone**: the file input takes `image/*`, which offers the cam
 skipping the field lookup, and `facility_maps` has no `name`, so **every insert of a zone plan fails** with
 `record "new" has no field "name"` — on `main`, before this branch, through the old file-name *Add a plan* too.
 Replacing a plan (an update of `image_path`) and adding the overview (no `zone_id`) are unaffected. The fix is a
-nested `if` in a new migration, which this stream may not write; it is a backlog follow-up, and it blocks loading
-the House Zone plan if that zone has no plan yet.
+nested `if` in a new migration, which this stream may not write. Lutan (2026-10-08): it goes into the schema PR
+already in flight, #463 (`claude/contacts-address-map-schema`, `0164`). Until that is applied, *Add a plan* for a
+zone with no plan yet (the House Zone) fails.
 
 ## Per-screen table
 
