@@ -6,7 +6,6 @@ import { dietUnitLabel, doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { formatDate, formatDateTime, todayIso } from "@/lib/format";
 import { toCsv } from "@/lib/csv";
 import { formatQuantity } from "@/lib/diets/options";
-import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { CsvDownloadButton } from "@/components/CsvDownloadButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
@@ -466,7 +465,7 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
     u.picker.session(formatDateTime(s.counted_at, locale), s.items);
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-6">
+    <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
       <div>
         <h1 className="text-2xl font-semibold text-foreground">{u.title}</h1>
         <p className="text-sm text-muted">{u.subtitle}</p>
@@ -481,7 +480,10 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
         </Link>
       </div>
 
-      <LargerScreenNotice>
+      {/* No larger-screen notice: opened by Management or the 2IC on a phone (decision 2026-10-07). */}
+
+
+      <>
         {historyResult.error && (
           <p className="text-sm text-danger">
             {u.couldntLoad}: {historyResult.error.message}
@@ -698,7 +700,7 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
 
           <p className="text-xs text-muted">{u.note}</p>
         </section>
-      </LargerScreenNotice>
+      </>
     </main>
   );
 }

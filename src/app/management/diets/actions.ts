@@ -8,6 +8,7 @@ import { parseUnitCost } from "@/lib/format";
 import { parseLeadDays, parseStockCount } from "@/lib/management/stock";
 import { resolveSafetyStock } from "@/lib/management/purchasing";
 import { loadConversions } from "@/lib/units-server";
+import { moveInCupboardOrder } from "@/lib/management/cupboard-order-server";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 
@@ -118,6 +119,24 @@ export async function updateDietTypeStock(id: string, count: string): Promise<Ac
     });
     if (error) return refuse(error.message);
     revalidateDietPages();
+    return { ok: true };
+  });
+}
+
+/**
+ * Move a food a place up or down the cupboard order (0161), which the
+ * stocktake sheet walks. The stock cell's, not Settings': where a sack sits
+ * in the store is how the shelter runs, and the 2IC sets it on a phone.
+ */
+export async function moveDietType(id: string, direction: "up" | "down"): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("diets.moveDietType", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "stock.diets")) return refuse(t.management.errors.managementAccessRequired);
+    const { error } = await moveInCupboardOrder(await createClient(), "diet_types", id, direction);
+    if (error) return refuse(error);
+    revalidatePath("/management/diets");
+    revalidatePath("/stocktake");
+    refresh();
     return { ok: true };
   });
 }

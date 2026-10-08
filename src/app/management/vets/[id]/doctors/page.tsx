@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { BackLink } from "@/components/BackLink";
-import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { AddDoctorForm } from "./AddDoctorForm";
 import { DoctorsTable, type DoctorRow, type ElsewhereDoctor } from "./DoctorsTable";
 import { requirePermission } from "@/lib/permissions/require";
@@ -94,7 +93,7 @@ export default async function VetDoctorsPage(
   elsewhere.sort((a, b) => a.name.localeCompare(b.name));
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-6">
+    <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
       <BackLink href="/management/vets">{d.back}</BackLink>
       <div>
         <h1 className="text-2xl font-semibold text-foreground">{d.title(vet.name)}</h1>
@@ -107,7 +106,10 @@ export default async function VetDoctorsPage(
         </p>
       </div>
 
-      <LargerScreenNotice>
+      {/* No larger-screen notice: opened by Management or the 2IC on a phone (decision 2026-10-07). */}
+
+
+      <>
         {doctorsResult.error && (
           <p className="text-sm text-danger">
             {d.couldntLoad}: {doctorsResult.error.message}
@@ -126,7 +128,7 @@ export default async function VetDoctorsPage(
           elsewhere={elsewhere}
           isAdmin={perms.isAdmin}
         />
-      </LargerScreenNotice>
+      </>
     </main>
   );
 }

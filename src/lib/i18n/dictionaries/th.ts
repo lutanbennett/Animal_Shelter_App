@@ -1911,6 +1911,18 @@ const th: Dictionary = {
     stock: {
       stocktakeLink: "ตรวจนับสต็อก: นับทุกรายการในครั้งเดียว",
       deliveriesLink: "บันทึกการรับของ",
+      order: {
+        link: "ลำดับในตู้",
+        title: "ลำดับในตู้",
+        intro:
+          "เรียงรายการตามที่วางอยู่บนชั้น จากบนลงล่าง ใบตรวจนับสต็อกจะเรียงตามลำดับนี้ คนนับจะได้เดินดูตู้รอบเดียว",
+        back: "กลับไปที่สต็อก",
+        position: (n: number) => `ลำดับ ${n}`,
+        moveUp: (name: string) => `เลื่อน ${name} ขึ้น`,
+        moveDown: (name: string) => `เลื่อน ${name} ลง`,
+        empty: "ยังไม่มีรายการให้เรียง",
+      },
+      packPrice: (amount: string, unit: string) => `${amount} ต่อ ${unit}`,
       stockHeading: "คงคลัง",
       daysHeading: "ใช้ได้อีก (วัน)",
       notCounted: "ยังไม่ได้นับ",

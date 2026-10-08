@@ -31,7 +31,6 @@ export default async function ManagementPage() {
       label: t.nav.contacts,
       description: t.management.landing.tiles.contacts,
       icon: CONTACT_ICONS.contact,
-      phoneNote: t.largerScreen.tileLabel,
     },
     {
       href: "/management/shelter-friends",
@@ -51,21 +50,18 @@ export default async function ManagementPage() {
       label: t.nav.vets,
       description: t.management.landing.tiles.vets,
       icon: VET_ICONS.vet,
-      phoneNote: t.largerScreen.tileLabel,
     },
     {
       href: "/management/medications",
       label: t.nav.medicationStock,
       description: t.management.landing.tiles.medications,
       icon: SECTION_ICONS.prescriptions,
-      phoneNote: t.largerScreen.tileLabel,
     },
     {
       href: "/management/diets",
       label: t.nav.dietStock,
       description: t.management.landing.tiles.diets,
       icon: SECTION_ICONS.diet,
-      phoneNote: t.largerScreen.tileLabel,
     },
     {
       href: "/management/recurring-jobs",
@@ -78,14 +74,12 @@ export default async function ManagementPage() {
       label: t.nav.stockUsage,
       description: t.management.landing.tiles.stockUsage,
       icon: Scale,
-      phoneNote: t.largerScreen.tileLabel,
     },
     {
       href: "/management/purchasing",
       label: t.nav.purchasing,
       description: t.management.landing.tiles.purchasing,
       icon: ShoppingCart,
-      phoneNote: t.largerScreen.tileLabel,
     },
     {
       href: "/management/cashflow",
