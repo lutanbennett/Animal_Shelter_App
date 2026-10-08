@@ -35,7 +35,7 @@ type EnclosureRow = {
   zone_id: string;
   map_shape: unknown;
   sort_order: number | null;
-  zones: { name: string; name_th: string | null; internal: boolean } | null;
+  zones: { name: string; name_th: string | null; internal: boolean; colour: string | null } | null;
 };
 
 type PlanRow = {
@@ -88,10 +88,10 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   // The map is for whoever holds facility.map (0132), and reads the same rows as the list.
   const canMap = can(perms, "facility.map");
   const [zonesResult, enclosuresResult, residentsResult, jobsResult, tagOrigin, specialDiets, plansResult] = await Promise.all([
-    supabase.from("zones").select("id, name, name_th, internal, map_shape, sort_order"),
+    supabase.from("zones").select("id, name, name_th, internal, map_shape, sort_order, colour"),
     supabase
       .from("enclosures")
-      .select("id, name, name_th, capacity, notes, zone_id, map_shape, sort_order, zones(name, name_th, internal)")
+      .select("id, name, name_th, capacity, notes, zone_id, map_shape, sort_order, zones(name, name_th, internal, colour)")
       .returns<EnclosureRow[]>(),
     loadOccupants(supabase),
     // Open maintenance per enclosure, and per zone for zone-wide jobs
@@ -160,6 +160,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       zone_id: row.zone_id,
       zone_name: row.zones?.name ?? t.common.dash,
       zone_name_th: row.zones?.name_th ?? null,
+      zone_colour: row.zones?.colour ?? null,
       zone_internal: row.zones?.internal ?? true,
       is_system: row.zones?.name === SYSTEM_ZONE,
       resident_count: counts.get(row.id) ?? 0,
@@ -196,6 +197,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       name: zone.name,
       name_th: zone.name_th,
       internal: zone.internal,
+      colour: zone.colour,
       enclosures: physical.filter((e) => e.zone_id === zone.id),
       total_enclosures: summaries.filter((e) => e.zone_id === zone.id).length,
       zone_wide_jobs: zoneWideJobs.get(zone.id) ?? 0,
@@ -263,6 +265,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
             id: zone.id,
             name: zone.name,
             name_th: zone.name_th,
+            colour: zone.colour,
             shape: parseShape(zone.map_shape),
             enclosure_count: inZone.length,
             resident_count: inZone.reduce((n, e) => n + e.resident_count, 0),

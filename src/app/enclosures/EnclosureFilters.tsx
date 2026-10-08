@@ -18,6 +18,7 @@ type ZoneOption = {
   name: string;
   name_th: string | null;
   internal: boolean;
+  colour: string | null;
   /** The Lifecycle pseudo-zone: offered only under "all". */
   is_system: boolean;
 };
@@ -107,6 +108,7 @@ export function EnclosureFilters({
           id: zone.id,
           name: zone.name,
           name_th: zone.name_th,
+          colour: zone.colour,
           href: toggleHref(zone.id),
           active: zoneIds.includes(zone.id),
         }))}

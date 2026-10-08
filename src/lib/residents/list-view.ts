@@ -84,7 +84,7 @@ export function applyFilters<
 
 /** The columns the (non-volunteer) residents list reads from `resident_list_view`. */
 const LIST_COLUMNS =
-  "resident_id, name, resident_code, thai_name, other_names, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_id, zone_name, zone_name_th, zone_internal";
+  "resident_id, name, resident_code, thai_name, other_names, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_id, zone_name, zone_name_th, zone_internal, zone_colour";
 
 type Params = Record<string, string | string[] | undefined>;
 
@@ -100,7 +100,7 @@ export async function resolveListView(supabase: Supabase, searchParams: Params, 
   // Zones and enclosures come first: which ?zone= and ?enclosure= ids are
   // honoured depends on the place, and the list query needs the survivors.
   const [zonesResult, enclosuresResult] = await Promise.all([
-    supabase.from("zones").select("id, name, name_th, internal, sort_order"),
+    supabase.from("zones").select("id, name, name_th, internal, sort_order, colour"),
     supabase.from("enclosures").select("id, name, name_th, zone_id, sort_order"),
   ]);
 

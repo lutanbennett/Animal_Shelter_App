@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
+import { ZoneName } from "@/components/ZoneName";
 import { ENCLOSURE_PLACES, type EnclosurePlace } from "@/lib/enclosures/place";
 
 export type PlaceZoneChip = {
   id: string;
   name: string;
   name_th: string | null;
+  /** zones.colour, drawn as a dot before the name; null for none. */
+  colour: string | null;
   /** Where tapping it goes: the list with this zone added or taken off. */
   href: string;
   active: boolean;
@@ -94,7 +97,8 @@ export function PlaceZoneChips({
             aria-current={zone.active ? "true" : undefined}
             className={chipClass(zone.active)}
           >
-            {placeName(locale, zone.name, zone.name_th)}
+            <ZoneName name={placeName(locale, zone.name, zone.name_th)} colour={zone.colour} />
+
           </Link>
         ))}
       </div>

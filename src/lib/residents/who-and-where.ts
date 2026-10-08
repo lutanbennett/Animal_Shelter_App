@@ -41,10 +41,11 @@ export type WhoAndWhere = {
   zone_id: string | null;
   zone_name: string | null;
   zone_name_th: string | null;
+  zone_colour: string | null;
 };
 
 export const WHO_AND_WHERE_COLUMNS =
-  "id, name, thai_name, resident_code, species, sex, profile_photo_drive_file_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_id, zone_name, zone_name_th";
+  "id, name, thai_name, resident_code, species, sex, profile_photo_drive_file_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_id, zone_name, zone_name_th, zone_colour";
 
 /** A who-and-where row in the shape the residents list and the enclosure pages already take. */
 export function asListRow(row: WhoAndWhere, zoneInternal: boolean | null = null): ResidentRow {
@@ -62,6 +63,7 @@ export function asListRow(row: WhoAndWhere, zoneInternal: boolean | null = null)
     zone_name: row.zone_name,
     zone_name_th: row.zone_name_th,
     zone_internal: zoneInternal,
+    zone_colour: row.zone_colour,
   };
 }
 
