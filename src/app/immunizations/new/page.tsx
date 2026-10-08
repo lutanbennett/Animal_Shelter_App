@@ -1,6 +1,7 @@
 import { requirePermission } from "@/lib/permissions/require";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { inShelterOrder } from "@/lib/enclosures/order";
 import { NOT_DECEASED } from "@/lib/residents/status";
 import {
   ImmunizationForm,
@@ -45,11 +46,10 @@ export default async function NewImmunizationPage(
         .from("picker_immunization_types")
         .select("id, name, is_mandatory, interval_months")
         .order("name"),
-      supabase.from("zones").select("id, name, name_th").order("name"),
+      supabase.from("zones").select("id, name, name_th, sort_order"),
       supabase
         .from("enclosures")
-        .select("id, name, name_th, zone_id")
-        .order("name"),
+        .select("id, name, name_th, zone_id, sort_order"),
     ]);
 
   const residents: ResidentOption[] = (residentsResult.data ?? []).map(
@@ -65,8 +65,9 @@ export default async function NewImmunizationPage(
 
   const immunizationTypes: ImmunizationTypeOption[] =
     immunizationTypesResult.data ?? [];
-  const zones: ZoneOption[] = zonesResult.data ?? [];
-  const enclosures: EnclosureOption[] = enclosuresResult.data ?? [];
+  // The shelter's order (Settings → Zones and Enclosures); the form filters enclosures by zone.
+  const zones: ZoneOption[] = inShelterOrder(zonesResult.data ?? []);
+  const enclosures: EnclosureOption[] = inShelterOrder(enclosuresResult.data ?? []);
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">

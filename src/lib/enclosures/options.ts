@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { enclosuresInShelterOrder, inShelterOrder } from "./order";
 
 /** The Lifecycle pseudo-zone holds status buckets, not physical enclosures. */
 export const SYSTEM_ZONE = "Lifecycle";
@@ -16,9 +17,6 @@ export type EnclosureOption = {
   residentCount: number;
 };
 
-const byName = (a: { name: string }, b: { name: string }) =>
-  a.name.localeCompare(b.name, undefined, { numeric: true });
-
 /**
  * Physical zones and enclosures for a zone → enclosure picker, with each
  * enclosure's current headcount so the picker can warn about capacity.
@@ -27,20 +25,30 @@ const byName = (a: { name: string }, b: { name: string }) =>
  *
  * Counts are tallied from resident_list_view in the request, the same way
  * /enclosures does (see docs/decisions.md, "Enclosure browser").
+ *
+ * Both lists come in the shelter's order (Settings → Zones and Enclosures,
+ * src/lib/enclosures/order.ts): zones, then enclosures zone by zone.
  */
 export async function loadEnclosureOptions(supabase: SupabaseClient) {
   const [zonesResult, enclosuresResult, residentsResult] = await Promise.all([
     supabase
       .from("zones")
-      .select("id, name, name_th")
+      .select("id, name, name_th, sort_order")
       .neq("name", SYSTEM_ZONE)
-      .returns<ZoneOption[]>(),
+      .returns<(ZoneOption & { sort_order: number | null })[]>(),
     supabase
       .from("enclosures")
-      .select("id, name, name_th, zone_id, capacity, zones!inner(name)")
+      .select("id, name, name_th, zone_id, capacity, sort_order, zones!inner(name)")
       .neq("zones.name", SYSTEM_ZONE)
       .returns<
-        { id: string; name: string; name_th: string | null; zone_id: string; capacity: number | null }[]
+        {
+          id: string;
+          name: string;
+          name_th: string | null;
+          zone_id: string;
+          capacity: number | null;
+          sort_order: number | null;
+        }[]
       >(),
     supabase
       .from("resident_list_view")
@@ -54,8 +62,9 @@ export async function loadEnclosureOptions(supabase: SupabaseClient) {
     counts.set(row.enclosure_id, (counts.get(row.enclosure_id) ?? 0) + 1);
   }
 
-  const zones = [...(zonesResult.data ?? [])].sort(byName);
-  const enclosures: EnclosureOption[] = (enclosuresResult.data ?? [])
+  const ordered = inShelterOrder(zonesResult.data ?? []);
+  const zones: ZoneOption[] = ordered.map(({ id, name, name_th }) => ({ id, name, name_th }));
+  const enclosures: EnclosureOption[] = enclosuresInShelterOrder(enclosuresResult.data ?? [], ordered)
     .map((e) => ({
       id: e.id,
       name: e.name,
@@ -63,8 +72,7 @@ export async function loadEnclosureOptions(supabase: SupabaseClient) {
       zoneId: e.zone_id,
       capacity: e.capacity,
       residentCount: counts.get(e.id) ?? 0,
-    }))
-    .sort(byName);
+    }));
 
   return {
     zones,

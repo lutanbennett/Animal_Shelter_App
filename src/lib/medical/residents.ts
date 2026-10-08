@@ -1,4 +1,5 @@
 import type { createClient } from "@/lib/supabase/server";
+import { loadPlaceOrder, natural } from "@/lib/enclosures/order";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
@@ -26,8 +27,6 @@ export type PickableResident = {
   zone: { name: string; nameTh: string | null } | null;
 };
 
-const natural = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
-
 const COLUMNS =
   "id, name, thai_name, profile_photo_drive_file_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th";
 
@@ -52,20 +51,24 @@ function shape(row: WhoRow): PickableResident {
 export async function loadPickableResidents(
   supabase: Supabase,
 ): Promise<{ residents: PickableResident[]; error: string | null }> {
-  const { data, error } = await supabase
-    .from("resident_who_and_where")
-    .select(COLUMNS)
-    .returns<WhoRow[]>();
+  const [{ data, error }, order] = await Promise.all([
+    supabase.from("resident_who_and_where").select(COLUMNS).returns<WhoRow[]>(),
+    loadPlaceOrder(supabase),
+  ]);
   if (error) return { residents: [], error: error.message };
-  const residents = (data ?? [])
-    .map(shape)
-    .filter((r) => r.status !== "Deceased" && r.status !== "Adopted");
-  residents.sort(
-    (a, b) =>
-      natural.compare(a.zone?.name ?? "￿", b.zone?.name ?? "￿") ||
-      natural.compare(a.enclosure?.name ?? "￿", b.enclosure?.name ?? "￿") ||
-      natural.compare(a.name, b.name),
-  );
+  // Zones and enclosures in the shelter's order (Settings → Zones and Enclosures), no place last.
+  const residents = [...(data ?? [])]
+    .filter((r) => r.current_status !== "Deceased" && r.current_status !== "Adopted")
+    .sort(
+      (a, b) =>
+        order.compareZones(a.zone_name, b.zone_name) ||
+        order.compareEnclosures(
+          { id: a.enclosure_id, name: a.enclosure_name },
+          { id: b.enclosure_id, name: b.enclosure_name },
+        ) ||
+        natural.compare(a.name, b.name),
+    )
+    .map(shape);
   return { residents, error: null };
 }
 
