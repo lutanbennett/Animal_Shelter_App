@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **Audit trigger on `facility_maps`…** and **Scope functions must sit beside a cell…** (both ticked) |
 | Branch / worktree | `claude/permission-guards-0165` @ `C:\Development\Animal_Shelter_permission-guards-0165` |
 | Dev server | not started: no UI surface in this PR |
-| PR | to follow |
+| PR | #468 |
 | Tested by / date | Claude / 2026-10-08 |
 | Carries a migration? | yes: `0165_audit_facility_maps.sql` |
 | Tested at SHA | `bc9aaa78` (after sync with `origin/main` `005e6594`) |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: #468, run 37761878720 at `91d40a62` — check, migration-numbers, new-policy-role-names, test-plan, public-views, script-integrity all pass; `audit` (non-blocking by design) still running at the time
 
 ## 3. Schema and data — *skip if no migration*
 
