@@ -6,6 +6,7 @@ import {
   type ActionRefusal,
   type ActionResult,
 } from "@/lib/action-result";
+import { mapLinkLeadsSomewhere } from "@/lib/contacts/map-preview";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
@@ -116,6 +117,11 @@ export async function updateSiteContent(
       const result = check(text(name));
       if (!result.ok) return refuse(`${label}: ${linkErrorText(t.linkErrors, result, hosts)}`);
       checked[name] = result.url;
+    }
+    // A map link that 404s at Google (a retired goo.gl link, a typo in a
+    // short link) is refused here rather than published in the footer.
+    if (checked.contact_map_url && !(await mapLinkLeadsSomewhere(checked.contact_map_url))) {
+      return refuse(`${s.contactMapUrl}: ${s.contactMapUrlDead}`);
     }
     const whatsapp = checkWhatsAppNumber(text("whatsapp_number"));
     if (!whatsapp.ok) return refuse(`${s.whatsappNumber}: ${t.linkErrors.whatsappNumber}`);

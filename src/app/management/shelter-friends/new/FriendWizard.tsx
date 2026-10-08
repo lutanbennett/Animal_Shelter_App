@@ -6,8 +6,7 @@ import { FriendCard } from "@/components/FriendCard";
 import { PendingPuppy } from "@/components/PuppyLoader";
 import { ACTION_ICONS, CONTACT_ICONS } from "@/components/hub-icons";
 import {
-  mapEmbedSrc,
-  mapQueryFromUrl,
+  addressMapNow,
   type Contact,
 } from "@/lib/contacts/contacts";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -124,15 +123,6 @@ function stepProblem(step: number, d: Draft, contacts: Contact[], t: Dictionary)
     );
   }
   return null;
-}
-
-/** The embed for a preview; a pasted maps link is read, a short link is not followed (the card does that). */
-function previewMapSrc(address: string | null) {
-  const trimmed = address?.trim();
-  if (!trimmed) return null;
-  if (!/^https?:\/\//i.test(trimmed)) return mapEmbedSrc(trimmed);
-  const [link, ...rest] = trimmed.split(/\s+/);
-  return mapEmbedSrc(mapQueryFromUrl(link) ?? rest.join(" "));
 }
 
 type Result = {
@@ -855,7 +845,7 @@ function FriendWizardForm({
                     friend={preview}
                     t={t}
                     locale={locale}
-                    mapSrc={preview.map_location ? previewMapSrc(preview.map_location) : null}
+                    map={addressMapNow(preview.map_location ?? preview.address)}
                   />
                 </div>
               </section>

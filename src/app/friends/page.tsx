@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
-import { friendMapSources, loadPublicFriends } from "@/lib/shelter-friends/public";
+import { friendMaps, loadPublicFriends } from "@/lib/shelter-friends/public";
 import { staffDraftFriends } from "@/lib/shelter-friends/staff-drafts";
 import { FriendCard } from "@/components/FriendCard";
 import { PublicHeader } from "../adopt/PublicHeader";
@@ -68,7 +68,7 @@ export default async function FriendsPage() {
     loadPublicFriends(supabase),
     staffDraftFriends(supabase),
   ]);
-  const maps = await friendMapSources(friends);
+  const maps = await friendMaps(friends);
 
   return (
     <main className="flex flex-1 flex-col">
@@ -126,7 +126,7 @@ export default async function FriendsPage() {
               friend={friend}
               t={t}
               locale={locale}
-              mapSrc={maps.get(friend.id) ?? null}
+              map={maps.get(friend.id) ?? null}
               reveal
             />
           ))}

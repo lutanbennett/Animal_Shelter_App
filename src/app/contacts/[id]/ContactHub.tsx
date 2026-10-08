@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArchiveContactControl } from "@/components/ArchiveContactControl";
 import { ArchivedBadge } from "@/components/ArchivedBadge";
 import { ContactActions } from "@/components/ContactActions";
+import { MapThumbnail } from "@/components/MapThumbnail";
 import { ActionLink } from "@/components/ActionLink";
 import { ACTION_ICONS, CONTACT_ICONS } from "@/components/hub-icons";
 import { formatDate } from "@/lib/format";
@@ -18,6 +19,8 @@ import {
 import {
   CARER_CONTACT_TYPE,
   isArchived,
+  splitAddress,
+  type AddressMap,
   type Contact,
   type VolunteerContact,
 } from "@/lib/contacts/contacts";
@@ -75,7 +78,7 @@ export function ContactHub({
   placements,
   canManage,
   canManageFriends,
-  mapSrc,
+  map,
   friend,
   friendTranslations,
 }: {
@@ -84,8 +87,12 @@ export function ContactHub({
   canManage: boolean;
   /** friends.manage: the Shelter Friend card's controls. */
   canManageFriends: boolean;
-  /** Embed URL for the address, resolved by the page (map-preview.ts); null hides the map. */
-  mapSrc: string | null;
+  /**
+   * The address's map and what tapping it opens, resolved by the page
+   * (map-preview.ts); null hides the map and the Map action rather than
+   * offering a link that leads nowhere.
+   */
+  map: AddressMap | null;
   /** The contact's Shelter Friend profile (0076), or null. */
   friend: ShelterFriend | null;
   friendTranslations: Partial<Record<"blurb" | "help_kind" | "discount_note", TranslationRow>>;
@@ -108,7 +115,10 @@ export function ContactHub({
       contact.address,
   );
   const address = contact.address?.trim() || null;
-  const addressIsLink = address !== null && /^https?:\/\//i.test(address);
+  // A pasted maps link prints on its own line, linked only when it leads
+  // to a map; one that doesn't says so, so staff know to re-paste it.
+  const { link: pastedLink, text: addressText } = splitAddress(address);
+  const linkWorks = pastedLink !== null && map?.href === pastedLink.toString();
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-4 md:p-6">
@@ -174,35 +184,43 @@ export function ContactHub({
             address, and the map preview belongs under the full text. */}
         {hasDetails ? (
           <>
-            <ContactActions contact={contact} size="lg" />
+            <ContactActions contact={contact} size="lg" mapLink={map?.href ?? null} />
             {address && (
               <div className="flex items-start gap-2">
                 <CONTACT_ICONS.address aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
                 <div className="flex min-w-0 flex-1 flex-col gap-2">
                   <div className="flex flex-col">
                     <span className="text-xs text-muted">{h.address}</span>
-                    {addressIsLink ? (
-                      <a
-                        href={address}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="break-all text-sm text-primary hover:underline"
-                      >
-                        {address}
-                      </a>
-                    ) : (
+                    {pastedLink &&
+                      (linkWorks ? (
+                        <a
+                          href={pastedLink.toString()}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="break-all text-sm text-primary hover:underline"
+                        >
+                          {pastedLink.toString()}
+                        </a>
+                      ) : (
+                        <span className="break-all text-sm text-muted">
+                          {pastedLink.toString()}
+                        </span>
+                      ))}
+                    {addressText && (
                       <span className="whitespace-pre-line break-words text-sm text-foreground">
-                        {address}
+                        {addressText}
                       </span>
                     )}
+                    {pastedLink && !linkWorks && (
+                      <span className="mt-1 text-xs text-warning">{h.mapLinkBroken}</span>
+                    )}
                   </div>
-                  {mapSrc && (
-                    <iframe
-                      src={mapSrc}
+                  {map && (
+                    <MapThumbnail
+                      map={map}
                       title={h.mapPreview(contact.name)}
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                      className="h-[200px] w-full max-w-lg rounded-lg border border-border bg-surface-hover"
+                      openLabel={h.openInMaps}
+                      className="max-w-lg"
                     />
                   )}
                 </div>
@@ -226,7 +244,7 @@ export function ContactHub({
           contact={contact}
           friend={friend}
           canManage={canManageFriends}
-          mapSrc={mapSrc}
+          map={map}
           translations={friendTranslations}
         />
       )}
