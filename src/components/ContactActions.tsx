@@ -29,9 +29,16 @@ type ContactDetails = Pick<
 export function ContactActions({
   contact,
   size = "sm",
+  mapLink,
 }: {
   contact: ContactDetails;
   size?: "sm" | "lg";
+  /**
+   * Where the Map button goes, when the page has already worked it out
+   * (map-preview.ts follows a short link to check it leads somewhere);
+   * null hides the button. Left out, it is built from the address alone.
+   */
+  mapLink?: string | null;
 }) {
   const { t } = useI18n();
   const a = t.contacts.actions;
@@ -42,7 +49,7 @@ export function ContactActions({
     { key: "messenger", href: messengerHref(contact.messenger_id), label: a.messenger, value: contact.messenger_id, icon: CONTACT_ICONS.messenger, external: true },
     { key: "whatsapp", href: whatsappHref(contact.whatsapp), label: a.whatsapp, value: contact.whatsapp, icon: CONTACT_ICONS.whatsapp, external: true },
     { key: "email", href: mailtoHref(contact.email), label: a.email, value: contact.email, icon: CONTACT_ICONS.email, external: false },
-    { key: "map", href: mapHref(contact.address), label: a.map, value: contact.address, icon: CONTACT_ICONS.map, external: true },
+    { key: "map", href: mapLink === undefined ? mapHref(contact.address) : mapLink, label: a.map, value: contact.address, icon: CONTACT_ICONS.map, external: true },
   ].filter((action): action is typeof action & { href: string } => action.href !== null);
 
   if (actions.length === 0) return null;

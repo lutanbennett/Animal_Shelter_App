@@ -8,7 +8,7 @@ import { ExternalLink, Eye, EyeOff } from "lucide-react";
 import { FriendBadge } from "@/components/FriendBadge";
 import { FriendCard } from "@/components/FriendCard";
 import { TranslationPanel } from "@/components/TranslationPanel";
-import { isArchived, type Contact } from "@/lib/contacts/contacts";
+import { isArchived, type AddressMap, type Contact } from "@/lib/contacts/contacts";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { PendingPuppy } from "@/components/PuppyLoader";
@@ -81,14 +81,14 @@ export function ShelterFriendCard({
   contact,
   friend,
   canManage,
-  mapSrc,
+  map,
   translations,
 }: {
   contact: Contact;
   friend: ShelterFriend | null;
   canManage: boolean;
-  /** The contact's address as a map embed, for the preview when Map is ticked. */
-  mapSrc: string | null;
+  /** The contact's address as a map (map-preview.ts), for the preview when Map is ticked. */
+  map: AddressMap | null;
   translations: Partial<Record<"blurb" | "help_kind" | "discount_note", TranslationRow>>;
 }) {
   const { t, locale } = useI18n();
@@ -318,7 +318,7 @@ export function ShelterFriendCard({
               friend={preview}
               t={t}
               locale={locale}
-              mapSrc={preview.map_location ? mapSrc : null}
+              map={map}
             />
           </div>
         </div>

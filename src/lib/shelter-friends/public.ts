@@ -2,7 +2,8 @@ import "server-only";
 
 import { cache } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { addressMapEmbedSrc } from "@/lib/contacts/map-preview";
+import type { AddressMap } from "@/lib/contacts/contacts";
+import { addressMap } from "@/lib/contacts/map-preview";
 import { createClient } from "@/lib/supabase/server";
 import { PUBLIC_FRIEND_COLUMNS, type PublicFriend } from "./friends";
 
@@ -46,13 +47,14 @@ export const hasPublicFriends = cache(async () => {
 });
 
 /**
- * The map embed for each Friend that opted into one, keyed by id. Resolved
- * server-side like the contact hub's (a shared maps short link is followed
- * once); a pin that can't be built is simply left out.
+ * The map for each Friend's published address or pin, keyed by id.
+ * Resolved server-side like the contact hub's (a shared maps short link is
+ * followed once); one that leads nowhere is simply left out. FriendCard
+ * still draws the map itself only for a Friend with a map_location.
  */
-export async function friendMapSources(friends: PublicFriend[]) {
+export async function friendMaps(friends: PublicFriend[]) {
   const entries = await Promise.all(
-    friends.map(async (f) => [f.id, await addressMapEmbedSrc(f.map_location)] as const),
+    friends.map(async (f) => [f.id, await addressMap(f.map_location ?? f.address)] as const),
   );
-  return new Map(entries.filter((e): e is readonly [string, string] => e[1] !== null));
+  return new Map(entries.filter((e): e is readonly [string, AddressMap] => e[1] !== null));
 }

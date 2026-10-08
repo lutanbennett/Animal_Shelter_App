@@ -1,7 +1,14 @@
 import Image from "next/image";
 import { Globe, Mail, MapPin, MessageCircle, Phone, Tag } from "lucide-react";
 import { FacebookIcon } from "@/components/FacebookIcon";
-import { lineHref, mailtoHref, mapHref, telHref } from "@/lib/contacts/contacts";
+import { MapThumbnail } from "@/components/MapThumbnail";
+import {
+  lineHref,
+  mailtoHref,
+  splitAddress,
+  telHref,
+  type AddressMap,
+} from "@/lib/contacts/contacts";
 import { formatDate } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -30,14 +37,20 @@ export function FriendCard({
   friend,
   t,
   locale,
-  mapSrc,
+  map,
   reveal = false,
 }: {
   friend: PublicFriend;
   t: Dictionary;
   locale: Locale;
-  /** Embed URL for map_location, resolved on the server; null draws no map. */
-  mapSrc: string | null;
+  /**
+   * The map for this Friend's address (contacts.ts `AddressMap`), built
+   * where a short link can be followed; null when it leads nowhere valid.
+   * The thumbnail is still drawn only when the view gave a map_location
+   * (show_map, 0076) — without one, this only says where the address
+   * link goes.
+   */
+  map: AddressMap | null;
   /** Spring into view on the public /friends page (src/app/adopt/SpringMotion.tsx). */
   reveal?: boolean;
 }) {
@@ -46,9 +59,12 @@ export function FriendCard({
   const tel = telHref(friend.phone);
   const line = lineHref(friend.line_id);
   const mail = mailtoHref(friend.email);
-  const address = friend.address?.trim() || null;
-  const addressIsLink = address !== null && /^https?:\/\//i.test(address);
-  const mapsLink = mapHref(friend.map_location ?? friend.address);
+  // A pasted maps link is never printed or opened whole: its link part
+  // opens the map, when that leads somewhere, and the text after it is
+  // printed as the address.
+  const { link: pastedLink, text: addressText } = splitAddress(friend.address);
+  const addressLink = pastedLink ? (map?.href ?? null) : null;
+  const showMap = Boolean(friend.map_location && map);
   const hasLinks = Boolean(friend.website_url || friend.facebook_url);
   const hasContact = Boolean(tel || line || mail);
 
@@ -152,43 +168,38 @@ export function FriendCard({
         </div>
       )}
 
-      {address && (
+      {(addressText || (addressLink && !showMap)) && (
         <div className="flex items-start gap-2 text-sm">
           <MapPin aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
-          {addressIsLink ? (
-            <a
-              href={address}
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium text-primary hover:underline"
-            >
-              {f.openInMaps}
-            </a>
-          ) : (
-            <span className="whitespace-pre-line break-words text-foreground">{address}</span>
-          )}
+          <div className="flex min-w-0 flex-col gap-1">
+            {addressText && (
+              <span className="whitespace-pre-line break-words text-foreground">{addressText}</span>
+            )}
+            {addressLink && !showMap && (
+              <a
+                href={addressLink}
+                target="_blank"
+                rel="noreferrer"
+                className="self-start font-medium text-primary hover:underline"
+              >
+                {f.openInMaps}
+              </a>
+            )}
+          </div>
         </div>
       )}
 
-      {mapSrc && (
+      {showMap && map && (
         <div className="flex flex-col gap-1">
-          <iframe
-            src={mapSrc}
-            title={f.mapOf(friend.name)}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            className="h-[200px] w-full rounded-lg border border-border bg-surface-hover"
-          />
-          {mapsLink && !addressIsLink && (
-            <a
-              href={mapsLink}
-              target="_blank"
-              rel="noreferrer"
-              className="self-start text-xs font-medium text-primary hover:underline"
-            >
-              {f.openInMaps}
-            </a>
-          )}
+          <MapThumbnail map={map} title={f.mapOf(friend.name)} openLabel={f.openInMaps} />
+          <a
+            href={map.href}
+            target="_blank"
+            rel="noreferrer"
+            className="self-start text-xs font-medium text-primary hover:underline"
+          >
+            {f.openInMaps}
+          </a>
         </div>
       )}
     </article>

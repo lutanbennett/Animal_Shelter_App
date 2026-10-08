@@ -1271,8 +1271,11 @@ const th: Dictionary = {
         contactLine: "LINE",
         contactLineHint: "พิมพ์ไอดีตามที่ LINE แสดง: มี @ สำหรับบัญชีทางการ (@lannacare) ไม่มี @ สำหรับไอดีส่วนตัว (lannacare) หรือวางลิงก์เพิ่มเพื่อนแบบเต็ม",
         contactAddress: "ที่อยู่",
+        contactMapUrlDead:
+          "Google แจ้งว่าลิงก์นี้ไม่มีอยู่แล้ว เปิด Google Maps ค้นหาสถานที่ กด แชร์ คัดลอกลิงก์ แล้ววางที่นี่",
         contactMapUrl: "ลิงก์แผนที่",
-        contactMapUrlHint: "ลิงก์ Google Maps — ที่อยู่ในส่วนท้ายจะเปิดลิงก์นี้",
+        contactMapUrlHint:
+          "ลิงก์ Google Maps — ที่อยู่ในส่วนท้ายจะเปิดลิงก์นี้ เปิด Google Maps ค้นหาสถานที่ กด แชร์ คัดลอกลิงก์ แล้ววางที่นี่",
         facebookUrl: "เพจ Facebook",
         facebookUrlHint:
           "เพจ Facebook ของศูนย์ เป็นลิงก์ https:// บน facebook.com แสดงใต้ \"ติดตามเรา\" ในส่วนท้ายและในเมนูบนมือถือ เว้นว่างเพื่อซ่อน",
@@ -2670,7 +2673,8 @@ const th: Dictionary = {
         whatsappHint: "เบอร์ที่ใช้กับบัญชี WhatsApp เบอร์ที่ขึ้นต้นด้วย 0 จะถือว่าเป็นเบอร์ไทย",
         address: "ที่อยู่",
         addressPlaceholder: "ที่อยู่ หรือลิงก์ Google Maps",
-        addressHint: "เปิดในแอปแผนที่ได้จากรายชื่อผู้ติดต่อ",
+        addressHint:
+          "สำหรับแผนที่: เปิด Google Maps ค้นหาสถานที่ กด แชร์ คัดลอกลิงก์ แล้ววางที่นี่ พิมพ์ที่อยู่ต่อท้ายลิงก์ได้",
         notes: "หมายเหตุ",
         notesPlaceholder: "สิ่งที่จำหน่าย ช่วงเวลาที่ว่าง สภาพบ้าน…",
         addButton: "เพิ่มผู้ติดต่อ",
@@ -3039,6 +3043,9 @@ const th: Dictionary = {
       email: "อีเมล",
       address: "ที่อยู่",
       mapPreview: (name: string) => `แผนที่ที่อยู่ของ ${name}`,
+      openInMaps: "เปิดใน Google Maps",
+      mapLinkBroken:
+        "ลิงก์แผนที่นี้ใช้ไม่ได้แล้ว จึงไม่แสดงแผนที่ เปิด Google Maps ค้นหาสถานที่ กด แชร์ แล้ววางลิงก์ใหม่ในช่องที่อยู่ที่ การจัดการ → ผู้ติดต่อ",
       notes: "หมายเหตุ",
       noDetails: "ยังไม่มีข้อมูลติดต่อ — ผู้บริหารเพิ่มได้ที่ การจัดการ → ผู้ติดต่อ",
       residentsInCare: "สัตว์ในความดูแล",

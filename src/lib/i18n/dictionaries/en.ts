@@ -1338,7 +1338,10 @@ const en = {
         contactLineHint: "Type the id exactly as LINE shows it: with the @ for an Official Account (@lannacare), without it for a personal id (lannacare). Or paste a full add-friend link.",
         contactAddress: "Address",
         contactMapUrl: "Map link",
-        contactMapUrlHint: "A Google Maps link; the address in the footer opens it.",
+        contactMapUrlDead:
+          "Google says that link doesn't exist any more. In Google Maps, find the place, tap Share, copy the link and paste it here.",
+        contactMapUrlHint:
+          "A Google Maps link; the address in the footer opens it. In Google Maps, find the place, tap Share, copy the link and paste it here.",
         facebookUrl: "Facebook page",
         facebookUrlHint:
           "The shelter's Facebook page, as an https:// link on facebook.com. Shown under Follow us in the footer and the phone menu. Leave blank to hide.",
@@ -2759,7 +2762,8 @@ const en = {
         whatsappHint: "The number the WhatsApp account uses; a number starting with 0 is treated as Thai.",
         address: "Address",
         addressPlaceholder: "Address or a pasted Google Maps link",
-        addressHint: "Opens in a maps app from the contact list.",
+        addressHint:
+          "For the map: in Google Maps, find the place, tap Share, copy the link and paste it here. You can type the written address after the link.",
         notes: "Notes",
         notesPlaceholder: "What they supply, availability, home set-up…",
         addButton: "Add contact",
@@ -3133,6 +3137,9 @@ const en = {
       email: "Email",
       address: "Address",
       mapPreview: (name: string) => `Map of ${name}'s address`,
+      openInMaps: "Open in Google Maps",
+      mapLinkBroken:
+        "This map link doesn't open a map any more, so no map is shown. In Google Maps, find the place, tap Share, and paste the new link into the address under Management → Contacts.",
       notes: "Notes",
       noDetails: "No contact details recorded — a manager can add them under Management → Contacts.",
       residentsInCare: "Residents in care",

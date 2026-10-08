@@ -261,13 +261,16 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
         </td>
         <td className="px-4 py-2">
           {editing ? (
-            <textarea
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder={c.createForm.addressPlaceholder}
-              rows={2}
-              className={`${inputClass} min-w-48`}
-            />
+            <div className="flex flex-col gap-1">
+              <textarea
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder={c.createForm.addressPlaceholder}
+                rows={2}
+                className={`${inputClass} min-w-48`}
+              />
+              <span className="max-w-xs text-xs text-muted">{c.createForm.addressHint}</span>
+            </div>
           ) : (
             <span className="line-clamp-2 max-w-xs whitespace-pre-line text-muted">
               {contact.address ?? t.common.dash}

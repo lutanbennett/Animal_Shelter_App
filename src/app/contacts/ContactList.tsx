@@ -23,6 +23,8 @@ export type ContactSummary = (Contact | VolunteerContact) & {
   inCareCount: number;
   /** Shelter Friend profile (0076): null when there is none, else whether it is published. */
   friendPublished: boolean | null;
+  /** Where the Map button goes, checked by the page (map-preview.ts); null hides it. */
+  mapLink: string | null;
 };
 
 /**
@@ -120,7 +122,7 @@ function ContactCard({ contact }: { contact: ContactSummary }) {
               .join(" · ")}
           </p>
         </div>
-        <ContactActions contact={contact} />
+        <ContactActions contact={contact} mapLink={contact.mapLink} />
       </div>
     </li>
   );

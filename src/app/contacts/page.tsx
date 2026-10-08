@@ -9,6 +9,7 @@ import {
   type Contact,
   type VolunteerContact,
 } from "@/lib/contacts/contacts";
+import { addressMap } from "@/lib/contacts/map-preview";
 import { ContactList, type ContactSummary } from "./ContactList";
 
 export default async function ContactsPage(props: PageProps<"/contacts">) {
@@ -60,11 +61,16 @@ export default async function ContactsPage(props: PageProps<"/contacts">) {
   const friends = new Map(
     (friendsResult.data ?? []).map((row) => [row.contact_id, row.published]),
   );
-  const contacts: ContactSummary[] = (contactsResult.data ?? []).map((contact) => ({
-    ...contact,
-    inCareCount: inCare.get(contact.id) ?? 0,
-    friendPublished: friends.get(contact.id) ?? null,
-  }));
+  // Each Map button's link is checked here, where a short link can be
+  // followed (cached per isolate, and only pasted links need the trip).
+  const contacts: ContactSummary[] = await Promise.all(
+    (contactsResult.data ?? []).map(async (contact) => ({
+      ...contact,
+      inCareCount: inCare.get(contact.id) ?? 0,
+      friendPublished: friends.get(contact.id) ?? null,
+      mapLink: (await addressMap(contact.address))?.href ?? null,
+    })),
+  );
 
   return (
     // min-w-0: the type-chip strip scrolls sideways on a phone, and without

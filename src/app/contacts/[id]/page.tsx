@@ -7,7 +7,7 @@ import {
   type Contact,
   type VolunteerContact,
 } from "@/lib/contacts/contacts";
-import { addressMapEmbedSrc } from "@/lib/contacts/map-preview";
+import { addressMap } from "@/lib/contacts/map-preview";
 import { SHELTER_FRIEND_COLUMNS, type ShelterFriend } from "@/lib/shelter-friends/friends";
 import { loadTranslations, translationKey } from "@/lib/translations/queries";
 import { ContactHub, type CarerPlacement } from "./ContactHub";
@@ -65,8 +65,8 @@ export default async function ContactPage(props: PageProps<"/contacts/[id]">) {
   // followed to what it points at), so it waits until the contact is known.
   if (friendResult.error) throw new Error(friendResult.error.message);
   const friend = friendResult.data?.[0] ?? null;
-  const [mapSrc, translations] = await Promise.all([
-    addressMapEmbedSrc(contact.address),
+  const [map, translations] = await Promise.all([
+    addressMap(contact.address),
     loadTranslations(supabase, "shelter_friends", friend ? [friend.id] : []),
   ]);
   const friendTranslation = (column: string) =>
@@ -78,7 +78,7 @@ export default async function ContactPage(props: PageProps<"/contacts/[id]">) {
       placements={placementsResult.data ?? []}
       canManage={can(perms, "contacts.directory")}
       canManageFriends={can(perms, "friends.manage")}
-      mapSrc={mapSrc}
+      map={map}
       friend={friend}
       friendTranslations={{
         blurb: friendTranslation("blurb"),
