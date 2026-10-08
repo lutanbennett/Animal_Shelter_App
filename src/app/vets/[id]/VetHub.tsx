@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { StatCard, type StatCardTone } from "@/components/StatCard";
 import { ActionLink } from "@/components/ActionLink";
 import { ACTION_ICONS, VET_ICONS } from "@/components/hub-icons";
 import { formatBaht, formatDate, formatDateTime } from "@/lib/format";
+import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { appointmentStatusLabel } from "@/lib/i18n/enum-labels";
 import {
@@ -33,7 +34,29 @@ export type Vet = {
 export type VetHubVisit = VetVisit & {
   doctor_id: string | null;
   doctor_name: string | null;
-  residents: { name: string; thai_name: string | null; resident_code: string } | null;
+  residents: {
+    name: string;
+    thai_name: string | null;
+    resident_code: string;
+    profile_photo_drive_file_id: string | null;
+  } | null;
+};
+
+/**
+ * What the Visits list is narrowed to. Each is a tile above it, and the
+ * tile's own title is the chip's label, so the filter adds no wording.
+ */
+type VisitFilter = "all" | "spend" | "procedures" | "bloodTests" | "prescriptions";
+
+const VISIT_FILTERS: VisitFilter[] = ["all", "spend", "procedures", "bloodTests", "prescriptions"];
+
+/** The resident tab a filtered visit row opens: where its records are. */
+const FILTER_SECTION: Record<VisitFilter, string> = {
+  all: "vet-appointments",
+  spend: "vet-appointments",
+  procedures: "procedures",
+  bloodTests: "blood-tests",
+  prescriptions: "prescriptions",
 };
 
 /** A doctor on the clinic's list (vet_doctors). */
@@ -50,12 +73,29 @@ export type LinkedRecords = {
 
 const RECENT_VISITS_LIMIT = 30;
 
+/** The resident's profile photo on a Schedule row, or a placeholder. */
+function ResidentThumb({ photoId, alt }: { photoId: string | null; alt: string }) {
+  return photoId ? (
+    // The 160 px thumbnail: a schedule is read on a phone, often on mobile data.
+    <img
+      src={driveImageUrl(photoId, 160)}
+      alt={alt}
+      className="h-12 w-12 shrink-0 rounded-lg border border-border object-cover"
+    />
+  ) : (
+    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-hover text-muted">
+      <VET_ICONS.residents aria-hidden="true" className="h-5 w-5" />
+    </div>
+  );
+}
+
 export function VetHub({
   vet,
   visits,
   linked,
   doctors,
   canManage,
+  canOpenVisits,
   now,
 }: {
   vet: Vet;
@@ -63,6 +103,8 @@ export function VetHub({
   linked: LinkedRecords;
   doctors: HubDoctor[];
   canManage: boolean;
+  /** medical.visits read: the Schedule rows' Edit link (the visit page refuses without it). */
+  canOpenVisits: boolean;
   /** Server-computed timestamp (ISO string) — avoids calling Date.now() during render. */
   now: string;
 }) {
@@ -97,6 +139,54 @@ export function VetHub({
   const countLinked = (records: LinkedRecord[]) =>
     records.filter((r) => inPeriodIds.has(r.vet_appointment_id)).length;
 
+  // The visits each record tile stands for: the ones it was logged against.
+  const visitsWith = useMemo(() => {
+    const ids = (records: LinkedRecord[]) =>
+      new Set(records.map((r) => r.vet_appointment_id));
+    return {
+      procedures: ids(linked.procedures),
+      bloodTests: ids(linked.bloodTests),
+      prescriptions: ids(linked.prescriptions),
+    };
+  }, [linked]);
+  const [visitFilter, setVisitFilter] = useState<VisitFilter>("all");
+  const filteredVisits = useMemo(() => {
+    if (visitFilter === "all") return inPeriod;
+    if (visitFilter === "spend") return inPeriod.filter((v) => v.cost != null);
+    const ids = visitsWith[visitFilter];
+    return inPeriod.filter((v) => ids.has(v.id));
+  }, [inPeriod, visitFilter, visitsWith]);
+  // The tile's own number, so a chip and the tile that set it agree: the
+  // record filters count records, though a visit may carry several, and the
+  // list's heading then counts the visits.
+  const filterCounts: Record<VisitFilter, number> = {
+    all: inPeriod.length,
+    spend: spend.withCost,
+    procedures: countLinked(linked.procedures),
+    bloodTests: countLinked(linked.bloodTests),
+    prescriptions: countLinked(linked.prescriptions),
+  };
+  // A filter left on with nothing under it (the period changed) reads as all.
+  const activeFilter: VisitFilter = filterCounts[visitFilter] > 0 ? visitFilter : "all";
+
+  /**
+   * A tile's link: the section it opens, with the visit filter set on the
+   * way. Scrolled here rather than by the router, so tapping the same tile
+   * twice still lands on its list.
+   */
+  const tileLink = (count: number, section: string, filter?: VisitFilter) => {
+    if (count === 0) return {};
+    return {
+      href: `#${section}`,
+      onClick: (event: MouseEvent<HTMLAnchorElement>) => {
+        event.preventDefault();
+        if (filter) setVisitFilter(filter);
+        document.getElementById(section)?.scrollIntoView({ block: "start" });
+        window.history.replaceState(window.history.state, "", `#${section}`);
+      },
+    };
+  };
+
   // The resident embed is repeated on every visit row; index it once.
   const residentsById = useMemo(() => {
     const map = new Map<string, NonNullable<VetHubVisit["residents"]>>();
@@ -122,9 +212,15 @@ export function VetHub({
       : schedule.upcoming.length > 0
         ? "warning"
         : "neutral";
+  // Both counts when there are both, so the tile says everything its list holds.
   const scheduleValue =
     schedule.overdue.length > 0
-      ? t.vets.hub.overdue(schedule.overdue.length)
+      ? [
+          t.vets.hub.overdue(schedule.overdue.length),
+          schedule.upcoming.length > 0 && t.vets.hub.upcoming(schedule.upcoming.length),
+        ]
+          .filter(Boolean)
+          .join(" · ")
       : schedule.upcoming.length > 0
         ? t.vets.hub.upcoming(schedule.upcoming.length)
         : t.vets.hub.nothingScheduled;
@@ -137,12 +233,13 @@ export function VetHub({
       ? t.vets.hub.pastDue
       : t.vets.hub.noUpcomingDetail;
 
+  const shownVisits = activeFilter === visitFilter ? filteredVisits : inPeriod;
   const recentVisits = useMemo(
     () =>
-      [...inPeriod]
+      [...shownVisits]
         .sort((a, b) => b.appointment_date.localeCompare(a.appointment_date))
         .slice(0, RECENT_VISITS_LIMIT),
-    [inPeriod],
+    [shownVisits],
   );
 
   const periodLabel = t.vets.hub.periods[period ?? "all"];
@@ -238,6 +335,7 @@ export function VetHub({
         <StatCard
           title={t.vets.hub.visits}
           icon={VET_ICONS.visits}
+          {...tileLink(inPeriod.length, "visits", "all")}
           value={`${inPeriod.length}`}
           detail={
             cancelledInPeriod > 0
@@ -249,6 +347,7 @@ export function VetHub({
         <StatCard
           title={t.vets.hub.residentsSeen}
           icon={VET_ICONS.residents}
+          {...tileLink(byResident.length, "residents")}
           value={`${byResident.length}`}
           detail={
             byResident.length === 0
@@ -260,6 +359,7 @@ export function VetHub({
         <StatCard
           title={t.vets.hub.schedule}
           icon={VET_ICONS.upcoming}
+          {...tileLink(schedule.overdue.length + schedule.upcoming.length, "schedule")}
           value={scheduleValue}
           detail={scheduleDetail}
           tone={scheduleTone}
@@ -267,6 +367,7 @@ export function VetHub({
         <StatCard
           title={t.vets.hub.spend}
           icon={VET_ICONS.visits}
+          {...tileLink(filterCounts.spend, "visits", "spend")}
           value={spend.withCost > 0 ? formatBaht(spend.total, locale) : "—"}
           detail={
             spend.withCost > 0
@@ -278,6 +379,7 @@ export function VetHub({
         <StatCard
           title={t.vets.hub.procedures}
           icon={VET_ICONS.procedures}
+          {...tileLink(filterCounts.procedures, "visits", "procedures")}
           value={`${countLinked(linked.procedures)}`}
           detail={t.vets.hub.linkedDetail}
           tone="neutral"
@@ -285,6 +387,7 @@ export function VetHub({
         <StatCard
           title={t.vets.hub.bloodTests}
           icon={VET_ICONS.bloodTests}
+          {...tileLink(filterCounts.bloodTests, "visits", "bloodTests")}
           value={`${countLinked(linked.bloodTests)}`}
           detail={t.vets.hub.linkedDetail}
           tone="neutral"
@@ -292,11 +395,91 @@ export function VetHub({
         <StatCard
           title={t.vets.hub.prescriptions}
           icon={VET_ICONS.prescriptions}
+          {...tileLink(filterCounts.prescriptions, "visits", "prescriptions")}
           value={`${countLinked(linked.prescriptions)}`}
           detail={t.vets.hub.linkedDetail}
           tone="neutral"
         />
       </div>
+
+      {/* Every scheduled visit, whatever the period: overdue ones first (they
+          need marking done or cancelled), then what is coming. The Visits
+          list below is the past; together they are the clinic's whole
+          picture. Headings reuse the tile's own wording. */}
+      <section id="schedule" className="flex scroll-mt-4 flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <VET_ICONS.upcoming aria-hidden="true" className="h-5 w-5 text-muted" />
+          <h2 className="text-lg font-semibold text-foreground">{t.vets.hub.schedule}</h2>
+        </div>
+        {schedule.overdue.length + schedule.upcoming.length === 0 ? (
+          <p className="rounded border border-border px-4 py-6 text-center text-sm text-muted">
+            {t.vets.hub.nothingScheduled}
+          </p>
+        ) : (
+          (
+            [
+              ["overdue", schedule.overdue, t.vets.hub.overdue(schedule.overdue.length)],
+              ["upcoming", schedule.upcoming, t.vets.hub.upcoming(schedule.upcoming.length)],
+            ] as const
+          )
+            .filter(([, rows]) => rows.length > 0)
+            .map(([kind, rows, heading]) => (
+              <div key={kind} className="flex flex-col gap-2">
+                <h3
+                  className={`text-sm font-medium ${
+                    kind === "overdue" ? "text-danger" : "text-foreground"
+                  }`}
+                >
+                  {heading}
+                </h3>
+                <ul
+                  className={`divide-y rounded border ${
+                    kind === "overdue"
+                      ? "divide-danger/30 border-danger/40 bg-danger/10"
+                      : "divide-border border-border bg-surface"
+                  }`}
+                >
+                  {rows.map((visit) => (
+                    <li key={visit.id} className="flex items-center gap-3 p-3">
+                      <ResidentThumb
+                        photoId={visit.residents?.profile_photo_drive_file_id ?? null}
+                        alt={residentName(visit.resident_id)}
+                      />
+                      <div className="flex min-w-0 flex-1 flex-col">
+                        <Link
+                          href={`/residents/${visit.resident_id}`}
+                          className="truncate font-medium text-primary hover:underline"
+                        >
+                          {residentName(visit.resident_id)}
+                        </Link>
+                        <span
+                          className={`text-xs ${
+                            kind === "overdue" ? "font-medium text-danger" : "text-muted"
+                          }`}
+                        >
+                          {formatDateTime(visit.appointment_date, locale)}
+                        </span>
+                        <span className="truncate text-xs text-muted">
+                          {[visit.reason ?? t.residents.sections.vetVisitFallback, visit.doctor_name]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                      </div>
+                      {canOpenVisits && (
+                        <Link
+                          href={`/vet-visits/${visit.id}/edit`}
+                          className="inline-flex min-h-11 shrink-0 items-center rounded border border-border bg-background px-3 text-sm font-medium text-primary hover:bg-surface-hover"
+                        >
+                          {t.common.edit}
+                        </Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
+        )}
+      </section>
 
       <section className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4">
         <div className="flex items-baseline justify-between gap-2">
@@ -349,7 +532,7 @@ export function VetHub({
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="flex flex-col gap-3">
+        <section id="residents" className="flex scroll-mt-4 flex-col gap-3">
           <div className="flex items-center gap-2">
             <VET_ICONS.residents aria-hidden="true" className="h-5 w-5 text-muted" />
             <h2 className="text-lg font-semibold text-foreground">
@@ -412,24 +595,51 @@ export function VetHub({
           )}
         </section>
 
-        <section className="flex flex-col gap-3">
+        <section id="visits" className="flex scroll-mt-4 flex-col gap-3">
           <div className="flex items-center gap-2">
             <VET_ICONS.visits aria-hidden="true" className="h-5 w-5 text-muted" />
             <h2 className="text-lg font-semibold text-foreground">
               {t.vets.hub.visitsHeading}
             </h2>
             <span className="text-sm text-muted">
-              {inPeriod.length > recentVisits.length
-                ? t.vets.hub.showingOf(recentVisits.length, inPeriod.length)
-                : `(${inPeriod.length})`}
+              {shownVisits.length > recentVisits.length
+                ? t.vets.hub.showingOf(recentVisits.length, shownVisits.length)
+                : `(${shownVisits.length})`}
             </span>
           </div>
+          {/* Narrow to what a tile counted. Only filters with something under
+              them are offered, and the tile titles are their labels. */}
+          {VISIT_FILTERS.some((f) => f !== "all" && filterCounts[f] > 0) && (
+            <div
+              role="radiogroup"
+              aria-label={t.vets.hub.visitsHeading}
+              className="flex flex-wrap gap-2"
+            >
+              {VISIT_FILTERS.filter((f) => f === "all" || filterCounts[f] > 0).map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  role="radio"
+                  aria-checked={f === activeFilter}
+                  onClick={() => setVisitFilter(f)}
+                  className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-sm font-medium transition md:min-h-0 md:py-1 ${
+                    f === activeFilter
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border text-muted hover:text-foreground"
+                  }`}
+                >
+                  {t.vets.hub[f === "all" ? "visits" : f]}
+                  <span className="tabular-nums opacity-80">{filterCounts[f]}</span>
+                </button>
+              ))}
+            </div>
+          )}
           {recentVisits.length > 0 ? (
             <ul className="flex flex-col gap-2">
               {recentVisits.map((visit) => (
                 <li key={visit.id}>
                   <Link
-                    href={`/residents/${visit.resident_id}/vet-appointments`}
+                    href={`/residents/${visit.resident_id}/${FILTER_SECTION[activeFilter]}`}
                     className="flex items-center justify-between gap-3 rounded border border-border bg-surface px-3 py-2 text-sm hover:bg-surface-hover"
                   >
                     <div className="flex min-w-0 flex-col">
