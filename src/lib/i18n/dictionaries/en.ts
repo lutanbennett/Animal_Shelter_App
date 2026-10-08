@@ -4961,16 +4961,74 @@ const en = {
   translations: {
     title: "Translations",
     subtitle:
-      "Text the reader didn't write, in the other language: what the public sees of a resident or project, and the maintenance jobs staff are asked to do. Anything staff write or change lands here until a manager has written or checked its translation; approved text is what visitors reading that language see — until then they see the original.",
-    queueEmpty: "Nothing waiting — every public-facing text has an approved translation.",
-    openCount: (n: number) => (n === 1 ? "1 waiting" : `${n} waiting`),
-    showApproved: "Show approved too",
-    hideApproved: "Hide approved",
+      "Everything a Thai or English reader sees that someone typed in the other language, in one place. Long text — a resident's bio, a project's story, a job's description — lands here whenever it is written or changed. Short labels — a diet's name, a vaccine, a zone, a website caption — show here until they have Thai. Until something is translated, readers see it as it was typed.",
+    filters: { missing: "Missing", stale: "Out of date", all: "All" },
+    filterLabel: "Show",
+    summaryTitle: "What's left, by kind",
+    groupCounts: (missing: number, stale: number) =>
+      missing === 0 && stale === 0
+        ? "All done"
+        : [missing > 0 ? `${missing} missing` : null, stale > 0 ? `${stale} out of date` : null]
+            .filter(Boolean)
+            .join(" · "),
+    asTypedCount: (n: number) => (n === 1 ? "1 shown as typed" : `${n} shown as typed`),
+    groups: {
+      website: "Website",
+      residents: "Residents",
+      projects: "Projects",
+      diets: "Diets",
+      medications: "Medications",
+      units: "Stock units",
+      setup_lists: "Setup lists",
+      places: "Places",
+      maintenance: "Maintenance",
+      recurring_jobs: "Recurring jobs",
+      friends: "Shelter Friends",
+      money: "Monthly costs",
+      roles: "Roles",
+    } as Record<string, string>,
+    nothingHere: {
+      missing: "Nothing is missing a translation.",
+      stale: "Nothing is out of date.",
+      all: "Nothing to translate yet.",
+    },
     couldntLoad: "Couldn't load the translations",
-    titlesMissing: (n: number) =>
-      n === 1
-        ? "1 published project has no Thai title, so Thai visitors see its English title. Titles are typed on the folder (Rename), not here:"
-        : `${n} published projects have no Thai title, so Thai visitors see their English titles. Titles are typed on the folder (Rename), not here:`,
+    labelStatus: {
+      missing: "Needs Thai",
+      as_typed: "Shown as typed",
+      stale: "Out of date — the English has changed",
+      current: "Translated",
+    },
+    asTypedHint:
+      "Left empty on purpose: most medicine and clinic names read the same in Thai, so the name is shown as typed. Add Thai only where it should read differently.",
+    labelFields: {
+      "site_content.tagline": "Tagline",
+      "site_content.hero_alt": "Main photo description",
+      "site_content.visiting_hours": "Visiting hours",
+      "site_content_photos.alt": "Photo description",
+      "impact_baselines.label": "Impact figure",
+      "project_folders.name": "Folder title",
+      "zones.name": "Zone",
+      "enclosures.name": "Enclosure",
+      "diet_types.name": "Diet",
+      "medication.name": "Medicine",
+      "item_unit_conversions.unit": "Stock unit",
+      "frequency.label": "How often",
+      "immunization_types.name": "Immunization type",
+      "procedure_types.name": "Procedure type",
+      "blood_test_types.name": "Blood test type",
+      "vets.name": "Clinic",
+      "fixed_outgoings.label": "Monthly cost",
+      "roles.name": "Role",
+    } as Record<string, string>,
+    englishWhenTranslated: "English when the Thai was written",
+    thaiField: "Thai",
+    thaiPlaceholder: "Type the Thai…",
+    saveLabel: "Save",
+    saved: "Saved",
+    clearHint: "To remove the Thai, empty the box and press Save.",
+    openScreen: "Where it's used",
+    noScreen: "Its own list is not one you can open. Translating it here is enough.",
     status: {
       pending: "Needs translation",
       draft: "Draft — not yet approved",
@@ -5012,6 +5070,7 @@ const en = {
       textRequired: "Write the translation before approving it.",
       linksDiffer: "The links in the translation must match the English exactly. Keep the address part of each [words](address) unchanged and translate only the words.",
       notFound: "That translation no longer exists — the original may have been cleared.",
+      labelNotFound: "That item no longer exists — it may have been deleted.",
     },
   },
 

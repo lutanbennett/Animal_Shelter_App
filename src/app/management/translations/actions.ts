@@ -134,3 +134,54 @@ export async function clearTranslation(
     return { ok: true, row };
   });
 }
+
+/**
+ * Write one label's Thai (0166's set_label_th()). Asks translations.manage,
+ * not the list's own edit permission: translating "Standard Kibble +
+ * Chicken" is not editing the diet list, and the Director translates
+ * setup lists she cannot open. Empty text clears the Thai, which the page
+ * then shows as missing (or "shown as typed" on an optional list).
+ *
+ * A label is read on many screens (a diet name on the Diet tab, the
+ * special-diet list, stocktake, purchasing), so the whole app is
+ * revalidated rather than guessing which pages show it.
+ *
+ * `reconfirm`: the English changed and the Thai is still right. The
+ * snapshot trigger only re-records the English when the Thai changes, so
+ * saving the same Thai would leave it out of date; clearing it first and
+ * writing it back is what takes a fresh snapshot. Two audit rows, both
+ * under the translator's name, for one deliberate act.
+ */
+export async function saveLabelTranslation(
+  table: string,
+  rowId: string,
+  column: string,
+  text: string,
+  reconfirm = false,
+): Promise<ActionResult<{ textTh: string | null }>> {
+  const { t } = await getT();
+  return runAction("translations.saveLabelTranslation", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "translations.manage")) return refuse(t.management.errors.managementAccessRequired);
+    const trimmed = text.trim();
+    const supabase = await createClient();
+    if (reconfirm && trimmed) {
+      const { error: clearError } = await supabase.rpc("set_label_th", {
+        p_table: table,
+        p_row_id: rowId,
+        p_column: column,
+        p_text: "",
+      });
+      if (clearError) return refuse(clearError.message);
+    }
+    const { data, error } = await supabase.rpc("set_label_th", {
+      p_table: table,
+      p_row_id: rowId,
+      p_column: column,
+      p_text: trimmed,
+    });
+    if (error) return refuse(error.message);
+    if (data !== true) return refuse(t.translations.errors.labelNotFound);
+    revalidatePath("/", "layout");
+    return { ok: true, textTh: trimmed || null };
+  });
+}
