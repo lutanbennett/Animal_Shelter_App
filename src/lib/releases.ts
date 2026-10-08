@@ -65,7 +65,6 @@ export const unreleased: ReleaseNote[] = [
   "Medications and Diets are each now two pages. The lists themselves (names, units, the daily amount for each size, merging duplicates, the units things are bought and counted in) are under Settings → Medications and Settings → Diets, for an admin. Management → Medication stock and Diet stock keep what changes day to day: how much is in the cupboard, the price, when to reorder, label photos and the forecast, laid out as cards that fit a phone. A price can now have up to 4 decimal places, so food bought by the sack can be priced per gram. In Thai too.",
 ];
 
-
 /** Newest first. */
 export const releases: Release[] = [
   {
