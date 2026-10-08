@@ -319,12 +319,13 @@ export async function buildResidentsCsv(supabase: Supabase, rows: ExportRow[], s
  * residents-on-site-with-deceased-2026-10-06.csv: the view's place and toggles, then the shelter's
  * date. Plain ASCII, so it saves under the same name on every phone.
  */
-export function exportFilename(view: Pick<Filters, "q" | "place" | "zoneIds" | "enclosureId" | "status" | "unallocated" | "chippedIds"> & { showAll: boolean; noChip: boolean }, ticked: number, now: number = Date.now()): string {
+export function exportFilename(view: Pick<Filters, "q" | "zoneIds" | "offsiteZoneIds" | "enclosureId" | "status" | "unallocated" | "chippedIds"> & { showAll: boolean; noChip: boolean }, ticked: number, now: number = Date.now()): string {
   const parts = ["residents"];
   if (ticked > 0) parts.push("selected");
-  if (view.place !== "all") parts.push(view.place === "internal" ? "on-site" : "off-site");
+  // The Off-site chip names the file as the Off-site place did; an on-site zone is "filtered".
+  if (view.offsiteZoneIds.length > 0) parts.push("off-site");
   if (view.status) parts.push(view.status.toLowerCase());
-  if (view.unallocated && view.zoneIds.length === 0) parts.push("unallocated");
+  if (view.unallocated && view.zoneIds.length === 0 && view.offsiteZoneIds.length === 0) parts.push("unallocated");
   if (view.q || view.zoneIds.length > 0 || view.enclosureId || view.noChip) parts.push("filtered");
   if (view.showAll) parts.push("with-deceased");
   parts.push(todayIso(now));

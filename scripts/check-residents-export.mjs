@@ -196,8 +196,8 @@ async function run(ids, adminCookie, volunteerCookie) {
   const tickedBody = parse(ticked.text.replace(/^﻿/, "")).filter((r) => r.length > 1).slice(1);
   check("ids narrows the file to the ticked residents", tickedBody.length === 1 && tickedBody[0][col("Name")]?.endsWith("Cooper"), `${tickedBody.length} rows`);
   check("and the name says so", /filename="residents-selected-filtered-/.test(ticked.headers.get("content-disposition") ?? ""), ticked.headers.get("content-disposition"));
-  const offSite = await download(adminCookie, `${search}&place=external`);
-  check("a place filter applies (the seeded residents are on site)", parse(offSite.text).filter((r) => r.length > 1).length === 1, "expected the header row only");
+  const offSite = await download(adminCookie, `${search}&zone=offsite`);
+  check("the Off-site chip applies (the seeded residents are on site)", parse(offSite.text).filter((r) => r.length > 1).length === 1, "expected the header row only");
   const odd = await download(adminCookie, `${search}&ids=not-an-id,${ids.plain}`);
   const oddBody = parse(odd.text.replace(/^﻿/, "")).filter((r) => r.length > 1).slice(1);
   check("a malformed id is ignored, the good one kept", oddBody.length === 1 && oddBody[0][col("Name")]?.includes("HYPERLINK"), `${oddBody.length} rows`);

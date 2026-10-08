@@ -118,10 +118,15 @@ try {
     expect(everywhere.html.includes(`status=${s}`), `a ${s} chip is offered`);
   }
 
-  const offSite = await page("/residents?place=external", cookie);
-  expect(!offSite.html.includes("unallocated=1"), "Off-site does not offer Unallocated");
+  // The old Off-site place is the Off-site chip now (2026-10-08), and an old Status-chip link
+  // is sent to Unallocated: both are redirects, checked by scripts/check-offsite-chip.mjs.
+  const oldStatus = await page(`/residents?zone=${lifecycle.id}`, cookie);
+  expect(
+    /unallocated=1/.test(oldStatus.location ?? "") || /NEXT_REDIRECT[^"]*unallocated=1/.test(oldStatus.html),
+    "an old Status-chip link is sent to Unallocated",
+  );
 
-  for (const path of ["/residents?unallocated=1", `/residents?zone=${lifecycle.id}`]) {
+  for (const path of ["/residents?unallocated=1"]) {
     const res = await page(path, cookie);
     if (sample.Unassigned) expect(lists(res.html, sample.Unassigned.resident_id), `${path} lists the unassigned`);
     for (const s of ["Adopted", "Fostered", "Hospitalised"]) {
