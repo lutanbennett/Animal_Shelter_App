@@ -3,6 +3,9 @@
 //   node scripts/audit-contact-map-links.mjs                    (dev — the default)
 //   node scripts/audit-contact-map-links.mjs --env production   (only when Lutan asks)
 //
+// .env.deploy.production lives only in the main checkout, so for production run
+// a workstream's copy from there: node ../Animal_Shelter_<feature>/scripts/…
+//
 // Reads every live contact with something in its address, and says for each
 // one whose map is wrong what is in the field, what is wrong in plain words,
 // and what to do. Shelter Friends have no map field of their own: a friend's
@@ -27,13 +30,16 @@
 // report, not a failure), 1 when it couldn't read the database. No
 // process.exit() after a fetch: libuv asserts on Windows (load-residents.mjs).
 import { join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 // Node warns that the .ts files have no package "type"; harmless, and noise
 // to whoever reads the report.
 process.removeAllListeners("warning");
 
-const root = process.cwd();
+// Code is found beside this file; the .env files in the current directory
+// (env.mjs). So a workstream's copy can run from the main checkout, where
+// .env.deploy.production lives, without copying that file anywhere.
+const root = join(fileURLToPath(import.meta.url), "../..");
 const imp = (p) => import(pathToFileURL(join(root, p)).href);
 const { loadEnv, parseEnvArg, projectRef, SITE_ORIGINS } = await imp("scripts/lib/env.mjs");
 // Node strips the types itself; both files have no imports.
@@ -188,7 +194,7 @@ async function main() {
   );
   console.log(`Contact map check — ${envName} (${ref}), ${new Date().toISOString().slice(0, 10)}`);
   console.log(
-    `${live.length} live contacts have an address (${rows.length - live.length} archived ones skipped). ` +
+    `${live.length} live contacts have an address (${rows.length - live.length} archived skipped). ` +
       `${live.length - results.length} are fine. ${shortLinks.size} short links checked with Google, ${googleRequests} lookups.`,
   );
   for (const [key, title] of GROUPS) {

@@ -51,6 +51,16 @@ gates: typecheck=0 lint=0 build=0
 - [ ] Data persists — n/a: the script writes nothing; there is no `--apply`
 - [ ] Create / edit / delete — n/a: read-only script
 - [x] Empty state renders sensibly — each of the four groups prints its heading with `: 0` when empty (dev run: `trailing 0`, `unchecked 0`)
+- [x] Production run, at Lutan's request in chat, from the main checkout (`node ../Animal_Shelter_contacts-link-audit/scripts/audit-contact-map-links.mjs --env production`), exit 0:
+
+```
+Contact map check — production (dbkodyyxxhtygxcxmfcu), 2026-10-08
+2 live contacts have an address (1 archived ones skipped). 2 are fine. 2 short links checked with Google, 2 lookups.
+...
+Summary: dead 0, plaintext 0, trailing 0, unchecked 0, fine 2.
+```
+
+  (the four empty group headings omitted as `...`; "archived ones" since reworded to "archived")
 - [x] Invalid input is rejected with a readable message — `--env nonsense` stops with `--env must be one of test, uat, production` (env.mjs); a database error prints `Could not read contacts from <env>` and sets exit 1, no stack trace
 - [x] Boundary cases checked — every case the item names, run through the script's own `judge()` against live Google:
 
@@ -123,7 +133,7 @@ link mid-text                -> plaintext | There is a link here, but not at the
 - [ ] Smoke-tested on `test.lannacare.org` — deferred: release manager
 - [ ] Timezone-sensitive behaviour — n/a: nothing derives a date (the report's date line is informational)
 - [ ] Boundary assertions cover both sides — n/a: no threshold or band; the outcome cases are listed in §4
-- [x] Evidence pasted is the tool's actual output, unedited — the gates lines, the dev summary line and the case table are pasted from the runs as printed
+- [x] Evidence pasted is the tool's actual output, unedited — the gates lines, the dev summary line and the case table are pasted from the runs as printed; the production excerpt marks its one cut (`...`, four empty headings)
 - [ ] Public pages re-checked after a cache purge — n/a: no public page changed
 
 ### Deploy safety
@@ -155,8 +165,7 @@ link mid-text                -> plaintext | There is a link here, but not at the
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | Run the audit on production and read the list — **only when Lutan asks** for it in chat: `node scripts/audit-contact-map-links.mjs --env production`. The production count is unknown until then | main checkout |
-| 2 | A contact with a `maps.app.goo.gl` link still shows its map thumbnail and opens the right place when tapped (the follower moved files) | `test.lannacare.org/contacts/<id>` after deploy, signed in |
+| 1 | A contact with a `maps.app.goo.gl` link still shows its map thumbnail and opens the right place when tapped (the follower moved files) | `test.lannacare.org/contacts/<id>` after deploy, signed in |
 
 ## Sign-off
 
@@ -171,7 +180,7 @@ Automated checks by: Claude  Date: 2026-10-08
 
 - [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty; awaiting Lutan
 
-Manual verification by: pending: the production run (Lutan's call) and one contact map checked on the deployed build
+Manual verification by: pending: one contact map checked on the deployed build
 
 ### Result
 
