@@ -3,6 +3,7 @@ import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
 import {
   CONTACT_COLUMNS,
+  contactMapSource,
   toVolunteerContact,
   type Contact,
   type VolunteerContact,
@@ -66,7 +67,7 @@ export default async function ContactPage(props: PageProps<"/contacts/[id]">) {
   if (friendResult.error) throw new Error(friendResult.error.message);
   const friend = friendResult.data?.[0] ?? null;
   const [map, translations] = await Promise.all([
-    addressMap(contact.address),
+    addressMap(contactMapSource(contact)),
     loadTranslations(supabase, "shelter_friends", friend ? [friend.id] : []),
   ]);
   const friendTranslation = (column: string) =>

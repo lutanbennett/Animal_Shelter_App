@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Contacts now have two boxes, Address and Map link, instead of one. The address is printed as words on the contact's page, the contact list and the Shelter Friends card — never as a long web link — and the map comes from the Map link, which you get in Google Maps with Share, then Copy link. Both are on Management → Contacts (add and edit) and the Add a Shelter Friend wizard. A link pasted into Address by mistake moves to Map link when you save. In Thai too.",
 ];
 
 /** Newest first. */

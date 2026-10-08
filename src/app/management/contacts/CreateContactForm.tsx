@@ -122,6 +122,19 @@ export function CreateContactForm() {
         <span className="text-xs text-muted">{f.addressHint}</span>
       </div>
       <div className="flex flex-col gap-1">
+        <label htmlFor="mapUrl" className="text-sm font-medium text-muted">
+          {f.mapUrl}
+        </label>
+        <input
+          id="mapUrl"
+          name="mapUrl"
+          inputMode="url"
+          placeholder={f.mapUrlPlaceholder}
+          className={`${inputClass} w-72`}
+        />
+        <span className="text-xs text-muted">{f.mapUrlHint}</span>
+      </div>
+      <div className="flex flex-col gap-1">
         <label htmlFor="notes" className="text-sm font-medium text-muted">
           {f.notes}
         </label>

@@ -214,6 +214,7 @@ export type WizardContact =
       email: string;
       lineId: string;
       address: string;
+      mapUrl: string;
     };
 
 /**
@@ -284,6 +285,7 @@ export async function addShelterFriend(input: {
         email: c.email,
         lineId: c.lineId,
         address: c.address,
+        mapUrl: c.mapUrl,
       });
       if (!created.ok) return refuse(created.error);
       contactId = created.id;

@@ -1,6 +1,7 @@
 import type { createClient } from "@/lib/supabase/server";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
-import { isContactType } from "@/lib/contacts/contacts";
+import { contactAddressFields, isContactType } from "@/lib/contacts/contacts";
+import { mapLinkLeadsSomewhere } from "@/lib/contacts/map-preview";
 
 /**
  * The one place a contact row is inserted — Management → Contacts' form and
@@ -23,6 +24,7 @@ export type NewContact = {
   messengerId?: string | null;
   whatsapp?: string | null;
   address?: string | null;
+  mapUrl?: string | null;
   notes?: string | null;
 };
 
@@ -35,6 +37,11 @@ export async function insertContact(
   if (!name) return { ok: false, error: t.management.contacts.errors.nameRequired };
   const type = fields.type;
   if (!isContactType(type)) return { ok: false, error: t.management.contacts.errors.invalidType };
+  const place = contactAddressFields(fields.address, fields.mapUrl);
+  if (!place.ok) return { ok: false, error: t.management.contacts.errors[place.error] };
+  if (place.map_url && !(await mapLinkLeadsSomewhere(place.map_url))) {
+    return { ok: false, error: t.management.contacts.errors.mapUrlDead };
+  }
 
   const { data, error } = await supabase
     .from("contacts")
@@ -46,7 +53,8 @@ export async function insertContact(
       line_id: optional(fields.lineId),
       messenger_id: optional(fields.messengerId),
       whatsapp: optional(fields.whatsapp),
-      address: optional(fields.address),
+      address: place.address,
+      map_url: place.map_url,
       notes: optional(fields.notes),
     })
     .select("id")

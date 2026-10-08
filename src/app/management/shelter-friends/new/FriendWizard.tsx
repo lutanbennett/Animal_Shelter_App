@@ -7,6 +7,7 @@ import { PendingPuppy } from "@/components/PuppyLoader";
 import { ACTION_ICONS, CONTACT_ICONS } from "@/components/hub-icons";
 import {
   addressMapNow,
+  contactAddressFields,
   type Contact,
 } from "@/lib/contacts/contacts";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -49,6 +50,7 @@ type Draft = {
   newLine: string;
   newEmail: string;
   newAddress: string;
+  newMapUrl: string;
   helpKind: string;
   blurb: string;
   discountNote: string;
@@ -73,6 +75,7 @@ const EMPTY_DRAFT: Draft = {
   newLine: "",
   newEmail: "",
   newAddress: "",
+  newMapUrl: "",
   helpKind: "",
   blurb: "",
   discountNote: "",
@@ -114,7 +117,9 @@ function stepProblem(step: number, d: Draft, contacts: Contact[], t: Dictionary)
     if (d.mode === "existing") {
       return contacts.some((c) => c.id === d.contactId) ? null : w.who.pickRequired;
     }
-    return d.newName.trim() ? null : w.who.nameRequired;
+    if (!d.newName.trim()) return w.who.nameRequired;
+    const place = contactAddressFields(d.newAddress, d.newMapUrl);
+    return place.ok ? null : t.management.contacts.errors[place.error];
   }
   if (step === 2) {
     return (
@@ -241,7 +246,7 @@ function FriendWizardForm({
     () =>
       draft.mode === "existing"
         ? chosen
-          ? { name: chosen.name, phone: chosen.phone, email: chosen.email, line_id: chosen.line_id, address: chosen.address }
+          ? { name: chosen.name, phone: chosen.phone, email: chosen.email, line_id: chosen.line_id, address: chosen.address, map_url: chosen.map_url }
           : null
         : {
             name: draft.newName.trim(),
@@ -249,6 +254,7 @@ function FriendWizardForm({
             email: draft.newEmail.trim() || null,
             line_id: draft.newLine.trim() || null,
             address: draft.newAddress.trim() || null,
+            map_url: draft.newMapUrl.trim() || null,
           },
     [draft, chosen],
   );
@@ -282,7 +288,7 @@ function FriendWizardForm({
     show_email: contactView?.email ?? null,
     show_line: contactView?.line_id ?? null,
     show_address: contactView?.address ?? null,
-    show_map: contactView?.address ?? null,
+    show_map: contactView?.map_url ?? contactView?.address ?? null,
   };
 
   const ticked = FRIEND_OPT_INS.filter((key) => draft.optIns[key]);
@@ -306,6 +312,7 @@ function FriendWizardForm({
               { label: form.lineId, value: contactView?.line_id ?? null },
               { label: form.email, value: contactView?.email ?? null },
               { label: form.address, value: contactView?.address ?? null },
+              { label: form.mapUrl, value: contactView?.map_url ?? null },
             ]
           : []),
       ],
@@ -394,6 +401,7 @@ function FriendWizardForm({
             email: draft.newEmail,
             lineId: draft.newLine,
             address: draft.newAddress,
+            mapUrl: draft.newMapUrl,
           };
     startTransition(async () => {
       try {
@@ -657,6 +665,19 @@ function FriendWizardForm({
                   />,
                   form.addressHint,
                 )}
+                {field(
+                  "friend-new-map-url",
+                  form.mapUrl,
+                  <input
+                    id="friend-new-map-url"
+                    inputMode="url"
+                    value={draft.newMapUrl}
+                    onChange={(e) => set("newMapUrl", e.target.value)}
+                    placeholder={form.mapUrlPlaceholder}
+                    className={inputClass}
+                  />,
+                  form.mapUrlHint,
+                )}
               </div>
             </div>
           )}
@@ -845,7 +866,7 @@ function FriendWizardForm({
                     friend={preview}
                     t={t}
                     locale={locale}
-                    map={addressMapNow(preview.map_location ?? preview.address)}
+                    map={addressMapNow(preview.map_location)}
                   />
                 </div>
               </section>

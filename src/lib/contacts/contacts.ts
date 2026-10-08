@@ -31,7 +31,10 @@ export type Contact = {
   line_id: string | null;
   messenger_id: string | null;
   whatsapp: string | null;
+  /** The written address, for reading and for post — text, never a link (0164). */
   address: string | null;
+  /** The Google Maps link for the place, kept apart from the address (0164). Null = none. */
+  map_url: string | null;
   notes: string | null;
   /** Set = archived (0075): kept with its history, out of default lists and pickers. */
   archived_at: string | null;
@@ -60,6 +63,7 @@ export function toVolunteerContact(row: {
     messenger_id: null,
     whatsapp: null,
     address: null,
+    map_url: null,
     notes: null,
     archived_at: null,
     archive_reason: null,
@@ -67,7 +71,7 @@ export function toVolunteerContact(row: {
 }
 
 export const CONTACT_COLUMNS =
-  "id, name, type, phone, email, line_id, messenger_id, whatsapp, address, notes, archived_at, archive_reason";
+  "id, name, type, phone, email, line_id, messenger_id, whatsapp, address, map_url, notes, archived_at, archive_reason";
 
 /**
  * Archived contacts stay in the table — a carer's placements, a supplier's
@@ -178,6 +182,75 @@ export function splitAddress(address: string | null | undefined): {
     // not a URL after all — only the text is left
   }
   return { link, text: rest.join(" ") };
+}
+
+/**
+ * The written address for display. A row whose link still sits at the
+ * front of `address` (from before 0164 split the two) never prints it:
+ * the link is the map's, not the address.
+ */
+export function addressText(address: string | null | undefined): string {
+  return splitAddress(address).text;
+}
+
+/**
+ * What a contact's map is built from: the Map link (0164), with the written
+ * address after it, so a link that leads nowhere still falls back to a
+ * search of the words — the "link, space, address" shape every map helper
+ * here already reads. A row with no Map link is read from `address` as it
+ * always was (a link not yet moved, or words searched as the map). This is
+ * for staff pages; the public Friend card has its own gated value
+ * (`map_location`) and must not borrow the address.
+ */
+export function contactMapSource(contact: {
+  address: string | null;
+  map_url: string | null;
+}): string | null {
+  const link = contact.map_url?.trim();
+  if (!link) return contact.address;
+  const text = addressText(contact.address);
+  return text ? `${link} ${text}` : link;
+}
+
+/**
+ * The two form boxes as they are saved, so the written address is never a
+ * link (0164). A link pasted at the start of the Address box moves to the
+ * Map link when that is empty, and the words after it stay as the address.
+ * The Map link box takes the first link in what was pasted (the Maps app's
+ * Share can copy the place name along with it) and stores it normalised —
+ * `new URL()` never contains a space, so `contacts_map_url_form` cannot
+ * disagree with the app.
+ */
+export function contactAddressFields(
+  address: string | null | undefined,
+  mapUrl: string | null | undefined,
+):
+  | { ok: true; address: string | null; map_url: string | null }
+  | { ok: false; error: "mapUrlInvalid" | "addressIsLink" } {
+  const mapText = mapUrl?.trim() ?? "";
+  let map: string | null = null;
+  if (mapText) {
+    const found = mapText.match(/https?:\/\/\S+/i)?.[0];
+    map = found ? parseHttpUrl(found) : null;
+    if (!map) return { ok: false, error: "mapUrlInvalid" };
+  }
+  const written = address?.trim() ?? "";
+  if (!/^https?:\/\//i.test(written)) return { ok: true, address: written || null, map_url: map };
+  const [first, ...rest] = written.split(/\s+/);
+  const link = parseHttpUrl(first);
+  // A link in the Address box with a different one already in Map link:
+  // which is right is the person's call, not the form's.
+  if (!link || (map && map !== link)) return { ok: false, error: "addressIsLink" };
+  return { ok: true, address: rest.join(" ") || null, map_url: link };
+}
+
+function parseHttpUrl(value: string): string | null {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
 }
 
 /** A Google Maps search for `query` — opens the Maps app on a phone. */
