@@ -11,7 +11,7 @@
 | PR | opened from this branch after this plan's first push |
 | Tested by / date | Claude, 2026-10-08 |
 | Carries a migration? | no |
-| Tested at SHA | `d2c80d27` (code); this plan is the next commit |
+| Tested at SHA | `b0baed03` (merge with `main`); this plan is the next commit |
 
 ## 1. Scope and risk
 
@@ -22,8 +22,8 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly: "Already up to date."
-- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Exit code read directly (`exit=0`), output redirected to a file:
+- [x] `node scripts/worktree.mjs sync` — first run "Already up to date."; re-run after the PR went CONFLICTING merged `website-content-grant` (0163). The one conflict was `docs/backlog.md`, two neighbouring lines: kept this branch's status note on the maps item and `main`'s tick on the website-content item; `main` had not touched the maps line (diffed against the merge base). Merge commit `b0baed03`
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Run on `d2c80d27` and again on the merge `b0baed03`; exit code read directly (`exit=0`) both times, output redirected to a file:
 
 ```
 gates: typecheck=0 lint=0 build=0
@@ -107,7 +107,7 @@ No permission, route or query scope changed: the map is built from the same `add
 
 - [x] The pages nearest the change still work (list the ones checked) — `/friends` (public), fetched for seven address shapes; the dev contacts' addresses run through the same `addressMapNow` code
 - [x] Any shared file touched checked from a second, unrelated page — `manual/en.ts` and both dictionaries feed every page; `/friends` and `/login` loaded and rendered from this branch's server after the change
-- [x] Nothing merged from `main` during `sync` was broken by this branch — sync merged nothing ("Already up to date")
+- [x] Nothing merged from `main` during `sync` was broken by this branch — the merged work (0163, Management holding `website.content`) touches permissions, not map code; `src/app/admin/website/actions.ts` merged without conflict and gates pass on the merge
 
 ## 7. Documentation
 
