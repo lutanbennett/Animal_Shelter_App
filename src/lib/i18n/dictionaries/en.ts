@@ -4987,6 +4987,8 @@ const en = {
       "attachments.caption": "Photo caption",
       "maintenance.title": "Job title",
       "maintenance.description": "Job description",
+      "recurring_jobs.title": "Recurring job title",
+      "recurring_jobs.description": "Recurring job description",
       "site_pages.title": "Page heading",
       "site_pages.body": "Page text",
     } as Record<string, string>,
