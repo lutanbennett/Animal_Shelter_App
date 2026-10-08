@@ -256,7 +256,7 @@ const manual: Manual = {
           roles: ["vet"],
           path: "Appointments (first in the menu)",
           intro:
-            "Appointments is the page you land on when you sign in. It lists every visit booked with your clinic — not just your own patients' — in three groups: To write up (the visit date has passed and it is not marked done), Upcoming (today or later) and Recently done (marked done in the last 30 days). Each row names the resident, which opens their page, and offers Log procedure, Log blood test, Add prescription, Log weight and Edit, all already linked to that visit; prescription and weight appear once the visit has started. Marking a visit done does not lock it: you can still add records to it, and anything you were typing when someone marked it done is saved as normal. A cancelled visit is not listed. The visits of all your clinics are listed together. If the page says your account is not linked to a clinic, ask an admin to link it to your doctor entry (Accounts and roles).",
+            "Appointments is the page you land on when you sign in. It lists every visit booked with your clinic — not just your own patients' — in three groups: To write up (the visit date has passed and it is not marked done — oldest first, its count and dates in red), Upcoming (today or later) and Recently done (marked done in the last 30 days). Each row names the resident, which opens their page, and offers Log procedure, Log blood test, Add prescription, Log weight and Edit, all already linked to that visit; prescription and weight appear once the visit has started. Marking a visit done does not lock it: you can still add records to it, and anything you were typing when someone marked it done is saved as normal. A cancelled visit is not listed. The visits of all your clinics are listed together. If the page says your account is not linked to a clinic, ask an admin to link it to your doctor entry (Accounts and roles).",
         },
       ],
     },
@@ -1049,6 +1049,7 @@ const manual: Manual = {
           steps: [
             "Open Shelter Operations from the menu and tap Vets to see every vet and clinic with their visit count, residents seen, last visit and what's upcoming or overdue.",
             "Tap a vet for their hub: contact details and notes, visits per month, the clinic's doctors with how many visits each saw, the residents they've seen, spend on visits with a recorded cost, and the procedures, blood tests and prescriptions logged against their visits. Change the period (3, 6, 12 months or all time) at the top.",
+            "Tap any card to see what it counts. Scheduled opens the Scheduled list: overdue visits first, in red and oldest first, then upcoming ones, soonest first, whatever period is chosen. Each row shows the resident, the date, the reason and the doctor; tap Edit to mark an overdue visit Completed or Cancelled. Visits and Residents seen open their lists for the period. Spend, Procedures, Blood tests and Prescriptions open the Visits list showing only the visits with a cost or with those records — tap a visit to go to that tab of the resident's record, or tap Visits above the list to see them all again. A card with nothing to show cannot be tapped.",
           ],
           screenshot: {
             src: "/manual/vet-hub.png",

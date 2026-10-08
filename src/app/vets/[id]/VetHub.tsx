@@ -156,12 +156,15 @@ export function VetHub({
     const ids = visitsWith[visitFilter];
     return inPeriod.filter((v) => ids.has(v.id));
   }, [inPeriod, visitFilter, visitsWith]);
+  // The tile's own number, so a chip and the tile that set it agree: the
+  // record filters count records, though a visit may carry several, and the
+  // list's heading then counts the visits.
   const filterCounts: Record<VisitFilter, number> = {
     all: inPeriod.length,
     spend: spend.withCost,
-    procedures: inPeriod.filter((v) => visitsWith.procedures.has(v.id)).length,
-    bloodTests: inPeriod.filter((v) => visitsWith.bloodTests.has(v.id)).length,
-    prescriptions: inPeriod.filter((v) => visitsWith.prescriptions.has(v.id)).length,
+    procedures: countLinked(linked.procedures),
+    bloodTests: countLinked(linked.bloodTests),
+    prescriptions: countLinked(linked.prescriptions),
   };
   // A filter left on with nothing under it (the period changed) reads as all.
   const activeFilter: VisitFilter = filterCounts[visitFilter] > 0 ? visitFilter : "all";
@@ -178,7 +181,7 @@ export function VetHub({
       onClick: (event: MouseEvent<HTMLAnchorElement>) => {
         event.preventDefault();
         if (filter) setVisitFilter(filter);
-        document.getElementById(section)?.scrollIntoView({ behavior: "smooth", block: "start" });
+        document.getElementById(section)?.scrollIntoView({ block: "start" });
         window.history.replaceState(window.history.state, "", `#${section}`);
       },
     };

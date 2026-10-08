@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "On a vet's page, every card now opens what it counts. Tap Scheduled for a list of the clinic's overdue visits — in red, oldest first — then the upcoming ones, each with the resident's photo and an Edit button to mark it done or cancelled. Visits and Residents seen open their lists; Spend, Procedures, Blood tests and Prescriptions show just the visits with a cost or with those records. On a doctor's Appointments page, the visits still to write up now have their count and dates in red.",
   "Contacts now have two boxes, Address and Map link, instead of one. The address is printed as words on the contact's page, the contact list and the Shelter Friends card — never as a long web link — and the map comes from the Map link, which you get in Google Maps with Share, then Copy link. Both are on Management → Contacts (add and edit) and the Add a Shelter Friend wizard. A link pasted into Address by mistake moves to Map link when you save. In Thai too.",
 ];
 

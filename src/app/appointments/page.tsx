@@ -47,10 +47,25 @@ export default async function AppointmentsPage() {
   );
   const today = todayIso();
 
-  const section = (title: string, rows: ClinicAppointment[], empty: string, hint?: string) => (
+  // `overdue`: the to-write-up list, whose rows are past their date. Its count
+  // and dates are in the danger colour, as on the clinic's own page.
+  const section = (
+    title: string,
+    rows: ClinicAppointment[],
+    empty: string,
+    hint?: string,
+    overdue = false,
+  ) => (
     <section className="flex flex-col gap-2">
       <h2 className="text-lg font-semibold text-foreground">
-        {title} <span className="text-sm font-normal text-muted">({rows.length})</span>
+        {title}{" "}
+        <span
+          className={`text-sm ${
+            overdue && rows.length > 0 ? "font-medium text-danger" : "font-normal text-muted"
+          }`}
+        >
+          ({rows.length})
+        </span>
       </h2>
       {hint && <p className="text-sm text-muted">{hint}</p>}
       {rows.length === 0 ? (
@@ -76,7 +91,7 @@ export default async function AppointmentsPage() {
                   >
                     {name}
                   </Link>
-                  <span className="text-xs text-muted">
+                  <span className={`text-xs ${overdue ? "font-medium text-danger" : "text-muted"}`}>
                     {formatDateTime(row.appointment_date, locale)}
                   </span>
                 </div>
@@ -121,7 +136,7 @@ export default async function AppointmentsPage() {
           {a.couldntLoad}: {error}
         </p>
       )}
-      {section(a.toWriteUp, toWriteUp, a.emptyToWriteUp, a.toWriteUpHint)}
+      {section(a.toWriteUp, toWriteUp, a.emptyToWriteUp, a.toWriteUpHint, true)}
       {section(a.upcoming, upcoming, a.emptyUpcoming)}
       {section(a.recentlyDone, recentlyDone, a.emptyRecentlyDone, a.recentlyDoneHint)}
     </>,
