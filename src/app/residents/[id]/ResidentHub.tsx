@@ -94,6 +94,7 @@ export type ImmunizationRecordRow = {
 };
 
 export type MissingImmunizationRow = {
+  immunization_type_id: string;
   immunization_type_name: string;
 };
 

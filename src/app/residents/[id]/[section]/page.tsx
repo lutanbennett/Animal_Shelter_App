@@ -6,6 +6,7 @@ import { formatBaht, formatDate, formatWeightDelta, formatWeightKg, todayIso } f
 import { getT } from "@/lib/i18n/get-t";
 import { contactNameEmbed } from "@/lib/contacts/visibility";
 import { placeName } from "@/lib/enclosures/names";
+import { localLabel } from "@/lib/translations/labels";
 import {
   appointmentStatusLabel,
   dietUnitLabel,
@@ -459,7 +460,7 @@ export default async function ResidentSectionPage(
     case "immunizations": {
       const { data } = await supabase
         .from("immunization_records")
-        .select("id, date_administered, administered_by, immunization_types:picker_immunization_types(name)")
+        .select("id, date_administered, administered_by, immunization_types:picker_immunization_types(name, name_th)")
         .is("archived_at", null)
         .eq("resident_id", id)
         .order("date_administered", { ascending: false })
@@ -468,14 +469,14 @@ export default async function ResidentSectionPage(
             id: string;
             date_administered: string;
             administered_by: string | null;
-            immunization_types: { name: string } | null;
+            immunization_types: { name: string; name_th: string | null } | null;
           }[]
         >();
       const immCount = await archivedCount("immunization_records");
       const { data: archivedImm } = showArchived
         ? await supabase
             .from("immunization_records")
-            .select("id, date_administered, administered_by, archive_reason, immunization_types:picker_immunization_types(name)")
+            .select("id, date_administered, administered_by, archive_reason, immunization_types:picker_immunization_types(name, name_th)")
             .not("archived_at", "is", null)
             .eq("resident_id", id)
             .order("date_administered", { ascending: false })
@@ -485,7 +486,7 @@ export default async function ResidentSectionPage(
                 date_administered: string;
                 administered_by: string | null;
                 archive_reason: string | null;
-                immunization_types: { name: string } | null;
+                immunization_types: { name: string; name_th: string | null } | null;
               }[]
             >()
         : { data: [] };
@@ -494,13 +495,13 @@ export default async function ResidentSectionPage(
           id: string;
           date_administered: string;
           administered_by: string | null;
-          immunization_types: { name: string } | null;
+          immunization_types: { name: string; name_th: string | null } | null;
         },
         archived: boolean,
       ) => (
         <div className="flex items-center justify-between gap-3">
           <span className="font-medium">
-            {row.immunization_types?.name ?? t.residents.sections.unknownVaccine}
+            {(row.immunization_types ? localLabel(locale, row.immunization_types.name, row.immunization_types.name_th) : t.residents.sections.unknownVaccine)}
           </span>
           <span className="flex flex-col items-end gap-1 text-xs text-muted">
             <span>
@@ -513,7 +514,7 @@ export default async function ResidentSectionPage(
                 residentId={id}
                 id={row.id}
                 archived={archived}
-                subject={`${row.immunization_types?.name ?? t.residents.sections.unknownVaccine} · ${formatDate(row.date_administered, locale)}`}
+                subject={`${(row.immunization_types ? localLabel(locale, row.immunization_types.name, row.immunization_types.name_th) : t.residents.sections.unknownVaccine)} · ${formatDate(row.date_administered, locale)}`}
               />
             )}
           </span>
@@ -598,7 +599,7 @@ export default async function ResidentSectionPage(
       const [{ data }, { data: visitWeights }] = await Promise.all([
         supabase
           .from("vet_appointments")
-          .select("id, appointment_date, status, reason, doctor_name, notes, cost, vets(name)")
+          .select("id, appointment_date, status, reason, doctor_name, notes, cost, vets(name, name_th)")
           .is("archived_at", null)
           .eq("resident_id", id)
           .order("appointment_date", { ascending: false })
@@ -611,7 +612,7 @@ export default async function ResidentSectionPage(
               doctor_name: string | null;
               notes: string | null;
               cost: number | null;
-              vets: { name: string } | null;
+              vets: { name: string; name_th: string | null } | null;
             }[]
           >(),
         supabase
@@ -632,7 +633,7 @@ export default async function ResidentSectionPage(
       const { data: archivedVisits } = showArchived
         ? await supabase
             .from("vet_appointments")
-            .select("id, appointment_date, status, reason, doctor_name, archive_reason, vets(name)")
+            .select("id, appointment_date, status, reason, doctor_name, archive_reason, vets(name, name_th)")
             .not("archived_at", "is", null)
             .eq("resident_id", id)
             .order("appointment_date", { ascending: false })
@@ -644,7 +645,7 @@ export default async function ResidentSectionPage(
                 reason: string | null;
                 doctor_name: string | null;
                 archive_reason: string | null;
-                vets: { name: string } | null;
+                vets: { name: string; name_th: string | null } | null;
               }[]
             >()
         : { data: [] };
@@ -678,9 +679,9 @@ export default async function ResidentSectionPage(
                   <span className="font-medium">
                     {row.reason ?? t.residents.sections.vetVisitFallback}
                   </span>
-                  {(row.vets?.name || row.doctor_name) && (
+                  {((row.vets && localLabel(locale, row.vets.name, row.vets.name_th)) || row.doctor_name) && (
                     <span className="text-xs text-muted">
-                      {[row.vets?.name, row.doctor_name].filter(Boolean).join(" · ")}
+                      {[(row.vets && localLabel(locale, row.vets.name, row.vets.name_th)), row.doctor_name].filter(Boolean).join(" · ")}
                     </span>
                   )}
                 </div>
@@ -769,9 +770,9 @@ export default async function ResidentSectionPage(
                 <span className="font-medium">
                   {row.reason ?? t.residents.sections.vetVisitFallback}
                 </span>
-                {(row.vets?.name || row.doctor_name) && (
+                {((row.vets && localLabel(locale, row.vets.name, row.vets.name_th)) || row.doctor_name) && (
                   <span className="text-xs text-muted">
-                    {[row.vets?.name, row.doctor_name].filter(Boolean).join(" · ")}
+                    {[(row.vets && localLabel(locale, row.vets.name, row.vets.name_th)), row.doctor_name].filter(Boolean).join(" · ")}
                   </span>
                 )}
               </div>
@@ -800,7 +801,7 @@ export default async function ResidentSectionPage(
       const { data, error } = await supabase
         .from("prescriptions")
         .select(
-          "id, start_date, end_date, dose_quantity, notes, medication:picker_medications(name, dose_unit), frequency(label), vet_appointments(appointment_date)",
+          "id, start_date, end_date, dose_quantity, notes, medication:picker_medications(name, dose_unit, name_th), frequency(label, label_th), vet_appointments(appointment_date)",
         )
         .is("archived_at", null)
         .eq("resident_id", id)
@@ -812,8 +813,8 @@ export default async function ResidentSectionPage(
             end_date: string | null;
             dose_quantity: number | null;
             notes: string | null;
-            medication: { name: string; dose_unit: string } | null;
-            frequency: { label: string } | null;
+            medication: { name: string; dose_unit: string; name_th: string | null } | null;
+            frequency: { label: string; label_th: string | null } | null;
             vet_appointments: { appointment_date: string } | null;
           }[]
         >();
@@ -822,7 +823,7 @@ export default async function ResidentSectionPage(
         ? await supabase
             .from("prescriptions")
             .select(
-              "id, start_date, end_date, dose_quantity, notes, archive_reason, medication:picker_medications(name, dose_unit), frequency(label), vet_appointments(appointment_date)",
+              "id, start_date, end_date, dose_quantity, notes, archive_reason, medication:picker_medications(name, dose_unit, name_th), frequency(label, label_th), vet_appointments(appointment_date)",
             )
             .not("archived_at", "is", null)
             .eq("resident_id", id)
@@ -835,8 +836,8 @@ export default async function ResidentSectionPage(
                 dose_quantity: number | null;
                 notes: string | null;
                 archive_reason: string | null;
-                medication: { name: string; dose_unit: string } | null;
-                frequency: { label: string } | null;
+                medication: { name: string; dose_unit: string; name_th: string | null } | null;
+                frequency: { label: string; label_th: string | null } | null;
                 vet_appointments: { appointment_date: string } | null;
               }[]
             >()
@@ -862,11 +863,11 @@ export default async function ResidentSectionPage(
             <div className="flex items-start justify-between gap-3">
               <div className="flex flex-col">
                 <span className="font-medium">
-                  {row.medication?.name ?? t.residents.sections.unknownMedication}
+                  {(row.medication ? localLabel(locale, row.medication.name, row.medication.name_th) : t.residents.sections.unknownMedication)}
                 </span>
-                {(dose || row.frequency?.label) && (
+                {(dose || (row.frequency && localLabel(locale, row.frequency.label, row.frequency.label_th))) && (
                   <span className="text-xs text-muted">
-                    {[dose, row.frequency?.label].filter(Boolean).join(" · ")}
+                    {[dose, (row.frequency && localLabel(locale, row.frequency.label, row.frequency.label_th))].filter(Boolean).join(" · ")}
                   </span>
                 )}
               </div>
@@ -895,7 +896,7 @@ export default async function ResidentSectionPage(
             {!isDeceased && !archived && (
               <RecordRowActions
                 editHref={`/prescriptions/${row.id}/edit`}
-                subject={`${row.medication?.name ?? t.residents.sections.unknownMedication} · ${formatDate(row.start_date, locale)}`}
+                subject={`${(row.medication ? localLabel(locale, row.medication.name, row.medication.name_th) : t.residents.sections.unknownMedication)} · ${formatDate(row.start_date, locale)}`}
                 endToday={
                   isCurrent && row.start_date <= today
                     ? endPrescriptionToday.bind(null, id, row.id)
@@ -914,7 +915,7 @@ export default async function ResidentSectionPage(
                   residentId={id}
                   id={row.id}
                   archived={archived}
-                  subject={`${row.medication?.name ?? t.residents.sections.unknownMedication} · ${formatDate(row.start_date, locale)}`}
+                  subject={`${(row.medication ? localLabel(locale, row.medication.name, row.medication.name_th) : t.residents.sections.unknownMedication)} · ${formatDate(row.start_date, locale)}`}
                 />
               </div>
             )}
@@ -973,7 +974,7 @@ export default async function ResidentSectionPage(
       const { data, error } = await supabase
         .from("resident_diets")
         .select(
-          "id, start_date, end_date, meals_per_day, daily_quantity, notes, diet_types:picker_diet_types(name, unit, daily_qty_small, daily_qty_medium, daily_qty_large)",
+          "id, start_date, end_date, meals_per_day, daily_quantity, notes, diet_types:picker_diet_types(name, name_th, unit, daily_qty_small, daily_qty_medium, daily_qty_large)",
         )
         .eq("resident_id", id)
         .order("start_date", { ascending: false })
@@ -987,6 +988,7 @@ export default async function ResidentSectionPage(
             notes: string | null;
             diet_types: {
               name: string;
+              name_th: string | null;
               unit: string;
               daily_qty_small: number;
               daily_qty_medium: number;
@@ -1020,7 +1022,7 @@ export default async function ResidentSectionPage(
             <div className="flex items-start justify-between gap-3">
               <div className="flex flex-col">
                 <span className="font-medium">
-                  {type?.name ?? t.residents.sections.unknownDietType}
+                  {(type ? localLabel(locale, type.name, type.name_th) : t.residents.sections.unknownDietType)}
                 </span>
                 <span className="text-xs text-muted">
                   {[t.residents.sections.mealsPerDay(row.meals_per_day), quantity]
@@ -1046,7 +1048,7 @@ export default async function ResidentSectionPage(
             {!isDeceased && (
               <RecordRowActions
                 editHref={`/diets/${row.id}/edit`}
-                subject={`${type?.name ?? t.residents.sections.unknownDietType} · ${formatDate(row.start_date, locale)}`}
+                subject={`${(type ? localLabel(locale, type.name, type.name_th) : t.residents.sections.unknownDietType)} · ${formatDate(row.start_date, locale)}`}
                 endToday={
                   isCurrent && row.start_date <= today
                     ? endDietToday.bind(null, id, row.id)
@@ -1284,7 +1286,7 @@ export default async function ResidentSectionPage(
       const { data: procedureRows, error } = await supabase
         .from("procedures")
         .select(
-          "id, date, notes, procedure_types(name), vet_appointments(appointment_date, reason)",
+          "id, date, notes, procedure_types(name, name_th), vet_appointments(appointment_date, reason)",
         )
         .eq("resident_id", id)
         .order("date", { ascending: false })
@@ -1294,7 +1296,7 @@ export default async function ResidentSectionPage(
             id: string;
             date: string;
             notes: string | null;
-            procedure_types: { name: string } | null;
+            procedure_types: { name: string; name_th: string | null } | null;
             vet_appointments: { appointment_date: string; reason: string | null } | null;
           }[]
         >();
@@ -1319,7 +1321,7 @@ export default async function ResidentSectionPage(
         id: row.id,
         date: row.date,
         notes: row.notes,
-        procedure_types: row.procedure_types,
+        procedure_types: row.procedure_types && { name: localLabel(locale, row.procedure_types.name, row.procedure_types.name_th) },
         vet_appointments: row.vet_appointments,
         attachments: (procedureFiles ?? [])
           .filter((a) => a.owner_id === row.id)
@@ -1353,7 +1355,7 @@ export default async function ResidentSectionPage(
       const { data: tests } = await supabase
         .from("blood_tests")
         .select(
-          "id, date, results, blood_test_types(name), vet_appointments(appointment_date, reason)",
+          "id, date, results, blood_test_types(name, name_th), vet_appointments(appointment_date, reason)",
         )
         .eq("resident_id", id)
         .order("date", { ascending: false })
@@ -1362,7 +1364,7 @@ export default async function ResidentSectionPage(
             id: string;
             date: string;
             results: string | null;
-            blood_test_types: { name: string } | null;
+            blood_test_types: { name: string; name_th: string | null } | null;
             vet_appointments: { appointment_date: string; reason: string | null } | null;
           }[]
         >();
@@ -1385,7 +1387,7 @@ export default async function ResidentSectionPage(
         id: row.id,
         date: row.date,
         results: row.results,
-        blood_test_types: row.blood_test_types,
+        blood_test_types: row.blood_test_types && { name: localLabel(locale, row.blood_test_types.name, row.blood_test_types.name_th) },
         vet_appointments: row.vet_appointments,
         attachments: (attachmentRows ?? [])
           .filter((a) => a.owner_id === row.id)

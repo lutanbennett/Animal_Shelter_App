@@ -5,6 +5,7 @@ import { loadPermissions } from "@/lib/permissions/load";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { localLabel } from "@/lib/translations/labels";
 import { placeName } from "@/lib/enclosures/names";
 import { formatDate, todayIso } from "@/lib/format";
 import { visitDate } from "@/lib/vets/linkable";
@@ -15,7 +16,7 @@ type VetAppointment = {
   id: string;
   appointment_date: string;
   reason: string | null;
-  vets: { name: string } | null;
+  vets: { name: string; name_th: string | null } | null;
 };
 
 export default async function SendToHospitalPage(
@@ -72,7 +73,7 @@ export default async function SendToHospitalPage(
       vetAppointmentId
         ? supabase
             .from("vet_appointments")
-            .select("id, appointment_date, reason, vets(name)")
+            .select("id, appointment_date, reason, vets(name, name_th)")
             .is("archived_at", null)
             .eq("id", vetAppointmentId)
             .eq("resident_id", id)
@@ -103,7 +104,7 @@ export default async function SendToHospitalPage(
     ? t.residents.hospital.visitNote(
         formatDate(visit.appointment_date, locale),
         visit.reason,
-        visit.vets?.name ?? null,
+        visit.vets ? localLabel(locale, visit.vets.name, visit.vets.name_th) : null,
       )
     : "";
 

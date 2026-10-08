@@ -7,6 +7,9 @@ import { readsWhoAndWhereOnly } from "@/lib/residents/who-and-where";
 import { loadResidentCard } from "@/lib/residents/card";
 import { getTagOrigin } from "@/lib/tags/origin";
 import { loadTranslations } from "@/lib/translations/queries";
+import { placeName } from "@/lib/enclosures/names";
+import { getT } from "@/lib/i18n/get-t";
+import { localLabel } from "@/lib/translations/labels";
 import {
   ResidentHub,
   type BloodTestRow,
@@ -96,14 +99,14 @@ export default async function ResidentPage(
       .eq("resident_id", id),
     supabase
       .from("immunization_records")
-      .select("id, date_administered, immunization_types:picker_immunization_types(name)")
+      .select("id, date_administered, immunization_types:picker_immunization_types(name, name_th)")
       .is("archived_at", null)
       .eq("resident_id", id)
       .order("date_administered", { ascending: false })
       .returns<ImmunizationRecordRow[]>(),
     supabase
       .from("immunization_compliance")
-      .select("immunization_type_name")
+      .select("immunization_type_id, immunization_type_name")
       .eq("resident_id", id)
       .returns<MissingImmunizationRow[]>(),
     supabase
@@ -115,14 +118,14 @@ export default async function ResidentPage(
       .returns<VetAppointmentRow[]>(),
     supabase
       .from("prescriptions")
-      .select("id, start_date, end_date, medication:picker_medications(name)")
+      .select("id, start_date, end_date, medication:picker_medications(name, name_th)")
       .is("archived_at", null)
       .eq("resident_id", id)
       .order("start_date", { ascending: false })
       .returns<PrescriptionRow[]>(),
     supabase
       .from("resident_diets")
-      .select("id, start_date, end_date, diet_types:picker_diet_types(name)")
+      .select("id, start_date, end_date, diet_types:picker_diet_types(name, name_th)")
       .eq("resident_id", id)
       .order("start_date", { ascending: false })
       .returns<DietRow[]>(),
@@ -135,7 +138,7 @@ export default async function ResidentPage(
       .returns<WeightRow[]>(),
     supabase
       .from("procedures")
-      .select("id, date, procedure_types(name)")
+      .select("id, date, procedure_types(name, name_th)")
       .eq("resident_id", id)
       .order("date", { ascending: false })
       .returns<ProcedureRow[]>(),
@@ -198,15 +201,33 @@ export default async function ResidentPage(
     previousEnclosureId
       ? supabase
           .from("enclosures")
-          .select("name")
+          .select("name, name_th")
           .eq("id", previousEnclosureId)
           .limit(1)
-          .returns<{ name: string }[]>()
+          .returns<{ name: string; name_th: string | null }[]>()
       : null,
     // The other-language versions of the public profile fields (0056).
     loadTranslations(supabase, "residents", [id]),
     getTagOrigin(),
   ]);
+
+  // The hub prints `.name`, so labels arrive in the reader's language (0166).
+  const { locale } = await getT();
+  const local = <T extends { name: string; name_th?: string | null }>(x: T | null) =>
+    x && { ...x, name: localLabel(locale, x.name, x.name_th) };
+  // immunization_compliance carries no Thai (0166 kept that private view narrow): the
+  // picker view has it, by id.
+  const missing = missingMandatoryResult.data ?? [];
+  const missingTh =
+    locale === "th" && missing.length > 0
+      ? (
+          await supabase
+            .from("picker_immunization_types")
+            .select("id, name_th")
+            .in("id", missing.map((m) => m.immunization_type_id))
+            .returns<{ id: string; name_th: string | null }[]>()
+        ).data ?? []
+      : [];
 
   return (
     <ResidentHub
@@ -231,15 +252,29 @@ export default async function ResidentPage(
       translations={Array.from(translations.values())}
       currentPlacementSince={currentPlacementResult.data?.[0]?.start_date ?? null}
       carerName={carerResult?.data?.[0]?.name ?? null}
-      hospitalPreviousEnclosureName={previousEnclosureResult?.data?.[0]?.name ?? null}
+      hospitalPreviousEnclosureName={
+        previousEnclosureResult?.data?.[0]
+          ? placeName(locale, previousEnclosureResult.data[0].name, previousEnclosureResult.data[0].name_th)
+          : null
+      }
       placementHistoryCount={placementCountResult.count ?? 0}
-      immunizationRecords={immunizationRecordsResult.data ?? []}
-      missingMandatoryImmunizations={missingMandatoryResult.data ?? []}
+      immunizationRecords={(immunizationRecordsResult.data ?? []).map((r) => ({
+        ...r,
+        immunization_types: local(r.immunization_types),
+      }))}
+      missingMandatoryImmunizations={missing.map((m) => ({
+        ...m,
+        immunization_type_name: localLabel(
+          locale,
+          m.immunization_type_name,
+          missingTh.find((x) => x.id === m.immunization_type_id)?.name_th,
+        ),
+      }))}
       vetAppointments={vetAppointmentsResult.data ?? []}
-      prescriptions={prescriptionsResult.data ?? []}
-      diets={dietsResult.data ?? []}
+      prescriptions={(prescriptionsResult.data ?? []).map((p) => ({ ...p, medication: local(p.medication) }))}
+      diets={(dietsResult.data ?? []).map((d) => ({ ...d, diet_types: local(d.diet_types) }))}
       weightEntries={weightResult.data ?? []}
-      procedures={proceduresResult.data ?? []}
+      procedures={(proceduresResult.data ?? []).map((p) => ({ ...p, procedure_types: local(p.procedure_types) }))}
       bloodTests={bloodTestsResult.data ?? []}
       photoCount={attachmentsCountResult.count ?? 0}
       adoptionUpdates={{
