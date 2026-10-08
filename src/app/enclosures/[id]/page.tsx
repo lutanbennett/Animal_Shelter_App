@@ -18,7 +18,7 @@ type EnclosureRow = {
   capacity: number | null;
   notes: string | null;
   zone_id: string;
-  zones: { name: string; name_th: string | null; internal: boolean } | null;
+  zones: { name: string; name_th: string | null; internal: boolean; colour: string | null } | null;
 };
 
 export default async function EnclosurePage(
@@ -30,7 +30,7 @@ export default async function EnclosurePage(
   const [enclosureResult, occupantsResult, maintenanceResult, tagOrigin] = await Promise.all([
     supabase
       .from("enclosures")
-      .select("id, name, name_th, capacity, notes, zone_id, zones(name, name_th, internal)")
+      .select("id, name, name_th, capacity, notes, zone_id, zones(name, name_th, internal, colour)")
       .eq("id", id)
       .limit(1)
       .returns<EnclosureRow[]>(),
@@ -72,6 +72,7 @@ export default async function EnclosurePage(
     zone_id: row.zone_id,
     zone_name: row.zones?.name ?? "—",
     zone_name_th: row.zones?.name_th ?? null,
+    zone_colour: row.zones?.colour ?? null,
     zone_internal: row.zones?.internal ?? true,
     isSystem: row.zones?.name === "Lifecycle",
   };

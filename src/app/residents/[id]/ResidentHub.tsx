@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Pencil } from "lucide-react";
 import {
@@ -37,6 +37,7 @@ import {
 } from "@/lib/i18n/enum-labels";
 import type { AdoptionProfile } from "@/components/AdoptionProfileFields";
 import { CopyTagLink } from "@/components/CopyTagLink";
+import { ZoneName } from "@/components/ZoneName";
 import { MicrochipLine } from "@/components/MicrochipForm";
 import { TranslationPanel } from "@/components/TranslationPanel";
 import { placeName } from "@/lib/enclosures/names";
@@ -83,6 +84,7 @@ export type ResidentStatus = {
   zone_name: string | null;
   zone_name_th: string | null;
   zone_internal: boolean | null;
+  zone_colour: string | null;
 };
 
 export type ImmunizationRecordRow = {
@@ -266,13 +268,25 @@ export function ResidentHub({
         ? carerName
           ? t.residents.hub.adoptedBy(carerName)
           : t.residents.hub.adoptedNoCarer
-        : [
-            placeName(locale, status?.enclosure_name, status?.enclosure_name_th),
-            placeName(locale, status?.zone_name, status?.zone_name_th),
-            carerName && t.residents.hub.carer(carerName),
-          ]
-            .filter(Boolean)
-            .join(" · ") || t.residents.hub.historyEntries(placementHistoryCount);
+        : placedDetail();
+
+  /** Enclosure · zone (with its dot) · carer, or the history count when none is known. */
+  function placedDetail(): ReactNode {
+    const enclosureName = placeName(locale, status?.enclosure_name, status?.enclosure_name_th);
+    const zoneName = placeName(locale, status?.zone_name, status?.zone_name_th);
+    const parts: ReactNode[] = [
+      enclosureName,
+      zoneName && <ZoneName key="zone" name={zoneName} colour={status?.zone_colour} />,
+      carerName && t.residents.hub.carer(carerName),
+    ].filter(Boolean);
+    if (parts.length === 0) return t.residents.hub.historyEntries(placementHistoryCount);
+    return parts.map((part, i) => (
+      <Fragment key={i}>
+        {i > 0 && " · "}
+        {part}
+      </Fragment>
+    ));
+  }
   // Which placement actions apply depends on the lifecycle status — see
   // availablePlacementActions() for the table.
   const housingActions: StatCardAction[] = availablePlacementActions(

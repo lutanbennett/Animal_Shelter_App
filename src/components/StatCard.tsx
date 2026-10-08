@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { Plus, type LucideIcon } from "lucide-react";
 
 export type StatCardTone = "success" | "warning" | "danger" | "neutral";
@@ -40,7 +41,8 @@ export function StatCard({
   href?: string;
   title: string;
   value: string;
-  detail?: string;
+  /** Text, or text with a zone's dot in it (ZoneName). */
+  detail?: ReactNode;
   tone?: StatCardTone;
   /**
    * Icon standing in for the title below the `md` breakpoint, where the
