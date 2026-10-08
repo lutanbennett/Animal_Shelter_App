@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **A colour for each zone, shown as a coloured dot beside its name** (ticked here) |
 | Branch / worktree | `claude/zone-colour-feature` @ `C:\Development\Animal_Shelter_zone-colour-feature` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3003` |
-| PR | opened from this commit |
+| PR | #462 |
 | Tested by / date | Claude / 2026-10-08 |
 | Carries a migration? | no — reads `0162_zone_colour.sql` (#456), already on `main` and applied to dev |
 | Tested at SHA | `7d02354b` (after sync with `origin/main`) |
@@ -32,7 +32,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: #462, all 7 checks passing on `85d674b7` (read from the PR status, 2026-10-08)
 
 ## 3. Schema and data — *skip if no migration*
 
