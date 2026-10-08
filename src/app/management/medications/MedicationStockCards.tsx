@@ -5,7 +5,7 @@ import { useConfirm } from "@/components/ConfirmProvider";
 import { useRef, useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { doseUnitLabel } from "@/lib/i18n/enum-labels";
-import { formatUnitCost, parseUnitCost, UNIT_COST_DECIMALS } from "@/lib/format";
+import { formatBahtPrice, formatUnitCost, parseUnitCost, UNIT_COST_DECIMALS } from "@/lib/format";
 import {
   parseLeadDays,
   parseSafetyStock,
@@ -48,6 +48,12 @@ export type MedicationStockRow = {
   labelFileId: string | null;
   /** The item's other units by name, for typing the safety stock in one. */
   unitOptions: string[];
+  /**
+   * The same price for one purchase unit (a bottle, a box), shown beside the
+   * per-unit price so a 4-place figure like ฿0.035 per ml reads against what
+   * the shelter actually pays. Null with no price or no purchase unit.
+   */
+  packPrice: { price: number; unit: string } | null;
 };
 
 const inputClass =
@@ -235,8 +241,13 @@ function MedicationCard({
           // forecast, and the forecast page counts these rows.
           <span className="text-muted">{m.table.notPricedYet}</span>
         ) : (
-          <span className="text-foreground">
-            {m.table.costPerUnit(formatUnitCost(medication.cost_per_unit, locale), unit)}
+          <span className="flex flex-wrap gap-x-2 text-foreground">
+            <span>{m.table.costPerUnit(formatUnitCost(medication.cost_per_unit, locale), unit)}</span>
+            {medication.packPrice && (
+              <span className="text-muted">
+                ({s.packPrice(formatBahtPrice(medication.packPrice.price, locale), medication.packPrice.unit)})
+              </span>
+            )}
           </span>
         )}
       </div>

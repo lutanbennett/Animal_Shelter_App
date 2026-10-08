@@ -3,7 +3,7 @@
 import { ActionButton } from "@/components/ActionButton";
 import { useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { formatBaht, formatUnitCost, parseUnitCost, UNIT_COST_DECIMALS } from "@/lib/format";
+import { formatBaht, formatBahtPrice, formatUnitCost, parseUnitCost, UNIT_COST_DECIMALS } from "@/lib/format";
 import { dietUnitLabel } from "@/lib/i18n/enum-labels";
 import { formatQuantity } from "@/lib/diets/options";
 import {
@@ -41,6 +41,12 @@ export type DietStockRow = {
   safetyStock: number | null;
   /** The item's other units by name, for typing the safety stock in one. */
   unitOptions: string[];
+  /**
+   * The same price for one purchase unit (a sack, a case), shown beside the
+   * per-unit price so ฿0.035 per g reads as ฿35 per kg. Null at ฿0 or with
+   * no purchase unit.
+   */
+  packPrice: { price: number; unit: string } | null;
 };
 
 const inputClass =
@@ -199,7 +205,14 @@ function DietCard({ dietType, forecastHeadings }: { dietType: DietStockRow; fore
             <span className="text-xs text-muted">{m.stockCard.costHint(unit)}</span>
           </label>
         ) : (
-          <span className="text-foreground">{m.stockCard.costPerUnit(formatUnitCost(dietType.cost_per_unit, locale), unit)}</span>
+          <span className="flex flex-wrap gap-x-2 text-foreground">
+            <span>{m.stockCard.costPerUnit(formatUnitCost(dietType.cost_per_unit, locale), unit)}</span>
+            {dietType.packPrice && (
+              <span className="text-muted">
+                ({s.packPrice(formatBahtPrice(dietType.packPrice.price, locale), dietType.packPrice.unit)})
+              </span>
+            )}
+          </span>
         )}
       </div>
 

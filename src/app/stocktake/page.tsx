@@ -26,8 +26,9 @@ type StockRow = {
  * volunteers (0091); the single stock cell on the Management tables stays
  * management-only.
  *
- * Name order for now: the backlog asks for the cupboard's own order once the
- * shelter can describe it.
+ * In the cupboard's own order (0161 sort_order, set under "Cupboard order" on
+ * Management → Medication stock and → Diet stock), name breaking a tie, so
+ * whoever counts walks the shelves once.
  */
 export default async function StocktakePage(props: PageProps<"/stocktake">) {
   const { supabase, perms } = await requirePermission("stock.count");
@@ -40,11 +41,13 @@ export default async function StocktakePage(props: PageProps<"/stocktake">) {
     supabase
       .from("stock_medications")
       .select("id, name, unit:dose_unit, stock_on_hand, stock_counted_at, label_drive_file_id")
+      .order("sort_order", { nullsFirst: false })
       .order("name")
       .returns<StockRow[]>(),
     supabase
       .from("stock_diet_types")
       .select("id, name, unit, stock_on_hand, stock_counted_at")
+      .order("sort_order", { nullsFirst: false })
       .order("name")
       .returns<StockRow[]>(),
     supabase.from("item_unit_conversions").select(CONVERSION_COLUMNS).returns<ConversionRow[]>(),

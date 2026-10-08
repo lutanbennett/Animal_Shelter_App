@@ -1990,6 +1990,18 @@ const en = {
     stock: {
       stocktakeLink: "Stocktake: count everything in one go",
       deliveriesLink: "Record a delivery",
+      order: {
+        link: "Cupboard order",
+        title: "Cupboard order",
+        intro:
+          "Put the list in the order things sit on the shelves, top to bottom. The stocktake sheet follows this order, so whoever counts walks the cupboard once.",
+        back: "Back to stock",
+        position: (n: number) => `No. ${n}`,
+        moveUp: (name: string) => `Move ${name} up`,
+        moveDown: (name: string) => `Move ${name} down`,
+        empty: "Nothing to put in order yet.",
+      },
+      packPrice: (amount: string, unit: string) => `${amount} per ${unit}`,
       stockHeading: "In stock",
       daysHeading: "Days of stock",
       notCounted: "Not counted",
