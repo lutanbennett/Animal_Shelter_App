@@ -4367,7 +4367,6 @@ const en = {
     spacesFree: (n: number) => `${n} space${n === 1 ? "" : "s"} free`,
     noCapacityCount: (n: number) => `${n} enclosure${n === 1 ? " has" : "s have"} no capacity set`,
     showingOf: (shown: number, total: number) => `showing ${shown} of ${total} enclosures`,
-    openJobs: (n: number) => `${n} open`,
     openJobsTitle: (n: number) =>
       n === 0 ? "No open maintenance jobs" : `${n} open maintenance job${n === 1 ? "" : "s"}`,
     zoneWideJobs: (n: number) => `${n} zone-wide job${n === 1 ? "" : "s"}`,

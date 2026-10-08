@@ -4242,7 +4242,6 @@ const th: Dictionary = {
     spacesFree: (n: number) => `ว่าง ${n} ที่`,
     noCapacityCount: (n: number) => `ยังไม่ได้กำหนดความจุ ${n} กรง`,
     showingOf: (shown: number, total: number) => `แสดง ${shown} จาก ${total} กรง`,
-    openJobs: (n: number) => `ค้าง ${n}`,
     openJobsTitle: (n: number) => (n === 0 ? "ไม่มีงานซ่อมบำรุงค้าง" : `งานซ่อมบำรุงค้าง ${n} งาน`),
     zoneWideJobs: (n: number) => `งานทั้งโซน ${n} งาน`,
     specialDiets: (n: number) => `อาหารพิเศษ ${n} ตัว`,

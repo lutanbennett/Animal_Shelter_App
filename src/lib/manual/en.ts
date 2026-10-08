@@ -887,6 +887,7 @@ const manual: Manual = {
             "Each card shows how many residents are in the enclosure against its capacity — green for space available, orange for nearly full or full, red for over capacity.",
             "Tick Has open maintenance to show only enclosures with a job that isn't Completed; it works alongside the zone chips, search and sort, and the address keeps it, so a filtered view can be bookmarked or shared. It counts jobs logged on the enclosure itself — a zone-wide job doesn't put every enclosure in that zone on the list; it stays as the zone-wide count beside the zone's name. Hospital, Unassigned and Fostered are hidden while it's ticked.",
             "A card with residents on a special diet — any current diet other than the shelter's standard one — shows a bowl-and-cutlery icon with how many, such as \"2 special diets\". Tap it (or hover on a computer) to see who. The card's colour is left to capacity.",
+            "An enclosure with open maintenance shows a spanner and the number of open jobs in the corner of its card (hold the pointer over it, on a computer, for \"3 open maintenance jobs\"); an enclosure with none shows nothing there.",
             "Tap a card to open the enclosure: its notes, every resident in it with a thumbnail, and its open maintenance jobs. A resident on a special diet has the diet's name under their thumbnail.",
           ],
           screenshot: {
