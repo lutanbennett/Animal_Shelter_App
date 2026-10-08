@@ -4380,9 +4380,10 @@ const en = {
     pageSubtitle: "Browse residents by zone and enclosure.",
     couldntLoadEnclosures: "Couldn't load enclosures",
     couldntLoadResidents: "Couldn't load resident counts",
-    placeLabel: "On-site or off-site",
-    placeAll: "Everywhere",
+    zoneChipsLabel: "Zones",
     allZones: "All zones",
+    /** The one chip for every zone marked off-site under Settings → Zones (2026-10-08). */
+    offsiteChip: "Off-site",
     search: "Search",
     searchPlaceholder: "Enclosure name",
     sort: "Sort",

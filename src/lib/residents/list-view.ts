@@ -3,15 +3,8 @@ import type { createClient } from "@/lib/supabase/server";
 import { residentCodeTerm } from "@/lib/residents/code-search";
 import { SYSTEM_ZONE } from "@/lib/enclosures/options";
 import { byShelterOrder, enclosuresInShelterOrder } from "@/lib/enclosures/order";
-import {
-  offeredZones,
-  parseEnclosurePlace,
-  parseZoneIds,
-  zonesKeptIn,
-  type EnclosurePlace,
-} from "@/lib/enclosures/place";
+import { OFFSITE, parseZoneIds, readZonePick, zoneIdsOf } from "@/lib/enclosures/place";
 import { NOT_DECEASED, UNASSIGNED } from "@/lib/residents/status";
-import { STATUSES_IN_PLACE } from "@/lib/residents/place";
 import { WHO_AND_WHERE_COLUMNS } from "@/lib/residents/who-and-where";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
@@ -32,15 +25,20 @@ export function parseStatusChip(params: Record<string, string | string[] | undef
 }
 
 /**
- * The name / place / zone / enclosure filters from the URL, applied the same
+ * The name / zone / enclosure filters from the URL, applied the same
  * way to the list query and to the count behind it — "38 deceased hidden"
  * has to count the animals this list would have shown, not every animal that
  * ever died.
  */
 export type Filters = {
   q: string;
-  place: EnclosurePlace;
+  /** The on-site zones picked, by id. */
   zoneIds: string[];
+  /**
+   * The Off-site chip: every zone with `internal = false`, by id, read when the page is (2026-10-08);
+   * empty when the chip is not picked. Applied with `zoneIds`, as one more zone would be.
+   */
+  offsiteZoneIds: string[];
   enclosureId: string;
   /**
    * "No microchip": the residents that DO have a chip, left out. The list
@@ -51,7 +49,7 @@ export type Filters = {
   /**
    * An Adopted, Fostered or Hospitalised chip: only residents with that status. They sit in the
    * Lifecycle pseudo-zone, so zone and enclosure are not applied — the chips are offered only
-   * where neither is set, and only under Everywhere.
+   * where no zone chip, Unallocated or enclosure is set.
    */
   status: StatusChip | null;
   /**
@@ -73,7 +71,8 @@ export function applyFilters<
     in(column: string, values: readonly string[]): Q;
     not(column: string, operator: string, value: string): Q;
   },
->(query: Q, { q, place, zoneIds, enclosureId, chippedIds, status, unallocated, limited }: Filters): Q {
+>(query: Q, { q, zoneIds: onSiteIds, offsiteZoneIds, enclosureId, chippedIds, status, unallocated, limited }: Filters): Q {
+  const zoneIds = [...onSiteIds, ...offsiteZoneIds];
   let next = query;
   if (q) {
     const term = q.replace(/[,()%]/g, "");
@@ -81,15 +80,12 @@ export function applyFilters<
       `name.ilike.%${term}%,thai_name.ilike.%${term}%,${limited ? "" : `other_names.ilike.%${term}%,`}resident_code.ilike.%${residentCodeTerm(term)}%`,
     );
   }
-  // By status rather than zone: Unassigned is on site and Hospital /
-  // Fostered are off it, though all three sit in the Lifecycle pseudo-zone
-  // (src/lib/residents/place.ts). Picking that zone itself listed the
-  // adopted too, which is why it is no longer offered (2026-10-08).
+  // By status rather than zone: Unassigned, Hospital, Fostered and Adopted
+  // all sit in the Lifecycle pseudo-zone (src/lib/residents/place.ts).
+  // Picking that zone itself listed the adopted too, which is why it is no
+  // longer offered (2026-10-08).
   if (status) {
     next = next.eq("current_status", status);
-  }
-  if (place !== "all") {
-    next = next.in("current_status", STATUSES_IN_PLACE[place]);
   }
   if (unallocated && zoneIds.length) {
     next = next.or(`zone_id.in.(${zoneIds.join(",")}),current_status.eq.${UNASSIGNED}`);
@@ -114,16 +110,15 @@ const LIST_COLUMNS =
 type Params = Record<string, string | string[] | undefined>;
 
 /**
- * What the URL asks of /residents, resolved once: the place, the zones and enclosure that survive
- * it, and the toggles. The page and the spreadsheet download both read it, so a file cannot differ
+ * What the URL asks of /residents, resolved once: the zone chips, the enclosure that survives
+ * them, and the toggles. The page and the spreadsheet download both read it, so a file cannot differ
  * from the list above the button (the backlog's "exactly as on screen").
  */
 export async function resolveListView(supabase: Supabase, searchParams: Params, limited: boolean) {
   const q = typeof searchParams.q === "string" ? searchParams.q.trim() : "";
-  const place = parseEnclosurePlace(searchParams.place);
 
   // Zones and enclosures come first: which ?zone= and ?enclosure= ids are
-  // honoured depends on the place, and the list query needs the survivors.
+  // honoured depends on them, and the list query needs the survivors.
   const [zonesResult, enclosuresResult] = await Promise.all([
     supabase.from("zones").select("id, name, name_th, internal, sort_order, colour"),
     supabase.from("enclosures").select("id, name, name_th, zone_id, sort_order"),
@@ -141,44 +136,40 @@ export async function resolveListView(supabase: Supabase, searchParams: Params, 
   // Unallocated and the status chips. Only physical zones are picked, and its enclosures (Adopted,
   // Hospital …) are not in the Enclosure select.
   const physicalZones = zones.filter((zone) => !zone.is_system);
-  const requestedZones = parseZoneIds(searchParams.zone);
   const lifecycleZone = zones.find((zone) => zone.is_system);
-  // Stale zones are dropped, not obeyed, exactly as on /enclosures
-  // (decisions.md, 2026-09-25): a zone not on offer under the place.
-  const zoneIds = zonesKeptIn(physicalZones, requestedZones, place);
-  // Unassigned residents are on site, so the chip is offered under Everywhere and On-site. A link
-  // from before 2026-10-08 that picked the Lifecycle zone ("Status") now means Unallocated.
+  // The chips picked, as on /enclosures (readZonePick): on-site zone ids and `offsite`, the one
+  // chip for every off-site zone. Stale zones are dropped, not obeyed (decisions.md, 2026-09-25).
+  const zoneIds = readZonePick(physicalZones, searchParams.zone, searchParams.place);
+  // A link from before 2026-10-08 that picked the Lifecycle zone ("Status") now means
+  // Unallocated, and so does the old On-site place, which counted the unallocated as on site.
   const unallocated =
-    place !== "external" &&
-    (searchParams.unallocated === "1" || Boolean(lifecycleZone && requestedZones.includes(lifecycleZone.id)));
+    searchParams.unallocated === "1" ||
+    searchParams.place === "internal" ||
+    Boolean(lifecycleZone && parseZoneIds(searchParams.zone).includes(lifecycleZone.id));
 
-  /** The enclosures the Enclosure select offers under a place and zones. */
-  function enclosuresIn(nextPlace: EnclosurePlace, nextZones: string[], nextUnallocated = false) {
+  /** The enclosures the Enclosure select offers under these chips: all of them when none is picked. */
+  function enclosuresIn(nextZones: string[], nextUnallocated = false) {
+    const ids = zoneIdsOf(physicalZones, nextZones);
     // Unallocated alone: those residents have no enclosure to pick.
-    if (nextUnallocated && !nextZones.length) return [];
-    const offered = new Set(
-      nextZones.length ? nextZones : offeredZones(physicalZones, nextPlace).map((zone) => zone.id),
-    );
+    if (nextUnallocated && !ids.length) return [];
+    const offered = new Set(ids.length ? ids : physicalZones.map((zone) => zone.id));
     return allEnclosures.filter((enclosure) => offered.has(enclosure.zone_id));
   }
-  const enclosures = enclosuresIn(place, zoneIds, unallocated);
+  const enclosures = enclosuresIn(zoneIds, unallocated);
   const requestedEnclosure =
     typeof searchParams.enclosure === "string" ? searchParams.enclosure : "";
   // Dropped the same way when it is outside the place or the picked zones.
   const enclosureId = enclosures.some((e) => e.id === requestedEnclosure) ? requestedEnclosure : "";
 
-  // Deceased residents are hidden unless ?all=1 says otherwise. The toggle
-  // belongs to Everywhere: the dead are in neither place, so under On-site
-  // or Off-site it would change nothing, and ?all=1 there is ignored.
-  const showAll = place === "all" && searchParams.all === "1";
+  // Deceased residents are hidden unless ?all=1 says otherwise.
+  const showAll = searchParams.all === "1";
   // "No microchip" (the encouraging-chipping nudge): kept across every
   // other filter, like the search.
   const noChip = !limited && searchParams.nochip === "1";
-  // The status chips belong to Everywhere with no zone, Unallocated or
-  // enclosure picked, like Show all: these animals are in no enclosure and
-  // most in no place, so any of those would empty the list.
+  // The status chips belong to a list with no zone, Unallocated or enclosure
+  // picked: these animals are in no enclosure, so any of those would empty it.
   const status =
-    place === "all" && zoneIds.length === 0 && !unallocated && !enclosureId
+    zoneIds.length === 0 && !unallocated && !enclosureId
       ? parseStatusChip(searchParams)
       : null;
   const chippedIds = noChip
@@ -190,9 +181,18 @@ export async function resolveListView(supabase: Supabase, searchParams: Params, 
           .returns<{ id: string }[]>()
       ).data ?? []).map((row) => row.id)
     : null;
-  const filters: Filters = { q, place, zoneIds, enclosureId, chippedIds, status, unallocated, limited };
+  const filters: Filters = {
+    q,
+    zoneIds: zoneIds.filter((id) => id !== OFFSITE),
+    offsiteZoneIds: zoneIds.includes(OFFSITE) ? zoneIdsOf(physicalZones, [OFFSITE]) : [],
+    enclosureId,
+    chippedIds,
+    status,
+    unallocated,
+    limited,
+  };
 
-  return { q, place, zones, physicalZones, allEnclosures, enclosures, enclosuresIn, zoneIds, unallocated, enclosureId, showAll, noChip, status, chippedIds, filters };
+  return { q, zones, physicalZones, allEnclosures, enclosures, enclosuresIn, zoneIds, unallocated, enclosureId, showAll, noChip, status, chippedIds, filters };
 }
 
 export type ListView = Awaited<ReturnType<typeof resolveListView>>;

@@ -4,12 +4,8 @@ import { getT } from "@/lib/i18n/get-t";
 import { occupancyLevel } from "@/lib/enclosures/occupancy";
 import { parseEnclosureSort } from "@/lib/enclosures/sort";
 import { byShelterOrder, inShelterOrder, natural } from "@/lib/enclosures/order";
-import {
-  parseEnclosurePlace,
-  parseZoneIds,
-  zoneInPlace,
-  zonesKeptIn,
-} from "@/lib/enclosures/place";
+import { redirect } from "next/navigation";
+import { readZonePick, tidiedQuery, zoneIdsOf } from "@/lib/enclosures/place";
 import { getTagOrigin } from "@/lib/tags/origin";
 import { loadOccupants } from "@/lib/residents/who-and-where";
 import { loadSpecialDiets } from "@/lib/diets/special";
@@ -77,7 +73,6 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   const searchParams = await props.searchParams;
   const { t } = await getT();
   const q = typeof searchParams.q === "string" ? searchParams.q.trim() : "";
-  const place = parseEnclosurePlace(searchParams.place);
   const sort = parseEnclosureSort(searchParams.sort);
 
   const { supabase, perms } = await requirePermission("facility.enclosures", "read");
@@ -141,12 +136,14 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
     .map((zone) => ({ ...zone, is_system: zone.name === SYSTEM_ZONE }))
     .sort((a, b) => Number(a.is_system) - Number(b.is_system) || byShelterOrder(a, b));
 
-  // A zone that isn't on offer under the place (offeredZones: Lifecycle is
-  // neither On-site nor Off-site, decisions.md 2026-09-25) is dropped rather
-  // than obeyed, so a link with ?place=external&zone=<an on-site zone> shows
-  // every off-site enclosure instead of an empty page. The chips switching
-  // place drop them the same way before they get here.
-  const zoneIds = zonesKeptIn(zones, parseZoneIds(searchParams.zone), place);
+  // The chips picked: zone ids and `offsite`, the one chip for every off-site
+  // zone (2026-10-08). An old ?place= link, or an off-site zone's own id, is
+  // read as the chips that mean the same, and the URL is tidied to them so
+  // the address bar and a bookmark made from it say what is on screen.
+  const zoneIds = readZonePick(zones, searchParams.zone, searchParams.place);
+  const tidied = tidiedQuery(searchParams, { zone: zoneIds.join(",") });
+  if (tidied !== null) redirect(tidied ? `/enclosures?${tidied}` : "/enclosures");
+  const shownZones = new Set(zoneIdsOf(zones, zoneIds));
 
   const term = q.toLowerCase();
   // In the shelter's order within each zone (Settings → Enclosures): the By zone view and the map read it.
@@ -169,9 +166,8 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
     }));
   const enclosures = summaries
     .filter((e) => !e.is_system || PINNED_STATUSES.includes(e.name))
-    // On-site / Off-site leaves the Lifecycle cards out, as ?maint=open does.
-    .filter((e) => place === "all" || (!e.is_system && zoneInPlace(e.zone_internal, place)))
-    .filter((e) => zoneIds.length === 0 || zoneIds.includes(e.zone_id))
+    // Any zone chip leaves the Lifecycle cards out unless the Status chip is one of them.
+    .filter((e) => shownZones.size === 0 || shownZones.has(e.zone_id))
     // Only jobs on the enclosure itself, matching the count on its card;
     // zone-wide jobs stay on the zone heading (decisions.md, 2026-09-24).
     // That also drops the Lifecycle cards, which carry no jobs.
@@ -305,7 +301,6 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
         <>
       <EnclosureFilters
         zones={zones}
-        place={place}
         zoneIds={zoneIds}
         q={q}
         sort={sort}

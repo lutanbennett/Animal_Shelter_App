@@ -5,7 +5,6 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
 import { Check } from "lucide-react";
 import { zoneColour } from "@/lib/zones/palette";
-import { ENCLOSURE_PLACES, type EnclosurePlace } from "@/lib/enclosures/place";
 
 export type PlaceZoneChip = {
   id: string;
@@ -19,23 +18,20 @@ export type PlaceZoneChip = {
 };
 
 /**
- * Everywhere / On-site / Off-site, and beneath it the zone chips for that
- * place (tap to add or remove, All zones empties the list). The same control
- * on /enclosures and /residents; each page works out the hrefs, since what
- * else a link keeps (search, sort, the deceased toggle) is the page's own.
- * Every state is a plain GET URL, so back and bookmarks keep working.
+ * One row of zone chips: All zones, each on-site zone, one Off-site chip for every off-site zone,
+ * then the page's own last chip (tap to add or remove, All zones empties the list). The
+ * Everywhere / On-site / Off-site row that sat above it is gone (2026-10-08): the chips say the
+ * same. The same control on /enclosures and /residents; each page works out the order
+ * (zoneChipOrder) and the hrefs, since what else a link keeps (search, sort, the deceased toggle)
+ * is the page's own. Every state is a plain GET URL, so back and bookmarks keep working.
  */
 export function PlaceZoneChips({
-  place,
-  placeHrefs,
   allZonesHref,
   zones,
   extra,
 }: {
-  place: EnclosurePlace;
-  placeHrefs: Record<EnclosurePlace, string>;
   allZonesHref: string;
-  /** The zones on offer under `place`, in display order. */
+  /** The chips, in display order. The Off-site chip is one of them, with no colour and its label as `name`. */
   zones: PlaceZoneChip[];
   /**
    * One more chip after the zones, picked and cleared with them: /residents' Unallocated, which
@@ -45,12 +41,6 @@ export function PlaceZoneChips({
 }) {
   const { t, locale } = useI18n();
   const noneActive = !zones.some((zone) => zone.active) && !extra?.active;
-
-  const placeLabels: Record<EnclosurePlace, string> = {
-    all: t.enclosures.placeAll,
-    internal: t.enclosures.hub.internal,
-    external: t.enclosures.hub.external,
-  };
 
   function chipClass(active: boolean) {
     return `inline-flex min-h-11 shrink-0 items-center rounded-full border px-3 py-1.5 text-sm font-medium transition md:min-h-0 ${
@@ -76,68 +66,45 @@ export function PlaceZoneChips({
     };
   }
 
-  function segmentClass(active: boolean) {
-    return `inline-flex min-h-11 items-center rounded px-3 py-1.5 text-sm font-medium transition md:min-h-0 ${
-      active
-        ? "bg-primary text-primary-foreground"
-        : "text-muted hover:bg-surface-hover hover:text-foreground"
-    }`;
-  }
-
   return (
-    <>
-      <div
-        role="group"
-        aria-label={t.enclosures.placeLabel}
-        className="flex w-fit gap-1 rounded-md border border-border bg-surface p-1"
+    // Horizontally scrollable on phones so a long zone list doesn't wrap
+    // into a tall block above the list.
+    <div
+      role="group"
+      aria-label={t.enclosures.zoneChipsLabel}
+      className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-1 md:mx-0 md:flex-wrap md:px-0"
+    >
+      <Link
+        href={allZonesHref}
+        aria-current={noneActive ? "true" : undefined}
+        className={chipClass(noneActive)}
       >
-        {ENCLOSURE_PLACES.map((value) => (
+        {t.enclosures.allZones}
+      </Link>
+      {zones.map((zone) => {
+        const chip = zoneChip(zone.colour, zone.active);
+        return (
           <Link
-            key={value}
-            href={placeHrefs[value]}
-            aria-current={place === value ? "true" : undefined}
-            className={segmentClass(place === value)}
+            key={zone.id}
+            href={zone.href}
+            aria-current={zone.active ? "true" : undefined}
+            className={chip.className}
+            style={chip.style}
           >
-            {placeLabels[value]}
+            {zone.active && chip.style && <Check aria-hidden="true" className="h-4 w-4 shrink-0" />}
+            {placeName(locale, zone.name, zone.name_th)}
           </Link>
-        ))}
-      </div>
-
-      {/* Horizontally scrollable on phones so a long zone list doesn't wrap
-          into a tall block above the list. */}
-      <div className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-1 md:mx-0 md:flex-wrap md:px-0">
+        );
+      })}
+      {extra && (
         <Link
-          href={allZonesHref}
-          aria-current={noneActive ? "true" : undefined}
-          className={chipClass(noneActive)}
+          href={extra.href}
+          aria-current={extra.active ? "true" : undefined}
+          className={chipClass(extra.active)}
         >
-          {t.enclosures.allZones}
+          {extra.label}
         </Link>
-        {zones.map((zone) => {
-          const chip = zoneChip(zone.colour, zone.active);
-          return (
-            <Link
-              key={zone.id}
-              href={zone.href}
-              aria-current={zone.active ? "true" : undefined}
-              className={chip.className}
-              style={chip.style}
-            >
-              {zone.active && chip.style && <Check aria-hidden="true" className="h-4 w-4 shrink-0" />}
-              {placeName(locale, zone.name, zone.name_th)}
-            </Link>
-          );
-        })}
-        {extra && (
-          <Link
-            href={extra.href}
-            aria-current={extra.active ? "true" : undefined}
-            className={chipClass(extra.active)}
-          >
-            {extra.label}
-          </Link>
-        )}
-      </div>
-    </>
+      )}
+    </div>
   );
 }
