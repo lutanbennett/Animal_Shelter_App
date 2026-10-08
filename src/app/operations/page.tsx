@@ -5,7 +5,7 @@ import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { SectionTiles, type SectionTile } from "@/components/SectionTiles";
 
 /**
- * Shelter Operations → its landing page: a tile per page of daily work
+ * Operations → its landing page: a tile per page of daily work
  * (docs/decisions/2026-10-07-management-settings-split.md, agreed with Lutan 2026-10-08).
  *
  * Only the medication list lives under /operations. The rest keep the addresses the manual,

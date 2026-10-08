@@ -3645,10 +3645,22 @@ const th: Dictionary = {
       deceasedMatches: (n: number) =>
         `พบสัตว์ที่เสียชีวิตแล้วตรงกับคำค้น ${n} ตัว`,
       deceasedMatchesShow: "แสดง",
-      adoptedMatches: (n: number) =>
-        `พบสัตว์ที่มีผู้รับเลี้ยงแล้วตรงกับคำค้น ${n} ตัว`,
-      adoptedFilter: "มีผู้รับเลี้ยงแล้ว",
-      adoptedOnly: "แสดงเฉพาะสัตว์ที่มีผู้รับเลี้ยงแล้ว",
+      statusMatches: {
+        Adopted: (n: number) => `พบสัตว์ที่มีผู้รับเลี้ยงแล้วตรงกับคำค้น ${n} ตัว`,
+        Fostered: (n: number) => `พบสัตว์ที่อยู่ในการอุปถัมภ์ชั่วคราวตรงกับคำค้น ${n} ตัว`,
+        Hospitalised: (n: number) => `พบสัตว์ที่เข้ารับการรักษาตรงกับคำค้น ${n} ตัว`,
+      },
+      statusFilter: {
+        Adopted: "มีผู้รับเลี้ยงแล้ว",
+        Fostered: "อุปถัมภ์ชั่วคราว",
+        Hospitalised: "เข้ารับการรักษา",
+      },
+      statusOnly: {
+        Adopted: "แสดงเฉพาะสัตว์ที่มีผู้รับเลี้ยงแล้ว",
+        Fostered: "แสดงเฉพาะสัตว์ที่อยู่ในการอุปถัมภ์ชั่วคราว",
+        Hospitalised: "แสดงเฉพาะสัตว์ที่เข้ารับการรักษา",
+      },
+      unallocatedFilter: "ยังไม่ระบุกรง",
       showAllDeceased: "แสดงทั้งหมด",
       noMicrochip: "ไม่มีไมโครชิป",
       hideDeceased: "ซ่อนที่เสียชีวิตแล้ว",
@@ -4250,7 +4262,6 @@ const th: Dictionary = {
     spacesFree: (n: number) => `ว่าง ${n} ที่`,
     noCapacityCount: (n: number) => `ยังไม่ได้กำหนดความจุ ${n} กรง`,
     showingOf: (shown: number, total: number) => `แสดง ${shown} จาก ${total} กรง`,
-    openJobs: (n: number) => `ค้าง ${n}`,
     openJobsTitle: (n: number) => (n === 0 ? "ไม่มีงานซ่อมบำรุงค้าง" : `งานซ่อมบำรุงค้าง ${n} งาน`),
     zoneWideJobs: (n: number) => `งานทั้งโซน ${n} งาน`,
     specialDiets: (n: number) => `อาหารพิเศษ ${n} ตัว`,

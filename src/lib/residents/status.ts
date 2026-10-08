@@ -15,3 +15,6 @@ export const DECEASED = "Deceased";
 
 /** Adopted: history like Deceased, so no On-site / Off-site place holds them. */
 export const ADOPTED = "Adopted";
+
+/** At the shelter with no enclosure yet: the Unallocated chip on /residents. */
+export const UNASSIGNED = "Unassigned";

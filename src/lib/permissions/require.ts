@@ -36,7 +36,7 @@ export async function requirePermission(activity: YesNoKey | LevelKey, level: Le
 }
 
 /**
- * The guard for a landing page (Shelter Operations, Management, Settings): a page that is a grid
+ * The guard for a landing page (Operations, Management, Settings): a page that is a grid
  * of the pages in its section, so it has no activity of its own. It opens for whoever may open at
  * least one page the route registry puts in `section` (sectionOf: the entry's own `section`, else
  * its URL), and the grid then shows only the tiles that person may open.

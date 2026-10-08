@@ -15,7 +15,7 @@ import { PanZoom } from "./PanZoom";
 /**
  * The read-only facility map on /enclosures (step 2 of 3, docs/facility-map-scope.md): a hand-drawn
  * plan with a polygon laid over each place, overview → zone → enclosure. It takes plain data, not
- * the page, so it can move under Shelter Operations with the Enclosures page if that is decided.
+ * the page, so it can move under Operations with the Enclosures page if that is decided.
  *
  * Colour is how full a place is (the list's own thresholds); the count on each enclosure and the
  * words in the card say the same, so colour is never the only signal. A tap selects; the card's

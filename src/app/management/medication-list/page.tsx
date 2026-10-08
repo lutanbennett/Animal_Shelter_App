@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 /**
- * The medication list moved to Shelter Operations (docs/decisions/2026-10-07-management-settings-split.md,
+ * The medication list moved to Operations (docs/decisions/2026-10-07-management-settings-split.md,
  * agreed 2026-10-08). This keeps old bookmarks working for one release cycle, carrying the round
  * and the view along.
  *

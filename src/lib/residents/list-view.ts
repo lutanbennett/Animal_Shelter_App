@@ -10,11 +10,26 @@ import {
   zonesKeptIn,
   type EnclosurePlace,
 } from "@/lib/enclosures/place";
-import { NOT_DECEASED, ADOPTED } from "@/lib/residents/status";
+import { NOT_DECEASED, UNASSIGNED } from "@/lib/residents/status";
 import { STATUSES_IN_PLACE } from "@/lib/residents/place";
 import { WHO_AND_WHERE_COLUMNS } from "@/lib/residents/who-and-where";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * The status chips beside Show all (Lutan, 2026-10-08): residents who are in no enclosure, one
+ * status at a time. Each is `current_status` exactly (src/lib/residents/place.ts), in this order.
+ */
+export const STATUS_CHIPS = ["Adopted", "Fostered", "Hospitalised"] as const;
+export type StatusChip = (typeof STATUS_CHIPS)[number];
+
+/** `?status=fostered` → "Fostered". `?adopted=1`, the Adopted chip's link before there were three, still works. */
+export function parseStatusChip(params: Record<string, string | string[] | undefined>): StatusChip | null {
+  const value = typeof params.status === "string" ? params.status.toLowerCase() : "";
+  const chip = STATUS_CHIPS.find((s) => s.toLowerCase() === value);
+  if (chip) return chip;
+  return params.adopted === "1" ? "Adopted" : null;
+}
 
 /**
  * The name / place / zone / enclosure filters from the URL, applied the same
@@ -34,11 +49,16 @@ export type Filters = {
    */
   chippedIds: string[] | null;
   /**
-   * The Adopted chip: only adopted residents. They sit in the Lifecycle
-   * pseudo-zone and in no place, so place, zone and enclosure are not
-   * applied — the chip is offered only where none of them is set.
+   * An Adopted, Fostered or Hospitalised chip: only residents with that status. They sit in the
+   * Lifecycle pseudo-zone, so zone and enclosure are not applied — the chips are offered only
+   * where neither is set, and only under Everywhere.
    */
-  adopted: boolean;
+  status: StatusChip | null;
+  /**
+   * The Unallocated chip, which sits with the zone chips: residents at the shelter with no
+   * enclosure yet ('Unassigned'). Picked with zones, it adds to them, as another zone would.
+   */
+  unallocated: boolean;
   /**
    * A volunteer's list reads `resident_who_and_where`, which has no other names (0134): the search
    * matches name, Thai name and code only.
@@ -53,7 +73,7 @@ export function applyFilters<
     in(column: string, values: readonly string[]): Q;
     not(column: string, operator: string, value: string): Q;
   },
->(query: Q, { q, place, zoneIds, enclosureId, chippedIds, adopted, limited }: Filters): Q {
+>(query: Q, { q, place, zoneIds, enclosureId, chippedIds, status, unallocated, limited }: Filters): Q {
   let next = query;
   if (q) {
     const term = q.replace(/[,()%]/g, "");
@@ -63,14 +83,19 @@ export function applyFilters<
   }
   // By status rather than zone: Unassigned is on site and Hospital /
   // Fostered are off it, though all three sit in the Lifecycle pseudo-zone
-  // (src/lib/residents/place.ts).
-  if (adopted) {
-    next = next.eq("current_status", ADOPTED);
+  // (src/lib/residents/place.ts). Picking that zone itself listed the
+  // adopted too, which is why it is no longer offered (2026-10-08).
+  if (status) {
+    next = next.eq("current_status", status);
   }
   if (place !== "all") {
     next = next.in("current_status", STATUSES_IN_PLACE[place]);
   }
-  if (zoneIds.length) {
+  if (unallocated && zoneIds.length) {
+    next = next.or(`zone_id.in.(${zoneIds.join(",")}),current_status.eq.${UNASSIGNED}`);
+  } else if (unallocated) {
+    next = next.eq("current_status", UNASSIGNED);
+  } else if (zoneIds.length) {
     next = next.in("zone_id", zoneIds);
   }
   if (enclosureId) {
@@ -112,18 +137,31 @@ export async function resolveListView(supabase: Supabase, searchParams: Params, 
   // Zone by zone, each in its order (Settings → Enclosures), for the Enclosure select.
   const allEnclosures = enclosuresInShelterOrder(enclosuresResult.data ?? [], zones);
 
+  // The Lifecycle pseudo-zone is not a zone chip here (2026-10-08): its place is taken by
+  // Unallocated and the status chips. Only physical zones are picked, and its enclosures (Adopted,
+  // Hospital …) are not in the Enclosure select.
+  const physicalZones = zones.filter((zone) => !zone.is_system);
+  const requestedZones = parseZoneIds(searchParams.zone);
+  const lifecycleZone = zones.find((zone) => zone.is_system);
   // Stale zones are dropped, not obeyed, exactly as on /enclosures
   // (decisions.md, 2026-09-25): a zone not on offer under the place.
-  const zoneIds = zonesKeptIn(zones, parseZoneIds(searchParams.zone), place);
+  const zoneIds = zonesKeptIn(physicalZones, requestedZones, place);
+  // Unassigned residents are on site, so the chip is offered under Everywhere and On-site. A link
+  // from before 2026-10-08 that picked the Lifecycle zone ("Status") now means Unallocated.
+  const unallocated =
+    place !== "external" &&
+    (searchParams.unallocated === "1" || Boolean(lifecycleZone && requestedZones.includes(lifecycleZone.id)));
 
   /** The enclosures the Enclosure select offers under a place and zones. */
-  function enclosuresIn(nextPlace: EnclosurePlace, nextZones: string[]) {
+  function enclosuresIn(nextPlace: EnclosurePlace, nextZones: string[], nextUnallocated = false) {
+    // Unallocated alone: those residents have no enclosure to pick.
+    if (nextUnallocated && !nextZones.length) return [];
     const offered = new Set(
-      nextZones.length ? nextZones : offeredZones(zones, nextPlace).map((zone) => zone.id),
+      nextZones.length ? nextZones : offeredZones(physicalZones, nextPlace).map((zone) => zone.id),
     );
     return allEnclosures.filter((enclosure) => offered.has(enclosure.zone_id));
   }
-  const enclosures = enclosuresIn(place, zoneIds);
+  const enclosures = enclosuresIn(place, zoneIds, unallocated);
   const requestedEnclosure =
     typeof searchParams.enclosure === "string" ? searchParams.enclosure : "";
   // Dropped the same way when it is outside the place or the picked zones.
@@ -136,11 +174,13 @@ export async function resolveListView(supabase: Supabase, searchParams: Params, 
   // "No microchip" (the encouraging-chipping nudge): kept across every
   // other filter, like the search.
   const noChip = !limited && searchParams.nochip === "1";
-  // The Adopted chip belongs to Everywhere with no zone or enclosure picked,
-  // like Show all: adopted animals are in no place and in the Lifecycle
-  // zone, so any of those would empty the list.
-  const adopted =
-    place === "all" && zoneIds.length === 0 && !enclosureId && searchParams.adopted === "1";
+  // The status chips belong to Everywhere with no zone, Unallocated or
+  // enclosure picked, like Show all: these animals are in no enclosure and
+  // most in no place, so any of those would empty the list.
+  const status =
+    place === "all" && zoneIds.length === 0 && !unallocated && !enclosureId
+      ? parseStatusChip(searchParams)
+      : null;
   const chippedIds = noChip
     ? ((
         await supabase
@@ -150,9 +190,9 @@ export async function resolveListView(supabase: Supabase, searchParams: Params, 
           .returns<{ id: string }[]>()
       ).data ?? []).map((row) => row.id)
     : null;
-  const filters: Filters = { q, place, zoneIds, enclosureId, chippedIds, adopted, limited };
+  const filters: Filters = { q, place, zoneIds, enclosureId, chippedIds, status, unallocated, limited };
 
-  return { q, place, zones, allEnclosures, enclosures, enclosuresIn, zoneIds, enclosureId, showAll, noChip, adopted, chippedIds, filters };
+  return { q, place, zones, physicalZones, allEnclosures, enclosures, enclosuresIn, zoneIds, unallocated, enclosureId, showAll, noChip, status, chippedIds, filters };
 }
 
 export type ListView = Awaited<ReturnType<typeof resolveListView>>;

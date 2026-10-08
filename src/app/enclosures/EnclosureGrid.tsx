@@ -80,15 +80,20 @@ function EnclosureCard({
             and no door for a QR code. */}
         {!enclosure.is_system && (
           <span className="flex shrink-0 items-center gap-1">
-            <span
-              title={t.enclosures.openJobsTitle(enclosure.open_jobs)}
-              className={`flex items-center gap-1 text-xs ${
-                enclosure.open_jobs > 0 ? "font-medium text-foreground" : "text-muted"
-              }`}
-            >
-              <ENCLOSURE_ICONS.maintenance aria-hidden="true" className="h-3.5 w-3.5" />
-              {t.enclosures.openJobs(enclosure.open_jobs)}
-            </span>
+            {/* Only when there is work open, and then just the spanner and the
+                number (Lutan, 2026-10-08); the label says what the number is now
+                the word has gone. The copy link stays at the right edge either way. */}
+            {enclosure.open_jobs > 0 && (
+              <span
+                title={t.enclosures.openJobsTitle(enclosure.open_jobs)}
+                aria-label={t.enclosures.openJobsTitle(enclosure.open_jobs)}
+                role="img"
+                className="flex items-center gap-1 text-xs font-medium text-foreground"
+              >
+                <ENCLOSURE_ICONS.maintenance aria-hidden="true" className="h-3.5 w-3.5" />
+                <span aria-hidden="true">{enclosure.open_jobs}</span>
+              </span>
+            )}
             <span className="relative z-10 -my-1">
               <CopyTagLink
                 path={enclosureTagPath(enclosure.id)}

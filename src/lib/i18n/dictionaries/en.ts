@@ -83,7 +83,7 @@ const en = {
     residents: "Residents",
     settings: "Settings",
     management: "Management",
-    shelterOperations: "Shelter Operations",
+    shelterOperations: "Operations",
     dashboard: "Dashboard",
     website: "Website",
     security: "Security",
@@ -1833,10 +1833,10 @@ const en = {
       failed: "Nothing was saved",
     },
   },
-  /** Shelter Operations (/operations): the landing of tiles for the daily work (agreed 2026-10-08). */
+  /** Operations (/operations): the landing of tiles for the daily work (agreed 2026-10-08). */
   operations: {
     landing: {
-      title: "Shelter Operations",
+      title: "Operations",
       subtitle: "The daily work of running the shelter. Pick a job to open it.",
       tiles: {
         enclosures: "Who is where: every zone and enclosure, with the residents in each.",
@@ -3759,10 +3759,31 @@ const en = {
           ? "1 deceased resident matches"
           : `${n} deceased residents match`,
       deceasedMatchesShow: "show",
-      adoptedMatches: (n: number) =>
-        n === 1 ? "1 adopted resident matches" : `${n} adopted residents match`,
-      adoptedFilter: "Adopted",
-      adoptedOnly: "Showing adopted residents only",
+      /**
+       * A name search whose matches a filter is hiding, by status (2026-10-08): "2 fostered
+       * residents match — show". Keyed by current_status, as are the chips below.
+       */
+      statusMatches: {
+        Adopted: (n: number) =>
+          n === 1 ? "1 adopted resident matches" : `${n} adopted residents match`,
+        Fostered: (n: number) =>
+          n === 1 ? "1 fostered resident matches" : `${n} fostered residents match`,
+        Hospitalised: (n: number) =>
+          n === 1 ? "1 resident in hospital matches" : `${n} residents in hospital match`,
+      },
+      /** The status chips beside Show all: one at a time, each clears place, zone and enclosure. */
+      statusFilter: {
+        Adopted: "Adopted",
+        Fostered: "Fostered",
+        Hospitalised: "Hospitalised",
+      },
+      statusOnly: {
+        Adopted: "Showing adopted residents only",
+        Fostered: "Showing fostered residents only",
+        Hospitalised: "Showing residents in hospital only",
+      },
+      /** With the zone chips: at the shelter, no enclosure yet (current_status 'Unassigned'). */
+      unallocatedFilter: "Unallocated",
       showAllDeceased: "Show all",
       noMicrochip: "No microchip",
       hideDeceased: "Hide deceased",
@@ -4375,7 +4396,6 @@ const en = {
     spacesFree: (n: number) => `${n} space${n === 1 ? "" : "s"} free`,
     noCapacityCount: (n: number) => `${n} enclosure${n === 1 ? " has" : "s have"} no capacity set`,
     showingOf: (shown: number, total: number) => `showing ${shown} of ${total} enclosures`,
-    openJobs: (n: number) => `${n} open`,
     openJobsTitle: (n: number) =>
       n === 0 ? "No open maintenance jobs" : `${n} open maintenance job${n === 1 ? "" : "s"}`,
     zoneWideJobs: (n: number) => `${n} zone-wide job${n === 1 ? "" : "s"}`,

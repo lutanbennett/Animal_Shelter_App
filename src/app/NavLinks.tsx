@@ -52,7 +52,7 @@ export function NavLinks({
   canSettings: boolean;
   /** Opens any page in the Management section: the Management link. */
   canManagement: boolean;
-  /** Opens any page in the Shelter Operations section: its link (opensAnyIn, the landing's own guard). */
+  /** Opens any page in the Operations section: its link (opensAnyIn, the landing's own guard). */
   canOperations: boolean;
   /**
    * Has recurring jobs of their own (recurring.do_own): My tasks leads the menu.
@@ -73,10 +73,10 @@ export function NavLinks({
 
   // Grouped by how often each link is reached for (agreed with the user
   // 2026-09-23): the daily pages, then the role-gated sections.
-  // Shelter Operations, Management and Settings are single links — their
+  // Operations, Management and Settings are single links — their
   // landing pages are tile grids of everything inside them, so the sidebar
   // does not repeat those children. Since 2026-10-08 the daily field pages
-  // and the vet and contact lookups are tiles under Shelter Operations
+  // and the vet and contact lookups are tiles under Operations
   // (docs/decisions/2026-10-07-management-settings-split.md).
   const groups: NavItem[][] = [
     [

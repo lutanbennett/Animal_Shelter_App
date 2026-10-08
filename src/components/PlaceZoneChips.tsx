@@ -30,15 +30,21 @@ export function PlaceZoneChips({
   placeHrefs,
   allZonesHref,
   zones,
+  extra,
 }: {
   place: EnclosurePlace;
   placeHrefs: Record<EnclosurePlace, string>;
   allZonesHref: string;
   /** The zones on offer under `place`, in display order. */
   zones: PlaceZoneChip[];
+  /**
+   * One more chip after the zones, picked and cleared with them: /residents' Unallocated, which
+   * filters by status rather than zone (2026-10-08). All zones clears it too.
+   */
+  extra?: { label: string; href: string; active: boolean };
 }) {
   const { t, locale } = useI18n();
-  const noneActive = !zones.some((zone) => zone.active);
+  const noneActive = !zones.some((zone) => zone.active) && !extra?.active;
 
   const placeLabels: Record<EnclosurePlace, string> = {
     all: t.enclosures.placeAll,
@@ -122,6 +128,15 @@ export function PlaceZoneChips({
             </Link>
           );
         })}
+        {extra && (
+          <Link
+            href={extra.href}
+            aria-current={extra.active ? "true" : undefined}
+            className={chipClass(extra.active)}
+          >
+            {extra.label}
+          </Link>
+        )}
       </div>
     </>
   );

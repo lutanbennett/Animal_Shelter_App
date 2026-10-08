@@ -37,7 +37,7 @@ export type RouteEntry = {
   device: "any" | "phone" | "desk";
   /**
    * A page people reach for on their own: the sidebar until 2026-10-08, now mostly a tile on the
-   * Shelter Operations landing. False is still guarded and reachable; a home tile may show it.
+   * Operations landing. False is still guarded and reachable; a home tile may show it.
    * Where two pages share a word, the home screen opens the one with this set.
    */
   menu: boolean;
