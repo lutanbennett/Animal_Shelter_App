@@ -56,8 +56,8 @@ export default async function MedicationSettingsPage() {
         <h1 className="text-2xl font-semibold text-foreground">{s.title}</h1>
         <p className="text-sm text-muted">{s.subtitle}</p>
         {/*
-          The page's actions row. The cupboard-order screen (batch 73, medication.sort_order from
-          0161) gets its link here, beside the way back to the stock half.
+          The cupboard order (0161) is set on the stock half, under Cupboard order, not here
+          (docs/decisions/2026-10-08-cupboard-order-on-the-stock-half.md).
         */}
         <div className="mt-3 flex flex-wrap gap-2">
           <ActionLink href="/management/medications" label={s.stockLink} icon={Boxes} iconOnlyOnMobile={false} />

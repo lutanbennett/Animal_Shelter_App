@@ -145,6 +145,15 @@ database; `lannacare.org` runs **production** (`dbkodyyxxhtygxcxmfcu`).
 | 1 | Open the new menu on a phone: Shelter Operations is there, its tiles make sense, and you can find each page you used to reach from the menu | a phone, signed in as yourself and, if you can, as a staff login |
 | 2 | Read the Thai wording: งานประจำวัน as the section name and the eight tile descriptions | the same, with ไทย selected |
 
+### What was checked at the `0.21.0` release, 2026-10-08
+
+- **1 — done, Lutan**, on test before the production deploy: Shelter Operations
+  is in the menu, the tiles make sense, and each page previously reached from
+  the menu is reachable. Asked for specifically because this note **leads the
+  admin mail** of a major release, and a mail cannot be recalled.
+- **2 — still open.** The Thai wording was not looked at. It is the only part of
+  this plan outstanding, and it ships either way, since `0.21.0` is live.
+
 ## Sign-off
 
 ### Automated and scripted checks
@@ -158,7 +167,7 @@ Automated checks by: Claude (shelter-operations-nav session)  Date: 2026-10-08
 
 - [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — two items wait for Lutan
 
-Manual verification by: pending: items 1 and 2 above need Lutan to look on a phone
+Manual verification by: pending: item 2, the Thai wording (งานประจำวัน and the eight tile descriptions). Item 1 is done — Lutan confirmed the menu on test in chat on 2026-10-08, before the production deploy, and this line was written by Claude at his request
 
 ### Result
 

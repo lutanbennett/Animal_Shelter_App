@@ -1,20 +1,21 @@
 import { ActionLink } from "@/components/ActionLink";
-import { ClipboardCheck, ListChecks, Scale, ShoppingCart, Truck } from "lucide-react";
+import { ArrowLeft, ArrowUpDown, ClipboardCheck, ListChecks, Scale, ShoppingCart, Truck } from "lucide-react";
 import { getT } from "@/lib/i18n/get-t";
 import { DietStockCards, type DietStockRow } from "./DietStockCards";
 import { ForecastWindowPicker } from "@/components/ForecastWindowPicker";
 import { formatDate } from "@/lib/format";
 import { forecastWindows, parseCustomWindow } from "@/lib/management/forecast-window";
-import { LargerScreenNotice } from "@/components/LargerScreenNotice";
+import { CupboardOrder } from "@/components/CupboardOrder";
 import { STOCK_RATE_DAYS, readStock, stockFiguresOf } from "@/lib/management/stock";
 import { UnitsPanel } from "@/components/UnitsPanel";
 import { dietUnitLabel } from "@/lib/i18n/enum-labels";
-import { inPurchaseUnit } from "@/lib/units";
+import { inPurchaseUnit, pricePerPurchaseUnit } from "@/lib/units";
 import { loadConversions } from "@/lib/units-server";
 import { loadReceipts } from "@/lib/management/receipts-server";
 import { receivedSinceCount } from "@/lib/management/purchasing";
 import { requirePermission } from "@/lib/permissions/require";
 import { canEditItemSettings } from "@/lib/permissions/item-settings";
+import { moveDietType } from "./actions";
 
 type DietTypeQueryRow = {
   id: string;
@@ -26,6 +27,7 @@ type DietTypeQueryRow = {
   stock_counted_at: string | null;
   reorder_lead_days: number | null;
   safety_stock: number | string | null;
+  sort_order: number | null;
 };
 
 type ForecastRow = {
@@ -49,6 +51,40 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
   const { t, locale } = await getT();
   const searchParams = await props.searchParams;
 
+  // ?view=order: the cupboard order on a screen of its own, one job per
+  // screen for the 2IC's phone, with no forecast to load.
+  if (searchParams.view === "order") {
+    const { data, error } = await supabase
+      .from("diet_types")
+      .select("id, name, unit")
+      .order("sort_order", { nullsFirst: false })
+      .order("name")
+      .returns<{ id: string; name: string; unit: string }[]>();
+    const o = t.management.stock.order;
+    return (
+      <main className="flex min-w-0 flex-1 flex-col gap-4 p-4 sm:p-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">
+            {o.title}: {t.management.diets.title}
+          </h1>
+          <p className="text-sm text-muted">{o.intro}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <ActionLink href="/management/diets" label={o.back} icon={ArrowLeft} iconOnlyOnMobile={false} />
+          </div>
+        </div>
+        {error && (
+          <p className="text-sm text-danger">
+            {t.management.diets.couldntLoad}: {error.message}
+          </p>
+        )}
+        <CupboardOrder
+          items={(data ?? []).map((row) => ({ id: row.id, name: row.name, unit: dietUnitLabel(t, row.unit) }))}
+          move={moveDietType}
+        />
+      </main>
+    );
+  }
+
   // The fixed 7 / 30-day columns, plus a custom From/To window from the
   // picker when the query string carries one.
   const custom = parseCustomWindow(searchParams);
@@ -58,8 +94,10 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
     supabase
       .from("diet_types")
       .select(
-        "id, name, unit, is_standard, cost_per_unit, stock_on_hand, stock_counted_at, reorder_lead_days, safety_stock",
+        "id, name, unit, is_standard, cost_per_unit, stock_on_hand, stock_counted_at, reorder_lead_days, safety_stock, sort_order",
       )
+      // The cupboard order (0161), as the stocktake sheet walks it; name breaks a tie.
+      .order("sort_order", { nullsFirst: false })
       .order("name")
       .returns<DietTypeQueryRow[]>(),
     ...windows.map(async (window) => {
@@ -115,6 +153,7 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
       purchaseUnit: inPurchaseUnit(stock.stock_on_hand, conversions.data[type.id] ?? []),
       safetyStock: type.safety_stock == null ? null : Number(type.safety_stock),
       unitOptions: (conversions.data[type.id] ?? []).map((c) => c.unit),
+      packPrice: pricePerPurchaseUnit(Number(type.cost_per_unit), conversions.data[type.id] ?? []),
     };
   });
 
@@ -127,16 +166,21 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
   );
 
   return (
-    <main className="flex flex-1 flex-col gap-8 p-6">
+    <main className="flex min-w-0 flex-1 flex-col gap-8 p-4 sm:p-6">
       <div>
         <h1 className="text-2xl font-semibold text-foreground">{m.title}</h1>
         <p className="text-sm text-muted">{m.subtitle}</p>
-        {/* Outside LargerScreenNotice: the sheet is built for a phone. */}
         <div className="mt-3 flex flex-wrap gap-2">
           <ActionLink
             href="/stocktake?tab=diets"
             label={t.management.stock.stocktakeLink}
             icon={ClipboardCheck}
+            iconOnlyOnMobile={false}
+          />
+          <ActionLink
+            href="/management/diets?view=order"
+            label={t.management.stock.order.link}
+            icon={ArrowUpDown}
             iconOnlyOnMobile={false}
           />
           <ActionLink
@@ -163,8 +207,8 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
         </div>
       </div>
 
-      {/* PR 3 of the split (the device-notice sweep) takes this notice off: this half is the phone page. */}
-      <LargerScreenNotice>
+      {/* No larger-screen notice: Management and the 2IC open this half on a phone (decision 2026-10-07). */}
+      <div className="flex flex-col gap-8">
         {typesResult.error && (
           <p className="text-sm text-danger">
             {m.couldntLoad}: {typesResult.error.message}
@@ -208,7 +252,7 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
             costPerBase: type.cost_per_unit,
           }))}
         />
-      </LargerScreenNotice>
+      </div>
     </main>
   );
 }

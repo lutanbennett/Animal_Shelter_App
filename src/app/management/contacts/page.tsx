@@ -6,7 +6,6 @@ import { CreateContactForm } from "./CreateContactForm";
 import { ContactsTable, type ContactRow } from "./ContactsTable";
 import { ActionLink } from "@/components/ActionLink";
 import { ACTION_ICONS } from "@/components/hub-icons";
-import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { requirePermission } from "@/lib/permissions/require";
 
 export default async function ContactsAdminPage(
@@ -97,7 +96,7 @@ export default async function ContactsAdminPage(
     }`;
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-6">
+    <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">
@@ -118,7 +117,10 @@ export default async function ContactsAdminPage(
         />
       </div>
 
-      <LargerScreenNotice>
+      {/* No larger-screen notice: opened by Management or the 2IC on a phone (decision 2026-10-07). */}
+
+
+      <>
         {contactsResult.error && (
           <p className="text-sm text-danger">
             {t.management.contacts.couldntLoad}: {contactsResult.error.message}
@@ -169,7 +171,7 @@ export default async function ContactsAdminPage(
           )}
           <ContactsTable contacts={contacts} />
         </div>
-      </LargerScreenNotice>
+      </>
     </main>
   );
 }

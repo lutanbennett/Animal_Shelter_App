@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { CreateVetForm } from "./CreateVetForm";
 import { VetsTable, type VetRow } from "./VetsTable";
-import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { requirePermission } from "@/lib/permissions/require";
 
 export default async function VetsAdminPage() {
@@ -43,7 +42,7 @@ export default async function VetsAdminPage() {
   }));
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-6">
+    <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
       <div>
         <h1 className="text-2xl font-semibold text-foreground">
           {t.management.vets.title}
@@ -56,7 +55,10 @@ export default async function VetsAdminPage() {
         </p>
       </div>
 
-      <LargerScreenNotice>
+      {/* No larger-screen notice: opened by Management or the 2IC on a phone (decision 2026-10-07). */}
+
+
+      <>
         {vetsResult.error && (
           <p className="text-sm text-danger">
             {t.management.vets.couldntLoad}: {vetsResult.error.message}
@@ -70,7 +72,7 @@ export default async function VetsAdminPage() {
 
         <CreateVetForm />
         <VetsTable vets={vets} />
-      </LargerScreenNotice>
+      </>
     </main>
   );
 }

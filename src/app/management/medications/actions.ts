@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { refresh, revalidatePath } from "next/cache";
 import { runAction, type ActionResult } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -8,6 +8,7 @@ import { parseUnitCost } from "@/lib/format";
 import { parseLeadDays, parseStockCount } from "@/lib/management/stock";
 import { resolveSafetyStock } from "@/lib/management/purchasing";
 import { loadConversions } from "@/lib/units-server";
+import { moveInCupboardOrder } from "@/lib/management/cupboard-order-server";
 import { MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import {
@@ -262,5 +263,23 @@ export async function removeMedicationLabel(id: string): Promise<ActionResult<{ 
     if (current.label_drive_file_id) await trashInDrive(current.label_drive_file_id);
     revalidateLabelPages();
     return { ok: true, success: t.management.medications.label.removed };
+  });
+}
+
+/**
+ * Move a medicine a place up or down the cupboard order (0161), which the
+ * stocktake sheet walks. The stock cell's, not Settings': where a box sits
+ * on the shelf is how the shelter runs, and the 2IC sets it on a phone.
+ */
+export async function moveMedication(id: string, direction: "up" | "down"): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("medications.moveMedication", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "stock.medications")) return refuse(t.management.errors.managementAccessRequired);
+    const { error } = await moveInCupboardOrder(await createClient(), "medication", id, direction);
+    if (error) return refuse(error);
+    revalidatePath("/management/medications");
+    revalidatePath("/stocktake");
+    refresh();
+    return { ok: true };
   });
 }
