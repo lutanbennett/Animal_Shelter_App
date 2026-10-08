@@ -8,7 +8,7 @@
 | Backlog item | none: Lutan asked for it in chat on 2026-10-08; the brief for batch 72 carries his words |
 | Branch / worktree | `claude/plan-day-token-estimates` @ `C:\Development\Animal_Shelter_plan-day-token-estimates` |
 | Dev server | n/a: documentation only; no page is served |
-| PR | to be opened from this branch |
+| PR | #455 |
 | Tested by / date | Claude, 2026-10-08 |
 | Carries a migration? | no |
 | Tested at SHA | `c3ec50e4` (this branch after `sync` merged `origin/main`) |
@@ -24,7 +24,7 @@
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly, pushed, exit 0
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them. Run twice on `c3ec50e4`; the first run's closing line and the second run's per-gate lines are below. Every commit on this branch touches only Markdown, which no gate reads
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: #455, all 7 checks passed on `3ddfa41a`
 
 ```
 === gates: typecheck exited 0 after 17s
