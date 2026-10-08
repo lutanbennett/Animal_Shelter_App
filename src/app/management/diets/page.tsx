@@ -1,6 +1,7 @@
 import { ActionLink } from "@/components/ActionLink";
 import { ArrowLeft, ArrowUpDown, ClipboardCheck, ListChecks, Scale, ShoppingCart, Truck } from "lucide-react";
 import { getT } from "@/lib/i18n/get-t";
+import { localLabel } from "@/lib/translations/labels";
 import { DietStockCards, type DietStockRow } from "./DietStockCards";
 import { ForecastWindowPicker } from "@/components/ForecastWindowPicker";
 import { formatDate } from "@/lib/format";
@@ -20,6 +21,7 @@ import { moveDietType } from "./actions";
 type DietTypeQueryRow = {
   id: string;
   name: string;
+  name_th: string | null;
   unit: string;
   is_standard: boolean;
   cost_per_unit: number | string;
@@ -56,10 +58,10 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
   if (searchParams.view === "order") {
     const { data, error } = await supabase
       .from("diet_types")
-      .select("id, name, unit")
+      .select("id, name, name_th, unit")
       .order("sort_order", { nullsFirst: false })
       .order("name")
-      .returns<{ id: string; name: string; unit: string }[]>();
+      .returns<{ id: string; name: string; name_th: string | null; unit: string }[]>();
     const o = t.management.stock.order;
     return (
       <main className="flex min-w-0 flex-1 flex-col gap-4 p-4 sm:p-6">
@@ -78,7 +80,11 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
           </p>
         )}
         <CupboardOrder
-          items={(data ?? []).map((row) => ({ id: row.id, name: row.name, unit: dietUnitLabel(t, row.unit) }))}
+          items={(data ?? []).map((row) => ({
+            id: row.id,
+            name: localLabel(locale, row.name, row.name_th),
+            unit: dietUnitLabel(t, row.unit),
+          }))}
           move={moveDietType}
         />
       </main>
@@ -94,7 +100,7 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
     supabase
       .from("diet_types")
       .select(
-        "id, name, unit, is_standard, cost_per_unit, stock_on_hand, stock_counted_at, reorder_lead_days, safety_stock, sort_order",
+        "id, name, name_th, unit, is_standard, cost_per_unit, stock_on_hand, stock_counted_at, reorder_lead_days, safety_stock, sort_order",
       )
       // The cupboard order (0161), as the stocktake sheet walks it; name breaks a tie.
       .order("sort_order", { nullsFirst: false })
@@ -138,7 +144,7 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
     const stock = stockFiguresOf(type);
     return {
       id: type.id,
-      name: type.name,
+      name: localLabel(locale, type.name, type.name_th),
       is_standard: type.is_standard,
       unit: type.unit,
       cost_per_unit: Number(type.cost_per_unit),

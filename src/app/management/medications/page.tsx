@@ -1,6 +1,7 @@
 import { ActionLink } from "@/components/ActionLink";
 import { ArrowLeft, ArrowUpDown, ClipboardCheck, ListChecks, Scale, ShoppingCart, Truck } from "lucide-react";
 import { getT } from "@/lib/i18n/get-t";
+import { localLabel } from "@/lib/translations/labels";
 import { MedicationStockCards, type MedicationStockRow } from "./MedicationStockCards";
 import { ForecastWindowPicker } from "@/components/ForecastWindowPicker";
 import { formatDate } from "@/lib/format";
@@ -20,6 +21,7 @@ import { moveMedication } from "./actions";
 type MedicationQueryRow = {
   id: string;
   name: string;
+  name_th: string | null;
   dose_unit: string;
   // numeric(12, 4) since 0161: PostgREST normally hands this back as a JSON
   // number, but ForecastRow below shows it can arrive as a string, so it is
@@ -58,10 +60,10 @@ export default async function MedicationStockPage(props: PageProps<"/management/
   if (searchParams.view === "order") {
     const { data, error } = await supabase
       .from("medication")
-      .select("id, name, dose_unit")
+      .select("id, name, name_th, dose_unit")
       .order("sort_order", { nullsFirst: false })
       .order("name")
-      .returns<{ id: string; name: string; dose_unit: string }[]>();
+      .returns<{ id: string; name: string; name_th: string | null; dose_unit: string }[]>();
     const o = t.management.stock.order;
     return (
       <main className="flex min-w-0 flex-1 flex-col gap-4 p-4 sm:p-6">
@@ -80,7 +82,11 @@ export default async function MedicationStockPage(props: PageProps<"/management/
           </p>
         )}
         <CupboardOrder
-          items={(data ?? []).map((row) => ({ id: row.id, name: row.name, unit: doseUnitLabel(t, row.dose_unit) }))}
+          items={(data ?? []).map((row) => ({
+            id: row.id,
+            name: localLabel(locale, row.name, row.name_th),
+            unit: doseUnitLabel(t, row.dose_unit),
+          }))}
           move={moveMedication}
         />
       </main>
@@ -96,7 +102,7 @@ export default async function MedicationStockPage(props: PageProps<"/management/
     supabase
       .from("medication")
       .select(
-        "id, name, dose_unit, cost_per_unit, stock_on_hand, stock_counted_at, reorder_lead_days, safety_stock, label_drive_file_id, sort_order",
+        "id, name, name_th, dose_unit, cost_per_unit, stock_on_hand, stock_counted_at, reorder_lead_days, safety_stock, label_drive_file_id, sort_order",
       )
       // The cupboard order (0161), as the stocktake sheet walks it; name breaks a tie.
       .order("sort_order", { nullsFirst: false })
@@ -142,7 +148,7 @@ export default async function MedicationStockPage(props: PageProps<"/management/
     const stock = stockFiguresOf(medication);
     return {
       id: medication.id,
-      name: medication.name,
+      name: localLabel(locale, medication.name, medication.name_th),
       dose_unit: medication.dose_unit,
       cost_per_unit: medication.cost_per_unit == null ? null : Number(medication.cost_per_unit),
       forecast,

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Truck } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { localLabel } from "@/lib/translations/labels";
 import { dietUnitLabel, doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { formatDate, formatDateTime, todayIso } from "@/lib/format";
 import { toCsv } from "@/lib/csv";
@@ -72,7 +73,7 @@ type CorrectionQueryRow = {
   counted_at: string;
 };
 
-type ItemRow = { id: string; name: string; unit: string; stock_counted_at: string | null };
+type ItemRow = { id: string; name: string; name_th?: string | null; unit: string; stock_counted_at: string | null };
 
 /** Forecast statuses each RPC leaves out (0044 / 0051). */
 const EXCLUDED: Record<Kind, string[]> = {
@@ -122,12 +123,12 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
       .returns<HistoryRow[]>(),
     supabase
       .from("medication")
-      .select("id, name, unit:dose_unit, stock_counted_at")
+      .select("id, name, name_th, unit:dose_unit, stock_counted_at")
       .order("name")
       .returns<ItemRow[]>(),
     supabase
       .from("diet_types")
-      .select("id, name, unit, stock_counted_at")
+      .select("id, name, name_th, unit, stock_counted_at")
       .order("name")
       .returns<ItemRow[]>(),
     // Residents whose status today keeps them out of a forecast, for the
@@ -195,9 +196,11 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
     medication: correctionsOf("medication"),
     diet: correctionsOf("diet"),
   };
+  // Names in the reader's language from here on (0166).
+  const local = (rows: ItemRow[] | null) => (rows ?? []).map((r) => ({ ...r, name: localLabel(locale, r.name, r.name_th) }));
   const items: Record<Kind, ItemRow[]> = {
-    medication: medicationResult.data ?? [],
-    diet: dietResult.data ?? [],
+    medication: local(medicationResult.data),
+    diet: local(dietResult.data),
   };
 
   // Every saved sheet, whichever kinds it counted.
