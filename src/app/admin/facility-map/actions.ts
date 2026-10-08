@@ -195,6 +195,12 @@ export async function uploadPlan(form: FormData): Promise<ActionResult<{ id: str
 
     if (mode === "add") {
       const zoneId = String(form.get("zoneId") ?? "") || null;
+      // Asked first so a refused add stores nothing; the unique index (23505 below) still decides a race.
+      const existing = zoneId
+        ? await supabase.from("facility_maps").select("id").eq("zone_id", zoneId).limit(1)
+        : await supabase.from("facility_maps").select("id").eq("kind", "overview").limit(1);
+      if (existing.error) return databaseFailure("facilityMap.uploadPlan", existing.error, t.common);
+      if (existing.data.length) return refuse(e.alreadyHasPlan);
       const id = crypto.randomUUID();
       const imagePath = await storePlanImage(id, bytes, type);
       const { error } = await supabase

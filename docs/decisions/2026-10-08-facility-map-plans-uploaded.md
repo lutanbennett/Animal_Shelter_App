@@ -104,10 +104,22 @@ after the 2026-10-04 note, so a signed-out request for `/facility-maps/main-zone
 
 ## Who, and on what screen
 
-Unchanged: `facility.enclosures` at *edit* (admin and management), the same check in every action, RLS on
-`facility_maps`, `zones`, `enclosures` and `map_rooms` as the real boundary for the shape writes. The editor
+Unchanged, and deliberately not widened: `facility.enclosures` at *edit* — Admin only since `0150` (management
+holds Read; whether management should get the map without every enclosure is its own open backlog item, and
+still open). The same check is in every action, and RLS on `facility_maps`, `zones`, `enclosures` and
+`map_rooms` is the real boundary for the shape writes. The editor
 keeps its *Best on a larger screen* notice — drawing twenty kennels is desk work — but **adding or replacing a
 picture works on a phone**: the file input takes `image/*`, which offers the camera, and every control is 44 px.
+
+## Found on the way: adding a plan for a zone is broken by `0162`
+
+`refuse_lifecycle_map()` (shared by `zones`, `enclosures` and `facility_maps`) was rewritten in `0161`/`0162` with
+`if (tg_table_name = 'zones' and new.name = 'Lifecycle') or …`. PL/pgSQL does not short-circuit that into
+skipping the field lookup, and `facility_maps` has no `name`, so **every insert of a zone plan fails** with
+`record "new" has no field "name"` — on `main`, before this branch, through the old file-name *Add a plan* too.
+Replacing a plan (an update of `image_path`) and adding the overview (no `zone_id`) are unaffected. The fix is a
+nested `if` in a new migration, which this stream may not write; it is a backlog follow-up, and it blocks loading
+the House Zone plan if that zone has no plan yet.
 
 ## Per-screen table
 
