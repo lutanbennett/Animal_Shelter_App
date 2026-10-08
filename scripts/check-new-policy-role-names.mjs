@@ -15,7 +15,7 @@
 // 'staff' 'vet' 'admin' 'volunteer' cast to app_role, inside a `create policy` / `alter policy` statement.
 // Functions and views that mention a role are not judged — only policies.
 //
-// ESCAPE HATCH. A deliberate one (the vet's 54 are a recorded decision: perm-convert-vet is parked) is marked with
+// ESCAPE HATCH. A deliberate one (none on dev since 0167 converted the vet's 54, the last) is marked with
 //     -- policy-role: deliberate — <why>
 // as a comment inside the statement or among the comment lines directly above it. The reason is required. Marked
 // statements pass but are listed, so a reviewer sees each one. A guard with no way out gets deleted.

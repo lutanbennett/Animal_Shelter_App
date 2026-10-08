@@ -1163,7 +1163,7 @@ beside them.
 | **R6 Admin, and the finish** | | | |
 | `perm-convert-settings` | schema | the four above | The Settings tables and setup lists |
 | `perm-convert-admin` | schema, `0153` | `-settings` | The 43 `admin_*` and 2 `volunteer_read_*` policies, and the checker extended to see them. **Built, 2026-10-07**; "Converted in `0153`" below |
-| `perm-convert-vet` | schema | Lutan's vet decision (§3 of `2026-10-07-admin-role.md`) | The vet's 54 policies on 29 tables, the last of the role-named ones |
+| `perm-convert-vet` | schema, `0167` | Lutan's vet decision (§3 of `2026-10-07-admin-role.md`) | The vet's 54 policies on 29 tables, the last of the role-named ones. **Built, 2026-10-09**, on the clinic scope rather than the vet's cells; "Converted in `0167`" below |
 | `perm-drop-enum` | schema | every table converted, vets and staff included | The bridge and the enum removed |
 | `settings-permission-matrix` | app | `perm-drop-enum` | The matrix in Settings |
 | `custom-roles` | schema + app | the matrix | A shelter adds a role |
@@ -1254,15 +1254,19 @@ role values and a bare `current_user_role()`, and `is_admin()` is the enum-free 
 | `audit_log`, `permission_activities`, `role_permissions`, `roles`, `user_roles`, `site_content`, `site_content_photos`, `site_pages`, `translatable_fields` | the policy rewritten in place on `is_admin()` | Admin-only, no cell, on purpose (§6). `user_roles` keeps its fixed rule and is **not** given an activity. The `*_requires_aal2` restrictive policies are untouched: a write to the matrix still needs an admin **and** `aal2` |
 | `vet_appointments`, `vet_doctors`, `vet_doctor_clinics` | `admin_all_*` rewritten in place on `is_admin()` | The vet's own policies on these stay with `perm-convert-vet` |
 
-**Still on the enum, and the only thing left: the vet (`perm-convert-vet`).** 54 `vet_*` policies on 29
-tables, each of which names `'vet'::app_role`, never ask a cell (`0135`, "Last"), and are blocked on
-Lutan's decision: does the vet keep the paper's 13 reference-data cells while on hold, or is the paper
-rewritten to the draft's one? The tables, one owner each: `adoption_updates`, `attachments`,
-`blood_test_types`, `blood_tests`, `bulk_appointments`, `diet_types`, `enclosures`, `frequency`,
-`immunization_records`, `immunization_types`, `medication`, `placement_history`, `prescriptions`,
-`procedure_types`, `procedures`, `recurring_job_assignees`, `recurring_job_occurrence_assignees`,
-`recurring_job_occurrences`, `recurring_jobs`, `resident_diets`, `residents`, `shelter_friends`,
-`translations`, `vet_appointments`, `vet_doctor_clinics`, `vet_doctors`, `vets`, `weight`, `zones`.
+**Converted in `0167` (`perm-convert-vet`), 2026-10-09: the last 54, and no policy names a role.** The
+vet's 54 policies on 29 tables (`adoption_updates`, `attachments`, `blood_test_types`, `blood_tests`,
+`bulk_appointments`, `diet_types`, `enclosures`, `frequency`, `immunization_records`,
+`immunization_types`, `medication`, `placement_history`, `prescriptions`, `procedure_types`, `procedures`,
+`recurring_job_assignees`, `recurring_job_occurrence_assignees`, `recurring_job_occurrences`,
+`recurring_jobs`, `resident_diets`, `residents`, `shelter_friends`, `translations`, `vet_appointments`,
+`vet_doctor_clinics`, `vet_doctors`, `vets`, `weight`, `zones`) were rewritten in place: `current_user_role()
+= 'vet'` became `(select is_clinic_login())`, *the caller's role has `scope_clinical = 'own_clinic'`* (§5),
+and nothing else in any of them changed. **They do not ask a cell, on purpose.** Lutan decided on 2026-10-07
+that vets stay as they are, and the vet's cells (the Director's draft: the microchip and the record) would
+have taken their clinic work away; on 2026-10-09 he chose the scope over the role name. So the vet's cells
+are still cosmetic, and the 21 vet lines on the parity board stay red as a recorded decision.
+`docs/decisions/2026-10-09-perm-convert-vet.md`. `OWNERS` in the checker is empty.
 
 **The end state is a query.** `node scripts/check-policy-role-names.mjs --final` must report no
 row. The stream that empties the last entry from `OWNERS` in that script (`perm-convert-vet`) runs it, and
