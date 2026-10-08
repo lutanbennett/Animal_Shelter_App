@@ -11,7 +11,7 @@
 | PR | opened from this branch |
 | Tested by / date | Claude (release manager session) / 2026-10-08 |
 | Carries a migration? | no — `0162`, `0163` and `0164` ship in this release and are **still pending on production**. See §3 |
-| Tested at SHA | `dd44aa87` (`main` tip at the cut) + this branch's commit |
+| Tested at SHA | `005e6594` (`main` tip at the cut) + this branch's commits |
 
 ## 1. Scope and risk
 
@@ -116,7 +116,7 @@ into the release record as a stated gap, not as closed items.
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — n/a in form: the worktree was created from `origin/main` at `dd44aa87` minutes before the cut, so there was nothing to merge in. `0` behind, confirmed by `git status -sb`
+- [x] `node scripts/worktree.mjs sync` — n/a in form: the worktree was created from `origin/main` minutes before the cut, so there was nothing to merge in. **`0` behind, confirmed against the remote rather than against a local ref** — and that check earned its keep. The main checkout had been pulled to `dd44aa87`, and `worktree.mjs new` runs its own `fetch`, so the branch was actually cut from `005e6594`: a backlog merge landed on `origin` in the minutes between. `git merge-base --is-ancestor origin/main <branch>` confirms `origin/main` is an ancestor of this branch, so it already contains that merge and is not behind at all. **This plan first recorded the base as `dd44aa87` and was corrected**; `0.21.0`'s lesson is that `main` moves under you during a release, and the form it took here was a base SHA that was stale the moment it was written
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Its closing lines, as printed:
 
 ```
@@ -228,7 +228,7 @@ why the migration does both halves in one file and says why.
 
 - [x] The pages nearest the change still work — the `build` gate renders the register's consumers; `/releases` is in the route list the build printed, and `deploy.mjs` and the Worker parse the same file, which §2 did explicitly under type stripping
 - [x] Any shared file touched checked from a second, unrelated place — `src/lib/releases.ts` is the shared file and it was exercised **by loading it**, not by reading it: imported as a module and every entry walked, plus the full `next build`. The weaker check would have been to read the diff and conclude the other 34 entries were fine; instead all 34 were compared as serialised JSON against `origin/main`
-- [x] Nothing merged from `main` during `sync` was broken by this branch — nothing was merged; the worktree was cut from `dd44aa87` directly
+- [x] Nothing merged from `main` during `sync` was broken by this branch — nothing was merged; the worktree was cut from `005e6594` directly, which already included that day's backlog merge. The five commits it carries beyond `dd44aa87` touch only `docs/backlog.md` — confirmed by `git diff --name-only`, which returns neither `src/lib/releases.ts`, `package.json` nor any migration
 - [x] **The branch was diffed against its merge-base, not against `origin/main`** — `0.21.0`'s lesson: `main` moves during a release, and comparing a two-file branch against a moved `origin/main` produced a thirty-file diff of someone else's feature
 
 ## 7. Documentation
