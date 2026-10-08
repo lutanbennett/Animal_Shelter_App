@@ -228,7 +228,7 @@ function EnclosureRowItem({
               {t.admin.enclosures.table.systemNote} {t.admin.placeOrder.lifecycleFixed}
             </span>
           ) : (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="grid w-max grid-cols-2 gap-2 md:flex md:items-center">
               <RowActionButton
                 disabled={isPending || position === 0}
                 onClick={() => handleMove("up")}

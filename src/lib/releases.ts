@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Zones and enclosures now appear in the shelter's own order instead of A-Z, everywhere they are listed: the Enclosures page, every zone and enclosure picker, the residents list and the medical and diet lists. The Director sets the order under Settings → Zones and Settings → Enclosures with up and down arrows that work on a phone, and a new zone or enclosure goes last. Numbers are now read as numbers, so Enclosure 2 comes before Enclosure 10. In Thai too.",
   "Web addresses on the public pages are now links you can tap, such as the DonorBox address on the Donate page. Staff can also put words on a link, for example [Give monthly](https://…), and add email and phone links. This works on the information pages and on project stories.",
   "Enclosures: each zone now shows how many residents are in it and how many spaces are free, with a total for all zones above. A full or over-capacity enclosure never takes spaces away from the others.",
   "More buttons are now big enough to tap with a thumb on a phone: Undo, Skip, Add note and Done on My tasks, the buttons in the photo viewer (close, Remove photo, Set as profile, Move, Show all), the Units buttons, and the account menu at the top. On a computer they look as before.",
