@@ -31,7 +31,7 @@ gates: typecheck=0 lint=0 build=0
 ```
 
   (A first run exited `build=143` straight after "Compiled successfully" while the preview dev server was running on the same checkout; with it stopped, the run above.)
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — all 7 checks passing on #469 at `7692eb28`, read from the PR status before merging
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -188,7 +188,7 @@ Manual verification by: pending: the five forms checks in Left for manual verifi
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR — summary and checks in the #469 description; the full plan is this file on the branch
 - [ ] Handed to the production release manager — n/a: not yet — handed over when the PR is merged
 
 Result: pass with accepted defects
