@@ -29,9 +29,9 @@ export default async function MedicationSettingsPage() {
   const [medicationsResult, prescriptionsResult, conversions] = await Promise.all([
     supabase
       .from("medication")
-      .select("id, name, dose_unit")
+      .select("id, name, name_th, dose_unit")
       .order("name")
-      .returns<{ id: string; name: string; dose_unit: string }[]>(),
+      .returns<{ id: string; name: string; name_th: string | null; dose_unit: string }[]>(),
     // One row per prescription is cheap at shelter scale and gives the
     // reference counts that gate the delete buttons.
     supabase.from("prescriptions").select("medication_id").returns<{ medication_id: string }[]>(),

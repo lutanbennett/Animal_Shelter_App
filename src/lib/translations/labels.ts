@@ -77,7 +77,7 @@ const LABEL_SCREENS: Record<string, (rowId: string) => string[]> = {
   immunization_types: () => ["/admin/immunization-types"],
   procedure_types: () => ["/admin/procedure-types"],
   blood_test_types: () => ["/admin/blood-test-types"],
-  vets: (id) => [`/management/vets/${id}`, "/vets"],
+  vets: () => ["/management/vets", "/vets"],
   fixed_outgoings: () => ["/management/cashflow/fixed-outgoings", "/management/cashflow"],
   roles: () => ["/admin/security"],
 };
