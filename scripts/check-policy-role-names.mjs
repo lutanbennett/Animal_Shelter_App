@@ -21,9 +21,15 @@
 // What counts as "names a role": any of 'management' 'staff' 'vet' 'admin' 'volunteer' cast to app_role, or a
 // bare call of current_user_role() (which is how every admin_* policy is written and how a future one would
 // be). Matches on the text, not the policy name: a name prefix is what missed the first nine.
+//
+// Both modes also ask a second question of every policy: is each scope function it calls (sees_all_*(),
+// has_shelter_floor(), each TRUE for public_viewer) ANDed with a has_permission() cell? scripts/lib/scope-guard.mjs
+// has the walk and what "ANDed" means. A policy that is right but fails the walk goes in SCOPE_DELIBERATE with
+// its reason; it then passes and is listed. Its static twin, which CI does run, is check-new-policy-role-names.mjs.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { unguardedScopeCalls } from "./lib/scope-guard.mjs";
 
 const final = process.argv.includes("--final");
 const root = process.cwd();
@@ -43,6 +49,10 @@ export const OWNERS = Object.fromEntries([
   "recurring_job_occurrences", "recurring_jobs", "resident_diets", "residents", "shelter_friends", "translations",
   "vet_appointments", "vet_doctor_clinics", "vet_doctors", "vets", "weight", "zones",
 ].map((t) => [t, VET]));
+
+// "table.policy" -> why its scope function needs no cell beside it (or why the walk misreads it). Each entry is
+// printed every run. Empty on 2026-10-08: all 41 policies calling one were ANDed with a cell.
+export const SCOPE_DELIBERATE = {};
 
 const TEXT = "(coalesce(qual, '') || coalesce(with_check, ''))";
 const query = `
@@ -75,6 +85,39 @@ const tallyLine = [...tally].map(([k, n]) => `${k} ${n}`).join(", ") || "none";
 let fails = 0;
 const fail = (s) => { fails++; console.log(`FAIL  ${s}`); };
 
+// Scope functions beside a cell. USING and WITH CHECK are judged apart: each must hold on its own.
+const scopeQuery = `
+select tablename, policyname, cmd, qual, with_check
+  from pg_policies
+ where schemaname = 'public'
+   and ${TEXT} ~* '(sees_all_[a-z_]+|has_shelter_floor)\\s*\\('
+ order by tablename, policyname`;
+const scopeRes = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
+  method: "POST",
+  headers: { Authorization: `Bearer ${env.SUPABASE_ACCESS_TOKEN}`, "Content-Type": "application/json" },
+  body: JSON.stringify({ query: scopeQuery }),
+});
+const scopeRows = await scopeRes.json();
+if (!Array.isArray(scopeRows)) throw new Error(`scope query failed (${scopeRes.status}): ${JSON.stringify(scopeRows).slice(0, 500)}`);
+let scopeBad = 0;
+const scopeSeen = new Set();
+for (const r of scopeRows) {
+  const key = `${r.tablename}.${r.policyname}`;
+  const loose = [["using", r.qual], ["with check", r.with_check]]
+    .flatMap(([clause, t]) => (t ? unguardedScopeCalls(t).map((fn) => `${fn}() in ${clause}`) : []));
+  if (!loose.length) continue;
+  if (SCOPE_DELIBERATE[key]) {
+    scopeSeen.add(key);
+    console.log(`deliberate  ${key} (${r.cmd}): ${loose.join(", ")}\n    why: ${SCOPE_DELIBERATE[key]}`);
+    continue;
+  }
+  scopeBad++;
+  fail(`${key} (${r.cmd}) calls ${loose.join(", ")} with no has_permission() ANDed beside it, so public_viewer passes it: add the cell, or put the policy in SCOPE_DELIBERATE with why`);
+}
+for (const k of Object.keys(SCOPE_DELIBERATE)) if (!scopeSeen.has(k)) fail(`${k} is in SCOPE_DELIBERATE but no longer fails the scope walk, or is gone: remove it`);
+const fnCount = new Set(scopeRows.flatMap((r) => [...`${r.qual ?? ""} ${r.with_check ?? ""}`.matchAll(/\b(sees_all_[a-z_]+|has_shelter_floor)\s*\(/gi)].map((m) => m[1])));
+console.log(`${scopeRows.length} policies call a scope function (${[...fnCount].sort().join(", ") || "none"}); ${scopeRows.length - scopeBad - scopeSeen.size} with a cell ANDed beside every call, ${scopeSeen.size} deliberate, ${scopeBad} without`);
+
 if (final) {
   if (rows.length === 0) console.log("ok    no policy names an app_role value or calls current_user_role()");
   else for (const [t, p] of byTable) fail(`${t} still names a role: ${p.join(", ")}`);
@@ -97,5 +140,5 @@ if (final) {
   console.log(`${rows.length} policies on ${byTable.size} tables still name a role (${tallyLine}); each has an owner:`);
   for (const [o, ts] of owners) console.log(`  ${o}: ${ts.length} tables, ${ts.reduce((n, s) => n + Number(s.match(/\((\d+)\)$/)[1]), 0)} policies`);
 }
-console.log(fails ? `\nRESULT: RED (${fails})` : final ? "\nRESULT: GREEN (the end state)" : "\nRESULT: GREEN (every remaining role-named policy has an owner, and §15 says so)");
+console.log(fails ? `\nRESULT: RED (${fails})` : final ? "\nRESULT: GREEN (the end state; every scope function has a cell beside it)" : "\nRESULT: GREEN (every remaining role-named policy has an owner, and §15 says so; every scope function has a cell beside it)");
 process.exitCode = fails ? 1 : 0;

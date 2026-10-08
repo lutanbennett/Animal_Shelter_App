@@ -19,9 +19,18 @@
 //     -- policy-role: deliberate — <why>
 // as a comment inside the statement or among the comment lines directly above it. The reason is required. Marked
 // statements pass but are listed, so a reviewer sees each one. A guard with no way out gets deleted.
+//
+// SECOND QUESTION (2026-10-08, decisions/2026-10-08-scope-functions-beside-a-cell.md): a new policy calling a scope
+// function (sees_all_*(), has_shelter_floor(), each TRUE for public_viewer) must AND a has_permission() cell beside
+// every call. 0150's first draft did not, and public_viewer read 76 rows of translations; check-app-access-gate
+// caught it after the fact. scripts/lib/scope-guard.mjs has the walk. Its own escape hatch, so a reason given for
+// one question never silently covers the other:
+//     -- scope-fn: deliberate — <why>
+// check-policy-role-names.mjs asks the same of every live policy on dev.
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { MIGRATIONS_DIR, MIGRATION_NAME, parseLsTree } from "./lib/migrations.mjs";
+import { unguardedScopeCalls } from "./lib/scope-guard.mjs";
 
 const args = process.argv.slice(2);
 const baseArg = args.indexOf("--base");
@@ -40,9 +49,16 @@ const git = (a) => {
 };
 const NAMES_ROLE = /current_user_role\s*\(\s*\)|'(management|staff|vet|admin|volunteer)'\s*::\s*app_role/i;
 const MARKER = /--\s*policy-role:\s*deliberate\s*[—–-]+\s*(\S.*)/i;
+const SCOPE_MARKER = /--\s*scope-fn:\s*deliberate\s*[—–-]+\s*(\S.*)/i;
 
 /** Every create/alter policy in `sql` that names a role: { head, marker (the reason, or null) }. */
-export function findRolePolicies(sql) {
+export const findRolePolicies = (sql) => findPolicies(sql, (text) => NAMES_ROLE.test(text), MARKER);
+
+/** Every create/alter policy in `sql` calling a scope function with no cell ANDed beside it: { head, marker, fns }. */
+export const findLooseScopePolicies = (sql) => findPolicies(sql, (text) => unguardedScopeCalls(text), SCOPE_MARKER);
+
+/** Every create/alter policy for which `test(text)` is truthy (an array counts only when non-empty). */
+function findPolicies(sql, test, MARKER) {
   const found = [];
   let carried = []; // comment lines since the last statement ended, which belong to the next one
   const chunks = sql.split(";");
@@ -61,9 +77,10 @@ export function findRolePolicies(sql) {
       else if (!code.length && line.trim().startsWith("--")) carried.push(line);
     }
     const text = code.join("\n");
-    if (/^\s*(create|alter)\s+policy\b/i.test(text) && NAMES_ROLE.test(text)) {
+    const hit = /^\s*(create|alter)\s+policy\b/i.test(text) ? test(text) : false;
+    if (Array.isArray(hit) ? hit.length : hit) {
       const above = carried.map((l) => l.match(MARKER)?.[1].trim()).find(Boolean);
-      found.push({ head: text.trim().split("\n")[0].trim(), marker: marker ?? above ?? null });
+      found.push({ head: text.trim().split("\n")[0].trim(), marker: marker ?? above ?? null, fns: Array.isArray(hit) ? hit : [] });
     }
     if (text.trim()) carried = [];
   }
@@ -87,21 +104,39 @@ function newFiles() {
 const candidates = newFiles();
 const bad = [];
 const deliberate = [];
+const looseScope = [];
+const deliberateScope = [];
 for (const f of candidates) {
-  for (const p of findRolePolicies(readFileSync(f, "utf8"))) (p.marker ? deliberate : bad).push({ f, ...p });
+  const sql = readFileSync(f, "utf8");
+  for (const p of findRolePolicies(sql)) (p.marker ? deliberate : bad).push({ f, ...p });
+  for (const p of findLooseScopePolicies(sql)) (p.marker ? deliberateScope : looseScope).push({ f, ...p });
 }
 for (const d of deliberate) console.log(`${TAG}: deliberate — ${d.f}: ${d.head}\n    why: ${d.marker}`);
-if (!bad.length) {
-  console.log(`${TAG}: ok — ${candidates.length} new migration file(s), none with an unmarked role-named policy`);
+for (const d of deliberateScope) console.log(`${TAG}: scope function deliberate — ${d.f}: ${d.head}\n    why: ${d.marker}`);
+if (!bad.length && !looseScope.length) {
+  console.log(
+    `${TAG}: ok — ${candidates.length} new migration file(s), none with an unmarked role-named policy` +
+      ` or a scope function without a cell beside it`,
+  );
   process.exit(0);
 }
-console.error(
-  `${TAG}: a new policy names a role (current_user_role() or '<role>'::app_role):\n` +
-    bad.map((b) => `  - ${b.f}: ${b.head}`).join("\n") +
-    `\n  Policies ask what you may do, not who you are. Do one of:\n` +
-    `    1. Use a permission cell: role_can('<cell>') — see docs/roles-and-permissions.md.\n` +
-    `    2. If a role name is genuinely intended (a recorded decision, like the vet's), add above or inside the\n` +
-    `       statement:  -- policy-role: deliberate — <why>\n` +
-    `       and make sure the table is in OWNERS in scripts/check-policy-role-names.mjs and in §15 of the doc.`,
-);
+if (bad.length)
+  console.error(
+    `${TAG}: a new policy names a role (current_user_role() or '<role>'::app_role):\n` +
+      bad.map((b) => `  - ${b.f}: ${b.head}`).join("\n") +
+      `\n  Policies ask what you may do, not who you are. Do one of:\n` +
+      `    1. Use a permission cell: role_can('<cell>') — see docs/roles-and-permissions.md.\n` +
+      `    2. If a role name is genuinely intended (a recorded decision, like the vet's), add above or inside the\n` +
+      `       statement:  -- policy-role: deliberate — <why>\n` +
+      `       and make sure the table is in OWNERS in scripts/check-policy-role-names.mjs and in §15 of the doc.`,
+  );
+if (looseScope.length)
+  console.error(
+    `${TAG}: a new policy calls a scope function with no has_permission() ANDed beside it:\n` +
+      looseScope.map((b) => `  - ${b.f}: ${b.head}  [${b.fns.map((n) => `${n}()`).join(", ")}]`).join("\n") +
+      `\n  sees_all_*() and has_shelter_floor() are TRUE for public_viewer; they narrow a cell, they are not one.\n` +
+      `    1. AND the cell beside it:  has_permission('<cell>') and sees_all_residents()\n` +
+      `    2. If it is right as written (scripts/lib/scope-guard.mjs says which safe shapes the walk misreads), add\n` +
+      `       above or inside the statement:  -- scope-fn: deliberate — <why>`,
+  );
 process.exit(1);
