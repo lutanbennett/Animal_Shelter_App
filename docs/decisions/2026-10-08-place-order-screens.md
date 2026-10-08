@@ -17,8 +17,12 @@ id). No view changed, so no schema.
 
 Rows with no order sort last, by name with numbers read as numbers. That covers
 the Lifecycle pseudo-zone and its pseudo-enclosures (0161 refuses them an order)
-and every place for the **vet**, who cannot read the tables: a failed read in
-`loadPlaceOrder()` leaves name order rather than an error.
+and every place for any reader the tables' policy turns away: a failed or empty
+read in `loadPlaceOrder()` leaves name order rather than an error. 0161's header
+expected that reader to be the vet, but on dev on 2026-10-08 a throwaway vet login
+read all 18 zones (`scripts/check-place-order-roles.mjs`), so in practice the vet
+gets the shelter's order like everyone else. Measured, not reasoned; the fallback
+stays for whichever role it does turn out to be.
 
 `/enclosures`'s *Name* sort and *Fullest* tie-break now compare names with
 numbers in order too ("Enclosure 2" before "Enclosure 10"). The item complained

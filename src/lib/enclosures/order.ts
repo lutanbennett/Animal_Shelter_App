@@ -9,8 +9,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  *
  * A row with no order sorts after those with one, by name with numbers read
  * as numbers. That is the Lifecycle pseudo-zone and its pseudo-enclosures,
- * which take no order on purpose (0161 refuses one), and every place for the
- * vet, who cannot read the tables and so keeps name order.
+ * which take no order on purpose (0161 refuses one), and every place for a
+ * reader the tables' policy turns away, who keeps name order. (0161's header
+ * expected that to be the vet; on dev on 2026-10-08 the vet read all 18 zones,
+ * scripts/check-place-order-roles.mjs.)
  */
 
 /** Names with numbers read as numbers: "Enclosure 2" before "Enclosure 10". */
@@ -103,7 +105,7 @@ export async function loadPlaceOrder(supabase: SupabaseClient): Promise<PlaceOrd
       .select("id, name, zone_id, sort_order")
       .returns<{ id: string; name: string; zone_id: string; sort_order: number | null }[]>(),
   ]);
-  // A failed read (the vet cannot read either table) leaves name order, not an error.
+  // A failed or empty read (a role the tables' policy turns away) leaves name order, not an error.
   return placeOrderFrom(zones.data ?? [], enclosures.data ?? []);
 }
 
