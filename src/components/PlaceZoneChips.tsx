@@ -3,14 +3,15 @@
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
-import { ZoneName } from "@/components/ZoneName";
+import { Check } from "lucide-react";
+import { zoneColour } from "@/lib/zones/palette";
 import { ENCLOSURE_PLACES, type EnclosurePlace } from "@/lib/enclosures/place";
 
 export type PlaceZoneChip = {
   id: string;
   name: string;
   name_th: string | null;
-  /** zones.colour, drawn as a dot before the name; null for none. */
+  /** zones.colour (0162): the chip is tinted with it, solid when chosen; null keeps the plain chip. */
   colour: string | null;
   /** Where tapping it goes: the list with this zone added or taken off. */
   href: string;
@@ -53,6 +54,22 @@ export function PlaceZoneChips({
     }`;
   }
 
+  /**
+   * A zone with a colour wears it (Lutan, 2026-10-08): a tint with a full-colour edge when not
+   * chosen, solid when chosen. Chosen text is near-black, which reads at 4.5:1 or better on every
+   * swatch (src/lib/zones/palette.ts), and a tick says "chosen" so colour is never the only sign.
+   */
+  function zoneChip(colour: string | null, active: boolean) {
+    const hex = zoneColour(colour);
+    if (!hex) return { className: chipClass(active), style: undefined };
+    return {
+      className: `inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full border-2 px-3 py-1.5 text-sm font-medium transition md:min-h-0 ${
+        active ? "text-[#121212]" : "text-foreground hover:brightness-125"
+      }`,
+      style: { borderColor: hex, backgroundColor: active ? hex : `${hex}2e` },
+    };
+  }
+
   function segmentClass(active: boolean) {
     return `inline-flex min-h-11 items-center rounded px-3 py-1.5 text-sm font-medium transition md:min-h-0 ${
       active
@@ -90,17 +107,21 @@ export function PlaceZoneChips({
         >
           {t.enclosures.allZones}
         </Link>
-        {zones.map((zone) => (
-          <Link
-            key={zone.id}
-            href={zone.href}
-            aria-current={zone.active ? "true" : undefined}
-            className={chipClass(zone.active)}
-          >
-            <ZoneName name={placeName(locale, zone.name, zone.name_th)} colour={zone.colour} />
-
-          </Link>
-        ))}
+        {zones.map((zone) => {
+          const chip = zoneChip(zone.colour, zone.active);
+          return (
+            <Link
+              key={zone.id}
+              href={zone.href}
+              aria-current={zone.active ? "true" : undefined}
+              className={chip.className}
+              style={chip.style}
+            >
+              {zone.active && chip.style && <Check aria-hidden="true" className="h-4 w-4 shrink-0" />}
+              {placeName(locale, zone.name, zone.name_th)}
+            </Link>
+          );
+        })}
       </div>
     </>
   );

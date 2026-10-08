@@ -115,7 +115,10 @@ function ZoneRowItem({
           {isSystem ? (
             <span className="text-xs text-muted">{t.admin.zones.lifecycleNoColour}</span>
           ) : editing ? (
-            <ZoneColourPicker value={colour} onChange={setColour} />
+            // A table cell shrinks to its widest word, so the swatches would stack in one column without a width.
+            <div className="w-72">
+              <ZoneColourPicker value={colour} onChange={setColour} />
+            </div>
           ) : zone.colour ? (
             <span className="inline-flex items-center gap-2 text-foreground">
               <ZoneDot colour={zone.colour} />

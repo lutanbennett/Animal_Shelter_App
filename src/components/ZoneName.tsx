@@ -7,8 +7,8 @@ import { zoneColour } from "@/lib/zones/palette";
  * colour is never the only way to tell zones apart. Nothing is drawn for a
  * zone with no colour, so names still line up only where every zone has one.
  *
- * The ring is the page background, which keeps the dot visible on a filled
- * surface (an active filter chip) and sets it apart from the capacity bar and
+ * The ring is the page background, which keeps the dot visible on any filled
+ * surface and sets it apart from the capacity bar and
  * badge, which are bars and pills, never dots.
  */
 export function ZoneDot({
