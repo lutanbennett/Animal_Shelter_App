@@ -55,14 +55,14 @@ export default async function ManagementPage() {
     },
     {
       href: "/management/medications",
-      label: t.nav.medications,
+      label: t.nav.medicationStock,
       description: t.management.landing.tiles.medications,
       icon: SECTION_ICONS.prescriptions,
       phoneNote: t.largerScreen.tileLabel,
     },
     {
       href: "/management/diets",
-      label: t.nav.diets,
+      label: t.nav.dietStock,
       description: t.management.landing.tiles.diets,
       icon: SECTION_ICONS.diet,
       phoneNote: t.largerScreen.tileLabel,

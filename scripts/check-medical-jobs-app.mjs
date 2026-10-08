@@ -150,7 +150,8 @@ try {
     [`/residents/${live.id}/medications`, "a resident record page (medications)"],
     [`/residents/${live.id}/weight`, "a resident record page (weight)"],
     ["/management/dashboard", "the dashboard"],
-    ["/management/medications", "the medication catalogue"],
+    ["/management/medications", "medication stock"],
+    ["/admin/medications", "the medication list (Settings)"],
     ["/weight/new?residentId=" + live.id, "the staff weight form"],
     ["/prescriptions/new", "the prescription form"],
   ];

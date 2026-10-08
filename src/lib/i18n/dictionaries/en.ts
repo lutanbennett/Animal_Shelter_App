@@ -104,6 +104,8 @@ const en = {
     medications: "Medications",
     medicationList: "Medication list",
     diets: "Diets",
+    medicationStock: "Medication stock",
+    dietStock: "Diet stock",
     cashflow: "Cashflow",
     stockUsage: "Stock between counts",
     purchasing: "Purchasing",
@@ -530,6 +532,10 @@ const en = {
           "The panels a blood test can be: CBC, chemistry, thyroid, heartworm…",
         frequencies:
           "The \"how often\" choices a prescription picks from, and the schedule the medication forecast counts for each.",
+        medications:
+          "The medication list prescriptions are written from: names, units, merging duplicates, and the units each is bought and counted in.",
+        diets:
+          "The food list staff pick from: names, units, the daily amount for each size, the standard diet, and the units each is bought and counted in.",
         security:
           "Sign-in accounts, roles and access requests. Needs your authenticator app (2-step verification). Also pinned to the bottom of the menu.",
         systemStatus:
@@ -537,6 +543,20 @@ const en = {
         recentChanges:
           "Who changed what: every add, edit, archive and delete on resident, medical and contact records, newest first.",
       },
+    },
+    /** Settings → Medications: the medication list (split from Management, 2026-10-08). */
+    medications: {
+      title: "Medications",
+      subtitle:
+        "The list of medications staff and vets pick from when writing a prescription. Add one, rename it, fix its unit, or merge a duplicate into the one to keep — its prescriptions move with it. A medication that has ever been prescribed can't be deleted: the prescription is part of the resident's medical record. Prices, stock and label photos are on Management → Medication stock.",
+      stockLink: "Medication stock",
+    },
+    /** Settings → Diets: the food list (split from Management, 2026-10-08). */
+    diets: {
+      title: "Diets",
+      subtitle:
+        "The food list staff pick from when recording a resident's diet. Each diet has a unit and the daily amount for a small, medium and large animal — a resident's own record can override the amount. A diet can't be deleted while a resident's record uses it. Prices, stock and the food forecast are on Management → Diet stock.",
+      stockLink: "Diet stock",
     },
     recentChanges: {
       title: "Recent changes",
@@ -1472,6 +1492,8 @@ const en = {
       "A factor can be approximate — a cup of kibble varies a little with the brand and how it is scooped. Use your usual measure; the figures that come from it are estimates to the same degree.",
     historyNote:
       "Correcting a factor is safe: every delivery and count already saved keeps the amount it was saved with, so past figures don't move.",
+    priceElsewhere:
+      "The price per bag, box or bottle is entered on Management → Medication stock or Diet stock, because prices change and units don't.",
     none: "No other units yet. Everything is in the base unit.",
     baseUnit: (unit: string) => `Base unit: ${unit}`,
     summary: (count: number) => (count === 0 ? "no other units" : `${count} other ${count === 1 ? "unit" : "units"}`),
@@ -1500,6 +1522,10 @@ const en = {
       now: (price: string, unit: string, perBase: string, base: string) =>
         `Now ${price} per ${unit} (฿${perBase} per ${base}).`,
       set: "Set price",
+      panelTitle: "Price per pack",
+      panelIntro:
+        "For an item bought in a bag, box or bottle: enter what one costs and the price per base unit is worked out from it. The units themselves are set up under Settings.",
+      noPurchaseUnits: "No item has a unit it is bought in yet. An admin sets one up under Settings → Medications or Diets.",
     },
     entry: {
       unit: "Unit",
@@ -1510,7 +1536,7 @@ const en = {
     },
     onHand: (quantity: string, unit: string) => `≈ ${quantity} ${unit}`,
     errors: {
-      notAuthorized: "Only management can change units of measure.",
+      notAuthorized: "Only an admin can change units of measure (Settings → Medications or Diets).",
       unitRequired: "Give the unit a name.",
       factorInvalid: "How many base units it holds must be a number above 0.",
       sameAsBase: (base: string) => `“${base}” is already this item's base unit. Name a different unit.`,
@@ -1519,7 +1545,7 @@ const en = {
       priceInvalid: "The price must be a number, 0 or more.",
       noPurchaseUnit: "Mark one unit as the one it is bought in first.",
       tooCoarse:
-        "That price works out to too small an amount per base unit to keep to 2 decimal places. Nothing was changed.",
+        "That price works out to too small an amount per base unit to keep to 4 decimal places. Nothing was changed.",
       gone: "That item or unit has been deleted. Reload the page.",
       failed: "Nothing was saved",
     },
@@ -1536,8 +1562,8 @@ const en = {
     blankHint:
       "Leave a row blank if you didn't count it — it stays as it was. If the figure hasn't changed, tap Same as last time.",
     noItems: {
-      medication: "No medications yet. Management adds them under Management → Medications.",
-      diet: "No diets yet. Management adds them under Management → Diets.",
+      medication: "No medications yet. An admin adds them under Settings → Medications.",
+      diet: "No diets yet. An admin adds them under Settings → Diets.",
     },
     noMatches: (query: string) => `Nothing matches “${query}”.`,
     notCounted: "Never counted",
@@ -1771,9 +1797,9 @@ const en = {
         vets:
           "The vets and clinics the shelter books visits with, and how much each one has seen.",
         medications:
-          "The medication list prescriptions are written from — names, units, and duplicates to merge.",
+          "How much of each medicine is in the cupboard, what it costs, when to reorder, its label photo, and what the prescriptions will use.",
         diets:
-          "The food list staff pick from, with the unit, cost and daily quantities the forecast uses.",
+          "How much of each food is in the cupboard, what it costs, when to reorder, and what the residents will eat and what that costs.",
         cashflow:
           "What the shelter is about to spend, in one place: food, medication, vaccinations, vet visits and maintenance.",
         translations:
@@ -2526,9 +2552,17 @@ const en = {
       },
     },
     diets: {
-      title: "Diets",
+      title: "Diet stock",
       subtitle:
-        "The food list staff pick from when recording a resident's diet, and the food forecast. Each diet has a unit, a cost per unit in baht, and the daily quantity for a small, medium and large animal — a resident's own record can override the quantity. A diet can't be deleted while a resident's record references it.",
+        "How much of each food is in the cupboard, what it costs and when to reorder, with what the residents living at the shelter will eat. Count it, price it, set when to reorder. The food list itself — names, units, the daily amount for each size — is under Settings → Diets.",
+      settingsLink: "Names and units",
+      stockCard: {
+        unit: (unit: string) => `Measured in ${unit}`,
+        cost: "Cost per unit",
+        costPerUnit: (amount: string, unit: string) => `${amount} per ${unit}`,
+        costHint: (unit: string) => `Baht for one ${unit}. Up to 4 decimal places, so a price per gram fits.`,
+        editPrice: "Price and reorder",
+      },
       couldntLoad: "Couldn't load diets",
       couldntLoadUsage: "Couldn't load diet counts",
       couldntLoadForecast: "Couldn't load the forecast",
@@ -2545,6 +2579,7 @@ const en = {
         large: "Large",
         notes: "Notes",
         addButton: "Add diet",
+        priceElsewhere: "Its price, reorder time and safety stock are set on Management → Diet stock. It starts at ฿0.",
       },
       table: {
         name: "Name",
@@ -2585,9 +2620,16 @@ const en = {
       },
     },
     medications: {
-      title: "Medications",
+      title: "Medication stock",
       subtitle:
-        "The list of medications staff and vets pick from when writing a prescription. The dose, how often and for how long are set on each prescription for that resident; this page is the product list. Rename one, fix its unit, or merge a duplicate into the one to keep — its prescriptions move with it. A medication that has ever been prescribed can't be deleted: the prescription is part of the resident's medical record.",
+        "How much of each medicine is in the cupboard, what it costs and when to reorder, with what the prescriptions will use. Count it, price it, set when to reorder, add a photo of the label. The medication list itself — names, units, merging duplicates — is under Settings → Medications.",
+      settingsLink: "Names and units",
+      stockCard: {
+        unit: (unit: string) => `Measured in ${unit}`,
+        costHint: (unit: string) => `Baht for one ${unit}, not one pack. Up to 4 decimal places. Blank = not priced yet.`,
+        editPrice: "Price and reorder",
+        none: "No medications yet. An admin adds them under Settings → Medications.",
+      },
       couldntLoad: "Couldn't load medications",
       couldntLoadUsage: "Couldn't load prescription counts",
       couldntLoadForecast: "Couldn't load the forecast",
@@ -2600,6 +2642,7 @@ const en = {
         costPlaceholder: "e.g. 2.50",
         costHint: "Baht for one unit, not one pack. Blank = not priced yet.",
         addButton: "Add medication",
+        priceElsewhere: "Its price, reorder time, safety stock and label photo are set on Management → Medication stock.",
       },
       table: {
         name: "Name",
@@ -3445,7 +3488,7 @@ const en = {
       "Open this from a resident's Diet page so the diet is recorded against the right resident.",
     residentNotFound: "Resident not found.",
     couldntLoadDietTypes: "Couldn't load diet types",
-    noDietTypes: "No diet types have been set up yet — management adds them under Management → Diets.",
+    noDietTypes: "No diet types have been set up yet — an admin adds them under Settings → Diets.",
     forResident: (name: string) => `For ${name}`,
     dietType: "Diet",
     selectDietType: "Select a diet",

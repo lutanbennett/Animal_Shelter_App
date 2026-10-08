@@ -4,9 +4,8 @@ import { revalidatePath } from "next/cache";
 import { runAction, type ActionResult } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { DOSE_UNITS, type DoseUnit } from "@/lib/i18n/enum-labels";
-import { parseBahtAmount } from "@/lib/format";
-import { parseLeadDays, parseSafetyStock, parseStockCount } from "@/lib/management/stock";
+import { parseUnitCost } from "@/lib/format";
+import { parseLeadDays, parseStockCount } from "@/lib/management/stock";
 import { resolveSafetyStock } from "@/lib/management/purchasing";
 import { loadConversions } from "@/lib/units-server";
 import { MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits";
@@ -23,13 +22,15 @@ import { loadPermissions } from "@/lib/permissions/load";
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
-export type MedicationFormState = ActionResult<{ success: string }> | undefined;
-
-export type MedicationFields = {
-  name: string;
-  doseUnit: string;
-  /** Baht per dose_unit, or null for "not priced yet" (0071). */
-  costPerUnit: number | null;
+/**
+ * What Management → Medication stock edits on a row. The name and the dose
+ * unit are Settings → Medications' (admin/medications/actions.ts) since the
+ * split of 2026-10-08, so they are not in this write at all: an action is
+ * reachable whatever the page shows.
+ */
+export type MedicationStockFields = {
+  /** Baht per dose_unit as typed, up to 4 places (0161); blank = "not priced yet" (0071). */
+  costPerUnit: string;
   /** Supplier lead time in days, as typed; blank = no reorder flag (0083). */
   reorderLeadDays: string;
   /**
@@ -41,22 +42,10 @@ export type MedicationFields = {
   safetyUnit: string;
 };
 
-function optional(value: FormDataEntryValue | string | null | undefined) {
-  const trimmed = typeof value === "string" ? value.trim() : "";
-  return trimmed ? trimmed : null;
-}
-
-function isDoseUnit(value: string | null): value is DoseUnit {
-  return value != null && DOSE_UNITS.includes(value as DoseUnit);
-}
-
 function revalidateMedicationPages() {
   revalidatePath("/management/medications");
   revalidatePath("/management/purchasing");
-  // The prescription form's pickers and the hub's medication(name) embeds
-  // read these tables too.
-  revalidatePath("/prescriptions/new");
-  revalidatePath("/residents", "layout");
+  revalidatePath("/management/cashflow");
 }
 
 /** Where the photo shows: this table, the stocktake sheet and the delivery form. */
@@ -66,77 +55,38 @@ function revalidateLabelPages() {
   revalidatePath("/deliveries");
 }
 
-async function countPrescriptions(id: string) {
-  const supabase = await createClient();
-  const { count, error } = await supabase
-    .from("prescriptions")
-    .select("id", { count: "exact", head: true })
-    .eq("medication_id", id);
-  if (error) throw new Error(error.message);
-  return count ?? 0;
-}
-
 // ---------------------------------------------------------------------------
 // Medications
 // ---------------------------------------------------------------------------
 
-export async function createMedication(
-  _state: MedicationFormState,
-  formData: FormData,
-): Promise<MedicationFormState> {
-  const { t } = await getT();
-  return runAction("medications.createMedication", t.common.somethingWentWrong, async () => {
-    if (!can(await loadPermissions(), "stock.medications")) return refuse(t.management.errors.managementAccessRequired);
-    const name = optional(formData.get("name"));
-    if (!name) return refuse(t.management.medications.errors.nameRequired);
-    const doseUnit = optional(formData.get("doseUnit"));
-    if (!isDoseUnit(doseUnit)) {
-      return refuse(t.management.medications.errors.unitInvalid);
-    }
-
-    // Optional: a medication can be added before anyone knows the price.
-    const cost = parseBahtAmount(formData.get("costPerUnit") as string | null);
-    if (!cost.ok) return refuse(t.management.medications.errors.costInvalid);
-
-    // A new item has no other units yet, so the floor is in its own unit.
-    const safety = parseSafetyStock(optional(formData.get("safetyStock")));
-    if (!safety.ok) return refuse(t.management.stock.errors.safetyInvalid);
-
-    const supabase = await createClient();
-    const { error } = await supabase
-      .from("medication")
-      .insert({ name, dose_unit: doseUnit, cost_per_unit: cost.value, safety_stock: safety.value });
-
-    if (error) return refuse(error.message);
-
-    revalidateMedicationPages();
-    return { ok: true, success: t.management.medications.createdMedication(name) };
-  });
-}
-
 /**
- * Renaming is safe; changing the unit silently redefines the dose of every
- * prescription written against this medication (the unit lives on the
- * product, 0027), so the table asks for confirmation first when any exist.
+ * Cost, reorder lead time and safety stock: the figures that change as the
+ * shelter runs. Adding, renaming, re-uniting, merging and deleting a
+ * medication are Settings → Medications'.
  */
-export async function updateMedication(id: string, fields: MedicationFields): Promise<ActionResult> {
+export async function updateMedicationStockSettings(
+  id: string,
+  fields: MedicationStockFields,
+): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("medications.updateMedication", t.common.somethingWentWrong, async () => {
+  return runAction("medications.updateMedicationStockSettings", t.common.somethingWentWrong, async () => {
     if (!can(await loadPermissions(), "stock.medications")) return refuse(t.management.errors.managementAccessRequired);
-    const name = optional(fields.name);
-    if (!name) return refuse(t.management.medications.errors.nameRequired);
-    const doseUnit = optional(fields.doseUnit);
-    if (!isDoseUnit(doseUnit)) {
-      return refuse(t.management.medications.errors.unitInvalid);
-    }
-    // Re-checked here, not only in the table: null clears the price back to
+    // Re-checked here, not only on the card: blank clears the price back to
     // "not priced yet", but a bad number must not become one.
-    const cost = parseBahtAmount(fields.costPerUnit?.toString() ?? null);
+    const cost = parseUnitCost(fields.costPerUnit);
     if (!cost.ok) return refuse(t.management.medications.errors.costInvalid);
     const leadDays = parseLeadDays(fields.reorderLeadDays);
     if (!leadDays.ok) return refuse(t.management.stock.errors.leadDaysInvalid);
 
     const supabase = await createClient();
+    const { data: row, error: rowError } = await supabase
+      .from("medication")
+      .select("dose_unit")
+      .eq("id", id)
+      .maybeSingle<{ dose_unit: string }>();
+    if (rowError) return refuse(rowError.message);
+    if (!row) return refuse(t.management.medications.errors.notFound);
+
     // The floor may be typed in the purchase unit; it is stored in base
     // units (0128), converted with the factor in force now.
     const conversions = await loadConversions(supabase, "medication", [id]);
@@ -145,7 +95,7 @@ export async function updateMedication(id: string, fields: MedicationFields): Pr
       fields.safetyStock,
       fields.safetyUnit,
       conversions.data[id] ?? [],
-      [doseUnit],
+      [row.dose_unit],
     );
     if (!safety.ok) {
       return refuse(
@@ -154,12 +104,10 @@ export async function updateMedication(id: string, fields: MedicationFields): Pr
     }
 
     // stock_on_hand is deliberately not in this write: naming it restamps
-    // stock_counted_at (0083), and a rename is not a stocktake.
+    // stock_counted_at (0083), and a price change is not a stocktake.
     const { error } = await supabase
       .from("medication")
       .update({
-        name,
-        dose_unit: doseUnit,
         cost_per_unit: cost.value,
         reorder_lead_days: leadDays.value,
         safety_stock: safety.value,
@@ -196,73 +144,6 @@ export async function updateMedicationStock(id: string, count: string): Promise<
     if (error) return refuse(error.message);
     revalidatePath("/management/medications");
     return { ok: true };
-  });
-}
-
-export async function deleteMedication(id: string): Promise<ActionResult> {
-  const { t } = await getT();
-  return runAction("medications.deleteMedication", t.common.somethingWentWrong, async () => {
-    if (!can(await loadPermissions(), "stock.medications")) return refuse(t.management.errors.managementAccessRequired);
-    // prescriptions.medication_id has no cascade: a medication that has ever
-    // been prescribed is part of a resident's medical record. Say so instead
-    // of surfacing the foreign-key error.
-    const count = await countPrescriptions(id);
-    if (count > 0) {
-      return refuse(t.management.medications.errors.hasPrescriptions(count));
-    }
-
-    const supabase = await createClient();
-    const { error } = await supabase.from("medication").delete().eq("id", id);
-
-    if (error) return refuse(error.message);
-    revalidateMedicationPages();
-    return { ok: true };
-  });
-}
-
-// ---------------------------------------------------------------------------
-// Merging duplicates (0043: one transaction in the database)
-// ---------------------------------------------------------------------------
-
-/**
- * Moves every prescription from `fromId` onto `intoId` and deletes `fromId`.
- * Both must share a dose_unit — the moved doses keep their numbers, so they
- * must keep their meaning; the function enforces it too. Returns how many
- * prescriptions moved.
- */
-export async function mergeMedication(
-  fromId: string,
-  intoId: string,
-): Promise<ActionResult<{ count: number }>> {
-  const { t } = await getT();
-  return runAction("medications.mergeMedication", t.common.somethingWentWrong, async () => {
-    if (!can(await loadPermissions(), "stock.medications")) return refuse(t.management.errors.managementAccessRequired);
-    if (fromId === intoId) {
-      return refuse(t.management.medications.errors.mergeSelf);
-    }
-
-    const supabase = await createClient();
-    const { data: pair, error: pairError } = await supabase
-      .from("medication")
-      .select("id, dose_unit")
-      .in("id", [fromId, intoId])
-      .returns<{ id: string; dose_unit: string }[]>();
-    if (pairError) return refuse(pairError.message);
-    if (!pair || pair.length !== 2) {
-      return refuse(t.management.medications.errors.notFound);
-    }
-    if (pair[0].dose_unit !== pair[1].dose_unit) {
-      return refuse(t.management.medications.errors.mergeUnitMismatch);
-    }
-
-    const { data, error } = await supabase.rpc("merge_medication", {
-      p_from: fromId,
-      p_into: intoId,
-    });
-    if (error) return refuse(error.message);
-
-    revalidateMedicationPages();
-    return { ok: true, count: (data as number | null) ?? 0 };
   });
 }
 

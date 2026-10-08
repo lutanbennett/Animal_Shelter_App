@@ -1,9 +1,7 @@
 import { ActionLink } from "@/components/ActionLink";
-import { ClipboardCheck, Scale, ShoppingCart, Truck } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { ClipboardCheck, ListChecks, Scale, ShoppingCart, Truck } from "lucide-react";
 import { getT } from "@/lib/i18n/get-t";
-import { CreateDietTypeForm } from "./CreateDietTypeForm";
-import { DietTypesTable, type DietTypeRow } from "./DietTypesTable";
+import { DietStockCards, type DietStockRow } from "./DietStockCards";
 import { ForecastWindowPicker } from "@/components/ForecastWindowPicker";
 import { formatDate } from "@/lib/format";
 import { forecastWindows, parseCustomWindow } from "@/lib/management/forecast-window";
@@ -16,11 +14,14 @@ import { loadConversions } from "@/lib/units-server";
 import { loadReceipts } from "@/lib/management/receipts-server";
 import { receivedSinceCount } from "@/lib/management/purchasing";
 import { requirePermission } from "@/lib/permissions/require";
+import { canEditItemSettings } from "@/lib/permissions/item-settings";
 
-type DietTypeQueryRow = Omit<
-  DietTypeRow,
-  "diet_count" | "forecast" | "stock" | "stockReading" | "purchaseUnit" | "safetyStock" | "unitOptions"
-> & {
+type DietTypeQueryRow = {
+  id: string;
+  name: string;
+  unit: string;
+  is_standard: boolean;
+  cost_per_unit: number | string;
   stock_on_hand: number | string | null;
   stock_counted_at: string | null;
   reorder_lead_days: number | null;
@@ -36,14 +37,15 @@ type ForecastRow = {
 };
 
 /**
- * Management → Diets: the food product list and the food forecast, the
- * shape of Management → Medications. Each row is a diet type with its
- * cost and per-size daily quantities; the forecast columns are what the
- * residents living at the shelter will eat of it in the next 7 / 30 days
- * and what that costs (0051 diet_forecast).
+ * Management → Diet stock: what is in the cupboard, what it costs, when to
+ * reorder, and what the residents living at the shelter will eat of it in the
+ * next 7 / 30 days and what that costs (0051 diet_forecast). The stock half
+ * of the split of 2026-10-08 (docs/decisions/2026-10-07-management-settings-split.md);
+ * the food list itself — names, units, per-size quantities, the standard diet,
+ * unit conversions — is Settings → Diets (/admin/diets), Admin only.
  */
-export default async function DietsManagementPage(props: PageProps<"/management/diets">) {
-  await requirePermission("stock.diets");
+export default async function DietStockPage(props: PageProps<"/management/diets">) {
+  const { supabase, perms } = await requirePermission("stock.diets");
   const { t, locale } = await getT();
   const searchParams = await props.searchParams;
 
@@ -52,21 +54,14 @@ export default async function DietsManagementPage(props: PageProps<"/management/
   const custom = parseCustomWindow(searchParams);
   const windows = forecastWindows(custom && "window" in custom ? custom.window : null);
 
-  const supabase = await createClient();
-  const [typesResult, dietsResult, ...forecastResults] = await Promise.all([
+  const [typesResult, ...forecastResults] = await Promise.all([
     supabase
       .from("diet_types")
       .select(
-        "id, name, unit, cost_per_unit, daily_qty_small, daily_qty_medium, daily_qty_large, notes, stock_on_hand, stock_counted_at, reorder_lead_days, is_standard, safety_stock",
+        "id, name, unit, is_standard, cost_per_unit, stock_on_hand, stock_counted_at, reorder_lead_days, safety_stock",
       )
       .order("name")
       .returns<DietTypeQueryRow[]>(),
-    // One row per resident diet is cheap at shelter scale and gives the
-    // reference counts that gate the delete buttons.
-    supabase
-      .from("resident_diets")
-      .select("diet_type_id")
-      .returns<{ diet_type_id: string }[]>(),
     ...windows.map(async (window) => {
       const { data, error } = await supabase.rpc("diet_forecast", {
         p_from: window.from,
@@ -76,10 +71,6 @@ export default async function DietsManagementPage(props: PageProps<"/management/
     }),
   ]);
 
-  const counts = new Map<string, number>();
-  for (const row of dietsResult.data ?? []) {
-    counts.set(row.diet_type_id, (counts.get(row.diet_type_id) ?? 0) + 1);
-  }
   const forecasts = forecastResults.map(
     (result) => new Map((result.data ?? []).map((row) => [row.diet_type_id, row])),
   );
@@ -97,7 +88,7 @@ export default async function DietsManagementPage(props: PageProps<"/management/
     new Map((typesResult.data ?? []).map((row) => [row.id, row.stock_counted_at])),
   );
 
-  const dietTypes: DietTypeRow[] = (typesResult.data ?? []).map((type) => {
+  const dietTypes: DietStockRow[] = (typesResult.data ?? []).map((type) => {
     const forecast = forecasts.map((byType) => {
       const row = byType.get(type.id);
       return {
@@ -112,12 +103,7 @@ export default async function DietsManagementPage(props: PageProps<"/management/
       name: type.name,
       is_standard: type.is_standard,
       unit: type.unit,
-      notes: type.notes,
       cost_per_unit: Number(type.cost_per_unit),
-      daily_qty_small: Number(type.daily_qty_small),
-      daily_qty_medium: Number(type.daily_qty_medium),
-      daily_qty_large: Number(type.daily_qty_large),
-      diet_count: counts.get(type.id) ?? 0,
       forecast,
       stock,
       stockReading: readStock(
@@ -137,10 +123,7 @@ export default async function DietsManagementPage(props: PageProps<"/management/
   const forecastHeadings = windows.map((window) =>
     window.days != null
       ? m.table.forecastHeading(window.days)
-      : t.management.forecastWindow.heading(
-          formatDate(window.from, locale),
-          formatDate(window.to, locale),
-        ),
+      : t.management.forecastWindow.heading(formatDate(window.from, locale), formatDate(window.to, locale)),
   );
 
   return (
@@ -174,18 +157,17 @@ export default async function DietsManagementPage(props: PageProps<"/management/
             icon={Truck}
             iconOnlyOnMobile={false}
           />
+          {canEditItemSettings(perms, "diet") && (
+            <ActionLink href="/admin/diets" label={m.settingsLink} icon={ListChecks} iconOnlyOnMobile={false} />
+          )}
         </div>
       </div>
 
+      {/* PR 3 of the split (the device-notice sweep) takes this notice off: this half is the phone page. */}
       <LargerScreenNotice>
         {typesResult.error && (
           <p className="text-sm text-danger">
             {m.couldntLoad}: {typesResult.error.message}
-          </p>
-        )}
-        {dietsResult.error && (
-          <p className="text-sm text-danger">
-            {m.couldntLoadUsage}: {dietsResult.error.message}
           </p>
         )}
         {receipts.error && (
@@ -200,18 +182,12 @@ export default async function DietsManagementPage(props: PageProps<"/management/
         )}
 
         <section className="flex flex-col gap-4">
-          {typesResult.data && !dietTypes.some((type) => type.is_standard) && (
-            <p className="rounded border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-foreground">
-              {m.standard.none}
-            </p>
-          )}
-          <CreateDietTypeForm />
           <ForecastWindowPicker
             from={custom && "window" in custom ? custom.window.from : ""}
             to={custom && "window" in custom ? custom.window.to : ""}
             invalid={custom != null && "invalid" in custom}
           />
-          <DietTypesTable dietTypes={dietTypes} forecastHeadings={forecastHeadings} />
+          <DietStockCards dietTypes={dietTypes} forecastHeadings={forecastHeadings} />
           <p className="text-xs text-muted">{m.table.forecastNote}</p>
           <p className="text-xs text-muted">{t.management.stock.note}</p>
         </section>
@@ -223,6 +199,7 @@ export default async function DietsManagementPage(props: PageProps<"/management/
         )}
         <UnitsPanel
           kind="diet"
+          mode="price"
           items={dietTypes.map((type) => ({
             id: type.id,
             name: type.name,

@@ -5,7 +5,7 @@ import { useState, useTransition } from "react";
 import { Check, Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import { ActionButton } from "@/components/ActionButton";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { formatBahtPrice } from "@/lib/format";
+import { formatBahtPrice, roundUnitCost } from "@/lib/format";
 import { formatQuantity } from "@/lib/diets/options";
 import { pricePerPurchaseUnit, type ItemKind, type UnitConversion } from "@/lib/units";
 import {
@@ -31,30 +31,60 @@ const inputClass =
 const EMPTY: ConversionFields = { unit: "", factor: "", note: "", isPurchase: false, isCount: false };
 
 /**
- * Units of measure for every item of one kind, on Management → Medications
- * and → Diets (0118). Each item is a collapsed row: its base unit, the other
- * units it is bought and counted in, and the price per purchase unit.
+ * Which half of the 2026-10-08 split this panel is on. "conversions" is
+ * Settings → Medications / Diets: add, edit and delete the units each item is
+ * bought and counted in (0118). "price" is Management's stock half: the units
+ * are shown, not changed, and the price per purchase unit is set, because a
+ * price changes as suppliers do and a unit does not.
  */
-export function UnitsPanel({ kind, items }: { kind: ItemKind; items: UnitsPanelItem[] }) {
+export type UnitsPanelMode = "conversions" | "price";
+
+/**
+ * Units of measure for every item of one kind. Each item is a collapsed row:
+ * its base unit, the other units it is bought and counted in, and, on the
+ * price side, the price per purchase unit.
+ */
+export function UnitsPanel({
+  kind,
+  mode,
+  items,
+}: {
+  kind: ItemKind;
+  mode: UnitsPanelMode;
+  items: UnitsPanelItem[];
+}) {
   const { t } = useI18n();
   const u = t.units;
+  // Only an item bought in a unit of its own has a price per that unit to set.
+  const shown = mode === "price" ? items.filter((item) => item.conversions.some((c) => c.isPurchase)) : items;
   if (items.length === 0) return null;
   return (
     <section className="flex flex-col gap-2">
-      <h2 className="text-lg font-semibold text-foreground">{u.title}</h2>
-      <p className="text-sm text-muted">{u.intro}</p>
-      <p className="text-xs text-muted">{u.approxNote}</p>
-      <p className="text-xs text-muted">{u.historyNote}</p>
-      <div className="flex flex-col divide-y divide-border rounded border border-border">
-        {items.map((item) => (
-          <ItemUnits key={item.id} kind={kind} item={item} />
-        ))}
-      </div>
+      <h2 className="text-lg font-semibold text-foreground">{mode === "price" ? u.price.panelTitle : u.title}</h2>
+      {mode === "conversions" ? (
+        <>
+          <p className="text-sm text-muted">{u.intro}</p>
+          <p className="text-xs text-muted">{u.approxNote}</p>
+          <p className="text-xs text-muted">{u.historyNote}</p>
+          <p className="text-xs text-muted">{u.priceElsewhere}</p>
+        </>
+      ) : (
+        <p className="text-sm text-muted">{u.price.panelIntro}</p>
+      )}
+      {shown.length === 0 ? (
+        <p className="text-sm text-muted">{u.price.noPurchaseUnits}</p>
+      ) : (
+        <div className="flex flex-col divide-y divide-border rounded border border-border">
+          {shown.map((item) => (
+            <ItemUnits key={item.id} kind={kind} mode={mode} item={item} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }
 
-function ItemUnits({ kind, item }: { kind: ItemKind; item: UnitsPanelItem }) {
+function ItemUnits({ kind, mode, item }: { kind: ItemKind; mode: UnitsPanelMode; item: UnitsPanelItem }) {
   const { t, locale } = useI18n();
   const confirm = useConfirm();
   const u = t.units;
@@ -132,28 +162,30 @@ function ItemUnits({ kind, item }: { kind: ItemKind; item: UnitsPanelItem }) {
                   {c.isCount && <Badge>{u.countBadge}</Badge>}
                   {c.note && <span className="text-xs text-muted">{c.note}</span>}
                 </span>
-                <span className="flex gap-2">
-                  <ActionButton icon={Pencil} compact disabled={pending} onClick={() => open(c)}>
-                    {u.edit}
-                  </ActionButton>
-                  <ActionButton
-                    icon={Trash2}
-                    compact
-                    disabled={pending}
-                    onClick={async () => {
-                      if (!await confirm({ body: u.deleteConfirm(c.unit), confirmLabel: t.common.delete })) return;
-                      run(() => deleteConversion(c.id));
-                    }}
-                  >
-                    {u.delete}
-                  </ActionButton>
-                </span>
+                {mode === "conversions" && (
+                  <span className="flex gap-2">
+                    <ActionButton icon={Pencil} compact disabled={pending} onClick={() => open(c)}>
+                      {u.edit}
+                    </ActionButton>
+                    <ActionButton
+                      icon={Trash2}
+                      compact
+                      disabled={pending}
+                      onClick={async () => {
+                        if (!await confirm({ body: u.deleteConfirm(c.unit), confirmLabel: t.common.delete })) return;
+                        run(() => deleteConversion(kind, c.id));
+                      }}
+                    >
+                      {u.delete}
+                    </ActionButton>
+                  </span>
+                )}
               </li>
             ),
           )}
         </ul>
 
-        {editingId === "new" ? (
+        {mode === "price" ? null : editingId === "new" ? (
           <ConversionForm
             base={item.baseUnit}
             fields={fields}
@@ -170,7 +202,7 @@ function ItemUnits({ kind, item }: { kind: ItemKind; item: UnitsPanelItem }) {
           </div>
         )}
 
-        {purchase && (
+        {mode === "price" && purchase && (
           <div className="flex flex-col gap-1 border-t border-border pt-3">
             <span className="text-sm font-medium text-foreground">{u.price.title}</span>
             {priced && item.costPerBase != null && (
@@ -178,7 +210,7 @@ function ItemUnits({ kind, item }: { kind: ItemKind; item: UnitsPanelItem }) {
                 {u.price.now(
                   formatBahtPrice(priced.price, locale),
                   priced.unit,
-                  formatQuantity(item.costPerBase),
+                  String(roundUnitCost(item.costPerBase)),
                   item.baseUnit,
                 )}
               </span>

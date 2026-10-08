@@ -75,8 +75,10 @@ eq("groupConversions sorts by size per item", Object.keys(groupConversions([
 
 // --- cost
 eq("850 a bag of 200 cups is 4.25 a cup", costPerBaseUnit(850, 200), { ok: true, value: 4.25 });
-eq("850 a bag of 180 cups rounds to 4.72 (0.05% off, accepted)", costPerBaseUnit(850, 180), { ok: true, value: 4.72 });
-eq("35 a kg per gram would round 0.035 to 0.04: refused", costPerBaseUnit(35, 1000), { ok: false, reason: "tooCoarse" });
+eq("850 a bag of 180 cups rounds to 4.7222 (four places since 0161)", costPerBaseUnit(850, 180), { ok: true, value: 4.7222 });
+eq("35 a kg is 0.035 a gram, kept (refused at two places before 0161)", costPerBaseUnit(35, 1000), { ok: true, value: 0.035 });
+eq("850 for a 15 kg sack is 0.0567 a gram", costPerBaseUnit(850, 15000), { ok: true, value: 0.0567 });
+eq("1 baht for 100 kg would round 0.00001 to 0: refused", costPerBaseUnit(1, 100000), { ok: false, reason: "tooCoarse" });
 eq("a negative price is refused", costPerBaseUnit(-1, 200), { ok: false, reason: "priceInvalid" });
 eq("price per purchase unit derived from the cost", pricePerPurchaseUnit(4.25, kibble), { price: 850, unit: "bag (20 kg)" });
 
