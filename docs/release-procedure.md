@@ -232,6 +232,13 @@ npm run deploy:test
 Production is served by the Pi; the Worker is the fallback. A Worker deploy alone
 does **not** update what users see.
 
+**But the converse is also true, and it is less obvious: a Pi deploy does not
+update the response *headers*.** The Worker adds them
+(`worker/security-headers.mjs`), so the Content-Security-Policy, and anything
+else set there, changes at the moment the **Worker** deploy runs — which on
+production is Lutan's command. See the trap below before verifying any
+header-related change.
+
 ```bash
 ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App && ./scripts/pi/deploy-pi.sh'
 ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App_test && ./scripts/pi/deploy-pi.sh --env test'
@@ -372,4 +379,52 @@ between releases is fine.
 
 **Two builds in one worktree collide.** Never run `gates.mjs` twice at once in the
 same checkout; a build that fails in seconds rather than minutes is contention
-until proven otherwise.
+until proven otherwise. A build that *passes* in seconds is usually a warm
+Turbopack cache from an earlier run of the same tree — still check each gate's
+own exit code rather than assuming either way.
+
+**A Pi deploy cannot change a security header, and test will lie to you about it
+in the window between the two deploys.** On `0.21.0` the Pi test build finished
+first, so `test.lannacare.org` reported `0.21.0` **and was still sending
+`content-security-policy-report-only`**, because the test Worker deploy was still
+running. Checking the policy at that moment would have reported "report-only,
+nothing to see" and passed the gate having verified nothing at all.
+
+The same two-endpoint check this document already prescribes for *versions* is
+the check for *headers*: `/api/version` is answered by the app (the Pi) and
+`/api/releases/current` from the Worker bundle. When they disagree, the Worker is
+behind, and **any header you read is the old one**. Verify a header change only
+once both report the release.
+
+**Read an exit code from the script, never through a pipe.** `release-prs.mjs`
+exited **1** naming a test plan that belonged to no PR in its list; run as
+`… | tail` it reported **0**, and `0.21.0` was briefly recorded as eleven PRs
+instead of twelve — the missing one had been **squash-merged**, so it had no
+merge commit carrying its number. The same trap then caught `gates.mjs`, handed
+back as "completed (exit code 0)" when that was `tail`'s status. Redirect to a
+file and read `$?` from the command itself:
+
+```bash
+node scripts/release-prs.mjs <prev sha> HEAD > /tmp/out.txt 2>&1; echo "exit: $?"
+```
+
+The test-plan template names this trap for `npm run build | tail`; it applies to
+every script in this runbook, and `| tee` is the one safe exception because it
+passes the status through.
+
+**`main` moves under you during a release.** On `0.21.0` it moved 24 commits —
+including a large feature — between the deploy and the record being written. So:
+pin both Pi builds with `--ref <release sha>` rather than letting them fetch
+`main`'s tip, re-check `git status -sb` against `origin/main` immediately before
+handing the deploy over, and **diff a branch against its merge-base, not against
+`origin/main`**. Comparing a two-file docs branch against a moved `origin/main`
+produced a thirty-file diff of someone else's feature and made it look as though
+the branch had deleted half the app.
+
+**Write a security checklist against what the *browser* fetches.**
+`csp-enforce`'s manual list named the Management dashboard visitor count as a CSP
+risk. It is not one and could not be: that figure is fetched **server-side** from
+Cloudflare's GraphQL API, and CSP governs only what the browser loads. It also
+has never shown a number, because `CLOUDFLARE_ANALYTICS_TOKEN` and
+`CLOUDFLARE_ZONE_ID` are unset. The row cost Lutan's attention at the one moment
+the release was waiting on him.
