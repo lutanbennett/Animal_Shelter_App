@@ -19,7 +19,8 @@ batch's worktrees exist at a time.
 
 ## 0. Resume, or plan from scratch?
 
-Look for `C:\Development\Animal_Shelter_App\.plan-day.md`.
+Look for `C:\Development\Animal_Shelter_App\.plan-day.md`. In a fresh chat,
+read `docs/planner-handover.md` first.
 
 **If it exists and has a batch not yet set up, this is a resume — do not
 re-plan.** Still do step 1 (`main` moves between batches; that is the
@@ -177,6 +178,9 @@ fixed the ordering, so a later run does not have to re-derive it.
 Keep the statuses current: mark a batch when you set it up, and mark it
 merged on a later run once its PRs are in.
 
+Keep a line `Workstreams since handover: <n> (last handover <date>)`: add
+the batch's stream count when you set it up.
+
 Keep a `slug | scale | estimated | actual` table: the estimate when a
 batch is set up, the actual when step 2 reads it. Writing both is what
 lets the bands below correct themselves from recorded work.
@@ -224,3 +228,9 @@ One line per stream: folder, port, and that the session should be opened
 on that folder — its first move is to read `.brief.md`. Then one line
 saying that once these have merged, running `/plan-day` again sets up the
 next batch without re-planning.
+
+**At nine or more workstreams since handover**, end by telling the user, in
+this order: (1) update `docs/planner-handover.md` now, in this chat, while the
+context exists — offer to do it; (2) then start a fresh chat for the next
+`/plan-day`. Reset the counter to 0 with today's date once the handover is
+written. Why: `docs/decisions/2026-10-08-planner-handover-counter.md`.
