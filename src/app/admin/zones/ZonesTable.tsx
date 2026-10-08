@@ -3,14 +3,30 @@
 import { ActionButton } from "@/components/ActionButton";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useState, useTransition } from "react";
-import { deleteZone, updateZone } from "./actions";
+import { deleteZone, moveZone, sortZonesByName, updateZone } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { RowActionButton } from "@/components/RowAction";
+import { inShelterOrder } from "@/lib/enclosures/order";
 
-export type ZoneRow = { id: string; name: string; name_th: string | null; internal: boolean };
+export type ZoneRow = {
+  id: string;
+  name: string;
+  name_th: string | null;
+  internal: boolean;
+  sort_order: number | null;
+};
 
-function ZoneRowItem({ zone }: { zone: ZoneRow }) {
+function ZoneRowItem({
+  zone,
+  position,
+  count,
+}: {
+  zone: ZoneRow;
+  /** 0-based place among the physical zones; null for Lifecycle, which takes no order. */
+  position: number | null;
+  count: number;
+}) {
   const { t } = useI18n();
   const confirm = useConfirm();
   const isSystem = zone.name === "Lifecycle";
@@ -37,6 +53,14 @@ function ZoneRowItem({ zone }: { zone: ZoneRow }) {
     });
   }
 
+  function handleMove(direction: "up" | "down") {
+    setMessage(null);
+    startTransition(async () => {
+      const result = await moveZone(zone.id, direction);
+      if (!result.ok) setMessage({ type: "error", text: result.error });
+    });
+  }
+
   async function handleDelete() {
     if (!await confirm({ body: t.admin.zones.deleteConfirm(zone.name), confirmLabel: t.common.delete })) return;
     setMessage(null);
@@ -51,6 +75,9 @@ function ZoneRowItem({ zone }: { zone: ZoneRow }) {
   return (
     <Fragment>
       <tr className="align-top hover:bg-surface-hover">
+        <td className="px-4 py-2 text-right tabular-nums text-muted">
+          {position === null ? t.common.dash : position + 1}
+        </td>
         <td className="px-4 py-2">
           {editing ? (
             <input
@@ -101,10 +128,22 @@ function ZoneRowItem({ zone }: { zone: ZoneRow }) {
         <td className="px-4 py-2">
           {isSystem ? (
             <span className="text-xs text-muted">
-              {t.admin.zones.table.systemNote}
+              {t.admin.zones.table.systemNote} {t.admin.placeOrder.lifecycleFixed}
             </span>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <RowActionButton
+                disabled={isPending || position === 0}
+                onClick={() => handleMove("up")}
+                label={t.admin.placeOrder.moveUp(zone.name)}
+                icon={ACTION_ICONS.moveUp}
+              />
+              <RowActionButton
+                disabled={isPending || position === null || position === count - 1}
+                onClick={() => handleMove("down")}
+                label={t.admin.placeOrder.moveDown(zone.name)}
+                icon={ACTION_ICONS.moveDown}
+              />
               {editing ? (
                 <>
                   <ActionButton icon={ACTION_ICONS.save} variant="primary" compact disabled={isPending} onClick={handleSave}>
@@ -147,7 +186,7 @@ function ZoneRowItem({ zone }: { zone: ZoneRow }) {
       {message && (
         <tr>
           <td
-            colSpan={4}
+            colSpan={5}
             className={`px-4 pb-2 text-xs ${
               message.type === "error" ? "text-danger" : "text-success"
             }`}
@@ -162,33 +201,71 @@ function ZoneRowItem({ zone }: { zone: ZoneRow }) {
 
 export function ZonesTable({ zones }: { zones: ZoneRow[] }) {
   const { t } = useI18n();
+  const confirm = useConfirm();
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  // The shelter's order; Lifecycle has none (0161), so it sorts last and is not counted.
+  const ordered = inShelterOrder(zones);
+  const physical = ordered.filter((zone) => zone.name !== "Lifecycle");
+
+  async function handleSortByName() {
+    if (!await confirm({ body: t.admin.placeOrder.sortZonesConfirm, confirmLabel: t.admin.placeOrder.sortByName })) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await sortZonesByName();
+      if (!result.ok) setError(result.error);
+    });
+  }
 
   return (
-    <div className="overflow-x-auto rounded border border-border">
-      <table className="w-full text-left text-sm">
-        <thead className="bg-surface text-muted">
-          <tr>
-            <th className="px-4 py-2 font-medium">{t.admin.zones.table.name}</th>
-            <th className="px-4 py-2 font-medium">{t.admin.zones.table.nameTh}</th>
-            <th className="px-4 py-2 font-medium">
-              {t.admin.zones.table.location}
-            </th>
-            <th className="px-4 py-2 font-medium" />
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {zones.map((zone) => (
-            <ZoneRowItem key={zone.id} zone={zone} />
-          ))}
-          {zones.length === 0 && (
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <p className="max-w-prose text-sm text-muted">{t.admin.placeOrder.zonesNote}</p>
+        <ActionButton
+          icon={ACTION_ICONS.sortByName}
+          disabled={isPending || physical.length < 2}
+          onClick={handleSortByName}
+        >
+          {t.admin.placeOrder.sortByName}
+        </ActionButton>
+      </div>
+      {error && <p className="text-sm text-danger">{error}</p>}
+      <div className="overflow-x-auto rounded border border-border">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-surface text-muted">
             <tr>
-              <td colSpan={4} className="px-4 py-6 text-center text-muted">
-                {t.admin.zones.table.noZones}
-              </td>
+              <th className="px-4 py-2 text-right font-medium">{t.admin.placeOrder.orderColumn}</th>
+              <th className="px-4 py-2 font-medium">{t.admin.zones.table.name}</th>
+              <th className="px-4 py-2 font-medium">{t.admin.zones.table.nameTh}</th>
+              <th className="px-4 py-2 font-medium">
+                {t.admin.zones.table.location}
+              </th>
+              <th className="px-4 py-2 font-medium" />
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {ordered.map((zone) => {
+              const index = physical.indexOf(zone);
+              return (
+                <ZoneRowItem
+                  key={zone.id}
+                  zone={zone}
+                  position={index === -1 ? null : index}
+                  count={physical.length}
+                />
+              );
+            })}
+            {zones.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-6 text-center text-muted">
+                  {t.admin.zones.table.noZones}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

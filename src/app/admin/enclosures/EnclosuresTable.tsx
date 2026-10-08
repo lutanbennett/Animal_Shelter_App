@@ -3,12 +3,14 @@
 import { ActionButton } from "@/components/ActionButton";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useState, useTransition } from "react";
-import { deleteEnclosure, updateEnclosure } from "./actions";
+import { deleteEnclosure, moveEnclosure, sortEnclosuresByName, updateEnclosure } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { RowActionButton } from "@/components/RowAction";
+import { inShelterOrder } from "@/lib/enclosures/order";
 
-type ZoneOption = { id: string; name: string };
+/** In the shelter's order (the page sorts them), Lifecycle last. */
+type ZoneOption = { id: string; name: string; sort_order: number | null };
 
 export type EnclosureRow = {
   id: string;
@@ -17,15 +19,63 @@ export type EnclosureRow = {
   capacity: number | null;
   notes: string | null;
   zone_id: string;
+  sort_order: number | null;
   zones: { name: string } | null;
 };
+
+const COLUMNS = 7;
+
+/** A zone's heading row: its name, and Sort A-Z for the enclosures under it. */
+function ZoneHeading({ zone, count }: { zone: ZoneOption; count: number }) {
+  const { t } = useI18n();
+  const confirm = useConfirm();
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const isSystem = zone.name === "Lifecycle";
+
+  async function handleSortByName() {
+    if (!await confirm({ body: t.admin.placeOrder.sortEnclosuresConfirm(zone.name), confirmLabel: t.admin.placeOrder.sortByName })) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await sortEnclosuresByName(zone.id);
+      if (!result.ok) setError(result.error);
+    });
+  }
+
+  return (
+    <tr className="bg-surface">
+      <th colSpan={COLUMNS} scope="rowgroup" className="px-4 py-2 text-left font-semibold text-foreground">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span>{zone.name}</span>
+          {!isSystem && (
+            <ActionButton
+              icon={ACTION_ICONS.sortByName}
+              compact
+              disabled={isPending || count < 2}
+              onClick={handleSortByName}
+            >
+              {t.admin.placeOrder.sortByName}
+            </ActionButton>
+          )}
+        </div>
+        {error && <p className="mt-1 text-xs font-normal text-danger">{error}</p>}
+      </th>
+    </tr>
+  );
+}
 
 function EnclosureRowItem({
   enclosure,
   zones,
+  position,
+  count,
 }: {
   enclosure: EnclosureRow;
   zones: ZoneOption[];
+  /** 0-based place within its zone. */
+  position: number;
+  /** How many enclosures its zone holds. */
+  count: number;
 }) {
   const { t } = useI18n();
   const confirm = useConfirm();
@@ -85,9 +135,20 @@ function EnclosureRowItem({
     });
   }
 
+  function handleMove(direction: "up" | "down") {
+    setMessage(null);
+    startTransition(async () => {
+      const result = await moveEnclosure(enclosure.id, direction);
+      if (!result.ok) setMessage({ type: "error", text: result.error });
+    });
+  }
+
   return (
     <Fragment>
       <tr className="align-top hover:bg-surface-hover">
+        <td className="px-4 py-2 text-right tabular-nums text-muted">
+          {isSystem ? t.common.dash : position + 1}
+        </td>
         <td className="px-4 py-2">
           {editing ? (
             <input
@@ -164,10 +225,22 @@ function EnclosureRowItem({
         <td className="px-4 py-2">
           {isSystem ? (
             <span className="text-xs text-muted">
-              {t.admin.enclosures.table.systemNote}
+              {t.admin.enclosures.table.systemNote} {t.admin.placeOrder.lifecycleFixed}
             </span>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <RowActionButton
+                disabled={isPending || position === 0}
+                onClick={() => handleMove("up")}
+                label={t.admin.placeOrder.moveUp(enclosure.name)}
+                icon={ACTION_ICONS.moveUp}
+              />
+              <RowActionButton
+                disabled={isPending || position === count - 1}
+                onClick={() => handleMove("down")}
+                label={t.admin.placeOrder.moveDown(enclosure.name)}
+                icon={ACTION_ICONS.moveDown}
+              />
               {editing ? (
                 <>
                   <ActionButton icon={ACTION_ICONS.save} variant="primary" compact disabled={isPending} onClick={handleSave}>
@@ -212,7 +285,7 @@ function EnclosureRowItem({
       {message && (
         <tr>
           <td
-            colSpan={6}
+            colSpan={COLUMNS}
             className={`px-4 pb-2 text-xs ${
               message.type === "error" ? "text-danger" : "text-success"
             }`}
@@ -234,46 +307,68 @@ export function EnclosuresTable({
 }) {
   const { t } = useI18n();
 
+  // One group per zone, in the shelter's order; enclosures in their order within it.
+  // Lifecycle has no order (0161), so its zone and its pseudo-enclosures come last.
+  const groups = inShelterOrder(zones)
+    .map((zone) => ({
+      zone,
+      enclosures: inShelterOrder(enclosures.filter((e) => e.zone_id === zone.id)),
+    }))
+    .filter((group) => group.enclosures.length > 0);
+
   return (
-    <div className="overflow-x-auto rounded border border-border">
-      <table className="w-full text-left text-sm">
-        <thead className="bg-surface text-muted">
-          <tr>
-            <th className="px-4 py-2 font-medium">
-              {t.admin.enclosures.table.name}
-            </th>
-            <th className="px-4 py-2 font-medium">
-              {t.admin.enclosures.table.nameTh}
-            </th>
-            <th className="px-4 py-2 font-medium">
-              {t.admin.enclosures.table.zone}
-            </th>
-            <th className="px-4 py-2 font-medium">
-              {t.admin.enclosures.table.capacity}
-            </th>
-            <th className="px-4 py-2 font-medium">
-              {t.admin.enclosures.table.notes}
-            </th>
-            <th className="px-4 py-2 font-medium" />
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {enclosures.map((enclosure) => (
-            <EnclosureRowItem
-              key={enclosure.id}
-              enclosure={enclosure}
-              zones={zones}
-            />
-          ))}
-          {enclosures.length === 0 && (
+    <div className="flex flex-col gap-3">
+      <p className="max-w-prose text-sm text-muted">{t.admin.placeOrder.enclosuresNote}</p>
+      <div className="overflow-x-auto rounded border border-border">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-surface text-muted">
             <tr>
-              <td colSpan={6} className="px-4 py-6 text-center text-muted">
-                {t.admin.enclosures.table.noEnclosures}
-              </td>
+              <th className="px-4 py-2 text-right font-medium">
+                {t.admin.placeOrder.orderColumn}
+              </th>
+              <th className="px-4 py-2 font-medium">
+                {t.admin.enclosures.table.name}
+              </th>
+              <th className="px-4 py-2 font-medium">
+                {t.admin.enclosures.table.nameTh}
+              </th>
+              <th className="px-4 py-2 font-medium">
+                {t.admin.enclosures.table.zone}
+              </th>
+              <th className="px-4 py-2 font-medium">
+                {t.admin.enclosures.table.capacity}
+              </th>
+              <th className="px-4 py-2 font-medium">
+                {t.admin.enclosures.table.notes}
+              </th>
+              <th className="px-4 py-2 font-medium" />
             </tr>
+          </thead>
+          {groups.map(({ zone, enclosures: inZone }) => (
+            <tbody key={zone.id} className="divide-y divide-border border-t border-border">
+              <ZoneHeading zone={zone} count={inZone.length} />
+              {inZone.map((enclosure, index) => (
+                <EnclosureRowItem
+                  key={enclosure.id}
+                  enclosure={enclosure}
+                  zones={zones}
+                  position={index}
+                  count={inZone.length}
+                />
+              ))}
+            </tbody>
+          ))}
+          {groups.length === 0 && (
+            <tbody>
+              <tr>
+                <td colSpan={COLUMNS} className="px-4 py-6 text-center text-muted">
+                  {t.admin.enclosures.table.noEnclosures}
+                </td>
+              </tr>
+            </tbody>
           )}
-        </tbody>
-      </table>
+        </table>
+      </div>
     </div>
   );
 }

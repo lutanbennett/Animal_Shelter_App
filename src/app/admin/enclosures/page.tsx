@@ -4,6 +4,7 @@ import { CreateEnclosureForm } from "./CreateEnclosureForm";
 import { EnclosuresTable, type EnclosureRow } from "./EnclosuresTable";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { requirePermission } from "@/lib/permissions/require";
+import { inShelterOrder } from "@/lib/enclosures/order";
 
 export default async function EnclosuresPage() {
   await requirePermission("facility.enclosures");
@@ -14,13 +15,16 @@ export default async function EnclosuresPage() {
   const [enclosuresResult, zonesResult] = await Promise.all([
     supabase
       .from("enclosures")
-      .select("id, name, name_th, capacity, notes, zone_id, zones(name)")
-      .order("name")
+      .select("id, name, name_th, capacity, notes, zone_id, sort_order, zones(name)")
       .returns<EnclosureRow[]>(),
-    supabase.from("zones").select("id, name").order("name"),
+    supabase
+      .from("zones")
+      .select("id, name, sort_order")
+      .returns<{ id: string; name: string; sort_order: number | null }[]>(),
   ]);
 
-  const zones = zonesResult.data ?? [];
+  // The shelter's order (Settings → Zones), for the groups and the zone pickers alike.
+  const zones = inShelterOrder(zonesResult.data ?? []);
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
