@@ -58,3 +58,16 @@ place, apart from `address`, which becomes the written address only. No
   public page through it once moved. No new public column.
 - **Vets and volunteers do not see it**, as they do not see `address`:
   `vet_contacts` / `volunteer_contacts` (0126) list their columns.
+
+## Also in 0164: zone plans could not be added
+
+Folded in on Lutan's say-so (from `facility-map-upload`), since only one schema
+PR may be in flight. Adding a facility plan for a zone failed with 42703
+`record "new" has no field "name"`: 0162's `refuse_lifecycle_map()` tested
+`tg_table_name = 'zones' and new.name = 'Lifecycle'` in one expression, and
+PL/pgSQL still resolved `new.name` when the trigger fired on `facility_maps`,
+which has no `name`. The name is now read only inside the zones branch; the
+rest of the body, the three messages and the triggers are unchanged.
+**Lesson: in a trigger function shared by several tables, read a table's own
+columns only inside that table's branch** — `and` does not protect a field
+reference.
