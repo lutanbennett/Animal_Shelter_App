@@ -104,7 +104,10 @@ export async function AppHeader() {
           name={userNameOf(user)}
           role={roleName}
           email={user.email ?? "—"}
-          className="order-4 flex min-w-0 flex-1 justify-end sm:order-3 sm:flex-none"
+          // min-w-32: flex-1 has a zero basis, so with min-w-0 the menu never
+          // wrapped; logins without the Assistant button (Vet, Head of Medical)
+          // got it squeezed to 15.9 px beside the logo. 8rem makes it wrap.
+          className="order-4 flex min-w-32 flex-1 justify-end sm:order-3 sm:min-w-0 sm:flex-none"
         />
         <SignOutButton iconOnPhone />
       </div>
