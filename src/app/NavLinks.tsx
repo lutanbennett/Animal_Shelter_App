@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import { NAV_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { ROUTES, sectionOf, type Section } from "@/lib/permissions/routes";
 import { useMobileNav } from "./MobileNavContext";
 
 type NavItem = {
@@ -15,42 +16,44 @@ type NavItem = {
   badge?: string;
   /** What the pill means, for a pill that is only a number. */
   badgeTitle?: string;
+  /** Other paths this entry lights up for: a section's pages that keep an address outside it. */
+  also?: string[];
 };
+
+/** The registered pages a section's landing lists, so its entry lights up on any of them. */
+const sectionPaths = (section: Section) => ROUTES.filter((r) => sectionOf(r) === section).map((r) => r.path);
 
 /**
  * The link the current page belongs to: the longest href that is the path
  * or a parent of it. Longest wins so that /admin/security lights up
- * Security in the footer rather than Settings as well, and a segment
+ * Security in the footer rather than Settings as well (and /admin/website,
+ * a Management page, Management rather than Settings), and a segment
  * boundary is required so /vets never claims /vetsomething.
  */
 function activeHref(pathname: string, items: NavItem[]): string | undefined {
   return items
-    .map((item) => item.href)
-    .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
-    .sort((a, b) => b.length - a.length)[0];
+    .flatMap((item) => [item.href, ...(item.also ?? [])].map((path) => ({ path, href: item.href })))
+    .filter(({ path }) => pathname === path || pathname.startsWith(`${path}/`))
+    .sort((a, b) => b.path.length - a.path.length)[0]?.href;
 }
 
 export function NavLinks({
   canSecurity,
   canSettings,
   canManagement,
+  canOperations,
   hasTasks,
   canAppointments,
-  canEnclosures,
-  canMaintenance,
-  canVets,
-  canContacts,
-  canProjects,
-  canStocktake,
-  canDeliveries,
   urgentCount,
 }: {
   /** Whoever may change who can sign in: the Security link. Not an activity (an Admin rule). */
   canSecurity: boolean;
-  /** Holds any activity a Settings page asks for: the Settings link. */
+  /** Opens any page in the Settings section: the Settings link. */
   canSettings: boolean;
-  /** Holds any activity a Management page asks for: the Management link. */
+  /** Opens any page in the Management section: the Management link. */
   canManagement: boolean;
+  /** Opens any page in the Shelter Operations section: its link (opensAnyIn, the landing's own guard). */
+  canOperations: boolean;
   /**
    * Has recurring jobs of their own (recurring.do_own): My tasks leads the menu.
    * Without it the menu leads with Appointments, as a vet's does.
@@ -61,16 +64,6 @@ export function NavLinks({
    * either gets no second entry: a volunteer's menu is Home, Residents and Enclosures.
    */
   canAppointments: boolean;
-  /** Each of these is the page's own guard, asked of the route registry (NavPane). */
-  canEnclosures: boolean;
-  canMaintenance: boolean;
-  canVets: boolean;
-  canContacts: boolean;
-  canProjects: boolean;
-  /** stock.count: shows Stocktake (0091). */
-  canStocktake: boolean;
-  /** stock.delivery: shows Deliveries, beside Stocktake (F-15). */
-  canDeliveries: boolean;
   /** My tasks due today or overdue, shown on the My tasks link when > 0. */
   urgentCount: number;
 }) {
@@ -79,11 +72,12 @@ export function NavLinks({
   const { open, setOpen } = useMobileNav();
 
   // Grouped by how often each link is reached for (agreed with the user
-  // 2026-09-23): the daily field pages, then the people and project
-  // reference lists, then the role-gated sections.
-  // Management and Settings are single links now — their landing pages are
-  // tile grids of everything inside them, so the sidebar no longer repeats
-  // those children under chevrons.
+  // 2026-09-23): the daily pages, then the role-gated sections.
+  // Shelter Operations, Management and Settings are single links — their
+  // landing pages are tile grids of everything inside them, so the sidebar
+  // does not repeat those children. Since 2026-10-08 the daily field pages
+  // and the vet and contact lookups are tiles under Shelter Operations
+  // (docs/decisions/2026-10-07-management-settings-split.md).
   const groups: NavItem[][] = [
     [
       // Home leads for everyone: the screen of jobs the sign-in lands on (home-screens, §8).
@@ -111,28 +105,18 @@ export function NavLinks({
             ]
           : []),
       { href: "/residents", label: t.nav.residents, icon: NAV_ICONS.residents },
-      ...(canEnclosures
-        ? [{ href: "/enclosures", label: t.nav.enclosures, icon: NAV_ICONS.enclosures }]
+      // The daily work (Lutan, 2026-10-08). Staff and volunteers have this
+      // section and no other: it opens for anyone who can open one tile.
+      ...(canOperations
+        ? [
+            {
+              href: "/operations",
+              label: t.nav.shelterOperations,
+              icon: NAV_ICONS.shelterOperations,
+              also: sectionPaths("operations"),
+            },
+          ]
         : []),
-      ...(canMaintenance
-        ? [{ href: "/maintenance", label: t.nav.maintenance, icon: NAV_ICONS.maintenance }]
-        : []),
-      // A field job, done walking the shelves — with the daily pages, not
-      // under Management, because staff and volunteers do it (0091).
-      ...(canStocktake
-        ? [{ href: "/stocktake", label: t.nav.stocktake, icon: NAV_ICONS.stocktake }]
-        : []),
-      // Recording a delivery is hers, as part of ordering: it had been a link at the top of Stocktake.
-      ...(canDeliveries
-        ? [{ href: "/deliveries", label: t.nav.deliveries, icon: NAV_ICONS.deliveries }]
-        : []),
-    ],
-    // The shelter's reference lists — not a vet's, who is an outside clinic
-    // and should not browse the other clinics the shelter uses (2026-09-27).
-    [
-      ...(canVets ? [{ href: "/vets", label: t.nav.vets, icon: NAV_ICONS.vets }] : []),
-      ...(canContacts ? [{ href: "/contacts", label: t.nav.contacts, icon: NAV_ICONS.contacts }] : []),
-      ...(canProjects ? [{ href: "/projects", label: t.nav.projects, icon: NAV_ICONS.projects }] : []),
     ],
     // No Assistant entry: the header button opens it on every screen, and
     // its slide-over links through to the full /assistant page
@@ -144,6 +128,7 @@ export function NavLinks({
               href: "/management",
               label: t.nav.management,
               icon: NAV_ICONS.management,
+              also: sectionPaths("management"),
             },
           ]
         : []),

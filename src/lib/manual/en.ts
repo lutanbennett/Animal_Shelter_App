@@ -149,7 +149,8 @@ const manual: Manual = {
           id: "navigation",
           title: "Finding your way around",
           steps: [
-            "On a computer the menu is always visible down the left, each link with its own icon: My tasks at the top, then Residents, Enclosures and Maintenance, then Vets, Contacts and Projects — and, depending on your role, Management and Settings. A vet's menu is just Appointments and Residents. Residents opens a front page of tiles, one for each page inside it; the same icons are used on the tiles and in the menu.",
+            "On a computer the menu is always visible down the left, each link with its own icon: Home and My tasks at the top, then Residents and Shelter Operations — and, depending on your role, Management and Settings. A vet's menu is just Appointments and Residents.",
+            "Shelter Operations, Management and Settings each open a front page of tiles, one for each page inside that you can open; Residents does the same for a resident's record. The same icons are used on the tiles and in the menu, and the menu entry stays lit while you are on any page inside it.",
             "Under a dividing line at the very bottom of the menu sit the things you only need now and then, so they are always in the same place: this manual, Release notes, Change password and — for admins — Security, where accounts and roles are managed.",
             "On a phone tap the ☰ button at the top left to open the same menu; tap outside it to close. The same links are the last entries in it, below the same line.",
             "The LCA logo and your email are in the header, with the Assistant button, the language switch and Sign out. Tap the logo to see the public website as a visitor does — it opens in a new tab so you don't lose your place.",
@@ -161,6 +162,24 @@ const manual: Manual = {
             caption: "The menu on a phone. On a computer the same links sit in a sidebar.",
             mobile: true,
           },
+        },
+        {
+          id: "shelter-operations",
+          title: "Shelter Operations: the daily work",
+          path: "Shelter Operations (in the menu)",
+          intro:
+            "One place for the jobs that keep the shelter running day to day. You only see the tiles for the pages your role can open, and if your role opens none of them the section is not in your menu.",
+          steps: [
+            "Open Shelter Operations from the menu. Its tiles are Enclosures (who is where), Medication list (today's round), Maintenance, Stocktake, Deliveries, Projects, Vets and Contacts.",
+            "Vets and Contacts here are the lookups: find a vet or a person and call or message them. Changing their records — adding a contact, archiving one, a vet's doctors — is under Management → Contacts and Management → Vets.",
+            "Every page kept its web address, so links in notifications, emails and your bookmarks still open it. Only the medication list has a new address, and its old one still takes you there.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "Before 8 October 2026 these pages were separate entries in the menu, and the medication list was under Management. The pages themselves have not changed, and nobody can open a page they could not open before.",
+            },
+          ],
         },
         {
           id: "release-notes",
@@ -860,9 +879,9 @@ const manual: Manual = {
           roles: ["admin", "management", "staff", "volunteer"],
           activity: "facility.enclosures",
           activityLevel: "read",
-          path: "Enclosures",
+          path: "Shelter Operations → Enclosures",
           steps: [
-            "Open Enclosures. Tap a zone chip to show only that zone, search by enclosure name, or sort by zone, name or Fullest first.",
+            "Open Shelter Operations from the menu and tap Enclosures. Tap a zone chip to show only that zone, search by enclosure name, or sort by zone, name or Fullest first.",
             "Choose On-site or Off-site at the top to see only the enclosures at the shelter, or only those away from it; Everywhere shows both. The zone chips then list just that place's zones. You can pick more than one zone — tap a chip to add it and tap it again to take it off; All zones clears them. Switching between On-site and Off-site clears the zones you had picked, since they belong to the other place. Hospital, Unassigned and Fostered are statuses rather than places, so they only show under Everywhere.",
             "Under each zone's name is a line of figures: On-site or Off-site, how many enclosures, how many residents, and how many spaces are free. \"All zones\" above the list gives the same totals. Spaces free adds up capacity minus residents for each enclosure that has a capacity; a full or over-capacity enclosure counts as none, and enclosures with no capacity set are left out and mentioned. Hospital, Unassigned and Fostered are not counted. When a search, zone chip or the open-maintenance tick narrows the list, the figures cover only what is shown and the line says \"showing 4 of 12 enclosures\".",
             "Each card shows how many residents are in the enclosure against its capacity — green for space available, orange for nearly full or full, red for over capacity.",
@@ -880,7 +899,7 @@ const manual: Manual = {
           title: "Finding your way round on the map",
           roles: ["admin", "management", "staff", "volunteer"],
           activity: "facility.map",
-          path: "Enclosures → Map",
+          path: "Shelter Operations → Enclosures → Map",
           steps: [
             "Open Enclosures and tap Map, next to List at the top. The Map button only appears once the shelter's hand-drawn plan has been loaded for at least one zone.",
             "The first plan is the whole shelter, with each zone outlined. Tap a zone, then Open this zone, to go to that zone's own plan; the buttons above the plan take you back to the overview or across to another zone.",
@@ -898,7 +917,7 @@ const manual: Manual = {
           roles: ["admin", "management", "staff", "volunteer"],
           activity: "facility.enclosures",
           activityLevel: "read",
-          path: "Enclosures → (an enclosure)",
+          path: "Shelter Operations → Enclosures → (an enclosure)",
           steps: [
             "The occupancy bar and notes are at the top; tap a resident to jump to their hub.",
             "Link for this enclosure's QR code: the address to program into the QR code on the enclosure. Tap Copy link, or select the address by hand. The enclosure browser has the same copy icon on every card, for doing a batch.",
@@ -927,7 +946,7 @@ const manual: Manual = {
           title: "Logging a job",
           roles: ["admin", "management", "staff"],
           activity: "maintenance.jobs",
-          path: "Maintenance → Log maintenance (or from an enclosure page)",
+          path: "Shelter Operations → Maintenance → Log maintenance (or from an enclosure page)",
           steps: [
             "Step 1, What is wrong: give the job a title, e.g. \"Gate latch broken\", describe what needs doing, and add photos of the problem as it is now. They upload when you save.",
             "Step 2, Where: pick the zone and enclosure, or tick Zone-wide for something like a fence line or drainage.",
@@ -945,7 +964,7 @@ const manual: Manual = {
           roles: ["admin", "management", "staff"],
           activity: "maintenance.jobs",
           activityLevel: "read",
-          path: "Maintenance",
+          path: "Shelter Operations → Maintenance",
           steps: [
             "Staff open on the jobs assigned to them; switch Assigned to from Me to Everyone to see the whole board (management and admin start there). Filter by zone or enclosure. Completed jobs from the last 30 days are shown; tick Show all completed jobs for older ones.",
             "On a computer, drag a job card to another column to change its status. On a phone, tap Move job on under the job, choose where it goes (Move to In progress, Blocked, Completed or Not started), and confirm — the question says in words what will happen. Use the status chips at the top to look at one status, such as Completed, and move a job back from there. Cards are coloured when a job is overdue, due soon, or blocked.",
@@ -980,9 +999,9 @@ const manual: Manual = {
           roles: ["admin", "management", "staff"],
           activity: "projects.folders",
           activityLevel: "read",
-          path: "Projects",
+          path: "Shelter Operations → Projects",
           steps: [
-            "Open Projects and tap a category, then a folder. Search folders by name from any level, and sort by name, newest or project date.",
+            "Open Shelter Operations from the menu, tap Projects, then a category, then a folder. Search folders by name from any level, and sort by name, newest or project date.",
             "Inside a folder, tap Add photos and drop in photos or PDFs. They go straight into that folder in Drive.",
             "Tap a photo to give it a caption (English and Thai), make it the folder's cover, or remove it.",
           ],
@@ -996,13 +1015,13 @@ const manual: Manual = {
           title: "Creating folders and writing the story",
           roles: ["admin", "management", "staff"],
           activity: "projects.folders",
-          path: "Projects → (a category or folder)",
+          path: "Shelter Operations → Projects → (a category or folder)",
           steps: [
             "Tap New folder, give it a name (this is also its Drive folder name) and, optionally, a Thai name.",
             "Use Rename, Move or Delete on a folder's page. Only an empty folder can be deleted; the twelve categories can't be changed.",
             "Under About this project tap Edit details to write the story, set the date and location, and type the Thai title. The Thai title is also under Rename and in the New folder form.",
-            "Turn on Show on website to publish the folder's title, story and photos on the public Our work page. Turn it off — or use Settings → Website — to take it down.",
-            "A published folder with no Thai title is still shown; visitors reading Thai simply see the English title. The folder says so under About this project, Settings → Website lists it with an Add Thai title link, and Management → Translations lists the published projects still missing one at the top.",
+            "Turn on Show on website to publish the folder's title, story and photos on the public Our work page. Turn it off — or use Management → Website — to take it down.",
+            "A published folder with no Thai title is still shown; visitors reading Thai simply see the English title. The folder says so under About this project, Management → Website lists it with an Add Thai title link, and Management → Translations lists the published projects still missing one at the top.",
           ],
           screenshot: {
             src: "/manual/projects.png",
@@ -1026,9 +1045,9 @@ const manual: Manual = {
           roles: ["admin", "management", "staff"],
           activity: "clinics.list",
           activityLevel: "read",
-          path: "Vets",
+          path: "Shelter Operations → Vets",
           steps: [
-            "Open Vets to see every vet and clinic with their visit count, residents seen, last visit and what's upcoming or overdue.",
+            "Open Shelter Operations from the menu and tap Vets to see every vet and clinic with their visit count, residents seen, last visit and what's upcoming or overdue.",
             "Tap a vet for their hub: contact details and notes, visits per month, the clinic's doctors with how many visits each saw, the residents they've seen, spend on visits with a recorded cost, and the procedures, blood tests and prescriptions logged against their visits. Change the period (3, 6, 12 months or all time) at the top.",
           ],
           screenshot: {
@@ -1041,9 +1060,9 @@ const manual: Manual = {
           title: "Contacts",
           roles: ["admin", "management"],
           activity: "contacts.browse",
-          path: "Contacts",
+          path: "Shelter Operations → Contacts",
           steps: [
-            "Open Contacts to find carers, volunteers and suppliers. Search by name, phone, email or chat ID, and filter by type. Contacts is for Management and the 2IC. The 2IC sees each person's name and phone number and nothing else — no address, email or notes. Staff and volunteers do not have the page: if you need a carer's number, ask Management. (Choosing a carer on intake or rehoming still works for staff.)",
+            "Open Shelter Operations from the menu and tap Contacts to find carers, volunteers and suppliers. Search by name, phone, email or chat ID, and filter by type. Contacts is for Management and the 2IC. The 2IC sees each person's name and phone number and nothing else — no address, email or notes. Staff and volunteers do not have the page: if you need a carer's number, ask Management. (Choosing a carer on intake or rehoming still works for staff.)",
             "Each contact has one-tap buttons: Call, LINE, Messenger, WhatsApp, Email and Map — handy on a phone.",
             "Tap a contact for their page, including the residents currently fostered or adopted with them and past placements.",
             "Contacts the shelter no longer works with are archived rather than deleted. They're hidden from the list; tap Show archived under the search box to see them, greyed out with an Archived badge and the reason. A search always finds them, so you can still look up an old number.",
@@ -1135,7 +1154,7 @@ const manual: Manual = {
             },
             {
               kind: "note",
-              text: "The Shelter Friends link, the home-page strip and the Donate mention only appear once at least one friend is published, so the website looks exactly as before until then. The Become a Shelter Friend page is always in the menu — it is how a business finds out about joining — and its wording is under Settings → Website.",
+              text: "The Shelter Friends link, the home-page strip and the Donate mention only appear once at least one friend is published, so the website looks exactly as before until then. The Become a Shelter Friend page is always in the menu — it is how a business finds out about joining — and its wording is under Management → Website.",
             },
           ],
         },
@@ -1228,11 +1247,11 @@ const manual: Manual = {
           id: "medication-list",
           title: "The medication list",
           roles: ["admin", "management", "staff"],
-          path: "Home → Administer Medication (Head of Medical), or Management → Medication list",
+          path: "Home → Administer Medication (Head of Medical), or Shelter Operations → Medication list",
           intro:
             "One list of who needs medicine today and how much, built for a phone while you walk round the enclosures. It is for reading: nothing on it is ticked off, and the app does not record that a dose was given.",
           steps: [
-            "The Head of Medical signs in to a Home with one button, Administer Medication, and taps it. Everyone else opens Management and taps Medication list. The date at the top is today at the shelter.",
+            "The Head of Medical signs in to a Home with one button, Administer Medication, and taps it. Everyone else opens Shelter Operations from the menu and taps Medication list. The date at the top is today at the shelter.",
             "The list is grouped by zone, then by enclosure, in the order you would walk them, and each enclosure shows its animals. Each animal has a photo and name at the top, so you treat the right one.",
             "Under the animal, each medicine shows a photo of its box or bottle label (added under Management → Medications), the amount to give, and how often. If a medicine has no label photo, only its name shows.",
             "A medicine given every other day, weekly or monthly shows only on the days it falls due, counted from the day the prescription started. A medicine marked as needed is always shown. Last day of the course appears on a medicine whose prescription ends today.",
@@ -1251,11 +1270,11 @@ const manual: Manual = {
           title: "Doing a stocktake",
           roles: ["admin", "management", "staff"],
           activity: "stock.count",
-          path: "Stocktake, or Home → Do Stocktaking (the 2IC)",
+          path: "Shelter Operations → Stocktake, or Home → Do Stocktaking (the 2IC)",
           intro:
             "One sheet for counting every medication and diet, built to be used on a phone while you walk the shelves. Nothing is saved until you tap Save at the end, and everything saved together gets the same time.",
           steps: [
-            "Open Stocktake from the menu — the 2IC taps Do Stocktaking on Home — (managers can also use the link at the top of Management → Medications or → Diets). Switch between Medications and Food with the tabs at the top; counts you have typed on one tab are kept while you look at the other.",
+            "Open Shelter Operations from the menu and tap Stocktake — the 2IC taps Do Stocktaking on Home — (managers can also use the link at the top of Management → Medications or → Diets). Switch between Medications and Food with the tabs at the top; counts you have typed on one tab are kept while you look at the other.",
             "Each row shows the item, its unit and the last count with how long ago it was taken. Type what is on the shelf now, in that unit — or, if the item has a count unit set up (bags, say), in that one: it is chosen for you, and the row shows what it comes to in the item's own unit. Pick another unit from the box beside the figure if you counted that way. One unit per row, so 3 bags and 4 kg is counted as 3.2 bags or as 64 kg. Press Enter (Next on a phone keyboard) to move to the next row. Use the search box to jump to an item.",
             "On a phone, the Medications tab is one card at a time: the box's label photo large at the top (the name instead, when there is no photo), then the name, the last count and when it was taken. Type what is on the shelf — the number keypad is already open — and tap Save to move to the next medicine. Same as last time confirms the old figure; Skip leaves the medicine for later. The top shows how far you are (23 of 100), Previous goes back one card, and See the whole list opens the full list instead.",
             "Your counts stay on the phone until you save them, so a closed tab, a locked screen or no signal in the kennels loses nothing: open Stocktake again and it picks up where you left off (counts older than two days are not kept). When the cards run out, anything you skipped is offered again — “5 skipped — count them now?” — and then Review and save sends everything at once, as on the computer.",
@@ -1333,11 +1352,11 @@ const manual: Manual = {
           title: "Recording a delivery",
           roles: ["admin", "management", "staff"],
           activity: "stock.delivery",
-          path: "Deliveries, or Home → Record a Delivery (the 2IC)",
+          path: "Shelter Operations → Deliveries, or Home → Record a Delivery (the 2IC)",
           intro:
             "Record each medication or food as it arrives, so Stock between counts can work out what was actually used. Recording a delivery doesn't change the stock count — the next stocktake does.",
           steps: [
-            "Open Deliveries from the menu (it is next to Stocktake), or from Home (the 2IC taps Record a Delivery). The Stocktake page also has a Record a delivery button at the top.",
+            "Open Shelter Operations from the menu and tap Deliveries (it is next to Stocktake), or start from Home (the 2IC taps Record a Delivery). The Stocktake page also has a Record a delivery button at the top.",
             "On a phone it is one question at a time, with a Back button on every screen that keeps what you have typed: what arrived (Medicine or Food), which one (type part of the name; a medicine with a label photo shows it, to match the box in your hand), how much, when, then a few optional details, and last a sentence saying what will be recorded. Tap Record this delivery only when that sentence is right. When it is saved, Record another item starts the next one with the day and supplier already as they were. On a larger screen the same questions are one form: pick Medication or Food, then the item. Enter the quantity. If the item has other units set up under Management → Medications or → Diets (bags, boxes), pick the unit the delivery came in — the one it is bought in is chosen for you — and the amount in the item's own unit is shown beside it and saved with it. With no other units, the quantity is in the item's own unit, as before. If it came in packs, fill in Came in packs? (2 × 50, say) and the quantity is worked out for you.",
             "Arrived on is today unless you change it; a delivery can't be dated in the future. If the item was counted in a stocktake that day, you are asked whether the delivery was already on the shelf when it was counted, so it is set against the right stocktake.",
             "Supplier (a Vendor from Contacts), the total cost in baht (0 for a donation) and a note are optional. Tap Record delivery. The day and supplier stay filled in, so the rest of the same delivery can be entered one item after another.",
@@ -1412,7 +1431,7 @@ const manual: Manual = {
             },
             {
               kind: "note",
-              text: "Vet visits that are booked but not yet invoiced are costed at one flat “typical vet visit” figure, set on Settings → Website. A visit that already has its real cost recorded uses that instead. If the figure is blank, booked visits are not costed at all and the page says so.",
+              text: "Vet visits that are booked but not yet invoiced are costed at one flat “typical vet visit” figure, set on Management → Website. A visit that already has its real cost recorded uses that instead. If the figure is blank, booked visits are not costed at all and the page says so.",
             },
           ],
           screenshot: {
@@ -1507,7 +1526,7 @@ const manual: Manual = {
           title: "The public website",
           roles: ["admin"],
           activity: "website.content",
-          path: "Settings → Website",
+          path: "Management → Website",
           steps: [
             "The page has five tabs across the top: Home page (hero photo and Pet of the week), Contact & settings (labels, contact details, preferred way to contact us and the typical vet visit figure), Pages (the wording of each information page), Gallery and Our work. The tab you are on is in the web address, so a reload, the Back button or a shared link comes back to the same place. Text you have typed in one tab is still there when you come back to it, but each section still has its own Save button.",
             "Hero photo (Home page tab): the big photo beside the heading at the top of the home page. With none set, the heading and its buttons take the full width.",
@@ -1662,12 +1681,12 @@ const manual: Manual = {
           title: "The public pages",
           steps: [
             "Home: the heading with Meet the animals and Give monthly (which opens the Donate page for now) beside the hero photo; four live counts (in care, adopted this year, in foster care, in vet care); the Shelter Friends band, once someone is published; four ways to help (Adopt, Sponsor a resident, Foster, Volunteer); and the Pet of the week beside Our story, its first three gallery photos and a link to Our work.",
-            "Adopt (the Meet our residents entry under Adopt in the menu): every resident with Ready for adoption ticked, except those adopted or deceased, with species / size / ready filters. Each profile shows their photos, their hook line under the name, quick facts (age, sex, breed, size, desexed and vaccinated — vaccinated comes from the immunization history — and energy level), who they get along with, their story (past story, bio and temperament), their ideal home, how to meet them, a line asking those who can't adopt to give monthly (it opens the Donate page for now), and similar residents. A bar along the bottom of the screen has a button for the shelter's preferred contact channel (Ask on LINE unless Settings → Website says otherwise) and Book a visit, which phones the shelter, or emails it if no phone number is set. Anything not filled in is left out rather than shown empty. Recent adoptions show as Happy endings, and How adoption works sits at the foot of the listing.",
+            "Adopt (the Meet our residents entry under Adopt in the menu): every resident with Ready for adoption ticked, except those adopted or deceased, with species / size / ready filters. Each profile shows their photos, their hook line under the name, quick facts (age, sex, breed, size, desexed and vaccinated — vaccinated comes from the immunization history — and energy level), who they get along with, their story (past story, bio and temperament), their ideal home, how to meet them, a line asking those who can't adopt to give monthly (it opens the Donate page for now), and similar residents. A bar along the bottom of the screen has a button for the shelter's preferred contact channel (Ask on LINE unless Management → Website says otherwise) and Book a visit, which phones the shelter, or emails it if no phone number is set. Anything not filled in is left out rather than shown empty. Recent adoptions show as Happy endings, and How adoption works sits at the foot of the listing.",
             "Our work: project folders marked Show on website, by category, with their story and photos.",
-            "Foster, Volunteer and Donate: the pages written under Settings → Website, each with the shelter's email and LINE.",
-            "International adoption: what adopting one of the animals from abroad involves, under Adopt in the menu and the footer, with the puppy flying over the globe at the top and the shelter's email and LINE at the foot. The adoption listing ends with a line pointing adopters abroad to it. Written under Settings → Website like the pages above. The old Pet relocation address (/relocation) now opens this page.",
+            "Foster, Volunteer and Donate: the pages written under Management → Website, each with the shelter's email and LINE.",
+            "International adoption: what adopting one of the animals from abroad involves, under Adopt in the menu and the footer, with the puppy flying over the globe at the top and the shelter's email and LINE at the foot. The adoption listing ends with a line pointing adopters abroad to it. Written under Management → Website like the pages above. The old Pet relocation address (/relocation) now opens this page.",
             "Shelter Friends: a card for each published friend of the shelter, with only the contact details they agreed to show (see Shelter Friends under Management). It is linked from the menu once there is at least one.",
-            "Become a Shelter Friend: what being a Friend means and how a business joins, under Get involved in the menu and the footer at all times. The home page's Become a Shelter Friend button and Your business here? tile open it, and so do lines on the Shelter Friends and Donate pages. Its contact card has Email, LINE and Call: the email arrives with a subject and a short form to fill in (business name, what they do, how they'd like to help), and LINE opens with the same message typed when the shelter's LINE id is an official account (starting with @). Written under Settings → Website.",
+            "Become a Shelter Friend: what being a Friend means and how a business joins, under Get involved in the menu and the footer at all times. The home page's Become a Shelter Friend button and Your business here? tile open it, and so do lines on the Shelter Friends and Donate pages. Its contact card has Email, LINE and Call: the email arrives with a subject and a short form to fill in (business name, what they do, how they'd like to help), and LINE opens with the same message typed when the shelter's LINE id is an official account (starting with @). Written under Management → Website.",
             "Tags on the kennels: scanning a resident's RFID card shows that resident's public card, and scanning an enclosure's QR code shows the enclosure and who lives there (see The enclosure page). Neither is linked from the menu — they are reached by scanning.",
           ],
           screenshot: {

@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
-import { ROUTES, canOpen, routeFor } from "@/lib/permissions/routes";
+import { canOpen, opensAnyIn, routeFor } from "@/lib/permissions/routes";
 import { todayIso } from "@/lib/format";
 import { countMyUrgentAccessRequests } from "@/lib/my-tasks/access-requests";
 import { countMyUrgentMaintenance } from "@/lib/my-tasks/maintenance";
@@ -27,8 +27,6 @@ export async function NavPane() {
     const route = routeFor(path);
     return !!route && canOpen(perms, route);
   };
-  // A landing page (Management, Settings) opens for whoever may open one page under it.
-  const opensAnyUnder = (prefix: string) => ROUTES.some((r) => r.path.startsWith(prefix + "/") && canOpen(perms, r));
 
   // The My tasks badge: what is due today or overdue across its sources.
   const today = todayIso();
@@ -42,17 +40,12 @@ export async function NavPane() {
   return (
     <NavLinks
       canSecurity={perms.isAdmin}
-      canSettings={opensAnyUnder("/admin")}
-      canManagement={opensAnyUnder("/management")}
+      // A landing opens for whoever may open one page in its section: the question its guard asks.
+      canSettings={opensAnyIn(perms, "settings")}
+      canManagement={opensAnyIn(perms, "management")}
+      canOperations={opensAnyIn(perms, "operations")}
       hasTasks={can(perms, "recurring.do_own")}
       canAppointments={opens("/appointments")}
-      canEnclosures={opens("/enclosures")}
-      canMaintenance={opens("/maintenance")}
-      canVets={opens("/vets")}
-      canContacts={opens("/contacts")}
-      canProjects={opens("/projects")}
-      canStocktake={can(perms, "stock.count")}
-      canDeliveries={can(perms, "stock.delivery")}
       urgentCount={urgentCount}
     />
   );

@@ -1,8 +1,14 @@
 # 2026-10-07 — Management, Settings and Shelter Operations: every page slotted against Lutan's rule
 
-**Status: PROPOSED. Nothing is moved by this PR.** The backlog item says to agree the
-table with Lutan before building, so this is the table and the order of work.
-Where a row is a judgement call it is marked **ASK** and listed at the end.
+**Status: AGREED with Lutan on 2026-10-08.** He printed the proposal, marked it up by hand
+(`Menu items.pdf`, under `LCA\` on his Desktop) and the rest was settled in chat. **31 of 35
+rows matched the proposal**; the four he changed are folded into the tables below, so this file
+is the single record. The questions it asked are answered at the end. The backlog item is
+*"Review which pages belong under Management and which under Settings"* (agreement recorded in
+`10bf3026`).
+
+Proposed 2026-10-07, when nothing was moved. Building it is three PRs (order of work below);
+**PR 1, the Shelter Operations landing and nav, is `claude/shelter-operations-nav`.**
 
 ## The rule (Lutan, 2026-09-27, backlog item "Maintenance versus Setup")
 
@@ -33,9 +39,9 @@ Four pages are on the wrong side by the rule, and one is on both:
 
 ## Every tile on both landing pages
 
-| Page | Today | Proposed | Why | Phone? |
+| Page | Was | Agreed | Why | Phone? |
 |---|---|---|---|---|
-| `/admin/website` | Settings | **Settings** | Public-site wording and photos: configuration, changed rarely | Fits; keep |
+| `/admin/website` | Settings | **Management** (changed by Lutan) | The Director is Admin at night on her PC but **Management by day on her phone**, and the website is her job, so it must be reachable from the Management side. He said it twice. Keeps its `/admin` address | Fits; keep |
 | `/admin/enclosures` | Settings | **Settings** | The list of enclosures other screens pick from | Admin's, at night: desktop-only notice stands |
 | `/admin/zones` | Settings | **Settings** | Same, for zones | Admin's: notice stands |
 | `/admin/facility-map` | Settings | **Settings** | Drawing plans is setup; desk work | Admin's: notice stands (decision 2026-10-04) |
@@ -48,21 +54,21 @@ Four pages are on the wrong side by the rule, and one is on both:
 | `/admin/status` | Settings | **Settings** | System health | Fits |
 | `/admin/role-draft` | Settings (no tile) | **Settings** | Admin-only review aid, goes away when the draft is signed | n/a |
 | `/management/dashboard` | Management | **Management** | The month's figures: derived from the dynamic records | Phone-first, no notice |
-| `/management/contacts` | Management | **Management** | Records about real people | See "device notice" below |
-| `/management/vets` | Management | **Management** | Records about real clinics | See below |
-| `/management/shelter-friends` | Management | **Management** — **ASK** | Records of real businesses, but it also drives the public site, which is Settings-like | See below |
+| `/management/contacts` | Management | **Management** | The contact **records**: add, edit, archive. Its lookup door, `/contacts`, is Shelter Operations | See "device notice" below |
+| `/management/vets` | Management | **Management** | The clinic **records editor**. Its lookup door, `/vets`, is Shelter Operations | See below |
+| `/management/shelter-friends` | Management | **Management** (answered) | Records of real businesses | See below |
 | `/management/recurring-jobs` | Management | **Management** | Rules, but who does them and the done/skipped record are live | Phone work for the 2IC |
 | `/management/cashflow` | Management | **Management** | Spending forecast: dynamic | Phone-first, no notice |
 | `/management/purchasing` | Management | **Management** | Orders: dynamic; already phone-first (#334) | Phone-first |
-| `/management/stock-usage` | Management | **Management** | How counts moved: dynamic | Notice should come off |
+| `/management/stock-usage` | Management | **Management** | How counts moved: dynamic. Lutan left the row blank; confirmed in chat as a skip, not a doubt | Notice should come off |
 | `/management/translations` | Management | **Management** | A work queue: rows appear and clear as people write | Phone-first |
-| `/management/medication-list` | Management | **Shelter Operations** | Read-only list used on the round; staff, Head of Medical, Management all open it | Phone-first |
-| `/management/medications` | Management | **Split** | Names, dose units, unit conversions → Settings; stock, cost, reorder, forecast → Management | Settings half: notice stands. Stock half: no notice (§ below) |
-| `/management/diets` | Management | **Split** | Diet names, units, per-size daily quantities → Settings; stock, cost, forecast → Management | Same |
+| `/management/medication-list` | Management | **Shelter Operations**, at `/operations/medication-list` | Read-only list used on the round; staff, Head of Medical, Management all open it | Phone-first |
+| `/management/medications` | Management | **Split** (answered) | Names, dose units, unit conversions → Settings; stock, cost, reorder, forecast → Management | Settings half: notice stands. Stock half: no notice (§ below) |
+| `/management/diets` | Management | **Split** (answered) | Diet names, units, per-size daily quantities → Settings; stock, cost, forecast → Management | Same |
 
 ## Every left-nav entry
 
-| Entry | Today | Proposed | Who, how often | Why |
+| Entry | Was | Agreed | Who, how often | Why |
 |---|---|---|---|---|
 | Home | top-level | **top-level** | Everyone, daily | The sign-in landing |
 | My day / Appointments | top-level | **top-level** | Staff, volunteers daily; vets | Personal, not a section |
@@ -71,9 +77,9 @@ Four pages are on the wrong side by the rule, and one is on both:
 | Maintenance | top-level | **Shelter Operations** | Staff, Management | Jobs done daily |
 | Stocktake | top-level | **Shelter Operations** | Staff, volunteers weekly | A field job (0091) |
 | Deliveries | top-level | **Shelter Operations** | 2IC on delivery days | Recording a delivery is daily work |
-| Projects | top-level | **Shelter Operations** — **ASK** | Management | Closer to running the shelter than to a record |
-| Vets (`/vets`) | top-level | **Shelter Operations** — **ASK** | Everyone but a vet; a lookup a few times a week | The read side. `/management/vets` stays as the record editor, so the same data has two doors with different jobs |
-| Contacts (`/contacts`) | top-level | **Shelter Operations** — **ASK** | Same | Same |
+| Projects | top-level | **Shelter Operations** (answered) | Management | Closer to running the shelter than to a record |
+| Vets (`/vets`, the lookup) | top-level | **Shelter Operations** (changed by Lutan: the doors split) | Management and staff; a lookup a few times a week | Checked on dev 2026-10-08: **`clinics.list` is held by `management = 2` and `staff = 1` (read)**. Staff look vets up. Management is a gated section they never see, so putting the lookup there would have taken it out of their menu: the page's own guard would not change, but nobody finds a page by URL on a phone. `/management/vets` stays as the record editor, so the same data has two doors with different jobs |
+| Contacts (`/contacts`, the lookup) | top-level | **Shelter Operations** (answered; records stay Management) | **Management and the 2IC only** | The read side, as for Vets. *Correction:* this row said *"everyone but a vet"* when it was proposed, which was already stale — **`0155` restricted `contacts.browse` to `management` and `second_in_command`**, so staff and volunteers cannot browse contacts at all. The tile is simply absent for them |
 | Management | top-level | **Management** | Director by day on her phone; the 2IC | The records |
 | Settings | top-level | **Settings** | The Director, at night | The setup |
 | Medication list | tile under Management | **Shelter Operations** | Staff and the Head of Medical, each round | As above |
@@ -91,8 +97,8 @@ label photo and the forecast, plus `UnitsPanel` (unit conversions) and the Merge
 **Diets** is the same shape: option list (diet name, unit, per-size daily quantities) in Settings;
 stock, cost and forecast in Management.
 
-**Cost per unit** stays on the Management side: it changes as suppliers change, so it passes the
-"dynamic" test even though it sits on a list row. **ASK** if Lutan would rather prices be setup.
+**Cost per unit stays on the Management side** (answered): it changes as suppliers change, so it
+passes the "dynamic" test even though it sits on a list row.
 
 The split is the one piece of real engineering here: two pages over the same table, both guarded
 by `stock.medications` / `stock.diets` today. The guards must be decided with `admin-role`.
@@ -115,49 +121,68 @@ desktop-only only if Admin is the only role that can open it.* Applied to this t
 A page's side implies who reaches it.
 - Settings is gated to Admin (the Director at her desk, at night).
 - Management is Admin and Management (the Director by day on her phone, the 2IC).
-- Shelter Operations is gated per tile, by each page's own activity, like Management's tiles
-  (`requireAnyPageUnder`). It opens for anyone who can open at least one tile, so **staff and
-  volunteers will see a section in their sidebar that Management and Settings never showed them.**
-  That is the intent, but it is the user-visible change.
+- Shelter Operations is gated per tile, by each page's own activity, like Management's tiles. It
+  opens for anyone who can open at least one tile, so **staff and volunteers will see a section in
+  their sidebar that Management and Settings never showed them.** That is the intent, but it is the
+  user-visible change.
 
 Moving **medication-list** and **enclosures** from Management / top-level to Shelter Operations
 changes no one's access: each is guarded by its own activity, not by its section. Moving a page
 is cosmetic for access and real for navigation.
 
-## What the home screens change
+**The one deliberate access change is the website.** Moving `/admin/website` to Management only
+works if Management can open it, and today it cannot: Admin reaches it because `can()` passes Admin
+everything (`src/lib/permissions/can.ts`, `if (perms.isAdmin) return true`), so `website.content`
+is held by **nobody**. Lutan's decision therefore means **granting the `management` role
+`website.content` at Edit**, and accepting what follows from it: **anyone holding the Management
+role can change the public site.** It also answers the question `baseline-impact-figures` filed
+rather than granting itself — *does Management hold `website.content`?* — **yes.**
 
-`src/lib/home/tiles.ts` and the jobs layer decide what each role's home offers, so Staff,
-Volunteer and the Head of Medical mostly never open a sidebar section. The sections matter for
-Admin and Management, who see the full sidebar, and for anyone following a link. That is why
-Shelter Operations is cheap (one landing, one nav entry, nothing re-guarded) and the moves are
-cheaper than they look: the value is for two roles, and the risk is in URLs, not in access.
+Found while building PR 1: the cell alone is not enough. The tables the page writes —
+`site_content`, `site_content_photos` and `site_pages` — still have write policies of
+`is_admin()` (as `0153` left them), so with only the cell a Management login would open the page
+and have every save refused by the database. Making the grant real also means rewriting those three
+policies to `has_permission('website.content')` (Admin is unchanged: `has_permission` passes
+Admin through). That is a wider schema change than the single row the brief described, so it is
+Lutan's to approve before it rides in a migration.
+
+## How the sections are decided in code (PR 1)
+
+The landings and the sidebar used to ask "can this person open any page whose URL is under
+`/management` (or `/admin`)?". That stops being true the moment a page keeps its address and moves
+section, which is most of this table: `/enclosures` and the rest keep their URLs and sit under
+Shelter Operations, and `/admin/website` keeps its URL and sits under Management. So the route
+registry (`src/lib/permissions/routes.ts`) now carries the section: an entry's own `section`, or,
+when it has none, the one its URL is under (`sectionOf`). The three landing guards
+(`requireAnyPageIn`) and the three sidebar entries (`opensAnyIn`) ask that one question, so a page
+is counted in exactly one section and the menu and the landing can never disagree. A section's
+menu entry also lights up while you are on any page in it.
 
 ## URLs and the redirect stubs
 
 - Nothing in code, scripts or the manual links to `/admin/contacts` or `/admin/vets`. The only
   references are in decisions and the backlog. They are bookmarks and nothing else.
-- **Recommendation: delete both stubs now, in the Shelter Operations PR.** They have been stubs
-  for 16 days; the only readers are two people on phones, who open the app from Home. A stub that
-  nobody removes is how `/admin/contacts` got here.
+- **Deleted in PR 1** (answered): they had been stubs since 2026-09-21.
 - **Policy for the moves this table makes:** keep a redirect from each old URL for **one release
   cycle after the move**, then delete it in the next release's clean-up. Record the removal date in
   the stub's comment so the next person does not have to guess.
 - URLs that actually move: `/management/medication-list` → `/operations/medication-list`;
   `/enclosures`, `/maintenance`, `/stocktake`, `/deliveries`, `/projects`, `/vets`, `/contacts`
-  **keep their URLs** and only change nav home (they are linked from the manual, notifications,
-  email and the home tiles; the sidebar entry moves, the address does not).
+  and `/admin/website` **keep their URLs** and only change where they sit in the menu (they are
+  linked from the manual, notifications, email and the home tiles; the menu entry moves, the
+  address does not).
   `/management/medications` and `/management/diets` stay as the Management stock halves; the new
   Settings halves are `/admin/medications` and `/admin/diets`.
 - The **section name in the URL** is only worth a new prefix for the new landing (`/operations`).
   Renaming `/admin` to `/settings` was already judged not worth it (decisions.md, 2026-09-23).
 
-## Proposed order of work (three PRs, in this order)
+## Order of work (three PRs, in this order)
 
 1. **Shelter Operations landing + nav.** New `/operations` page of tiles, nav entry, en/th, manual
    topic, release note. Moves **medication-list** under it with a redirect, and moves the nav
-   entries listed above. No schema, no guard change. Delete the two old stubs. Touches
-   `NavLinks.tsx`, `routes.ts` (registry rows), the dictionaries and manual: conflict-prone, so it
-   goes alone.
+   entries listed above. No page guard changes. Delete the two old stubs. Website moves to the
+   Management landing. Touches `NavLinks.tsx`, `routes.ts` (registry rows), the dictionaries and
+   manual: conflict-prone, so it goes alone. *(`claude/shelter-operations-nav`.)*
 2. **Split medications and diets.** Settings halves as new `/admin/medications` and `/admin/diets`;
    Management halves lose the option-list parts. Needs a guard decision with `admin-role`:
    Settings halves use the existing activities with level `edit`, Admin only, unless the Director's
@@ -166,17 +191,17 @@ cheaper than they look: the value is for two roles, and the risk is in URLs, not
    make `check-phone-width.mjs` the proof. Folds into the bare-buttons stream if that is still live.
 
 Order matters: 1 first, because it removes nav churn; 2 only after `admin-role` has merged its guards.
+The `website.content` grant is a schema change, so it rides in whichever migration is in flight when
+Lutan approves it (only one branch may carry one), not in PR 1.
 
-## ASK (what this table cannot settle alone)
+## The questions, answered (Lutan, 2026-10-08)
 
-1. **Splitting medications and diets,** or leaving them whole under Management with the option-list
-   parts (names, units, merge, conversions) simply left there? The rule says split; the cost is two
-   pages where there is one today.
-2. **Cost per unit:** Management (my proposal: prices change) or Settings (a figure you set once)?
-3. **Projects, Vets and Contacts** as Shelter Operations tiles, or stay top-level?
-4. **Shelter Friends:** Management (records of real businesses) or Settings (it configures the
-   public site)?
-5. **Stubs:** delete `/admin/contacts` and `/admin/vets` now?
+1. **Split medications and diets?** **Yes.** PR 2.
+2. **Cost per unit: Management or Settings?** **Management**, because prices change.
+3. **Projects, Vets and Contacts as Shelter Operations tiles, or top-level?** **Shelter Operations,
+   all three.** He confirmed this over the table's `M` marks. It is consistent with the Vets and
+   Contacts rows above because **only the lookup doors move**; the records pages stay in Management.
+4. **Shelter Friends: Management or Settings?** **Management.**
+5. **Delete the `/admin/contacts` and `/admin/vets` stubs now?** **Yes, in PR 1.**
 
-When these are answered the item can be ticked as the PRs land. **The backlog item is not ticked
-by this PR**: the rule is applied and the table is here, but nothing is built.
+The backlog item is ticked when all three PRs have landed, not before.

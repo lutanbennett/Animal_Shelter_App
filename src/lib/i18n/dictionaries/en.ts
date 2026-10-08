@@ -83,6 +83,7 @@ const en = {
     residents: "Residents",
     settings: "Settings",
     management: "Management",
+    shelterOperations: "Shelter Operations",
     dashboard: "Dashboard",
     website: "Website",
     security: "Security",
@@ -304,7 +305,7 @@ const en = {
     },
     /**
      * /friends/join's starter text, shown until an admin saves a body of
-     * their own on Settings → Website (which also offers it to edit).
+     * their own on Management → Website (which also offers it to edit).
      * From the Shelter Friends item's own description (docs/backlog.md);
      * no promises only the Director can make — fees, terms, how long a
      * profile stays up.
@@ -326,7 +327,7 @@ const en = {
     },
     /**
      * /adopt/international's starter text, shown until an admin saves a body
-     * of their own on Settings → Website (which also offers it to edit).
+     * of their own on Management → Website (which also offers it to edit).
      * Generic on purpose (docs/decisions.md, 2026-09-27): what an adoption
      * from abroad involves, in outline and our own words — no fees,
      * timelines, countries served, partner names or licence claims, which
@@ -1722,6 +1723,25 @@ const en = {
       failed: "Nothing was saved",
     },
   },
+  /** Shelter Operations (/operations): the landing of tiles for the daily work (agreed 2026-10-08). */
+  operations: {
+    landing: {
+      title: "Shelter Operations",
+      subtitle: "The daily work of running the shelter. Pick a job to open it.",
+      tiles: {
+        enclosures: "Who is where: every zone and enclosure, with the residents in each.",
+        maintenance: "Repairs and work needed around the shelter: report a job, pick one up, mark it done.",
+        stocktake: "Count the medicine and food on the shelves, walking round with a phone.",
+        deliveries: "Record medicine or food as it arrives from a supplier.",
+        projects: "Photos and stories from the shelter's work, filed by category like a folder tree.",
+        vets: "Look up a vet or clinic the shelter works with, and call them.",
+        contacts: "Look up a carer, volunteer or supplier, and call or message them.",
+        medicationList:
+          "Who needs what medicine today, in walking order, with a photo of each animal and of each box. A list to read; nothing to tap.",
+      },
+    },
+  },
+
   management: {
     landing: {
       title: "Management",
@@ -1736,8 +1756,6 @@ const en = {
           "The vets and clinics the shelter books visits with, and how much each one has seen.",
         medications:
           "The medication list prescriptions are written from — names, units, and duplicates to merge.",
-        medicationList:
-          "Who needs what medicine today, in walking order, with a photo of each animal and of each box. A list to read; nothing to tap.",
         diets:
           "The food list staff pick from, with the unit, cost and daily quantities the forecast uses.",
         cashflow:

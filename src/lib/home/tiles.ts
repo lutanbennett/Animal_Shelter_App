@@ -31,7 +31,7 @@ const ORDER: Record<string, readonly string[]> = {
   management: [
     "/management/recurring-jobs",
     "/management/vets",
-    "/management/medication-list",
+    "/operations/medication-list",
     "/management/dashboard",
     "/management/contacts",
     "/maintenance",

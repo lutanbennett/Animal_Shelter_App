@@ -52,7 +52,7 @@ export const JOBS: Record<JobKey, Job> = {
       { activity: "medical.prescriptions", level: "read" },
       { activity: "resident.record", level: "read" }, // who and where, nothing more (0134)
     ],
-    opens: "/management/medication-list",
+    opens: "/operations/medication-list",
   },
   // Second job of the Head of Medical. She cannot open a resident's record, so the page is her
   // own (/medical/weight), reading who-and-where and writing the flat `weight` table.
