@@ -18,6 +18,9 @@ export const UNDOABLE_EDIT_TABLES: readonly AuditedTable[] = [
   "vet_appointments",
   "weight",
   "immunization_records",
+  // A figure is a typed number and date; putting the old pair back is the
+  // same write Settings → Website makes. It has no delete (0156).
+  "impact_baselines",
 ];
 
 /** Tables a hard delete can be undone on, by putting the row back. */
@@ -36,14 +39,23 @@ export type UndoKind =
   | "archive" // an archive or restore: the record's own Restore / Archive does it
   | "added" // an insert: nothing to put back
   | "resident" // a deleted resident: lossy and cascading
-  | "file"; // a file: its Drive copy is in the trash
+  | "file" // a file: its Drive copy is in the trash
+  | "permissions" // a role or permission: changed only by an app update, so not from a log
+  | "facilityMap" // a plan: its own Undo also puts the picture and its history back
+  | "elsewhere"; // anything else: not undone here, and nothing more specific to say
 
 export function undoKind(e: Pick<AuditEntry, "table" | "op" | "kind">): UndoKind {
-  if (e.kind === "archived" || e.kind === "restored") return "archive";
   if (e.op === "INSERT") return "added";
+  // Before the archive check: a role has archived_at but no Restore button.
+  if (e.table === "roles" || e.table === "role_permissions") return "permissions";
+  if (e.table === "facility_maps") return "facilityMap";
+  if (e.kind === "archived" || e.kind === "restored") return "archive";
   if (e.table === "attachments") return "file";
-  if (e.op === "DELETE") return e.table === "residents" ? "resident" : "reinsert";
-  return UNDOABLE_EDIT_TABLES.includes(e.table) ? "edit" : "file";
+  if (e.op === "DELETE") {
+    if (e.table === "residents") return "resident";
+    return UNDOABLE_DELETE_TABLES.includes(e.table) ? "reinsert" : "elsewhere";
+  }
+  return UNDOABLE_EDIT_TABLES.includes(e.table) ? "edit" : "elsewhere";
 }
 
 /** The newest audit id for each row, so an entry can be checked as the latest. */

@@ -20,6 +20,10 @@ function revalidateFor(table: AuditedTable, image: Image) {
   if (table === "contacts") revalidatePath("/management/contacts");
   if (table === "vet_appointments") revalidatePath("/appointments");
   if (table === "prescriptions") revalidatePath("/management/stock-usage");
+  if (table === "impact_baselines") {
+    revalidatePath("/admin/website");
+    revalidatePath("/");
+  }
   refresh();
 }
 
