@@ -541,7 +541,7 @@ const en = {
         systemStatus:
           "Whether the database, photo storage, migrations, release mail, backups and the Pi are healthy, and how much the app is being used.",
         recentChanges:
-          "Who changed what: every add, edit, archive and delete on resident, medical and contact records, newest first.",
+          "Who changed what: every add, edit, archive and delete on resident, medical and contact records, impact figures, facility plans, roles and permissions, newest first.",
       },
     },
     /** Settings → Medications: the medication list (split from Management, 2026-10-08). */
@@ -561,7 +561,7 @@ const en = {
     recentChanges: {
       title: "Recent changes",
       subtitle:
-        "Who changed what, newest first: every add, edit, archive and delete on residents, contacts, prescriptions, vet visits, weights, files and vaccinations. The list shows which fields changed; the values appear only when you open one. The newest change to a record can be undone.",
+        "Who changed what, newest first: every add, edit, archive and delete on residents, contacts, prescriptions, vet visits, weights, files and vaccinations, and on impact figures, facility plans, roles and permissions. The list shows which fields changed; the values appear only when you open one. The newest change to a record can be undone.",
       tables: {
         residents: "Resident",
         contacts: "Contact",
@@ -570,6 +570,10 @@ const en = {
         weight: "Weight",
         attachments: "File",
         immunization_records: "Vaccination",
+        impact_baselines: "Impact figure",
+        facility_maps: "Facility plan",
+        roles: "Role",
+        role_permissions: "Permission",
       },
       kinds: {
         added: "Added",
@@ -631,6 +635,10 @@ const en = {
           resident:
             "A deleted resident can't be undone here: it would come back without its chip number or anything that was deleted with it.",
           file: "Files can't be undone here: a deleted file's copy is in the Drive bin.",
+          permissions:
+            "Roles and permissions can't be undone here: they change only with an update to the app, because putting one back by hand could let someone in or lock them out.",
+          facilityMap: "To undo a plan change, use Undo the replace on Settings → Facility map: it puts the picture back too.",
+          elsewhere: "This kind of change can't be undone here. Change the record itself instead.",
         },
         errors: {
           gone: "That entry could not be found.",

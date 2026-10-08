@@ -92,7 +92,11 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
     const label =
       e.table === "residents"
         ? (residentName ?? e.name ?? s.unnamedRecord)
-        : e.table === "contacts" || e.table === "attachments"
+        : e.table === "contacts" ||
+            e.table === "attachments" ||
+            e.table === "roles" ||
+            e.table === "role_permissions" ||
+            e.table === "impact_baselines"
           ? (e.name ?? s.unnamedRecord)
           : null;
     const owner = e.table !== "residents" && e.table !== "contacts" ? residentName : null;

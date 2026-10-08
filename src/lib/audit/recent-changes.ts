@@ -4,7 +4,7 @@ import { addDaysIso } from "@/lib/format";
 /**
  * Reading audit_log for Settings → Recent changes (backlog DB-6, part 2).
  *
- * The table holds whole-row images of seven tables and is the most sensitive
+ * The table holds whole-row images of eleven tables and is the most sensitive
  * one in the database, so this file is deliberately modest:
  *
  *  - It reads with the signed-in admin's own client. RLS (0121) lets only an
@@ -24,6 +24,12 @@ export const AUDITED_TABLES = [
   "weight",
   "attachments",
   "immunization_records",
+  // The settings tables with a record_audit() trigger: 0132, 0156, 0165.
+  // Every table with that trigger belongs here, or its rows show unlabelled.
+  "impact_baselines",
+  "facility_maps",
+  "roles",
+  "role_permissions",
 ] as const;
 export type AuditedTable = (typeof AUDITED_TABLES)[number];
 
@@ -149,11 +155,15 @@ function toEntry(r: RawRow): AuditEntry {
     kind: kindOf(r.op, r.old_row, r.new_row, changed),
     changed,
     name:
-      table === "residents" || table === "contacts"
+      table === "residents" || table === "contacts" || table === "roles"
         ? str(image.name)
         : table === "attachments"
           ? str(image.file_name)
-          : null,
+          : table === "impact_baselines"
+            ? str(image.label)
+            : table === "role_permissions"
+              ? str(image.activity)
+              : null,
     residentId,
   };
 }
