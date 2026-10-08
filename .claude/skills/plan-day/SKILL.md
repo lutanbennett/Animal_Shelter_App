@@ -66,6 +66,14 @@ leftovers to `done` — but only if `held` says `free`. A `HELD` worktree
 has a session or a process in it; name it and ask rather than tearing it
 down. List any husks it prints so the user can clear them.
 
+**Capture actuals now — this is the only chance.** For each worktree whose
+PR has merged and whose session is still running, find the session in
+`mcp__ccd_session_mgmt__list_sessions` (match on its folder) and call
+`mcp__ccd_session_mgmt__get_usage` with that `session_id`; record
+`context.tokensUsed` against the slug in `.plan-day.md` (step 6). Once a
+session closes the figure is gone; if it reports `unavailable`, write
+`unmeasured`, never a guess.
+
 ## 3. Read the backlog
 
 `C:\Development\Animal_Shelter_App\docs\backlog.md`, open items only
@@ -128,6 +136,11 @@ Rules, in order:
    Claude-buildable, unblocked items, plan fewer and say why. Padding
    the list with user-driven items to reach nine is the failure mode to
    avoid — those stay reminders in **Not today**.
+8. **Fold small items into one stream.** Every stream pays a ~110k floor
+   before any work (see *Token estimates*), so three quick wins as three
+   streams cost ~330k of floor; as one stream, ~110k. Disjointness
+   decides what *can* share a stream; this decides what *should*. Worked
+   example: batch 73's `stock-pages-finish` folds three items.
 
 When the third batch is planned, note that cutting a release is the
 natural step once it merges.
@@ -136,7 +149,9 @@ natural step once it merges.
 
 Three tables, one per batch, each with `#`, feature slug (`kebab-case`,
 becomes `claude/<slug>` and `Animal_Shelter_<slug>`), the backlog item's
-bold title, area, migration yes/no, and one line on why now. Give each
+bold title, area, migration yes/no, estimated tokens (`~250k`, from the
+bands below), and one line on why now. Under the tables, one line: *token
+figures are context-window size, a measure of scale, not a bill.* Give each
 batch a line saying what makes it a batch — what its three share, what it
 unblocks for the next one, which dependency fixed the order.
 
@@ -161,6 +176,27 @@ fixed the ordering, so a later run does not have to re-derive it.
 
 Keep the statuses current: mark a batch when you set it up, and mark it
 merged on a later run once its PRs are in.
+
+Keep a `slug | scale | estimated | actual` table: the estimate when a
+batch is set up, the actual when step 2 reads it. Writing both is what
+lets the bands below correct themselves from recorded work.
+
+### Token estimates (provisional — revise from the actuals)
+
+| scale | band | shape |
+|---|---|---|
+| Floor | ~110k | every stream, before any work: tools, memory, skills, CLAUDE.md, brief |
+| Quick win | 110–170k | 1–3 files; screenshots cost far less than first assumed |
+| Schema PR | unmeasured | read `zone-colour-schema` (batch 73) while its session is live |
+| Medium | 200–320k | 5–15 files, browser checks, both dictionaries |
+| Large | 350–550k | rebuilt pages, many files |
+
+Measured 2026-10-08 (batch 72): `account-menu-min-width` quick 129,320
+(est. 180–280k); `place-order-settings` medium 282,082 (est. 300–450k);
+`medications-diets-split` large 361,651 (est. 400–600k). The figure is
+the window, not billed tokens — each turn re-sends it, mostly cached.
+Auto-compact starts at 97% of 1M, so a stream past ~970k spent more than
+its figure shows. Reasoning: `docs/decisions/2026-10-08-plan-day-token-estimates.md`.
 
 ## 7. Set up — the current batch only
 
