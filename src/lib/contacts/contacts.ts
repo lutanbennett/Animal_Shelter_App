@@ -151,17 +151,85 @@ export function mailtoHref(email: string | null | undefined): string | null {
 }
 
 /**
+ * Hosts whose links are redirects to the real maps URL: what the Maps
+ * app's Share button produces (`maps.app.goo.gl`), and the older forms.
+ * Only following one shows whether it still leads anywhere — see
+ * map-preview.ts.
+ */
+export const MAP_SHORT_LINK_HOSTS: readonly string[] = ["maps.app.goo.gl", "goo.gl", "g.co"];
+
+/**
+ * An address field split into the maps link it starts with, if any, and
+ * the text around it. Staff paste a shared link and often type a note or
+ * the written address after it; only the first word is the link, and
+ * opening the whole field is a broken URL (Google answers 400).
+ */
+export function splitAddress(address: string | null | undefined): {
+  link: URL | null;
+  text: string;
+} {
+  const trimmed = address?.trim() ?? "";
+  if (!/^https?:\/\//i.test(trimmed)) return { link: null, text: trimmed };
+  const [first, ...rest] = trimmed.split(/\s+/);
+  let link: URL | null = null;
+  try {
+    link = new URL(first);
+  } catch {
+    // not a URL after all — only the text is left
+  }
+  return { link, text: rest.join(" ") };
+}
+
+/** A Google Maps search for `query` — opens the Maps app on a phone. */
+export function mapSearchHref(query: string): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
+/**
+ * What tapping the map opens and the thumbnail it shows, built from the
+ * same place so the two never disagree. A link that says where it points
+ * opens as pasted; anything else falls back to the text as a search.
+ */
+export type AddressMap = { href: string; src: string };
+
+function textMap(text: string): AddressMap | null {
+  const query = text.trim();
+  return query ? { href: mapSearchHref(query), src: mapEmbedSrc(query)! } : null;
+}
+
+/**
+ * The address's map without leaving the page: a full Google Maps link
+ * (or a short link already followed, `resolvedQuery`) opens as pasted;
+ * a short link not yet followed, a link to anything other than a map,
+ * or a link Google no longer recognises falls back to the text after it,
+ * and with no text there is no map — never a link that 404s.
+ * map-preview.ts's `addressMap` is the server-side version that follows
+ * short links first.
+ */
+export function addressMapNow(
+  address: string | null | undefined,
+  resolvedQuery?: string | null,
+): AddressMap | null {
+  const { link, text } = splitAddress(address);
+  if (!link) return textMap(text);
+  const query = resolvedQuery ?? mapQueryFromUrl(link.toString());
+  if (query) return { href: link.toString(), src: mapEmbedSrc(query)! };
+  return textMap(text);
+}
+
+/**
  * Opens the address in Google Maps — the Maps app on a phone, the site on
- * desktop. A pasted maps link (a shared pin, `maps.app.goo.gl/…`) is used
- * as-is; anything else goes in as a search query, which handles Thai
- * village addresses, landmarks and plus codes alike.
+ * desktop — for pages that can't follow a short link (the contact list,
+ * client previews). A pasted maps link opens on its own, without the text
+ * after it; a short link is trusted unfollowed here, so the contact hub,
+ * which does follow it, passes its own `AddressMap.href` instead. Plain
+ * text goes in as a search, which handles Thai village addresses,
+ * landmarks and plus codes alike.
  */
 export function mapHref(address: string | null | undefined): string | null {
-  if (!address) return null;
-  const trimmed = address.trim();
-  if (!trimmed) return null;
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(trimmed)}`;
+  const { link } = splitAddress(address);
+  if (link && MAP_SHORT_LINK_HOSTS.includes(link.hostname)) return link.toString();
+  return addressMapNow(address)?.href ?? null;
 }
 
 /**
@@ -191,6 +259,8 @@ export function mapQueryFromUrl(url: string): string | null {
     return null;
   }
   if (!/(^|\.)google\.[a-z.]+$/i.test(parsed.hostname)) return null;
+  // google.com itself, or a web search, is not a map.
+  if (!/^maps\./i.test(parsed.hostname) && !parsed.pathname.startsWith("/maps")) return null;
   const q = parsed.searchParams.get("q");
   if (q?.trim()) return q.trim();
   const pin = parsed.pathname.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/);
