@@ -1546,8 +1546,8 @@ const en = {
     blankHint:
       "Leave a row blank if you didn't count it — it stays as it was. If the figure hasn't changed, tap Same as last time.",
     noItems: {
-      medication: "No medications yet. Management adds them under Management → Medications.",
-      diet: "No diets yet. Management adds them under Management → Diets.",
+      medication: "No medications yet. An admin adds them under Settings → Medications.",
+      diet: "No diets yet. An admin adds them under Settings → Diets.",
     },
     noMatches: (query: string) => `Nothing matches “${query}”.`,
     notCounted: "Never counted",
@@ -3472,7 +3472,7 @@ const en = {
       "Open this from a resident's Diet page so the diet is recorded against the right resident.",
     residentNotFound: "Resident not found.",
     couldntLoadDietTypes: "Couldn't load diet types",
-    noDietTypes: "No diet types have been set up yet — management adds them under Management → Diets.",
+    noDietTypes: "No diet types have been set up yet — an admin adds them under Settings → Diets.",
     forResident: (name: string) => `For ${name}`,
     dietType: "Diet",
     selectDietType: "Select a diet",
