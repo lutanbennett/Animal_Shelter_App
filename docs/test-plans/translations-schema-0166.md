@@ -11,7 +11,7 @@
 | PR | see the PR this plan is in |
 | Tested by / date | Claude / 2026-10-08 |
 | Carries a migration? | yes — `0166_label_translations.sql` |
-| Tested at SHA | `99037afb` (after sync with `origin/main` `c827c8a9`, already up to date) |
+| Tested at SHA | `99037afb` (after sync with `origin/main` `c827c8a9`, already up to date; synced again at merge with `6da4856e` (#477), one conflict in `releases.ts` resolved by keeping both lines, gates re-run after it) |
 
 ## 1. Scope and risk
 
@@ -31,14 +31,14 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit; ticked from the PR status before merging
+- [x] CI green on the PR — all 7 checks passing on #476, read from the PR status before merging
 
 ## 3. Schema and data — *skip if no migration*
 
 - [x] Migration number is one above the highest on `main`, and no other in-flight branch carries one — `check-migration-numbers.mjs`: ok, `0166` against highest `0165`; the brief names this as the batch's only migration stream
 - [x] `node scripts/apply-migrations.mjs --status` reviewed before applying — dev 165 applied, 0 pending, no drift against `origin/main`
 - [x] `node scripts/apply-migrations.mjs --dry-run` reviewed — `dry-run 0166_label_translations.sql … ok`
-- [ ] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations` — n/a: not yet — applied only when Lutan says merge, and this line is ticked in that commit
+- [x] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations` — applied on Lutan’s "merge it", 2026-10-08: `applying 0166_label_translations.sql … ok`; `--status` then 166 applied, 0 pending. After the apply: `check-app-access-gate.mjs` HARNESS-OK (public_viewer and anon gain nothing), `check-view-write-grants.mjs` 292 statements, 0 failed
 - [x] File is re-runnable — the whole file ran **twice** in one transaction on dev, then rolled back: `RERUN-OK labels=18 sources=88 recurring=18` (no duplicates on the second run)
 - [x] Existing rows still read correctly after the change — every view rewritten from its latest migration text with one trailing column; `check-view-write-grants.mjs`: 292 statements, 0 failed
 - [x] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness on dev, signed in as a Management login and then a Staff login (`request.jwt.claims`). Results:
@@ -70,7 +70,7 @@ gates: typecheck=0 lint=0 build=0
 | staff | `label_translations()` | read only | pass — reads, write refused |
 | vet | views only | unchanged | n/a — no vet policy changed; `check-view-write-grants` ran every role |
 | volunteer | nothing new | unchanged | n/a — no translations permission |
-| signed out | `public_site_content_photos` | gains `alt_th`, public as `alt` is | pass — `check-app-access-gate.mjs` HARNESS-OK on dev before apply; re-run after apply is deferred with the apply |
+| signed out | `public_site_content_photos` | gains `alt_th`, public as `alt` is | pass — `check-app-access-gate.mjs` HARNESS-OK on dev before apply; re-run after the apply, still HARNESS-OK |
 
 - [ ] Every role above tested — n/a: Admin and Vet not run separately; no policy on an existing table changed, and the new functions ask permissions, not roles (`check-new-policy-role-names.mjs`: ok)
 - [x] A role that should not have access is blocked server-side — Staff's write refused in §3; `check-policy-role-names.mjs` GREEN
