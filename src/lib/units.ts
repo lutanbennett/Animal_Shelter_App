@@ -165,10 +165,11 @@ export function inPurchaseUnit(
 }
 
 /**
- * Price per purchase unit → cost per base unit, to the column's 2 places
- * (diet_types.cost_per_unit numeric(10,2), medication 12,2). Refused when
- * rounding would move the figure by more than 1%: 35 baht a kg is 0.035 a
- * gram, which a 2-place column would save as 0.04.
+ * Price per purchase unit → cost per base unit, to the column's 4 places
+ * (both cost_per_unit columns are numeric(12, 4) since 0161, so 35 baht a kg
+ * is kept as 0.035 a gram). Still refused when rounding would move the
+ * figure by more than 1%: 1 baht for 100 kg is 0.00001 a gram, which four
+ * places would save as 0.
  */
 export function costPerBaseUnit(
   pricePerPurchaseUnit: number,
@@ -178,7 +179,7 @@ export function costPerBaseUnit(
     return { ok: false, reason: "priceInvalid" };
   }
   const exact = pricePerPurchaseUnit / basePer;
-  const value = Math.round(exact * 100) / 100;
+  const value = Math.round(exact * 10_000) / 10_000;
   if (exact > 0 && Math.abs(value - exact) / exact > 0.01) return { ok: false, reason: "tooCoarse" };
   return { ok: true, value };
 }
