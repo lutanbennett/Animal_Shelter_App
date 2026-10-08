@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "On a phone, your name and role at the top of the screen are a proper button again for vets and the head of medical. It had been squeezed to a sliver beside the logo; it now sits on its own line, so you can tap it to see which account you are on.",
   "Medications and Diets are each now two pages. The lists themselves (names, units, the daily amount for each size, merging duplicates, the units things are bought and counted in) are under Settings → Medications and Settings → Diets, for an admin. Management → Medication stock and Diet stock keep what changes day to day: how much is in the cupboard, the price, when to reorder, label photos and the forecast, laid out as cards that fit a phone. A price can now have up to 4 decimal places, so food bought by the sack can be priced per gram. In Thai too.",
 ];
 
