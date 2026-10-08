@@ -1,6 +1,7 @@
 "use client";
 
 import { ACTION_ICONS } from "@/components/hub-icons";
+import { placeLine } from "@/components/ZoneName";
 import { ActionButton } from "@/components/ActionButton";
 import { useState } from "react";
 import { useKeptForm } from "@/lib/use-kept-form";
@@ -21,6 +22,7 @@ export type RehomeCurrent = {
   status: string | null;
   enclosureName: string | null;
   zoneName: string | null;
+  zoneColour?: string | null;
   carerName: string | null;
   since: string | null;
 };
@@ -78,7 +80,7 @@ export function RehomeForm({
       : t.residents.hub.fosteredNoCarer
     : current.status === "Hospitalised"
       ? t.residents.hub.inHospital
-      : [current.enclosureName, current.zoneName].filter(Boolean).join(" · ") ||
+      : placeLine(current) ||
         statusLabel(t, current.status);
 
   return (

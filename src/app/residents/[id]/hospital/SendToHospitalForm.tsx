@@ -1,6 +1,7 @@
 "use client";
 
 import { ACTION_ICONS } from "@/components/hub-icons";
+import { placeLine } from "@/components/ZoneName";
 import { ActionButton } from "@/components/ActionButton";
 import { useKeptForm } from "@/lib/use-kept-form";
 import Link from "next/link";
@@ -42,7 +43,7 @@ export function SendToHospitalForm({
           {t.residents.move.currentLocation}
         </h2>
         <p className="text-base font-semibold text-foreground">
-          {[current.enclosureName, current.zoneName].filter(Boolean).join(" · ") ||
+          {placeLine(current) ||
             t.common.dash}
         </p>
         {current.since && (

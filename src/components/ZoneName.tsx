@@ -31,6 +31,26 @@ export function ZoneDot({
 }
 
 /**
+ * "Kennel 4 · ● Main Zone", the current place on the move, hospital, rehome
+ * and death forms; null when neither is known, so a caller's `||` fallback still works.
+ */
+export function placeLine(place: {
+  enclosureName: string | null;
+  zoneName: string | null;
+  zoneColour?: string | null;
+}): ReactNode {
+  const { enclosureName, zoneName, zoneColour } = place;
+  if (!enclosureName && !zoneName) return null;
+  return (
+    <>
+      {enclosureName}
+      {enclosureName && zoneName && " · "}
+      {zoneName && <ZoneName name={zoneName} colour={zoneColour} />}
+    </>
+  );
+}
+
+/**
  * A zone <select> with the chosen zone's dot drawn inside it, left of the
  * text. A native option cannot hold a dot, and the list stays native so a
  * phone opens its own picker; once a zone is chosen, its colour shows.

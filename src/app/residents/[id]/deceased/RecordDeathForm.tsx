@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { placeLine } from "@/components/ZoneName";
 import { useKeptForm } from "@/lib/use-kept-form";
 import { HeartCrack, X } from "lucide-react";
 import { ActionButton } from "@/components/ActionButton";
@@ -60,7 +61,7 @@ export function RecordDeathForm({
             {t.residents.move.currentLocation}
           </h2>
           <p className="text-base font-semibold text-foreground">
-            {[current.enclosureName, current.zoneName].filter(Boolean).join(" · ") ||
+            {placeLine(current) ||
               t.common.dash}
           </p>
           {current.since && (
