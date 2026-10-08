@@ -62,18 +62,27 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  "Web addresses on the public pages are now links you can tap, such as the DonorBox address on the Donate page. Staff can also put words on a link, for example [Give monthly](https://…), and add email and phone links. This works on the information pages and on project stories.",
-  "Enclosures: each zone now shows how many residents are in it and how many spaces are free, with a total for all zones above. A full or over-capacity enclosure never takes spaces away from the others.",
-  "More buttons are now big enough to tap with a thumb on a phone: Undo, Skip, Add note and Done on My tasks, the buttons in the photo viewer (close, Remove photo, Set as profile, Move, Show all), the Units buttons, and the account menu at the top. On a computer they look as before.",
-  "The rest of the small buttons are now big enough to tap on a phone: Save and Cancel when editing, Retry and Remove on uploads, Confirm and Cancel in the assistant, and the setup tables in Management and Admin. The × that removes a file from a blood test or procedure now shows on a phone (before, it only appeared under a mouse), and it asks before deleting the file.",
-  "Home page: the rehomed and village sterilisation figures now show just the number, without \"About\" in front or the note underneath about earlier work being estimated. In Thai too.",
-  "The menu has a new entry, Shelter Operations, for the daily work: Enclosures, the Medication list, Maintenance, Stocktake, Deliveries, Projects, Vets and Contacts are now tiles inside it instead of separate menu entries. You see only the tiles you can use. Staff and volunteers will see Shelter Operations in their menu for the first time. The pages themselves have not changed, and links to them still work. The Website page is now a tile on Management instead of Settings. In Thai too.",
   "Medications and Diets are each now two pages. The lists themselves (names, units, the daily amount for each size, merging duplicates, the units things are bought and counted in) are under Settings → Medications and Settings → Diets, for an admin. Management → Medication stock and Diet stock keep what changes day to day: how much is in the cupboard, the price, when to reorder, label photos and the forecast, laid out as cards that fit a phone. A price can now have up to 4 decimal places, so food bought by the sack can be priced per gram. In Thai too.",
 ];
 
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.21.0",
+    date: "2026-10-08",
+    title:
+      "Shelter Operations: the daily work in one menu entry, and more buttons you can tap on a phone",
+    major: true,
+    notes: [
+      "The menu has a new entry, Shelter Operations, for the daily work: Enclosures, the Medication list, Maintenance, Stocktake, Deliveries, Projects, Vets and Contacts are now tiles inside it instead of separate menu entries. You see only the tiles you can use. Staff and volunteers will see Shelter Operations in their menu for the first time. The pages themselves have not changed, and links to them still work. The Website page is now a tile on Management instead of Settings. In Thai too.",
+      "Home page: the rehomed and village sterilisation figures now show just the number, without \"About\" in front or the note underneath about earlier work being estimated. In Thai too.",
+      "Enclosures: each zone now shows how many residents are in it and how many spaces are free, with a total for all zones above. A full or over-capacity enclosure never takes spaces away from the others.",
+      "Web addresses on the public pages are now links you can tap, such as the DonorBox address on the Donate page. Staff can also put words on a link, for example [Give monthly](https://…), and add email and phone links. This works on the information pages and on project stories.",
+      "More buttons are now big enough to tap with a thumb on a phone: Undo, Skip, Add note and Done on My tasks, the buttons in the photo viewer (close, Remove photo, Set as profile, Move, Show all), the Units buttons, and the account menu at the top. On a computer they look as before.",
+      "The rest of the small buttons are now big enough to tap on a phone: Save and Cancel when editing, Retry and Remove on uploads, Confirm and Cancel in the assistant, and the setup tables in Management and Admin. The × that removes a file from a blood test or procedure now shows on a phone (before, it only appeared under a mouse), and it asks before deleting the file.",
+    ],
+  },
   {
     version: "0.20.1",
     date: "2026-10-07",
