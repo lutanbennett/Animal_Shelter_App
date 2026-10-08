@@ -1,6 +1,7 @@
 import type { createClient } from "@/lib/supabase/server";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { contactAddressFields, isContactType } from "@/lib/contacts/contacts";
+import { mapLinkLeadsSomewhere } from "@/lib/contacts/map-preview";
 
 /**
  * The one place a contact row is inserted — Management → Contacts' form and
@@ -38,6 +39,9 @@ export async function insertContact(
   if (!isContactType(type)) return { ok: false, error: t.management.contacts.errors.invalidType };
   const place = contactAddressFields(fields.address, fields.mapUrl);
   if (!place.ok) return { ok: false, error: t.management.contacts.errors[place.error] };
+  if (place.map_url && !(await mapLinkLeadsSomewhere(place.map_url))) {
+    return { ok: false, error: t.management.contacts.errors.mapUrlDead };
+  }
 
   const { data, error } = await supabase
     .from("contacts")

@@ -2828,6 +2828,8 @@ const en = {
           "The Map link must be a link starting https://. In Google Maps, find the place, tap Share, copy the link and paste it here.",
         addressIsLink:
           "The Address box starts with a link. Put the link in Map link and keep Address for the written address.",
+        mapUrlDead:
+          "Google says that map link doesn't exist any more. In Google Maps, find the place, tap Share, copy the link and paste it into Map link.",
         hasPlacements: (n: number) =>
           `This contact has ${n} placement${n === 1 ? "" : "s"} recorded and can't be deleted — the placements are part of the residents' history. Archive them instead.`,
         typeLockedByPlacements: (n: number) =>

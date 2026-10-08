@@ -5,6 +5,7 @@ import { runAction, type ActionResult } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { insertContact } from "@/lib/contacts/create";
+import { mapLinkLeadsSomewhere } from "@/lib/contacts/map-preview";
 import {
   CARER_CONTACT_TYPE,
   contactAddressFields,
@@ -102,6 +103,21 @@ export async function updateContact(id: string, fields: ContactFields): Promise<
     if (!place.ok) return refuse(t.management.contacts.errors[place.error]);
 
     const supabase = await createClient();
+
+    // A new or changed Map link must lead to a place; one already saved is
+    // left alone, so fixing a phone number never stalls on an old link.
+    if (place.map_url) {
+      const { data: current, error: currentError } = await supabase
+        .from("contacts")
+        .select("map_url")
+        .eq("id", id)
+        .limit(1)
+        .returns<{ map_url: string | null }[]>();
+      if (currentError) return refuse(currentError.message);
+      if (current?.[0]?.map_url !== place.map_url && !(await mapLinkLeadsSomewhere(place.map_url))) {
+        return refuse(t.management.contacts.errors.mapUrlDead);
+      }
+    }
 
     // The database only checks the carer type when a placement is written
     // (placement_history_check_carer_type), so a carer with history could
