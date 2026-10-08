@@ -1,5 +1,6 @@
 import type { createClient } from "@/lib/supabase/server";
 import { todayIso } from "@/lib/format";
+import { loadPlaceOrder } from "@/lib/enclosures/order";
 import { roundsFor, type RoundKey } from "@/lib/rounds/suggest";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
@@ -81,12 +82,16 @@ const natural = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
  */
 export async function loadSpecialDiets(supabase: Supabase, round: RoundKey): Promise<SpecialDietList> {
   const today = todayIso();
-  const { data, error } = await supabase
-    .from("special_diet_list")
-    .select(
-      "resident_diet_id, resident_id, name, thai_name, profile_photo_drive_file_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th, diet_type_id, diet_name, diet_unit, meals_per_day, daily_quantity, notes, round_keys",
-    )
-    .returns<Row[]>();
+  const [{ data, error }, order] = await Promise.all([
+    supabase
+      .from("special_diet_list")
+      .select(
+        "resident_diet_id, resident_id, name, thai_name, profile_photo_drive_file_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th, diet_type_id, diet_name, diet_unit, meals_per_day, daily_quantity, notes, round_keys",
+      )
+      .returns<Row[]>(),
+    // The shelter's order of zones and enclosures (Settings), for the groups below.
+    loadPlaceOrder(supabase),
+  ]);
   if (error) return { today, round, zones: [], apart: [], error: error.message };
 
   const foodRounds = roundsFor("food");
@@ -124,6 +129,7 @@ export async function loadSpecialDiets(supabase: Supabase, round: RoundKey): Pro
 
   const zones = new Map<string, DietZone>();
   const apart: DietResident[] = [];
+  const enclosureIdOf = new Map<DietZone["enclosures"][number], string | null>();
   for (const { row, resident } of byResident.values()) {
     resident.diets.sort((a, b) => natural.compare(a.name, b.name));
     if (!row.enclosure_name || !row.zone_name || row.current_status !== "Resident") {
@@ -139,13 +145,19 @@ export async function loadSpecialDiets(supabase: Supabase, round: RoundKey): Pro
     if (!enclosure) {
       enclosure = { enclosure: { name: row.enclosure_name, nameTh: row.enclosure_name_th }, residents: [] };
       zone.enclosures.push(enclosure);
+      enclosureIdOf.set(enclosure, row.enclosure_id);
     }
     enclosure.residents.push(resident);
   }
 
-  const zoneGroups = [...zones.values()].sort((a, b) => natural.compare(a.zone.name, b.zone.name));
+  const zoneGroups = [...zones.values()].sort((a, b) => order.compareZones(a.zone.name, b.zone.name));
   for (const zone of zoneGroups) {
-    zone.enclosures.sort((a, b) => natural.compare(a.enclosure.name, b.enclosure.name));
+    zone.enclosures.sort((a, b) =>
+      order.compareEnclosures(
+        { id: enclosureIdOf.get(a), name: a.enclosure.name },
+        { id: enclosureIdOf.get(b), name: b.enclosure.name },
+      ),
+    );
     for (const e of zone.enclosures) e.residents.sort((a, b) => natural.compare(a.name, b.name));
   }
   apart.sort((a, b) => natural.compare(a.name, b.name));

@@ -2,6 +2,7 @@ import "server-only";
 import type { createClient } from "@/lib/supabase/server";
 import { residentCodeTerm } from "@/lib/residents/code-search";
 import { SYSTEM_ZONE } from "@/lib/enclosures/options";
+import { byShelterOrder, enclosuresInShelterOrder } from "@/lib/enclosures/order";
 import {
   offeredZones,
   parseEnclosurePlace,
@@ -99,16 +100,17 @@ export async function resolveListView(supabase: Supabase, searchParams: Params, 
   // Zones and enclosures come first: which ?zone= and ?enclosure= ids are
   // honoured depends on the place, and the list query needs the survivors.
   const [zonesResult, enclosuresResult] = await Promise.all([
-    supabase.from("zones").select("id, name, name_th, internal").order("name"),
-    supabase.from("enclosures").select("id, name, name_th, zone_id").order("name"),
+    supabase.from("zones").select("id, name, name_th, internal, sort_order"),
+    supabase.from("enclosures").select("id, name, name_th, zone_id, sort_order"),
   ]);
 
-  // Physical zones first (alphabetical), the Lifecycle pseudo-zone last, as
-  // on /enclosures.
+  // Physical zones in the shelter's order (Settings → Zones), the Lifecycle
+  // pseudo-zone last, as on /enclosures.
   const zones = [...(zonesResult.data ?? [])]
     .map((zone) => ({ ...zone, is_system: zone.name === SYSTEM_ZONE }))
-    .sort((a, b) => Number(a.is_system) - Number(b.is_system) || a.name.localeCompare(b.name));
-  const allEnclosures = enclosuresResult.data ?? [];
+    .sort((a, b) => Number(a.is_system) - Number(b.is_system) || byShelterOrder(a, b));
+  // Zone by zone, each in its order (Settings → Enclosures), for the Enclosure select.
+  const allEnclosures = enclosuresInShelterOrder(enclosuresResult.data ?? [], zones);
 
   // Stale zones are dropped, not obeyed, exactly as on /enclosures
   // (decisions.md, 2026-09-25): a zone not on offer under the place.

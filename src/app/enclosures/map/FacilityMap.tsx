@@ -68,7 +68,7 @@ export function FacilityMap({ data }: { data: FacilityMapData }) {
   const planOf = useMemo(() => new Map(data.plans.filter((p) => p.zone_id).map((p) => [p.zone_id!, p])), [data.plans]);
   const overview = data.plans.find((p) => p.kind === "overview") ?? null;
   const zoneById = useMemo(() => new Map(data.zones.map((z) => [z.id, z])), [data.zones]);
-  // Zone plans in the zones' own (alphabetical) order, whatever order the rows came back in.
+  // Zone plans in the zones' own order (the shelter's, Settings → Zones), whatever order the rows came back in.
   const zonePlans = data.zones.map((z) => planOf.get(z.id)).filter((p): p is MapPlan => Boolean(p));
 
   const [planId, setPlanId] = useState<string>((overview ?? zonePlans[0] ?? data.plans[0]).id);
@@ -124,7 +124,7 @@ export function FacilityMap({ data }: { data: FacilityMapData }) {
           meds: e.medication_count,
         });
     }
-    rest.sort((a, b) => a.name.localeCompare(b.name));
+    // Left in the order they came: the shelter's (Settings → Enclosures), as the page sorted them.
     return { items: placed, unplaced: { zones: [] as typeof data.zones, enclosures: rest } };
   }, [data, plan, planOf, locale]);
 
