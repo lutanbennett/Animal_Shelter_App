@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, House, Pill, Plus, Truck, Wheat } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { localLabel } from "@/lib/translations/labels";
 import { formatBahtPrice, formatDate, parseBahtAmount } from "@/lib/format";
 import { formatQuantity } from "@/lib/diets/options";
 import { defaultUnit, resolveEntered } from "@/lib/units";
@@ -74,7 +75,10 @@ export function DeliverySteps({
   const item = items[kind].find((i) => i.id === itemId);
   const date = earlier ? earlierDate : today;
   const countedThatDay = itemId !== "" && date !== "" && (countDays[kind][itemId] ?? []).includes(date);
-  const unitLabel = unitName || item?.unit || "";
+  // unitName is the English key the receipt stamps; what is shown is the reader's language (0166).
+  const unitLabel = unitName
+    ? localLabel(locale, unitName, item?.conversions.find((c) => c.unit === unitName)?.unitTh)
+    : item?.unit || "";
   const quantityOk = parseDeliveryQuantity(quantity).ok;
   const preview = item && unitName && quantityOk ? resolveEntered(Number(quantity), unitName, item.conversions) : null;
   const supplier = suppliers.find((x) => x.id === supplierId);
@@ -267,7 +271,7 @@ export function DeliverySteps({
                   <option value="">{item.unit}</option>
                   {item.conversions.map((c) => (
                     <option key={c.id} value={c.unit}>
-                      {c.unit}
+                      {localLabel(locale, c.unit, c.unitTh)}
                     </option>
                   ))}
                 </select>
