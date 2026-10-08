@@ -12,8 +12,7 @@ export default async function ZonesPage() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("zones")
-    .select("id, name, name_th, internal")
-    .order("name")
+    .select("id, name, name_th, internal, sort_order")
     .returns<ZoneRow[]>();
 
   return (

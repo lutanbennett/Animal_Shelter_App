@@ -9,16 +9,14 @@ import { createDietType } from "./actions";
 const inputClass =
   "rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
 
+/** The option-list fields only: the price, reorder lead and safety stock are set on Management → Diet stock. */
 export function CreateDietTypeForm() {
   const [state, onSubmit, pending] = useKeptForm(createDietType, undefined);
   const { t } = useI18n();
   const m = t.management.diets;
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="flex flex-col gap-3 rounded border border-border bg-surface p-4"
-    >
+    <form onSubmit={onSubmit} className="flex flex-col gap-3 rounded border border-border bg-surface p-4">
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1">
           <label htmlFor="diet-name" className="text-sm font-medium text-muted">
@@ -44,38 +42,6 @@ export function CreateDietTypeForm() {
             ))}
           </select>
           <span className="text-xs text-muted">{m.createForm.unitHint}</span>
-        </div>
-        <div className="flex flex-col gap-1">
-          <label htmlFor="diet-cost" className="text-sm font-medium text-muted">
-            {m.createForm.cost}
-          </label>
-          <input
-            id="diet-cost"
-            name="costPerUnit"
-            type="number"
-            inputMode="decimal"
-            min="0"
-            step="0.01"
-            defaultValue="0"
-            className={`${inputClass} w-32`}
-          />
-          <span className="text-xs text-muted">{m.createForm.costHint}</span>
-        </div>
-        <div className="flex flex-col gap-1">
-          <label htmlFor="diet-safety" className="text-sm font-medium text-muted">
-            {t.management.stock.safetyCreateLabel}
-          </label>
-          <input
-            id="diet-safety"
-            name="safetyStock"
-            type="number"
-            inputMode="decimal"
-            min="0"
-            step="any"
-            placeholder={t.management.stock.safetyPlaceholder}
-            className={`${inputClass} w-32`}
-          />
-          <span className="text-xs text-muted">{t.management.stock.safetyHint}</span>
         </div>
       </div>
 
@@ -120,6 +86,7 @@ export function CreateDietTypeForm() {
         </button>
       </div>
 
+      <p className="text-xs text-muted">{m.createForm.priceElsewhere}</p>
       {state && !state.ok && <p className="text-sm text-danger">{state.error}</p>}
       {state?.ok && <p className="text-sm text-success">{state.success}</p>}
     </form>

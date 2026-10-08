@@ -8,6 +8,7 @@ import { dietUnitLabel, doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { costPerBaseUnit, defaultUnit, parseConversion, type ItemKind } from "@/lib/units";
 import { loadConversions } from "@/lib/units-server";
 import { can } from "@/lib/permissions/can";
+import { canEditItemSettings } from "@/lib/permissions/item-settings";
 import { loadPermissions } from "@/lib/permissions/load";
 
 const refuse = (error: string) => ({ ok: false as const, error });
@@ -22,6 +23,8 @@ export type ConversionFields = {
 };
 
 function revalidateUnitPages() {
+  revalidatePath("/admin/medications");
+  revalidatePath("/admin/diets");
   revalidatePath("/management/medications");
   revalidatePath("/management/diets");
   revalidatePath("/deliveries");
@@ -67,8 +70,9 @@ export async function saveConversion(
   const { t } = await getT();
   const e = t.units.errors;
   return runAction("units.saveConversion", t.common.somethingWentWrong, async () => {
-    if (!can(await loadPermissions(), "stock.diets")) return refuse(e.notAuthorized);
     if (kind !== "medication" && kind !== "diet") return refuse(e.failed);
+    // Settings → Medications / Diets since the split of 2026-10-08: Admin only (item-settings.ts).
+    if (!canEditItemSettings(await loadPermissions(), kind)) return refuse(e.notAuthorized);
 
     const base = await baseUnitOf(kind, itemId);
     if (!base) return refuse(e.gone);
@@ -111,16 +115,19 @@ export async function saveConversion(
 }
 
 /** Safe for history for the same reason editing is: past rows keep their own copy of the factor. */
-export async function deleteConversion(id: string): Promise<ActionResult> {
+export async function deleteConversion(kind: ItemKind, id: string): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.units.errors;
   return runAction("units.deleteConversion", t.common.somethingWentWrong, async () => {
-    if (!can(await loadPermissions(), "stock.diets")) return refuse(e.notAuthorized);
+    if (kind !== "medication" && kind !== "diet") return refuse(e.failed);
+    if (!canEditItemSettings(await loadPermissions(), kind)) return refuse(e.notAuthorized);
     const supabase = await createClient();
+    // Only a conversion of this kind: the check above was for this kind.
     const { error, count } = await supabase
       .from("item_unit_conversions")
       .delete({ count: "exact" })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("item_kind", table(kind).itemKind);
     if (error) return refuse(`${e.failed}: ${error.message}`);
     if (!count) return refuse(e.gone);
     revalidateUnitPages();
@@ -142,8 +149,11 @@ export async function setPricePerPurchaseUnit(
   const { t } = await getT();
   const e = t.units.errors;
   return runAction("units.setPricePerPurchaseUnit", t.common.somethingWentWrong, async () => {
-    if (!can(await loadPermissions(), "stock.diets")) return refuse(e.notAuthorized);
     if (kind !== "medication" && kind !== "diet") return refuse(e.failed);
+    // A price is the stock half's (Management), as the cost per unit is.
+    if (!can(await loadPermissions(), kind === "medication" ? "stock.medications" : "stock.diets")) {
+      return refuse(t.management.errors.managementAccessRequired);
+    }
     const typed = price.trim();
     const amount = Number(typed);
     if (!typed || !Number.isFinite(amount)) return refuse(e.priceInvalid);

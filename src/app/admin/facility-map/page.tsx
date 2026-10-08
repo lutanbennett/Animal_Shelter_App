@@ -1,4 +1,5 @@
 import { getT } from "@/lib/i18n/get-t";
+import { inShelterOrder } from "@/lib/enclosures/order";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { requirePermission } from "@/lib/permissions/require";
 import { parseShape } from "@/lib/facility-map/geometry";
@@ -19,15 +20,16 @@ export default async function FacilityMapAdminPage() {
   const { t } = await getT();
 
   const [zonesResult, enclosuresResult, plansResult, roomsResult] = await Promise.all([
-    supabase.from("zones").select("id, name, name_th, internal, map_shape").neq("name", "Lifecycle").eq("internal", true).order("name"),
-    supabase.from("enclosures").select("id, name, name_th, zone_id, map_shape").order("name"),
+    supabase.from("zones").select("id, name, name_th, internal, map_shape, sort_order").neq("name", "Lifecycle").eq("internal", true),
+    supabase.from("enclosures").select("id, name, name_th, zone_id, map_shape, sort_order"),
     supabase.from("facility_maps").select("id, kind, zone_id, image_path, width, height").returns<PlanRow[]>(),
     supabase.from("map_rooms").select("map_id, kind, shape").returns<{ map_id: string; kind: string; shape: unknown }[]>(),
   ]);
 
-  const zones: EditorZone[] = (zonesResult.data ?? []).map((z) => ({ id: z.id, name: z.name, name_th: z.name_th, shape: parseShape(z.map_shape) }));
+  // Listed in the shelter's order (Settings → Zones and Enclosures).
+  const zones: EditorZone[] = inShelterOrder(zonesResult.data ?? []).map((z) => ({ id: z.id, name: z.name, name_th: z.name_th, shape: parseShape(z.map_shape) }));
   const zoneIds = new Set(zones.map((z) => z.id));
-  const enclosures: EditorEnclosure[] = (enclosuresResult.data ?? [])
+  const enclosures: EditorEnclosure[] = inShelterOrder(enclosuresResult.data ?? [])
     .filter((e) => zoneIds.has(e.zone_id))
     .map((e) => ({ id: e.id, name: e.name, name_th: e.name_th, zone_id: e.zone_id, shape: parseShape(e.map_shape) }));
   const plans: MapPlan[] = (plansResult.data ?? [])

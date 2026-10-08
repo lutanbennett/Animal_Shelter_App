@@ -9,7 +9,7 @@ const inputClass =
   "w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary";
 
 /**
- * The "In stock" cell on Management → Medications and → Diets. Never shows
+ * The "In stock" figure on Management → Medication stock and → Diet stock. Never shows
  * a blank or "0" for an item nobody has counted — null and zero are
  * different answers (0083) — and always says how old the count is.
  */
@@ -21,7 +21,10 @@ export function StockOnHandCell({
   countValue,
   onCountChange,
   inPurchaseUnit,
+  as = "td",
 }: {
+  /** "div" on a card (Management → Medication stock, Diet stock); "td" in a table row. */
+  as?: "td" | "div";
   figures: StockFigures;
   reading: StockReading;
   /** Already translated. */
@@ -34,10 +37,12 @@ export function StockOnHandCell({
 }) {
   const { t } = useI18n();
   const s = t.management.stock;
+  const Cell = as;
+  const cellClass = as === "td" ? "px-4 py-2" : undefined;
 
   if (counting) {
     return (
-      <td className="px-4 py-2">
+      <Cell className={cellClass}>
         <div className="flex flex-col gap-1">
           <input
             type="number"
@@ -53,12 +58,12 @@ export function StockOnHandCell({
           />
           <span className="text-xs text-muted">{s.countLabel(unit)}</span>
         </div>
-      </td>
+      </Cell>
     );
   }
 
   return (
-    <td className="px-4 py-2">
+    <Cell className={cellClass}>
       {figures.stock_on_hand == null ? (
         <span className="text-muted">{s.notCounted}</span>
       ) : (
@@ -82,7 +87,7 @@ export function StockOnHandCell({
           <span className="text-xs text-muted">{s.countedAgo(reading.countedDaysAgo ?? 0)}</span>
         </>
       )}
-    </td>
+    </Cell>
   );
 }
 
@@ -113,7 +118,10 @@ export function DaysOfStockCell({
   leadDaysValue,
   onLeadDaysChange,
   safety,
+  as = "td",
 }: {
+  /** As StockOnHandCell. */
+  as?: "td" | "div";
   figures: StockFigures;
   reading: StockReading;
   /** The row's Edit mode — the lead time is edited with the item's other details. */
@@ -124,10 +132,12 @@ export function DaysOfStockCell({
 }) {
   const { t, locale } = useI18n();
   const s = t.management.stock;
+  const Cell = as;
+  const cellClass = as === "td" ? "px-4 py-2" : undefined;
 
   if (editing) {
     return (
-      <td className="px-4 py-2">
+      <Cell className={cellClass}>
         <div className="flex flex-col gap-1">
           <input
             type="number"
@@ -173,7 +183,7 @@ export function DaysOfStockCell({
             </>
           )}
         </div>
-      </td>
+      </Cell>
     );
   }
 
@@ -205,7 +215,7 @@ export function DaysOfStockCell({
   }
 
   return (
-    <td className="px-4 py-2">
+    <Cell className={cellClass}>
       {main}
       {safety && safety.stored != null && (
         <div className="mt-1 text-xs text-muted">
@@ -224,6 +234,6 @@ export function DaysOfStockCell({
           )}
         </div>
       )}
-    </td>
+    </Cell>
   );
 }

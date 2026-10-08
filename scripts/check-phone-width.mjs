@@ -140,6 +140,8 @@ const PAGES = [
   "/admin/zones",
   "/admin/enclosures",
   "/admin/website",
+  "/admin/medications",
+  "/admin/diets",
   // everyone
   "/manual",
   "/releases",

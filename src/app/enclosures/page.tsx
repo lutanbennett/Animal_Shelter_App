@@ -3,6 +3,7 @@ import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import { occupancyLevel } from "@/lib/enclosures/occupancy";
 import { parseEnclosureSort } from "@/lib/enclosures/sort";
+import { byShelterOrder, inShelterOrder, natural } from "@/lib/enclosures/order";
 import {
   parseEnclosurePlace,
   parseZoneIds,
@@ -33,6 +34,7 @@ type EnclosureRow = {
   notes: string | null;
   zone_id: string;
   map_shape: unknown;
+  sort_order: number | null;
   zones: { name: string; name_th: string | null; internal: boolean } | null;
 };
 
@@ -68,7 +70,7 @@ function compareOccupancy(a: EnclosureSummary, b: EnclosureSummary) {
   const ratioA = a.capacity ? a.resident_count / a.capacity : 0;
   const ratioB = b.capacity ? b.resident_count / b.capacity : 0;
   if (ratioB !== ratioA) return ratioB - ratioA;
-  return b.resident_count - a.resident_count || a.name.localeCompare(b.name);
+  return b.resident_count - a.resident_count || natural.compare(a.name, b.name);
 }
 
 export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
@@ -86,11 +88,10 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   // The map is for whoever holds facility.map (0132), and reads the same rows as the list.
   const canMap = can(perms, "facility.map");
   const [zonesResult, enclosuresResult, residentsResult, jobsResult, tagOrigin, specialDiets, plansResult] = await Promise.all([
-    supabase.from("zones").select("id, name, name_th, internal, map_shape").order("name"),
+    supabase.from("zones").select("id, name, name_th, internal, map_shape, sort_order"),
     supabase
       .from("enclosures")
-      .select("id, name, name_th, capacity, notes, zone_id, map_shape, zones(name, name_th, internal)")
-      .order("name")
+      .select("id, name, name_th, capacity, notes, zone_id, map_shape, sort_order, zones(name, name_th, internal)")
       .returns<EnclosureRow[]>(),
     loadOccupants(supabase),
     // Open maintenance per enclosure, and per zone for zone-wide jobs
@@ -135,10 +136,10 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
     }
   }
 
-  // Physical zones first (alphabetical), the Lifecycle pseudo-zone last.
+  // Physical zones in the shelter's order (Settings → Zones), the Lifecycle pseudo-zone last.
   const zones = [...(zonesResult.data ?? [])]
     .map((zone) => ({ ...zone, is_system: zone.name === SYSTEM_ZONE }))
-    .sort((a, b) => Number(a.is_system) - Number(b.is_system) || a.name.localeCompare(b.name));
+    .sort((a, b) => Number(a.is_system) - Number(b.is_system) || byShelterOrder(a, b));
 
   // A zone that isn't on offer under the place (offeredZones: Lifecycle is
   // neither On-site nor Off-site, decisions.md 2026-09-25) is dropped rather
@@ -148,7 +149,8 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   const zoneIds = zonesKeptIn(zones, parseZoneIds(searchParams.zone), place);
 
   const term = q.toLowerCase();
-  const summaries: EnclosureSummary[] = (enclosuresResult.data ?? [])
+  // In the shelter's order within each zone (Settings → Enclosures): the By zone view and the map read it.
+  const summaries: EnclosureSummary[] = inShelterOrder(enclosuresResult.data ?? [])
     .map((row) => ({
       id: row.id,
       name: row.name,
@@ -202,7 +204,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
 
   const flat =
     sort === "name"
-      ? [...physical].sort((a, b) => a.name.localeCompare(b.name))
+      ? [...physical].sort((a, b) => natural.compare(a.name, b.name))
       : sort === "occupancy"
         ? [...physical].sort(compareOccupancy)
         : undefined;

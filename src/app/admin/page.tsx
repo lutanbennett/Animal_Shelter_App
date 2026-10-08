@@ -81,6 +81,20 @@ export default async function AdminPage() {
       phoneNote: t.largerScreen.tileLabel,
     },
     {
+      href: "/admin/medications",
+      label: t.nav.medications,
+      description: t.admin.landing.tiles.medications,
+      icon: SECTION_ICONS.prescriptions,
+      phoneNote: t.largerScreen.tileLabel,
+    },
+    {
+      href: "/admin/diets",
+      label: t.nav.diets,
+      description: t.admin.landing.tiles.diets,
+      icon: SECTION_ICONS.diet,
+      phoneNote: t.largerScreen.tileLabel,
+    },
+    {
       href: "/admin/security",
       label: t.nav.security,
       description: t.admin.landing.tiles.security,

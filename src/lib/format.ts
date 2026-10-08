@@ -225,3 +225,34 @@ export function parseBahtAmount(raw: string | null | undefined): ParsedBaht {
   if (!Number.isFinite(value) || value < 0 || value > MAX_BAHT) return { ok: false };
   return { ok: true, value: Math.round(value * 100) / 100 };
 }
+
+// A medicine's or a food's cost per base unit (cost_per_unit, numeric(12, 4)
+// since 0161): a sack of kibble priced per gram is a few hundredths of a
+// baht, which two places would round to 0.06 or refuse. Only these two
+// columns take four places; every other price is still whole satang.
+export const UNIT_COST_DECIMALS = 4;
+const MAX_UNIT_COST = 99_999_999.9999;
+
+export function roundUnitCost(value: number) {
+  return Math.round(value * 10 ** UNIT_COST_DECIMALS) / 10 ** UNIT_COST_DECIMALS;
+}
+
+/** As parseBahtAmount, for a cost per unit: up to four decimals. */
+export function parseUnitCost(raw: string | null | undefined): ParsedBaht {
+  const trimmed = typeof raw === "string" ? raw.trim() : "";
+  if (!trimmed) return { ok: true, value: null };
+  const value = Number(trimmed);
+  if (!Number.isFinite(value) || value < 0 || value > MAX_UNIT_COST) return { ok: false };
+  return { ok: true, value: roundUnitCost(value) };
+}
+
+/** As formatBahtPrice, for a cost per unit: "฿0.0567", "฿2.5", "฿120". */
+export function formatUnitCost(amount: number, locale: Locale = "en") {
+  return amount.toLocaleString(NUMBER_LOCALE_TAG[locale], {
+    style: "currency",
+    currency: "THB",
+    currencyDisplay: "narrowSymbol",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: UNIT_COST_DECIMALS,
+  });
+}

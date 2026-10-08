@@ -16,7 +16,7 @@ type SpecialDietRow = {
  *
  * With no standard flagged (0087 allows zero) nobody is special: the
  * alternative, every resident with a diet marked, would bury the cards in
- * markers that mean nothing. Management → Diets says so instead.
+ * markers that mean nothing. Settings → Diets says so instead.
  *
  * `residentIds` narrows the read to one enclosure's residents; omit it for
  * the whole shelter. A role RLS keeps out of resident_diets gets an empty

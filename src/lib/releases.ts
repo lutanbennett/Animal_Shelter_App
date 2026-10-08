@@ -61,8 +61,11 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
-
+export const unreleased: ReleaseNote[] = [
+  "On a phone, your name and role at the top of the screen are a proper button again for vets and the head of medical. It had been squeezed to a sliver beside the logo; it now sits on its own line, so you can tap it to see which account you are on.",
+  "Zones and enclosures now appear in the shelter's own order instead of A-Z, everywhere they are listed: the Enclosures page, every zone and enclosure picker, the residents list and the medical and diet lists. The Director sets the order under Settings → Zones and Settings → Enclosures with up and down arrows that work on a phone, and a new zone or enclosure goes last. Numbers are now read as numbers, so Enclosure 2 comes before Enclosure 10. In Thai too.",
+  "Medications and Diets are each now two pages. The lists themselves (names, units, the daily amount for each size, merging duplicates, the units things are bought and counted in) are under Settings → Medications and Settings → Diets, for an admin. Management → Medication stock and Diet stock keep what changes day to day: how much is in the cupboard, the price, when to reorder, label photos and the forecast, laid out as cards that fit a phone. A price can now have up to 4 decimal places, so food bought by the sack can be priced per gram. In Thai too.",
+];
 
 /** Newest first. */
 export const releases: Release[] = [
