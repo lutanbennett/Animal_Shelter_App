@@ -31,14 +31,14 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — read from the PR status and ticked before merging
+- [x] CI green on the PR — all 7 checks passing on #463 at `ace66c3c`, read from the PR checks before merging
 
 ## 3. Schema and data — *skip if no migration*
 
 - [x] Migration number is one above the highest on `main`, and no other in-flight branch carries one — `check-migration-numbers.mjs`: ok, `0164` against highest `0163`; the brief names this as the batch's only migration stream
 - [x] `node scripts/apply-migrations.mjs --status` reviewed before applying — dev 163 applied, 0 pending, no drift against `origin/main`
 - [x] `node scripts/apply-migrations.mjs --dry-run` reviewed — `dry-run 0164_contacts_map_url.sql … ok`; the consumer warnings say the readers are not live yet, which is the intended order
-- [ ] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations` — n/a: not yet — applied from this branch only when Lutan says merge, and this line is ticked in that commit
+- [x] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations` — applied from this branch on Lutan’s "merge it", 2026-10-08: `applying 0164_contacts_map_url.sql … ok`; `--status` then 164 applied rows, the one extra being `0164`
 - [x] File is re-runnable — the harness below ran the whole file **twice** in one transaction before asserting
 - [x] Existing rows still read correctly after the change — `public_shelter_friends` rewritten from its **live** definition (`pg_get_viewdef` on dev; it reads `private.approved_translations`, which 0076's text predates); the harness asserts the same 16 columns in the same order, and `map_location` equal to the address while `map_url` is null. `check-view-write-grants.mjs --with 0164`: 292 statements, 0 failed
 - [x] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness on dev (kept in the session scratchpad; nothing added to `scripts/`, per the brief). Asserted: one `contacts_map_url_form` after two runs; view grants for anon/authenticated are `SELECT` only; `vet_contacts` / `volunteer_contacts` have no `map_url`; accepts `https://maps.app.goo.gl/…`, `HTTPS://www.google.com/maps/search/?api=1&query=18.9,98.9` and null; refuses `javascript:alert(1)`, a schemeless link, link-space-text, a bare `https://`, a trailing newline and the empty string with `check_violation`; a published friend with `show_map` gets the address while `map_url` is null and the link once set; with `show_map` off and `show_address` on, `map_location` is null and the link appears nowhere in the row; anon is refused on `contacts`. Result: `HARNESS-OK` (rolled back). **Zone plan fix**, a second harness on dev: *before* (current dev, no 0164) inserting a `facility_maps` row for House Zone failed with `42703: record "new" has no field "name"` — the bug reproduced; *after* (0164 run twice) the House Zone plan inserts; a Lifecycle plan is still refused ("cannot be on the map"); colour, sort_order and map_shape on the Lifecycle zone are still refused, each with its own message; a new zone named Lifecycle with a colour is still refused ("takes no colour"); an ordinary zone still takes a colour. Result: `HARNESS-OK` (rolled back)
