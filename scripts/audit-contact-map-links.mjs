@@ -6,10 +6,12 @@
 // .env.deploy.production lives only in the main checkout, so for production run
 // a workstream's copy from there: node ../Animal_Shelter_<feature>/scripts/…
 //
-// Reads every live contact with something in its address, and says for each
-// one whose map is wrong what is in the field, what is wrong in plain words,
-// and what to do. Shelter Friends have no map field of their own: a friend's
-// map is its contact's address (public_shelter_friends.map_location, 0076,
+// Reads every live contact with a Map link or an address, and says for each
+// one whose map is wrong what is in the fields, what is wrong in plain words,
+// and what to do. The map is judged as the app builds it (contactMapSource:
+// the Map link, 0164, else a link still at the front of the address).
+// Shelter Friends have no map field of their own: a friend's map is its
+// contact's (public_shelter_friends.map_location = coalesce(map_url, address),
 // shown only where show_map is on), so a friend is reported once, as its
 // contact, marked as shown on the public website where it is.
 //
@@ -43,7 +45,7 @@ const root = join(fileURLToPath(import.meta.url), "../..");
 const imp = (p) => import(pathToFileURL(join(root, p)).href);
 const { loadEnv, parseEnvArg, projectRef, SITE_ORIGINS } = await imp("scripts/lib/env.mjs");
 // Node strips the types itself; both files have no imports.
-const { MAP_SHORT_LINK_HOSTS, addressMapNow, mapQueryFromUrl, splitAddress } = await imp("src/lib/contacts/contacts.ts");
+const { MAP_SHORT_LINK_HOSTS, addressMapNow, contactMapSource, mapQueryFromUrl, splitAddress } = await imp("src/lib/contacts/contacts.ts");
 const { followShortLink } = await imp("src/lib/contacts/short-link.ts");
 
 const { name: envName } = parseEnvArg(process.argv.slice(2));
@@ -53,19 +55,19 @@ const origin = SITE_ORIGINS[envName];
 const PAUSE_MS = 1000;
 
 const HOW_TO_FIX =
-  "Open Google Maps, find the place, tap Share, tap Copy link, then paste the link into this contact's Address.";
+  "Open Google Maps, find the place, tap Share, tap Copy link, then paste the link into this contact's Map link.";
 
 async function readContacts() {
   const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
     method: "POST",
     headers: { Authorization: `Bearer ${env.SUPABASE_ACCESS_TOKEN}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      query: `select c.id, c.name, c.address, (c.archived_at is not null) as archived,
+      query: `select c.id, c.name, c.address, c.map_url, (c.archived_at is not null) as archived,
                      coalesce(sf.published and sf.show_map, false) as on_website,
                      (sf.id is not null) as is_friend
                 from contacts c
                 left join shelter_friends sf on sf.contact_id = c.id
-               where nullif(trim(c.address), '') is not null
+               where nullif(trim(c.address), '') is not null or c.map_url is not null
                order by c.name`,
     }),
   });
@@ -112,7 +114,7 @@ async function judgeShortLink(url) {
 const COORDS = /^-?\d{1,2}\.\d+\s*,\s*-?\d{1,3}\.\d+$/;
 const PLUS_CODE = /^[23456789CFGHJMPQRVWX]{4,8}\+[23456789CFGHJMPQRVWX]{2,3}(\s|$)/i;
 
-export async function judge(address) {
+export async function judge(address, { hasMapUrl = false } = {}) {
   const { link, text } = splitAddress(address);
   if (!link && (COORDS.test(text) || PLUS_CODE.test(text))) return null;
   if (!link) {
@@ -123,7 +125,7 @@ export async function judge(address) {
         ? "There is a link here, but not at the start, so the app can't use it. The map shows Google's guess from the words, which in Thailand is often the wrong place."
         : "This is written as words, not a map link. The map shows Google's guess from the words, which in Thailand is often the wrong place.",
       fix: buried
-        ? `Check the link still opens the right place, then paste it so it comes first. ${HOW_TO_FIX}`
+        ? `Check the link still opens the right place, then paste it into Map link. ${HOW_TO_FIX}`
         : `If the map on this contact's page is already the right place, nothing is needed. If not: ${HOW_TO_FIX}`,
     };
   }
@@ -155,11 +157,13 @@ export async function judge(address) {
       fix: HOW_TO_FIX,
     };
   }
-  if (text) {
+  // With a Map link of its own (0164) the words after it are the written
+  // address, which is how they should be.
+  if (text && !hasMapUrl) {
     return {
       outcome: "trailing",
       problem: "The link works, but there are words after it in the same box. The app opens only the link and ignores the words.",
-      fix: "Nothing is broken. When contacts get a separate Address box, move the words there.",
+      fix: "Nothing is broken. Open the contact under Management → Contacts, Edit, Save: the link moves to Map link and the words stay as the Address (scripts/move-contact-map-links.mjs does all of them at once).",
     };
   }
   return null;
@@ -185,12 +189,12 @@ async function main() {
   const live = rows.filter((r) => !r.archived);
   const results = [];
   for (const row of live) {
-    const verdict = await judge(row.address);
+    const verdict = await judge(contactMapSource(row), { hasMapUrl: Boolean(row.map_url) });
     if (verdict) results.push({ ...row, ...verdict });
   }
 
   const shortLinks = new Set(
-    live.map((r) => splitAddress(r.address).link).filter((l) => l && MAP_SHORT_LINK_HOSTS.includes(l.hostname)).map(String),
+    live.map((r) => splitAddress(contactMapSource(r)).link).filter((l) => l && MAP_SHORT_LINK_HOSTS.includes(l.hostname)).map(String),
   );
   console.log(`Contact map check — ${envName} (${ref}), ${new Date().toISOString().slice(0, 10)}`);
   console.log(
@@ -203,7 +207,8 @@ async function main() {
     for (const r of group) {
       const tags = [r.is_friend && "Shelter Friend", r.on_website && "map shown on the public website"].filter(Boolean);
       console.log(`\n• ${r.name}${tags.length ? ` (${tags.join(", ")})` : ""}`);
-      console.log(`  In the Address box now: ${r.address.replace(/\s+/g, " ").trim()}`);
+      if (r.map_url) console.log(`  Map link now: ${r.map_url}`);
+      if (r.address) console.log(`  Address now: ${r.address.replace(/\s+/g, " ").trim()}`);
       console.log(`  What's wrong: ${r.problem}`);
       console.log(`  What to do: ${r.fix}`);
       console.log(`  Fix it here: ${origin}/contacts/${r.id}`);
