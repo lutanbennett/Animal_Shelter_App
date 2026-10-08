@@ -131,7 +131,7 @@ Driven over HTTP against the dev server by a scratch script signed in as a dispo
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
-| 1 | major | Adding a plan for a **zone** fails with `record "new" has no field "name"`: `refuse_lifecycle_map()` since `0161`/`0162` reads `new.name`, which `facility_maps` lacks. Pre-existing on `main`, not caused by this branch; replace and the overview are unaffected. Blocks loading the House Zone plan if that zone has no plan yet | deferred: fix folded into the in-flight schema PR #463 (`0164`) at Lutan’s request, 2026-10-08 |
+| 1 | major | Adding a plan for a **zone** fails with `record "new" has no field "name"`: `refuse_lifecycle_map()` since `0161`/`0162` reads `new.name`, which `facility_maps` lacks. Pre-existing on `main`, not caused by this branch; replace and the overview are unaffected. Blocks loading the House Zone plan if that zone has no plan yet | deferred: fixed in schema PR #463 (`0164`, `ace66c3c`) at Lutan’s request, 2026-10-08; closed when #463 is merged and applied |
 | 2 | minor | A refused duplicate add stored its picture before the database refused the row | fixed (existing plan checked first) |
 
 ## Left for manual verification
