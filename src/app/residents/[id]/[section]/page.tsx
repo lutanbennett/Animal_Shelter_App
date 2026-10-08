@@ -522,16 +522,25 @@ export default async function ResidentSectionPage(
       );
       const { data: missing } = await supabase
         .from("immunization_compliance")
-        .select("immunization_type_name")
+        .select("immunization_type_id, immunization_type_name")
         .eq("resident_id", id)
-        .returns<{ immunization_type_name: string }[]>();
+        .returns<{ immunization_type_id: string; immunization_type_name: string }[]>();
+      // The compliance view carries no Thai (0166 kept that private view narrow); the picker view has it.
+      const { data: missingTh } =
+        locale === "th" && missing && missing.length > 0
+          ? await supabase
+              .from("picker_immunization_types")
+              .select("id, name_th")
+              .in("id", missing.map((m) => m.immunization_type_id))
+              .returns<{ id: string; name_th: string | null }[]>()
+          : { data: [] as { id: string; name_th: string | null }[] };
       const { data: nextDue } = await supabase
         .from("immunization_next_due")
-        .select("immunization_type_name, next_due_date")
+        .select("immunization_type_name, immunization_type_name_th, next_due_date")
         .eq("resident_id", id)
         .not("next_due_date", "is", null)
         .order("next_due_date", { ascending: true })
-        .returns<{ immunization_type_name: string; next_due_date: string }[]>();
+        .returns<{ immunization_type_name: string; immunization_type_name_th: string | null; next_due_date: string }[]>();
       const today = todayIso();
       body = (
         <div className="flex flex-col gap-4">
@@ -549,7 +558,11 @@ export default async function ResidentSectionPage(
           {missing && missing.length > 0 && (
             <div className="rounded-lg border border-danger/40 bg-danger/10 p-4 text-sm text-danger">
               {t.residents.sections.missingMandatory(
-                missing.map((m) => m.immunization_type_name).join(", "),
+                missing
+                  .map((m) =>
+                    localLabel(locale, m.immunization_type_name, missingTh?.find((x) => x.id === m.immunization_type_id)?.name_th),
+                  )
+                  .join(", "),
               )}
             </div>
           )}
@@ -565,7 +578,7 @@ export default async function ResidentSectionPage(
                     className="flex items-center justify-between"
                   >
                     <span className="text-foreground">
-                      {n.immunization_type_name}
+                      {localLabel(locale, n.immunization_type_name, n.immunization_type_name_th)}
                     </span>
                     <span
                       className={

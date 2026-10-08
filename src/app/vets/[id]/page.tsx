@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
+import { getLocale } from "@/lib/i18n/get-locale";
+import { localLabel } from "@/lib/translations/labels";
 import {
   VetHub,
   type HubDoctor,
@@ -29,10 +31,10 @@ export default async function VetPage(props: PageProps<"/vets/[id]">) {
     await Promise.all([
       supabase
         .from("vets")
-        .select("id, name, clinic_name, contact_info, notes")
+        .select("id, name, name_th, clinic_name, contact_info, notes")
         .eq("id", id)
         .limit(1)
-        .returns<Vet[]>(),
+        .returns<(Vet & { name_th: string | null })[]>(),
       supabase
         .from("vet_appointments")
         .select(
@@ -79,8 +81,9 @@ export default async function VetPage(props: PageProps<"/vets/[id]">) {
 
   // A query error must not look like a missing vet — surface it, not a 404.
   if (vetResult.error) throw new Error(vetResult.error.message);
-  const vet = vetResult.data?.[0];
-  if (!vet) notFound();
+  const row = vetResult.data?.[0];
+  if (!row) notFound();
+  const vet: Vet = { ...row, name: localLabel(await getLocale(), row.name, row.name_th) };
   if (visitsResult.error) throw new Error(visitsResult.error.message);
 
   return (
