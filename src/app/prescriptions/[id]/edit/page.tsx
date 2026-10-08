@@ -18,7 +18,7 @@ export default async function EditPrescriptionPage(
 ) {
   await requirePermission("medical.prescriptions", "read");
   const { id } = await props.params;
-  const { t } = await getT();
+  const { t, locale } = await getT();
   const supabase = await createClient();
 
   const { data: rows, error } = await supabase
@@ -47,7 +47,7 @@ export default async function EditPrescriptionPage(
       .eq("resident_id", residentId)
       .limit(1)
       .returns<{ is_deceased: boolean }[]>(),
-    loadPrescriptionOptions(supabase, residentId, prescription.vet_appointment_id),
+    loadPrescriptionOptions(supabase, residentId, locale, prescription.vet_appointment_id),
   ]);
   const { medications, frequencies, vetAppointments } = options;
 

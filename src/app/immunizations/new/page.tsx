@@ -1,6 +1,7 @@
 import { requirePermission } from "@/lib/permissions/require";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { localLabel } from "@/lib/translations/labels";
 import { inShelterOrder } from "@/lib/enclosures/order";
 import { NOT_DECEASED } from "@/lib/residents/status";
 import {
@@ -16,7 +17,7 @@ export default async function NewImmunizationPage(
 ) {
   await requirePermission("medical.immunizations");
   const searchParams = await props.searchParams;
-  const { t } = await getT();
+  const { t, locale } = await getT();
 
   const preselectedIds = new Set<string>();
   const residentIdParam = searchParams.residentId;
@@ -44,7 +45,7 @@ export default async function NewImmunizationPage(
         .order("name"),
       supabase
         .from("picker_immunization_types")
-        .select("id, name, is_mandatory, interval_months")
+        .select("id, name, name_th, is_mandatory, interval_months")
         .order("name"),
       supabase.from("zones").select("id, name, name_th, sort_order, colour"),
       supabase
@@ -63,8 +64,9 @@ export default async function NewImmunizationPage(
     }),
   );
 
-  const immunizationTypes: ImmunizationTypeOption[] =
-    immunizationTypesResult.data ?? [];
+  const immunizationTypes: ImmunizationTypeOption[] = (immunizationTypesResult.data ?? []).map(
+    ({ name_th, ...type }) => ({ ...type, name: localLabel(locale, type.name, name_th) }),
+  );
   // The shelter's order (Settings → Zones and Enclosures); the form filters enclosures by zone.
   const zones: ZoneOption[] = inShelterOrder(zonesResult.data ?? []);
   const enclosures: EnclosureOption[] = inShelterOrder(enclosuresResult.data ?? []);
