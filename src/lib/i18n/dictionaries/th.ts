@@ -4831,7 +4831,7 @@ const th: Dictionary = {
       maintenance: "งานซ่อมบำรุง",
       recurring_jobs: "งานประจำ",
       friends: "เพื่อนของศูนย์",
-      money: "ค่าใช้จ่ายรายเดือน",
+      money: "ค่าใช้จ่ายคงที่",
       roles: "บทบาท",
     } as Record<string, string>,
     nothingHere: {
@@ -4865,7 +4865,7 @@ const th: Dictionary = {
       "procedure_types.name": "ประเภทหัตถการ",
       "blood_test_types.name": "ประเภทการตรวจเลือด",
       "vets.name": "คลินิก",
-      "fixed_outgoings.label": "ค่าใช้จ่ายรายเดือน",
+      "fixed_outgoings.label": "ค่าใช้จ่ายคงที่",
       "roles.name": "บทบาท",
     } as Record<string, string>,
     englishWhenTranslated: "ภาษาอังกฤษตอนที่เขียนภาษาไทย",

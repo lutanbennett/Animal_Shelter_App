@@ -124,6 +124,9 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
   const rateWindow = windows.findIndex((window) => window.days === STOCK_RATE_DAYS);
 
   const conversions = await loadConversions(supabase, "diet");
+  // A unit's English is its key; what the page shows is the reader's language (0166).
+  const shownUnit = <T extends { unit: string }>(itemId: string, x: T | null): T | null =>
+    x && { ...x, unit: localLabel(locale, x.unit, conversions.data[itemId]?.find((c) => c.unit === x.unit)?.unitTh) };
   // Deliveries since each count are part of the cupboard now (stock.ts), so
   // days-of-stock agrees with Management → Purchasing.
   const receipts = await loadReceipts(supabase, "diet");
@@ -156,10 +159,13 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
         undefined,
         receivedSince.get(type.id) ?? 0,
       ),
-      purchaseUnit: inPurchaseUnit(stock.stock_on_hand, conversions.data[type.id] ?? []),
+      purchaseUnit: shownUnit(type.id, inPurchaseUnit(stock.stock_on_hand, conversions.data[type.id] ?? [])),
       safetyStock: type.safety_stock == null ? null : Number(type.safety_stock),
       unitOptions: (conversions.data[type.id] ?? []).map((c) => c.unit),
-      packPrice: pricePerPurchaseUnit(Number(type.cost_per_unit), conversions.data[type.id] ?? []),
+      unitOptionLabels: Object.fromEntries(
+        (conversions.data[type.id] ?? []).map((c) => [c.unit, localLabel(locale, c.unit, c.unitTh)]),
+      ),
+      packPrice: shownUnit(type.id, pricePerPurchaseUnit(Number(type.cost_per_unit), conversions.data[type.id] ?? [])),
     };
   });
 

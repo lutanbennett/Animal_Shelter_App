@@ -41,6 +41,7 @@ export type DietStockRow = {
   safetyStock: number | null;
   /** The item's other units by name, for typing the safety stock in one. */
   unitOptions: string[];
+  unitOptionLabels: Record<string, string>;
   /**
    * The same price for one purchase unit (a sack, a case), shown beside the
    * per-unit price so ฿0.035 per g reads as ฿35 per kg. Null at ฿0 or with
@@ -180,6 +181,7 @@ function DietCard({ dietType, forecastHeadings }: { dietType: DietStockRow; fore
               stored: dietType.safetyStock,
               baseUnitLabel: unit,
               unitOptions: dietType.unitOptions,
+              unitOptionLabels: dietType.unitOptionLabels,
               value: safetyValue,
               unit: safetyUnit,
               onValueChange: setSafetyValue,

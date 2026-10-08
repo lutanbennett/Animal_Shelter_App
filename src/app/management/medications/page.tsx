@@ -128,6 +128,9 @@ export default async function MedicationStockPage(props: PageProps<"/management/
   const rateWindow = windows.findIndex((window) => window.days === STOCK_RATE_DAYS);
 
   const conversions = await loadConversions(supabase, "medication");
+  // A unit's English is its key; what the page shows is the reader's language (0166).
+  const shownUnit = <T extends { unit: string }>(itemId: string, x: T | null): T | null =>
+    x && { ...x, unit: localLabel(locale, x.unit, conversions.data[itemId]?.find((c) => c.unit === x.unit)?.unitTh) };
   // Deliveries since each count are part of the cupboard now (stock.ts), so
   // days-of-stock agrees with Management → Purchasing.
   const receipts = await loadReceipts(supabase, "medication");
@@ -159,13 +162,19 @@ export default async function MedicationStockPage(props: PageProps<"/management/
         undefined,
         receivedSince.get(medication.id) ?? 0,
       ),
-      purchaseUnit: inPurchaseUnit(stock.stock_on_hand, conversions.data[medication.id] ?? []),
+      purchaseUnit: shownUnit(medication.id, inPurchaseUnit(stock.stock_on_hand, conversions.data[medication.id] ?? [])),
       safetyStock: medication.safety_stock == null ? null : Number(medication.safety_stock),
       labelFileId: medication.label_drive_file_id,
       unitOptions: (conversions.data[medication.id] ?? []).map((c) => c.unit),
-      packPrice: pricePerPurchaseUnit(
-        medication.cost_per_unit == null ? null : Number(medication.cost_per_unit),
-        conversions.data[medication.id] ?? [],
+      unitOptionLabels: Object.fromEntries(
+        (conversions.data[medication.id] ?? []).map((c) => [c.unit, localLabel(locale, c.unit, c.unitTh)]),
+      ),
+      packPrice: shownUnit(
+        medication.id,
+        pricePerPurchaseUnit(
+          medication.cost_per_unit == null ? null : Number(medication.cost_per_unit),
+          conversions.data[medication.id] ?? [],
+        ),
       ),
     };
   });

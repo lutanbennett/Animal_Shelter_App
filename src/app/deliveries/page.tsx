@@ -205,7 +205,7 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
                           .map((line) =>
                             t.units.entry.recent(
                               formatQuantity(line.quantity),
-                              line.unit,
+                              localLabel(locale, line.unit, conversions[id]?.find((c) => c.unit === line.unit)?.unitTh),
                               formatQuantity(Number(r.quantity)),
                               unit,
                             ),

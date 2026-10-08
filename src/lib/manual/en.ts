@@ -126,7 +126,7 @@ const manual: Manual = {
           title: "Switching language",
           steps: [
             "Use the EN / ไทย switch in the header (or on the sign-in page).",
-            "The choice is remembered on that device. Free-text notes stay in whatever language they were typed in; the ones the public reads (a resident's bio, a project's story) get a translation written by a manager — see Management → Translating public text.",
+            "The choice is remembered on that device. Free-text notes stay in whatever language they were typed in; the ones the public reads (a resident's bio, a project's story) get a translation written by a manager — see Management → Translating.",
           ],
         },
         {
@@ -1455,15 +1455,17 @@ const manual: Manual = {
         },
         {
           id: "translations",
-          title: "Translating public text",
+          title: "Translating",
           roles: ["admin", "management"],
           activity: "translations.manage",
           path: "Management → Translations",
           steps: [
-            "The app's own labels are in both languages already; this page is for text one person types and another reads in the other language: a resident's hook line, bio, temperament, past story and ideal home on the adoption pages, a project's story and photo captions under Our work, and the title and description of every maintenance job. Whichever language it was written in, the other language needs a version, and that is written by hand here.",
-            "Every such text lands on this page when it is first written and again whenever it changes: Needs translation for a new one, Out of date when the original has been edited since it was translated — with the old and new original shown side by side so you fix the translation rather than start over. Work down the list, type the translation and tap Save & approve.",
-            "Only an approved translation is shown to visitors reading that language; until then they see the original. Show approved too lists the ones already live if you need to correct one, and Remove translation takes one down.",
-            "The same box appears under the text on the resident's page, on the project folder and on the maintenance job, so you can translate right after writing without coming here. On the board and the job page, staff reading Thai see the approved Thai title and description in place of the English. Nobody has to translate internal notes (weights, vet visits, prescriptions): those stay as typed.",
+            "The app's own buttons and headings are in both languages already. This page is for everything someone typed in one language that a reader of the other language also sees. It holds two kinds. Long text: a resident's hook line, bio, temperament, past story and ideal home, a project's story and photo captions, the website's pages, maintenance and recurring jobs. Short names: diets, medicines, vaccines, procedures, blood tests, how-often labels, stock units, clinics, zones and enclosures, project folders, fixed outgoings and the website's captions.",
+            "The page is in sections, one per kind (Website, Residents, Projects, Diets, Medications, Setup lists, Places and so on). The box at the top says how many are missing and how many are out of date in each; tap a section's name to jump to it. Missing shows what nobody has translated yet, Out of date what was translated before the English changed, and All shows everything, including what is done.",
+            "For a short name, type the Thai in the box and press Save. Each card says where the name is used, with a link to its own list. You can translate a name here even when its list is not one you can open: translating a name never changes the list itself, only its Thai. To take a Thai name away, empty the box and press Save. When the English has changed, the card shows the English the Thai was written for; correct the Thai, or press Save as it is if it is still right.",
+            "Medicine and clinic names are mostly drug, brand or proper names that read the same in Thai, so an empty one says Shown as typed rather than missing, and it is not counted. Give one Thai only if it should read differently, such as Subcutaneous Fluids.",
+            "For long text, write the translation in the box and tap Save & approve. Only an approved translation is shown to readers of that language; until then they see the original. Remove translation takes one down. The same box appears under the text on the resident's page, on the project folder and on the maintenance job, so you can translate right after writing without coming here. Nobody has to translate internal notes (weights, vet visits, prescriptions): those stay as typed.",
+            "Every list with a short name also has a Thai name box of its own: Settings → Diets, Medications, Frequencies and the immunization, procedure and blood test types; the units on a diet or medicine; Management → Vets; and Cashflow → Fixed outgoings. So a new diet or vaccine can be given its Thai as it is added. Whichever box you use, it is the same Thai, and it shows straight away on every screen to anyone reading in Thai.",
           ],
         },
       ],

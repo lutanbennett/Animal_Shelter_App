@@ -362,7 +362,7 @@ Admin is shown for completeness; it is never stored (§6).
 | `recurring.manage` | Set up recurring jobs and hand dates over | Y/N | Y | Y | – | – | – | 29 | |
 | `recurring.do_any` | Mark anyone's recurring job done or skipped | Y/N | Y | Y | – | – | – | 29 | *Split*, finding A6 |
 | `recurring.do_own` | Mark your own recurring jobs done or skipped | Y/N | Y | Y | Y | – | – | 30 | |
-| `translations.manage` | Translate the public text | Y/N | Y | Y | – | – | – | 31 | |
+| `translations.manage` | Translate the public text, and every label's Thai | Y/N | Y | Y | – | – | – | 31 | Covers **every** label on Management → Translations (`set_label_th()`, `0166`), including labels whose own list the holder cannot open: Management translates the setup lists, which are `reference.types` and Admin's. **Translating a label is not editing the list**: it writes only the registered Thai column, never the English, and gives no way to add, rename or delete an entry. Ruled with the item "One place to translate everything" (`docs/decisions/2026-10-09-translations-page.md`) |
 | **The assistant** | | | | | | | | | |
 | `assistant.ask` | Ask the assistant a question | Y/N | Y | Y | Y | – | – | 32 | |
 | `assistant.record` | Record something through the assistant | Y/N | Y | Y | Y | – | – | 32 | Each thing it records is also checked against that thing's own activity |
@@ -373,7 +373,7 @@ Admin is shown for completeness; it is never stored (§6).
 | `audit.view` | See who changed what | Y/N | Y | – | – | – | – | 35 | |
 | `audit.undo` | Undo a change | Y/N | Y | – | – | – | – | 35 | *Split* |
 | `system.status` | The system status page | Y/N | Y | – | – | – | – | 36 | |
-| `translations.view` | See the public text's translations | Y/N | Y | Y | Y | – | – | – | Read only; added by `0154` to replace `sees_all_translations()`. Translating stays `translations.manage` |
+| `translations.view` | See the public text's translations | Y/N | Y | Y | Y | – | – | – | Read only; added by `0154` to replace `sees_all_translations()`. Translating stays `translations.manage`. Also reads `label_translations()` (`0166`), but the page is `translations.manage`'s |
 
 Not in the table, because nobody sets them (§6): signing in and out, a forgotten
 password, changing your own password, the language switch, the manual, the

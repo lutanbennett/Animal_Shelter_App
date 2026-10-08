@@ -4984,7 +4984,7 @@ const en = {
       maintenance: "Maintenance",
       recurring_jobs: "Recurring jobs",
       friends: "Shelter Friends",
-      money: "Monthly costs",
+      money: "Fixed outgoings",
       roles: "Roles",
     } as Record<string, string>,
     nothingHere: {
@@ -5018,7 +5018,7 @@ const en = {
       "procedure_types.name": "Procedure type",
       "blood_test_types.name": "Blood test type",
       "vets.name": "Clinic",
-      "fixed_outgoings.label": "Monthly cost",
+      "fixed_outgoings.label": "Fixed outgoing",
       "roles.name": "Role",
     } as Record<string, string>,
     englishWhenTranslated: "English when the Thai was written",
