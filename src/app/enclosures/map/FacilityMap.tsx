@@ -6,7 +6,7 @@ import { ENCLOSURE_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
 import { occupancyLevel, type OccupancyLevel } from "@/lib/enclosures/occupancy";
-import { bounds, centroid, planHeight, pointsAttr } from "@/lib/facility-map/geometry";
+import { centroid, markerBoxes, planHeight, pointsAttr } from "@/lib/facility-map/geometry";
 import type { FacilityMapData, MapPlan } from "@/lib/facility-map/types";
 import { ZoneName } from "@/components/ZoneName";
 import { OccupancyIndicator } from "../OccupancyIndicator";
@@ -17,9 +17,11 @@ import { PanZoom } from "./PanZoom";
  * plan with a polygon laid over each place, overview → zone → enclosure. It takes plain data, not
  * the page, so it can move under Operations with the Enclosures page if that is decided.
  *
- * Colour is how full a place is (the list's own thresholds); the count on each enclosure and the
- * words in the card say the same, so colour is never the only signal. A tap selects; the card's
- * Open button is what navigates, so a fat finger never leaves the map by accident.
+ * Colour is how full a place is (the list's own thresholds); the words in the card and each shape's
+ * accessible name say the same, so colour is never the only signal. On a zone plan an enclosure
+ * carries only small markers (medication, special diet, maintenance) and a room nothing, so the
+ * drawing's own numbers stay readable (2026-10-09). A tap selects and never navigates, so a fat
+ * finger never leaves the map by accident.
  */
 
 // Static class names, so Tailwind sees them.
@@ -195,8 +197,6 @@ export function FacilityMap({ data }: { data: FacilityMapData }) {
               key={item.id}
               item={item}
               plan={plan}
-              // A plan that is one enclosure (the Cat Zone) has nothing to tell apart: the card says it all.
-              showChip={items.length > 1}
               selected={item.id === pickedId}
               onPick={() => setPickedId(item.id)}
               ariaLabel={
@@ -271,9 +271,7 @@ function MapShape({
   selected,
   onPick,
   ariaLabel,
-  showChip,
 }: {
-  showChip: boolean;
   item: Item;
   plan: MapPlan;
   selected: boolean;
@@ -282,14 +280,10 @@ function MapShape({
 }) {
   const k = plan.height / plan.width;
   const pts = pointsAttr(item.shape, plan.width, plan.height);
-  const b = bounds(item.shape);
   const [cx, cy] = centroid(item.shape);
   const isRoom = item.kind === "room";
-  const isZone = item.kind === "zone" || isRoom; // a room is labelled in its middle, like a zone
-  const chip = item.capacity ? `${item.count}/${item.capacity}` : String(item.count);
-  const chipW = 1.4 + chip.length * 1.45;
-  const chipX = b.minX + 0.5;
-  const chipY = b.minY * k + 0.5;
+  const isZone = item.kind === "zone";
+  const marks = item.kind === "enclosure" ? markerLayout(item, plan) : [];
 
   return (
     <g
@@ -332,26 +326,35 @@ function MapShape({
         >
           {item.name}
         </text>
-      ) : showChip ? (
-        <g className="pointer-events-none">
-          <rect x={chipX} y={chipY} width={chipW} height={3.5} rx={0.9} className="fill-white stroke-neutral-700" strokeWidth={0.15} />
-          <text x={chipX + chipW / 2} y={chipY + 1.8} textAnchor="middle" dominantBaseline="middle" fontSize={2.4} fontWeight={700} className="fill-neutral-900">
-            {chip}
-          </text>
-          {[
-            [item.jobs, ENCLOSURE_ICONS.maintenance],
-            [item.diet, ENCLOSURE_ICONS.specialDiet],
-            [item.meds, ENCLOSURE_ICONS.medication],
-          ]
-            .filter(([n]) => (n as number) > 0)
-            .map(([, Icon], i) => {
-              const MarkIcon = Icon as typeof ENCLOSURE_ICONS.medication;
-              return <MarkIcon key={i} x={chipX + chipW + 0.4 + i * 3.4} y={chipY + 0.2} width={3} height={3} className="text-neutral-900" strokeWidth={2.4} />;
-            })}
+      ) : marks.length > 0 ? (
+        // Only the markers, small and inside the outline: the drawing's own numbers stay visible. The
+        // count and the names are in the card and the accessible name, so nothing is lost by leaving them off.
+        <g className="pointer-events-none" aria-hidden="true">
+          {marks.map(({ Icon, x, y, size }, i) => (
+            <g key={i}>
+              <circle cx={x + size / 2} cy={y + size / 2} r={size * 0.62} className="fill-white/90" />
+              <Icon x={x + size * 0.1} y={y + size * 0.1} width={size * 0.8} height={size * 0.8} className="text-neutral-900" strokeWidth={2.4} />
+            </g>
+          ))}
         </g>
       ) : null}
     </g>
   );
+}
+
+/** An enclosure's markers, in a fixed order, each only when it applies; placed by `markerBoxes`. */
+function markerLayout(item: Item, plan: MapPlan) {
+  const icons = (
+    [
+      [item.meds, ENCLOSURE_ICONS.medication],
+      [item.diet, ENCLOSURE_ICONS.specialDiet],
+      [item.jobs, ENCLOSURE_ICONS.maintenance],
+    ] as const
+  )
+    .filter(([n]) => n > 0)
+    .map(([, Icon]) => Icon);
+  const boxes = markerBoxes(icons.length, item.shape, plan.width, plan.height);
+  return icons.map((Icon, i) => ({ Icon, ...boxes[i] }));
 }
 
 function Legend() {
