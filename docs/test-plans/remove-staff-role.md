@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — all 7 checks passing on #499 at `cfb04672` (audit, check, migration-numbers, new-policy-role-names, public-views, script-integrity, test-plan), read from `gh pr view 499`
 
 ## 3. Schema and data — *skip if no migration*
 
