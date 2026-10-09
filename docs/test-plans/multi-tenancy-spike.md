@@ -10,7 +10,7 @@
 | Backlog item | `docs/backlog.md` → *Spike: can the app hold several shelters in one database? Measure it, do not estimate it.* |
 | Branch / worktree | `claude/multi-tenancy-spike` @ `C:\Development\Animal_Shelter_multi-tenancy-spike` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3008` (not started: nothing to render) |
-| PR | (opened from this commit) |
+| PR | [#504](https://github.com/lutanbennett/Animal_Shelter_App/pull/504) |
 | Tested by / date | Claude, 2026-10-09 |
 | Carries a migration? | no — by design: the spike's schema ran only inside a rolled-back transaction |
 | Tested at SHA | `a61f7ec6` (docs); harness evidence from `3761a29d` |
@@ -26,7 +26,7 @@
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (`Merge made by the 'ort' strategy`, three docs files from main, no conflicts)
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — all 7 checks passed on #504, 0 failing, 0 pending, merge state CLEAN
 
 ```
 === gates: build exited 0 after 169s
