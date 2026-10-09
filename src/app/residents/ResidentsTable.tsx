@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Download, PawPrint, Pencil } from "lucide-react";
 import { ActionLink } from "@/components/ActionLink";
 import { CopyTagLink } from "@/components/CopyTagLink";
@@ -13,6 +13,7 @@ import { SYSTEM_ZONE } from "@/lib/enclosures/options";
 import { ZoneName } from "@/components/ZoneName";
 import { statusLabel } from "@/lib/i18n/enum-labels";
 import { residentPlace } from "@/lib/residents/place";
+import { ADOPTED, DECEASED } from "@/lib/residents/status";
 import { residentTagPath } from "@/lib/tags/links";
 
 export type ResidentRow = {
@@ -59,8 +60,54 @@ export function ResidentsTable({
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [downloading, setDownloading] = useState<string | null>(null);
+  // How many ticked residents the last change of filters took out of the list (and so unticked).
+  const [dropped, setDropped] = useState(0);
+
+  // A tick only ever stands for a resident on screen. The filters navigate on the client, so this
+  // component and its ticks outlive a change of zone or search; without this, a resident the new
+  // filters hide would still be ticked and still be booked. Adjusted during render, not in an
+  // effect, so the buttons never draw once with the hidden ids in their links.
+  const listedKey = residents.map((r) => r.resident_id).join(",");
+  const [prevListedKey, setPrevListedKey] = useState(listedKey);
+  if (listedKey !== prevListedKey) {
+    setPrevListedKey(listedKey);
+    const listed = new Set(residents.map((r) => r.resident_id));
+    const kept = new Set([...selected].filter((id) => listed.has(id)));
+    setDropped(selected.size - kept.size);
+    if (kept.size !== selected.size) setSelected(kept);
+  }
+
+  // Select all takes the rows the actions are for: not the deceased (both forms leave them out of
+  // their pickers, so the count would lie) and not the adopted (no longer the shelter's to book or
+  // vaccinate). Either can still be ticked by hand (docs/decisions/2026-10-09-residents-select-all.md).
+  const selectable = residents.filter(
+    (r) => r.current_status !== DECEASED && r.current_status !== ADOPTED,
+  );
+  const leftOut = residents.length - selectable.length;
+  const allTicked =
+    selectable.length > 0 && selectable.every((r) => selected.has(r.resident_id));
+  const selectAllLabel = allTicked
+    ? t.residents.list.table.unselectAll
+    : t.residents.list.table.selectAll(selectable.length, leftOut);
+  // Some ticked but not all: the box shows a dash rather than claim either.
+  const selectAllRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = selected.size > 0 && !allTicked;
+    }
+  }, [selected, allTicked]);
+
+  function toggleAll() {
+    setDropped(0);
+    setSelected(
+      allTicked
+        ? new Set()
+        : new Set([...selected, ...selectable.map((r) => r.resident_id)]),
+    );
+  }
 
   function toggle(id: string) {
+    setDropped(0);
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -132,6 +179,7 @@ export function ResidentsTable({
           {selected.size > 0
             ? t.residents.list.selectedCount(selected.size)
             : t.residents.list.selectPrompt}
+          {allTicked && leftOut > 0 && ` · ${t.residents.list.selectAllLeftOut(leftOut)}`}
         </p>
         {!limited && (
         <div className="ml-auto flex gap-2">
@@ -164,6 +212,11 @@ export function ResidentsTable({
         )}
         {limited && <div className="ml-auto flex gap-2">{downloadLink}</div>}
       </div>
+      {!limited && dropped > 0 && (
+        <p role="status" className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground">
+          {t.residents.list.selectionDropped(dropped)}
+        </p>
+      )}
       {downloading && (
         <p role="status" className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground">
           {t.residents.list.downloadSaved(downloading)}
@@ -180,7 +233,20 @@ export function ResidentsTable({
         <table className="w-full text-left text-sm">
           <thead className="bg-surface text-muted">
             <tr>
-              {!limited && <th className="hidden w-10 px-4 py-2 md:table-cell" />}
+              {!limited && (
+                <th className="hidden w-10 px-4 py-2 md:table-cell">
+                  <input
+                    ref={selectAllRef}
+                    type="checkbox"
+                    checked={allTicked}
+                    onChange={toggleAll}
+                    disabled={selectable.length === 0}
+                    className="h-4 w-4 accent-primary disabled:opacity-40"
+                    title={selectAllLabel}
+                    aria-label={selectAllLabel}
+                  />
+                </th>
+              )}
               <th className="hidden px-4 py-2 font-medium md:table-cell">
                 {t.residents.list.table.id}
               </th>

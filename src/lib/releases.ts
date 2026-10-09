@@ -68,6 +68,7 @@ export const unreleased: ReleaseNote[] = [
   "Tap an enclosure on the map to see its details straight away under the plan: the residents in it with their photos, diets and medication, its notes and its open maintenance jobs. Tap another to switch, or Open full page for moving residents and logging maintenance.",
   { text: "The Management dashboard's month section has Copy as text, for pasting the month straight into the monthly report or a LINE message, and Print, which prints that section on its own. It also has two new cards: Vaccinations given, by vaccine, and Clinic spend, from the invoice amounts on the month's visits, with how many visits have no amount yet.", roles: ["admin", "management"] },
   { text: "Dashboard months now run on Thai time. Something recorded between midnight and 7 am on the 1st used to count in the previous month; it now counts in the month it happened. The same applies to the visits-per-month chart on a clinic's page.", roles: ["admin", "management"] },
+  "On a computer, the Residents list has a Select all box at the top of the tick column: pick a zone, tick it, and every resident listed is ticked for Book clinic visit, Log immunizations or Download. Adopted and deceased residents are left out. Changing a filter unticks anyone who is no longer listed, and says so.",
 ];
 
 /** Newest first. */
