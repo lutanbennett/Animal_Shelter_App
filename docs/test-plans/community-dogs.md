@@ -138,7 +138,7 @@ The first run ended `gates: typecheck=0 lint=1 build=0`: the acceptance matrix h
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | With Staff given Write and correct, a real staff login (not Admin's preview) can record a visit; set back to No, it cannot | a staff login on dev |
+| 1 | With 2IC given Write and correct, a real 2IC login (not Admin's preview) can record a visit; set back to No, it cannot. (2IC rather than Staff: Lutan, 2026-10-09, Lanna uses Admin, Management, 2IC, Maintenance, Medical and Vet; Staff is unused here, `docs/decisions/2026-10-03-lanna-roles-lutans-answers.md`) | a 2IC login on dev |
 | 2 | The Thai wording reads naturally to a Thai reader (the Director asked for this): the form, the list, the manual-facing words, and the baseline notes on Settings → Website | `/outreach` in ไทย |
 | 3 | Adding a photo from a real phone's camera on the new-visit form, and the *May be shown on the website* tick on the edit page | `/outreach/new` on a phone |
 
