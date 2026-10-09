@@ -164,6 +164,9 @@ async function run(s, cookies) {
     const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
     await context.addCookies([...cookies, { name: "locale", value: "en" }].map((c) => ({ ...c, url: base })));
     const page = await context.newPage();
+    const consoleErrors = [];
+    page.on("console", (message) => message.type() === "error" && consoleErrors.push(message.text()));
+    page.on("pageerror", (error) => consoleErrors.push(error.message));
     const header = page.locator("thead input[type=checkbox]");
     const rowBoxes = page.locator("tbody input[type=checkbox]");
     const ticked = () => page.locator("tbody input[type=checkbox]:checked").count();
@@ -209,6 +212,11 @@ async function run(s, cookies) {
     check("Book clinic visit carries the four living, not the other two", same(await bookingIds(page), [...s.a, s.b]), (await bookingIds(page)).join(","));
     check("the count line says two were not ticked", (await page.getByText("2 adopted or deceased not ticked").count()) > 0);
     check("the box reads as all ticked", (await header.isChecked()) && !(await header.evaluate((el) => el.indeterminate)));
+    check("no console errors on the residents list", consoleErrors.length === 0, consoleErrors.join(" | "));
+
+    console.log("the manual:");
+    await page.goto(`${base}/manual`, { waitUntil: "networkidle" });
+    check("the residents topic explains Select all", (await page.getByText("tick the box at the top of the tick column").count()) > 0);
   } finally {
     await browser.close();
   }
