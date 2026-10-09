@@ -59,7 +59,7 @@ for (const line of paper.slice(start + 2)) {
     cells[m[1]][role] = v === "–" ? 0 : LEVEL[v];
   }
 }
-if (Object.keys(cells).length !== 58) throw new Error(`expected 58 activities in §4, parsed ${Object.keys(cells).length}`);
+if (Object.keys(cells).length !== 60) throw new Error(`expected 60 activities in §4, parsed ${Object.keys(cells).length}`);
 
 // RE-BASELINED 2026-10-06 (director-draft-apply): the volunteer's expected cells are the Director's draft 2 (3 cells on the paper, 5
 // under the draft), not the paper's R1 column. The VET column is deliberately NOT overridden: the paper gives vets 13 cells, the draft
@@ -410,7 +410,7 @@ if (mismatches.length) {
 const uncovered = Object.entries(NO_DB_PROBE);
 const probed = new Set(TABLE_PROBES.map((p) => p.activity));
 const unaccounted = Object.keys(cells).filter((a) => !probed.has(a) && !(a in NO_DB_PROBE));
-console.log(`\nActivities probed: ${probed.size} of 58. Not probed, with the reason: ${uncovered.length}.`);
+console.log(`\nActivities probed: ${probed.size} of 60. Not probed, with the reason: ${uncovered.length}.`);
 for (const [a, why] of uncovered) console.log(`  ${a}: ${why}`);
 if (unaccounted.length) console.log(`\nNEITHER PROBED NOR EXPLAINED: ${unaccounted.join(", ")}`);
 
