@@ -4,9 +4,12 @@ Two backlog items from Lutan's Main Zone screenshot, built together because both
 `src/app/enclosures/map/FacilityMap.tsx`.
 
 **Markers are sized from each enclosure's own bounding box, not a fixed size.** `markerBoxes`
-(`src/lib/facility-map/geometry.ts`) lays one row, or two when that lets them be bigger, centred on
-the centroid and pulled inside the box with a padding of 12% of its smaller side, capped at 2.6
-drawing units (of 100 across). The fixed 3-unit icons strung out beside a chip are what ran
+(`src/lib/facility-map/geometry.ts`) lays one row, or two when that lets them be bigger, in the
+shape's **top-left corner**, in from the outline by 12% of its smaller side (at most 1.2 units), capped
+at 2.6 drawing units (of 100 across). Not the centroid, though the backlog item suggested it: seen on
+the dev plan, centred icons sat exactly on the circled enclosure numbers the drawing puts in each
+middle, which is the thing the change exists to uncover. A shape whose corner is outside its own
+outline (an L) falls back to the centroid. The fixed 3-unit icons strung out beside a chip are what ran
 enclosure 10's icons into 9. On today's dev plans every enclosure is big enough for the cap, so they
 all draw at 2.6 — the box sizing only takes over for a smaller enclosure drawn later. It is pure so
 `scripts/check-map-markers.mjs` can prove containment against the real plans rather than by eye.

@@ -4,7 +4,8 @@
 //
 // For every enclosure placed on a zone plan, and for one, two and three markers (medication, special
 // diet, maintenance), every marker's square, with its white halo, must sit inside that enclosure's
-// outline and touch no other enclosure or room on the plan. That is the 2026-10-09 Main Zone
+// outline, touch no other enclosure or room on the plan, and keep clear of the middle, where the
+// drawing puts the enclosure's number. That is the 2026-10-09 Main Zone
 // screenshot as a test: enclosure 10's icon spilling into 9, and the chips on the small row crowding.
 // Read-only. Prints the smallest marker per plan, so "small" is a number, not an impression.
 import { join } from "node:path";
@@ -68,6 +69,11 @@ for (const plan of plans.filter((p) => p.kind === "zone")) {
         expect(box.size > 0 && box.size <= geo.MARKER_MAX, `${e.name}: marker size ${box.size.toFixed(2)} within (0, ${geo.MARKER_MAX}]`);
         const pts = rim(box);
         expect(pts.every((p) => inside(p, own)), `${e.name} (${n} markers): a marker's halo crosses its own outline`);
+        // The drawing numbers each enclosure in its middle: a marker must leave that readable.
+        const [cx, cy] = geo.centroid(e.shape);
+        const dx = box.x + box.size / 2 - cx;
+        const dy = box.y + box.size / 2 - cy * k;
+        expect(Math.hypot(dx, dy) > box.size * 0.62 + 2, `${e.name} (${n} markers): a marker covers the middle, where the drawing has its number`);
         for (const o of others) if (o.poly !== own && o.name !== e.name) expect(!pts.some((p) => inside(p, o.poly)), `${e.name} (${n} markers): a marker reaches into ${o.name}`);
       }
       for (let i = 0; i < boxes.length; i++)

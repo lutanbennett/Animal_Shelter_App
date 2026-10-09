@@ -66,11 +66,26 @@ export function bounds(shape: Point[]) {
 export const MARKER_MAX = 2.6;
 /** The gap between markers, as a fraction of their size. */
 const MARKER_GAP = 0.3;
+/** The most a marker sits in from its enclosure's corner, in drawing units: clear of the outline, still in the corner. */
+const MARKER_PAD_MAX = 1.2;
+
+/** Whether a point is inside a polygon (even-odd), both in the same space. */
+export function insideShape([x, y]: Point, poly: Point[]): boolean {
+  let hit = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i];
+    const [xj, yj] = poly[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) hit = !hit;
+  }
+  return hit;
+}
 
 /**
  * Where `n` markers go inside a shape, in drawing space: one row, or two when that lets them be
- * bigger, centred on the centroid and sized from the shape's own bounding box, so they never run
- * past its edge into a neighbour (the 2026-10-09 Main Zone screenshot: enclosure 10's icon in 9).
+ * bigger, sized from the shape's own bounding box so they never run past its edge into a neighbour
+ * (the 2026-10-09 Main Zone screenshot: enclosure 10's icon in 9). They sit in the top-left corner,
+ * because the drawing puts each enclosure's number in its middle and the point is to keep it
+ * readable; a shape whose corner is outside its own outline (an L) gets them on its centroid instead.
  * Each box is square, `size` across, top-left at `x, y`.
  */
 export function markerBoxes(n: number, shape: Point[], width: number, height: number): { x: number; y: number; size: number }[] {
@@ -80,7 +95,7 @@ export function markerBoxes(n: number, shape: Point[], width: number, height: nu
   const [cx, cy] = centroid(shape);
   const w = b.maxX - b.minX;
   const h = (b.maxY - b.minY) * k;
-  const pad = 0.12 * Math.min(w, h);
+  const pad = Math.min(MARKER_PAD_MAX, 0.12 * Math.min(w, h));
   const cap = Math.min(MARKER_MAX, 0.45 * Math.min(w, h));
   const span = (count: number) => count + MARKER_GAP * (count - 1); // in sizes
   const fit = (cols: number, rows: number) => Math.max(0, Math.min(cap, (w - 2 * pad) / span(cols), (h - 2 * pad) / span(rows)));
@@ -92,10 +107,16 @@ export function markerBoxes(n: number, shape: Point[], width: number, height: nu
   const step = size * (1 + MARKER_GAP);
   const blockW = span(cols) * size;
   const blockH = span(rows) * size;
-  // The centroid, pulled in just enough that the block stays inside the box.
-  const clamp = (v: number, lo: number, hi: number) => (lo > hi ? (lo + hi) / 2 : Math.min(hi, Math.max(lo, v)));
-  const left = clamp(cx - blockW / 2, b.minX + pad, b.maxX - pad - blockW);
-  const top = clamp(cy * k - blockH / 2, b.minY * k + pad, b.maxY * k - pad - blockH);
+  const drawn: Point[] = shape.map(([x, y]) => [x, y * k]);
+  let left = b.minX + pad;
+  let top = b.minY * k + pad;
+  const corners: Point[] = [[left, top], [left + blockW, top], [left, top + blockH], [left + blockW, top + blockH]];
+  if (!corners.every((p) => insideShape(p, drawn))) {
+    // The centroid, pulled in just enough that the block stays inside the box.
+    const clamp = (v: number, lo: number, hi: number) => (lo > hi ? (lo + hi) / 2 : Math.min(hi, Math.max(lo, v)));
+    left = clamp(cx - blockW / 2, b.minX + pad, b.maxX - pad - blockW);
+    top = clamp(cy * k - blockH / 2, b.minY * k + pad, b.maxY * k - pad - blockH);
+  }
   return Array.from({ length: n }, (_, i) => {
     const row = Math.floor(i / cols);
     const inRow = row === rows - 1 ? n - row * cols : cols; // a short last row is centred too
