@@ -58,7 +58,7 @@ const manual: Manual = {
     staff:
       "Day-to-day resident work: intake, moves, hospital, foster and adoption, photos, maintenance, projects. Can read medical records.",
     doctor:
-      "Clinic visits, procedures, blood tests, prescriptions and immunizations, for the residents their own clinics treat — any resident the clinic has a visit, prescription, procedure or blood test for, with that resident's whole history. Other residents are not shown at all. The menu is Appointments and Residents only — the shelter's enclosures, maintenance, projects, contacts and clinic list are not part of a doctor's access.",
+      "Clinic visits, procedures, blood tests, prescriptions and immunizations, for the residents their own clinics treat — any resident the clinic has a visit, prescription, procedure or blood test for, with that resident's whole history — plus every resident the doctor was the doctor for at a clinic they have since left, which they can read but not change. Other residents are not shown at all. The menu is Appointments and Residents only — the shelter's enclosures, maintenance, projects, contacts and clinic list are not part of a doctor's access.",
     volunteer:
       "Sees who each resident is and where they live, and browses the enclosures. Nothing else is read or changed: no medical records, notes or microchip numbers, no moving a resident, no photos to add, and no maintenance, projects, contacts, clinics, stock or assistant. The menu is Home, Residents and Enclosures.",
   },
@@ -377,7 +377,7 @@ const manual: Manual = {
             },
             {
               kind: "note",
-              text: "Signed in as a doctor, the list is your clinics': every resident your clinics have a clinic visit, prescription, procedure or blood test for — a cancelled visit included — and no one else. The line under the heading names the clinic. A resident appears once the shelter books them a visit with you, and their hub shows all of their history, other clinics' visits included. A doctor who works at more than one clinic sees the residents of all of them; the line under the heading names the clinics. A Doctor login not linked to a doctor sees no residents until an admin links it (Accounts and roles).",
+              text: "Signed in as a doctor, the list is your clinics': every resident your clinics have a clinic visit, prescription, procedure or blood test for — a cancelled visit included — plus every resident you were the doctor for at a clinic you have since left, and no one else. You can read those but not change them: you add and change records only at the clinics you work at now. The line under the heading names the clinic. A resident appears once the shelter books them a visit with you, and their hub shows all of their history, other clinics' visits included. A doctor who works at more than one clinic sees the residents of all of them; the line under the heading names the clinics. A Doctor login not linked to a doctor sees no residents until an admin links it (Accounts and roles).",
             },
           ],
         },

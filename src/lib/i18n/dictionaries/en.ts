@@ -3804,7 +3804,7 @@ const en = {
        * residents.
        */
       vetScope: (clinic: string) =>
-        `Showing the residents ${clinic} ${clinic.includes(", ") ? "have" : "has"} a clinic visit, prescription, procedure or blood test for. A resident appears here once the shelter books them a visit with one of your clinics.`,
+        `Showing the residents ${clinic} ${clinic.includes(", ") ? "have" : "has"} a clinic visit, prescription, procedure or blood test for, and every resident you were the doctor for at a clinic you have since left (those you can read but not change). A resident appears here once the shelter books them a visit with one of your clinics.`,
       vetScopeNoClinic:
         "Your account isn't linked to a clinic yet, so no residents are shown. Ask a shelter admin to set your clinic in Settings → Security.",
       selectedCount: (n: number) => `${n} selected`,
