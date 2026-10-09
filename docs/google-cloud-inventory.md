@@ -4,38 +4,100 @@ Written 2026-09-30 by the `google-cloud-one-account` stream. Scope narrowed by L
 decision record `docs/decisions/2026-09-30-google-cloud-one-account.md` and the
 backlog item "Put the Google Cloud setup under one account".
 
-**How to read the confidence marks.** Every fact below says where it came from.
-**[repo]** was read from this repository. **[ran]** was observed by running a
-script on 2026-09-30. **[recorded]** comes from a backlog or decisions entry
-written by someone who was looking at the console at the time. **[CONFIRM]**
-could not be established from here: nobody opened a console for this document,
-so treat it as a question for Lutan, not a fact.
+**Section 1 was rewritten on 2026-10-09 from a live stocktake** (stream
+`google-stocktake`). Lutan asked for it on 2026-10-07, after a secret rotation
+planned from this file's unconfirmed guesses went wrong three times. Every Google
+Cloud console page below was opened on 2026-10-09 in Lutan's Chrome and **read
+only**; nothing was changed. The old `[CONFIRM]` marks on Google facts are gone
+because those facts have now been seen.
 
-## 1. Inventory
+**How to read the confidence marks.** **[seen 2026-10-09]** was read in the Google
+Cloud console that day. **[repo]** was read from this repository. **[recorded]**
+comes from a backlog or decisions entry written by someone who was looking at the
+console or an API at the time. **[CONFIRM]** has still not been established.
 
-Two Google Cloud projects are known. **Do not assume there are only two**
-([CONFIRM]: open each Google account's project picker and count).
+**Identify a client by its redirect URI, never by its name.** Names are free text
+and two of them are Google's defaults. The redirect URI says which Supabase
+project, and so which site, the client serves.
 
-| | **LCA App** | **Lanna Care - Dev** |
+## 1. Inventory (stocktake 2026-10-09)
+
+### Google accounts
+
+These are all the Google accounts signed in to Lutan's Chrome. The `authuser`
+number is the one the console uses in its URLs on that machine, so it can change
+if accounts are signed in or out [seen 2026-10-09].
+
+| `authuser` | Account | Cloud projects it owns |
 |---|---|---|
-| Project id | `endless-bonus-458210-d4` [recorded] | `lanna-care-dev` [recorded] |
-| Project number | [CONFIRM] (not in the repo) | `1036347359893` [ran] (the prefix of the Drive client ID) |
-| Owning Google account | `lutan.bennett2@gmail.com` [recorded] | `lannaanimalfoundationbwm@gmail.com` [recorded] |
-| Previously named | `My First Project` [recorded] | [CONFIRM] |
-| Consent screen | **In production**, published 2026-09-22. App name `Lanna Care for Animals`; home `https://lannacare.org`; privacy `https://lannacare.org/privacy`; authorised domains `lannacare.org` and the Supabase host; scopes `openid`, `email`, `profile` only, so no Google verification. Brand-verified via Search Console (Domain property, Lutan's account) [recorded] | **In production**, published 2026-09-25 after the 7-day Testing expiry broke every upload. Logo removed (a logo forces verification); `lannacare.org` added as an authorised domain [recorded] |
-| Used for | Staff sign-in with Google, on the production Supabase project | Drive storage, and the dev Supabase sign-in |
+| 0 | `lutan.bennett2@gmail.com` | **LCA App**, and `My First Project` (empty) |
+| 1 | `lutan.bennett1@gmail.com` | none |
+| 2 | `lannaanimalfoundationbwm@gmail.com` | **Lanna Care - Dev** only |
+| 3 | `lutan.bennett3@gmail.com` | none |
 
-### Clients
+`lannacareforanimals@gmail.com`, the shelter's own account, is not signed in and
+was not checked.
 
-| Client | Project | Type | Purpose | Where its values live |
-|---|---|---|---|---|
-| Production sign-in client (name [CONFIRM]) | LCA App | Web | Google provider on the **production** Supabase project `dbkodyyxxhtygxcxmfcu` | `GOOGLE_SIGNIN_*` in `.env.deploy.production`, **not read by the app**, kept only to re-apply to Supabase [recorded]. The live copy is in Supabase, Authentication, Providers, Google [CONFIRM] |
-| **Lanna Care Drive Access** | Lanna Care - Dev | Desktop app | Every Drive read and write: photos, attachments, archive PDFs, the `Backups` folder | `GOOGLE_OAUTH_CLIENT_ID` / `_SECRET` (below). Client ID starts `1036…` [ran] |
-| **LCA Application** | Lanna Care - Dev | Web | Google provider on the **dev** Supabase project `qxkmhwybjggxvsfxsxbd`, which `test.lannacare.org` and local dev use | Supabase dev, Authentication, Providers, Google [CONFIRM]; in no repo file |
+**`lannaanimalfoundationbwm` was locked out of the console from 2026-10-03.**
+Google now refuses Cloud console access to any account without two-step
+verification ("Google Cloud access blocked … enforce two-step verification"). Lutan
+turned it on on 2026-10-09, and the console opened a few minutes later. Running
+clients and refresh tokens were not part of the block. Only the console was. If
+2-step verification is ever turned off again, the console is blocked again.
 
-Consequences: **production sign-in and dev sign-in sit in different projects and
-different accounts**, and **all three environments' Drive access is one client in
-the lanna account** [repo: README "Environments" table, Google Drive row].
+### Projects
+
+| | **LCA App** | **Lanna Care - Dev** | My First Project |
+|---|---|---|---|
+| Owning account | `lutan.bennett2@gmail.com` | `lannaanimalfoundationbwm@gmail.com` | `lutan.bennett2@gmail.com` |
+| Project id | `endless-bonus-458210-d4` | `lanna-care-dev` | `project-36366f84-5606-437c-869` |
+| Project number | **`104841707674`** | **`1036347359893`** | `802572408195` |
+| Organisation | none | none | `lutan-bennett2-org` (`500079492508`) |
+| Consent screen | **In production**, External | **In production**, External | never configured |
+| API keys | none | none | none |
+| Service accounts | none | none | none |
+| OAuth clients | 2 (below) | 2 (below) | none |
+| Used for | Staff sign-in on production Supabase (`lannacare.org`) | Drive storage everywhere; staff sign-in on dev Supabase (`test.lannacare.org`, local) | Nothing; unused |
+
+All of the above is [seen 2026-10-09]. Older history [recorded]: LCA App was
+renamed from `My First Project` and published 2026-09-22 (branding `Lanna Care for
+Animals`, home `https://lannacare.org`, privacy `https://lannacare.org/privacy`,
+scopes `openid`/`email`/`profile`, brand-verified via Search Console under Lutan's
+account). Lanna Care - Dev was published 2026-09-25 after the 7-day Testing expiry
+broke every upload. Its logo was removed, because a logo forces verification. The
+second `My First Project` is a different, later project, not the renamed one.
+
+### OAuth clients — every one that exists
+
+| Project | Name | Type | Client ID | Redirect URI | Created | Secrets (all enabled) | Serves |
+|---|---|---|---|---|---|---|---|
+| LCA App | Lanna Care sign-in (production Supabase) | Web | `104841707674-bjgla5kd0i4rbifi5buuekea7jqd74dp` | `https://dbkodyyxxhtygxcxmfcu.supabase.co/auth/v1/callback` | 2026-09-21 | **2**: ending `q-4Z` (2026-09-21) and `LFbV` (**2026-10-07**) | **Production sign-in.** Supabase `dbkodyyxxhtygxcxmfcu` uses this client [recorded: Management API, 2026-10-07] |
+| LCA App | Web client 1 | Web | `104841707674-drg7qtiia19jbq14rlhsljtiis4qju2n` | `https://dbkodyyxxhtygxcxmfcu.supabase.co/auth/v1/callback` (the same) | 2025-04-28 | **2**: 2025-04-28 and **2026-10-07** | Nothing known. Older duplicate of the client above |
+| Lanna Care - Dev | LCA Application | Web | `1036347359893-tk4qklicq40o496onnqan8j8mf1od331` | `https://qxkmhwybjggxvsfxsxbd.supabase.co/auth/v1/callback` | 2026-09-20 | 1 (2026-09-20) | **Dev/test sign-in.** Supabase `qxkmhwybjggxvsfxsxbd` uses this client [recorded: Management API, 2026-10-07] |
+| Lanna Care - Dev | Lanna Care Drive Access | Desktop | `1036347359893-dfbupbdp60l8ukicc08dhf0jipafinb6` | none (Desktop clients use a loopback address) | 2026-09-18 | 1 (2026-09-18) | **All Drive access**: photos, attachments, archive PDFs, backups, for every environment. `GOOGLE_OAUTH_CLIENT_ID` in `.env.local` [repo] |
+
+No client has authorised JavaScript origins. Client IDs and the last four
+characters of a secret are identifiers, not secrets. The console no longer shows
+full secrets.
+
+What the stocktake settled:
+
+- **The second client in LCA App ("Web client 1", `…drg7qt…`) has the same redirect
+  URI as the production client.** It is the April 2025 original. Production
+  Supabase uses the newer `…bjgla5…`. Google shows both as last used around
+  2026-10-06, but that date lags by a day or more, so it does not prove `…drg7qt…`
+  is still in use. It can be deleted once production sign-in has been seen working
+  without it (disabling its secrets first is the reversible test).
+- **Both LCA App clients gained a second secret on 2026-10-07**, from the rotation
+  attempt that went wrong. A client keeps accepting every enabled secret, so the
+  exposed one is still live until it is disabled.
+- **`GOOGLE_SIGNIN_CLIENT_SECRET=` in `.env.deploy.production` is malformed** [recorded
+  2026-10-07]: a `GOCSPX-` secret with a client ID run on after it. **The embedded
+  client ID is `…bjgla5…`**, the production client [repo, 2026-10-09]. Which of its
+  two secrets the file holds was not checked: reading the file's secret was
+  refused, correctly.
+- **Production and dev/test sign-in are different clients in different accounts.**
+  Rotating one cannot break the other.
 
 ### Where the Drive values are consumed
 
@@ -48,57 +110,67 @@ The app reads exactly four variables [repo: `.env.example`, `src/lib/google/driv
 | `GOOGLE_OAUTH_REFRESH_TOKEN` | a token **minted for one Google account** against that client | same |
 | `GOOGLE_DRIVE_ROOT_FOLDER_ID` | the tree's root folder in that account | same |
 
-Places those four are set, all of which a move must touch [repo]:
+Places those four are set, all of which a Drive secret rotation must touch [repo]:
 
 - `.env.local` (dev, and Test), `.env.deploy.uat`, `.env.deploy.production`.
-  `.env.deploy.<env>` overrides `.env.local` (README "Environments"). Only
-  `.env.local` and `.dev.vars` were inspected; the deploy files are gitignored
-  and **[CONFIRM] which exist and what they hold**.
+  `.env.deploy.<env>` overrides `.env.local` (README "Environments"). On
+  2026-10-09 the main checkout had only `.env.deploy.production`, which sets none
+  of the four Drive variables (so production falls back to `.env.local`'s), plus
+  `BACKUP_DRIVE_FOLDER_ID` and `GOOGLE_SIGNIN_CLIENT_SECRET` [repo, names only].
 - **Worker secrets** on `lanna-animal-care-test`, `lanna-animal-care-uat` and
   `lanna-animal-care`, pushed by `node scripts/deploy.mjs --env <env> --secrets`
   (`RUNTIME_SECRETS` in `scripts/deploy.mjs`). Secrets cannot be read back;
   Settings shows whether each deployed Worker's Drive still works.
 - `.dev.vars` (local Worker preview).
 - The **Pi**: `scripts/pi/write-env.mjs` copies the same four names into its env
-  files. Not yet in use.
+  files.
 - **Weekly backups** (`scripts/backup.mjs`) use the same four to write into the
   tree's `Backups` folder; `src/lib/status/health.ts` checks it there.
 
-Which client is where, today:
+Sign-in is not read from env: it is configured **inside each Supabase project**
+(Authentication, Providers, Google), so the `GOOGLE_SIGNIN_*` names appear nowhere
+in `src/` or `worker/` [repo]. `scripts/deploy.mjs` never pushes
+`GOOGLE_SIGNIN_CLIENT_SECRET`, so **a sign-in rotation needs no deploy**, and it signs
+nobody out, because the secret is only used during the sign-in exchange [recorded
+2026-10-07].
 
-| Environment | Drive client project | Drive account (token acts as) |
-|---|---|---|
-| Dev / Test | Lanna Care - Dev | `lannaanimalfoundationbwm@gmail.com` [ran against `.env.local`: token minted, root folder "LCA Health System" present] |
-| UAT and Production | same client and tree | same, "for now" [repo: README]; **[CONFIRM] against each deploy env file** |
+### Which client to change for which rotation
 
-Sign-in is not read from env: it is configured **inside each Supabase project**,
-so the `GOOGLE_SIGNIN_*` names appear nowhere in `src/` or `scripts/` [repo,
-grepped 2026-09-30].
+| To rotate | Sign in to the console as | Project | Client | Then put the new secret in |
+|---|---|---|---|---|
+| Production sign-in (the exposed `GOOGLE_SIGNIN_CLIENT_SECRET`) | `lutan.bennett2` | LCA App | `…bjgla5…` (redirect `dbkodyyxxhtygxcxmfcu`) | Supabase `dbkodyyxxhtygxcxmfcu` → Authentication → Providers → Google; and `.env.deploy.production` (fixing the malformed line). Then disable, and later delete, the older secrets, on this client and on `…drg7qt…` |
+| Dev/test sign-in | `lannaanimalfoundationbwm` | Lanna Care - Dev | `…tk4qkl…` (redirect `qxkmhwybjggxvsfxsxbd`) | Supabase `qxkmhwybjggxvsfxsxbd` → Authentication → Providers → Google |
+| Drive | `lannaanimalfoundationbwm` | Lanna Care - Dev | `…dfbupb…` (Desktop) | `GOOGLE_OAUTH_CLIENT_SECRET` in every place listed above, then `deploy.mjs --secrets` for each environment. The refresh token stays valid across a secret change, so no new token is needed |
+
+Google lets a client hold two secrets at once for exactly this: add the new one,
+switch everything over, check it works, then disable the old one. Disabling is
+reversible. Deleting is not.
 
 ### Things that break silently, and when
 
 - **Consent screen left in Testing:** refresh tokens expire after 7 days.
   Happened 2026-09-25 (`scripts/check-drive-token.mjs` header). **Any new project
-  starts in Testing**, so this trap is waiting in the runbook below.
+  starts in Testing**, so this trap is waiting in the runbook below. Both live
+  projects were In production on 2026-10-09.
+- **Two-step verification turned off** on an account that owns a project: the
+  console locks (2026-10-03 to 2026-10-09 for the lanna account).
+- **Inactive clients are deleted by Google after six months unused.** This is a
+  console notice on every client page. It only matters for a client kept as a spare.
 - **The 90-day expiry on the backlog is still unfound** (set 2026-09-22, breakage
-  expected around **2026-12-21**); it is *not* in LCA App [recorded]. Not checked
-  in this pass, and worth doing while in the consoles: Lanna Care - Dev's Auth
-  Platform settings; Supabase Authentication, Sessions (both projects) and
-  Account, Access Tokens (the token behind `apply-migrations.mjs`); Cloudflare,
-  API Tokens (behind `deploy.mjs` and the analytics token). If found, tick that
-  item.
-- **A new Supabase project or domain** needs its redirect URI and origin added
-  to the sign-in client (README "Auth on a new Supabase project"; the cutover
-  item, step 5).
+  expected around **2026-12-21**). It is *not* in LCA App [recorded]. Lanna Care -
+  Dev's Auth Platform settings were not opened in this stocktake [CONFIRM]. Other
+  candidates: Supabase Authentication, Sessions (both projects) and Account, Access
+  Tokens (the token behind `apply-migrations.mjs`); Cloudflare, API Tokens (behind
+  `deploy.mjs` and the analytics token).
+- **A new Supabase project or domain** needs its redirect URI added to the sign-in
+  client (README "Auth on a new Supabase project"; the cutover item, step 5).
 
-### Tooling added by this stream
+### Tooling
 
-`node --env-file=<file> scripts/check-drive-token.mjs` now also prints the
-client's **project number** and the **Drive account the token acts as**, beside
-its existing checks. Half this inventory is therefore re-runnable against any env
-file: compare the number with the console's project dashboard and the email with
-the tables above. It cannot tell you the project *id*, the owning account or the
-consent-screen state; those need the console.
+`node --env-file=<file> scripts/check-drive-token.mjs` prints the Drive client's
+**project number** and the **Drive account the token acts as**, beside its existing
+checks. Compare them with the tables above. It cannot tell you the project *id*,
+the owning account or the consent-screen state; those need the console.
 
 ## 2. Decision (Lutan, 2026-09-30)
 
@@ -139,12 +211,15 @@ between steps 5 and 6 nobody can sign in with Google on `lannacare.org`.
 **Before starting**
 1. Sign in to the console as `lannaanimalfoundationbwm@gmail.com`, open
    `lanna-care-dev`, and confirm it is the project in the tables above. Note the
-   project number (should be `1036347359893`).
+   project number (should be `1036347359893`). The account needs two-step
+   verification on, or the console refuses it (section 1).
 2. Run `node --env-file=.env.local scripts/check-drive-token.mjs` (dev), and the same
    with `.env.deploy.uat` / `.env.deploy.production` if they exist, and write the
-   answers into the Drive table above. This settles the Drive [CONFIRM]s.
+   answers into the Drive section above, which confirms which client and account
+   each environment's token really uses.
 3. **Consent screen check (in `lanna-care-dev`): Audience must say *In production*.**
-   Published 2026-09-25 [recorded], but check, because a project left in Testing
+   Published 2026-09-25 [recorded] and still In production on 2026-10-09 [seen],
+   but check again, because a project left in Testing
    expires every refresh token after seven days. Confirm nothing has reverted it.
 4. Consent screen, Branding: **authorised domains** need `lannacare.org` [recorded]
    **and the UAT Supabase host `dbkodyyxxhtygxcxmfcu.supabase.co`** (add it; not
@@ -155,8 +230,10 @@ between steps 5 and 6 nobody can sign in with Google on `lannacare.org`.
 5. **Lutan**, in `lanna-care-dev`, Clients, Create client: type **Web application**,
    name e.g. `LCA UAT sign-in`. Authorised redirect URI:
    `https://dbkodyyxxhtygxcxmfcu.supabase.co/auth/v1/callback`. (Origins are not
-   needed for the Supabase flow. Copy any that the old client in `LCA App` lists,
-   which you can read side by side.) Note the new client ID and secret. Do not use
+   needed for the Supabase flow, and neither existing client lists any [seen
+   2026-10-09].) **This step creates a new client. The URI is not a description
+   of an existing one.** LCA App already holds two clients with this same URI:
+   `…bjgla5…` (live) and `…drg7qt…` (old). See section 1. Note the new client ID and secret. Do not use
    the existing `LCA Application` client: it is dev's, and sharing one secret
    between dev and UAT means rotating it breaks both. [Option, not recommended:
    reuse it by adding the UAT redirect URI.]
@@ -196,11 +273,11 @@ blocks or is undone by that.
 
 ## 4. What this document does not know
 
-- Whether the UAT Supabase host is already an authorised domain on `lanna-care-dev`'s consent screen, and whether brand verification (Search Console) covers that project.
-- Whether either project holds anything beyond what is listed.
-- What `.env.deploy.uat` and `.env.deploy.production` hold for the Drive client.
-- The name and ID of the production sign-in client.
+Still open after the 2026-10-09 stocktake:
+
+- What the production client's `…drg7qt…` twin is still used by, if anything. Disabling its secrets and then signing in on `lannacare.org` settles it.
+- Which of `…bjgla5…`'s two secrets `.env.deploy.production` and the production Supabase hold. Their last four characters can be compared against `q-4Z` / `LFbV` by Lutan.
+- Whether the UAT Supabase host is an authorised domain on `lanna-care-dev`'s consent screen, and whether brand verification (Search Console) covers that project. The Branding page was not opened.
+- What `.env.deploy.uat` holds. No such file existed in the main checkout on 2026-10-09.
 - Where the 90-day expiry lives.
-- What the `security-review` stream's assessment (`origin/claude/security-review`,
-  a PDF/DOCX) says about these clients; it was not read for this pass. Check it
-  for anything that contradicts this file.
+- Anything owned by `lannacareforanimals@gmail.com`, which is not signed in to Lutan's Chrome.
