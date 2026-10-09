@@ -8,9 +8,9 @@
 | Backlog item | `docs/backlog.md` → **Remove the Staff role: Lanna's roles are Admin, Management, 2IC, Maintenance, Medical, Vet and Volunteer** (ticked here) |
 | Branch / worktree | `claude/remove-staff-role` @ `C:\Development\Animal_Shelter_remove-staff-role` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3001` |
-| PR | this PR; the schema half is #498 |
+| PR | #499; the schema half is #498 (merged 2026-10-09, `2efb73fb`) |
 | Tested by / date | Claude / 2026-10-09 |
-| Carries a migration? | no — `0173` is #498's; this branch contains #498's commit until it merges |
+| Carries a migration? | no — `0173` is #498's, already on `main` |
 | Tested at SHA | `ad13d59b` |
 
 ## 1. Scope and risk
@@ -22,7 +22,7 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — branch created from `origin/main` `827975a9`; nothing has landed on `main` since apart from #498, which this branch already contains
+- [x] `node scripts/worktree.mjs sync` — after #498 merged: one conflict in `docs/backlog.md` (main had reworded this item Vet → Doctor), resolved by keeping main's file and re-applying only this branch's four lines; the merge brought in docs only, so the gates below still stand
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`:
 
 ```
