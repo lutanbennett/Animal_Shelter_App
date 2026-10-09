@@ -1,8 +1,9 @@
 import "server-only";
 import { Document, Font, Image, Page, StyleSheet, Text as PdfText, View, renderToBuffer } from "@react-pdf/renderer";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { NOTO_SANS_THAI_REGULAR } from "@/lib/archive/fonts/noto-sans-thai-regular";
 import { NOTO_SANS_THAI_BOLD } from "@/lib/archive/fonts/noto-sans-thai-bold";
+import { thaiPdfChildren } from "@/lib/archive/fonts/thai-pdf-children";
 import screenshotSizes from "./screenshot-sizes.json";
 import { isForTopic } from "./for-topic";
 import type { Permissions } from "@/lib/permissions/can";
@@ -25,10 +26,16 @@ Font.register({
 });
 Font.registerHyphenationCallback((word) => [word]);
 
-// See the resident summary: no breaks at script changes, lines break at spaces.
+// See the resident summary: no breaks at script changes, lines break at spaces,
+// and every string goes through thaiPdfText() so a ำ drops no letters.
 const NO_HYPHENATION = 10000;
 function Text(props: ComponentProps<typeof PdfText>) {
-  return <PdfText hyphenationPenalty={NO_HYPHENATION} {...props} />;
+  const children = (props as { children?: ReactNode }).children;
+  return (
+    <PdfText hyphenationPenalty={NO_HYPHENATION} {...props}>
+      {thaiPdfChildren(children)}
+    </PdfText>
+  );
 }
 
 const ROLE_ORDER: ManualRole[] = ["admin", "management", "staff", "vet", "volunteer"];
