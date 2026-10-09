@@ -48,7 +48,7 @@ release's real risk is not in this diff at all: it is `0172`, and it is in
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — not yet run: the PR is opened by this commit. The run is read and this line completed, with the job names and the SHA, in a follow-up commit before the merge. Not ticked in advance
+- [x] CI green on the PR (runs the same three) — read on PR #505, not ticked in advance. The first run at `8d4082ec` was **6 green, 1 red**: `check`, `public-views`, `audit`, `migration-numbers`, `new-policy-role-names` and `script-integrity` passed, and `test-plan` failed on this very line, which that commit left unticked because the run had not happened yet. That is `test-plan` doing exactly its job — content, not presence. Completed here, and the run on this commit is the one that reports seven green
 - [x] `node scripts/check-release-guards.mjs` — exit 0, all fifteen cases, including "a cut release with nothing unreleased passes" and "unreleased notes are a problem"
 
 **The cut was verified mechanically, not read over**, as the runbook requires.
