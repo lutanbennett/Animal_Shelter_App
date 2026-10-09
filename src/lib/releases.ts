@@ -62,6 +62,8 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "The facility map is easier to read: the 3/4 counts and the room names are gone from the zone plans, so the enclosure numbers on the drawing show through, and each enclosure carries only small icons for medication, a special diet or open maintenance.",
+  "Tap an enclosure on the map to see its details straight away under the plan: the residents in it with their photos, diets and medication, its notes and its open maintenance jobs. Tap another to switch, or Open full page for moving residents and logging maintenance.",
 ];
 
 /** Newest first. */

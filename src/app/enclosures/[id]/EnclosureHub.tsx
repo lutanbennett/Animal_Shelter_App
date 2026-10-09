@@ -41,6 +41,8 @@ export type EnclosureResident = {
   profile_photo_drive_file_id: string | null;
   /** Their current non-standard diets, by name; empty when on the standard (0087). */
   special_diets: string[];
+  /** On a current prescription (the facility map's pill); false for a role that cannot read prescriptions. */
+  on_medication: boolean;
 };
 
 function ResidentThumbnail({ resident }: { resident: EnclosureResident }) {
@@ -82,8 +84,174 @@ function ResidentThumbnail({ resident }: { resident: EnclosureResident }) {
             </span>
           </span>
         )}
+        {resident.on_medication && (
+          <span className="flex items-center gap-1 text-xs font-medium text-foreground">
+            <ENCLOSURE_ICONS.medication aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+            {t.enclosures.map.medicationLabel}
+          </span>
+        )}
       </div>
     </Link>
+  );
+}
+
+/**
+ * The pieces below are the enclosure page's own, exported so the facility map's details panel
+ * (map/EnclosurePanel.tsx) shows an enclosure with them rather than a second layout of its own.
+ */
+
+/** Who is in the enclosure: photo, name, code, diets and medication, each opening the resident. */
+export function EnclosureResidents({
+  residents,
+  compact = false,
+}: {
+  residents: EnclosureResident[];
+  /** The map panel's narrower grid, and a smaller heading. */
+  compact?: boolean;
+}) {
+  const { t } = useI18n();
+  return (
+    <section className="flex flex-col gap-4">
+      <div className="flex items-center gap-2">
+        <ENCLOSURE_ICONS.residents
+          aria-hidden="true"
+          className="h-5 w-5 text-muted"
+        />
+        {compact ? (
+          <h4 className="text-base font-semibold text-foreground">
+            {t.enclosures.hub.residentsHeading}
+          </h4>
+        ) : (
+          <h2 className="text-lg font-semibold text-foreground">
+            {t.enclosures.hub.residentsHeading}
+          </h2>
+        )}
+        <span className="text-sm text-muted">({residents.length})</span>
+      </div>
+      {residents.length > 0 ? (
+        <div className={`grid grid-cols-2 gap-3 sm:grid-cols-3 ${compact ? "lg:grid-cols-5" : "lg:grid-cols-4"}`}>
+          {residents.map((resident) => (
+            <ResidentThumbnail key={resident.id} resident={resident} />
+          ))}
+        </div>
+      ) : (
+        <p className="rounded border border-border px-4 py-6 text-center text-sm text-muted">
+          {t.enclosures.hub.noResidents}
+        </p>
+      )}
+    </section>
+  );
+}
+
+export function EnclosureNotes({ notes }: { notes: string | null }) {
+  const { t } = useI18n();
+  return (
+    <div className="rounded-lg border border-border bg-surface p-4">
+      <h3 className="mb-2 text-sm font-medium text-muted">
+        {t.enclosures.hub.notes}
+      </h3>
+      {notes ? (
+        <p className="whitespace-pre-line text-sm text-foreground">
+          {notes}
+        </p>
+      ) : (
+        <p className="text-sm text-muted">{t.enclosures.hub.noNotes}</p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Maintenance: the open jobs for this enclosure, newest due first
+ * (loadMaintenanceJobs orders by due date), with the rest on the
+ * board filtered to this enclosure.
+ */
+export function EnclosureMaintenance({
+  enclosureId,
+  jobs,
+  canWriteMaintenance,
+}: {
+  enclosureId: string;
+  jobs: MaintenanceJob[];
+  canWriteMaintenance: boolean;
+}) {
+  const { t, locale } = useI18n();
+  const openJobs = jobs.filter((job) => job.status !== "Completed");
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4">
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+          <ENCLOSURE_ICONS.maintenance
+            aria-hidden="true"
+            className="h-5 w-5 shrink-0 text-muted md:h-4 md:w-4"
+          />
+          {t.enclosures.hub.maintenance}
+        </span>
+        <span
+          className={`shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${
+            openJobs.length > 0
+              ? "bg-primary/15 text-primary"
+              : "bg-surface-hover text-muted"
+          }`}
+        >
+          {openJobs.length > 0
+            ? t.enclosures.hub.maintenanceOpen(openJobs.length)
+            : t.enclosures.hub.maintenanceNone}
+        </span>
+      </div>
+
+      {openJobs.length > 0 ? (
+        <ul className="flex flex-col gap-1.5">
+          {openJobs.slice(0, 4).map((job) => {
+            const due = dueState(job.due_date, job.status);
+            return (
+              <li key={job.id}>
+                <Link
+                  href={`/maintenance/${job.id}`}
+                  className={`flex flex-col gap-0.5 rounded border border-l-4 border-border px-2 py-1.5 text-sm hover:bg-surface-hover ${DUE_TONE[due].card}`}
+                >
+                  <span className="truncate font-medium text-foreground">{job.title}</span>
+                  <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
+                    <span className={`flex items-center gap-1 ${STATUS_TONE[job.status].text}`}>
+                      <span className={`h-2 w-2 rounded-full ${STATUS_TONE[job.status].dot}`} />
+                      {maintenanceStatusLabel(t, job.status)}
+                    </span>
+                    {job.due_date && (
+                      <span className={due !== "none" ? `rounded px-1 font-medium ${DUE_TONE[due].badge}` : ""}>
+                        {formatDate(job.due_date, locale)}
+                      </span>
+                    )}
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <span className="text-xs text-muted">
+          {t.enclosures.hub.maintenanceDetail}
+        </span>
+      )}
+
+      <div className="flex flex-wrap items-center gap-3 text-xs font-medium">
+        {canWriteMaintenance && (
+          <ActionLink
+            href={`/maintenance/new?enclosureId=${enclosureId}`}
+            label={t.enclosures.hub.maintenanceLog}
+            icon={ACTION_ICONS.add}
+            variant="primary"
+            iconOnlyOnMobile={false}
+          />
+        )}
+        <Link
+          href={`/maintenance?enclosure=${enclosureId}`}
+          className="text-primary hover:underline"
+        >
+          {t.enclosures.hub.maintenanceViewAll}
+          {jobs.length > 0 && ` (${jobs.length})`}
+        </Link>
+      </div>
+    </div>
   );
 }
 
@@ -106,7 +274,6 @@ export function EnclosureHub({
   tagOrigin: string | null;
 }) {
   const { t, locale } = useI18n();
-  const openJobs = maintenanceJobs.filter((job) => job.status !== "Completed");
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
@@ -173,123 +340,19 @@ export function EnclosureHub({
       </div>
 
       <div className="grid gap-6 md:grid-cols-[2fr_1fr]">
-        <section className="flex flex-col gap-4">
-          <div className="flex items-center gap-2">
-            <ENCLOSURE_ICONS.residents
-              aria-hidden="true"
-              className="h-5 w-5 text-muted"
-            />
-            <h2 className="text-lg font-semibold text-foreground">
-              {t.enclosures.hub.residentsHeading}
-            </h2>
-            <span className="text-sm text-muted">({residents.length})</span>
-          </div>
-          {residents.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {residents.map((resident) => (
-                <ResidentThumbnail key={resident.id} resident={resident} />
-              ))}
-            </div>
-          ) : (
-            <p className="rounded border border-border px-4 py-6 text-center text-sm text-muted">
-              {t.enclosures.hub.noResidents}
-            </p>
-          )}
-        </section>
+        <EnclosureResidents residents={residents} />
 
         <aside className="flex flex-col gap-4">
-          <div className="rounded-lg border border-border bg-surface p-4">
-            <h3 className="mb-2 text-sm font-medium text-muted">
-              {t.enclosures.hub.notes}
-            </h3>
-            {enclosure.notes ? (
-              <p className="whitespace-pre-line text-sm text-foreground">
-                {enclosure.notes}
-              </p>
-            ) : (
-              <p className="text-sm text-muted">{t.enclosures.hub.noNotes}</p>
-            )}
-          </div>
+          <EnclosureNotes notes={enclosure.notes} />
 
-          {/* Maintenance: the open jobs for this enclosure, newest due first
-              (loadMaintenanceJobs orders by due date), with the rest on the
-              board filtered to this enclosure. Lifecycle pseudo-enclosures
-              (Hospital, Fostered, …) aren't physical, so they get no card. */}
+          {/* Lifecycle pseudo-enclosures (Hospital, Fostered, …) aren't
+              physical, so they get no maintenance card. */}
           {!enclosure.isSystem && (
-            <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4">
-              <div className="flex items-center justify-between gap-2">
-                <span className="flex items-center gap-2 text-sm font-medium text-foreground">
-                  <ENCLOSURE_ICONS.maintenance
-                    aria-hidden="true"
-                    className="h-5 w-5 shrink-0 text-muted md:h-4 md:w-4"
-                  />
-                  {t.enclosures.hub.maintenance}
-                </span>
-                <span
-                  className={`shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${
-                    openJobs.length > 0
-                      ? "bg-primary/15 text-primary"
-                      : "bg-surface-hover text-muted"
-                  }`}
-                >
-                  {openJobs.length > 0
-                    ? t.enclosures.hub.maintenanceOpen(openJobs.length)
-                    : t.enclosures.hub.maintenanceNone}
-                </span>
-              </div>
-
-              {openJobs.length > 0 ? (
-                <ul className="flex flex-col gap-1.5">
-                  {openJobs.slice(0, 4).map((job) => {
-                    const due = dueState(job.due_date, job.status);
-                    return (
-                      <li key={job.id}>
-                        <Link
-                          href={`/maintenance/${job.id}`}
-                          className={`flex flex-col gap-0.5 rounded border border-l-4 border-border px-2 py-1.5 text-sm hover:bg-surface-hover ${DUE_TONE[due].card}`}
-                        >
-                          <span className="truncate font-medium text-foreground">{job.title}</span>
-                          <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
-                            <span className={`flex items-center gap-1 ${STATUS_TONE[job.status].text}`}>
-                              <span className={`h-2 w-2 rounded-full ${STATUS_TONE[job.status].dot}`} />
-                              {maintenanceStatusLabel(t, job.status)}
-                            </span>
-                            {job.due_date && (
-                              <span className={due !== "none" ? `rounded px-1 font-medium ${DUE_TONE[due].badge}` : ""}>
-                                {formatDate(job.due_date, locale)}
-                              </span>
-                            )}
-                          </span>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : (
-                <span className="text-xs text-muted">
-                  {t.enclosures.hub.maintenanceDetail}
-                </span>
-              )}
-
-              <div className="flex flex-wrap items-center gap-3 text-xs font-medium">
-                {canWriteMaintenance && (
-                  <ActionLink
-                    href={`/maintenance/new?enclosureId=${enclosure.id}`}
-                    label={t.enclosures.hub.maintenanceLog}
-                    icon={ACTION_ICONS.add}
-                    variant="primary"
-                    iconOnlyOnMobile={false}
-                  />
-                )}
-                <Link
-                  href={`/maintenance?enclosure=${enclosure.id}`}
-                  className="text-primary hover:underline"
-                >
-                  {t.enclosures.hub.maintenanceViewAll}
-                  {maintenanceJobs.length > 0 && ` (${maintenanceJobs.length})`}
-                </Link>
-              </div>
-            </div>
+            <EnclosureMaintenance
+              enclosureId={enclosure.id}
+              jobs={maintenanceJobs}
+              canWriteMaintenance={canWriteMaintenance}
+            />
           )}
         </aside>
       </div>
