@@ -15,6 +15,11 @@
 //   guards       lunch cannot be put on a diet
 //   re-run       both migration files applied a second time change nothing
 //   access       who reads and who writes the mappings, each login's own JWT
+//   functions    nobody signed in, Admin included, may call reset_prescription_rounds(), reset_frequency_rounds()
+//                or reset_diet_rounds() (0170). They run as their owner and ask nothing of the caller; only the
+//                owner-rights triggers call them. The access probes above never looked through them, which is how
+//                a login with no role could put a prescription back on its default rounds. Probed BEFORE the
+//                re-run below, because replaying 0137 and 0138 re-grants them inside this transaction.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -41,9 +46,16 @@ const probes = [
   ["write rounds", `update rounds set name = name where key = 'lunch'`, { admin: 1, management: 0, staff: 0, vet: 0, volunteer: 0, norole: 0 }],
   ["write prescription_rounds", `delete from prescription_rounds where prescription_id in (select id from prescriptions where resident_id = '${R}')`, { admin: 1, management: 1, staff: 1, vet: 0, volunteer: 0, norole: 0 }],
 ];
+// [function, the table its argument is an id of]: called with a real id, so a granted call would really reset it.
+const RESETS = [["reset_prescription_rounds", "prescriptions"], ["reset_frequency_rounds", "frequency"], ["reset_diet_rounds", "resident_diets"]];
+const fnProbes = RESETS.map(([fn]) => [`call ${fn}()`, null, Object.fromEntries(P.map((p) => [p, 0]))]);
 
 const lines = [];
 for (const [name, sql] of probes) for (const who of P) lines.push(`  perform pg_temp.probe('${who}', ${lit(ID[who])}, $n$${name}$n$, $q$${sql}$q$);`);
+const fnLines = [];
+for (const [fn, table] of RESETS) for (const who of P) {
+  fnLines.push(`  perform pg_temp.probe('${who}', ${lit(ID[who])}, $n$call ${fn}()$n$, format('select %I(%L::uuid)', '${fn}', (select id from ${table} order by id limit 1)));`);
+}
 
 const harness = `
 begin;
@@ -74,15 +86,6 @@ begin
   insert into res values ('probe:' || p_name || ':' || p_who, v >= 1, v::text);
 end $f$;
 
--- the migrations again, on top of themselves: re-runnable, and a no-op on rows already mapped
-create temp table before_counts as
-  select (select count(*) from frequency_rounds) f, (select count(*) from resident_diet_rounds) d,
-         (select count(*) from prescription_rounds) p, (select count(*) from rounds) r;
-${migrations}
-select pg_temp.t('re-run: nothing duplicated or undone',
-  (select f = (select count(*) from frequency_rounds) and d = (select count(*) from resident_diet_rounds)
-      and p = (select count(*) from prescription_rounds) and r = (select count(*) from rounds) from before_counts));
-
 do $setup$
 begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
@@ -92,6 +95,20 @@ begin
     select id, who::app_role from (values ${["admin", "management", "staff", "volunteer", "vet"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into residents (id, name, species) values (${lit(R)}, 'Harness resident', 'Dog');
 end $setup$;
+
+-- the live grants on the reset functions, before the re-run below puts 0137's and 0138's back
+do $fn$ begin
+${fnLines.join("\n")}
+end $fn$;
+
+-- the migrations again, on top of themselves: re-runnable, and a no-op on rows already mapped
+create temp table before_counts as
+  select (select count(*) from frequency_rounds) f, (select count(*) from resident_diet_rounds) d,
+         (select count(*) from prescription_rounds) p, (select count(*) from rounds) r;
+${migrations}
+select pg_temp.t('re-run: nothing duplicated or undone',
+  (select f = (select count(*) from frequency_rounds) and d = (select count(*) from resident_diet_rounds)
+      and p = (select count(*) from prescription_rounds) and r = (select count(*) from rounds) from before_counts));
 
 do $run$
 declare
@@ -214,7 +231,7 @@ for (const r of rows) {
   if (r.ok) { ok++; if (verbose) console.log(`ok    ${r.name}`); }
   else { fails++; console.log(`FAIL  ${r.name}${r.detail ? ` — ${r.detail}` : ""}`); }
 }
-for (const [name, , exp] of probes) {
+for (const [name, , exp] of [...probes, ...fnProbes]) {
   for (const who of P) {
     const r = rows.find((x) => x.name === `probe:${name}:${who}`);
     const label = `${name} as ${who}: ${exp[who] ? "allowed" : "refused"}`;

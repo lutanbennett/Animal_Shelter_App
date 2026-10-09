@@ -48,3 +48,14 @@ notify pgrst, 'reload schema';
 drop policy if exists contacts_select_perm on contacts;
 create policy contacts_select_perm on contacts for select to authenticated
   using ((select has_permission('contacts.browse')) and (select sees_all_contacts()));
+
+-- ---------------------------------------------------------------------------
+-- 2. reset_prescription_rounds(), reset_frequency_rounds(), reset_diet_rounds()
+-- ---------------------------------------------------------------------------
+-- Owner-rights, and they ask nothing of the caller. Their only callers are the three *_rounds_default_trigger functions,
+-- which are owner-rights too (postgres), so the trigger path does not need the caller to hold execute. No app code calls
+-- them. service_role keeps execute for scripts.
+revoke execute on function reset_prescription_rounds(uuid), reset_frequency_rounds(uuid), reset_diet_rounds(uuid)
+  from public, anon, authenticated;
+grant execute on function reset_prescription_rounds(uuid), reset_frequency_rounds(uuid), reset_diet_rounds(uuid)
+  to service_role;
