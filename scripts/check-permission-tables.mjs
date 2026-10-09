@@ -11,7 +11,7 @@
 // that is archived; a login whose configured role has been archived.
 //
 // It checks
-//   A  the seed: six roles, 60 activities, 54 / 39 / 13 / 3 cells for
+//   A  the seed: six roles, 60 activities, 55 / 39 / 13 / 3 cells for
 //      management / staff / vet / volunteer and none for admin or public_viewer,
 //      every Yes/No cell at level 2, and every real login on dev has a role_id
 //      that agrees with its enum value
@@ -221,7 +221,7 @@ begin
   -- residents list, who and where, the map and its enclosures read, own recurring jobs, the assistant). The VET stays at the
   -- paper's 13 and is checked with eq_known(): the draft gives vets only the microchip (2 cells) and Lutan said vets are on hold,
   -- so the paper and the draft genuinely disagree. That is recorded, not flattened: the run stays RED until someone decides.
-  for t in select unnest(array['management:54', 'staff:39', 'volunteer:5', 'admin:0', 'public_viewer:0']) loop
+  for t in select unnest(array['management:55', 'staff:39', 'volunteer:5', 'admin:0', 'public_viewer:0']) loop
     perform pg_temp.eq('A cells ' || split_part(t, ':', 1),
       (select count(*) from role_permissions rp join roles r on r.id = rp.role_id where r.key = split_part(t, ':', 1))::text,
       split_part(t, ':', 2));
@@ -234,7 +234,7 @@ begin
   perform pg_temp.eq('A real logins agree with the enum', (select count(*) from user_roles ur join roles r on r.id = ur.role_id where r.legacy_role is distinct from ur.role)::text, '0');
   perform pg_temp.eq('A scopes vet', (select scope_residents || '/' || scope_clinical || '/' || scope_contacts || '/' || scope_photos || '/' || sees_login_emails from roles where key = 'vet'), 'own_clinic/own_clinic/name_type/medical_only/false');
   perform pg_temp.eq('A scopes volunteer', (select scope_contacts || '/' || sees_login_emails from roles where key = 'volunteer'), 'name_phone/false');
-  v_report := v_report || 'A: 6 roles, 60 activities, cells 54/39/13/5/0/0, role_id agrees with the enum on every real login | ';
+  v_report := v_report || 'A: 6 roles, 60 activities, cells 55/39/13/5/0/0, role_id agrees with the enum on every real login | ';
 
   -- B: has_permission().
   -- the four answers-no cases
@@ -310,7 +310,7 @@ begin
     end loop;
   end loop;
   perform pg_temp.eq('H answers checked', v_checked::text, '720');
-  perform pg_temp.eq('H expected cells', (select count(*) from harness_expected)::text, '109'); -- 107 on the paper; the volunteer is 5 under the draft
+  perform pg_temp.eq('H expected cells', (select count(*) from harness_expected)::text, '111'); -- 107 on the paper; the volunteer is 5 under the draft; +1 Management community.outings (0169), +1 Management donation.receipt (0168). UNVERIFIED until both are applied
   v_report := v_report || 'H: 720 answers, six roles x 60 activities x read and edit, equal the paper''s §4 table | ';
 
   n := pg_temp.try(null, format('insert into role_permissions (role_id, activity, level) values (%L, ''stock.count'', 2)', v_role_admin), 'aal1', 'service_role');
@@ -479,7 +479,7 @@ begin
   if exists (select 1 from harness_known_red) then
     raise exception '%', 'HARNESS-KNOWN-RED every other check held; recorded disagreements with the draft: ' || (select string_agg(label || ': got ' || got || ', paper wants ' || want, '; ') from harness_known_red);
   end if;
-  raise exception '%', format('HARNESS-OK %s asserted live | A: 6 roles, 60 activities, cells 54/39/13/3/0/0 | B: four answers-no cases, archived person, signed out, anon, null, mistyped level, seeded yes, read vs edit, admin yes | C: my_permissions | D: guards, role_id bridge, last admin | E: RLS at aal1/aal2, anon | F: audit | H: 660 answers (6 roles x 60 activities x read/edit) equal section 4 of the paper | G: replay keeps a shelter edit',
+  raise exception '%', format('HARNESS-OK %s asserted live | A: 6 roles, 60 activities, cells 55/39/13/3/0/0 | B: four answers-no cases, archived person, signed out, anon, null, mistyped level, seeded yes, read vs edit, admin yes | C: my_permissions | D: guards, role_id bridge, last admin | E: RLS at aal1/aal2, anon | F: audit | H: 660 answers (6 roles x 60 activities x read/edit) equal section 4 of the paper | G: replay keeps a shelter edit',
     ${JSON.stringify(file).replace(/"/g, "'")});
 end;
 $h2$;

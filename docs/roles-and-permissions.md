@@ -375,7 +375,7 @@ Admin is shown for completeness; it is never stored (§6).
 | `audit.undo` | Undo a change | Y/N | Y | – | – | – | – | 35 | *Split* |
 | `system.status` | The system status page | Y/N | Y | – | – | – | – | 36 | |
 | `translations.view` | See the public text's translations | Y/N | Y | Y | Y | – | – | – | Read only; added by `0154` to replace `sees_all_translations()`. Translating stays `translations.manage`. Also reads `label_translations()` (`0166`), but the page is `translations.manage`'s |
-| `donation.receipt` | Issue a donation receipt | Y/N | Y | – | – | – | – | – | Added by `0168` (Lutan, 2026-10-09): Admin only until delegated in Settings, so no cells |
+| `donation.receipt` | Issue a donation receipt | Y/N | Y | Y | – | – | – | – | Added by `0168` (Lutan, 2026-10-09): Management too, because the Director issues receipts from her phone by day on a Management login. Covers recording the gift, issuing, voiding and re-issuing; `donations`, `donation_lines`, `donation_receipts`, `issue_donation_receipt()` |
 
 Not in the table, because nobody sets them (§6): signing in and out, a forgotten
 password, changing your own password, the language switch, the manual, the

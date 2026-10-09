@@ -15,8 +15,8 @@
 --   receipt_counters     the next number, one row per series. NOT a sequence: a sequence skips a value whenever a
 --                        transaction that took one rolls back, and a receipt register must never skip.
 --   issue_donation_receipt(donation, country, issuer, content)  the only way a receipt row is made.
---   activity donation.receipt (yes/no, "Issue a donation receipt"). No cells: Admin only until delegated in
---                        Settings, per the item ("the Director (Admin) by default").
+--   activity donation.receipt (yes/no, "Issue a donation receipt"). Admin, and Management by one cell: Lutan,
+--                        2026-10-09, because the Director issues receipts from her phone by day on a Management login.
 --
 -- THE NUMBER. 'LCA' + seven digits, the first LCA0009000 (Lutan, 2026-10-09), one series for both countries.
 -- issue_donation_receipt() takes the counter row FOR UPDATE, so two receipts issued at once queue on it, and the
@@ -217,6 +217,13 @@ grant execute on function issue_donation_receipt(uuid, text, date, jsonb, jsonb)
 insert into permission_activities (key, kind, area, sort)
 values ('donation.receipt', 'yesno', 'management', 60)
 on conflict (key) do update set kind = excluded.kind, area = excluded.area, sort = excluded.sort;
+
+-- Lutan, 2026-10-09: Management too, for the Director's phone login. Admin needs no cell (§6 rule 1).
+insert into role_permissions (role_id, activity, level)
+select r.id, 'donation.receipt', 2
+from roles r
+where r.key = 'management'
+on conflict (role_id, activity) do nothing;
 
 alter table donations enable row level security;
 alter table donation_lines enable row level security;

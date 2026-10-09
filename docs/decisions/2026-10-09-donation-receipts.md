@@ -49,5 +49,6 @@ correct.
 
 ## Who
 
-A new activity, `donation.receipt` (yes/no), with no cells: Admin only until an Admin delegates it in the
-Settings matrix, which needs no migration.
+A new activity, `donation.receipt` (yes/no). Admin, and Management by one seeded cell: Lutan, 2026-10-09,
+because the Director issues receipts from her phone by day on a Management login (Admin on her PC at night),
+and there is no screen yet for an Admin to change a cell, so the answer had to be in the migration.
