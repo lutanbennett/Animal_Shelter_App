@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **One place to translate everything** (ticked); F-11 partly closed |
 | Branch / worktree | `claude/translations-page` @ `C:\Development\Animal_Shelter_translations-page` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3006` |
-| PR | opened from this commit |
+| PR | #479 |
 | Tested by / date | Claude / 2026-10-09 |
 | Carries a migration? | no — reads `0166_label_translations.sql`, merged and applied to dev in #476 |
 | Tested at SHA | `3e3ccef3` (after sync with `origin/main` `a8716dd4`: already up to date) |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — all 7 checks passing on #479 at `1449c622`, read from the PR status before merging
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -232,7 +232,7 @@ Manual verification by: pending: the three rows under Left for manual verificati
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR — in the body of #479
 - [ ] Handed to the production release manager — n/a: not yet — handed over with the release that carries it
 
 Result: pass
