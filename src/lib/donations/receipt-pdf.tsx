@@ -1,6 +1,6 @@
 import "server-only";
 import { Document, Font, Image, Page, StyleSheet, Text as PdfText, View, renderToBuffer } from "@react-pdf/renderer";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { NOTO_SANS_THAI_REGULAR } from "@/lib/archive/fonts/noto-sans-thai-regular";
 import { NOTO_SANS_THAI_BOLD } from "@/lib/archive/fonts/noto-sans-thai-bold";
 import { thaiPdfText } from "@/lib/archive/fonts/thai-pdf-text";
@@ -40,7 +40,8 @@ Font.registerHyphenationCallback((word) => [word]);
 // Every string goes through thaiPdfText(), or a Thai name containing ำ loses
 // its last characters (src/lib/archive/fonts/thai-pdf-text.ts).
 const NO_HYPHENATION = 10000;
-function Text({ children, ...props }: ComponentProps<typeof PdfText>) {
+function Text(props: ComponentProps<typeof PdfText>) {
+  const children = (props as { children?: ReactNode }).children;
   return (
     <PdfText hyphenationPenalty={NO_HYPHENATION} {...props}>
       {typeof children === "string" ? thaiPdfText(children) : children}
