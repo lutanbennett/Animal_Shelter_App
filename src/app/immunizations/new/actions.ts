@@ -3,6 +3,7 @@
 import { databaseFailure } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { localLabel } from "@/lib/translations/labels";
 import { isFutureDate, isIsoDate } from "@/lib/placements/dates";
 
 export type ImmunizationRecordResult = {
@@ -34,7 +35,7 @@ type EnrichedRow = {
   date_administered: string;
   immunization_type_id: string;
   residents: { name: string } | null;
-  immunization_types: { name: string; interval_months: number | null } | null;
+  immunization_types: { name: string; name_th: string | null; interval_months: number | null } | null;
 };
 
 /** Adds whole months to an ISO (YYYY-MM-DD) date string, in UTC to avoid
@@ -49,7 +50,7 @@ export async function recordImmunizations(
   _state: ImmunizationFormState,
   formData: FormData,
 ): Promise<ImmunizationFormState> {
-  const { t } = await getT();
+  const { t, locale } = await getT();
   const residentIds = formData
     .getAll("residentIds")
     .filter((id): id is string => typeof id === "string" && id.length > 0);
@@ -102,7 +103,7 @@ export async function recordImmunizations(
   const { data: enrichedData, error: enrichError } = await supabase
     .from("immunization_records")
     .select(
-      "id, resident_id, date_administered, immunization_type_id, residents(name), immunization_types:picker_immunization_types(name, interval_months)",
+      "id, resident_id, date_administered, immunization_type_id, residents(name), immunization_types:picker_immunization_types(name, name_th, interval_months)",
     )
     .in(
       "id",
@@ -124,7 +125,7 @@ export async function recordImmunizations(
           row.residents?.name ?? t.immunizations.resultTable.unknownResident,
         immunizationTypeId: row.immunization_type_id,
         immunizationTypeName:
-          row.immunization_types?.name ??
+          (row.immunization_types && localLabel(locale, row.immunization_types.name, row.immunization_types.name_th)) ||
           t.immunizations.resultTable.unknownImmunization,
         dateAdministered: row.date_administered,
         intervalMonths,

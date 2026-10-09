@@ -35,7 +35,7 @@ export default async function DietSettingsPage() {
   const [typesResult, dietsResult, conversions] = await Promise.all([
     supabase
       .from("diet_types")
-      .select("id, name, unit, daily_qty_small, daily_qty_medium, daily_qty_large, notes, is_standard")
+      .select("id, name, name_th, unit, daily_qty_small, daily_qty_medium, daily_qty_large, notes, is_standard")
       .order("name")
       .returns<DietTypeQueryRow[]>(),
     // One row per resident diet is cheap at shelter scale and gives the

@@ -13,6 +13,7 @@ import { deleteMedication, mergeMedication, updateMedicationDefinition } from ".
 export type MedicationDefinitionRow = {
   id: string;
   name: string;
+  name_th: string | null;
   dose_unit: string;
   /** Every prescription ever written for it — any at all blocks delete. */
   prescription_count: number;
@@ -36,6 +37,7 @@ function MedicationRowItem({
   const confirm = useConfirm();
   const m = t.management.medications;
   const [name, setName] = useState(medication.name);
+  const [nameTh, setNameTh] = useState(medication.name_th ?? "");
   const [doseUnit, setDoseUnit] = useState(medication.dose_unit);
   const [mode, setMode] = useState<"view" | "edit" | "merge">("view");
   const [mergeInto, setMergeInto] = useState("");
@@ -44,6 +46,7 @@ function MedicationRowItem({
 
   function reset() {
     setName(medication.name);
+    setNameTh(medication.name_th ?? "");
     setDoseUnit(medication.dose_unit);
     setMergeInto("");
     setMode("view");
@@ -65,7 +68,7 @@ function MedicationRowItem({
     }
     setMessage(null);
     startTransition(async () => {
-      const result = await updateMedicationDefinition(medication.id, { name, doseUnit });
+      const result = await updateMedicationDefinition(medication.id, { name, nameTh, doseUnit });
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
         return;
@@ -105,14 +108,32 @@ function MedicationRowItem({
       <tr className="align-top hover:bg-surface-hover">
         <td className="px-4 py-2">
           {editing ? (
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              aria-label={m.table.name}
-              className={`${inputClass} min-w-48`}
-            />
+            <div className="flex flex-col gap-1">
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                aria-label={m.table.name}
+                className={`${inputClass} min-w-48`}
+              />
+              <input
+                value={nameTh}
+                onChange={(e) => setNameTh(e.target.value)}
+                placeholder={t.translations.thaiName}
+                aria-label={t.translations.thaiName}
+                title={t.translations.thaiNameOptionalHint}
+                lang="th"
+                className={`${inputClass} min-w-48`}
+              />
+            </div>
           ) : (
-            <span className="font-medium text-foreground">{medication.name}</span>
+            <div className="flex flex-col">
+              <span className="font-medium text-foreground">{medication.name}</span>
+              {medication.name_th && (
+                <span lang="th" className="text-sm text-foreground">
+                  {medication.name_th}
+                </span>
+              )}
+            </div>
           )}
         </td>
         <td className="px-4 py-2">

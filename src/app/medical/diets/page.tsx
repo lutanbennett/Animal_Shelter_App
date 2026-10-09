@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/format";
 import { dietUnitLabel } from "@/lib/i18n/enum-labels";
 import { statusLabel } from "@/lib/i18n/enum-labels";
 import { placeName } from "@/lib/enclosures/names";
+import { localLabel } from "@/lib/translations/labels";
 import { ZoneName } from "@/components/ZoneName";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { RoundIcon, RoundStrip } from "@/components/medication/RoundIcons";
@@ -55,7 +56,7 @@ export default async function SpecialDietsPage(props: PageProps<"/medical/diets"
     const amount = perMeal != null ? `${number(perMeal)} ${unit}` : d.amountMissing;
     return (
       <li key={diet.residentDietId} className="flex flex-col gap-1">
-        <p className="break-words text-lg font-medium text-foreground">{diet.name}</p>
+        <p className="break-words text-lg font-medium text-foreground">{localLabel(locale, diet.name, diet.nameTh)}</p>
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1" role="group" aria-label={d.amountPicture(amount)}>
           <Utensils aria-hidden className="h-8 w-8 shrink-0 text-foreground" />
           <span className="break-words text-xl font-semibold text-foreground">{amount}</span>

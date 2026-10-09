@@ -27,6 +27,18 @@ export function CreateVetForm() {
         />
       </div>
       <div className="flex flex-col gap-1">
+        <label htmlFor="nameTh" className="text-sm font-medium text-muted">
+          {t.translations.thaiName}
+        </label>
+        <input
+          id="nameTh"
+          name="nameTh"
+          lang="th"
+          title={t.translations.thaiNameOptionalHint}
+          className="w-48 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+        />
+      </div>
+      <div className="flex flex-col gap-1">
         <label htmlFor="clinicName" className="text-sm font-medium text-muted">
           {t.management.vets.createForm.clinic}
         </label>

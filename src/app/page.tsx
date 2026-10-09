@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { getT } from "@/lib/i18n/get-t";
+import { localLabel } from "@/lib/translations/labels";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { localizedField } from "@/lib/translations/localize";
 import type { PublicTranslations } from "@/lib/translations/types";
@@ -45,7 +46,7 @@ type FeaturedResident = {
   translations: PublicTranslations;
 };
 
-type GalleryPhoto = { id: string; drive_file_id: string; alt: string };
+type GalleryPhoto = { id: string; drive_file_id: string; alt: string; alt_th: string | null };
 
 /** The mockup's band holds five logos and the "Your business here?" tile. */
 const FRIENDS_SHOWN = 5;
@@ -135,7 +136,7 @@ export default async function WelcomePage() {
     loadSitePages(supabase),
     supabase
       .from("public_site_content_photos")
-      .select("id, drive_file_id, alt")
+      .select("id, drive_file_id, alt, alt_th")
       .order("sort_order")
       .limit(3)
       .returns<GalleryPhoto[]>(),
@@ -450,7 +451,7 @@ export default async function WelcomePage() {
                 >
                   <Image
                     src={driveImageUrl(photo.drive_file_id, 400)}
-                    alt={photo.alt}
+                    alt={localLabel(locale, photo.alt, photo.alt_th)}
                     fill
                     sizes="(min-width: 1024px) 16vw, 33vw"
                     className="object-cover"

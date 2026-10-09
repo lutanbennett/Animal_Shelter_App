@@ -1,4 +1,6 @@
 import type { createClient } from "@/lib/supabase/server";
+import type { Locale } from "@/lib/i18n/locales";
+import { localLabel } from "@/lib/translations/labels";
 
 /** A diet_types row as the diet form and tab need it (0051). */
 export type DietTypeOption = {
@@ -12,12 +14,17 @@ export type DietTypeOption = {
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
-export function loadDietTypeOptions(supabase: Supabase) {
-  return supabase
+/** `name` comes back in the reader's language where it has one (0166); the form keys on `id`. */
+export async function loadDietTypeOptions(supabase: Supabase, locale: Locale) {
+  const { data, error } = await supabase
     .from("picker_diet_types")
-    .select("id, name, unit, daily_qty_small, daily_qty_medium, daily_qty_large")
+    .select("id, name, name_th, unit, daily_qty_small, daily_qty_medium, daily_qty_large")
     .order("name")
-    .returns<DietTypeOption[]>();
+    .returns<(DietTypeOption & { name_th: string | null })[]>();
+  return {
+    data: data?.map(({ name_th, ...type }) => ({ ...type, name: localLabel(locale, type.name, name_th) })) ?? null,
+    error,
+  };
 }
 
 /**

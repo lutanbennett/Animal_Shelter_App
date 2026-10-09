@@ -8,6 +8,7 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatBahtPrice, roundUnitCost } from "@/lib/format";
 import { formatQuantity } from "@/lib/diets/options";
 import { pricePerPurchaseUnit, type ItemKind, type UnitConversion } from "@/lib/units";
+import { localLabel } from "@/lib/translations/labels";
 import {
   deleteConversion,
   saveConversion,
@@ -28,7 +29,7 @@ export type UnitsPanelItem = {
 const inputClass =
   "rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary";
 
-const EMPTY: ConversionFields = { unit: "", factor: "", note: "", isPurchase: false, isCount: false };
+const EMPTY: ConversionFields = { unit: "", unitTh: "", factor: "", note: "", isPurchase: false, isCount: false };
 
 /**
  * Which half of the 2026-10-08 split this panel is on. "conversions" is
@@ -104,6 +105,7 @@ function ItemUnits({ kind, mode, item }: { kind: ItemKind; mode: UnitsPanelMode;
       conversion
         ? {
             unit: conversion.unit,
+            unitTh: conversion.unitTh ?? "",
             factor: String(conversion.basePer),
             note: conversion.note ?? "",
             isPurchase: conversion.isPurchase,
@@ -157,7 +159,7 @@ function ItemUnits({ kind, mode, item }: { kind: ItemKind; mode: UnitsPanelMode;
             ) : (
               <li key={c.id} className="flex flex-wrap items-center justify-between gap-2">
                 <span className="flex flex-wrap items-center gap-2 text-foreground">
-                  {u.oneIs(c.unit, formatQuantity(c.basePer), item.baseUnit)}
+                  {u.oneIs(localLabel(locale, c.unit, c.unitTh), formatQuantity(c.basePer), item.baseUnit)}
                   {c.isPurchase && <Badge>{u.purchaseBadge}</Badge>}
                   {c.isCount && <Badge>{u.countBadge}</Badge>}
                   {c.note && <span className="text-xs text-muted">{c.note}</span>}
@@ -280,6 +282,15 @@ function ConversionForm({
             value={fields.unit}
             onChange={(e) => set("unit", e.target.value)}
             placeholder={u.unitPlaceholder}
+            className={`${inputClass} w-48`}
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-xs text-muted">
+          {t.translations.thaiName}
+          <input
+            value={fields.unitTh}
+            onChange={(e) => set("unitTh", e.target.value)}
+            lang="th"
             className={`${inputClass} w-48`}
           />
         </label>

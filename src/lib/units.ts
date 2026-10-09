@@ -20,7 +20,10 @@ export type ItemKind = "medication" | "diet";
 
 export type UnitConversion = {
   id: string;
+  /** The English name, and the key: it is what stock_*.entered stamps (0118). */
   unit: string;
+  /** Display only (0166): what a Thai reader sees, when someone has written it. */
+  unitTh: string | null;
   /** Base units in ONE of this unit. */
   basePer: number;
   isPurchase: boolean;
@@ -37,6 +40,7 @@ export type ConversionRow = {
   medication_id: string | null;
   diet_type_id: string | null;
   unit: string;
+  unit_th: string | null;
   base_units_per: number | string;
   is_purchase_unit: boolean;
   is_count_unit: boolean;
@@ -44,12 +48,13 @@ export type ConversionRow = {
 };
 
 export const CONVERSION_COLUMNS =
-  "id, medication_id, diet_type_id, unit, base_units_per, is_purchase_unit, is_count_unit, note";
+  "id, medication_id, diet_type_id, unit, unit_th, base_units_per, is_purchase_unit, is_count_unit, note";
 
 export function conversionOf(row: ConversionRow): UnitConversion {
   return {
     id: row.id,
     unit: row.unit,
+    unitTh: row.unit_th,
     basePer: Number(row.base_units_per),
     isPurchase: row.is_purchase_unit,
     isCount: row.is_count_unit,

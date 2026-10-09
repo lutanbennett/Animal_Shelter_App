@@ -15,6 +15,7 @@ import {
 export type ProcedureTypeRow = {
   id: string;
   name: string;
+  name_th: string | null;
   /** Every procedure logged with it — any at all blocks delete. */
   procedure_count: number;
 };
@@ -33,6 +34,7 @@ function ProcedureTypeRowItem({
   const confirm = useConfirm();
   const p = t.admin.procedureTypes;
   const [name, setName] = useState(procedureType.name);
+  const [nameTh, setNameTh] = useState(procedureType.name_th ?? "");
   const [mode, setMode] = useState<"view" | "edit" | "merge">("view");
   const [mergeInto, setMergeInto] = useState("");
   const [message, setMessage] = useState<
@@ -42,6 +44,7 @@ function ProcedureTypeRowItem({
 
   function reset() {
     setName(procedureType.name);
+    setNameTh(procedureType.name_th ?? "");
     setMergeInto("");
     setMode("view");
   }
@@ -49,7 +52,7 @@ function ProcedureTypeRowItem({
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
-      const result = await updateProcedureType(procedureType.id, { name });
+      const result = await updateProcedureType(procedureType.id, { name, nameTh });
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
         return;
@@ -98,15 +101,32 @@ function ProcedureTypeRowItem({
       <tr className="align-top hover:bg-surface-hover">
         <td className="px-4 py-2">
           {editing ? (
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className={`${inputClass} min-w-48`}
-            />
+            <div className="flex flex-col gap-1">
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={`${inputClass} min-w-48`}
+              />
+              <input
+                value={nameTh}
+                onChange={(e) => setNameTh(e.target.value)}
+                placeholder={t.translations.thaiName}
+                aria-label={t.translations.thaiName}
+                lang="th"
+                className={`${inputClass} min-w-48`}
+              />
+            </div>
           ) : (
-            <span className="font-medium text-foreground">
-              {procedureType.name}
-            </span>
+            <div className="flex flex-col">
+              <span className="font-medium text-foreground">
+                {procedureType.name}
+              </span>
+              {procedureType.name_th && (
+                <span lang="th" className="text-sm text-foreground">
+                  {procedureType.name_th}
+                </span>
+              )}
+            </div>
           )}
         </td>
         <td className="px-4 py-2 text-muted">

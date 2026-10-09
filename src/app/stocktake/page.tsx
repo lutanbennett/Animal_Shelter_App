@@ -3,6 +3,7 @@ import { Truck } from "lucide-react";
 import { requirePermission } from "@/lib/permissions/require";
 import { can } from "@/lib/permissions/can";
 import { getT } from "@/lib/i18n/get-t";
+import { localLabel } from "@/lib/translations/labels";
 import { dietUnitLabel, doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { type StocktakeItem, type StocktakeKind } from "@/lib/management/stocktake";
 import { CONVERSION_COLUMNS, groupConversions, type ConversionRow } from "@/lib/units";
@@ -11,6 +12,7 @@ import { StocktakeSheet } from "./StocktakeSheet";
 type StockRow = {
   id: string;
   name: string;
+  name_th: string | null;
   unit: string;
   // numeric: PostgREST can hand it back as a string.
   stock_on_hand: number | string | null;
@@ -33,20 +35,20 @@ type StockRow = {
 export default async function StocktakePage(props: PageProps<"/stocktake">) {
   const { supabase, perms } = await requirePermission("stock.count");
 
-  const { t } = await getT();
+  const { t, locale } = await getT();
   const searchParams = await props.searchParams;
   const initialTab: StocktakeKind = searchParams.tab === "diets" ? "diet" : "medication";
 
   const [medicationResult, dietResult, conversionsResult] = await Promise.all([
     supabase
       .from("stock_medications")
-      .select("id, name, unit:dose_unit, stock_on_hand, stock_counted_at, label_drive_file_id")
+      .select("id, name, name_th, unit:dose_unit, stock_on_hand, stock_counted_at, label_drive_file_id")
       .order("sort_order", { nullsFirst: false })
       .order("name")
       .returns<StockRow[]>(),
     supabase
       .from("stock_diet_types")
-      .select("id, name, unit, stock_on_hand, stock_counted_at")
+      .select("id, name, name_th, unit, stock_on_hand, stock_counted_at")
       .order("sort_order", { nullsFirst: false })
       .order("name")
       .returns<StockRow[]>(),
@@ -58,7 +60,7 @@ export default async function StocktakePage(props: PageProps<"/stocktake">) {
     (unitLabel: (unit: string) => string) =>
     (row: StockRow): StocktakeItem => ({
       id: row.id,
-      name: row.name,
+      name: localLabel(locale, row.name, row.name_th),
       unit: unitLabel(row.unit),
       lastCount: row.stock_on_hand == null ? null : Number(row.stock_on_hand),
       lastCountedAt: row.stock_counted_at,

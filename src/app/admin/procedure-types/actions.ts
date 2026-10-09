@@ -49,7 +49,9 @@ export async function createProcedureType(
     if (!name) return refuse(t.admin.procedureTypes.errors.nameRequired);
 
     const supabase = await createClient();
-    const { error } = await supabase.from("procedure_types").insert({ name });
+    // Optional: an empty Thai name means Thai readers see the English (0166).
+    const nameTh = (formData.get("nameTh") as string | null)?.trim() || null;
+    const { error } = await supabase.from("procedure_types").insert({ name, name_th: nameTh });
 
     if (error) return refuse(error.message);
 
@@ -60,7 +62,7 @@ export async function createProcedureType(
 
 export async function updateProcedureType(
   id: string,
-  fields: { name: string },
+  fields: { name: string; nameTh: string },
 ): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("procedureTypes.updateProcedureType", t.common.somethingWentWrong, async () => {
@@ -72,7 +74,7 @@ export async function updateProcedureType(
     const supabase = await createClient();
     const { error } = await supabase
       .from("procedure_types")
-      .update({ name })
+      .update({ name, name_th: fields.nameTh.trim() || null })
       .eq("id", id);
 
     if (error) return refuse(error.message);

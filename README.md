@@ -29,7 +29,7 @@ Six `app_role` values, enforced by row-level security
 | Role | Access |
 |---|---|
 | **admin** | Everything, including the Settings section (the /admin pages: security, website, zones, enclosures, immunization and procedure types, frequencies) and the Management section. |
-| **management** | Staff's operational access plus the Management section: the reporting dashboard (`/management/dashboard`), contact, vet, medication and diet management, and the translations of public text (`/management/translations`). |
+| **management** | Staff's operational access plus the Management section: the reporting dashboard (`/management/dashboard`), contact, vet, medication and diet management, and translations (`/management/translations`): the public text and every label's Thai, including setup lists Management cannot otherwise open. |
 | **staff** | Read/write on residents, placements, weights, photos, maintenance and projects; read on medical records. Staff no longer browse the Contacts pages (`contacts.browse`, 0155: Management and the 2IC only), though their carer pickers still read the table. Staff record a microchip and see a Shelter Friend's card (`friends.view`). |
 | **vet** | Read/write on vet visits, procedures, blood tests, prescriptions and immunizations; read on residents. An outside clinic, so the app shows a vet only My tasks and Residents: Enclosures, Maintenance, Vets, Contacts and Projects are hidden from the menu and refused at the URL (each page asks its own activity, `src/lib/permissions/`: a vet holds none of the five). A vet account belongs to one clinic (`user_roles.vet_id`, 0102, set at `/admin/security`) and records vet visits for that clinic only; with none set, the vet-visit forms refuse it (`src/lib/vets/scope.ts` — the forms' rule, not yet RLS). |
 | **volunteer** | Read everything; write photos and enclosure moves only. |
@@ -764,6 +764,12 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
   Which fields are translatable is the `translatable_fields` table, not
   code (today: resident bio / temperament / past story, project story,
   photo caption, maintenance job title / description).
+  Short labels (diet, medicine and setup-list names, units, places,
+  website captions) are the other half (0166): a paired `_th` column,
+  registered in `translatable_labels`, read on the page with
+  `label_translations()` and written with `set_label_th()`.
+  `labels.ts` has the page's types, groups and links, and `localLabel()`,
+  which every screen uses to show a label in the reader's language.
 - `src/lib/archive/` — the deceased resident archive: the summary PDF, the
   offline `index.html` index page written beside it in the resident's Drive
   folder, the step that moves that folder to `Residents/Deceased/`, and

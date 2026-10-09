@@ -17,7 +17,7 @@ export default async function ImmunizationTypesPage() {
   // send a string, so it is normalised once here.
   const { data, error } = await supabase
     .from("immunization_types")
-    .select("id, name, is_mandatory, interval_months, cost")
+    .select("id, name, name_th, is_mandatory, interval_months, cost")
     .order("name")
     .returns<(Omit<ImmunizationTypeRow, "cost"> & { cost: number | string | null })[]>();
 

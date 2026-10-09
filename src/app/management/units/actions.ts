@@ -15,6 +15,8 @@ const refuse = (error: string) => ({ ok: false as const, error });
 
 export type ConversionFields = {
   unit: string;
+  /** Optional (0166): empty means Thai readers see the English. */
+  unitTh: string;
   /** Base units in one of this unit, as typed. */
   factor: string;
   note: string;
@@ -99,6 +101,7 @@ export async function saveConversion(
 
     const row = {
       unit: parsed.unit,
+      unit_th: fields.unitTh.trim() || null,
       base_units_per: parsed.basePer,
       is_purchase_unit: fields.isPurchase,
       is_count_unit: fields.isCount,

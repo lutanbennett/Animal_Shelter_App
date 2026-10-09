@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Scale } from "lucide-react";
 import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
+import { localLabel } from "@/lib/translations/labels";
 import { dietUnitLabel, doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { formatBahtPrice, formatDateTime, todayIso } from "@/lib/format";
 import { formatQuantity } from "@/lib/diets/options";
@@ -31,7 +32,7 @@ import { DeleteDeliveryButton } from "./DeleteDeliveryButton";
  * same fields.
  */
 
-type ItemRow = { id: string; name: string; unit: string; label_drive_file_id?: string | null };
+type ItemRow = { id: string; name: string; name_th: string | null; unit: string; label_drive_file_id?: string | null };
 
 type ReceiptRow = {
   id: string;
@@ -61,8 +62,8 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
   const initialKind: DeliveryKind = searchParams.tab === "diets" ? "diet" : "medication";
 
   const [medicationResult, dietResult, countsResult, suppliersResult, receiptsResult, conversionsResult] = await Promise.all([
-    supabase.from("stock_medications").select("id, name, unit:dose_unit, label_drive_file_id").order("name").returns<ItemRow[]>(),
-    supabase.from("stock_diet_types").select("id, name, unit").order("name").returns<ItemRow[]>(),
+    supabase.from("stock_medications").select("id, name, name_th, unit:dose_unit, label_drive_file_id").order("name").returns<ItemRow[]>(),
+    supabase.from("stock_diet_types").select("id, name, name_th, unit").order("name").returns<ItemRow[]>(),
     supabase
       .from("stock_counts")
       .select("medication_id, diet_type_id, counted_at")
@@ -93,7 +94,7 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
     (unitLabel: (unit: string) => string) =>
     (row: ItemRow): DeliveryFormItem => ({
       id: row.id,
-      name: row.name,
+      name: localLabel(locale, row.name, row.name_th),
       unit: unitLabel(row.unit),
       labelFileId: row.label_drive_file_id ?? null,
       conversions: conversions[row.id] ?? [],
@@ -121,7 +122,7 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
 
   const suppliers = suppliersResult.data ?? [];
   const supplierName = new Map(suppliers.map((s) => [s.id, s.name]));
-  const itemName = new Map([...medications, ...diets].map((i) => [i.id, i.name]));
+  const itemName = new Map([...medications, ...diets].map((i) => [i.id, localLabel(locale, i.name, i.name_th)]));
   const receipts = receiptsResult.data ?? [];
   const recorders = await loadAppUsersById(
     supabase,
@@ -204,7 +205,7 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
                           .map((line) =>
                             t.units.entry.recent(
                               formatQuantity(line.quantity),
-                              line.unit,
+                              localLabel(locale, line.unit, conversions[id]?.find((c) => c.unit === line.unit)?.unitTh),
                               formatQuantity(Number(r.quantity)),
                               unit,
                             ),

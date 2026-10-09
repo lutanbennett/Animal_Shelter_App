@@ -16,6 +16,7 @@ import { deleteFrequency, mergeFrequency, updateFrequency } from "./actions";
 export type FrequencyRow = FrequencySchedule & {
   id: string;
   label: string;
+  label_th: string | null;
   /** Every prescription that uses it — any at all blocks delete. */
   prescription_count: number;
 };
@@ -34,6 +35,7 @@ function FrequencyRowItem({
   const confirm = useConfirm();
   const f = t.admin.frequencies;
   const [label, setLabel] = useState(frequency.label);
+  const [labelTh, setLabelTh] = useState(frequency.label_th ?? "");
   const [schedule, setSchedule] = useState(() => scheduleToFields(frequency));
   const [mode, setMode] = useState<"view" | "edit" | "merge">("view");
   const [mergeInto, setMergeInto] = useState("");
@@ -44,6 +46,7 @@ function FrequencyRowItem({
 
   function reset() {
     setLabel(frequency.label);
+    setLabelTh(frequency.label_th ?? "");
     setSchedule(scheduleToFields(frequency));
     setMergeInto("");
     setMode("view");
@@ -56,7 +59,7 @@ function FrequencyRowItem({
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
-      const result = await updateFrequency(frequency.id, { label, schedule });
+      const result = await updateFrequency(frequency.id, { label, labelTh, schedule });
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
         return;
@@ -106,13 +109,30 @@ function FrequencyRowItem({
       <tr className="align-top hover:bg-surface-hover">
         <td className="px-4 py-2">
           {editing ? (
-            <input
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              className={`${inputClass} min-w-48`}
-            />
+            <div className="flex flex-col gap-1">
+              <input
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                className={`${inputClass} min-w-48`}
+              />
+              <input
+                value={labelTh}
+                onChange={(e) => setLabelTh(e.target.value)}
+                placeholder={t.translations.thaiName}
+                aria-label={t.translations.thaiName}
+                lang="th"
+                className={`${inputClass} min-w-48`}
+              />
+            </div>
           ) : (
-            <span className="font-medium text-foreground">{frequency.label}</span>
+            <div className="flex flex-col">
+              <span className="font-medium text-foreground">{frequency.label}</span>
+              {frequency.label_th && (
+                <span lang="th" className="text-sm text-foreground">
+                  {frequency.label_th}
+                </span>
+              )}
+            </div>
           )}
         </td>
         <td className="px-4 py-2">

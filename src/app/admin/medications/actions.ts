@@ -18,6 +18,8 @@ export type MedicationFormState = ActionResult<{ success: string }> | undefined;
 
 export type MedicationDefinition = {
   name: string;
+  /** Optional (0166): a drug or brand name usually reads the same in Thai; empty shows the name as typed. */
+  nameTh: string;
   doseUnit: string;
 };
 
@@ -73,7 +75,7 @@ export async function createMedication(
     if (!isDoseUnit(doseUnit)) return refuse(t.management.medications.errors.unitInvalid);
 
     const supabase = await createClient();
-    const { error } = await supabase.from("medication").insert({ name, dose_unit: doseUnit });
+    const { error } = await supabase.from("medication").insert({ name, name_th: optional(formData.get("nameTh")), dose_unit: doseUnit });
     if (error) return refuse(error.message);
 
     revalidateMedicationPages();
@@ -100,7 +102,7 @@ export async function updateMedicationDefinition(
     if (!isDoseUnit(doseUnit)) return refuse(t.management.medications.errors.unitInvalid);
 
     const supabase = await createClient();
-    const { error } = await supabase.from("medication").update({ name, dose_unit: doseUnit }).eq("id", id);
+    const { error } = await supabase.from("medication").update({ name, name_th: optional(fields.nameTh), dose_unit: doseUnit }).eq("id", id);
     if (error) return refuse(error.message);
     revalidateMedicationPages();
     return { ok: true };

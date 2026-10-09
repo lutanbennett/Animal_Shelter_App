@@ -51,6 +51,8 @@ export async function createImmunizationType(
     const supabase = await createClient();
     const { error } = await supabase.from("immunization_types").insert({
       name,
+      // Optional: empty means Thai readers see the English (0166).
+      name_th: (formData.get("nameTh") as string | null)?.trim() || null,
       is_mandatory: isMandatory,
       interval_months: interval.value,
       cost: cost.value,
@@ -67,6 +69,7 @@ export async function updateImmunizationType(
   id: string,
   fields: {
     name: string;
+    nameTh: string;
     isMandatory: boolean;
     intervalMonths: number | null;
     /** Baht per dose, or null for "not priced yet" (0071). */
@@ -92,6 +95,7 @@ export async function updateImmunizationType(
       .from("immunization_types")
       .update({
         name: fields.name.trim(),
+        name_th: fields.nameTh.trim() || null,
         is_mandatory: fields.isMandatory,
         interval_months: fields.intervalMonths,
         cost: cost.value,

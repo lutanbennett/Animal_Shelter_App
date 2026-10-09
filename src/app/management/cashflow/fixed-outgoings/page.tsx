@@ -24,7 +24,7 @@ export default async function FixedOutgoingsPage() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("fixed_outgoings")
-    .select("id, label, monthly_amount, note, active, starts_on, ends_on")
+    .select("id, label, label_th, monthly_amount, note, active, starts_on, ends_on")
     .order("label")
     .returns<FixedOutgoing[]>();
 

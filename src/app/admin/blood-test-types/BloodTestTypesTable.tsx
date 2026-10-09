@@ -15,6 +15,7 @@ import {
 export type BloodTestTypeRow = {
   id: string;
   name: string;
+  name_th: string | null;
   /** Every blood test logged with it — any at all blocks delete. */
   blood_test_count: number;
 };
@@ -33,6 +34,7 @@ function BloodTestTypeRowItem({
   const confirm = useConfirm();
   const p = t.admin.bloodTestTypes;
   const [name, setName] = useState(bloodTestType.name);
+  const [nameTh, setNameTh] = useState(bloodTestType.name_th ?? "");
   const [mode, setMode] = useState<"view" | "edit" | "merge">("view");
   const [mergeInto, setMergeInto] = useState("");
   const [message, setMessage] = useState<
@@ -42,6 +44,7 @@ function BloodTestTypeRowItem({
 
   function reset() {
     setName(bloodTestType.name);
+    setNameTh(bloodTestType.name_th ?? "");
     setMergeInto("");
     setMode("view");
   }
@@ -49,7 +52,7 @@ function BloodTestTypeRowItem({
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
-      const result = await updateBloodTestType(bloodTestType.id, { name });
+      const result = await updateBloodTestType(bloodTestType.id, { name, nameTh });
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
         return;
@@ -98,15 +101,32 @@ function BloodTestTypeRowItem({
       <tr className="align-top hover:bg-surface-hover">
         <td className="px-4 py-2">
           {editing ? (
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className={`${inputClass} min-w-48`}
-            />
+            <div className="flex flex-col gap-1">
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={`${inputClass} min-w-48`}
+              />
+              <input
+                value={nameTh}
+                onChange={(e) => setNameTh(e.target.value)}
+                placeholder={t.translations.thaiName}
+                aria-label={t.translations.thaiName}
+                lang="th"
+                className={`${inputClass} min-w-48`}
+              />
+            </div>
           ) : (
-            <span className="font-medium text-foreground">
-              {bloodTestType.name}
-            </span>
+            <div className="flex flex-col">
+              <span className="font-medium text-foreground">
+                {bloodTestType.name}
+              </span>
+              {bloodTestType.name_th && (
+                <span lang="th" className="text-sm text-foreground">
+                  {bloodTestType.name_th}
+                </span>
+              )}
+            </div>
           )}
         </td>
         <td className="px-4 py-2 text-muted">

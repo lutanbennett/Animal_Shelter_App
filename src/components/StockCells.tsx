@@ -103,6 +103,8 @@ export type SafetyStockEdit = {
   baseUnitLabel: string;
   /** The item's other units, by name, for the unit picker. */
   unitOptions: string[];
+  /** What each of those is called in the reader's language (0166); the option's value stays the English. */
+  unitOptionLabels?: Record<string, string>;
   /** The text being typed, and the unit it is typed in ("" = base). */
   value: string;
   unit: string;
@@ -174,7 +176,7 @@ export function DaysOfStockCell({
                   <option value="">{safety.baseUnitLabel}</option>
                   {safety.unitOptions.map((unit) => (
                     <option key={unit} value={unit}>
-                      {unit}
+                      {safety.unitOptionLabels?.[unit] ?? unit}
                     </option>
                   ))}
                 </select>

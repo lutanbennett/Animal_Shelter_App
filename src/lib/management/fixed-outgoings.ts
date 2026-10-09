@@ -17,6 +17,8 @@ export const MAX_FIXED_OUTGOINGS = 24;
 export type FixedOutgoing = {
   id: string;
   label: string;
+  /** Display only (0166): the label a Thai reader sees, when written. */
+  label_th: string | null;
   monthly_amount: number | string;
   note: string | null;
   active: boolean;
@@ -29,6 +31,7 @@ export type FixedOutgoing = {
 /** What the editor sends, as strings from inputs. Months are `YYYY-MM` from <input type="month">. */
 export type FixedOutgoingFields = {
   label: string;
+  labelTh: string;
   monthlyAmount: string;
   note: string;
   active: boolean;
@@ -59,6 +62,7 @@ export function parseFixedOutgoing(
       ok: true;
       row: {
         label: string;
+        label_th: string | null;
         monthly_amount: number;
         note: string | null;
         active: boolean;
@@ -90,6 +94,7 @@ export function parseFixedOutgoing(
     ok: true,
     row: {
       label,
+      label_th: fields.labelTh.trim() || null,
       monthly_amount: Math.round(amount * 100) / 100,
       note: fields.note.trim() || null,
       active: fields.active,

@@ -2,6 +2,7 @@ import { requirePermission } from "@/lib/permissions/require";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { localLabel } from "@/lib/translations/labels";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import {
@@ -18,7 +19,7 @@ import {
 export default async function NewProcedurePage(props: PageProps<"/procedures/new">) {
   await requirePermission("medical.procedures");
   const searchParams = await props.searchParams;
-  const { t } = await getT();
+  const { t, locale } = await getT();
 
   const residentId = searchParams.residentId;
   const vetAppointmentId = searchParams.vetAppointmentId;
@@ -60,9 +61,9 @@ export default async function NewProcedurePage(props: PageProps<"/procedures/new
         >(),
       supabase
         .from("procedure_types")
-        .select("id, name")
+        .select("id, name, name_th")
         .order("name", { ascending: true })
-        .returns<ProcedureTypeOption[]>(),
+        .returns<(ProcedureTypeOption & { name_th: string | null })[]>(),
       supabase
         .from("vet_appointments")
         .select("id, appointment_date, reason")
@@ -150,7 +151,10 @@ export default async function NewProcedurePage(props: PageProps<"/procedures/new
             ? { number: resident.microchip_number, implantedOn: resident.microchip_implanted_on }
             : null
         }
-        procedureTypes={typesResult.data ?? []}
+        procedureTypes={(typesResult.data ?? []).map(({ name_th, ...type }) => ({
+          ...type,
+          name: localLabel(locale, type.name, name_th),
+        }))}
         vetAppointments={vetAppointmentsResult.data ?? []}
         preselectedVetAppointmentId={
           typeof vetAppointmentId === "string" && vetAppointmentId

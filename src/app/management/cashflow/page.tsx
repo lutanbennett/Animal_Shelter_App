@@ -70,7 +70,7 @@ export default async function CashflowPage(props: PageProps<"/management/cashflo
     // The named monthly costs (0114), folded in below as one more category.
     supabase
       .from("fixed_outgoings")
-      .select("id, label, monthly_amount, note, active, starts_on, ends_on")
+      .select("id, label, label_th, monthly_amount, note, active, starts_on, ends_on")
       .returns<FixedOutgoing[]>(),
   ]);
 

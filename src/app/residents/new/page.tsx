@@ -1,6 +1,7 @@
 import { requirePermission } from "@/lib/permissions/require";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { localLabel } from "@/lib/translations/labels";
 import { loadEnclosureOptions } from "@/lib/enclosures/options";
 import {
   IntakeForm,
@@ -15,7 +16,7 @@ export default async function NewResidentPage(
 ) {
   await requirePermission("resident.register");
   const supabase = await createClient();
-  const { t } = await getT();
+  const { t, locale } = await getT();
   const searchParams = await props.searchParams;
   const initialStep = parseStepParam(searchParams.step);
   // From the scan box on /residents: an unknown chip, prefilled.
@@ -34,9 +35,9 @@ export default async function NewResidentPage(
       .returns<OriginOption[]>(),
     supabase
       .from("picker_diet_types")
-      .select("id, name, is_standard")
+      .select("id, name, name_th, is_standard")
       .order("name")
-      .returns<DietTypeOption[]>(),
+      .returns<(DietTypeOption & { name_th: string | null })[]>(),
   ]);
 
   const origins = originsResult.data ?? [];
@@ -65,7 +66,10 @@ export default async function NewResidentPage(
         zones={options.zones}
         enclosures={options.enclosures}
         origins={origins}
-        dietTypes={dietTypesResult.data ?? []}
+        dietTypes={(dietTypesResult.data ?? []).map(({ name_th, ...type }) => ({
+          ...type,
+          name: localLabel(locale, type.name, name_th),
+        }))}
         initialStep={initialStep}
         chip={chip}
       />

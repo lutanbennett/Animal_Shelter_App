@@ -3,6 +3,7 @@ import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
 import { loadMaintenanceJobs } from "@/lib/maintenance/queries";
 import { getTagOrigin } from "@/lib/tags/origin";
+import { getLocale } from "@/lib/i18n/get-locale";
 import { loadSpecialDiets } from "@/lib/diets/special";
 import { loadOccupants, readsWhoAndWhereOnly } from "@/lib/residents/who-and-where";
 import {
@@ -56,7 +57,7 @@ export default async function EnclosurePage(
           .order("name")
           .returns<Omit<EnclosureResident, "special_diets">[]>()
       : null,
-    loadSpecialDiets(supabase, residentIds),
+    loadSpecialDiets(supabase, residentIds, await getLocale()),
   ]);
   const residents: EnclosureResident[] = (residentsResult?.data ?? []).map((resident) => ({
     ...resident,

@@ -16,7 +16,7 @@ export default async function NewPrescriptionPage(
 ) {
   await requirePermission("medical.prescriptions");
   const searchParams = await props.searchParams;
-  const { t } = await getT();
+  const { t, locale } = await getT();
 
   const residentId = searchParams.residentId;
   const vetAppointmentId = searchParams.vetAppointmentId;
@@ -51,7 +51,7 @@ export default async function NewPrescriptionPage(
       .eq("resident_id", residentId)
       .limit(1)
       .returns<{ is_deceased: boolean }[]>(),
-    loadPrescriptionOptions(supabase, residentId),
+    loadPrescriptionOptions(supabase, residentId, locale),
   ]);
   const { medications, frequencies, vetAppointments } = options;
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { localLabel } from "@/lib/translations/labels";
 import { BackLink } from "@/components/BackLink";
 import { AddDoctorForm } from "./AddDoctorForm";
 import { DoctorsTable, type DoctorRow, type ElsewhereDoctor } from "./DoctorsTable";
@@ -28,17 +29,17 @@ export default async function VetDoctorsPage(
 ) {
   const { perms } = await requirePermission("clinics.doctors");
   const { id } = await props.params;
-  const { t } = await getT();
+  const { t, locale } = await getT();
   const d = t.management.vetDoctors;
 
   const supabase = await createClient();
   const [vetResult, doctorsResult, visitsResult] = await Promise.all([
     supabase
       .from("vets")
-      .select("id, name, clinic_name")
+      .select("id, name, name_th, clinic_name")
       .eq("id", id)
       .limit(1)
-      .returns<{ id: string; name: string; clinic_name: string | null }[]>(),
+      .returns<{ id: string; name: string; name_th: string | null; clinic_name: string | null }[]>(),
     // Every doctor with every clinic they work at: this clinic's roster is
     // the ones linked here, the rest are who "same person as…" and "also
     // works here" can pick from.
@@ -96,7 +97,7 @@ export default async function VetDoctorsPage(
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
       <BackLink href="/management/vets">{d.back}</BackLink>
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">{d.title(vet.name)}</h1>
+        <h1 className="text-2xl font-semibold text-foreground">{d.title(localLabel(locale, vet.name, vet.name_th))}</h1>
         {vet.clinic_name && <p className="text-sm text-muted">{vet.clinic_name}</p>}
         <p className="mt-1 max-w-3xl text-sm text-muted">
           {d.subtitle}{" "}
