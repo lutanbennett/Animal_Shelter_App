@@ -38,7 +38,7 @@ export function impactStats(t: Dictionary, stats: ShelterStats | null): ImpactSt
     { key: "in-care", value: stats.in_care, label: s.inCare },
     { key: "adopted-this-year", value: stats.adopted_this_year, label: s.adoptedThisYear },
     { key: "in-foster", value: stats.in_foster, label: s.inFoster },
-    { key: "in-vet-care", value: stats.in_treatment, label: s.inVetCare },
+    { key: "in-treatment", value: stats.in_treatment, label: s.inVetCare },
   ];
 }
 

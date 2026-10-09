@@ -4,7 +4,7 @@ import { useMemo, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { StatCard, type StatCardTone } from "@/components/StatCard";
 import { ActionLink } from "@/components/ActionLink";
-import { ACTION_ICONS, VET_ICONS } from "@/components/hub-icons";
+import { ACTION_ICONS, CLINIC_ICONS } from "@/components/hub-icons";
 import { formatBaht, formatDate, formatDateTime } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -23,15 +23,14 @@ import {
 } from "@/lib/clinics/stats";
 import { VisitsChart } from "./VisitsChart";
 
-export type Vet = {
+export type Clinic = {
   id: string;
   name: string;
-  clinic_name: string | null;
   contact_info: string | null;
   notes: string | null;
 };
 
-export type VetHubVisit = ClinicVisit & {
+export type ClinicHubVisit = ClinicVisit & {
   doctor_id: string | null;
   doctor_name: string | null;
   residents: {
@@ -52,8 +51,8 @@ const VISIT_FILTERS: VisitFilter[] = ["all", "spend", "procedures", "bloodTests"
 
 /** The resident tab a filtered visit row opens: where its records are. */
 const FILTER_SECTION: Record<VisitFilter, string> = {
-  all: "vet-appointments",
-  spend: "vet-appointments",
+  all: "clinic-visits",
+  spend: "clinic-visits",
   procedures: "procedures",
   bloodTests: "blood-tests",
   prescriptions: "prescriptions",
@@ -62,7 +61,7 @@ const FILTER_SECTION: Record<VisitFilter, string> = {
 /** A doctor on the clinic's list (doctors). */
 export type HubDoctor = { id: string; name: string; active: boolean };
 
-/** A medical record linked to one of this vet's visits. */
+/** A medical record linked to one of this clinic's visits. */
 export type LinkedRecord = { id: string; clinic_visit_id: string };
 
 export type LinkedRecords = {
@@ -84,13 +83,13 @@ function ResidentThumb({ photoId, alt }: { photoId: string | null; alt: string }
     />
   ) : (
     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-hover text-muted">
-      <VET_ICONS.residents aria-hidden="true" className="h-5 w-5" />
+      <CLINIC_ICONS.residents aria-hidden="true" className="h-5 w-5" />
     </div>
   );
 }
 
 export function ClinicHub({
-  vet,
+  clinic,
   visits,
   linked,
   doctors,
@@ -98,8 +97,8 @@ export function ClinicHub({
   canOpenVisits,
   now,
 }: {
-  vet: Vet;
-  visits: VetHubVisit[];
+  clinic: Clinic;
+  visits: ClinicHubVisit[];
   linked: LinkedRecords;
   doctors: HubDoctor[];
   canManage: boolean;
@@ -189,7 +188,7 @@ export function ClinicHub({
 
   // The resident embed is repeated on every visit row; index it once.
   const residentsById = useMemo(() => {
-    const map = new Map<string, NonNullable<VetHubVisit["residents"]>>();
+    const map = new Map<string, NonNullable<ClinicHubVisit["residents"]>>();
     for (const v of visits) {
       if (v.residents && !map.has(v.resident_id)) map.set(v.resident_id, v.residents);
     }
@@ -276,25 +275,17 @@ export function ClinicHub({
       <div className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5 md:flex-row md:items-start md:justify-between">
         <div className="flex min-w-0 flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
-            <VET_ICONS.vet aria-hidden="true" className="h-6 w-6 shrink-0 text-muted" />
-            <h1 className="text-2xl font-semibold text-foreground">{vet.name}</h1>
+            <CLINIC_ICONS.clinic aria-hidden="true" className="h-6 w-6 shrink-0 text-muted" />
+            <h1 className="text-2xl font-semibold text-foreground">{clinic.name}</h1>
           </div>
-          {vet.clinic_name && (
-            <p className="flex items-center gap-1 text-sm text-muted">
-              <VET_ICONS.clinic aria-hidden="true" className="h-4 w-4" />
-              {vet.clinic_name}
-            </p>
-          )}
-          {vet.contact_info ? (
+          {clinic.contact_info && (
             <p className="flex items-start gap-1 whitespace-pre-line text-sm text-foreground">
-              <VET_ICONS.contact aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
-              {vet.contact_info}
+              <CLINIC_ICONS.contact aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
+              {clinic.contact_info}
             </p>
-          ) : (
-            <p className="text-sm text-muted">{t.vets.hub.noContact}</p>
           )}
-          {vet.notes && (
-            <p className="whitespace-pre-line text-sm text-muted">{vet.notes}</p>
+          {clinic.notes && (
+            <p className="whitespace-pre-line text-sm text-muted">{clinic.notes}</p>
           )}
           {canManage && (
             <ActionLink href="/management/clinics" label={t.vets.manageInAdmin} icon={ACTION_ICONS.manage} iconOnlyOnMobile={false} />
@@ -334,7 +325,7 @@ export function ClinicHub({
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         <StatCard
           title={t.vets.hub.visits}
-          icon={VET_ICONS.visits}
+          icon={CLINIC_ICONS.visits}
           {...tileLink(inPeriod.length, "visits", "all")}
           value={`${inPeriod.length}`}
           detail={
@@ -346,7 +337,7 @@ export function ClinicHub({
         />
         <StatCard
           title={t.vets.hub.residentsSeen}
-          icon={VET_ICONS.residents}
+          icon={CLINIC_ICONS.residents}
           {...tileLink(byResident.length, "residents")}
           value={`${byResident.length}`}
           detail={
@@ -358,7 +349,7 @@ export function ClinicHub({
         />
         <StatCard
           title={t.vets.hub.schedule}
-          icon={VET_ICONS.upcoming}
+          icon={CLINIC_ICONS.upcoming}
           {...tileLink(schedule.overdue.length + schedule.upcoming.length, "schedule")}
           value={scheduleValue}
           detail={scheduleDetail}
@@ -366,7 +357,7 @@ export function ClinicHub({
         />
         <StatCard
           title={t.vets.hub.spend}
-          icon={VET_ICONS.visits}
+          icon={CLINIC_ICONS.visits}
           {...tileLink(filterCounts.spend, "visits", "spend")}
           value={spend.withCost > 0 ? formatBaht(spend.total, locale) : "—"}
           detail={
@@ -378,7 +369,7 @@ export function ClinicHub({
         />
         <StatCard
           title={t.vets.hub.procedures}
-          icon={VET_ICONS.procedures}
+          icon={CLINIC_ICONS.procedures}
           {...tileLink(filterCounts.procedures, "visits", "procedures")}
           value={`${countLinked(linked.procedures)}`}
           detail={t.vets.hub.linkedDetail}
@@ -386,7 +377,7 @@ export function ClinicHub({
         />
         <StatCard
           title={t.vets.hub.bloodTests}
-          icon={VET_ICONS.bloodTests}
+          icon={CLINIC_ICONS.bloodTests}
           {...tileLink(filterCounts.bloodTests, "visits", "bloodTests")}
           value={`${countLinked(linked.bloodTests)}`}
           detail={t.vets.hub.linkedDetail}
@@ -394,7 +385,7 @@ export function ClinicHub({
         />
         <StatCard
           title={t.vets.hub.prescriptions}
-          icon={VET_ICONS.prescriptions}
+          icon={CLINIC_ICONS.prescriptions}
           {...tileLink(filterCounts.prescriptions, "visits", "prescriptions")}
           value={`${countLinked(linked.prescriptions)}`}
           detail={t.vets.hub.linkedDetail}
@@ -408,7 +399,7 @@ export function ClinicHub({
           picture. Headings reuse the tile's own wording. */}
       <section id="schedule" className="flex scroll-mt-4 flex-col gap-3">
         <div className="flex items-center gap-2">
-          <VET_ICONS.upcoming aria-hidden="true" className="h-5 w-5 text-muted" />
+          <CLINIC_ICONS.upcoming aria-hidden="true" className="h-5 w-5 text-muted" />
           <h2 className="text-lg font-semibold text-foreground">{t.vets.hub.schedule}</h2>
         </div>
         {schedule.overdue.length + schedule.upcoming.length === 0 ? (
@@ -506,7 +497,7 @@ export function ClinicHub({
             <span className="text-muted">({activeDoctors.length})</span>
           </h2>
           {canManage && (
-            <ActionLink href={`/management/clinics/${vet.id}/doctors`} label={t.vets.manageDoctors} icon={ACTION_ICONS.manage} iconOnlyOnMobile={false} />
+            <ActionLink href={`/management/clinics/${clinic.id}/doctors`} label={t.vets.manageDoctors} icon={ACTION_ICONS.manage} iconOnlyOnMobile={false} />
           )}
         </div>
         {activeDoctors.length > 0 ? (
@@ -534,7 +525,7 @@ export function ClinicHub({
       <div className="grid gap-6 lg:grid-cols-2">
         <section id="residents" className="flex scroll-mt-4 flex-col gap-3">
           <div className="flex items-center gap-2">
-            <VET_ICONS.residents aria-hidden="true" className="h-5 w-5 text-muted" />
+            <CLINIC_ICONS.residents aria-hidden="true" className="h-5 w-5 text-muted" />
             <h2 className="text-lg font-semibold text-foreground">
               {t.vets.hub.residentsHeading}
             </h2>
@@ -560,7 +551,7 @@ export function ClinicHub({
                       <tr key={row.resident_id} className="hover:bg-surface-hover">
                         <td className="px-3 py-2">
                           <Link
-                            href={`/residents/${row.resident_id}/vet-appointments`}
+                            href={`/residents/${row.resident_id}/clinic-visits`}
                             className="flex flex-col hover:underline"
                           >
                             <span className="font-medium text-foreground">
@@ -597,7 +588,7 @@ export function ClinicHub({
 
         <section id="visits" className="flex scroll-mt-4 flex-col gap-3">
           <div className="flex items-center gap-2">
-            <VET_ICONS.visits aria-hidden="true" className="h-5 w-5 text-muted" />
+            <CLINIC_ICONS.visits aria-hidden="true" className="h-5 w-5 text-muted" />
             <h2 className="text-lg font-semibold text-foreground">
               {t.vets.hub.visitsHeading}
             </h2>

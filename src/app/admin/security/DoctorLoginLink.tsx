@@ -6,16 +6,16 @@ import { ActionButton } from "@/components/ActionButton";
 import { useConfirm } from "@/components/ConfirmProvider";
 import type { ActionResult } from "@/lib/action-result";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { createVetDoctorForLogin, linkVetDoctor, unlinkVetDoctor } from "./actions";
+import { createDoctorForLogin, linkDoctor, unlinkDoctor } from "./actions";
 import type { ClinicOption, SecurityUser } from "./UsersTable";
 
 export type DoctorOption = { id: string; name: string; clinics: string[] };
 
 /**
- * A vet login's clinics (Settings → Security). They are not set here: they
+ * A doctor login's clinics (Settings → Security). They are not set here: they
  * are the clinics of the doctor the login is linked to (doctors.user_id,
  * 0125), edited on the clinic's Doctors page, so there is one place that
- * says where a vet works. Here an admin picks the doctor, or makes one from
+ * says where a doctor works. Here an admin picks the doctor, or makes one from
  * the login. Most doctors never get a login; unlinking leaves the doctor
  * and their visits as they are.
  */
@@ -61,7 +61,7 @@ export function DoctorLoginLink({
   async function handleUnlink() {
     if (!user.doctor) return;
     if (!(await confirm({ body: v.unlinkConfirm(user.doctor.name, user.email) }))) return;
-    run(() => unlinkVetDoctor(user.id), v.unlinked);
+    run(() => unlinkDoctor(user.id), v.unlinked);
   }
 
   return (
@@ -104,7 +104,7 @@ export function DoctorLoginLink({
                   compact
                   icon={ACTION_ICONS.link}
                   disabled={disabled || isPending || !pick}
-                  onClick={() => run(() => linkVetDoctor(user.id, pick), v.linked, () => setPick(""))}
+                  onClick={() => run(() => linkDoctor(user.id, pick), v.linked, () => setPick(""))}
                 >
                   {v.link}
                 </ActionButton>
@@ -150,7 +150,7 @@ export function DoctorLoginLink({
                   icon={ACTION_ICONS.add}
                   disabled={isPending || !name.trim()}
                   onClick={() =>
-                    run(() => createVetDoctorForLogin(user.id, name, picked), v.created, () => setCreating(false))
+                    run(() => createDoctorForLogin(user.id, name, picked), v.created, () => setCreating(false))
                   }
                 >
                   {v.createButton}

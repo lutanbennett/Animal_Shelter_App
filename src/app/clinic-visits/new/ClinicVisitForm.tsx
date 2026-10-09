@@ -4,7 +4,7 @@ import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { useState } from "react";
 import { useKeptForm } from "@/lib/use-kept-form";
-import { bookVetVisit } from "./actions";
+import { bookClinicVisit } from "./actions";
 import { ResidentPicker, type ResidentOption } from "@/components/ResidentPicker";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { DoctorNamesByClinic } from "@/lib/clinics/doctors";
@@ -12,43 +12,38 @@ import { DoctorNameField } from "../DoctorNameField";
 
 export type { ResidentOption };
 
-export type VetOption = {
+export type ClinicOption = {
   id: string;
   name: string;
-  clinic_name: string | null;
 };
 
-export function vetOptionLabel(v: VetOption) {
-  return v.clinic_name ? `${v.name} — ${v.clinic_name}` : v.name;
-}
-
 /**
- * `fixedVet` is a vet account's only clinic (src/lib/clinics/scope.ts): shown
- * as the clinic the visit is for rather than a dropdown with one entry. A vet
- * who works at several chooses among theirs.
+ * `fixedClinic` is a doctor login's only current clinic (src/lib/clinics/scope.ts):
+ * shown as the clinic the visit is for rather than a dropdown with one entry.
+ * A doctor who works at several chooses among theirs.
  */
 export function ClinicVisitForm({
   residents,
-  vets,
-  fixedVet,
+  clinics,
+  fixedClinic,
   lockedDoctor,
-  doctorNamesByVet,
+  doctorNamesByClinic,
   preselectedResidentIds,
 }: {
   residents: ResidentOption[];
-  vets: VetOption[];
-  fixedVet: VetOption | null;
-  /** A linked vet's own doctor entry: the Doctor field is them, locked. */
+  clinics: ClinicOption[];
+  fixedClinic: ClinicOption | null;
+  /** A doctor login's own doctor entry: the Doctor field is them, locked. */
   lockedDoctor: string | null;
-  doctorNamesByVet: DoctorNamesByClinic;
+  doctorNamesByClinic: DoctorNamesByClinic;
   preselectedResidentIds: string[];
 }) {
-  const [state, onSubmit, pending] = useKeptForm(bookVetVisit, undefined);
+  const [state, onSubmit, pending] = useKeptForm(bookClinicVisit, undefined);
   const { t } = useI18n();
   const [selectedIds, setSelectedIds] = useState<string[]>(
     preselectedResidentIds,
   );
-  const [clinicId, setVetId] = useState(fixedVet?.id ?? "");
+  const [clinicId, setClinicId] = useState(fixedClinic?.id ?? "");
   const [statusTouched, setStatusTouched] = useState(false);
   const [status, setStatus] = useState<"scheduled" | "completed">(
     "scheduled",
@@ -81,11 +76,11 @@ export function ClinicVisitForm({
           <label htmlFor="clinicId" className="text-sm font-medium text-muted">
             {t.vetVisits.vetClinic}
           </label>
-          {fixedVet ? (
+          {fixedClinic ? (
             <>
-              <input type="hidden" name="clinicId" value={fixedVet.id} />
+              <input type="hidden" name="clinicId" value={fixedClinic.id} />
               <p id="clinicId" className="py-2 text-sm text-foreground">
-                {vetOptionLabel(fixedVet)}
+                {fixedClinic.name}
               </p>
               <p className="text-xs text-muted">{t.vetVisits.ownClinicHint}</p>
             </>
@@ -95,15 +90,15 @@ export function ClinicVisitForm({
             name="clinicId"
             required
             value={clinicId}
-            onChange={(e) => setVetId(e.target.value)}
+            onChange={(e) => setClinicId(e.target.value)}
             className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
           >
             <option value="" disabled>
               {t.vetVisits.selectVet}
             </option>
-            {vets.map((v) => (
-              <option key={v.id} value={v.id}>
-                {vetOptionLabel(v)}
+            {clinics.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
               </option>
             ))}
           </select>
@@ -112,7 +107,7 @@ export function ClinicVisitForm({
 
         <DoctorNameField
           clinicId={clinicId}
-          namesByVet={doctorNamesByVet}
+          namesByClinic={doctorNamesByClinic}
           lockedName={lockedDoctor}
           className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
         />

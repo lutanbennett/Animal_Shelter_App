@@ -5,9 +5,9 @@ import { localLabel } from "@/lib/translations/labels";
 import { NOT_DECEASED } from "@/lib/residents/status";
 import { loadDoctorNamesByClinic } from "@/lib/clinics/doctors";
 import { loadClinicScope } from "@/lib/clinics/scope";
-import { ClinicVisitForm, type ResidentOption, type VetOption } from "./ClinicVisitForm";
+import { ClinicVisitForm, type ResidentOption, type ClinicOption } from "./ClinicVisitForm";
 
-export default async function NewVetVisitPage(
+export default async function NewClinicVisitPage(
   props: PageProps<"/clinic-visits/new">,
 ) {
   await requirePermission("medical.visits");
@@ -39,17 +39,17 @@ export default async function NewVetVisitPage(
     );
   }
 
-  // A vet account books against its own clinics only (src/lib/clinics/scope.ts).
-  let vetsQuery = supabase.from("clinics").select("id, name, name_th, clinic_name").order("name");
-  if (scope.kind === "clinics") vetsQuery = vetsQuery.in("id", scope.clinicIds);
+  // A doctor login books against its current clinics only (src/lib/clinics/scope.ts).
+  let clinicsQuery = supabase.from("clinics").select("id, name, name_th").order("name");
+  if (scope.kind === "clinics") clinicsQuery = clinicsQuery.in("id", scope.clinicIds);
 
-  const [residentsResult, vetsResult, doctorNamesByVet] = await Promise.all([
+  const [residentsResult, clinicsResult, doctorNamesByClinic] = await Promise.all([
     supabase
       .from("resident_list_view")
       .select("resident_id, name, thai_name, current_status")
       .or(NOT_DECEASED)
       .order("name"),
-    vetsQuery,
+    clinicsQuery,
     loadDoctorNamesByClinic(supabase),
   ]);
 
@@ -62,8 +62,8 @@ export default async function NewVetVisitPage(
     }),
   );
 
-  const vets: VetOption[] = ((vetsResult.data ?? []) as (VetOption & { name_th: string | null })[]).map(
-    ({ name_th, ...vet }) => ({ ...vet, name: localLabel(locale, vet.name, name_th) }),
+  const clinics: ClinicOption[] = ((clinicsResult.data ?? []) as (ClinicOption & { name_th: string | null })[]).map(
+    ({ name_th, ...clinic }) => ({ ...clinic, name: localLabel(locale, clinic.name, name_th) }),
   );
 
   return (
@@ -80,18 +80,18 @@ export default async function NewVetVisitPage(
           {t.vetVisits.couldntLoadResidents}: {residentsResult.error.message}
         </p>
       )}
-      {vetsResult.error && (
+      {clinicsResult.error && (
         <p className="text-sm text-danger">
-          {t.vetVisits.couldntLoadVets}: {vetsResult.error.message}
+          {t.vetVisits.couldntLoadVets}: {clinicsResult.error.message}
         </p>
       )}
 
       <ClinicVisitForm
         residents={residents}
-        vets={vets}
-        fixedVet={scope.kind === "clinics" && vets.length === 1 ? vets[0] : null}
+        clinics={clinics}
+        fixedClinic={scope.kind === "clinics" && clinics.length === 1 ? clinics[0] : null}
         lockedDoctor={scope.kind === "clinics" ? scope.doctorName : null}
-        doctorNamesByVet={doctorNamesByVet}
+        doctorNamesByClinic={doctorNamesByClinic}
         preselectedResidentIds={[...preselectedIds]}
       />
     </main>

@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { todayIso } from "@/lib/format";
 
-/** A vet visit as the "linked vet visit" pickers list it. */
+/** A clinic visit as the "linked clinic visit" pickers list it. */
 export type LinkableVisit = {
   id: string;
   appointment_date: string;
@@ -25,7 +25,7 @@ export type LinkableVisitOptions = {
 };
 
 /**
- * The vet visits a record for `residentId` may be linked to, newest first.
+ * The clinic visits a record for `residentId` may be linked to, newest first.
  *
  * The form's half of a rule — the pleasant half, which saves a person
  * picking a visit only to be refused. It is not the guarantee: a second tab

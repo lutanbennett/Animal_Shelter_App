@@ -2,7 +2,15 @@
 
 import { refresh, revalidatePath } from "next/cache";
 import { runAction, unexpectedFailure, type ActionResult } from "@/lib/action-result";
-import { changedColumns, kindOf, type AuditedTable, type Image } from "@/lib/audit/recent-changes";
+import {
+  changedColumns,
+  currentImage,
+  currentTableName,
+  kindOf,
+  loggedTableNames,
+  type AuditedTable,
+  type Image,
+} from "@/lib/audit/recent-changes";
 import { editPlan, undoKind } from "@/lib/audit/undo";
 import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
@@ -65,9 +73,10 @@ export async function undoChange(auditId: number): Promise<ActionResult> {
       .maybeSingle();
     if (!entry) return refuse(u.errors.gone);
 
-    const table = entry.table_name as AuditedTable;
-    const oldRow = entry.old_row as Image;
-    const newRow = entry.new_row as Image;
+    // A row logged before 0172 names vet_appointments and its old columns: written back under the new ones.
+    const table = currentTableName(entry.table_name) as AuditedTable;
+    const oldRow = currentImage(entry.old_row as Image);
+    const newRow = currentImage(entry.new_row as Image);
     const changed = changedColumns(oldRow, newRow);
     const what = undoKind({ table, op: entry.op, kind: kindOf(entry.op, oldRow, newRow, changed) });
     if (what !== "edit" && what !== "reinsert") return refuse(u.errors.notUndoable);
@@ -75,7 +84,7 @@ export async function undoChange(auditId: number): Promise<ActionResult> {
     const { data: newest } = await supabase
       .from("audit_log")
       .select("id")
-      .eq("table_name", table)
+      .in("table_name", loggedTableNames(table))
       .eq("row_id", entry.row_id)
       .order("id", { ascending: false })
       .limit(1)

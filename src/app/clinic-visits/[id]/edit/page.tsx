@@ -8,14 +8,14 @@ import { getT } from "@/lib/i18n/get-t";
 import { localLabel } from "@/lib/translations/labels";
 import { loadDoctorNamesByClinic } from "@/lib/clinics/doctors";
 import { loadClinicScope } from "@/lib/clinics/scope";
-import type { VetOption } from "@/app/clinic-visits/new/ClinicVisitForm";
+import type { ClinicOption } from "@/app/clinic-visits/new/ClinicVisitForm";
 import { MicrochipLine } from "@/components/MicrochipForm";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
-import { ClinicVisitEditForm, type VetVisitInitial } from "./ClinicVisitEditForm";
+import { ClinicVisitEditForm, type ClinicVisitInitial } from "./ClinicVisitEditForm";
 
-/** Reached from a row's Edit link on the resident's Vet Appointments tab. */
-export default async function EditVetVisitPage(props: PageProps<"/clinic-visits/[id]/edit">) {
+/** Reached from a row's Edit link on the resident's clinic visits tab. */
+export default async function EditClinicVisitPage(props: PageProps<"/clinic-visits/[id]/edit">) {
   await requirePermission("medical.visits", "read");
   const { id } = await props.params;
   const { t, locale } = await getT();
@@ -26,7 +26,7 @@ export default async function EditVetVisitPage(props: PageProps<"/clinic-visits/
     .select("id, resident_id, clinic_id, appointment_date, status, reason, doctor_name, notes, cost")
     .eq("id", id)
     .limit(1)
-    .returns<VetVisitInitial[]>();
+    .returns<ClinicVisitInitial[]>();
   if (error) throw new Error(error.message);
   const visit = rows?.[0];
   if (!visit) notFound();
@@ -41,7 +41,7 @@ export default async function EditVetVisitPage(props: PageProps<"/clinic-visits/
     );
   }
 
-  // Another clinic's visit is read-only to a vet (0110): the database would
+  // Another clinic's visit is read-only to a doctor login (0110): the database would
   // refuse the save, so say so rather than show a form that can only fail.
   if (scope.kind === "clinics" && (!visit.clinic_id || !scope.clinicIds.includes(visit.clinic_id))) {
     return (
@@ -52,10 +52,10 @@ export default async function EditVetVisitPage(props: PageProps<"/clinic-visits/
     );
   }
 
-  let vetsQuery = supabase.from("clinics").select("id, name, name_th, clinic_name").order("name");
-  if (scope.kind === "clinics") vetsQuery = vetsQuery.in("id", scope.clinicIds);
+  let clinicsQuery = supabase.from("clinics").select("id, name, name_th").order("name");
+  if (scope.kind === "clinics") clinicsQuery = clinicsQuery.in("id", scope.clinicIds);
 
-  const [residentResult, stateResult, vetsResult, doctorNamesByVet, perms] = await Promise.all([
+  const [residentResult, stateResult, clinicsResult, doctorNamesByClinic, perms] = await Promise.all([
     supabase
       .from("residents")
       .select("id, name, thai_name, microchip_number, microchip_implanted_on")
@@ -76,19 +76,19 @@ export default async function EditVetVisitPage(props: PageProps<"/clinic-visits/
       .eq("resident_id", visit.resident_id)
       .limit(1)
       .returns<{ is_deceased: boolean }[]>(),
-    vetsQuery.returns<(VetOption & { name_th: string | null })[]>(),
+    clinicsQuery.returns<(ClinicOption & { name_th: string | null })[]>(),
     loadDoctorNamesByClinic(supabase),
     loadPermissions(),
   ]);
   const resident = residentResult.data?.[0];
   if (!resident) notFound();
-  const vets: VetOption[] = (vetsResult.data ?? []).map(({ name_th, ...vet }) => ({
-    ...vet,
-    name: localLabel(locale, vet.name, name_th),
+  const clinics: ClinicOption[] = (clinicsResult.data ?? []).map(({ name_th, ...clinic }) => ({
+    ...clinic,
+    name: localLabel(locale, clinic.name, name_th),
   }));
 
   const displayName = resident.thai_name ? `${resident.name} (${resident.thai_name})` : resident.name;
-  const tabHref = `/residents/${visit.resident_id}/vet-appointments`;
+  const tabHref = `/residents/${visit.resident_id}/clinic-visits`;
 
   if (stateResult.data?.[0]?.is_deceased) {
     return (
@@ -120,18 +120,18 @@ export default async function EditVetVisitPage(props: PageProps<"/clinic-visits/
         canEdit={can(perms, "resident.microchip")}
       />
 
-      {vetsResult.error && (
+      {clinicsResult.error && (
         <p className="text-sm text-danger">
-          {t.vetVisits.couldntLoadVets}: {vetsResult.error.message}
+          {t.vetVisits.couldntLoadVets}: {clinicsResult.error.message}
         </p>
       )}
 
       <ClinicVisitEditForm
         visit={{ ...visit, cost: visit.cost == null ? null : Number(visit.cost) }}
-        vets={vets}
-        fixedVet={scope.kind === "clinics" && vets.length === 1 ? vets[0] : null}
+        clinics={clinics}
+        fixedClinic={scope.kind === "clinics" && clinics.length === 1 ? clinics[0] : null}
         lockedDoctor={scope.kind === "clinics" ? (visit.doctor_name ?? scope.doctorName) : null}
-        doctorNamesByVet={doctorNamesByVet}
+        doctorNamesByClinic={doctorNamesByClinic}
         residentDisplayName={displayName}
         cancelHref={tabHref}
       />

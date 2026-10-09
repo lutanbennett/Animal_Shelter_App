@@ -23,7 +23,7 @@ function residentLabel(r: ResidentOption) {
  * Modal multi-select for residents. Renders as chips + an "Add" trigger
  * rather than an inline list, since the full resident list (300+ at
  * production scale) is too long to embed directly in a form. Reusable
- * across any form that needs to attach one or more residents (vet visits,
+ * across any form that needs to attach one or more residents (clinic visits,
  * immunizations, procedures, weight logs, ...).
  *
  * `single` turns it into a one-resident chooser (radio rows, picking one

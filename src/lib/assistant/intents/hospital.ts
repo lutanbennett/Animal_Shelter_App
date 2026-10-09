@@ -2,7 +2,7 @@
  * "Send Panda to the vet hospital" and "Panda is back from hospital" —
  * the two halves of a hospital stay, one parser each.
  *
- * Both run before the vet parser, because "vet hospital" mentions a vet
+ * Both run before the clinic parser, because "vet hospital" mentions a vet
  * and is not a booking; the return parser runs before the send one,
  * because "back from hospital" mentions a hospital and is not an admission.
  */

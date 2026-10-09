@@ -33,6 +33,34 @@ export const AUDITED_TABLES = [
 ] as const;
 export type AuditedTable = (typeof AUDITED_TABLES)[number];
 
+/**
+ * audit_log is append-only, so a row keeps the names in force when it was
+ * written. 0172 renamed vet_appointments to clinic_visits, and two columns
+ * with it; older rows are read here under the new names, so a visit shows,
+ * filters and undoes as one table whichever side of 0172 it was logged.
+ */
+const LEGACY_TABLE_NAMES: Record<string, AuditedTable> = { vet_appointments: "clinic_visits" };
+const LEGACY_COLUMNS: Record<string, string> = {
+  vet_id: "clinic_id", // clinic_visits
+  vet_appointment_id: "clinic_visit_id", // prescriptions, weight
+};
+
+/** A logged table_name under its current name. */
+export function currentTableName(name: string): string {
+  return LEGACY_TABLE_NAMES[name] ?? name;
+}
+
+/** Every table_name a table's rows can be logged under, for a query. */
+export function loggedTableNames(table: AuditedTable): string[] {
+  return [table, ...Object.keys(LEGACY_TABLE_NAMES).filter((old) => LEGACY_TABLE_NAMES[old] === table)];
+}
+
+/** A logged row image with any renamed column under its current name. */
+export function currentImage(image: Image): Image {
+  if (!image || !Object.keys(image).some((k) => k in LEGACY_COLUMNS)) return image;
+  return Object.fromEntries(Object.entries(image).map(([k, v]) => [LEGACY_COLUMNS[k] ?? k, v]));
+}
+
 export const PAGE_SIZE = 50;
 
 /** Actor filter value for changes with no login behind them. */
@@ -134,10 +162,11 @@ type RawRow = {
   new_row: Image;
 };
 
-function toEntry(r: RawRow): AuditEntry {
+function toEntry(raw: RawRow): AuditEntry {
+  const r = { ...raw, old_row: currentImage(raw.old_row), new_row: currentImage(raw.new_row) };
   const image = r.new_row ?? r.old_row ?? {};
   const changed = changedColumns(r.old_row, r.new_row);
-  const table = r.table_name as AuditedTable;
+  const table = currentTableName(r.table_name) as AuditedTable;
   const str = (v: unknown) => (typeof v === "string" && v ? v : null);
   let residentId: string | null = null;
   if (table === "attachments") {
@@ -190,7 +219,7 @@ export async function loadPage(supabase: SupabaseClient, f: AuditFilters): Promi
     // One more than a page: its presence is how we know there is another.
     .limit(PAGE_SIZE + 1);
 
-  if (f.table) q = q.eq("table_name", f.table);
+  if (f.table) q = q.in("table_name", loggedTableNames(f.table));
   if (f.row) q = q.eq("row_id", f.row);
   if (f.actor === SYSTEM_ACTOR) q = q.is("actor", null);
   else if (f.actor) q = q.eq("actor", f.actor);
@@ -239,7 +268,7 @@ export async function loadDetail(supabase: SupabaseClient, id: number): Promise<
     .eq("id", id)
     .maybeSingle();
   if (!data) return null;
-  return { id: data.id as number, before: data.old_row as Image, after: data.new_row as Image };
+  return { id: data.id as number, before: currentImage(data.old_row as Image), after: currentImage(data.new_row as Image) };
 }
 
 /** A value as a short string for the detail panel. */

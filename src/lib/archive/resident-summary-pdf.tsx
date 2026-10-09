@@ -437,17 +437,17 @@ function ResidentSummaryDocument({
           />
         </Section>
 
-        <Section title="Vet appointments">
+        <Section title="Clinic visits">
           <Table
-            columns={["Date", "Vet", "Status", "Reason / notes"]}
+            columns={["Date", "Clinic / doctor", "Status", "Reason / notes"]}
             widths={["13%", "22%", "13%", "52%"]}
             rows={record.appointments.map((appointment) => [
               day(appointment.appointmentDate),
-              join([appointment.vetName, appointment.doctorName], " · "),
+              join([appointment.clinicName, appointment.doctorName], " · "),
               appointment.status,
               join([appointment.reason, appointment.notes], " · "),
             ])}
-            empty="No vet appointments recorded."
+            empty="No clinic visits recorded."
           />
         </Section>
 

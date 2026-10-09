@@ -46,7 +46,7 @@ function yTicks(max: number): number[] {
 /**
  * Intakes, adoptions and deaths per month as one group of three bars per
  * month, oldest on the left, with a legend and a hover/keyboard tooltip
- * giving the three counts. Follows the vet hub's VisitsChart.
+ * giving the three counts. Follows the clinic hub's VisitsChart.
  */
 export function TrendChart({ buckets }: { buckets: TrendBucket[] }) {
   const { t, locale } = useI18n();

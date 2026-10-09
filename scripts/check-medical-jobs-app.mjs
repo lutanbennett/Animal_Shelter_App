@@ -119,7 +119,7 @@ try {
   const one = await page(`/medical/weight?resident=${live.id}`);
   const oneText = text(one.html);
   expect(oneText.includes("Weight in kg") && one.html.includes('inputMode="decimal"') || one.html.includes('inputmode="decimal"'), "the weight form opens with the decimal keypad");
-  expect(!oneText.toLowerCase().includes("vet visit") && !one.html.includes('name="vetAppointmentId"'), "no vet-visit picker is offered (she cannot read clinic_visits)");
+  expect(!oneText.toLowerCase().includes("vet visit") && !one.html.includes('name="clinicVisitId"'), "no vet-visit picker is offered (she cannot read clinic_visits)");
   const gone = await page("/medical/weight?resident=00000000-0000-0000-0000-000000000000");
   expect(gone.status === 200 && text(gone.html).includes("isn't in the list"), "an unknown resident gets the polite sentence");
   if (deadId) {

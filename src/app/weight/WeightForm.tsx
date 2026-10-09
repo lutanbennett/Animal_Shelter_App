@@ -10,7 +10,7 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate, formatWeightKg, todayIso, weightUnit } from "@/lib/format";
 import { visitDate, type LinkableVisit } from "@/lib/clinics/linkable";
 
-export type VetAppointmentOption = LinkableVisit;
+export type ClinicVisitOption = LinkableVisit;
 
 /** Another reading of this resident's, for the one-weight-per-day notice. */
 export type ExistingReading = { id: string; date: string; weight_kg: number };
@@ -36,8 +36,8 @@ export type WeightInitial = {
 export function WeightForm({
   residentId,
   residentDisplayName,
-  vetAppointments,
-  preselectedVetAppointmentId = null,
+  clinicVisits,
+  preselectedClinicVisitId = null,
   previousReading = null,
   readings,
   initial = null,
@@ -45,8 +45,8 @@ export function WeightForm({
   residentId: string;
   residentDisplayName: string;
   /** Already filtered to visits this reading may link to (loadLinkableVisits). */
-  vetAppointments: VetAppointmentOption[];
-  preselectedVetAppointmentId?: string | null;
+  clinicVisits: ClinicVisitOption[];
+  preselectedClinicVisitId?: string | null;
   /** "Last reading: 12.4 kg on 3 Sep 2026", already localised; null when none. */
   previousReading?: string | null;
   /** The resident's other readings — never the one being edited. */
@@ -59,13 +59,13 @@ export function WeightForm({
     undefined,
   );
   const { t, locale } = useI18n();
-  // Linking a vet visit defaults the date to the visit's date until the user
+  // Linking a clinic visit defaults the date to the visit's date until the user
   // has typed a date themselves — same behaviour as the blood-test form.
   const [dateTouched, setDateTouched] = useState(editing);
   const [date, setDate] = useState(() => {
     if (initial) return initial.date;
-    if (preselectedVetAppointmentId) {
-      const match = vetAppointments.find((a) => a.id === preselectedVetAppointmentId);
+    if (preselectedClinicVisitId) {
+      const match = clinicVisits.find((a) => a.id === preselectedClinicVisitId);
       if (match) return visitDate(match);
     }
     return todayIso();
@@ -73,9 +73,9 @@ export function WeightForm({
 
   const sameDay = readings.find((r) => r.date === date) ?? null;
 
-  function handleVetAppointmentChange(id: string) {
+  function handleClinicVisitChange(id: string) {
     if (dateTouched || !id) return;
-    const match = vetAppointments.find((a) => a.id === id);
+    const match = clinicVisits.find((a) => a.id === id);
     if (match) setDate(visitDate(match));
   }
 
@@ -167,18 +167,18 @@ export function WeightForm({
         )}
 
         <div className="flex flex-col gap-1 sm:col-span-2">
-          <label htmlFor="vetAppointmentId" className="text-sm font-medium text-muted">
+          <label htmlFor="clinicVisitId" className="text-sm font-medium text-muted">
             {t.weight.linkedVisit}
           </label>
           <select
-            id="vetAppointmentId"
-            name="vetAppointmentId"
-            defaultValue={initial?.clinic_visit_id ?? preselectedVetAppointmentId ?? ""}
-            onChange={(e) => handleVetAppointmentChange(e.target.value)}
+            id="clinicVisitId"
+            name="clinicVisitId"
+            defaultValue={initial?.clinic_visit_id ?? preselectedClinicVisitId ?? ""}
+            onChange={(e) => handleClinicVisitChange(e.target.value)}
             className={inputClass}
           >
             <option value="">{t.weight.noLinkedVisit}</option>
-            {vetAppointments.map((a) => (
+            {clinicVisits.map((a) => (
               <option key={a.id} value={a.id}>
                 {formatDate(a.appointment_date, locale)}
                 {a.reason ? ` — ${a.reason}` : ""}

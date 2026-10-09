@@ -90,7 +90,7 @@ export const SECTION_ICONS = {
   housing: House,
   photos: Camera,
   immunizations: Syringe,
-  "vet-appointments": Stethoscope,
+  "clinic-visits": Stethoscope,
   prescriptions: Pill,
   weight: Weight,
   procedures: Scissors,
@@ -164,10 +164,10 @@ export const CONTACT_ICONS = {
   inCare: HeartHandshake,
 } satisfies Record<string, LucideIcon>;
 
-/** Icons for the vet list (`/clinics`) and vet hub. */
-export const VET_ICONS = {
-  vet: UserRound,
+/** Icons for the clinic list (`/clinics`) and clinic hub. */
+export const CLINIC_ICONS = {
   clinic: Building2,
+  doctor: UserRound,
   contact: Phone,
   visits: Stethoscope,
   residents: PawPrint,
@@ -182,7 +182,7 @@ export const VET_ICONS = {
  * One icon per sidebar link (src/app/NavLinks.tsx). Pages that also have a
  * tile or a heading icon elsewhere reuse that icon, so the menu and the
  * landing pages agree: Enclosures and Maintenance match the enclosure hub,
- * Vets and Contacts the Management tiles, Security the Settings tile,
+ * Clinics and Contacts the Management tiles, Security the Settings tile,
  * and Projects the folder grid. Management and
  * Settings have no tile of their own, so they take icons none of their
  * children use.
@@ -190,14 +190,14 @@ export const VET_ICONS = {
 export const NAV_ICONS = {
   home: House,
   my: ListTodo,
-  appointments: VET_ICONS.upcoming,
+  appointments: CLINIC_ICONS.upcoming,
   residents: CONTACT_ICONS.residents,
   enclosures: ENCLOSURE_ICONS.enclosure,
   maintenance: ENCLOSURE_ICONS.maintenance,
   stocktake: ClipboardCheck,
   deliveries: Truck,
   recurringJobs: Repeat,
-  vets: VET_ICONS.vet,
+  clinics: CLINIC_ICONS.clinic,
   contacts: CONTACT_ICONS.contact,
   projects: Folder,
   shelterOperations: ClipboardList,

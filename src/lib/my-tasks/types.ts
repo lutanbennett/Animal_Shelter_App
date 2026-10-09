@@ -2,7 +2,7 @@ import type { MaintenanceStatus } from "@/lib/maintenance/status";
 
 /**
  * The common shape of "something assigned to me" on /my (docs/decisions.md,
- * 2026-09-26). Every source — maintenance and recurring jobs today; vet
+ * 2026-09-26). Every source — maintenance and recurring jobs today; clinic
  * trips, medication rounds and stock orders later — is one small loader
  * that returns `MyTask[]`, and the page renders each source as its own
  * section grouped by `due`. A new source adds a member to `MyTaskSource`, a

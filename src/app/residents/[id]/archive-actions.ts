@@ -26,7 +26,7 @@ function revalidate(kind: MedicalArchiveKind, residentId: string) {
 }
 
 /**
- * Archives one weight reading, prescription, vet visit or immunization
+ * Archives one weight reading, prescription, clinic visit or immunization
  * record: kept, but out of every list, chart, forecast and count (0124's
  * readers skip it). The audit trigger (0121) writes the one audit row for
  * the update; nothing here does.

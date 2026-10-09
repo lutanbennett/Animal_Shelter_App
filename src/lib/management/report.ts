@@ -8,7 +8,7 @@
  *
  * The sections mirror the monthly report the shelter already produces by
  * hand (total in care, adopted, fostered, died, blood work split by where
- * it was done, initial vs follow-up vet visits, procedures) so the
+ * it was done, initial vs follow-up clinic visits, procedures) so the
  * dashboard can replace it, plus the things that report can't show —
  * intakes, hospitalisations, the current picture and a trend.
  */
@@ -155,13 +155,13 @@ export type MonthReport = {
   died: NamedEntry[];
   hospitalised: NamedEntry[];
   returned: NamedEntry[];
-  /** Blood tests not linked to a vet appointment — done at the shelter. */
+  /** Blood tests not linked to a clinic visit — done at the shelter. */
   bloodWorkInHouse: NamedEntry[];
-  /** Blood tests linked to a vet appointment. */
-  bloodWorkVetVisit: NamedEntry[];
+  /** Blood tests linked to a clinic visit. */
+  bloodWorkClinicVisit: NamedEntry[];
   /** Visits this month that were the resident's first visit ever. */
-  vetVisitsInitial: NamedEntry[];
-  vetVisitsFollowUp: NamedEntry[];
+  clinicVisitsInitial: NamedEntry[];
+  clinicVisitsFollowUp: NamedEntry[];
   /** Procedures grouped by type, most frequent type first. */
   procedures: { type: string; entries: NamedEntry[]; count: number }[];
 };
@@ -236,12 +236,12 @@ export function monthReport(
       bloodTests.filter((b) => b.clinic_visit_id == null),
       residents,
     ),
-    bloodWorkVetVisit: toEntries(
+    bloodWorkClinicVisit: toEntries(
       bloodTests.filter((b) => b.clinic_visit_id != null),
       residents,
     ),
-    vetVisitsInitial: toEntries(initial, residents),
-    vetVisitsFollowUp: toEntries(followUp, residents),
+    clinicVisitsInitial: toEntries(initial, residents),
+    clinicVisitsFollowUp: toEntries(followUp, residents),
     procedures,
   };
 }
@@ -273,9 +273,9 @@ export type Snapshot = {
   microchipped: number;
   notMicrochipped: number;
   /** Scheduled visits in the next seven days. */
-  vetVisitsDue: number;
+  clinicVisitsDue: number;
   /** Scheduled visits whose date has passed. */
-  vetVisitsOverdue: number;
+  clinicVisitsOverdue: number;
   openMaintenance: number;
   blockedMaintenance: number;
 };
@@ -311,13 +311,13 @@ export function snapshot(
 
   const nowMs = now.getTime();
   const weekMs = nowMs + 7 * 24 * 60 * 60 * 1000;
-  let vetVisitsDue = 0;
-  let vetVisitsOverdue = 0;
+  let clinicVisitsDue = 0;
+  let clinicVisitsOverdue = 0;
   for (const a of data.appointments) {
     if (a.status !== "scheduled") continue;
     const ms = new Date(a.appointment_date).getTime();
-    if (ms < nowMs) vetVisitsOverdue += 1;
-    else if (ms <= weekMs) vetVisitsDue += 1;
+    if (ms < nowMs) clinicVisitsOverdue += 1;
+    else if (ms <= weekMs) clinicVisitsDue += 1;
   }
 
   let openMaintenance = 0;
@@ -343,8 +343,8 @@ export function snapshot(
     publicVisible,
     microchipped,
     notMicrochipped: inCare - microchipped,
-    vetVisitsDue,
-    vetVisitsOverdue,
+    clinicVisitsDue,
+    clinicVisitsOverdue,
     openMaintenance,
     blockedMaintenance,
   };

@@ -4,7 +4,7 @@
  *
  *   public       the public card: signed out, or signed in without app access
  *   public-plus  the public card plus where the resident lives and the person's own jobs: a login
- *                that may not open the full record (the 2IC, the Heads, a volunteer, a vet outside
+ *                that may not open the full record (the 2IC, the Heads, a volunteer, a doctor outside
  *                their clinic). Never less than a stranger sees
  *   full         the resident's page, with the record the role may read
  *
@@ -19,7 +19,7 @@ export type CardTapInput = {
   readsRecord: boolean;
   /** readsWhoAndWhereOnly(): the volunteer floor, which the 2IC and the Heads borrow (0134). */
   whoAndWhereOnly: boolean;
-  /** The `residents` row came back for this login (a vet sees only their clinics', 0108). */
+  /** The `residents` row came back for this login (a doctor sees only their clinics', 0108). */
   rowVisible: boolean;
 };
 

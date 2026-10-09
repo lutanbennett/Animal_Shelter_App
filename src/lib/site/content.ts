@@ -150,7 +150,7 @@ export function visitingHoursLines(
 }
 
 /**
- * The typical-vet-visit estimate (0071): the flat figure the cashflow
+ * The typical-clinic-visit estimate (0071): the flat figure the cashflow
  * forecast uses for a visit that is booked but not yet invoiced.
  *
  * Deliberately not part of SITE_CONTENT_COLUMNS, and so not in SiteContent.
@@ -167,7 +167,7 @@ export function visitingHoursLines(
  * salaries, rent — needs its own table with its own policy (0039 is the
  * pattern), not another column here.
  */
-export async function loadVetVisitEstimate(
+export async function loadClinicVisitEstimate(
   supabase: SupabaseClient,
 ): Promise<number | null> {
   const { data } = await supabase

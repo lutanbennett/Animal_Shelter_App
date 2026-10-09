@@ -142,7 +142,7 @@ export default async function PublicResidentPage(
   });
 
   // Quick facts, in the mockup's order. Only what is known: "Not desexed"
-  // is a vet conversation, not a fact to lead with. Breed stands in for
+  // is a clinic conversation, not a fact to lead with. Breed stands in for
   // species (the photo says dog or cat); species shows only without one.
   const d = t.adopt.details;
   const p = t.adopt.profile;

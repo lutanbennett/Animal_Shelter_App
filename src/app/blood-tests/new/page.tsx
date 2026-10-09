@@ -6,7 +6,7 @@ import { localLabel } from "@/lib/translations/labels";
 import {
   BloodTestForm,
   type BloodTestTypeOption,
-  type VetAppointmentOption,
+  type ClinicVisitOption,
 } from "./BloodTestForm";
 
 export default async function NewBloodTestPage(
@@ -17,7 +17,7 @@ export default async function NewBloodTestPage(
   const { t, locale } = await getT();
 
   const residentId = searchParams.residentId;
-  const vetAppointmentId = searchParams.vetAppointmentId;
+  const clinicVisitId = searchParams.clinicVisitId;
 
   if (typeof residentId !== "string" || !residentId) {
     return (
@@ -38,7 +38,7 @@ export default async function NewBloodTestPage(
 
   const supabase = await createClient();
 
-  const [residentResult, vetAppointmentsResult, stateResult, typesResult] = await Promise.all([
+  const [residentResult, clinicVisitsResult, stateResult, typesResult] = await Promise.all([
     supabase
       .from("residents")
       .select("id, name, thai_name")
@@ -51,7 +51,7 @@ export default async function NewBloodTestPage(
       .is("archived_at", null)
       .eq("resident_id", residentId)
       .order("appointment_date", { ascending: false })
-      .returns<VetAppointmentOption[]>(),
+      .returns<ClinicVisitOption[]>(),
     supabase
       .from("resident_current_state")
       .select("is_deceased")
@@ -81,7 +81,7 @@ export default async function NewBloodTestPage(
     ? `${resident.name} (${resident.thai_name})`
     : resident.name;
 
-  // Unlike the immunization and vet-visit forms, this page is reached with a
+  // Unlike the immunization and clinic-visit forms, this page is reached with a
   // resident id rather than a picker, so the "no records for the dead" rule
   // (migration 0026, which would reject the insert anyway) is checked here.
   if (stateResult.data?.[0]?.is_deceased) {
@@ -101,7 +101,7 @@ export default async function NewBloodTestPage(
     );
   }
 
-  const vetAppointments = vetAppointmentsResult.data ?? [];
+  const clinicVisits = clinicVisitsResult.data ?? [];
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
@@ -118,9 +118,9 @@ export default async function NewBloodTestPage(
         <p className="text-sm text-muted">{t.bloodTests.pageSubtitle}</p>
       </div>
 
-      {vetAppointmentsResult.error && (
+      {clinicVisitsResult.error && (
         <p className="text-sm text-danger">
-          {t.bloodTests.couldntLoadVetAppointments}: {vetAppointmentsResult.error.message}
+          {t.bloodTests.couldntLoadVetAppointments}: {clinicVisitsResult.error.message}
         </p>
       )}
       {typesResult.error && (
@@ -136,10 +136,10 @@ export default async function NewBloodTestPage(
           ...type,
           name: localLabel(locale, type.name, name_th),
         }))}
-        vetAppointments={vetAppointments}
-        preselectedVetAppointmentId={
-          typeof vetAppointmentId === "string" && vetAppointmentId
-            ? vetAppointmentId
+        clinicVisits={clinicVisits}
+        preselectedClinicVisitId={
+          typeof clinicVisitId === "string" && clinicVisitId
+            ? clinicVisitId
             : null
         }
       />

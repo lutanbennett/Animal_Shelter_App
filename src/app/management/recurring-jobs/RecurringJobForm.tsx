@@ -129,7 +129,7 @@ export function RecurringJobForm({
     linkChoice === "none" ? "" : linkChoice === "other" ? linkOther : LINK_PRESETS[linkChoice as keyof typeof LINK_PRESETS];
 
   // Everyone whose role can do the work on the job's page (eligibility.ts):
-  // never a vet, and a volunteer is not offered maintenance. Anyone already
+  // never a doctor, and a volunteer is not offered maintenance. Anyone already
   // on the job who can't — given it before this filter, or the link has just
   // changed — or who has since left stays listed and flagged, so they can be
   // taken off rather than silently kept. Saving refuses the first kind.

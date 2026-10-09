@@ -49,7 +49,7 @@ export default async function EditPrescriptionPage(
       .returns<{ is_deceased: boolean }[]>(),
     loadPrescriptionOptions(supabase, residentId, locale, prescription.clinic_visit_id),
   ]);
-  const { medications, frequencies, vetAppointments } = options;
+  const { medications, frequencies, clinicVisits } = options;
 
   const resident = residentResult.data?.[0];
   if (!resident) notFound();
@@ -76,7 +76,7 @@ export default async function EditPrescriptionPage(
   const loadErrors = [
     [t.prescriptions.couldntLoadMedications, medications.error],
     [t.prescriptions.couldntLoadFrequencies, frequencies.error],
-    [t.prescriptions.couldntLoadVetAppointments, vetAppointments.error],
+    [t.prescriptions.couldntLoadVetAppointments, clinicVisits.error],
   ] as const;
 
   return (
@@ -106,7 +106,7 @@ export default async function EditPrescriptionPage(
         residentDisplayName={displayName}
         medications={medications.data ?? []}
         frequencies={frequencies.data ?? []}
-        vetAppointments={vetAppointments.data ?? []}
+        clinicVisits={clinicVisits.data ?? []}
         initial={prescription}
         cancelHref={tabHref}
       />

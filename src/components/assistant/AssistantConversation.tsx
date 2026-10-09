@@ -73,11 +73,7 @@ export function AssistantConversation({
         name: e.name,
         nameTh: e.name_th,
       })),
-      vets: context.vets.map((v) => ({
-        id: v.id,
-        name: v.name,
-        clinicName: v.clinic_name,
-      })),
+      clinics: context.clinics,
     }),
     [context],
   );
@@ -153,7 +149,7 @@ export function AssistantConversation({
   const examples = a.examples(
     context.residents[0]?.name ?? "Panda",
     context.enclosures[0]?.name ?? "A3",
-    context.vets[0]?.name ?? "Dr Somchai",
+    context.clinics[0]?.name ?? "Dr Somchai",
   );
 
   return (
@@ -246,7 +242,7 @@ function TurnReply({
             residents: context.residents,
             zones: context.zones,
             enclosures: context.enclosures,
-            vets: context.vets,
+            clinics: context.clinics,
             doctors: context.doctors,
             candidates: turn.parsed.residentCandidates,
             onSettle: (outcome) => onSettle(turn, outcome),

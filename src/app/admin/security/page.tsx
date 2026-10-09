@@ -20,11 +20,11 @@ export default async function SecurityPage() {
 
   const admin = createAdminClient();
 
-  const [authUsersResult, rolesResult, vetsResult, doctorsResult, appRolesResult, outreachCellsResult] = await Promise.all([
+  const [authUsersResult, rolesResult, clinicsResult, doctorsResult, appRolesResult, outreachCellsResult] = await Promise.all([
     listAllUsers(admin),
     admin.from("user_roles").select("user_id, role, archived_at"),
-    admin.from("clinics").select("id, name, clinic_name").order("name"),
-    // Doctors with the clinics they work at: a vet login's clinics are its
+    admin.from("clinics").select("id, name").order("name"),
+    // Doctors with the clinics they work at: a doctor login's clinics are its
     // linked doctor's (0125).
     admin
       .from("doctors")
@@ -62,12 +62,9 @@ export default async function SecurityPage() {
       },
     ]),
   );
-  const clinics = (vetsResult.data ?? []).map((v) => ({
-    id: v.id as string,
-    label: v.clinic_name ? `${v.name} — ${v.clinic_name}` : (v.name as string),
-  }));
+  const clinics = (clinicsResult.data ?? []).map((c) => ({ id: c.id as string, label: c.name as string }));
 
-  const clinicName = new Map((vetsResult.data ?? []).map((v) => [v.id as string, v.name as string]));
+  const clinicName = new Map((clinicsResult.data ?? []).map((c) => [c.id as string, c.name as string]));
   type DoctorLink = { clinic_id: string; active: boolean };
   const doctorRows = (doctorsResult.data ?? []).map((d) => ({
     id: d.id as string,

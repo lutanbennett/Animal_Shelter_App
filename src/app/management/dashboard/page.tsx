@@ -261,13 +261,13 @@ export default async function ManagementDashboardPage(
           <StatCard
             href="/clinics"
             title={d.now.vetVisitsDue}
-            value={String(current.vetVisitsDue)}
+            value={String(current.clinicVisitsDue)}
             detail={
-              current.vetVisitsOverdue > 0
-                ? d.now.vetVisitsOverdue(current.vetVisitsOverdue)
+              current.clinicVisitsOverdue > 0
+                ? d.now.vetVisitsOverdue(current.clinicVisitsOverdue)
                 : undefined
             }
-            tone={current.vetVisitsOverdue > 0 ? "danger" : "neutral"}
+            tone={current.clinicVisitsOverdue > 0 ? "danger" : "neutral"}
           />
           <StatCard
             href="/maintenance"
@@ -379,24 +379,24 @@ export default async function ManagementDashboardPage(
             title={d.month.bloodWorkVetVisit}
             hint={d.month.bloodWorkVetVisitHint}
             icon={Droplet}
-            count={entryTotal(report.bloodWorkVetVisit)}
-            entries={report.bloodWorkVetVisit}
+            count={entryTotal(report.bloodWorkClinicVisit)}
+            entries={report.bloodWorkClinicVisit}
             none={d.month.none}
           />
           <ReportCard
             title={d.month.vetVisitsInitial}
             hint={d.month.vetVisitsInitialHint}
             icon={Stethoscope}
-            count={entryTotal(report.vetVisitsInitial)}
-            entries={report.vetVisitsInitial}
+            count={entryTotal(report.clinicVisitsInitial)}
+            entries={report.clinicVisitsInitial}
             none={d.month.none}
           />
           <ReportCard
             title={d.month.vetVisitsFollowUp}
             hint={d.month.vetVisitsFollowUpHint}
             icon={Stethoscope}
-            count={entryTotal(report.vetVisitsFollowUp)}
-            entries={report.vetVisitsFollowUp}
+            count={entryTotal(report.clinicVisitsFollowUp)}
+            entries={report.clinicVisitsFollowUp}
             none={d.month.none}
           />
           <ReportCard

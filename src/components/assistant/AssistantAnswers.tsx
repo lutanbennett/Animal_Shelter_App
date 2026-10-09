@@ -174,7 +174,7 @@ function DueBody({
                   {nameOf(v.residentId)}
                 </Link>{" "}
                 — {formatDateTime(v.when, locale)}
-                {v.vetName ? ` · ${v.vetName}` : ""}
+                {v.clinicName ? ` · ${v.clinicName}` : ""}
                 {v.reason ? ` · ${v.reason}` : ""}
               </li>
             ))}
@@ -197,7 +197,7 @@ function DueBody({
                   {nameOf(v.residentId)}
                 </Link>{" "}
                 — {formatDateTime(v.when, locale)}
-                {v.vetName ? ` · ${v.vetName}` : ""}
+                {v.clinicName ? ` · ${v.clinicName}` : ""}
                 {v.reason ? ` · ${v.reason}` : ""}
               </li>
             ))}

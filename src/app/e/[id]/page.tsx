@@ -31,8 +31,8 @@ import { ResidentCard } from "@/app/adopt/ResidentCard";
  * temporary — browsers cache 308s, which would pin a printed code to
  * today's page layout, and to whoever was signed in.
  *
- * A vet is signed in but is not sent on: the enclosure pages are the
- * shelter's, not a visiting clinic's (isShelterRole), so a vet who scans a
+ * A doctor is signed in but is not sent on: the enclosure pages are the
+ * shelter's, not a visiting clinic's (isShelterRole), so a doctor who scans a
  * kennel gets this card — who lives here, each opening their resident page —
  * rather than a refusal. The sign-in hint is for the signed out only.
  */
@@ -63,7 +63,7 @@ export default async function EnclosureTagPage(props: PageProps<"/e/[id]">) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  // Staff go on to the enclosure page; whoever may not open Enclosures (a vet, a public viewer) sees the card.
+  // Staff go on to the enclosure page; whoever may not open Enclosures (a doctor, a public viewer) sees the card.
   if (user && can(await loadPermissions(), "facility.enclosures", "read")) redirect(`/enclosures/${id}`);
 
   const [enclosure, { t, locale }] = await Promise.all([

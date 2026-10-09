@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { addDaysIso, formatDate, todayIso } from "@/lib/format";
-import { loadVetVisitEstimate } from "@/lib/site/content";
+import { loadClinicVisitEstimate } from "@/lib/site/content";
 import { ForecastWindowPicker } from "@/components/ForecastWindowPicker";
 import {
   CASHFLOW_FIXED_DAYS,
@@ -10,16 +10,16 @@ import {
   type CashflowRow,
 } from "@/lib/management/cashflow";
 import { fixedOutgoingRows, type FixedOutgoing } from "@/lib/management/fixed-outgoings";
-import { VET_HISTORY_DAYS, vetForecast, type ClinicVisit } from "@/lib/management/clinic-forecast";
+import { CLINIC_HISTORY_DAYS, clinicForecast, type ClinicVisit } from "@/lib/management/clinic-forecast";
 import { CashflowView } from "./CashflowView";
 import { requirePermission } from "@/lib/permissions/require";
 
-type VetRow = { appointment_date: string; cost: number | string | null };
+type VisitRow = { appointment_date: string; cost: number | string | null };
 
 /**
  * Management → Cashflow: every outgoing the database can see, in baht,
  * for one window — the page the `cashflow_forecast` function (0072) exists
- * for. Food, medication, immunizations, vet visits and maintenance each
+ * for. Food, medication, immunizations, clinic visits and maintenance each
  * forecast in their own unit elsewhere in the app; this is the only place
  * they add up.
  *
@@ -42,12 +42,12 @@ export default async function CashflowPage(props: PageProps<"/management/cashflo
 
   const supabase = await createClient();
   const today = todayIso();
-  const [forecast, vetEstimate, vetBooked, vetHistory, fixed] = await Promise.all([
+  const [forecast, clinicEstimate, clinicBooked, clinicHistory, fixed] = await Promise.all([
     supabase.rpc("cashflow_forecast", { p_from: window.from, p_to: window.to }),
-    // Shown under the table so it is obvious which figure the vet row used
+    // Shown under the table so it is obvious which figure the clinic row used
     // and where to change it.
-    loadVetVisitEstimate(supabase),
-    // The vet line is computed here, not by the RPC (vet-forecast.ts): the
+    loadClinicVisitEstimate(supabase),
+    // The clinic line is computed here, not by the RPC (clinic-forecast.ts): the
     // visits still booked inside the window, and the completed ones of the
     // last quarter that give the typical rate and cost. A day either side
     // of each range is fetched loosely and trimmed on shelter dates below.
@@ -58,15 +58,15 @@ export default async function CashflowPage(props: PageProps<"/management/cashflo
       .eq("status", "scheduled")
       .gte("appointment_date", `${addDaysIso(window.from, -1)}T00:00:00Z`)
       .lte("appointment_date", `${addDaysIso(window.to, 2)}T00:00:00Z`)
-      .returns<VetRow[]>(),
+      .returns<VisitRow[]>(),
     supabase
       .from("clinic_visits")
       .select("appointment_date, cost")
       .is("archived_at", null)
       .eq("status", "completed")
-      .gte("appointment_date", `${addDaysIso(today, -VET_HISTORY_DAYS - 1)}T00:00:00Z`)
+      .gte("appointment_date", `${addDaysIso(today, -CLINIC_HISTORY_DAYS - 1)}T00:00:00Z`)
       .lte("appointment_date", `${addDaysIso(today, 2)}T00:00:00Z`)
-      .returns<VetRow[]>(),
+      .returns<VisitRow[]>(),
     // The named monthly costs (0114), folded in below as one more category.
     supabase
       .from("fixed_outgoings")
@@ -76,26 +76,26 @@ export default async function CashflowPage(props: PageProps<"/management/cashflo
 
   // Counted by the day, like every other category (fixedOutgoingRows).
   const fixedLines = fixed.data ?? [];
-  const toVisits = (data: VetRow[] | null): ClinicVisit[] =>
+  const toVisits = (data: VisitRow[] | null): ClinicVisit[] =>
     (data ?? []).map((r) => ({
       date: todayIso(new Date(r.appointment_date)),
       cost: r.cost == null ? null : Number(r.cost),
     }));
-  const vet = vetForecast({
+  const clinic = clinicForecast({
     from: window.from,
     to: window.to,
     today,
-    booked: toVisits(vetBooked.data),
-    history: toVisits(vetHistory.data).filter(
-      (v) => v.date > addDaysIso(today, -VET_HISTORY_DAYS) && v.date <= today,
+    booked: toVisits(clinicBooked.data),
+    history: toVisits(clinicHistory.data).filter(
+      (v) => v.date > addDaysIso(today, -CLINIC_HISTORY_DAYS) && v.date <= today,
     ),
-    estimate: vetEstimate,
+    estimate: clinicEstimate,
   });
   const rows = [
-    // The RPC's own vet rows (booked visits at the flat figure) are
-    // superseded by vet.rows.
-    ...((forecast.data ?? []) as CashflowRow[]).filter((r) => r.category !== "vet"),
-    ...vet.rows,
+    // The RPC's own clinic rows (booked visits at the flat figure) are
+    // superseded by clinic.rows.
+    ...((forecast.data ?? []) as CashflowRow[]).filter((r) => r.category !== "clinic"),
+    ...clinic.rows,
     ...fixedOutgoingRows(fixedLines, window.from, window.to),
   ];
   const fixedMonthly = fixedLines
@@ -145,14 +145,14 @@ export default async function CashflowPage(props: PageProps<"/management/cashflo
         <ForecastWindowPicker from={customFrom} to={customTo} invalid={invalid} />
       </section>
 
-      {forecast.error || fixed.error || vetBooked.error || vetHistory.error ? (
+      {forecast.error || fixed.error || clinicBooked.error || clinicHistory.error ? (
         <p className="text-sm text-danger">
-          {c.couldntLoad}: {(forecast.error ?? fixed.error ?? vetBooked.error ?? vetHistory.error)?.message}
+          {c.couldntLoad}: {(forecast.error ?? fixed.error ?? clinicBooked.error ?? clinicHistory.error)?.message}
         </p>
       ) : (
         <CashflowView
           rows={rows}
-          vetBasis={vet.basis}
+          clinicBasis={clinic.basis}
           fixedMonthly={fixedLines.some((l) => l.active) ? fixedMonthly : null}
           from={window.from}
           to={window.to}

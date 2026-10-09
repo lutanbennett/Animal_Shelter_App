@@ -105,7 +105,7 @@
     },
     {
       "row": 11,
-      "label": "Book a vet visit",
+      "label": "Book a clinic visit",
       "keys": [
         {
           "activity": "visit.book",
@@ -115,7 +115,7 @@
     },
     {
       "row": 12,
-      "label": "Record a vet visit and its outcome",
+      "label": "Record a clinic visit and its outcome",
       "keys": [
         {
           "activity": "medical.visits",
@@ -602,7 +602,7 @@
         50
       ],
       "notes": [
-        "She may prescribe, record immunizations, weights and diets, but not book or record a vet visit, procedures or blood tests, and not register a new resident. Flagged as worth a second look, not as an error.",
+        "She may prescribe, record immunizations, weights and diets, but not book or record a clinic visit, procedures or blood tests, and not register a new resident. Flagged as worth a second look, not as an error.",
         "Two marks on her column were not ticks (rows 11 and 39); Lutan answered no to both."
       ]
     },
@@ -633,7 +633,7 @@
       ],
       "notes": [
         "Her sheet has no \"view residents\", no prescriptions and no diet tick, yet her jobs are the medication list, special diets, weights and medical photos. Lutan: she needs them, because her work relies on giving out medication. All five jobs are kept.",
-        "Photos (row 20) is ticked on her sheet's row, so it loads as ticked. Prescriptions and diet are loaded at Read, not Edit, as 'added' cells: rows 15 and 18 would let her write prescriptions and change diets, which the shelter gives to a vet.",
+        "Photos (row 20) is ticked on her sheet's row, so it loads as ticked. Prescriptions and diet are loaded at Read, not Edit, as 'added' cells: rows 15 and 18 would let her write prescriptions and change diets, which the shelter gives to a doctor.",
         "Row 49 (ask the assistant) was a faint stroke; Lutan answered no."
       ]
     },
@@ -650,13 +650,13 @@
         "Own recurring jobs (row 47) is ticked and loaded. The database lets a volunteer record a job only if it is assigned to them (record_recurring_job, 0141): that rule already exists and needed no change."
       ]
     },
-    "vet": {
-      "label": "Vets",
+    "doctor": {
+      "label": "Doctors",
       "ticks": [
         4
       ],
       "notes": [
-        "Vets get only the microchip. No booking, visits, prescriptions, procedures or blood tests, so a doctor login can set a microchip and see nothing clinical. Vets are on hold on purpose: Lutan, \"it is something that may be turned on in the future but is not a specific need right now.\""
+        "Doctors get only the microchip. No booking, visits, prescriptions, procedures or blood tests, so a doctor login can set a microchip and see nothing clinical. Doctors are on hold on purpose: Lutan, \"it is something that may be turned on in the future but is not a specific need right now.\""
       ]
     }
   },

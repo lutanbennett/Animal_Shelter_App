@@ -4,7 +4,7 @@ import { ActionLink } from "@/components/ActionLink";
 import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
 import { loadCurrentRole } from "@/lib/auth/app-access";
-import { DEFAULT_SIGNED_IN_PATH, VET_HOME_PATH } from "@/lib/auth/next-path";
+import { DEFAULT_SIGNED_IN_PATH, DOCTOR_HOME_PATH } from "@/lib/auth/next-path";
 
 export const metadata: Metadata = { robots: { index: false } };
 
@@ -20,7 +20,7 @@ export const metadata: Metadata = { robots: { index: false } };
 export default async function NoAccessPage() {
   const { t } = await getT();
   const n = t.noAccess;
-  const isVet = (await loadCurrentRole(await createClient())) === "vet";
+  const isDoctor = (await loadCurrentRole(await createClient())) === "doctor";
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-4 p-6">
@@ -30,9 +30,9 @@ export default async function NoAccessPage() {
       </div>
       <div>
         <ActionLink
-          href={isVet ? VET_HOME_PATH : DEFAULT_SIGNED_IN_PATH}
-          label={isVet ? n.goToAppointments : t.nav.home}
-          icon={isVet ? CalendarClock : Home}
+          href={isDoctor ? DOCTOR_HOME_PATH : DEFAULT_SIGNED_IN_PATH}
+          label={isDoctor ? n.goToAppointments : t.nav.home}
+          icon={isDoctor ? CalendarClock : Home}
           variant="primary"
           iconOnlyOnMobile={false}
         />

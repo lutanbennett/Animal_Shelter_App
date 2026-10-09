@@ -14,7 +14,7 @@ export default async function NewWeightPage(props: PageProps<"/weight/new">) {
   const { t, locale } = await getT();
 
   const residentId = searchParams.residentId;
-  const vetAppointmentId = searchParams.vetAppointmentId;
+  const clinicVisitId = searchParams.clinicVisitId;
 
   if (typeof residentId !== "string" || !residentId) {
     return (
@@ -36,18 +36,18 @@ export default async function NewWeightPage(props: PageProps<"/weight/new">) {
   // "Log weight" on a visit that already has its reading goes to that
   // reading instead: one weight per visit (0106), so the only thing to do
   // there is correct it.
-  if (typeof vetAppointmentId === "string" && vetAppointmentId) {
+  if (typeof clinicVisitId === "string" && clinicVisitId) {
     const { data: onVisit } = await supabase
       .from("weight")
       .select("id")
       .is("archived_at", null)
-      .eq("clinic_visit_id", vetAppointmentId)
+      .eq("clinic_visit_id", clinicVisitId)
       .limit(1)
       .returns<{ id: string }[]>();
     if (onVisit?.[0]) redirect(`/weight/${onVisit[0].id}/edit`);
   }
 
-  const [residentResult, vetAppointmentsResult, stateResult, readingsResult] =
+  const [residentResult, clinicVisitsResult, stateResult, readingsResult] =
     await Promise.all([
       supabase
         .from("residents")
@@ -123,20 +123,20 @@ export default async function NewWeightPage(props: PageProps<"/weight/new">) {
         <p className="text-sm text-muted">{t.weight.pageSubtitle}</p>
       </div>
 
-      {vetAppointmentsResult.error && (
+      {clinicVisitsResult.error && (
         <p className="text-sm text-danger">
-          {t.weight.couldntLoadVetAppointments}: {vetAppointmentsResult.error}
+          {t.weight.couldntLoadVetAppointments}: {clinicVisitsResult.error}
         </p>
       )}
 
       <WeightForm
         residentId={residentId}
         residentDisplayName={displayName}
-        vetAppointments={vetAppointmentsResult.visits}
+        clinicVisits={clinicVisitsResult.visits}
         readings={readings}
-        preselectedVetAppointmentId={
-          typeof vetAppointmentId === "string" && vetAppointmentId
-            ? vetAppointmentId
+        preselectedClinicVisitId={
+          typeof clinicVisitId === "string" && clinicVisitId
+            ? clinicVisitId
             : null
         }
         previousReading={

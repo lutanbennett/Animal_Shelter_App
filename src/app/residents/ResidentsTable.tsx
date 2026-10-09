@@ -152,7 +152,7 @@ export function ResidentsTable({
                 ? t.residents.list.bookVetVisitCount(selected.size)
                 : t.residents.list.bookVetVisit
             }
-            icon={SECTION_ICONS["vet-appointments"]}
+            icon={SECTION_ICONS["clinic-visits"]}
           />
           <ActionLink
             href="/residents/new"

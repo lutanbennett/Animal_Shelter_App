@@ -62,7 +62,7 @@ export type ArchiveAppointment = {
   id: string;
   appointmentDate: string;
   status: string;
-  vetName: string | null;
+  clinicName: string | null;
   doctorName: string | null;
   reason: string | null;
   notes: string | null;
@@ -274,7 +274,7 @@ type AppointmentRow = {
   reason: string | null;
   doctor_name: string | null;
   notes: string | null;
-  vets: { name: string } | null;
+  clinics: { name: string } | null;
 };
 
 type DietRow = {
@@ -396,7 +396,7 @@ export async function loadResidentArchiveRecord(
       .returns<ImmunizationRow[]>(),
     supabase
       .from("clinic_visits")
-      .select("id, appointment_date, status, reason, doctor_name, notes, vets(name)")
+      .select("id, appointment_date, status, reason, doctor_name, notes, clinics(name)")
       .is("archived_at", null)
       .eq("resident_id", residentId)
       .order("appointment_date", { ascending: false })
@@ -539,7 +539,7 @@ export async function loadResidentArchiveRecord(
       id: row.id,
       appointmentDate: row.appointment_date,
       status: row.status,
-      vetName: row.vets?.name ?? null,
+      clinicName: row.clinics?.name ?? null,
       doctorName: row.doctor_name,
       reason: row.reason,
       notes: row.notes,

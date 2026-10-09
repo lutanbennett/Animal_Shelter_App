@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { loadClinicScope, scopeAllowsClinic } from "@/lib/clinics/scope";
 
-export type VetVisitEditState = { error: string } | undefined;
+export type ClinicVisitEditState = { error: string } | undefined;
 
 const STATUSES = ["scheduled", "completed", "cancelled"] as const;
 
@@ -18,16 +18,16 @@ function str(formData: FormData, key: string): string | null {
 }
 
 /**
- * Updates one visit: vet, doctor, date/time, status, reason, notes and — after
+ * Updates one visit: clinic, doctor, date/time, status, reason, notes and — after
  * the visit, from the invoice — the cost (0053). Rows for a deceased
  * resident are locked (0026), which the page refuses to show a form for.
  * RLS filters rather than rejects, so a volunteer's update matches no
  * row and reads as "not authorised".
  */
-export async function updateVetVisit(
-  _state: VetVisitEditState,
+export async function updateClinicVisit(
+  _state: ClinicVisitEditState,
   formData: FormData,
-): Promise<VetVisitEditState> {
+): Promise<ClinicVisitEditState> {
   const { t } = await getT();
   const e = t.vetVisits.errors;
 
@@ -55,8 +55,8 @@ export async function updateVetVisit(
   }
 
   const supabase = await createClient();
-  // Same rule as the page (src/lib/clinics/scope.ts): a vet may keep the
-  // visit's current clinic or choose their own, nothing else.
+  // Same rule as the page (src/lib/clinics/scope.ts): a doctor login may
+  // keep the visit's current clinic or choose another of its own, nothing else.
   const scope = await loadClinicScope(supabase);
   if (scope.kind === "unlinked") return { error: t.vetVisits.noClinicForAccount };
   let doctorName = str(formData, "doctorName");
@@ -69,7 +69,7 @@ export async function updateVetVisit(
       .returns<{ clinic_id: string | null; doctor_name: string | null }[]>();
     if (!scopeAllowsClinic(scope, clinicId, current?.[0]?.clinic_id)) return { error: e.notYourClinic };
     // Locked Doctor (Lutan, 2026-10-01): the visit's own doctor stays, a
-    // visit with none becomes the vet's own. Not trusted from the form.
+    // visit with none becomes the doctor login's own. Not trusted from the form.
     if (scope.doctorName) doctorName = current?.[0]?.doctor_name ?? scope.doctorName;
   }
 
@@ -97,8 +97,8 @@ export async function updateVetVisit(
   if (!data || data.length === 0) return { error: e.notAuthorized };
 
   revalidatePath(`/residents/${residentId}`);
-  revalidatePath(`/residents/${residentId}/vet-appointments`);
+  revalidatePath(`/residents/${residentId}/clinic-visits`);
   revalidatePath(`/clinics/${clinicId}`, "page");
   revalidatePath("/clinics");
-  redirect(`/residents/${residentId}/vet-appointments`);
+  redirect(`/residents/${residentId}/clinic-visits`);
 }

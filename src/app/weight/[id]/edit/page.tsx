@@ -9,7 +9,7 @@ import { WeightForm, type ExistingReading, type WeightInitial } from "../../Weig
 
 /**
  * Reached from a reading's Edit link on the resident's Weight tab, from
- * "Edit weight" on a vet visit that has its reading, and from the same-day
+ * "Edit weight" on a clinic visit that has its reading, and from the same-day
  * notice on /weight/new. Correcting a reading edits its row: a resident has
  * one weight per day and a visit one weight (0106), so a second row is never
  * the way to fix a typo. A deceased resident's record is closed, so the
@@ -103,7 +103,7 @@ export default async function EditWeightPage(props: PageProps<"/weight/[id]/edit
       <WeightForm
         residentId={residentId}
         residentDisplayName={displayName}
-        vetAppointments={visitsResult.visits}
+        clinicVisits={visitsResult.visits}
         readings={readingsResult.data ?? []}
         initial={{
           id: reading.id,

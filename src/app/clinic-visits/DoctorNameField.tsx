@@ -5,29 +5,29 @@ import type { DoctorNamesByClinic } from "@/lib/clinics/doctors";
 
 /**
  * The optional Doctor field on the booking and edit forms: free text, with
- * the names already recorded against the chosen vet offered as a datalist
- * so a name is typed once and picked after that. The list follows the vet
- * select, so the form passes the currently selected vet id.
+ * the names already recorded against the chosen clinic offered as a datalist
+ * so a name is typed once and picked after that. The list follows the clinic
+ * select, so the form passes the currently selected clinic id.
  *
- * `lockedName` is a linked vet's own doctor entry (Lutan, 2026-10-01): when
- * a vet records a visit the Doctor is themselves, shown but not editable,
+ * `lockedName` is a doctor login's own doctor entry (Lutan, 2026-10-01):
+ * when a doctor records a visit the Doctor is themselves, shown but not editable,
  * and sent as a hidden field. The action sets it again server-side.
  */
 export function DoctorNameField({
   clinicId,
-  namesByVet,
+  namesByClinic,
   lockedName,
   defaultValue,
   className,
 }: {
   clinicId: string;
-  namesByVet: DoctorNamesByClinic;
+  namesByClinic: DoctorNamesByClinic;
   lockedName?: string | null;
   defaultValue?: string;
   className: string;
 }) {
   const { t } = useI18n();
-  const names = namesByVet[clinicId] ?? [];
+  const names = namesByClinic[clinicId] ?? [];
 
   if (lockedName) {
     return (

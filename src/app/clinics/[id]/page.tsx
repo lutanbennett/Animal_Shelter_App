@@ -7,21 +7,21 @@ import {
   ClinicHub,
   type HubDoctor,
   type LinkedRecord,
-  type Vet,
-  type VetHubVisit,
+  type Clinic,
+  type ClinicHubVisit,
 } from "./ClinicHub";
 
-export default async function VetPage(props: PageProps<"/clinics/[id]">) {
+export default async function ClinicPage(props: PageProps<"/clinics/[id]">) {
   const { id } = await props.params;
   const { supabase, perms } = await requirePermission("clinics.list", "read");
 
-  // Records logged against this vet's visits are counted on the hub. Each
+  // Records logged against this clinic's visits are counted on the hub. Each
   // is fetched through its clinic_visit_id with an inner join filtered
-  // on the vet, so one round-trip per table and no id list in the URL.
+  // on the clinic, so one round-trip per table and no id list in the URL.
   const linkedSelect = "id, clinic_visit_id, clinic_visits!inner(clinic_id)";
 
   const [
-    vetResult,
+    clinicResult,
     visitsResult,
     proceduresResult,
     bloodTestsResult,
@@ -31,10 +31,10 @@ export default async function VetPage(props: PageProps<"/clinics/[id]">) {
     await Promise.all([
       supabase
         .from("clinics")
-        .select("id, name, name_th, clinic_name, contact_info, notes")
+        .select("id, name, name_th, contact_info, notes")
         .eq("id", id)
         .limit(1)
-        .returns<(Vet & { name_th: string | null })[]>(),
+        .returns<(Clinic & { name_th: string | null })[]>(),
       supabase
         .from("clinic_visits")
         .select(
@@ -43,7 +43,7 @@ export default async function VetPage(props: PageProps<"/clinics/[id]">) {
         .is("archived_at", null)
         .eq("clinic_id", id)
         .order("appointment_date", { ascending: false })
-        .returns<VetHubVisit[]>(),
+        .returns<ClinicHubVisit[]>(),
       supabase
         .from("procedures")
         .select(linkedSelect)
@@ -64,7 +64,7 @@ export default async function VetPage(props: PageProps<"/clinics/[id]">) {
         .is("archived_at", null)
         .returns<LinkedRecord[]>(),
       // The clinic's doctor list (0102, links 0125). Read-only here; corrected
-      // under Management → Vets → Doctors. `active` is the link's: a doctor
+      // under Management → Clinics → Doctors. `active` is the link's: a doctor
       // who left this clinic may still work at another.
       supabase
         .from("doctor_clinics")
@@ -79,16 +79,16 @@ export default async function VetPage(props: PageProps<"/clinics/[id]">) {
         })),
     ]);
 
-  // A query error must not look like a missing vet — surface it, not a 404.
-  if (vetResult.error) throw new Error(vetResult.error.message);
-  const row = vetResult.data?.[0];
+  // A query error must not look like a missing clinic — surface it, not a 404.
+  if (clinicResult.error) throw new Error(clinicResult.error.message);
+  const row = clinicResult.data?.[0];
   if (!row) notFound();
-  const vet: Vet = { ...row, name: localLabel(await getLocale(), row.name, row.name_th) };
+  const clinic: Clinic = { ...row, name: localLabel(await getLocale(), row.name, row.name_th) };
   if (visitsResult.error) throw new Error(visitsResult.error.message);
 
   return (
     <ClinicHub
-      vet={vet}
+      clinic={clinic}
       visits={visitsResult.data ?? []}
       linked={{
         procedures: proceduresResult.data ?? [],

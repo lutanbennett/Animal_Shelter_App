@@ -10,30 +10,29 @@ import {
   visitsInPeriod,
   type ClinicVisit,
 } from "@/lib/clinics/stats";
-import { ClinicGrid, type VetSummary } from "./ClinicGrid";
+import { ClinicGrid, type ClinicSummary } from "./ClinicGrid";
 
-type VetRow = {
+type ClinicRow = {
   id: string;
   name: string;
   name_th: string | null;
-  clinic_name: string | null;
   contact_info: string | null;
 };
 
 type VisitRow = ClinicVisit & { clinic_id: string };
 
-export default async function VetsPage() {
+export default async function ClinicsPage() {
   const { t, locale } = await getT();
   const { supabase, perms } = await requirePermission("clinics.list", "read");
 
-  // Every visit is loaded once and bucketed per vet here — the same rows
+  // Every visit is loaded once and bucketed per clinic here — the same rows
   // the hub reads, so the numbers on the cards match the numbers inside.
-  const [vetsResult, visitsResult] = await Promise.all([
+  const [clinicsResult, visitsResult] = await Promise.all([
     supabase
       .from("clinics")
-      .select("id, name, name_th, clinic_name, contact_info")
+      .select("id, name, name_th, contact_info")
       .order("name")
-      .returns<VetRow[]>(),
+      .returns<ClinicRow[]>(),
     supabase
       .from("clinic_visits")
       .select("id, clinic_id, resident_id, appointment_date, status, reason")
@@ -43,20 +42,20 @@ export default async function VetsPage() {
   ]);
 
   const now = new Date();
-  const byVet = new Map<string, ClinicVisit[]>();
+  const byClinic = new Map<string, ClinicVisit[]>();
   for (const row of visitsResult.data ?? []) {
-    const list = byVet.get(row.clinic_id) ?? [];
+    const list = byClinic.get(row.clinic_id) ?? [];
     list.push(row);
-    byVet.set(row.clinic_id, list);
+    byClinic.set(row.clinic_id, list);
   }
 
-  const vets: VetSummary[] = (vetsResult.data ?? []).map((vet) => {
-    const visits = byVet.get(vet.id) ?? [];
+  const clinics: ClinicSummary[] = (clinicsResult.data ?? []).map((clinic) => {
+    const visits = byClinic.get(clinic.id) ?? [];
     const happened = visitsInPeriod(visits, null, now);
     const schedule = scheduleSummary(visits, now);
     return {
-      ...vet,
-      name: localLabel(locale, vet.name, vet.name_th),
+      ...clinic,
+      name: localLabel(locale, clinic.name, clinic.name_th),
       visitCount: happened.length,
       residentCount: new Set(happened.map((v) => v.resident_id)).size,
       upcomingCount: schedule.upcoming.length,
@@ -79,9 +78,9 @@ export default async function VetsPage() {
         )}
       </div>
 
-      {vetsResult.error && (
+      {clinicsResult.error && (
         <p className="text-sm text-danger">
-          {t.vets.couldntLoadVets}: {vetsResult.error.message}
+          {t.vets.couldntLoadVets}: {clinicsResult.error.message}
         </p>
       )}
       {visitsResult.error && (
@@ -90,7 +89,7 @@ export default async function VetsPage() {
         </p>
       )}
 
-      <ClinicGrid vets={vets} />
+      <ClinicGrid clinics={clinics} />
     </main>
   );
 }

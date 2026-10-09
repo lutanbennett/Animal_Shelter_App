@@ -40,7 +40,7 @@ export async function sendToHospital(
     revalidatePath("/residents");
     revalidatePath(`/residents/${residentId}`);
     revalidatePath(`/residents/${residentId}/housing`);
-    revalidatePath(`/residents/${residentId}/vet-appointments`);
+    revalidatePath(`/residents/${residentId}/clinic-visits`);
     // Occupancy on the enclosure browser and both enclosure hubs changes too.
     revalidatePath("/enclosures", "layout");
     redirect(`/residents/${residentId}`);

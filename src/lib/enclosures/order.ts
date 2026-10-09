@@ -11,7 +11,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * as numbers. That is the Lifecycle pseudo-zone and its pseudo-enclosures,
  * which take no order on purpose (0161 refuses one), and every place for a
  * reader the tables' policy turns away, who keeps name order. (0161's header
- * expected that to be the vet; on dev on 2026-10-08 the vet read all 18 zones,
+ * expected that to be the vet role; on dev on 2026-10-08 that login read all 18 zones,
  * scripts/check-place-order-roles.mjs.)
  */
 
@@ -57,7 +57,7 @@ export function enclosuresInShelterOrder<T extends Ordered & { zone_id: string }
  * carry zone and enclosure names but not the order (0161's header): the
  * order read from the tables once, as two comparators. A zone is known by
  * name (the views' grouping key), an enclosure by id. Anything the reader
- * cannot see — the vet, or a place added since — sorts last by name.
+ * cannot see — a doctor login, or a place added since — sorts last by name.
  */
 export type PlaceOrder = {
   compareZones: (a: string | null | undefined, b: string | null | undefined) => number;

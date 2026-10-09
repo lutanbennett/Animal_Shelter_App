@@ -79,7 +79,7 @@ export function homeTilesFor(perms: Permissions, t: Dictionary): HomeTile[] {
   }
 
   // The Director's daytime screen (the whiteboard's Management column, 2026-10-03): a few big tiles on a
-  // phone, not every page Management can open. Vet visits, medical records and a resident's details are
+  // phone, not every page Management can open. Clinic visits, medical records and a resident's details are
   // tabs on a resident, so they are reached through the Residents tile and need no tile of their own.
   const curated = CURATED_HOME[perms.role.key];
   if (curated) return curated(perms, t);

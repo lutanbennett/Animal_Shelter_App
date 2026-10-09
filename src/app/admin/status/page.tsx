@@ -357,7 +357,7 @@ async function Usage({ t, locale, days }: { t: T; locale: Locale; days: UsagePer
         {r.records.facts ? (
           <>
             <Figure label={u.records.residents} value={r.records.facts.residents} />
-            <Figure label={u.records.vetVisits} value={r.records.facts.vetVisits} />
+            <Figure label={u.records.vetVisits} value={r.records.facts.clinicVisits} />
             <Figure label={u.records.weights} value={r.records.facts.weights} />
             <Figure label={u.records.maintenanceJobs} value={r.records.facts.maintenanceJobs} />
           </>

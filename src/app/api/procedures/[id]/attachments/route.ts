@@ -42,7 +42,7 @@ async function handlePost(
 
   // The activity 0152 asks of this owner_type, in the attachments policies and record_attachment().
   // Asked here, before Drive is touched, so a refused upload cannot orphan a file. The clinic scope is
-  // left to the database (sees_all_clinical(); the vet has no cell rows yet, so is refused here as before).
+  // left to the database (sees_all_clinical(); the doctor has no cell rows yet, so is refused here as before).
   const perms = await loadPermissions();
   if (!can(perms, "medical.procedures")) {
     const { t } = await getT();
@@ -82,7 +82,7 @@ async function handlePost(
   // Every role can read procedures (0001), so the lookup itself isn't the
   // gate: the medical.procedures check above and record_attachment()'s own role
   // check are, and both let staff/volunteers attach files to a record a
-  // vet created (decisions.md: volunteers may write "attachments/photos,
+  // doctor created (decisions.md: volunteers may write "attachments/photos,
   // any owner type").
   const { data: procedure, error: procedureError } = await supabase
     .from("procedures")

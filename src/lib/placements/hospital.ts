@@ -43,7 +43,7 @@ export type ReturnFromHospitalResult =
  * the same statement (see 0001 / 0024), so this is a single insert.
  *
  * Shared by the hub's send-to-hospital page, which is reached from the
- * Housing card, the housing section and individual vet visit records.
+ * Housing card, the housing section and individual clinic visit records.
  */
 export async function sendResidentToHospital(
   supabase: SupabaseClient,
@@ -52,7 +52,7 @@ export async function sendResidentToHospital(
 ): Promise<SendToHospitalResult> {
   const errors = t.residents.hospital.errors;
 
-  // RLS would reject the insert for a vet or volunteer with a raw policy
+  // RLS would reject the insert for a doctor or volunteer with a raw policy
   // error — say why.
   if (!can(await loadPermissions(), "placement.hospital")) {
     return { error: t.residents.hospital.notAuthorized };
@@ -152,7 +152,7 @@ export async function returnResidentFromHospital(
 ): Promise<ReturnFromHospitalResult> {
   const errors = t.residents.hospitalReturn.errors;
 
-  // RLS would reject the insert for a vet or volunteer with a raw policy
+  // RLS would reject the insert for a doctor or volunteer with a raw policy
   // error — say why.
   if (!can(await loadPermissions(), "placement.hospital")) {
     return { error: t.residents.hospitalReturn.notAuthorized };

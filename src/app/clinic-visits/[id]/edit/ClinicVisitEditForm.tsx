@@ -5,13 +5,13 @@ import { ActionButton } from "@/components/ActionButton";
 import Link from "next/link";
 import { useState } from "react";
 import { useKeptForm } from "@/lib/use-kept-form";
-import { updateVetVisit } from "./actions";
+import { updateClinicVisit } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { vetOptionLabel, type VetOption } from "@/app/clinic-visits/new/ClinicVisitForm";
+import type { ClinicOption } from "@/app/clinic-visits/new/ClinicVisitForm";
 import type { DoctorNamesByClinic } from "@/lib/clinics/doctors";
 import { DoctorNameField } from "../../DoctorNameField";
 
-export type VetVisitInitial = {
+export type ClinicVisitInitial = {
   id: string;
   resident_id: string;
   clinic_id: string | null;
@@ -37,34 +37,34 @@ function toLocalInput(iso: string): string {
  * Edits one visit after it's booked — the booking form is for several
  * residents at once and has no cancelled state, so this is its own
  * single-row form: mark the visit completed or cancelled, fix the date or
- * vet, and record what it cost from the invoice.
+ * clinic, and record what it cost from the invoice.
  */
 export function ClinicVisitEditForm({
   visit,
-  vets,
-  fixedVet,
+  clinics,
+  fixedClinic,
   lockedDoctor,
-  doctorNamesByVet,
+  doctorNamesByClinic,
   residentDisplayName,
   cancelHref,
 }: {
-  visit: VetVisitInitial;
-  vets: VetOption[];
-  /** A vet account's only clinic, when that is the only one on offer (src/lib/clinics/scope.ts). */
-  fixedVet: VetOption | null;
+  visit: ClinicVisitInitial;
+  clinics: ClinicOption[];
+  /** A doctor login's only current clinic, when that is the only one on offer (src/lib/clinics/scope.ts). */
+  fixedClinic: ClinicOption | null;
   /**
-   * A linked vet's Doctor field, locked: the visit's own doctor if it has
-   * one (a vet does not reassign a colleague's visit), otherwise themselves.
+   * A doctor login's Doctor field, locked: the visit's own doctor if it has
+   * one (a doctor does not reassign a colleague's visit), otherwise themselves.
    */
   lockedDoctor: string | null;
-  doctorNamesByVet: DoctorNamesByClinic;
+  doctorNamesByClinic: DoctorNamesByClinic;
   residentDisplayName: string;
   cancelHref: string;
 }) {
-  const [state, onSubmit, pending] = useKeptForm(updateVetVisit, undefined);
+  const [state, onSubmit, pending] = useKeptForm(updateClinicVisit, undefined);
   const { t } = useI18n();
   const v = t.vetVisits;
-  const [clinicId, setVetId] = useState(fixedVet?.id ?? visit.clinic_id ?? "");
+  const [clinicId, setClinicId] = useState(fixedClinic?.id ?? visit.clinic_id ?? "");
 
   return (
     <form onSubmit={onSubmit} className="flex max-w-3xl flex-col gap-6">
@@ -78,11 +78,11 @@ export function ClinicVisitEditForm({
           <label htmlFor="clinicId" className="text-sm font-medium text-muted">
             {v.vetClinic}
           </label>
-          {fixedVet ? (
+          {fixedClinic ? (
             <>
-              <input type="hidden" name="clinicId" value={fixedVet.id} />
+              <input type="hidden" name="clinicId" value={fixedClinic.id} />
               <p id="clinicId" className="py-2 text-sm text-foreground">
-                {vetOptionLabel(fixedVet)}
+                {fixedClinic.name}
               </p>
               <p className="text-xs text-muted">{v.ownClinicHint}</p>
             </>
@@ -92,15 +92,15 @@ export function ClinicVisitEditForm({
             name="clinicId"
             required
             value={clinicId}
-            onChange={(e) => setVetId(e.target.value)}
+            onChange={(e) => setClinicId(e.target.value)}
             className={inputClass}
           >
             <option value="" disabled>
               {v.selectVet}
             </option>
-            {vets.map((vet) => (
-              <option key={vet.id} value={vet.id}>
-                {vetOptionLabel(vet)}
+            {clinics.map((clinic) => (
+              <option key={clinic.id} value={clinic.id}>
+                {clinic.name}
               </option>
             ))}
           </select>
@@ -109,7 +109,7 @@ export function ClinicVisitEditForm({
 
         <DoctorNameField
           clinicId={clinicId}
-          namesByVet={doctorNamesByVet}
+          namesByClinic={doctorNamesByClinic}
           lockedName={lockedDoctor}
           defaultValue={visit.doctor_name ?? ""}
           className={inputClass}

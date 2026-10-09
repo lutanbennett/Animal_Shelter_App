@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { refuseFor } from "@/lib/auth/require-role";
-import { safeNextPath, VET_HOME_PATH } from "@/lib/auth/next-path";
+import { safeNextPath, DOCTOR_HOME_PATH } from "@/lib/auth/next-path";
 import { loadPermissions } from "@/lib/permissions/load";
 import { deviceFrom } from "@/lib/home/device";
 import { listHomeRoles } from "@/lib/home/roles";
@@ -16,7 +16,7 @@ import { HomeTiles } from "@/components/HomeTiles";
  *  - Admin: one login, the home follows the device. A phone goes to the Management home, anything
  *    larger to Settings (src/lib/home/device.ts). The switch on both opens the others.
  *  - A role with a configured landing page (`roles.home_path`): there.
- *  - A role whose clinical scope is its own clinic (the vet): its appointments, as before. The
+ *  - A role whose clinical scope is its own clinic (the doctor): its appointments, as before. The
  *    test is the scope, not the role's name.
  *  - Everyone else: their own home, one tile per page they may open (src/lib/home/tiles.ts).
  *
@@ -43,7 +43,7 @@ export default async function HomePage() {
 
   const configured = safeNextPath(perms.role.homePath);
   if (configured && configured !== "/home") redirect(configured);
-  if (perms.scopes.clinical === "own_clinic") redirect(VET_HOME_PATH);
+  if (perms.scopes.clinical === "own_clinic") redirect(DOCTOR_HOME_PATH);
 
   const { t } = await getT();
   const tiles = homeTilesFor(perms, t);

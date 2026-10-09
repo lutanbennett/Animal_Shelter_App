@@ -4,19 +4,18 @@ import { ActionButton } from "@/components/ActionButton";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useState, useTransition } from "react";
 import Link from "next/link";
-import { deleteVet, updateVet } from "./actions";
+import { deleteClinic, updateClinic } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { RowActionButton } from "@/components/RowAction";
 
-export type VetRow = {
+export type ClinicRow = {
   id: string;
   name: string;
   name_th: string | null;
-  clinic_name: string | null;
   contact_info: string | null;
   notes: string | null;
-  /** Logged visits, all statuses — a vet with any can't be deleted. */
+  /** Logged visits, all statuses — a clinic with any can't be deleted. */
   visit_count: number;
   /** Doctors on the clinic's list (doctors), active or not. */
   doctor_count: number;
@@ -25,14 +24,13 @@ export type VetRow = {
 const inputClass =
   "w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary";
 
-function VetRowItem({ vet }: { vet: VetRow }) {
+function ClinicRowItem({ clinic }: { clinic: ClinicRow }) {
   const { t } = useI18n();
   const confirm = useConfirm();
-  const [name, setName] = useState(vet.name);
-  const [nameTh, setNameTh] = useState(vet.name_th ?? "");
-  const [clinicName, setClinicName] = useState(vet.clinic_name ?? "");
-  const [contactInfo, setContactInfo] = useState(vet.contact_info ?? "");
-  const [notes, setNotes] = useState(vet.notes ?? "");
+  const [name, setName] = useState(clinic.name);
+  const [nameTh, setNameTh] = useState(clinic.name_th ?? "");
+  const [contactInfo, setContactInfo] = useState(clinic.contact_info ?? "");
+  const [notes, setNotes] = useState(clinic.notes ?? "");
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState<
     { type: "error" | "success"; text: string } | null
@@ -40,17 +38,16 @@ function VetRowItem({ vet }: { vet: VetRow }) {
   const [isPending, startTransition] = useTransition();
 
   function reset() {
-    setName(vet.name);
-    setNameTh(vet.name_th ?? "");
-    setClinicName(vet.clinic_name ?? "");
-    setContactInfo(vet.contact_info ?? "");
-    setNotes(vet.notes ?? "");
+    setName(clinic.name);
+    setNameTh(clinic.name_th ?? "");
+    setContactInfo(clinic.contact_info ?? "");
+    setNotes(clinic.notes ?? "");
   }
 
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
-      const result = await updateVet(vet.id, { name, nameTh, clinicName, contactInfo, notes });
+      const result = await updateClinic(clinic.id, { name, nameTh, contactInfo, notes });
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
         return;
@@ -61,10 +58,10 @@ function VetRowItem({ vet }: { vet: VetRow }) {
   }
 
   async function handleDelete() {
-    if (!await confirm({ body: t.management.vets.deleteConfirm(vet.name), confirmLabel: t.common.delete })) return;
+    if (!await confirm({ body: t.management.vets.deleteConfirm(clinic.name), confirmLabel: t.common.delete })) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await deleteVet(vet.id);
+      const result = await deleteClinic(clinic.id);
       if (!result.ok) setMessage({ type: "error", text: result.error });
     });
   }
@@ -93,29 +90,17 @@ function VetRowItem({ vet }: { vet: VetRow }) {
           ) : (
             <div className="flex flex-col">
               <Link
-                href={`/clinics/${vet.id}`}
+                href={`/clinics/${clinic.id}`}
                 className="font-medium text-foreground hover:underline"
               >
-                {vet.name}
+                {clinic.name}
               </Link>
-              {vet.name_th && (
+              {clinic.name_th && (
                 <span lang="th" className="text-sm text-foreground">
-                  {vet.name_th}
+                  {clinic.name_th}
                 </span>
               )}
             </div>
-          )}
-        </td>
-        <td className="px-4 py-2">
-          {editing ? (
-            <input
-              value={clinicName}
-              onChange={(e) => setClinicName(e.target.value)}
-              placeholder={t.management.vets.createForm.clinicPlaceholder}
-              className={`${inputClass} min-w-40`}
-            />
-          ) : (
-            <span className="text-muted">{vet.clinic_name ?? t.common.dash}</span>
           )}
         </td>
         <td className="px-4 py-2">
@@ -129,7 +114,7 @@ function VetRowItem({ vet }: { vet: VetRow }) {
             />
           ) : (
             <span className="whitespace-pre-line text-muted">
-              {vet.contact_info ?? t.common.dash}
+              {clinic.contact_info ?? t.common.dash}
             </span>
           )}
         </td>
@@ -143,21 +128,21 @@ function VetRowItem({ vet }: { vet: VetRow }) {
               className={`${inputClass} min-w-56`}
             />
           ) : (
-            <span className="whitespace-pre-line text-muted">{vet.notes ?? t.common.dash}</span>
+            <span className="whitespace-pre-line text-muted">{clinic.notes ?? t.common.dash}</span>
           )}
         </td>
         <td className="px-4 py-2 text-muted">
-          <Link href={`/clinics/${vet.id}`} className="hover:underline">
-            {t.management.vets.table.visitCount(vet.visit_count)}
+          <Link href={`/clinics/${clinic.id}`} className="hover:underline">
+            {t.management.vets.table.visitCount(clinic.visit_count)}
           </Link>
         </td>
         <td className="px-4 py-2">
           <Link
-            href={`/management/clinics/${vet.id}/doctors`}
+            href={`/management/clinics/${clinic.id}/doctors`}
             className="whitespace-nowrap text-primary hover:underline"
           >
-            {vet.doctor_count > 0
-              ? t.management.vets.table.doctorCount(vet.doctor_count)
+            {clinic.doctor_count > 0
+              ? t.management.vets.table.doctorCount(clinic.doctor_count)
               : t.management.vets.table.noDoctors}
           </Link>
         </td>
@@ -184,20 +169,20 @@ function VetRowItem({ vet }: { vet: VetRow }) {
               <RowActionButton
                 onClick={() => setEditing(true)}
                 label={t.common.edit}
-                subject={vet.name}
+                subject={clinic.name}
                 icon={ACTION_ICONS.edit}
               />
             )}
             <RowActionButton
-              disabled={isPending || vet.visit_count > 0}
+              disabled={isPending || clinic.visit_count > 0}
               onClick={handleDelete}
               label={t.common.delete}
               hint={
-                vet.visit_count > 0
-                  ? t.management.vets.errors.hasVisits(vet.visit_count)
+                clinic.visit_count > 0
+                  ? t.management.vets.errors.hasVisits(clinic.visit_count)
                   : undefined
               }
-              subject={vet.name}
+              subject={clinic.name}
               icon={ACTION_ICONS.delete}
               tone="danger"
             />
@@ -207,7 +192,7 @@ function VetRowItem({ vet }: { vet: VetRow }) {
       {message && (
         <tr>
           <td
-            colSpan={7}
+            colSpan={6}
             className={`px-4 pb-2 text-xs ${
               message.type === "error" ? "text-danger" : "text-success"
             }`}
@@ -220,7 +205,7 @@ function VetRowItem({ vet }: { vet: VetRow }) {
   );
 }
 
-export function ClinicsTable({ vets }: { vets: VetRow[] }) {
+export function ClinicsTable({ clinics }: { clinics: ClinicRow[] }) {
   const { t } = useI18n();
 
   return (
@@ -229,7 +214,6 @@ export function ClinicsTable({ vets }: { vets: VetRow[] }) {
         <thead className="bg-surface text-muted">
           <tr>
             <th className="px-4 py-2 font-medium">{t.management.vets.table.name}</th>
-            <th className="px-4 py-2 font-medium">{t.management.vets.table.clinic}</th>
             <th className="px-4 py-2 font-medium">{t.management.vets.table.contact}</th>
             <th className="px-4 py-2 font-medium">{t.management.vets.table.notes}</th>
             <th className="px-4 py-2 font-medium">{t.management.vets.table.visits}</th>
@@ -238,12 +222,12 @@ export function ClinicsTable({ vets }: { vets: VetRow[] }) {
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
-          {vets.map((vet) => (
-            <VetRowItem key={vet.id} vet={vet} />
+          {clinics.map((clinic) => (
+            <ClinicRowItem key={clinic.id} clinic={clinic} />
           ))}
-          {vets.length === 0 && (
+          {clinics.length === 0 && (
             <tr>
-              <td colSpan={7} className="px-4 py-6 text-center text-muted">
+              <td colSpan={6} className="px-4 py-6 text-center text-muted">
                 {t.management.vets.table.noVets}
               </td>
             </tr>

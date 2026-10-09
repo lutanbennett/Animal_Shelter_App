@@ -1,14 +1,15 @@
 /**
  * "Book a vet visit for Panda with Dr Somchai on Friday at 10am" — the
- * demo's second intent, unchanged except that it now runs after the
- * hospital parsers, which also mention vets.
+ * demo's second intent, a clinic visit. It runs after the hospital
+ * parsers, which also mention vets. People still say "vet" and "หมอ", so
+ * those stay in the words it listens for, beside "clinic" and "doctor".
  */
 
 import { matchByName, matchResident, mentions, parseDate, parseTime } from "../text";
 import type { IntentParser } from "../types";
 
-const VET_RE =
-  /(?<![a-z])(vet|vets|clinic|appointment|check-?up|vaccin[a-z]*|book)(?![a-z])|หมอ|สัตวแพทย์|คลินิก|นัด|วัคซีน/i;
+const CLINIC_RE =
+  /(?<![a-z])(vet|vets|clinic|clinics|doctor|doctors|dr|appointment|check-?up|vaccin[a-z]*|book)(?![a-z])|หมอ|สัตวแพทย์|คลินิก|นัด|วัคซีน/i;
 
 const REASONS = [
   "checkup",
@@ -28,8 +29,8 @@ const REASONS = [
   "x-ray",
 ];
 
-// Words a vet's name is matched on must be more than a title.
-const VET_STOPWORDS = new Set(["dr", "dr.", "doctor", "vet", "clinic", "the", "and"]);
+// Words a clinic's name is matched on must be more than a title.
+const CLINIC_STOPWORDS = new Set(["dr", "dr.", "doctor", "vet", "clinic", "clinics", "the", "and"]);
 
 // Words that follow "doctor"/"dr" without being a name: "doctor visit",
 // "doctor tomorrow", "doctor for Panda". Ending the name here is what
@@ -87,24 +88,23 @@ export function parseDoctorName(text: string): string | null {
   return null;
 }
 
-export const vetIntent: IntentParser = {
-  intent: "vet",
+export const clinicIntent: IntentParser = {
+  intent: "clinic",
   parse(text, ctx) {
-    if (!VET_RE.test(text)) return null;
+    if (!CLINIC_RE.test(text)) return null;
     const resident = matchResident(text, ctx.residents);
-    const vet = matchByName(text, ctx.vets, (v) => [
-      v.name,
-      v.clinicName,
-      ...v.name
+    const clinic = matchByName(text, ctx.clinics, (c) => [
+      c.name,
+      ...c.name
         .toLowerCase()
         .split(/\s+/)
-        .filter((w) => w.length >= 3 && !VET_STOPWORDS.has(w)),
+        .filter((w) => w.length >= 3 && !CLINIC_STOPWORDS.has(w)),
     ]);
     return {
       draft: {
-        kind: "vet",
+        kind: "clinic",
         residentId: resident.id,
-        clinicId: vet.id,
+        clinicId: clinic.id,
         date: parseDate(text, ctx.now),
         time: parseTime(text),
         reason: REASONS.find((r) => mentions(text, r)) ?? null,

@@ -12,7 +12,7 @@ type PersonRow = {
   id: string;
   name: string;
   user_id: string | null;
-  doctor_clinics: { clinic_id: string; active: boolean; vets: { name: string } | null }[];
+  doctor_clinics: { clinic_id: string; active: boolean; clinics: { name: string } | null }[];
 };
 
 /**
@@ -24,7 +24,7 @@ type PersonRow = {
  * RLS (a visit can add a name), but a rename or merge rewrites past visits,
  * so it is a manager's correction.
  */
-export default async function VetDoctorsPage(
+export default async function ClinicDoctorsPage(
   props: PageProps<"/management/clinics/[id]/doctors">,
 ) {
   const { perms } = await requirePermission("clinics.doctors");
@@ -33,19 +33,19 @@ export default async function VetDoctorsPage(
   const d = t.management.vetDoctors;
 
   const supabase = await createClient();
-  const [vetResult, doctorsResult, visitsResult] = await Promise.all([
+  const [clinicResult, doctorsResult, visitsResult] = await Promise.all([
     supabase
       .from("clinics")
-      .select("id, name, name_th, clinic_name")
+      .select("id, name, name_th")
       .eq("id", id)
       .limit(1)
-      .returns<{ id: string; name: string; name_th: string | null; clinic_name: string | null }[]>(),
+      .returns<{ id: string; name: string; name_th: string | null }[]>(),
     // Every doctor with every clinic they work at: this clinic's roster is
     // the ones linked here, the rest are who "same person as…" and "also
     // works here" can pick from.
     supabase
       .from("doctors")
-      .select("id, name, user_id, doctor_clinics(clinic_id, active, vets(name))")
+      .select("id, name, user_id, doctor_clinics(clinic_id, active, clinics(name))")
       .returns<PersonRow[]>(),
     supabase
       .from("clinic_visits")
@@ -55,9 +55,9 @@ export default async function VetDoctorsPage(
       .returns<{ doctor_id: string; appointment_date: string }[]>(),
   ]);
 
-  if (vetResult.error) throw new Error(vetResult.error.message);
-  const vet = vetResult.data?.[0];
-  if (!vet) notFound();
+  if (clinicResult.error) throw new Error(clinicResult.error.message);
+  const clinic = clinicResult.data?.[0];
+  if (!clinic) notFound();
 
   const stats = new Map<string, { count: number; last: string }>();
   for (const visit of visitsResult.data ?? []) {
@@ -73,7 +73,7 @@ export default async function VetDoctorsPage(
     const here = person.doctor_clinics.find((link) => link.clinic_id === id);
     const otherClinics = person.doctor_clinics
       .filter((link) => link.clinic_id !== id)
-      .map((link) => link.vets?.name ?? "")
+      .map((link) => link.clinics?.name ?? "")
       .filter(Boolean)
       .sort((a, b) => a.localeCompare(b));
     if (here) {
@@ -97,11 +97,10 @@ export default async function VetDoctorsPage(
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
       <BackLink href="/management/clinics">{d.back}</BackLink>
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">{d.title(localLabel(locale, vet.name, vet.name_th))}</h1>
-        {vet.clinic_name && <p className="text-sm text-muted">{vet.clinic_name}</p>}
+        <h1 className="text-2xl font-semibold text-foreground">{d.title(localLabel(locale, clinic.name, clinic.name_th))}</h1>
         <p className="mt-1 max-w-3xl text-sm text-muted">
           {d.subtitle}{" "}
-          <Link href={`/clinics/${vet.id}`} className="text-primary hover:underline">
+          <Link href={`/clinics/${clinic.id}`} className="text-primary hover:underline">
             {d.viewHub}
           </Link>
         </p>
@@ -122,9 +121,9 @@ export default async function VetDoctorsPage(
           </p>
         )}
 
-        <AddDoctorForm clinicId={vet.id} elsewhere={elsewhere} />
+        <AddDoctorForm clinicId={clinic.id} elsewhere={elsewhere} />
         <DoctorsTable
-          clinicId={vet.id}
+          clinicId={clinic.id}
           doctors={doctors}
           elsewhere={elsewhere}
           isAdmin={perms.isAdmin}

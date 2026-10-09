@@ -4,7 +4,7 @@ import { Plus, type LucideIcon } from "lucide-react";
 
 export type StatCardTone = "success" | "warning" | "danger" | "neutral";
 
-/** Secondary link (e.g. "Book vet visit") shown at the foot of a card. */
+/** Secondary link (e.g. "Book clinic visit") shown at the foot of a card. */
 export type StatCardAction = { href: string; label: string; icon?: LucideIcon };
 
 const TONE_CLASSES: Record<StatCardTone, string> = {
@@ -42,7 +42,7 @@ export function StatCard({
   href?: string;
   /**
    * Runs alongside href, for a card whose target is on the same page and
-   * needs state set on the way (the vet hub's visit filter).
+   * needs state set on the way (the clinic hub's visit filter).
    */
   onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
   title: string;

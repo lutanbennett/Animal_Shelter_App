@@ -257,7 +257,7 @@ export function renderResidentIndexHtml(
     ["bio", "Bio & background"],
     ["housing", "Housing history"],
     ["immunizations", "Immunizations"],
-    ["appointments", "Vet appointments"],
+    ["appointments", "Clinic visits"],
     ["prescriptions", "Prescriptions"],
     ["diet", "Diet"],
     ["procedures", "Procedures"],
@@ -391,16 +391,16 @@ export function renderResidentIndexHtml(
 
     ${section(
       "appointments",
-      "Vet appointments",
+      "Clinic visits",
       table(
-        ["Date", "Vet", "Status", "Reason / notes"],
+        ["Date", "Clinic / doctor", "Status", "Reason / notes"],
         record.appointments.map((appointment) => [
           esc(day(appointment.appointmentDate)),
-          escOrDash(join([appointment.vetName, appointment.doctorName])),
+          escOrDash(join([appointment.clinicName, appointment.doctorName])),
           esc(appointment.status),
           escOrDash(join([appointment.reason, appointment.notes])),
         ]),
-        "No vet appointments recorded.",
+        "No clinic visits recorded.",
       ),
     )}
 

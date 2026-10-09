@@ -18,7 +18,7 @@ function str(formData: FormData, key: string): string | null {
 function done(residentId: string): never {
   revalidatePath(`/residents/${residentId}`);
   revalidatePath(`/residents/${residentId}/weight`);
-  revalidatePath(`/residents/${residentId}/vet-appointments`);
+  revalidatePath(`/residents/${residentId}/clinic-visits`);
   redirect(`/residents/${residentId}/weight`);
 }
 
@@ -29,7 +29,7 @@ function done(residentId: string): never {
  * When the form found a reading already on the chosen day it posts that
  * reading's id as `replaceWeightId`, and saving corrects it instead: one
  * weight per day (0106). Blank notes and visit keep the reading's own, so a
- * vet weighing an animal on its intake day links the intake reading to the
+ * doctor weighing an animal on its intake day links the intake reading to the
  * visit without wiping anything.
  */
 export async function createWeight(
@@ -53,12 +53,12 @@ export async function createWeight(
   const result = replaceWeightId
     ? await updateWeight(supabase, t, replaceWeightId, {
         ...input,
-        vetAppointmentId: str(formData, "vetAppointmentId") ?? undefined,
+        clinicVisitId: str(formData, "clinicVisitId") ?? undefined,
         notes: str(formData, "notes") ?? undefined,
       })
     : await recordWeight(supabase, t, {
         ...input,
-        vetAppointmentId: str(formData, "vetAppointmentId"),
+        clinicVisitId: str(formData, "clinicVisitId"),
         notes: str(formData, "notes"),
       });
   if ("error" in result) return result;
@@ -83,7 +83,7 @@ export async function saveWeightEdit(
     residentId,
     date: str(formData, "date") ?? "",
     weightKg: Number(weightRaw),
-    vetAppointmentId: str(formData, "vetAppointmentId"),
+    clinicVisitId: str(formData, "clinicVisitId"),
     notes: str(formData, "notes"),
   });
   if ("error" in result) return result;

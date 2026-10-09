@@ -2,23 +2,23 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { loadPermissions } from "@/lib/permissions/load";
 
 /**
- * Which clinics this session may record a vet visit against. The shelter's
- * own people book against any clinic. A login whose role has the "own
- * clinic" clinical scope (a vet) books against the clinics of the doctor
- * it is linked to (doctors.user_id, 0125),
- * set by an admin in Settings → Security; a doctor may work at several. A
- * vet account linked to no clinic is refused rather than shown every
- * clinic: Lutan's call, 2026-09-27 (docs/decisions.md).
+ * Which clinics this session may record a clinic visit against. The
+ * shelter's own people book against any clinic. A login whose role has the
+ * "own clinic" clinical scope (a doctor login) books against the clinics
+ * its doctor currently works at (doctors.user_id, active doctor_clinics
+ * links: current_user_clinic_ids(), 0172), set by an admin in Settings →
+ * Security; a doctor may work at several. A doctor login with no current
+ * clinic is refused rather than shown every clinic: Lutan's call,
+ * 2026-09-27 (docs/decisions.md).
  *
  * `doctorName` is the linked doctor's own name, which the Doctor field is
- * locked to when a vet records a visit (Lutan, 2026-10-01). Null for a
- * login that has clinics but no doctor entry yet, whose Doctor field stays
- * free text.
+ * locked to when a doctor login records a visit (Lutan, 2026-10-01).
  *
- * This is the forms' and actions' rule, not RLS: the database still lets a
- * vet write a visit for any of their clinics, on a resident they can see.
- * Which residents they can see is RLS (0108, current_clinic_resident_ids()),
- * and /residents uses this scope only to say whose list it is.
+ * This is the forms' and actions' rule for booking and editing. RLS agrees
+ * (writes need a current clinic, current_clinic_resident_ids()) but reads
+ * reach further: a doctor login also sees its own patients at any clinic it
+ * has worked at (current_doctor_resident_ids(), 0172). /residents uses this
+ * scope only to say whose list it is.
  */
 export type ClinicScope =
   | { kind: "any" }

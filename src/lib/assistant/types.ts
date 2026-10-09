@@ -24,21 +24,26 @@ export type ParserResident = {
 
 export type ParserEnclosure = { id: string; name: string; nameTh: string | null };
 
-export type ParserVet = { id: string; name: string; clinicName: string | null };
+export type ParserClinic = { id: string; name: string };
 
 /** Everything a parser may match a sentence against. */
 export type ParseContext = {
   residents: ParserResident[];
   enclosures: ParserEnclosure[];
-  vets: ParserVet[];
+  clinics: ParserClinic[];
   /** The person's own clock, so "tomorrow" is tomorrow where they are. */
   now: Date;
 };
 
-/** The parser that claimed the sentence. Stored on the audit row. */
+/**
+ * The parser that claimed the sentence. Stored on the audit row
+ * (assistant_actions.intent, and draft.kind inside draft). Rows written
+ * before 0172 say "vet" where these say "clinic"; nothing in the app reads
+ * them back, but anything that does should treat the two as one.
+ */
 export type Intent =
   | "move"
-  | "vet"
+  | "clinic"
   | "hospital"
   | "hospital-return"
   | "weight"
@@ -49,7 +54,7 @@ export type Intent =
 /** Intents that write; the rest are answered inline with no confirm step. */
 export const WRITE_INTENTS: readonly Intent[] = [
   "move",
-  "vet",
+  "clinic",
   "hospital",
   "hospital-return",
   "weight",
@@ -67,8 +72,8 @@ export type MoveDraft = {
   date: string | null;
 };
 
-export type VetVisitDraft = {
-  kind: "vet";
+export type ClinicVisitDraft = {
+  kind: "clinic";
   residentId: string | null;
   clinicId: string | null;
   date: string | null;
@@ -113,7 +118,7 @@ export type DueDraft = {
 
 export type Draft =
   | MoveDraft
-  | VetVisitDraft
+  | ClinicVisitDraft
   | HospitalDraft
   | HospitalReturnDraft
   | WeightDraft

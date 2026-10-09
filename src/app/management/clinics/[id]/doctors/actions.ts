@@ -1,7 +1,7 @@
 "use server";
 
 import { refresh, revalidatePath } from "next/cache";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runAction, unexpectedFailure, type ActionResult } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
@@ -11,7 +11,7 @@ const refuse = (error: string) => ({ ok: false as const, error });
 
 export type DoctorFormState = ActionResult<{ success: string }> | undefined;
 
-// doctor_clinics_vet_key_idx: one row per spelling (ignoring case and
+// doctor_clinics_clinic_key_idx: one row per spelling (ignoring case and
 // spacing) per clinic (0125).
 const UNIQUE_VIOLATION = "23505";
 // Row-level security refusing a write (0125): management and staff cannot
@@ -40,7 +40,7 @@ function tidy(name: string | null | undefined) {
 
 /**
  * A doctor needs only a name and a clinic: no email, no account, no
- * invitation (Lutan, 2026-10-01). The database links them to this clinic.
+ * invitation (Lutan, 2026-10-01).
  */
 export async function addDoctor(
   clinicId: string,
@@ -48,7 +48,7 @@ export async function addDoctor(
   formData: FormData,
 ): Promise<DoctorFormState> {
   const { t } = await getT();
-  return runAction("vetDoctors.addDoctor", t.common.somethingWentWrong, async () => {
+  return runAction("doctors.addDoctor", t.common.somethingWentWrong, async () => {
     if (!can(await loadPermissions(), "clinics.doctors")) return refuse(t.management.errors.managementAccessRequired);
     const d = t.management.vetDoctors;
 
@@ -56,9 +56,21 @@ export async function addDoctor(
     if (!name) return refuse(d.errors.nameRequired);
 
     const supabase = await createClient();
-    const { error } = await supabase.from("doctors").insert({ clinic_id: clinicId, name });
-    if (error) {
-      return refuse(error.code === UNIQUE_VIOLATION ? d.errors.alreadyListed(name) : error.message);
+    // A doctor has no clinic of its own (0172): the person first, then the link here.
+    const { data: created, error } = await supabase
+      .from("doctors")
+      .insert({ name })
+      .select("id")
+      .maybeSingle<{ id: string }>();
+    if (error || !created) return unexpectedFailure("doctors.addDoctor", error, t.common.somethingWentWrong);
+
+    const { error: linkError } = await supabase
+      .from("doctor_clinics")
+      .insert({ clinic_id: clinicId, doctor_id: created.id, active: true });
+    if (linkError) {
+      // The name is already listed here: nothing half-made.
+      await supabase.from("doctors").delete().eq("id", created.id);
+      return refuse(linkError.code === UNIQUE_VIOLATION ? d.errors.alreadyListed(name) : linkError.message);
     }
 
     revalidateDoctorPages(clinicId);
@@ -77,7 +89,7 @@ export async function addExistingDoctor(
   formData: FormData,
 ): Promise<DoctorFormState> {
   const { t } = await getT();
-  return runAction("vetDoctors.addExistingDoctor", t.common.somethingWentWrong, async () => {
+  return runAction("doctors.addExistingDoctor", t.common.somethingWentWrong, async () => {
     if (!can(await loadPermissions(), "clinics.doctors")) return refuse(t.management.errors.managementAccessRequired);
     const d = t.management.vetDoctors;
 
@@ -108,7 +120,7 @@ export async function addExistingDoctor(
 
 /**
  * Renames a doctor. The database writes the new spelling onto every visit
- * linked to them (vet_doctors_propagate_name, 0102), at every clinic they
+ * linked to them (doctors_propagate_name, 0102), at every clinic they
  * work at, so the page confirms with the visit count before calling this.
  */
 export async function renameDoctor(
@@ -117,7 +129,7 @@ export async function renameDoctor(
   rawName: string,
 ): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("vetDoctors.renameDoctor", t.common.somethingWentWrong, async () => {
+  return runAction("doctors.renameDoctor", t.common.somethingWentWrong, async () => {
     if (!can(await loadPermissions(), "clinics.doctors")) return refuse(t.management.errors.managementAccessRequired);
     const d = t.management.vetDoctors;
 
@@ -137,8 +149,8 @@ export async function renameDoctor(
 /**
  * Marks a doctor as having left this clinic, or back. It is the link's own
  * flag (doctor_clinics.active, 0125), so a doctor who left one clinic
- * is still suggested at the others, and a vet login linked to them loses
- * this clinic only.
+ * is still suggested at the others, and a doctor login linked to them can
+ * no longer book or edit here (it still sees the residents it treated).
  */
 export async function setDoctorActive(
   clinicId: string,
@@ -146,7 +158,7 @@ export async function setDoctorActive(
   active: boolean,
 ): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("vetDoctors.setDoctorActive", t.common.somethingWentWrong, async () => {
+  return runAction("doctors.setDoctorActive", t.common.somethingWentWrong, async () => {
     if (!can(await loadPermissions(), "clinics.doctors")) return refuse(t.management.errors.managementAccessRequired);
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -178,7 +190,7 @@ export async function mergeDoctors(
   intoId: string,
 ): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("vetDoctors.mergeDoctors", t.common.somethingWentWrong, async () => {
+  return runAction("doctors.mergeDoctors", t.common.somethingWentWrong, async () => {
     if (!can(await loadPermissions(), "clinics.doctors")) return refuse(t.management.errors.managementAccessRequired);
     if (fromId === intoId) return refuse(t.management.vetDoctors.errors.mergeSelf);
 
@@ -201,7 +213,7 @@ export async function mergeDoctors(
  */
 export async function deleteDoctor(clinicId: string, id: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("vetDoctors.deleteDoctor", t.common.somethingWentWrong, async () => {
+  return runAction("doctors.deleteDoctor", t.common.somethingWentWrong, async () => {
     if (!can(await loadPermissions(), "clinics.doctors")) return refuse(t.management.errors.managementAccessRequired);
     const supabase = await createClient();
     const { count, error: countError } = await supabase

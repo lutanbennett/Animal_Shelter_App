@@ -34,7 +34,7 @@ async function handlePost(
 
   // The activity 0152 asks of this owner_type, in the attachments policies and record_attachment().
   // Asked here, before Drive is touched, so a refused upload cannot orphan a file. The clinic scope is
-  // left to the database (sees_all_clinical(); the vet has no cell rows yet, so is refused here as before).
+  // left to the database (sees_all_clinical(); the doctor has no cell rows yet, so is refused here as before).
   const perms = await loadPermissions();
   if (!can(perms, "medical.blood_tests")) {
     const { t } = await getT();
@@ -75,7 +75,7 @@ async function handlePost(
   // reach this lookup; the actual write gate is the medical.blood_tests check
   // above plus record_attachment()'s own role check below, both of which
   // intentionally allow staff/volunteers to attach files to a blood test
-  // even though only vet/admin can create the row itself (decisions.md:
+  // even though only doctor/admin can create the row itself (decisions.md:
   // volunteers may write "attachments/photos, any owner type").
   const { data: bloodTest, error: bloodTestError } = await supabase
     .from("blood_tests")

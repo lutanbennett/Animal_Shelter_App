@@ -17,7 +17,7 @@ import { formatDate, todayIso } from "@/lib/format";
 import { visitDate } from "@/lib/clinics/linkable";
 
 export type BloodTestTypeOption = { id: string; name: string };
-export type VetAppointmentOption = {
+export type ClinicVisitOption = {
   id: string;
   appointment_date: string;
   reason: string | null;
@@ -49,14 +49,14 @@ export function BloodTestForm({
   residentId,
   residentDisplayName,
   bloodTestTypes,
-  vetAppointments,
-  preselectedVetAppointmentId,
+  clinicVisits,
+  preselectedClinicVisitId,
 }: {
   residentId: string;
   residentDisplayName: string;
   bloodTestTypes: BloodTestTypeOption[];
-  vetAppointments: VetAppointmentOption[];
-  preselectedVetAppointmentId: string | null;
+  clinicVisits: ClinicVisitOption[];
+  preselectedClinicVisitId: string | null;
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
@@ -65,8 +65,8 @@ export function BloodTestForm({
   const [saved, setSaved] = useState<{ bloodTestId: string; date: string } | null>(null);
   const [dateTouched, setDateTouched] = useState(false);
   const [date, setDate] = useState(() => {
-    if (preselectedVetAppointmentId) {
-      const match = vetAppointments.find((a) => a.id === preselectedVetAppointmentId);
+    if (preselectedClinicVisitId) {
+      const match = clinicVisits.find((a) => a.id === preselectedClinicVisitId);
       if (match) return visitDate(match);
     }
     return todayIso();
@@ -74,9 +74,9 @@ export function BloodTestForm({
   const uploads = useDeferredUploads();
   const tabHref = `/residents/${residentId}/blood-tests`;
 
-  function handleVetAppointmentChange(id: string) {
+  function handleClinicVisitChange(id: string) {
     if (dateTouched || !id) return;
-    const match = vetAppointments.find((a) => a.id === id);
+    const match = clinicVisits.find((a) => a.id === id);
     if (match) setDate(visitDate(match));
   }
 
@@ -165,18 +165,18 @@ export function BloodTestForm({
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="vetAppointmentId" className="text-sm font-medium text-muted">
+          <label htmlFor="clinicVisitId" className="text-sm font-medium text-muted">
             {t.bloodTests.linkedVisit}
           </label>
           <select
-            id="vetAppointmentId"
-            name="vetAppointmentId"
-            defaultValue={preselectedVetAppointmentId ?? ""}
-            onChange={(e) => handleVetAppointmentChange(e.target.value)}
+            id="clinicVisitId"
+            name="clinicVisitId"
+            defaultValue={preselectedClinicVisitId ?? ""}
+            onChange={(e) => handleClinicVisitChange(e.target.value)}
             className={inputClass}
           >
             <option value="">{t.bloodTests.noLinkedVisit}</option>
-            {vetAppointments.map((a) => (
+            {clinicVisits.map((a) => (
               <option key={a.id} value={a.id}>
                 {formatDate(a.appointment_date, locale)}
                 {a.reason ? ` — ${a.reason}` : ""}

@@ -2,12 +2,12 @@ import { addDaysIso } from "../format";
 import type { CashflowRow } from "./cashflow";
 
 /**
- * The vet line of Management → Cashflow.
+ * The clinic line of Management → Cashflow.
  *
- * Replaces the vet rows `cashflow_forecast` (0072) returns, which charged
+ * Replaces the clinic rows `cashflow_forecast` (0072) returns, which charged
  * only the visits already booked at a flat estimate. Computed here, like
  * the fixed-outgoings rows (fixed-outgoings.ts), so the rule can change
- * without a migration; the page drops the RPC's vet rows and folds these
+ * without a migration; the page drops the RPC's clinic rows and folds these
  * in. Everything is pure and runs on shelter calendar dates.
  *
  * THE RULE, per week (Monday to Sunday):
@@ -37,7 +37,7 @@ import type { CashflowRow } from "./cashflow";
  */
 
 /** The history window, in days, and the lowest number of invoiced visits whose mean replaces the flat estimate. */
-export const VET_HISTORY_DAYS = 90;
+export const CLINIC_HISTORY_DAYS = 90;
 export const MIN_COSTED_FOR_MEAN = 3;
 
 export type ClinicVisit = {
@@ -48,7 +48,7 @@ export type ClinicVisit = {
 };
 
 /** What the page prints under the table so the number can be accounted for. */
-export type VetForecastBasis = {
+export type ClinicForecastBasis = {
   /** Typical visits per week, from history. 0 when there is none. */
   perWeek: number;
   /** Completed visits in the history window. 0 means "unknown", not "none needed". */
@@ -74,10 +74,10 @@ function weekStart(date: string): string {
 }
 
 /** The unit cost and where it came from. */
-export function vetUnitCost(
+export function clinicUnitCost(
   history: readonly ClinicVisit[],
   estimate: number | null,
-): Pick<VetForecastBasis, "unitCost" | "unitCostSource" | "costedVisits"> {
+): Pick<ClinicForecastBasis, "unitCost" | "unitCostSource" | "costedVisits"> {
   const costs = history.flatMap((v) => (v.cost == null ? [] : [v.cost]));
   if (costs.length >= MIN_COSTED_FOR_MEAN) {
     const mean = costs.reduce((a, b) => a + b, 0) / costs.length;
@@ -90,20 +90,20 @@ export function vetUnitCost(
 
 /**
  * `booked`: visits still scheduled, any date (only those in the window
- * count). `history`: completed visits in the last VET_HISTORY_DAYS days.
+ * count). `history`: completed visits in the last CLINIC_HISTORY_DAYS days.
  * `today` is the shelter's today.
  */
-export function vetForecast(args: {
+export function clinicForecast(args: {
   from: string;
   to: string;
   today: string;
   booked: readonly ClinicVisit[];
   history: readonly ClinicVisit[];
   estimate: number | null;
-}): { rows: CashflowRow[]; basis: VetForecastBasis } {
+}): { rows: CashflowRow[]; basis: ClinicForecastBasis } {
   const { from, to, today, booked, history, estimate } = args;
-  const perWeek = history.length / (VET_HISTORY_DAYS / 7);
-  const unit = vetUnitCost(history, estimate);
+  const perWeek = history.length / (CLINIC_HISTORY_DAYS / 7);
+  const unit = clinicUnitCost(history, estimate);
 
   type Acc = { amount: number; missing: number; booked: number; bookedCosted: number; filler: number };
   const months = new Map<string, Acc>();
@@ -154,7 +154,7 @@ export function vetForecast(args: {
       // as a gap rather than printing a zero.
       const unpricedFiller = unit.unitCost == null && a.filler > 0.005 ? Math.max(1, Math.round(a.filler)) : 0;
       return {
-        category: "vet",
+        category: "clinic",
         month,
         amount: round2(a.amount),
         // Only a month made entirely of invoiced booked visits is `actual`.

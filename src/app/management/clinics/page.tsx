@@ -2,20 +2,20 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { CreateClinicForm } from "./CreateClinicForm";
-import { ClinicsTable, type VetRow } from "./ClinicsTable";
+import { ClinicsTable, type ClinicRow } from "./ClinicsTable";
 import { requirePermission } from "@/lib/permissions/require";
 
-export default async function VetsAdminPage() {
+export default async function ClinicsAdminPage() {
   await requirePermission("clinics.list");
   const { t } = await getT();
 
   const supabase = await createClient();
-  const [vetsResult, visitsResult, doctorsResult] = await Promise.all([
+  const [clinicsResult, visitsResult, doctorsResult] = await Promise.all([
     supabase
       .from("clinics")
-      .select("id, name, name_th, clinic_name, contact_info, notes")
+      .select("id, name, name_th, contact_info, notes")
       .order("name")
-      .returns<Omit<VetRow, "visit_count" | "doctor_count">[]>(),
+      .returns<Omit<ClinicRow, "visit_count" | "doctor_count">[]>(),
     // One row per visit is cheap at shelter scale and avoids a view just
     // for the count that gates the delete button.
     supabase
@@ -23,7 +23,7 @@ export default async function VetsAdminPage() {
       .select("clinic_id")
       .not("clinic_id", "is", null)
       .returns<{ clinic_id: string }[]>(),
-    // Links, not doctors.clinic_id (deprecated, 0125): a doctor counts at every clinic they work at.
+    // A doctor counts at every clinic they work at (doctor_clinics, 0125; 0172 dropped the old single-clinic column).
     supabase.from("doctor_clinics").select("clinic_id").returns<{ clinic_id: string }[]>(),
   ]);
 
@@ -35,10 +35,10 @@ export default async function VetsAdminPage() {
   for (const row of doctorsResult.data ?? []) {
     doctorCounts.set(row.clinic_id, (doctorCounts.get(row.clinic_id) ?? 0) + 1);
   }
-  const vets: VetRow[] = (vetsResult.data ?? []).map((vet) => ({
-    ...vet,
-    visit_count: counts.get(vet.id) ?? 0,
-    doctor_count: doctorCounts.get(vet.id) ?? 0,
+  const clinics: ClinicRow[] = (clinicsResult.data ?? []).map((clinic) => ({
+    ...clinic,
+    visit_count: counts.get(clinic.id) ?? 0,
+    doctor_count: doctorCounts.get(clinic.id) ?? 0,
   }));
 
   return (
@@ -59,9 +59,9 @@ export default async function VetsAdminPage() {
 
 
       <>
-        {vetsResult.error && (
+        {clinicsResult.error && (
           <p className="text-sm text-danger">
-            {t.management.vets.couldntLoad}: {vetsResult.error.message}
+            {t.management.vets.couldntLoad}: {clinicsResult.error.message}
           </p>
         )}
         {visitsResult.error && (
@@ -71,7 +71,7 @@ export default async function VetsAdminPage() {
         )}
 
         <CreateClinicForm />
-        <ClinicsTable vets={vets} />
+        <ClinicsTable clinics={clinics} />
       </>
     </main>
   );

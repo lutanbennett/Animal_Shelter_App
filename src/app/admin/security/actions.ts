@@ -96,7 +96,7 @@ export type CreateUserState =
   | undefined;
 
 /** The staff roles, plus public_viewer: a login that sees only the public website (0085). */
-const VALID_ROLES = ["admin", "management", "staff", "vet", "volunteer", "public_viewer"] as const;
+const VALID_ROLES = ["admin", "management", "staff", "doctor", "volunteer", "public_viewer"] as const;
 
 const isValidRole = (role: string | null) =>
   !!role && VALID_ROLES.includes(role as (typeof VALID_ROLES)[number]);
@@ -240,35 +240,35 @@ export async function updateUserRole(userId: string, role: string): Promise<Acti
 }
 
 /**
- * A vet login's clinics are the clinics of the doctor it is linked to
+ * A doctor login's clinics are the clinics of the doctor it is linked to
  * (doctors.user_id, 0125) — one source of truth, set here by an admin
  * and edited on the clinic page. Most doctors never get a login; this is
  * only for the ones who do. Unlinking or archiving the login leaves the
  * doctor and their visits untouched.
  */
-async function loadVetLogin(userId: string, t: T) {
+async function loadDoctorLogin(userId: string, t: T) {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("user_roles")
     .select("user_id")
     .eq("user_id", userId)
-    .eq("role", "vet")
+    .eq("role", "doctor")
     .maybeSingle<{ user_id: string }>();
   if (error) {
-    return { denied: unexpectedFailure("security.loadVetLogin", error, t.common.somethingWentWrong) };
+    return { denied: unexpectedFailure("security.loadDoctorLogin", error, t.common.somethingWentWrong) };
   }
   if (!data) return { denied: refuse(t.admin.security.errors.linkOnlyForVets) };
   return { denied: null, admin };
 }
 
-export async function linkVetDoctor(userId: string, doctorId: string): Promise<ActionResult> {
+export async function linkDoctor(userId: string, doctorId: string): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.admin.security.errors;
-  return runAction("security.linkVetDoctor", t.common.somethingWentWrong, async () => {
+  return runAction("security.linkDoctor", t.common.somethingWentWrong, async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
 
-    const login = await loadVetLogin(userId, t);
+    const login = await loadDoctorLogin(userId, t);
     if (login.denied) return login.denied;
     const { admin } = login;
 
@@ -278,7 +278,7 @@ export async function linkVetDoctor(userId: string, doctorId: string): Promise<A
       .eq("id", doctorId)
       .maybeSingle<{ id: string; user_id: string | null }>();
     if (lookupError) {
-      return unexpectedFailure("security.linkVetDoctor", lookupError, t.common.somethingWentWrong);
+      return unexpectedFailure("security.linkDoctor", lookupError, t.common.somethingWentWrong);
     }
     if (!doctor) return refuse(e.doctorNotFound);
     if (doctor.user_id && doctor.user_id !== userId) return refuse(e.doctorAlreadyLinked);
@@ -289,10 +289,10 @@ export async function linkVetDoctor(userId: string, doctorId: string): Promise<A
       .update({ user_id: null })
       .eq("user_id", userId)
       .neq("id", doctorId);
-    if (clearError) return unexpectedFailure("security.linkVetDoctor", clearError, t.common.somethingWentWrong);
+    if (clearError) return unexpectedFailure("security.linkDoctor", clearError, t.common.somethingWentWrong);
 
     const { error } = await admin.from("doctors").update({ user_id: userId }).eq("id", doctorId);
-    if (error) return unexpectedFailure("security.linkVetDoctor", error, t.common.somethingWentWrong);
+    if (error) return unexpectedFailure("security.linkDoctor", error, t.common.somethingWentWrong);
 
     revalidateSecurity();
     revalidatePath("/management/clinics", "layout");
@@ -305,28 +305,28 @@ export async function linkVetDoctor(userId: string, doctorId: string): Promise<A
  * name" path — at the clinics ticked. The doctor is the person; the login
  * is linked to them. More clinics are added later on the clinic page.
  */
-export async function createVetDoctorForLogin(
+export async function createDoctorForLogin(
   userId: string,
   rawName: string,
   clinicIds: string[],
 ): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.admin.security.errors;
-  return runAction("security.createVetDoctorForLogin", t.common.somethingWentWrong, async () => {
+  return runAction("security.createDoctorForLogin", t.common.somethingWentWrong, async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
 
     const name = rawName.trim().replace(/\s+/g, " ");
     if (!name) return refuse(e.doctorNameRequired);
 
-    const login = await loadVetLogin(userId, t);
+    const login = await loadDoctorLogin(userId, t);
     if (login.denied) return login.denied;
     const { admin } = login;
 
     const clinics = [...new Set(clinicIds)];
     if (clinics.length === 0) return refuse(e.pickAClinic);
     const { data: found, error: clinicError } = await admin.from("clinics").select("id").in("id", clinics);
-    if (clinicError) return unexpectedFailure("security.createVetDoctorForLogin", clinicError, t.common.somethingWentWrong);
+    if (clinicError) return unexpectedFailure("security.createDoctorForLogin", clinicError, t.common.somethingWentWrong);
     if ((found ?? []).length !== clinics.length) return refuse(e.clinicNotFound);
 
     // One login is one doctor.
@@ -337,15 +337,15 @@ export async function createVetDoctorForLogin(
       .maybeSingle<{ id: string }>();
     if (existing) return refuse(e.alreadyLinked);
 
-    // clinic_id is the first clinic: the database links the doctor to it.
+    // A doctor has no clinic of its own (0172): the person first, then a link to each clinic.
     const { data: created, error } = await admin
       .from("doctors")
-      .insert({ name, user_id: userId, clinic_id: clinics[0] })
+      .insert({ name, user_id: userId })
       .select("id")
       .maybeSingle<{ id: string }>();
     if (error || !created) {
       if (error?.code === "23505") return refuse(e.doctorNameTaken(name));
-      return unexpectedFailure("security.createVetDoctorForLogin", error, t.common.somethingWentWrong);
+      return unexpectedFailure("security.createDoctorForLogin", error, t.common.somethingWentWrong);
     }
 
     const { error: linkError } = await admin
@@ -355,10 +355,10 @@ export async function createVetDoctorForLogin(
         { onConflict: "clinic_id,doctor_id" },
       );
     if (linkError) {
-      // A name already taken at one of the other clinics: nothing half-made.
+      // A name already taken at one of the clinics: nothing half-made.
       await admin.from("doctors").delete().eq("id", created.id);
       if (linkError.code === "23505") return refuse(e.doctorNameTaken(name));
-      return unexpectedFailure("security.createVetDoctorForLogin", linkError, t.common.somethingWentWrong);
+      return unexpectedFailure("security.createDoctorForLogin", linkError, t.common.somethingWentWrong);
     }
 
     revalidateSecurity();
@@ -368,15 +368,15 @@ export async function createVetDoctorForLogin(
 }
 
 /** Unlinks the login; the doctor and every visit stay as they are. */
-export async function unlinkVetDoctor(userId: string): Promise<ActionResult> {
+export async function unlinkDoctor(userId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("security.unlinkVetDoctor", t.common.somethingWentWrong, async () => {
+  return runAction("security.unlinkDoctor", t.common.somethingWentWrong, async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
 
     const admin = createAdminClient();
     const { error } = await admin.from("doctors").update({ user_id: null }).eq("user_id", userId);
-    if (error) return unexpectedFailure("security.unlinkVetDoctor", error, t.common.somethingWentWrong);
+    if (error) return unexpectedFailure("security.unlinkDoctor", error, t.common.somethingWentWrong);
     revalidateSecurity();
     revalidatePath("/management/clinics", "layout");
     return { ok: true };

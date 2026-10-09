@@ -38,7 +38,7 @@ export async function loadSenderOptions(
       .returns<{ carer_id: string | null; carer: { id: string; name: string } | null }[]>(),
     // Only staff and Management record an update, so only they need a list
     // of names to choose a sender from: staff through picker_contacts (0170),
-    // Management through the table. A vet or volunteer reads names through a
+    // Management through the table. A doctor or volunteer reads names through a
     // narrow view (0126) with no archive state, and is shown the "not
     // allowed" message instead of the form.
     relation === "contacts" || relation === "picker_contacts"

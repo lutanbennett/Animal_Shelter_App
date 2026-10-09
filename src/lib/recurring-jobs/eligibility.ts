@@ -22,8 +22,8 @@ import { ROUTES } from "@/lib/permissions/routes";
  * (decisions/2026-10-04-permissions-sweep-rest.md). A path no rule matches —
  * no link at all, /residents, /my — can be done by any assignable role.
  *
- * Vets are not assignable at all (Lutan, 2026-09-27): a vet's work comes
- * from their vet appointments and the residents on them, not from the
+ * Doctors are not assignable at all (Lutan, 2026-09-27): a doctor's work comes
+ * from their clinic visits and the residents on them, not from the
  * shelter's routine, so no recurring job goes to one whatever it links to.
  *
  * Pure and client-safe: the form filters its picker with it as the link
@@ -32,7 +32,7 @@ import { ROUTES } from "@/lib/permissions/routes";
 
 /**
  * The built-in roles that can be given a recurring job: everyone with app
- * access but vets. 0095 lets any app role be an assignee (and read the
+ * access but doctors. 0095 lets any app role be an assignee (and read the
  * rules); this is narrower, and the actions enforce it. It is the ENUM gate
  * for queries over app_users.role, which every configured role also passes
  * (each borrows a legacy value); it is not the list of keys eligibility is
@@ -40,10 +40,10 @@ import { ROUTES } from "@/lib/permissions/routes";
  * 0146), because a configured role's enum value is not its key
  * (decisions/2026-10-05-rota-eligibility.md).
  */
-export const ASSIGNABLE_ROLES = APP_ACCESS_ROLES.filter((role) => role !== "vet");
+export const ASSIGNABLE_ROLES = APP_ACCESS_ROLES.filter((role) => role !== "doctor");
 
-/** Keys that are never assignable whatever they hold: a vet's work comes from vet appointments, and a public viewer is not staff. */
-const NEVER_ASSIGNABLE = ["vet", "public_viewer"];
+/** Keys that are never assignable whatever they hold: a doctor's work comes from clinic visits, and a public viewer is not staff. */
+const NEVER_ASSIGNABLE = ["doctor", "public_viewer"];
 
 /** The cell a page asks for: the activity its route registers, at the level that opens it. */
 export type Need = { activity: ActivityKey; level: Level };

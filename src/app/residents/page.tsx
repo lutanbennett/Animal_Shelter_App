@@ -63,7 +63,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
 
   // A chip scanner types 15 digits and presses Enter. An exact match goes
   // straight to that resident whatever the place, zone or deceased filters
-  // say (RLS still limits a vet to their clinic's residents); an unknown
+  // say (RLS still limits a doctor to their clinic's residents); an unknown
   // chip offers a new resident. Anything else is the usual name search.
   const chipQuery = limited ? null : chipFromSearch(q);
   if (chipQuery) {
@@ -149,7 +149,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
     .select(idColumn, { count: "exact", head: true })
     .eq("current_status", DECEASED);
 
-  const [tagOrigin, vetScope, residentsResult, deceased, statusMatches] = await Promise.all([
+  const [tagOrigin, clinicScope, residentsResult, deceased, statusMatches] = await Promise.all([
     getTagOrigin(),
     loadClinicScope(supabase),
     listQuery(supabase, view, limited).returns<(ResidentRow | WhoAndWhere)[]>(),
@@ -168,12 +168,12 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
     ),
   ]);
 
-  // RLS already limits a vet to their clinics' residents (0108); this only
+  // RLS already limits a doctor to their clinics' residents (0108); this only
   // names the clinics, so the list says whose it is.
-  const vetClinicName =
-    vetScope.kind === "clinics"
+  const scopeClinicName =
+    clinicScope.kind === "clinics"
       ? ((
-          await supabase.from("clinics").select("name, name_th").in("id", vetScope.clinicIds).order("name")
+          await supabase.from("clinics").select("name, name_th").in("id", clinicScope.clinicIds).order("name")
         ).data ?? [])
           .map((v) => localLabel(locale, v.name as string, v.name_th as string | null))
           .join(", ") || null
@@ -256,10 +256,10 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
         {status && (
           <p className="text-sm text-muted">{t.residents.list.statusOnly[status]}</p>
         )}
-        {vetScope.kind === "clinics" && vetClinicName && (
-          <p className="text-sm text-muted">{t.residents.list.vetScope(vetClinicName)}</p>
+        {clinicScope.kind === "clinics" && scopeClinicName && (
+          <p className="text-sm text-muted">{t.residents.list.vetScope(scopeClinicName)}</p>
         )}
-        {vetScope.kind === "unlinked" && (
+        {clinicScope.kind === "unlinked" && (
           <p className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground">
             {t.residents.list.vetScopeNoClinic}
           </p>

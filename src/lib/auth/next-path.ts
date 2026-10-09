@@ -33,5 +33,5 @@ export function safeNextPath(next: string | null | undefined): string | null {
  */
 export const DEFAULT_SIGNED_IN_PATH = "/home";
 
-/** A vet's home: /my sends them here, since they have no tasks (2026-09-29). */
-export const VET_HOME_PATH = "/appointments";
+/** A doctor's home: /my sends them here, since they have no tasks (2026-09-29). */
+export const DOCTOR_HOME_PATH = "/appointments";

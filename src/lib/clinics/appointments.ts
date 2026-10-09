@@ -26,10 +26,11 @@ export type ClinicAppointments = {
 };
 
 /**
- * The visits booked with the vet's clinics, for their /appointments page.
- * `clinicIds` are the clinics of their login (loadClinicScope): the page shows the clinics'
- * appointments, not just the signed-in doctor's (Lutan, 2026-09-29). Which
- * residents a vet may see is RLS (0108) and is not re-decided here.
+ * The visits booked with a doctor login's clinics, for its /appointments page.
+ * `clinicIds` are the clinics it currently works at (loadClinicScope): the
+ * page shows the clinics' appointments, not just the signed-in doctor's
+ * (Lutan, 2026-09-29). Which residents a doctor login may see is RLS
+ * (current_doctor_resident_ids(), 0172) and is not re-decided here.
  *
  * Cancelled visits are left out: there is nothing to write up. A completed
  * visit stays reachable for RECENTLY_DONE_DAYS, because marking a visit done

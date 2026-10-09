@@ -105,7 +105,7 @@
     },
     {
       "row": 11,
-      "label": "Book a vet visit",
+      "label": "Book a clinic visit",
       "keys": [
         {
           "activity": "visit.book",
@@ -115,7 +115,7 @@
     },
     {
       "row": 12,
-      "label": "Record a vet visit and its outcome",
+      "label": "Record a clinic visit and its outcome",
       "keys": [
         {
           "activity": "medical.visits",
@@ -602,7 +602,7 @@
         50
       ],
       "notes": [
-        "She may prescribe, record immunizations, weights and diets, but not book or record a vet visit, procedures or blood tests, and not register a new resident. Flagged as worth a second look, not as an error.",
+        "She may prescribe, record immunizations, weights and diets, but not book or record a clinic visit, procedures or blood tests, and not register a new resident. Flagged as worth a second look, not as an error.",
         "Two marks on her column were not ticks (rows 11 and 39); both are loaded as no until Lutan says otherwise."
       ]
     },
@@ -647,13 +647,13 @@
         "Own recurring jobs (row 47) is ticked and loaded. Until now the database refused a volunteer a recurring job only because no cell gave it; with the cell it allows it. Whether a volunteer should hold it is Lutan's question."
       ]
     },
-    "vet": {
-      "label": "Vets",
+    "doctor": {
+      "label": "Doctors",
       "ticks": [
         4
       ],
       "notes": [
-        "Vets get only the microchip. No booking, visits, prescriptions, procedures or blood tests, so a doctor login can set a microchip and see nothing clinical. That fits \"vets are on hold\" but is a real narrowing."
+        "Doctors get only the microchip. No booking, visits, prescriptions, procedures or blood tests, so a doctor login can set a microchip and see nothing clinical. That fits \"doctors are on hold\" but is a real narrowing."
       ]
     }
   },

@@ -53,17 +53,17 @@ export async function countSignIns(days: number): Promise<CheckOutcome<SignInFac
   return { state: "ok", facts: { signedIn, accounts } };
 }
 
-export type RecordFacts = { residents: number; vetVisits: number; weights: number; maintenanceJobs: number };
+export type RecordFacts = { residents: number; clinicVisits: number; weights: number; maintenanceJobs: number };
 
 export async function countRecords(days: number): Promise<CheckOutcome<RecordFacts>> {
   const since = sinceIso(days);
-  const [residents, vetVisits, weights, maintenanceJobs] = await Promise.all([
+  const [residents, clinicVisits, weights, maintenanceJobs] = await Promise.all([
     countSince("residents", "created_at", since),
     countSince("clinic_visits", "created_at", since),
     countSince("weight", "created_at", since),
     countSince("maintenance", "created_at", since),
   ]);
-  return { state: "ok", facts: { residents, vetVisits, weights, maintenanceJobs } };
+  return { state: "ok", facts: { residents, clinicVisits, weights, maintenanceJobs } };
 }
 
 export type UploadFacts = { total: number };

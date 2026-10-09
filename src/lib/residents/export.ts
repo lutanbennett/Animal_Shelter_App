@@ -137,21 +137,21 @@ async function loadExtras(supabase: Supabase, ids: string[], scope: ExportScope)
         (
           await supabase
             .from("clinic_visits")
-            .select("resident_id, appointment_date, vets(name)")
+            .select("resident_id, appointment_date, clinics(name)")
             .in("resident_id", chunk)
             .is("archived_at", null)
             .eq("status", "scheduled")
             .gte("appointment_date", `${today}T00:00:00+07:00`)
             .order("appointment_date")
-            .returns<{ resident_id: string; appointment_date: string; vets: { name: string } | { name: string }[] | null }[]>()
+            .returns<{ resident_id: string; appointment_date: string; clinics: { name: string } | { name: string }[] | null }[]>()
         ).data ?? [],
       ).then((rows) => {
         for (const row of rows.sort((a, b) => a.appointment_date.localeCompare(b.appointment_date))) {
           if (extras.nextVisit.has(row.resident_id)) continue;
-          const vet = Array.isArray(row.vets) ? row.vets[0] : row.vets;
+          const clinic = Array.isArray(row.clinics) ? row.clinics[0] : row.clinics;
           extras.nextVisit.set(row.resident_id, {
             date: todayIso(new Date(row.appointment_date).getTime()),
-            clinic: vet?.name ?? "",
+            clinic: clinic?.name ?? "",
           });
         }
       }),
@@ -277,8 +277,8 @@ const COLUMNS: readonly Column[] = [
   { header: "Intake date", group: "record", value: (r, x) => x.detail.get(r.resident_id)?.intake_date ?? "" },
   { header: "Ready for adoption", group: "record", value: (r, x) => yesNo(x.detail.get(r.resident_id)?.ready_for_adoption) },
   { header: "Prescriptions running today", group: "prescriptions", value: (r, x) => String(x.prescriptions.get(r.resident_id) ?? 0) },
-  { header: "Next vet visit", group: "visits", value: (r, x) => x.nextVisit.get(r.resident_id)?.date ?? "" },
-  { header: "Next vet visit clinic", group: "visits", value: (r, x) => x.nextVisit.get(r.resident_id)?.clinic ?? "" },
+  { header: "Next clinic visit", group: "visits", value: (r, x) => x.nextVisit.get(r.resident_id)?.date ?? "" },
+  { header: "Next visit clinic", group: "visits", value: (r, x) => x.nextVisit.get(r.resident_id)?.clinic ?? "" },
   { header: "Current diet", group: "diet", value: (r, x) => x.diet.get(r.resident_id) ?? "" },
   { header: "Latest weight (kg)", group: "weight", value: (r, x) => (x.weight.has(r.resident_id) ? String(x.weight.get(r.resident_id)!.kg) : "") },
   { header: "Latest weight date", group: "weight", value: (r, x) => x.weight.get(r.resident_id)?.date ?? "" },

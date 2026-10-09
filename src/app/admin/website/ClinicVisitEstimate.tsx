@@ -4,21 +4,21 @@ import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { useKeptForm } from "@/lib/use-kept-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { updateVetVisitEstimate } from "./actions";
+import { updateClinicVisitEstimate } from "./actions";
 
 /**
- * The one operational figure on this page (0071): what a typical vet visit
+ * The one operational figure on this page (0071): what a typical clinic visit
  * costs, used by the cashflow forecast to price visits that are booked but
  * not yet invoiced. Its own card rather than a field inside
  * SiteSettingsForm — everything in that form is public website copy, and
  * this is neither public nor copy.
  *
  * Blank is a real answer: it clears the figure back to "not priced yet",
- * and the forecast then shows vet visits as a gap rather than as zero.
+ * and the forecast then shows clinic visits as a gap rather than as zero.
  */
 export function ClinicVisitEstimate({ estimate }: { estimate: number | null }) {
   const [state, onSubmit, pending] = useKeptForm(
-    updateVetVisitEstimate,
+    updateClinicVisitEstimate,
     undefined,
   );
   const { t } = useI18n();
@@ -36,13 +36,13 @@ export function ClinicVisitEstimate({ estimate }: { estimate: number | null }) {
 
       <div className="flex flex-wrap items-end gap-3">
         <label
-          htmlFor="vetVisitEstimate"
+          htmlFor="clinicVisitEstimate"
           className="flex flex-col gap-1 text-sm font-medium text-muted"
         >
           {v.label}
           <input
-            id="vetVisitEstimate"
-            name="vetVisitEstimate"
+            id="clinicVisitEstimate"
+            name="clinicVisitEstimate"
             type="number"
             min={0}
             step="0.01"

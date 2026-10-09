@@ -66,7 +66,7 @@ export function PhotoGallery({
   profilePhotoDriveFileId: string | null;
   /**
    * The folders this user may move a photo INTO (photoCategoriesForRole).
-   * A role with one folder (a vet: Medical) can move a photo into it but
+   * A role with one folder (a doctor: Medical) can move a photo into it but
    * never out of it — the "Move to folder" picker only ever offers folders
    * in this list, and the server action refuses the rest regardless.
    */

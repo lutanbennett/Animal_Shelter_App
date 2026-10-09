@@ -8,22 +8,22 @@ import { visitDate } from "@/lib/clinics/linkable";
 import { loadClinicAppointments, type ClinicAppointment } from "@/lib/clinics/appointments";
 
 /**
- * /appointments — a vet's home: the visits booked with their clinic, split
- * into ones still to write up, upcoming, and recently done. Each row opens
- * the resident and offers the records a vet adds, every link carrying
- * `vetAppointmentId` so the record is linked to the visit.
+ * /appointments — a doctor login's home: the visits booked with its current
+ * clinics, split into ones still to write up, upcoming, and recently done.
+ * Each row opens the resident and offers the records a doctor adds, every link carrying
+ * `clinicVisitId` so the record is linked to the visit.
  *
  * Nothing here depends on the visit's status: the forms it links to list a
  * resident's visits whatever their status, so marking a visit completed
- * while a vet has a form open does not lose what they are typing.
+ * while a doctor has a form open does not lose what they are typing.
  *
- * Clinic-scoped logins only (a vet: `medical.visits` read with the "own
+ * Clinic-scoped logins only (a doctor login: `medical.visits` read with the "own
  * clinic" scope, Appendix A) — the shelter's own people book and read visits from the
  * resident hub. Tasks stay shelter operations (Lutan, 2026-09-29).
  */
 export default async function AppointmentsPage() {
   const { supabase, perms } = await requirePermission("medical.visits", "read");
-  // The scope is what makes this a vet's page: shelter staff hold the activity too and book from the hub.
+  // The scope is what makes this a doctor login's page: shelter staff hold the activity too and book from the hub.
   if (perms.scopes.clinical !== "own_clinic") refuseFor(perms);
   const { t, locale } = await getT();
   const a = t.vetAppointments;
@@ -79,7 +79,7 @@ export default async function AppointmentsPage() {
                 : row.residents.name
               : a.unknownResident;
             const link = (path: string) =>
-              `${path}?residentId=${row.resident_id}&vetAppointmentId=${row.id}`;
+              `${path}?residentId=${row.resident_id}&clinicVisitId=${row.id}`;
             const started = visitDate(row) <= today;
             const actionClass = "text-xs font-medium text-primary hover:underline";
             return (

@@ -2,16 +2,16 @@ import type { createClient } from "@/lib/supabase/server";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
-/** Vet id → the doctor names offered for that clinic. */
+/** Clinic id → the doctor names offered for that clinic. */
 export type DoctorNamesByClinic = Record<string, string[]>;
 
 /**
- * The suggestions behind the vet-visit forms' Doctor field: each clinic's
+ * The suggestions behind the clinic-visit forms' Doctor field: each clinic's
  * active doctors from its list (doctor_clinics, 0125: a doctor appears
  * under every clinic they work at), loaded once with the
- * page so switching the vet select costs no round trip. The list fills
+ * page so switching the clinic select costs no round trip. The list fills
  * itself from the names typed on visits and is corrected under
- * Management → Vets → Doctors, so a merged typo stops being offered and a
+ * Management → Clinics → Doctors, so a merged typo stops being offered and a
  * doctor marked as left drops out. Typing a name that is not offered still
  * works: the database adds it to the clinic's list.
  */
@@ -22,18 +22,18 @@ export async function loadDoctorNamesByClinic(supabase: Supabase): Promise<Docto
     .eq("active", true)
     .returns<{ clinic_id: string; doctors: { name: string } }[]>();
 
-  const byVet = new Map<string, string[]>();
+  const byClinic = new Map<string, string[]>();
   for (const row of data ?? []) {
-    byVet.set(row.clinic_id, [...(byVet.get(row.clinic_id) ?? []), row.doctors.name]);
+    byClinic.set(row.clinic_id, [...(byClinic.get(row.clinic_id) ?? []), row.doctors.name]);
   }
   // Suggestions are a convenience: a failed load leaves the field plain
   // free text rather than breaking the form.
   return Object.fromEntries(
-    [...byVet].map(([clinicId, names]) => [clinicId, names.sort((a, b) => a.localeCompare(b))]),
+    [...byClinic].map(([clinicId, names]) => [clinicId, names.sort((a, b) => a.localeCompare(b))]),
   );
 }
 
-// Titles people put in front of a vet's name, compared after punctuation
+// Titles people put in front of a doctor's name, compared after punctuation
 // is gone: "Dr.", "น.สพ." (male vet) and "สพ.ญ." (female vet) arrive here
 // as "dr", "นสพ" and "สพญ". Thai titles are often written without a space.
 const LATIN_TITLES = new Set(["dr", "doctor", "doc", "vet", "khun"]);
@@ -43,7 +43,7 @@ const THAI_TITLES = ["นสพ", "สพญ", "หมอ", "คุณ"];
  * A name reduced to the part that identifies the person, for spotting two
  * spellings of one doctor: "Dr. Somchai", "somchai" and "หมอ Somchai" all
  * give "somchai". Only a hint for the roster page. The database's own
- * matching (vet_doctor_key) deliberately ignores just case and spacing, and
+ * matching (doctor_name_key) deliberately ignores just case and spacing, and
  * a merge is always someone's decision.
  */
 export function doctorNameCore(name: string): string {

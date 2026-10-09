@@ -12,11 +12,11 @@ import { visitDate } from "@/lib/clinics/linkable";
 import { PLACEMENT_ICONS } from "@/components/hub-icons";
 import { SendToHospitalForm } from "./SendToHospitalForm";
 
-type VetAppointment = {
+type ClinicVisit = {
   id: string;
   appointment_date: string;
   reason: string | null;
-  vets: { name: string; name_th: string | null } | null;
+  clinics: { name: string; name_th: string | null } | null;
 };
 
 export default async function SendToHospitalPage(
@@ -28,11 +28,11 @@ export default async function SendToHospitalPage(
   const { t, locale } = await getT();
   const supabase = await createClient();
 
-  // Reached from a vet visit record: the visit pre-fills the date and notes
+  // Reached from a clinic visit record: the visit pre-fills the date and notes
   // so the placement says why the resident went in.
-  const vetAppointmentId =
-    typeof searchParams.vetAppointmentId === "string"
-      ? searchParams.vetAppointmentId
+  const clinicVisitId =
+    typeof searchParams.clinicVisitId === "string"
+      ? searchParams.clinicVisitId
       : null;
 
   const [residentResult, statusResult, placementResult, perms, visitResult] =
@@ -70,15 +70,15 @@ export default async function SendToHospitalPage(
         .limit(1)
         .returns<{ start_date: string }[]>(),
       loadPermissions(),
-      vetAppointmentId
+      clinicVisitId
         ? supabase
             .from("clinic_visits")
-            .select("id, appointment_date, reason, vets(name, name_th)")
+            .select("id, appointment_date, reason, clinics(name, name_th)")
             .is("archived_at", null)
-            .eq("id", vetAppointmentId)
+            .eq("id", clinicVisitId)
             .eq("resident_id", id)
             .limit(1)
-            .returns<VetAppointment[]>()
+            .returns<ClinicVisit[]>()
         : Promise.resolve({ data: null }),
     ]);
 
@@ -104,7 +104,7 @@ export default async function SendToHospitalPage(
     ? t.residents.hospital.visitNote(
         formatDate(visit.appointment_date, locale),
         visit.reason,
-        visit.vets ? localLabel(locale, visit.vets.name, visit.vets.name_th) : null,
+        visit.clinics ? localLabel(locale, visit.clinics.name, visit.clinics.name_th) : null,
       )
     : "";
 

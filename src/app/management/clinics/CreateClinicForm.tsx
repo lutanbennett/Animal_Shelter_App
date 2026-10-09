@@ -3,10 +3,10 @@
 import { useKeptForm } from "@/lib/use-kept-form";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { createVet } from "./actions";
+import { createClinic } from "./actions";
 
 export function CreateClinicForm() {
-  const [state, onSubmit, pending] = useKeptForm(createVet, undefined);
+  const [state, onSubmit, pending] = useKeptForm(createClinic, undefined);
   const { t } = useI18n();
 
   return (
@@ -36,17 +36,6 @@ export function CreateClinicForm() {
           lang="th"
           title={t.translations.thaiNameOptionalHint}
           className="w-48 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
-        />
-      </div>
-      <div className="flex flex-col gap-1">
-        <label htmlFor="clinicName" className="text-sm font-medium text-muted">
-          {t.management.vets.createForm.clinic}
-        </label>
-        <input
-          id="clinicName"
-          name="clinicName"
-          placeholder={t.management.vets.createForm.clinicPlaceholder}
-          className="w-56 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
         />
       </div>
       <div className="flex flex-col gap-1">

@@ -54,6 +54,7 @@ const nextConfig: NextConfig = {
       { source: "/management/vets", destination: "/management/clinics", permanent: true },
       { source: "/management/vets/:path*", destination: "/management/clinics/:path*", permanent: true },
       { source: "/vet-visits/:path*", destination: "/clinic-visits/:path*", permanent: true },
+      { source: "/residents/:id/vet-appointments", destination: "/residents/:id/clinic-visits", permanent: true },
     ];
   },
 

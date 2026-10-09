@@ -9,13 +9,12 @@ import { loadPermissions } from "@/lib/permissions/load";
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
-export type VetFormState = ActionResult<{ success: string }> | undefined;
+export type ClinicFormState = ActionResult<{ success: string }> | undefined;
 
-export type VetFields = {
+export type ClinicFields = {
   name: string;
   /** Optional (0166): most clinic names are proper names and read the same in Thai. */
   nameTh: string | null;
-  clinicName: string | null;
   contactInfo: string | null;
   notes: string | null;
 };
@@ -25,18 +24,18 @@ function optional(value: FormDataEntryValue | string | null | undefined) {
   return trimmed ? trimmed : null;
 }
 
-function revalidateVetPages(id?: string) {
+function revalidateClinicPages(id?: string) {
   revalidatePath("/management/clinics");
   revalidatePath("/clinics");
   if (id) revalidatePath(`/clinics/${id}`);
 }
 
-export async function createVet(
-  _state: VetFormState,
+export async function createClinic(
+  _state: ClinicFormState,
   formData: FormData,
-): Promise<VetFormState> {
+): Promise<ClinicFormState> {
   const { t } = await getT();
-  return runAction("vets.createVet", t.common.somethingWentWrong, async () => {
+  return runAction("clinics.createClinic", t.common.somethingWentWrong, async () => {
     if (!can(await loadPermissions(), "clinics.list")) return refuse(t.management.errors.managementAccessRequired);
     const name = optional(formData.get("name"));
     if (!name) return refuse(t.management.vets.errors.nameRequired);
@@ -45,21 +44,20 @@ export async function createVet(
     const { error } = await supabase.from("clinics").insert({
       name,
       name_th: optional(formData.get("nameTh")),
-      clinic_name: optional(formData.get("clinicName")),
       contact_info: optional(formData.get("contactInfo")),
       notes: optional(formData.get("notes")),
     });
 
     if (error) return refuse(error.message);
 
-    revalidateVetPages();
+    revalidateClinicPages();
     return { ok: true, success: t.management.vets.createdVet(name) };
   });
 }
 
-export async function updateVet(id: string, fields: VetFields): Promise<ActionResult> {
+export async function updateClinic(id: string, fields: ClinicFields): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("vets.updateVet", t.common.somethingWentWrong, async () => {
+  return runAction("clinics.updateClinic", t.common.somethingWentWrong, async () => {
     if (!can(await loadPermissions(), "clinics.list")) return refuse(t.management.errors.managementAccessRequired);
     const name = optional(fields.name);
     if (!name) return refuse(t.management.vets.errors.nameRequired);
@@ -70,25 +68,24 @@ export async function updateVet(id: string, fields: VetFields): Promise<ActionRe
       .update({
         name,
         name_th: optional(fields.nameTh),
-        clinic_name: optional(fields.clinicName),
         contact_info: optional(fields.contactInfo),
         notes: optional(fields.notes),
       })
       .eq("id", id);
 
     if (error) return refuse(error.message);
-    revalidateVetPages(id);
+    revalidateClinicPages(id);
     return { ok: true };
   });
 }
 
-export async function deleteVet(id: string): Promise<ActionResult> {
+export async function deleteClinic(id: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("vets.deleteVet", t.common.somethingWentWrong, async () => {
+  return runAction("clinics.deleteClinic", t.common.somethingWentWrong, async () => {
     if (!can(await loadPermissions(), "clinics.list")) return refuse(t.management.errors.managementAccessRequired);
     const supabase = await createClient();
 
-    // clinic_visits.clinic_id has no cascade, so a vet with history can't go:
+    // clinic_visits.clinic_id has no cascade, so a clinic with history can't go:
     // the visits are the resident's medical record. Say so up front instead
     // of surfacing the foreign-key error.
     const { count, error: countError } = await supabase
@@ -103,7 +100,7 @@ export async function deleteVet(id: string): Promise<ActionResult> {
     const { error } = await supabase.from("clinics").delete().eq("id", id);
 
     if (error) return refuse(error.message);
-    revalidateVetPages(id);
+    revalidateClinicPages(id);
     return { ok: true };
   });
 }

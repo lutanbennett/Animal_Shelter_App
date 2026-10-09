@@ -80,7 +80,7 @@ export async function rehomeResident(
 ): Promise<RehomeResidentResult> {
   const errors = t.residents.rehome.errors;
 
-  // RLS would reject the insert for a vet or volunteer with a raw policy
+  // RLS would reject the insert for a doctor or volunteer with a raw policy
   // error — say why.
   if (!can(await loadPermissions(), "placement.rehome")) {
     return { error: t.residents.rehome.notAuthorized };
@@ -245,7 +245,7 @@ export async function returnResidentToShelter(
 ): Promise<ReturnToShelterResult> {
   const errors = t.residents.shelterReturn.errors;
 
-  // RLS would reject the insert for a vet or volunteer with a raw policy
+  // RLS would reject the insert for a doctor or volunteer with a raw policy
   // error — say why.
   if (!can(await loadPermissions(), "placement.rehome")) {
     return { error: t.residents.shelterReturn.notAuthorized };

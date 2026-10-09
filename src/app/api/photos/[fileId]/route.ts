@@ -22,7 +22,7 @@ import { readCachedPhoto, writeCachedPhoto } from "@/lib/photo-cache";
  *    Friend logos and medication label photos — only to a caller whose own session can select the row
  *    that holds it (`canSeeInternalFile`), so RLS decides: signed out, an
  *    archived login and a role with no app access all see nothing, and a
- *    vet is refused a maintenance photo as the maintenance pages refuse
+ *    doctor is refused a maintenance photo as the maintenance pages refuse
  *    them. It is never cached anywhere: `private, no-store`.
  *  - Everything else is "Photo not found.", so a signed-out visitor can't
  *    tell an internal file from a made-up id.

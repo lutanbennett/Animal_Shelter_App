@@ -18,12 +18,12 @@ import {
 import type {
   FrequencyOption,
   MedicationOption,
-  VetAppointmentOption,
+  ClinicVisitOption,
 } from "@/lib/prescriptions/options";
 import { OptionalDateInput } from "@/components/OptionalDateInput";
 import { visitDate } from "@/lib/clinics/linkable";
 
-export type { FrequencyOption, MedicationOption, VetAppointmentOption };
+export type { FrequencyOption, MedicationOption, ClinicVisitOption };
 
 /** The columns the edit page loads to prefill the form. */
 export type PrescriptionInitial = {
@@ -61,8 +61,8 @@ export function PrescriptionForm({
   residentDisplayName,
   medications,
   frequencies,
-  vetAppointments,
-  preselectedVetAppointmentId = null,
+  clinicVisits,
+  preselectedClinicVisitId = null,
   initial = null,
   cancelHref,
 }: {
@@ -71,8 +71,8 @@ export function PrescriptionForm({
   residentDisplayName: string;
   medications: MedicationOption[];
   frequencies: FrequencyOption[];
-  vetAppointments: VetAppointmentOption[];
-  preselectedVetAppointmentId?: string | null;
+  clinicVisits: ClinicVisitOption[];
+  preselectedClinicVisitId?: string | null;
   initial?: PrescriptionInitial | null;
   cancelHref: string;
 }) {
@@ -84,7 +84,7 @@ export function PrescriptionForm({
   // A visit passed in the URL that the list does not offer (one after today)
   // is not preselected: the form starts unlinked rather than on a hidden value.
   const preselectedVisit =
-    vetAppointments.find((a) => a.id === preselectedVetAppointmentId) ?? null;
+    clinicVisits.find((a) => a.id === preselectedClinicVisitId) ?? null;
 
   // Medication / frequency each switch between "pick one" and "add a new
   // one" the way the intake form's origin field does; whichever set of
@@ -103,7 +103,7 @@ export function PrescriptionForm({
     ? newMedicationUnit
     : (selectedMedication?.dose_unit ?? null);
 
-  // A prescription written at a vet visit starts on the day of the visit
+  // A prescription written at a clinic visit starts on the day of the visit
   // unless the user says otherwise.
   const [startTouched, setStartTouched] = useState(false);
   const [startDate, setStartDate] = useState(() => {
@@ -113,9 +113,9 @@ export function PrescriptionForm({
   });
   const [endDate, setEndDate] = useState(initial?.end_date ?? "");
 
-  function handleVetAppointmentChange(id: string) {
+  function handleClinicVisitChange(id: string) {
     if (startTouched || mode === "edit" || !id) return;
-    const match = vetAppointments.find((a) => a.id === id);
+    const match = clinicVisits.find((a) => a.id === id);
     if (match) setStartDate(visitDate(match));
   }
 
@@ -329,18 +329,18 @@ export function PrescriptionForm({
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="vetAppointmentId" className="text-sm font-medium text-muted">
+        <label htmlFor="clinicVisitId" className="text-sm font-medium text-muted">
           {t.prescriptions.linkedVisit}
         </label>
         <select
-          id="vetAppointmentId"
-          name="vetAppointmentId"
+          id="clinicVisitId"
+          name="clinicVisitId"
           defaultValue={initial?.clinic_visit_id ?? preselectedVisit?.id ?? ""}
-          onChange={(e) => handleVetAppointmentChange(e.target.value)}
+          onChange={(e) => handleClinicVisitChange(e.target.value)}
           className={inputClass}
         >
           <option value="">{t.prescriptions.noLinkedVisit}</option>
-          {vetAppointments.map((a) => (
+          {clinicVisits.map((a) => (
             <option key={a.id} value={a.id}>
               {formatDate(a.appointment_date, locale)}
               {a.reason ? ` — ${a.reason}` : ""}

@@ -23,7 +23,7 @@ export async function AppHeader() {
 
   const { t, locale } = await getT();
   // The assistant opens from here so it is reachable from every screen,
-  // including the phone. The vet role does not get it (0070).
+  // including the phone. The doctor role does not get it (0070).
   const perms = await loadPermissions();
 
   // Name · role, so two logins with the same first name (or one person's
@@ -105,7 +105,7 @@ export async function AppHeader() {
           role={roleName}
           email={user.email ?? "—"}
           // min-w-32: flex-1 has a zero basis, so with min-w-0 the menu never
-          // wrapped; logins without the Assistant button (Vet, Head of Medical)
+          // wrapped; logins without the Assistant button (Doctor, Head of Medical)
           // got it squeezed to 15.9 px beside the logo. 8rem makes it wrap.
           className="order-4 flex min-w-32 flex-1 justify-end sm:order-3 sm:min-w-0 sm:flex-none"
         />

@@ -101,7 +101,7 @@ const en = {
     procedureTypes: "Procedure Types",
     bloodTestTypes: "Blood Test Types",
     frequencies: "Frequencies",
-    vets: "Vets",
+    vets: "Clinics",
     medications: "Medications",
     medicationList: "Medication list",
     diets: "Diets",
@@ -171,7 +171,7 @@ const en = {
       inCare: "dogs and cats in our care today",
       adoptedThisYear: "adopted into new homes this year",
       inFoster: "living with foster families",
-      inVetCare: "in vet care right now",
+      inVetCare: "in treatment right now",
     },
     featured: {
       heading: "Pet of the week",
@@ -320,7 +320,7 @@ const en = {
         "## What is a Shelter Friend?",
         "Shelter Friends are local businesses that help us care for the animals at Lanna Care for Animals. Every Friend helps in the way that suits their business, and we thank them in public — so our supporters know who to give their custom to.",
         "## Ways to help",
-        "- Donating goods we use every day: dog and cat food, litter, medicine, or building materials for kennels and fences\n- Giving our supporters a discount — for example, money off for adopters who show their adoption card\n- Offering a service, whatever your trade: vet care, grooming, transport, printing, repairs\n- Sponsoring something specific, such as a month's food",
+        "- Donating goods we use every day: dog and cat food, litter, medicine, or building materials for kennels and fences\n- Giving our supporters a discount — for example, money off for adopters who show their adoption card\n- Offering a service, whatever your trade: animal health care, grooming, transport, printing, repairs\n- Sponsoring something specific, such as a month's food",
         "## What your business gets",
         "- A profile on our Shelter Friends page, with your logo: who you are, what you do for the shelter, any offer for our supporters, and links to your website and Facebook page\n- Your logo in the Shelter Friends band on our home page\n- Our thanks, in public, and supporters who are asked to shop with you",
         "## Your contact details, your choice",
@@ -345,7 +345,7 @@ const en = {
         "## Getting to know the animal",
         "An adoption starts with the animal, wherever you live. We will tell you what we know about their personality, health and history, and answer your questions. If you are able to visit us and meet them in person, so much the better.",
         "## Paperwork and health requirements",
-        "Every country has its own rules for bringing an animal in, and they change from time to time. An overseas home usually needs some of the following, done with a vet before the animal travels:",
+        "Every country has its own rules for bringing an animal in, and they change from time to time. An overseas home usually needs some of the following, done with a doctor before the animal travels:",
         "- A microchip\n- Vaccinations, including rabies\n- Blood tests, where the destination country asks for them\n- Health certificates, and the export and import permits that go with them",
         "We work through what your country asks for with you, one step at a time.",
         "## The journey",
@@ -386,7 +386,7 @@ const en = {
       {
         heading: "People in the shelter's records",
         paragraphs: [
-          "To care for its animals the shelter keeps records about the people connected to them: adopters and carers, foster families, volunteers, vets and clinics, suppliers and donors. Typically that is a name, phone number, email address, postal address, LINE ID, and notes about the animals involved — for example the outcome of a home visit.",
+          "To care for its animals the shelter keeps records about the people connected to them: adopters and carers, foster families, volunteers, clinics and doctors, suppliers and donors. Typically that is a name, phone number, email address, postal address, LINE ID, and notes about the animals involved — for example the outcome of a home visit.",
           "We collect this directly from you when you adopt, foster, volunteer or donate, and use it only to run the shelter: arranging adoptions and fosters, following up on an animal's welfare, and keeping in touch with you. We never sell it and never share it for marketing.",
         ],
       },
@@ -405,7 +405,7 @@ const en = {
       {
         heading: "Your choices",
         paragraphs: [
-          "You can ask us what we hold about you, ask us to correct it, or ask us to remove it — we'll explain if part of it has to stay, for example a vet record. Just get in touch:",
+          "You can ask us what we hold about you, ask us to correct it, or ask us to remove it — we'll explain if part of it has to stay, for example a medical record. Just get in touch:",
         ],
       },
       {
@@ -529,7 +529,7 @@ const en = {
         immunizationTypes:
           "The vaccines tracked per resident, and how often each one has to be repeated.",
         procedureTypes:
-          "The kinds of procedure staff and vets pick from when logging one, and where duplicates get merged.",
+          "The kinds of procedure staff and doctors pick from when logging one, and where duplicates get merged.",
         bloodTestTypes:
           "The panels a blood test can be: CBC, chemistry, thyroid, heartworm…",
         frequencies:
@@ -550,7 +550,7 @@ const en = {
     medications: {
       title: "Medications",
       subtitle:
-        "The list of medications staff and vets pick from when writing a prescription. Add one, rename it, fix its unit, or merge a duplicate into the one to keep — its prescriptions move with it. A medication that has ever been prescribed can't be deleted: the prescription is part of the resident's medical record. Prices, stock and label photos are on Management → Medication stock.",
+        "The list of medications staff and doctors pick from when writing a prescription. Add one, rename it, fix its unit, or merge a duplicate into the one to keep — its prescriptions move with it. A medication that has ever been prescribed can't be deleted: the prescription is part of the resident's medical record. Prices, stock and label photos are on Management → Medication stock.",
       stockLink: "Medication stock",
     },
     /** Settings → Diets: the food list (split from Management, 2026-10-08). */
@@ -563,12 +563,13 @@ const en = {
     recentChanges: {
       title: "Recent changes",
       subtitle:
-        "Who changed what, newest first: every add, edit, archive and delete on residents, contacts, prescriptions, vet visits, weights, files and vaccinations, and on impact figures, facility plans, roles and permissions. The list shows which fields changed; the values appear only when you open one. The newest change to a record can be undone.",
+        "Who changed what, newest first: every add, edit, archive and delete on residents, contacts, prescriptions, clinic visits, weights, files and vaccinations, and on impact figures, facility plans, roles and permissions. The list shows which fields changed; the values appear only when you open one. The newest change to a record can be undone.",
       tables: {
         residents: "Resident",
         contacts: "Contact",
         prescriptions: "Prescription",
-        clinic_visits: "Vet visit",
+        clinic_visits: "Clinic visit",
+        vet_appointments: "Clinic visit",
         weight: "Weight",
         attachments: "File",
         immunization_records: "Vaccination",
@@ -791,7 +792,7 @@ const en = {
         records: {
           title: "Records added",
           residents: "Residents",
-          vetVisits: "Vet visits",
+          vetVisits: "Clinic visits",
           weights: "Weights",
           maintenanceJobs: "Maintenance jobs",
         },
@@ -857,7 +858,7 @@ const en = {
         staff: "Staff",
         admin: "Admin",
         management: "Management",
-        vet: "Vet",
+        doctor: "Doctor",
         volunteer: "Volunteer",
         public_viewer: "Public viewer",
       },
@@ -886,7 +887,7 @@ const en = {
           label: "Doctor (sets the clinics)",
           worksAt: (clinics: string[]) => `Works at ${clinics.join(", ")}`,
           worksNowhere: "Doesn't work at any clinic now, so this login sees nothing.",
-          editClinicsHint: "Change where they work on the clinic's Doctors page (Management → Vets).",
+          editClinicsHint: "Change where they work on the clinic's Doctors page (Management → Clinics).",
           unlink: "Unlink",
           unlinkConfirm: (doctor: string, email: string) =>
             `Unlink ${email} from ${doctor}? ${doctor} stays on the doctor lists with all their visits. This login then has no clinics and sees nothing until it is linked to a doctor again.`,
@@ -938,7 +939,7 @@ const en = {
         invalidRole: "Invalid role.",
         cantChangeOwnRole: "You can't change your own role.",
         clinicNotFound: "That clinic no longer exists.",
-        linkOnlyForVets: "Only a vet account is linked to a doctor. Set the role to vet first.",
+        linkOnlyForVets: "Only a Doctor login is linked to a doctor. Set the role to Doctor first.",
         doctorNotFound: "That doctor no longer exists.",
         doctorAlreadyLinked: "That doctor is already linked to another login.",
         alreadyLinked: "This login is already linked to a doctor.",
@@ -1230,7 +1231,7 @@ const en = {
     procedureTypes: {
       title: "Procedure Types",
       subtitle:
-        "The kinds of procedure staff and vets pick from when logging one — X-ray, ultrasound, teeth cleaning, nail clipping… New ones can be added inline from the procedure form, so duplicates and misspellings collect here. Rename a type in place, or merge a duplicate into the one to keep — its procedures move with it. A type that has ever been logged can't be deleted: the procedure is part of the resident's medical record.",
+        "The kinds of procedure staff and doctors pick from when logging one — X-ray, ultrasound, teeth cleaning, nail clipping… New ones can be added inline from the procedure form, so duplicates and misspellings collect here. Rename a type in place, or merge a duplicate into the one to keep — its procedures move with it. A type that has ever been logged can't be deleted: the procedure is part of the resident's medical record.",
       couldntLoad: "Couldn't load procedure types",
       couldntLoadUsage: "Couldn't load procedure counts",
       createForm: {
@@ -1412,13 +1413,13 @@ const en = {
         moveDown: (name: string) => `Move ${name} down`,
       },
       vetVisit: {
-        heading: "Typical vet visit",
+        heading: "Typical clinic visit",
         subtitle:
-          "What one vet visit usually costs. The cashflow forecast uses this for visits that are booked but not yet invoiced; once a real invoice is recorded against a visit, that figure is used instead. Not shown anywhere on the public website.",
+          "What one clinic visit usually costs. The cashflow forecast uses this for visits that are booked but not yet invoiced; once a real invoice is recorded against a visit, that figure is used instead. Not shown anywhere on the public website.",
         label: "Cost per visit",
         placeholder: "e.g. 800",
         hint:
-          "Leave it blank if you would rather not guess — the forecast then shows vet visits as \"not priced yet\" instead of counting them as free. One figure for every vet: there isn't enough invoice history yet for a per-vet average to mean much.",
+          "Leave it blank if you would rather not guess — the forecast then shows clinic visits as \"not priced yet\" instead of counting them as free. One figure for every clinic: there isn't enough invoice history yet for a per-clinic average to mean much.",
         invalid:
           "The estimate must be a number of baht, 0 or more. Leave it blank if you don't want one.",
       },
@@ -1851,7 +1852,7 @@ const en = {
         deliveries: "Record medicine or food as it arrives from a supplier.",
         projects: "Photos and stories from the shelter's work, filed by category like a folder tree.",
         outreach: "A short note after each visit to a temple or village: where, what you did, how many dogs.",
-        vets: "Look up a vet or clinic the shelter works with, and call them.",
+        vets: "Look up a clinic the shelter works with, and call them.",
         contacts: "Look up a carer, volunteer or supplier, and call or message them.",
         medicationList:
           "Who needs what medicine today, in walking order, with a photo of each animal and of each box. A list to read; nothing to tap.",
@@ -1870,13 +1871,13 @@ const en = {
         contacts:
           "The people the shelter works with: foster and adoptive carers, volunteers and suppliers.",
         vets:
-          "The vets and clinics the shelter books visits with, and how much each one has seen.",
+          "The clinics the shelter books visits with, and how much each one has seen.",
         medications:
           "How much of each medicine is in the cupboard, what it costs, when to reorder, its label photo, and what the prescriptions will use.",
         diets:
           "How much of each food is in the cupboard, what it costs, when to reorder, and what the residents will eat and what that costs.",
         cashflow:
-          "What the shelter is about to spend, in one place: food, medication, vaccinations, vet visits and maintenance.",
+          "What the shelter is about to spend, in one place: food, medication, vaccinations, clinic visits and maintenance.",
         translations:
           "Public-facing text whose other-language version still has to be written or checked.",
         stockUsage:
@@ -1918,7 +1919,7 @@ const en = {
         `${n} active job${n === 1 ? " has" : "s have"} nobody who can do ${n === 1 ? "it" : "them"} — ${n === 1 ? "its" : "their"} only assignees have left, or nobody is assigned. Edit the job, or use Hand over below.`,
       stranded: "Nobody can do this — reassign it",
       cannotDoBanner: (n: number) =>
-        `${n} job${n === 1 ? " is" : "s are"} with someone whose role can’t be given ${n === 1 ? "it" : "them"} — a vet, or someone who can’t open the page the job is done on. Edit the job, or use Hand over below.`,
+        `${n} job${n === 1 ? " is" : "s are"} with someone whose role can’t be given ${n === 1 ? "it" : "them"} — a doctor, or someone who can’t open the page the job is done on. Edit the job, or use Hand over below.`,
       cannotDo: (names: string) => `${names} can’t be given this job — take them off and choose someone who can`,
       nextDates: "Next",
       noNextDates: "No dates in the next year",
@@ -1990,7 +1991,7 @@ const en = {
         assigneesHint: "Everyone ticked sees each date on their My tasks; any of them can mark it done.",
         archivedMember: "(has left — untick to take them off)",
         assigneesRestricted: (roles: string) => `Only roles that can do the work on the linked page are listed: ${roles}.`,
-        assigneesNoVets: "Vets aren’t listed: their work comes from their vet appointments, not the shelter’s routine.",
+        assigneesNoVets: "Doctors aren’t listed: their work comes from their clinic visits, not the shelter’s routine.",
         cannotDoMember: "(can’t be given this job — untick to take them off)",
         active: "Active",
         activeHint: "A paused job shows nothing on My tasks, missed dates included. Resuming starts again from today.",
@@ -2055,7 +2056,7 @@ const en = {
         dependsOnSelf: "A job can't wait for itself.",
         assigneeNotLive: "Someone chosen can no longer sign in. Choose people who still work here.",
         assigneeCannotDo: (names: string) =>
-          `${names} can’t be given this job: vets aren’t given recurring jobs, and other roles only jobs on pages they can open. Choose someone else, or change the link.`,
+          `${names} can’t be given this job: doctors aren’t given recurring jobs, and other roles only jobs on pages they can open. Choose someone else, or change the link.`,
         hasHistory:
           "This job has been marked done or skipped before, so it is kept for the record. Pause it, or give it an end date, instead.",
         handOverFromRequired: "Choose whose jobs to hand over.",
@@ -2217,7 +2218,7 @@ const en = {
       noRoundNote:
         "These have no round ticked, so they would appear in no round. Ask Management to set one.",
       asNeededHeading: "As needed",
-      asNeededNote: "Given only when the vet says so; not part of any round.",
+      asNeededNote: "Given only when the doctor says so; not part of any round.",
       amountPicture: (amount: string) => `Amount: ${amount}`,
       roundsPicture: (rounds: string) => `Given: ${rounds}`,
       apartHeading: "Not in an enclosure today",
@@ -2341,7 +2342,7 @@ const en = {
     cashflow: {
       title: "Cashflow forecast",
       subtitle:
-        "What the shelter is committed to spending over the window, added up from the records: food, medication, vaccinations falling due, booked vet visits and open maintenance jobs, plus the fixed monthly costs listed under Fixed outgoings.",
+        "What the shelter is committed to spending over the window, added up from the records: food, medication, vaccinations falling due, booked clinic visits and open maintenance jobs, plus the fixed monthly costs listed under Fixed outgoings.",
       notABudgetLead: "This is not a budget.",
       notABudget:
         "It is the outgoings the shelter's own records imply, plus the fixed monthly costs someone has listed — no donations or other income, and no cost that is neither recorded nor listed. Treat it as a floor under what the month will cost, not as the whole picture.",
@@ -2358,7 +2359,7 @@ const en = {
         food: "Food",
         medication: "Medication",
         immunization: "Vaccinations",
-        vet: "Vet visits",
+        clinic: "Clinic visits",
         maintenance: "Maintenance",
         fixed: "Fixed outgoings",
       },
@@ -2396,22 +2397,22 @@ const en = {
         partialTitle: (n: number) =>
           `${n} more item${n === 1 ? "" : "s"} in this month have no price, so they are not in this figure.`,
         basisNote:
-          "“Priced” multiplies a price someone entered by what the records imply. “Estimated” uses a stand-in figure — a maintenance job's estimated cost, or the vet visits worked out from recent frequency (see the note below). “Invoiced” means every visit that month is booked and already has its real cost.",
+          "“Priced” multiplies a price someone entered by what the records imply. “Estimated” uses a stand-in figure — a maintenance job's estimated cost, or the clinic visits worked out from recent frequency (see the note below). “Invoiced” means every visit that month is booked and already has its real cost.",
       },
       csv: {
         download: "Download CSV",
         notPricedColumn: (category: string) => `${category} not priced`,
       },
       vetNote: (perWeek: string, visits: number) =>
-        `Vet visits: about ${perWeek} a week, from ${visits} completed in the last 90 days. Each week counts the larger of that and the visits actually booked, so a busy week is not understated.`,
+        `Clinic visits: about ${perWeek} a week, from ${visits} completed in the last 90 days. Each week counts the larger of that and the visits actually booked, so a busy week is not understated.`,
       vetNoHistory:
-        "Vet visits: no completed visit in the last 90 days, so there is no typical rate to forecast from — only visits already booked are counted, and an empty month here means nothing is booked, not that no visits are expected.",
+        "Clinic visits: no completed visit in the last 90 days, so there is no typical rate to forecast from — only visits already booked are counted, and an empty month here means nothing is booked, not that no visits are expected.",
       vetCostActual: (amount: string, n: number) =>
         `Costed at ${amount} a visit, the average of ${n} invoiced visits; a booked visit with its own cost uses that instead.`,
       vetCostEstimate: (amount: string) =>
         `Costed at ${amount} a visit (the typical figure; too few invoices are recorded to average); a booked visit with its own cost uses that instead.`,
       vetCostUnset:
-        "No typical vet visit figure is set and too few invoices are recorded to average, so visits without their own cost are not costed.",
+        "No typical clinic visit figure is set and too few invoices are recorded to average, so visits without their own cost are not costed.",
       vetNoteLink: "Change it on the website settings",
     },
     fixedOutgoings: {
@@ -2485,7 +2486,7 @@ const en = {
         readyForAdoption: "Ready for adoption",
         readyForAdoptionDetail: (publicCount: number) =>
           `${publicCount} shown on the public site`,
-        vetVisitsDue: "Vet visits next 7 days",
+        vetVisitsDue: "Clinic visits next 7 days",
         vetVisitsOverdue: (n: number) =>
           n === 1 ? "1 past visit still marked scheduled" : `${n} past visits still marked scheduled`,
         openMaintenance: "Open maintenance jobs",
@@ -2505,12 +2506,12 @@ const en = {
         hospitalised: "Sent to hospital",
         returned: "Returned to shelter",
         bloodWorkInHouse: "Blood work — in-house",
-        bloodWorkInHouseHint: "Tests not linked to a vet visit",
-        bloodWorkVetVisit: "Blood work — at vet visit",
-        bloodWorkVetVisitHint: "Tests linked to a vet visit",
-        vetVisitsInitial: "Initial vet visits",
+        bloodWorkInHouseHint: "Tests not linked to a clinic visit",
+        bloodWorkVetVisit: "Blood work — at clinic visit",
+        bloodWorkVetVisitHint: "Tests linked to a clinic visit",
+        vetVisitsInitial: "Initial clinic visits",
         vetVisitsInitialHint: "The resident's first ever visit",
-        vetVisitsFollowUp: "Follow-up vet visits",
+        vetVisitsFollowUp: "Follow-up clinic visits",
         vetVisitsFollowUpHint: "Any visit after the first",
         procedures: "Procedures",
         proceduresByType: "By type",
@@ -2528,15 +2529,15 @@ const en = {
       },
     },
     vets: {
-      title: "Vets",
+      title: "Clinics",
       subtitle:
-        "The vets and clinics the shelter books visits with. Name is what staff pick when booking; clinic and contact details show on the vet hub.",
+        "The clinics the shelter books visits with. The name is what staff pick when booking; contact details show on the clinic hub. A mobile doctor who comes to the shelter is added as a clinic with no address.",
       viewHub: "View visit statistics →",
-      couldntLoad: "Couldn't load vets",
+      couldntLoad: "Couldn't load clinics",
       couldntLoadVisits: "Couldn't load visit counts",
       createForm: {
         name: "Name",
-        namePlaceholder: "e.g. Dr Somchai",
+        namePlaceholder: "e.g. Chiang Mai Animal Hospital",
         clinic: "Clinic",
         clinicPlaceholder: "e.g. Chiang Mai Animal Hospital",
         contact: "Contact info",
@@ -2544,7 +2545,7 @@ const en = {
         contactHint: "Free text — phone, LINE ID, email, address",
         notes: "Notes",
         notesPlaceholder: "Specialities, opening hours, emergency line…",
-        addButton: "Add vet",
+        addButton: "Add clinic",
       },
       table: {
         name: "Name",
@@ -2553,25 +2554,25 @@ const en = {
         notes: "Notes",
         visits: "Visits",
         visitCount: (n: number) => `${n} visit${n === 1 ? "" : "s"}`,
-        noVets: "No vets yet.",
+        noVets: "No clinics yet.",
         doctors: "Doctors",
         doctorCount: (n: number) => `${n} doctor${n === 1 ? "" : "s"}`,
         noDoctors: "None yet",
       },
-      deleteConfirm: (name: string) => `Delete vet "${name}"? This can't be undone.`,
-      createdVet: (name: string) => `Created vet "${name}".`,
+      deleteConfirm: (name: string) => `Delete clinic "${name}"? This can't be undone.`,
+      createdVet: (name: string) => `Created clinic "${name}".`,
       errors: {
         nameRequired: "Name is required.",
         hasVisits: (n: number) =>
-          `This vet has ${n} logged visit${n === 1 ? "" : "s"} and can't be deleted — the visits are part of the residents' medical records.`,
+          `This clinic has ${n} logged visit${n === 1 ? "" : "s"} and can't be deleted — the visits are part of the residents' medical records.`,
       },
     },
     vetDoctors: {
-      back: "← Back to vets",
-      title: (vet: string) => `Doctors at ${vet}`,
+      back: "← Back to clinics",
+      title: (clinic: string) => `Doctors at ${clinic}`,
       subtitle:
-        "This list fills itself: every doctor's name typed on a visit with this vet is added here, and the visit forms suggest the names on it. A doctor needs only a name — no email or account. One who works at more than one clinic is one person listed at each. Use this page to put it right — rename a misspelling, merge two entries for one person (even from different clinics), add a doctor from another clinic, and mark a doctor who has left this clinic so they are no longer suggested here.",
-      viewHub: "View this vet's visits →",
+        "This list fills itself: every doctor's name typed on a visit with this clinic is added here, and the visit forms suggest the names on it. A doctor needs only a name — no email or account. One who works at more than one clinic is one person listed at each. Use this page to put it right — rename a misspelling, merge two entries for one person (even from different clinics), add a doctor from another clinic, and mark a doctor who has left this clinic so they are no longer suggested here.",
+      viewHub: "View this clinic's visits →",
       couldntLoad: "Couldn't load the doctors",
       couldntLoadVisits: "Couldn't load visit counts",
       addForm: {
@@ -2597,7 +2598,7 @@ const en = {
         visitCount: (n: number) => `${n} visit${n === 1 ? "" : "s"}`,
         lastVisit: (date: string) => `Last: ${date}`,
         noDoctors:
-          "No doctors yet. They appear here when a doctor's name is recorded on a visit with this vet, or add one above.",
+          "No doctors yet. They appear here when a doctor's name is recorded on a visit with this clinic, or add one above.",
         leftHeading: (n: number) => `No longer at the clinic (${n})`,
       },
       leftBadge: "Left",
@@ -2607,7 +2608,7 @@ const en = {
       renameConfirm: (from: string, to: string, n: number, clinics: string[]) =>
         `Rename "${from}" to "${to}"?\n\n${clinics.length ? `This is one person: the name changes at ${clinics.join(", ")} too.\n\n` : ""}The doctor's name changes on ${n === 0 ? "every visit linked to them" : n === 1 ? "the visit" : `all ${n} visits`} linked to them, past ones included, everywhere the visit is shown.\n\nIf "${to}" is someone already on the list, cancel and use Merge… instead.`,
       markLeft: "Mark as left",
-      markLeftHint: "Stops suggesting them at this clinic. Their visits keep their name, and they stay listed at any other clinic. A vet login linked to them loses this clinic.",
+      markLeftHint: "Stops suggesting them at this clinic. Their visits keep their name, and they stay listed at any other clinic. A Doctor login linked to them loses this clinic.",
       markActive: "Back at the clinic",
       possibleDuplicate: (names: string) => `Possibly the same person as ${names}`,
       duplicatesNote: (n: number) =>
@@ -2627,9 +2628,9 @@ const en = {
       deleteConfirm: (name: string) => `Remove "${name}" from the list? This can't be undone.`,
       errors: {
         nameRequired: "Enter the doctor's name.",
-        alreadyListed: (name: string) => `"${name}" is already on this vet's list.`,
+        alreadyListed: (name: string) => `"${name}" is already on this clinic's list.`,
         renameClash: (name: string) =>
-          `"${name}" is already on this vet's list. If it is the same person, use Merge… instead of renaming.`,
+          `"${name}" is already on this clinic's list. If it is the same person, use Merge… instead of renaming.`,
         hasVisits: (n: number) =>
           `This doctor is on ${n} recorded visit${n === 1 ? "" : "s"} here, so they can't be removed — merge them into another spelling, or mark them as left.`,
         pickDoctor: "Choose a doctor.",
@@ -2914,21 +2915,21 @@ const en = {
     pageSubtitleReadOnly:
       "Ask where a resident is, who is in an enclosure, or what is due. Recording changes is for staff and management.",
     tryTitle: "Try something like",
-    examples: (resident: string, enclosure: string, vet: string) => [
+    examples: (resident: string, enclosure: string, clinic: string) => [
       `Where is ${resident}?`,
       `Who is in ${enclosure}?`,
       "What is due this week?",
-      `Send ${resident} to the vet hospital today`,
+      `Send ${resident} to hospital today`,
       `${resident} is back from hospital`,
       `${resident} weighs 12.4 kg`,
       `Move ${resident} to ${enclosure} today`,
-      `Book a vet visit for ${resident} with ${vet} on Friday at 10am`,
+      `Book a clinic visit for ${resident} with ${clinic} on Friday at 10am`,
     ],
     placeholder: "What should happen?",
     send: "Send",
     looking: "Looking...",
     cantHelp:
-      "I didn't understand that one. I can send a resident to hospital and back, log a weight, move a resident, book a vet visit, and answer \"where is …\", \"who is in …\" and \"what is due this week\". The user manual has the exact sentences.",
+      "I didn't understand that one. I can send a resident to hospital and back, log a weight, move a resident, book a clinic visit, and answer \"where is …\", \"who is in …\" and \"what is due this week\". The user manual has the exact sentences.",
     severalMatch: "More than one resident has that name — pick the right one.",
     whichOne: "Which one do you mean?",
     fillBlanks: "Check the details, fill in anything missing, then confirm.",
@@ -2943,28 +2944,28 @@ const en = {
         `Done — ${resident} has been moved to ${enclosure}.`,
     },
     vet: {
-      title: "Book vet visit",
-      summary: (resident: string, vet: string, when: string, doctor: string | null = null) =>
-        `Book a vet visit for ${resident} with ${vet}${doctor ? ` (${doctor})` : ""} on ${when}`,
-      done: (resident: string, vet: string, when: string, doctor: string | null = null) =>
-        `Done — vet visit booked for ${resident} with ${vet}${doctor ? ` (${doctor})` : ""} on ${when}.`,
-      doctorNew: (vet: string) =>
-        `Not on ${vet}'s doctor list yet — it will be added when you confirm. Fix the spelling first if it's wrong.`,
+      title: "Book clinic visit",
+      summary: (resident: string, clinic: string, when: string, doctor: string | null = null) =>
+        `Book a clinic visit for ${resident} with ${clinic}${doctor ? ` (${doctor})` : ""} on ${when}`,
+      done: (resident: string, clinic: string, when: string, doctor: string | null = null) =>
+        `Done — clinic visit booked for ${resident} with ${clinic}${doctor ? ` (${doctor})` : ""} on ${when}.`,
+      doctorNew: (clinic: string) =>
+        `Not on ${clinic}'s doctor list yet — it will be added when you confirm. Fix the spelling first if it's wrong.`,
       doctorAlike: (name: string) => `${name} is on this clinic's list.`,
       doctorUse: (name: string) => `Use "${name}"`,
     },
     hospital: {
       title: "Send to hospital",
       summary: (resident: string, date: string) =>
-        `Send ${resident} to the vet hospital on ${date}`,
-      done: (resident: string) => `Done — ${resident} has been sent to the vet hospital.`,
+        `Send ${resident} to hospital on ${date}`,
+      done: (resident: string) => `Done — ${resident} has been sent to hospital.`,
     },
     hospitalReturn: {
       title: "Back from hospital",
       summary: (resident: string, to: string, date: string) =>
-        `Bring ${resident} back from the vet hospital to ${to} on ${date}`,
+        `Bring ${resident} back from hospital to ${to} on ${date}`,
       done: (resident: string, enclosure: string) =>
-        `Done — ${resident} is back from the vet hospital, in ${enclosure}.`,
+        `Done — ${resident} is back from hospital, in ${enclosure}.`,
     },
     weight: {
       title: "Log weight",
@@ -2975,14 +2976,14 @@ const en = {
     fields: {
       resident: "Resident",
       enclosure: "To enclosure",
-      vet: "Vet / clinic",
+      vet: "Clinic",
       date: "Date",
       time: "Time",
       reason: "Reason",
       weightKg: "Weight (kg)",
     },
     pickResident: "Choose a resident",
-    pickVet: "Choose a vet",
+    pickVet: "Choose a clinic",
     unknown: "…",
     /** Stored in the notes of whatever the assistant records, in the language of whoever confirmed it. */
     stamp: (request: string) => `via the assistant — "${request}"`,
@@ -3016,7 +3017,7 @@ const en = {
         days === 1 ? "Due today" : `Due in the next ${days} days`,
       dueNothing: "Nothing is due, and nothing is overdue.",
       dueOverdue: "Overdue",
-      dueVisits: "Vet visits",
+      dueVisits: "Clinic visits",
       dueJobs: "Maintenance",
     },
     panel: {
@@ -3029,15 +3030,15 @@ const en = {
   },
 
   vetVisits: {
-    pageTitle: "Book Vet Visit",
+    pageTitle: "Book Clinic Visit",
     pageSubtitle:
-      "Log a vet appointment — upcoming, or retrospective for a visit (including an emergency) that already happened. Select multiple residents to book one visit for several at once.",
+      "Log a clinic visit — upcoming, or retrospective for a visit (including an emergency) that already happened. Select multiple residents to book one visit for several at once.",
     couldntLoadResidents: "Couldn't load residents",
-    couldntLoadVets: "Couldn't load vets",
+    couldntLoadVets: "Couldn't load clinics",
     residentsLabel: "Residents",
     selectResidents: "Select residents",
-    vetClinic: "Vet / clinic",
-    selectVet: "Select a vet",
+    vetClinic: "Clinic",
+    selectVet: "Select a clinic",
     doctorName: "Doctor (optional)",
     doctorNamePlaceholder: "e.g. Dr Somchai",
     doctorNameHint: "Who saw the resident, if you know. Leave blank otherwise.",
@@ -3054,29 +3055,29 @@ const en = {
     ownClinicHint: "Your account belongs to this clinic, so visits you record are for it.",
     doctorLockedHint: "You are the doctor on visits you record, so this is filled in for you.",
     noClinicForAccount:
-      "Your account isn't linked to a clinic yet, so you can't record vet visits. Ask a shelter admin to set your clinic in Settings → Security.",
+      "Your account isn't linked to a clinic yet, so you can't record clinic visits. Ask a shelter admin to set your clinic in Settings → Security.",
     otherClinicReadOnly:
       "This visit was recorded by another clinic, so you can read it but not change it.",
     notes: "Notes",
     notesPlaceholder: "Any additional detail for this visit",
-    editPageTitle: "Edit Vet Visit",
+    editPageTitle: "Edit Clinic Visit",
     editPageSubtitle:
-      "Mark the visit completed or cancelled, fix the date or vet, and record what it cost once the invoice is in.",
+      "Mark the visit completed or cancelled, fix the date or clinic, and record what it cost once the invoice is in.",
     forResident: (name: string) => `For ${name}`,
     cost: "Cost (฿)",
-    costHint: "From the invoice — leave blank until you have it. The vet hub totals these.",
+    costHint: "From the invoice — leave blank until you have it. The clinic hub totals these.",
     booking: "Booking...",
     bookButton: (count: number) =>
-      count > 1 ? `Book visit for ${count} residents` : "Book vet visit",
+      count > 1 ? `Book visit for ${count} residents` : "Book clinic visit",
     errors: {
       selectResident: "Select at least one resident.",
-      selectVet: "Select a vet.",
+      selectVet: "Select a clinic.",
       enterDateTime: "Enter an appointment date and time.",
       invalidDate: "Invalid appointment date.",
       invalidStatus: "Choose a valid status.",
       invalidCost: "Cost must be a number of baht, zero or more.",
-      notFound: "Vet visit not found.",
-      notAuthorized: "You don't have permission to change vet visits.",
+      notFound: "Clinic visit not found.",
+      notAuthorized: "You don't have permission to change clinic visits.",
       notYourClinic: "You can only record visits for your own clinic.",
       prescriptionsBlockFuture:
         "This visit has prescriptions linked to it, so it can't be moved to a day after today. Unlink them from the prescriptions first, or keep the visit on the day it happened.",
@@ -3084,12 +3085,12 @@ const en = {
   },
 
   vets: {
-    pageTitle: "Vets",
+    pageTitle: "Clinics",
     pageSubtitle:
-      "The vets and clinics the shelter works with, and how much of the caseload each one sees.",
-    couldntLoadVets: "Couldn't load vets",
-    couldntLoadVisits: "Couldn't load vet visits",
-    manageInAdmin: "Edit vet details in Management",
+      "The clinics the shelter works with, and how much of the caseload each one sees.",
+    couldntLoadVets: "Couldn't load clinics",
+    couldntLoadVisits: "Couldn't load clinic visits",
+    manageInAdmin: "Edit clinic details in Management",
     manageDoctors: "Manage the doctor list",
     list: {
       visits: "Visits",
@@ -3098,10 +3099,10 @@ const en = {
       upcoming: (n: number) => `${n} upcoming`,
       overdue: (n: number) => `${n} overdue`,
       nothingScheduled: "Nothing scheduled",
-      noVets: "No vets yet — a manager can add them under Management → Vets.",
+      noVets: "No clinics yet — a manager can add them under Management → Clinics.",
     },
     hub: {
-      backToVets: "← Back to vets",
+      backToVets: "← Back to clinics",
       noContact: "No contact details recorded.",
       showing: "Showing",
       periods: {
@@ -3133,20 +3134,20 @@ const en = {
       nothingScheduled: "None scheduled",
       nextVisit: (date: string, resident: string) => `Next: ${date} · ${resident}`,
       pastDue: "Past-due visits need a status update",
-      noUpcomingDetail: "No future visits booked with this vet",
+      noUpcomingDetail: "No future visits booked with this clinic",
       procedures: "Procedures",
       bloodTests: "Blood tests",
       prescriptions: "Prescriptions",
-      linkedDetail: "Logged against this vet's visits",
+      linkedDetail: "Logged against this clinic's visits",
       chart: {
         heading: "Visits per month",
         subheading: (months: number) => (months === 1 ? "This month" : `Last ${months} months`),
         empty: "No visits in this period.",
         visits: (n: number) => `${n} visit${n === 1 ? "" : "s"}`,
-        ariaLabel: (months: number) => `Vet visits per month over the last ${months} months`,
+        ariaLabel: (months: number) => `Clinic visits per month over the last ${months} months`,
       },
       residentsHeading: "Residents seen",
-      noResidentsInPeriod: "No residents were seen by this vet in this period.",
+      noResidentsInPeriod: "No residents were seen at this clinic in this period.",
       table: {
         resident: "Resident",
         visits: "Visits",
@@ -3155,11 +3156,11 @@ const en = {
       },
       visitsHeading: "Visits",
       showingOf: (shown: number, total: number) => `(latest ${shown} of ${total})`,
-      noVisitsInPeriod: "No visits with this vet in this period.",
+      noVisitsInPeriod: "No visits with this clinic in this period.",
       doctors: {
         heading: "Doctors",
         visits: (n: number) => `${n} visit${n === 1 ? "" : "s"}`,
-        none: "No doctors recorded yet. A doctor's name typed on a visit with this vet is added here.",
+        none: "No doctors recorded yet. A doctor's name typed on a visit with this clinic is added here.",
         left: (n: number) => `+ ${n} no longer at the clinic`,
       },
       unknownResident: "Unknown resident",
@@ -3280,19 +3281,19 @@ const en = {
     pageSubtitle:
       "Record a blood test for this resident and attach the lab scan or PDF — one or more files per test.",
     noResidentSelected:
-      "Open this from a resident's Blood Tests tab or a vet appointment so the test is logged against the right resident.",
+      "Open this from a resident's Blood Tests tab or a clinic visit so the test is logged against the right resident.",
     residentNotFound: "Resident not found.",
-    couldntLoadVetAppointments: "Couldn't load vet appointments",
+    couldntLoadVetAppointments: "Couldn't load clinic visits",
     forResident: (name: string) => `For ${name}`,
     dateOfTest: "Date of test",
     testType: "Test type",
     couldntLoadTypes: "Couldn't load blood test types",
     unknownType: "Unknown test type",
-    linkedVisit: "Linked vet visit",
+    linkedVisit: "Linked clinic visit",
     noLinkedVisit: "No linked visit",
     results: "Results / notes",
     resultsPlaceholder:
-      "Free text for now — e.g. which tests were run, key values, the vet’s summary.",
+      "Free text for now — e.g. which tests were run, key values, the doctor’s summary.",
     resultsHint: "Optional — you can leave this blank and just attach the scan.",
     saving: "Saving...",
     saveButton: "Save blood test",
@@ -3302,7 +3303,7 @@ const en = {
     attachHint:
       "Pick the lab scan or PDF here; it uploads when you save. You can add more later from the Blood Tests tab.",
     done: "Done",
-    linkedVisitLabel: (date: string, reason: string) => `Vet visit: ${date} — ${reason}`,
+    linkedVisitLabel: (date: string, reason: string) => `Clinic visit: ${date} — ${reason}`,
     fileFallback: "File",
     noFiles: "No files attached yet.",
     attachFiles: "Attach files",
@@ -3407,27 +3408,27 @@ const en = {
   weight: {
     pageTitle: "Log Weight",
     pageSubtitle:
-      "Record a weight reading for this resident. Every reading builds the trend on the Weight tab, so weigh at intake, at each vet visit and whenever condition changes.",
+      "Record a weight reading for this resident. Every reading builds the trend on the Weight tab, so weigh at intake, at each clinic visit and whenever condition changes.",
     noResidentSelected:
-      "Open this from a resident's Weight tab or a vet appointment so the reading is logged against the right resident.",
+      "Open this from a resident's Weight tab or a clinic visit so the reading is logged against the right resident.",
     residentNotFound: "Resident not found.",
-    couldntLoadVetAppointments: "Couldn't load vet appointments",
+    couldntLoadVetAppointments: "Couldn't load clinic visits",
     forResident: (name: string) => `For ${name}`,
     previousReading: (weight: string, date: string) =>
       `Last reading: ${weight} on ${date}`,
     weightKg: "Weight",
     dateWeighed: "Date weighed",
-    linkedVisit: "Linked vet visit",
+    linkedVisit: "Linked clinic visit",
     noLinkedVisit: "No linked visit — weighed at the shelter",
     linkedVisitHint:
-      "Weighing is standard at a vet visit; linking it keeps the reading with that visit's record. A visit carries one weight, so visits that already have one — and visits still to come — aren't listed.",
+      "Weighing is standard at a clinic visit; linking it keeps the reading with that visit's record. A visit carries one weight, so visits that already have one — and visits still to come — aren't listed.",
     notes: "Notes",
     notesPlaceholder: "Optional — e.g. before or after feeding, scales used, body condition.",
     saving: "Saving...",
     saveButton: "Save weight",
     editPageTitle: "Edit Weight",
     editPageSubtitle:
-      "Correct this reading. A resident has one weight per day and a vet visit one weight, so a correction changes this reading rather than adding another.",
+      "Correct this reading. A resident has one weight per day and a clinic visit one weight, so a correction changes this reading rather than adding another.",
     readingNotFound: "Weight reading not found.",
     saveChanges: "Save changes",
     sameDay: {
@@ -3458,7 +3459,7 @@ const en = {
       alreadyOnDay:
         "A weight is already recorded for this resident on that day. There is one weight per day — correct that reading on the Weight tab instead.",
       alreadyOnVisit:
-        "That vet visit already has a weight. Correct that reading instead, or link this one to another visit.",
+        "That clinic visit already has a weight. Correct that reading instead, or link this one to another visit.",
       readingGone:
         "That reading was changed or removed in the meantime. Reload the page and try again.",
     },
@@ -3469,10 +3470,10 @@ const en = {
     pageSubtitle:
       "Record a procedure for this resident — an X-ray, ultrasound, teeth cleaning, spay/neuter — and attach the images or paperwork that came with it.",
     noResidentSelected:
-      "Open this from a resident's Procedures tab or a vet appointment so the procedure is logged against the right resident.",
+      "Open this from a resident's Procedures tab or a clinic visit so the procedure is logged against the right resident.",
     residentNotFound: "Resident not found.",
     couldntLoadTypes: "Couldn't load procedure types",
-    couldntLoadVetAppointments: "Couldn't load vet appointments",
+    couldntLoadVetAppointments: "Couldn't load clinic visits",
     forResident: (name: string) => `For ${name}`,
     type: "Procedure",
     selectType: "Select a procedure",
@@ -3481,10 +3482,10 @@ const en = {
     chooseExistingType: "Choose an existing procedure instead",
     unknownType: "Unknown procedure",
     date: "Date",
-    linkedVisit: "Linked vet visit",
+    linkedVisit: "Linked clinic visit",
     noLinkedVisit: "No linked visit — done at the shelter",
     linkedVisitHint:
-      "Most procedures happen at a vet visit; linking keeps the record with that visit. Leave unlinked for things done on site, like nail clipping.",
+      "Most procedures happen at a clinic visit; linking keeps the record with that visit. Leave unlinked for things done on site, like nail clipping.",
     notes: "Notes",
     notesPlaceholder:
       "Optional — findings, what was done, follow-up needed, who performed it.",
@@ -3496,7 +3497,7 @@ const en = {
     attachHint:
       "Pick any X-rays, scans or paperwork here; they upload when you save. You can add more later from the Procedures tab.",
     done: "Done",
-    linkedVisitLabel: (date: string, reason: string) => `Vet visit: ${date} — ${reason}`,
+    linkedVisitLabel: (date: string, reason: string) => `Clinic visit: ${date} — ${reason}`,
     doneAtShelter: "Done at the shelter",
     fileFallback: "File",
     noFiles: "No files attached.",
@@ -3520,11 +3521,11 @@ const en = {
     pageSubtitle:
       "Record a medication for this resident: what, how much, how often and for how long. Ongoing prescriptions count toward the shelter's daily medication requirement until they end.",
     noResidentSelected:
-      "Open this from a resident's Prescriptions tab or a vet appointment so the prescription is recorded against the right resident.",
+      "Open this from a resident's Prescriptions tab or a clinic visit so the prescription is recorded against the right resident.",
     residentNotFound: "Resident not found.",
     couldntLoadMedications: "Couldn't load medications",
     couldntLoadFrequencies: "Couldn't load frequencies",
-    couldntLoadVetAppointments: "Couldn't load vet appointments",
+    couldntLoadVetAppointments: "Couldn't load clinic visits",
     forResident: (name: string) => `For ${name}`,
     medication: "Medication",
     selectMedication: "Select a medication",
@@ -3549,7 +3550,7 @@ const en = {
     startDate: "Start date",
     endDate: "End date",
     endDateHint: "Leave blank if ongoing.",
-    linkedVisit: "Linked vet visit",
+    linkedVisit: "Linked clinic visit",
     noLinkedVisit: "No linked visit",
     notes: "Notes",
     notesPlaceholder: "e.g. give with food, route, anything the carer should know",
@@ -3574,7 +3575,7 @@ const en = {
       endBeforeStart: "End date can't be before the start date.",
       saveFailed: "Failed to save the prescription.",
       visitInFuture:
-        "That vet visit hasn't happened yet, so a prescription can't be linked to it. Link it to a visit on or before today, or leave it unlinked.",
+        "That clinic visit hasn't happened yet, so a prescription can't be linked to it. Link it to a visit on or before today, or leave it unlinked.",
     },
   },
 
@@ -3798,12 +3799,12 @@ const en = {
       hideDeceased: "Hide deceased",
       couldntLoad: "Couldn't load residents",
       /**
-       * A vet's list is scoped by the database to their clinic (0108), so it
+       * A doctor's list is scoped by the database to their clinics (0108), so it
        * says whose list it is — otherwise a short list reads as missing
        * residents.
        */
       vetScope: (clinic: string) =>
-        `Showing the residents ${clinic} ${clinic.includes(", ") ? "have" : "has"} a vet visit, prescription, procedure or blood test for. A resident appears here once the shelter books them a visit with one of your clinics.`,
+        `Showing the residents ${clinic} ${clinic.includes(", ") ? "have" : "has"} a clinic visit, prescription, procedure or blood test for. A resident appears here once the shelter books them a visit with one of your clinics.`,
       vetScopeNoClinic:
         "Your account isn't linked to a clinic yet, so no residents are shown. Ask a shelter admin to set your clinic in Settings → Security.",
       selectedCount: (n: number) => `${n} selected`,
@@ -3814,8 +3815,8 @@ const en = {
         `Downloading ${filename}. It goes to your Downloads folder (on an iPhone, the Files app under Downloads). Open it in Excel or Google Sheets.`,
       logImmunizations: "Log immunizations",
       logImmunizationsCount: (n: number) => `Log immunizations (${n})`,
-      bookVetVisit: "Book vet visit",
-      bookVetVisitCount: (n: number) => `Book vet visit (${n})`,
+      bookVetVisit: "Book clinic visit",
+      bookVetVisitCount: (n: number) => `Book clinic visit (${n})`,
       newResident: "New resident (intake)",
       table: {
         id: "ID",
@@ -3900,7 +3901,7 @@ const en = {
       immunizationsMissing: (n: number) => `${n} missing`,
       immunizationsRecorded: (n: number) => `${n} recorded`,
       allMandatoryOnFile: "All mandatory types on file",
-      vetAppointments: "Vet Appointments",
+      vetAppointments: "Clinic Visits",
       vetOverdue: (n: number) => `${n} overdue`,
       vetUpcoming: (n: number) => `${n} upcoming`,
       vetNoneScheduled: "None scheduled",
@@ -3947,8 +3948,8 @@ const en = {
         "Record that the resident has gone to hospital. Their current placement is closed and they're marked as off-site in medical care from the date given.",
       returnHint:
         "This enclosure is remembered so the resident can be returned to it when they come back.",
-      visitNote: (date: string, reason: string | null, vet: string | null) =>
-        [`Vet visit ${date}`, reason, vet].filter(Boolean).join(" · "),
+      visitNote: (date: string, reason: string | null, clinic: string | null) =>
+        [`Clinic visit ${date}`, reason, clinic].filter(Boolean).join(" · "),
       fields: {
         date: "Date admitted",
         notes: "Reason / notes",
@@ -4022,13 +4023,13 @@ const en = {
         causeOfDeath: "Cause of death",
         causeOfDeathPlaceholder: "e.g. kidney failure, hit by a car, old age",
         notesPlaceholder:
-          "e.g. found in the morning, euthanised at the clinic after the vet's advice",
+          "e.g. found in the morning, euthanised at the clinic after the doctor's advice",
       },
       whatHappens: {
         title: "What recording a death does",
         items: [
           "The resident's status becomes Deceased and they leave their enclosure.",
-          "Future vet appointments are cancelled and active prescriptions are ended.",
+          "Future clinic visits are cancelled and active prescriptions are ended.",
           "They're removed from the public adoption pages.",
           "Their whole record becomes read-only — no edits, photos or new medical records.",
           "Their Drive folder moves to Residents/Deceased/, and a summary PDF plus an offline index page are written into it.",
@@ -4081,7 +4082,7 @@ const en = {
           title: "What withdrawing a death does",
           items: [
             "The resident goes back to the enclosure (or carer) they were with when the death was recorded — as of now, not backdated.",
-            "The vet appointments the death cancelled are scheduled again, and the prescriptions it ended get their previous end dates back.",
+            "The clinic visits the death cancelled are scheduled again, and the prescriptions it ended get their previous end dates back.",
             "Ready for adoption is restored if it was set, and they return to the public adoption pages if they were listed.",
             "Their record can be edited again.",
             "Their Drive folder moves back under Residents/, and the generated summary PDF and index page are deleted.",
@@ -4324,7 +4325,7 @@ const en = {
         housing: "Housing & Placement History",
         photos: "Photos",
         immunizations: "Immunizations",
-        "vet-appointments": "Vet Appointments",
+        "clinic-visits": "Clinic Visits",
         prescriptions: "Prescriptions",
         weight: "Weight History",
         procedures: "Procedures",
@@ -4336,7 +4337,7 @@ const en = {
       empty: {
         housing: "No placement history recorded yet.",
         immunizations: "No immunizations recorded yet.",
-        vetAppointments: "No vet appointments logged yet.",
+        vetAppointments: "No clinic visits logged yet.",
         prescriptions: "No prescriptions recorded yet.",
         weight: "No weight readings recorded yet.",
         procedures: "No procedures recorded yet.",
@@ -4347,19 +4348,19 @@ const en = {
       ongoing: "ongoing",
       logImmunization: "Log immunization",
       logBloodTest: "Log blood test",
-      bookVetVisit: "Book vet visit",
+      bookVetVisit: "Book clinic visit",
       missingMandatory: (list: string) => `Missing mandatory: ${list}`,
       nextDueDates: "Next due dates",
       overdue: "(overdue)",
       unknownVaccine: "Unknown vaccine",
-      vetVisitFallback: "Vet visit",
+      vetVisitFallback: "Clinic visit",
       unknownMedication: "Unknown medication",
       addPrescription: "Add prescription",
       currentPrescriptions: "Current",
       expiredPrescriptions: "Expired",
       noCurrentPrescriptions: "No current prescriptions.",
       startsOn: (date: string) => `Starts ${date}`,
-      linkedVisit: (date: string) => `Vet visit ${date}`,
+      linkedVisit: (date: string) => `Clinic visit ${date}`,
       logWeight: "Log weight",
       editWeight: "Edit weight",
       logProcedure: "Log procedure",
@@ -5116,7 +5117,7 @@ const en = {
       "immunization_types.name": "Immunization type",
       "procedure_types.name": "Procedure type",
       "blood_test_types.name": "Blood test type",
-      "vets.name": "Clinic",
+      "clinics.name": "Clinic",
       "fixed_outgoings.label": "Fixed outgoing",
       "roles.name": "Role",
     } as Record<string, string>,
@@ -5287,7 +5288,7 @@ const en = {
       admin: "Admin",
       management: "Management",
       staff: "Staff",
-      vet: "Vet",
+      doctor: "Doctor",
       volunteer: "Volunteer",
     },
     showingAll: (role: string) =>

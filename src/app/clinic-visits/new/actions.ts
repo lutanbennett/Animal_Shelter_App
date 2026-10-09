@@ -6,12 +6,12 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { loadClinicScope, scopeAllowsClinic } from "@/lib/clinics/scope";
 
-export type VetVisitState = { error: string } | undefined;
+export type ClinicVisitState = { error: string } | undefined;
 
-export async function bookVetVisit(
-  _state: VetVisitState,
+export async function bookClinicVisit(
+  _state: ClinicVisitState,
   formData: FormData,
-): Promise<VetVisitState> {
+): Promise<ClinicVisitState> {
   const { t } = await getT();
   const residentIds = formData
     .getAll("residentIds")
@@ -42,12 +42,12 @@ export async function bookVetVisit(
   }
 
   const supabase = await createClient();
-  // The page shows a vet only their own clinic; this is the check a posted
+  // The page shows a doctor login only its current clinics; this is the check a posted
   // form can't get round (src/lib/clinics/scope.ts).
   const scope = await loadClinicScope(supabase);
   if (scope.kind === "unlinked") return { error: t.vetVisits.noClinicForAccount };
   if (!scopeAllowsClinic(scope, clinicId)) return { error: t.vetVisits.errors.notYourClinic };
-  // A linked vet's visit is their own: the locked Doctor field is not
+  // A doctor login's visit is its own: the locked Doctor field is not
   // trusted from the form (Lutan, 2026-10-01).
   if (scope.kind === "clinics" && scope.doctorName) doctorName = scope.doctorName;
 
@@ -63,11 +63,11 @@ export async function bookVetVisit(
     p_doctor_name: doctorName,
   });
 
-  if (error) return databaseFailure("vetVisits.create", error, t.common);
+  if (error) return databaseFailure("clinicVisits.create", error, t.common);
 
-  // Back to what was booked: one resident's vet visits, or the residents
+  // Back to what was booked: one resident's clinic visits, or the residents
   // list a bulk booking was started from. Never "/", the public website.
   redirect(
-    residentIds.length === 1 ? `/residents/${residentIds[0]}/vet-appointments` : "/residents",
+    residentIds.length === 1 ? `/residents/${residentIds[0]}/clinic-visits` : "/residents",
   );
 }

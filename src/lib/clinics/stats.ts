@@ -1,7 +1,7 @@
 /**
- * Vet visit statistics, shared by the `/clinics` list and the vet hub. Pure
+ * Clinic visit statistics, shared by the `/clinics` list and the clinic hub. Pure
  * functions over the appointment rows: the shelter books a few hundred
- * visits a year at most, so every row for a vet is loaded once and the
+ * visits a year at most, so every row for a clinic is loaded once and the
  * period filter, monthly buckets and per-resident roll-ups are all computed
  * from that one list rather than re-queried per period.
  */
@@ -107,7 +107,7 @@ export type ResidentVisitSummary = {
   reasons: string[];
 };
 
-/** One row per resident the vet saw, most recently seen first. */
+/** One row per resident the clinic saw, most recently seen first. */
 export function visitsByResident(visits: ClinicVisit[]): ResidentVisitSummary[] {
   const byResident = new Map<string, ResidentVisitSummary>();
   const newestFirst = [...visits].sort((a, b) =>

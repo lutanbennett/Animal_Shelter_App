@@ -22,7 +22,7 @@ import { MicrochipForm } from "@/components/MicrochipForm";
 const isMicrochipping = (typeName: string) => /microchip/i.test(typeName);
 
 export type ProcedureTypeOption = { id: string; name: string };
-export type VetAppointmentOption = {
+export type ClinicVisitOption = {
   id: string;
   appointment_date: string;
   reason: string | null;
@@ -42,19 +42,19 @@ export function ProcedureForm({
   residentDisplayName,
   microchip,
   procedureTypes,
-  vetAppointments,
-  preselectedVetAppointmentId,
+  clinicVisits,
+  preselectedClinicVisitId,
 }: {
   residentId: string;
   residentDisplayName: string;
   /**
-   * The current chip, when the person may set it (admin, staff, vet). After a
+   * The current chip, when the person may set it (admin, staff, doctor). After a
    * Microchipping is saved they are asked for the number before leaving.
    */
   microchip: { number: string | null; implantedOn: string | null } | null;
   procedureTypes: ProcedureTypeOption[];
-  vetAppointments: VetAppointmentOption[];
-  preselectedVetAppointmentId: string | null;
+  clinicVisits: ClinicVisitOption[];
+  preselectedClinicVisitId: string | null;
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
@@ -71,13 +71,13 @@ export function ProcedureForm({
   // is what gets submitted.
   const [isAddingType, setIsAddingType] = useState(procedureTypes.length === 0);
 
-  // Linking a vet visit defaults the date to the visit's date until the
+  // Linking a clinic visit defaults the date to the visit's date until the
   // user has typed a date themselves — same behaviour as weight and blood
   // tests.
   const [dateTouched, setDateTouched] = useState(false);
   const [date, setDate] = useState(() => {
-    if (preselectedVetAppointmentId) {
-      const match = vetAppointments.find((a) => a.id === preselectedVetAppointmentId);
+    if (preselectedClinicVisitId) {
+      const match = clinicVisits.find((a) => a.id === preselectedClinicVisitId);
       if (match) return visitDate(match);
     }
     return todayIso();
@@ -93,9 +93,9 @@ export function ProcedureForm({
     else router.push(tabHref);
   }
 
-  function handleVetAppointmentChange(id: string) {
+  function handleClinicVisitChange(id: string) {
     if (dateTouched || !id) return;
-    const match = vetAppointments.find((a) => a.id === id);
+    const match = clinicVisits.find((a) => a.id === id);
     if (match) setDate(visitDate(match));
   }
 
@@ -244,18 +244,18 @@ export function ProcedureForm({
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="vetAppointmentId" className="text-sm font-medium text-muted">
+          <label htmlFor="clinicVisitId" className="text-sm font-medium text-muted">
             {t.procedures.linkedVisit}
           </label>
           <select
-            id="vetAppointmentId"
-            name="vetAppointmentId"
-            defaultValue={preselectedVetAppointmentId ?? ""}
-            onChange={(e) => handleVetAppointmentChange(e.target.value)}
+            id="clinicVisitId"
+            name="clinicVisitId"
+            defaultValue={preselectedClinicVisitId ?? ""}
+            onChange={(e) => handleClinicVisitChange(e.target.value)}
             className={inputClass}
           >
             <option value="">{t.procedures.noLinkedVisit}</option>
-            {vetAppointments.map((a) => (
+            {clinicVisits.map((a) => (
               <option key={a.id} value={a.id}>
                 {formatDate(a.appointment_date, locale)}
                 {a.reason ? ` — ${a.reason}` : ""}
