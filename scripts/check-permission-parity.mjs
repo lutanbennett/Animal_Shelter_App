@@ -7,8 +7,11 @@
 //
 //   node scripts/check-permission-parity.mjs            (from the repo root; dev only)
 //   node scripts/check-permission-parity.mjs --verbose  (also list every match)
+//   node scripts/check-permission-parity.mjs --write-fixture  (regenerate layer 2's fixture)
 //   PARITY_FLIP=volunteer:stock.delivery:2 node scripts/check-permission-parity.mjs
 //        flips one expected cell, to show that the check can fail (it must go red)
+//   PARITY_FLIP_DB=doctor:clinics.list:2 node scripts/check-permission-parity.mjs
+//        flips one seeded cell inside the rolled-back transaction (it must go red)
 //
 // Three outcomes, not two (the way check-test-plan.mjs separates "unsigned"
 // from "wrong"):
@@ -21,13 +24,32 @@
 // ("STALE"): the list can neither hide a regression nor rot
 // (decisions/2026-10-02-check-scripts-assert-live-not-replay.md).
 //
-// Layer 1 of §11 only: the database. The principals are the six legacy roles,
-// a login with no role, and an archived person. A configured role that has been
-// archived is probed through has_permission() alone, because today's policies
-// read the enum and would still let the person in; that gap is what conversion
-// closes, and section Z asserts the function already answers no.
+// What this file covers of §11's three layers (reconciled 2026-10-09, read against
+// a live run: docs/decisions/2026-10-09-parity-check-layers-reconciled.md):
 //
-// Layers 2 (app predicates) and 3 (routes) are not here: see the decision file.
+//   Layer 0  the seeded cells: has_permission() under each login must say what the
+//            paper says. Not one of §11's three; it is what makes layer 3 provable.
+//   Layer 1  the database, HERE. Principals: admin, management, doctor, volunteer,
+//            public_viewer, a login with no role, and an archived person (who holds
+//            the retired Staff role). Staff is not a live principal since 0173: no
+//            live login can hold it. 2IC, Maintenance and Medical are configured
+//            roles with no §4 column, so there is no default to reproduce; their
+//            own checks are check-2ic-role / check-maintenance-role / check-medical-role.
+//            A configured role that has been archived is probed through
+//            has_permission() alone (section Z), since today's policies read the
+//            enum and would still let the person in.
+//   Layer 2  the app's predicates, HERE (below). The retired predicates are compared
+//            through scripts/fixtures/legacy-predicates.json; canDoJob's rule for
+//            /admin /management /maintenance is check-recurring-job-eligibility.mjs.
+//   Layer 3  the routes, NOT here, and only partly anywhere. For a page in the route
+//            registry (src/lib/permissions/routes.ts), check-permission-catalogue.mjs
+//            section E asserts its page.tsx guards with requirePermission() on the
+//            registry's own activity; with layer 0 that fixes who may open it. Pages
+//            outside the registry are checked by nothing: see the decision file.
+//
+// Expected state: RED, with only doctor MISMATCHes on has_permission() lines. The
+// doctor's cells are deliberately not re-baselined (see the RE-BASELINED note below);
+// any other line, a STALE or a HARNESS FAULT is a real finding.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
