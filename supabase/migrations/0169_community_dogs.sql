@@ -120,7 +120,7 @@ create table if not exists community_dog_outings (
   constraint community_dog_outings_dog_count_positive check (dog_count >= 1),
   constraint community_dog_outings_some_help check (fed or treated or sterilised or vaccinated or rehomed),
   constraint community_dog_outings_sterilised_count check (
-    (sterilised and sterilised_count between 1 and dog_count)
+    (sterilised and sterilised_count is not null and sterilised_count between 1 and dog_count)
     or (not sterilised and sterilised_count is null)
   )
 );
