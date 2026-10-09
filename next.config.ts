@@ -43,8 +43,19 @@ const nextConfig: NextConfig = {
   // the new page rather than a 404. Here rather than a route file: redirects
   // run before proxy.ts, so /relocation needs no place on the public-path
   // lists to work signed out.
+  //
+  // 0.24: "Vet" left the system (docs/decisions/2026-10-09-clinics-and-doctors.md). Its three pages
+  // moved, and bookmarks, printed QR sheets and old links in chat land on the new ones.
   async redirects() {
-    return [{ source: "/relocation", destination: "/adopt/international", permanent: true }];
+    return [
+      { source: "/relocation", destination: "/adopt/international", permanent: true },
+      { source: "/vets", destination: "/clinics", permanent: true },
+      { source: "/vets/:path*", destination: "/clinics/:path*", permanent: true },
+      { source: "/management/vets", destination: "/management/clinics", permanent: true },
+      { source: "/management/vets/:path*", destination: "/management/clinics/:path*", permanent: true },
+      { source: "/vet-visits/:path*", destination: "/clinic-visits/:path*", permanent: true },
+      { source: "/residents/:id/vet-appointments", destination: "/residents/:id/clinic-visits", permanent: true },
+    ];
   },
 
   typescript: {

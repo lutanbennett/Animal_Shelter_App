@@ -12,10 +12,11 @@
 //   node scripts/check-new-policy-role-names.mjs <file.sql> ...  # these files, as if all were new (to see it fail)
 //
 // "Names a role" is what check-policy-role-names.mjs counts: a bare current_user_role(), or any of 'management'
-// 'staff' 'vet' 'admin' 'volunteer' cast to app_role, inside a `create policy` / `alter policy` statement.
+// 'staff' 'doctor' 'admin' 'volunteer' cast to app_role, inside a `create policy` / `alter policy` statement. 'vet', the
+// doctor's key before 0172, is still caught, since a file written before the rename may say it.
 // Functions and views that mention a role are not judged — only policies.
 //
-// ESCAPE HATCH. A deliberate one (none on dev since 0167 converted the vet's 54, the last) is marked with
+// ESCAPE HATCH. A deliberate one (none on dev since 0167 converted the doctor's (then vet's) 54, the last) is marked with
 //     -- policy-role: deliberate — <why>
 // as a comment inside the statement or among the comment lines directly above it. The reason is required. Marked
 // statements pass but are listed, so a reviewer sees each one. A guard with no way out gets deleted.
@@ -47,7 +48,7 @@ const git = (a) => {
   const r = spawnSync("git", a, { encoding: "utf8" });
   return { ok: r.status === 0, out: (r.stdout ?? "").trim(), err: (r.stderr ?? "").trim() };
 };
-const NAMES_ROLE = /current_user_role\s*\(\s*\)|'(management|staff|vet|admin|volunteer)'\s*::\s*app_role/i;
+const NAMES_ROLE = /current_user_role\s*\(\s*\)|'(management|staff|doctor|vet|admin|volunteer)'\s*::\s*app_role/i;
 const MARKER = /--\s*policy-role:\s*deliberate\s*[—–-]+\s*(\S.*)/i;
 const SCOPE_MARKER = /--\s*scope-fn:\s*deliberate\s*[—–-]+\s*(\S.*)/i;
 
@@ -126,7 +127,7 @@ if (bad.length)
       bad.map((b) => `  - ${b.f}: ${b.head}`).join("\n") +
       `\n  Policies ask what you may do, not who you are. Do one of:\n` +
       `    1. Use a permission cell: role_can('<cell>') — see docs/roles-and-permissions.md.\n` +
-      `    2. If a role name is genuinely intended (a recorded decision, like the vet's), add above or inside the\n` +
+      `    2. If a role name is genuinely intended (a recorded decision, like the doctor's), add above or inside the\n` +
       `       statement:  -- policy-role: deliberate — <why>\n` +
       `       and make sure the table is in OWNERS in scripts/check-policy-role-names.mjs and in §15 of the doc.`,
   );

@@ -13,7 +13,7 @@
  * that several parsers would claim goes to the most specific one.
  *
  *   - the lookups first, so "where is Panda going" is a question, not a move;
- *   - hospital before vet, because a "vet hospital" is not a booking;
+ *   - hospital before clinic, because a "vet hospital" is not a booking;
  *   - the return before the admission, because "back from hospital" is
  *     still a sentence about a hospital;
  *   - weight before both bookings, because "weigh Panda before the vet"
@@ -24,7 +24,7 @@
 import { dueIntent, whereIntent, whoIntent } from "./intents/lookups";
 import { hospitalIntent, hospitalReturnIntent } from "./intents/hospital";
 import { weightIntent } from "./intents/weight";
-import { vetIntent } from "./intents/vet";
+import { clinicIntent } from "./intents/clinic";
 import { moveIntent } from "./intents/move";
 import type { Intent, IntentParser, ParseContext, ParseResult } from "./types";
 
@@ -35,7 +35,7 @@ export const INTENT_PARSERS: readonly IntentParser[] = [
   hospitalReturnIntent,
   hospitalIntent,
   weightIntent,
-  vetIntent,
+  clinicIntent,
   moveIntent,
 ];
 

@@ -57,7 +57,7 @@ export function readMicrochip(
  */
 export type MicrochipRefusal =
   | "deceased" // restrict_violation: the 0026 lock
-  | "notInScope" // insufficient_privilege: a vet outside their clinic, or a role that may not
+  | "notInScope" // insufficient_privilege: a doctor outside their clinic, or a role that may not
   | "invalid" // check_violation: residents_microchip_number_iso
   | "duplicate" // unique_violation: residents_microchip_number_key
   | "notFound"; // no_data_found: the resident is gone

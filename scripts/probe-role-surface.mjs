@@ -37,7 +37,7 @@ const PRINCIPALS = [
   { name: "public_viewer", role: "public_viewer" },
   { name: "volunteer", role: "volunteer" },
   { name: "staff", role: "staff" },
-  { name: "vet", role: "vet" },
+  { name: "doctor", role: "doctor" },
   { name: "head_of_maintenance", role: "head_of_maintenance" },
   { name: "head_of_medical", role: "head_of_medical" },
   { name: "second_in_command", role: "second_in_command" },
@@ -66,7 +66,7 @@ function principalSql(p) {
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   values ('${id}', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-surface-${p.name}@example.invalid', '{}', '{"full_name":"Harness surface"}', now(), now());
   ${p.role ? `insert into user_roles (user_id, role_id, role, archived_at) select '${id}', id, legacy_role, ${p.arch ? "now()" : "null"} from roles where key = '${p.role}';` : ""}
-  ${p.role === "vet" ? `insert into vet_doctors (name, user_id, vet_id) select 'Harness surface vet', '${id}', id from vets order by id limit 1;` : ""}`;
+  ${p.role === "doctor" ? `with d as (insert into doctors (name, user_id) values ('Harness surface doctor', '${id}') returning id) insert into doctor_clinics (clinic_id, doctor_id) select (select id from clinics order by id limit 1), id from d;` : ""}`;
   const claims = p.name === "anon"
     ? `json_build_object('role', 'anon')`
     : `json_build_object('sub', '${id}', 'role', 'authenticated', 'aal', '${p.aal ?? "aal1"}')`;

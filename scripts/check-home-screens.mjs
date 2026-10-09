@@ -76,7 +76,7 @@ const roles = {
   management: forRole("management"),
   staff: forRole("staff"),
   volunteer: forRole("volunteer"),
-  vet: forRole("vet", { clinical: "own_clinic", residents: "own_clinic" }),
+  doctor: forRole("doctor", { clinical: "own_clinic", residents: "own_clinic" }),
 };
 const registered = new Set(ROUTES.map((r) => r.path));
 for (const [role, perms] of Object.entries(roles)) {
@@ -137,12 +137,12 @@ const shelterMade = (gone = []) => {
   eq("C a shelter-made role that is not Management is not given Intake as a tile (it is the curated screen's)", hrefs.includes("/residents/new"), false);
 }
 eq("C staff leads with My tasks, Residents, then the whiteboard order of what staff hold", homeTilesFor(roles.staff, t).slice(0, 5).map((x) => x.href), ["/my", "/residents", "/stocktake", "/maintenance", "/deliveries"]);
-eq("C a vet's home is its appointments, and staff are not offered them", [
-  homeTilesFor(roles.vet, t).some((x) => x.href === "/appointments"),
+eq("C a doctor's home is its appointments, and staff are not offered them", [
+  homeTilesFor(roles.doctor, t).some((x) => x.href === "/appointments"),
   homeTilesFor(roles.staff, t).some((x) => x.href === "/appointments"),
   homeTilesFor(roles.management, t).some((x) => x.href === "/appointments"),
 ], [true, false, false]);
-eq("C a vet has no tasks tile", homeTilesFor(roles.vet, t).some((x) => x.href === "/my"), false);
+eq("C a doctor has no tasks tile", homeTilesFor(roles.doctor, t).some((x) => x.href === "/my"), false);
 // No seeded role reads Contacts without editing it since 0134 took the address book from the volunteer, so the
 // read-only case is a role built for the purpose: one cell. Since 0155 (q6/q7) the pages ask contacts.browse, not contacts.directory.
 const contactsReader = parsePermissions({

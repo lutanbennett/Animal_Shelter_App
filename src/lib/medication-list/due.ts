@@ -22,7 +22,7 @@ export type DueSchedule = {
 
 /**
  * `due` — a dose falls on this day. `notToday` — the schedule is real but
- * today is between doses. `asNeeded` — no schedule to work from (a vet's
+ * today is between doses. `asNeeded` — no schedule to work from (a doctor's
  * "as needed"), so the prescription is shown, never hidden.
  */
 export type DueState = "due" | "notToday" | "asNeeded";

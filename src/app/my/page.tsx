@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { todayIso } from "@/lib/format";
-import { VET_HOME_PATH } from "@/lib/auth/next-path";
+import { DOCTOR_HOME_PATH } from "@/lib/auth/next-path";
 import { TWO_STEP_PATH, getAssuranceLevel } from "@/lib/auth/two-step";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -19,12 +19,12 @@ import { MyTaskList } from "./MyTaskList";
  * person, one section per source, each grouped overdue / today / later /
  * no date. Waiting access requests come first for admins — someone is
  * locked out until they are dealt with — then recurring jobs (0095), the
- * day's routine, then maintenance. The others (vet trips, medication rounds, stock orders)
+ * day's routine, then maintenance. The others (clinic trips, medication rounds, stock orders)
  * plug in as further loaders returning the same MyTask shape
  * (src/lib/my-tasks/types.ts).
  *
  * A source the reader's role can't read is skipped rather than loaded
- * empty — vets have no maintenance policy, so theirs is the empty state.
+ * empty — doctors have no maintenance policy, so theirs is the empty state.
  */
 export default async function MyPage() {
   const { t, locale } = await getT();
@@ -36,9 +36,9 @@ export default async function MyPage() {
     supabase.auth.getUser(),
     loadPermissions(),
   ]);
-  // Tasks are shelter operations; a vet's home is their appointments. Which role lands where is
-  // home-screens' (roles.home_path); until it is built a vet is still told by name.
-  if (role === "vet") redirect(VET_HOME_PATH);
+  // Tasks are shelter operations; a doctor's home is their appointments. Which role lands where is
+  // home-screens' (roles.home_path); until it is built a doctor is still told by name.
+  if (role === "doctor") redirect(DOCTOR_HOME_PATH);
   const userId = auth.user?.id;
 
   const sections: MyTaskSection[] = userId

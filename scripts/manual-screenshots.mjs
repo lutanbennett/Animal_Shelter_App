@@ -11,7 +11,7 @@
 // Public pages are captured from a second, signed-out context.
 //
 // Records are discovered from the running app — the first resident whose
-// status is Resident, the first enclosure, vet, contact and project folder —
+// status is Resident, the first enclosure, clinic, contact and project folder —
 // so point it at a database with some data in it (dev, not an empty
 // project). The file names must match the `src` values in
 // src/lib/manual/en.ts.
@@ -74,7 +74,7 @@ const SIGNED_IN = [
   { name: "resident-photos", path: "/residents/{resident}/photos", full: true },
   { name: "weight-history", path: "/residents/{resident}/weight", full: true },
   { name: "immunizations-new", path: "/immunizations/new", full: true },
-  { name: "vet-visit-new", path: "/vet-visits/new?residentId={resident}", full: true },
+  { name: "vet-visit-new", path: "/clinic-visits/new?residentId={resident}", full: true },
   { name: "prescription-new", path: "/prescriptions/new?residentId={resident}", full: true },
   { name: "diet-new", path: "/diets/new?residentId={resident}", full: true },
   { name: "procedure-new", path: "/procedures/new?residentId={resident}", full: true },
@@ -85,13 +85,13 @@ const SIGNED_IN = [
   { name: "maintenance-new", path: "/maintenance/new", full: true },
   { name: "projects", path: "/projects" },
   { name: "project-folder", path: "/projects/{project}", full: true },
-  { name: "vets", path: "/vets" },
-  { name: "vet-hub", path: "/vets/{vet}", full: true },
+  { name: "vets", path: "/clinics" },
+  { name: "vet-hub", path: "/clinics/{clinic}", full: true },
   { name: "contacts", path: "/contacts" },
   { name: "contact-hub", path: "/contacts/{contact}", full: true },
   { name: "management-dashboard", path: "/management/dashboard", full: true },
   { name: "management-contacts", path: "/management/contacts" },
-  { name: "management-vets", path: "/management/vets" },
+  { name: "management-vets", path: "/management/clinics" },
   { name: "management-medications", path: "/management/medications", full: true },
   { name: "management-diets", path: "/management/diets", full: true },
   { name: "management-cashflow", path: "/management/cashflow", full: true },
@@ -287,7 +287,7 @@ async function discoverIds(page) {
 
   for (const [key, list, prefix] of [
     ["enclosure", "/enclosures", "/enclosures/"],
-    ["vet", "/vets", "/vets/"],
+    ["clinic", "/clinics", "/clinics/"],
     ["contact", "/contacts", "/contacts/"],
     ["project", "/projects", "/projects/"],
   ]) {

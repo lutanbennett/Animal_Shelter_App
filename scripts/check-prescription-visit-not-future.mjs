@@ -76,7 +76,7 @@ begin
     ('early',    (v_today + 1 + time '06:00') at time zone shelter_time_zone()),
     ('empty',    (v_today - 3 + time '10:00') at time zone shelter_time_zone());
   insert into harness select k, gen_random_uuid() from harness_visits;
-  insert into vet_appointments (id, resident_id, appointment_date, reason)
+  insert into clinic_visits (id, resident_id, appointment_date, reason)
   select h.id, v_res, v.at, 'Harness ' || v.k
   from harness_visits v join harness h using (k);
 end $setup$;
@@ -100,7 +100,7 @@ declare
   v_msg text;
   v_report text := '';
 begin
-  if (select (appointment_date at time zone 'UTC')::date from vet_appointments where id = v_early) <> v_today then
+  if (select (appointment_date at time zone 'UTC')::date from clinic_visits where id = v_early) <> v_today then
     raise exception 'HARNESS-FAIL setup: the 06:00 visit is not on today''s UTC date';
   end if;
 
@@ -109,7 +109,7 @@ begin
 
   -- A: tomorrow's visit, and 06:00 tomorrow (still today in UTC).
   begin
-    insert into prescriptions (resident_id, medication_id, start_date, vet_appointment_id)
+    insert into prescriptions (resident_id, medication_id, start_date, clinic_visit_id)
     values (v_res, v_med, v_today, v_tomorrow);
     raise exception 'HARNESS-FAIL A: a prescription on tomorrow''s visit was accepted';
   exception when check_violation then
@@ -117,7 +117,7 @@ begin
     if v_msg not like 'prescriptions_visit_not_in_future:%' then raise exception 'HARNESS-FAIL A: refused with %', v_msg; end if;
   end;
   begin
-    insert into prescriptions (resident_id, medication_id, start_date, vet_appointment_id)
+    insert into prescriptions (resident_id, medication_id, start_date, clinic_visit_id)
     values (v_res, v_med, v_today, v_early);
     raise exception 'HARNESS-FAIL A: a prescription on 06:00 tomorrow (today in UTC) was accepted';
   exception when check_violation then null;
@@ -125,9 +125,9 @@ begin
   v_report := v_report || 'A: staff insert on tomorrow''s visit refused, 06:00 tomorrow too | ';
 
   -- B: what still works.
-  insert into prescriptions (resident_id, medication_id, start_date, vet_appointment_id)
+  insert into prescriptions (resident_id, medication_id, start_date, clinic_visit_id)
   values (v_res, v_med, v_today - 1, v_past) returning id into v_rx;
-  insert into prescriptions (resident_id, medication_id, start_date, vet_appointment_id)
+  insert into prescriptions (resident_id, medication_id, start_date, clinic_visit_id)
   values (v_res, v_med, v_today, v_tonight);
   insert into prescriptions (resident_id, medication_id, start_date)
   values (v_res, v_med, v_today);
@@ -135,7 +135,7 @@ begin
 
   -- C: relink to the future refused; other edits fine.
   begin
-    update prescriptions set vet_appointment_id = v_tomorrow where id = v_rx;
+    update prescriptions set clinic_visit_id = v_tomorrow where id = v_rx;
     raise exception 'HARNESS-FAIL C: re-linking to tomorrow''s visit was accepted';
   exception when check_violation then null;
   end;
@@ -149,12 +149,12 @@ begin
 
   -- D: a link from before the rule is not refused when the row is edited.
   alter table prescriptions disable trigger prescriptions_visit_not_in_future;
-  insert into prescriptions (resident_id, medication_id, start_date, vet_appointment_id)
+  insert into prescriptions (resident_id, medication_id, start_date, clinic_visit_id)
   values (v_res, v_med, v_today, v_tomorrow) returning id into v_legacy;
   alter table prescriptions enable trigger prescriptions_visit_not_in_future;
   set local role authenticated;
   update prescriptions set notes = 'still linked' where id = v_legacy;
-  update prescriptions set vet_appointment_id = v_tomorrow, notes = 'same link resent' where id = v_legacy;
+  update prescriptions set clinic_visit_id = v_tomorrow, notes = 'same link resent' where id = v_legacy;
   if (select notes from prescriptions where id = v_legacy) <> 'same link resent' then
     raise exception 'HARNESS-FAIL D: the legacy row edit did not land';
   end if;
@@ -163,14 +163,14 @@ begin
 
   -- E: the visit side.
   begin
-    update vet_appointments set appointment_date = appointment_date + interval '3 days' where id = v_past;
+    update clinic_visits set appointment_date = appointment_date + interval '3 days' where id = v_past;
     raise exception 'HARNESS-FAIL E: a visit with a prescription moved into the future';
   exception when check_violation then
     get stacked diagnostics v_msg = message_text;
     if v_msg not like 'prescriptions_visit_not_in_future:%' then raise exception 'HARNESS-FAIL E: refused with %', v_msg; end if;
   end;
-  update vet_appointments set appointment_date = appointment_date - interval '1 day' where id = v_past;
-  update vet_appointments set appointment_date = appointment_date + interval '10 days' where id = v_empty;
+  update clinic_visits set appointment_date = appointment_date - interval '1 day' where id = v_past;
+  update clinic_visits set appointment_date = appointment_date + interval '10 days' where id = v_empty;
   v_report := v_report || 'E: visit with a prescription cannot move past today; earlier day and prescription-free visit can';
 
   raise exception '%', format('HARNESS-OK %s ran twice | %s | %s', ${pgQuote(file)},

@@ -21,7 +21,7 @@ export const CASHFLOW_CATEGORIES = [
   "food",
   "medication",
   "immunization",
-  "vet",
+  "clinic",
   "maintenance",
   // Not from cashflow_forecast: the page folds fixed_outgoings (0114) in as
   // rows of this category (fixedOutgoingRows). Last, so the five original
@@ -39,7 +39,7 @@ export const CATEGORY_FILL: Record<CashflowCategory, string> = {
   food: "var(--series-food)",
   medication: "var(--series-medication)",
   immunization: "var(--series-immunization)",
-  vet: "var(--series-vet)",
+  clinic: "var(--series-clinic)",
   maintenance: "var(--series-maintenance)",
   fixed: "var(--series-fixed)",
 };
@@ -53,9 +53,9 @@ export const CATEGORY_PRICE_PATH: Record<CashflowCategory, string> = {
   food: "/management/diets",
   medication: "/management/medications",
   immunization: "/admin/immunization-types",
-  // The vet figure is the flat typical-visit estimate, edited beside the
+  // The clinic figure is the flat typical-visit estimate, edited beside the
   // other site settings rather than per visit.
-  vet: "/admin/website",
+  clinic: "/admin/website",
   maintenance: "/maintenance",
   // A fixed line always has an amount, so this never shows as a gap; the
   // path is where the lines are edited.

@@ -17,7 +17,7 @@
 // DB-10 (anon reads the site_* tables only through fixed-column views)
 //   A1  anon reads public_site_content / public_site_content_photos
 //   A2  anon is refused site_content, site_content_photos and site_pages, and
-//       cannot read vet_visit_estimate through the view
+//       cannot read clinic_visit_estimate through the view
 //   A3  a column added to site_content after the fact does not reach anon
 //   A4  authenticated still reads the base tables; is_public_drive_file still
 //       answers for a signed-out visitor
@@ -136,8 +136,8 @@ begin
   if v_r <> 'ok' then raise exception 'FAIL A1 anon public_site_content_photos: %', v_r; end if;
   v_r := pg_temp.run('anon', null, 'select slug, title from public_site_pages');
   if v_r <> 'ok' then raise exception 'FAIL A1 anon public_site_pages: %', v_r; end if;
-  v_r := pg_temp.run('anon', null, 'select vet_visit_estimate from public_site_content');
-  if v_r not like '%does not exist%' then raise exception 'FAIL A2 anon read vet_visit_estimate through the view: %', v_r; end if;
+  v_r := pg_temp.run('anon', null, 'select clinic_visit_estimate from public_site_content');
+  if v_r not like '%does not exist%' then raise exception 'FAIL A2 anon read clinic_visit_estimate through the view: %', v_r; end if;
   foreach v_name in array array['site_content', 'site_content_photos', 'site_pages'] loop
     v_r := pg_temp.run('anon', null, format('select count(*) from %I', v_name));
     if v_r not like 'permission denied%' then raise exception 'FAIL A2 anon read %: %', v_name, v_r; end if;
@@ -153,14 +153,14 @@ begin
   if v_r not like 'permission denied%' then raise exception 'FAIL A3 new column reached anon through the table: %', v_r; end if;
 
   -- A4
-  v_r := pg_temp.run('authenticated', v_admin, 'select vet_visit_estimate, harness_secret from site_content');
+  v_r := pg_temp.run('authenticated', v_admin, 'select clinic_visit_estimate, harness_secret from site_content');
   if v_r <> 'ok' then raise exception 'FAIL A4 admin read of site_content: %', v_r; end if;
   v_r := pg_temp.run('authenticated', v_admin, 'select slug, body from site_pages');
   if v_r <> 'ok' then raise exception 'FAIL A4 admin read of site_pages: %', v_r; end if;
   v_r := pg_temp.run('anon', null, 'select is_public_drive_file(''harness-no-such-file'')');
   if v_r <> 'ok' then raise exception 'FAIL A4 anon is_public_drive_file: %', v_r; end if;
 
-  raise exception 'HARNESS-OK files ran twice | R1 Lifecycle zone: rename, delete, unflag refused (owner and admin) | R2 five pseudo-enclosures: rename, move, delete, unflag refused (owner and admin) | P1 ordinary zone and enclosure insert, rename, delete | P2 protected rows keep capacity, notes, name_th, internal editable | P3 exactly 1 zone and 5 enclosures protected | A1 anon reads the three public_site_* views | A2 anon refused the three base tables and vet_visit_estimate, cannot write the view | A3 a new site_content column does not reach anon | A4 admin still reads the base tables, anon is_public_drive_file works';
+  raise exception 'HARNESS-OK files ran twice | R1 Lifecycle zone: rename, delete, unflag refused (owner and admin) | R2 five pseudo-enclosures: rename, move, delete, unflag refused (owner and admin) | P1 ordinary zone and enclosure insert, rename, delete | P2 protected rows keep capacity, notes, name_th, internal editable | P3 exactly 1 zone and 5 enclosures protected | A1 anon reads the three public_site_* views | A2 anon refused the three base tables and clinic_visit_estimate, cannot write the view | A3 a new site_content column does not reach anon | A4 admin still reads the base tables, anon is_public_drive_file works';
 end
 $h$;
 rollback;

@@ -28,9 +28,9 @@ if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the
 const QUERIES = {
   "residents list": `select resident_id, name, resident_code, thai_name, other_names, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_id, zone_name, zone_name_th, zone_internal from resident_list_view order by name`,
   "medication list: prescriptions": `select p.id, p.resident_id, p.dose_quantity, p.start_date, p.end_date, m.name, m.dose_unit, m.label_drive_file_id, f.label, f.doses_per_day, r.name, r.thai_name, r.profile_photo_drive_file_id from prescriptions p left join medication m on m.id = p.medication_id left join frequency f on f.id = p.frequency_id left join residents r on r.id = p.resident_id where p.archived_at is null and p.start_date <= current_date and (p.end_date is null or p.end_date >= current_date)`,
-  // 0147: the address book and the clinics list, read by /contacts and the vet-visit form
+  // 0147: the address book and the clinics list, read by /contacts and the clinic-visit form
   "contacts list": `select id, name, type, phone, email, line_id, address, notes, archived_at from contacts where archived_at is null order by name`,
-  "clinics list": `select v.id, v.name, v.clinic_name, d.name from vets v left join vet_doctors d on d.vet_id = v.id order by v.name`,
+  "clinics list": `select c.id, c.name, d.name from clinics c left join doctor_clinics dc on dc.clinic_id = c.id left join doctors d on d.id = dc.doctor_id order by c.name`,
   "medication list: placements": `select resident_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th from resident_list_view`,
   // 2026-10-09: the statements with the most init-plans. /projects reads 34 through the
   // view; the photo route asks attachments once per image shown (src/app/api/photos/[fileId]).

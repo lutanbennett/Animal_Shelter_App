@@ -9,7 +9,7 @@
 //                src/lib/permissions/jobs.ts (neither can drift from the other unseen)
 //   the row      legacy_role volunteer, Thai name present, kind custom, opens the app
 //   reads        the Head of Medical reads prescriptions, frequency and the two list views;
-//                a volunteer, a vet and a login with no role read none of them
+//                a volunteer, a doctor and a login with no role read none of them
 //   the floor    the Head of Medical reads NOTHING else: not medication (prices), not residents,
 //                not resident_list_view, not a visit or a procedure (a weight and the stock count are hers by the draft);
 //                the list views carry no price, stock, breed or bio column
@@ -27,15 +27,15 @@ if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the
 const { bundleOfRole } = await import(pathToFileURL(join(process.cwd(), "src/lib/permissions/jobs.ts")).href);
 
 const lit = (id) => `'${id}'::uuid`;
-const P = ["hom", "admin", "management", "staff", "volunteer", "vet", "norole"];
+const P = ["hom", "admin", "management", "staff", "volunteer", "doctor", "norole"];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
 const R = randomUUID(), OWN = randomUUID();
 
-const NONE = { hom: 0, admin: 0, management: 0, staff: 0, volunteer: 0, vet: 0, norole: 0 };
+const NONE = { hom: 0, admin: 0, management: 0, staff: 0, volunteer: 0, doctor: 0, norole: 0 };
 const READ_ALL = { ...NONE, hom: 1, admin: 1, management: 1, staff: 1 };
 const STAFF_UP = { ...NONE, admin: 1, management: 1, staff: 1 };
-// the harness resident has a visit at the vet's own clinic, so the vet_* policies (untouched) let that vet in
-const OWN_CLINIC = { ...STAFF_UP, vet: 1 };
+// the harness resident has a visit at the doctor's own clinic, so the doctor_* policies (untouched) let that doctor in
+const OWN_CLINIC = { ...STAFF_UP, doctor: 1 };
 // 0140 gave the role medical.weight (Edit), so a weight is one of its own reads and writes now
 const OWN_CLINIC_AND_HOM = { ...OWN_CLINIC, hom: 1 };
 // cells granted ahead of the screens that make them jobs (0140); check-medical-jobs.mjs holds the behaviour
@@ -53,16 +53,16 @@ for (const c of DRAFT_CELLS) AHEAD.set(c.activity, Math.max(AHEAD.get(c.activity
 // [name, sql, expectation]: a table of who may (1) or may not (0); "error" = the statement must fail;
 // "hom-zero" = only the Head of Medical is asserted, and it must see nothing
 const probes = [
-  ["prescriptions", `select 1 from prescriptions where resident_id = '${R}'`, { ...READ_ALL, vet: 1 }],
-  ["frequency", `select 1 from frequency limit 1`, { ...READ_ALL, vet: 1 }], // a vet's vet_read_frequency is untouched
+  ["prescriptions", `select 1 from prescriptions where resident_id = '${R}'`, { ...READ_ALL, doctor: 1 }],
+  ["frequency", `select 1 from frequency limit 1`, { ...READ_ALL, doctor: 1 }], // a doctor's doctor_read_frequency is untouched
   ["medication_list_medications", `select 1 from medication_list_medications limit 1`, READ_ALL],
   ["medication_list_residents", `select 1 from medication_list_residents where id = '${R}'`, READ_ALL],
   // the floor: nothing else
-  ["medication", `select 1 from medication limit 1`, { ...STAFF_UP, vet: 1 }],
+  ["medication", `select 1 from medication limit 1`, { ...STAFF_UP, doctor: 1 }],
   ["residents", `select 1 from residents where id = '${R}'`, OWN_CLINIC],
   ["resident_list_view", `select 1 from resident_list_view where resident_id = '${R}'`, OWN_CLINIC],
   ["weight", `select 1 from weight where resident_id = '${R}'`, OWN_CLINIC_AND_HOM],
-  ["vet_appointments", `select 1 from vet_appointments where resident_id = '${R}'`, OWN_CLINIC],
+  ["clinic_visits", `select 1 from clinic_visits where resident_id = '${R}'`, OWN_CLINIC],
   ["procedures", `select 1 from procedures where resident_id = '${R}'`, null],
   // her sheet ticks the stocktake (row 36, stock.count), so she reads the counts: the draft's cell, not the old seed
   ["stock_counts", `select 1 from stock_counts limit 1`, "hom-reads"],
@@ -113,12 +113,12 @@ begin
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-mr-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${["admin", "management", "staff", "volunteer", "vet"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
+    select id, who::app_role from (values ${["admin", "management", "staff", "volunteer", "doctor"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role_id, role) select ${lit(ID.hom)}, id, legacy_role from roles where key = 'head_of_medical';
-  insert into vets (id, name, clinic_name) values (${lit(OWN)}, 'Harness own', 'Harness own');
-  insert into vet_doctors (name, user_id, vet_id) values ('Harness vet', ${lit(ID.vet)}, ${lit(OWN)});
+  insert into clinics (id, name) values (${lit(OWN)}, 'Harness own');
+  with d as (insert into doctors (name, user_id) values ('Harness doctor', ${lit(ID.doctor)}) returning id) insert into doctor_clinics (clinic_id, doctor_id) select ${lit(OWN)}, id from d;
   insert into residents (id, name, species) values (${lit(R)}, 'Harness resident', 'Dog');
-  insert into vet_appointments (resident_id, vet_id, appointment_date, status) values (${lit(R)}, ${lit(OWN)}, now() - interval '3 days', 'completed');
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values (${lit(R)}, ${lit(OWN)}, now() - interval '3 days', 'completed');
   insert into weight (resident_id, date, weight_kg) values (${lit(R)}, current_date - 1, 5);
   insert into prescriptions (resident_id, medication_id, start_date) values (${lit(R)}, (select id from medication order by id limit 1), current_date);
 end $setup$;

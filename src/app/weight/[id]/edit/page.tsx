@@ -4,12 +4,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { loadLinkableVisits } from "@/lib/vets/linkable";
+import { loadLinkableVisits } from "@/lib/clinics/linkable";
 import { WeightForm, type ExistingReading, type WeightInitial } from "../../WeightForm";
 
 /**
  * Reached from a reading's Edit link on the resident's Weight tab, from
- * "Edit weight" on a vet visit that has its reading, and from the same-day
+ * "Edit weight" on a clinic visit that has its reading, and from the same-day
  * notice on /weight/new. Correcting a reading edits its row: a resident has
  * one weight per day and a visit one weight (0106), so a second row is never
  * the way to fix a typo. A deceased resident's record is closed, so the
@@ -23,7 +23,7 @@ export default async function EditWeightPage(props: PageProps<"/weight/[id]/edit
 
   const { data: rows, error } = await supabase
     .from("weight")
-    .select("id, resident_id, date, weight_kg, vet_appointment_id, notes")
+    .select("id, resident_id, date, weight_kg, clinic_visit_id, notes")
     .is("archived_at", null)
     .eq("id", id)
     .limit(1)
@@ -49,7 +49,7 @@ export default async function EditWeightPage(props: PageProps<"/weight/[id]/edit
     loadLinkableVisits(supabase, residentId, {
       onePerVisit: "weight",
       notInFuture: true,
-      keep: reading.vet_appointment_id,
+      keep: reading.clinic_visit_id,
     }),
     supabase
       .from("weight")
@@ -103,13 +103,13 @@ export default async function EditWeightPage(props: PageProps<"/weight/[id]/edit
       <WeightForm
         residentId={residentId}
         residentDisplayName={displayName}
-        vetAppointments={visitsResult.visits}
+        clinicVisits={visitsResult.visits}
         readings={readingsResult.data ?? []}
         initial={{
           id: reading.id,
           date: reading.date,
           weight_kg: reading.weight_kg,
-          vet_appointment_id: reading.vet_appointment_id,
+          clinic_visit_id: reading.clinic_visit_id,
           notes: reading.notes,
         }}
       />

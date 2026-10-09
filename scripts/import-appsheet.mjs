@@ -114,7 +114,9 @@ function monthYearToAge(value, where, asOfIso) {
 const bool = (value) => (value === "TRUE" ? true : value === "FALSE" ? false : null);
 const blank = (value) => (value && value.trim() ? value.trim() : null);
 
-/** Deterministic UUID (v5 shape) from an AppSheet id, so re-runs load the same rows. */
+/** Deterministic UUID (v5 shape) from an AppSheet id, so re-runs load the same rows. The `table` is only the
+ * seed's namespace: clinics and clinic visits keep their pre-0172 names ("vets", "vet_appointments") here, so a
+ * re-run after the rename still gives every row the id it had. */
 function uuid(table, id) {
   const hex = createHash("sha1").update(`lanna-appsheet:${table}:${id}`).digest("hex").slice(0, 32);
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-5${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
@@ -235,7 +237,7 @@ for (const e of enclosureRows) {
 }
 
 // ---------------------------------------------------------------------------
-// Reference rows: contacts, vets, origins, medication, frequency, immunization types
+// Reference rows: contacts, clinics (AppSheet's Vets), origins, medication, frequency, immunization types
 // ---------------------------------------------------------------------------
 
 // contact_type is Carer / Volunteer / Vendor only (0067 dropped Donor and
@@ -258,17 +260,17 @@ const contacts = src.Contacts.filter((c) => c.ID).map((c) => {
 });
 const contactId = (appsheetId) => (appsheetId ? uuid("contacts", appsheetId) : null);
 
-const vets = src.Vets.filter((v) => v.VetID).map((v) => ({
+const clinics = src.Vets.filter((v) => v.VetID).map((v) => ({
   id: uuid("vets", v.VetID),
   name: v["Vet Name"].trim(),
   contactInfo: [v.Phone && `Phone: ${v.Phone}`, v["Line ID"] && `LINE: ${v["Line ID"]}`, v.Address && `Map: ${v.Address}`].filter(Boolean).join("\n") || null,
   notes: blank(v.Notes),
 }));
-const vetIds = new Set(src.Vets.map((v) => v.VetID));
-const vetId = (appsheetId, where) => {
+const clinicIds = new Set(src.Vets.map((v) => v.VetID));
+const clinicId = (appsheetId, where) => {
   if (!appsheetId) return null;
-  if (!vetIds.has(appsheetId)) {
-    note("orphan-rows", `${where}: unknown vet ${appsheetId}`);
+  if (!clinicIds.has(appsheetId)) {
+    note("orphan-rows", `${where}: unknown clinic ${appsheetId}`);
     return null;
   }
   return uuid("vets", appsheetId);
@@ -371,7 +373,7 @@ const appointmentRows = keepIfResident(src["Vet Appointments"], "RID", "Vet Appo
 const appointments = appointmentRows.map((a) => ({
   id: uuid("vet_appointments", a["Appointment ID"]),
   residentId: uuid("residents", a.RID),
-  vetId: vetId(a.Vet, `Appointment ${a["Appointment ID"]}`),
+  clinicId: clinicId(a.Vet, `Appointment ${a["Appointment ID"]}`),
   date: parseDate(a.Date, `Appointment ${a["Appointment ID"]}`),
   notes: blank(a.Notes),
 })).filter((a) => a.date || (note("dropped", `Appointment ${a.id}: no date`), false));
@@ -746,10 +748,10 @@ const counts = {
   zones: zones.length,
   enclosures: enclosures.length,
   contacts: contacts.length,
-  vets: vets.length,
+  clinics: clinics.length,
   group_origins: origins.length,
   placement_history: placements.length,
-  vet_appointments: appointments.length,
+  clinic_visits: appointments.length,
   weight: weights.length,
   procedures: procedures.length,
   blood_tests: bloodTests.length,
@@ -801,7 +803,7 @@ if (replace) {
     delete from blood_tests;
     delete from procedures;
     delete from weight;
-    delete from vet_appointments;
+    delete from clinic_visits;
     delete from bulk_appointments;
     delete from maintenance_assignees;
     delete from maintenance_photos;
@@ -809,7 +811,7 @@ if (replace) {
     delete from placement_history;
     delete from residents;
     delete from contacts;
-    delete from vets;
+    delete from clinics;
     delete from group_origins;
     delete from enclosures where zone_id <> (select id from zones where name = 'Lifecycle');
     delete from zones where name <> 'Lifecycle';
@@ -824,7 +826,7 @@ const admin = "(select admin_id from import_ctx)";
 for (const z of zones) sql.push(`insert into zones (id, name, internal) values (${q(z.id)}, ${q(z.name)}, ${q(z.internal)});`);
 for (const e of enclosures) sql.push(`insert into enclosures (id, name, zone_id, capacity, notes) values (${q(e.id)}, ${q(e.name)}, ${q(e.zoneId)}, ${q(e.capacity)}, ${q(e.notes)});`);
 for (const c of contacts) sql.push(`insert into contacts (id, name, type, phone, address, whatsapp, messenger_id, line_id) values (${q(c.id)}, ${q(c.name)}, ${q(c.type)}, ${q(c.phone)}, ${q(c.address)}, ${q(c.whatsapp)}, ${q(c.messengerId)}, ${q(c.lineId)});`);
-for (const v of vets) sql.push(`insert into vets (id, name, contact_info, notes) values (${q(v.id)}, ${q(v.name)}, ${q(v.contactInfo)}, ${q(v.notes)});`);
+for (const v of clinics) sql.push(`insert into clinics (id, name, contact_info, notes) values (${q(v.id)}, ${q(v.name)}, ${q(v.contactInfo)}, ${q(v.notes)});`);
 for (const o of origins) sql.push(`insert into group_origins (id, name, notes) values (${q(o.id)}, ${q(o.name)}, ${q(o.notes)});`);
 for (const m of medications) sql.push(`insert into medication (name) values (${q(m.name)}) on conflict (name) do nothing;`);
 for (const t of immunizationTypes) sql.push(`insert into immunization_types (name, is_mandatory, interval_months) values (${q(t.name)}, ${q(t.isMandatory)}, ${q(t.intervalMonths)}) on conflict (name) do update set is_mandatory = excluded.is_mandatory, interval_months = excluded.interval_months;`);
@@ -840,11 +842,11 @@ for (const r of residents) {
 // The code sequence continues after the migrated ones.
 sql.push(`select setval('residents_resident_number_seq', ${residents.length});`);
 
-for (const a of appointments) sql.push(`insert into vet_appointments (id, resident_id, vet_id, appointment_date, notes, status, created_by) values (${q(a.id)}, ${q(a.residentId)}, ${q(a.vetId)}, ${q(`${a.date} 09:00+07`)}, ${q(a.notes)}, 'completed', ${admin});`);
-for (const w of weights) sql.push(`insert into weight (id, resident_id, vet_appointment_id, date, weight_kg, created_by) values (${q(w.id)}, ${q(w.residentId)}, ${q(w.appointmentId)}, ${q(w.date)}, ${q(w.kg)}, ${admin});`);
-for (const p of procedures) sql.push(`insert into procedures (id, resident_id, vet_appointment_id, procedure_type_id, date, notes, created_by) values (${q(p.id)}, ${q(p.residentId)}, ${q(p.appointmentId)}, (select id from procedure_types where name = ${q(p.typeName)}), ${q(p.date)}, ${q(p.notes)}, ${admin});`);
-for (const b of bloodTests) sql.push(`insert into blood_tests (id, resident_id, vet_appointment_id, blood_test_type_id, date, results, created_by) values (${q(b.id)}, ${q(b.residentId)}, ${q(b.appointmentId)}, (select id from blood_test_types where name = ${q(b.typeName)}), ${q(b.date)}, ${q(b.results)}, ${admin});`);
-for (const p of prescriptions) sql.push(`insert into prescriptions (id, resident_id, vet_appointment_id, medication_id, frequency_id, dose_quantity, start_date, end_date, notes, created_by) values (${q(p.id)}, ${q(p.residentId)}, ${q(p.appointmentId)}, (select id from medication where name = ${q(p.medicationName)}), (select id from frequency where label = ${q(p.frequencyLabel)}), ${q(p.doseQuantity)}, ${q(p.start)}, ${q(p.end)}, ${q(p.notes)}, ${admin});`);
+for (const a of appointments) sql.push(`insert into clinic_visits (id, resident_id, clinic_id, appointment_date, notes, status, created_by) values (${q(a.id)}, ${q(a.residentId)}, ${q(a.clinicId)}, ${q(`${a.date} 09:00+07`)}, ${q(a.notes)}, 'completed', ${admin});`);
+for (const w of weights) sql.push(`insert into weight (id, resident_id, clinic_visit_id, date, weight_kg, created_by) values (${q(w.id)}, ${q(w.residentId)}, ${q(w.appointmentId)}, ${q(w.date)}, ${q(w.kg)}, ${admin});`);
+for (const p of procedures) sql.push(`insert into procedures (id, resident_id, clinic_visit_id, procedure_type_id, date, notes, created_by) values (${q(p.id)}, ${q(p.residentId)}, ${q(p.appointmentId)}, (select id from procedure_types where name = ${q(p.typeName)}), ${q(p.date)}, ${q(p.notes)}, ${admin});`);
+for (const b of bloodTests) sql.push(`insert into blood_tests (id, resident_id, clinic_visit_id, blood_test_type_id, date, results, created_by) values (${q(b.id)}, ${q(b.residentId)}, ${q(b.appointmentId)}, (select id from blood_test_types where name = ${q(b.typeName)}), ${q(b.date)}, ${q(b.results)}, ${admin});`);
+for (const p of prescriptions) sql.push(`insert into prescriptions (id, resident_id, clinic_visit_id, medication_id, frequency_id, dose_quantity, start_date, end_date, notes, created_by) values (${q(p.id)}, ${q(p.residentId)}, ${q(p.appointmentId)}, (select id from medication where name = ${q(p.medicationName)}), (select id from frequency where label = ${q(p.frequencyLabel)}), ${q(p.doseQuantity)}, ${q(p.start)}, ${q(p.end)}, ${q(p.notes)}, ${admin});`);
 for (const i of immunizationsUnique) sql.push(`insert into immunization_records (id, resident_id, immunization_type_id, date_administered, created_by) values (${q(i.id)}, ${q(i.residentId)}, (select id from immunization_types where name = ${q(i.typeName)}), ${q(i.date)}, ${admin});`);
 
 for (const a of attachmentsResolved) sql.push(`insert into attachments (id, owner_type, owner_id, sub_folder, drive_file_id, file_name, date_taken, caption, uploaded_by) values (${q(a.id)}, ${q(a.ownerType)}, ${q(a.ownerId)}, ${q(a.subFolder)}, ${q(a.driveFileId)}, ${q(a.path.split("/").pop())}, ${q(a.dateTaken)}, ${q(a.caption)}, ${admin});`);

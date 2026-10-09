@@ -60,7 +60,7 @@ export type DueVisit = {
   /** ISO timestamp. */
   when: string;
   reason: string | null;
-  vetName: string | null;
+  clinicName: string | null;
 };
 
 export type DueJob = {
@@ -233,7 +233,7 @@ type AppointmentRow = {
   resident_id: string;
   appointment_date: string;
   reason: string | null;
-  vets: { name: string } | null;
+  clinics: { name: string } | null;
 };
 
 type JobRow = {
@@ -268,8 +268,8 @@ async function answerDue(
     // The dashboard's own "due" set: still scheduled, and either already
     // past or inside the window (src/lib/management/report.ts).
     supabase
-      .from("vet_appointments")
-      .select("id, resident_id, appointment_date, reason, vets(name)")
+      .from("clinic_visits")
+      .select("id, resident_id, appointment_date, reason, clinics(name)")
       .is("archived_at", null)
       .eq("status", "scheduled")
       .lt("appointment_date", end.toISOString())
@@ -297,7 +297,7 @@ async function answerDue(
       residentId: row.resident_id,
       when: row.appointment_date,
       reason: row.reason,
-      vetName: row.vets?.name ?? null,
+      clinicName: row.clinics?.name ?? null,
     };
     if (new Date(visit.when).getTime() < nowMs) overdueVisits.push(visit);
     else visits.push(visit);

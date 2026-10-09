@@ -36,7 +36,7 @@ import { endPrescriptionToday } from "@/app/prescriptions/actions";
 import { endDietToday } from "@/app/diets/actions";
 import { defaultDailyQuantity, formatQuantity } from "@/lib/diets/options";
 import { WeightChart } from "@/components/WeightChart";
-import { visitDate } from "@/lib/vets/linkable";
+import { visitDate } from "@/lib/clinics/linkable";
 import { ActionLink } from "@/components/ActionLink";
 import { MicrochipLine } from "@/components/MicrochipForm";
 import { ArchivedBadge } from "@/components/ArchivedBadge";
@@ -88,7 +88,7 @@ function RecordList<T extends { id: string }>({
  */
 const SECTION_READS: Partial<Record<string, LevelKey>> = {
   immunizations: "medical.immunizations",
-  "vet-appointments": "medical.visits",
+  "clinic-visits": "medical.visits",
   prescriptions: "medical.prescriptions",
   diet: "medical.diet",
   weight: "medical.weight",
@@ -152,15 +152,15 @@ export default async function ResidentSectionPage(
   // Archive (0124): a second list of archived rows behind ?archived=1, as on
   // contacts. The live queries below already skip archived rows; this only
   // adds the way to see and restore them. Who gets the button is
-  // medical.archive: admin, management and staff, never a vet or
+  // medical.archive: admin, management and staff, never a doctor or
   // volunteer, and nobody on a deceased resident.
   const showArchived = (await props.searchParams).archived === "1";
-  // A vet or volunteer reads a carer or sender name through a narrow view (0126): the contacts scope says which.
+  // A doctor or volunteer reads a carer or sender name through a narrow view (0126): the contacts scope says which.
   const photoSelect = residentPhotoSelect(perms);
   const contactEmbed = (withArchive = false) => contactNameEmbed(perms, withArchive);
   const canArchive = (kind: MedicalArchiveKind) => !isDeceased && can(perms, "medical.archive");
   const archivedCount = async (
-    table: "weight" | "prescriptions" | "vet_appointments" | "immunization_records",
+    table: "weight" | "prescriptions" | "clinic_visits" | "immunization_records",
   ) =>
     (
       await supabase
@@ -608,11 +608,11 @@ export default async function ResidentSectionPage(
       );
       break;
     }
-    case "vet-appointments": {
+    case "clinic-visits": {
       const [{ data }, { data: visitWeights }] = await Promise.all([
         supabase
-          .from("vet_appointments")
-          .select("id, appointment_date, status, reason, doctor_name, notes, cost, vets(name, name_th)")
+          .from("clinic_visits")
+          .select("id, appointment_date, status, reason, doctor_name, notes, cost, clinics(name, name_th)")
           .is("archived_at", null)
           .eq("resident_id", id)
           .order("appointment_date", { ascending: false })
@@ -625,28 +625,28 @@ export default async function ResidentSectionPage(
               doctor_name: string | null;
               notes: string | null;
               cost: number | null;
-              vets: { name: string; name_th: string | null } | null;
+              clinics: { name: string; name_th: string | null } | null;
             }[]
           >(),
         supabase
           .from("weight")
-          .select("id, vet_appointment_id")
+          .select("id, clinic_visit_id")
           .is("archived_at", null)
           .eq("resident_id", id)
-          .not("vet_appointment_id", "is", null)
-          .returns<{ id: string; vet_appointment_id: string }[]>(),
+          .not("clinic_visit_id", "is", null)
+          .returns<{ id: string; clinic_visit_id: string }[]>(),
       ]);
       // One weight per visit (0106): a visit that has its reading offers to
       // correct it, and a visit still to come offers nothing, since a
       // reading can't be dated in the future.
       const weightByVisit = new Map(
-        (visitWeights ?? []).map((w) => [w.vet_appointment_id, w.id]),
+        (visitWeights ?? []).map((w) => [w.clinic_visit_id, w.id]),
       );
-      const visitCount = await archivedCount("vet_appointments");
+      const visitCount = await archivedCount("clinic_visits");
       const { data: archivedVisits } = showArchived
         ? await supabase
-            .from("vet_appointments")
-            .select("id, appointment_date, status, reason, doctor_name, archive_reason, vets(name, name_th)")
+            .from("clinic_visits")
+            .select("id, appointment_date, status, reason, doctor_name, archive_reason, clinics(name, name_th)")
             .not("archived_at", "is", null)
             .eq("resident_id", id)
             .order("appointment_date", { ascending: false })
@@ -658,7 +658,7 @@ export default async function ResidentSectionPage(
                 reason: string | null;
                 doctor_name: string | null;
                 archive_reason: string | null;
-                vets: { name: string; name_th: string | null } | null;
+                clinics: { name: string; name_th: string | null } | null;
               }[]
             >()
         : { data: [] };
@@ -675,9 +675,9 @@ export default async function ResidentSectionPage(
           {!isDeceased && (
             <div className="flex justify-end">
               <ActionLink
-                href={`/vet-visits/new?residentId=${id}`}
+                href={`/clinic-visits/new?residentId=${id}`}
                 label={t.residents.sections.bookVetVisit}
-                icon={SECTION_ICONS["vet-appointments"]}
+                icon={SECTION_ICONS["clinic-visits"]}
                 variant="primary"
                 iconOnlyOnMobile={false}
               />
@@ -692,9 +692,9 @@ export default async function ResidentSectionPage(
                   <span className="font-medium">
                     {row.reason ?? t.residents.sections.vetVisitFallback}
                   </span>
-                  {((row.vets && localLabel(locale, row.vets.name, row.vets.name_th)) || row.doctor_name) && (
+                  {((row.clinics && localLabel(locale, row.clinics.name, row.clinics.name_th)) || row.doctor_name) && (
                     <span className="text-xs text-muted">
-                      {[(row.vets && localLabel(locale, row.vets.name, row.vets.name_th)), row.doctor_name].filter(Boolean).join(" · ")}
+                      {[(row.clinics && localLabel(locale, row.clinics.name, row.clinics.name_th)), row.doctor_name].filter(Boolean).join(" · ")}
                     </span>
                   )}
                 </div>
@@ -710,20 +710,20 @@ export default async function ResidentSectionPage(
                     {!isDeceased && (
                       <>
                         <RowActionLink
-                          href={`/vet-visits/${row.id}/edit`}
+                          href={`/clinic-visits/${row.id}/edit`}
                           label={t.common.edit}
                           subject={visitSubject(row)}
                           icon={ACTION_ICONS.edit}
                         />
                         <RowActionLink
-                          href={`/blood-tests/new?residentId=${id}&vetAppointmentId=${row.id}`}
+                          href={`/blood-tests/new?residentId=${id}&clinicVisitId=${row.id}`}
                           label={t.residents.sections.logBloodTest}
                           subject={visitSubject(row)}
                           icon={SECTION_ICONS["blood-tests"]}
                         />
                         {visitDate(row) <= today && (
                           <RowActionLink
-                            href={`/prescriptions/new?residentId=${id}&vetAppointmentId=${row.id}`}
+                            href={`/prescriptions/new?residentId=${id}&clinicVisitId=${row.id}`}
                             label={t.residents.sections.addPrescription}
                             subject={visitSubject(row)}
                             icon={SECTION_ICONS.prescriptions}
@@ -739,7 +739,7 @@ export default async function ResidentSectionPage(
                         ) : (
                           visitDate(row) <= today && (
                             <RowActionLink
-                              href={`/weight/new?residentId=${id}&vetAppointmentId=${row.id}`}
+                              href={`/weight/new?residentId=${id}&clinicVisitId=${row.id}`}
                               label={t.residents.sections.logWeight}
                               subject={visitSubject(row)}
                               icon={SECTION_ICONS.weight}
@@ -747,7 +747,7 @@ export default async function ResidentSectionPage(
                           )
                         )}
                         <RowActionLink
-                          href={`/procedures/new?residentId=${id}&vetAppointmentId=${row.id}`}
+                          href={`/procedures/new?residentId=${id}&clinicVisitId=${row.id}`}
                           label={t.residents.sections.logProcedure}
                           subject={visitSubject(row)}
                           icon={SECTION_ICONS.procedures}
@@ -756,7 +756,7 @@ export default async function ResidentSectionPage(
                     )}
                     {canSendToHospital && (
                       <RowActionLink
-                        href={`/residents/${id}/hospital?vetAppointmentId=${row.id}`}
+                        href={`/residents/${id}/hospital?clinicVisitId=${row.id}`}
                         label={t.residents.hub.placementActions.hospital}
                         subject={visitSubject(row)}
                         icon={PLACEMENT_ICONS.hospital}
@@ -783,9 +783,9 @@ export default async function ResidentSectionPage(
                 <span className="font-medium">
                   {row.reason ?? t.residents.sections.vetVisitFallback}
                 </span>
-                {((row.vets && localLabel(locale, row.vets.name, row.vets.name_th)) || row.doctor_name) && (
+                {((row.clinics && localLabel(locale, row.clinics.name, row.clinics.name_th)) || row.doctor_name) && (
                   <span className="text-xs text-muted">
-                    {[(row.vets && localLabel(locale, row.vets.name, row.vets.name_th)), row.doctor_name].filter(Boolean).join(" · ")}
+                    {[(row.clinics && localLabel(locale, row.clinics.name, row.clinics.name_th)), row.doctor_name].filter(Boolean).join(" · ")}
                   </span>
                 )}
               </div>
@@ -814,7 +814,7 @@ export default async function ResidentSectionPage(
       const { data, error } = await supabase
         .from("prescriptions")
         .select(
-          "id, start_date, end_date, dose_quantity, notes, medication:picker_medications(name, dose_unit, name_th), frequency(label, label_th), vet_appointments(appointment_date)",
+          "id, start_date, end_date, dose_quantity, notes, medication:picker_medications(name, dose_unit, name_th), frequency(label, label_th), clinic_visits(appointment_date)",
         )
         .is("archived_at", null)
         .eq("resident_id", id)
@@ -828,7 +828,7 @@ export default async function ResidentSectionPage(
             notes: string | null;
             medication: { name: string; dose_unit: string; name_th: string | null } | null;
             frequency: { label: string; label_th: string | null } | null;
-            vet_appointments: { appointment_date: string } | null;
+            clinic_visits: { appointment_date: string } | null;
           }[]
         >();
       const rxCount = await archivedCount("prescriptions");
@@ -836,7 +836,7 @@ export default async function ResidentSectionPage(
         ? await supabase
             .from("prescriptions")
             .select(
-              "id, start_date, end_date, dose_quantity, notes, archive_reason, medication:picker_medications(name, dose_unit, name_th), frequency(label, label_th), vet_appointments(appointment_date)",
+              "id, start_date, end_date, dose_quantity, notes, archive_reason, medication:picker_medications(name, dose_unit, name_th), frequency(label, label_th), clinic_visits(appointment_date)",
             )
             .not("archived_at", "is", null)
             .eq("resident_id", id)
@@ -851,7 +851,7 @@ export default async function ResidentSectionPage(
                 archive_reason: string | null;
                 medication: { name: string; dose_unit: string; name_th: string | null } | null;
                 frequency: { label: string; label_th: string | null } | null;
-                vet_appointments: { appointment_date: string } | null;
+                clinic_visits: { appointment_date: string } | null;
               }[]
             >()
         : { data: [] };
@@ -896,10 +896,10 @@ export default async function ResidentSectionPage(
                     {t.residents.sections.startsOn(formatDate(row.start_date, locale))}
                   </span>
                 )}
-                {row.vet_appointments && (
+                {row.clinic_visits && (
                   <span className="text-xs text-muted">
                     {t.residents.sections.linkedVisit(
-                      formatDate(row.vet_appointments.appointment_date, locale),
+                      formatDate(row.clinic_visits.appointment_date, locale),
                     )}
                   </span>
                 )}
@@ -1121,7 +1121,7 @@ export default async function ResidentSectionPage(
     case "weight": {
       const { data, error } = await supabase
         .from("weight")
-        .select("id, date, weight_kg, notes, vet_appointments(appointment_date)")
+        .select("id, date, weight_kg, notes, clinic_visits(appointment_date)")
         .is("archived_at", null)
         .eq("resident_id", id)
         .order("date", { ascending: false })
@@ -1132,7 +1132,7 @@ export default async function ResidentSectionPage(
             date: string;
             weight_kg: number;
             notes: string | null;
-            vet_appointments: { appointment_date: string } | null;
+            clinic_visits: { appointment_date: string } | null;
           }[]
         >();
       const rows = data ?? [];
@@ -1140,7 +1140,7 @@ export default async function ResidentSectionPage(
       const { data: archivedWeights } = showArchived
         ? await supabase
             .from("weight")
-            .select("id, date, weight_kg, notes, archive_reason, vet_appointments(appointment_date)")
+            .select("id, date, weight_kg, notes, archive_reason, clinic_visits(appointment_date)")
             .not("archived_at", "is", null)
             .eq("resident_id", id)
             .order("date", { ascending: false })
@@ -1151,7 +1151,7 @@ export default async function ResidentSectionPage(
                 weight_kg: number;
                 notes: string | null;
                 archive_reason: string | null;
-                vet_appointments: { appointment_date: string } | null;
+                clinic_visits: { appointment_date: string } | null;
               }[]
             >()
         : { data: [] };
@@ -1233,9 +1233,9 @@ export default async function ResidentSectionPage(
                   </span>
                   <span className="text-right text-xs text-muted">
                     {formatDate(row.date, locale)}
-                    {row.vet_appointments &&
+                    {row.clinic_visits &&
                       ` · ${t.residents.sections.linkedVisit(
-                        formatDate(row.vet_appointments.appointment_date, locale),
+                        formatDate(row.clinic_visits.appointment_date, locale),
                       )}`}
                   </span>
                 </div>
@@ -1271,9 +1271,9 @@ export default async function ResidentSectionPage(
                 <span className="font-medium">{formatWeightKg(row.weight_kg, locale)}</span>
                 <span className="text-right text-xs text-muted">
                   {formatDate(row.date, locale)}
-                  {row.vet_appointments &&
+                  {row.clinic_visits &&
                     ` · ${t.residents.sections.linkedVisit(
-                      formatDate(row.vet_appointments.appointment_date, locale),
+                      formatDate(row.clinic_visits.appointment_date, locale),
                     )}`}
                 </span>
               </div>
@@ -1299,7 +1299,7 @@ export default async function ResidentSectionPage(
       const { data: procedureRows, error } = await supabase
         .from("procedures")
         .select(
-          "id, date, notes, procedure_types(name, name_th), vet_appointments(appointment_date, reason)",
+          "id, date, notes, procedure_types(name, name_th), clinic_visits(appointment_date, reason)",
         )
         .eq("resident_id", id)
         .order("date", { ascending: false })
@@ -1310,7 +1310,7 @@ export default async function ResidentSectionPage(
             date: string;
             notes: string | null;
             procedure_types: { name: string; name_th: string | null } | null;
-            vet_appointments: { appointment_date: string; reason: string | null } | null;
+            clinic_visits: { appointment_date: string; reason: string | null } | null;
           }[]
         >();
 
@@ -1335,7 +1335,7 @@ export default async function ResidentSectionPage(
         date: row.date,
         notes: row.notes,
         procedure_types: row.procedure_types && { name: localLabel(locale, row.procedure_types.name, row.procedure_types.name_th) },
-        vet_appointments: row.vet_appointments,
+        clinic_visits: row.clinic_visits,
         attachments: (procedureFiles ?? [])
           .filter((a) => a.owner_id === row.id)
           .map((a) => ({ id: a.id, drive_file_id: a.drive_file_id, file_name: a.file_name })),
@@ -1368,7 +1368,7 @@ export default async function ResidentSectionPage(
       const { data: tests } = await supabase
         .from("blood_tests")
         .select(
-          "id, date, results, blood_test_types(name, name_th), vet_appointments(appointment_date, reason)",
+          "id, date, results, blood_test_types(name, name_th), clinic_visits(appointment_date, reason)",
         )
         .eq("resident_id", id)
         .order("date", { ascending: false })
@@ -1378,7 +1378,7 @@ export default async function ResidentSectionPage(
             date: string;
             results: string | null;
             blood_test_types: { name: string; name_th: string | null } | null;
-            vet_appointments: { appointment_date: string; reason: string | null } | null;
+            clinic_visits: { appointment_date: string; reason: string | null } | null;
           }[]
         >();
 
@@ -1401,7 +1401,7 @@ export default async function ResidentSectionPage(
         date: row.date,
         results: row.results,
         blood_test_types: row.blood_test_types && { name: localLabel(locale, row.blood_test_types.name, row.blood_test_types.name_th) },
-        vet_appointments: row.vet_appointments,
+        clinic_visits: row.clinic_visits,
         attachments: (attachmentRows ?? [])
           .filter((a) => a.owner_id === row.id)
           .map((a) => ({ id: a.id, drive_file_id: a.drive_file_id, file_name: a.file_name })),
@@ -1445,9 +1445,9 @@ export default async function ResidentSectionPage(
         )}
         {title}
       </h1>
-      {/* The vet-visit and procedure views are where a vet reads a chip
+      {/* The clinic-visit and procedure views are where a doctor reads a chip
           against a scanner, or finds it missing and records it (0116). */}
-      {(section === "vet-appointments" || section === "procedures") && (
+      {(section === "clinic-visits" || section === "procedures") && (
         <MicrochipLine
           residentId={id}
           number={resident.microchip_number}

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { NOISE, type AuditEntry, type AuditedTable, type Image } from "@/lib/audit/recent-changes";
+import { loggedTableNames, NOISE, type AuditEntry, type AuditedTable, type Image } from "@/lib/audit/recent-changes";
 
 /**
  * Which audit entries can be undone, and what an undo writes (backlog DB-6,
@@ -15,7 +15,7 @@ export const UNDOABLE_EDIT_TABLES: readonly AuditedTable[] = [
   "residents",
   "contacts",
   "prescriptions",
-  "vet_appointments",
+  "clinic_visits",
   "weight",
   "immunization_records",
   // A figure is a typed number and date; putting the old pair back is the
@@ -27,7 +27,7 @@ export const UNDOABLE_EDIT_TABLES: readonly AuditedTable[] = [
 export const UNDOABLE_DELETE_TABLES: readonly AuditedTable[] = [
   "contacts",
   "prescriptions",
-  "vet_appointments",
+  "clinic_visits",
   "weight",
   "immunization_records",
 ];
@@ -73,7 +73,7 @@ export async function newestIdByRow(
       const { data } = await supabase
         .from("audit_log")
         .select("id")
-        .eq("table_name", e.table)
+        .in("table_name", loggedTableNames(e.table))
         .eq("row_id", e.rowId)
         .order("id", { ascending: false })
         .limit(1)

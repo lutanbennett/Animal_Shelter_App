@@ -3,7 +3,7 @@ import { canOpen, routeFor } from "@/lib/permissions/routes";
 import { requireAnyPageIn } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import { SectionTiles, type SectionTile } from "@/components/SectionTiles";
-import { CONTACT_ICONS, NAV_ICONS, SECTION_ICONS, VET_ICONS } from "@/components/hub-icons";
+import { CONTACT_ICONS, NAV_ICONS, SECTION_ICONS, CLINIC_ICONS } from "@/components/hub-icons";
 
 /**
  * Management → the group's own landing page: a tile per page the route registry
@@ -52,10 +52,10 @@ export default async function ManagementPage() {
       icon: Globe,
     },
     {
-      href: "/management/vets",
+      href: "/management/clinics",
       label: t.nav.vets,
       description: t.management.landing.tiles.vets,
-      icon: VET_ICONS.vet,
+      icon: CLINIC_ICONS.clinic,
     },
     {
       href: "/management/medications",

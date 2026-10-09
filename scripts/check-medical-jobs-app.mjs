@@ -119,7 +119,7 @@ try {
   const one = await page(`/medical/weight?resident=${live.id}`);
   const oneText = text(one.html);
   expect(oneText.includes("Weight in kg") && one.html.includes('inputMode="decimal"') || one.html.includes('inputmode="decimal"'), "the weight form opens with the decimal keypad");
-  expect(!oneText.toLowerCase().includes("vet visit") && !one.html.includes('name="vetAppointmentId"'), "no vet-visit picker is offered (she cannot read vet_appointments)");
+  expect(!oneText.toLowerCase().includes("clinic visit") && !one.html.includes('name="clinicVisitId"'), "no clinic-visit picker is offered (she cannot read clinic_visits)");
   const gone = await page("/medical/weight?resident=00000000-0000-0000-0000-000000000000");
   expect(gone.status === 200 && text(gone.html).includes("isn't in the list"), "an unknown resident gets the polite sentence");
   if (deadId) {
@@ -212,11 +212,11 @@ try {
   const reads = await Promise.all([
     her.from("residents").select("id").limit(1),
     her.from("resident_current_state").select("resident_id").limit(1),
-    her.from("vet_appointments").select("id").limit(1),
+    her.from("clinic_visits").select("id").limit(1),
     her.from("diet_types").select("id").limit(1),
     her.from("attachments").select("id").limit(1),
   ]);
-  for (const [i, name] of ["residents", "resident_current_state", "vet_appointments", "diet_types", "attachments"].entries()) {
+  for (const [i, name] of ["residents", "resident_current_state", "clinic_visits", "diet_types", "attachments"].entries()) {
     expect(!reads[i].data?.length, `${name} returns her nothing`);
   }
   const photoView = await her.from("medical_photo_residents").select("id, name").eq("id", live.id);

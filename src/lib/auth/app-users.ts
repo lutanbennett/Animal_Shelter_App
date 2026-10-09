@@ -22,7 +22,7 @@ export function appUserLabel(user: Pick<AppUser, "email" | "display_name"> | nul
 
 /**
  * Logins a maintenance job can be assigned to: everyone who actions
- * jobs. Vets are left out — they don't fix fences — and so is anyone
+ * jobs. Doctors are left out — they don't fix fences — and so is anyone
  * without a role or who has been archived. Sorted by the name that will
  * be shown.
  */

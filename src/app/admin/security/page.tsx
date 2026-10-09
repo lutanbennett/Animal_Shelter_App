@@ -20,15 +20,15 @@ export default async function SecurityPage() {
 
   const admin = createAdminClient();
 
-  const [authUsersResult, rolesResult, vetsResult, doctorsResult, appRolesResult, outreachCellsResult] = await Promise.all([
+  const [authUsersResult, rolesResult, clinicsResult, doctorsResult, appRolesResult, outreachCellsResult] = await Promise.all([
     listAllUsers(admin),
     admin.from("user_roles").select("user_id, role, archived_at"),
-    admin.from("vets").select("id, name, clinic_name").order("name"),
-    // Doctors with the clinics they work at: a vet login's clinics are its
+    admin.from("clinics").select("id, name").order("name"),
+    // Doctors with the clinics they work at: a doctor login's clinics are its
     // linked doctor's (0125).
     admin
-      .from("vet_doctors")
-      .select("id, name, user_id, vet_doctor_clinics(vet_id, active)")
+      .from("doctors")
+      .select("id, name, user_id, doctor_clinics(clinic_id, active)")
       .order("name"),
     // Who may write outreach notes (0169): every live role that opens the app but Admin, whose
     // column is a rule, and the one cell each holds.
@@ -62,20 +62,17 @@ export default async function SecurityPage() {
       },
     ]),
   );
-  const clinics = (vetsResult.data ?? []).map((v) => ({
-    id: v.id as string,
-    label: v.clinic_name ? `${v.name} — ${v.clinic_name}` : (v.name as string),
-  }));
+  const clinics = (clinicsResult.data ?? []).map((c) => ({ id: c.id as string, label: c.name as string }));
 
-  const clinicName = new Map((vetsResult.data ?? []).map((v) => [v.id as string, v.name as string]));
-  type DoctorLink = { vet_id: string; active: boolean };
+  const clinicName = new Map((clinicsResult.data ?? []).map((c) => [c.id as string, c.name as string]));
+  type DoctorLink = { clinic_id: string; active: boolean };
   const doctorRows = (doctorsResult.data ?? []).map((d) => ({
     id: d.id as string,
     name: d.name as string,
     userId: (d.user_id as string | null) ?? null,
-    clinics: ((d.vet_doctor_clinics ?? []) as DoctorLink[])
+    clinics: ((d.doctor_clinics ?? []) as DoctorLink[])
       .filter((l) => l.active)
-      .map((l) => clinicName.get(l.vet_id) ?? "")
+      .map((l) => clinicName.get(l.clinic_id) ?? "")
       .filter(Boolean)
       .sort((a, b) => a.localeCompare(b)),
   }));

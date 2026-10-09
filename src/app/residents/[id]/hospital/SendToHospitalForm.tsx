@@ -23,7 +23,7 @@ export function SendToHospitalForm({
 }: {
   residentId: string;
   current: CurrentLocation;
-  /** YYYY-MM-DD; the vet visit date when reached from a visit record. */
+  /** YYYY-MM-DD; the clinic visit date when reached from a visit record. */
   defaultDate: string;
   defaultNotes: string;
   /** YYYY-MM-DD, server-computed so the max attribute matches the server's check. */

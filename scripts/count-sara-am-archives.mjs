@@ -31,8 +31,8 @@ hits as (
   union all select x.resident_id, 'immunizations' from immunization_records x join a on a.id = x.resident_id
     left join picker_immunization_types t on t.id = x.immunization_type_id
     where x.archived_at is null and concat_ws(' ', to_jsonb(x)::text, t.name) like '%ำ%'
-  union all select x.resident_id, 'appointments' from vet_appointments x join a on a.id = x.resident_id
-    left join vets v on v.id = x.vet_id where x.archived_at is null and concat_ws(' ', to_jsonb(x)::text, v.name) like '%ำ%'
+  union all select x.resident_id, 'appointments' from clinic_visits x join a on a.id = x.resident_id
+    left join clinics v on v.id = x.clinic_id where x.archived_at is null and concat_ws(' ', to_jsonb(x)::text, v.name) like '%ำ%'
   union all select x.resident_id, 'prescriptions' from prescriptions x join a on a.id = x.resident_id
     left join picker_medications m on m.id = x.medication_id where x.archived_at is null and concat_ws(' ', to_jsonb(x)::text, m.name) like '%ำ%'
   union all select x.resident_id, 'diets' from resident_diets x join a on a.id = x.resident_id

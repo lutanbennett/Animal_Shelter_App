@@ -16,7 +16,7 @@ import {
   updateUserRole,
 } from "./actions";
 import { MAX_NAME_LENGTH } from "@/lib/auth/user-name";
-import { VetDoctorLink, type DoctorOption } from "./VetDoctorLink";
+import { DoctorLoginLink, type DoctorOption } from "./DoctorLoginLink";
 import { TemporaryPasswordNotice } from "@/components/TemporaryPasswordNotice";
 import type { ActionResult } from "@/lib/action-result";
 import { formatDateTime as formatDate } from "@/lib/format";
@@ -31,7 +31,7 @@ export type SecurityUser = {
   role: string | null;
   /** Set when they've left (0063): no access, kept for past work. */
   archivedAt: string | null;
-  /** The doctor this login is linked to (0125); its clinics are the vet's. */
+  /** The doctor this login is linked to (0125); its clinics are the login's. */
   doctor: { id: string; name: string; clinics: string[] } | null;
   createdAt: string;
   lastSignInAt: string | null;
@@ -43,7 +43,7 @@ export type SecurityUser = {
   twoStepSetupUntil: string | null;
 };
 
-const ROLES = ["admin", "management", "staff", "vet", "volunteer", "public_viewer"];
+const ROLES = ["admin", "management", "staff", "doctor", "volunteer", "public_viewer"];
 
 export type ClinicOption = { id: string; label: string };
 
@@ -235,8 +235,8 @@ function UserRow({
               </option>
             ))}
           </select>
-          {role === "vet" && (
-            <VetDoctorLink
+          {role === "doctor" && (
+            <DoctorLoginLink
               user={user}
               clinics={clinics}
               unlinkedDoctors={unlinkedDoctors}

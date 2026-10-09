@@ -1,6 +1,6 @@
 import type { ManualRole } from "./types";
 
-const MANUAL_ROLES: readonly string[] = ["admin", "management", "staff", "vet", "volunteer"];
+const MANUAL_ROLES: readonly string[] = ["admin", "management", "staff", "doctor", "volunteer"];
 
 /** The signed-in role as the manual names it, or null for anything it doesn't (signed out, public viewer). */
 export function asManualRole(role: string | null | undefined): ManualRole | null {

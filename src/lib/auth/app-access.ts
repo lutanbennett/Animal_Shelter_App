@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isPublicPath } from "@/lib/public-paths";
-import { DEFAULT_SIGNED_IN_PATH, VET_HOME_PATH } from "./next-path";
+import { DEFAULT_SIGNED_IN_PATH, DOCTOR_HOME_PATH } from "./next-path";
 
 /**
  * The roles that open the app. Everything else a session can be — signed
@@ -10,7 +10,7 @@ import { DEFAULT_SIGNED_IN_PATH, VET_HOME_PATH } from "./next-path";
  * so a role added later starts outside the app until someone decides
  * otherwise (docs/decisions.md, 2026-09-26).
  */
-export const APP_ACCESS_ROLES = ["admin", "management", "staff", "vet", "volunteer"] as const;
+export const APP_ACCESS_ROLES = ["admin", "management", "staff", "doctor", "volunteer"] as const;
 
 /**
  * A login for testing the locked UAT/test sites as a visitor: it signs in,
@@ -44,7 +44,7 @@ export async function sessionHasAppAccess(supabase: SupabaseClient): Promise<boo
  * after sign-in.
  */
 export function signedInLandingPath(role: string | null, next: string | null): string {
-  if (hasAppAccess(role)) return next ?? (role === "vet" ? VET_HOME_PATH : DEFAULT_SIGNED_IN_PATH);
+  if (hasAppAccess(role)) return next ?? (role === "doctor" ? DOCTOR_HOME_PATH : DEFAULT_SIGNED_IN_PATH);
   if (next && isPublicPath(new URL(next, "http://x").pathname)) return next;
   return "/";
 }

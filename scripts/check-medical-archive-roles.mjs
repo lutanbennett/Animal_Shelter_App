@@ -10,10 +10,10 @@
 // It checks, per docs/decisions/2026-10-02-medical-archive-roles.md:
 //   A  staff archives and restores a weight, prescription, visit and
 //      immunization (1 row each), and each archive writes ONE audit row
-//   B  a vet is refused (0 rows) on another clinic's visit and on a
+//   B  a doctor is refused (0 rows) on another clinic's visit and on a
 //      prescription on it; on their own clinic's visit the database allows
 //      the archive but not the restore (it drops the visit from their
-//      scope), which is why the app offers vets no Archive at all
+//      scope), which is why the app offers doctors no Archive at all
 //   C  a volunteer archives nothing
 //   D  a second archive of an archived row changes nothing (the .is(null) guard)
 //
@@ -67,7 +67,7 @@ do $setup$
 declare
   v_res uuid;
   v_staff uuid := gen_random_uuid();
-  v_vet uuid := gen_random_uuid();
+  v_doctor uuid := gen_random_uuid();
   v_vol uuid := gen_random_uuid();
   v_own uuid := gen_random_uuid();
   v_other uuid := gen_random_uuid();
@@ -75,26 +75,26 @@ begin
   select id into v_res from record_intake(
     p_name => 'Harness archive roles', p_intake_date => date '2026-08-01', p_weight_kg => 10,
     p_diet_type_id => (select id from diet_types order by is_standard desc nulls last limit 1));
-  insert into harness values ('res', v_res), ('staff', v_staff), ('vet', v_vet), ('vol', v_vol),
+  insert into harness values ('res', v_res), ('staff', v_staff), ('doctor', v_doctor), ('vol', v_vol),
     ('own', v_own), ('other', v_other);
 
-  insert into vets (id, name, clinic_name) values (v_own, 'Harness own clinic', 'Harness own clinic'),
-    (v_other, 'Harness other clinic', 'Harness other clinic');
+  insert into clinics (id, name) values (v_own, 'Harness own clinic'),
+    (v_other, 'Harness other clinic');
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
          'harness-archive-' || u || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
-  from unnest(array[v_staff, v_vet, v_vol]) u;
+  from unnest(array[v_staff, v_doctor, v_vol]) u;
   insert into user_roles (user_id, role) values (v_staff, 'staff'), (v_vol, 'volunteer');
-  insert into user_roles (user_id, role) values (v_vet, 'vet');
-  -- 0127: a vet login's clinic is its linked doctor's (the home-clinic trigger links it)
-  insert into vet_doctors (name, user_id, vet_id) values ('Harness vet doctor', v_vet, v_own);
+  insert into user_roles (user_id, role) values (v_doctor, 'doctor');
+  -- 0127: a doctor login's clinic is its linked doctor's (doctor_clinics links it, 0172)
+  with d as (insert into doctors (name, user_id) values ('Harness doctor', v_doctor) returning id) insert into doctor_clinics (clinic_id, doctor_id) select v_own, id from d;
 end $setup$;
 
 do $h$
 declare
   v_res uuid := (select id from harness where k = 'res');
   v_staff uuid := (select id from harness where k = 'staff');
-  v_vet uuid := (select id from harness where k = 'vet');
+  v_doctor uuid := (select id from harness where k = 'doctor');
   v_vol uuid := (select id from harness where k = 'vol');
   v_own uuid := (select id from harness where k = 'own');
   v_other uuid := (select id from harness where k = 'other');
@@ -107,7 +107,7 @@ declare
   v_n int; v_audit int;
   v_report text := '';
 begin
-  insert into vet_appointments (id, resident_id, vet_id, appointment_date, reason)
+  insert into clinic_visits (id, resident_id, clinic_id, appointment_date, reason)
   values (v_visit_own, v_res, v_own, date '2026-08-10', 'own'),
          (v_visit_other, v_res, v_other, date '2026-08-11', 'other');
   insert into weight (resident_id, date, weight_kg) values (v_res, date '2026-08-12', 11) returning id into v_w;
@@ -115,9 +115,9 @@ begin
   values (v_res, v_type, date '2026-08-12') returning id into v_i;
   insert into prescriptions (resident_id, medication_id, frequency_id, start_date, dose_quantity)
   values (v_res, v_med, v_freq, date '2026-08-12', 1) returning id into v_rx;
-  insert into prescriptions (resident_id, medication_id, frequency_id, start_date, dose_quantity, vet_appointment_id)
+  insert into prescriptions (resident_id, medication_id, frequency_id, start_date, dose_quantity, clinic_visit_id)
   values (v_res, v_med, v_freq, date '2026-08-12', 1, v_visit_own) returning id into v_rx_own;
-  insert into prescriptions (resident_id, medication_id, frequency_id, start_date, dose_quantity, vet_appointment_id)
+  insert into prescriptions (resident_id, medication_id, frequency_id, start_date, dose_quantity, clinic_visit_id)
   values (v_res, v_med, v_freq, date '2026-08-12', 1, v_visit_other) returning id into v_rx_other;
 
   -- A: staff, all four, one audit row each.
@@ -129,30 +129,30 @@ begin
   end if;
   if pg_temp.restore_as(v_staff, 'weight', v_w) <> 1 then raise exception 'HARNESS-FAIL A: staff could not restore a weight'; end if;
   if pg_temp.archive_as(v_staff, 'prescriptions', v_rx) <> 1 then raise exception 'HARNESS-FAIL A: staff could not archive a prescription'; end if;
-  if pg_temp.archive_as(v_staff, 'vet_appointments', v_visit_other) <> 1 then raise exception 'HARNESS-FAIL A: staff could not archive a visit'; end if;
+  if pg_temp.archive_as(v_staff, 'clinic_visits', v_visit_other) <> 1 then raise exception 'HARNESS-FAIL A: staff could not archive a visit'; end if;
   if pg_temp.archive_as(v_staff, 'immunization_records', v_i) <> 1 then raise exception 'HARNESS-FAIL A: staff could not archive an immunization'; end if;
-  if pg_temp.restore_as(v_staff, 'vet_appointments', v_visit_other) <> 1 then raise exception 'HARNESS-FAIL A: staff could not restore a visit'; end if;
+  if pg_temp.restore_as(v_staff, 'clinic_visits', v_visit_other) <> 1 then raise exception 'HARNESS-FAIL A: staff could not restore a visit'; end if;
   v_report := v_report || 'A: staff archives all four, restores, one audit row per archive | ';
 
-  -- B: a vet. The database would let them archive their own clinic's
+  -- B: a doctor. The database would let them archive their own clinic's
   -- visit and a prescription on it, and refuses the other clinic's. The app
-  -- offers them nothing, because the archive is one-way for a vet: it drops
+  -- offers them nothing, because the archive is one-way for a doctor: it drops
   -- the visit from their scope, so they cannot restore it.
-  if pg_temp.archive_as(v_vet, 'prescriptions', v_rx_own) <> 1 then raise exception 'HARNESS-FAIL B: vet could not archive a prescription on their own visit'; end if;
-  if pg_temp.restore_as(v_vet, 'prescriptions', v_rx_own) <> 1 then raise exception 'HARNESS-FAIL B: vet could not restore a prescription on their own live visit'; end if;
-  if pg_temp.archive_as(v_vet, 'vet_appointments', v_visit_other) <> 0 then raise exception 'HARNESS-FAIL B: vet archived ANOTHER clinic''s visit'; end if;
-  if pg_temp.archive_as(v_vet, 'prescriptions', v_rx_other) <> 0 then raise exception 'HARNESS-FAIL B: vet archived a prescription on ANOTHER clinic''s visit'; end if;
-  if pg_temp.archive_as(v_vet, 'vet_appointments', v_visit_own) <> 1 then raise exception 'HARNESS-FAIL B: vet could not archive their own clinic''s visit'; end if;
-  if pg_temp.restore_as(v_vet, 'vet_appointments', v_visit_own) <> 0 then
-    raise exception 'HARNESS-FAIL B: a vet restored their own archived visit, so the decision''s reason (one-way for a vet) is stale';
+  if pg_temp.archive_as(v_doctor, 'prescriptions', v_rx_own) <> 1 then raise exception 'HARNESS-FAIL B: doctor could not archive a prescription on their own visit'; end if;
+  if pg_temp.restore_as(v_doctor, 'prescriptions', v_rx_own) <> 1 then raise exception 'HARNESS-FAIL B: doctor could not restore a prescription on their own live visit'; end if;
+  if pg_temp.archive_as(v_doctor, 'clinic_visits', v_visit_other) <> 0 then raise exception 'HARNESS-FAIL B: doctor archived ANOTHER clinic''s visit'; end if;
+  if pg_temp.archive_as(v_doctor, 'prescriptions', v_rx_other) <> 0 then raise exception 'HARNESS-FAIL B: doctor archived a prescription on ANOTHER clinic''s visit'; end if;
+  if pg_temp.archive_as(v_doctor, 'clinic_visits', v_visit_own) <> 1 then raise exception 'HARNESS-FAIL B: doctor could not archive their own clinic''s visit'; end if;
+  if pg_temp.restore_as(v_doctor, 'clinic_visits', v_visit_own) <> 0 then
+    raise exception 'HARNESS-FAIL B: a doctor restored their own archived visit, so the decision''s reason (one-way for a doctor) is stale';
   end if;
-  v_report := v_report || 'B: vet refused (0 rows) on the other clinic; own-clinic archive is one-way, so not offered | ';
+  v_report := v_report || 'B: doctor refused (0 rows) on the other clinic; own-clinic archive is one-way, so not offered | ';
 
   -- C: a volunteer.
   select count(*) into v_n from (values
     (pg_temp.archive_as(v_vol, 'weight', v_w)),
     (pg_temp.archive_as(v_vol, 'prescriptions', v_rx_other)),
-    (pg_temp.archive_as(v_vol, 'vet_appointments', v_visit_other)),
+    (pg_temp.archive_as(v_vol, 'clinic_visits', v_visit_other)),
     (pg_temp.archive_as(v_vol, 'immunization_records', (select id from immunization_records where resident_id = v_res limit 1)))
   ) x(n) where n <> 0;
   if v_n <> 0 then raise exception 'HARNESS-FAIL C: a volunteer archived something'; end if;

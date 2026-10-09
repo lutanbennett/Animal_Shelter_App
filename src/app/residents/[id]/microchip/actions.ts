@@ -9,7 +9,7 @@ import { microchipRefusal, readMicrochip } from "@/lib/residents/microchip";
 
 /**
  * Adds, corrects or clears one resident's chip through
- * set_resident_microchip() (0116), the one write path a vet has: vets read
+ * set_resident_microchip() (0116), the one write path a doctor has: doctors read
  * residents in their clinic's scope but hold no update on the table. Staff
  * and admin use it too from the hub, so there is one form and one set of
  * messages wherever a chip is recorded outside Edit resident and intake.
@@ -46,9 +46,9 @@ export async function setResidentMicrochip(
       return { ok: false, error: e[refusal] };
     }
 
-    // The hub, its sections, and the vet-visit views all show the chip.
+    // The hub, its sections, and the clinic-visit views all show the chip.
     revalidatePath(`/residents/${residentId}`, "layout");
-    revalidatePath("/vet-visits", "layout");
+    revalidatePath("/clinic-visits", "layout");
     revalidatePath("/appointments");
     return { ok: true, cleared: chip.microchip_number === null };
   });

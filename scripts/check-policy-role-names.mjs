@@ -18,7 +18,7 @@
 //   --final   the assertion perm-drop-enum waits on: zero rows. perm-convert-vet, the last stream, runs this
 //             and empties OWNERS in the same change.
 //
-// What counts as "names a role": any of 'management' 'staff' 'vet' 'admin' 'volunteer' cast to app_role, or a
+// What counts as "names a role": any of 'management' 'staff' 'doctor' 'admin' 'volunteer' cast to app_role, or a
 // bare call of current_user_role() (which is how every admin_* policy is written and how a future one would
 // be). Matches on the text, not the policy name: a name prefix is what missed the first nine.
 //
@@ -39,7 +39,7 @@ const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
 // table -> the stream that converts it. Remove an entry in the PR that converts the table.
-// EMPTY since perm-convert-vet (0167, 2026-10-09): the vet's 54 policies, the last, now ask is_clinic_login()
+// EMPTY since perm-convert-vet (0167, 2026-10-09): the doctor's 54 policies, the last, now ask is_clinic_login()
 // (roles.scope_clinical = 'own_clinic') and no policy names a role. A new entry here means a policy that names a
 // role was added after the end state: convert it rather than owning it (check-new-policy-role-names.mjs, in CI,
 // should have refused it first).
@@ -54,13 +54,13 @@ const query = `
 select tablename, policyname, cmd,
        (${TEXT} like '%''management''::app_role%') as management,
        (${TEXT} like '%''staff''::app_role%') as staff,
-       (${TEXT} like '%''vet''::app_role%') as vet,
+       (${TEXT} like '%''doctor''::app_role%') as doctor,
        (${TEXT} like '%''admin''::app_role%') as admin,
        (${TEXT} like '%''volunteer''::app_role%') as volunteer,
        (${TEXT} like '%current_user_role()%') as bare
   from pg_policies
  where schemaname = 'public'
-   and (${TEXT} ~ '''(management|staff|vet|admin|volunteer)''::app_role' or ${TEXT} like '%current_user_role()%')
+   and (${TEXT} ~ '''(management|staff|doctor|admin|volunteer)''::app_role' or ${TEXT} like '%current_user_role()%')
  order by tablename, policyname`;
 const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
   method: "POST",
@@ -72,7 +72,7 @@ if (!Array.isArray(rows)) throw new Error(`query failed (${res.status}): ${JSON.
 
 const byTable = new Map();
 for (const r of rows) byTable.set(r.tablename, [...(byTable.get(r.tablename) ?? []), r.policyname]);
-const named = (r) => ["management", "staff", "vet", "admin", "volunteer"].filter((k) => r[k]).concat(r.bare ? ["current_user_role()"] : []);
+const named = (r) => ["management", "staff", "doctor", "admin", "volunteer"].filter((k) => r[k]).concat(r.bare ? ["current_user_role()"] : []);
 const tally = new Map();
 for (const r of rows) for (const k of named(r)) tally.set(k, (tally.get(k) ?? 0) + 1);
 const tallyLine = [...tally].map(([k, n]) => `${k} ${n}`).join(", ") || "none";

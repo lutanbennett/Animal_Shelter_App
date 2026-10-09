@@ -8,7 +8,7 @@ import { PrescriptionForm } from "../PrescriptionForm";
 
 /**
  * Reached from the resident's Prescriptions tab, the hub's prescriptions
- * card, or a row on the Vet Appointments tab (which also preselects the
+ * card, or a row on the Clinic Visits tab (which also preselects the
  * visit and defaults the start date to it) — same shape as /blood-tests/new.
  */
 export default async function NewPrescriptionPage(
@@ -19,7 +19,7 @@ export default async function NewPrescriptionPage(
   const { t, locale } = await getT();
 
   const residentId = searchParams.residentId;
-  const vetAppointmentId = searchParams.vetAppointmentId;
+  const clinicVisitId = searchParams.clinicVisitId;
 
   if (typeof residentId !== "string" || !residentId) {
     return (
@@ -53,7 +53,7 @@ export default async function NewPrescriptionPage(
       .returns<{ is_deceased: boolean }[]>(),
     loadPrescriptionOptions(supabase, residentId, locale),
   ]);
-  const { medications, frequencies, vetAppointments } = options;
+  const { medications, frequencies, clinicVisits } = options;
 
   const resident = residentResult.data?.[0];
   if (!resident) {
@@ -91,7 +91,7 @@ export default async function NewPrescriptionPage(
   const loadErrors = [
     [t.prescriptions.couldntLoadMedications, medications.error],
     [t.prescriptions.couldntLoadFrequencies, frequencies.error],
-    [t.prescriptions.couldntLoadVetAppointments, vetAppointments.error],
+    [t.prescriptions.couldntLoadVetAppointments, clinicVisits.error],
   ] as const;
 
   return (
@@ -123,10 +123,10 @@ export default async function NewPrescriptionPage(
         residentDisplayName={displayName}
         medications={medications.data ?? []}
         frequencies={frequencies.data ?? []}
-        vetAppointments={vetAppointments.data ?? []}
-        preselectedVetAppointmentId={
-          typeof vetAppointmentId === "string" && vetAppointmentId
-            ? vetAppointmentId
+        clinicVisits={clinicVisits.data ?? []}
+        preselectedClinicVisitId={
+          typeof clinicVisitId === "string" && clinicVisitId
+            ? clinicVisitId
             : null
         }
         cancelHref={`/residents/${residentId}/prescriptions`}

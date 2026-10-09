@@ -150,7 +150,7 @@ export function visitingHoursLines(
 }
 
 /**
- * The typical-vet-visit estimate (0071): the flat figure the cashflow
+ * The typical-clinic-visit estimate (0071): the flat figure the cashflow
  * forecast uses for a visit that is booked but not yet invoiced.
  *
  * Deliberately not part of SITE_CONTENT_COLUMNS, and so not in SiteContent.
@@ -167,16 +167,16 @@ export function visitingHoursLines(
  * salaries, rent — needs its own table with its own policy (0039 is the
  * pattern), not another column here.
  */
-export async function loadVetVisitEstimate(
+export async function loadClinicVisitEstimate(
   supabase: SupabaseClient,
 ): Promise<number | null> {
   const { data } = await supabase
     .from("site_content")
-    .select("vet_visit_estimate")
+    .select("clinic_visit_estimate")
     .eq("id", true)
     .limit(1)
-    .returns<{ vet_visit_estimate: number | string | null }[]>();
+    .returns<{ clinic_visit_estimate: number | string | null }[]>();
   // numeric(12, 2) can come back as a string from PostgREST.
-  const raw = data?.[0]?.vet_visit_estimate;
+  const raw = data?.[0]?.clinic_visit_estimate;
   return raw == null ? null : Number(raw);
 }

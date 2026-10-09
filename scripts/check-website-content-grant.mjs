@@ -14,7 +14,7 @@
 //             site_content_photos, each counted as the rows the policy let through; impact_baselines (0156,
 //             already on the cell) as the control that the cell was always the right door
 //
-// Expected: admin yes in both phases; management no before, yes after; the 2IC, staff, volunteer, vet and the
+// Expected: admin yes in both phases; management no before, yes after; the 2IC, staff, volunteer, doctor and the
 // public viewer no in both (nobody but Management is widened); anon refused.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -28,7 +28,7 @@ const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
 const migration = readFileSync(join(root, "supabase/migrations/0163_management_website_content.sql"), "utf8");
-const LEGACY = ["admin", "management", "staff", "volunteer", "vet", "public_viewer"];
+const LEGACY = ["admin", "management", "staff", "volunteer", "doctor", "public_viewer"];
 const ID = Object.fromEntries([...LEGACY, "sic"].map((p) => [p, randomUUID()]));
 const lit = (id) => `'${id}'::uuid`;
 // Who should be able to write, by phase. Everyone else must read no and write 0 rows.
@@ -128,7 +128,7 @@ begin
             from seen where who in ('admin', 'management', 'sic') group by phase, who) s;
 
   if v_bad <> '' then raise exception 'FAIL%  || %', v_bad, v_report; end if;
-  raise exception 'HARNESS-OK website-content-grant | before: only admin holds the cell and writes site_content, site_pages, site_content_photos; management refused on all three | after (0163 replayed): admin and management hold it and write all three; 2IC, staff, volunteer, vet, public_viewer still no and 0 rows; anon refused | %', v_report;
+  raise exception 'HARNESS-OK website-content-grant | before: only admin holds the cell and writes site_content, site_pages, site_content_photos; management refused on all three | after (0163 replayed): admin and management hold it and write all three; 2IC, staff, volunteer, doctor, public_viewer still no and 0 rows; anon refused | %', v_report;
 end;
 $h$;
 rollback;

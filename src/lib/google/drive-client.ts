@@ -54,7 +54,7 @@ export type PhotoCategory = (typeof PHOTO_CATEGORIES)[number];
 /**
  * The folders this person may file a resident photo under. Filing anywhere
  * but Medical is what publishes a photo (parity finding A5), so a person who
- * holds photos.resident_add and not photos.resident_publish — a vet adds
+ * holds photos.resident_add and not photos.resident_publish — a doctor adds
  * clinical photos and nothing else (backlog, Pass 1 Vet, 2026-09-27) — files
  * to Medical only. The form shows no picker when there is one choice, and the
  * upload route refuses anything else.

@@ -98,7 +98,7 @@ export type MissingImmunizationRow = {
   immunization_type_name: string;
 };
 
-export type VetAppointmentRow = {
+export type ClinicVisitRow = {
   id: string;
   appointment_date: string;
   status: string;
@@ -180,7 +180,7 @@ export function ResidentHub({
   placementHistoryCount,
   immunizationRecords,
   missingMandatoryImmunizations,
-  vetAppointments,
+  clinicVisits,
   prescriptions,
   diets,
   weightEntries,
@@ -208,7 +208,7 @@ export function ResidentHub({
   canUndoDeath: boolean;
   /** Admin/management: may write and approve the other-language text. */
   canManageTranslations: boolean;
-  /** Admin, staff or a vet (in scope, or they could not see the hub): may record the chip (0116). */
+  /** Admin, staff or a doctor (in scope, or they could not see the hub): may record the chip (0116). */
   canSetMicrochip: boolean;
   /** The resident's rows in `translations` (bio, temperament, past story). */
   translations: TranslationRow[];
@@ -219,7 +219,7 @@ export function ResidentHub({
   placementHistoryCount: number;
   immunizationRecords: ImmunizationRecordRow[];
   missingMandatoryImmunizations: MissingImmunizationRow[];
-  vetAppointments: VetAppointmentRow[];
+  clinicVisits: ClinicVisitRow[];
   prescriptions: PrescriptionRow[];
   diets: DietRow[];
   weightEntries: WeightRow[];
@@ -321,9 +321,9 @@ export function ResidentHub({
           .join(", ") + (missingCount > 2 ? ", …" : "")
       : t.residents.hub.allMandatoryOnFile;
 
-  // Vet appointments — genuinely computable overdue/upcoming from real dates.
+  // Clinic visits — genuinely computable overdue/upcoming from real dates.
   const nowMs = new Date(now).getTime();
-  const scheduled = vetAppointments.filter((a) => a.status === "scheduled");
+  const scheduled = clinicVisits.filter((a) => a.status === "scheduled");
   const upcoming = scheduled
     .filter((a) => new Date(a.appointment_date).getTime() >= nowMs)
     .sort(
@@ -334,19 +334,19 @@ export function ResidentHub({
   const overdue = scheduled.filter(
     (a) => new Date(a.appointment_date).getTime() < nowMs,
   );
-  const vetTone: StatCardTone =
+  const visitTone: StatCardTone =
     overdue.length > 0 ? "danger" : upcoming.length > 0 ? "warning" : "neutral";
-  const vetValue =
+  const visitValue =
     overdue.length > 0
       ? t.residents.hub.vetOverdue(overdue.length)
       : upcoming.length > 0
         ? t.residents.hub.vetUpcoming(upcoming.length)
         : t.residents.hub.vetNoneScheduled;
-  const vetDetail = upcoming[0]
+  const visitDetail = upcoming[0]
     ? t.residents.hub.vetNext(formatDate(upcoming[0].appointment_date, locale))
     : overdue.length > 0
       ? t.residents.hub.vetPastDue
-      : t.residents.hub.vetTotalVisits(vetAppointments.length);
+      : t.residents.hub.vetTotalVisits(clinicVisits.length);
 
   // Prescriptions
   const today = todayIso(new Date(now));
@@ -724,14 +724,14 @@ export function ResidentHub({
             />
             <StatCard
               title={t.residents.hub.vetAppointments}
-              icon={SECTION_ICONS["vet-appointments"]}
-              value={vetValue}
-              detail={vetDetail}
-              tone={vetTone}
-              href={`${base}/vet-appointments`}
+              icon={SECTION_ICONS["clinic-visits"]}
+              value={visitValue}
+              detail={visitDetail}
+              tone={visitTone}
+              href={`${base}/clinic-visits`}
               actions={medicalActions([
                 {
-                  href: `/vet-visits/new?residentId=${resident.id}`,
+                  href: `/clinic-visits/new?residentId=${resident.id}`,
                   label: t.residents.sections.bookVetVisit,
                 },
               ])}

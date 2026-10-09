@@ -82,7 +82,7 @@ export async function loadMyRecurringTasks(
   );
   if (eligibilityError) return { ...section, error: eligibilityError };
 
-  // A job the reader's role isn't given (a vet on any recurring job, or a
+  // A job the reader's role isn't given (a doctor on any recurring job, or a
   // job on a page their role can't open — assigned before the picker
   // filtered by role, or the link changed since) keeps its place on the list,
   // since it is still theirs to skip or pass back, but loses its link and

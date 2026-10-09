@@ -112,13 +112,13 @@ begin
   v_report := v_report || 'A: edit undo applies and is logged as a new UPDATE by the admin | ';
 
   -- B: delete undo for five tables, full-row equality, INSERT logged under the admin.
-  insert into vet_appointments (id, resident_id, appointment_date, reason) values (v_visit, v_res, date '2026-08-10', 'harness');
+  insert into clinic_visits (id, resident_id, appointment_date, reason) values (v_visit, v_res, date '2026-08-10', 'harness');
   insert into weight (resident_id, date, weight_kg) values (v_res, date '2026-08-12', 11) returning id into v_w;
   insert into immunization_records (resident_id, immunization_type_id, date_administered)
     values (v_res, v_type, date '2026-08-12') returning id into v_i;
   insert into prescriptions (resident_id, medication_id, frequency_id, start_date, dose_quantity)
     values (v_res, v_med, v_freq, date '2026-08-12', 1) returning id into v_rx;
-  insert into prescriptions (resident_id, medication_id, frequency_id, start_date, dose_quantity, vet_appointment_id)
+  insert into prescriptions (resident_id, medication_id, frequency_id, start_date, dose_quantity, clinic_visit_id)
     values (v_res, v_med, v_freq, date '2026-08-13', 1, v_visit) returning id into v_rx_visit;
 
   v_before := to_jsonb((select x from weight x where id = v_w));
@@ -149,13 +149,13 @@ begin
   if to_jsonb((select x from contacts x where id = v_c)) is distinct from v_before then raise exception 'HARNESS-FAIL B: contact differs'; end if;
 
   -- a visit: its prescription goes first (the child cannot outlive it)
-  v_before := to_jsonb((select x from vet_appointments x where id = v_visit));
+  v_before := to_jsonb((select x from clinic_visits x where id = v_visit));
   delete from prescriptions where id = v_rx_visit;
   v_a := pg_temp.last_audit('prescriptions', v_rx_visit, 'DELETE');
-  delete from vet_appointments where id = v_visit;
-  v_r := pg_temp.reinsert(v_admin, 'vet_appointments', pg_temp.last_audit('vet_appointments', v_visit, 'DELETE'));
+  delete from clinic_visits where id = v_visit;
+  v_r := pg_temp.reinsert(v_admin, 'clinic_visits', pg_temp.last_audit('clinic_visits', v_visit, 'DELETE'));
   if v_r <> 'ok' then raise exception 'HARNESS-FAIL B: visit not put back: %', v_r; end if;
-  if to_jsonb((select x from vet_appointments x where id = v_visit)) is distinct from v_before then raise exception 'HARNESS-FAIL B: visit differs'; end if;
+  if to_jsonb((select x from clinic_visits x where id = v_visit)) is distinct from v_before then raise exception 'HARNESS-FAIL B: visit differs'; end if;
   v_report := v_report || 'B: weight, vaccination, prescription, contact and visit go back identical, logged as INSERT by the admin | ';
 
   -- C: the slot taken, then freed.
@@ -169,7 +169,7 @@ begin
   v_report := v_report || 'C: a taken day refuses with 23505, an archived one does not | ';
 
   -- D: the visit is gone again, so the prescription that pointed at it cannot return.
-  delete from vet_appointments where id = v_visit;
+  delete from clinic_visits where id = v_visit;
   v_r := pg_temp.reinsert(v_admin, 'prescriptions', v_a);
   if v_r not like '23503%' then raise exception 'HARNESS-FAIL D: a prescription on a deleted visit was not refused: %', v_r; end if;
   v_report := v_report || 'D: a row whose visit is gone refuses with 23503 | ';
@@ -179,7 +179,7 @@ begin
   delete from weight where resident_id = v_res;
   delete from immunization_records where resident_id = v_res;
   delete from prescriptions where resident_id = v_res;
-  delete from vet_appointments where resident_id = v_res;
+  delete from clinic_visits where resident_id = v_res;
   delete from resident_diets where resident_id = v_res;
   delete from placement_history where resident_id = v_res;
   delete from residents where id = v_res;

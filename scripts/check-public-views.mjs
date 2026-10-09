@@ -116,12 +116,12 @@ for (const name of PUBLIC) {
   }
 }
 
-// A column is public only when the view names it. vet_visit_estimate (0071) is
+// A column is public only when the view names it. clinic_visit_estimate (0071) is
 // an internal figure on site_content; it must not reach anon through the view
 // or the base table (0122).
 for (const [source, column] of [
-  ["public_site_content", "vet_visit_estimate"],
-  ["site_content", "vet_visit_estimate"],
+  ["public_site_content", "clinic_visit_estimate"],
+  ["site_content", "clinic_visit_estimate"],
   ["site_content", "id"],
 ]) {
   const res = await fetch(`${url}/rest/v1/${source}?select=${column}&limit=1`, { headers });
@@ -237,7 +237,7 @@ for (const name of PUBLIC) {
 
 // The audit log (0121) holds whole before/after copies of resident, medical
 // and contact rows, so it is admin-read only and nobody writes it through the
-// API. Anon must be refused every method; staff, volunteer and vet are
+// API. Anon must be refused every method; staff, volunteer and doctor logins are
 // asserted in scripts/check-audit-log.mjs.
 for (const [method, body] of [["GET"], ["POST", {}], ["PATCH", {}], ["DELETE"]]) {
   const call = await fetch(`${url}/rest/v1/audit_log${method === "GET" ? "?select=old_row,new_row&limit=1" : ""}`, {

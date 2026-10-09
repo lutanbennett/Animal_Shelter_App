@@ -28,7 +28,7 @@ import { requirePermission } from "@/lib/permissions/require";
  */
 export default async function SpecialDietsPage(props: PageProps<"/medical/diets">) {
   const { perms } = await requirePermission("medical.diet", "read");
-  // The view is for a login that sees every clinic (0140); a vet would get an empty page.
+  // The view is for a login that sees every clinic (0140); a doctor would get an empty page.
   if (perms.scopes.clinical !== "any") refuseFor(perms);
   const { t, locale } = await getT();
   const d = t.medicalJobs.diets;

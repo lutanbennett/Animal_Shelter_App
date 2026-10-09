@@ -14,8 +14,8 @@
 //              "edit" (the statement writes: allowed means it took effect)
 //   sql        the statement. `$R` is the resident it runs against; `$P` is the
 //              harness person it runs as, for the few statements that name one
-//   scoped     run once inside a vet's scope and once outside it (§5). Outside
-//              it a vet is refused whatever the cell says; every other role is
+//   scoped     run once inside a doctor's scope and once outside it (§5). Outside
+//              it a doctor is refused whatever the cell says; every other role is
 //              unaffected
 //   expect     override: the exact set of roles the DEFAULT says may do this.
 //              For a statement whose default is narrower than the activity's
@@ -46,7 +46,7 @@ export const PROBES = [
   { activity: "resident.record", level: "edit", scoped: true, sql: `update residents set bio = 'probe' where id = $R` },
   // 0134: a volunteer reads a resident only through resident_who_and_where (name, photo, species, sex, status, enclosure), and no placement history
   { activity: "resident.record", level: "read", scoped: true, sql: `select 1 from residents where id = $R`, byRole: { volunteer: `select 1 from resident_who_and_where where id = $R` } },
-  { activity: "resident.record", level: "read", scoped: true, sql: `select 1 from placement_history where resident_id = $R`, expect: ["admin", "management", "staff", "vet"] },
+  { activity: "resident.record", level: "read", scoped: true, sql: `select 1 from placement_history where resident_id = $R`, expect: ["admin", "management", "staff", "doctor"] },
   {
     // C2 (closed by 0144): nobody deletes a resident from a screen. Admin only.
     activity: "resident.record", level: "edit", sql: `delete from residents where id = $BARE`,
@@ -65,19 +65,19 @@ export const PROBES = [
   { activity: "placement.death", level: "edit", sql: `insert into placement_history (resident_id, placement_type, start_date) values ($R, 'Deceased', now() + interval '1 minute')` },
   { activity: "placement.death_withdraw", level: "edit", fn: true, sql: `select undo_deceased_placement($DEAD, 'probe')` },
 
-  // --- Medical (scoped to the vet's clinic)
-  { activity: "visit.book", level: "edit", scoped: true, sql: `insert into vet_appointments (resident_id, vet_id, appointment_date, status) values ($R, $CLINIC, now() + interval '9 days', 'scheduled')` },
-  ...table("medical.visits", "vet_appointments", `update vet_appointments set reason = 'probe' where resident_id = $R`, `insert into vet_appointments (resident_id, vet_id, appointment_date, status) values ($R, $CLINIC, now() + interval '9 days', 'scheduled')`, `delete from vet_appointments where resident_id = $R`, { c4: true }),
+  // --- Medical (scoped to the doctor's clinic)
+  { activity: "visit.book", level: "edit", scoped: true, sql: `insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values ($R, $CLINIC, now() + interval '9 days', 'scheduled')` },
+  ...table("medical.visits", "clinic_visits", `update clinic_visits set reason = 'probe' where resident_id = $R`, `insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values ($R, $CLINIC, now() + interval '9 days', 'scheduled')`, `delete from clinic_visits where resident_id = $R`, { c4: true }),
   ...table("medical.procedures", "procedures", `update procedures set notes = 'probe' where resident_id = $R`, `insert into procedures (resident_id, date, procedure_type_id) values ($R, current_date, (select id from procedure_types limit 1))`, `delete from procedures where resident_id = $R`, { c4: true }),
   ...table("medical.blood_tests", "blood_tests", `update blood_tests set results = 'probe' where resident_id = $R`, `insert into blood_tests (resident_id, date, blood_test_type_id) values ($R, current_date, (select id from blood_test_types limit 1))`, `delete from blood_tests where resident_id = $R`, { c4: true }),
   ...table("medical.prescriptions", "prescriptions", `update prescriptions set notes = 'probe' where resident_id = $R`, `insert into prescriptions (resident_id, medication_id, start_date) values ($R, ${MED}, current_date)`, `delete from prescriptions where resident_id = $R`, { c4: true }),
   ...table("medical.immunizations", "immunization_records", `update immunization_records set notes = 'probe' where resident_id = $R`, `insert into immunization_records (resident_id, immunization_type_id, date_administered) values ($R, (select id from immunization_types limit 1), current_date - 400)`, `delete from immunization_records where resident_id = $R`, { c4: true }),
   ...table("medical.weight", "weight", `update weight set notes = 'probe' where resident_id = $R`, `insert into weight (resident_id, date, weight_kg) values ($R, current_date - 400, 5)`, `delete from weight where resident_id = $R`, { c5: true }),
   ...table("medical.diet", "resident_diets", `update resident_diets set notes = 'probe' where resident_id = $R`, `insert into resident_diets (resident_id, diet_type_id, start_date) values ($R, (select id from diet_types limit 1), current_date - 400)`, `delete from resident_diets where resident_id = $R`, {}),
-  { activity: "medical.archive", level: "edit", sql: `update weight set archived_at = now(), archive_reason = 'probe' where resident_id = $R`, known: [{ id: "N4", roles: ["vet"] }] },
-  { activity: "medical.archive", level: "edit", sql: `update prescriptions set archived_at = now(), archive_reason = 'probe' where resident_id = $R`, known: [{ id: "N4", roles: ["vet"] }] },
-  { activity: "medical.archive", level: "edit", sql: `update immunization_records set archived_at = now(), archive_reason = 'probe' where resident_id = $R`, known: [{ id: "N4", roles: ["vet"] }] },
-  { activity: "medical.archive", level: "edit", sql: `update vet_appointments set archived_at = now(), archive_reason = 'probe' where resident_id = $R`, known: [{ id: "N4", roles: ["vet"] }] },
+  { activity: "medical.archive", level: "edit", sql: `update weight set archived_at = now(), archive_reason = 'probe' where resident_id = $R`, known: [{ id: "N4", roles: ["doctor"] }] },
+  { activity: "medical.archive", level: "edit", sql: `update prescriptions set archived_at = now(), archive_reason = 'probe' where resident_id = $R`, known: [{ id: "N4", roles: ["doctor"] }] },
+  { activity: "medical.archive", level: "edit", sql: `update immunization_records set archived_at = now(), archive_reason = 'probe' where resident_id = $R`, known: [{ id: "N4", roles: ["doctor"] }] },
+  { activity: "medical.archive", level: "edit", sql: `update clinic_visits set archived_at = now(), archive_reason = 'probe' where resident_id = $R`, known: [{ id: "N4", roles: ["doctor"] }] },
 
   // --- Photos
   { activity: "photos.resident_add", level: "edit", scoped: true, fn: true, sql: `select record_attachment('resident', $R, 'harness-probe-file', 'probe.jpg', 'Medical', null, null)` },
@@ -89,8 +89,8 @@ export const PROBES = [
   // --- Enclosures
   { activity: "facility.enclosures", level: "edit", sql: `update enclosures set notes = 'probe' where id = $ENC` },
   { activity: "facility.enclosures", level: "edit", sql: `update zones set internal = internal where id = $ZONE` },
-  { activity: "facility.enclosures", level: "read", sql: `select 1 from enclosures where id = $ENC`, known: [{ id: "C10", roles: ["vet"] }] },
-  { activity: "facility.enclosures", level: "read", sql: `select 1 from zones where id = $ZONE`, known: [{ id: "C10", roles: ["vet"] }] },
+  { activity: "facility.enclosures", level: "read", sql: `select 1 from enclosures where id = $ENC`, known: [{ id: "C10", roles: ["doctor"] }] },
+  { activity: "facility.enclosures", level: "read", sql: `select 1 from zones where id = $ZONE`, known: [{ id: "C10", roles: ["doctor"] }] },
 
   // --- Maintenance
   { activity: "maintenance.jobs", level: "edit", sql: `insert into maintenance (title, zone_id) values ('probe', $ZONE)` },
@@ -116,11 +116,11 @@ export const PROBES = [
   { activity: "donation.receipt", level: "edit", sql: `insert into donations (received_on, donor_name, method) values (current_date, 'Probe donor', 'cash')` },
 
   // --- Clinics, contacts, supporters
-  { activity: "clinics.list", level: "edit", sql: `update vets set notes = 'probe' where id = $CLINIC` },
-  { activity: "clinics.list", level: "read", sql: `select 1 from vets where id = $CLINIC`, known: [{ id: "C10", roles: ["vet"] }] },
-  { activity: "clinics.doctors", level: "edit", sql: `insert into vet_doctors (name, vet_id) values ('Probe doctor', $CLINIC)`, known: [{ id: "C7", roles: ["staff", "vet"] }] },
-  { activity: "clinics.doctors", level: "edit", sql: `update vet_doctors set active = active where id = $DOCTOR`, known: [{ id: "C7", roles: ["vet"] }] },
-  { activity: "clinics.doctors", level: "edit", fn: true, sql: `select merge_vet_doctors($DOCTOR, $DOCTOR2)`, known: [{ id: "C7", roles: ["vet"] }] },
+  { activity: "clinics.list", level: "edit", sql: `update clinics set notes = 'probe' where id = $CLINIC` },
+  { activity: "clinics.list", level: "read", sql: `select 1 from clinics where id = $CLINIC`, known: [{ id: "C10", roles: ["doctor"] }] },
+  { activity: "clinics.doctors", level: "edit", sql: `with d as (insert into doctors (name) values ('Probe doctor') returning id) insert into doctor_clinics (clinic_id, doctor_id) select $CLINIC, id from d`, known: [{ id: "C7", roles: ["staff", "doctor"] }] },
+  { activity: "clinics.doctors", level: "edit", sql: `update doctors set active = active where id = $DOCTOR`, known: [{ id: "C7", roles: ["doctor"] }] },
+  { activity: "clinics.doctors", level: "edit", fn: true, sql: `select merge_doctors($DOCTOR, $DOCTOR2)`, known: [{ id: "C7", roles: ["doctor"] }] },
   { activity: "contacts.directory", level: "edit", sql: `update contacts set notes = 'probe' where id = $CONTACT` },
   { activity: "contacts.directory", level: "edit", sql: `delete from contacts where id = $CONTACT` },
   // Read on contacts.directory names a contact (picker_contacts: id, name, type, archived_at); the table, with phone,
@@ -129,16 +129,16 @@ export const PROBES = [
   { activity: "contacts.browse", level: "edit", sql: `select 1 from contacts where id = $CONTACT` },
   { activity: "contacts.add", level: "edit", sql: `insert into contacts (name, type) values ('Probe contact', 'Vendor')` },
   { activity: "friends.manage", level: "edit", sql: `update shelter_friends set published = published where id = $FRIEND` },
-  { activity: "friends.view", level: "read", sql: `select 1 from shelter_friends where id = $FRIEND`, known: [{ id: "C10", roles: ["vet"] }] },
+  { activity: "friends.view", level: "read", sql: `select 1 from shelter_friends where id = $FRIEND`, known: [{ id: "C10", roles: ["doctor"] }] },
 
   // --- Stock and ordering
   { activity: "stock.count", level: "edit", fn: true, sql: `select record_stocktake('[]'::jsonb, '[]'::jsonb)` },
   { activity: "stock.delivery", level: "edit", sql: `insert into stock_receipts (item_kind, medication_id, quantity) values ('medication', ${MED}, 1)` },
   { activity: "stock.delivery", level: "read", sql: `select 1 from stock_receipts where id = $RECEIPT` },
   { activity: "stock.medications", level: "edit", sql: `update medication set cost_per_unit = cost_per_unit where id = ${MED}` },
-  { activity: "stock.medications", level: "read", sql: `select cost_per_unit from medication where id = ${MED}`, known: [{ id: "N1", roles: ["vet"] }] },
+  { activity: "stock.medications", level: "read", sql: `select cost_per_unit from medication where id = ${MED}`, known: [{ id: "N1", roles: ["doctor"] }] },
   { activity: "stock.diets", level: "edit", sql: `update diet_types set notes = 'probe' where id = $DIET` },
-  { activity: "stock.diets", level: "read", sql: `select cost_per_unit from diet_types where id = $DIET`, known: [{ id: "C10", roles: ["vet"] }] },
+  { activity: "stock.diets", level: "read", sql: `select cost_per_unit from diet_types where id = $DIET`, known: [{ id: "C10", roles: ["doctor"] }] },
   { activity: "stock.correct", level: "edit", fn: true, sql: `select record_stock_correction('medication', ${MED}, 1)` },
 
   // --- Management
@@ -147,12 +147,12 @@ export const PROBES = [
   { activity: "recurring.manage", level: "edit", sql: `update recurring_jobs set description = 'probe' where id = $JOB_NONE` },
   { activity: "recurring.manage", level: "edit", sql: `insert into recurring_jobs (title, time_of_day, link_path, repeat, weekdays, starts_on) values ('Probe', 'morning', '/', 'weekly', '{1}', current_date)` },
   { activity: "recurring.do_any", level: "edit", fn: true, sql: `select record_recurring_job($JOB_NONE, current_date, 'done', null)` },
-  { activity: "recurring.do_own", level: "edit", fn: true, sql: `select record_recurring_job($JOB_ALL, current_date, 'done', null)`, known: [{ id: "C11", roles: ["vet"] }] },
+  { activity: "recurring.do_own", level: "edit", fn: true, sql: `select record_recurring_job($JOB_ALL, current_date, 'done', null)`, known: [{ id: "C11", roles: ["doctor"] }] },
 
   // --- Settings
   { activity: "website.content", level: "edit", sql: `update site_content set tagline = tagline` },
-  { activity: "reference.types", level: "edit", sql: `update immunization_types set cost = cost where id = (select id from immunization_types limit 1)`, known: [{ id: "C3", roles: ["vet"] }] },
-  { activity: "reference.types", level: "edit", sql: `insert into immunization_types (name, interval_months) values ('Probe type', 12)`, known: [{ id: "C3", roles: ["vet"] }] },
+  { activity: "reference.types", level: "edit", sql: `update immunization_types set cost = cost where id = (select id from immunization_types limit 1)`, known: [{ id: "C3", roles: ["doctor"] }] },
+  { activity: "reference.types", level: "edit", sql: `insert into immunization_types (name, interval_months) values ('Probe type', 12)`, known: [{ id: "C3", roles: ["doctor"] }] },
   { activity: "reference.types", level: "edit", sql: `update blood_test_types set name = name where id = (select id from blood_test_types limit 1)` },
   { activity: "reference.add_while_recording", level: "edit", sql: `insert into medication (name) values ('Probe medication')` },
   { activity: "reference.add_while_recording", level: "edit", sql: `insert into frequency (label) values ('Probe frequency')` },
@@ -176,8 +176,8 @@ function table(activity, name, update, insert, del, flags) {
   // (medical.archive), so the default is Admin only. Tables whose policies hand
   // it to a role are the known tightenings (C4, C5).
   const delProbe = { activity, level: "edit", scoped: true, sql: del, expect: ["admin"] };
-  if (flags.c4) delProbe.known = [{ id: "C4", roles: ["vet"] }];
-  if (flags.c5) delProbe.known = [{ id: "C5", roles: ["vet"] }]; // management and staff closed by 0135 (perm-convert-medical); the vet half closes when Vet converts
+  if (flags.c4) delProbe.known = [{ id: "C4", roles: ["doctor"] }];
+  if (flags.c5) delProbe.known = [{ id: "C5", roles: ["doctor"] }]; // management and staff closed by 0135 (perm-convert-medical); the doctor half closes when Doctor converts
   out.push(delProbe);
   return out;
 }
@@ -193,7 +193,7 @@ export const NO_DB_PROBE = {
   "system.status": "status_alert_runs is not granted to authenticated at all, Admin included: the page reads it with the service role, so the database has no per-role statement to test",
   "reports.dashboard": "a page that reads tables other activities own; it has no table",
   "translations.manage": "the translations table has no fixture row that is stable across runs; the policy is read by hand in Appendix C",
-  "translations.view": "management and staff read the table through this cell, but a vet and a volunteer still read it through their own legacy policies (vet_read_translations, volunteer_read_translations, perm-convert-vet's), so a read probe would report them as differences that are not this cell's; check-perm-convert-settings.mjs and check-app-access-gate.mjs read it under every login instead",
+  "translations.view": "management and staff read the table through this cell, but a doctor and a volunteer still read it through their own legacy policies (doctor_read_translations, volunteer_read_translations, perm-convert-vet's), so a read probe would report them as differences that are not this cell's; check-perm-convert-settings.mjs and check-app-access-gate.mjs read it under every login instead",
   "assistant.ask": "app code and the Anthropic call; no database statement",
   "assistant.record": "app code; each thing it records is checked against that thing's own activity",
   "audit.undo": "app code replaying the audit log through the ordinary table policies",

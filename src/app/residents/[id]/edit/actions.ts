@@ -46,7 +46,7 @@ export async function updateResident(
   return runAction<never>("residents.updateResident", t.common.somethingWentWrong, async () => {
     const supabase = await createClient();
 
-    // RLS would silently match zero rows for a volunteer/vet rather than
+    // RLS would silently match zero rows for a volunteer/doctor rather than
     // error, so check the activity up front and give a real message.
     if (!can(await loadPermissions(), "resident.record")) {
       return { ok: false, error: t.residents.edit.notAuthorized };

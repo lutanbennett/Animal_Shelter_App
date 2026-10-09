@@ -6,7 +6,7 @@
 //
 //   node scripts/worktree.mjs dev                                  (another terminal)
 //   node scripts/check-phone-width.mjs [http://localhost:<port>]   (defaults to this checkout's .port)
-//   node scripts/check-phone-width.mjs --roles=admin,staff --locales=en --pages=/vets,/enclosures
+//   node scripts/check-phone-width.mjs --roles=admin,staff --locales=en --pages=/clinics,/enclosures
 //   (In Git Bash a leading /path in --pages is rewritten to C:/Program Files/Git/…; prefix the command with MSYS_NO_PATHCONV=1.)
 //   node scripts/check-phone-width.mjs --keep      (leave the seeded rows and the throwaway logins in dev)
 //   node scripts/check-phone-width.mjs --verbose   (also list every page that passed)
@@ -23,7 +23,7 @@
 //     No password is read from .env.local; a random one is made per run.
 //   - rows with awkwardly long names, because short dev names pass while the
 //     real site fails: a zone and an enclosure called "Blue Enclosure 3 (Hallway
-//     Small Dogs Only)" and longer, a vet whose clinic is long, a contact with a
+//     Small Dogs Only)" and longer, a clinic with a long name, a contact with a
 //     long name and address, a resident in that enclosure, one at the hospital.
 // Everything is deleted at the end, whatever happened (--keep to look at it).
 //
@@ -68,7 +68,7 @@ const TAP_TOLERANCE = 0.5;
 /**
  * Roles worth covering, and why (docs/decisions/2026-10-05-phone-width-check.md).
  * admin, management and staff are the three with the widest page sets; staff are
- * about 100% on phones. vet and volunteer see different, narrower pages (the vet's
+ * about 100% on phones. doctor and volunteer see different, narrower pages (the doctor's
  * own screens, the volunteer's R1 set). head_of_medical stands for the configured
  * roles: a narrow set of pages assembled from jobs, which is the kind that shows
  * up in nav only when the job is held.
@@ -77,7 +77,7 @@ const ALL_ROLES = {
   admin: { legacy: "admin" },
   management: { legacy: "management" },
   staff: { legacy: "staff" },
-  vet: { legacy: "vet" },
+  doctor: { legacy: "doctor" },
   volunteer: { legacy: "volunteer" },
   head_of_medical: { legacy: "volunteer", configured: "head_of_medical" },
   head_of_maintenance: { legacy: "volunteer", configured: "head_of_maintenance" },
@@ -96,15 +96,15 @@ for (const l of locales) if (!["en", "th"].includes(l)) fail(`unknown locale ${l
 const PAGES = [
   // F-06's pages
   "/enclosures",
-  "/vets",
+  "/clinics",
   "/deliveries",
   "/residents/new",
   "/residents/{resident}/edit",
   "/residents/{hospitalised}/hospital/return",
   "/residents/{resident}/rehome",
-  "/vets/{vet}",
+  "/clinics/{clinic}",
   "/contacts",
-  "/vet-visits/new?residentId={resident}",
+  "/clinic-visits/new?residentId={resident}",
   // the rest of the day-to-day screens
   "/home",
   "/my",
@@ -131,8 +131,8 @@ const PAGES = [
   "/management",
   "/management/dashboard",
   "/management/contacts",
-  "/management/vets",
-  "/management/vets/{vet}/doctors",
+  "/management/clinics",
+  "/management/clinics/{clinic}/doctors",
   "/management/medications",
   "/management/medications?view=order",
   "/management/diets",
@@ -210,9 +210,8 @@ async function seed() {
   const LONG_CLINIC = `ZZ Width ${tag} Chiang Mai Small Animal Hospital (CMCAH) Faculty of Veterinary Medicine`;
   const zone = await insert("zones", { name: `ZZ Width ${tag} Hallway and Laundry Zone, Small Dogs` });
   const enclosure = await insert("enclosures", { name: LONG_ENCLOSURE, zone_id: zone.id, capacity: 4 });
-  const vet = await insert("vets", {
-    name: `ZZ Width ${tag} Dr Somchai Rattanakosin-Wongsawat`,
-    clinic_name: LONG_CLINIC,
+  const clinic = await insert("clinics", {
+    name: LONG_CLINIC,
     contact_info: "+66 53 948 000 / reception@a-very-long-clinic-address-for-a-small-animal-hospital.example.invalid",
   });
   const contact = await insert("contacts", {
@@ -238,7 +237,7 @@ async function seed() {
   await insert("placement_history", { resident_id: ill.id, placement_type: "Intake", zone_id: zone.id, enclosure_id: enclosure.id, start_date: "2026-02-01T00:00:00Z", end_date: "2026-03-01T00:00:00Z" });
   await insert("placement_history", { resident_id: ill.id, placement_type: "SendToHospital", zone_id: zone.id, enclosure_id: enclosure.id, start_date: "2026-03-01T00:00:00Z" })
     .catch((error) => console.warn(`  warning: could not put a resident in hospital, so the Return from hospital page will be skipped (${error.message})`));
-  return { resident: resident.id, hospitalised: ill.id, enclosure: enclosure.id, vet: vet.id, contact: contact.id };
+  return { resident: resident.id, hospitalised: ill.id, enclosure: enclosure.id, clinic: clinic.id, contact: contact.id };
 }
 
 // ---------------------------------------------------------------------------
@@ -598,7 +597,7 @@ async function cleanup() {
 async function sweep() {
   const { data: residents } = await service.from("residents").select("id").like("name", "ZZ Width %");
   for (const { id } of residents ?? []) await service.from("placement_history").delete().eq("resident_id", id);
-  for (const table of ["residents", "contacts", "vets", "enclosures", "zones"]) {
+  for (const table of ["residents", "contacts", "clinics", "enclosures", "zones"]) {
     const { data, error } = await service.from(table).delete().like("name", "ZZ Width %").select("id");
     console.log(`  ${table}: ${error ? error.message : `${data.length} removed`}`);
   }

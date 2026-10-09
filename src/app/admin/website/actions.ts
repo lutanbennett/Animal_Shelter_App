@@ -167,24 +167,24 @@ export async function updateSiteContent(
 }
 
 /**
- * The typical-vet-visit estimate (0071) — the flat figure the cashflow
+ * The typical-clinic-visit estimate (0071) — the flat figure the cashflow
  * forecast stands in for a booked-but-not-yet-invoiced visit. Its own
  * action rather than a field on updateSiteContent: it is an operational
  * number, not website copy, and only the forecast reads it, so saving it
  * has no reason to revalidate every public page.
  *
  * Blank clears it back to "not priced yet", which the forecast shows as a
- * gap. A zero would read as "vet visits are free".
+ * gap. A zero would read as "clinic visits are free".
  */
-export async function updateVetVisitEstimate(
+export async function updateClinicVisitEstimate(
   _state: SiteContentFormState,
   formData: FormData,
 ): Promise<SiteContentFormState> {
   const { t } = await getT();
-  return runAction("website.updateVetVisitEstimate", t.common.somethingWentWrong, async () => {
+  return runAction("website.updateClinicVisitEstimate", t.common.somethingWentWrong, async () => {
     if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
 
-    const estimate = parseBahtAmount(formData.get("vetVisitEstimate") as string | null);
+    const estimate = parseBahtAmount(formData.get("clinicVisitEstimate") as string | null);
     if (!estimate.ok) return refuse(t.admin.website.vetVisit.invalid);
 
     const supabase = await createClient();
@@ -195,7 +195,7 @@ export async function updateVetVisitEstimate(
     const { error } = await supabase
       .from("site_content")
       .update({
-        vet_visit_estimate: estimate.value,
+        clinic_visit_estimate: estimate.value,
         updated_at: new Date().toISOString(),
         updated_by: user?.id ?? null,
       })

@@ -63,17 +63,17 @@ begin
   insert into harness values ('res', v_res), ('v1', v_v1), ('v2', v_v2);
   insert into harness select 'intake_w', id from weight where resident_id = v_res;
 
-  insert into vet_appointments (id, resident_id, appointment_date, reason)
+  insert into clinic_visits (id, resident_id, appointment_date, reason)
   values (v_v1, v_res, timestamptz '2026-08-01 10:00+07', 'Harness visit same day as intake'),
          (v_v2, v_res, timestamptz '2026-08-10 10:00+07', 'Harness visit later');
 
   if not (select applied_already from harness_before) then
     -- Two readings on one visit, different days, created in order.
-    insert into weight (id, resident_id, date, weight_kg, vet_appointment_id, created_at)
+    insert into weight (id, resident_id, date, weight_kg, clinic_visit_id, created_at)
     values (gen_random_uuid(), v_res, date '2026-08-02', 11, v_v2, now() - interval '1 minute')
     returning id into v_w;
     insert into harness values ('plant_old', v_w);
-    insert into weight (resident_id, date, weight_kg, vet_appointment_id)
+    insert into weight (resident_id, date, weight_kg, clinic_visit_id)
     values (v_res, date '2026-08-10', 12, v_v2)
     returning id into v_w;
     insert into harness values ('plant_new', v_w);
@@ -99,13 +99,13 @@ begin
   -- 0: the clean-up kept both planted readings, and only the newer is linked.
   if v_applied then
     v_report := v_report || '0: skipped, file already applied on dev | ';
-    insert into weight (resident_id, date, weight_kg, vet_appointment_id)
+    insert into weight (resident_id, date, weight_kg, clinic_visit_id)
     values (v_res, date '2026-08-10', 12, v_v2);
   else
-    if (select vet_appointment_id from weight where id = (select id from harness where k = 'plant_old')) is not null then
+    if (select clinic_visit_id from weight where id = (select id from harness where k = 'plant_old')) is not null then
       raise exception 'HARNESS-FAIL 0: the older reading on the visit is still linked';
     end if;
-    if (select vet_appointment_id from weight where id = (select id from harness where k = 'plant_new')) is distinct from v_v2 then
+    if (select clinic_visit_id from weight where id = (select id from harness where k = 'plant_new')) is distinct from v_v2 then
       raise exception 'HARNESS-FAIL 0: the newer reading lost its visit';
     end if;
     v_report := v_report || '0: planted pair → older unlinked and kept, newer still linked | ';
@@ -113,7 +113,7 @@ begin
 
   -- A: a second reading on visit 2 (which now has one), on a free day.
   begin
-    insert into weight (resident_id, date, weight_kg, vet_appointment_id)
+    insert into weight (resident_id, date, weight_kg, clinic_visit_id)
     values (v_res, date '2026-08-11', 12.5, v_v2);
     raise exception 'HARNESS-FAIL A: a second reading on one visit was accepted';
   exception when unique_violation then
@@ -132,7 +132,7 @@ begin
     if v_con <> 'weight_one_per_day' then raise exception 'HARNESS-FAIL B: refused by % instead', v_con; end if;
   end;
   begin
-    insert into weight (resident_id, date, weight_kg, vet_appointment_id)
+    insert into weight (resident_id, date, weight_kg, clinic_visit_id)
     values (v_res, date '2026-08-01', 10.4, v_v1);
     raise exception 'HARNESS-FAIL B: a visit reading on the intake reading''s day was accepted';
   exception when unique_violation then
@@ -147,11 +147,11 @@ begin
   v_report := v_report || 'C: unlinked readings on two different days accepted | ';
 
   -- D: correct the intake reading in place and link it to the same-day visit.
-  update weight set weight_kg = 10.4, vet_appointment_id = v_v1 where id = v_intake;
+  update weight set weight_kg = 10.4, clinic_visit_id = v_v1 where id = v_intake;
   if (select count(*) from weight where resident_id = v_res and date = date '2026-08-01') <> 1 then
     raise exception 'HARNESS-FAIL D: intake day does not have exactly one reading';
   end if;
-  if (select vet_appointment_id from weight where id = v_intake) is distinct from v_v1 then
+  if (select clinic_visit_id from weight where id = v_intake) is distinct from v_v1 then
     raise exception 'HARNESS-FAIL D: the corrected intake reading is not linked to the visit';
   end if;
   v_report := v_report || 'D: intake reading corrected in place and linked to the same-day visit | ';

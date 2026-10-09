@@ -121,24 +121,24 @@ export async function assistantMove(
 }
 
 /**
- * Same RPC as /vet-visits/new. The instant is built in the browser (the
+ * Same RPC as /clinic-visits/new. The instant is built in the browser (the
  * person's own clock), so it is already an ISO timestamp here.
  */
-export async function assistantBookVetVisit(
+export async function assistantBookClinicVisit(
   input: WriteInput<{
     residentId: string;
-    vetId: string;
+    clinicId: string;
     appointmentIso: string;
     reason: string | null;
     doctorName: string | null;
   }>,
 ): Promise<AssistantResult> {
   return runWrite(
-    "vet",
+    "clinic",
     input,
     async (supabase, t) => {
       if (!input.residentId) return { error: t.vetVisits.errors.selectResident };
-      if (!input.vetId) return { error: t.vetVisits.errors.selectVet };
+      if (!input.clinicId) return { error: t.vetVisits.errors.selectVet };
       const appointment = new Date(input.appointmentIso);
       if (Number.isNaN(appointment.getTime())) {
         return { error: t.vetVisits.errors.invalidDate };
@@ -146,14 +146,14 @@ export async function assistantBookVetVisit(
 
       const { data, error } = await supabase.rpc("schedule_bulk_appointments", {
         p_resident_ids: [input.residentId],
-        p_vet_id: input.vetId,
+        p_clinic_id: input.clinicId,
         p_appointment_date: appointment.toISOString(),
         p_reason: input.reason?.trim() || null,
         p_notes: stamp(t, input.request),
         // Mirrors the booking form's default: a visit already in the past
         // is being logged, not scheduled.
         p_status: appointment.getTime() <= Date.now() ? "completed" : "scheduled",
-        // As bookVetVisit: trimmed, blank is null, and the database links
+        // As the booking form: trimmed, blank is null, and the database links
         // the name to the clinic's doctor list in the same transaction.
         p_doctor_name: input.doctorName?.trim() || null,
       });
@@ -165,10 +165,10 @@ export async function assistantBookVetVisit(
     },
     () => {
       revalidatePath(`/residents/${input.residentId}`);
-      revalidatePath(`/vets/${input.vetId}`);
+      revalidatePath(`/clinics/${input.clinicId}`);
       revalidatePath("/");
     },
-    "vet_appointments",
+    "clinic_visits",
   );
 }
 
@@ -188,7 +188,7 @@ export async function assistantSendToHospital(
     () => {
       revalidateResident(input.residentId);
       revalidatePath(`/residents/${input.residentId}/housing`);
-      revalidatePath(`/residents/${input.residentId}/vet-appointments`);
+      revalidatePath(`/residents/${input.residentId}/clinic-visits`);
       revalidatePath("/enclosures", "layout");
       revalidatePath("/assistant");
     },
@@ -270,7 +270,7 @@ export async function recordAssistantTurn(input: {
  * than with every layout render, since most screens never open it.
  *
  * A server action can be called by anyone signed in, button or not, so it
- * checks the role itself as `assistantLookup` does: a vet gets an empty
+ * checks the role itself as `assistantLookup` does: a doctor gets an empty
  * context and `notAuthorized`, not the resident list.
  */
 export async function fetchAssistantContext(): Promise<AssistantContext> {

@@ -1,12 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { loadSiteContent, loadVetVisitEstimate } from "@/lib/site/content";
+import { loadSiteContent, loadClinicVisitEstimate } from "@/lib/site/content";
 import { SITE_PAGE_PATHS, SITE_PAGE_SLUGS } from "@/lib/site/pages";
 import en from "@/lib/i18n/dictionaries/en";
 import { sitePageStarter } from "../../adopt/SitePageView";
 import { loadTranslations, translationKey } from "@/lib/translations/queries";
 import { SiteSettingsForm } from "./SiteSettingsForm";
-import { VetVisitEstimate } from "./VetVisitEstimate";
+import { ClinicVisitEstimate } from "./ClinicVisitEstimate";
 import { SitePageForm, type SitePageRow } from "./SitePageForm";
 import { HeroPhoto } from "./HeroPhoto";
 import { GalleryPhotos, type GalleryPhotoRow } from "./GalleryPhotos";
@@ -39,7 +39,7 @@ export default async function WebsitePage({
 
   const [
     content,
-    vetVisitEstimate,
+    clinicVisitEstimate,
     pagesResult,
     photosResult,
     publicResidentsResult,
@@ -50,7 +50,7 @@ export default async function WebsitePage({
       loadSiteContent(supabase),
       // Not part of loadSiteContent: it is an internal figure kept out of
       // the column list every public page loads (0071).
-      loadVetVisitEstimate(supabase),
+      loadClinicVisitEstimate(supabase),
       supabase
         .from("site_pages")
         .select("id, slug, title, body, updated_at")
@@ -151,7 +151,7 @@ export default async function WebsitePage({
             contact: (
               <>
                 <SiteSettingsForm content={content} />
-                <VetVisitEstimate estimate={vetVisitEstimate} />
+                <ClinicVisitEstimate estimate={clinicVisitEstimate} />
               </>
             ),
             pages: (

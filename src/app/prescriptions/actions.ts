@@ -25,11 +25,11 @@ function isoDate(value: string): boolean {
 function revalidateResidentPages(residentId: string) {
   revalidatePath(`/residents/${residentId}`);
   revalidatePath(`/residents/${residentId}/prescriptions`);
-  revalidatePath(`/residents/${residentId}/vet-appointments`);
+  revalidatePath(`/residents/${residentId}/clinic-visits`);
 }
 
 /**
- * A prescription on a vet visit that has not happened yet (0107). The form
+ * A prescription on a clinic visit that has not happened yet (0107). The form
  * only lists visits on or before today, but a second tab or a stale page
  * still reaches the trigger — this turns its refusal into a sentence.
  */
@@ -50,7 +50,7 @@ type ParsedPrescription = {
   frequencyId: string | null;
   newFrequencyLabel: string | null;
   newSchedule: FrequencySchedule | null;
-  vetAppointmentId: string | null;
+  clinicVisitId: string | null;
   notes: string | null;
 };
 
@@ -121,7 +121,7 @@ function parsePrescriptionFields(
       frequencyId,
       newFrequencyLabel,
       newSchedule,
-      vetAppointmentId: str(formData, "vetAppointmentId"),
+      clinicVisitId: str(formData, "clinicVisitId"),
       notes: str(formData, "notes"),
     },
   };
@@ -194,7 +194,7 @@ export async function createPrescription(
     resident_id: residentId,
     medication_id: refs.medicationId,
     frequency_id: refs.frequencyId,
-    vet_appointment_id: fields.vetAppointmentId,
+    clinic_visit_id: fields.clinicVisitId,
     dose_quantity: fields.doseQuantity,
     start_date: fields.startDate,
     end_date: fields.endDate,
@@ -236,7 +236,7 @@ export async function updatePrescription(
     .update({
       medication_id: refs.medicationId,
       frequency_id: refs.frequencyId,
-      vet_appointment_id: fields.vetAppointmentId,
+      clinic_visit_id: fields.clinicVisitId,
       dose_quantity: fields.doseQuantity,
       start_date: fields.startDate,
       end_date: fields.endDate,

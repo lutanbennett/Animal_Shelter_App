@@ -11,8 +11,8 @@ import { formatDate } from "@/lib/format";
 
 /**
  * Record, correct or clear one resident's chip through
- * set_resident_microchip() (0116): the form a vet uses from the hub and the
- * vet-visit page, and the "Record the chip number?" step after a
+ * set_resident_microchip() (0116): the form a doctor uses from the hub and the
+ * clinic-visit page, and the "Record the chip number?" step after a
  * Microchipping procedure. The number and the date are always sent together,
  * because the function overwrites both.
  */
@@ -77,8 +77,8 @@ export function MicrochipForm({
 
 /**
  * The chip as a line of text, with a pencil that opens MicrochipForm in
- * place for anyone who may set it (admin, staff, a vet in scope). Used on
- * the hub, the vet-visit page and the procedures tab, where a vet needs the
+ * place for anyone who may set it (admin, staff, a doctor in scope). Used on
+ * the hub, the clinic-visit page and the procedures tab, where a doctor needs the
  * number in front of them.
  */
 export function MicrochipLine({

@@ -83,9 +83,9 @@ async function handlePost(
   }
 
   // The route is what refuses, not only the form. A role with one folder
-  // (a vet: Medical) files there and nowhere else — so not an adopter's
+  // (a doctor: Medical) files there and nowhere else — so not an adopter's
   // photo either, which has no category and a folder of its own; the hub
-  // never offers a vet one.
+  // never offers a doctor one.
   const categories = photoCategoriesFor(perms);
   const onlyFolder = categories.length === 1 ? categories[0] : null;
   const category = formData.get("category");

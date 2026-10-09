@@ -30,14 +30,14 @@
 //   resident_diets         all of them, and their resident_diet_rounds (which
 //                          go by ON DELETE CASCADE)
 //   weight                 at most one: the intake weight, dated the intake
-//                          date, not from a vet visit, not archived
+//                          date, not from a clinic visit, not archived
 //   translations           its machine translations (residents_drop_translations
 //                          removes them)
 // audit_log keeps its rows (it cannot be edited, 0121), so the removal stays
 // on record there as well as in the receipt.
 //
 // WHAT MAKES IT REFUSE:
-//   - vet appointments, blood tests, prescriptions, immunizations, procedures,
+//   - clinic visits, blood tests, prescriptions, immunizations, procedures,
 //     adoption updates, photos or files: real history, a person must decide
 //   - a donation earmarked for it, or being the website's featured resident:
 //     those links are ON DELETE SET NULL, so a delete would quietly blank them
@@ -247,7 +247,7 @@ const q = (v) => `'${String(v).replace(/'/g, "''")}'`;
 // database does not have (production can be behind on migrations) is skipped
 // and said so.
 const BLOCKERS = [
-  ["vet appointment(s)", "vet_appointments", "resident_id = :id"],
+  ["clinic visit(s)", "clinic_visits", "resident_id = :id"],
   ["blood test(s)", "blood_tests", "resident_id = :id"],
   ["prescription(s)", "prescriptions", "resident_id = :id"],
   ["immunization(s)", "immunization_records", "resident_id = :id"],
@@ -362,7 +362,7 @@ async function run() {
     weights.length === 0 ||
     (weights.length === 1 &&
       weights[0].date === remove.intake_date &&
-      !weights[0].vet_appointment_id &&
+      !weights[0].clinic_visit_id &&
       !weights[0].archived_at);
   if (!intakeWeight) refusals.push(`${removeCode} has weights beyond its intake weight (${weights.length} in all).`);
 

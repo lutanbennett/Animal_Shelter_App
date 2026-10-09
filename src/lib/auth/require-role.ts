@@ -49,7 +49,7 @@ export function refuseFor(perms: Permissions | null | undefined): never {
  * → refused (above). Returns the Supabase client, user and role so the page
  * does not look them up again.
  *
- *   const { supabase, role } = await requireRole((role) => role === "vet");
+ *   const { supabase, role } = await requireRole((role) => role === "doctor");
  *
  * Server actions keep returning or throwing their refusal instead — a
  * redirect from inside a form submission is not a refusal anyone reads.

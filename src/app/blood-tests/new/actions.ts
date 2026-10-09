@@ -16,7 +16,7 @@ export async function createBloodTest(
 ): Promise<BloodTestFormState> {
   const { t } = await getT();
   const residentId = formData.get("residentId");
-  const vetAppointmentId = formData.get("vetAppointmentId");
+  const clinicVisitId = formData.get("clinicVisitId");
   const bloodTestTypeId = formData.get("bloodTestTypeId");
   const date = formData.get("date");
   const results = formData.get("results");
@@ -44,9 +44,9 @@ export async function createBloodTest(
     .insert({
       resident_id: residentId,
       blood_test_type_id: bloodTestTypeId,
-      vet_appointment_id:
-        typeof vetAppointmentId === "string" && vetAppointmentId
-          ? vetAppointmentId
+      clinic_visit_id:
+        typeof clinicVisitId === "string" && clinicVisitId
+          ? clinicVisitId
           : null,
       date,
       results: typeof results === "string" && results ? results : null,

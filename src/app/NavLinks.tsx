@@ -28,7 +28,7 @@ const sectionPaths = (section: Section) => ROUTES.filter((r) => sectionOf(r) ===
  * or a parent of it. Longest wins so that /admin/security lights up
  * Security in the footer rather than Settings as well (and /admin/website,
  * a Management page, Management rather than Settings), and a segment
- * boundary is required so /vets never claims /vetsomething.
+ * boundary is required so /clinics never claims /clinicsomething.
  */
 function activeHref(pathname: string, items: NavItem[]): string | undefined {
   return items
@@ -56,7 +56,7 @@ export function NavLinks({
   canOperations: boolean;
   /**
    * Has recurring jobs of their own (recurring.do_own): My tasks leads the menu.
-   * Without it the menu leads with Appointments, as a vet's does.
+   * Without it the menu leads with Appointments, as a doctor's does.
    */
   hasTasks: boolean;
   /**
@@ -76,14 +76,14 @@ export function NavLinks({
   // Operations, Management and Settings are single links — their
   // landing pages are tile grids of everything inside them, so the sidebar
   // does not repeat those children. Since 2026-10-08 the daily field pages
-  // and the vet and contact lookups are tiles under Operations
+  // and the clinic and contact lookups are tiles under Operations
   // (docs/decisions/2026-10-07-management-settings-split.md).
   const groups: NavItem[][] = [
     [
       // Home leads for everyone: the screen of jobs the sign-in lands on (home-screens, §8).
       { href: "/home", label: t.nav.home, icon: NAV_ICONS.home },
       // "What do I need to do today" (my-dashboard).
-      // A vet has no tasks: theirs is the clinic's appointments (Lutan,
+      // A doctor has no tasks: theirs is the clinic's appointments (Lutan,
       // 2026-09-29).
       ...(hasTasks
         ? [

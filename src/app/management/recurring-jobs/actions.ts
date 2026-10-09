@@ -173,7 +173,7 @@ async function setAssignees(supabase: Supabase, jobId: string, userIds: string[]
 
 /**
  * The people in `userIds` who can still sign in but whose role cannot do a
- * job linking to `linkPath` (eligibility.ts) — a vet on a stocktake. The
+ * job linking to `linkPath` (eligibility.ts) — a doctor on a stocktake. The
  * database would take them (0095 checks only that a login is live staff),
  * so this is the check, run before anything is written. Archived logins
  * are the stranded warning's business.

@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { loadEnclosureOptions, type EnclosureOption, type ZoneOption } from "@/lib/enclosures/options";
 import { can, type Permissions } from "@/lib/permissions/can";
 import { NOT_DECEASED } from "@/lib/residents/status";
-import { loadDoctorNamesByVet, type DoctorNamesByVet } from "@/lib/vets/doctors";
+import { loadDoctorNamesByClinic, type DoctorNamesByClinic } from "@/lib/clinics/doctors";
 
 /** A resident as the parser matches it and the cards display it. */
 export type AssistantResident = {
@@ -21,16 +21,16 @@ export type AssistantResident = {
   hospitalPreviousEnclosureId: string | null;
 };
 
-export type AssistantVet = { id: string; name: string; clinic_name: string | null };
+export type AssistantClinic = { id: string; name: string };
 
 export type AssistantContext = {
   residents: AssistantResident[];
   zones: ZoneOption[];
   enclosures: EnclosureOption[];
-  vets: AssistantVet[];
-  /** Each clinic's active doctors, for the vet card's optional Doctor field. */
-  doctors: DoctorNamesByVet;
-  /** assistant.ask: the assistant opens at all (the vet's role is external, 0070). */
+  clinics: AssistantClinic[];
+  /** Each clinic's active doctors, for the clinic card's optional Doctor field. */
+  doctors: DoctorNamesByClinic;
+  /** assistant.ask: the assistant opens at all (the doctor's role is external, 0070). */
   canAsk: boolean;
   /** assistant.record: may confirm a write; without it, lookups only. */
   canWrite: boolean;
@@ -56,12 +56,12 @@ type ListRow = {
 export function emptyAssistantContext(
   error: string | null = null,
 ): AssistantContext {
-  return { residents: [], zones: [], enclosures: [], vets: [], doctors: {}, canAsk: false, canWrite: false, error };
+  return { residents: [], zones: [], enclosures: [], clinics: [], doctors: {}, canAsk: false, canWrite: false, error };
 }
 
 /**
  * Everything the assistant matches a sentence against: every resident who
- * isn't deceased, the physical enclosures and the vets.
+ * isn't deceased, the physical enclosures and the clinics.
  *
  * Loaded once and handed to the browser, where the parsing happens — so
  * "Panda" only resolves when a resident is actually called that, and no
@@ -74,14 +74,14 @@ export function emptyAssistantContext(
  * thumbnails.
  *
  * It does no check of its own: the caller checks `can(perms, "assistant.ask")`
- * and only then loads, so a vet never gets the rows by asking directly
+ * and only then loads, so a doctor never gets the rows by asking directly
  * (docs/decisions.md, 2026-09-25).
  */
 export async function loadAssistantContext(
   supabase: SupabaseClient,
   perms: Permissions,
 ): Promise<AssistantContext> {
-  const [listResult, vetsResult, options, doctors] = await Promise.all([
+  const [listResult, clinicsResult, options, doctors] = await Promise.all([
     supabase
       .from("resident_list_view")
       .select(
@@ -91,12 +91,12 @@ export async function loadAssistantContext(
       .order("name")
       .returns<ListRow[]>(),
     supabase
-      .from("vets")
-      .select("id, name, clinic_name")
+      .from("clinics")
+      .select("id, name")
       .order("name")
-      .returns<AssistantVet[]>(),
+      .returns<AssistantClinic[]>(),
     loadEnclosureOptions(supabase),
-    loadDoctorNamesByVet(supabase),
+    loadDoctorNamesByClinic(supabase),
   ]);
 
   const rows = listResult.data ?? [];
@@ -153,13 +153,13 @@ export async function loadAssistantContext(
     residents,
     zones: options.zones,
     enclosures: options.enclosures,
-    vets: vetsResult.data ?? [],
+    clinics: clinicsResult.data ?? [],
     doctors,
     canAsk: true,
     canWrite: can(perms, "assistant.record"),
     error:
       listResult.error?.message ??
-      vetsResult.error?.message ??
+      clinicsResult.error?.message ??
       photosResult.error?.message ??
       stateResult.error?.message ??
       options.error,

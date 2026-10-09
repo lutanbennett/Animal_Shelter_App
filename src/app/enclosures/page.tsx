@@ -90,7 +90,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       .returns<EnclosureRow[]>(),
     loadOccupants(supabase),
     // Open maintenance per enclosure, and per zone for zone-wide jobs
-    // (enclosure_id null). A vet can't read maintenance (0001) and simply
+    // (enclosure_id null). A doctor can't read maintenance (0001) and simply
     // gets zeros — no error, RLS filters.
     supabase
       .from("maintenance")
@@ -105,7 +105,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       : Promise.resolve({ data: [] as PlanRow[] }),
   ]);
 
-  // The open-maintenance filter is hidden from vets, and a ?maint=open link
+  // The open-maintenance filter is hidden from doctors, and a ?maint=open link
   // is ignored for them, since RLS would leave it showing nothing at all.
   const canFilterMaintenance = can(perms, "maintenance.jobs", "read");
   const maintOpen = canFilterMaintenance && searchParams.maint === "open";

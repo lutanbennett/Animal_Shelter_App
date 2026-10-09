@@ -27,7 +27,7 @@ export const ADOPTION_UPDATES_FOLDER = "Adoption updates";
  * attachments.adoption_update_id in one embed wherever a resident photo is
  * listed (RESIDENT_PHOTO_SELECT). Null on a photo the shelter took.
  * `sender` is null when nobody was recorded, or for a role that cannot read
- * contacts (vets) — the photo still says it came from an adopter.
+ * contacts (a doctor) — the photo still says it came from an adopter.
  */
 export type PhotoProvenance = {
   id: string;

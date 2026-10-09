@@ -47,19 +47,20 @@ const manual: Manual = {
     admin: "Admin",
     management: "Management",
     staff: "Staff",
-    vet: "Vet",
+    doctor: "Doctor",
     volunteer: "Volunteer",
   },
   roleSummary: {
     admin:
       "Everything, including the Settings section (users, zones, enclosures, immunization and procedure types, frequencies) and the Management section.",
     management:
-      "Everything staff can do, plus the Management section: the reporting dashboard, the public website, the contact, vet, medication and diet lists, and the translations of public text.",
+      "Everything staff can do, plus the Management section: the reporting dashboard, the public website, the contact, clinic, medication and diet lists, and the translations of public text.",
     staff:
       "Day-to-day resident work: intake, moves, hospital, foster and adoption, photos, maintenance, projects. Can read medical records.",
-    vet: "Vet visits, procedures, blood tests, prescriptions and immunizations, for the residents their own clinic treats — any resident the clinic has a visit, prescription, procedure or blood test for, with that resident's whole history. Other residents are not shown at all. The menu is Appointments and Residents only — the shelter's enclosures, maintenance, projects, contacts and vet list are not part of a vet's access.",
+    doctor:
+      "Clinic visits, procedures, blood tests, prescriptions and immunizations, for the residents their own clinics treat — any resident the clinic has a visit, prescription, procedure or blood test for, with that resident's whole history — plus every resident the doctor was the doctor for at a clinic they have since left, which they can read but not change. Other residents are not shown at all. The menu is Appointments and Residents only — the shelter's enclosures, maintenance, projects, contacts and clinic list are not part of a doctor's access.",
     volunteer:
-      "Sees who each resident is and where they live, and browses the enclosures. Nothing else is read or changed: no medical records, notes or microchip numbers, no moving a resident, no photos to add, and no maintenance, projects, contacts, vets, stock or assistant. The menu is Home, Residents and Enclosures.",
+      "Sees who each resident is and where they live, and browses the enclosures. Nothing else is read or changed: no medical records, notes or microchip numbers, no moving a resident, no photos to add, and no maintenance, projects, contacts, clinics, stock or assistant. The menu is Home, Residents and Enclosures.",
   },
 
   filter: {
@@ -91,7 +92,7 @@ const manual: Manual = {
           steps: [
             "Open the app's address in your browser and tap Staff & Volunteer Login — or, once the website is open to the public, Staff login at the very bottom of any public page, or in the menu on a phone (or go straight to /login). Already signed in? The public pages have Open the app at the top instead, which takes you to the same place.",
             "Enter your email and password and tap Sign in — or tap Continue with Google if your account was set up with Google.",
-            "You land on My tasks, the app's home page: what's assigned to you today (a vet lands on Appointments instead). Sign out any time with the Sign out button at the top right.",
+            "You land on My tasks, the app's home page: what's assigned to you today (a doctor lands on Appointments instead). Sign out any time with the Sign out button at the top right.",
             "Forgotten your password? Tap Forgot password? under the Sign in button, enter your email, and follow the link in the message to choose a new one — it's valid for an hour. If you were given a temporary password and it's lost, ask an admin to issue another instead.",
             "To change your password at any time, pick Change password from the bottom of the menu. You'll be asked for your current password first, and once it's changed every other phone or computer signed in as you is signed out — you stay signed in on this one. If you've forgotten the current one, sign out and use Forgot password? instead.",
             "The top of every screen shows who is signed in — your name and your role, such as \"Noi · Volunteer\". Tap it to see the email address of the account, change your name (under Change password), or sign out. If your account has no name yet, the email is shown instead; add one under Change password so people can tell you from someone with the same first name.",
@@ -149,7 +150,7 @@ const manual: Manual = {
           id: "navigation",
           title: "Finding your way around",
           steps: [
-            "On a computer the menu is always visible down the left, each link with its own icon: Home and My tasks at the top, then Residents and Operations — and, depending on your role, Management and Settings. A vet's menu is just Appointments and Residents.",
+            "On a computer the menu is always visible down the left, each link with its own icon: Home and My tasks at the top, then Residents and Operations — and, depending on your role, Management and Settings. A doctor's menu is just Appointments and Residents.",
             "Operations, Management and Settings each open a front page of tiles, one for each page inside that you can open; Residents does the same for a resident's record. The same icons are used on the tiles and in the menu, and the menu entry stays lit while you are on any page inside it.",
             "Under a dividing line at the very bottom of the menu sit the things you only need now and then, so they are always in the same place: this manual, Release notes, Change password and — for admins — Security, where accounts and roles are managed.",
             "On a phone tap the ☰ button at the top left to open the same menu; tap outside it to close. The same links are the last entries in it, below the same line.",
@@ -170,8 +171,8 @@ const manual: Manual = {
           intro:
             "One place for the jobs that keep the shelter running day to day. You only see the tiles for the pages your role can open, and if your role opens none of them the section is not in your menu.",
           steps: [
-            "Open Operations from the menu. Its tiles are Enclosures (who is where), Medication list (today's round), Maintenance, Stocktake, Deliveries, Projects, Vets and Contacts.",
-            "Vets and Contacts here are the lookups: find a vet or a person and call or message them. Changing their records — adding a contact, archiving one, a vet's doctors — is under Management → Contacts and Management → Vets.",
+            "Open Operations from the menu. Its tiles are Enclosures (who is where), Medication list (today's round), Maintenance, Stocktake, Deliveries, Projects, Clinics and Contacts.",
+            "Clinics and Contacts here are the lookups: find a clinic or a person and call or message them. Changing their records — adding a contact, archiving one, a clinic's doctors — is under Management → Contacts and Management → Clinics.",
             "Every page kept its web address, so links in notifications, emails and your bookmarks still open it. Only the medication list has a new address, and its old one still takes you there.",
           ],
           callouts: [
@@ -191,7 +192,7 @@ const manual: Manual = {
             "Open Release notes from the bottom of the menu.",
             "Each release shows its number, the date it was prepared and the environment you are looking at. A Major badge marks a release worth reading before you carry on working.",
             "Click a release to see what changed in it, and click it again to fold it away. The newest release is already open.",
-            "The page lists the changes for your role and the ones for everyone. Every release stays in the list, so the numbers run in order; one with nothing for your role carries a badge saying so — Nothing for Vet, for a vet — and opening it says its changes are for other roles. Show everything, at the top, lists every change, greyed where it isn't for your role.",
+            "The page lists the changes for your role and the ones for everyone. Every release stays in the list, so the numbers run in order; one with nothing for your role carries a badge saying so — Nothing for Doctor, for a doctor — and opening it says its changes are for other roles. Show everything, at the top, lists every change, greyed where it isn't for your role.",
             "Admins also get each major release by email. The subject starts with [UAT] or [Production], so a test release is never mistaken for a live one.",
           ],
           callouts: [
@@ -212,7 +213,7 @@ const manual: Manual = {
           steps: [
             "Open it with the Assistant button in the header, at the top of every screen — it slides in over whatever you were looking at, so you don't lose your place. On a phone the button shows just its speech-bubble icon. For more room, press Open full page under the panel's title: the same assistant fills a page of its own.",
             "Type one request and press Send. Check the card that comes back, fill in or correct anything on it, then press Confirm. Cancel writes nothing.",
-            "To record something: \"Send Panda to the vet hospital today\" · \"Panda is back from hospital\" · \"Panda weighs 12.4 kg\" (or \"log weight 12.4 for Panda\") · \"Move Panda to B1 today\" · \"Book a vet visit for Panda with Dr Somchai on Friday at 10am\". If you name the doctor (\"with Dr Somchai\", \"หมอสมชาย\") the card keeps the name in an optional Doctor field you can change or clear; it never asks for one. A name the clinic's doctor list doesn't have yet is added when you confirm, and the card says so first.",
+            "To record something: \"Send Panda to hospital today\" · \"Panda is back from hospital\" · \"Panda weighs 12.4 kg\" (or \"log weight 12.4 for Panda\") · \"Move Panda to B1 today\" · \"Book a clinic visit for Panda with Dr Somchai on Friday at 10am\" (\"vet\" works too). If you name the doctor (\"with Dr Somchai\", \"หมอสมชาย\") the card keeps the name in an optional Doctor field you can change or clear; it never asks for one. A name the clinic's doctor list doesn't have yet is added when you confirm, and the card says so first.",
             "To ask something: \"Where is Panda?\" · \"Who is in B1?\" · \"What is due this week?\" — these are answered straight away, with no card and nothing to confirm.",
             "Names: use the name as it is written on the resident's record, or their code (R-0042). If more than one resident has that name, the assistant shows you their photos, codes and enclosures and asks which one you meant.",
             "Dates: today, tomorrow, yesterday, a weekday name (Friday means the next Friday), or a full date such as 2026-09-30. Times: 10am, 2.30pm, 14:30.",
@@ -248,12 +249,12 @@ const manual: Manual = {
       title: "Appointments",
       icon: CalendarClock,
       intro:
-        "A vet's home page: the visits booked with your clinic. It replaces My tasks for a vet — tasks are the shelter's own routine work, and a vet has none.",
+        "A doctor's home page: the visits booked with your clinics. It replaces My tasks for a doctor — tasks are the shelter's own routine work, and a doctor has none.",
       topics: [
         {
           id: "appointments-vet",
           title: "Your clinic's appointments",
-          roles: ["vet"],
+          roles: ["doctor"],
           path: "Appointments (first in the menu)",
           intro:
             "Appointments is the page you land on when you sign in. It lists every visit booked with your clinic — not just your own patients' — in three groups: To write up (the visit date has passed and it is not marked done — oldest first, its count and dates in red), Upcoming (today or later) and Recently done (marked done in the last 30 days). Each row names the resident, which opens their page, and offers Log procedure, Log blood test, Add prescription, Log weight and Edit, all already linked to that visit; prescription and weight appear once the visit has started. Marking a visit done does not lock it: you can still add records to it, and anything you were typing when someone marked it done is saved as normal. A cancelled visit is not listed. The visits of all your clinics are listed together. If the page says your account is not linked to a clinic, ask an admin to link it to your doctor entry (Accounts and roles).",
@@ -286,7 +287,7 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "Vets and volunteers aren't given maintenance jobs.",
+              text: "Doctors and volunteers aren't given maintenance jobs.",
             },
           ],
         },
@@ -309,11 +310,11 @@ const manual: Manual = {
           activity: "recurring.do_own",
           path: "My tasks → Recurring jobs",
           intro:
-            "Recurring jobs are the routine management has set to come round on a calendar — the Monday stocktake, ordering medication after it, the monthly worming. Each date appears on your list for its day: staff can be given one as well as management. Vets are not given recurring jobs — a vet's work comes from their vet appointments.",
+            "Recurring jobs are the routine management has set to come round on a calendar — the Monday stocktake, ordering medication after it, the monthly worming. Each date appears on your list for its day: staff can be given one as well as management. Doctors are not given recurring jobs — a doctor's work comes from their clinic visits.",
           steps: [
             "Recurring jobs are listed first on My tasks, grouped like the rest: Overdue, Due today and Coming up (the next seven days). Each shows its time of day (morning, afternoon, evening or any time), its date, and who else is on it.",
             "When the job is done on a particular screen, tap its title to go there — a stocktake job opens the Stocktake page, on the right tab.",
-            "If a job says “your role isn't given this job”, it was given to you by mistake — a job given to a vet, or a maintenance job given to a volunteer. Its title doesn't link anywhere, because the page may only refuse you. Ask management to give it to someone else; you can still skip a date meanwhile.",
+            "If a job says “your role isn't given this job”, it was given to you by mistake — a job given to a doctor, or a maintenance job given to a volunteer. Its title doesn't link anywhere, because the page may only refuse you. Ask management to give it to someone else; you can still skip a date meanwhile.",
             "Tap Done when you have done it, or Skip when it isn't happening this time (for example the shelter is closed). To leave a note with it — what was short, why it was skipped — tap Add a note first. Either way the row leaves the list, with Undo in case it was the wrong one.",
             "A job that is waiting for another one shows “Waiting for …”, for example ordering medication waiting for the stocktake the same morning. It goes away as soon as that job is marked done or skipped. You can still mark it done if you have done it anyway.",
             "A date nobody marked stays on the list as overdue, with how many days late it is, until someone marks it done or skipped. Dates ahead can be skipped but not marked done before their day.",
@@ -354,7 +355,7 @@ const manual: Manual = {
             "Tap a resident's name to open their hub.",
             "Tap No microchip to list only residents with no chip number recorded; tap it again to show everyone. It works alongside the search and the other filters. To find one animal by their chip, see Scanning a microchip.",
             "Tap Download spreadsheet (the arrow beside the buttons above the list) to save the residents you are looking at as a spreadsheet: the same zone, Off-site, Unallocated, enclosure, search, Show all, Adopted, Fostered or Hospitalised choices as the list on screen, nothing more and nothing less. On a computer, tick some residents first and the button becomes Download spreadsheet (3) and saves only those. It is a CSV file, one row per resident, that opens in Excel or Google Sheets and sorts and filters there. It goes to your Downloads folder (on an iPhone, the Files app, under Downloads), and the page says the file name when it starts.",
-            "The spreadsheet has more than the list shows: R-code, name, Thai name, other names, species, breed, sex, age (worded as on the resident's hub) and the estimated birth year so it sorts, size, colour, microchipped (Yes or No, never the number), zone, enclosure, status, place (On-site or Off-site), intake date, ready for adoption, and, if your role can read them, the prescriptions running today, the next vet visit and its clinic, the current diet, and the latest weight with its date. Headings are in English for everyone. A column your role cannot read is left out of the file rather than left blank.",
+            "The spreadsheet has more than the list shows: R-code, name, Thai name, other names, species, breed, sex, age (worded as on the resident's hub) and the estimated birth year so it sorts, size, colour, microchipped (Yes or No, never the number), zone, enclosure, status, place (On-site or Off-site), intake date, ready for adoption, and, if your role can read them, the prescriptions running today, the next clinic visit and its clinic, the current diet, and the latest weight with its date. Headings are in English for everyone. A column your role cannot read is left out of the file rather than left blank.",
           ],
           screenshot: {
             src: "/manual/residents-list.png",
@@ -364,7 +365,7 @@ const manual: Manual = {
           callouts: [
             {
               kind: "tip",
-              text: "Tick several residents (computer only) to log immunizations or book one vet visit for all of them at once — the buttons appear above the table.",
+              text: "Tick several residents (computer only) to log immunizations or book one clinic visit for all of them at once — the buttons appear above the table.",
             },
             {
               kind: "tip",
@@ -376,36 +377,36 @@ const manual: Manual = {
             },
             {
               kind: "note",
-              text: "Signed in as a vet, the list is your clinic's: every resident your clinic has a vet visit, prescription, procedure or blood test for — a cancelled visit included — and no one else. The line under the heading names the clinic. A resident appears once the shelter books them a visit with you, and their hub shows all of their history, other clinics' visits included. A vet who works at more than one clinic sees the residents of all of them; the line under the heading names the clinics. A vet account not linked to a doctor sees no residents until an admin links it (Accounts and roles).",
+              text: "Signed in as a doctor, the list is your clinics': every resident your clinics have a clinic visit, prescription, procedure or blood test for — a cancelled visit included — plus every resident you were the doctor for at a clinic you have since left, and no one else. You can read those but not change them: you add and change records only at the clinics you work at now. The line under the heading names the clinic. A resident appears once the shelter books them a visit with you, and their hub shows all of their history, other clinics' visits included. A doctor who works at more than one clinic sees the residents of all of them; the line under the heading names the clinics. A Doctor login not linked to a doctor sees no residents until an admin links it (Accounts and roles).",
             },
           ],
         },
         {
           id: "name-card",
           title: "Scanning a name card",
-          roles: ["admin", "management", "staff", "vet", "volunteer"],
+          roles: ["admin", "management", "staff", "doctor", "volunteer"],
           path: "Hold your phone to a resident's name card",
           intro:
             "Every resident has a name card with an NFC chip. Hold the top of your phone to it (an iPhone XS or later, or an Android phone with NFC on) and the resident's page opens. What you see depends on who you are, but never less than a visitor sees.",
           steps: [
             "Signed out, or signed in only to test the public website: you see the resident's public card, the same as any visitor: photo, name, age, temperament and the rest of what the website shows.",
-            "Admin, Management, Staff, and a vet whose clinic treats that resident: the tap opens the resident's full page, with the record your role may read.",
+            "Admin, Management, Staff, and a doctor whose clinic treats that resident: the tap opens the resident's full page, with the record your role may read.",
             "The 2IC, the Heads and volunteers: you see the public card, plus where the resident lives and a button for each job you can do for that resident (for example Add Medical Photos or Record Weight). The medical record itself is not shown to these roles.",
-            "A vet looking at a resident their clinic does not treat sees the public card instead of an error.",
+            "A doctor looking at a resident their clinics do not treat sees the public card instead of an error.",
             "If you are signed in on another browser, the card opens the public page in the one your phone uses. Sign in there once and stay signed in.",
           ],
         },
         {
           id: "microchip",
           title: "Scanning a microchip",
-          roles: ["admin", "management", "staff", "vet"],
+          roles: ["admin", "management", "staff", "doctor"],
           path: "Residents → Scan a chip, or a resident's hub",
           intro:
-            "A microchip number is exactly 15 digits, and no two residents can share one. It is for staff, Management and vets only: the public website says only whether an animal is microchipped, never the number.",
+            "A microchip number is exactly 15 digits, and no two residents can share one. It is for staff, Management and doctors only: the public website says only whether an animal is microchipped, never the number.",
           steps: [
             "To find an animal by their chip, open Residents. A USB or Bluetooth chip reader types the 15 digits and presses Enter, so scan straight into the Search box, where the cursor already is on a computer, or click the Scan a chip box and scan there; both work the same. A known chip opens that resident straight away, whatever the place, zone or deceased filters say. An unknown chip says so and, for staff, offers New resident with this chip, which starts intake with the number filled in. Typing the 15 digits works just as well, spaces and dashes included. Phones cannot read the usual 134.2 kHz chips, so use a reader.",
-            "The chip shows under the resident's name on their hub, and at the top of their Vet appointments and Procedures pages and a visit's Edit page, so it is in front of a vet wherever they work. It is also in the summary PDF and offline index filed when a resident dies.",
-            "To record or correct a chip, tap Record chip (or Correct, beside a number already recorded), scan or type the number, add the date it was implanted if you know it, and tap Save chip. Admins, staff and vets can do this; a vet can for any resident their clinic treats. Staff can also enter it under Edit resident or on the Health step of intake.",
+            "The chip shows under the resident's name on their hub, and at the top of their Clinic visits and Procedures pages and a visit's Edit page, so it is in front of a doctor wherever they work. It is also in the summary PDF and offline index filed when a resident dies.",
+            "To record or correct a chip, tap Record chip (or Correct, beside a number already recorded), scan or type the number, add the date it was implanted if you know it, and tap Save chip. Admins, staff and doctors can do this; a doctor can for any resident their clinics treat. Staff can also enter it under Edit resident or on the Health step of intake.",
             "After you log a Microchipping procedure, you are asked Record the chip number? straight away, with the implant date set to the procedure's date. Scan the chip and tap Save chip, or tap Not now to do it later from the hub.",
             "To remove a number recorded in error, open the form, clear the number and tap Save chip. The implant date is removed with it.",
           ],
@@ -469,7 +470,7 @@ const manual: Manual = {
             "Housing & Status: current enclosure (or hospital / carer) and the actions that apply right now — Move enclosure, Send to hospital, Foster / adopt, and so on.",
             "Photos: the Google Drive gallery for this resident.",
             "Adoption updates: news from the adopter — how many updates there are and the latest. It appears on any resident who has been adopted, including one since returned to the shelter. See Adoption updates below.",
-            "Medical cards: Immunizations, Vet Appointments, Prescriptions, Weight, Procedures and Blood Tests. Each shows the latest state (for example \"2 missing\" mandatory vaccines, or the next vet visit) and a quick link to add a record.",
+            "Medical cards: Immunizations, Clinic Visits, Prescriptions, Weight, Procedures and Blood Tests. Each shows the latest state (for example \"2 missing\" mandatory vaccines, or the next clinic visit) and a quick link to add a record.",
             "On a phone the hub is split into two tabs — Overview and Medical.",
           ],
           screenshot: {
@@ -511,7 +512,7 @@ const manual: Manual = {
             },
             {
               kind: "note",
-              text: "A resident returned to the shelter keeps the updates from their time away, and the card stays on their hub. Vets can read updates but not add them.",
+              text: "A resident returned to the shelter keeps the updates from their time away, and the card stays on their hub. Doctors can read updates but not add them.",
             },
           ],
         },
@@ -572,7 +573,7 @@ const manual: Manual = {
           path: "Resident hub → Housing & Status → Send to hospital",
           steps: [
             "Tap Send to hospital, enter the date admitted and the reason, and tap Send to hospital. Their enclosure is remembered.",
-            "You can also start this from a vet visit on the Vet Appointments page — the date and notes are pre-filled from the visit.",
+            "You can also start this from a clinic visit on the Clinic Visits page — the date and notes are pre-filled from the visit.",
             "While they're away the Housing card reads \"In hospital · Returns to …\" and Move enclosure is hidden.",
             "When they're back, tap Return from hospital. The enclosure they left from is pre-selected; choose a different one if they need to go into isolation first. Enter the date returned and tap Return from hospital.",
           ],
@@ -616,7 +617,7 @@ const manual: Manual = {
             "Tap the broken-heart icon beside the pencil on the hub.",
             "Enter the date of death, the cause and any notes. The page lists exactly what will happen.",
             "Tap Record death and confirm.",
-            "The resident's status becomes Deceased; future vet visits are cancelled, prescriptions ended, and they leave the public pages. The record closes — only their bio and photos can still be changed, and the archive files below are refreshed when they are. Their Drive folder moves to Residents/Deceased/ with a summary PDF and an offline index page — the hub shows links to these, and a Retry button if Drive was unavailable. If you change the bio or photos afterwards and Drive can't be updated, the page warns you that the PDF and index are out of date; tap Refresh archive on the banner to try again.",
+            "The resident's status becomes Deceased; future clinic visits are cancelled, prescriptions ended, and they leave the public pages. The record closes — only their bio and photos can still be changed, and the archive files below are refreshed when they are. Their Drive folder moves to Residents/Deceased/ with a summary PDF and an offline index page — the hub shows links to these, and a Retry button if Drive was unavailable. If you change the bio or photos afterwards and Drive can't be updated, the page warns you that the PDF and index are out of date; tap Refresh archive on the banner to try again.",
             "Checked end to end on 2 October 2026: after a death, adding a photo, changing the bio, choosing a different profile photo and removing a photo each updated both the summary PDF and the offline index in Drive within a few seconds. The out-of-date warning only shows at the moment you make the change and is gone once the page is reloaded, so if you see it, press Refresh archive before leaving. A phone photo (HEIC) chosen as the profile is turned into a picture for the PDF by Drive; if the PDF still could not get the picture, the page says so at the moment you choose it — pick a JPEG or PNG photo instead, or press Refresh archive. A resident whose first archive never finished is not archived by a later edit — use Retry archiving on the hub, which includes everything saved so far.",
           ],
           screenshot: {
@@ -640,7 +641,7 @@ const manual: Manual = {
             "On the hub of the resident recorded as deceased, tap Withdraw this death at the bottom of the banner.",
             "Check where they'll go back to — the enclosure or carer they were with when the death was recorded — and say why it was recorded in error. The reason is required.",
             "Tap Withdraw death and confirm.",
-            "The resident is back where they were, the vet visits the death cancelled are scheduled again, the prescriptions it ended get their old end dates back, and their record can be edited again. The Drive folder moves back under Residents/ and the generated summary PDF and index page are deleted — a Retry appears on the hub if Drive was unavailable.",
+            "The resident is back where they were, the clinic visits the death cancelled are scheduled again, the prescriptions it ended get their old end dates back, and their record can be edited again. The Drive folder moves back under Residents/ and the generated summary PDF and index page are deleted — a Retry appears on the hub if Drive was unavailable.",
           ],
           callouts: [
             {
@@ -652,7 +653,7 @@ const manual: Manual = {
         {
           id: "placement-history",
           title: "Placement history",
-          roles: ["admin", "management", "staff", "vet"],
+          roles: ["admin", "management", "staff", "doctor"],
           path: "Resident hub → Housing & Status card",
           steps: [
             "Tap the Housing & Status card title to open Housing & Placement History.",
@@ -672,12 +673,12 @@ const manual: Manual = {
       title: "Medical records",
       icon: HeartPulse,
       intro:
-        "Six kinds of medical record hang off each resident. All of them are reached from the resident hub's medical cards, or from a vet visit so the record is linked to that visit. Staff can read all of these; adding to them is for vets, staff, management and admins as noted.",
+        "Six kinds of medical record hang off each resident. All of them are reached from the resident hub's medical cards, or from a clinic visit so the record is linked to that visit. Staff can read all of these; adding to them is for doctors, staff, management and admins as noted.",
       topics: [
         {
           id: "immunizations",
           title: "Logging immunizations",
-          roles: ["admin", "management", "staff", "vet"],
+          roles: ["admin", "management", "staff", "doctor"],
           activity: "medical.immunizations",
           path: "Resident hub → Immunizations → Log immunization, or tick residents on the list",
           intro:
@@ -702,44 +703,44 @@ const manual: Manual = {
         },
         {
           id: "vet-visits",
-          title: "Booking and recording vet visits",
-          roles: ["admin", "management", "staff", "vet"],
+          title: "Booking and recording clinic visits",
+          roles: ["admin", "management", "staff", "doctor"],
           activity: "medical.visits",
-          path: "Resident hub → Vet Appointments → Book vet visit",
+          path: "Resident hub → Clinic Visits → Book clinic visit",
           steps: [
-            "Choose one or more residents and the vet or clinic (vets are set up under Management → Vets). If you know which doctor will see them, type their name in Doctor — it is optional. The doctors on that clinic's list are offered as you type, so pick one rather than spelling it a new way. A name that isn't offered is added to the clinic's list when you book.",
+            "Choose one or more residents and the clinic (clinics are set up under Management → Clinics). If you know which doctor will see them, type their name in Doctor — it is optional. The doctors on that clinic's list are offered as you type, so pick one rather than spelling it a new way. A name that isn't offered is added to the clinic's list when you book.",
             "Enter the date and time. Use a past date to record a visit that already happened, including emergencies.",
             "Give the reason, set the status and add notes. The status follows the date you enter — a past date sets Completed, a future one Scheduled — but it is yours to change: choose Scheduled for a past visit you can't yet confirm took place.",
-            "Tap Book vet visit. With one resident you go straight to their Vet Appointments page, where the new visit is listed; with several, back to the Residents list.",
-            "On the resident's Vet Appointments page each visit has quick links to log a blood test, prescription, weight or procedure against that visit, and to send the resident to hospital. A visit still to come has no prescription or weight link — those are recorded once the visit has happened.",
-            "After the visit, tap Edit on its row to mark it Completed (or Cancelled), fix the date or vet, add the doctor who saw them, and enter the cost from the invoice. The vet's hub totals those costs for the period shown.",
+            "Tap Book clinic visit. With one resident you go straight to their Clinic Visits page, where the new visit is listed; with several, back to the Residents list.",
+            "On the resident's Clinic Visits page each visit has quick links to log a blood test, prescription, weight or procedure against that visit, and to send the resident to hospital. A visit still to come has no prescription or weight link — those are recorded once the visit has happened.",
+            "After the visit, tap Edit on its row to mark it Completed (or Cancelled), fix the date or clinic, add the doctor who saw them, and enter the cost from the invoice. The clinic's hub totals those costs for the period shown.",
           ],
           screenshot: {
             src: "/manual/vet-visit-new.png",
-            alt: "The book vet visit form",
+            alt: "The book clinic visit form",
           },
           callouts: [
             {
               kind: "note",
-              text: "A visit whose date has passed but is still Scheduled shows as overdue on the hub and the Vets pages until its status is updated. That is why the status is a choice and not worked out from the date: Scheduled means nobody has confirmed the visit happened, Completed that it did, and Cancelled that it didn't.",
+              text: "A visit whose date has passed but is still Scheduled shows as overdue on the hub and the Clinics pages until its status is updated. That is why the status is a choice and not worked out from the date: Scheduled means nobody has confirmed the visit happened, Completed that it did, and Cancelled that it didn't.",
             },
             {
               kind: "note",
-              text: "Signed in as a vet, the form offers only your own clinics: one clinic is shown by name, two or more are a short list to choose from. The Doctor field is you — filled in and locked, because a visit you record is yours; staff and admins still choose any doctor at the clinic. If your account hasn't been linked to a doctor yet the form says so — ask a shelter admin to link it (Accounts and roles).",
+              text: "Signed in as a doctor, the form offers only your own clinics: one clinic is shown by name, two or more are a short list to choose from. The Doctor field is you — filled in and locked, because a visit you record is yours; staff and admins still choose any doctor at the clinic. If your account hasn't been linked to a doctor yet the form says so — ask a shelter admin to link it (Accounts and roles).",
             },
           ],
         },
         {
           id: "prescriptions",
           title: "Adding a prescription",
-          roles: ["admin", "management", "staff", "vet"],
+          roles: ["admin", "management", "staff", "doctor"],
           activity: "medical.prescriptions",
           path: "Resident hub → Prescriptions → Add prescription",
           steps: [
             "Pick the medication from the list (or add a new one, giving what one unit is — tablet, ml, drop…). An admin keeps this list tidy under Settings → Medications.",
             "Enter the dose per administration and pick a frequency, e.g. Twice daily or Every 8 hours. New frequencies can be added inline too.",
             "Set the start date, and an end date if it's a course; leave the end blank if ongoing.",
-            "Optionally link the vet visit that prescribed it and add notes such as \"give with food\". Only visits up to today are offered: a prescription belongs to a visit that has happened, and one still to come can be linked once it has.",
+            "Optionally link the clinic visit that prescribed it and add notes such as \"give with food\". Only visits up to today are offered: a prescription belongs to a visit that has happened, and one still to come can be linked once it has.",
             "Tap Save prescription. The resident's Prescriptions page separates Current from Expired.",
             "To change one later, tap Edit on its row — same form, prefilled. To stop a course early, tap End today on a current row; it sets the end date to today and the medication drops out of the forecast from tomorrow.",
           ],
@@ -751,7 +752,7 @@ const manual: Manual = {
         {
           id: "diet",
           title: "Recording a resident's diet",
-          roles: ["admin", "management", "staff", "vet"],
+          roles: ["admin", "management", "staff", "doctor"],
           activity: "medical.diet",
           path: "Resident hub → Diet → Add diet",
           steps: [
@@ -769,31 +770,31 @@ const manual: Manual = {
         {
           id: "weight",
           title: "Logging weight",
-          roles: ["admin", "management", "staff", "vet"],
+          roles: ["admin", "management", "staff", "doctor"],
           activity: "medical.weight",
           path: "Resident hub → Weight → Log weight",
           steps: [
             "Enter the weight in kg and the date weighed. The last reading is shown for comparison.",
-            "If the weighing happened at a vet visit, link it so the reading stays with that visit. A visit holds one weight, so visits that already have one aren't offered, and nor are visits still to come.",
+            "If the weighing happened at a clinic visit, link it so the reading stays with that visit. A visit holds one weight, so visits that already have one aren't offered, and nor are visits still to come.",
             "Tap Save weight. The Weight page charts every reading and shows the change since the previous and first readings.",
-            "A resident has one weight per day. If the day you pick already has a reading, the form says so and saving corrects that reading instead of adding a second — this is how a vet's weight on an animal's intake day replaces the intake weight and links it to the visit. Blank notes and visit keep the reading's own.",
-            "To fix a mistyped reading, tap Edit on it on the Weight page (or Edit weight on its vet visit). Corrections always change the reading itself.",
+            "A resident has one weight per day. If the day you pick already has a reading, the form says so and saving corrects that reading instead of adding a second — this is how a doctor's weight on an animal's intake day replaces the intake weight and links it to the visit. Blank notes and visit keep the reading's own.",
+            "To fix a mistyped reading, tap Edit on it on the Weight page (or Edit weight on its clinic visit). Corrections always change the reading itself.",
           ],
           screenshot: {
             src: "/manual/weight-history.png",
             alt: "The weight history page with its trend chart",
-            caption: "Weight history. Weigh at intake, at each vet visit, and whenever condition changes.",
+            caption: "Weight history. Weigh at intake, at each clinic visit, and whenever condition changes.",
           },
         },
         {
           id: "procedures",
           title: "Logging a procedure",
-          roles: ["admin", "management", "staff", "vet"],
+          roles: ["admin", "management", "staff", "doctor"],
           activity: "medical.procedures",
           path: "Resident hub → Procedures → Log procedure",
           steps: [
             "Pick the procedure type — X-ray, ultrasound, spay/neuter, dental… — or add a new type.",
-            "Enter the date, link the vet visit if there was one (leave unlinked for things done on site, like nail clipping), and add notes.",
+            "Enter the date, link the clinic visit if there was one (leave unlinked for things done on site, like nail clipping), and add notes.",
             "Drop in any X-rays, scans or paperwork, then tap Save procedure — the files upload as part of the save. Files that arrive later go in from the row's Attach files link on the Procedures page.",
           ],
           screenshot: {
@@ -804,13 +805,13 @@ const manual: Manual = {
         {
           id: "blood-tests",
           title: "Logging a blood test",
-          roles: ["admin", "management", "staff", "vet"],
+          roles: ["admin", "management", "staff", "doctor"],
           activity: "medical.blood_tests",
           path: "Resident hub → Blood Tests → Log blood test",
           steps: [
             "Pick the test type — CBC is preselected as the routine panel; the list (chemistry, thyroid, heartworm, tick-borne, cortisol, urinalysis) is kept under Settings → Blood Test Types.",
-            "Enter the date of the test and, if it was done at a vet visit, link the visit.",
-            "Type the results or the vet's summary in the notes (optional — you can just attach the scan).",
+            "Enter the date of the test and, if it was done at a clinic visit, link the visit.",
+            "Type the results or the doctor's summary in the notes (optional — you can just attach the scan).",
             "Drop in the lab scan or PDF (several files can go on one test), then tap Save blood test — the files upload as part of the save. A report that arrives later goes in from the row's Attach files link on the Blood Tests page.",
           ],
           screenshot: {
@@ -823,13 +824,13 @@ const manual: Manual = {
           title: "Removing a medical record",
           roles: ["admin", "management", "staff"],
           activity: "medical.archive",
-          path: "Resident hub → Weight, Prescriptions, Vet appointments or Immunizations",
+          path: "Resident hub → Weight, Prescriptions, Clinic visits or Immunizations",
           steps: [
-            "A weight reading, a prescription, a vet visit or an immunization that was entered by mistake is removed rather than deleted. Tap Remove on its row and, if you like, say why — for example that it was entered on the wrong resident.",
+            "A weight reading, a prescription, a clinic visit or an immunization that was entered by mistake is removed rather than deleted. Tap Remove on its row and, if you like, say why — for example that it was entered on the wrong resident.",
             "A removed record leaves the list and everything built from it: the weight chart, the medication and cost forecasts, stock usage, the vaccinated and in-treatment counts, and the public website. It is not gone. If you remove the newest dose of a vaccine, the resident's next-due date goes back to the dose before it.",
             "Under each list, 'N removed hidden' appears when something has been removed. Tap Show removed to see those records below the live ones, greyed out with the reason, and Restore to bring one back. Hide removed puts the list back as it was.",
             "A removed weight or immunization no longer holds its day, so you can enter the correct one straight away. If you then restore the old one while a new one has taken its day, Restore says so and does nothing; remove or correct the new one first.",
-            "Vets don't see Remove. A vet who enters something by mistake asks the shelter to remove it. A deceased resident's record is closed, so nothing on it can be removed or restored.",
+            "Doctors don't see Remove. A doctor who enters something by mistake asks the shelter to remove it. A deceased resident's record is closed, so nothing on it can be removed or restored.",
             "Photos and other attachments are not removed this way — they are still deleted from their own row.",
           ],
         },
@@ -847,16 +848,16 @@ const manual: Manual = {
         {
           id: "resident-photos",
           title: "Adding resident photos",
-          roles: ["admin", "management", "staff", "vet"],
+          roles: ["admin", "management", "staff", "doctor"],
           path: "Resident hub → Photos",
           steps: [
             "Open the Photos card on the hub.",
-            "Choose the Drive folder the batch belongs in and, optionally, the date taken. A vet's photos always go in Medical, so a vet sees no folder choice.",
+            "Choose the Drive folder the batch belongs in and, optionally, the date taken. A doctor's photos always go in Medical, so a doctor sees no folder choice.",
             "Medical photos never appear on the website — use Medical for operations, teeth, wounds and anything else that should stay inside the shelter. Photos in the other folders show on the resident's public page once they are on the website.",
             "Drop photos on the upload area or tap it to choose from your phone. You can select several at once.",
             "The first photo ever uploaded becomes the profile photo. To change it, hover or tap a photo and choose Set as profile photo, or pick one on the Edit page. A Medical photo can't be chosen as the profile photo, because the profile photo is what the website shows. If the first photo was a Medical one, it stays the profile photo inside the app but the website shows no photo — choose one from another folder to give the resident a picture there.",
             "Photos an adopter sent carry a coloured label with who sent them, the date and how they came in, and opening one links back to its update. Once a resident has both kinds, the buttons above the gallery show just the shelter's photos or just the adopters'. Adopters' photos are added from Adoption updates, not here.",
-            "Filed a photo under the wrong folder — a Medical photo recorded as Shelter, say? Open it and use Move to folder to refile it, in Drive and in the app together, without losing its date taken or caption. A vet can only move a photo into Medical, not out of it. Moving the profile photo into Medical is refused — choose a different profile photo first.",
+            "Filed a photo under the wrong folder — a Medical photo recorded as Shelter, say? Open it and use Move to folder to refile it, in Drive and in the app together, without losing its date taken or caption. A doctor can only move a photo into Medical, not out of it. Moving the profile photo into Medical is refused — choose a different profile photo first.",
           ],
           screenshot: {
             src: "/manual/resident-photos.png",
@@ -1070,26 +1071,28 @@ const manual: Manual = {
     // ------------------------------------------------------------------
     {
       id: "vets-contacts",
-      title: "Vets and contacts",
+      title: "Clinics and contacts",
       icon: Users,
       intro:
         "Two read-only directories for everyday use. The lists themselves are edited under Management.",
       topics: [
         {
           id: "vets",
-          title: "Vets",
+          title: "Clinics",
           roles: ["admin", "management", "staff"],
           activity: "clinics.list",
           activityLevel: "read",
-          path: "Operations → Vets",
+          path: "Operations → Clinics",
+          intro:
+            "A clinic is the place a resident is taken to, and the place a visit is booked with. A doctor is a person who works at one or more clinics, and a doctor may have their own login to the app. A doctor who comes to the shelter instead (a mobile doctor) is entered as a clinic with no address: only the name is needed, and nothing is shown for the details left out.",
           steps: [
-            "Open Operations from the menu and tap Vets to see every vet and clinic with their visit count, residents seen, last visit and what's upcoming or overdue.",
-            "Tap a vet for their hub: contact details and notes, visits per month, the clinic's doctors with how many visits each saw, the residents they've seen, spend on visits with a recorded cost, and the procedures, blood tests and prescriptions logged against their visits. Change the period (3, 6, 12 months or all time) at the top.",
+            "Open Operations from the menu and tap Clinics to see every clinic with its visit count, residents seen, last visit and what's upcoming or overdue.",
+            "Tap a clinic for its hub: contact details and notes, visits per month, the clinic's doctors with how many visits each saw, the residents seen there, spend on visits with a recorded cost, and the procedures, blood tests and prescriptions logged against its visits. Change the period (3, 6, 12 months or all time) at the top.",
             "Tap any card to see what it counts. Scheduled opens the Scheduled list: overdue visits first, in red and oldest first, then upcoming ones, soonest first, whatever period is chosen. Each row shows the resident, the date, the reason and the doctor; tap Edit to mark an overdue visit Completed or Cancelled. Visits and Residents seen open their lists for the period. Spend, Procedures, Blood tests and Prescriptions open the Visits list showing only the visits with a cost or with those records — tap a visit to go to that tab of the resident's record, or tap Visits above the list to see them all again. A card with nothing to show cannot be tapped.",
           ],
           screenshot: {
             src: "/manual/vet-hub.png",
-            alt: "A vet's hub with visit statistics",
+            alt: "A clinic's hub with visit statistics",
           },
         },
         {
@@ -1134,8 +1137,8 @@ const manual: Manual = {
           activity: "reports.dashboard",
           path: "Management → Dashboard",
           steps: [
-            "Right now: residents in care (in the shelter, in hospital, fostered), ready for adoption, vet visits in the next 7 days, and open maintenance jobs.",
-            "The month at a glance: intakes, adoptions, fosters, deaths, hospital stays, returns, blood work, initial and follow-up vet visits and procedures — with the residents' names under each. Use Previous month / Next month to move around.",
+            "Right now: residents in care (in the shelter, in hospital, fostered), ready for adoption, clinic visits in the next 7 days, and open maintenance jobs.",
+            "The month at a glance: intakes, adoptions, fosters, deaths, hospital stays, returns, blood work, initial and follow-up clinic visits and procedures — with the residents' names under each. Use Previous month / Next month to move around.",
             "Last 12 months: intakes, adoptions and deaths by month.",
           ],
           screenshot: {
@@ -1235,17 +1238,17 @@ const manual: Manual = {
         },
         {
           id: "manage-vets",
-          title: "Managing vets",
+          title: "Managing clinics",
           roles: ["admin", "management"],
           activity: "clinics.list",
-          path: "Management → Vets",
+          path: "Management → Clinics",
           steps: [
-            "Add a vet with the name staff will pick when booking, the clinic, free-text contact details, and notes — specialities, opening hours, an emergency line — which show on their hub.",
-            "A vet with logged visits can't be deleted — the visits are part of the residents' medical records.",
+            "Add a clinic with the name staff will pick when booking, and if you like free-text contact details and notes — specialities, opening hours, an emergency line — which show on its hub. Only the name is needed: a mobile doctor is added as a clinic with no address.",
+            "A clinic with logged visits can't be deleted — the visits are part of the residents' medical records.",
           ],
           screenshot: {
             src: "/manual/management-vets.png",
-            alt: "The vets management table",
+            alt: "The clinics management table",
           },
         },
         {
@@ -1253,17 +1256,17 @@ const manual: Manual = {
           title: "A clinic's doctors",
           roles: ["admin", "management"],
           activity: "clinics.doctors",
-          path: "Management → Vets → Doctors",
+          path: "Management → Clinics → Doctors",
           intro:
-            "Each vet or clinic has a list of its doctors, which the visit forms suggest from. Nobody has to type the list in: every doctor's name typed on a visit is added to that clinic's list, and \"dr ploy\" or \"Dr  Ploy\" find the \"Dr Ploy\" already there. What it can't tell is that \"Somchai\" and \"Dr Somchai\" are the same person — that is what this page is for.",
+            "Each clinic has a list of its doctors, which the visit forms suggest from. Nobody has to type the list in: every doctor's name typed on a visit is added to that clinic's list, and \"dr ploy\" or \"Dr  Ploy\" find the \"Dr Ploy\" already there. What it can't tell is that \"Somchai\" and \"Dr Somchai\" are the same person — that is what this page is for.",
           steps: [
-            "In Management → Vets, the Doctors column shows how many doctors each clinic has; tap it to open the clinic's list. From a vet's hub, Manage the doctor list goes to the same page.",
+            "In Management → Clinics, the Doctors column shows how many doctors each clinic has; tap it to open the clinic's list. From a clinic's hub, Manage the doctor list goes to the same page.",
             "Each doctor shows how many visits they are on and the date of the latest. Names that look like one person written two ways — the same name with and without \"Dr\", \"หมอ\", \"น.สพ.\" or \"สพ.ญ.\", or different punctuation — are marked \"Possibly the same person as …\". That is only a hint; you decide.",
             "Merge… folds one spelling into another: choose the name to keep, and every visit recorded with the other one now shows the kept name, past visits included. The other spelling leaves the list. Use it on the spelling you want to drop. It can't be undone.",
             "Rename fixes a doctor's spelling. The new name is written onto every visit linked to that doctor, past ones included, so the page says how many visits will change and asks before saving. If the new name is already on the list, it is refused: that is a merge, not a rename.",
             "Mark as left, for a doctor who no longer works there, stops them being suggested on the visit forms. Their visits keep their name, and they move to No longer at the clinic at the bottom of the list. Back at the clinic undoes it. If someone types a left doctor's name on a new visit, it is still linked to them.",
             "Add a doctor is only needed for someone nobody has recorded a visit with yet, so they are suggested from the first booking. It needs a name and nothing else — no email, no account, no invitation; most doctors the residents are taken to will never use the system. Delete is only for a doctor with no visits at this clinic — a mistaken entry; anyone on a visit is merged or marked as left instead.",
-            "A doctor who works at more than one clinic is one person listed at each. Under Add a doctor, Also works here adds a doctor from another clinic to this one; each row then says where else they work (\"Also works at …\"). Mark as left applies to this clinic only — they stay on the other clinics' lists, and a vet login linked to them loses just this clinic. A doctor who has a login is marked \"Has a login\"; changing where they work, or merging them, is for an admin only, because it changes which clinics that login can see.",
+            "A doctor who works at more than one clinic is one person listed at each. Under Add a doctor, Also works here adds a doctor from another clinic to this one; each row then says where else they work (\"Also works at …\"). Mark as left applies to this clinic only — they stay on the other clinics' lists, and a Doctor login linked to them loses just this clinic. A doctor who has a login is marked \"Has a login\"; changing where they work, or merging them, is for an admin only, because it changes which clinics that login can see.",
             "If one person was entered twice — at two clinics, or spelled two ways — use Merge… on the entry to drop and choose the one to keep, even if it is listed at another clinic. The kept doctor takes every clinic the dropped one worked at, and all the visits; a login moves with them. Two doctors who both have a login can't be merged. Nothing is ever merged for you by name; the \"Possibly the same person\" note is only a hint, and it now looks across clinics.",
           ],
           callouts: [
@@ -1462,12 +1465,12 @@ const manual: Manual = {
             "Tap New recurring job. Say what to do, the time of day, and optionally instructions and the screen it is done on (for a stocktake, Stocktake — Medications or — Diets; Other page… takes any page of this app, starting with /).",
             "Choose how it repeats: weekly on the days you tick (every 2 weeks for fortnightly), monthly on a day of the month, or monthly on a weekday such as the first Monday or the last Friday. Every 3 months makes it quarterly. Set the start date and, if it stops, an end date.",
             "Check Next dates under the rule before saving. It is worked out by the same rule My tasks uses, so if the first date isn't the one you expect, the rule needs changing. Fortnightly counts from the week the job starts in: a fortnightly Monday job starting on a Wednesday first falls twelve days later, not five.",
-            "Tick who does it. Several people make a team: all of them see it, and any one can mark it done. Only people who can still sign in are offered — and never vets, whose work comes from their vet appointments rather than the shelter's routine. The screen the job is done on narrows it further: a maintenance job or a delivery lists admin, management and staff; a Management or Settings page lists only those who can open it; a stocktake lists the same three; a job with no screen lists admin, management, staff and volunteers. The line under Assigned to says which roles are listed.",
+            "Tick who does it. Several people make a team: all of them see it, and any one can mark it done. Only people who can still sign in are offered — and never doctors, whose work comes from their clinic visits rather than the shelter's routine. The screen the job is done on narrows it further: a maintenance job or a delivery lists admin, management and staff; a Management or Settings page lists only those who can open it; a stocktake lists the same three; a job with no screen lists admin, management, staff and volunteers. The line under Assigned to says which roles are listed.",
             "To make one job follow another the same day — order medication after the stocktake — choose the first under Do after. On a day both fall, the second shows “Waiting for …” until the first is done or skipped.",
             "Each job in the list shows its rule, who it is with, its next three dates, and how many missed dates are still open. Pause stops it showing anywhere, missed dates included; Resume starts again from today, so the paused weeks don't come back as missed. Changing when it repeats also starts the missed-dates count again from today.",
             "Someone off sick or on leave: under Hand over, choose them, These dates only, the dates, who covers, and a reason. Every one of their dates in that range goes to the cover (anyone else on the job stays on it), and the jobs themselves don't change, so the week after goes back to normal. Handed-over dates are listed under Handed to someone else, where Give back undoes one.",
             "Someone who has left: a job whose only people have left is marked in red at the top of the page. Edit it and tick someone else, or use Hand over with From now on to move all of that person's jobs at once.",
-            "Someone who can't be given the job: a job given to a vet, or to someone whose role can't open its screen — set up before the list was filtered, or its screen changed since — is also marked in red, naming them. Edit it, untick them (they are shown struck through) and tick someone who can; the job can't be saved while they are on it. Hand over refuses the same way: a date or job that would go to someone who can't be given it is listed under Some couldn't be handed over, with the reason, and the rest go ahead.",
+            "Someone who can't be given the job: a job given to a doctor, or to someone whose role can't open its screen — set up before the list was filtered, or its screen changed since — is also marked in red, naming them. Edit it, untick them (they are shown struck through) and tick someone who can; the job can't be saved while they are on it. Hand over refuses the same way: a date or job that would go to someone who can't be given it is listed under Some couldn't be handed over, with the reason, and the rest go ahead.",
             "Recently done lists the latest dates marked done or skipped, with who marked them, when, and their note — the record that the stocktake happened.",
           ],
           callouts: [
@@ -1488,7 +1491,7 @@ const manual: Manual = {
           activity: "reports.cashflow",
           path: "Management → Cashflow",
           intro:
-            "Food, medication, vaccinations, vet visits and maintenance are each forecast on their own page in their own unit. This is the one page where they add up, in baht — together with the shelter's fixed monthly costs (rent, electricity, salaries and the like).",
+            "Food, medication, vaccinations, clinic visits and maintenance are each forecast on their own page in their own unit. This is the one page where they add up, in baht — together with the shelter's fixed monthly costs (rent, electricity, salaries and the like).",
           steps: [
             "Pick a window: Next 30 days or Next 90 days, or enter From and To dates for any period up to a year.",
             "The three cards are the window's total, the average month, and how many items still have no price. Below them, a stacked column — one column per month, one colour per category — and the table it is drawn from.",
@@ -1498,8 +1501,8 @@ const manual: Manual = {
             "Download CSV saves the table as a spreadsheet for the monthly report — the same months and the same categories that are switched on. Amounts are plain numbers so the spreadsheet can add them up, and each category has a second column counting what is not priced yet, so a 0 there never hides a gap.",
             "Fixed outgoings is the sixth category: the named monthly costs someone has listed. Tap Edit fixed outgoings under the table (or open Management → Cashflow → Fixed outgoings) to add a line — a name such as Rent, an amount in baht per month, and optionally the first and last month it applies. When an amount changes, end the old line and add a new one from the next month; the past months keep the old figure. Switch a line off to keep it on record without counting it. The list holds at most 24 lines, and the page tells you when it is full.",
             "Fixed outgoings are counted by the day, the same way everything else on this page is: a window that covers only half of a month carries half of that month's amount, so a 30-day window carries about one month of rent rather than two. A window that covers a whole calendar month carries exactly one.",
-            "The vet line follows how often the shelter really goes. Each week it counts the larger of two things: the typical number of visits (completed visits in the last 90 days, averaged per week) and the visits actually booked that week. Booked visits are part of that count, not extra on top of it — two booked in a week where about 1.5 is typical is two visits, and one booked is one visit plus half a visit's typical cost. A booked visit with its real cost recorded uses that cost; the others cost the average of recorded visit costs, or the typical vet visit figure from the website settings until at least three invoices are recorded. Weeks are Monday to Sunday and a week that spans a month end is split by day, so the columns still add up. The typical rate applies from today onward only. A note under the table gives the rate, how many visits it came from and the cost per visit used. If there is no completed visit in the last 90 days the note says so: only booked visits are counted, and an empty month means nothing is booked, not that no visits are expected.",
-            "Under each category name is where its figure came from: priced (a price someone entered, times what the records imply), estimated (a stand-in — a maintenance job's estimated cost, or the typical vet visit) or invoiced (every visit that month already has its real cost).",
+            "The clinic visits line follows how often the shelter really goes. Each week it counts the larger of two things: the typical number of visits (completed visits in the last 90 days, averaged per week) and the visits actually booked that week. Booked visits are part of that count, not extra on top of it — two booked in a week where about 1.5 is typical is two visits, and one booked is one visit plus half a visit's typical cost. A booked visit with its real cost recorded uses that cost; the others cost the average of recorded visit costs, or the typical clinic visit figure from the website settings until at least three invoices are recorded. Weeks are Monday to Sunday and a week that spans a month end is split by day, so the columns still add up. The typical rate applies from today onward only. A note under the table gives the rate, how many visits it came from and the cost per visit used. If there is no completed visit in the last 90 days the note says so: only booked visits are counted, and an empty month means nothing is booked, not that no visits are expected.",
+            "Under each category name is where its figure came from: priced (a price someone entered, times what the records imply), estimated (a stand-in — a maintenance job's estimated cost, or the typical clinic visit) or invoiced (every visit that month already has its real cost).",
           ],
           callouts: [
             {
@@ -1512,7 +1515,7 @@ const manual: Manual = {
             },
             {
               kind: "note",
-              text: "Vet visits that are booked but not yet invoiced are costed at one flat “typical vet visit” figure, set on Management → Website. A visit that already has its real cost recorded uses that instead. If the figure is blank, booked visits are not costed at all and the page says so.",
+              text: "Clinic visits that are booked but not yet invoiced are costed at one flat “typical clinic visit” figure, set on Management → Website. A visit that already has its real cost recorded uses that instead. If the figure is blank, booked visits are not costed at all and the page says so.",
             },
           ],
           screenshot: {
@@ -1533,8 +1536,8 @@ const manual: Manual = {
             "The page is in sections, one per kind (Website, Residents, Projects, Diets, Medications, Setup lists, Places and so on). The box at the top says how many are missing and how many are out of date in each; tap a section's name to jump to it. Missing shows what nobody has translated yet, Out of date what was translated before the English changed, and All shows everything, including what is done.",
             "For a short name, type the Thai in the box and press Save. Each card says where the name is used, with a link to its own list. You can translate a name here even when its list is not one you can open: translating a name never changes the list itself, only its Thai. To take a Thai name away, empty the box and press Save. When the English has changed, the card shows the English the Thai was written for; correct the Thai, or press Save as it is if it is still right.",
             "Medicine and clinic names are mostly drug, brand or proper names that read the same in Thai, so an empty one says Shown as typed rather than missing, and it is not counted. Give one Thai only if it should read differently, such as Subcutaneous Fluids.",
-            "For long text, write the translation in the box and tap Save & approve. Only an approved translation is shown to readers of that language; until then they see the original. Remove translation takes one down. The same box appears under the text on the resident's page, on the project folder and on the maintenance job, so you can translate right after writing without coming here. Nobody has to translate internal notes (weights, vet visits, prescriptions): those stay as typed.",
-            "Every list with a short name also has a Thai name box of its own: Settings → Diets, Medications, Frequencies and the immunization, procedure and blood test types; the units on a diet or medicine; Management → Vets; and Cashflow → Fixed outgoings. So a new diet or vaccine can be given its Thai as it is added. Whichever box you use, it is the same Thai, and it shows straight away on every screen to anyone reading in Thai.",
+            "For long text, write the translation in the box and tap Save & approve. Only an approved translation is shown to readers of that language; until then they see the original. Remove translation takes one down. The same box appears under the text on the resident's page, on the project folder and on the maintenance job, so you can translate right after writing without coming here. Nobody has to translate internal notes (weights, clinic visits, prescriptions): those stay as typed.",
+            "Every list with a short name also has a Thai name box of its own: Settings → Diets, Medications, Frequencies and the immunization, procedure and blood test types; the units on a diet or medicine; Management → Clinics; and Cashflow → Fixed outgoings. So a new diet or vaccine can be given its Thai as it is added. Whichever box you use, it is the same Thai, and it shows straight away on every screen to anyone reading in Thai.",
           ],
         },
       ],
@@ -1555,10 +1558,10 @@ const manual: Manual = {
           path: "Security (bottom of the menu)",
           steps: [
             "Create a user with an email and a role. A temporary password is generated and shown once — copy it and pass it on (LINE is fine; it only works until they've signed in). The first time they sign in with it they must choose their own password before anything else opens. Someone who will only use Google sign-in can ignore the temporary password.",
-            "Every login can have a name. Type one in the Name box when you create the user, or change it in the Name column of the table and press Save name; an empty name goes back to showing the email. The name is shown in the header beside the role (\"Lutan · Admin\"), and everywhere the person is picked or listed — maintenance assignees, recurring jobs, Recent changes. Give each test account its own name, such as \"Lutan (test vet)\". A login that uses Google starts with its Google name, and signing in with Google again can put that name back.",
+            "Every login can have a name. Type one in the Name box when you create the user, or change it in the Name column of the table and press Save name; an empty name goes back to showing the email. The name is shown in the header beside the role (\"Lutan · Admin\"), and everywhere the person is picked or listed — maintenance assignees, recurring jobs, Recent changes. Give each test account its own name, such as \"Lutan (test doctor)\". A login that uses Google starts with its Google name, and signing in with Google again can put that name back.",
             "Someone signing in with Google for the first time is turned away with \"hasn't been given access yet\" and appears under Access requests at the top of the page. Choose a role and tap Approve, then ask them to try again — or Deny to remove the account. If their Google email matches a login you created, the two are linked automatically.",
             "Change a role from the dropdown in the table. Issue temporary password does what it says — their old password stops working and they choose a new one at their next sign-in. You can't change your own role, reset your own password here or delete yourself; change your own password from Change password at the bottom of the menu.",
-            "A vet account gets its clinics from a doctor. Under the role, a vet account shows a Doctor box: link the account to a doctor already on the lists, or choose Create a doctor from this login and tick the clinics they work at. The account's clinics are then that doctor's clinics — a vet who works at two clinics sees and records for both, and for no others. To change where they work, edit the doctor on the clinic's Doctors page (Management → Vets), not here. A vet account not linked to a doctor sees no residents and can't record visits, so it's flagged. Unlink, or archiving the account, leaves the doctor and all their visits exactly as they were. Most doctors will never have a login at all; that is normal.",
+            "A Doctor login gets its clinics from a doctor. Under the role, a Doctor login shows a Doctor box: link the account to a doctor already on the lists, or choose Create a doctor from this login and tick the clinics they work at. The account's clinics are then that doctor's clinics — a doctor who works at two clinics sees and records for both, and for no others. To change where they work, edit the doctor on the clinic's Doctors page (Management → Clinics), not here. A Doctor login not linked to a doctor sees no residents and can't record visits, so it's flagged. Unlink, or archiving the account, leaves the doctor and all their visits exactly as they were. Most doctors will never have a login at all; that is normal.",
             "Public viewer is for testing the website as a visitor while the testing sites are closed to the public: it signs in, sees every public page exactly as a stranger will once the site is open, and never sees the app — any app address sends it to the home page, and the public header offers only Sign out. Give it to testers, never to staff.",
             "When someone leaves, Archive them rather than delete: they can no longer sign in, they disappear from the maintenance Assigned to list, and their name stays on the jobs they did. Archived accounts sit at the bottom of the table with Restore beside them. Delete is for accounts made by mistake — it removes them from past jobs too.",
           ],
@@ -1574,12 +1577,12 @@ const manual: Manual = {
           activity: "audit.view",
           path: "Settings → Recent changes",
           steps: [
-            "Every add, edit, archive and delete on residents, contacts, prescriptions, vet visits, weights, files and vaccinations — and on the home page impact figures, facility plans, roles and permissions — is recorded automatically, with who did it and when. Recent changes lists them newest first, 50 at a time. Tap Older changes for the next page.",
+            "Every add, edit, archive and delete on residents, contacts, prescriptions, clinic visits, weights, files and vaccinations — and on the home page impact figures, facility plans, roles and permissions — is recorded automatically, with who did it and when. Recent changes lists them newest first, 50 at a time. Tap Older changes for the next page.",
             "Each line says when, who, what (Added, Edited, Archived, Restored or Deleted) and which record, with the resident's name where the record belongs to one. For an edit, Fields lists which fields changed, not what they were changed to — so the page is safe to have open where others can see it. A change shown as made by No login came from outside the app (a migration or the developer's console), not from a person.",
             "Tap Show values on a line to open it. That shows the value before and after for each changed field, which can include phone numbers and medical notes, so open it only when you need it. Only one line is open at a time.",
             "To answer \"something changed and I don't know who\", filter by Kind of record, by Changed by and by date (From and To, both inclusive), then tap Show. Under any line, All changes to this record shows the whole history of that one resident, contact or record, oldest at the bottom.",
-            "To undo a mistake, tap Undo this change on its line, then Yes, undo it. An edit puts the fields it changed back to their Before values (open Show values first to see them); a deleted contact, prescription, vet visit, weight or vaccination is put back as it was. The undo is itself recorded here as a new change, so the page shows the mistake and the correction.",
-            "Undo is offered only on the newest change to a record. If it has been changed since, the line says so: undo the newer change first, or edit the record by hand. An undo can also be refused because something now holds its place, such as a new weight for the same day or a vet visit that has since been deleted; the message says which.",
+            "To undo a mistake, tap Undo this change on its line, then Yes, undo it. An edit puts the fields it changed back to their Before values (open Show values first to see them); a deleted contact, prescription, clinic visit, weight or vaccination is put back as it was. The undo is itself recorded here as a new change, so the page shows the mistake and the correction.",
+            "Undo is offered only on the newest change to a record. If it has been changed since, the line says so: undo the newer change first, or edit the record by hand. An undo can also be refused because something now holds its place, such as a new weight for the same day or a clinic visit that has since been deleted; the message says which.",
             "Some things are not undone here. To reverse an archive, use Restore on the record itself. A deleted resident or file can't be put back from this page (a resident would return without its chip number and without what was deleted with it; a file's copy is in the Drive bin), and an added record is removed by archiving it. An impact figure edit can be undone here like any other edit. A facility plan change is undone with Undo the replace on Settings → Facility map, which puts the picture back too. Roles and permissions are not undone here at all: they change only with an update to the app, because putting one back by hand could let someone in or lock them out. A microchip number is never kept in this history.",
           ],
         },
@@ -1611,7 +1614,7 @@ const manual: Manual = {
           activity: "website.content",
           path: "Management → Website",
           steps: [
-            "The page has five tabs across the top: Home page (hero photo and Pet of the week), Contact & settings (labels, contact details, preferred way to contact us and the typical vet visit figure), Pages (the wording of each information page), Gallery and Our work. The tab you are on is in the web address, so a reload, the Back button or a shared link comes back to the same place. Text you have typed in one tab is still there when you come back to it, but each section still has its own Save button.",
+            "The page has five tabs across the top: Home page (hero photo and Pet of the week), Contact & settings (labels, contact details, preferred way to contact us and the typical clinic visit figure), Pages (the wording of each information page), Gallery and Our work. The tab you are on is in the web address, so a reload, the Back button or a shared link comes back to the same place. Text you have typed in one tab is still there when you come back to it, but each section still has its own Save button.",
             "Hero photo (Home page tab): the big photo beside the heading at the top of the home page. With none set, the heading and its buttons take the full width.",
             "Impact figures (Home page tab): the starting numbers behind the Animals rehomed and Sterilisations in local villages figures on the home page. The shelter did this work before the system existed, so enter your best estimate and the date it is true up to and including. The public figure is that number plus every adoption the system has recorded after the date (village sterilisations are not recorded anywhere yet, so that figure is your number alone). The home page shows the figure as a plain number, with no word or note saying part of it is an estimate, so enter a number you are happy to stand behind. Leave both boxes blank to keep a figure off the public site. Saving asks you to confirm, and the change is listed in Settings → Recent changes.",
             "Labels and contact details: the tagline (the paragraph under the home page's heading; left empty, a standard line about the shelter shows instead), hero photo description and visiting hours in English and Thai side by side, plus the email, phone, LINE id, address and map link shown in the footer of every public page and on each resident's profile. On a phone, the LINE id and phone number are also the LINE and Call buttons under Talk to us at the foot of the website's menu; with neither set, that panel isn't shown.",
@@ -1695,7 +1698,7 @@ const manual: Manual = {
           activity: "reference.types",
           path: "Settings → Procedure Types",
           steps: [
-            "The list the procedure form offers — X-ray, ultrasound, teeth cleaning, nail clipping. Staff and vets can add a type inline when logging a procedure, so this is where duplicates and misspellings get tidied up.",
+            "The list the procedure form offers — X-ray, ultrasound, teeth cleaning, nail clipping. Staff and doctors can add a type inline when logging a procedure, so this is where duplicates and misspellings get tidied up.",
             "Rename a type in place, or Merge… a duplicate into the one to keep — its procedures move across. A type with logged procedures can't be deleted; merge it instead.",
           ],
           screenshot: {
@@ -1710,7 +1713,7 @@ const manual: Manual = {
           activity: "reference.types",
           path: "Settings → Blood Test Types",
           steps: [
-            "The panels the blood test form offers — CBC, Blood Chemistry Panel, Thyroid Panel, Heartworm Test, Tick Borne Disease Panel, Cortisol Test, Urinary Analysis. Add one here when the vet starts running a new panel; the form defaults to CBC.",
+            "The panels the blood test form offers — CBC, Blood Chemistry Panel, Thyroid Panel, Heartworm Test, Tick Borne Disease Panel, Cortisol Test, Urinary Analysis. Add one here when the clinic starts running a new panel; the form defaults to CBC.",
             "Rename a type in place, or Merge… a duplicate into the one to keep — its blood tests move across. A type with logged blood tests can't be deleted; merge it instead.",
           ],
           screenshot: {
@@ -1726,7 +1729,7 @@ const manual: Manual = {
           path: "Settings → Frequencies",
           steps: [
             "The \"how often\" choices the prescription form offers — Twice daily, Weekly, Monthly. Each is a label staff see plus a schedule the medication forecast counts: so many times a day, or one dose every so many days, weeks or months from the prescription's start date. As needed can't be forecast.",
-            "Staff and vets can add a frequency inline when writing a prescription, so this is where duplicates get tidied up. Fix a label or schedule in place, or Merge… a duplicate into the one to keep — its prescriptions move across and take the kept one's schedule. A frequency on any prescription can't be deleted; merge it instead.",
+            "Staff and doctors can add a frequency inline when writing a prescription, so this is where duplicates get tidied up. Fix a label or schedule in place, or Merge… a duplicate into the one to keep — its prescriptions move across and take the kept one's schedule. A frequency on any prescription can't be deleted; merge it instead.",
           ],
         },
         {
@@ -1743,7 +1746,7 @@ const manual: Manual = {
             "Each tile says when it was checked. Results are kept for a minute so the page stays quick; tap Check now to ask again straight away.",
             "Alerts: every 15 minutes the same health checks run on their own. When a tile is red on two checks in a row, every admin gets one email saying which and why; when it works again, one more saying so. Nothing in between, however long it lasts. Amber and grey tiles never send mail.",
             "The Status alert mail tile says when the checks last ran and who the last mail reached. It turns red if the checks have stopped running or the last mail reached nobody, and amber if some admins were skipped — the reason is shown beside each address. Run the alert check now does one round straight away; Send a test alert mails every admin a test, so you can see it arrive.",
-            "Usage: pick 7, 30 or 90 days to see how many people signed in, how many residents, vet visits, weights and maintenance jobs were added, how many photos and documents were uploaded, how many requests went to the assistant, and how many people visited the website. The visitor figure is Cloudflare's own daily total — no cookies, nothing that follows a visitor — and stays grey until the Cloudflare analytics token is set up.",
+            "Usage: pick 7, 30 or 90 days to see how many people signed in, how many residents, clinic visits, weights and maintenance jobs were added, how many photos and documents were uploaded, how many requests went to the assistant, and how many people visited the website. The visitor figure is Cloudflare's own daily total — no cookies, nothing that follows a visitor — and stays grey until the Cloudflare analytics token is set up.",
           ],
           callouts: [
             {
@@ -1771,7 +1774,7 @@ const manual: Manual = {
           id: "public-pages",
           title: "The public pages",
           steps: [
-            "Home: the heading with Meet the animals and Give monthly (which opens the Donate page for now) beside the hero photo; four live counts (in care, adopted this year, in foster care, in vet care); the Shelter Friends band, once someone is published; four ways to help (Adopt, Sponsor a resident, Foster, Volunteer); and the Pet of the week beside Our story, its first three gallery photos and a link to Our work.",
+            "Home: the heading with Meet the animals and Give monthly (which opens the Donate page for now) beside the hero photo; four live counts (in care, adopted this year, in foster care, in treatment); the Shelter Friends band, once someone is published; four ways to help (Adopt, Sponsor a resident, Foster, Volunteer); and the Pet of the week beside Our story, its first three gallery photos and a link to Our work.",
             "Adopt (the Meet our residents entry under Adopt in the menu): every resident with Ready for adoption ticked, except those adopted or deceased, with species / size / ready filters. Each profile shows their photos, their hook line under the name, quick facts (age, sex, breed, size, desexed and vaccinated — vaccinated comes from the immunization history — and energy level), who they get along with, their story (past story, bio and temperament), their ideal home, how to meet them, a line asking those who can't adopt to give monthly (it opens the Donate page for now), and similar residents. A bar along the bottom of the screen has a button for the shelter's preferred contact channel (Ask on LINE unless Management → Website says otherwise) and Book a visit, which phones the shelter, or emails it if no phone number is set. Anything not filled in is left out rather than shown empty. Recent adoptions show as Happy endings, and How adoption works sits at the foot of the listing.",
             "Our work: project folders marked Show on website, by category, with their story and photos.",
             "Foster, Volunteer and Donate: the pages written under Management → Website, each with the shelter's email and LINE.",

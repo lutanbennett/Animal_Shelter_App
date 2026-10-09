@@ -10,19 +10,19 @@ import { driveImageUrl } from "@/lib/google/drive-client";
 import { placeName } from "@/lib/enclosures/names";
 import type { EnclosureOption, ZoneOption } from "@/lib/enclosures/options";
 import { EnclosurePicker } from "@/components/EnclosurePicker";
-import type { AssistantResident, AssistantVet } from "@/lib/assistant/data";
+import type { AssistantClinic, AssistantResident } from "@/lib/assistant/data";
 import { isoLocal } from "@/lib/assistant/text";
-import { doctorNameCore, type DoctorNamesByVet } from "@/lib/vets/doctors";
+import { doctorNameCore, type DoctorNamesByClinic } from "@/lib/clinics/doctors";
 import type {
   Draft,
   HospitalDraft,
   HospitalReturnDraft,
   MoveDraft,
-  VetVisitDraft,
+  ClinicVisitDraft,
   WeightDraft,
 } from "@/lib/assistant/types";
 import {
-  assistantBookVetVisit,
+  assistantBookClinicVisit,
   assistantLogWeight,
   assistantMove,
   assistantReturnFromHospital,
@@ -52,9 +52,9 @@ export type CardContext = {
   residents: AssistantResident[];
   zones: ZoneOption[];
   enclosures: EnclosureOption[];
-  vets: AssistantVet[];
-  /** Each clinic's active doctors, offered on the vet card. */
-  doctors: DoctorNamesByVet;
+  clinics: AssistantClinic[];
+  /** Each clinic's active doctors, offered on the clinic card. */
+  doctors: DoctorNamesByClinic;
   /** Residents the name could have meant, when it could have meant several. */
   candidates: string[];
   onSettle: (outcome: AssistantOutcome) => void;
@@ -72,10 +72,6 @@ function viewerToday() {
 
 function residentLabel(r: AssistantResident) {
   return r.thaiName ? `${r.name} (${r.thaiName}) · ${r.code}` : `${r.name} · ${r.code}`;
-}
-
-function vetLabel(v: AssistantVet) {
-  return v.clinic_name ? `${v.name} — ${v.clinic_name}` : v.name;
 }
 
 // ---------------------------------------------------------------------------
@@ -390,11 +386,11 @@ function MoveCard({ ctx, draft }: { ctx: CardContext; draft: MoveDraft }) {
   );
 }
 
-function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
+function ClinicCard({ ctx, draft }: { ctx: CardContext; draft: ClinicVisitDraft }) {
   const { t, locale } = useI18n();
   const a = t.assistant;
   const [residentId, setResidentId] = useState(draft.residentId ?? "");
-  const [vetId, setVetId] = useState(draft.vetId ?? "");
+  const [clinicId, setClinicId] = useState(draft.clinicId ?? "");
   const [date, setDate] = useState(draft.date ?? "");
   const [time, setTime] = useState(draft.time ?? "");
   const [reason, setReason] = useState(draft.reason ?? "");
@@ -404,7 +400,7 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
     const said = draft.doctorName ?? "";
     const core = doctorNameCore(said);
     const listed = core
-      ? (ctx.doctors[draft.vetId ?? ""] ?? []).filter((n) => doctorNameCore(n) === core)
+      ? (ctx.doctors[draft.clinicId ?? ""] ?? []).filter((n) => doctorNameCore(n) === core)
       : [];
     return listed.length === 1 ? listed[0] : said;
   });
@@ -412,7 +408,7 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
   const [pending, startTransition] = useTransition();
 
   const resident = ctx.residents.find((r) => r.id === residentId) ?? null;
-  const vet = ctx.vets.find((v) => v.id === vetId) ?? null;
+  const clinic = ctx.clinics.find((c) => c.id === clinicId) ?? null;
   // Built here, on the person's own clock, so "10am" is 10am where they are.
   const when = date && time ? new Date(`${date}T${time}`) : null;
   const whenLabel = when ? formatDateTime(when.toISOString(), locale) : a.unknown;
@@ -422,26 +418,26 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
   // list doesn't have is still written (the database adds it, as on the
   // booking form), but the card says so rather than doing it silently.
   const doctor = doctorName.trim();
-  const roster = ctx.doctors[vetId] ?? [];
+  const roster = ctx.doctors[clinicId] ?? [];
   const sameName = (x: string, y: string) =>
-    x.trim().replace(/s+/g, " ").toLowerCase() === y.trim().replace(/s+/g, " ").toLowerCase();
+    x.trim().replace(/\s+/g, " ").toLowerCase() === y.trim().replace(/\s+/g, " ").toLowerCase();
   const listedAs = roster.find((n) => sameName(n, doctor)) ?? null;
   const alike = doctor && !listedAs
     ? roster.filter((n) => doctorNameCore(n) === doctorNameCore(doctor))
     : [];
-  const doctorNote = !doctor || !vet || listedAs
+  const doctorNote = !doctor || !clinic || listedAs
     ? null
     : alike.length === 1
       ? null
-      : a.vet.doctorNew(vet.name);
+      : a.vet.doctorNew(clinic.name);
 
   function confirm() {
-    if (!resident || !vet || !when) return;
+    if (!resident || !clinic || !when) return;
     setError(null);
     startTransition(async () => {
-      const result = await assistantBookVetVisit({
+      const result = await assistantBookClinicVisit({
         residentId: resident.id,
-        vetId: vet.id,
+        clinicId: clinic.id,
         appointmentIso: when.toISOString(),
         reason: reason || null,
         doctorName: doctor || null,
@@ -449,7 +445,7 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
         draft: {
           ...draft,
           residentId: resident.id,
-          vetId: vet.id,
+          clinicId: clinic.id,
           date,
           time,
           reason: reason || null,
@@ -459,7 +455,7 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
       if ("error" in result) return setError(result.error);
       ctx.onSettle({
         kind: "done",
-        message: a.vet.done(`${resident.name} (${resident.code})`, vet.name, whenLabel, doctor || null),
+        message: a.vet.done(`${resident.name} (${resident.code})`, clinic.name, whenLabel, doctor || null),
         residentId: resident.id,
       });
     });
@@ -470,7 +466,7 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
       title={a.vet.title}
       summary={a.vet.summary(
         resident ? `${resident.name} (${resident.code})` : a.unknown,
-        vet ? vet.name : a.unknown,
+        clinic ? clinic.name : a.unknown,
         whenLabel,
         doctor || null,
       )}
@@ -478,42 +474,42 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
       hintTone={chrome.hintTone}
       error={error}
       pending={pending}
-      canConfirm={!!resident && !!vet && !!when}
+      canConfirm={!!resident && !!clinic && !!when}
       notesStamp={chrome.notesStamp}
       onConfirm={confirm}
       onCancel={() => ctx.onSettle({ kind: "cancelled" })}
     >
       <ResidentField
         ctx={ctx}
-        idPrefix="vet"
+        idPrefix="clinic"
         residentId={residentId}
         onChange={setResidentId}
       />
       <div className="flex flex-col gap-1">
-        <label htmlFor={`vet-${ctx.turnId}-vet`} className="text-sm font-medium text-muted">
+        <label htmlFor={`clinic-${ctx.turnId}-clinic`} className="text-sm font-medium text-muted">
           {a.fields.vet} <span className="text-danger">*</span>
         </label>
         <select
-          id={`vet-${ctx.turnId}-vet`}
-          value={vetId}
-          onChange={(e) => setVetId(e.target.value)}
+          id={`clinic-${ctx.turnId}-clinic`}
+          value={clinicId}
+          onChange={(e) => setClinicId(e.target.value)}
           className={inputClass}
         >
           <option value="">{a.pickVet}</option>
-          {ctx.vets.map((v) => (
-            <option key={v.id} value={v.id}>
-              {vetLabel(v)}
+          {ctx.clinics.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
             </option>
           ))}
         </select>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1">
-          <label htmlFor={`vet-${ctx.turnId}-date`} className="text-sm font-medium text-muted">
+          <label htmlFor={`clinic-${ctx.turnId}-date`} className="text-sm font-medium text-muted">
             {a.fields.date} <span className="text-danger">*</span>
           </label>
           <input
-            id={`vet-${ctx.turnId}-date`}
+            id={`clinic-${ctx.turnId}-date`}
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
@@ -521,11 +517,11 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label htmlFor={`vet-${ctx.turnId}-time`} className="text-sm font-medium text-muted">
+          <label htmlFor={`clinic-${ctx.turnId}-time`} className="text-sm font-medium text-muted">
             {a.fields.time} <span className="text-danger">*</span>
           </label>
           <input
-            id={`vet-${ctx.turnId}-time`}
+            id={`clinic-${ctx.turnId}-time`}
             type="time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
@@ -534,11 +530,11 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
         </div>
       </div>
       <div className="flex flex-col gap-1">
-        <label htmlFor={`vet-${ctx.turnId}-reason`} className="text-sm font-medium text-muted">
+        <label htmlFor={`clinic-${ctx.turnId}-reason`} className="text-sm font-medium text-muted">
           {a.fields.reason}
         </label>
         <input
-          id={`vet-${ctx.turnId}-reason`}
+          id={`clinic-${ctx.turnId}-reason`}
           type="text"
           value={reason}
           placeholder={t.vetVisits.reasonPlaceholder}
@@ -547,21 +543,21 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
         />
       </div>
       <div className="flex flex-col gap-1">
-        <label htmlFor={`vet-${ctx.turnId}-doctor`} className="text-sm font-medium text-muted">
+        <label htmlFor={`clinic-${ctx.turnId}-doctor`} className="text-sm font-medium text-muted">
           {t.vetVisits.doctorName}
         </label>
         <input
-          id={`vet-${ctx.turnId}-doctor`}
+          id={`clinic-${ctx.turnId}-doctor`}
           type="text"
           autoComplete="off"
-          list={roster.length > 0 ? `vet-${ctx.turnId}-doctors` : undefined}
+          list={roster.length > 0 ? `clinic-${ctx.turnId}-doctors` : undefined}
           value={doctorName}
           placeholder={t.vetVisits.doctorNamePlaceholder}
           onChange={(e) => setDoctorName(e.target.value)}
           className={inputClass}
         />
         {roster.length > 0 && (
-          <datalist id={`vet-${ctx.turnId}-doctors`}>
+          <datalist id={`clinic-${ctx.turnId}-doctors`}>
             {roster.map((n) => (
               <option key={n} value={n} />
             ))}
@@ -852,8 +848,8 @@ export function AssistantCard({ ctx, draft }: { ctx: CardContext; draft: Draft }
   switch (draft.kind) {
     case "move":
       return <MoveCard ctx={ctx} draft={draft} />;
-    case "vet":
-      return <VetCard ctx={ctx} draft={draft} />;
+    case "clinic":
+      return <ClinicCard ctx={ctx} draft={draft} />;
     case "hospital":
       return <HospitalCard ctx={ctx} draft={draft} />;
     case "hospital-return":

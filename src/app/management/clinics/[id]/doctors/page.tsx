@@ -1,0 +1,134 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { getT } from "@/lib/i18n/get-t";
+import { localLabel } from "@/lib/translations/labels";
+import { BackLink } from "@/components/BackLink";
+import { AddDoctorForm } from "./AddDoctorForm";
+import { DoctorsTable, type DoctorRow, type ElsewhereDoctor } from "./DoctorsTable";
+import { requirePermission } from "@/lib/permissions/require";
+
+type PersonRow = {
+  id: string;
+  name: string;
+  user_id: string | null;
+  doctor_clinics: { clinic_id: string; active: boolean; clinics: { name: string } | null }[];
+};
+
+/**
+ * One clinic's doctors (doctors, 0102; the clinics a doctor works at are
+ * doctor_clinics, 0125). The list fills itself from the names typed on
+ * visits; this page is where it is seen and corrected — renamed, merged,
+ * marked as left, or a doctor from another clinic added as working here too.
+ * Management and admin only: every booking role may write the table under
+ * RLS (a visit can add a name), but a rename or merge rewrites past visits,
+ * so it is a manager's correction.
+ */
+export default async function ClinicDoctorsPage(
+  props: PageProps<"/management/clinics/[id]/doctors">,
+) {
+  const { perms } = await requirePermission("clinics.doctors");
+  const { id } = await props.params;
+  const { t, locale } = await getT();
+  const d = t.management.vetDoctors;
+
+  const supabase = await createClient();
+  const [clinicResult, doctorsResult, visitsResult] = await Promise.all([
+    supabase
+      .from("clinics")
+      .select("id, name, name_th")
+      .eq("id", id)
+      .limit(1)
+      .returns<{ id: string; name: string; name_th: string | null }[]>(),
+    // Every doctor with every clinic they work at: this clinic's roster is
+    // the ones linked here, the rest are who "same person as…" and "also
+    // works here" can pick from.
+    supabase
+      .from("doctors")
+      .select("id, name, user_id, doctor_clinics(clinic_id, active, clinics(name))")
+      .returns<PersonRow[]>(),
+    supabase
+      .from("clinic_visits")
+      .select("doctor_id, appointment_date")
+      .eq("clinic_id", id)
+      .not("doctor_id", "is", null)
+      .returns<{ doctor_id: string; appointment_date: string }[]>(),
+  ]);
+
+  if (clinicResult.error) throw new Error(clinicResult.error.message);
+  const clinic = clinicResult.data?.[0];
+  if (!clinic) notFound();
+
+  const stats = new Map<string, { count: number; last: string }>();
+  for (const visit of visitsResult.data ?? []) {
+    const s = stats.get(visit.doctor_id);
+    stats.set(visit.doctor_id, {
+      count: (s?.count ?? 0) + 1,
+      last: s && s.last > visit.appointment_date ? s.last : visit.appointment_date,
+    });
+  }
+  const doctors: DoctorRow[] = [];
+  const elsewhere: ElsewhereDoctor[] = [];
+  for (const person of doctorsResult.data ?? []) {
+    const here = person.doctor_clinics.find((link) => link.clinic_id === id);
+    const otherClinics = person.doctor_clinics
+      .filter((link) => link.clinic_id !== id)
+      .map((link) => link.clinics?.name ?? "")
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+    if (here) {
+      doctors.push({
+        id: person.id,
+        name: person.name,
+        active: here.active,
+        hasLogin: person.user_id !== null,
+        otherClinics,
+        visit_count: stats.get(person.id)?.count ?? 0,
+        last_visit: stats.get(person.id)?.last ?? null,
+      });
+    } else {
+      elsewhere.push({ id: person.id, name: person.name, hasLogin: person.user_id !== null, clinics: otherClinics });
+    }
+  }
+  doctors.sort((a, b) => a.name.localeCompare(b.name));
+  elsewhere.sort((a, b) => a.name.localeCompare(b.name));
+
+  return (
+    <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
+      <BackLink href="/management/clinics">{d.back}</BackLink>
+      <div>
+        <h1 className="text-2xl font-semibold text-foreground">{d.title(localLabel(locale, clinic.name, clinic.name_th))}</h1>
+        <p className="mt-1 max-w-3xl text-sm text-muted">
+          {d.subtitle}{" "}
+          <Link href={`/clinics/${clinic.id}`} className="text-primary hover:underline">
+            {d.viewHub}
+          </Link>
+        </p>
+      </div>
+
+      {/* No larger-screen notice: opened by Management or the 2IC on a phone (decision 2026-10-07). */}
+
+
+      <>
+        {doctorsResult.error && (
+          <p className="text-sm text-danger">
+            {d.couldntLoad}: {doctorsResult.error.message}
+          </p>
+        )}
+        {visitsResult.error && (
+          <p className="text-sm text-danger">
+            {d.couldntLoadVisits}: {visitsResult.error.message}
+          </p>
+        )}
+
+        <AddDoctorForm clinicId={clinic.id} elsewhere={elsewhere} />
+        <DoctorsTable
+          clinicId={clinic.id}
+          doctors={doctors}
+          elsewhere={elsewhere}
+          isAdmin={perms.isAdmin}
+        />
+      </>
+    </main>
+  );
+}

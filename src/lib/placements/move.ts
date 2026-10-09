@@ -38,7 +38,7 @@ export async function moveResidentToEnclosure(
 ): Promise<MoveResidentResult> {
   const errors = t.residents.move.errors;
 
-  // RLS would reject the insert for a vet with a raw policy error — say why.
+  // RLS would reject the insert for a doctor with a raw policy error — say why.
   if (!can(await loadPermissions(), "placement.move")) {
     return { error: t.residents.move.notAuthorized };
   }

@@ -8,12 +8,12 @@ import { loadPermissions } from "@/lib/permissions/load";
 import {
   ProcedureForm,
   type ProcedureTypeOption,
-  type VetAppointmentOption,
+  type ClinicVisitOption,
 } from "./ProcedureForm";
 
 /**
- * /procedures/new?residentId=…[&vetAppointmentId=…] — reached from the hub's
- * Procedures card and tab, or from a vet appointment row (which preselects
+ * /procedures/new?residentId=…[&clinicVisitId=…] — reached from the hub's
+ * Procedures card and tab, or from a clinic visit row (which preselects
  * the visit and defaults the date to it) — same shape as /weight/new.
  */
 export default async function NewProcedurePage(props: PageProps<"/procedures/new">) {
@@ -22,7 +22,7 @@ export default async function NewProcedurePage(props: PageProps<"/procedures/new
   const { t, locale } = await getT();
 
   const residentId = searchParams.residentId;
-  const vetAppointmentId = searchParams.vetAppointmentId;
+  const clinicVisitId = searchParams.clinicVisitId;
 
   if (typeof residentId !== "string" || !residentId) {
     return (
@@ -43,7 +43,7 @@ export default async function NewProcedurePage(props: PageProps<"/procedures/new
 
   const supabase = await createClient();
 
-  const [residentResult, typesResult, vetAppointmentsResult, stateResult, perms] =
+  const [residentResult, typesResult, clinicVisitsResult, stateResult, perms] =
     await Promise.all([
       supabase
         .from("residents")
@@ -65,12 +65,12 @@ export default async function NewProcedurePage(props: PageProps<"/procedures/new
         .order("name", { ascending: true })
         .returns<(ProcedureTypeOption & { name_th: string | null })[]>(),
       supabase
-        .from("vet_appointments")
+        .from("clinic_visits")
         .select("id, appointment_date, reason")
         .is("archived_at", null)
         .eq("resident_id", residentId)
         .order("appointment_date", { ascending: false })
-        .returns<VetAppointmentOption[]>(),
+        .returns<ClinicVisitOption[]>(),
       supabase
         .from("resident_current_state")
         .select("is_deceased")
@@ -137,9 +137,9 @@ export default async function NewProcedurePage(props: PageProps<"/procedures/new
           {t.procedures.couldntLoadTypes}: {typesResult.error.message}
         </p>
       )}
-      {vetAppointmentsResult.error && (
+      {clinicVisitsResult.error && (
         <p className="text-sm text-danger">
-          {t.procedures.couldntLoadVetAppointments}: {vetAppointmentsResult.error.message}
+          {t.procedures.couldntLoadVetAppointments}: {clinicVisitsResult.error.message}
         </p>
       )}
 
@@ -155,10 +155,10 @@ export default async function NewProcedurePage(props: PageProps<"/procedures/new
           ...type,
           name: localLabel(locale, type.name, name_th),
         }))}
-        vetAppointments={vetAppointmentsResult.data ?? []}
-        preselectedVetAppointmentId={
-          typeof vetAppointmentId === "string" && vetAppointmentId
-            ? vetAppointmentId
+        clinicVisits={clinicVisitsResult.data ?? []}
+        preselectedClinicVisitId={
+          typeof clinicVisitId === "string" && clinicVisitId
+            ? clinicVisitId
             : null
         }
       />

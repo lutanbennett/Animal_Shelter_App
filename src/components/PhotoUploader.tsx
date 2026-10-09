@@ -86,7 +86,7 @@ export function PhotoUploader({
   residentId: string;
   /**
    * The folders this user may file into (photoCategoriesForRole). With one
-   * (a vet: Medical) there is no picker — the form says where the photos
+   * (a doctor: Medical) there is no picker — the form says where the photos
    * go. The upload route refuses any other folder regardless.
    */
   categories?: readonly PhotoCategory[];

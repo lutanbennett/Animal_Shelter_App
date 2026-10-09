@@ -85,7 +85,7 @@ async function insert(table, row) {
 async function seed() {
   const zone = await insert("zones", { name: `${NAME} Zone` });
   const enclosure = await insert("enclosures", { name: `${NAME} Pen`, zone_id: zone.id, capacity: 4 });
-  const vet = await insert("vets", { name: `${NAME} Clinic`, clinic_name: `${NAME} Clinic` });
+  const clinic = await insert("clinics", { name: `${NAME} Clinic` });
   const cooper = await insert("residents", {
     name: `${NAME} Cooper`,
     thai_name: "คูเปอร์",
@@ -109,7 +109,7 @@ async function seed() {
   const future = new Date(Date.now() + 9 * 86_400_000).toISOString();
   await insert("prescriptions", { resident_id: cooper.id, medication_id: medication.id, start_date: "2026-01-01" });
   await insert("prescriptions", { resident_id: cooper.id, medication_id: medication.id, start_date: "2025-01-01", end_date: "2025-02-01" });
-  await insert("vet_appointments", { resident_id: cooper.id, vet_id: vet.id, appointment_date: future, status: "scheduled" });
+  await insert("clinic_visits", { resident_id: cooper.id, clinic_id: clinic.id, appointment_date: future, status: "scheduled" });
   await insert("weight", { resident_id: cooper.id, date: "2026-02-01", weight_kg: 17.5 });
   await insert("weight", { resident_id: cooper.id, date: today, weight_kg: 18.25 });
   const diet = await insert("diet_types", { name: `${NAME} Diet`, daily_qty_small: 100, daily_qty_medium: 200, daily_qty_large: 300 });
@@ -180,16 +180,16 @@ async function run(ids, adminCookie, volunteerCookie) {
   const cooper = body.find((r) => r[col("Name")]?.endsWith("Cooper"));
   const plain = body.find((r) => r[col("Name")]?.includes("HYPERLINK"));
   check("one row per resident", body.length === 2, `${body.length} rows`);
-  check("the header names the columns the backlog asked for", ["R-code", "Name", "Thai name", "Other names", "Species", "Breed", "Sex", "Age", "Estimated birth year", "Size", "Colour", "Microchipped", "Zone", "Enclosure", "Status", "Place", "Intake date", "Ready for adoption", "Prescriptions running today", "Next vet visit", "Next vet visit clinic", "Current diet", "Latest weight (kg)", "Latest weight date"].every((h) => col(h) >= 0), header.join("|"));
+  check("the header names the columns the backlog asked for", ["R-code", "Name", "Thai name", "Other names", "Species", "Breed", "Sex", "Age", "Estimated birth year", "Size", "Colour", "Microchipped", "Zone", "Enclosure", "Status", "Place", "Intake date", "Ready for adoption", "Prescriptions running today", "Next clinic visit", "Next visit clinic", "Current diet", "Latest weight (kg)", "Latest weight date"].every((h) => col(h) >= 0), header.join("|"));
   check("a Thai name arrives intact", cooper?.[col("Thai name")] === "คูเปอร์", cooper?.[col("Thai name")]);
   check("sex, size, breed and colour are plain values", cooper?.[col("Sex")] === "Male" && cooper?.[col("Size")] === "Medium" && cooper?.[col("Breed")] === "Thai Ridgeback" && cooper?.[col("Colour")] === "Brindle", cooper?.join("|"));
   check("age is the hub's wording and a birth year sorts", /5|6/.test(cooper?.[col("Age")] ?? "") && /^20\d\d$/.test(cooper?.[col("Estimated birth year")] ?? ""), `${cooper?.[col("Age")]} / ${cooper?.[col("Estimated birth year")]}`);
   check("only the running prescription is counted (the ended one is not)", cooper?.[col("Prescriptions running today")] === "1", cooper?.[col("Prescriptions running today")]);
-  check("next vet visit has a date and the clinic", /^\d{4}-\d{2}-\d{2}$/.test(cooper?.[col("Next vet visit")] ?? "") && cooper?.[col("Next vet visit clinic")] === `${NAME} Clinic`, `${cooper?.[col("Next vet visit")]} / ${cooper?.[col("Next vet visit clinic")]}`);
+  check("next clinic visit has a date and the clinic", /^\d{4}-\d{2}-\d{2}$/.test(cooper?.[col("Next clinic visit")] ?? "") && cooper?.[col("Next visit clinic")] === `${NAME} Clinic`, `${cooper?.[col("Next clinic visit")]} / ${cooper?.[col("Next visit clinic")]}`);
   check("current diet and the latest weight (not the older one)", cooper?.[col("Current diet")] === `${NAME} Diet` && cooper?.[col("Latest weight (kg)")] === "18.25", `${cooper?.[col("Current diet")]} / ${cooper?.[col("Latest weight (kg)")]}`);
   check("microchipped and ready for adoption read Yes / No", cooper?.[col("Microchipped")] === "No" && cooper?.[col("Ready for adoption")] === "Yes");
   check("a name that opens with = is text, not a formula", /^'=HYPERLINK/.test(plain?.[col("Name")] ?? ""), plain?.[col("Name")]);
-  check("a resident with nothing recorded still has a row: 0 and blanks", plain?.[col("Prescriptions running today")] === "0" && plain?.[col("Next vet visit")] === "" && plain?.[col("Current diet")] === "" && plain?.[col("Latest weight (kg)")] === "", plain?.join("|"));
+  check("a resident with nothing recorded still has a row: 0 and blanks", plain?.[col("Prescriptions running today")] === "0" && plain?.[col("Next clinic visit")] === "" && plain?.[col("Current diet")] === "" && plain?.[col("Latest weight (kg)")] === "", plain?.join("|"));
 
   console.log("admin, ticked rows and the page's filters:");
   const ticked = await download(adminCookie, `${search}&ids=${ids.cooper}`);
@@ -207,7 +207,7 @@ async function run(ids, adminCookie, volunteerCookie) {
   check("answers 200", vol.status === 200, `${vol.status} ${vol.location}`);
   const volRows = parse(vol.text.replace(/^﻿/, "")).filter((r) => r.length > 1);
   const volHeader = volRows[0] ?? [];
-  const forbidden = ["Other names", "Breed", "Age", "Estimated birth year", "Size", "Colour", "Microchipped", "Intake date", "Ready for adoption", "Prescriptions running today", "Next vet visit", "Next vet visit clinic", "Current diet", "Latest weight (kg)", "Latest weight date"];
+  const forbidden = ["Other names", "Breed", "Age", "Estimated birth year", "Size", "Colour", "Microchipped", "Intake date", "Ready for adoption", "Prescriptions running today", "Next clinic visit", "Next visit clinic", "Current diet", "Latest weight (kg)", "Latest weight date"];
   check("the header is exactly who and where", volHeader.join("|") === "R-code|Name|Thai name|Species|Sex|Zone|Enclosure|Status|Place", volHeader.join("|"));
   check("no column a volunteer cannot read, blank or otherwise", forbidden.every((h) => !volHeader.includes(h)));
   const volCooper = volRows.find((r) => r[1]?.endsWith("Cooper"));
@@ -223,7 +223,7 @@ async function run(ids, adminCookie, volunteerCookie) {
 
 async function cleanup() {
   for (const id of made.seed.filter(([t]) => t === "residents").map(([, i]) => i)) {
-    for (const table of ["prescriptions", "vet_appointments", "weight", "resident_diets", "placement_history"]) {
+    for (const table of ["prescriptions", "clinic_visits", "weight", "resident_diets", "placement_history"]) {
       await service.from(table).delete().eq("resident_id", id);
     }
   }
@@ -242,11 +242,11 @@ async function cleanup() {
 async function sweep() {
   const { data: residents } = await service.from("residents").select("id").like("name", "%ZZ Export %");
   for (const { id } of residents ?? []) {
-    for (const table of ["prescriptions", "vet_appointments", "weight", "resident_diets", "placement_history"]) {
+    for (const table of ["prescriptions", "clinic_visits", "weight", "resident_diets", "placement_history"]) {
       await service.from(table).delete().eq("resident_id", id);
     }
   }
-  for (const [table, column] of [["residents", "name"], ["diet_types", "name"], ["medication", "name"], ["vets", "name"], ["enclosures", "name"], ["zones", "name"]]) {
+  for (const [table, column] of [["residents", "name"], ["diet_types", "name"], ["medication", "name"], ["clinics", "name"], ["enclosures", "name"], ["zones", "name"]]) {
     const { data, error } = await service.from(table).delete().like(column, "%ZZ Export %").select("id");
     console.log(`  ${table}: ${error ? error.message : `${data.length} removed`}`);
   }

@@ -20,7 +20,7 @@ import {
   type ProcedureRow,
   type Resident,
   type ResidentStatus,
-  type VetAppointmentRow,
+  type ClinicVisitRow,
   type WeightRow,
 } from "./ResidentHub";
 
@@ -43,7 +43,7 @@ export default async function ResidentPage(
     placementCountResult,
     immunizationRecordsResult,
     missingMandatoryResult,
-    vetAppointmentsResult,
+    clinicVisitsResult,
     prescriptionsResult,
     dietsResult,
     weightResult,
@@ -110,12 +110,12 @@ export default async function ResidentPage(
       .eq("resident_id", id)
       .returns<MissingImmunizationRow[]>(),
     supabase
-      .from("vet_appointments")
+      .from("clinic_visits")
       .select("id, appointment_date, status, reason")
       .is("archived_at", null)
       .eq("resident_id", id)
       .order("appointment_date", { ascending: false })
-      .returns<VetAppointmentRow[]>(),
+      .returns<ClinicVisitRow[]>(),
     supabase
       .from("prescriptions")
       .select("id, start_date, end_date, medication:picker_medications(name, name_th)")
@@ -176,7 +176,7 @@ export default async function ResidentPage(
   if (residentResult.error) throw new Error(residentResult.error.message);
   const resident = residentResult.data?.[0];
   if (!resident) {
-    // A vet sees only the residents their clinics treat (0108): the card, not a 404, for the rest.
+    // A doctor sees only the residents their clinics treat (0108): the card, not a 404, for the rest.
     if (await loadResidentCard(supabase, id)) redirect(`/r/${id}`);
     notFound();
   }
@@ -270,7 +270,7 @@ export default async function ResidentPage(
           missingTh.find((x) => x.id === m.immunization_type_id)?.name_th,
         ),
       }))}
-      vetAppointments={vetAppointmentsResult.data ?? []}
+      clinicVisits={clinicVisitsResult.data ?? []}
       prescriptions={(prescriptionsResult.data ?? []).map((p) => ({ ...p, medication: local(p.medication) }))}
       diets={(dietsResult.data ?? []).map((d) => ({ ...d, diet_types: local(d.diet_types) }))}
       weightEntries={weightResult.data ?? []}

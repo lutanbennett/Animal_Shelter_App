@@ -5,9 +5,9 @@
 //   node scripts/check-maintenance-role.mjs --verbose  (also list every passing check)
 //
 // What it holds, for seven principals (the Head of Maintenance "hm", admin, management, staff, volunteer,
-// a vet, no role):
+// a doctor, no role):
 //   her board     she reads maintenance, a job's team, its Thai title, zones, enclosures, the people list,
-//                 who-and-where; a volunteer, a vet and no role read none of the three job tables
+//                 who-and-where; a volunteer, a doctor and no role read none of the three job tables
 //   her work      she creates, changes, completes and assigns a job (and removes a team member)
 //   her limits    she cannot delete a job, add a photo or file to one, set up a recurring task, reassign
 //                 one, or read a resident's record, medication, weight, diet, stock or contacts
@@ -27,15 +27,15 @@ if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the
 const { bundleOfRole } = await import(pathToFileURL(join(process.cwd(), "src/lib/permissions/jobs.ts")).href);
 
 const lit = (id) => `'${id}'::uuid`;
-const P = ["hm", "admin", "management", "staff", "volunteer", "vet", "norole"];
+const P = ["hm", "admin", "management", "staff", "volunteer", "doctor", "norole"];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
 const R = randomUUID(), OWN = randomUUID(), ZONE = randomUUID(), ENC = randomUUID(), JOB = randomUUID();
 const RJ_MINE = randomUUID(), RJ_OTHER = randomUUID();
 
-const NONE = { hm: 0, admin: 0, management: 0, staff: 0, volunteer: 0, vet: 0, norole: 0 };
+const NONE = { hm: 0, admin: 0, management: 0, staff: 0, volunteer: 0, doctor: 0, norole: 0 };
 const STAFF_UP = { ...NONE, admin: 1, management: 1, staff: 1 };
 const WITH_HM = { ...STAFF_UP, hm: 1 };
-const WITH_HM_VET = { ...WITH_HM, vet: 1 }; // a vet reaches a job's attachments by vet_*_attachments, unchanged by 0152
+const WITH_HM_DOCTOR = { ...WITH_HM, doctor: 1 }; // a doctor reaches a job's attachments by doctor_*_attachments, unchanged by 0152
 const MANAGERS = { ...NONE, admin: 1, management: 1 };
 
 // [name, sql, expectation]: a table of who may (1) or may not (0); "hm-one" = she must reach at least a row
@@ -44,7 +44,7 @@ const probes = [
   // her board
   ["maintenance", `select 1 from maintenance where id = '${JOB}'`, WITH_HM],
   ["maintenance_assignees", `select 1 from maintenance_assignees where maintenance_id = '${JOB}'`, WITH_HM],
-  ["translations of a job", `select 1 from translations where table_name = 'maintenance' and row_id = '${JOB}'`, { ...WITH_HM, vet: 1 }], // a vet's vet_read_translations is untouched
+  ["translations of a job", `select 1 from translations where table_name = 'maintenance' and row_id = '${JOB}'`, { ...WITH_HM, doctor: 1 }], // a doctor's doctor_read_translations is untouched
   ["translations of anything else", `select 1 from translations where table_name <> 'maintenance'`, "hm-zero"],
   ["zones", `select 1 from zones where id = '${ZONE}'`, "hm-one"],
   ["enclosures", `select 1 from enclosures where id = '${ENC}'`, "hm-one"],
@@ -63,7 +63,7 @@ const probes = [
   ["delete a job", `delete from maintenance where id = '${JOB}'`, STAFF_UP],
   // RE-BASELINED 2026-10-07 (photo-split, 0152): the draft gives her maintenance.photos and the policies now follow the cell
   ["add a job photo", `insert into maintenance_photos (maintenance_id, drive_file_id) values ('${JOB}', 'probe')`, WITH_HM],
-  ["file a job attachment", `insert into attachments (owner_type, owner_id, drive_file_id, file_name) values ('maintenance', '${JOB}', 'probe', 'probe.jpg')`, WITH_HM_VET],
+  ["file a job attachment", `insert into attachments (owner_type, owner_id, drive_file_id, file_name) values ('maintenance', '${JOB}', 'probe', 'probe.jpg')`, WITH_HM_DOCTOR],
   ["set up a recurring task", `insert into recurring_jobs (title, repeat, weekdays) values ('probe', 'weekly', '{1}')`, MANAGERS],
   ["change a recurring task", `update recurring_jobs set title = 'probe' where id = '${RJ_MINE}'`, MANAGERS],
   ["assign a recurring task", `insert into recurring_job_assignees (job_id, user_id) values ('${RJ_MINE}', '${ID.volunteer}')`, MANAGERS],
@@ -74,14 +74,14 @@ const probes = [
   ["prescriptions", `select 1 from prescriptions where resident_id = '${R}'`, "hm-zero"],
   ["medication", `select 1 from medication limit 1`, "hm-zero"],
   ["diet_types", `select 1 from diet_types limit 1`, "hm-zero"],
-  ["attachments", `select 1 from attachments limit 1`, WITH_HM_VET], // her own maintenance.photos cell reads a job's attachments (0152)
+  ["attachments", `select 1 from attachments limit 1`, WITH_HM_DOCTOR], // her own maintenance.photos cell reads a job's attachments (0152)
   ["stock_counts", `select 1 from stock_counts limit 1`, "hm-zero"],
   ["contacts", `select 1 from contacts limit 1`, "hm-zero"],
   ["assistant_actions", `select 1 from assistant_actions limit 1`, "hm-zero"],
   ["insert placement", `insert into placement_history (resident_id, placement_type, start_date) values ('${R}', 'SendToHospital', now() + interval '1 minute')`, "hm-zero"],
   // her own recurring tasks
   ["mark my recurring task done", `select record_recurring_job('${RJ_MINE}', current_date, 'done')`, { ...NONE, hm: 1, admin: 1, management: 1 }],
-  ["mark another's recurring task done", `select record_recurring_job('${RJ_OTHER}', current_date, 'done')`, { ...NONE, admin: 1, management: 1, vet: 1 }], // the vet is its assignee; she is not,
+  ["mark another's recurring task done", `select record_recurring_job('${RJ_OTHER}', current_date, 'done')`, { ...NONE, admin: 1, management: 1, doctor: 1 }], // the doctor is its assignee; she is not,
 ];
 
 const lines = [];
@@ -116,10 +116,10 @@ begin
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-mnt-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${["admin", "management", "staff", "volunteer", "vet"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
+    select id, who::app_role from (values ${["admin", "management", "staff", "volunteer", "doctor"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role_id, role) select ${lit(ID.hm)}, id, legacy_role from roles where key = 'head_of_maintenance';
-  insert into vets (id, name, clinic_name) values (${lit(OWN)}, 'Harness own', 'Harness own');
-  insert into vet_doctors (name, user_id, vet_id) values ('Harness vet', ${lit(ID.vet)}, ${lit(OWN)});
+  insert into clinics (id, name) values (${lit(OWN)}, 'Harness own');
+  with d as (insert into doctors (name, user_id) values ('Harness doctor', ${lit(ID.doctor)}) returning id) insert into doctor_clinics (clinic_id, doctor_id) select ${lit(OWN)}, id from d;
   insert into zones (id, name) values (${lit(ZONE)}, 'Harness zone');
   insert into enclosures (id, name, zone_id) values (${lit(ENC)}, 'Harness enclosure', ${lit(ZONE)});
   insert into residents (id, name, species) values (${lit(R)}, 'Harness resident', 'Dog');
@@ -134,7 +134,7 @@ begin
   insert into recurring_jobs (id, title, repeat, weekdays, starts_on) values
     (${lit(RJ_MINE)}, 'Harness mine', 'weekly', '{1,2,3,4,5,6,7}', current_date - 7),
     (${lit(RJ_OTHER)}, 'Harness other', 'weekly', '{1,2,3,4,5,6,7}', current_date - 7);
-  insert into recurring_job_assignees (job_id, user_id) values (${lit(RJ_MINE)}, ${lit(ID.hm)}), (${lit(RJ_OTHER)}, ${lit(ID.vet)});
+  insert into recurring_job_assignees (job_id, user_id) values (${lit(RJ_MINE)}, ${lit(ID.hm)}), (${lit(RJ_OTHER)}, ${lit(ID.doctor)});
 end $setup$;
 
 do $run$ begin

@@ -1,18 +1,18 @@
 import type { createClient } from "@/lib/supabase/server";
 import type { FrequencySchedule } from "@/lib/prescriptions/frequency";
-import { loadLinkableVisits, type LinkableVisit } from "@/lib/vets/linkable";
+import { loadLinkableVisits, type LinkableVisit } from "@/lib/clinics/linkable";
 import type { Locale } from "@/lib/i18n/locales";
 import { localLabel } from "@/lib/translations/labels";
 
 export type MedicationOption = { id: string; name: string; dose_unit: string };
 export type FrequencyOption = FrequencySchedule & { id: string; label: string };
-export type VetAppointmentOption = LinkableVisit;
+export type ClinicVisitOption = LinkableVisit;
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
 /**
  * The three pick-lists the prescription form offers, for the add and edit
- * pages alike: every medication and frequency, and the resident's own vet
+ * pages alike: every medication and frequency, and the resident's own clinic
  * visits (newest first) to link the prescription to — only those on or
  * before today, since a prescription on a visit that hasn't happened is a
  * mistake or a plan (0107 refuses it). `keepVisitId` is the visit an edited
@@ -40,7 +40,7 @@ export async function loadPrescriptionOptions(
     loadLinkableVisits(supabase, residentId, { notInFuture: true, keep: keepVisitId }),
   ]);
   // Same { data, error } shape as the other two, for the pages' error list.
-  const vetAppointments = {
+  const clinicVisits = {
     data: linkable.visits,
     error: linkable.error ? { message: linkable.error } : null,
   };
@@ -54,6 +54,6 @@ export async function loadPrescriptionOptions(
       data:
         frequencies.data?.map(({ label_th, ...f }) => ({ ...f, label: localLabel(locale, f.label, label_th) })) ?? null,
     },
-    vetAppointments,
+    clinicVisits,
   };
 }

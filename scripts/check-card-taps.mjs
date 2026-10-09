@@ -7,15 +7,15 @@
 //   node scripts/check-card-taps.mjs --verbose  (also list every passing check)
 //
 // WHAT THIS ASSERTS (and what it does not), per principal: signed out, public_viewer, admin,
-// management, staff, the 2IC, both Heads, a volunteer, a vet whose clinic treats the resident and
-// a vet whose clinic does not.
+// management, staff, the 2IC, both Heads, a volunteer, a doctor whose clinic treats the resident and
+// a doctor whose clinic does not.
 //   1. the public card (public_resident_cards) answers with a row for every one of them: the
 //      floor nobody falls below, so the page never 404s on a resident that exists
 //   2. the landing, from src/lib/residents/card-landing.ts fed the inputs the page reads from
 //      the live database (current_user_role, my_permissions, the residents row), is exactly the
 //      expected one below
 //   3. a "full" landing really reads the resident row (the hub will not 404) and holds
-//      resident.record; a "public-plus" landing really reads the who-and-where row, except a vet
+//      resident.record; a "public-plus" landing really reads the who-and-where row, except a doctor
 //      outside their clinic, who sees the plain card
 // Not asserted: the rendered HTML, the job buttons, or the redirect from /residents/<id>. Those
 // are in the test plan's browser checks. Whether the Heads and volunteers SHOULD read medical is
@@ -33,7 +33,7 @@ if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the
 const { cardLanding } = await import(pathToFileURL(join(root, "src/lib/residents/card-landing.ts")).href);
 
 const lit = (id) => `'${id}'::uuid`;
-const P = ["anon", "public_viewer", "admin", "management", "staff", "volunteer", "vet_in", "vet_out", "sic", "hom", "hm"];
+const P = ["anon", "public_viewer", "admin", "management", "staff", "volunteer", "doctor_in", "doctor_out", "sic", "hom", "hm"];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
 const R = randomUUID(), OWN = randomUUID(), OTHER = randomUUID();
 
@@ -41,7 +41,7 @@ const EXPECT = {
   anon: "public", public_viewer: "public",
   admin: "full", management: "full", staff: "full",
   sic: "public-plus", hom: "public-plus", hm: "public-plus", volunteer: "public-plus",
-  vet_in: "full", vet_out: "public-plus",
+  doctor_in: "full", doctor_out: "public-plus",
 };
 
 const harness = `
@@ -86,14 +86,15 @@ begin
   insert into user_roles (user_id, role) values
     (${lit(ID.admin)}, 'admin'), (${lit(ID.management)}, 'management'), (${lit(ID.staff)}, 'staff'),
     (${lit(ID.volunteer)}, 'volunteer'), (${lit(ID.public_viewer)}, 'public_viewer');
-  insert into vets (id, name, clinic_name) values (${lit(OWN)}, 'Harness own', 'Harness own'), (${lit(OTHER)}, 'Harness other', 'Harness other');
-  insert into user_roles (user_id, role) values (${lit(ID.vet_in)}, 'vet'), (${lit(ID.vet_out)}, 'vet');
-  insert into vet_doctors (name, user_id, vet_id) values ('Harness vet in', ${lit(ID.vet_in)}, ${lit(OWN)}), ('Harness vet out', ${lit(ID.vet_out)}, ${lit(OTHER)});
+  insert into clinics (id, name) values (${lit(OWN)}, 'Harness own'), (${lit(OTHER)}, 'Harness other');
+  insert into user_roles (user_id, role) values (${lit(ID.doctor_in)}, 'doctor'), (${lit(ID.doctor_out)}, 'doctor');
+  with d as (insert into doctors (name, user_id) values ('Harness doctor in', ${lit(ID.doctor_in)}), ('Harness doctor out', ${lit(ID.doctor_out)}) returning id, user_id)
+    insert into doctor_clinics (clinic_id, doctor_id) select case when user_id = ${lit(ID.doctor_in)} then ${lit(OWN)} else ${lit(OTHER)} end, id from d;
   insert into user_roles (user_id, role_id, role) select ${lit(ID.sic)}, id, legacy_role from roles where key = 'second_in_command';
   insert into user_roles (user_id, role_id, role) select ${lit(ID.hom)}, id, legacy_role from roles where key = 'head_of_medical';
   insert into user_roles (user_id, role_id, role) select ${lit(ID.hm)}, id, legacy_role from roles where key = 'head_of_maintenance';
   insert into residents (id, name, species) values (${lit(R)}, 'Harness resident', 'Dog');
-  insert into vet_appointments (resident_id, vet_id, appointment_date, status) values (${lit(R)}, ${lit(OWN)}, now() - interval '3 days', 'completed');
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values (${lit(R)}, ${lit(OWN)}, now() - interval '3 days', 'completed');
 end $setup$;
 
 do $run$ begin
@@ -115,7 +116,7 @@ if (!m) throw new Error(`no result (status ${res.status}): ${msg.slice(0, 1500)}
 const rows = JSON.parse(m[1]);
 const get = (who, k) => rows.find((r) => r.who === who && r.k === k)?.v;
 
-const APP_ROLES = ["admin", "management", "staff", "vet", "volunteer"]; // src/lib/auth/app-access.ts
+const APP_ROLES = ["admin", "management", "staff", "doctor", "volunteer"]; // src/lib/auth/app-access.ts
 let fails = 0, ok = 0;
 const fail = (s) => { fails++; console.log(`FAIL  ${s}`); };
 const pass = (s) => { ok++; if (verbose) console.log(`ok    ${s}`); };
@@ -138,7 +139,7 @@ for (const p of P) {
 
   if (landing === "full" && get(p, "visible") !== "1") fail(`${p}: "full" but the resident row is not readable (the hub would 404)`);
   if (landing === "full" && !reads) fail(`${p}: "full" without resident.record`);
-  if (landing === "public-plus" && p !== "vet_out" && get(p, "wow") !== "1") fail(`${p}: public-plus but the who-and-where row is not readable`);
+  if (landing === "public-plus" && p !== "doctor_out" && get(p, "wow") !== "1") fail(`${p}: public-plus but the who-and-where row is not readable`);
 }
 
 console.log(`\n${ok} checks held, ${fails} failed.`);

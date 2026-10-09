@@ -12,7 +12,7 @@ import { recordWeight, updateWeight } from "@/lib/weight/record";
 export type RecordWeightState = { error: string } | undefined;
 
 /**
- * Record Weight (a Head of Medical job). Today's date, no vet visit, no note: she is weighing
+ * Record Weight (a Head of Medical job). Today's date, no clinic visit, no note: she is weighing
  * a dog, not filing a visit, and the form for that stays on the resident's record. A second
  * weight on the same day corrects the first (one per day, 0106), which is what the form warned
  * about. The write goes straight to `weight`, whose policy asks medical.weight (0135); the

@@ -10,7 +10,7 @@ export type RecordWeightInput = {
   /** Kilograms, already a number. */
   weightKg: number;
   /** The visit this reading was taken at, when it was taken at one. */
-  vetAppointmentId?: string | null;
+  clinicVisitId?: string | null;
   notes?: string | null;
 };
 
@@ -25,7 +25,7 @@ export type UpdateWeightInput = {
   residentId: string;
   date: string;
   weightKg: number;
-  vetAppointmentId?: string | null;
+  clinicVisitId?: string | null;
   notes?: string | null;
 };
 
@@ -58,7 +58,7 @@ function checkReading(
 }
 
 /**
- * One weight per resident per day, one per vet visit (0106). The form hides
+ * One weight per resident per day, one per clinic visit (0106). The form hides
  * taken visits and offers a correction on a taken day, but a second tab, the
  * assistant or a stale page still reaches the index — this turns its refusal
  * into a sentence.
@@ -98,7 +98,7 @@ export async function recordWeight(
     .from("weight")
     .insert({
       resident_id: input.residentId,
-      vet_appointment_id: input.vetAppointmentId ?? null,
+      clinic_visit_id: input.clinicVisitId ?? null,
       date: input.date,
       weight_kg: input.weightKg,
       notes: input.notes ?? null,
@@ -130,7 +130,7 @@ export async function updateWeight(
     date: input.date,
     weight_kg: input.weightKg,
   };
-  if (input.vetAppointmentId !== undefined) changes.vet_appointment_id = input.vetAppointmentId;
+  if (input.clinicVisitId !== undefined) changes.clinic_visit_id = input.clinicVisitId;
   if (input.notes !== undefined) changes.notes = input.notes;
 
   const { data, error } = await supabase

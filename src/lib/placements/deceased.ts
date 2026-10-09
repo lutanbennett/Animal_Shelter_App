@@ -24,7 +24,7 @@ export type RecordDeathResult = { error: string } | { ok: true };
  *
  * Everything that follows in the database is a consequence of this one
  * insert, handled by triggers in the same transaction (0002 / 0026): future
- * vet appointments are cancelled, active prescriptions are ended,
+ * clinic visits are cancelled, active prescriptions are ended,
  * ready_for_adoption is cleared, and from then on every write to this
  * resident's record is rejected. The Drive side of the workflow (moving the
  * folder to Residents/Deceased/ and generating the summary PDF and offline
@@ -37,7 +37,7 @@ export async function recordResidentDeath(
 ): Promise<RecordDeathResult> {
   const errors = t.residents.deceased.errors;
 
-  // RLS would reject the insert for a vet or volunteer with a raw policy
+  // RLS would reject the insert for a doctor or volunteer with a raw policy
   // error — say why.
   if (!can(await loadPermissions(), "placement.death")) {
     return { error: t.residents.deceased.notAuthorized };

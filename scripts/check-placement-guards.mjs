@@ -61,7 +61,7 @@ do $h$
 declare
   v_vol uuid := gen_random_uuid(); v_staff uuid := gen_random_uuid(); v_admin uuid := gen_random_uuid();
   v_zone uuid := gen_random_uuid(); v_e1 uuid := gen_random_uuid(); v_e2 uuid := gen_random_uuid();
-  v_vet uuid := gen_random_uuid(); v_carer uuid := gen_random_uuid();
+  v_clinic uuid := gen_random_uuid(); v_carer uuid := gen_random_uuid();
   v_life uuid; v_un uuid; v_hosp uuid; v_fost uuid; v_adop uuid; v_dead uuid;
   a uuid := gen_random_uuid(); b uuid := gen_random_uuid(); c uuid := gen_random_uuid();
   v_appt uuid; v_r text; v_n int; v_id uuid; v_end timestamptz; v_uid uuid;
@@ -83,7 +83,7 @@ begin
   insert into zones (id, name) values (v_zone, 'Harness zone');
   insert into enclosures (id, name, zone_id) values (v_e1, 'Harness E1', v_zone), (v_e2, 'Harness E2', v_zone);
   insert into contacts (id, name, type) values (v_carer, 'Harness carer', 'Carer');
-  insert into vets (id, name, clinic_name) values (v_vet, 'Harness vet', 'Harness clinic');
+  insert into clinics (id, name) values (v_clinic, 'Harness clinic');
   insert into residents (id, name, species) values (a, 'Harness A', 'Dog'), (b, 'Harness B', 'Dog'), (c, 'Harness C', 'Dog');
 
   -- A: Intake (Unassigned) -> volunteer ChangeEnclosure E1 -> staff ChangeEnclosure E2
@@ -164,12 +164,12 @@ begin
   if v_n <> 1 then raise exception 'FAIL R3 a refused insert closed the prior placement'; end if;
 
   -- P2: the deceased workflow, with something for the cascade to snapshot
-  insert into vet_appointments (resident_id, vet_id, appointment_date, status)
-  values (b, v_vet, now() + interval '3 days', 'scheduled') returning id into v_appt;
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, status)
+  values (b, v_clinic, now() + interval '3 days', 'scheduled') returning id into v_appt;
   v_r := pg_temp.run(v_staff, format($q$insert into placement_history (resident_id, placement_type, start_date, zone_id, enclosure_id, previous_enclosure_id, cause_of_death)
     values (%L, 'Deceased', %L, %L, %L, %L, 'harness')$q$, b, t0 + interval '2 days', v_life, v_dead, v_e1));
   if v_r <> 'ok' then raise exception 'FAIL P2 Deceased placement: %', v_r; end if;
-  if (select status from vet_appointments where id = v_appt) <> 'cancelled' then raise exception 'FAIL P2 cascade did not cancel the visit'; end if;
+  if (select status from clinic_visits where id = v_appt) <> 'cancelled' then raise exception 'FAIL P2 cascade did not cancel the visit'; end if;
   select count(*) into v_n from placement_history
    where resident_id = b and placement_type = 'Deceased' and deceased_cascade is not null;
   if v_n <> 1 then raise exception 'FAIL P2 no cascade snapshot on the Deceased row'; end if;
@@ -180,7 +180,7 @@ begin
   perform undo_deceased_placement(b, 'harness: recorded in error');
   reset role;
   perform set_config('request.jwt.claims', '', true);
-  if (select status from vet_appointments where id = v_appt) <> 'scheduled' then raise exception 'FAIL P2 undo did not restore the visit'; end if;
+  if (select status from clinic_visits where id = v_appt) <> 'scheduled' then raise exception 'FAIL P2 undo did not restore the visit'; end if;
   select count(*) into v_n from placement_history
    where resident_id = b and end_date is null and placement_type = 'DeceasedInError' and enclosure_id = v_e1;
   if v_n <> 1 then raise exception 'FAIL P2 undo did not put B back in E1'; end if;
