@@ -86,6 +86,8 @@ try {
     mustNot: [],
     boundaries: [{ n: "B1", text: `ลองลบ ${NEW}` }],
   });
+  // A role with nothing at all to test still gets a page to sign.
+  probe.sheets.push({ key: "empty", label: "Empty probe", note: null, does: [], mustNot: [], boundaries: [] });
   const ptext = (await render(probe, "probe.pdf")).replace(/[ \t]+/g, " ");
   ok(`B a role name with ำ keeps its last letter: "${NEW}"`, ptext.includes(`${NEW} — tester's sheet`));
   ok(`B a step with two ำ keeps its last letter: "${STEP}"`, ptext.includes(STEP));
@@ -93,6 +95,7 @@ try {
   ok(`B a boundary line ending in a role with ำ: "ลองลบ ${NEW}"`, ptext.includes(`ลองลบ ${NEW}`));
   ok(`C a new role has a sign-off row`, ptext.split("\n").some((l) => l.trim() === NEW));
   ok(`C ${oldLabel} renamed "${LONG}": its sheet and sign-off row`, ptext.includes(`${LONG} — tester's sheet`) && ptext.split("\n").some((l) => l.trim() === LONG));
+  ok("C a role with nothing to test still has its sheet", ptext.includes("Empty probe — tester's sheet"));
   ok(`C the old name "${oldLabel}" is gone from headings`, !ptext.includes(`${oldLabel} — tester's sheet`));
 } finally {
   rmSync(dir, { recursive: true, force: true });
