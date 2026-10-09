@@ -215,7 +215,7 @@ grant execute on function issue_donation_receipt(uuid, text, date, jsonb, jsonb)
 -- ---------------------------------------------------------------------------
 
 insert into permission_activities (key, kind, area, sort)
-values ('donation.receipt', 'yesno', 'management', 59)
+values ('donation.receipt', 'yesno', 'management', 60)
 on conflict (key) do update set kind = excluded.kind, area = excluded.area, sort = excluded.sort;
 
 alter table donations enable row level security;
