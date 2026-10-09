@@ -12,6 +12,7 @@ import { RowActionButton } from "@/components/RowAction";
 export type VetRow = {
   id: string;
   name: string;
+  name_th: string | null;
   clinic_name: string | null;
   contact_info: string | null;
   notes: string | null;
@@ -28,6 +29,7 @@ function VetRowItem({ vet }: { vet: VetRow }) {
   const { t } = useI18n();
   const confirm = useConfirm();
   const [name, setName] = useState(vet.name);
+  const [nameTh, setNameTh] = useState(vet.name_th ?? "");
   const [clinicName, setClinicName] = useState(vet.clinic_name ?? "");
   const [contactInfo, setContactInfo] = useState(vet.contact_info ?? "");
   const [notes, setNotes] = useState(vet.notes ?? "");
@@ -39,6 +41,7 @@ function VetRowItem({ vet }: { vet: VetRow }) {
 
   function reset() {
     setName(vet.name);
+    setNameTh(vet.name_th ?? "");
     setClinicName(vet.clinic_name ?? "");
     setContactInfo(vet.contact_info ?? "");
     setNotes(vet.notes ?? "");
@@ -47,7 +50,7 @@ function VetRowItem({ vet }: { vet: VetRow }) {
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
-      const result = await updateVet(vet.id, { name, clinicName, contactInfo, notes });
+      const result = await updateVet(vet.id, { name, nameTh, clinicName, contactInfo, notes });
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
         return;
@@ -71,18 +74,36 @@ function VetRowItem({ vet }: { vet: VetRow }) {
       <tr className="align-top hover:bg-surface-hover">
         <td className="px-4 py-2">
           {editing ? (
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className={`${inputClass} min-w-40`}
-            />
+            <div className="flex flex-col gap-1">
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={`${inputClass} min-w-40`}
+              />
+              <input
+                value={nameTh}
+                onChange={(e) => setNameTh(e.target.value)}
+                placeholder={t.translations.thaiName}
+                aria-label={t.translations.thaiName}
+                title={t.translations.thaiNameOptionalHint}
+                lang="th"
+                className={`${inputClass} min-w-40`}
+              />
+            </div>
           ) : (
-            <Link
-              href={`/vets/${vet.id}`}
-              className="font-medium text-foreground hover:underline"
-            >
-              {vet.name}
-            </Link>
+            <div className="flex flex-col">
+              <Link
+                href={`/vets/${vet.id}`}
+                className="font-medium text-foreground hover:underline"
+              >
+                {vet.name}
+              </Link>
+              {vet.name_th && (
+                <span lang="th" className="text-sm text-foreground">
+                  {vet.name_th}
+                </span>
+              )}
+            </div>
           )}
         </td>
         <td className="px-4 py-2">

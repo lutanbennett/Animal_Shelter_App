@@ -71,7 +71,7 @@ function compareOccupancy(a: EnclosureSummary, b: EnclosureSummary) {
 
 export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   const searchParams = await props.searchParams;
-  const { t } = await getT();
+  const { t, locale } = await getT();
   const q = typeof searchParams.q === "string" ? searchParams.q.trim() : "";
   const sort = parseEnclosureSort(searchParams.sort);
 
@@ -99,7 +99,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       .returns<{ enclosure_id: string | null; zone_id: string }[]>(),
     getTagOrigin(),
     // Who is on a special diet, for the marker on each card (0087).
-    loadSpecialDiets(supabase),
+    loadSpecialDiets(supabase, undefined, locale),
     canMap
       ? supabase.from("facility_maps").select("id, kind, zone_id, image_path, width, height").returns<PlanRow[]>()
       : Promise.resolve({ data: [] as PlanRow[] }),

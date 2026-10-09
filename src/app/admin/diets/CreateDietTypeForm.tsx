@@ -31,6 +31,13 @@ export function CreateDietTypeForm() {
           />
         </div>
         <div className="flex flex-col gap-1">
+          <label htmlFor="diet-name-th" className="text-sm font-medium text-muted">
+            {t.translations.thaiName}
+          </label>
+          <input id="diet-name-th" name="nameTh" lang="th" className={`${inputClass} w-64`} />
+          <span className="max-w-64 text-xs text-muted">{t.translations.thaiNameHint}</span>
+        </div>
+        <div className="flex flex-col gap-1">
           <label htmlFor="diet-unit" className="text-sm font-medium text-muted">
             {m.createForm.unit}
           </label>

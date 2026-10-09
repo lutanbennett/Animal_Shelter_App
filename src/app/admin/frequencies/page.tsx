@@ -14,8 +14,8 @@ export default async function FrequenciesPage() {
   const [frequenciesResult, prescriptionsResult] = await Promise.all([
     supabase
       .from("frequency")
-      .select("id, label, doses_per_day, interval_count, interval_unit")
-      .returns<(FrequencySchedule & { id: string; label: string })[]>(),
+      .select("id, label, label_th, doses_per_day, interval_count, interval_unit")
+      .returns<(FrequencySchedule & { id: string; label: string; label_th: string | null })[]>(),
     // One row per prescription is cheap at shelter scale and gives the
     // reference counts that gate the delete buttons.
     supabase

@@ -13,6 +13,8 @@ export type VetFormState = ActionResult<{ success: string }> | undefined;
 
 export type VetFields = {
   name: string;
+  /** Optional (0166): most clinic names are proper names and read the same in Thai. */
+  nameTh: string | null;
   clinicName: string | null;
   contactInfo: string | null;
   notes: string | null;
@@ -42,6 +44,7 @@ export async function createVet(
     const supabase = await createClient();
     const { error } = await supabase.from("vets").insert({
       name,
+      name_th: optional(formData.get("nameTh")),
       clinic_name: optional(formData.get("clinicName")),
       contact_info: optional(formData.get("contactInfo")),
       notes: optional(formData.get("notes")),
@@ -66,6 +69,7 @@ export async function updateVet(id: string, fields: VetFields): Promise<ActionRe
       .from("vets")
       .update({
         name,
+        name_th: optional(fields.nameTh),
         clinic_name: optional(fields.clinicName),
         contact_info: optional(fields.contactInfo),
         notes: optional(fields.notes),

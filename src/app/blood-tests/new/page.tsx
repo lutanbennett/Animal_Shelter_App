@@ -2,6 +2,7 @@ import { requirePermission } from "@/lib/permissions/require";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { localLabel } from "@/lib/translations/labels";
 import {
   BloodTestForm,
   type BloodTestTypeOption,
@@ -13,7 +14,7 @@ export default async function NewBloodTestPage(
 ) {
   await requirePermission("medical.blood_tests");
   const searchParams = await props.searchParams;
-  const { t } = await getT();
+  const { t, locale } = await getT();
 
   const residentId = searchParams.residentId;
   const vetAppointmentId = searchParams.vetAppointmentId;
@@ -59,9 +60,9 @@ export default async function NewBloodTestPage(
       .returns<{ is_deceased: boolean }[]>(),
     supabase
       .from("blood_test_types")
-      .select("id, name")
+      .select("id, name, name_th")
       .order("name")
-      .returns<BloodTestTypeOption[]>(),
+      .returns<(BloodTestTypeOption & { name_th: string | null })[]>(),
   ]);
 
   const resident = residentResult.data?.[0];
@@ -131,7 +132,10 @@ export default async function NewBloodTestPage(
       <BloodTestForm
         residentId={residentId}
         residentDisplayName={displayName}
-        bloodTestTypes={typesResult.data ?? []}
+        bloodTestTypes={(typesResult.data ?? []).map(({ name_th, ...type }) => ({
+          ...type,
+          name: localLabel(locale, type.name, name_th),
+        }))}
         vetAppointments={vetAppointments}
         preselectedVetAppointmentId={
           typeof vetAppointmentId === "string" && vetAppointmentId

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { ArrowLeft, Check, ClipboardCheck, List, Pill, SkipForward } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { localLabel } from "@/lib/translations/labels";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { formatQuantity } from "@/lib/diets/options";
 import { readStock } from "@/lib/management/stock";
@@ -207,7 +208,7 @@ function CardView({
   onList: () => void;
   message: React.ReactNode;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const s = t.stocktake;
   const c = s.cards;
   const [value, setValue] = useState(entry && !entry.same ? entry.value : "");
@@ -225,7 +226,7 @@ function CardView({
   const unit = entryUnit(item, draft);
   const conversions = item.conversions ?? [];
   const typedUnit = unit ? conversions.find((cv) => cv.unit === unit) : undefined;
-  const shownUnit = typedUnit ? typedUnit.unit : item.unit;
+  const shownUnit = typedUnit ? localLabel(locale, typedUnit.unit, typedUnit.unitTh) : item.unit;
   const lastInUnit = typedUnit && item.lastCount != null ? inUnit(item.lastCount, typedUnit) : null;
   const neverCounted = item.lastCount == null;
   const canSave = outcome.kind === "counted";
@@ -288,7 +289,7 @@ function CardView({
             {neverCounted
               ? s.notCounted
               : `${s.lastCount(formatQuantity(item.lastCount), item.unit)}${
-                  lastInUnit ? ` (${t.units.onHand(formatQuantity(lastInUnit), typedUnit!.unit)})` : ""
+                  lastInUnit ? ` (${t.units.onHand(formatQuantity(lastInUnit), localLabel(locale, typedUnit!.unit, typedUnit!.unitTh))})` : ""
                 } · ${t.management.stock.countedAgo(countedDaysAgo(item))}`}
           </p>
         </div>
@@ -311,7 +312,7 @@ function CardView({
                 <option value="">{item.unit}</option>
                 {conversions.map((cv) => (
                   <option key={cv.id} value={cv.unit}>
-                    {cv.unit}
+                    {localLabel(locale, cv.unit, cv.unitTh)}
                   </option>
                 ))}
               </select>

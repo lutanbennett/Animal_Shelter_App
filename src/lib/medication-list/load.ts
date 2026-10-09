@@ -3,6 +3,8 @@ import { todayIso } from "@/lib/format";
 import { loadPlaceOrder } from "@/lib/enclosures/order";
 import { doseDueState, type DueSchedule } from "./due";
 import { ROUND_KEYS, type RoundKey } from "@/lib/rounds/suggest";
+import type { Locale } from "@/lib/i18n/locales";
+import { localLabel } from "@/lib/translations/labels";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
@@ -16,8 +18,8 @@ type PrescriptionRow = {
   end_date: string | null;
 };
 
-type MedicationRow = { id: string; name: string; dose_unit: string; label_drive_file_id: string | null };
-type FrequencyRow = DueSchedule & { id: string; label: string };
+type MedicationRow = { id: string; name: string; name_th: string | null; dose_unit: string; label_drive_file_id: string | null };
+type FrequencyRow = DueSchedule & { id: string; label: string; label_th: string | null };
 
 /** A row of `medication_list_residents` (0136): who a resident is and where it lives. */
 type PlacementRow = {
@@ -118,6 +120,8 @@ const natural = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
 export async function loadMedicationList(
   supabase: Supabase,
   round: RoundKey,
+  /** Medicine and frequency names come back in this language where they have it (0166). */
+  locale: Locale,
 ): Promise<MedicationList> {
   const today = todayIso();
 
@@ -131,11 +135,11 @@ export async function loadMedicationList(
       .returns<PrescriptionRow[]>(),
     supabase
       .from("medication_list_medications")
-      .select("id, name, dose_unit, label_drive_file_id")
+      .select("id, name, dose_unit, label_drive_file_id, name_th")
       .returns<MedicationRow[]>(),
     supabase
       .from("frequency")
-      .select("id, label, doses_per_day, interval_count, interval_unit")
+      .select("id, label, label_th, doses_per_day, interval_count, interval_unit")
       .returns<FrequencyRow[]>(),
     supabase
       .from("medication_list_residents")
@@ -203,11 +207,11 @@ export async function loadMedicationList(
       medicationId: rx.medication_id,
       place,
       rounds,
-      name: medication.name,
+      name: localLabel(locale, medication.name, medication.name_th),
       doseUnit: medication.dose_unit,
       quantity: quantity != null && Number.isFinite(quantity) ? quantity : null,
       schedule: frequency,
-      frequencyLabel: frequency?.label ?? null,
+      frequencyLabel: frequency ? localLabel(locale, frequency.label, frequency.label_th) : null,
       labelFileId: medication.label_drive_file_id,
       lastDay: rx.end_date === today,
     });

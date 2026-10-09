@@ -1,5 +1,7 @@
 import type { createClient } from "@/lib/supabase/server";
 import { todayIso } from "@/lib/format";
+import type { Locale } from "@/lib/i18n/locales";
+import { localLabel } from "@/lib/translations/labels";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
@@ -24,7 +26,9 @@ type SpecialDietRow = {
  */
 export async function loadSpecialDiets(
   supabase: Supabase,
-  residentIds?: string[],
+  residentIds: string[] | undefined,
+  /** The names come back in this language where they have one (0166). */
+  locale: Locale,
 ): Promise<Map<string, string[]>> {
   const special = new Map<string, string[]>();
   if (residentIds && residentIds.length === 0) return special;
@@ -34,10 +38,12 @@ export async function loadSpecialDiets(
   // cell no longer sees, and an inner join would then drop every row.
   const { data: types } = await supabase
     .from("picker_diet_types")
-    .select("id, name, is_standard")
-    .returns<{ id: string; name: string; is_standard: boolean }[]>();
+    .select("id, name, name_th, is_standard")
+    .returns<{ id: string; name: string; name_th: string | null; is_standard: boolean }[]>();
   if (!types?.some((t) => t.is_standard)) return special;
-  const nameOf = new Map(types.filter((t) => !t.is_standard).map((t) => [t.id, t.name]));
+  const nameOf = new Map(
+    types.filter((t) => !t.is_standard).map((t) => [t.id, localLabel(locale, t.name, t.name_th)]),
+  );
 
   const today = todayIso();
   let query = supabase

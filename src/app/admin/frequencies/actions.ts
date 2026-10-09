@@ -20,6 +20,8 @@ export type FrequencyFormState = ActionResult<{ success: string }> | undefined;
 
 export type FrequencyFields = {
   label: string;
+  /** Empty: Thai readers see the English (0166). */
+  labelTh: string;
   schedule: ScheduleFields;
 };
 
@@ -80,7 +82,7 @@ export async function createFrequency(
     const supabase = await createClient();
     const { error } = await supabase
       .from("frequency")
-      .insert({ label, ...parsed.schedule });
+      .insert({ label, label_th: optional(formData.get("labelTh")), ...parsed.schedule });
 
     if (error) return refuse(error.message);
 
@@ -105,7 +107,7 @@ export async function updateFrequency(
     const supabase = await createClient();
     const { error } = await supabase
       .from("frequency")
-      .update({ label, ...parsed.schedule })
+      .update({ label, label_th: optional(fields.labelTh), ...parsed.schedule })
       .eq("id", id);
 
     if (error) return refuse(error.message);

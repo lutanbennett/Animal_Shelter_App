@@ -15,9 +15,9 @@ export default async function BloodTestTypesPage() {
   const [typesResult, bloodTestsResult] = await Promise.all([
     supabase
       .from("blood_test_types")
-      .select("id, name")
+      .select("id, name, name_th")
       .order("name")
-      .returns<Pick<BloodTestTypeRow, "id" | "name">[]>(),
+      .returns<Pick<BloodTestTypeRow, "id" | "name" | "name_th">[]>(),
     // One row per blood test is cheap at shelter scale and gives the
     // reference counts that gate the delete buttons.
     supabase

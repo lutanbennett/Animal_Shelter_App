@@ -1,6 +1,7 @@
 import { requirePermission } from "@/lib/permissions/require";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { localLabel } from "@/lib/translations/labels";
 import { NOT_DECEASED } from "@/lib/residents/status";
 import { loadDoctorNamesByVet } from "@/lib/vets/doctors";
 import { loadVetScope } from "@/lib/vets/scope";
@@ -11,7 +12,7 @@ export default async function NewVetVisitPage(
 ) {
   await requirePermission("medical.visits");
   const searchParams = await props.searchParams;
-  const { t } = await getT();
+  const { t, locale } = await getT();
 
   const preselectedIds = new Set<string>();
   const residentIdParam = searchParams.residentId;
@@ -39,7 +40,7 @@ export default async function NewVetVisitPage(
   }
 
   // A vet account books against its own clinics only (src/lib/vets/scope.ts).
-  let vetsQuery = supabase.from("vets").select("id, name, clinic_name").order("name");
+  let vetsQuery = supabase.from("vets").select("id, name, name_th, clinic_name").order("name");
   if (scope.kind === "clinics") vetsQuery = vetsQuery.in("id", scope.vetIds);
 
   const [residentsResult, vetsResult, doctorNamesByVet] = await Promise.all([
@@ -61,7 +62,9 @@ export default async function NewVetVisitPage(
     }),
   );
 
-  const vets: VetOption[] = vetsResult.data ?? [];
+  const vets: VetOption[] = ((vetsResult.data ?? []) as (VetOption & { name_th: string | null })[]).map(
+    ({ name_th, ...vet }) => ({ ...vet, name: localLabel(locale, vet.name, name_th) }),
+  );
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">

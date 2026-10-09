@@ -14,6 +14,7 @@ import { deleteDietType, setStandardDietType, updateDietDefinition, type DietDef
 export type DietDefinitionRow = {
   id: string;
   name: string;
+  name_th: string | null;
   /** The shelter's standard diet (0087); at most one row, possibly none. */
   is_standard: boolean;
   unit: string;
@@ -34,6 +35,7 @@ const inputClass =
 function fieldsOf(row: DietDefinitionRow): DietDefinitionFields {
   return {
     name: row.name,
+    nameTh: row.name_th ?? "",
     unit: row.unit,
     dailyQtySmall: formatQuantity(row.daily_qty_small),
     dailyQtyMedium: formatQuantity(row.daily_qty_medium),
@@ -128,6 +130,14 @@ function DietTypeRowItem({
                 className={`${inputClass} min-w-48`}
               />
               <input
+                value={fields.nameTh}
+                onChange={(e) => set("nameTh")(e.target.value)}
+                placeholder={t.translations.thaiName}
+                aria-label={t.translations.thaiName}
+                lang="th"
+                className={`${inputClass} min-w-48`}
+              />
+              <input
                 value={fields.notes}
                 onChange={(e) => set("notes")(e.target.value)}
                 placeholder={m.createForm.notes}
@@ -149,6 +159,11 @@ function DietTypeRowItem({
                   </span>
                 )}
               </span>
+              {dietType.name_th && (
+                <span lang="th" className="text-sm text-foreground">
+                  {dietType.name_th}
+                </span>
+              )}
               {dietType.notes && <span className="text-xs text-muted">{dietType.notes}</span>}
             </div>
           )}

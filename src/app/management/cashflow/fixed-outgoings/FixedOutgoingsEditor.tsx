@@ -8,6 +8,7 @@ import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { RowActionButton } from "@/components/RowAction";
 import type { FixedOutgoing, FixedOutgoingFields } from "@/lib/management/fixed-outgoings";
+import { localLabel } from "@/lib/translations/labels";
 import { createFixedOutgoing, deleteFixedOutgoing, updateFixedOutgoing } from "./actions";
 
 const inputClass =
@@ -15,6 +16,7 @@ const inputClass =
 
 const BLANK: FixedOutgoingFields = {
   label: "",
+  labelTh: "",
   monthlyAmount: "",
   note: "",
   active: true,
@@ -24,6 +26,7 @@ const BLANK: FixedOutgoingFields = {
 
 const toFields = (line: FixedOutgoing): FixedOutgoingFields => ({
   label: line.label,
+  labelTh: line.label_th ?? "",
   monthlyAmount: String(Number(line.monthly_amount)),
   note: line.note ?? "",
   active: line.active,
@@ -112,6 +115,18 @@ export function FixedOutgoingsEditor({ lines, max }: { lines: FixedOutgoing[]; m
             className={`${inputClass} w-64`}
           />
           <span className="text-xs text-muted">{m.form.labelHint}</span>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="fo-label-th" className="text-sm font-medium text-muted">
+            {t.translations.thaiName}
+          </label>
+          <input
+            id="fo-label-th"
+            value={fields.labelTh}
+            onChange={(e) => set("labelTh", e.target.value)}
+            lang="th"
+            className={`${inputClass} w-64`}
+          />
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="fo-amount" className="text-sm font-medium text-muted">
@@ -238,7 +253,7 @@ export function FixedOutgoingsEditor({ lines, max }: { lines: FixedOutgoing[]; m
               >
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-foreground">
-                    {line.label}
+                    {localLabel(locale, line.label, line.label_th)}
                     {!line.active && (
                       <span className="ml-2 text-xs font-normal text-muted">{m.inactive}</span>
                     )}

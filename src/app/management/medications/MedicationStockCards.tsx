@@ -48,6 +48,7 @@ export type MedicationStockRow = {
   labelFileId: string | null;
   /** The item's other units by name, for typing the safety stock in one. */
   unitOptions: string[];
+  unitOptionLabels: Record<string, string>;
   /**
    * The same price for one purchase unit (a bottle, a box), shown beside the
    * per-unit price so a 4-place figure like ฿0.035 per ml reads against what
@@ -211,6 +212,7 @@ function MedicationCard({
               stored: medication.safetyStock,
               baseUnitLabel: unit,
               unitOptions: medication.unitOptions,
+              unitOptionLabels: medication.unitOptionLabels,
               value: safetyValue,
               unit: safetyUnit,
               onValueChange: setSafetyValue,

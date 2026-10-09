@@ -3,6 +3,7 @@ import { ChevronDown } from "lucide-react";
 import { requirePermission } from "@/lib/permissions/require";
 import { can } from "@/lib/permissions/can";
 import { getT } from "@/lib/i18n/get-t";
+import { localLabel } from "@/lib/translations/labels";
 import { dietUnitLabel, doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { formatDate } from "@/lib/format";
 import { toCsv } from "@/lib/csv";
@@ -41,6 +42,7 @@ type Kind = "medication" | "diet";
 type ItemQueryRow = {
   id: string;
   name: string;
+  name_th: string | null;
   unit: string;
   stock_on_hand: number | string | null;
   stock_counted_at: string | null;
@@ -77,12 +79,12 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
   const [medResult, dietResult, vendorsResult] = await Promise.all([
     supabase
       .from("stock_medications")
-      .select("id, name, unit:dose_unit, stock_on_hand, stock_counted_at, reorder_lead_days, safety_stock")
+      .select("id, name, name_th, unit:dose_unit, stock_on_hand, stock_counted_at, reorder_lead_days, safety_stock")
       .order("name")
       .returns<ItemQueryRow[]>(),
     supabase
       .from("stock_diet_types")
-      .select("id, name, unit, stock_on_hand, stock_counted_at, reorder_lead_days, safety_stock, is_standard")
+      .select("id, name, name_th, unit, stock_on_hand, stock_counted_at, reorder_lead_days, safety_stock, is_standard")
       .order("name")
       .returns<ItemQueryRow[]>(),
     // Archived too: an old delivery still names its supplier.
@@ -153,12 +155,12 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
         kind,
         unitLabel: kind === "medication" ? doseUnitLabel(t, r.unit) : dietUnitLabel(t, r.unit),
         isStandard: r.is_standard ?? false,
-        pack: purchase ? { unit: purchase.unit, basePer: purchase.basePer } : null,
+        pack: purchase ? { unit: localLabel(locale, purchase.unit, purchase.unitTh), basePer: purchase.basePer } : null,
         supplierId: suppliers.get(r.id) ?? null,
         leadDays: r.reorder_lead_days,
         row: purchaseRow({
           id: r.id,
-          name: r.name,
+          name: localLabel(locale, r.name, r.name_th),
           counted: r.stock_on_hand == null ? null : Number(r.stock_on_hand),
           countedAt: r.stock_counted_at,
           usedInRateWindow: used(r.id, STOCK_RATE_DAYS),

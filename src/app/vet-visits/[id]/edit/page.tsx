@@ -5,6 +5,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { localLabel } from "@/lib/translations/labels";
 import { loadDoctorNamesByVet } from "@/lib/vets/doctors";
 import { loadVetScope } from "@/lib/vets/scope";
 import type { VetOption } from "@/app/vet-visits/new/VetVisitForm";
@@ -17,7 +18,7 @@ import { VetVisitEditForm, type VetVisitInitial } from "./VetVisitEditForm";
 export default async function EditVetVisitPage(props: PageProps<"/vet-visits/[id]/edit">) {
   await requirePermission("medical.visits", "read");
   const { id } = await props.params;
-  const { t } = await getT();
+  const { t, locale } = await getT();
   const supabase = await createClient();
 
   const { data: rows, error } = await supabase
@@ -51,7 +52,7 @@ export default async function EditVetVisitPage(props: PageProps<"/vet-visits/[id
     );
   }
 
-  let vetsQuery = supabase.from("vets").select("id, name, clinic_name").order("name");
+  let vetsQuery = supabase.from("vets").select("id, name, name_th, clinic_name").order("name");
   if (scope.kind === "clinics") vetsQuery = vetsQuery.in("id", scope.vetIds);
 
   const [residentResult, stateResult, vetsResult, doctorNamesByVet, perms] = await Promise.all([
@@ -75,13 +76,16 @@ export default async function EditVetVisitPage(props: PageProps<"/vet-visits/[id
       .eq("resident_id", visit.resident_id)
       .limit(1)
       .returns<{ is_deceased: boolean }[]>(),
-    vetsQuery.returns<VetOption[]>(),
+    vetsQuery.returns<(VetOption & { name_th: string | null })[]>(),
     loadDoctorNamesByVet(supabase),
     loadPermissions(),
   ]);
   const resident = residentResult.data?.[0];
   if (!resident) notFound();
-  const vets = vetsResult.data ?? [];
+  const vets: VetOption[] = (vetsResult.data ?? []).map(({ name_th, ...vet }) => ({
+    ...vet,
+    name: localLabel(locale, vet.name, name_th),
+  }));
 
   const displayName = resident.thai_name ? `${resident.name} (${resident.thai_name})` : resident.name;
   const tabHref = `/residents/${visit.resident_id}/vet-appointments`;

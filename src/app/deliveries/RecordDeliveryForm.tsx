@@ -4,6 +4,7 @@ import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { localLabel } from "@/lib/translations/labels";
 import { localizedValidity } from "@/lib/i18n/validity";
 import { formatQuantity } from "@/lib/diets/options";
 import { defaultUnit, resolveEntered, type UnitConversion } from "@/lib/units";
@@ -67,7 +68,10 @@ export function RecordDeliveryForm({
   const item = items[kind].find((i) => i.id === itemId);
   const countedThatDay = itemId !== "" && (countDays[kind][itemId] ?? []).includes(date);
   const quantityOk = parseDeliveryQuantity(quantity).ok;
-  const unitLabel = unitName || item?.unit || "";
+  // unitName is the English key the receipt stamps; what is shown is the reader's language (0166).
+  const unitLabel = unitName
+    ? localLabel(locale, unitName, item?.conversions.find((c) => c.unit === unitName)?.unitTh)
+    : item?.unit || "";
   const preview =
     item && unitName && quantityOk ? resolveEntered(Number(quantity), unitName, item.conversions) : null;
   const chooseItem = (id: string) => {
@@ -210,7 +214,7 @@ export function RecordDeliveryForm({
               <option value="">{item.unit}</option>
               {item.conversions.map((c) => (
                 <option key={c.id} value={c.unit}>
-                  {c.unit}
+                  {localLabel(locale, c.unit, c.unitTh)}
                 </option>
               ))}
             </select>

@@ -15,9 +15,9 @@ export default async function ProcedureTypesPage() {
   const [typesResult, proceduresResult] = await Promise.all([
     supabase
       .from("procedure_types")
-      .select("id, name")
+      .select("id, name, name_th")
       .order("name")
-      .returns<Pick<ProcedureTypeRow, "id" | "name">[]>(),
+      .returns<Pick<ProcedureTypeRow, "id" | "name" | "name_th">[]>(),
     // One row per procedure is cheap at shelter scale and gives the
     // reference counts that gate the delete buttons.
     supabase

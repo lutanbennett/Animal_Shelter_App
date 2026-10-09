@@ -1,6 +1,8 @@
 import type { createClient } from "@/lib/supabase/server";
 import type { FrequencySchedule } from "@/lib/prescriptions/frequency";
 import { loadLinkableVisits, type LinkableVisit } from "@/lib/vets/linkable";
+import type { Locale } from "@/lib/i18n/locales";
+import { localLabel } from "@/lib/translations/labels";
 
 export type MedicationOption = { id: string; name: string; dose_unit: string };
 export type FrequencyOption = FrequencySchedule & { id: string; label: string };
@@ -20,19 +22,21 @@ type Supabase = Awaited<ReturnType<typeof createClient>>;
 export async function loadPrescriptionOptions(
   supabase: Supabase,
   residentId: string,
+  /** Medicine and frequency names come back in this language where they have one (0166). */
+  locale: Locale,
   keepVisitId: string | null = null,
 ) {
   const [medications, frequencies, linkable] = await Promise.all([
     supabase
       .from("picker_medications")
-      .select("id, name, dose_unit")
+      .select("id, name, name_th, dose_unit")
       .order("name")
-      .returns<MedicationOption[]>(),
+      .returns<(MedicationOption & { name_th: string | null })[]>(),
     supabase
       .from("frequency")
-      .select("id, label, doses_per_day, interval_count, interval_unit")
+      .select("id, label, label_th, doses_per_day, interval_count, interval_unit")
       .order("label")
-      .returns<FrequencyOption[]>(),
+      .returns<(FrequencyOption & { label_th: string | null })[]>(),
     loadLinkableVisits(supabase, residentId, { notInFuture: true, keep: keepVisitId }),
   ]);
   // Same { data, error } shape as the other two, for the pages' error list.
@@ -40,5 +44,16 @@ export async function loadPrescriptionOptions(
     data: linkable.visits,
     error: linkable.error ? { message: linkable.error } : null,
   };
-  return { medications, frequencies, vetAppointments };
+  return {
+    medications: {
+      ...medications,
+      data: medications.data?.map(({ name_th, ...m }) => ({ ...m, name: localLabel(locale, m.name, name_th) })) ?? null,
+    },
+    frequencies: {
+      ...frequencies,
+      data:
+        frequencies.data?.map(({ label_th, ...f }) => ({ ...f, label: localLabel(locale, f.label, label_th) })) ?? null,
+    },
+    vetAppointments,
+  };
 }

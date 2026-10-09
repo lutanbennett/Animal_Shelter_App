@@ -4,10 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { createPortal } from "react-dom";
 import { Check, ClipboardCheck, Layers, Search, TriangleAlert } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { localLabel } from "@/lib/translations/labels";
 import { formatDateTime } from "@/lib/format";
 import { formatQuantity } from "@/lib/diets/options";
 import { readStock } from "@/lib/management/stock";
-import { inUnit } from "@/lib/units";
+import { inUnit, type UnitConversion } from "@/lib/units";
+import type { Locale } from "@/lib/i18n/locales";
 import {
   CARDS_START,
   cardSequence,
@@ -450,7 +452,7 @@ function StocktakeRow({
   onChange: (entry: RowEntry) => void;
   onEnter: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const s = t.stocktake;
   const outcome = rowOutcome(item, entry);
   const same = entry?.same ?? false;
@@ -463,9 +465,9 @@ function StocktakeRow({
   const lastLine = neverCounted
     ? s.notCounted
     : `${s.lastCount(formatQuantity(item.lastCount), item.unit)}${
-        lastInUnit ? ` (${t.units.onHand(formatQuantity(lastInUnit), typedUnit!.unit)})` : ""
+        lastInUnit ? ` (${t.units.onHand(formatQuantity(lastInUnit), localLabel(locale, typedUnit!.unit, typedUnit!.unitTh))})` : ""
       } · ${t.management.stock.countedAgo(countedDaysAgo(item))}`;
-  const shownUnit = typedUnit ? typedUnit.unit : item.unit;
+  const shownUnit = typedUnit ? localLabel(locale, typedUnit.unit, typedUnit.unitTh) : item.unit;
 
   return (
     <li
@@ -499,7 +501,7 @@ function StocktakeRow({
             <option value="">{item.unit}</option>
             {conversions.map((c) => (
               <option key={c.id} value={c.unit}>
-                {c.unit}
+                {localLabel(locale, c.unit, c.unitTh)}
               </option>
             ))}
           </select>
@@ -593,7 +595,7 @@ function ReviewDialog({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const s = t.stocktake;
 
   useEffect(() => {
@@ -655,7 +657,7 @@ function ReviewDialog({
                     <span className="text-xs text-muted">
                       {t.units.entry.recent(
                         formatQuantity(line.outcome.typed.quantity),
-                        line.outcome.typed.unit,
+                        unitName(locale, line.outcome.typed.unit, line.item.conversions),
                         formatQuantity(line.outcome.count),
                         line.item.unit,
                       )}
@@ -693,4 +695,9 @@ function ReviewDialog({
     </div>,
     document.body,
   );
+}
+
+/** A typed unit (the English key a count stamps) in the reader's language (0166). */
+function unitName(locale: Locale, unit: string, conversions: readonly UnitConversion[] | undefined) {
+  return localLabel(locale, unit, conversions?.find((c) => c.unit === unit)?.unitTh);
 }

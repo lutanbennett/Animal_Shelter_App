@@ -3,6 +3,7 @@ import { ACTION_ICONS } from "@/components/hub-icons";
 import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
+import { localLabel } from "@/lib/translations/labels";
 import {
   lastVisit,
   scheduleSummary,
@@ -14,6 +15,7 @@ import { VetGrid, type VetSummary } from "./VetGrid";
 type VetRow = {
   id: string;
   name: string;
+  name_th: string | null;
   clinic_name: string | null;
   contact_info: string | null;
 };
@@ -21,7 +23,7 @@ type VetRow = {
 type VisitRow = VetVisit & { vet_id: string };
 
 export default async function VetsPage() {
-  const { t } = await getT();
+  const { t, locale } = await getT();
   const { supabase, perms } = await requirePermission("clinics.list", "read");
 
   // Every visit is loaded once and bucketed per vet here — the same rows
@@ -29,7 +31,7 @@ export default async function VetsPage() {
   const [vetsResult, visitsResult] = await Promise.all([
     supabase
       .from("vets")
-      .select("id, name, clinic_name, contact_info")
+      .select("id, name, name_th, clinic_name, contact_info")
       .order("name")
       .returns<VetRow[]>(),
     supabase
@@ -54,6 +56,7 @@ export default async function VetsPage() {
     const schedule = scheduleSummary(visits, now);
     return {
       ...vet,
+      name: localLabel(locale, vet.name, vet.name_th),
       visitCount: happened.length,
       residentCount: new Set(happened.map((v) => v.resident_id)).size,
       upcomingCount: schedule.upcoming.length,
