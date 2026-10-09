@@ -49,7 +49,6 @@ export function OutingPhotos({ outingId, photos }: { outingId: string; photos: O
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {photos.map((p) => (
               <li key={p.id} className="flex flex-col gap-2">
-                {/* eslint-disable-next-line @next/next/no-img-element -- served by our own photo proxy */}
                 <img
                   src={driveImageUrl(p.drive_file_id, 400)}
                   alt={p.file_name ?? ""}

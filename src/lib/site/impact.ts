@@ -46,6 +46,11 @@ export function impactStats(t: Dictionary, stats: ShelterStats | null): ImpactSt
  * public_impact_figures (0156): a hand-entered baseline plus a live count
  * since its date, added up by the view on every read. Only figures with a
  * baseline entered are in it, so a figure nobody has set is simply absent.
+ * Since 0169 that includes the outreach figures: community_dogs (dogs helped
+ * at outreach visits, counted again on each visit) and villages_sterilised,
+ * both counted from the visit notes. With no baseline they show no tile at
+ * all, never "0 dogs helped", because the Director's starting number is the
+ * larger part of the claim.
  */
 export type ImpactFigure = {
   key: string;

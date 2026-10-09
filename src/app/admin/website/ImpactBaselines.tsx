@@ -40,7 +40,16 @@ function BaselineForm({ row }: { row: ImpactBaselineRow }) {
   const confirm = useConfirm();
   const i = t.admin.website.impact;
   const [state, onSubmit, pending] = useKeptForm(updateImpactBaseline, undefined);
-  const counted = row.key === "animals_rehomed";
+  // What the live count adds after the date (public_impact_figures, 0156 and 0169); every other
+  // figure is the baseline alone.
+  const countedNote =
+    row.key === "animals_rehomed"
+      ? i.countedNote
+      : row.key === "community_dogs"
+        ? i.outingsNote
+        : row.key === "villages_sterilised"
+          ? i.outingsSterilisedNote
+          : i.baselineOnlyNote;
 
   return (
     <form
@@ -64,7 +73,7 @@ function BaselineForm({ row }: { row: ImpactBaselineRow }) {
       <input type="hidden" name="key" value={row.key} />
       <div>
         <h3 className="text-sm font-semibold text-foreground">{row.label}</h3>
-        <p className="text-xs text-muted">{counted ? i.countedNote : i.baselineOnlyNote}</p>
+        <p className="text-xs text-muted">{countedNote}</p>
       </div>
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1 text-sm font-medium text-muted">

@@ -265,9 +265,11 @@ export default async function WelcomePage() {
           <h2 id="impact-heading" className="sr-only">
             {t.home.stats.heading}
           </h2>
-          <dl data-reveal className={`grid grid-cols-2 gap-x-6 gap-y-8 rounded-[20px] bg-site-accent px-6 py-8 text-site-on-accent sm:px-10 sm:py-9 ${stats.length > 4 ? "lg:grid-cols-3" : "lg:grid-cols-4"}`}>
+          {/* Up to seven tiles once every impact figure has a baseline (0156, 0169): rows of four, and a
+              short last row centred rather than left hanging. */}
+          <dl data-reveal className="flex flex-wrap justify-center gap-x-6 gap-y-8 rounded-[20px] bg-site-accent px-6 py-8 text-site-on-accent sm:px-10 sm:py-9">
             {stats.map((stat) => (
-              <div key={stat.key} className="flex flex-col-reverse items-center gap-1.5 text-center">
+              <div key={stat.key} className="flex basis-[calc(50%-12px)] flex-col-reverse items-center gap-1.5 text-center lg:basis-[calc(25%-18px)]">
                 <dt className="text-base leading-snug">{stat.label}</dt>
                 <dd className="font-display text-4xl font-bold tabular-nums lg:text-[44px]">
                   {stat.value.toLocaleString(locale === "th" ? "th-TH" : "en-GB")}

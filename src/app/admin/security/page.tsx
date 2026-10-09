@@ -9,6 +9,7 @@ import { mustChangePassword } from "@/lib/auth/password-change";
 import { AccessRequests, type AccessRequest } from "./AccessRequests";
 import { CreateUserForm } from "./CreateUserForm";
 import { UsersTable, type SecurityUser } from "./UsersTable";
+import { OutreachWriters, type OutreachWriterRole } from "./OutreachWriters";
 
 export default async function SecurityPage() {
   const currentUser = await requireAdminUser();
@@ -19,7 +20,7 @@ export default async function SecurityPage() {
 
   const admin = createAdminClient();
 
-  const [authUsersResult, rolesResult, vetsResult, doctorsResult] = await Promise.all([
+  const [authUsersResult, rolesResult, vetsResult, doctorsResult, appRolesResult, outreachCellsResult] = await Promise.all([
     listAllUsers(admin),
     admin.from("user_roles").select("user_id, role, archived_at"),
     admin.from("vets").select("id, name, clinic_name").order("name"),
@@ -29,7 +30,28 @@ export default async function SecurityPage() {
       .from("vet_doctors")
       .select("id, name, user_id, vet_doctor_clinics(vet_id, active)")
       .order("name"),
+    // Who may write outreach notes (0169): every live role that opens the app but Admin, whose
+    // column is a rule, and the one cell each holds.
+    admin
+      .from("roles")
+      .select("id, key, name, name_th")
+      .is("archived_at", null)
+      .eq("opens_app", true)
+      .neq("key", "admin")
+      .order("name"),
+    admin.from("role_permissions").select("role_id, level").eq("activity", "community.outings"),
   ]);
+
+  const outreachLevel = new Map((outreachCellsResult.data ?? []).map((c) => [c.role_id as string, c.level as 1 | 2]));
+  const outreachRoles: OutreachWriterRole[] = (appRolesResult.data ?? [])
+    .map((r) => ({
+      key: r.key as string,
+      name: r.name as string,
+      nameTh: (r.name_th as string | null) ?? null,
+      level: (outreachLevel.get(r.id as string) ?? 0) as 0 | 1 | 2,
+    }))
+    // Management first: today's answer, and the role a manager reaches for.
+    .sort((a, b) => Number(b.key === "management") - Number(a.key === "management"));
 
   const roleByUserId = new Map(
     (rolesResult.data ?? []).map((r) => [
@@ -150,6 +172,7 @@ export default async function SecurityPage() {
         unlinkedDoctors={unlinkedDoctors}
         currentUserId={currentUser.id}
       />
+      <OutreachWriters roles={outreachRoles} />
     </main>
   );
 }
