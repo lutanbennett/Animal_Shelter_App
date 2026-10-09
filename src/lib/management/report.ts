@@ -11,7 +11,12 @@
  * it was done, initial vs follow-up clinic visits, procedures) so the
  * dashboard can replace it, plus the things that report can't show —
  * intakes, hospitalisations, the current picture and a trend.
+ *
+ * Months are the shelter's months (Asia/Bangkok), whatever zone the server
+ * runs in: see shelterMidnight() in src/lib/format.ts.
  */
+
+import { addMonthsToKey, shelterMidnight, shelterMonthKey } from "@/lib/format";
 
 export type ResidentRow = {
   id: string;
@@ -36,6 +41,14 @@ export type AppointmentRow = {
   resident_id: string;
   appointment_date: string;
   status: "scheduled" | "completed" | "cancelled";
+  /** Baht from the invoice (0053); null until it arrives. Only the month's visits carry it. */
+  cost?: number | string | null;
+};
+
+export type ImmunizationRow = {
+  resident_id: string;
+  date_administered: string;
+  immunization_types: { name: string } | null;
 };
 
 export type BloodTestRow = {
@@ -58,7 +71,7 @@ export type NamedEntry = { id: string; name: string; count: number };
 export type MonthWindow = {
   /** "YYYY-MM". */
   key: string;
-  /** First instant of the month (local time). */
+  /** First instant of the month at the shelter (00:00 Asia/Bangkok). */
   start: Date;
   /** First instant of the following month — exclusive. */
   end: Date;
@@ -72,40 +85,33 @@ const MONTH_KEY = /^(\d{4})-(\d{2})$/;
 /** Parses a "YYYY-MM" search param; anything else means the current month. */
 export function monthWindow(key: string | undefined, now: Date): MonthWindow {
   const match = key ? MONTH_KEY.exec(key) : null;
-  let year = now.getFullYear();
-  let month = now.getMonth();
-  if (match) {
-    const m = Number(match[2]);
-    if (m >= 1 && m <= 12) {
-      year = Number(match[1]);
-      month = m - 1;
-    }
-  }
-  const start = new Date(year, month, 1);
-  const end = new Date(year, month + 1, 1);
+  const valid = match != null && Number(match[2]) >= 1 && Number(match[2]) <= 12;
+  const monthKey = valid ? key! : toMonthKey(now);
+  const startDate = `${monthKey}-01`;
+  const endDate = `${addMonthsToKey(monthKey, 1)}-01`;
   return {
-    key: toMonthKey(start),
-    start,
-    end,
-    startDate: `${toMonthKey(start)}-01`,
-    endDate: `${toMonthKey(end)}-01`,
+    key: monthKey,
+    start: shelterMidnight(startDate),
+    end: shelterMidnight(endDate),
+    startDate,
+    endDate,
   };
 }
 
+/** The shelter month an instant falls in, "YYYY-MM". */
 export function toMonthKey(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  return shelterMonthKey(d);
 }
 
 export function shiftMonth(window: MonthWindow, by: number): string {
-  return toMonthKey(new Date(window.start.getFullYear(), window.start.getMonth() + by, 1));
+  return addMonthsToKey(window.key, by);
 }
 
 /**
  * Whether a timestamp or date falls in the month. A date-only value
  * ("2026-01-31", as blood_tests.date and procedures.date come back) is
- * compared as text so the server's time zone can't shift it across a
- * month boundary; timestamptz values are compared as instants in the
- * server's local time, which is what the window was built in.
+ * compared as text, since it is already a shelter date; timestamptz values
+ * are compared as instants against the shelter-midnight bounds.
  */
 function inWindow(value: string, window: MonthWindow): boolean {
   if (value.length === 10) {
@@ -163,8 +169,40 @@ export type MonthReport = {
   clinicVisitsInitial: NamedEntry[];
   clinicVisitsFollowUp: NamedEntry[];
   /** Procedures grouped by type, most frequent type first. */
-  procedures: { type: string; entries: NamedEntry[]; count: number }[];
+  procedures: TypedGroup[];
+  /** Vaccination doses given, grouped by vaccine, most frequent first. */
+  immunizations: TypedGroup[];
+  /**
+   * What this month's clinic visits cost, from the invoices entered on them.
+   * `notInvoiced` counts visits that happened with no cost yet, so a small
+   * or zero `spent` is never read as the whole bill.
+   */
+  clinicSpend: { spent: number; invoiced: number; notInvoiced: number };
 };
+
+export type TypedGroup = { type: string; entries: NamedEntry[]; count: number };
+
+/** Rows grouped by a type name, most frequent type first, then by name. */
+function groupByType<T extends { resident_id: string }>(
+  rows: T[],
+  typeOf: (row: T) => string,
+  residents: Map<string, ResidentRow>,
+): TypedGroup[] {
+  const byType = new Map<string, T[]>();
+  for (const row of rows) {
+    const type = typeOf(row);
+    byType.set(type, [...(byType.get(type) ?? []), row]);
+  }
+  return [...byType.entries()]
+    .map(([type, list]) => ({ type, entries: toEntries(list, residents), count: list.length }))
+    .sort((a, b) => b.count - a.count || a.type.localeCompare(b.type));
+}
+
+function amount(value: number | string | null | undefined): number | null {
+  if (value == null) return null;
+  const n = typeof value === "string" ? Number(value) : value;
+  return Number.isFinite(n) ? n : null;
+}
 
 export function monthReport(
   window: MonthWindow,
@@ -175,6 +213,7 @@ export function monthReport(
     appointments: AppointmentRow[];
     bloodTests: BloodTestRow[];
     procedures: ProcedureRow[];
+    immunizations: ImmunizationRow[];
   },
 ): MonthReport {
   const { residents, placements } = data;
@@ -212,17 +251,32 @@ export function monthReport(
     (first ? initial : followUp).push(a);
   }
 
+  // Spend is the month's visits that happened, initial and follow-up alike.
+  let spent = 0;
+  let invoiced = 0;
+  let notInvoiced = 0;
+  for (const a of [...initial, ...followUp]) {
+    const cost = amount(a.cost);
+    if (cost == null) {
+      notInvoiced += 1;
+    } else {
+      spent += cost;
+      invoiced += 1;
+    }
+  }
+
   const bloodTests = data.bloodTests.filter((b) => inWindow(b.date, window));
 
-  const byType = new Map<string, ProcedureRow[]>();
-  for (const p of data.procedures) {
-    if (!inWindow(p.date, window)) continue;
-    const type = p.procedure_types?.name ?? "";
-    byType.set(type, [...(byType.get(type) ?? []), p]);
-  }
-  const procedures = [...byType.entries()]
-    .map(([type, rows]) => ({ type, entries: toEntries(rows, residents), count: rows.length }))
-    .sort((a, b) => b.count - a.count || a.type.localeCompare(b.type));
+  const procedures = groupByType(
+    data.procedures.filter((p) => inWindow(p.date, window)),
+    (p) => p.procedure_types?.name ?? "",
+    residents,
+  );
+  const immunizations = groupByType(
+    data.immunizations.filter((i) => inWindow(i.date_administered, window)),
+    (i) => i.immunization_types?.name ?? "",
+    residents,
+  );
 
   return {
     intakes: toEntries(started("Intake"), residents),
@@ -243,7 +297,46 @@ export function monthReport(
     clinicVisitsInitial: toEntries(initial, residents),
     clinicVisitsFollowUp: toEntries(followUp, residents),
     procedures,
+    immunizations,
+    clinicSpend: { spent, invoiced, notInvoiced },
   };
+}
+
+/** The labels monthReportText needs, from the dashboard dictionary. */
+export type ReportTextLabels = {
+  heading: string;
+  none: string;
+  lines: { label: string; entries?: NamedEntry[]; groups?: { label: string; entries: NamedEntry[] }[]; count?: number; detail?: string }[];
+};
+
+function namesText(entries: NamedEntry[], none: string): string {
+  if (entries.length === 0) return none;
+  return entries.map((e) => (e.count > 1 ? `${e.name} (${e.count})` : e.name)).join(", ");
+}
+
+/**
+ * The month section as plain text, for pasting into the monthly report or a
+ * LINE message: one line per card, "Label: count — names", and an indented
+ * line per group for the cards that have them. Plain text on purpose: LINE
+ * shows markdown as typed.
+ */
+export function monthReportText({ heading, none, lines }: ReportTextLabels): string {
+  const out = [heading, ""];
+  for (const line of lines) {
+    if (line.groups) {
+      const total = line.count ?? line.groups.reduce((n, g) => n + entryTotal(g.entries), 0);
+      out.push(`${line.label}: ${total}${line.groups.length === 0 ? ` — ${none}` : ""}`);
+      for (const g of line.groups) {
+        out.push(`  ${g.label}: ${entryTotal(g.entries)} — ${namesText(g.entries, none)}`);
+      }
+    } else if (line.entries) {
+      const total = line.count ?? entryTotal(line.entries);
+      out.push(`${line.label}: ${total} — ${namesText(line.entries, none)}`);
+    } else {
+      out.push(`${line.label}: ${line.detail ?? ""}`);
+    }
+  }
+  return out.join("\n");
 }
 
 /** Total rows behind a name list (a resident with two tests counts twice). */
@@ -363,20 +456,19 @@ export type TrendBucket = {
 };
 
 /**
- * Intakes, adoptions and deaths per calendar month for the `months` months
- * ending with the one containing `now`, oldest first, empty months kept.
+ * Intakes, adoptions and deaths per shelter month for the `months` months
+ * ending with `lastMonth` ("YYYY-MM"), oldest first, empty months kept.
  */
-export function trend(placements: PlacementRow[], months: number, now: Date): TrendBucket[] {
+export function trend(placements: PlacementRow[], months: number, lastMonth: string): TrendBucket[] {
   const buckets: TrendBucket[] = [];
   const index = new Map<string, number>();
   for (let i = months - 1; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const key = `${toMonthKey(d)}-01`;
+    const key = `${addMonthsToKey(lastMonth, -i)}-01`;
     index.set(key, buckets.length);
     buckets.push({ month: key, intakes: 0, adoptions: 0, deaths: 0 });
   }
   for (const p of placements) {
-    const slot = index.get(`${toMonthKey(new Date(p.start_date))}-01`);
+    const slot = index.get(`${shelterMonthKey(p.start_date)}-01`);
     if (slot == null) continue;
     if (p.placement_type === "Intake") buckets[slot].intakes += 1;
     else if (p.placement_type === "Adopt") buckets[slot].adoptions += 1;

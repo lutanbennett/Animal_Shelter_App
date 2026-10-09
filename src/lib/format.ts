@@ -88,6 +88,63 @@ export function todayIso(now: Date | number = Date.now()): string {
   return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
+// The same zone with the time of day, to measure its offset from UTC.
+const SHELTER_INSTANT_FORMAT = new Intl.DateTimeFormat("en-GB", {
+  timeZone: SHELTER_TIME_ZONE,
+  hourCycle: "h23",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+});
+
+/** How far the shelter's clock is ahead of UTC at `at`, in ms. */
+function shelterOffsetMs(at: number): number {
+  const parts = SHELTER_INSTANT_FORMAT.formatToParts(at);
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((p) => p.type === type)?.value ?? 0);
+  const asUtc = Date.UTC(
+    part("year"),
+    part("month") - 1,
+    part("day"),
+    part("hour"),
+    part("minute"),
+    part("second"),
+  );
+  return asUtc - Math.floor(at / 1000) * 1000;
+}
+
+/**
+ * The instant a shelter calendar day begins: 00:00 in Chiang Mai, which is
+ * 17:00 UTC the day before. The bound for comparing a timestamptz column
+ * (placement_history.start_date, clinic_visits.appointment_date) against a
+ * shelter date. Building it with `new Date(y, m, 1)` used the runtime's zone
+ * instead, so on Cloudflare (UTC) anything recorded before 07:00 on the 1st
+ * fell into the previous month (Dashboard follow-ups (e)).
+ */
+export function shelterMidnight(isoDate: string): Date {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  const utc = Date.UTC(y, m - 1, d);
+  return new Date(utc - shelterOffsetMs(utc));
+}
+
+/** The shelter month ("YYYY-MM") a timestamp or date falls in. */
+export function shelterMonthKey(value: string | number | Date): string {
+  // A date-only value is already a shelter date; reading it through Date
+  // would treat it as UTC midnight, which is the same day here but needn't be.
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value.slice(0, 7);
+  return todayIso(new Date(value)).slice(0, 7);
+}
+
+/** "YYYY-MM" moved by `months`, as pure calendar arithmetic. */
+export function addMonthsToKey(key: string, months: number): string {
+  const [y, m] = key.split("-").map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + months, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
 /**
  * Calendar arithmetic on a YYYY-MM-DD string, done in UTC so that it stays
  * pure date arithmetic whatever zone the runtime is in: `addDaysIso(todayIso(), 1)`

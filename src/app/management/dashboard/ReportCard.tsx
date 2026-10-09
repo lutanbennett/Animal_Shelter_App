@@ -45,6 +45,7 @@ export function ReportCard({
   hint,
   icon: Icon,
   count,
+  detail,
   entries,
   groups,
   none,
@@ -52,7 +53,10 @@ export function ReportCard({
   title: string;
   hint?: string;
   icon: LucideIcon;
-  count: number;
+  /** A number, or a formatted figure such as a baht amount. */
+  count: number | string;
+  /** A line under the heading for a card with no names, such as clinic spend. */
+  detail?: string;
   entries?: NamedEntry[];
   groups?: { label: string; entries: NamedEntry[] }[];
   none: string;
@@ -71,6 +75,7 @@ export function ReportCard({
           {count}
         </span>
       </div>
+      {detail && <span className="text-xs text-muted">{detail}</span>}
       {entries && <NameList entries={entries} none={none} />}
       {groups &&
         (groups.length === 0 ? (

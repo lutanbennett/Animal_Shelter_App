@@ -3,6 +3,7 @@ import {
   Ambulance,
   ChevronLeft,
   ChevronRight,
+  Coins,
   Droplet,
   HeartCrack,
   HeartHandshake,
@@ -10,15 +11,19 @@ import {
   RotateCcw,
   Scissors,
   Stethoscope,
+  Syringe,
+  type LucideIcon,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { speciesLabel } from "@/lib/i18n/enum-labels";
-import { formatMonth } from "@/lib/format";
+import { addMonthsToKey, formatBaht, formatMonth, shelterMidnight } from "@/lib/format";
 import { StatCard } from "@/components/StatCard";
+import { PrintButton } from "@/components/PrintButton";
 import {
   entryTotal,
   monthReport,
+  monthReportText,
   monthWindow,
   residentIndex,
   shiftMonth,
@@ -27,13 +32,16 @@ import {
   trend,
   type AppointmentRow,
   type BloodTestRow,
+  type ImmunizationRow,
   type MaintenanceRow,
+  type NamedEntry,
   type PlacementRow,
   type ProcedureRow,
   type ResidentRow,
   type StateRow,
 } from "@/lib/management/report";
 import { ReportCard } from "./ReportCard";
+import { CopyTextButton } from "./CopyTextButton";
 import { TrendChart } from "./TrendChart";
 import { requirePermission } from "@/lib/permissions/require";
 
@@ -64,11 +72,7 @@ export default async function ManagementDashboardPage(
   );
   // The trend ends with the selected month, so stepping back in time moves
   // the chart with the cards.
-  const trendStart = new Date(
-    window.start.getFullYear(),
-    window.start.getMonth() - (TREND_MONTHS - 1),
-    1,
-  );
+  const trendStart = shelterMidnight(`${addMonthsToKey(window.key, -(TREND_MONTHS - 1))}-01`);
 
   const supabase = await createClient();
 
@@ -84,6 +88,7 @@ export default async function ManagementDashboardPage(
     scheduledResult,
     bloodTestsResult,
     proceduresResult,
+    immunizationsResult,
     maintenanceResult,
   ] = await Promise.all([
     supabase
@@ -105,7 +110,7 @@ export default async function ManagementDashboardPage(
       .returns<PlacementRow[]>(),
     supabase
       .from("clinic_visits")
-      .select("resident_id, appointment_date, status")
+      .select("resident_id, appointment_date, status, cost")
       .is("archived_at", null)
       .gte("appointment_date", window.start.toISOString())
       .lt("appointment_date", window.end.toISOString())
@@ -130,6 +135,14 @@ export default async function ManagementDashboardPage(
       .lt("date", window.endDate)
       .returns<ProcedureRow[]>(),
     supabase
+      .from("immunization_records")
+      .select("resident_id, date_administered, immunization_types(name)")
+      // 0124: an archived dose is a deleted one.
+      .is("archived_at", null)
+      .gte("date_administered", window.startDate)
+      .lt("date_administered", window.endDate)
+      .returns<ImmunizationRow[]>(),
+    supabase
       .from("maintenance")
       .select("status")
       .neq("status", "Completed")
@@ -144,6 +157,7 @@ export default async function ManagementDashboardPage(
     scheduledResult,
     bloodTestsResult,
     proceduresResult,
+    immunizationsResult,
     maintenanceResult,
   ];
   const loadError = results.find((r) => r.error)?.error ?? null;
@@ -178,6 +192,7 @@ export default async function ManagementDashboardPage(
     appointments: [...(priorVisitsResult.data ?? []), ...monthVisits],
     bloodTests: bloodTestsResult.data ?? [],
     procedures: proceduresResult.data ?? [],
+    immunizations: immunizationsResult.data ?? [],
   });
   const current = snapshot(now, {
     residents,
@@ -185,9 +200,101 @@ export default async function ManagementDashboardPage(
     appointments: scheduledResult.data ?? [],
     maintenance: maintenanceResult.data ?? [],
   });
-  const buckets = trend(placements, TREND_MONTHS, window.start);
+  const buckets = trend(placements, TREND_MONTHS, window.key);
 
-  const monthLabel = formatMonth(window.start, locale, true);
+  // The first of the month as a date string, not window.start: that is the
+  // shelter's midnight, 17:00 UTC the day before, and would read as the
+  // previous month on a server running in UTC.
+  const monthLabel = formatMonth(window.startDate, locale, true);
+
+  // One list drives both the cards and the copied text, so the two cannot
+  // drift apart.
+  const { spent, invoiced, notInvoiced } = report.clinicSpend;
+  const cards: {
+    title: string;
+    hint?: string;
+    icon: LucideIcon;
+    count: number | string;
+    detail?: string;
+    entries?: NamedEntry[];
+    groups?: { label: string; entries: NamedEntry[] }[];
+  }[] = [
+    { title: d.month.intakes, icon: PawPrint, count: report.intakes.length, entries: report.intakes },
+    { title: d.month.adopted, icon: HeartHandshake, count: report.adopted.length, entries: report.adopted },
+    {
+      title: d.month.fostered,
+      icon: HeartHandshake,
+      count: report.fosteredNew.length + report.fosteredContinued.length,
+      groups: [
+        { label: d.month.fosteredNew, entries: report.fosteredNew },
+        { label: d.month.fosteredContinued, entries: report.fosteredContinued },
+      ],
+    },
+    { title: d.month.died, icon: HeartCrack, count: report.died.length, entries: report.died },
+    { title: d.month.hospitalised, icon: Ambulance, count: report.hospitalised.length, entries: report.hospitalised },
+    { title: d.month.returned, icon: RotateCcw, count: report.returned.length, entries: report.returned },
+    {
+      title: d.month.bloodWorkInHouse,
+      hint: d.month.bloodWorkInHouseHint,
+      icon: Droplet,
+      count: entryTotal(report.bloodWorkInHouse),
+      entries: report.bloodWorkInHouse,
+    },
+    {
+      title: d.month.bloodWorkVetVisit,
+      hint: d.month.bloodWorkVetVisitHint,
+      icon: Droplet,
+      count: entryTotal(report.bloodWorkClinicVisit),
+      entries: report.bloodWorkClinicVisit,
+    },
+    {
+      title: d.month.vetVisitsInitial,
+      hint: d.month.vetVisitsInitialHint,
+      icon: Stethoscope,
+      count: entryTotal(report.clinicVisitsInitial),
+      entries: report.clinicVisitsInitial,
+    },
+    {
+      title: d.month.vetVisitsFollowUp,
+      hint: d.month.vetVisitsFollowUpHint,
+      icon: Stethoscope,
+      count: entryTotal(report.clinicVisitsFollowUp),
+      entries: report.clinicVisitsFollowUp,
+    },
+    {
+      title: d.month.clinicSpend,
+      hint: d.month.clinicSpendHint,
+      icon: Coins,
+      count: formatBaht(spent, locale),
+      detail:
+        invoiced + notInvoiced > 0 ? d.month.clinicSpendDetail(invoiced, notInvoiced) : d.month.none,
+    },
+    {
+      title: d.month.procedures,
+      hint: d.month.proceduresByType,
+      icon: Scissors,
+      count: report.procedures.reduce((n, g) => n + g.count, 0),
+      groups: report.procedures.map((g) => ({ label: g.type || d.other, entries: g.entries })),
+    },
+    {
+      title: d.month.vaccinations,
+      hint: d.month.vaccinationsByVaccine,
+      icon: Syringe,
+      count: report.immunizations.reduce((n, g) => n + g.count, 0),
+      groups: report.immunizations.map((g) => ({ label: g.type || d.other, entries: g.entries })),
+    },
+  ];
+  const monthText = monthReportText({
+    heading: d.month.heading(monthLabel),
+    none: d.month.none,
+    lines: cards.map((c) => ({
+      label: c.title,
+      count: typeof c.count === "number" ? c.count : undefined,
+      detail: typeof c.count === "string" ? [c.count, c.detail].filter(Boolean).join(" — ") : undefined,
+      entries: c.entries,
+      groups: c.groups,
+    })),
+  });
   const isCurrentMonth = window.key === toMonthKey(now);
   const speciesSummary = current.bySpecies
     .map(
@@ -201,6 +308,15 @@ export default async function ManagementDashboardPage(
 
   return (
     <main className="flex flex-1 flex-col gap-8 p-4 md:p-6">
+      {/* Print the month section alone: everything that neither contains it
+          nor sits inside it goes, app chrome included, so nothing leaves
+          blank pages behind. Black on white whatever the theme. */}
+      <style>{`@media print {
+  body *:not(:has(#month-report)):not(#month-report):not(#month-report *) { display: none !important; }
+  body { background: #fff !important; }
+  #month-report, #month-report * { color: #000 !important; background: transparent !important; }
+  #month-report nav { display: none !important; }
+}`}</style>
       <div>
         <h1 className="text-2xl font-semibold text-foreground">{d.title}</h1>
         <p className="text-sm text-muted">{d.subtitle}</p>
@@ -283,8 +399,8 @@ export default async function ManagementDashboardPage(
         </div>
       </section>
 
-      {/* The month — what the monthly report asks for */}
-      <section className="flex flex-col gap-3">
+      {/* The month — what the monthly report asks for, and the only part that prints */}
+      <section id="month-report" className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-foreground">
             {d.month.heading(monthLabel)}
@@ -321,95 +437,20 @@ export default async function ManagementDashboardPage(
           </nav>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          <ReportCard
-            title={d.month.intakes}
-            icon={PawPrint}
-            count={report.intakes.length}
-            entries={report.intakes}
-            none={d.month.none}
+        <div className="flex flex-wrap items-center gap-2 print:hidden">
+          <CopyTextButton
+            text={monthText}
+            label={d.month.copyText}
+            copiedLabel={d.month.copied}
+            promptLabel={d.month.copyPrompt}
           />
-          <ReportCard
-            title={d.month.adopted}
-            icon={HeartHandshake}
-            count={report.adopted.length}
-            entries={report.adopted}
-            none={d.month.none}
-          />
-          <ReportCard
-            title={d.month.fostered}
-            icon={HeartHandshake}
-            count={report.fosteredNew.length + report.fosteredContinued.length}
-            groups={[
-              { label: d.month.fosteredNew, entries: report.fosteredNew },
-              { label: d.month.fosteredContinued, entries: report.fosteredContinued },
-            ]}
-            none={d.month.none}
-          />
-          <ReportCard
-            title={d.month.died}
-            icon={HeartCrack}
-            count={report.died.length}
-            entries={report.died}
-            none={d.month.none}
-          />
-          <ReportCard
-            title={d.month.hospitalised}
-            icon={Ambulance}
-            count={report.hospitalised.length}
-            entries={report.hospitalised}
-            none={d.month.none}
-          />
-          <ReportCard
-            title={d.month.returned}
-            icon={RotateCcw}
-            count={report.returned.length}
-            entries={report.returned}
-            none={d.month.none}
-          />
-          <ReportCard
-            title={d.month.bloodWorkInHouse}
-            hint={d.month.bloodWorkInHouseHint}
-            icon={Droplet}
-            count={entryTotal(report.bloodWorkInHouse)}
-            entries={report.bloodWorkInHouse}
-            none={d.month.none}
-          />
-          <ReportCard
-            title={d.month.bloodWorkVetVisit}
-            hint={d.month.bloodWorkVetVisitHint}
-            icon={Droplet}
-            count={entryTotal(report.bloodWorkClinicVisit)}
-            entries={report.bloodWorkClinicVisit}
-            none={d.month.none}
-          />
-          <ReportCard
-            title={d.month.vetVisitsInitial}
-            hint={d.month.vetVisitsInitialHint}
-            icon={Stethoscope}
-            count={entryTotal(report.clinicVisitsInitial)}
-            entries={report.clinicVisitsInitial}
-            none={d.month.none}
-          />
-          <ReportCard
-            title={d.month.vetVisitsFollowUp}
-            hint={d.month.vetVisitsFollowUpHint}
-            icon={Stethoscope}
-            count={entryTotal(report.clinicVisitsFollowUp)}
-            entries={report.clinicVisitsFollowUp}
-            none={d.month.none}
-          />
-          <ReportCard
-            title={d.month.procedures}
-            hint={d.month.proceduresByType}
-            icon={Scissors}
-            count={report.procedures.reduce((n, g) => n + g.count, 0)}
-            groups={report.procedures.map((g) => ({
-              label: g.type || d.other,
-              entries: g.entries,
-            }))}
-            none={d.month.none}
-          />
+          <PrintButton label={d.month.print} />
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 print:grid-cols-2">
+          {cards.map((card) => (
+            <ReportCard key={card.title} {...card} none={d.month.none} />
+          ))}
         </div>
       </section>
 

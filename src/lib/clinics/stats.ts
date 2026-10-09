@@ -6,6 +6,8 @@
  * from that one list rather than re-queried per period.
  */
 
+import { addMonthsToKey, shelterMonthKey } from "@/lib/format";
+
 export type VisitStatus = "scheduled" | "completed" | "cancelled";
 
 export type ClinicVisit = {
@@ -147,20 +149,18 @@ export function visitsByMonth(
 ): MonthBucket[] {
   const buckets: MonthBucket[] = [];
   const index = new Map<string, number>();
+  // Shelter months, not the runtime's: a visit at 06:30 on the 1st in Chiang
+  // Mai is 23:30 UTC on the last day of the month before.
+  const thisMonth = shelterMonthKey(now);
   for (let i = months - 1; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const key = monthKey(d);
+    const key = `${addMonthsToKey(thisMonth, -i)}-01`;
     index.set(key, buckets.length);
     buckets.push({ month: key, count: 0 });
   }
   for (const v of visits) {
     if (v.status === "cancelled") continue;
-    const slot = index.get(monthKey(new Date(v.appointment_date)));
+    const slot = index.get(`${shelterMonthKey(v.appointment_date)}-01`);
     if (slot != null) buckets[slot].count += 1;
   }
   return buckets;
-}
-
-function monthKey(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
 }
