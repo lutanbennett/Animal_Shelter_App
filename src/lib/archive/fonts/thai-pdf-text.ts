@@ -13,5 +13,5 @@
  * the two code points instead of one.
  */
 export function thaiPdfText(text: string): string {
-  return text.replace(/ำ/g, "ํา");
+  return text.replace(/\u0E33/g, "\u0E4D\u0E32");
 }
