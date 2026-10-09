@@ -126,7 +126,7 @@ comment on table public.clinic_visits is
 
 -- ---------------------------------------------------------------------------------------------------------
 -- 3. Names that said vet: indexes, constraints, triggers and policies, wherever they are.
-create function pg_temp.vet_name(p text) returns text language sql immutable as $f$
+create or replace function pg_temp.vet_name(p text) returns text language sql immutable as $f$
   select regexp_replace(regexp_replace(regexp_replace(
            replace(replace(replace(replace(replace(p,
              'vet_appointment', 'clinic_visit'),
@@ -205,6 +205,21 @@ begin
   end if;
 end $$;
 update public.roles set key = 'doctor', name = 'Doctor' where key = 'vet';
+
+-- The gate every internal view asks first (0086). Its body named 'vet' as text, which after the rename is not a
+-- value of app_role: left as it was, it would raise for every signed-in caller and close the app to everyone.
+create or replace function private.has_app_access()
+  returns boolean
+  language sql
+  stable
+  set search_path = 'pg_catalog', 'public'
+as $$
+  select current_user::text not in ('anon', 'authenticated')
+      or coalesce(
+           public.current_user_role() in ('admin', 'management', 'staff', 'doctor', 'volunteer'),
+           false
+         );
+$$;
 
 -- ---------------------------------------------------------------------------------------------------------
 -- 5. Functions: the name first (a rename keeps the OID, so every policy and trigger calling one still does),
@@ -642,7 +657,7 @@ begin
     from residents
     where id = new.resident_id;
 
-    -- 0172: the key was 'vet_appointments'; undo_deceased_placement() reads either.
+    -- 0172: the key was the old table's name; undo_deceased_placement() reads either.
     new.deceased_cascade := jsonb_build_object(
       'clinic_visits', v_appointments,
       'prescriptions', v_prescriptions,
@@ -1213,6 +1228,27 @@ end $$;
 drop function if exists public.vet_doctors_link_home_clinic();
 
 
+-- 5b. A policy's deparse keeps the old function name as a column alias ("... AS current_vet_resident_ids"). It
+-- is only a label, but it still says vet, so every policy that carries one is rewritten with the label renamed.
+do $$
+declare r record; v_q text; v_c text;
+begin
+  for r in
+    select tablename, policyname, qual, with_check from pg_policies
+     where schemaname = 'public'
+       and (qual ~ 'current_vet_resident_ids|current_user_vet_ids' or with_check ~ 'current_vet_resident_ids|current_user_vet_ids')
+  loop
+    v_q := replace(replace(r.qual, 'current_vet_resident_ids', 'current_clinic_resident_ids'), 'current_user_vet_ids', 'current_user_clinic_ids');
+    v_c := replace(replace(r.with_check, 'current_vet_resident_ids', 'current_clinic_resident_ids'), 'current_user_vet_ids', 'current_user_clinic_ids');
+    if v_q is not null then
+      execute format('alter policy %I on public.%I using (%s)', r.policyname, r.tablename, v_q);
+    end if;
+    if v_c is not null then
+      execute format('alter policy %I on public.%I with check (%s)', r.policyname, r.tablename, v_c);
+    end if;
+  end loop;
+end $$;
+
 -- ---------------------------------------------------------------------------------------------------------
 -- 6. A doctor login's READS move to the wider scope; its writes stay where they were.
 -- Every SELECT policy that asked current_clinic_resident_ids() asks current_doctor_resident_ids() instead, its
@@ -1229,6 +1265,32 @@ begin
                    replace(r.qual, 'current_clinic_resident_ids', 'current_doctor_resident_ids'));
   end loop;
 end $$;
+
+-- Five read-only views carry the same test in their WHERE (0081's pattern): a doctor login sees a row only for a
+-- resident in scope. They are reads, so they move to the read scope too, or /residents/<id> would show a resident
+-- whose state, placement and vaccinations come back empty. Rebuilt from their own definition with only the
+-- function swapped; owner-run views with no options, so the rebuild changes nothing else.
+do $$
+declare r record;
+begin
+  for r in
+    select c.relname, pg_get_viewdef(c.oid) as def
+      from pg_class c
+     where c.relnamespace = 'public'::regnamespace and c.relkind = 'v'
+       and c.relname in ('resident_current_state', 'current_placement', 'immunization_compliance',
+                         'immunization_duplicate_check', 'translation_queue')
+       and pg_get_viewdef(c.oid) like '%current_clinic_resident_ids%'
+  loop
+    execute format('create or replace view public.%I as %s', r.relname,
+                   replace(replace(r.def, 'current_clinic_resident_ids', 'current_doctor_resident_ids'),
+                           'current_vet_resident_ids', 'current_doctor_resident_ids'));
+  end loop;
+end $$;
+revoke insert, update, delete, truncate, references, trigger on public.resident_current_state from authenticated, anon;
+revoke insert, update, delete, truncate, references, trigger on public.current_placement from authenticated, anon;
+revoke insert, update, delete, truncate, references, trigger on public.immunization_compliance from authenticated, anon;
+revoke insert, update, delete, truncate, references, trigger on public.immunization_duplicate_check from authenticated, anon;
+revoke insert, update, delete, truncate, references, trigger on public.translation_queue from authenticated, anon;
 
 -- weight and immunization_records had one FOR ALL policy each, reads and writes together. It stays (clinic scope,
 -- so writes do not move) and a SELECT policy beside it adds the wider reads; policies of one command are OR'd.
