@@ -44,18 +44,19 @@ The pair is still worth knowing, because it will recur:
 
 ## In flight
 
-Nothing was left open by the release itself. **Worktrees to clear** — all free
-leftovers whose PRs have merged, best done with `/clean-streams`:
+**Nothing was left open by the release itself**, and no branch carries a
+migration.
 
-| Worktree | Branch | State |
-|---|---|---|
-| `Animal_Shelter_cut-release-0-23-0` | `claude/cut-release-0-23-0` | merged as #491 |
-| `Animal_Shelter_record-0-22-0` | `claude/record-0-22-0` | merged; carried over from the last handover, still not cleared |
-| `Animal_Shelter_release-handover-0-22-0` | `claude/release-handover-0-22-0` | merged; carried over, still not cleared |
-| `Animal_Shelter_record-0-23-0` | `claude/record-0-23-0` | this record, once its PR merges |
+**Do not trust a list of worktrees in this file — run `node scripts/worktree.mjs
+list`.** Writing one down was tried and it was stale within the hour: the three
+leftovers this section originally named were cleared by another session while
+this PR was open, and three new streams had started in the meantime. What is
+durable is the shape, not the names:
 
-Four other streams were live during the release and may still be: check
-`node scripts/worktree.mjs list` for `HELD` before touching anything.
+- The release's own worktrees — the cut, and this record — are free leftovers once their PRs merge. `/clean-streams` is the one-pass way to clear them.
+- `HELD — <session name>` means someone is still in it. Ask; do not tear it down.
+- The list also names **husks**, folders git no longer tracks, which `done <name>` clears. There was one at the time of writing, `Animal_Shelter_planner-handover-81`, left behind by #490.
+- Several feature streams run in parallel with a release and are nothing to do with it. A release manager's business is the two it created.
 
 ---
 
@@ -217,7 +218,7 @@ What is worth carrying forward, most valuable first:
 5. **Ask whether anything in the release can fail silently** — and read the candidates in code before asking, so the question carries an answer. See the section above for what a *yes* looks like.
 6. **Budget the Worker deploy at ~13 minutes**, do not overlap it with anything building in the same checkout, and fill the wait with the Pi builds, the drift checks and the record.
 7. Four production-only checks are owed: a donation receipt, a facility-map upload, a Management → Website save, and a phone-width sweep that has never happened.
-8. `/clean-streams` — four free leftovers are listed under **In flight**.
+8. `/clean-streams`, and read **In flight** on why this file no longer lists worktrees by name.
 
 ---
 
