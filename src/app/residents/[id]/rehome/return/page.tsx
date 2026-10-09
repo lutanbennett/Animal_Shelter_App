@@ -2,6 +2,7 @@ import { requireFullResident } from "@/lib/residents/who-and-where";
 import Link from "next/link";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
+import { contactRelation } from "@/lib/contacts/visibility";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -84,7 +85,7 @@ export default async function ReturnToShelterPage(
   const carerResult =
     withCarer && state?.current_carer_id
       ? await supabase
-          .from("contacts")
+          .from(contactRelation(perms))
           .select("name")
           .eq("id", state.current_carer_id)
           .limit(1)

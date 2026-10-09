@@ -123,7 +123,7 @@ export async function rehomeResident(
         .returns<{ current_status: string | null; is_deceased: boolean }[]>(),
       input.carerId && !input.newCarer
         ? supabase
-            .from("contacts")
+            .from("picker_contacts")
             .select("id, name, type, archived_at")
             .eq("id", input.carerId)
             .limit(1)
@@ -184,19 +184,20 @@ export async function rehomeResident(
 
   let carerId = input.carerId;
   if (input.newCarer) {
-    const { data: created, error } = await supabase
-      .from("contacts")
-      .insert({
-        name: input.newCarer.name,
-        type: CARER_CONTACT_TYPE,
-        phone: input.newCarer.phone,
-        email: input.newCarer.email,
-        line_id: input.newCarer.lineId,
-      })
-      .select("id")
-      .single<{ id: string }>();
+    // The id is made here, not read back: staff may add a carer
+    // (contacts.add) but not read the contacts table (0170), and
+    // INSERT ... RETURNING needs the new row to pass the read policy.
+    const newId = crypto.randomUUID();
+    const { error } = await supabase.from("contacts").insert({
+      id: newId,
+      name: input.newCarer.name,
+      type: CARER_CONTACT_TYPE,
+      phone: input.newCarer.phone,
+      email: input.newCarer.email,
+      line_id: input.newCarer.lineId,
+    });
     if (error) return { error: error.message };
-    carerId = created.id;
+    carerId = newId;
   }
 
   const { error } = await supabase.from("placement_history").insert({

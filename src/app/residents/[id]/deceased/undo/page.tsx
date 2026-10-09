@@ -43,7 +43,7 @@ export default async function UndoDeathPage(
     supabase
       .from("placement_history")
       .select(
-        "id, placement_type, start_date, cause_of_death, enclosure:enclosures!enclosure_id(name, name_th, zones(name, name_th)), carer:contacts(name)",
+        "id, placement_type, start_date, cause_of_death, enclosure:enclosures!enclosure_id(name, name_th, zones(name, name_th)), carer:picker_contacts(name)",
       )
       .eq("resident_id", id)
       .eq("placement_type", "Deceased")
@@ -67,7 +67,7 @@ export default async function UndoDeathPage(
     ? await supabase
         .from("placement_history")
         .select(
-          "id, placement_type, start_date, cause_of_death, enclosure:enclosures!enclosure_id(name, name_th, zones(name, name_th)), carer:contacts(name)",
+          "id, placement_type, start_date, cause_of_death, enclosure:enclosures!enclosure_id(name, name_th, zones(name, name_th)), carer:picker_contacts(name)",
         )
         .eq("resident_id", id)
         .lt("start_date", death.start_date)

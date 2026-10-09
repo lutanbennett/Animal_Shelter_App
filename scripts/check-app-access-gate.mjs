@@ -52,6 +52,9 @@ const INTERNAL = [
   "user_roles",
   "maintenance",
   "assistant_actions",
+  // The shelter's layout: open to every signed-in login until 0170 put the gate on their read policies.
+  "facility_maps",
+  "map_rooms",
 ];
 // Invoker functions granted to authenticated: rows with anything in them.
 const FUNCTIONS = {
