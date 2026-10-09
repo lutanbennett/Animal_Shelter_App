@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **Clinics and doctors: remove the word "Vet" from the system** (ticked by the app PR that follows) |
 | Branch / worktree | `claude/vet-to-doctor-rename-schema` @ `C:\Development\Animal_Shelter_vet-to-doctor-rename-schema` |
 | Dev server | not started — this PR changes no app code; the app rename is the next PR, `claude/vet-to-doctor-rename` |
-| PR | opened from this commit |
+| PR | #495 |
 | Tested by / date | Claude / 2026-10-09 |
 | Carries a migration? | yes — `0172_clinics_and_doctors.sql` |
 | Tested at SHA | `146b7925` (origin/main) plus this branch's files |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — all 7 checks passing on #495 (audit, check, migration-numbers, new-policy-role-names, public-views, script-integrity, test-plan), read from `gh pr checks 495`
 
 ## 3. Schema and data — *skip if no migration*
 
