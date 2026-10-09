@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ResidentPicker, type ResidentOption } from "@/components/ResidentPicker";
-import { formatBaht } from "@/lib/format";
+import { formatBahtExact } from "@/lib/format";
 import {
   DONATION_DESIGNATIONS,
   DONATION_METHODS,
@@ -18,7 +18,7 @@ import { recordDonation } from "../actions";
 export type DonorContact = { id: string; name: string; email: string | null; phone: string | null; line_id: string | null };
 
 const inputClass =
-  "w-full rounded border border-border bg-background px-3 py-2 text-base text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40 sm:text-sm";
+  "min-h-11 w-full rounded border border-border bg-background px-3 py-2 text-base text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40 sm:text-sm";
 const labelClass = "text-sm font-medium text-muted";
 
 /**
@@ -206,7 +206,7 @@ export function DonationForm({ contacts, residents, today }: { contacts: DonorCo
         )}
         {!inKind && (
           <p className="text-right text-base font-semibold text-foreground">
-            {f.total}: {formatBaht(total, locale)}
+            {f.total}: {formatBahtExact(total, locale)}
           </p>
         )}
       </fieldset>

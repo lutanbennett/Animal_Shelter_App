@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BackLink } from "@/components/BackLink";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { addDaysIso, formatBaht, formatDate, todayIso } from "@/lib/format";
+import { addDaysIso, formatBahtExact, formatDate, todayIso } from "@/lib/format";
 import { requirePermission } from "@/lib/permissions/require";
 import type { DonationMethod } from "@/lib/donations/donations";
 
@@ -96,7 +96,7 @@ export default async function DonationsPage(props: PageProps<"/management/donati
           <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1 rounded border border-border bg-surface px-4 py-3">
             <span className="text-sm text-muted">{d.totalFor(rows.length)}</span>
             <span className="text-lg font-semibold text-foreground">
-              {d.totalBaht}: {formatBaht(total, locale)}
+              {d.totalBaht}: {formatBahtExact(total, locale)}
             </span>
             <span className="w-full text-xs text-muted">{d.totalNote}</span>
           </div>
@@ -110,7 +110,7 @@ export default async function DonationsPage(props: PageProps<"/management/donati
                     {r.donor_name}
                   </span>
                   <span className="text-sm text-muted">{d.methods[r.method]}</span>
-                  <span className="w-28 text-right text-sm text-foreground">{r.inKind ? d.inKind : formatBaht(r.amount, locale)}</span>
+                  <span className="w-28 text-right text-sm text-foreground">{r.inKind ? d.inKind : formatBahtExact(r.amount, locale)}</span>
                   <span className="flex w-full flex-wrap gap-2 text-xs sm:w-auto">
                     <span className="font-mono text-foreground">{(r.live ?? r.latest)?.number ?? d.noReceipt}</span>
                     {!r.live && r.latest && <span className="rounded bg-danger/10 px-1.5 text-danger">{d.status.void}</span>}
