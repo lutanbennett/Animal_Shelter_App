@@ -7,6 +7,8 @@
 //   node scripts/acceptance-matrix.mjs --out <file>    # ...or to a file (see below)
 //   node scripts/acceptance-matrix.mjs --role vet      # one tester's sheet only
 //   node scripts/acceptance-matrix.mjs --check         # validate; write nothing
+//   node scripts/acceptance-matrix.mjs --pdf <file>    # the printable A4 sign-off edition (with --role too)
+//   node scripts/acceptance-matrix.mjs --json <file>   # the document as data, for checks
 //
 // Three sources, only the first mechanical:
 //   1. The manual (src/lib/manual/en.ts) says WHICH activities exist and WHICH
@@ -67,7 +69,7 @@ const option = (name) => {
   return i === -1 ? null : args[i + 1] ?? null;
 };
 if (flag("--help") || flag("-h")) {
-  console.log(readFileSync(fileURLToPath(import.meta.url), "utf8").split("\n").slice(1, 33).map((l) => l.replace(/^\/\/ ?/, "")).join("\n"));
+  console.log(readFileSync(fileURLToPath(import.meta.url), "utf8").split("\n").slice(1, 35).map((l) => l.replace(/^\/\/ ?/, "")).join("\n"));
   process.exit(0);
 }
 const onlyRole = option("--role");
@@ -269,132 +271,216 @@ if (flag("--check")) {
   process.exit(0);
 }
 
-// ── Output ──────────────────────────────────────────────────────────────────
-const cellText = { does: "does", "must not": "must not", "n/a": "–" };
+// ── The document, as data ───────────────────────────────────────────────────
+// Both editions are drawn from this one object, words included: the Markdown
+// below and the printable A4 PDF (--pdf, scripts/lib/acceptance-matrix-pdf.mjs).
+// So the PDF cannot test anything the Markdown does not, and a role added,
+// removed or renamed in ROLES / ROLE_LABEL reaches both with neither renderer
+// changing — the PDF lays out whatever roles it is given and names none itself.
+// Prose may carry **bold** and `code`; each renderer turns those into its own.
+
+/** Said at the top of a role's sheet, for the roles tested in an unusual way. */
+const ROLE_NOTE = {
+  visitor: `The signed-out visitor has no account: test these in a private browser window, not signed in.`,
+  public_viewer: `The public viewer signs in but sees only the public website: test these signed in as that account.`,
+};
+const CELL_TEXT = { does: "does", "must not": "must not", "n/a": "–" };
+const BLANK = "____________________";
+
+const roleList = onlyRole ? [onlyRole] : ROLES;
+const doc = {
+  title: `Acceptance checklist — Lanna Care for Animals`,
+  version,
+  summary,
+  generated: `**Generated** by \`node scripts/acceptance-matrix.mjs\` from the user manual, the role walkthrough and the Admin-on-mobile decision (${summary}). Do not edit a generated copy to change what is tested; change the manual, \`${ENTRIES_FILE}\` or the walkthrough, and generate again. A **signed** edition is kept as \`docs/uat/acceptance-<date>.md\` and is never edited afterwards: any later change to a signed activity starts a new edition.`,
+  blank: BLANK,
+  cover: [
+    ["Edition", "acceptance-____-__-__"],
+    ["System version (from Release notes)", `${BLANK} (this checklist was generated from ${version})`],
+    ["Site tested on", BLANK],
+    ["Data", "disposable test data only — nothing recorded here is a real animal or person"],
+    ["First test date / last test date", `${BLANK} / ${BLANK}`],
+    ["Director", BLANK],
+  ],
+  howToRead: {
+    intro: `Every activity the manual describes is a row, and every role is a column. **does** means that role is meant to do it; **must not** means the role must be refused; **–** means it does not apply to that role.`,
+    points: [
+      `**Language.** Every activity is tried in English and in Thai, so text left untranslated and Thai that does not fit are found.`,
+      `**Device.** Each activity is tried where it is really done: a **phone** for field work, a **desktop** for setup and reporting, both where the work is done either way. A dash in a box means the activity is not done on that device.`,
+      `**Who tests.** Each role's sheet is tried by a person who really does that job, signed in as that role.`,
+      `**A failure** is written in the Failures list at the end with what was done about it. It is either fixed and tried again, or accepted by the Director and written down as such.`,
+    ],
+  },
+  /** The matrix's columns, in order. */
+  roles: ROLES.map((key) => ({ key, label: ROLE_LABEL[key], does: count(key, "does") })),
+  cellText: CELL_TEXT,
+  sections: [],
+  sheet: {
+    testerLine: [`Tester`, `Account used`, `Date(s)`],
+    doesHeading: `What this role does`,
+    doesIntro: `Try each once on every device it lists, in **English (EN)** and again in **Thai (ไทย)**. Write **P** (pass) or **F** (fail) in the box; say what you saw in Notes — especially any English left in Thai mode, or Thai text that is cut off or overlaps.`,
+    caseColumns: ["EN phone", "EN desktop", "ไทย phone", "ไทย desktop"],
+    mustNotHeading: `What this role must NOT be able to do`,
+    mustNotIntro: `For each, look for it in the menu or on the page (it should not be offered), then try to reach it by typing its address or following an old link (it should be refused, with a page saying you do not have access — not a blank page, an error, or the public home page). Write **P** if it is properly out of reach, **F** if you could do it.`,
+    mustNotColumns: ["Not offered", "Refused if reached"],
+    boundariesHeading: `Boundaries to try`,
+    oath: `I tried every line above myself, in the role named, and wrote down what I saw.`,
+  },
+  sheets: roleList.map((role) => ({
+    key: role,
+    label: ROLE_LABEL[role],
+    note: ROLE_NOTE[role] ?? null,
+    does: rows
+      .filter((r) => r.cells[role] === "does")
+      .map((r) => ({
+        n: r.n,
+        activity: r.activity,
+        do: r.do,
+        expect: r.expect,
+        forRole: r.notes?.[role] ?? null,
+        // One box per language and device, absent where the activity is not done on that device.
+        cases: [r.device !== "desktop", r.device !== "phone", r.device !== "desktop", r.device !== "phone"],
+      })),
+    mustNot: SIGNED_IN_FIVE.includes(role) ? rows.filter((r) => r.cells[role] === "must not").map((r) => ({ n: r.n, activity: r.activity })) : [],
+    boundaries: [...BOUNDARIES, ...VISITOR_BOUNDARIES].filter((b) => b.role === role).map((b, i) => ({ n: `B${i + 1}`, text: b.text })),
+  })),
+  /** The failures list and the sign-off belong to the whole document, not to one tester's sheet. */
+  closing: onlyRole
+    ? null
+    : {
+        failuresHeading: `Failures and how each was resolved`,
+        failureColumns: ["#", "Row or boundary", "Role", "Language / device", "What went wrong", "Resolved or accepted", "By whom, when"],
+        failuresNote: `**Resolved** = fixed and tried again, with the date. **Accepted** = the shelter agrees to go live with it, and the Director has initialled it.`,
+        signOffColumns: ["Role", "Tested by", "Date", "Signature"],
+        director: `**Director:** I have read the failures list. The system does what the shelter needs, apart from the accepted issues written above.`,
+        directorLine: [`Name`, `Signature`, `Date`],
+      },
+};
+for (const r of rows) {
+  if (doc.sections.at(-1)?.id !== r.topic.section.id) doc.sections.push({ id: r.topic.section.id, title: r.topic.section.title, rows: [] });
+  doc.sections.at(-1).rows.push({ n: r.n, activity: r.activity, device: DEVICE_LABEL[r.device], cells: ROLES.map((role) => r.cells[role]) });
+}
+
+// ── Output: the data, and the PDF ───────────────────────────────────────────
+const jsonDest = option("--json");
+if (jsonDest) {
+  writeFileSync(path.resolve(process.cwd(), jsonDest), JSON.stringify(doc, null, 2), "utf8");
+  console.error(`acceptance-matrix: wrote ${jsonDest} — ${summary}`);
+  process.exit(0);
+}
+const pdfDest = option("--pdf");
+if (pdfDest) {
+  const { renderAcceptancePdf } = await import(pathToFileURL(path.join(here, "lib/acceptance-matrix-pdf.mjs")).href);
+  writeFileSync(path.resolve(process.cwd(), pdfDest), await renderAcceptancePdf(doc, repo));
+  console.error(`acceptance-matrix: wrote ${pdfDest} — ${summary}`);
+  process.exit(0);
+}
+
+// ── Output: Markdown ────────────────────────────────────────────────────────
 const box = "[ ]";
 const out = [];
 const line = (s = "") => out.push(s);
+const fillIn = (labels) => labels.map((l) => `${l}: ${BLANK}`).join("  ");
 
-function cases(r) {
-  // Four boxes, one per language and device, blank where the activity is not done on that device.
-  const dev = (d) => (r.device === "both" || r.device === d ? box : "–");
-  return [dev("phone"), dev("desktop"), dev("phone"), dev("desktop")];
-}
-
-function sectionRole(role) {
-  const mine = rows.filter((r) => r.cells[role] === "does");
-  line(`## ${ROLE_LABEL[role]} — tester's sheet`);
+function sectionRole(s) {
+  const t = doc.sheet;
+  line(`## ${s.label} — tester's sheet`);
   line();
-  line(`Tester: ____________________  Account used: ____________________  Date(s): ____________________`);
+  line(fillIn(t.testerLine));
   line();
-  if (role === "visitor") line(`The signed-out visitor has no account: test these in a private browser window, not signed in.`);
-  if (role === "public_viewer") line(`The public viewer signs in but sees only the public website: test these signed in as that account.`);
-  if (mine.length) {
-    line(`### What this role does`);
+  if (s.note) line(s.note);
+  if (s.does.length) {
+    line(`### ${t.doesHeading}`);
     line();
-    line(`Try each once on every device it lists, in **English (EN)** and again in **Thai (ไทย)**. Write **P** (pass) or **F** (fail) in the box; say what you saw in Notes — especially any English left in Thai mode, or Thai text that is cut off or overlaps.`);
+    line(t.doesIntro);
     line();
-    line(`| # | Activity | What to do | You should see | EN phone | EN desktop | ไทย phone | ไทย desktop | Notes |`);
+    line(`| # | Activity | What to do | You should see | ${t.caseColumns.join(" | ")} | Notes |`);
     line(`|---|---|---|---|---|---|---|---|---|`);
-    for (const r of mine) {
-      const extra = r.notes?.[role] ? ` **For this role:** ${r.notes[role]}` : "";
-      line(`| ${r.n} | ${r.activity} | ${r.do} | ${r.expect}${extra} | ${cases(r).join(" | ")} | |`);
+    for (const r of s.does) {
+      const extra = r.forRole ? ` **For this role:** ${r.forRole}` : "";
+      line(`| ${r.n} | ${r.activity} | ${r.do} | ${r.expect}${extra} | ${r.cases.map((c) => (c ? box : "–")).join(" | ")} | |`);
     }
     line();
   }
-  const refused = SIGNED_IN_FIVE.includes(role) ? rows.filter((r) => r.cells[role] === "must not") : [];
-  if (refused.length) {
-    line(`### What this role must NOT be able to do`);
+  if (s.mustNot.length) {
+    line(`### ${t.mustNotHeading}`);
     line();
-    line(`For each, look for it in the menu or on the page (it should not be offered), then try to reach it by typing its address or following an old link (it should be refused, with a page saying you do not have access — not a blank page, an error, or the public home page). Write **P** if it is properly out of reach, **F** if you could do it.`);
+    line(t.mustNotIntro);
     line();
-    line(`| # | Activity | Not offered | Refused if reached | Notes |`);
+    line(`| # | Activity | ${t.mustNotColumns.join(" | ")} | Notes |`);
     line(`|---|---|---|---|---|`);
-    for (const r of refused) line(`| ${r.n} | ${r.activity} | ${box} | ${box} | |`);
+    for (const r of s.mustNot) line(`| ${r.n} | ${r.activity} | ${box} | ${box} | |`);
     line();
   }
-  const bounds = [...BOUNDARIES, ...VISITOR_BOUNDARIES].filter((b) => b.role === role);
-  if (bounds.length) {
-    line(`### Boundaries to try`);
+  if (s.boundaries.length) {
+    line(`### ${t.boundariesHeading}`);
     line();
     line(`| # | Try this | Result | Notes |`);
     line(`|---|---|---|---|`);
-    bounds.forEach((b, i) => line(`| B${i + 1} | ${b.text} | ${box} | |`));
+    for (const b of s.boundaries) line(`| ${b.n} | ${b.text} | ${box} | |`);
     line();
   }
-  line(`**Tester's signature:** ____________________  **Date:** ____________________`);
+  line(`**Tester's signature:** ${BLANK}  **Date:** ${BLANK}`);
   line();
-  line(`I tried every line above myself, in the role named, and wrote down what I saw.`);
+  line(t.oath);
   line();
 }
 
-const roleList = onlyRole ? [onlyRole] : ROLES;
-line(`# Acceptance checklist — Lanna Care for Animals`);
+line(`# ${doc.title}`);
 line();
-line(`> **Generated** by \`node scripts/acceptance-matrix.mjs\` from the user manual, the role walkthrough and the Admin-on-mobile decision (${summary}). Do not edit a generated copy to change what is tested; change the manual, \`${ENTRIES_FILE}\` or the walkthrough, and generate again. A **signed** edition is kept as \`docs/uat/acceptance-<date>.md\` and is never edited afterwards: any later change to a signed activity starts a new edition.`);
+line(`> ${doc.generated}`);
 line();
 line(`## Cover`);
 line();
 line(`| | |`);
 line(`|---|---|`);
-line(`| Edition | acceptance-____-__-__ |`);
-line(`| System version (from Release notes) | ____________________ (this checklist was generated from ${version}) |`);
-line(`| Site tested on | ____________________ |`);
-line(`| Data | disposable test data only — nothing recorded here is a real animal or person |`);
-line(`| First test date / last test date | ____________________ / ____________________ |`);
-line(`| Director | ____________________ |`);
+for (const [k, v] of doc.cover) line(`| ${k} | ${v} |`);
 line();
 line(`## How to read this`);
 line();
-line(`Every activity the manual describes is a row, and every role is a column. **does** means that role is meant to do it; **must not** means the role must be refused; **–** means it does not apply to that role.`);
+line(doc.howToRead.intro);
 line();
-line(`- **Language.** Every activity is tried in English and in Thai, so text left untranslated and Thai that does not fit are found.`);
-line(`- **Device.** Each activity is tried where it is really done: a **phone** for field work, a **desktop** for setup and reporting, both where the work is done either way. A dash in a box means the activity is not done on that device.`);
-line(`- **Who tests.** Each role's sheet is tried by a person who really does that job, signed in as that role.`);
-line(`- **A failure** is written in the Failures list at the end with what was done about it. It is either fixed and tried again, or accepted by the Director and written down as such.`);
+for (const p of doc.howToRead.points) line(`- ${p}`);
 line();
 line(`## The matrix`);
 line();
-line(`| # | Activity | Device | ${ROLES.map((r) => ROLE_LABEL[r]).join(" | ")} |`);
-line(`|---|---|---|${ROLES.map(() => "---").join("|")}|`);
-let section = null;
-for (const r of rows) {
-  if (r.topic.section.id !== section) {
-    section = r.topic.section.id;
-    line(`| | **${r.topic.section.title}** | | ${ROLES.map(() => "").join(" | ")} |`);
-  }
-  line(`| ${r.n} | ${r.activity} | ${DEVICE_LABEL[r.device]} | ${ROLES.map((role) => cellText[r.cells[role]]).join(" | ")} |`);
+line(`| # | Activity | Device | ${doc.roles.map((r) => r.label).join(" | ")} |`);
+line(`|---|---|---|${doc.roles.map(() => "---").join("|")}|`);
+for (const s of doc.sections) {
+  line(`| | **${s.title}** | | ${doc.roles.map(() => "").join(" | ")} |`);
+  for (const r of s.rows) line(`| ${r.n} | ${r.activity} | ${r.device} | ${r.cells.map((c) => CELL_TEXT[c]).join(" | ")} |`);
 }
 line();
-line(`Rows each role does: ${ROLES.map((r) => `${ROLE_LABEL[r]} ${count(r, "does")}`).join(" · ")}.`);
+line(`Rows each role does: ${doc.roles.map((r) => `${r.label} ${r.does}`).join(" · ")}.`);
 line();
 
-for (const role of roleList) {
+for (const s of doc.sheets) {
   line(`---`);
   line();
-  sectionRole(role);
+  sectionRole(s);
 }
 
-if (!onlyRole) {
+if (doc.closing) {
+  const c = doc.closing;
   line(`---`);
   line();
-  line(`## Failures and how each was resolved`);
+  line(`## ${c.failuresHeading}`);
   line();
-  line(`| # | Row or boundary | Role | Language / device | What went wrong | Resolved or accepted | By whom, when |`);
-  line(`|---|---|---|---|---|---|---|`);
-  line(`| | | | | | | |`);
+  line(`| ${c.failureColumns.join(" | ")} |`);
+  line(`|${c.failureColumns.map(() => "---").join("|")}|`);
+  line(`|${c.failureColumns.map(() => " ").join("|")}|`);
   line();
-  line(`**Resolved** = fixed and tried again, with the date. **Accepted** = the shelter agrees to go live with it, and the Director has initialled it.`);
+  line(c.failuresNote);
   line();
   line(`## Sign-off`);
   line();
-  line(`| Role | Tested by | Date | Signature |`);
-  line(`|---|---|---|---|`);
-  for (const role of ROLES) line(`| ${ROLE_LABEL[role]} | | | |`);
+  line(`| ${c.signOffColumns.join(" | ")} |`);
+  line(`|${c.signOffColumns.map(() => "---").join("|")}|`);
+  for (const r of doc.roles) line(`| ${r.label} | | | |`);
   line();
-  line(`**Director:** I have read the failures list. The system does what the shelter needs, apart from the accepted issues written above.`);
+  line(c.director);
   line();
-  line(`Name: ____________________  Signature: ____________________  Date: ____________________`);
+  line(fillIn(c.directorLine));
   line();
 }
 
