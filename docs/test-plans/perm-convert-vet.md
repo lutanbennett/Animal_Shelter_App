@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **`perm-convert-vet`** (was ticked as declined; status line added: built on the scope, the declined part still declined) |
 | Branch / worktree | `claude/perm-convert-vet` @ `C:\Development\Animal_Shelter_perm-convert-vet` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3007` |
-| PR | opened after this commit |
+| PR | #478 |
 | Tested by / date | Claude, 2026-10-09 |
 | Carries a migration? | yes: `0167_perm_convert_vet.sql` |
 | Tested at SHA | the `claude/perm-convert-vet` tip this file is committed in |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): #478, 7 passing, 0 failing
 
 ## 3. Schema and data
 
@@ -157,7 +157,7 @@ Manual verification by: pending: Lutan (item 1, a vet login's pages)
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR: summarised in #478's description, full file on the branch
 - [ ] Handed to the production release manager — n/a: not yet — the PR does not exist at this commit
 
 Result: pass with accepted defects
