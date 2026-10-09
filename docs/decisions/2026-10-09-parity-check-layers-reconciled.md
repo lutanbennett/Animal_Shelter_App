@@ -60,6 +60,18 @@ lines, which are a recorded decision, not a fault (below).
 | **2. The app's predicates** | `check-permission-parity.mjs`: 35 predicates × 6 roles including no role, against the default; the deleted ones compared through `legacy-predicates.json`. `canDoJob`'s rule for `/admin /management /maintenance` is `check-recurring-job-eligibility.mjs` | **yes**. The header said otherwise; the header was stale since the day layer 2 was added |
 | **3. The routes** | `check-permission-catalogue.mjs` section E: every entry in `src/lib/permissions/routes.ts` has a `page.tsx` and that page guards with `requirePermission()` on the registry's own activity. With layer 0 proving the cells, that fixes who may open each registered page | **split, and incomplete** (below) |
 
+**One caveat on the delegates: `check-recurring-job-eligibility.mjs` is red today**
+(exit 1 on this branch and on `main`, run 2026-10-09). Three FAILs: E9 (`/contacts`
+eligible roles are admin, management, second_in_command; the script wants admin,
+management, staff, volunteer) and the fixture rows for `canDoJob(/management)` and
+`canDoJob(/admin)`. It is not in `npm run lint`, so nothing saw it. It is already the
+backlog item *"Eight dev check harnesses no longer start since the Staff retirement and
+the doctor rename"* (found by `close-the-remaining-over-grants` the same day), which
+leaves this stream's two scripts to it and the eligibility script to that item. Note for
+whoever takes it: E9 is not only the Staff column (volunteer is missing and 2IC is
+present, which looks like `0170`/`0171`'s contacts change), so "drop the staff
+column" will not be enough to make it green.
+
 ### Layer 3 in detail
 
 §11 asks for *"every route in the registry and every role: the registry's answer
