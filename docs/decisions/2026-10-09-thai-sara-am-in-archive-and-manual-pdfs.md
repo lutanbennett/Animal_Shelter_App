@@ -22,13 +22,18 @@ strings today, so it is not exposed, but if it ever gets an array child it shoul
 Rendered the real components with stub records before and after, rasterised with Windows' own PDF
 renderer, pixel-diffed the pages and compared `pdftotext` output:
 
-- **Visible:** the bold header line lost its last character. The summary's
+- **Visible, in the manual as it ships today:** the English manual's assistant topic, step 7, ends with
+  Thai examples containing two ำ (`น้ำหนัก`, `กำหนด`). The PDF printed it ending `…ครบกำหน`, two
+  characters short (`ด.`). After the fix it reads `…ครบกำหนด.`, and that line is the only pixel change
+  on the page. So the downloadable manual has been missing those characters since step 7 gained its
+  Thai.
+- **Visible, in stub samples:** the summary's bold header
   `Nam (บริษัท ล้านนา พัฒนา จำกัด (คุณสมศรี ใจดี))` printed one `)` short, and so did a manual title with
-  ำ in it. After the fix those are the **only** pixels that change on any page.
-- **Not visible in our samples:** regular-weight body text, notes, table cells, a two-line wrapped
-  paragraph with 48 ำ, the footer, the callout and short strings like `Nam (น้ำ)` all drew every glyph.
-  So "every ำ drops a letter" is too strong for these two documents. When a letter goes missing
-  depends on line layout, so the fix does not rely on guessing which texts are safe.
+  ำ in it.
+- **Not visible in other stub samples:** notes, table cells, a two-line wrapped paragraph with 48 ำ,
+  the footer, the callout and short strings like `Nam (น้ำ)` all drew every glyph. So a ำ does not
+  always cost a letter. Whether it does depends on how textkit lays out the text, and we did not pin
+  that down, so the fix covers every Text rather than guessing which ones are safe.
 - **Text layer, every ำ:** copying or searching text in the PDF gave wrong characters wherever a ำ
   appeared (`น้ำ)` came out as `นำ้ )`, `งาม` as `ง ม`), because the glyph-to-character map is shifted
   by one after each ำ. After the fix it copies as `น้ํา)`: right letters, ำ as two code points.
