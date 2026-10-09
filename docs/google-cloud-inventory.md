@@ -11,6 +11,31 @@ Cloud console page below was opened on 2026-10-09 in Lutan's Chrome and **read
 only**; nothing was changed. The old `[CONFIRM]` marks on Google facts are gone
 because those facts have now been seen.
 
+**Later the same day (2026-10-09) the consolidation in section 3 was carried out,
+and section 1 describes the result.** Production sign-in moved from LCA App to a
+new client in Lanna Care - Dev. Supabase `dbkodyyxxhtygxcxmfcu` was switched to it,
+and Lutan signed in on `lannacare.org` successfully before and after the old secrets
+were disabled. Both LCA App clients were then deleted, which also retired the
+secret exposed on 2026-10-01. In order:
+
+1. Lutan turned on two-step verification for `lannaanimalfoundationbwm`; the
+   console had refused that account since 2026-10-03.
+2. `lannaanimalfoundationbwm` was added as an **Owner** of the `lannacare.org`
+   Domain property in Search Console (by `lutan.bennett2`, who stays an owner).
+3. Lanna Care - Dev's branding was submitted for verification. It passed within
+   a minute and was published, so the Google screen says "Lanna Care for Animals"
+   for both production and dev/test sign-in.
+4. New web client `1036347359893-udugtetbu312ee8301th8r0uo1jucupd` created in
+   Lanna Care - Dev, redirect `https://dbkodyyxxhtygxcxmfcu.supabase.co/auth/v1/callback`.
+   Lutan pressed Create and pasted its ID and secret into Supabase; no session
+   saw the secret.
+5. Secrets `q-4Z` and `D3vd` on the two LCA App clients were disabled, and sign-in
+   was retested. Then both clients (`…bjgla5…`, `…drg7qt…`) were deleted. They are
+   restorable from LCA App's deleted-credentials page until **2026-11-08**.
+
+LCA App now holds no clients and is unused. Deleting the project itself is still
+open (section 3, step 10).
+
 **How to read the confidence marks.** **[seen 2026-10-09]** was read in the Google
 Cloud console that day. **[repo]** was read from this repository. **[recorded]**
 comes from a backlog or decisions entry written by someone who was looking at the
@@ -56,8 +81,9 @@ clients and refresh tokens were not part of the block. Only the console was. If
 | Consent screen | **In production**, External | **In production**, External | never configured |
 | API keys | none | none | none |
 | Service accounts | none | none | none |
-| OAuth clients | 2 (below) | 2 (below) | none |
-| Used for | Staff sign-in on production Supabase (`lannacare.org`) | Drive storage everywhere; staff sign-in on dev Supabase (`test.lannacare.org`, local) | Nothing; unused |
+| OAuth clients | **none** (2 deleted 2026-10-09) | **3** (below) | none |
+| Branding | verified (2026-09-22) | **verified and published 2026-10-09** | — |
+| Used for | **Nothing since 2026-10-09** | Drive storage everywhere; staff sign-in on **both** Supabase projects (`lannacare.org`, `test.lannacare.org`, local) | Nothing; unused |
 
 All of the above is [seen 2026-10-09]. Older history [recorded]: LCA App was
 renamed from `My First Project` and published 2026-09-22 (branding `Lanna Care for
@@ -67,12 +93,11 @@ account). Lanna Care - Dev was published 2026-09-25 after the 7-day Testing expi
 broke every upload. Its logo was removed, because a logo forces verification. The
 second `My First Project` is a different, later project, not the renamed one.
 
-### OAuth clients — every one that exists
+### OAuth clients — every one that exists (after the 2026-10-09 move)
 
 | Project | Name | Type | Client ID | Redirect URI | Created | Secrets (all enabled) | Serves |
 |---|---|---|---|---|---|---|---|
-| LCA App | Lanna Care sign-in (production Supabase) | Web | `104841707674-bjgla5kd0i4rbifi5buuekea7jqd74dp` | `https://dbkodyyxxhtygxcxmfcu.supabase.co/auth/v1/callback` | 2026-09-21 | **2**: ending `q-4Z` (2026-09-21) and `LFbV` (**2026-10-07**) | **Production sign-in.** Supabase `dbkodyyxxhtygxcxmfcu` uses this client [recorded: Management API, 2026-10-07] |
-| LCA App | Web client 1 | Web | `104841707674-drg7qtiia19jbq14rlhsljtiis4qju2n` | `https://dbkodyyxxhtygxcxmfcu.supabase.co/auth/v1/callback` (the same) | 2025-04-28 | **2**: 2025-04-28 and **2026-10-07** | Nothing known. Older duplicate of the client above |
+| Lanna Care - Dev | Lanna Care sign-in (production Supabase) | Web | `1036347359893-udugtetbu312ee8301th8r0uo1jucupd` | `https://dbkodyyxxhtygxcxmfcu.supabase.co/auth/v1/callback` | 2026-10-09 | 1 (2026-10-09) | **Production sign-in** (`lannacare.org`). Lutan pasted it into Supabase `dbkodyyxxhtygxcxmfcu` and signed in with it on 2026-10-09 |
 | Lanna Care - Dev | LCA Application | Web | `1036347359893-tk4qklicq40o496onnqan8j8mf1od331` | `https://qxkmhwybjggxvsfxsxbd.supabase.co/auth/v1/callback` | 2026-09-20 | 1 (2026-09-20) | **Dev/test sign-in.** Supabase `qxkmhwybjggxvsfxsxbd` uses this client [recorded: Management API, 2026-10-07] |
 | Lanna Care - Dev | Lanna Care Drive Access | Desktop | `1036347359893-dfbupbdp60l8ukicc08dhf0jipafinb6` | none (Desktop clients use a loopback address) | 2026-09-18 | 1 (2026-09-18) | **All Drive access**: photos, attachments, archive PDFs, backups, for every environment. `GOOGLE_OAUTH_CLIENT_ID` in `.env.local` [repo] |
 
@@ -80,24 +105,29 @@ No client has authorised JavaScript origins. Client IDs and the last four
 characters of a secret are identifiers, not secrets. The console no longer shows
 full secrets.
 
-What the stocktake settled:
+**Deleted 2026-10-09, kept here so nobody goes looking for them** (both in LCA App,
+both with redirect `https://dbkodyyxxhtygxcxmfcu.supabase.co/auth/v1/callback`):
 
-- **The second client in LCA App ("Web client 1", `…drg7qt…`) has the same redirect
-  URI as the production client.** It is the April 2025 original. Production
-  Supabase uses the newer `…bjgla5…`. Google shows both as last used around
-  2026-10-06, but that date lags by a day or more, so it does not prove `…drg7qt…`
-  is still in use. It can be deleted once production sign-in has been seen working
-  without it (disabling its secrets first is the reversible test).
-- **Both LCA App clients gained a second secret on 2026-10-07**, from the rotation
-  attempt that went wrong. A client keeps accepting every enabled secret, so the
-  exposed one is still live until it is disabled.
+| Name | Client ID | Created | Secrets at deletion |
+|---|---|---|---|
+| Lanna Care sign-in (production Supabase) | `104841707674-bjgla5kd0i4rbifi5buuekea7jqd74dp` | 2026-09-21 | `q-4Z` (2026-09-21, the one exposed 2026-10-01) disabled; `LFbV` (2026-10-07) still enabled, because Google will not disable a client's last secret |
+| Web client 1 | `104841707674-drg7qtiia19jbq14rlhsljtiis4qju2n` | 2025-04-28 | `D3vd` (2025-04-28) disabled; `7Ui9` (2026-10-07) still enabled, for the same reason |
+
+What the stocktake found, and what became of it:
+
+- **Two LCA App clients had the production redirect URI**, the newer `…bjgla5…`
+  (which Supabase used) and the April 2025 original `…drg7qt…`. Both deleted.
+- **Both had gained a second secret on 2026-10-07** from the rotation attempt that
+  went wrong. A client accepts every enabled secret. Deleting the clients was the
+  only way to retire those, since a client's last secret cannot be disabled.
 - **`GOOGLE_SIGNIN_CLIENT_SECRET=` in `.env.deploy.production` is malformed** [recorded
-  2026-10-07]: a `GOCSPX-` secret with a client ID run on after it. **The embedded
-  client ID is `…bjgla5…`**, the production client [repo, 2026-10-09]. Which of its
-  two secrets the file holds was not checked: reading the file's secret was
-  refused, correctly.
-- **Production and dev/test sign-in are different clients in different accounts.**
-  Rotating one cannot break the other.
+  2026-10-07]: a `GOCSPX-` secret with the `…bjgla5…` client ID run on after it. That
+  client is now deleted, so the line is dead. Replace it with
+  `GOOGLE_SIGNIN_CLIENT_ID=` / `GOOGLE_SIGNIN_CLIENT_SECRET=` for the new client
+  (Lutan's; the file is in the main checkout, `C:\Development\Animal_Shelter_App`).
+  The app does not read either.
+- **Production and dev/test sign-in are now different clients in the same
+  project.** Rotating one still cannot break the other.
 
 ### Where the Drive values are consumed
 
@@ -138,7 +168,7 @@ nobody out, because the secret is only used during the sign-in exchange [recorde
 
 | To rotate | Sign in to the console as | Project | Client | Then put the new secret in |
 |---|---|---|---|---|
-| Production sign-in (the exposed `GOOGLE_SIGNIN_CLIENT_SECRET`) | `lutan.bennett2` | LCA App | `…bjgla5…` (redirect `dbkodyyxxhtygxcxmfcu`) | Supabase `dbkodyyxxhtygxcxmfcu` → Authentication → Providers → Google; and `.env.deploy.production` (fixing the malformed line). Then disable, and later delete, the older secrets, on this client and on `…drg7qt…` |
+| Production sign-in | `lannaanimalfoundationbwm` | Lanna Care - Dev | `…udugte…` (redirect `dbkodyyxxhtygxcxmfcu`) | Supabase `dbkodyyxxhtygxcxmfcu` → Authentication → Providers → Google; and `.env.deploy.production`. Then disable the old secret |
 | Dev/test sign-in | `lannaanimalfoundationbwm` | Lanna Care - Dev | `…tk4qkl…` (redirect `qxkmhwybjggxvsfxsxbd`) | Supabase `qxkmhwybjggxvsfxsxbd` → Authentication → Providers → Google |
 | Drive | `lannaanimalfoundationbwm` | Lanna Care - Dev | `…dfbupb…` (Desktop) | `GOOGLE_OAUTH_CLIENT_SECRET` in every place listed above, then `deploy.mjs --secrets` for each environment. The refresh token stays valid across a secret change, so no new token is needed |
 
@@ -275,9 +305,7 @@ blocks or is undone by that.
 
 Still open after the 2026-10-09 stocktake:
 
-- What the production client's `…drg7qt…` twin is still used by, if anything. Disabling its secrets and then signing in on `lannacare.org` settles it.
-- Which of `…bjgla5…`'s two secrets `.env.deploy.production` and the production Supabase hold. Their last four characters can be compared against `q-4Z` / `LFbV` by Lutan.
-- Whether the UAT Supabase host is an authorised domain on `lanna-care-dev`'s consent screen, and whether brand verification (Search Console) covers that project. The Branding page was not opened.
+- Whether anything other than Supabase used the deleted LCA App clients. Nothing in the repo does, and sign-in worked after they were disabled. If something unexpected breaks before 2026-11-08, restoring them from LCA App's deleted-credentials page is the quick way back.
 - What `.env.deploy.uat` holds. No such file existed in the main checkout on 2026-10-09.
 - Where the 90-day expiry lives.
 - Anything owned by `lannacareforanimals@gmail.com`, which is not signed in to Lutan's Chrome.

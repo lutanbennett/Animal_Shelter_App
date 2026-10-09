@@ -21,6 +21,17 @@ clients first."* Done 2026-10-09. The results are in section 1 of
   verification** (from 2026-10-03). `lannaanimalfoundationbwm` was locked until
   Lutan turned it on on 2026-10-09. Any account that owns a project needs 2-step
   verification kept on.
-- **Not decided here:** deleting `…drg7qt…` and disabling the 2026-10-07 extra
-  secrets. Both are part of the rotation itself, which stays Lutan's (backlog
-  "Two exposed secrets to rotate").
+- **Rotation and consolidation done together, the same day (Lutan's call).**
+  Rather than rotate the exposed secret on the old client and then move it later,
+  production sign-in moved straight to a new client in `lanna-care-dev`, and both
+  LCA App clients were deleted. Deletion was the only way to retire the
+  2026-10-07 extra secrets, because Google will not disable a client's last
+  secret. Deleted clients stay restorable for 30 days.
+- **Brand verification moved by making the lanna account a Search Console owner**
+  of `lannacare.org`, delegated by `lutan.bennett2`, who stays an owner. With
+  that in place, Google verified `lanna-care-dev`'s branding within a minute. The
+  apex `google-site-verification` TXT record in Cloudflare still anchors
+  `lutan.bennett2`'s ownership, so it must stay.
+- **The shelter's own account was the preferred home**
+  (`lannacareforanimals@gmail.com`), but nobody had its login yet. It remains the
+  target for production when that exists.

@@ -8,8 +8,8 @@ Filled from `docs/test-plan-template.md`.
 
 | | |
 |---|---|
-| Feature | Google stocktake: live inventory of every Google account, project and OAuth client |
-| Backlog item | `docs/backlog.md` → Two exposed secrets to rotate (its "STOCKTAKE FIRST" step; item not ticked, the rotation itself is Lutan’s) |
+| Feature | Google stocktake, then the move of production sign-in onto the lanna account |
+| Backlog item | `docs/backlog.md` → Put the Google Cloud setup under one account (ticked); Two exposed secrets to rotate (part (b) closed by the move and noted on the `backlog` branch; part (a) still open) |
 | Branch / worktree | `claude/google-stocktake` @ `C:DevelopmentAnimal_Shelter_google-stocktake` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3009` (not used) |
 | PR | linked from the PR itself |
@@ -19,10 +19,10 @@ Filled from `docs/test-plan-template.md`.
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence, and it matches what the backlog item asked for: section 1 of `docs/google-cloud-inventory.md` rewritten from a read-only look at the Google Cloud console on 2026-10-09: every account, project (with id and number) and OAuth client (name, type, client ID, redirect URI, secrets), as the backlog item’s "STOCKTAKE FIRST" step specifies
-- [x] Files/areas touched listed (routes, `worker/`, `supabase/migrations/`, shared libs): `docs/google-cloud-inventory.md`, `docs/decisions/2026-10-09-google-stocktake.md`, this plan. No `src/`, `worker/`, `scripts/` or migration
-- [x] Roles affected identified: admin / staff / vet / volunteer / resident / signed-out public: none; documentation only
-- [x] Anything explicitly **out of scope** written down, so the release manager is not surprised: no secret was rotated, disabled or deleted and no client, consent screen or Supabase provider was changed; Lutan turned on 2-step verification for `lannaanimalfoundationbwm` himself so the console could be read
+- [x] Change is described in one sentence, and it matches what the backlog item asked for: section 1 of `docs/google-cloud-inventory.md` rewritten from a read-only look at the Google Cloud console on 2026-10-09 (every account, project with id and number, and OAuth client with type, ID, redirect URI and secrets, as the "STOCKTAKE FIRST" step specifies), then updated after the same day's console move: production sign-in to a new client in `lanna-care-dev`, LCA App's two clients deleted
+- [x] Files/areas touched listed (routes, `worker/`, `supabase/migrations/`, shared libs): `docs/google-cloud-inventory.md`, `docs/decisions/2026-10-09-google-stocktake.md`, `docs/backlog.md` (one tick, one stale reference corrected), this plan. No `src/`, `worker/`, `scripts/` or migration. Outside the repo: Google Cloud console (both accounts), Search Console, and production Supabase's Google provider (pasted by Lutan)
+- [x] Roles affected identified: admin / staff / vet / volunteer / resident / signed-out public: everyone who signs in with Google on `lannacare.org` goes through the new client; nothing in the app changed
+- [x] Anything explicitly **out of scope** written down, so the release manager is not surprised: the Drive client and dev/test sign-in client were not changed; the empty `LCA App` project is not yet deleted; `.env.deploy.production`'s backup copy of the sign-in credentials is Lutan's to update; part (a) of the exposed-secrets item (authenticator re-enrolment) is untouched
 
 ## 2. Automated gates
 
@@ -111,7 +111,7 @@ out of it for a day.
 
 ## 7. Documentation
 
-- [ ] Backlog item ticked in `docs/backlog.md` **on this branch** (follow-ups go on the `backlog` branch instead) — n/a: the item stays open until Lutan rotates the secret; the stocktake was noted on it on the `backlog` branch (commits 18d14d96, 31ff5923)
+- [x] Backlog item ticked in `docs/backlog.md` **on this branch** (follow-ups go on the `backlog` branch instead): "Put the Google Cloud setup under one account" ticked with what closed it; the cutover item's step 5 corrected to name `lanna-care-dev`; the exposed-secrets item's progress note is on the `backlog` branch, since part (a) remains
 - [x] Non-obvious design choices added as a new file in `docs/decisions/` (`<date>-<slug>.md`): `2026-10-09-google-stocktake.md`
 - [x] `README.md` still accurate: the Environments table is unchanged and still true
 - [ ] **Release notes.** Would a shelter user notice this change? If so, `unreleased` in `src/lib/releases.ts` has a line for it, **in this PR**, written for a shelter user and not as a commit message. If not, `n/a: <why nobody would notice>`: a refactor, a script, a fix to something no user reached. The checker holds this line to the diff. A tick fails if `unreleased` gained no line. A PR touching `src/app/`, `src/components/`, `src/lib/manual/`, `src/lib/i18n/` or `worker/` fails if this line is missing, and its `n/a` reason is printed for the reviewer. An empty `unreleased` looks exactly like "nothing visible shipped", so this line is the only place that difference gets written down. A PR that touches nothing but `docs/test-plans/` (a sign-off recorded after merge) has a tick checked against the merge that introduced the plan instead, so leave the feature's tick as it was. The checker finds this line by its bold **Release notes.** label, so keep the label as it is — n/a: infrastructure and documentation, no shelter user sees it
@@ -184,7 +184,7 @@ section 8's.
 
 | # | What to check | Where |
 |---|---|---|
-| | | |
+| 1 | Google sign-in works with the new client, and the Google screen says "Lanna Care for Animals" | Private window, `https://lannacare.org`, Sign in with Google. Lutan reported in chat 2026-10-09: worked after the Supabase switch, and again after the old secrets were disabled |
 
 ## Sign-off
 
@@ -205,9 +205,9 @@ Automated checks by: Claude (Opus 5.5)  Date: 2026-10-09
 
 ### Manual verification
 
-- [x] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the plan may tick this** and write `n/a: <reason>` on the signature below — there is nothing for a person to look at, so nothing is being signed for. If the list is not empty, only the person who looked may tick it
+- [ ] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the plan may tick this** and write `n/a: <reason>` on the signature below — there is nothing for a person to look at, so nothing is being signed for. If the list is not empty, only the person who looked may tick it — n/a: the list is not empty, so it is Lutan's to tick; see the pending line below
 
-Manual verification by: n/a: documentation only; the console facts were read directly, and nothing in the app changed
+Manual verification by: pending: Lutan's signature for item 1 (he reported it working in chat but has not signed)
 
 ### Result
 
