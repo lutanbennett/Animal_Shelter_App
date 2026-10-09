@@ -988,14 +988,14 @@ export const ENTRIES = {
 export const BOUNDARIES = [
   // Pass 1 — Vet
   { role: "vet", starts: "/my — redirects", text: "Type the address of My tasks: you are sent to Appointments (a vet has no My tasks)." },
-  { role: "vet", starts: "/vets and a clinic page", text: "Type the address of the Vets list and of a clinic page: refused, with the \"no access\" page inside the app." },
+  { role: "vet", starts: "/clinics and a clinic page", text: "Type the address of the Vets list and of a clinic page: refused, with the \"no access\" page inside the app." },
   { role: "vet", starts: "/contacts — refused", text: "Type the address of Contacts: refused." },
   { role: "vet", starts: "/enclosures, and a zone", text: "Type the address of Enclosures, a zone and an enclosure: refused." },
   { role: "vet", starts: "/projects — refused", text: "Type the address of Projects: refused." },
   { role: "vet", starts: "/maintenance — refused", text: "Type the address of Maintenance: refused; a vet gets no board at all." },
   { role: "vet", starts: "/stocktake — refused", text: "Type the address of Stocktake: refused." },
   { role: "vet", starts: "/management and /management/dashboard", text: "Type the address of Management and of its Dashboard: refused." },
-  { role: "vet", starts: "/management/vets/<id>/doctors", text: "Type the address of a clinic's Doctors list in Management: refused; a vet cannot rename, merge or retire doctors." },
+  { role: "vet", starts: "/management/clinics/<id>/doctors", text: "Type the address of a clinic's Doctors list in Management: refused; a vet cannot rename, merge or retire doctors." },
   { role: "vet", starts: "/admin, /admin/security", text: "Type the address of Settings, Security and Recent changes: refused." },
   { role: "vet", starts: "/deliveries — refused", text: "Type the address of Deliveries: refused." },
   { role: "vet", starts: "Resident hub shows no New resident", text: "On a resident's hub there is no New resident, Edit, Move, Hospital, Foster, Adopt or Record a death control." },

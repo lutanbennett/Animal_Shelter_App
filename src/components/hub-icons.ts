@@ -164,7 +164,7 @@ export const CONTACT_ICONS = {
   inCare: HeartHandshake,
 } satisfies Record<string, LucideIcon>;
 
-/** Icons for the vet list (`/vets`) and vet hub. */
+/** Icons for the vet list (`/clinics`) and vet hub. */
 export const VET_ICONS = {
   vet: UserRound,
   clinic: Building2,

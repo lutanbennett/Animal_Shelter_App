@@ -3,9 +3,9 @@ import { refuseFor } from "@/lib/auth/require-role";
 import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import { formatDateTime, todayIso } from "@/lib/format";
-import { loadVetScope } from "@/lib/vets/scope";
-import { visitDate } from "@/lib/vets/linkable";
-import { loadClinicAppointments, type ClinicAppointment } from "@/lib/vets/appointments";
+import { loadClinicScope } from "@/lib/clinics/scope";
+import { visitDate } from "@/lib/clinics/linkable";
+import { loadClinicAppointments, type ClinicAppointment } from "@/lib/clinics/appointments";
 
 /**
  * /appointments — a vet's home: the visits booked with their clinic, split
@@ -27,7 +27,7 @@ export default async function AppointmentsPage() {
   if (perms.scopes.clinical !== "own_clinic") refuseFor(perms);
   const { t, locale } = await getT();
   const a = t.vetAppointments;
-  const scope = await loadVetScope(supabase);
+  const scope = await loadClinicScope(supabase);
 
   const shell = (body: React.ReactNode) => (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-6">
@@ -43,7 +43,7 @@ export default async function AppointmentsPage() {
 
   const { toWriteUp, upcoming, recentlyDone, error } = await loadClinicAppointments(
     supabase,
-    scope.vetIds,
+    scope.clinicIds,
   );
   const today = todayIso();
 
@@ -117,7 +117,7 @@ export default async function AppointmentsPage() {
                       {t.residents.sections.logWeight}
                     </Link>
                   )}
-                  <Link href={`/vet-visits/${row.id}/edit`} className={actionClass}>
+                  <Link href={`/clinic-visits/${row.id}/edit`} className={actionClass}>
                     {t.common.edit}
                   </Link>
                 </div>

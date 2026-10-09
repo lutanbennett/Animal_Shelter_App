@@ -12,7 +12,7 @@ import type { EnclosureOption, ZoneOption } from "@/lib/enclosures/options";
 import { EnclosurePicker } from "@/components/EnclosurePicker";
 import type { AssistantResident, AssistantVet } from "@/lib/assistant/data";
 import { isoLocal } from "@/lib/assistant/text";
-import { doctorNameCore, type DoctorNamesByVet } from "@/lib/vets/doctors";
+import { doctorNameCore, type DoctorNamesByClinic } from "@/lib/clinics/doctors";
 import type {
   Draft,
   HospitalDraft,
@@ -54,7 +54,7 @@ export type CardContext = {
   enclosures: EnclosureOption[];
   vets: AssistantVet[];
   /** Each clinic's active doctors, offered on the vet card. */
-  doctors: DoctorNamesByVet;
+  doctors: DoctorNamesByClinic;
   /** Residents the name could have meant, when it could have meant several. */
   candidates: string[];
   onSettle: (outcome: AssistantOutcome) => void;
@@ -394,7 +394,7 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
   const { t, locale } = useI18n();
   const a = t.assistant;
   const [residentId, setResidentId] = useState(draft.residentId ?? "");
-  const [vetId, setVetId] = useState(draft.vetId ?? "");
+  const [clinicId, setVetId] = useState(draft.clinicId ?? "");
   const [date, setDate] = useState(draft.date ?? "");
   const [time, setTime] = useState(draft.time ?? "");
   const [reason, setReason] = useState(draft.reason ?? "");
@@ -404,7 +404,7 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
     const said = draft.doctorName ?? "";
     const core = doctorNameCore(said);
     const listed = core
-      ? (ctx.doctors[draft.vetId ?? ""] ?? []).filter((n) => doctorNameCore(n) === core)
+      ? (ctx.doctors[draft.clinicId ?? ""] ?? []).filter((n) => doctorNameCore(n) === core)
       : [];
     return listed.length === 1 ? listed[0] : said;
   });
@@ -412,7 +412,7 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
   const [pending, startTransition] = useTransition();
 
   const resident = ctx.residents.find((r) => r.id === residentId) ?? null;
-  const vet = ctx.vets.find((v) => v.id === vetId) ?? null;
+  const vet = ctx.vets.find((v) => v.id === clinicId) ?? null;
   // Built here, on the person's own clock, so "10am" is 10am where they are.
   const when = date && time ? new Date(`${date}T${time}`) : null;
   const whenLabel = when ? formatDateTime(when.toISOString(), locale) : a.unknown;
@@ -422,7 +422,7 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
   // list doesn't have is still written (the database adds it, as on the
   // booking form), but the card says so rather than doing it silently.
   const doctor = doctorName.trim();
-  const roster = ctx.doctors[vetId] ?? [];
+  const roster = ctx.doctors[clinicId] ?? [];
   const sameName = (x: string, y: string) =>
     x.trim().replace(/s+/g, " ").toLowerCase() === y.trim().replace(/s+/g, " ").toLowerCase();
   const listedAs = roster.find((n) => sameName(n, doctor)) ?? null;
@@ -441,7 +441,7 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
     startTransition(async () => {
       const result = await assistantBookVetVisit({
         residentId: resident.id,
-        vetId: vet.id,
+        clinicId: vet.id,
         appointmentIso: when.toISOString(),
         reason: reason || null,
         doctorName: doctor || null,
@@ -449,7 +449,7 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
         draft: {
           ...draft,
           residentId: resident.id,
-          vetId: vet.id,
+          clinicId: vet.id,
           date,
           time,
           reason: reason || null,
@@ -495,7 +495,7 @@ function VetCard({ ctx, draft }: { ctx: CardContext; draft: VetVisitDraft }) {
         </label>
         <select
           id={`vet-${ctx.turnId}-vet`}
-          value={vetId}
+          value={clinicId}
           onChange={(e) => setVetId(e.target.value)}
           className={inputClass}
         >

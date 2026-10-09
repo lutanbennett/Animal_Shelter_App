@@ -505,7 +505,7 @@ const th: Dictionary = {
         residents: "สัตว์",
         contacts: "ผู้ติดต่อ",
         prescriptions: "ใบสั่งยา",
-        vet_appointments: "การพบสัตวแพทย์",
+        clinic_visits: "การพบสัตวแพทย์",
         weight: "น้ำหนัก",
         attachments: "ไฟล์",
         immunization_records: "วัคซีน",

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { formatDate, formatWeightKg } from "@/lib/format";
-import { loadLinkableVisits } from "@/lib/vets/linkable";
+import { loadLinkableVisits } from "@/lib/clinics/linkable";
 import { WeightForm, type ExistingReading } from "../WeightForm";
 
 export default async function NewWeightPage(props: PageProps<"/weight/new">) {
@@ -41,7 +41,7 @@ export default async function NewWeightPage(props: PageProps<"/weight/new">) {
       .from("weight")
       .select("id")
       .is("archived_at", null)
-      .eq("vet_appointment_id", vetAppointmentId)
+      .eq("clinic_visit_id", vetAppointmentId)
       .limit(1)
       .returns<{ id: string }[]>();
     if (onVisit?.[0]) redirect(`/weight/${onVisit[0].id}/edit`);

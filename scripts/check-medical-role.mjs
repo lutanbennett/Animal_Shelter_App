@@ -62,7 +62,7 @@ const probes = [
   ["residents", `select 1 from residents where id = '${R}'`, OWN_CLINIC],
   ["resident_list_view", `select 1 from resident_list_view where resident_id = '${R}'`, OWN_CLINIC],
   ["weight", `select 1 from weight where resident_id = '${R}'`, OWN_CLINIC_AND_HOM],
-  ["vet_appointments", `select 1 from vet_appointments where resident_id = '${R}'`, OWN_CLINIC],
+  ["clinic_visits", `select 1 from clinic_visits where resident_id = '${R}'`, OWN_CLINIC],
   ["procedures", `select 1 from procedures where resident_id = '${R}'`, null],
   // her sheet ticks the stocktake (row 36, stock.count), so she reads the counts: the draft's cell, not the old seed
   ["stock_counts", `select 1 from stock_counts limit 1`, "hom-reads"],
@@ -116,9 +116,9 @@ begin
     select id, who::app_role from (values ${["admin", "management", "staff", "volunteer", "vet"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role_id, role) select ${lit(ID.hom)}, id, legacy_role from roles where key = 'head_of_medical';
   insert into vets (id, name, clinic_name) values (${lit(OWN)}, 'Harness own', 'Harness own');
-  insert into vet_doctors (name, user_id, vet_id) values ('Harness vet', ${lit(ID.vet)}, ${lit(OWN)});
+  insert into doctors (name, user_id, clinic_id) values ('Harness vet', ${lit(ID.vet)}, ${lit(OWN)});
   insert into residents (id, name, species) values (${lit(R)}, 'Harness resident', 'Dog');
-  insert into vet_appointments (resident_id, vet_id, appointment_date, status) values (${lit(R)}, ${lit(OWN)}, now() - interval '3 days', 'completed');
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values (${lit(R)}, ${lit(OWN)}, now() - interval '3 days', 'completed');
   insert into weight (resident_id, date, weight_kg) values (${lit(R)}, current_date - 1, 5);
   insert into prescriptions (resident_id, medication_id, start_date) values (${lit(R)}, (select id from medication order by id limit 1), current_date);
 end $setup$;

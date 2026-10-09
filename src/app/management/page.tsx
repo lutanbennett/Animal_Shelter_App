@@ -52,7 +52,7 @@ export default async function ManagementPage() {
       icon: Globe,
     },
     {
-      href: "/management/vets",
+      href: "/management/clinics",
       label: t.nav.vets,
       description: t.management.landing.tiles.vets,
       icon: VET_ICONS.vet,

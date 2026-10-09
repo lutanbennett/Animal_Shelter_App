@@ -8,7 +8,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { localLabel } from "@/lib/translations/labels";
 import { placeName } from "@/lib/enclosures/names";
 import { formatDate, todayIso } from "@/lib/format";
-import { visitDate } from "@/lib/vets/linkable";
+import { visitDate } from "@/lib/clinics/linkable";
 import { PLACEMENT_ICONS } from "@/components/hub-icons";
 import { SendToHospitalForm } from "./SendToHospitalForm";
 
@@ -72,7 +72,7 @@ export default async function SendToHospitalPage(
       loadPermissions(),
       vetAppointmentId
         ? supabase
-            .from("vet_appointments")
+            .from("clinic_visits")
             .select("id, appointment_date, reason, vets(name, name_th)")
             .is("archived_at", null)
             .eq("id", vetAppointmentId)

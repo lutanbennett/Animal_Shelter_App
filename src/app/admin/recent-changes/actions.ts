@@ -18,7 +18,7 @@ function revalidateFor(table: AuditedTable, image: Image) {
   if (typeof residentId === "string") revalidatePath(`/residents/${residentId}`, "layout");
   if (table === "residents") revalidatePath("/residents");
   if (table === "contacts") revalidatePath("/management/contacts");
-  if (table === "vet_appointments") revalidatePath("/appointments");
+  if (table === "clinic_visits") revalidatePath("/appointments");
   if (table === "prescriptions") revalidatePath("/management/stock-usage");
   if (table === "impact_baselines") {
     revalidatePath("/admin/website");

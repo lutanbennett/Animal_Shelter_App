@@ -136,7 +136,7 @@ async function loadExtras(supabase: Supabase, ids: string[], scope: ExportScope)
       inChunks(ids, async (chunk) =>
         (
           await supabase
-            .from("vet_appointments")
+            .from("clinic_visits")
             .select("resident_id, appointment_date, vets(name)")
             .in("resident_id", chunk)
             .is("archived_at", null)

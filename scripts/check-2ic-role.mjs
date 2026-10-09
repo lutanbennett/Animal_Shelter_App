@@ -137,7 +137,7 @@ begin
   insert into user_roles (user_id, role_id, role) select ${lit(ID.co)}, id, legacy_role from roles where key = 'harness_co';
   insert into user_roles (user_id, role_id, role) select ${lit(ID.dl)}, id, legacy_role from roles where key = 'harness_dl';
   insert into vets (id, name, clinic_name) values (${lit(OWN)}, 'Harness own', 'Harness own');
-  insert into vet_doctors (name, user_id, vet_id) values ('Harness vet', ${lit(ID.vet)}, ${lit(OWN)});
+  insert into doctors (name, user_id, clinic_id) values ('Harness vet', ${lit(ID.vet)}, ${lit(OWN)});
   insert into zones (id, name) values (${lit(ZONE)}, 'Harness zone');
   insert into residents (id, name, species) values (${lit(R)}, 'Harness resident', 'Dog');
   insert into weight (resident_id, date, weight_kg) values (${lit(R)}, current_date - 1, 5);

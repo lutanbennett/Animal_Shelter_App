@@ -50,7 +50,7 @@ create temp table harness_before as
 select
   (select count(*) from weight where archived_at is not null) as w,
   (select count(*) from prescriptions where archived_at is not null) as p,
-  (select count(*) from vet_appointments where archived_at is not null) as v,
+  (select count(*) from clinic_visits where archived_at is not null) as v,
   (select count(*) from immunization_records where archived_at is not null) as i;
 
 -- Run one statement as a login. Returns the row count; -1 if a privilege
@@ -61,7 +61,7 @@ begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', p_uid, 'role', 'authenticated', 'aal', 'aal1')::text, true);
   set local role authenticated;
-  select coalesce(array_agg(x), array[]::uuid[]) into v from current_vet_resident_ids() x;
+  select coalesce(array_agg(x), array[]::uuid[]) into v from current_clinic_resident_ids() x;
   reset role;
   perform set_config('request.jwt.claims', '', true);
   return v;
@@ -86,11 +86,11 @@ begin
           'harness-soft-delete-' || v_vet || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now());
   insert into user_roles (user_id, role) values (v_vet, 'vet');
   -- 0127: a vet login's clinic is its linked doctor's (the home-clinic trigger links it)
-  insert into vet_doctors (name, user_id, vet_id) values ('Harness vet doctor', v_vet, v_clinic);
+  insert into doctors (name, user_id, clinic_id) values ('Harness vet doctor', v_vet, v_clinic);
 end $setup$;
 
 -- Not replayed (0127): 0124's vet_owns_visit and friends were redefined onto
--- current_user_vet_ids() by 0125, and replaying the file would put back calls to
+-- current_user_clinic_ids() by 0125, and replaying the file would put back calls to
 -- current_user_vet_id(), which no longer exists. The assertions run against the
 -- live definitions instead.
 
@@ -141,9 +141,9 @@ begin
   end if;
 
   -- A: weights.
-  insert into vet_appointments (id, resident_id, vet_id, appointment_date, reason)
+  insert into clinic_visits (id, resident_id, clinic_id, appointment_date, reason)
   values (v_visit, v_res, v_clinic, timestamptz '2026-08-05 10:00+07', 'Harness visit');
-  insert into weight (resident_id, date, weight_kg, vet_appointment_id)
+  insert into weight (resident_id, date, weight_kg, clinic_visit_id)
   values (v_res, date '2026-08-05', 11, v_visit) returning id into v_w;
 
   begin
@@ -163,7 +163,7 @@ begin
   v_report := v_report || 'F: archive = one audit row carrying archived_at | ';
 
   -- the same day AND the same visit are free again
-  insert into weight (resident_id, date, weight_kg, vet_appointment_id)
+  insert into weight (resident_id, date, weight_kg, clinic_visit_id)
   values (v_res, date '2026-08-05', 11.5, v_visit) returning id into v_w2;
   begin
     update weight set archived_at = null, archive_reason = null where id = v_w;
@@ -247,7 +247,7 @@ begin
 
   -- D: cashflow (vet).
   select coalesce(sum(amount), 0) into v_a from cashflow_forecast(date_trunc('month', v_future)::date, (date_trunc('month', v_future) + interval '1 month - 1 day')::date) where category = 'vet';
-  insert into vet_appointments (id, resident_id, vet_id, appointment_date, reason, status, cost)
+  insert into clinic_visits (id, resident_id, clinic_id, appointment_date, reason, status, cost)
   values (v_visit2, v_res, v_clinic, v_future::timestamptz + interval '10 hours', 'Harness future visit', 'scheduled', 777);
   select coalesce(sum(amount), 0) into v_b from cashflow_forecast(date_trunc('month', v_future)::date, (date_trunc('month', v_future) + interval '1 month - 1 day')::date) where category = 'vet';
   if v_b <> v_a + 777 then raise exception 'HARNESS-FAIL D: a live scheduled visit is not in the forecast (% -> %)', v_a, v_b; end if;
@@ -255,7 +255,7 @@ begin
   if not (v_res = any (pg_temp.vet_ids(v_vet))) then
     raise exception 'HARNESS-FAIL E: the vet cannot see a resident they have a live visit with';
   end if;
-  update vet_appointments set archived_at = now() where id = v_visit2;
+  update clinic_visits set archived_at = now() where id = v_visit2;
   select coalesce(sum(amount), 0) into v_b from cashflow_forecast(date_trunc('month', v_future)::date, (date_trunc('month', v_future) + interval '1 month - 1 day')::date) where category = 'vet';
   if v_b <> v_a then raise exception 'HARNESS-FAIL D: an archived visit still costs money (% -> %)', v_a, v_b; end if;
   v_report := v_report || 'D: archived visit leaves the cashflow forecast | ';
@@ -264,11 +264,11 @@ begin
   if not (v_res = any (pg_temp.vet_ids(v_vet))) then
     raise exception 'HARNESS-FAIL E: scope was lost while one live visit remained';
   end if;
-  update vet_appointments set archived_at = now() where id = v_visit;
+  update clinic_visits set archived_at = now() where id = v_visit;
   if v_res = any (pg_temp.vet_ids(v_vet)) then
     raise exception 'HARNESS-FAIL E: archived visits still give the vet sight of the resident';
   end if;
-  update vet_appointments set archived_at = null where id = v_visit;
+  update clinic_visits set archived_at = null where id = v_visit;
   if not (v_res = any (pg_temp.vet_ids(v_vet))) then
     raise exception 'HARNESS-FAIL E: restoring the visit did not restore the vet''s scope';
   end if;

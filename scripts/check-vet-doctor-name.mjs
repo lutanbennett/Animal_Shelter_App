@@ -19,7 +19,7 @@ const migration = readFileSync(join(root, "supabase/migrations/0074_vet_doctor_n
 
 const sql = `
 begin;
-create temp table h_pre on commit drop as select count(doctor_name) as n from vet_appointments;
+create temp table h_pre on commit drop as select count(doctor_name) as n from clinic_visits;
 ${migration}
 -- a second run of the whole file must be harmless
 ${migration}
@@ -31,7 +31,7 @@ declare
   v_rejected boolean := false;
 begin
   -- A. the replay back-filled nothing (real rows may carry a name by now: compare with before)
-  select count(*), count(doctor_name) into v_rows, v_nonnull from vet_appointments;
+  select count(*), count(doctor_name) into v_rows, v_nonnull from clinic_visits;
   if v_nonnull <> (select n from h_pre) then raise exception 'FAIL A the replay back-filled % rows', v_nonnull - (select n from h_pre); end if;
 
   select s.resident_id into v_res from resident_current_state s
@@ -40,54 +40,54 @@ begin
   if v_res is null then raise exception 'FAIL setup: no living resident'; end if;
 
   -- B. insert: trimmed, blank -> null, missing -> null, inner spacing kept
-  insert into vet_appointments (resident_id, vet_id, appointment_date, doctor_name)
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, doctor_name)
     values (v_res, v_vet, now(), '  Dr Somchai  ') returning id, doctor_name into v_id, v_got;
   if v_got is distinct from 'Dr Somchai' then raise exception 'FAIL B spaces: [%]', v_got; end if;
 
-  insert into vet_appointments (resident_id, vet_id, appointment_date, doctor_name)
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, doctor_name)
     values (v_res, v_vet, now(), E'\\tDr  Nok\\n') returning doctor_name into v_got;
   if v_got is distinct from 'Dr  Nok' then raise exception 'FAIL B tab/newline or inner spacing: [%]', v_got; end if;
 
-  insert into vet_appointments (resident_id, vet_id, appointment_date, doctor_name)
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, doctor_name)
     values (v_res, v_vet, now(), '') returning doctor_name into v_got;
   if v_got is not null then raise exception 'FAIL B empty stored as [%]', v_got; end if;
 
-  insert into vet_appointments (resident_id, vet_id, appointment_date, doctor_name)
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, doctor_name)
     values (v_res, v_vet, now(), E'   \\t ') returning doctor_name into v_got;
   if v_got is not null then raise exception 'FAIL B whitespace-only stored as [%]', v_got; end if;
 
-  insert into vet_appointments (resident_id, vet_id, appointment_date)
+  insert into clinic_visits (resident_id, clinic_id, appointment_date)
     values (v_res, v_vet, now()) returning doctor_name into v_got;
   if v_got is not null then raise exception 'FAIL B omitted stored as [%]', v_got; end if;
 
-  insert into vet_appointments (resident_id, vet_id, appointment_date, doctor_name)
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, doctor_name)
     values (v_res, v_vet, now(), v_long) returning doctor_name into v_got;
   if v_got is distinct from v_long then raise exception 'FAIL B 500 Thai characters did not round-trip'; end if;
 
   -- C. update: trimmed; cleared to null; untouched by edits to other columns
-  update vet_appointments set doctor_name = ' Dr Ploy ' where id = v_id returning doctor_name into v_got;
+  update clinic_visits set doctor_name = ' Dr Ploy ' where id = v_id returning doctor_name into v_got;
   if v_got is distinct from 'Dr Ploy' then raise exception 'FAIL C update trim: [%]', v_got; end if;
-  update vet_appointments set notes = 'harness 0074' where id = v_id returning doctor_name into v_got;
+  update clinic_visits set notes = 'harness 0074' where id = v_id returning doctor_name into v_got;
   if v_got is distinct from 'Dr Ploy' then raise exception 'FAIL C other-column edit changed it: [%]', v_got; end if;
-  update vet_appointments set doctor_name = '  ' where id = v_id returning doctor_name into v_got;
+  update clinic_visits set doctor_name = '  ' where id = v_id returning doctor_name into v_got;
   if v_got is not null then raise exception 'FAIL C cleared to [%]', v_got; end if;
 
   -- D. the constraint holds on its own, with the trigger out of the way
-  alter table vet_appointments disable trigger user; -- all of them: 0102's doctor-link trigger also trims doctor_name
+  alter table clinic_visits disable trigger user; -- all of them: 0102's doctor-link trigger also trims doctor_name
   begin
-    insert into vet_appointments (resident_id, vet_id, appointment_date, doctor_name)
+    insert into clinic_visits (resident_id, clinic_id, appointment_date, doctor_name)
       values (v_res, v_vet, now(), ' untrimmed');
   exception when check_violation then v_rejected := true;
   end;
   if not v_rejected then raise exception 'FAIL D constraint accepted an untrimmed name'; end if;
   v_rejected := false;
   begin
-    insert into vet_appointments (resident_id, vet_id, appointment_date, doctor_name)
+    insert into clinic_visits (resident_id, clinic_id, appointment_date, doctor_name)
       values (v_res, v_vet, now(), '');
   exception when check_violation then v_rejected := true;
   end;
   if not v_rejected then raise exception 'FAIL D constraint accepted an empty string'; end if;
-  alter table vet_appointments enable trigger user;
+  alter table clinic_visits enable trigger user;
 
   raise exception 'HARNESS-OK existing rows=% with a name=% (replay added none) | insert trim, tab/newline, blank->null, whitespace->null, omitted->null, 500 Thai chars | update trim, other-column edit, clear->null | constraint rejects untrimmed and empty with trigger disabled | file ran twice', v_rows, v_nonnull;
 end;

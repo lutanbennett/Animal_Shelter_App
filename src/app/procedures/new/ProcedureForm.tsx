@@ -15,7 +15,7 @@ import {
 } from "@/components/DeferredUploads";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate, todayIso } from "@/lib/format";
-import { visitDate } from "@/lib/vets/linkable";
+import { visitDate } from "@/lib/clinics/linkable";
 import { MicrochipForm } from "@/components/MicrochipForm";
 
 /** The 0031 seed type is "Microchipping"; a shelter-added "Microchip implant" counts too. */

@@ -268,7 +268,7 @@ async function answerDue(
     // The dashboard's own "due" set: still scheduled, and either already
     // past or inside the window (src/lib/management/report.ts).
     supabase
-      .from("vet_appointments")
+      .from("clinic_visits")
       .select("id, resident_id, appointment_date, reason, vets(name)")
       .is("archived_at", null)
       .eq("status", "scheduled")

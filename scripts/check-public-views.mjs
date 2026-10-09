@@ -116,12 +116,12 @@ for (const name of PUBLIC) {
   }
 }
 
-// A column is public only when the view names it. vet_visit_estimate (0071) is
+// A column is public only when the view names it. clinic_visit_estimate (0071) is
 // an internal figure on site_content; it must not reach anon through the view
 // or the base table (0122).
 for (const [source, column] of [
-  ["public_site_content", "vet_visit_estimate"],
-  ["site_content", "vet_visit_estimate"],
+  ["public_site_content", "clinic_visit_estimate"],
+  ["site_content", "clinic_visit_estimate"],
   ["site_content", "id"],
 ]) {
   const res = await fetch(`${url}/rest/v1/${source}?select=${column}&limit=1`, { headers });

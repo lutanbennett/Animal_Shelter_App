@@ -128,7 +128,7 @@ begin
 
   -- A1/A2: the other tables, insert / update / delete as a vet (R2: a vet
   -- cannot read what its own write produced)
-  v_r := pg_temp.run(v_admin, format($q$insert into vet_appointments (id, resident_id, vet_id, appointment_date, reason) values (%L, %L, %L, now() - interval '1 day', 'check')$q$, v_appt, v_res, v_vet));
+  v_r := pg_temp.run(v_admin, format($q$insert into clinic_visits (id, resident_id, clinic_id, appointment_date, reason) values (%L, %L, %L, now() - interval '1 day', 'check')$q$, v_appt, v_res, v_vet));
   if v_r <> 'ok' then raise exception 'FAIL A1 vet appointment insert: %', v_r; end if;
   v_r := pg_temp.run(v_admin, format($q$insert into weight (id, resident_id, date, weight_kg) values (%L, %L, current_date, 12.5)$q$, v_w, v_res));
   if v_r <> 'ok' then raise exception 'FAIL A1 weight insert: %', v_r; end if;
@@ -143,7 +143,7 @@ begin
   if v_r <> 'ok' then raise exception 'FAIL A1 weight update: %', v_r; end if;
   v_r := pg_temp.run(v_admin, format($q$update prescriptions set notes = 'n' where id = %L$q$, v_rx));
   if v_r <> 'ok' then raise exception 'FAIL A1 prescription update: %', v_r; end if;
-  v_r := pg_temp.run(v_admin, format($q$update vet_appointments set notes = 'n' where id = %L$q$, v_appt));
+  v_r := pg_temp.run(v_admin, format($q$update clinic_visits set notes = 'n' where id = %L$q$, v_appt));
   if v_r <> 'ok' then raise exception 'FAIL A1 appointment update: %', v_r; end if;
   v_r := pg_temp.run(v_admin, format($q$update immunization_records set notes = 'n' where id = %L$q$, v_ir));
   if v_r <> 'ok' then raise exception 'FAIL A1 immunization update: %', v_r; end if;
@@ -156,7 +156,7 @@ begin
   if v_r <> 'ok' then raise exception 'FAIL A1 weight delete: %', v_r; end if;
   delete from prescriptions where id = v_rx;
   delete from immunization_records where id = v_ir;
-  delete from vet_appointments where id = v_appt;
+  delete from clinic_visits where id = v_appt;
   v_r := pg_temp.run(v_staff, format($q$delete from attachments where id = %L$q$, v_att));
   if v_r <> 'ok' then raise exception 'FAIL A1 attachment delete: %', v_r; end if;
   delete from contacts where id = v_carer;
@@ -164,7 +164,7 @@ begin
   for v_tbl, v_id in
     select * from (values
       ('weight', v_w), ('prescriptions', v_rx), ('immunization_records', v_ir),
-      ('vet_appointments', v_appt), ('attachments', v_att), ('contacts', v_carer)
+      ('clinic_visits', v_appt), ('attachments', v_att), ('contacts', v_carer)
     ) t (a, b)
   loop
     select count(*) into v_n from audit_log
@@ -235,7 +235,7 @@ begin
   then raise exception 'FAIL W2 a trigger function is executable by an API role'; end if;
   if has_table_privilege('anon', 'audit_log', 'select') then raise exception 'FAIL W1 anon can select audit_log'; end if;
 
-  raise exception 'HARNESS-OK file ran twice | A1 insert/update/delete recorded on residents, contacts, prescriptions, vet_appointments, weight, attachments, immunization_records | A2 actor is the session login (staff, admin), null for the owner | A3 residents images omit microchip_number and microchip_implanted_on | A4 no-change and excluded-column-only updates write nothing | R1 admin reads, volunteer/staff/vet see zero rows | R2 staff writes recorded though they cannot read the log | W1 no API role (admin, service_role included) inserts, updates, deletes or truncates; the owner is refused by the trigger | W2 trigger functions not executable by anon/authenticated';
+  raise exception 'HARNESS-OK file ran twice | A1 insert/update/delete recorded on residents, contacts, prescriptions, clinic_visits, weight, attachments, immunization_records | A2 actor is the session login (staff, admin), null for the owner | A3 residents images omit microchip_number and microchip_implanted_on | A4 no-change and excluded-column-only updates write nothing | R1 admin reads, volunteer/staff/vet see zero rows | R2 staff writes recorded though they cannot read the log | W1 no API role (admin, service_role included) inserts, updates, deletes or truncates; the owner is refused by the trigger | W2 trigger functions not executable by anon/authenticated';
 end
 $h$;
 rollback;

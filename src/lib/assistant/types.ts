@@ -70,7 +70,7 @@ export type MoveDraft = {
 export type VetVisitDraft = {
   kind: "vet";
   residentId: string | null;
-  vetId: string | null;
+  clinicId: string | null;
   date: string | null;
   /** HH:MM, or null when the text didn't say. */
   time: string | null;

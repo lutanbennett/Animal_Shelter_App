@@ -48,7 +48,7 @@ export async function setResidentMicrochip(
 
     // The hub, its sections, and the vet-visit views all show the chip.
     revalidatePath(`/residents/${residentId}`, "layout");
-    revalidatePath("/vet-visits", "layout");
+    revalidatePath("/clinic-visits", "layout");
     revalidatePath("/appointments");
     return { ok: true, cleared: chip.microchip_number === null };
   });

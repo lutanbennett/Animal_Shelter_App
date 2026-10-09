@@ -119,7 +119,7 @@ begin
     select id, who::app_role from (values ${["admin", "management", "staff", "volunteer", "vet"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role_id, role) select ${lit(ID.hm)}, id, legacy_role from roles where key = 'head_of_maintenance';
   insert into vets (id, name, clinic_name) values (${lit(OWN)}, 'Harness own', 'Harness own');
-  insert into vet_doctors (name, user_id, vet_id) values ('Harness vet', ${lit(ID.vet)}, ${lit(OWN)});
+  insert into doctors (name, user_id, clinic_id) values ('Harness vet', ${lit(ID.vet)}, ${lit(OWN)});
   insert into zones (id, name) values (${lit(ZONE)}, 'Harness zone');
   insert into enclosures (id, name, zone_id) values (${lit(ENC)}, 'Harness enclosure', ${lit(ZONE)});
   insert into residents (id, name, species) values (${lit(R)}, 'Harness resident', 'Dog');

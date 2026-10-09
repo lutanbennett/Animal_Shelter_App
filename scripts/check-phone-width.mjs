@@ -6,7 +6,7 @@
 //
 //   node scripts/worktree.mjs dev                                  (another terminal)
 //   node scripts/check-phone-width.mjs [http://localhost:<port>]   (defaults to this checkout's .port)
-//   node scripts/check-phone-width.mjs --roles=admin,staff --locales=en --pages=/vets,/enclosures
+//   node scripts/check-phone-width.mjs --roles=admin,staff --locales=en --pages=/clinics,/enclosures
 //   (In Git Bash a leading /path in --pages is rewritten to C:/Program Files/Git/…; prefix the command with MSYS_NO_PATHCONV=1.)
 //   node scripts/check-phone-width.mjs --keep      (leave the seeded rows and the throwaway logins in dev)
 //   node scripts/check-phone-width.mjs --verbose   (also list every page that passed)
@@ -96,15 +96,15 @@ for (const l of locales) if (!["en", "th"].includes(l)) fail(`unknown locale ${l
 const PAGES = [
   // F-06's pages
   "/enclosures",
-  "/vets",
+  "/clinics",
   "/deliveries",
   "/residents/new",
   "/residents/{resident}/edit",
   "/residents/{hospitalised}/hospital/return",
   "/residents/{resident}/rehome",
-  "/vets/{vet}",
+  "/clinics/{vet}",
   "/contacts",
-  "/vet-visits/new?residentId={resident}",
+  "/clinic-visits/new?residentId={resident}",
   // the rest of the day-to-day screens
   "/home",
   "/my",
@@ -131,8 +131,8 @@ const PAGES = [
   "/management",
   "/management/dashboard",
   "/management/contacts",
-  "/management/vets",
-  "/management/vets/{vet}/doctors",
+  "/management/clinics",
+  "/management/clinics/{vet}/doctors",
   "/management/medications",
   "/management/medications?view=order",
   "/management/diets",

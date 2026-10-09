@@ -87,7 +87,7 @@ begin
   insert into user_roles (user_id, role) values (v_staff, 'staff'), (v_vol, 'volunteer');
   insert into user_roles (user_id, role) values (v_vet, 'vet');
   -- 0127: a vet login's clinic is its linked doctor's (the home-clinic trigger links it)
-  insert into vet_doctors (name, user_id, vet_id) values ('Harness vet doctor', v_vet, v_own);
+  insert into doctors (name, user_id, clinic_id) values ('Harness vet doctor', v_vet, v_own);
 end $setup$;
 
 do $h$
@@ -107,7 +107,7 @@ declare
   v_n int; v_audit int;
   v_report text := '';
 begin
-  insert into vet_appointments (id, resident_id, vet_id, appointment_date, reason)
+  insert into clinic_visits (id, resident_id, clinic_id, appointment_date, reason)
   values (v_visit_own, v_res, v_own, date '2026-08-10', 'own'),
          (v_visit_other, v_res, v_other, date '2026-08-11', 'other');
   insert into weight (resident_id, date, weight_kg) values (v_res, date '2026-08-12', 11) returning id into v_w;
@@ -115,9 +115,9 @@ begin
   values (v_res, v_type, date '2026-08-12') returning id into v_i;
   insert into prescriptions (resident_id, medication_id, frequency_id, start_date, dose_quantity)
   values (v_res, v_med, v_freq, date '2026-08-12', 1) returning id into v_rx;
-  insert into prescriptions (resident_id, medication_id, frequency_id, start_date, dose_quantity, vet_appointment_id)
+  insert into prescriptions (resident_id, medication_id, frequency_id, start_date, dose_quantity, clinic_visit_id)
   values (v_res, v_med, v_freq, date '2026-08-12', 1, v_visit_own) returning id into v_rx_own;
-  insert into prescriptions (resident_id, medication_id, frequency_id, start_date, dose_quantity, vet_appointment_id)
+  insert into prescriptions (resident_id, medication_id, frequency_id, start_date, dose_quantity, clinic_visit_id)
   values (v_res, v_med, v_freq, date '2026-08-12', 1, v_visit_other) returning id into v_rx_other;
 
   -- A: staff, all four, one audit row each.
@@ -129,9 +129,9 @@ begin
   end if;
   if pg_temp.restore_as(v_staff, 'weight', v_w) <> 1 then raise exception 'HARNESS-FAIL A: staff could not restore a weight'; end if;
   if pg_temp.archive_as(v_staff, 'prescriptions', v_rx) <> 1 then raise exception 'HARNESS-FAIL A: staff could not archive a prescription'; end if;
-  if pg_temp.archive_as(v_staff, 'vet_appointments', v_visit_other) <> 1 then raise exception 'HARNESS-FAIL A: staff could not archive a visit'; end if;
+  if pg_temp.archive_as(v_staff, 'clinic_visits', v_visit_other) <> 1 then raise exception 'HARNESS-FAIL A: staff could not archive a visit'; end if;
   if pg_temp.archive_as(v_staff, 'immunization_records', v_i) <> 1 then raise exception 'HARNESS-FAIL A: staff could not archive an immunization'; end if;
-  if pg_temp.restore_as(v_staff, 'vet_appointments', v_visit_other) <> 1 then raise exception 'HARNESS-FAIL A: staff could not restore a visit'; end if;
+  if pg_temp.restore_as(v_staff, 'clinic_visits', v_visit_other) <> 1 then raise exception 'HARNESS-FAIL A: staff could not restore a visit'; end if;
   v_report := v_report || 'A: staff archives all four, restores, one audit row per archive | ';
 
   -- B: a vet. The database would let them archive their own clinic's
@@ -140,10 +140,10 @@ begin
   -- the visit from their scope, so they cannot restore it.
   if pg_temp.archive_as(v_vet, 'prescriptions', v_rx_own) <> 1 then raise exception 'HARNESS-FAIL B: vet could not archive a prescription on their own visit'; end if;
   if pg_temp.restore_as(v_vet, 'prescriptions', v_rx_own) <> 1 then raise exception 'HARNESS-FAIL B: vet could not restore a prescription on their own live visit'; end if;
-  if pg_temp.archive_as(v_vet, 'vet_appointments', v_visit_other) <> 0 then raise exception 'HARNESS-FAIL B: vet archived ANOTHER clinic''s visit'; end if;
+  if pg_temp.archive_as(v_vet, 'clinic_visits', v_visit_other) <> 0 then raise exception 'HARNESS-FAIL B: vet archived ANOTHER clinic''s visit'; end if;
   if pg_temp.archive_as(v_vet, 'prescriptions', v_rx_other) <> 0 then raise exception 'HARNESS-FAIL B: vet archived a prescription on ANOTHER clinic''s visit'; end if;
-  if pg_temp.archive_as(v_vet, 'vet_appointments', v_visit_own) <> 1 then raise exception 'HARNESS-FAIL B: vet could not archive their own clinic''s visit'; end if;
-  if pg_temp.restore_as(v_vet, 'vet_appointments', v_visit_own) <> 0 then
+  if pg_temp.archive_as(v_vet, 'clinic_visits', v_visit_own) <> 1 then raise exception 'HARNESS-FAIL B: vet could not archive their own clinic''s visit'; end if;
+  if pg_temp.restore_as(v_vet, 'clinic_visits', v_visit_own) <> 0 then
     raise exception 'HARNESS-FAIL B: a vet restored their own archived visit, so the decision''s reason (one-way for a vet) is stale';
   end if;
   v_report := v_report || 'B: vet refused (0 rows) on the other clinic; own-clinic archive is one-way, so not offered | ';
@@ -152,7 +152,7 @@ begin
   select count(*) into v_n from (values
     (pg_temp.archive_as(v_vol, 'weight', v_w)),
     (pg_temp.archive_as(v_vol, 'prescriptions', v_rx_other)),
-    (pg_temp.archive_as(v_vol, 'vet_appointments', v_visit_other)),
+    (pg_temp.archive_as(v_vol, 'clinic_visits', v_visit_other)),
     (pg_temp.archive_as(v_vol, 'immunization_records', (select id from immunization_records where resident_id = v_res limit 1)))
   ) x(n) where n <> 0;
   if v_n <> 0 then raise exception 'HARNESS-FAIL C: a volunteer archived something'; end if;

@@ -28,7 +28,7 @@ const sectionPaths = (section: Section) => ROUTES.filter((r) => sectionOf(r) ===
  * or a parent of it. Longest wins so that /admin/security lights up
  * Security in the footer rather than Settings as well (and /admin/website,
  * a Management page, Management rather than Settings), and a segment
- * boundary is required so /vets never claims /vetsomething.
+ * boundary is required so /clinics never claims /vetsomething.
  */
 function activeHref(pathname: string, items: NavItem[]): string | undefined {
   return items

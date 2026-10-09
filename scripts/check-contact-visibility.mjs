@@ -11,12 +11,12 @@
 //      are the file's doing, not the harness failing to reach RLS (skipped,
 //      and said so, once applied)
 //   A  a vet reads no row of contacts itself, and cannot select phone, email,
-//      address, LINE, WhatsApp, Messenger or notes from vet_contacts (the
+//      address, LINE, WhatsApp, Messenger or notes from doctor_contacts (the
 //      columns are not there), nor read volunteer_contacts
-//   B  a vet reads every contact's id, name and type through vet_contacts
+//   B  a vet reads every contact's id, name and type through doctor_contacts
 //   C  a volunteer reads no row of contacts itself, and cannot select email,
 //      address, LINE, WhatsApp, Messenger, notes or type from
-//      volunteer_contacts, nor read vet_contacts
+//      volunteer_contacts, nor read doctor_contacts
 //   D  a volunteer reads every contact's name and phone through
 //      volunteer_contacts, and the phone is the real one
 //   E  staff, management and admin still read every column of contacts and
@@ -150,15 +150,15 @@ begin
   foreach col in array array['phone', 'email', 'address', 'line_id', 'whatsapp', 'messenger_id', 'notes'] loop
     n := pg_temp.try(v_vet, format('select %I from contacts', col));
     if n > 0 then raise exception 'HARNESS-FAIL A: vet read % rows of contacts.%', n, col; end if;
-    n := pg_temp.try(v_vet, format('select %I from vet_contacts', col));
-    if n <> -2 then raise exception 'HARNESS-FAIL A: vet_contacts has a column %, gave %', col, n; end if;
+    n := pg_temp.try(v_vet, format('select %I from doctor_contacts', col));
+    if n <> -2 then raise exception 'HARNESS-FAIL A: doctor_contacts has a column %, gave %', col, n; end if;
   end loop;
   n := pg_temp.try(v_vet, 'select * from volunteer_contacts');
   if n <> 0 then raise exception 'HARNESS-FAIL A: vet read % rows of volunteer_contacts', n; end if;
-  v_report := v_report || 'A: vet reads 0 rows of contacts, no phone/email/address/LINE/WhatsApp/Messenger/notes column in vet_contacts, 0 of volunteer_contacts | ';
+  v_report := v_report || 'A: vet reads 0 rows of contacts, no phone/email/address/LINE/WhatsApp/Messenger/notes column in doctor_contacts, 0 of volunteer_contacts | ';
 
   -- B: a vet reads id, name and type for every contact.
-  n := pg_temp.try(v_vet, 'select id, name, type from vet_contacts');
+  n := pg_temp.try(v_vet, 'select id, name, type from doctor_contacts');
   if n <> v_total then raise exception 'HARNESS-FAIL B: vet read % of % contacts', n, v_total; end if;
   v_report := v_report || format('B: vet reads id/name/type of %s/%s contacts | ', n, v_total);
 
@@ -171,9 +171,9 @@ begin
     n := pg_temp.try(v_vol, format('select %I from volunteer_contacts', col));
     if n <> -2 then raise exception 'HARNESS-FAIL C: volunteer_contacts has a column %, gave %', col, n; end if;
   end loop;
-  n := pg_temp.try(v_vol, 'select * from vet_contacts');
-  if n <> 0 then raise exception 'HARNESS-FAIL C: volunteer read % rows of vet_contacts', n; end if;
-  v_report := v_report || 'C: volunteer reads 0 rows of contacts, only id/name/phone in volunteer_contacts, 0 of vet_contacts | ';
+  n := pg_temp.try(v_vol, 'select * from doctor_contacts');
+  if n <> 0 then raise exception 'HARNESS-FAIL C: volunteer read % rows of doctor_contacts', n; end if;
+  v_report := v_report || 'C: volunteer reads 0 rows of contacts, only id/name/phone in volunteer_contacts, 0 of doctor_contacts | ';
 
   -- D: and the volunteer's phone is the real one.
   n := pg_temp.try(v_vol, 'select name, phone from volunteer_contacts');
@@ -186,13 +186,13 @@ begin
   foreach uid in array array[v_staff, v_mgmt, v_admin] loop
     n := pg_temp.try(uid, 'select phone, email, address, line_id, whatsapp, messenger_id, notes from contacts');
     if n <> v_total then raise exception 'HARNESS-FAIL E: % read % of % contacts', uid, n, v_total; end if;
-    n := pg_temp.try(uid, 'select * from vet_contacts');
-    if n <> 0 then raise exception 'HARNESS-FAIL E: % read % rows of vet_contacts', uid, n; end if;
+    n := pg_temp.try(uid, 'select * from doctor_contacts');
+    if n <> 0 then raise exception 'HARNESS-FAIL E: % read % rows of doctor_contacts', uid, n; end if;
     n := pg_temp.try(uid, 'select * from volunteer_contacts');
     if n <> 0 then raise exception 'HARNESS-FAIL E: % read % rows of volunteer_contacts', uid, n; end if;
   end loop;
-  n := pg_temp.try(null, 'select * from vet_contacts');
-  if n <> -1 then raise exception 'HARNESS-FAIL E: anon vet_contacts gave %', n; end if;
+  n := pg_temp.try(null, 'select * from doctor_contacts');
+  if n <> -1 then raise exception 'HARNESS-FAIL E: anon doctor_contacts gave %', n; end if;
   n := pg_temp.try(null, 'select * from volunteer_contacts');
   if n <> -1 then raise exception 'HARNESS-FAIL E: anon volunteer_contacts gave %', n; end if;
   v_report := v_report || 'E: staff/management/admin read all columns and 0 rows of the narrow views, anon refused | ';

@@ -172,11 +172,11 @@ export async function loadVetVisitEstimate(
 ): Promise<number | null> {
   const { data } = await supabase
     .from("site_content")
-    .select("vet_visit_estimate")
+    .select("clinic_visit_estimate")
     .eq("id", true)
     .limit(1)
-    .returns<{ vet_visit_estimate: number | string | null }[]>();
+    .returns<{ clinic_visit_estimate: number | string | null }[]>();
   // numeric(12, 2) can come back as a string from PostgREST.
-  const raw = data?.[0]?.vet_visit_estimate;
+  const raw = data?.[0]?.clinic_visit_estimate;
   return raw == null ? null : Number(raw);
 }

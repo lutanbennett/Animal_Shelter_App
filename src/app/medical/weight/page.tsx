@@ -18,7 +18,7 @@ import { BackLink } from "@/components/BackLink";
  * Not under /residents: she cannot open a resident's record, only who and where (0134). So the
  * picker reads `resident_who_and_where`, the history reads `weight` (a flat table whose policy asks
  * medical.weight), and nothing here reads `residents`, `resident_current_state` or
- * `vet_appointments`, none of which her login can. There is no vet-visit link and no date: the
+ * `clinic_visits`, none of which her login can. There is no vet-visit link and no date: the
  * reading is today's. Adjusting a dose from the weight is judgement and is not recorded here.
  */
 export default async function RecordWeightPage(props: PageProps<"/medical/weight">) {

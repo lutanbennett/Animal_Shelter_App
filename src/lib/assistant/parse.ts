@@ -24,7 +24,7 @@
 import { dueIntent, whereIntent, whoIntent } from "./intents/lookups";
 import { hospitalIntent, hospitalReturnIntent } from "./intents/hospital";
 import { weightIntent } from "./intents/weight";
-import { vetIntent } from "./intents/vet";
+import { vetIntent } from "./intents/clinic";
 import { moveIntent } from "./intents/move";
 import type { Intent, IntentParser, ParseContext, ParseResult } from "./types";
 

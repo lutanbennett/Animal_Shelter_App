@@ -16,7 +16,7 @@ export function isMedicalArchiveKind(value: unknown): value is MedicalArchiveKin
 export const MEDICAL_ARCHIVE_TABLES = {
   weight: "weight",
   prescription: "prescriptions",
-  visit: "vet_appointments",
+  visit: "clinic_visits",
   immunization: "immunization_records",
 } as const satisfies Record<MedicalArchiveKind, string>;
 
@@ -38,7 +38,7 @@ export const MEDICAL_ARCHIVE_SECTIONS = {
  * Archive is an UPDATE, so the ceiling is what RLS lets each role update,
  * and a vet could (their own clinic's visits and the prescriptions on them,
  * 0110). They are not offered it because the archive is one-way for them:
- * 0124 drops an archived visit from current_vet_resident_ids(), so the vet
+ * 0124 drops an archived visit from current_clinic_resident_ids(), so the vet
  * who archives a resident's only visit loses sight of the resident and
  * cannot restore it (found by scripts/check-medical-archive-roles.mjs).
  * A volunteer cannot update any of the four.

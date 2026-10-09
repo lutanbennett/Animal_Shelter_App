@@ -568,7 +568,7 @@ const en = {
         residents: "Resident",
         contacts: "Contact",
         prescriptions: "Prescription",
-        vet_appointments: "Vet visit",
+        clinic_visits: "Vet visit",
         weight: "Weight",
         attachments: "File",
         immunization_records: "Vaccination",

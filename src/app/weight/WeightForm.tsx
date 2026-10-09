@@ -8,7 +8,7 @@ import { useKeptForm } from "@/lib/use-kept-form";
 import { createWeight, saveWeightEdit } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate, formatWeightKg, todayIso, weightUnit } from "@/lib/format";
-import { visitDate, type LinkableVisit } from "@/lib/vets/linkable";
+import { visitDate, type LinkableVisit } from "@/lib/clinics/linkable";
 
 export type VetAppointmentOption = LinkableVisit;
 
@@ -19,7 +19,7 @@ export type WeightInitial = {
   id: string;
   date: string;
   weight_kg: number;
-  vet_appointment_id: string | null;
+  clinic_visit_id: string | null;
   notes: string | null;
 };
 
@@ -173,7 +173,7 @@ export function WeightForm({
           <select
             id="vetAppointmentId"
             name="vetAppointmentId"
-            defaultValue={initial?.vet_appointment_id ?? preselectedVetAppointmentId ?? ""}
+            defaultValue={initial?.clinic_visit_id ?? preselectedVetAppointmentId ?? ""}
             onChange={(e) => handleVetAppointmentChange(e.target.value)}
             className={inputClass}
           >

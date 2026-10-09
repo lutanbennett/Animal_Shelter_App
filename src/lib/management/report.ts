@@ -1,6 +1,6 @@
 /**
  * The management dashboard's numbers, as pure functions over the rows the
- * page loads. Same approach as src/lib/vets/stats.ts: the shelter's data
+ * page loads. Same approach as src/lib/clinics/stats.ts: the shelter's data
  * is small (a few hundred residents, a few hundred placements and visits a
  * year), so everything for the chosen month is loaded once and the
  * sections, name lists and trend buckets are derived here rather than
@@ -41,7 +41,7 @@ export type AppointmentRow = {
 export type BloodTestRow = {
   resident_id: string;
   date: string;
-  vet_appointment_id: string | null;
+  clinic_visit_id: string | null;
 };
 
 export type ProcedureRow = {
@@ -233,11 +233,11 @@ export function monthReport(
     hospitalised: toEntries(started("SendToHospital"), residents),
     returned: toEntries(started("ReturnToShelter"), residents),
     bloodWorkInHouse: toEntries(
-      bloodTests.filter((b) => b.vet_appointment_id == null),
+      bloodTests.filter((b) => b.clinic_visit_id == null),
       residents,
     ),
     bloodWorkVetVisit: toEntries(
-      bloodTests.filter((b) => b.vet_appointment_id != null),
+      bloodTests.filter((b) => b.clinic_visit_id != null),
       residents,
     ),
     vetVisitsInitial: toEntries(initial, residents),

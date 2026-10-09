@@ -195,7 +195,7 @@ export async function updateVetVisitEstimate(
     const { error } = await supabase
       .from("site_content")
       .update({
-        vet_visit_estimate: estimate.value,
+        clinic_visit_estimate: estimate.value,
         updated_at: new Date().toISOString(),
         updated_by: user?.id ?? null,
       })

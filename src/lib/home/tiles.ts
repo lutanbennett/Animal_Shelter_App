@@ -30,7 +30,7 @@ export type HomeTile = {
 const ORDER: Record<string, readonly string[]> = {
   management: [
     "/management/recurring-jobs",
-    "/management/vets",
+    "/management/clinics",
     "/operations/medication-list",
     "/management/dashboard",
     "/management/contacts",

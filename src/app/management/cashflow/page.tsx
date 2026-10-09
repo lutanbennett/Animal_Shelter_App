@@ -10,7 +10,7 @@ import {
   type CashflowRow,
 } from "@/lib/management/cashflow";
 import { fixedOutgoingRows, type FixedOutgoing } from "@/lib/management/fixed-outgoings";
-import { VET_HISTORY_DAYS, vetForecast, type VetVisit } from "@/lib/management/vet-forecast";
+import { VET_HISTORY_DAYS, vetForecast, type ClinicVisit } from "@/lib/management/clinic-forecast";
 import { CashflowView } from "./CashflowView";
 import { requirePermission } from "@/lib/permissions/require";
 
@@ -52,7 +52,7 @@ export default async function CashflowPage(props: PageProps<"/management/cashflo
     // last quarter that give the typical rate and cost. A day either side
     // of each range is fetched loosely and trimmed on shelter dates below.
     supabase
-      .from("vet_appointments")
+      .from("clinic_visits")
       .select("appointment_date, cost")
       .is("archived_at", null)
       .eq("status", "scheduled")
@@ -60,7 +60,7 @@ export default async function CashflowPage(props: PageProps<"/management/cashflo
       .lte("appointment_date", `${addDaysIso(window.to, 2)}T00:00:00Z`)
       .returns<VetRow[]>(),
     supabase
-      .from("vet_appointments")
+      .from("clinic_visits")
       .select("appointment_date, cost")
       .is("archived_at", null)
       .eq("status", "completed")
@@ -76,7 +76,7 @@ export default async function CashflowPage(props: PageProps<"/management/cashflo
 
   // Counted by the day, like every other category (fixedOutgoingRows).
   const fixedLines = fixed.data ?? [];
-  const toVisits = (data: VetRow[] | null): VetVisit[] =>
+  const toVisits = (data: VetRow[] | null): ClinicVisit[] =>
     (data ?? []).map((r) => ({
       date: todayIso(new Date(r.appointment_date)),
       cost: r.cost == null ? null : Number(r.cost),

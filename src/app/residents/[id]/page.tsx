@@ -110,7 +110,7 @@ export default async function ResidentPage(
       .eq("resident_id", id)
       .returns<MissingImmunizationRow[]>(),
     supabase
-      .from("vet_appointments")
+      .from("clinic_visits")
       .select("id, appointment_date, status, reason")
       .is("archived_at", null)
       .eq("resident_id", id)

@@ -65,10 +65,10 @@ const CASES = [
   READ("residents"), READ("placement_history"), READ("adoption_updates"),
   READ("blood_tests"), READ("blood_test_types"), READ("procedures"), READ("procedure_types"),
   READ("prescriptions"), READ("medication"), READ("frequency"), READ("diet_types"), READ("resident_diets"),
-  READ("immunization_records"), READ("immunization_types"), READ("weight"), READ("vet_appointments"),
+  READ("immunization_records"), READ("immunization_types"), READ("weight"), READ("clinic_visits"),
   READ("group_origins"), READ("attachments"),
   // clinics, contacts, supporters
-  READ("vets"), READ("vet_doctors"), READ("vet_doctor_clinics"), READ("contacts"), READ("shelter_friends"),
+  READ("vets"), READ("doctors"), READ("doctor_clinics"), READ("contacts"), READ("shelter_friends"),
   { key: "read volunteer_contacts", kind: "read", sql: "select 1 from volunteer_contacts", others: "none" },
   // maintenance and projects
   READ("maintenance"), READ("maintenance_assignees"), READ("maintenance_photos"), READ("project_folders"), READ("project_photos"),

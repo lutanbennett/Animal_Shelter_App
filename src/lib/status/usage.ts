@@ -59,7 +59,7 @@ export async function countRecords(days: number): Promise<CheckOutcome<RecordFac
   const since = sinceIso(days);
   const [residents, vetVisits, weights, maintenanceJobs] = await Promise.all([
     countSince("residents", "created_at", since),
-    countSince("vet_appointments", "created_at", since),
+    countSince("clinic_visits", "created_at", since),
     countSince("weight", "created_at", since),
     countSince("maintenance", "created_at", since),
   ]);

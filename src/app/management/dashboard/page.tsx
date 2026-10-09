@@ -104,7 +104,7 @@ export default async function ManagementDashboardPage(
       )
       .returns<PlacementRow[]>(),
     supabase
-      .from("vet_appointments")
+      .from("clinic_visits")
       .select("resident_id, appointment_date, status")
       .is("archived_at", null)
       .gte("appointment_date", window.start.toISOString())
@@ -112,14 +112,14 @@ export default async function ManagementDashboardPage(
       .neq("status", "cancelled")
       .returns<AppointmentRow[]>(),
     supabase
-      .from("vet_appointments")
+      .from("clinic_visits")
       .select("resident_id, appointment_date, status")
       .is("archived_at", null)
       .eq("status", "scheduled")
       .returns<AppointmentRow[]>(),
     supabase
       .from("blood_tests")
-      .select("resident_id, date, vet_appointment_id")
+      .select("resident_id, date, clinic_visit_id")
       .gte("date", window.startDate)
       .lt("date", window.endDate)
       .returns<BloodTestRow[]>(),
@@ -156,7 +156,7 @@ export default async function ManagementDashboardPage(
   const priorVisitsResult =
     seenIds.length > 0
       ? await supabase
-          .from("vet_appointments")
+          .from("clinic_visits")
           .select("resident_id, appointment_date, status")
           .is("archived_at", null)
           .in("resident_id", seenIds)
@@ -259,7 +259,7 @@ export default async function ManagementDashboardPage(
             detail={d.now.noMicrochipDetail(current.microchipped)}
           />
           <StatCard
-            href="/vets"
+            href="/clinics"
             title={d.now.vetVisitsDue}
             value={String(current.vetVisitsDue)}
             detail={

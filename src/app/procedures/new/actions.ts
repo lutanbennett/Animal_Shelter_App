@@ -94,7 +94,7 @@ export async function createProcedure(
     .insert({
       resident_id: residentId,
       procedure_type_id: procedureTypeId,
-      vet_appointment_id: str(formData, "vetAppointmentId"),
+      clinic_visit_id: str(formData, "vetAppointmentId"),
       date,
       notes: str(formData, "notes"),
     })

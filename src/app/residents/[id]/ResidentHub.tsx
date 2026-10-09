@@ -731,7 +731,7 @@ export function ResidentHub({
               href={`${base}/vet-appointments`}
               actions={medicalActions([
                 {
-                  href: `/vet-visits/new?residentId=${resident.id}`,
+                  href: `/clinic-visits/new?residentId=${resident.id}`,
                   label: t.residents.sections.bookVetVisit,
                 },
               ])}

@@ -92,8 +92,8 @@ export function ResidentsTable({
 
   const bookingHref =
     selected.size > 0
-      ? `/vet-visits/new?residentIds=${[...selected].join(",")}`
-      : "/vet-visits/new";
+      ? `/clinic-visits/new?residentIds=${[...selected].join(",")}`
+      : "/clinic-visits/new";
   const immunizationHref =
     selected.size > 0
       ? `/immunizations/new?residentIds=${[...selected].join(",")}`

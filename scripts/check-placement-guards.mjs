@@ -164,12 +164,12 @@ begin
   if v_n <> 1 then raise exception 'FAIL R3 a refused insert closed the prior placement'; end if;
 
   -- P2: the deceased workflow, with something for the cascade to snapshot
-  insert into vet_appointments (resident_id, vet_id, appointment_date, status)
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, status)
   values (b, v_vet, now() + interval '3 days', 'scheduled') returning id into v_appt;
   v_r := pg_temp.run(v_staff, format($q$insert into placement_history (resident_id, placement_type, start_date, zone_id, enclosure_id, previous_enclosure_id, cause_of_death)
     values (%L, 'Deceased', %L, %L, %L, %L, 'harness')$q$, b, t0 + interval '2 days', v_life, v_dead, v_e1));
   if v_r <> 'ok' then raise exception 'FAIL P2 Deceased placement: %', v_r; end if;
-  if (select status from vet_appointments where id = v_appt) <> 'cancelled' then raise exception 'FAIL P2 cascade did not cancel the visit'; end if;
+  if (select status from clinic_visits where id = v_appt) <> 'cancelled' then raise exception 'FAIL P2 cascade did not cancel the visit'; end if;
   select count(*) into v_n from placement_history
    where resident_id = b and placement_type = 'Deceased' and deceased_cascade is not null;
   if v_n <> 1 then raise exception 'FAIL P2 no cascade snapshot on the Deceased row'; end if;
@@ -180,7 +180,7 @@ begin
   perform undo_deceased_placement(b, 'harness: recorded in error');
   reset role;
   perform set_config('request.jwt.claims', '', true);
-  if (select status from vet_appointments where id = v_appt) <> 'scheduled' then raise exception 'FAIL P2 undo did not restore the visit'; end if;
+  if (select status from clinic_visits where id = v_appt) <> 'scheduled' then raise exception 'FAIL P2 undo did not restore the visit'; end if;
   select count(*) into v_n from placement_history
    where resident_id = b and end_date is null and placement_type = 'DeceasedInError' and enclosure_id = v_e1;
   if v_n <> 1 then raise exception 'FAIL P2 undo did not put B back in E1'; end if;

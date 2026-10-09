@@ -76,7 +76,7 @@ const probes = [
   ["diet_types", `select 1 from diet_types limit 1`, { ...STAFF_UP, vet: 1 }],
   ["attachments", `select 1 from attachments limit 1`, "hom-zero"],
   ["procedures", `select 1 from procedures where resident_id = '${R}'`, "hom-zero"],
-  ["visit write", `insert into vet_appointments (resident_id, vet_id, appointment_date, status) values ('${R}', '${OWN}', now(), 'scheduled')`, "hom-zero"],
+  ["visit write", `insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values ('${R}', '${OWN}', now(), 'scheduled')`, "hom-zero"],
 ];
 
 const lines = [];
@@ -132,10 +132,10 @@ begin
     select id, who::app_role from (values ${["admin", "management", "staff", "volunteer", "vet"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role_id, role) select ${lit(ID.hom)}, id, legacy_role from roles where key = 'head_of_medical';
   insert into vets (id, name, clinic_name) values (${lit(OWN)}, 'Harness own', 'Harness own');
-  insert into vet_doctors (name, user_id, vet_id) values ('Harness vet', ${lit(ID.vet)}, ${lit(OWN)});
+  insert into doctors (name, user_id, clinic_id) values ('Harness vet', ${lit(ID.vet)}, ${lit(OWN)});
   insert into residents (id, name, species, size) values (${lit(R)}, 'Harness resident', 'Dog', 'Medium');
   insert into residents (id, name, species, size, drive_folder_id) values (${lit(R2)}, 'Harness resident two', 'Cat', 'Small', 'keep-me');
-  insert into vet_appointments (resident_id, vet_id, appointment_date, status) values (${lit(R)}, ${lit(OWN)}, now() - interval '3 days', 'completed');
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values (${lit(R)}, ${lit(OWN)}, now() - interval '3 days', 'completed');
   insert into weight (resident_id, date, weight_kg) values (${lit(R)}, current_date - 1, 5);
   select id into v_std from diet_types where is_standard;
   if v_std is null then

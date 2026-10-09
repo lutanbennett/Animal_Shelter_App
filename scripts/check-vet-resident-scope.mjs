@@ -103,7 +103,7 @@ begin
   end loop;
   insert into user_roles (user_id, role) select id, 'vet' from harness_ids where who = 'vet';
   -- 0127: a vet login's clinic is its linked doctor's (the home-clinic trigger links it)
-  insert into vet_doctors (name, user_id, vet_id) select 'Harness vet doctor', id, v_own from harness_ids where who = 'vet';
+  insert into doctors (name, user_id, clinic_id) select 'Harness vet doctor', id, v_own from harness_ids where who = 'vet';
   insert into user_roles (user_id, role)
   select id, case who when 'mgmt' then 'management' when 'unlinked' then 'vet' else who end::app_role
   from harness_ids where who in ('unlinked', 'mgmt', 'admin', 'staff', 'volunteer');
@@ -112,27 +112,27 @@ begin
   select id, 'Harness ' || who, 'Dog', case when who in ('seen', 'other') then 'Harness bio ' || who end
   from harness_ids where who in ('seen', 'cancelled', 'mixed', 'other', 'none');
 
-  insert into vet_appointments (resident_id, vet_id, appointment_date, status) values
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values
     ((select id from harness_ids where who = 'seen'), v_own, now() - interval '3 days', 'completed'),
     ((select id from harness_ids where who = 'cancelled'), v_own, now() + interval '3 days', 'cancelled'),
     ((select id from harness_ids where who = 'mixed'), v_own, now() - interval '2 days', 'completed'),
     ((select id from harness_ids where who = 'mixed'), v_oth, now() - interval '9 days', 'completed');
-  insert into vet_appointments (resident_id, vet_id, appointment_date, status)
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, status)
   values ((select id from harness_ids where who = 'other'), v_oth, now() - interval '5 days', 'completed')
   returning id into v_visit;
 
-  insert into weight (resident_id, date, weight_kg, vet_appointment_id)
+  insert into weight (resident_id, date, weight_kg, clinic_visit_id)
   values ((select id from harness_ids where who = 'other'), current_date - 5, 12.5, v_visit);
   insert into placement_history (resident_id, placement_type, start_date)
   values ((select id from harness_ids where who = 'other'), 'Intake', now() - interval '30 days');
-  insert into prescriptions (resident_id, medication_id, start_date, vet_appointment_id)
+  insert into prescriptions (resident_id, medication_id, start_date, clinic_visit_id)
   values ((select id from harness_ids where who = 'other'), (select id from medication limit 1), current_date - 5, v_visit);
 end $setup$;
 
 create temp table harness_before (applied_already boolean, vet_reads_other bigint);
 grant all on harness_before to authenticated, service_role;
 insert into harness_before
-select exists (select 1 from pg_proc where proname = 'current_vet_resident_ids'),
+select exists (select 1 from pg_proc where proname = 'current_clinic_resident_ids'),
        pg_temp.try((select id from harness_ids where who = 'vet'),
          format('select 1 from residents where id = %L', (select id from harness_ids where who = 'other')));
 
@@ -188,26 +188,26 @@ begin
   v_report := v_report || 'B: other and none by id: 0 from residents, resident_list_view, resident_current_state, current_placement | ';
 
   -- C: other's clinical rows; mixed shows both clinics' visits.
-  foreach t in array array['vet_appointments', 'prescriptions', 'procedures', 'blood_tests', 'weight',
+  foreach t in array array['clinic_visits', 'prescriptions', 'procedures', 'blood_tests', 'weight',
                            'immunization_records', 'resident_diets', 'placement_history', 'adoption_updates',
                            'immunization_compliance', 'immunization_duplicate_check'] loop
     n := pg_temp.try(v_vet, format('select 1 from %I where resident_id = %L', t, v_other));
     if n <> 0 then raise exception 'HARNESS-FAIL C: vet read % rows of other from %', n, t; end if;
   end loop;
-  n := pg_temp.try(v_vet, format('select 1 from vet_appointments where resident_id = %L', v_mixed));
+  n := pg_temp.try(v_vet, format('select 1 from clinic_visits where resident_id = %L', v_mixed));
   if n <> 2 then raise exception 'HARNESS-FAIL C: vet read % of mixed''s 2 visits', n; end if;
-  n := pg_temp.try(v_vet, format('select 1 from vet_appointments where resident_id = %L', v_canc));
+  n := pg_temp.try(v_vet, format('select 1 from clinic_visits where resident_id = %L', v_canc));
   if n <> 1 then raise exception 'HARNESS-FAIL C: vet read % of cancelled''s visit', n; end if;
   v_report := v_report || 'C: 0 of other''s rows from 11 tables/views; mixed shows both clinics'' visits (2) | ';
 
   -- D: writes.
   n := pg_temp.try(v_vet, format('insert into weight (resident_id, date, weight_kg) values (%L, current_date, 10)', v_other));
   if n <> -1 then raise exception 'HARNESS-FAIL D: vet weight insert for other gave %', n; end if;
-  n := pg_temp.try(v_vet, format('insert into vet_appointments (resident_id, vet_id, appointment_date) values (%L, %L, now())', v_other, v_own));
+  n := pg_temp.try(v_vet, format('insert into clinic_visits (resident_id, clinic_id, appointment_date) values (%L, %L, now())', v_other, v_own));
   if n <> -1 then raise exception 'HARNESS-FAIL D: vet booked other at own clinic: %', n; end if;
   n := pg_temp.try(v_vet, format('update weight set notes = ''vet'' where resident_id = %L', v_other));
   if n <> 0 then raise exception 'HARNESS-FAIL D: vet updated % of other''s weights', n; end if;
-  n := pg_temp.try(v_vet, format('delete from vet_appointments where resident_id = %L', v_other));
+  n := pg_temp.try(v_vet, format('delete from clinic_visits where resident_id = %L', v_other));
   if n <> 0 then raise exception 'HARNESS-FAIL D: vet deleted % of other''s visits', n; end if;
   n := pg_temp.try(v_vet, format('select record_attachment(''resident'', %L, ''harnessFileOther00'')', v_other));
   if n >= 0 then raise exception 'HARNESS-FAIL D: vet recorded an attachment on other'; end if;
@@ -220,7 +220,7 @@ begin
   v_report := v_report || 'D: other: weight/visit/attachment refused, update 0, delete 0; seen: weight 1, attachment 1 | ';
 
   -- E: a vet with no clinic.
-  foreach t in array array['residents', 'resident_list_view', 'resident_current_state', 'current_placement', 'vet_appointments', 'weight'] loop
+  foreach t in array array['residents', 'resident_list_view', 'resident_current_state', 'current_placement', 'clinic_visits', 'weight'] loop
     n := pg_temp.try(v_unl, format('select 1 from %I', t));
     if n <> 0 then raise exception 'HARNESS-FAIL E: unlinked vet read % rows from %', n, t; end if;
   end loop;

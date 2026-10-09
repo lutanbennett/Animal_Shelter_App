@@ -138,7 +138,7 @@ export const ROUTES: readonly RouteEntry[] = [
     section: "operations",
   },
   {
-    path: "/vets",
+    path: "/clinics",
     activity: "clinics.list",
     level: "read",
     icon: NAV_ICONS.vets,
@@ -191,7 +191,7 @@ export const ROUTES: readonly RouteEntry[] = [
     menu: false,
   },
   {
-    path: "/management/vets",
+    path: "/management/clinics",
     activity: "clinics.list",
     icon: VET_ICONS.vet,
     label: (t) => t.nav.vets,

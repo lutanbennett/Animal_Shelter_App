@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { loadLinkableVisits } from "@/lib/vets/linkable";
+import { loadLinkableVisits } from "@/lib/clinics/linkable";
 import { WeightForm, type ExistingReading, type WeightInitial } from "../../WeightForm";
 
 /**
@@ -23,7 +23,7 @@ export default async function EditWeightPage(props: PageProps<"/weight/[id]/edit
 
   const { data: rows, error } = await supabase
     .from("weight")
-    .select("id, resident_id, date, weight_kg, vet_appointment_id, notes")
+    .select("id, resident_id, date, weight_kg, clinic_visit_id, notes")
     .is("archived_at", null)
     .eq("id", id)
     .limit(1)
@@ -49,7 +49,7 @@ export default async function EditWeightPage(props: PageProps<"/weight/[id]/edit
     loadLinkableVisits(supabase, residentId, {
       onePerVisit: "weight",
       notInFuture: true,
-      keep: reading.vet_appointment_id,
+      keep: reading.clinic_visit_id,
     }),
     supabase
       .from("weight")
@@ -109,7 +109,7 @@ export default async function EditWeightPage(props: PageProps<"/weight/[id]/edit
           id: reading.id,
           date: reading.date,
           weight_kg: reading.weight_kg,
-          vet_appointment_id: reading.vet_appointment_id,
+          clinic_visit_id: reading.clinic_visit_id,
           notes: reading.notes,
         }}
       />

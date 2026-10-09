@@ -273,7 +273,7 @@
     "admin": "contacts",
     "management": "contacts",
     "staff": "contacts",
-    "vet": "vet_contacts",
+    "vet": "doctor_contacts",
     "volunteer": "volunteer_contacts",
     "public_viewer": "contacts",
     "null": "contacts"

@@ -395,7 +395,7 @@ export async function loadResidentArchiveRecord(
       .order("date_administered", { ascending: false })
       .returns<ImmunizationRow[]>(),
     supabase
-      .from("vet_appointments")
+      .from("clinic_visits")
       .select("id, appointment_date, status, reason, doctor_name, notes, vets(name)")
       .is("archived_at", null)
       .eq("resident_id", residentId)

@@ -24,7 +24,7 @@ export default async function EditPrescriptionPage(
   const { data: rows, error } = await supabase
     .from("prescriptions")
     .select(
-      "id, resident_id, medication_id, frequency_id, vet_appointment_id, dose_quantity, start_date, end_date, notes",
+      "id, resident_id, medication_id, frequency_id, clinic_visit_id, dose_quantity, start_date, end_date, notes",
     )
     .eq("id", id)
     .limit(1)
@@ -47,7 +47,7 @@ export default async function EditPrescriptionPage(
       .eq("resident_id", residentId)
       .limit(1)
       .returns<{ is_deceased: boolean }[]>(),
-    loadPrescriptionOptions(supabase, residentId, locale, prescription.vet_appointment_id),
+    loadPrescriptionOptions(supabase, residentId, locale, prescription.clinic_visit_id),
   ]);
   const { medications, frequencies, vetAppointments } = options;
 

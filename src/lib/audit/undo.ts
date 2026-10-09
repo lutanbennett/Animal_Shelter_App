@@ -15,7 +15,7 @@ export const UNDOABLE_EDIT_TABLES: readonly AuditedTable[] = [
   "residents",
   "contacts",
   "prescriptions",
-  "vet_appointments",
+  "clinic_visits",
   "weight",
   "immunization_records",
   // A figure is a typed number and date; putting the old pair back is the
@@ -27,7 +27,7 @@ export const UNDOABLE_EDIT_TABLES: readonly AuditedTable[] = [
 export const UNDOABLE_DELETE_TABLES: readonly AuditedTable[] = [
   "contacts",
   "prescriptions",
-  "vet_appointments",
+  "clinic_visits",
   "weight",
   "immunization_records",
 ];

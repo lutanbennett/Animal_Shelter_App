@@ -20,7 +20,7 @@ export const AUDITED_TABLES = [
   "residents",
   "contacts",
   "prescriptions",
-  "vet_appointments",
+  "clinic_visits",
   "weight",
   "attachments",
   "immunization_records",

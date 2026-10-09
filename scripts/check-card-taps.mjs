@@ -88,12 +88,12 @@ begin
     (${lit(ID.volunteer)}, 'volunteer'), (${lit(ID.public_viewer)}, 'public_viewer');
   insert into vets (id, name, clinic_name) values (${lit(OWN)}, 'Harness own', 'Harness own'), (${lit(OTHER)}, 'Harness other', 'Harness other');
   insert into user_roles (user_id, role) values (${lit(ID.vet_in)}, 'vet'), (${lit(ID.vet_out)}, 'vet');
-  insert into vet_doctors (name, user_id, vet_id) values ('Harness vet in', ${lit(ID.vet_in)}, ${lit(OWN)}), ('Harness vet out', ${lit(ID.vet_out)}, ${lit(OTHER)});
+  insert into doctors (name, user_id, clinic_id) values ('Harness vet in', ${lit(ID.vet_in)}, ${lit(OWN)}), ('Harness vet out', ${lit(ID.vet_out)}, ${lit(OTHER)});
   insert into user_roles (user_id, role_id, role) select ${lit(ID.sic)}, id, legacy_role from roles where key = 'second_in_command';
   insert into user_roles (user_id, role_id, role) select ${lit(ID.hom)}, id, legacy_role from roles where key = 'head_of_medical';
   insert into user_roles (user_id, role_id, role) select ${lit(ID.hm)}, id, legacy_role from roles where key = 'head_of_maintenance';
   insert into residents (id, name, species) values (${lit(R)}, 'Harness resident', 'Dog');
-  insert into vet_appointments (resident_id, vet_id, appointment_date, status) values (${lit(R)}, ${lit(OWN)}, now() - interval '3 days', 'completed');
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values (${lit(R)}, ${lit(OWN)}, now() - interval '3 days', 'completed');
 end $setup$;
 
 do $run$ begin

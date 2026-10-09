@@ -264,10 +264,10 @@ const vets = src.Vets.filter((v) => v.VetID).map((v) => ({
   contactInfo: [v.Phone && `Phone: ${v.Phone}`, v["Line ID"] && `LINE: ${v["Line ID"]}`, v.Address && `Map: ${v.Address}`].filter(Boolean).join("\n") || null,
   notes: blank(v.Notes),
 }));
-const vetIds = new Set(src.Vets.map((v) => v.VetID));
-const vetId = (appsheetId, where) => {
+const clinicIds = new Set(src.Vets.map((v) => v.VetID));
+const clinicId = (appsheetId, where) => {
   if (!appsheetId) return null;
-  if (!vetIds.has(appsheetId)) {
+  if (!clinicIds.has(appsheetId)) {
     note("orphan-rows", `${where}: unknown vet ${appsheetId}`);
     return null;
   }
@@ -369,9 +369,9 @@ const deceasedResidents = new Set(placements.filter((p) => p.type === "Deceased"
 
 const appointmentRows = keepIfResident(src["Vet Appointments"], "RID", "Vet Appointments");
 const appointments = appointmentRows.map((a) => ({
-  id: uuid("vet_appointments", a["Appointment ID"]),
+  id: uuid("clinic_visits", a["Appointment ID"]),
   residentId: uuid("residents", a.RID),
-  vetId: vetId(a.Vet, `Appointment ${a["Appointment ID"]}`),
+  clinicId: clinicId(a.Vet, `Appointment ${a["Appointment ID"]}`),
   date: parseDate(a.Date, `Appointment ${a["Appointment ID"]}`),
   notes: blank(a.Notes),
 })).filter((a) => a.date || (note("dropped", `Appointment ${a.id}: no date`), false));
@@ -382,7 +382,7 @@ const appointmentId = (appsheetId, where) => {
     note("orphan-rows", `${where}: unknown appointment ${appsheetId} → unlinked`);
     return null;
   }
-  return uuid("vet_appointments", appsheetId);
+  return uuid("clinic_visits", appsheetId);
 };
 
 const weights = keepIfResident(src.Weight, "RID", "Weight")
@@ -749,7 +749,7 @@ const counts = {
   vets: vets.length,
   group_origins: origins.length,
   placement_history: placements.length,
-  vet_appointments: appointments.length,
+  clinic_visits: appointments.length,
   weight: weights.length,
   procedures: procedures.length,
   blood_tests: bloodTests.length,
@@ -801,7 +801,7 @@ if (replace) {
     delete from blood_tests;
     delete from procedures;
     delete from weight;
-    delete from vet_appointments;
+    delete from clinic_visits;
     delete from bulk_appointments;
     delete from maintenance_assignees;
     delete from maintenance_photos;
@@ -840,11 +840,11 @@ for (const r of residents) {
 // The code sequence continues after the migrated ones.
 sql.push(`select setval('residents_resident_number_seq', ${residents.length});`);
 
-for (const a of appointments) sql.push(`insert into vet_appointments (id, resident_id, vet_id, appointment_date, notes, status, created_by) values (${q(a.id)}, ${q(a.residentId)}, ${q(a.vetId)}, ${q(`${a.date} 09:00+07`)}, ${q(a.notes)}, 'completed', ${admin});`);
-for (const w of weights) sql.push(`insert into weight (id, resident_id, vet_appointment_id, date, weight_kg, created_by) values (${q(w.id)}, ${q(w.residentId)}, ${q(w.appointmentId)}, ${q(w.date)}, ${q(w.kg)}, ${admin});`);
-for (const p of procedures) sql.push(`insert into procedures (id, resident_id, vet_appointment_id, procedure_type_id, date, notes, created_by) values (${q(p.id)}, ${q(p.residentId)}, ${q(p.appointmentId)}, (select id from procedure_types where name = ${q(p.typeName)}), ${q(p.date)}, ${q(p.notes)}, ${admin});`);
-for (const b of bloodTests) sql.push(`insert into blood_tests (id, resident_id, vet_appointment_id, blood_test_type_id, date, results, created_by) values (${q(b.id)}, ${q(b.residentId)}, ${q(b.appointmentId)}, (select id from blood_test_types where name = ${q(b.typeName)}), ${q(b.date)}, ${q(b.results)}, ${admin});`);
-for (const p of prescriptions) sql.push(`insert into prescriptions (id, resident_id, vet_appointment_id, medication_id, frequency_id, dose_quantity, start_date, end_date, notes, created_by) values (${q(p.id)}, ${q(p.residentId)}, ${q(p.appointmentId)}, (select id from medication where name = ${q(p.medicationName)}), (select id from frequency where label = ${q(p.frequencyLabel)}), ${q(p.doseQuantity)}, ${q(p.start)}, ${q(p.end)}, ${q(p.notes)}, ${admin});`);
+for (const a of appointments) sql.push(`insert into clinic_visits (id, resident_id, clinic_id, appointment_date, notes, status, created_by) values (${q(a.id)}, ${q(a.residentId)}, ${q(a.clinicId)}, ${q(`${a.date} 09:00+07`)}, ${q(a.notes)}, 'completed', ${admin});`);
+for (const w of weights) sql.push(`insert into weight (id, resident_id, clinic_visit_id, date, weight_kg, created_by) values (${q(w.id)}, ${q(w.residentId)}, ${q(w.appointmentId)}, ${q(w.date)}, ${q(w.kg)}, ${admin});`);
+for (const p of procedures) sql.push(`insert into procedures (id, resident_id, clinic_visit_id, procedure_type_id, date, notes, created_by) values (${q(p.id)}, ${q(p.residentId)}, ${q(p.appointmentId)}, (select id from procedure_types where name = ${q(p.typeName)}), ${q(p.date)}, ${q(p.notes)}, ${admin});`);
+for (const b of bloodTests) sql.push(`insert into blood_tests (id, resident_id, clinic_visit_id, blood_test_type_id, date, results, created_by) values (${q(b.id)}, ${q(b.residentId)}, ${q(b.appointmentId)}, (select id from blood_test_types where name = ${q(b.typeName)}), ${q(b.date)}, ${q(b.results)}, ${admin});`);
+for (const p of prescriptions) sql.push(`insert into prescriptions (id, resident_id, clinic_visit_id, medication_id, frequency_id, dose_quantity, start_date, end_date, notes, created_by) values (${q(p.id)}, ${q(p.residentId)}, ${q(p.appointmentId)}, (select id from medication where name = ${q(p.medicationName)}), (select id from frequency where label = ${q(p.frequencyLabel)}), ${q(p.doseQuantity)}, ${q(p.start)}, ${q(p.end)}, ${q(p.notes)}, ${admin});`);
 for (const i of immunizationsUnique) sql.push(`insert into immunization_records (id, resident_id, immunization_type_id, date_administered, created_by) values (${q(i.id)}, ${q(i.residentId)}, (select id from immunization_types where name = ${q(i.typeName)}), ${q(i.date)}, ${admin});`);
 
 for (const a of attachmentsResolved) sql.push(`insert into attachments (id, owner_type, owner_id, sub_folder, drive_file_id, file_name, date_taken, caption, uploaded_by) values (${q(a.id)}, ${q(a.ownerType)}, ${q(a.ownerId)}, ${q(a.subFolder)}, ${q(a.driveFileId)}, ${q(a.path.split("/").pop())}, ${q(a.dateTaken)}, ${q(a.caption)}, ${admin});`);

@@ -98,7 +98,7 @@ export async function recordWeight(
     .from("weight")
     .insert({
       resident_id: input.residentId,
-      vet_appointment_id: input.vetAppointmentId ?? null,
+      clinic_visit_id: input.vetAppointmentId ?? null,
       date: input.date,
       weight_kg: input.weightKg,
       notes: input.notes ?? null,
@@ -130,7 +130,7 @@ export async function updateWeight(
     date: input.date,
     weight_kg: input.weightKg,
   };
-  if (input.vetAppointmentId !== undefined) changes.vet_appointment_id = input.vetAppointmentId;
+  if (input.vetAppointmentId !== undefined) changes.clinic_visit_id = input.vetAppointmentId;
   if (input.notes !== undefined) changes.notes = input.notes;
 
   const { data, error } = await supabase

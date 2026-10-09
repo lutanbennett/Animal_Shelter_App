@@ -194,7 +194,7 @@ export async function createPrescription(
     resident_id: residentId,
     medication_id: refs.medicationId,
     frequency_id: refs.frequencyId,
-    vet_appointment_id: fields.vetAppointmentId,
+    clinic_visit_id: fields.vetAppointmentId,
     dose_quantity: fields.doseQuantity,
     start_date: fields.startDate,
     end_date: fields.endDate,
@@ -236,7 +236,7 @@ export async function updatePrescription(
     .update({
       medication_id: refs.medicationId,
       frequency_id: refs.frequencyId,
-      vet_appointment_id: fields.vetAppointmentId,
+      clinic_visit_id: fields.vetAppointmentId,
       dose_quantity: fields.doseQuantity,
       start_date: fields.startDate,
       end_date: fields.endDate,

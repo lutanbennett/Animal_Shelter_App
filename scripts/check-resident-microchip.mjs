@@ -116,14 +116,14 @@ begin
     from unnest(array[v_vet, v_staff, v_vol, v_unl, v_mgmt]) u;
   insert into user_roles (user_id, role) values (v_vet, 'vet'), (v_unl, 'vet');
   -- 0127: a vet login's clinic is its linked doctor's (the home-clinic trigger links it)
-  insert into vet_doctors (name, user_id, vet_id) values ('Harness vet doctor', v_vet, v_own);
+  insert into doctors (name, user_id, clinic_id) values ('Harness vet doctor', v_vet, v_own);
   insert into user_roles (user_id, role) values (v_staff, 'staff'), (v_vol, 'volunteer'), (v_mgmt, 'management');
   insert into residents (name) values ('harness 0116 in'), ('harness 0116 out');
   select id into v_in from residents where name = 'harness 0116 in';
   select id into v_out from residents where name = 'harness 0116 out';
   -- the 0026 lock refuses a visit on a deceased resident, so lift it just for this setup row
   perform set_config('app.deceased_lock_bypass', 'on', true);
-  insert into vet_appointments (resident_id, vet_id, appointment_date, status) values
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values
     (v_in, v_own, now() - interval '2 days', 'completed'),
     (v_out, v_oth, now() - interval '2 days', 'completed'),
     (v_dead, v_own, now() - interval '2 days', 'completed');

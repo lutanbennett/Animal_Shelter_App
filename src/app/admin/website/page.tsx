@@ -6,7 +6,7 @@ import en from "@/lib/i18n/dictionaries/en";
 import { sitePageStarter } from "../../adopt/SitePageView";
 import { loadTranslations, translationKey } from "@/lib/translations/queries";
 import { SiteSettingsForm } from "./SiteSettingsForm";
-import { VetVisitEstimate } from "./VetVisitEstimate";
+import { ClinicVisitEstimate } from "./ClinicVisitEstimate";
 import { SitePageForm, type SitePageRow } from "./SitePageForm";
 import { HeroPhoto } from "./HeroPhoto";
 import { GalleryPhotos, type GalleryPhotoRow } from "./GalleryPhotos";
@@ -151,7 +151,7 @@ export default async function WebsitePage({
             contact: (
               <>
                 <SiteSettingsForm content={content} />
-                <VetVisitEstimate estimate={vetVisitEstimate} />
+                <ClinicVisitEstimate estimate={vetVisitEstimate} />
               </>
             ),
             pages: (

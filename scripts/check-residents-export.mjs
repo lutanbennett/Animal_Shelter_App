@@ -109,7 +109,7 @@ async function seed() {
   const future = new Date(Date.now() + 9 * 86_400_000).toISOString();
   await insert("prescriptions", { resident_id: cooper.id, medication_id: medication.id, start_date: "2026-01-01" });
   await insert("prescriptions", { resident_id: cooper.id, medication_id: medication.id, start_date: "2025-01-01", end_date: "2025-02-01" });
-  await insert("vet_appointments", { resident_id: cooper.id, vet_id: vet.id, appointment_date: future, status: "scheduled" });
+  await insert("clinic_visits", { resident_id: cooper.id, clinic_id: vet.id, appointment_date: future, status: "scheduled" });
   await insert("weight", { resident_id: cooper.id, date: "2026-02-01", weight_kg: 17.5 });
   await insert("weight", { resident_id: cooper.id, date: today, weight_kg: 18.25 });
   const diet = await insert("diet_types", { name: `${NAME} Diet`, daily_qty_small: 100, daily_qty_medium: 200, daily_qty_large: 300 });
@@ -223,7 +223,7 @@ async function run(ids, adminCookie, volunteerCookie) {
 
 async function cleanup() {
   for (const id of made.seed.filter(([t]) => t === "residents").map(([, i]) => i)) {
-    for (const table of ["prescriptions", "vet_appointments", "weight", "resident_diets", "placement_history"]) {
+    for (const table of ["prescriptions", "clinic_visits", "weight", "resident_diets", "placement_history"]) {
       await service.from(table).delete().eq("resident_id", id);
     }
   }
@@ -242,7 +242,7 @@ async function cleanup() {
 async function sweep() {
   const { data: residents } = await service.from("residents").select("id").like("name", "%ZZ Export %");
   for (const { id } of residents ?? []) {
-    for (const table of ["prescriptions", "vet_appointments", "weight", "resident_diets", "placement_history"]) {
+    for (const table of ["prescriptions", "clinic_visits", "weight", "resident_diets", "placement_history"]) {
       await service.from(table).delete().eq("resident_id", id);
     }
   }

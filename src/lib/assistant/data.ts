@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { loadEnclosureOptions, type EnclosureOption, type ZoneOption } from "@/lib/enclosures/options";
 import { can, type Permissions } from "@/lib/permissions/can";
 import { NOT_DECEASED } from "@/lib/residents/status";
-import { loadDoctorNamesByVet, type DoctorNamesByVet } from "@/lib/vets/doctors";
+import { loadDoctorNamesByClinic, type DoctorNamesByClinic } from "@/lib/clinics/doctors";
 
 /** A resident as the parser matches it and the cards display it. */
 export type AssistantResident = {
@@ -29,7 +29,7 @@ export type AssistantContext = {
   enclosures: EnclosureOption[];
   vets: AssistantVet[];
   /** Each clinic's active doctors, for the vet card's optional Doctor field. */
-  doctors: DoctorNamesByVet;
+  doctors: DoctorNamesByClinic;
   /** assistant.ask: the assistant opens at all (the vet's role is external, 0070). */
   canAsk: boolean;
   /** assistant.record: may confirm a write; without it, lookups only. */
@@ -91,12 +91,12 @@ export async function loadAssistantContext(
       .order("name")
       .returns<ListRow[]>(),
     supabase
-      .from("vets")
+      .from("clinics")
       .select("id, name, clinic_name")
       .order("name")
       .returns<AssistantVet[]>(),
     loadEnclosureOptions(supabase),
-    loadDoctorNamesByVet(supabase),
+    loadDoctorNamesByClinic(supabase),
   ]);
 
   const rows = listResult.data ?? [];

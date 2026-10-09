@@ -46,7 +46,7 @@ export default async function NewBloodTestPage(
       .limit(1)
       .returns<{ id: string; name: string; thai_name: string | null }[]>(),
     supabase
-      .from("vet_appointments")
+      .from("clinic_visits")
       .select("id, appointment_date, reason")
       .is("archived_at", null)
       .eq("resident_id", residentId)

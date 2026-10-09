@@ -16,7 +16,7 @@ import {
   updateUserRole,
 } from "./actions";
 import { MAX_NAME_LENGTH } from "@/lib/auth/user-name";
-import { VetDoctorLink, type DoctorOption } from "./VetDoctorLink";
+import { DoctorLoginLink, type DoctorOption } from "./DoctorLoginLink";
 import { TemporaryPasswordNotice } from "@/components/TemporaryPasswordNotice";
 import type { ActionResult } from "@/lib/action-result";
 import { formatDateTime as formatDate } from "@/lib/format";
@@ -236,7 +236,7 @@ function UserRow({
             ))}
           </select>
           {role === "vet" && (
-            <VetDoctorLink
+            <DoctorLoginLink
               user={user}
               clinics={clinics}
               unlinkedDoctors={unlinkedDoctors}

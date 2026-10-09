@@ -21,7 +21,7 @@ import type {
   VetAppointmentOption,
 } from "@/lib/prescriptions/options";
 import { OptionalDateInput } from "@/components/OptionalDateInput";
-import { visitDate } from "@/lib/vets/linkable";
+import { visitDate } from "@/lib/clinics/linkable";
 
 export type { FrequencyOption, MedicationOption, VetAppointmentOption };
 
@@ -30,7 +30,7 @@ export type PrescriptionInitial = {
   id: string;
   medication_id: string | null;
   frequency_id: string | null;
-  vet_appointment_id: string | null;
+  clinic_visit_id: string | null;
   dose_quantity: number | null;
   start_date: string;
   end_date: string | null;
@@ -335,7 +335,7 @@ export function PrescriptionForm({
         <select
           id="vetAppointmentId"
           name="vetAppointmentId"
-          defaultValue={initial?.vet_appointment_id ?? preselectedVisit?.id ?? ""}
+          defaultValue={initial?.clinic_visit_id ?? preselectedVisit?.id ?? ""}
           onChange={(e) => handleVetAppointmentChange(e.target.value)}
           className={inputClass}
         >

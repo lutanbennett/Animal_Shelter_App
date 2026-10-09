@@ -241,7 +241,7 @@ export async function updateUserRole(userId: string, role: string): Promise<Acti
 
 /**
  * A vet login's clinics are the clinics of the doctor it is linked to
- * (vet_doctors.user_id, 0125) — one source of truth, set here by an admin
+ * (doctors.user_id, 0125) — one source of truth, set here by an admin
  * and edited on the clinic page. Most doctors never get a login; this is
  * only for the ones who do. Unlinking or archiving the login leaves the
  * doctor and their visits untouched.
@@ -273,7 +273,7 @@ export async function linkVetDoctor(userId: string, doctorId: string): Promise<A
     const { admin } = login;
 
     const { data: doctor, error: lookupError } = await admin
-      .from("vet_doctors")
+      .from("doctors")
       .select("id, user_id")
       .eq("id", doctorId)
       .maybeSingle<{ id: string; user_id: string | null }>();
@@ -285,17 +285,17 @@ export async function linkVetDoctor(userId: string, doctorId: string): Promise<A
 
     // One login is one doctor: clear any other doctor this login had.
     const { error: clearError } = await admin
-      .from("vet_doctors")
+      .from("doctors")
       .update({ user_id: null })
       .eq("user_id", userId)
       .neq("id", doctorId);
     if (clearError) return unexpectedFailure("security.linkVetDoctor", clearError, t.common.somethingWentWrong);
 
-    const { error } = await admin.from("vet_doctors").update({ user_id: userId }).eq("id", doctorId);
+    const { error } = await admin.from("doctors").update({ user_id: userId }).eq("id", doctorId);
     if (error) return unexpectedFailure("security.linkVetDoctor", error, t.common.somethingWentWrong);
 
     revalidateSecurity();
-    revalidatePath("/management/vets", "layout");
+    revalidatePath("/management/clinics", "layout");
     return { ok: true };
   });
 }
@@ -325,22 +325,22 @@ export async function createVetDoctorForLogin(
 
     const clinics = [...new Set(clinicIds)];
     if (clinics.length === 0) return refuse(e.pickAClinic);
-    const { data: found, error: clinicError } = await admin.from("vets").select("id").in("id", clinics);
+    const { data: found, error: clinicError } = await admin.from("clinics").select("id").in("id", clinics);
     if (clinicError) return unexpectedFailure("security.createVetDoctorForLogin", clinicError, t.common.somethingWentWrong);
     if ((found ?? []).length !== clinics.length) return refuse(e.clinicNotFound);
 
     // One login is one doctor.
     const { data: existing } = await admin
-      .from("vet_doctors")
+      .from("doctors")
       .select("id")
       .eq("user_id", userId)
       .maybeSingle<{ id: string }>();
     if (existing) return refuse(e.alreadyLinked);
 
-    // vet_id is the first clinic: the database links the doctor to it.
+    // clinic_id is the first clinic: the database links the doctor to it.
     const { data: created, error } = await admin
-      .from("vet_doctors")
-      .insert({ name, user_id: userId, vet_id: clinics[0] })
+      .from("doctors")
+      .insert({ name, user_id: userId, clinic_id: clinics[0] })
       .select("id")
       .maybeSingle<{ id: string }>();
     if (error || !created) {
@@ -349,20 +349,20 @@ export async function createVetDoctorForLogin(
     }
 
     const { error: linkError } = await admin
-      .from("vet_doctor_clinics")
+      .from("doctor_clinics")
       .upsert(
-        clinics.map((vet_id) => ({ vet_id, doctor_id: created.id, active: true })),
-        { onConflict: "vet_id,doctor_id" },
+        clinics.map((clinic_id) => ({ clinic_id, doctor_id: created.id, active: true })),
+        { onConflict: "clinic_id,doctor_id" },
       );
     if (linkError) {
       // A name already taken at one of the other clinics: nothing half-made.
-      await admin.from("vet_doctors").delete().eq("id", created.id);
+      await admin.from("doctors").delete().eq("id", created.id);
       if (linkError.code === "23505") return refuse(e.doctorNameTaken(name));
       return unexpectedFailure("security.createVetDoctorForLogin", linkError, t.common.somethingWentWrong);
     }
 
     revalidateSecurity();
-    revalidatePath("/management/vets", "layout");
+    revalidatePath("/management/clinics", "layout");
     return { ok: true };
   });
 }
@@ -375,10 +375,10 @@ export async function unlinkVetDoctor(userId: string): Promise<ActionResult> {
     if (denied) return denied;
 
     const admin = createAdminClient();
-    const { error } = await admin.from("vet_doctors").update({ user_id: null }).eq("user_id", userId);
+    const { error } = await admin.from("doctors").update({ user_id: null }).eq("user_id", userId);
     if (error) return unexpectedFailure("security.unlinkVetDoctor", error, t.common.somethingWentWrong);
     revalidateSecurity();
-    revalidatePath("/management/vets", "layout");
+    revalidatePath("/management/clinics", "layout");
     return { ok: true };
   });
 }

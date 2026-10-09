@@ -185,15 +185,15 @@ begin
   insert into user_roles (user_id, role, archived_at) select id, 'staff', now() from harness_ids where who = 'archperson';
 
   insert into vets (id, name, clinic_name) values (v_own, 'Harness own', 'Harness own clinic'), (v_oth, 'Harness other', 'Harness other clinic');
-  insert into vet_doctors (name, user_id, vet_id) select 'Harness vet doctor', id, v_own from harness_ids where who = 'vet';
-  insert into vet_doctors (id, name, vet_id) values (${lit(F.DOCTOR)}, 'Harness doctor one', v_own), (${lit(F.DOCTOR2)}, 'Harness doctor two', v_own);
+  insert into doctors (name, user_id, clinic_id) select 'Harness vet doctor', id, v_own from harness_ids where who = 'vet';
+  insert into doctors (id, name, clinic_id) values (${lit(F.DOCTOR)}, 'Harness doctor one', v_own), (${lit(F.DOCTOR2)}, 'Harness doctor two', v_own);
 
   insert into residents (id, name, species, bio) values
     (${lit(F.R_IN)}, 'Harness in-scope', 'Dog', 'bio'), (${lit(F.R_OUT)}, 'Harness out-of-scope', 'Dog', 'bio'), (${lit(F.DEAD)}, 'Harness dead', 'Dog', 'bio'), (${lit(F.BARE)}, 'Harness bare', 'Dog', 'bio');
   insert into zones (id, name) values (${lit(F.ZONE)}, 'Harness zone');
   insert into enclosures (id, name, zone_id) values (${lit(F.ENC)}, 'Harness enclosure', ${lit(F.ZONE)});
 
-  insert into vet_appointments (resident_id, vet_id, appointment_date, status) values
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values
     (${lit(F.R_IN)}, v_own, now() - interval '3 days', 'completed'), (${lit(F.R_OUT)}, v_oth, now() - interval '3 days', 'completed');
   insert into placement_history (resident_id, placement_type, start_date) select id, 'Intake', now() - interval '30 days'
     from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)}, ${lit(F.DEAD)});
@@ -546,7 +546,7 @@ for (const id of Object.keys(WIDENED_BY_DECISION)) if (!PREDICATES.some((x) => x
 if (widenedSeen.length) console.log(`  widened on purpose by a later decision (the role gained a cell the old predicate never gave), expected: ${widenedSeen.join(", ")}`);
 for (const [k, why] of Object.entries(UNPAIRED)) console.log(`  not paired: ${k}: ${why}`);
 
-// Two truth tables are scope tests, not activities: "is this a clinic-scoped login" (loadVetScope, and
+// Two truth tables are scope tests, not activities: "is this a clinic-scoped login" (loadClinicScope, and
 // /appointments which only such a login may open). Their stand-in is roles.scope_clinical = 'own_clinic'
 // in the 0132 seed, so the fixture row must equal "the seed gives this role the own-clinic scope".
 const seedSql = readFileSync(join(root, "supabase/migrations/0132_permission_tables.sql"), "utf8");
@@ -564,7 +564,7 @@ for (const l of layer2) console.log(`  MISMATCH ${l.problem}`);
 // contacts scope (my_permissions().scopes.contacts), seeded by 0132. The fixture holds what the function said.
 {
   const seed = readFileSync(join(root, "supabase/migrations/0132_permission_tables.sql"), "utf8");
-  const VIEW = { full: "contacts", name_phone: "volunteer_contacts", name_type: "vet_contacts" };
+  const VIEW = { full: "contacts", name_phone: "volunteer_contacts", name_type: "doctor_contacts" };
   const OPENS_APP = (role) => role !== "public_viewer"; // the seed's opens_app, which replaced canReadRecurringJobs
   for (const m of seed.matchAll(/\('([a-z_]+)',\s+'[A-Za-z ]+',\s+'(?:fixed|default)',\s+(true|false),\s+'[a-z_]+',\s+'[a-z_]+',\s+'[a-z_]+',\s+'(full|name_phone|name_type)'/g)) {
     l2checked++;

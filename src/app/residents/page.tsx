@@ -12,7 +12,7 @@ import { localLabel } from "@/lib/translations/labels";
 import { placeName } from "@/lib/enclosures/names";
 import { OFFSITE, tidiedQuery, toggleZone, zoneChipOrder } from "@/lib/enclosures/place";
 import { getTagOrigin } from "@/lib/tags/origin";
-import { loadVetScope } from "@/lib/vets/scope";
+import { loadClinicScope } from "@/lib/clinics/scope";
 import { DECEASED } from "@/lib/residents/status";
 import { exportFilename } from "@/lib/residents/export";
 import {
@@ -151,7 +151,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
 
   const [tagOrigin, vetScope, residentsResult, deceased, statusMatches] = await Promise.all([
     getTagOrigin(),
-    loadVetScope(supabase),
+    loadClinicScope(supabase),
     listQuery(supabase, view, limited).returns<(ResidentRow | WhoAndWhere)[]>(),
     applyFilters(deceasedCountQuery, filters),
     Promise.all(
@@ -173,7 +173,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   const vetClinicName =
     vetScope.kind === "clinics"
       ? ((
-          await supabase.from("vets").select("name, name_th").in("id", vetScope.vetIds).order("name")
+          await supabase.from("clinics").select("name, name_th").in("id", vetScope.clinicIds).order("name")
         ).data ?? [])
           .map((v) => localLabel(locale, v.name as string, v.name_th as string | null))
           .join(", ") || null

@@ -21,7 +21,7 @@ import {
   type CashflowCell,
   type CashflowRow,
 } from "@/lib/management/cashflow";
-import type { VetForecastBasis } from "@/lib/management/vet-forecast";
+import type { VetForecastBasis } from "@/lib/management/clinic-forecast";
 import { CashflowChart } from "./CashflowChart";
 
 /**

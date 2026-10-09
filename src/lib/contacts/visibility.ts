@@ -9,7 +9,7 @@ import { can, type Permissions } from "@/lib/permissions/can";
  * - `full` without it (staff) reads `picker_contacts` (id, name, type,
  *   archived_at): staff name and pick contacts but never read their phone,
  *   email or address (0170, findings C9 and C10);
- * - `name_type` (a vet) reads `vet_contacts` (id, name, type);
+ * - `name_type` (a vet) reads `doctor_contacts` (id, name, type);
  * - `name_phone` (a volunteer, the 2IC) reads `volunteer_contacts` (id, name, phone).
  *
  * The base-table read policy answers only contacts.browse, so a query that
@@ -20,13 +20,13 @@ import { can, type Permissions } from "@/lib/permissions/can";
  * PostgREST follows the foreign key through the view. A page that needs more
  * than a name for anyone but Management has the wrong idea of what they may see.
  */
-export type ContactRelation = "contacts" | "picker_contacts" | "vet_contacts" | "volunteer_contacts";
+export type ContactRelation = "contacts" | "picker_contacts" | "doctor_contacts" | "volunteer_contacts";
 
 export function contactRelation(perms: Permissions | null | undefined): ContactRelation {
   const scope = perms?.scopes.contacts;
   if (scope === "full") return can(perms, "contacts.browse") ? "contacts" : "picker_contacts";
   if (scope === "name_phone") return "volunteer_contacts";
-  return "vet_contacts";
+  return "doctor_contacts";
 }
 
 /**

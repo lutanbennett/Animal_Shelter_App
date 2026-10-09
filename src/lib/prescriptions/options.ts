@@ -1,6 +1,6 @@
 import type { createClient } from "@/lib/supabase/server";
 import type { FrequencySchedule } from "@/lib/prescriptions/frequency";
-import { loadLinkableVisits, type LinkableVisit } from "@/lib/vets/linkable";
+import { loadLinkableVisits, type LinkableVisit } from "@/lib/clinics/linkable";
 import type { Locale } from "@/lib/i18n/locales";
 import { localLabel } from "@/lib/translations/labels";
 

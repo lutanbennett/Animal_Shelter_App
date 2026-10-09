@@ -44,7 +44,7 @@ export async function createBloodTest(
     .insert({
       resident_id: residentId,
       blood_test_type_id: bloodTestTypeId,
-      vet_appointment_id:
+      clinic_visit_id:
         typeof vetAppointmentId === "string" && vetAppointmentId
           ? vetAppointmentId
           : null,

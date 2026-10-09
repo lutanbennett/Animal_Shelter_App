@@ -25,7 +25,7 @@ export type ProcedureRow = {
   date: string;
   notes: string | null;
   procedure_types: { name: string } | null;
-  vet_appointments: { appointment_date: string; reason: string | null } | null;
+  clinic_visits: { appointment_date: string; reason: string | null } | null;
   attachments: ProcedureAttachmentRow[];
 };
 
@@ -81,10 +81,10 @@ export function ProcedureList({
                   {procedure.procedure_types?.name ?? t.procedures.unknownType}
                 </span>
                 <span className="text-xs text-muted">
-                  {procedure.vet_appointments
+                  {procedure.clinic_visits
                     ? t.procedures.linkedVisitLabel(
-                        formatDate(procedure.vet_appointments.appointment_date, locale),
-                        procedure.vet_appointments.reason ??
+                        formatDate(procedure.clinic_visits.appointment_date, locale),
+                        procedure.clinic_visits.reason ??
                           t.residents.sections.vetVisitFallback,
                       )
                     : t.procedures.doneAtShelter}

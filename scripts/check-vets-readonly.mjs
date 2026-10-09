@@ -15,7 +15,7 @@
 //      through their own JWT — the Data API path the file closes
 //   C  pg_policies: the only vet policy left on vets is a SELECT
 //   D  management and admin still insert, update and delete, as
-//      /management/vets does; staff and volunteer still only read
+//      /management/clinics does; staff and volunteer still only read
 //   E  the service role still writes
 //
 // Exits 0 when every assertion held. Writes nothing even on success.
@@ -80,7 +80,7 @@ begin
   end loop;
   insert into user_roles (user_id, role) select id, 'vet' from harness_ids where who = 'vet';
   -- 0127: a vet login's clinic is its linked doctor's (the home-clinic trigger links it)
-  insert into vet_doctors (name, user_id, vet_id)
+  insert into doctors (name, user_id, clinic_id)
   select 'Harness vet doctor', id, (select id from harness_ids where who = 'own_clinic') from harness_ids where who = 'vet';
   insert into user_roles (user_id, role)
   select id, case who when 'mgmt' then 'management' else who end::app_role
