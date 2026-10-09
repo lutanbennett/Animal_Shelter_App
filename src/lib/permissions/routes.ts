@@ -13,7 +13,7 @@
  * rest, and Settings and Management landing pages with their areas.
  */
 
-import { Activity, Camera, ClipboardCheck, Coins, Globe, HandCoins, HeartHandshake, History, LayoutDashboard, Languages, Pill, Scale, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
+import { Activity, Camera, ClipboardCheck, HandHeart, Coins, Globe, HandCoins, HeartHandshake, History, LayoutDashboard, Languages, Pill, Scale, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
 import { CONTACT_ICONS, ENCLOSURE_ICONS, NAV_ICONS, SECTION_ICONS, VET_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can, type Permissions } from "./can";
@@ -113,6 +113,17 @@ export const ROUTES: readonly RouteEntry[] = [
     level: "read",
     icon: NAV_ICONS.projects,
     label: (t) => t.nav.projects,
+    device: "any",
+    menu: true,
+    section: "operations",
+  },
+  {
+    // Outreach visits to temples and villages (0169): one short note, typed standing there.
+    path: "/outreach",
+    activity: "community.outings",
+    level: "read",
+    icon: HandHeart,
+    label: (t) => t.nav.outreach,
     device: "any",
     menu: true,
     section: "operations",

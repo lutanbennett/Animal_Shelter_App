@@ -23,6 +23,7 @@ const TILES: { href: string; description: (t: Dictionary) => string }[] = [
   { href: "/stocktake", description: (t) => t.operations.landing.tiles.stocktake },
   { href: "/deliveries", description: (t) => t.operations.landing.tiles.deliveries },
   { href: "/projects", description: (t) => t.operations.landing.tiles.projects },
+  { href: "/outreach", description: (t) => t.operations.landing.tiles.outreach },
   { href: "/vets", description: (t) => t.operations.landing.tiles.vets },
   { href: "/contacts", description: (t) => t.operations.landing.tiles.contacts },
 ];

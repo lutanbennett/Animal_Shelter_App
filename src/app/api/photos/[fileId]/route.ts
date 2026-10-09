@@ -81,6 +81,9 @@ async function canSeeInternalFile(supabase: Supabase, fileId: string) {
     supabase.from("attachments").select("id").eq("drive_file_id", fileId).limit(1),
     supabase.from("project_photos").select("id").eq("drive_file_id", fileId).limit(1),
     supabase.from("maintenance_photos").select("id").eq("drive_file_id", fileId).limit(1),
+    // Outreach visit photos (0169): only for whoever may read the notes. Never public, even ticked:
+    // is_public_drive_file() does not know this table.
+    supabase.from("community_outing_photos").select("id").eq("drive_file_id", fileId).limit(1),
     supabase.from("shelter_friends").select("id").eq("logo_drive_file_id", fileId).limit(1),
     supabase.from("medication").select("id").eq("label_drive_file_id", fileId).limit(1),
     // The stock screens read a label through this view, never the table (0143: the table carries a price).
