@@ -68,7 +68,6 @@ export function CarerPicker({
                   disabled={c.id === disabledCarerId}
                 >
                   {c.name}
-                  {c.phone ? ` · ${c.phone}` : ""}
                   {c.id === currentCarerId ? ` ${r.currentCarerSuffix}` : ""}
                 </option>
               ))}

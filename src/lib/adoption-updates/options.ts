@@ -4,6 +4,7 @@
  */
 
 import { contactNameEmbed } from "@/lib/contacts/visibility";
+import type { Permissions } from "@/lib/permissions/can";
 
 /**
  * How the news came in — the codes adoption_updates_channel allows. The
@@ -41,9 +42,16 @@ export type PhotoProvenance = {
  * keeps it on another. The embed names the composite foreign key
  * (adoption_update_id, owner_id) → adoption_updates (id, resident_id).
  */
-export function residentPhotoSelect(contactsScope: string | null | undefined): string {
-  return `id, drive_file_id, file_name, sub_folder, date_taken, adoption_update:adoption_updates!attachments_adoption_update_fk(id, received_on, channel, sender:${contactNameEmbed(contactsScope)})`;
+export function residentPhotoSelect(perms: Permissions | null | undefined): string {
+  return photoSelectWith(contactNameEmbed(perms));
 }
 
-/** The staff view of it, for the pages only staff reach. */
-export const RESIDENT_PHOTO_SELECT = residentPhotoSelect("full");
+function photoSelectWith(senderEmbed: string): string {
+  return `id, drive_file_id, file_name, sub_folder, date_taken, adoption_update:adoption_updates!attachments_adoption_update_fk(id, received_on, channel, sender:${senderEmbed})`;
+}
+
+/**
+ * The staff view of it, for the pages only staff reach: the sender's name
+ * through picker_contacts, which staff, Management and Admin all read (0170).
+ */
+export const RESIDENT_PHOTO_SELECT = photoSelectWith("picker_contacts(name)");

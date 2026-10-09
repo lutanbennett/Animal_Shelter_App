@@ -133,7 +133,7 @@ async function carerName(
   const carerId = state?.[0]?.current_carer_id;
   if (!carerId) return null;
   const { data } = await supabase
-    .from(contactRelation(perms?.scopes.contacts))
+    .from(contactRelation(perms))
     .select("name")
     .eq("id", carerId)
     .limit(1)

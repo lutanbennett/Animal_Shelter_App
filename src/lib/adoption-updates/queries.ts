@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { contactRelation } from "@/lib/contacts/visibility";
+import type { Permissions } from "@/lib/permissions/can";
 
 export type SenderOptions = {
   /** Carers of the resident's Adopt placements, newest adoption first. */
@@ -23,24 +24,26 @@ export type SenderOptions = {
 export async function loadSenderOptions(
   supabase: SupabaseClient,
   residentId: string,
-  /** The caller's contacts scope (perms.scopes.contacts): which view of the address book they read. */
-  contactsScope: string | null | undefined,
+  /** The caller's permissions: which view of the address book they read (contactRelation). */
+  perms: Permissions | null | undefined,
 ): Promise<SenderOptions> {
+  const relation = contactRelation(perms);
   const [adoptions, contacts] = await Promise.all([
     supabase
       .from("placement_history")
-      .select(`carer_id, carer:${contactRelation(contactsScope)}(id, name)`)
+      .select(`carer_id, carer:${relation}(id, name)`)
       .eq("resident_id", residentId)
       .eq("placement_type", "Adopt")
       .order("start_date", { ascending: false })
       .returns<{ carer_id: string | null; carer: { id: string; name: string } | null }[]>(),
-    // Only staff record an update, so only staff need the address book to
-    // choose a sender from; a vet or volunteer reads names through a narrow
-    // view (0126) with no archive state, and is shown the "not allowed"
-    // message instead of the form.
-    contactRelation(contactsScope) === "contacts"
+    // Only staff and Management record an update, so only they need a list
+    // of names to choose a sender from: staff through picker_contacts (0170),
+    // Management through the table. A vet or volunteer reads names through a
+    // narrow view (0126) with no archive state, and is shown the "not
+    // allowed" message instead of the form.
+    relation === "contacts" || relation === "picker_contacts"
       ? supabase
-          .from("contacts")
+          .from(relation)
           .select("id, name")
           .is("archived_at", null)
           .order("name")

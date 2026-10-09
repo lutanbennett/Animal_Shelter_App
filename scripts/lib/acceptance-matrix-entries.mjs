@@ -545,6 +545,29 @@ export const ENTRIES = {
       expect: "The photos appear in the folder.",
     },
   ],
+  "outreach-visits": [
+    {
+      activity: "Record an outreach visit on a phone",
+      needs: "community.outings",
+      device: "phone",
+      do: "Operations → Outreach visits → Record a visit. Pick or add the temple or village, tick what you did, type how many dogs, Save visit.",
+      expect: "The visit is at the top of the list with its place, dogs and what was done.",
+    },
+    {
+      activity: "Correct or delete an outreach visit",
+      needs: "community.outings",
+      device: "both",
+      do: "Tap Edit beside a visit, change the number of dogs and save; then Edit again and Delete this visit.",
+      expect: "The list shows the new number, then the visit is gone.",
+    },
+    {
+      activity: "Change who may write outreach notes",
+      needs: "community.outings",
+      device: "desktop",
+      do: "As Admin, Settings → Security → Who may write outreach notes: set Staff to Write and correct, then back to No.",
+      expect: "Saved. While set, a staff login sees Outreach visits under Operations; after, it does not.",
+    },
+  ],
   "manage-projects": [
     {
       activity: "Create a project folder and write its story",

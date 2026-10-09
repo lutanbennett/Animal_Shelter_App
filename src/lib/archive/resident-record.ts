@@ -380,7 +380,7 @@ export async function loadResidentArchiveRecord(
     supabase
       .from("placement_history")
       .select(
-        "id, placement_type, start_date, end_date, notes, cause_of_death, enclosure:enclosures!enclosure_id(name), previous_enclosure:enclosures!previous_enclosure_id(name), carer:contacts!carer_id(name)",
+        "id, placement_type, start_date, end_date, notes, cause_of_death, enclosure:enclosures!enclosure_id(name), previous_enclosure:enclosures!previous_enclosure_id(name), carer:picker_contacts!carer_id(name)",
       )
       .eq("resident_id", residentId)
       .order("start_date", { ascending: true })
