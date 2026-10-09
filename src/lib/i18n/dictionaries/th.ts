@@ -2427,8 +2427,20 @@ const th: Dictionary = {
         vetVisitsFollowUpHint: "การพบครั้งถัดไปหลังจากครั้งแรก",
         procedures: "หัตถการ",
         proceduresByType: "ตามประเภท",
+        vaccinations: "การฉีดวัคซีน",
+        vaccinationsByVaccine: "จำนวนเข็ม แยกตามวัคซีน",
+        clinicSpend: "ค่าใช้จ่ายคลินิก",
+        clinicSpendHint: "จากยอดในใบแจ้งหนี้ที่บันทึกไว้กับการไปคลินิกเดือนนี้",
+        clinicSpendDetail: (invoiced: number, notInvoiced: number) =>
+          notInvoiced === 0
+            ? `${invoiced} ครั้ง บันทึกยอดครบแล้ว`
+            : `บันทึกยอดแล้ว ${invoiced} ครั้ง · ยังไม่มียอด ${notInvoiced} ครั้ง`,
         none: "ไม่มี",
         namesHeading: "รายชื่อ",
+        copyText: "คัดลอกเป็นข้อความ",
+        copied: "คัดลอกแล้ว",
+        copyPrompt: "คัดลอกข้อความนี้:",
+        print: "พิมพ์",
       },
       trend: {
         heading: "12 เดือนที่ผ่านมา",

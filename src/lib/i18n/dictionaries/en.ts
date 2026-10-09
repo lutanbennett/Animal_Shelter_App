@@ -2515,8 +2515,22 @@ const en = {
         vetVisitsFollowUpHint: "Any visit after the first",
         procedures: "Procedures",
         proceduresByType: "By type",
+        vaccinations: "Vaccinations given",
+        vaccinationsByVaccine: "Doses, by vaccine",
+        clinicSpend: "Clinic spend",
+        clinicSpendHint: "From the invoice amounts entered on this month's visits",
+        clinicSpendDetail: (invoiced: number, notInvoiced: number) =>
+          notInvoiced === 0
+            ? invoiced === 1
+              ? "1 visit, invoiced"
+              : `${invoiced} visits, all invoiced`
+            : `${invoiced} invoiced · ${notInvoiced} with no amount yet`,
         none: "None",
         namesHeading: "Who",
+        copyText: "Copy as text",
+        copied: "Copied",
+        copyPrompt: "Copy this text:",
+        print: "Print",
       },
       trend: {
         heading: "Last 12 months",
