@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → two ticked: *A vet login can read, rename, add and delete every project and maintenance photo record (Medium)*, *A vet login lists every person with a login, with their role (Low)* |
 | Branch / worktree | `claude/close-the-remaining-over-grants` @ `C:\Development\Animal_Shelter_close-the-remaining-over-grants` |
 | Dev server | not started: no screen changed; every check is under a real JWT against the dev database |
-| PR | opened from this branch; number in the PR itself |
+| PR | [#502](https://github.com/lutanbennett/Animal_Shelter_App/pull/502) |
 | Tested by / date | Claude (automated) / 2026-10-09 |
 | Carries a migration? | yes: `0174_close_the_remaining_over_grants.sql` |
 | Tested at SHA | `a1860f9d` (code, after `sync`); this plan's own commit adds only the plan, the decision and the backlog ticks |
@@ -24,7 +24,7 @@
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (`a1860f9d`, merging `#501`; no conflicts)
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): #502, all 7 checks passing
 
 ```
 === gates: build exited 0 after 262s
@@ -227,7 +227,7 @@ Manual verification by: pending: the two items under Left for manual verificatio
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR: #502 links `docs/test-plans/close-the-remaining-over-grants.md` and summarises it
 - [ ] Handed to the production release manager — n/a: not yet — the PR is not merged
 
 Result: pass
