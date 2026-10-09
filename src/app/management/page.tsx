@@ -1,4 +1,4 @@
-import { Coins, Globe, HeartHandshake, LayoutDashboard, Languages, Scale, ShoppingCart } from "lucide-react";
+import { Coins, Globe, HandCoins, HeartHandshake, LayoutDashboard, Languages, Scale, ShoppingCart } from "lucide-react";
 import { canOpen, routeFor } from "@/lib/permissions/routes";
 import { requireAnyPageIn } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
@@ -37,6 +37,12 @@ export default async function ManagementPage() {
       label: t.nav.shelterFriends,
       description: t.management.landing.tiles.shelterFriends,
       icon: HeartHandshake,
+    },
+    {
+      href: "/management/donations",
+      label: t.nav.donations,
+      description: t.management.landing.tiles.donations,
+      icon: HandCoins,
     },
     // Keeps its /admin address; the Director runs the website by day as Management (Lutan, 2026-10-08).
     {

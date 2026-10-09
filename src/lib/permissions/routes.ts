@@ -13,7 +13,7 @@
  * rest, and Settings and Management landing pages with their areas.
  */
 
-import { Activity, Camera, ClipboardCheck, Coins, Globe, HeartHandshake, History, LayoutDashboard, Languages, Pill, Scale, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
+import { Activity, Camera, ClipboardCheck, Coins, Globe, HandCoins, HeartHandshake, History, LayoutDashboard, Languages, Pill, Scale, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
 import { CONTACT_ICONS, ENCLOSURE_ICONS, NAV_ICONS, SECTION_ICONS, VET_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can, type Permissions } from "./can";
@@ -167,6 +167,15 @@ export const ROUTES: readonly RouteEntry[] = [
     activity: "friends.manage",
     icon: HeartHandshake,
     label: (t) => t.nav.shelterFriends,
+    device: "any",
+    menu: false,
+  },
+  {
+    // The Director issues receipts from her phone as well as her PC at home (backlog, 2026-10-07).
+    path: "/management/donations",
+    activity: "donation.receipt",
+    icon: HandCoins,
+    label: (t) => t.nav.donations,
     device: "any",
     menu: false,
   },
