@@ -295,7 +295,7 @@ today is three things. The rule proposed:
 - **Where the manual promises more than the code (B), the cell is what the code
   does**, until question L6 is answered.
 
-### The 56 activities, with today's five roles
+### The 60 activities, with today's five roles
 
 `E` Edit, `R` Read, `Y` Yes, `–` None/No. `°` means "within this role's scope"
 (§5): for a vet, the residents their clinic treats and their own clinic's
@@ -340,6 +340,7 @@ Admin is shown for completeness; it is never stored (§6).
 | `projects.folders` | Project folders and their stories | E/R | E | E | E | – | – | 18 | Edit includes delete (A8) |
 | `projects.photos` | Add and remove project photos | Y/N | Y | Y | Y | – | – | 18 | |
 | `projects.publish` | Put a project on the public website | Y/N | Y | Y | Y | – | – | 19 | *Split* |
+| `community.outings` | Outreach notes: temple and community dogs helped | E/R | E | E | – | – | – | – | Added by `0169` (the Director, 2026-10-08, q5): "Management for now", and who may write a note is a setting, so this cell is that setting. Edit writes, corrects and removes a note, its place and its photos (A8); Read sees them. `community_places`, `community_dog_outings`, `community_outing_photos` |
 | **Clinics, contacts, supporters** | | | | | | | | | |
 | `clinics.list` | The list of clinics | E/R | E | E | R | – | – | 20 | "Vets" today; the rename is parked |
 | `clinics.doctors` | A clinic's doctors: add, rename, merge, retire | Y/N | Y | Y | – | – | – | 20 | |
@@ -374,6 +375,7 @@ Admin is shown for completeness; it is never stored (§6).
 | `audit.undo` | Undo a change | Y/N | Y | – | – | – | – | 35 | *Split* |
 | `system.status` | The system status page | Y/N | Y | – | – | – | – | 36 | |
 | `translations.view` | See the public text's translations | Y/N | Y | Y | Y | – | – | – | Read only; added by `0154` to replace `sees_all_translations()`. Translating stays `translations.manage`. Also reads `label_translations()` (`0166`), but the page is `translations.manage`'s |
+| `donation.receipt` | Issue a donation receipt | Y/N | Y | – | – | – | – | – | Added by `0168` (Lutan, 2026-10-09): Admin only until delegated in Settings, so no cells |
 
 Not in the table, because nobody sets them (§6): signing in and out, a forgotten
 password, changing your own password, the language switch, the manual, the
