@@ -39,16 +39,11 @@ const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
 // table -> the stream that converts it. Remove an entry in the PR that converts the table.
-// What is left after perm-convert-admin (0153) is the vet's: its policies never ask a cell (0135, "Last"),
-// and converting them is blocked on whether the vet keeps the paper's reference-data cells while on hold.
-const VET = "perm-convert-vet";
-export const OWNERS = Object.fromEntries([
-  "adoption_updates", "attachments", "blood_test_types", "blood_tests", "bulk_appointments", "diet_types",
-  "enclosures", "frequency", "immunization_records", "immunization_types", "medication", "placement_history",
-  "prescriptions", "procedure_types", "procedures", "recurring_job_assignees", "recurring_job_occurrence_assignees",
-  "recurring_job_occurrences", "recurring_jobs", "resident_diets", "residents", "shelter_friends", "translations",
-  "vet_appointments", "vet_doctor_clinics", "vet_doctors", "vets", "weight", "zones",
-].map((t) => [t, VET]));
+// EMPTY since perm-convert-vet (0167, 2026-10-09): the vet's 54 policies, the last, now ask is_clinic_login()
+// (roles.scope_clinical = 'own_clinic') and no policy names a role. A new entry here means a policy that names a
+// role was added after the end state: convert it rather than owning it (check-new-policy-role-names.mjs, in CI,
+// should have refused it first).
+export const OWNERS = {};
 
 // "table.policy" -> why its scope function needs no cell beside it (or why the walk misreads it). Each entry is
 // printed every run. Empty on 2026-10-08: all 41 policies calling one were ANDed with a cell.
