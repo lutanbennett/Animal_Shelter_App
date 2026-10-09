@@ -310,7 +310,7 @@ begin
     end loop;
   end loop;
   perform pg_temp.eq('H answers checked', v_checked::text, '720');
-  perform pg_temp.eq('H expected cells', (select count(*) from harness_expected)::text, '111'); -- 107 on the paper; the volunteer is 5 under the draft; +1 Management community.outings (0169), +1 Management donation.receipt (0168). UNVERIFIED until both are applied
+  perform pg_temp.eq('H expected cells', (select count(*) from harness_expected)::text, '112'); -- 110 on the paper (0163 gave Management website.content; 0169 community.outings and 0168 donation.receipt one Management cell each); the volunteer is 5 under the draft. Measured on dev after 0168/0169 were applied, 2026-10-09
   v_report := v_report || 'H: 720 answers, six roles x 60 activities x read and edit, equal the paper''s §4 table | ';
 
   n := pg_temp.try(null, format('insert into role_permissions (role_id, activity, level) values (%L, ''stock.count'', 2)', v_role_admin), 'aal1', 'service_role');
@@ -467,14 +467,14 @@ do $h2$
 begin
   perform pg_temp.eq('G roles after replay', (select count(*) from roles where key in ('admin','management','staff','vet','volunteer','public_viewer'))::text, '6');
   perform pg_temp.eq('G activities after replay', (select count(*) from permission_activities)::text, '60');
-  -- replaying 0132 alone puts back the 21 volunteer cells 0134 deleted (52+39+13+24); that is what the seed file says
-  perform pg_temp.eq('G cells after replay', (select count(*) from role_permissions rp join roles r on r.id = rp.role_id where r.key in ('management','staff','vet','volunteer'))::text, '128');
+  -- replaying 0132 alone puts back the 21 volunteer cells 0134 deleted (52+39+13+24 = 128 seeded), and keeps the three Management cells added since (0163 website.content, 0168 donation.receipt, 0169 community.outings): 131
+  perform pg_temp.eq('G cells after replay', (select count(*) from role_permissions rp join roles r on r.id = rp.role_id where r.key in ('management','staff','vet','volunteer'))::text, '131');
   perform pg_temp.eq('G a shelter edit survives the replay', (select level::text from role_permissions rp join roles r on r.id = rp.role_id where r.key = 'volunteer' and rp.activity = 'facility.enclosures'), '2');
   perform pg_temp.eq('G the catalogue is restored', (select area from permission_activities where key = 'stock.delivery'), 'stock');
   -- 0132 alone writes nothing it did not already hold, EXCEPT the seed cells missing from the live roles: those come back as logged inserts
   -- RE-BASELINED 2026-10-06 (director-draft-apply): the replay restores every seed cell the live roles no longer hold, so it logs 122 minus
   -- the live cells it found (21 on a pristine post-0134 database; more once the Director's draft has narrowed the vet and widened the volunteer)
-  perform pg_temp.eq('G replay logged exactly the seed cells the live roles lacked', (select count(*) from audit_log where table_name in ('roles', 'role_permissions'))::text, (select audit_rows + (128 - live_cells) from harness_pre)::text);
+  perform pg_temp.eq('G replay logged exactly the seed cells the live roles lacked', (select count(*) from audit_log where table_name in ('roles', 'role_permissions'))::text, (select audit_rows + (131 - live_cells) from harness_pre)::text);
 
   if exists (select 1 from harness_known_red) then
     raise exception '%', 'HARNESS-KNOWN-RED every other check held; recorded disagreements with the draft: ' || (select string_agg(label || ': got ' || got || ', paper wants ' || want, '; ') from harness_known_red);
