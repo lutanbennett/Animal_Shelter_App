@@ -617,6 +617,22 @@ export const ENTRIES = {
       expect: "The card leaves the public page but the profile is kept.",
     },
   ],
+  "donation-receipts": [
+    {
+      activity: "Record a donation and issue its receipt",
+      needs: "donation.receipt",
+      device: "both",
+      do: "Record a donation from a made-up donor with a Thai name and two lines, then Share it from a phone (or Download it on a PC).",
+      expect: "A receipt numbered LCA… opens with the Thai name in full, both lines and the total; it is saved on Drive under Admin, Donations, Receipts.",
+    },
+    {
+      activity: "Void a receipt and issue a new one",
+      needs: "donation.receipt",
+      device: "both",
+      do: "Open that donation, Void this receipt with a reason, then Issue a new receipt.",
+      expect: "The old receipt stays on the list marked Void with its number; the new one has the next number.",
+    },
+  ],
   "manage-vets": [
     {
       activity: "Add a vet or clinic",
