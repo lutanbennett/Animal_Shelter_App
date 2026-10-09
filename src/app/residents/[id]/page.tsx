@@ -192,7 +192,7 @@ export default async function ResidentPage(
   const [carerResult, previousEnclosureResult, translations, tagOrigin] = await Promise.all([
     carerId
       ? supabase
-          .from(contactRelation(perms?.scopes.contacts))
+          .from(contactRelation(perms))
           .select("name")
           .eq("id", carerId)
           .limit(1)

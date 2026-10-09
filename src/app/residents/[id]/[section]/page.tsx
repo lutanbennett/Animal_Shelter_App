@@ -156,8 +156,8 @@ export default async function ResidentSectionPage(
   // volunteer, and nobody on a deceased resident.
   const showArchived = (await props.searchParams).archived === "1";
   // A vet or volunteer reads a carer or sender name through a narrow view (0126): the contacts scope says which.
-  const photoSelect = residentPhotoSelect(perms?.scopes.contacts);
-  const contactEmbed = (withArchive = false) => contactNameEmbed(perms?.scopes.contacts, withArchive);
+  const photoSelect = residentPhotoSelect(perms);
+  const contactEmbed = (withArchive = false) => contactNameEmbed(perms, withArchive);
   const canArchive = (kind: MedicalArchiveKind) => !isDeceased && can(perms, "medical.archive");
   const archivedCount = async (
     table: "weight" | "prescriptions" | "vet_appointments" | "immunization_records",

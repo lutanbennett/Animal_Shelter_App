@@ -46,7 +46,7 @@ const PROBES = {
 };
 // expected 1/0 per principal; anything not listed is 0. SKIP lists the cells not asserted (see the header).
 const EXPECT = {
-  contacts_table: ["admin", "management", "staff", "c_dir_all"],
+  contacts_table: ["admin", "management", "c_dir_all", "c_browse_full"], // 0170/0171: browse or directory Edit; staff name contacts through picker_contacts
   contacts_view: ["twoic", "c_browse_np"],
   friends: ["admin", "management", "staff", "vet", "c_friends_view", "c_friends_manage"],
   imm_table: ["admin", "vet", "c_types_read"],

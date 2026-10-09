@@ -6,9 +6,6 @@ export { CARER_CONTACT_TYPE };
 export type CarerOption = {
   id: string;
   name: string;
-  phone: string | null;
-  email: string | null;
-  line_id: string | null;
 };
 
 /**
@@ -21,11 +18,16 @@ export type CarerOption = {
  * Archived carers are left out: placing a new resident with one is refused
  * (rehome.ts) until the contact is restored, which is the point of
  * archiving them.
+ *
+ * Read through picker_contacts (0170): a name to choose, never the phone,
+ * email or address. Staff pick carers but do not read the address book; the
+ * picker used to print each carer's phone beside the name, which is how a
+ * staff login came to need the whole table.
  */
 export async function loadCarerOptions(supabase: SupabaseClient) {
   const { data, error } = await supabase
-    .from("contacts")
-    .select("id, name, phone, email, line_id")
+    .from("picker_contacts")
+    .select("id, name")
     .eq("type", CARER_CONTACT_TYPE)
     .is("archived_at", null)
     .order("name")

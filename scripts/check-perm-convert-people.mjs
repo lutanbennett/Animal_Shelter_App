@@ -63,7 +63,9 @@ const T = {
 // expected "RUID" per principal; anything not listed is 0000
 const A = "1111", RO = "1000";
 const EXPECT = {
-  contacts: { admin: A, management: A, staff: "1010", c_dir_read: RO, c_dir_edit: "1101", c_add: "0010", c_dir_all: A },
+  // 0170/0171: the table is read with contacts.browse or contacts.directory Edit. Read on the directory names a contact
+  // through picker_contacts and no longer reads the table (C9, C10), so staff and c_dir_read read nothing here.
+  contacts: { admin: A, management: A, staff: "0010", c_dir_edit: "1101", c_add: "0010", c_dir_all: A },
   shelter_friends: { admin: A, management: A, staff: RO, vet: RO, c_friends_view: RO, c_friends: A },
   vets: { admin: A, management: A, staff: RO, vet: RO, c_clinics_read: RO, c_clinics_edit: A, c_doctors: RO, c_book: RO },
   vet_doctors: { admin: A, management: A, staff: "1010", vet: A, c_clinics_read: RO, c_clinics_edit: RO, c_doctors: A, c_book: "1010" },
