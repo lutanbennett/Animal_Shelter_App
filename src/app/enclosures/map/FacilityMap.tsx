@@ -1,15 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { ENCLOSURE_ICONS } from "@/components/hub-icons";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ActionButton } from "@/components/ActionButton";
+import { ActionLink } from "@/components/ActionLink";
+import { ACTION_ICONS, ENCLOSURE_ICONS } from "@/components/hub-icons";
+import type { EnclosureDetails } from "@/lib/enclosures/details";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
 import { occupancyLevel, type OccupancyLevel } from "@/lib/enclosures/occupancy";
-import { bounds, centroid, planHeight, pointsAttr } from "@/lib/facility-map/geometry";
+import { centroid, markerBoxes, planHeight, pointsAttr } from "@/lib/facility-map/geometry";
 import type { FacilityMapData, MapPlan } from "@/lib/facility-map/types";
 import { ZoneName } from "@/components/ZoneName";
 import { OccupancyIndicator } from "../OccupancyIndicator";
+import { EnclosureMaintenance, EnclosureNotes, EnclosureResidents } from "../[id]/EnclosureHub";
+import { loadEnclosurePanel } from "./actions";
 import { PanZoom } from "./PanZoom";
 
 /**
@@ -17,9 +22,11 @@ import { PanZoom } from "./PanZoom";
  * plan with a polygon laid over each place, overview → zone → enclosure. It takes plain data, not
  * the page, so it can move under Operations with the Enclosures page if that is decided.
  *
- * Colour is how full a place is (the list's own thresholds); the count on each enclosure and the
- * words in the card say the same, so colour is never the only signal. A tap selects; the card's
- * Open button is what navigates, so a fat finger never leaves the map by accident.
+ * Colour is how full a place is (the list's own thresholds); the words in the card and each shape's
+ * accessible name say the same, so colour is never the only signal. On a zone plan an enclosure
+ * carries only small markers (medication, special diet, maintenance) and a room nothing, so the
+ * drawing's own numbers stay readable (2026-10-09). A tap selects and never navigates, so a fat
+ * finger never leaves the map by accident.
  */
 
 // Static class names, so Tailwind sees them.
@@ -76,7 +83,9 @@ export function FacilityMap({ data }: { data: FacilityMapData }) {
 
   const [planId, setPlanId] = useState<string>((overview ?? zonePlans[0] ?? data.plans[0]).id);
   const [pickedId, setPickedId] = useState<string | null>(null);
-  const plan = data.plans.find((p) => p.id === planId) ?? data.plans[0];
+  // Enclosure details already fetched on this visit, so tapping back to one is instant.
+  const [detailsCache] = useState(() => new Map<string, EnclosureDetails>());
+  const plan =data.plans.find((p) => p.id === planId) ?? data.plans[0];
   const zone = plan.zone_id ? (zoneById.get(plan.zone_id) ?? null) : null;
 
   const zoneName = (id: string) => {
@@ -195,8 +204,6 @@ export function FacilityMap({ data }: { data: FacilityMapData }) {
               key={item.id}
               item={item}
               plan={plan}
-              // A plan that is one enclosure (the Cat Zone) has nothing to tell apart: the card says it all.
-              showChip={items.length > 1}
               selected={item.id === pickedId}
               onPick={() => setPickedId(item.id)}
               ariaLabel={
@@ -213,7 +220,7 @@ export function FacilityMap({ data }: { data: FacilityMapData }) {
 
       <Legend />
 
-      {picked && <PickedCard item={picked} plan={plan} planOf={planOf} onOpenPlan={goTo} onClose={() => setPickedId(null)} />}
+      {picked && <PickedCard item={picked} plan={plan} planOf={planOf} onOpenPlan={goTo} onClose={() => setPickedId(null)} cache={detailsCache} />}
 
       {unplacedCount > 0 && (
         <section className="flex flex-col gap-2">
@@ -271,9 +278,7 @@ function MapShape({
   selected,
   onPick,
   ariaLabel,
-  showChip,
 }: {
-  showChip: boolean;
   item: Item;
   plan: MapPlan;
   selected: boolean;
@@ -282,14 +287,10 @@ function MapShape({
 }) {
   const k = plan.height / plan.width;
   const pts = pointsAttr(item.shape, plan.width, plan.height);
-  const b = bounds(item.shape);
   const [cx, cy] = centroid(item.shape);
   const isRoom = item.kind === "room";
-  const isZone = item.kind === "zone" || isRoom; // a room is labelled in its middle, like a zone
-  const chip = item.capacity ? `${item.count}/${item.capacity}` : String(item.count);
-  const chipW = 1.4 + chip.length * 1.45;
-  const chipX = b.minX + 0.5;
-  const chipY = b.minY * k + 0.5;
+  const isZone = item.kind === "zone";
+  const marks = item.kind === "enclosure" ? markerLayout(item, plan) : [];
 
   return (
     <g
@@ -332,26 +333,35 @@ function MapShape({
         >
           {item.name}
         </text>
-      ) : showChip ? (
-        <g className="pointer-events-none">
-          <rect x={chipX} y={chipY} width={chipW} height={3.5} rx={0.9} className="fill-white stroke-neutral-700" strokeWidth={0.15} />
-          <text x={chipX + chipW / 2} y={chipY + 1.8} textAnchor="middle" dominantBaseline="middle" fontSize={2.4} fontWeight={700} className="fill-neutral-900">
-            {chip}
-          </text>
-          {[
-            [item.jobs, ENCLOSURE_ICONS.maintenance],
-            [item.diet, ENCLOSURE_ICONS.specialDiet],
-            [item.meds, ENCLOSURE_ICONS.medication],
-          ]
-            .filter(([n]) => (n as number) > 0)
-            .map(([, Icon], i) => {
-              const MarkIcon = Icon as typeof ENCLOSURE_ICONS.medication;
-              return <MarkIcon key={i} x={chipX + chipW + 0.4 + i * 3.4} y={chipY + 0.2} width={3} height={3} className="text-neutral-900" strokeWidth={2.4} />;
-            })}
+      ) : marks.length > 0 ? (
+        // Only the markers, small and inside the outline: the drawing's own numbers stay visible. The
+        // count and the names are in the card and the accessible name, so nothing is lost by leaving them off.
+        <g className="pointer-events-none" aria-hidden="true">
+          {marks.map(({ Icon, x, y, size }, i) => (
+            <g key={i}>
+              <circle cx={x + size / 2} cy={y + size / 2} r={size * 0.62} className="fill-white/90" />
+              <Icon x={x + size * 0.1} y={y + size * 0.1} width={size * 0.8} height={size * 0.8} className="text-neutral-900" strokeWidth={2.4} />
+            </g>
+          ))}
         </g>
       ) : null}
     </g>
   );
+}
+
+/** An enclosure's markers, in a fixed order, each only when it applies; placed by `markerBoxes`. */
+function markerLayout(item: Item, plan: MapPlan) {
+  const icons = (
+    [
+      [item.meds, ENCLOSURE_ICONS.medication],
+      [item.diet, ENCLOSURE_ICONS.specialDiet],
+      [item.jobs, ENCLOSURE_ICONS.maintenance],
+    ] as const
+  )
+    .filter(([n]) => n > 0)
+    .map(([, Icon]) => Icon);
+  const boxes = markerBoxes(icons.length, item.shape, plan.width, plan.height);
+  return icons.map((Icon, i) => ({ Icon, ...boxes[i] }));
 }
 
 function Legend() {
@@ -395,19 +405,32 @@ function PickedCard({
   planOf,
   onOpenPlan,
   onClose,
+  cache,
 }: {
   item: Item;
   plan: MapPlan;
   planOf: Map<string, MapPlan>;
   onOpenPlan: (plan: MapPlan) => void;
   onClose: () => void;
+  cache: Map<string, EnclosureDetails>;
 }) {
   const { t } = useI18n();
   const m = t.enclosures.map;
   const zonePlan = item.kind === "zone" ? planOf.get(item.id) : undefined;
   const button = "inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover";
+  const ref = useRef<HTMLElement>(null);
+
+  // On a phone the card is below the plan, off-screen: without this a tap looks as if it did nothing.
+  // Only when its top is out of view, so a desktop that already shows it does not jump.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const top = el.getBoundingClientRect().top;
+    if (top < 0 || top > window.innerHeight - 160) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [item.id]);
+
   return (
-    <section aria-live="polite" className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4" data-plan={plan.id}>
+    <section ref={ref} aria-live="polite" className="flex scroll-mt-4 flex-col gap-3 rounded-lg border border-border bg-surface p-4 md:scroll-mt-[calc(var(--app-header-h)+1rem)]" data-plan={plan.id}>
       <div className="flex items-start justify-between gap-2">
         <h3 className="min-w-0 break-words text-base font-semibold text-foreground">
           <ZoneName name={item.name} colour={item.colour} />
@@ -440,9 +463,8 @@ function PickedCard({
         </div>
       )}
       {item.kind === "room" ? null : item.kind === "enclosure" ? (
-        <Link href={`/enclosures/${item.id}`} className={button}>
-          {m.openEnclosure}
-        </Link>
+        // Keyed, so tapping another enclosure starts its own load rather than showing the last one's.
+        <EnclosureDetailsBody key={item.id} id={item.id} cache={cache} />
       ) : zonePlan ? (
         <button type="button" onClick={() => onOpenPlan(zonePlan)} className={button}>
           {m.openPlan}
@@ -453,5 +475,83 @@ function PickedCard({
         </Link>
       )}
     </section>
+  );
+}
+
+type Loaded = { state: "loading" } | { state: "error"; error: string } | { state: "ready"; details: EnclosureDetails };
+
+/**
+ * A tapped enclosure's details, loaded on the tap (the map carries only counts), built from the
+ * enclosure page's own pieces. A failed load says so and keeps the plan usable; the full page is
+ * one link away for what lives only there (move, log maintenance, the tag link).
+ */
+function EnclosureDetailsBody({ id, cache }: { id: string; cache: Map<string, EnclosureDetails> }) {
+  const { t } = useI18n();
+  const m = t.enclosures.map;
+  const cached = cache.get(id);
+  const [loaded, setLoaded] = useState<Loaded>(cached ? { state: "ready", details: cached } : { state: "loading" });
+  const [attempt, setAttempt] = useState(cached ? -1 : 0); // -1: nothing to fetch
+
+  useEffect(() => {
+    if (attempt < 0) return;
+    let live = true;
+    loadEnclosurePanel(id)
+      .then((result) => {
+        if (!live) return;
+        if (result.ok) {
+          cache.set(id, result.details);
+          setLoaded({ state: "ready", details: result.details });
+        } else setLoaded({ state: "error", error: result.error });
+      })
+      .catch(() => live && setLoaded({ state: "error", error: m.detailsError }));
+    return () => {
+      live = false;
+    };
+  }, [id, attempt, cache, m.detailsError]);
+
+  const fullPage = <ActionLink href={`/enclosures/${id}`} label={m.openFullPage} icon={ENCLOSURE_ICONS.enclosure} iconOnlyOnMobile={false} />;
+
+  if (loaded.state === "loading") {
+    return (
+      <>
+        <p role="status" className="text-sm text-muted">
+          {m.detailsLoading}
+        </p>
+        <div>{fullPage}</div>
+      </>
+    );
+  }
+  if (loaded.state === "error") {
+    return (
+      <>
+        <p role="alert" className="rounded border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-foreground">
+          {loaded.error}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <ActionButton
+            icon={ACTION_ICONS.refresh}
+            onClick={() => {
+              setLoaded({ state: "loading" });
+              setAttempt((n) => Math.max(0, n) + 1);
+            }}
+          >
+            {m.tryAgain}
+          </ActionButton>
+          {fullPage}
+        </div>
+      </>
+    );
+  }
+  const { enclosure, residents, maintenanceJobs } = loaded.details;
+  return (
+    <>
+      <EnclosureResidents residents={residents} compact />
+      <div className="grid gap-3 md:grid-cols-2">
+        <EnclosureNotes notes={enclosure.notes} />
+        {/* Logging a job is an action, so it stays on the full page with the others. */}
+        <EnclosureMaintenance enclosureId={enclosure.id} jobs={maintenanceJobs} canWriteMaintenance={false} />
+      </div>
+      <div>{fullPage}</div>
+    </>
   );
 }

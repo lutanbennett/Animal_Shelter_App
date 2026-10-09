@@ -64,6 +64,8 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 export const unreleased: ReleaseNote[] = [
   "\"Vets\" is now \"Clinics\" everywhere, in English and Thai: in the menu, on Management, and on the booking form, which now asks for a clinic and offers its doctors. A vet visit is now a clinic visit. A clinic is the place an animal is taken to; a doctor is a person who works at one or more clinics. A doctor who visits without premises is entered as a clinic with no address, and nothing shows for the missing address. Old links and bookmarks still open the right page.",
   { text: "The vet login is now called a Doctor login. A doctor now also sees every animal they were the doctor for at a clinic they have since left. They can still only add or change records at the clinics they work at now.", roles: ["admin", "doctor"] },
+  "The facility map is easier to read: the 3/4 counts and the room names are gone from the zone plans, so the enclosure numbers on the drawing show through, and each enclosure carries only small icons for medication, a special diet or open maintenance.",
+  "Tap an enclosure on the map to see its details straight away under the plan: the residents in it with their photos, diets and medication, its notes and its open maintenance jobs. Tap another to switch, or Open full page for moving residents and logging maintenance.",
 ];
 
 /** Newest first. */
