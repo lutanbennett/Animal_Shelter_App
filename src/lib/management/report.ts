@@ -48,7 +48,7 @@ export type AppointmentRow = {
 export type ImmunizationRow = {
   resident_id: string;
   date_administered: string;
-  immunization_types: { name: string } | null;
+  immunization_types: { name: string; name_th?: string | null } | null;
 };
 
 export type BloodTestRow = {

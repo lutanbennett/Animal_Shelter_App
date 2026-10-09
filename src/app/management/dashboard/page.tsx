@@ -136,7 +136,11 @@ export default async function ManagementDashboardPage(
       .returns<ProcedureRow[]>(),
     supabase
       .from("immunization_records")
-      .select("resident_id, date_administered, immunization_types(name)")
+      // Through the picker view, as every other reader of vaccine names does:
+      // immunization_types itself is not readable by every role that sees this.
+      .select(
+        "resident_id, date_administered, immunization_types:picker_immunization_types(name, name_th)",
+      )
       // 0124: an archived dose is a deleted one.
       .is("archived_at", null)
       .gte("date_administered", window.startDate)
@@ -192,7 +196,12 @@ export default async function ManagementDashboardPage(
     appointments: [...(priorVisitsResult.data ?? []), ...monthVisits],
     bloodTests: bloodTestsResult.data ?? [],
     procedures: proceduresResult.data ?? [],
-    immunizations: immunizationsResult.data ?? [],
+    // Grouped under the vaccine's name in the reader's language.
+    immunizations: (immunizationsResult.data ?? []).map((row) => {
+      const type = row.immunization_types;
+      const name = locale === "th" && type?.name_th ? type.name_th : type?.name;
+      return { ...row, immunization_types: name ? { name } : null };
+    }),
   });
   const current = snapshot(now, {
     residents,
