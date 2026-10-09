@@ -7,8 +7,11 @@
 //
 //   node scripts/check-permission-parity.mjs            (from the repo root; dev only)
 //   node scripts/check-permission-parity.mjs --verbose  (also list every match)
+//   node scripts/check-permission-parity.mjs --write-fixture  (regenerate layer 2's fixture)
 //   PARITY_FLIP=volunteer:stock.delivery:2 node scripts/check-permission-parity.mjs
 //        flips one expected cell, to show that the check can fail (it must go red)
+//   PARITY_FLIP_DB=doctor:clinics.list:2 node scripts/check-permission-parity.mjs
+//        flips one seeded cell inside the rolled-back transaction (it must go red)
 //
 // Three outcomes, not two (the way check-test-plan.mjs separates "unsigned"
 // from "wrong"):
@@ -21,13 +24,32 @@
 // ("STALE"): the list can neither hide a regression nor rot
 // (decisions/2026-10-02-check-scripts-assert-live-not-replay.md).
 //
-// Layer 1 of §11 only: the database. The principals are the six legacy roles,
-// a login with no role, and an archived person. A configured role that has been
-// archived is probed through has_permission() alone, because today's policies
-// read the enum and would still let the person in; that gap is what conversion
-// closes, and section Z asserts the function already answers no.
+// What this file covers of §11's three layers (reconciled 2026-10-09, read against
+// a live run: docs/decisions/2026-10-09-parity-check-layers-reconciled.md):
 //
-// Layers 2 (app predicates) and 3 (routes) are not here: see the decision file.
+//   Layer 0  the seeded cells: has_permission() under each login must say what the
+//            paper says. Not one of §11's three; it is what makes layer 3 provable.
+//   Layer 1  the database, HERE. Principals: admin, management, doctor, volunteer,
+//            public_viewer, a login with no role, and an archived person (who holds
+//            the retired Staff role). Staff is not a live principal since 0173: no
+//            live login can hold it. 2IC, Maintenance and Medical are configured
+//            roles with no §4 column, so there is no default to reproduce; their
+//            own checks are check-2ic-role / check-maintenance-role / check-medical-role.
+//            A configured role that has been archived is probed through
+//            has_permission() alone (section Z), since today's policies read the
+//            enum and would still let the person in.
+//   Layer 2  the app's predicates, HERE (below). The retired predicates are compared
+//            through scripts/fixtures/legacy-predicates.json; canDoJob's rule for
+//            /admin /management /maintenance is check-recurring-job-eligibility.mjs.
+//   Layer 3  the routes, NOT here, and only partly anywhere. For a page in the route
+//            registry (src/lib/permissions/routes.ts), check-permission-catalogue.mjs
+//            section E asserts its page.tsx guards with requirePermission() on the
+//            registry's own activity; with layer 0 that fixes who may open it. Pages
+//            outside the registry are checked by nothing: see the decision file.
+//
+// Expected state: RED, with only doctor MISMATCHes on has_permission() lines. The
+// doctor's cells are deliberately not re-baselined (see the RE-BASELINED note below);
+// any other line, a STALE or a HARNESS FAULT is a real finding.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -102,13 +124,13 @@ if (flipDb) {
     : `insert into role_permissions (role_id, activity, level) select id, '${activity}', ${Number(level)} from roles where key = '${role}' on conflict (role_id, activity) do update set level = excluded.level;`;
 }
 
-const PRINCIPALS = ["admin", "management", "staff", "doctor", "volunteer", "public_viewer", "norole", "archperson"];
-const ROLE_OF = { admin: "admin", management: "management", staff: "staff", doctor: "doctor", volunteer: "volunteer", public_viewer: "public_viewer" };
+const PRINCIPALS = ["admin", "management", "doctor", "volunteer", "public_viewer", "norole", "archperson"];
+const ROLE_OF = { admin: "admin", management: "management", doctor: "doctor", volunteer: "volunteer", public_viewer: "public_viewer" };
 const expectedLevel = (role, activity) => (ROLE_OF[role] ? (cells[activity][role] ?? 0) : 0);
 
 // Fixture ids, minted here so probes can name them.
 const F = {};
-for (const k of ["R_IN", "R_OUT", "BARE", "CATEGORY", "DEAD", "ENC", "ZONE", "JOB", "PROJECT", "CLINIC", "OTHER_CLINIC", "DOCTOR", "DOCTOR2", "CONTACT", "CARER", "FRIEND", "RECEIPT", "DIET", "OUTGOING", "JOB_NONE", "JOB_ALL", ...PRINCIPALS, "archrole"]) F[k] = randomUUID();
+for (const k of ["R_IN", "R_OUT", "BARE", "CATEGORY", "DEAD", "ENC", "ZONE", "JOB", "PROJECT", "CLINIC", "OTHER_CLINIC", "DOCTOR", "DOCTOR2", "CONTACT", "CARER", "FRIEND", "RECEIPT", "DIET", "IMM_TYPE", "OUTGOING", "JOB_NONE", "JOB_ALL", ...PRINCIPALS, "archrole"]) F[k] = randomUUID();
 // the seeded root folder of a project category, which new folders must sit inside
 const rootRes = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
   method: "POST",
@@ -181,7 +203,7 @@ begin
             'harness-parity-' || r.who || '-' || r.id || '@example.invalid', '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || r.who), now(), now());
   end loop;
   insert into user_roles (user_id, role) select id, who::app_role from harness_ids
-   where who in ('admin', 'management', 'staff', 'doctor', 'volunteer', 'public_viewer');
+   where who in ('admin', 'management', 'doctor', 'volunteer', 'public_viewer');
   insert into user_roles (user_id, role, archived_at) select id, 'staff', now() from harness_ids where who = 'archperson';
 
   insert into clinics (id, name) values (v_own, 'Harness own clinic'), (v_oth, 'Harness other clinic');
@@ -203,6 +225,8 @@ begin
   insert into contacts (id, name, type) values (${lit(F.CONTACT)}, 'Harness contact', 'Vendor'), (${lit(F.CARER)}, 'Harness carer', 'Carer');
   insert into shelter_friends (id, contact_id) values (${lit(F.FRIEND)}, ${lit(F.CONTACT)});
   insert into diet_types (id, name, daily_qty_small, daily_qty_medium, daily_qty_large) values (${lit(F.DIET)}, 'Harness diet', 1, 1, 1);
+  -- the immunization probe names this type rather than looking one up: what a role can look up is not what it is probing
+  insert into immunization_types (id, name, interval_months) values (${lit(F.IMM_TYPE)}, 'Harness immunization type', 12);
   insert into maintenance (id, title, zone_id) values (${lit(F.JOB)}, 'Harness job', ${lit(F.ZONE)});
   insert into project_folders (id, top_level_category, name, parent_folder_id) values (${lit(F.PROJECT)}, 'Events', 'Harness project', ${lit(F.CATEGORY)});
   insert into stock_receipts (id, item_kind, medication_id, quantity) values (${lit(F.RECEIPT)}, 'medication', (select id from medication order by id limit 1), 1);
@@ -246,13 +270,13 @@ begin
     end loop;
   end loop;
   -- an unknown activity and a missing cell, as a role that would otherwise have rights
-  n := (select (pg_temp.probe(${lit(F.staff)}, 'select 1 where has_permission(''no.such.activity'', ''read'')')->>'n')::bigint);
-  if n is distinct from 0 then v_report := v_report || jsonb_build_object('z', 'staff answered yes to an unknown activity'); end if;
+  n := (select (pg_temp.probe(${lit(F.management)}, 'select 1 where has_permission(''no.such.activity'', ''read'')')->>'n')::bigint);
+  if n is distinct from 0 then v_report := v_report || jsonb_build_object('z', 'management answered yes to an unknown activity'); end if;
   n := (select (pg_temp.probe(${lit(F.volunteer)}, 'select 1 where has_permission(''stock.delivery'', ''read'')')->>'n')::bigint);
   if n is distinct from 0 then v_report := v_report || jsonb_build_object('z', 'volunteer answered yes to a missing cell'); end if;
   -- and the positive control: the same function does say yes where a cell exists
-  n := (select (pg_temp.probe(${lit(F.staff)}, 'select 1 where has_permission(''stock.delivery'', ''edit'')')->>'n')::bigint);
-  if n is distinct from 1 then v_report := v_report || jsonb_build_object('z', 'staff was not answered yes to stock.delivery edit (control)'); end if;
+  n := (select (pg_temp.probe(${lit(F.management)}, 'select 1 where has_permission(''stock.delivery'', ''edit'')')->>'n')::bigint);
+  if n is distinct from 1 then v_report := v_report || jsonb_build_object('z', 'management was not answered yes to stock.delivery edit (control)'); end if;
   create temp table harness_z as select v_report as r;
 end $z$;
 `;
@@ -499,6 +523,9 @@ const WIDENED_BY_DECISION = {
 const narrowedSeen = [];
 const widenedSeen = [];
 const ROLES_FOR_TABLE = ["admin", "management", "staff", "doctor", "volunteer", "public_viewer", null];
+// Staff stays in the fixture (what the predicates said before it went) but is not compared with a default: 0173
+// retired the role, no live login can hold it, and layer 1 no longer probes it either.
+const ROLES_COMPARED = ROLES_FOR_TABLE.filter((r) => r !== "staff");
 const fixturePath = join(root, "scripts/fixtures/legacy-predicates.json");
 const fixture = existsSync(fixturePath) ? JSON.parse(readFileSync(fixturePath, "utf8")) : {};
 const live = {};
@@ -525,7 +552,7 @@ for (const pr of PREDICATES) {
   if (live[key] && fixture[key] && JSON.stringify(live[key]) !== JSON.stringify(fixture[key])) {
     layer2.push({ pr, problem: `${pr.id} now answers differently from scripts/fixtures/legacy-predicates.json. If that was intended, rerun with --write-fixture` });
   }
-  for (const r of ROLES_FOR_TABLE) {
+  for (const r of ROLES_COMPARED) {
     const want = pr.expect ? pr.expect(r) : r != null && (expectedLevel(r, pr.activity) >= pr.level);
     const got = table[String(r)];
     l2checked++;
@@ -541,7 +568,7 @@ for (const pr of PREDICATES) {
 }
 console.log(`
 == Layer 2: the app's predicates ==
-${l2checked} answers (${PREDICATES.length} predicates x 7 roles incl. no role)`);
+${l2checked} answers (${PREDICATES.length} predicates x ${ROLES_COMPARED.length} roles incl. no role; staff retired by 0173)`);
 for (const id of Object.keys(NARROWED_BY_R1)) if (!PREDICATES.some((x) => x.id === id)) layer2.push({ pr: null, problem: `NARROWED_BY_R1 names ${id}, which is not a predicate of this check` });
 if (narrowedSeen.length) console.log(`  narrowed on purpose by R1 (the volunteer's cells are fewer than the old predicates said), expected: ${narrowedSeen.join(", ")}`);
 for (const id of Object.keys(WIDENED_BY_DECISION)) if (!PREDICATES.some((x) => x.id === id)) layer2.push({ pr: null, problem: `WIDENED_BY_DECISION names ${id}, which is not a predicate of this check` });
