@@ -3681,6 +3681,9 @@ const th: Dictionary = {
         "บัญชีของคุณยังไม่ได้เชื่อมกับคลินิก จึงยังไม่แสดงสัตว์ใด ๆ กรุณาขอให้ผู้ดูแลระบบของศูนย์ตั้งคลินิกให้ที่ การตั้งค่า → ความปลอดภัย",
       selectedCount: (n: number) => `เลือกแล้ว ${n} ตัว`,
       selectPrompt: "เลือกสัตว์เพื่อดำเนินการกับหลายตัวพร้อมกัน",
+      selectAllLeftOut: (n: number) => `ไม่ได้เลือกตัวที่มีผู้รับเลี้ยงแล้วหรือเสียชีวิตแล้ว ${n} ตัว`,
+      selectionDropped: (n: number) =>
+        `สัตว์ที่เลือกไว้ ${n} ตัวไม่อยู่ในรายการแล้ว จึงยกเลิกการเลือก`,
       download: "ดาวน์โหลดสเปรดชีต",
       downloadCount: (n: number) => `ดาวน์โหลดสเปรดชีต (${n})`,
       downloadSaved: (filename: string) =>
@@ -3699,6 +3702,11 @@ const th: Dictionary = {
         location: "ภายใน / ภายนอกศูนย์",
         noMatches: "ไม่พบสัตว์ที่ตรงกับตัวกรองนี้",
         selectAriaLabel: (name: string) => `เลือก ${name}`,
+        selectAll: (n: number, leftOut: number) =>
+          `เลือกทั้ง ${n} ตัวที่แสดง${
+            leftOut > 0 ? ` (ไม่รวมตัวที่มีผู้รับเลี้ยงแล้วหรือเสียชีวิตแล้ว ${leftOut} ตัว)` : ""
+          }`,
+        unselectAll: "ยกเลิกการเลือกทั้งหมด",
         editAriaLabel: (name: string) => `แก้ไข ${name}`,
       },
     },
