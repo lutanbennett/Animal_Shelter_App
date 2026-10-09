@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → Residents list: a "Select all" tick box, so picking a zone and then every resident in it is one tap |
 | Branch / worktree | `claude/residents-select-all` @ `C:\Development\Animal_Shelter_residents-select-all` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3002` |
-| PR | opened from this branch (see the PR's own page) |
+| PR | #497 |
 | Tested by / date | Claude, 2026-10-09 |
 | Carries a migration? | no |
 | Tested at SHA | `4d0b2833` |
@@ -29,7 +29,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: all seven checks pass on #497
 
 ## 3. Schema and data — *skip if no migration*
 
