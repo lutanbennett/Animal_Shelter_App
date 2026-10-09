@@ -1,26 +1,9 @@
 import { notFound } from "next/navigation";
 import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
-import { loadMaintenanceJobs } from "@/lib/maintenance/queries";
 import { getTagOrigin } from "@/lib/tags/origin";
-import { getLocale } from "@/lib/i18n/get-locale";
-import { loadSpecialDiets } from "@/lib/diets/special";
-import { loadOccupants, readsWhoAndWhereOnly } from "@/lib/residents/who-and-where";
-import {
-  EnclosureHub,
-  type Enclosure,
-  type EnclosureResident,
-} from "./EnclosureHub";
-
-type EnclosureRow = {
-  id: string;
-  name: string;
-  name_th: string | null;
-  capacity: number | null;
-  notes: string | null;
-  zone_id: string;
-  zones: { name: string; name_th: string | null; internal: boolean; colour: string | null } | null;
-};
+import { loadEnclosureDetails } from "@/lib/enclosures/details";
+import { EnclosureHub } from "./EnclosureHub";
 
 export default async function EnclosurePage(
   props: PageProps<"/enclosures/[id]">,
@@ -28,63 +11,17 @@ export default async function EnclosurePage(
   const { id } = await props.params;
   const { supabase, perms } = await requirePermission("facility.enclosures", "read");
 
-  const [enclosureResult, occupantsResult, maintenanceResult, tagOrigin] = await Promise.all([
-    supabase
-      .from("enclosures")
-      .select("id, name, name_th, capacity, notes, zone_id, zones(name, name_th, internal, colour)")
-      .eq("id", id)
-      .limit(1)
-      .returns<EnclosureRow[]>(),
-    // Who's here now, per the same view the residents list uses; the
-    // profile photo isn't in that view so it's fetched in a second step.
-    loadOccupants(supabase, id),
-    loadMaintenanceJobs(supabase, { enclosureId: id }),
-    getTagOrigin(),
-  ]);
-
-  const row = enclosureResult.data?.[0];
-  if (!row) notFound();
-
-  const limited = await readsWhoAndWhereOnly();
-  const residentIds = occupantsResult.data.map((r) => r.resident_id);
-  const [residentsResult, specialDiets] = await Promise.all([
-    residentIds.length > 0
-      ? supabase
-          // A volunteer's second step reads who and where too: it has the same five columns (0134).
-          .from((limited ? "resident_who_and_where" : "residents") as "residents")
-          .select("id, name, thai_name, resident_code, profile_photo_drive_file_id")
-          .in("id", residentIds)
-          .order("name")
-          .returns<Omit<EnclosureResident, "special_diets">[]>()
-      : null,
-    loadSpecialDiets(supabase, residentIds, await getLocale()),
-  ]);
-  const residents: EnclosureResident[] = (residentsResult?.data ?? []).map((resident) => ({
-    ...resident,
-    special_diets: specialDiets.get(resident.id) ?? [],
-  }));
-
-  const enclosure: Enclosure = {
-    id: row.id,
-    name: row.name,
-    name_th: row.name_th,
-    capacity: row.capacity,
-    notes: row.notes,
-    zone_id: row.zone_id,
-    zone_name: row.zones?.name ?? "—",
-    zone_name_th: row.zones?.name_th ?? null,
-    zone_colour: row.zones?.colour ?? null,
-    zone_internal: row.zones?.internal ?? true,
-    isSystem: row.zones?.name === "Lifecycle",
-  };
+  // The same loader as the facility map's details panel, so the two never disagree.
+  const [details, tagOrigin] = await Promise.all([loadEnclosureDetails(supabase, id), getTagOrigin()]);
+  if (!details) notFound();
 
   return (
     <EnclosureHub
-      enclosure={enclosure}
-      residents={residents}
+      enclosure={details.enclosure}
+      residents={details.residents}
       canEditEnclosures={can(perms, "facility.enclosures")}
       canWriteMaintenance={can(perms, "maintenance.jobs")}
-      maintenanceJobs={maintenanceResult.jobs}
+      maintenanceJobs={details.maintenanceJobs}
       tagOrigin={tagOrigin}
     />
   );
