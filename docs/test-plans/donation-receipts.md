@@ -154,7 +154,7 @@ Automated checks by: Claude  Date: 2026-10-09
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty; Lutan or the Director ticks it after the three checks above
 
 Manual verification by: pending: share from a real phone, the side-by-side look at the sample, and the Drive folder's sharing (Left for manual verification 1–3)
 
@@ -166,4 +166,4 @@ Manual verification by: pending: share from a real phone, the side-by-side look 
 
 Result: pass
 
-Release manager acknowledgement: <name>  Date: <yyyy-mm-dd>
+Release manager acknowledgement: pending: production release manager
