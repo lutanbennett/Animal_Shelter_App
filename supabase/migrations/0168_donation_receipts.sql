@@ -1,4 +1,4 @@
--- consumer: src/lib/donations/receipts.ts, src/app/admin/donations/actions.ts
+-- consumer: src/lib/donations/receipts-server.ts, src/app/management/donations/actions.ts
 --
 -- Donation receipts, the schema half (backlog, "Donation receipts: a form for the Director to issue a receipt";
 -- Lutan's answers of 2026-10-09 are on the item). Folded into the community-dogs schema PR by Lutan's choice on
