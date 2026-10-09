@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → three ticked: *Carer contacts: close the data hole behind the pages*, *`reset_prescription_rounds()` … can be called by any signed-in login*, *The facility map tables answer every signed-in login*. Two left open with a note: *A vet login can read, rename, add and delete every project and maintenance photo record*, *A vet login lists every person with a login* |
 | Branch / worktree | `claude/close-the-over-grants` @ `C:\Development\Animal_Shelter_close-the-over-grants` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3002` (throwaway staff and Management logins made and deleted by script) |
-| PR | opened from this branch; the number is recorded in the follow-up commit |
+| PR | [#488](https://github.com/lutanbennett/Animal_Shelter_App/pull/488) |
 | Tested by / date | Claude (automated) / 2026-10-09 |
 | Carries a migration? | yes: `0170_close_the_over_grants.sql`, `0171_contacts_editor_reads.sql` |
 | Tested at SHA | `47dbd1ae` (code); this plan's own commit adds only the plan |
@@ -24,7 +24,7 @@
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (`Already up to date.`)
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): #488, all 7 checks passing at `0f4d48d4`
 
 ```
 === gates: build exited 0 after 46s
@@ -192,7 +192,7 @@ Manual verification by: pending: the three items under Left for manual verificat
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR: #488 links `docs/test-plans/close-the-over-grants.md` and summarises it
 - [ ] Handed to the production release manager — n/a: not yet — the PR is not merged
 
 Result: pass
