@@ -25,6 +25,26 @@
 // are ignored, so a `create table` inside a function or DO block is neither
 // counted nor able to satisfy the check; write the grants at top level.
 //
+// Views also need their write grants revoked (files above 0160 only). The
+// project's default privileges give `authenticated` insert, update, delete,
+// truncate, references and trigger on every new object, and Postgres cannot
+// set default privileges for views apart from tables, which need DML. So every
+// public view a migration creates or replaces must be followed, in the same
+// file, by
+//
+//   revoke insert, update, delete, truncate, references, trigger on <view> from authenticated, anon;
+//
+// (`revoke all on <view> from …` naming both roles counts too, as 0161 writes
+// it; the grant of select comes after). On a non-updatable view the grants do
+// nothing, and a writable security_invoker one is still bounded by its table's
+// policies, but an `instead of` trigger added later would make them real.
+// `create or replace` keeps a view's grants, so replacing a view an earlier
+// migration created needs no revoke unless this file drops it first (as for
+// functions below). 0160 revoked them from the six views that had them
+// (docs/decisions/2026-10-07-view-write-grants.md), so every view that existed
+// then is clean, and everything up to and including 0160 is exempt from this
+// one rule.
+//
 //   node scripts/check-migration-grants.mjs            # every file above 0077
 //   node scripts/check-migration-grants.mjs <file>…    # just these, any number
 //
@@ -40,6 +60,10 @@ const MIGRATIONS_DIR = path.resolve(here, "..", "supabase", "migrations");
 // catch-up that grants all of it.
 const LAST_EXEMPT = 77;
 const API_ROLES = ["anon", "authenticated", "service_role"];
+// Files up to and including this number are exempt from the view-revoke rule;
+// 0160 revoked the write grants from every view that existed then.
+const VIEW_REVOKES_SINCE = 160;
+const VIEW_WRITES = ["insert", "update", "delete", "truncate", "references", "trigger"];
 // 0086 moved these into `private` and left a gated view of the same name in
 // `public`. A later `create or replace view <name>` in `public` would replace
 // the gate, so a file after 0086 edits `private.<name>` and may re-create the
@@ -98,13 +122,13 @@ function createdObjects(sql) {
     }
   }
   const view = new RegExp(
-    String.raw`\bcreate\s+(?:or\s+replace\s+)?(temp\s+|temporary\s+)?(?:recursive\s+)?(materialized\s+)?view\s+(?:if\s+not\s+exists\s+)?${NAME}`,
+    String.raw`\bcreate\s+(or\s+replace\s+)?(temp\s+|temporary\s+)?(?:recursive\s+)?(materialized\s+)?view\s+(?:if\s+not\s+exists\s+)?${NAME}`,
     "gi",
   );
   for (const m of sql.matchAll(view)) {
-    const name = normalise(m[3]);
-    if (m[1] || !name) continue;
-    found.push({ kind: m[2] ? "materialized view" : "view", name });
+    const name = normalise(m[4]);
+    if (m[2] || !name) continue;
+    found.push({ kind: m[3] ? "materialized view" : "view", name, replace: Boolean(m[1]) });
   }
   const sequence = new RegExp(
     String.raw`\bcreate\s+(temp\s+|temporary\s+)?sequence\s+(?:if\s+not\s+exists\s+)?${NAME}`,
@@ -292,6 +316,57 @@ function securityFindings(sql, before) {
   return out;
 }
 
+/** Names of views created in `public` by every migration numbered below `n`. */
+function viewsBefore(n) {
+  const known = new Set();
+  for (const f of readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith(".sql") && (numberOf(f) ?? 0) < n)) {
+    for (const obj of createdObjects(stripSql(readFileSync(path.join(MIGRATIONS_DIR, f), "utf8")))) {
+      if (obj.kind.endsWith("view")) known.add(obj.name);
+    }
+  }
+  return known;
+}
+
+/** Views created in `public` whose write grants the file does not revoke from authenticated and anon. */
+function viewWriteFindings(sql, before) {
+  const stmts = statements(sql);
+  const dropped = (name) =>
+    stmts.some((s) => /^drop\s+(?:materialized\s+)?view\b/i.test(s) && new RegExp(String.raw`\b${name}\b`, "i").test(s));
+  const revokes = [];
+  for (const s of stmts) {
+    const m = s
+      .toLowerCase()
+      .match(/^revoke\s+([\s\S]+?)\s+on\s+(?:table\s+)?([\s\S]+?)\s+from\s+([\s\S]+?)(?:\s+(?:cascade|restrict))?$/);
+    if (!m) continue;
+    revokes.push({
+      privs: m[1].split(",").map((p) => p.trim()),
+      objects: m[2].split(",").map((o) => normalise(o.trim())),
+      roles: m[3].split(",").map((r) => r.trim().replace(/"/g, "")),
+    });
+  }
+  const out = [];
+  for (const obj of createdObjects(sql)) {
+    if (obj.kind !== "view" && obj.kind !== "materialized view") continue;
+    // A replaced view keeps its grants; only a first creation (or one after a drop) gets the defaults.
+    if (obj.replace && before.has(obj.name) && !dropped(obj.name)) continue;
+    const revoked = (role) =>
+      new Set(
+        revokes
+          .filter((r) => r.objects.includes(obj.name) && r.roles.includes(role))
+          .flatMap((r) => (r.privs.some((p) => /^all(\s+privileges)?$/.test(p)) ? VIEW_WRITES : r.privs)),
+      );
+    const short = ["authenticated", "anon"].filter((role) => VIEW_WRITES.some((p) => !revoked(role).has(p)));
+    if (short.length) {
+      out.push(
+        `${obj.kind} ${obj.name} is created without \`revoke insert, update, delete, truncate, references, trigger` +
+          ` on ${obj.name} from authenticated, anon;\` (short for ${short.join(", ")}) — the default privileges` +
+          ` give every signed-in login those on a new view (0160).`,
+      );
+    }
+  }
+  return out;
+}
+
 function numberOf(file) {
   const m = path.basename(file).match(/^(\d+)_/);
   return m ? Number(m[1]) : null;
@@ -325,7 +400,10 @@ for (const file of files) {
       );
     }
   }
-  for (const finding of securityFindings(stripSql(readFileSync(file, "utf8")), functionsBefore(numberOf(file) ?? 0))) {
+  const stripped = stripSql(readFileSync(file, "utf8"));
+  const findings = securityFindings(stripped, functionsBefore(numberOf(file) ?? 0));
+  if ((numberOf(file) ?? 0) > VIEW_REVOKES_SINCE) findings.push(...viewWriteFindings(stripped, viewsBefore(numberOf(file) ?? 0)));
+  for (const finding of findings) {
     secure++;
     console.error(`${path.basename(file)}: ${finding}`);
   }
