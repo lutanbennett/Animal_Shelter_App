@@ -1165,6 +1165,41 @@ const manual: Manual = {
           ],
         },
         {
+          id: "donation-receipts",
+          title: "Recording a donation and sending its receipt",
+          roles: ["admin", "management"],
+          activity: "donation.receipt",
+          path: "Management → Donations → Record a donation",
+          intro:
+            "When a gift arrives, record it here and the app issues the receipt: numbered LCA0009000, LCA0009001 and so on, never repeated or skipped, in the same layout as the receipts the Director made by hand, saved on Google Drive and ready for you to send. Admin and Management can do it, on a phone as well as a PC.",
+          steps: [
+            "Tap Record a donation. Who gave: type the donor's name exactly as it should appear on the receipt (Thai is fine), or pick them from your contacts to fill in their name, email, phone and LINE. Fill in at least one way to reach them.",
+            "The gift: the date it was received (never a future date), how it was given (bank transfer, PromptPay, cash, DonorBox or in kind), and what it is for: general, a resident (choose which), a project or an appeal (say which).",
+            "Receipt lines: one line for each item on the receipt, each with its amount in baht, for example \"Sponsorship of two packs (40kg) of dry dog food\", 1,200. Add a line for each further item. For a gift in kind (goods, not money) choose In kind under How it was given: the amounts disappear, you describe what was given, and the receipt says In kind instead of a total.",
+            "Receipt for: Thai receipt or US receipt. Most donors are in the US. Today the two look the same except the date: the Thai receipt writes it day first (09/10/2026), the US one month first (10/09/2026).",
+            "Tap Save and issue receipt. The receipt takes the next number and opens on the donation's page. It is filed on Drive under Admin → Donations → Receipts → the year, named with its number and the donor, e.g. LCA0009000-Global-Tiger.pdf.",
+            "To send it from a phone, tap Share: your phone's share menu opens with the PDF attached, so you can pick Gmail, LINE or anything else. On a PC, tap Download, then Email draft: an email to the donor opens with the subject and a short thank-you already written. Attach the downloaded PDF yourself, because an email link cannot attach a file. The app never sends the receipt for you; it comes from you.",
+            "When you have sent it, tap I've sent it. The list then shows it as Sent.",
+            "If Google Drive is down, the receipt is still issued and you can still view, download and send it. The donation's page says Not yet saved to Drive with a Save to Drive now button; tap it later.",
+            "To correct a mistake (wrong name, wrong amount), open the donation and tap Void this receipt, say why, and confirm. A void receipt is never deleted: it keeps its number, stays on the list marked Void, and its copy on Drive is stamped VOID. Then tap Issue a new receipt; it takes the next number. To change the donor's name or the lines first, record the gift again and leave the voided one as it is.",
+            "Management → Donations lists the gifts received between two dates, newest first, with each one's receipt number, whether it is on Drive and whether it has been sent, and the total in baht. Void receipts are listed but not counted. Open any gift to view, re-download or re-send its receipt.",
+          ],
+          callouts: [
+            {
+              kind: "warning",
+              text: "A receipt is a financial document. Never issue one for money that has not arrived, and void a wrong one rather than issuing a second receipt for the same gift: the register must show one live receipt per gift.",
+            },
+            {
+              kind: "note",
+              text: "The foundation's address on the receipt is fixed in the app on purpose and does not come from the website settings, so editing the website can never change a receipt. If the registered address changes, ask the developer.",
+            },
+            {
+              kind: "note",
+              text: "These receipts are a thank-you and the foundation's own record. They do not make a gift tax-deductible: in Thailand that needs the gift recorded in the Revenue Department's e-Donation system, and US tax status is still being sought.",
+            },
+          ],
+        },
+        {
           id: "manage-vets",
           title: "Managing vets",
           roles: ["admin", "management"],

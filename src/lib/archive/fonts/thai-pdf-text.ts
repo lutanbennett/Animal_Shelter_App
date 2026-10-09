@@ -7,7 +7,7 @@
  * keeps as many glyphs as the string has characters. So "บริษัท … จำกัด (คุณสมศรี)"
  * printed without its closing bracket, and a name with two ำ lost two letters,
  * on a page that otherwise looks right. Found 2026-10-09 building donation
- * receipts (docs/decisions/2026-10-09-donation-receipts.md). The two-part
+ * receipts (docs/decisions/2026-10-09-thai-sara-am-in-pdfs.md). The two-part
  * spelling is ำ's own compatibility decomposition and shapes to the same two
  * glyphs, so the page looks identical; only text copied out of the PDF carries
  * the two code points instead of one.
