@@ -815,7 +815,13 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
 - `scripts/` — one-off tooling: `apply-migrations.mjs` (migration runner),
   `load-residents.mjs` (bulk resident loads from a reviewed CSV — dry run by
   default, `--apply` to write; see
-  `docs/decisions/2026-10-05-bulk-resident-loader.md`),
+  `docs/decisions/2026-10-05-bulk-resident-loader.md`; its run also lists
+  possible duplicates of existing residents),
+  `correct-resident.mjs` (removes a resident entered twice, keeping the
+  original, optionally copying details such as the Thai name across; refuses
+  anything with real history; dry run by default, `--apply` to write, receipt
+  on the Desktop first; see
+  `docs/decisions/2026-10-09-resident-corrections-script.md`),
   `audit-contact-map-links.mjs` (lists contacts and Shelter Friends whose map
   link is dead, missing or has words after it, in plain words for whoever
   fixes them — read-only, dev by default, `--env production` when asked; see

@@ -63,7 +63,16 @@
 //   - an unparseable date, number, boolean or enum value
 //
 // Checks that only warn: a missing size, a missing weight, a row landing in
-// Lifecycle/Unassigned.
+// Lifecycle/Unassigned, and a possible duplicate (below).
+//
+// Possible duplicates: every row is compared with every resident already in
+// the database — archived, adopted, deceased and Lifecycle/Unassigned ones
+// included — by the rules in scripts/lib/near-names.mjs (the same name once a
+// bracket tag is dropped, the same Thai name, or a close spelling). Each match
+// is listed with the existing resident's code, where it is now and when it was
+// created, so a human can rule same-dog or different-dog and mark the row
+// `hold` if it is the same. It never refuses: "Noon" and "Noon (Daeng)" can be
+// two dogs. The exact-name refusal above is separate and unchanged.
 //
 // Known limitation: rows load with created_by null, because record_intake
 // takes the author from auth.uid() and the Management API has no user. Both
@@ -73,6 +82,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
 import { parseCsvObjects } from "./lib/csv.mjs";
+import { nearMatchReason } from "./lib/near-names.mjs";
 
 // ---------------------------------------------------------------------------
 // Arguments
@@ -392,11 +402,23 @@ const [reference] = await query(`select json_build_object(
   'zones', coalesce((select json_agg(json_build_object('id', id, 'name', name)) from zones), '[]'::json),
   'enclosures', coalesce((select json_agg(json_build_object('id', e.id, 'name', e.name, 'zone', z.name)) from enclosures e join zones z on z.id = e.zone_id), '[]'::json),
   'diets', coalesce((select json_agg(json_build_object('id', id, 'name', name, 'standard', is_standard)) from diet_types), '[]'::json),
-  'residents', coalesce((select json_agg(lower(name)) from residents), '[]'::json)
+  'residents', coalesce((select json_agg(json_build_object(
+    'code', r.resident_code,
+    'name', r.name,
+    'thaiName', r.thai_name,
+    'created', to_char(r.created_at, 'YYYY-MM-DD'),
+    'place', (select coalesce(z.name || ' / ' || e.name, p.placement_type::text)
+              from placement_history p
+              left join enclosures e on e.id = p.enclosure_id
+              left join zones z on z.id = e.zone_id
+              where p.resident_id = r.id and p.end_date is null
+              order by p.start_date desc, p.created_at desc
+              limit 1)))
+    from residents r), '[]'::json)
 ) as data`);
 
 const { zones, enclosures, diets, residents } = reference.data;
-const existingNames = new Set(residents);
+const existingNames = new Set(residents.map((r) => r.name.toLowerCase()));
 
 // Diet: a name if one was given or asked for per row, otherwise the standard one.
 const standardDiet = diets.find((d) => d.standard);
@@ -445,9 +467,28 @@ if (clashes.length && !allowNameClash) {
   for (const row of clashes) warn(row.where, "a resident of this name already exists — loading anyway (--allow-name-clash)");
 }
 
+// Near-duplicates: warn only. nearMatchReason skips exact name matches, which
+// the clash check above already refuses (or warns about under
+// --allow-name-clash), so nothing is listed twice.
+const nearDuplicates = rows.flatMap((row) =>
+  residents.map((existing) => ({ row, existing, reason: nearMatchReason(row, existing) })).filter((m) => m.reason),
+);
+const withThai = (name, thai) => (thai ? `"${name}" (${thai})` : `"${name}"`);
+
 if (warnings.length) {
   console.log(`\nWarnings (${warnings.length}):`);
   for (const w of warnings) console.log(`  - ${w}`);
+}
+if (nearDuplicates.length) {
+  console.log(`\nPossible duplicates — check each one before loading (${nearDuplicates.length}):`);
+  console.log(`  Same animal? Put "yes" in that row's hold column. Different animal? Nothing to do.`);
+  for (const { row, existing, reason } of nearDuplicates) {
+    console.log(
+      `  - row ${row.line} ${withThai(row.name, row.thaiName)} looks like ` +
+        `${existing.code ?? "(no code)"} ${withThai(existing.name, existing.thaiName)}: ${reason}. ` +
+        `It is in ${existing.place ?? "no open placement"}, created ${existing.created}.`,
+    );
+  }
 }
 if (held.length) {
   console.log(`\nHeld, not loaded (${held.length}):`);
