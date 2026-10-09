@@ -27,9 +27,9 @@ export async function staffDraftFriends(
   const [{ count, error }, perms] = await Promise.all([
     supabase
       .from("shelter_friends")
-      .select("id, contacts!inner(archived_at)", { count: "exact", head: true })
+      .select("id, picker_contacts!inner(archived_at)", { count: "exact", head: true })
       .eq("published", false)
-      .is("contacts.archived_at", null),
+      .is("picker_contacts.archived_at", null),
     loadPermissions(),
   ]);
   if (error || !count) return null;

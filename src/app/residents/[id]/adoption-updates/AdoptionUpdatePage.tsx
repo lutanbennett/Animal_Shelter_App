@@ -46,7 +46,7 @@ export async function AdoptionUpdatePage({
           >()
       : null,
     loadPermissions(),
-    loadPermissions().then((perms) => loadSenderOptions(supabase, residentId, perms?.scopes.contacts)),
+    loadPermissions().then((perms) => loadSenderOptions(supabase, residentId, perms)),
   ]);
 
   if (residentResult.error) throw new Error(residentResult.error.message);

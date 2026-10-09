@@ -66,7 +66,7 @@ const probes = [
   ["daily quantities, diet view", `select daily_qty_small from stock_diet_types limit 1`, NONE],
   ["medication table", `select 1 from medication limit 1`, who(...OLD, "vet")],
   ["diet_types table", `select 1 from diet_types limit 1`, who(...OLD, "vet")],
-  ["contacts", `select 1 from contacts limit 1`, who(...OLD)],
+  ["contacts", `select 1 from contacts limit 1`, who("admin", "management")], // 0170: staff name contacts through picker_contacts, not the table
   ["correct a stock figure", `select record_stock_correction('medication', (select id from medication limit 1), 1)`, MANAGERS],
   ["change a stock figure directly", `update medication set stock_on_hand = 1 where id = (select id from medication limit 1)`, MANAGERS],
   ["add a medicine", `insert into medication (name, dose_unit) values ('probe', 'tablet')`, who("admin", "management", "staff", "vet")],
