@@ -1030,6 +1030,40 @@ const manual: Manual = {
             alt: "The projects page showing the category folders",
           },
         },
+        {
+          id: "outreach-visits",
+          title: "Recording an outreach visit",
+          roles: ["admin", "management"],
+          activity: "community.outings",
+          path: "Operations → Outreach visits",
+          intro:
+            "Dogs the shelter helps without taking in — fed, treated, sterilised or vaccinated at a temple or in a village, or rehomed from a temple — are recorded as one short note after each visit. The notes add up to \"Dogs helped at our outreach visits\" on the home page.",
+          steps: [
+            "Open Operations from the menu, tap Outreach visits, then Record a visit.",
+            "Check the date, then pick the place. A temple or village not in the list yet: pick + A new place, type its name and say whether it is a temple or a village. Next.",
+            "Tick everything you did. Next.",
+            "Type how many dogs you helped. If you ticked Sterilised, also type how many of them were sterilised. Add a note or photos if you like, then Save visit.",
+            "To correct a visit, tap Edit beside it. The same page adds or removes photos, and deletes the visit.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "Count every dog you helped at that visit, even one you helped last time. The figure counts help given, not different dogs, which is why the website says \"dogs helped at our outreach visits\".",
+            },
+            {
+              kind: "tip",
+              text: "Sterilised dogs count twice on the website: in the dogs helped, and in \"Sterilisations in local villages\". That is what the Director asked for.",
+            },
+            {
+              kind: "note",
+              text: "Photos stay inside the app. Ticking May be shown on the website records that a photo may be used, but nothing on the website shows outreach photos yet.",
+            },
+            {
+              kind: "note",
+              text: "Who may record visits is set by Admin on Settings → Security, under Who may write outreach notes. Today it is Management. The home page shows the figure only once Admin has entered its starting number and date on Settings → Website.",
+            },
+          ],
+        },
       ],
     },
 
