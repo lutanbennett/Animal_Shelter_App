@@ -59,3 +59,19 @@ revoke execute on function reset_prescription_rounds(uuid), reset_frequency_roun
   from public, anon, authenticated;
 grant execute on function reset_prescription_rounds(uuid), reset_frequency_rounds(uuid), reset_diet_rounds(uuid)
   to service_role;
+
+-- ---------------------------------------------------------------------------
+-- 3. facility_maps and map_rooms: read behind the app-access gate
+-- ---------------------------------------------------------------------------
+-- The writes converted to facility.enclosures (0150, 0158); the reads were kept open on purpose, because the map is
+-- read on /enclosures and the plan views by every role that opens the app. has_app_access() (0086) is that audience
+-- exactly: it is false for public_viewer, a login with no role and an archived person, as for every other internal
+-- table. It is not a scope function in the sense of scripts/lib/scope-guard.mjs and names no role in the policy text.
+-- rounds is open the same way and left alone: it holds only round names, and check-medication-rounds.mjs asserts it.
+drop policy if exists facility_maps_read on facility_maps;
+create policy facility_maps_read on facility_maps for select to authenticated
+  using ((select private.has_app_access()));
+
+drop policy if exists map_rooms_read on map_rooms;
+create policy map_rooms_read on map_rooms for select to authenticated
+  using ((select private.has_app_access()));

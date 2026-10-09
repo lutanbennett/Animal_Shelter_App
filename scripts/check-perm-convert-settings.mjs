@@ -9,7 +9,7 @@
 //                      mine needs assistant.record; someone else's is Admin's alone (management lost it: 0150)
 //   translations       read / update / insert / delete: write translations.manage; read that or translations.view (0154);
 //                      a vet reads through its own policy and writes nothing
-//   facility_maps      read / update / insert / delete: read is open to every login; write facility.enclosures Edit
+//   facility_maps      read / update / insert / delete: read is every login with app access (0170); write facility.enclosures Edit
 //                      (facility.map, which staff and volunteers hold, opens nothing)
 //   fixed_outgoings    read / update / insert / delete: reports.cashflow Read for read, Edit for the rest
 // Principals: admin, management, staff, volunteer, a vet, no role, and configured roles. Then structural sweeps: no policy
@@ -76,9 +76,10 @@ const EXPECT = {
   // management and staff: their own rows only. Nobody but Admin reads or writes in someone else's name.
   assistant_actions: { admin: ALL, management: "1010", staff: "1010", c_record: "1010" },
   translations: { admin: ALL, management: ALL, staff: READ_ONLY, vet: READ_ONLY, c_trans: ALL, c_view: READ_ONLY },
-  // read is open to every login, even one with no role
+  // read is every login with app access (0170: a login with no role, public_viewer and an archived person read nothing)
   facility_maps: {
     ...Object.fromEntries(P.map((p) => [p, READ_ONLY])),
+    norole: NONE,
     admin: ALL, c_encl_edit: ALL, // management holds facility.enclosures Read only (0132), so it no longer writes a plan: the page never let it
   },
   fixed_outgoings: { admin: ALL, management: ALL, c_cash_read: READ_ONLY, c_cash_edit: ALL },
