@@ -1138,7 +1138,9 @@ const manual: Manual = {
           path: "Management → Dashboard",
           steps: [
             "Right now: residents in care (in the shelter, in hospital, fostered), ready for adoption, clinic visits in the next 7 days, and open maintenance jobs.",
-            "The month at a glance: intakes, adoptions, fosters, deaths, hospital stays, returns, blood work, initial and follow-up clinic visits and procedures — with the residents' names under each. Use Previous month / Next month to move around.",
+            "The month at a glance: intakes, adoptions, fosters, deaths, hospital stays, returns, blood work, initial and follow-up clinic visits, procedures and vaccinations given — with the residents' names under each. Use Previous month / Next month to move around. Months run on Thai time, so something recorded just after midnight on the 1st counts in the new month.",
+            "Clinic spend adds up the invoice amounts entered on the month's clinic visits. It also says how many visits have no amount yet: until those are filled in, the figure is not the whole bill.",
+            "Copy as text puts the whole month on the clipboard, one line per heading with the names, ready to paste into the monthly report or a LINE message. Print prints the month section on its own, in black on white.",
             "Last 12 months: intakes, adoptions and deaths by month.",
           ],
           screenshot: {
