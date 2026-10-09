@@ -47,7 +47,7 @@ hence the mechanical comparison in §2 rather than reading the entry over.
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit. Ticked in a follow-up commit once the run is actually green, never pre-ticked
+- [x] CI green on the PR (runs the same three) — all seven green on PR #491 at `ab55f85f`: `check` 1m53s, `public-views` 1m28s, `test-plan`, `audit`, `migration-numbers`, `new-policy-role-names`, `script-integrity`. Ticked after reading the run, not before it
 - [x] `node scripts/check-release-guards.mjs` — exit 0, all fifteen cases, including "a cut release with nothing unreleased passes" and "unreleased notes are a problem"
 
 **The cut was verified mechanically, not read over**, as the runbook requires.
