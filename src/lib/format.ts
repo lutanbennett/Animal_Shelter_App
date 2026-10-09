@@ -206,6 +206,20 @@ export function formatBahtPrice(amount: number, locale: Locale = "en") {
   });
 }
 
+// A donation amount: whole baht shown whole ("฿1,200"), anything with satang
+// shown to two places ("฿4,300.50", never formatBahtPrice's "฿4,300.5"),
+// because it has to agree with the receipt, which prints 4,300.50.
+export function formatBahtExact(amount: number, locale: Locale = "en") {
+  const whole = Number.isInteger(Math.round(amount * 100) / 100);
+  return amount.toLocaleString(NUMBER_LOCALE_TAG[locale], {
+    style: "currency",
+    currency: "THB",
+    currencyDisplay: "narrowSymbol",
+    minimumFractionDigits: whole ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
+}
+
 // The largest numeric(12, 2) there is — the type every price column uses.
 const MAX_BAHT = 9_999_999_999.99;
 
