@@ -102,13 +102,13 @@ if (flipDb) {
     : `insert into role_permissions (role_id, activity, level) select id, '${activity}', ${Number(level)} from roles where key = '${role}' on conflict (role_id, activity) do update set level = excluded.level;`;
 }
 
-const PRINCIPALS = ["admin", "management", "staff", "doctor", "volunteer", "public_viewer", "norole", "archperson"];
-const ROLE_OF = { admin: "admin", management: "management", staff: "staff", doctor: "doctor", volunteer: "volunteer", public_viewer: "public_viewer" };
+const PRINCIPALS = ["admin", "management", "doctor", "volunteer", "public_viewer", "norole", "archperson"];
+const ROLE_OF = { admin: "admin", management: "management", doctor: "doctor", volunteer: "volunteer", public_viewer: "public_viewer" };
 const expectedLevel = (role, activity) => (ROLE_OF[role] ? (cells[activity][role] ?? 0) : 0);
 
 // Fixture ids, minted here so probes can name them.
 const F = {};
-for (const k of ["R_IN", "R_OUT", "BARE", "CATEGORY", "DEAD", "ENC", "ZONE", "JOB", "PROJECT", "CLINIC", "OTHER_CLINIC", "DOCTOR", "DOCTOR2", "CONTACT", "CARER", "FRIEND", "RECEIPT", "DIET", "OUTGOING", "JOB_NONE", "JOB_ALL", ...PRINCIPALS, "archrole"]) F[k] = randomUUID();
+for (const k of ["R_IN", "R_OUT", "BARE", "CATEGORY", "DEAD", "ENC", "ZONE", "JOB", "PROJECT", "CLINIC", "OTHER_CLINIC", "DOCTOR", "DOCTOR2", "CONTACT", "CARER", "FRIEND", "RECEIPT", "DIET", "IMM_TYPE", "OUTGOING", "JOB_NONE", "JOB_ALL", ...PRINCIPALS, "archrole"]) F[k] = randomUUID();
 // the seeded root folder of a project category, which new folders must sit inside
 const rootRes = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
   method: "POST",
@@ -181,7 +181,7 @@ begin
             'harness-parity-' || r.who || '-' || r.id || '@example.invalid', '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || r.who), now(), now());
   end loop;
   insert into user_roles (user_id, role) select id, who::app_role from harness_ids
-   where who in ('admin', 'management', 'staff', 'doctor', 'volunteer', 'public_viewer');
+   where who in ('admin', 'management', 'doctor', 'volunteer', 'public_viewer');
   insert into user_roles (user_id, role, archived_at) select id, 'staff', now() from harness_ids where who = 'archperson';
 
   insert into clinics (id, name) values (v_own, 'Harness own clinic'), (v_oth, 'Harness other clinic');
@@ -203,6 +203,8 @@ begin
   insert into contacts (id, name, type) values (${lit(F.CONTACT)}, 'Harness contact', 'Vendor'), (${lit(F.CARER)}, 'Harness carer', 'Carer');
   insert into shelter_friends (id, contact_id) values (${lit(F.FRIEND)}, ${lit(F.CONTACT)});
   insert into diet_types (id, name, daily_qty_small, daily_qty_medium, daily_qty_large) values (${lit(F.DIET)}, 'Harness diet', 1, 1, 1);
+  -- the immunization probe names this type rather than looking one up: what a role can look up is not what it is probing
+  insert into immunization_types (id, name, interval_months) values (${lit(F.IMM_TYPE)}, 'Harness immunization type', 12);
   insert into maintenance (id, title, zone_id) values (${lit(F.JOB)}, 'Harness job', ${lit(F.ZONE)});
   insert into project_folders (id, top_level_category, name, parent_folder_id) values (${lit(F.PROJECT)}, 'Events', 'Harness project', ${lit(F.CATEGORY)});
   insert into stock_receipts (id, item_kind, medication_id, quantity) values (${lit(F.RECEIPT)}, 'medication', (select id from medication order by id limit 1), 1);
@@ -246,13 +248,13 @@ begin
     end loop;
   end loop;
   -- an unknown activity and a missing cell, as a role that would otherwise have rights
-  n := (select (pg_temp.probe(${lit(F.staff)}, 'select 1 where has_permission(''no.such.activity'', ''read'')')->>'n')::bigint);
-  if n is distinct from 0 then v_report := v_report || jsonb_build_object('z', 'staff answered yes to an unknown activity'); end if;
+  n := (select (pg_temp.probe(${lit(F.management)}, 'select 1 where has_permission(''no.such.activity'', ''read'')')->>'n')::bigint);
+  if n is distinct from 0 then v_report := v_report || jsonb_build_object('z', 'management answered yes to an unknown activity'); end if;
   n := (select (pg_temp.probe(${lit(F.volunteer)}, 'select 1 where has_permission(''stock.delivery'', ''read'')')->>'n')::bigint);
   if n is distinct from 0 then v_report := v_report || jsonb_build_object('z', 'volunteer answered yes to a missing cell'); end if;
   -- and the positive control: the same function does say yes where a cell exists
-  n := (select (pg_temp.probe(${lit(F.staff)}, 'select 1 where has_permission(''stock.delivery'', ''edit'')')->>'n')::bigint);
-  if n is distinct from 1 then v_report := v_report || jsonb_build_object('z', 'staff was not answered yes to stock.delivery edit (control)'); end if;
+  n := (select (pg_temp.probe(${lit(F.management)}, 'select 1 where has_permission(''stock.delivery'', ''edit'')')->>'n')::bigint);
+  if n is distinct from 1 then v_report := v_report || jsonb_build_object('z', 'management was not answered yes to stock.delivery edit (control)'); end if;
   create temp table harness_z as select v_report as r;
 end $z$;
 `;
@@ -499,6 +501,9 @@ const WIDENED_BY_DECISION = {
 const narrowedSeen = [];
 const widenedSeen = [];
 const ROLES_FOR_TABLE = ["admin", "management", "staff", "doctor", "volunteer", "public_viewer", null];
+// Staff stays in the fixture (what the predicates said before it went) but is not compared with a default: 0173
+// retired the role, no live login can hold it, and layer 1 no longer probes it either.
+const ROLES_COMPARED = ROLES_FOR_TABLE.filter((r) => r !== "staff");
 const fixturePath = join(root, "scripts/fixtures/legacy-predicates.json");
 const fixture = existsSync(fixturePath) ? JSON.parse(readFileSync(fixturePath, "utf8")) : {};
 const live = {};
@@ -525,7 +530,7 @@ for (const pr of PREDICATES) {
   if (live[key] && fixture[key] && JSON.stringify(live[key]) !== JSON.stringify(fixture[key])) {
     layer2.push({ pr, problem: `${pr.id} now answers differently from scripts/fixtures/legacy-predicates.json. If that was intended, rerun with --write-fixture` });
   }
-  for (const r of ROLES_FOR_TABLE) {
+  for (const r of ROLES_COMPARED) {
     const want = pr.expect ? pr.expect(r) : r != null && (expectedLevel(r, pr.activity) >= pr.level);
     const got = table[String(r)];
     l2checked++;
@@ -541,7 +546,7 @@ for (const pr of PREDICATES) {
 }
 console.log(`
 == Layer 2: the app's predicates ==
-${l2checked} answers (${PREDICATES.length} predicates x 7 roles incl. no role)`);
+${l2checked} answers (${PREDICATES.length} predicates x ${ROLES_COMPARED.length} roles incl. no role; staff retired by 0173)`);
 for (const id of Object.keys(NARROWED_BY_R1)) if (!PREDICATES.some((x) => x.id === id)) layer2.push({ pr: null, problem: `NARROWED_BY_R1 names ${id}, which is not a predicate of this check` });
 if (narrowedSeen.length) console.log(`  narrowed on purpose by R1 (the volunteer's cells are fewer than the old predicates said), expected: ${narrowedSeen.join(", ")}`);
 for (const id of Object.keys(WIDENED_BY_DECISION)) if (!PREDICATES.some((x) => x.id === id)) layer2.push({ pr: null, problem: `WIDENED_BY_DECISION names ${id}, which is not a predicate of this check` });
