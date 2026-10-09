@@ -110,6 +110,11 @@ export const PROBES = [
   // 0169: the places list is written under the same cell as the notes; a read probe needs a fixture row, and there is none yet
   { activity: "community.outings", level: "edit", sql: `insert into community_places (name, kind) values ('Probe temple', 'temple')` },
 
+  // --- Donations
+  // 0168: donations, its lines and the receipt register share the one cell; receipts are made only by issue_donation_receipt(), which asks it too.
+  // A read probe needs a fixture row, and there is none yet
+  { activity: "donation.receipt", level: "edit", sql: `insert into donations (received_on, donor_name, method) values (current_date, 'Probe donor', 'cash')` },
+
   // --- Clinics, contacts, supporters
   { activity: "clinics.list", level: "edit", sql: `update vets set notes = 'probe' where id = $CLINIC` },
   { activity: "clinics.list", level: "read", sql: `select 1 from vets where id = $CLINIC`, known: [{ id: "C10", roles: ["vet"] }] },
