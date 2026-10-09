@@ -12,7 +12,8 @@ middle, which is the thing the change exists to uncover. A shape whose corner is
 outline (an L) falls back to the centroid. The fixed 3-unit icons strung out beside a chip are what ran
 enclosure 10's icons into 9. On today's dev plans every enclosure is big enough for the cap, so they
 all draw at 2.6 — the box sizing only takes over for a smaller enclosure drawn later. It is pure so
-`scripts/check-map-markers.mjs` can prove containment against the real plans rather than by eye.
+`scripts/check-map-markers.mjs` can prove against the real plans, rather than by eye, that every
+marker is inside its enclosure, touches no neighbour and keeps clear of the middle.
 
 **The count is gone from the plan, not moved.** Occupancy is still the outline's colour, and the
 number is in the card and in each shape's accessible name, so colour is never the only signal (the
