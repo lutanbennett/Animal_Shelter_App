@@ -937,6 +937,7 @@ const en = {
         passwordTooShort: "Password must be at least 12 characters.",
         selectValidRole: "Select a valid role.",
         invalidRole: "Invalid role.",
+        retiredRole: "Staff is no longer a role. Choose another role for this login, then Restore.",
         cantChangeOwnRole: "You can't change your own role.",
         clinicNotFound: "That clinic no longer exists.",
         linkOnlyForVets: "Only a Doctor login is linked to a doctor. Set the role to Doctor first.",

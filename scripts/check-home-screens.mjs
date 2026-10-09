@@ -74,7 +74,6 @@ const forRole = (role, scopes = {}) => {
 };
 const roles = {
   management: forRole("management"),
-  staff: forRole("staff"),
   volunteer: forRole("volunteer"),
   doctor: forRole("doctor", { clinical: "own_clinic", residents: "own_clinic" }),
 };
@@ -136,10 +135,10 @@ const shelterMade = (gone = []) => {
   eq("C a shelter-made role with every cell taken away still has Residents", hrefsOf(shelterMade(ACTIVITIES.map((a) => a.key))), ["/residents"]);
   eq("C a shelter-made role that is not Management is not given Intake as a tile (it is the curated screen's)", hrefs.includes("/residents/new"), false);
 }
-eq("C staff leads with My tasks, Residents, then the whiteboard order of what staff hold", homeTilesFor(roles.staff, t).slice(0, 5).map((x) => x.href), ["/my", "/residents", "/stocktake", "/maintenance", "/deliveries"]);
-eq("C a doctor's home is its appointments, and staff are not offered them", [
+// Staff's home (stocktake, maintenance, deliveries) went with the role (0173).
+eq("C a doctor's home is its appointments, and nobody else is offered them", [
   homeTilesFor(roles.doctor, t).some((x) => x.href === "/appointments"),
-  homeTilesFor(roles.staff, t).some((x) => x.href === "/appointments"),
+  homeTilesFor(roles.volunteer, t).some((x) => x.href === "/appointments"),
   homeTilesFor(roles.management, t).some((x) => x.href === "/appointments"),
 ], [true, false, false]);
 eq("C a doctor has no tasks tile", homeTilesFor(roles.doctor, t).some((x) => x.href === "/my"), false);
@@ -167,8 +166,7 @@ eq("C a volunteer's home is Residents and Enclosures, and nothing else", homeTil
 
 eq("C Enclosures is the menu's page", [
   homeTilesFor(roles.volunteer, t).filter((x) => x.label === t.nav.enclosures).map((x) => x.href),
-  homeTilesFor(roles.staff, t).filter((x) => x.label === t.nav.enclosures).map((x) => x.href),
-], [["/enclosures"], ["/enclosures"]]);
+], [["/enclosures"]]);
 
 // ---- D ----
 const settingsOnly = parsePermissions({

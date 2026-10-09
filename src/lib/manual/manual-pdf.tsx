@@ -38,7 +38,7 @@ function Text(props: ComponentProps<typeof PdfText>) {
   );
 }
 
-const ROLE_ORDER: ManualRole[] = ["admin", "management", "staff", "doctor", "volunteer"];
+const ROLE_ORDER: ManualRole[] = ["admin", "management", "doctor", "volunteer"];
 const COLORS = { text: "#1f2933", muted: "#6b7280", rule: "#d8dee5", accent: "#a35f00" };
 const CALLOUT: Record<ManualCallout["kind"], { label: string; bg: string; border: string }> = {
   tip: { label: "Tip", bg: "#ecf7ee", border: "#7cc48a" },

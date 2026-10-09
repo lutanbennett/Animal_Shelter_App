@@ -23,10 +23,11 @@
 //              names its rows this way; the other areas follow as their sweeps land.
 //   roles      (optional) narrows the manual's roles, where the topic mixes
 //              activities — e.g. everyone may read the maintenance board, only
-//              staff and up may change a job's status
+//              management and up may change a job's status
 //   who        (optional) explicit list of roles that do it, instead of the
 //              manual's — for the public site and for signing in
-//   audience   (optional) "five" (default: the manual's roles), "signedin" (five
+//   audience   (optional) "five" (default: the manual's roles; the name is older than
+//              Staff's retirement, which left four), "signedin" (those
 //              plus public viewer), "all" (every column, signed out included)
 //   na         (optional) roles for which the row simply does not apply, rather
 //              than "must not": e.g. a doctor has no My tasks
@@ -41,7 +42,6 @@
 const MENU = {
   doctor: "The menu shows only Appointments and Residents, then Manual, Release notes and Change password. No Operations.",
   volunteer: "The menu is Home, Residents and Operations, then Manual, Release notes and Change password. Operations has one tile, Enclosures: no Stocktake, no Maintenance, Projects, Contacts or Clinics. No Assistant button, no Management and no Settings.",
-  staff: "The menu has Operations, with Stocktake among its tiles, and the Assistant button, but no Management, no Settings and no Security.",
   management: "The menu has Operations and Management, but no Settings and no Security. Website is a tile on Management.",
   admin: "The menu has Operations, Management, Settings, and Security at the bottom.",
 };
@@ -149,7 +149,7 @@ export const ENTRIES = {
       activity: "Record something with the assistant",
       needs: "assistant.record",
       device: "both",
-      roles: ["admin", "management", "staff"],
+      roles: ["admin", "management"],
       do: "Ask the assistant to record a weight for a resident, check the card, and press Confirm.",
       expect: "The weight really appears on that resident's Weight page. Cancel writes nothing.",
     },
@@ -188,7 +188,7 @@ export const ENTRIES = {
       activity: "Change a maintenance job's status from My tasks",
       needs: "maintenance.jobs",
       device: "phone",
-      roles: ["admin", "management", "staff"],
+      roles: ["admin", "management"],
       na: ["doctor"],
       do: "Tap In progress, then Completed on one of your jobs, then tap Undo.",
       expect: "The status changes each time, and the completed job comes back with Undo.",
@@ -521,7 +521,7 @@ export const ENTRIES = {
       activity: "Change a job's status on the board",
       needs: "maintenance.jobs",
       device: "both",
-      roles: ["admin", "management", "staff"],
+      roles: ["admin", "management"],
       do: "On a phone, tap Move job on under a job, choose Move to In progress, and confirm; then do the same to reach Completed and to go back a column. On a desktop, drag the card to another column.",
       expect: "The confirmation says in words what will happen; the status changes and stays after a refresh.",
     },
@@ -529,7 +529,7 @@ export const ENTRIES = {
       activity: "Edit a job, record its cost, add before and after photos",
       needs: "maintenance.jobs",
       device: "both",
-      roles: ["admin", "management", "staff"],
+      roles: ["admin", "management"],
       do: "Open a job, enter the actual cost, and add an After photo.",
       expect: "The cost and photo show on the job.",
     },
@@ -564,8 +564,8 @@ export const ENTRIES = {
       activity: "Change who may write outreach notes",
       needs: "community.outings",
       device: "desktop",
-      do: "As Admin, Settings → Security → Who may write outreach notes: set Staff to Write and correct, then back to No.",
-      expect: "Saved. While set, a staff login sees Outreach visits under Operations; after, it does not.",
+      do: "As Admin, Settings → Security → Who may write outreach notes: set Volunteer to Write and correct, then back to No. Staff is not on the list: it was retired.",
+      expect: "Saved. While set, a volunteer login sees Outreach visits under Operations; after, it does not.",
     },
   ],
   "manage-projects": [
@@ -1001,16 +1001,12 @@ export const BOUNDARIES = [
   { role: "doctor", starts: "Resident hub shows no New resident", text: "On a resident's hub there is no New resident, Edit, Move, Hospital, Foster, Adopt or Record a death control." },
   { role: "doctor", starts: "/residents/<id>/edit, /move", text: "Type the address of a resident's Edit, Move, Hospital, Rehome and Deceased pages: all refused." },
   { role: "doctor", starts: "No Remove control on a weight", text: "There is no Remove button on a weight, prescription, clinic visit or immunization." },
-  { role: "doctor", starts: "A resident whose only record", text: "After admin or staff remove the only record from this clinic, the resident has left the doctor's list and its address is refused (it reads as absent, not broken)." },
+  { role: "doctor", starts: "A resident whose only record", text: "After admin or management remove the only record from this clinic, the resident has left the doctor's list and its address is refused (it reads as absent, not broken)." },
   { role: "doctor", starts: "A resident outside the clinic's scope", text: "Type the address of a resident this clinic has no record for: refused, nothing is shown." },
   { role: "doctor", starts: "Photo upload to any folder but Medical", text: "A doctor's photo upload to any folder other than Medical is refused. Needs the browser's developer tools; write \"not run\" if you cannot." },
   { role: "doctor", starts: "The Assistant slide-over", text: "There is no Assistant button, and no address that opens it." },
   { role: "doctor", starts: "The doctor is not offered when a recurring job", text: "When a recurring job is assigned, the doctor is not in the list of people to choose." },
   // Pass 2 — Staff
-  { role: "staff", starts: "/management/ — redirected", text: "Type the address of each Management page — dashboard, cashflow, stock usage, recurring jobs, translations, Shelter Friends, medications, diets, clinics, contacts: all are refused." },
-  { role: "staff", starts: "/admin/ — redirected", text: "Type the address of Settings and any page under it: refused." },
-  { role: "staff", starts: "Withdraw a death recorded in error", text: "On a deceased resident there is no Withdraw this death, and its address is refused. Only admin can." },
-  { role: "staff", starts: "Cannot create, edit or delete a recurring job", text: "Staff cannot create, edit or delete a recurring job; they only mark done the ones given to them." },
   // Pass 3 — Admin
   { role: "admin", starts: "Deleting a reference type that is in use", text: "Delete an immunization, procedure, blood-test or other type that is in use: refused or handled, never leaving records pointing at nothing." },
   { role: "admin", starts: "Removing the last admin", text: "Try to remove or demote the last admin: refused." },
