@@ -3809,6 +3809,14 @@ const en = {
         "Your account isn't linked to a clinic yet, so no residents are shown. Ask a shelter admin to set your clinic in Settings → Security.",
       selectedCount: (n: number) => `${n} selected`,
       selectPrompt: "Select residents to act on several at once.",
+      /** Beside the count once Select all has ticked every row it takes. */
+      selectAllLeftOut: (n: number) =>
+        `${n} adopted or deceased not ticked`,
+      /** A change of filters hid ticked residents; they were unticked so nothing acts on them unseen. */
+      selectionDropped: (n: number) =>
+        n === 1
+          ? "1 ticked resident is no longer in the list, so they were unticked."
+          : `${n} ticked residents are no longer in the list, so they were unticked.`,
       download: "Download spreadsheet",
       downloadCount: (n: number) => `Download spreadsheet (${n})`,
       downloadSaved: (filename: string) =>
@@ -3827,6 +3835,11 @@ const en = {
         location: "On-site / Off-site",
         noMatches: "No residents match these filters.",
         selectAriaLabel: (name: string) => `Select ${name}`,
+        selectAll: (n: number, leftOut: number) =>
+          `Select all ${n} ${n === 1 ? "resident" : "residents"} shown${
+            leftOut > 0 ? ` (${leftOut} adopted or deceased left out)` : ""
+          }`,
+        unselectAll: "Untick all residents",
         editAriaLabel: (name: string) => `Edit ${name}`,
       },
     },

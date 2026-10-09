@@ -369,6 +369,10 @@ const manual: Manual = {
             },
             {
               kind: "tip",
+              text: "To tick every resident in a zone, pick the zone chip, then tick the box at the top of the tick column: every resident listed is ticked in one go. Tick it again to untick them all. A dash in the box means only some are ticked. Adopted and deceased residents are left out (the line above the table says how many); tick one by hand if you really mean them. If you change the zone, search or any other filter, ticked residents that are no longer listed are unticked and the page says how many, so nothing is booked for an animal you cannot see.",
+            },
+            {
+              kind: "tip",
               text: "Searching for an animal who has died still finds them: the count line says \"1 deceased resident matches — show\", and show adds them to the list.",
             },
             {

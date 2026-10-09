@@ -66,6 +66,7 @@ export const unreleased: ReleaseNote[] = [
   { text: "The vet login is now called a Doctor login. A doctor now also sees every animal they were the doctor for at a clinic they have since left. They can still only add or change records at the clinics they work at now.", roles: ["admin", "doctor"] },
   "The facility map is easier to read: the 3/4 counts and the room names are gone from the zone plans, so the enclosure numbers on the drawing show through, and each enclosure carries only small icons for medication, a special diet or open maintenance.",
   "Tap an enclosure on the map to see its details straight away under the plan: the residents in it with their photos, diets and medication, its notes and its open maintenance jobs. Tap another to switch, or Open full page for moving residents and logging maintenance.",
+  "On a computer, the Residents list has a Select all box at the top of the tick column: pick a zone, tick it, and every resident listed is ticked for Book clinic visit, Log immunizations or Download. Adopted and deceased residents are left out. Changing a filter unticks anyone who is no longer listed, and says so.",
 ];
 
 /** Newest first. */
