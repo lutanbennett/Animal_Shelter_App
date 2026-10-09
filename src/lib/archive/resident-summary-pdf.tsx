@@ -9,9 +9,10 @@ import {
   Image,
   renderToBuffer,
 } from "@react-pdf/renderer";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { NOTO_SANS_THAI_REGULAR } from "./fonts/noto-sans-thai-regular";
 import { NOTO_SANS_THAI_BOLD } from "./fonts/noto-sans-thai-bold";
+import { thaiPdfChildren } from "./fonts/thai-pdf-children";
 import type { ResidentArchiveRecord } from "./resident-record";
 import { getAppEnv, type AppEnv } from "@/lib/app-env";
 
@@ -48,10 +49,20 @@ Font.registerHyphenationCallback((word) => [word]);
 // `Valley (-`. A penalty of textkit's infinity (linebreak.infinity) makes
 // such a point unbreakable, so lines break only at spaces. Every Text in
 // this file is this one.
+//
+// It also passes every string through thaiPdfText(): a ำ makes textkit drop
+// a character from the end of the text, so the header
+// "Nam (… จำกัด (คุณสมศรี ใจดี))" printed one ")" short
+// (src/lib/archive/fonts/thai-pdf-text.ts).
 const NO_HYPHENATION = 10000;
 
 function Text(props: ComponentProps<typeof PdfText>) {
-  return <PdfText hyphenationPenalty={NO_HYPHENATION} {...props} />;
+  const children = (props as { children?: ReactNode }).children;
+  return (
+    <PdfText hyphenationPenalty={NO_HYPHENATION} {...props}>
+      {thaiPdfChildren(children)}
+    </PdfText>
+  );
 }
 
 /**
