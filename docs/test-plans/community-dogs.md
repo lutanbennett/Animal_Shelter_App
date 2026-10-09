@@ -60,7 +60,7 @@ The first run ended `gates: typecheck=0 lint=1 build=0`: the acceptance matrix h
 
 | Role | Can reach | Expected | Result |
 |---|---|---|---|
-| admin | `/outreach`, new, edit; Settings → Security control | Records, corrects, deletes; sets who may write | Form, edit and delete driven in the browser. The Security control was **not** driven: the page needs Lutan's authenticator code (manual item 1) |
+| admin | `/outreach`, new, edit; Settings → Security control | Records, corrects, deletes; sets who may write | Form, edit and delete driven in the browser. Security control driven after Lutan passed the authenticator step: Management showed Write and correct, the rest No; Staff → Write and correct said Saved, survived a reload, wrote `(staff, community.outings, 2)` with an `audit_log` INSERT whose actor is Lutan, and Admin's Staff home preview (`/home/staff`) gained Outreach visits; Staff → No removed both. Dev left at Management only |
 | management | `/outreach`, new, edit | Records and corrects (the Director's answer, `community.outings` = 2) | Scripted as a disposable Management login on dev: `my_permissions` has the cell at 2; adds a place, records, reads back, deletes; **cannot** write `role_permissions` (no row returned) |
 | staff | nothing | Refused until Admin gives the cell | Not signed in as staff. The page guard is `requirePermission("community.outings", "read")` and RLS asks the same cell; `0169`'s own check proved staff refused without the cell. Manual item 2 covers granting it |
 | vet | nothing | Refused | Same guard and RLS; no cell. Not signed in as a vet |
@@ -138,10 +138,9 @@ The first run ended `gates: typecheck=0 lint=1 build=0`: the acceptance matrix h
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | Settings → Security → *Who may write outreach notes*: Management shows Write and correct; changing Staff to Write and correct says Saved and shows in Recent changes; set it back to No | `/admin/security` on dev (needs your authenticator code) |
-| 2 | With Staff given Write and correct, a staff login sees Outreach visits under Operations and can record one; set back to No, it cannot | a staff login on dev |
-| 3 | The Thai wording reads naturally to a Thai reader (the Director asked for this): the form, the list, the manual-facing words, and the baseline notes on Settings → Website | `/outreach` in ไทย |
-| 4 | Adding a photo from a real phone's camera on the new-visit form, and the *May be shown on the website* tick on the edit page | `/outreach/new` on a phone |
+| 1 | With Staff given Write and correct, a real staff login (not Admin's preview) can record a visit; set back to No, it cannot | a staff login on dev |
+| 2 | The Thai wording reads naturally to a Thai reader (the Director asked for this): the form, the list, the manual-facing words, and the baseline notes on Settings → Website | `/outreach` in ไทย |
+| 3 | Adding a photo from a real phone's camera on the new-visit form, and the *May be shown on the website* tick on the edit page | `/outreach/new` on a phone |
 
 ## Sign-off
 
@@ -154,9 +153,9 @@ Automated checks by: Claude  Date: 2026-10-09
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet; four items wait for Lutan
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet; three items wait for Lutan
 
-Manual verification by: pending: the four items under Left for manual verification
+Manual verification by: pending: the three items under Left for manual verification
 
 ### Result
 
