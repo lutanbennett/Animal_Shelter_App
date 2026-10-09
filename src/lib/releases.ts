@@ -62,18 +62,27 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  "\"Vets\" is now \"Clinics\" everywhere, in English and Thai: in the menu, on Management, and on the booking form, which now asks for a clinic and offers its doctors. A vet visit is now a clinic visit. A clinic is the place an animal is taken to; a doctor is a person who works at one or more clinics. A doctor who visits without premises is entered as a clinic with no address, and nothing shows for the missing address. Old links and bookmarks still open the right page.",
-  { text: "The vet login is now called a Doctor login. A doctor now also sees every animal they were the doctor for at a clinic they have since left. They can still only add or change records at the clinics they work at now.", roles: ["admin", "doctor"] },
-  "The facility map is easier to read: the 3/4 counts and the room names are gone from the zone plans, so the enclosure numbers on the drawing show through, and each enclosure carries only small icons for medication, a special diet or open maintenance.",
-  { text: "Staff is no longer a role, because it confused things: the roles are Admin, Management, 2IC, Head of Maintenance, Head of Medical, Doctor and Volunteer. Settings → Security no longer offers Staff when you create a user, approve a request or change a role, and the manual no longer has a Staff view. Nobody signing in today holds Staff. An archived login that did still shows it; give it another role before you Restore it.", roles: ["admin", "management"] },
-  "Tap an enclosure on the map to see its details straight away under the plan: the residents in it with their photos, diets and medication, its notes and its open maintenance jobs. Tap another to switch, or Open full page for moving residents and logging maintenance.",
-  { text: "The Management dashboard's month section has Copy as text, for pasting the month straight into the monthly report or a LINE message, and Print, which prints that section on its own. It also has two new cards: Vaccinations given, by vaccine, and Clinic spend, from the invoice amounts on the month's visits, with how many visits have no amount yet.", roles: ["admin", "management"] },
-  { text: "Dashboard months now run on Thai time. Something recorded between midnight and 7 am on the 1st used to count in the previous month; it now counts in the month it happened. The same applies to the visits-per-month chart on a clinic's page.", roles: ["admin", "management"] },
-  "On a computer, the Residents list has a Select all box at the top of the tick column: pick a zone, tick it, and every resident listed is ticked for Book clinic visit, Log immunizations or Download. Adopted and deceased residents are left out. Changing a filter unticks anyone who is no longer listed, and says so.",
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.24.0",
+    date: "2026-10-10",
+    title:
+      "Vets are now Clinics, tap an enclosure on the map to see inside it, and Staff is no longer a role",
+    major: true,
+    notes: [
+      "\"Vets\" is now \"Clinics\" everywhere, in English and Thai: in the menu, on Management, and on the booking form, which now asks for a clinic and offers its doctors. A vet visit is now a clinic visit. A clinic is the place an animal is taken to; a doctor is a person who works at one or more clinics. A doctor who visits without premises is entered as a clinic with no address, and nothing shows for the missing address. Old links and bookmarks still open the right page.",
+      "Tap an enclosure on the map to see its details straight away under the plan: the residents in it with their photos, diets and medication, its notes and its open maintenance jobs. Tap another to switch, or Open full page for moving residents and logging maintenance.",
+      "On a computer, the Residents list has a Select all box at the top of the tick column: pick a zone, tick it, and every resident listed is ticked for Book clinic visit, Log immunizations or Download. Adopted and deceased residents are left out. Changing a filter unticks anyone who is no longer listed, and says so.",
+      "The facility map is easier to read: the 3/4 counts and the room names are gone from the zone plans, so the enclosure numbers on the drawing show through, and each enclosure carries only small icons for medication, a special diet or open maintenance.",
+      { text: "The vet login is now called a Doctor login. A doctor now also sees every animal they were the doctor for at a clinic they have since left. They can still only add or change records at the clinics they work at now.", roles: ["admin", "doctor"] },
+      { text: "Staff is no longer a role, because it confused things: the roles are Admin, Management, 2IC, Head of Maintenance, Head of Medical, Doctor and Volunteer. Settings → Security no longer offers Staff when you create a user, approve a request or change a role, and the manual no longer has a Staff view. Nobody signing in today holds Staff. An archived login that did still shows it; give it another role before you Restore it.", roles: ["admin", "management"] },
+      { text: "The Management dashboard's month section has Copy as text, for pasting the month straight into the monthly report or a LINE message, and Print, which prints that section on its own. It also has two new cards: Vaccinations given, by vaccine, and Clinic spend, from the invoice amounts on the month's visits, with how many visits have no amount yet.", roles: ["admin", "management"] },
+      { text: "Dashboard months now run on Thai time. Something recorded between midnight and 7 am on the 1st used to count in the previous month; it now counts in the month it happened. The same applies to the visits-per-month chart on a clinic's page.", roles: ["admin", "management"] },
+    ],
+  },
   {
     version: "0.23.0",
     date: "2026-10-09",
