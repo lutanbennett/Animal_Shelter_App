@@ -18,13 +18,13 @@
 //
 // For every case:
 //   volunteer   must be REFUSED: 42501, zero rows, or (a function) its own refusal text
-//   staff or management, and admin   must still be ALLOWED. Narrowing one role by
+//   management, and admin   must still be ALLOWED. Narrowing one role by
 //               breaking another is the failure this half catches. A table with no rows
 //               at all on dev is reported "no rows to see", not counted as a control.
 // Then the volunteer's three kept rights must work (who and where, enclosures, zones),
 // the who-and-where view must have exactly its fixed columns and be empty for everyone
-// else, and two structural sweeps must hold: only the two kept policies name the
-// volunteer, and only reassign_recurring_job() still says 'volunteer' in a function.
+// else, and two structural sweeps must hold: no policy names the volunteer (0153), and
+// only the listed refusal functions still say 'volunteer' in a function body.
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
@@ -36,7 +36,8 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-const WHO = ["admin", "management", "staff", "volunteer"];
+// No staff principal: 0173 retired Staff and a live staff login can no longer be made.
+const WHO = ["admin", "management", "volunteer"];
 const F = {};
 for (const k of ["R", "ENC", "ZONE", "JOB", "PROJECT", "CATEGORY", "JOB_ALL", "ATT", ...WHO]) F[k] = randomUUID();
 const dbq = async (query) => {
@@ -65,7 +66,10 @@ const CASES = [
   READ("residents"), READ("placement_history"), READ("adoption_updates"),
   READ("blood_tests"), READ("blood_test_types"), READ("procedures"), READ("procedure_types"),
   READ("prescriptions"), READ("medication"), READ("frequency"), READ("diet_types"), READ("resident_diets"),
-  READ("immunization_records"), READ("immunization_types"), READ("weight"), READ("clinic_visits"),
+  READ("immunization_records"),
+  // 0155: the table carries the price, so only reference.types (Admin) reads it; the vaccine picker is what
+  // medical.immunizations holders (Management) read. Staff was this case's control until 0173 retired it.
+  { ...READ("immunization_types"), others: "admin" }, READ("picker_immunization_types"), READ("weight"), READ("clinic_visits"),
   READ("group_origins"), READ("attachments"),
   // clinics, contacts, supporters
   READ("clinics"), READ("doctors"), READ("doctor_clinics"), READ("contacts"), READ("shelter_friends"),
@@ -96,7 +100,7 @@ const CASES = [
 ];
 
 // What the volunteer keeps, and the view's fixed shape.
-const WHO_AND_WHERE_COLUMNS = ["id", "name", "thai_name", "resident_code", "species", "sex", "profile_photo_drive_file_id", "current_status", "enclosure_id", "enclosure_name", "enclosure_name_th", "zone_id", "zone_name", "zone_name_th"];
+const WHO_AND_WHERE_COLUMNS = ["id", "name", "thai_name", "resident_code", "species", "sex", "profile_photo_drive_file_id", "current_status", "enclosure_id", "enclosure_name", "enclosure_name_th", "zone_id", "zone_name", "zone_name_th", "zone_colour"]; // zone_colour: 0162
 
 const RESTORE = {
   weight: "create policy volunteer_read_weight on weight for select using (current_user_role() = 'volunteer'::app_role);",
@@ -248,7 +252,7 @@ CASES.forEach((c, i) => {
   const adm = allowed(got.get(`${i}:admin`), c);
   const v = got.get(`${i}:volunteer`);
   const vol = allowed(v, c);
-  const above = ["management", "staff"].map((w) => [w, allowed(got.get(`${i}:${w}`), c)]);
+  const above = ["management"].map((w) => [w, allowed(got.get(`${i}:${w}`), c)]);
   // Admin is the fixture check: if Admin cannot do it, the case is broken, not the system.
   const needsRows = c.kind === "read" && Number(baseN.get(i)) === 0;
   if (!needsRows && adm !== true && c.others !== "none") { faults.push(`${c.key}: admin was not allowed (${got.get(`${i}:admin`).state ?? "0 rows"} ${got.get(`${i}:admin`).msg ?? ""}), so the case or its fixture is broken`); return; }
@@ -265,15 +269,20 @@ CASES.forEach((c, i) => {
     lines.push(`  ok    ${c.key}: volunteer refused`);
     return;
   }
+  if (c.others === "admin") {
+    // only Admin holds it on purpose; Admin being allowed was the fixture check above
+    lines.push(`  ok    ${c.key}: volunteer refused; only admin holds it`);
+    return;
+  }
   if (needsRows) {
     inconclusive.push(c.key);
-    lines.push(`  ok    ${c.key}: volunteer refused (no rows to see on dev, so staff and management are not a control)`);
+    lines.push(`  ok    ${c.key}: volunteer refused (no rows to see on dev, so management is not a control)`);
     return;
   }
   controls++;
   const someone = above.some(([, a]) => a === true);
   if (!someone) {
-    failures.push(`${c.key}: the volunteer was refused, but neither management nor staff was allowed either (${above.map(([w, a]) => `${w}=${a}`).join(", ")}). Narrowing one role must not break another`);
+    failures.push(`${c.key}: the volunteer was refused, but management was not allowed either (${above.map(([w, a]) => `${w}=${a}`).join(", ")}). Narrowing one role must not break another`);
     lines.push(`  FAIL  ${c.key}: refused for everyone`);
   } else lines.push(`  ok    ${c.key}: volunteer refused; ${above.map(([w, a]) => `${w} ${a ? "allowed" : "refused"}`).join(", ")}`);
 });
@@ -285,7 +294,7 @@ for (const [idx, label] of KEPT) {
   if (a !== true) failures.push(`the volunteer lost ${label}: ${JSON.stringify(got.get(`${idx}:volunteer`))}`);
   else lines.push(`  ok    kept: volunteer reads ${label}`);
 }
-for (const w of ["management", "staff"]) {
+for (const w of ["management"]) {
   const a = allowed(got.get(`1000:${w}`), { kind: "read" });
   if (a !== false) failures.push(`resident_who_and_where returned rows to ${w}; it is the volunteer's view only`);
 }
@@ -293,15 +302,17 @@ for (const w of ["management", "staff"]) {
 if (result.cols !== WHO_AND_WHERE_COLUMNS.join(",")) failures.push(`resident_who_and_where columns are ${result.cols}, expected ${WHO_AND_WHERE_COLUMNS.join(",")}`);
 else lines.push("  ok    resident_who_and_where has exactly its fixed columns");
 // the structural sweeps
-if (result.policies !== "volunteer_read_enclosures,volunteer_read_zones") failures.push(`policies that still name the volunteer: ${result.policies}; expected only volunteer_read_enclosures and volunteer_read_zones`);
-else lines.push("  ok    only volunteer_read_enclosures and volunteer_read_zones still name the volunteer");
+// 0153 converted the last two (volunteer_read_enclosures, volunteer_read_zones) to facility.enclosures Read, so none is
+// left; the volunteer still reading both is the "kept" check above.
+if (result.policies !== null) failures.push(`policies that still name the volunteer: ${result.policies}; expected none since 0153`);
+else lines.push("  ok    no policy names the volunteer (0153)");
 if (result.functions !== "has_app_access,has_shelter_floor,reassign_recurring_job,sees_all_contacts,sees_all_residents") failures.push(`functions that still say 'volunteer': ${result.functions}; expected only has_app_access (may sign in), reassign_recurring_job (who a date may be handed to), has_shelter_floor (0149: the one test left for deleting a job) sees_all_residents (0144) and sees_all_contacts (0147): each excludes the volunteer floor from the whole record, grants nothing. None is a right`);
 else lines.push("  ok    only has_app_access() (may sign in), has_shelter_floor() (0149, a refusal), reassign_recurring_job() (who a date may be handed to) sees_all_residents() (0144) and sees_all_contacts() (0147), both refusals, not rights, still say 'volunteer'");
 
 if (verbose) console.log(lines.join("\n") + "\n");
 console.log(`${CASES.length} removed rights, each under the volunteer's own JWT: ${refused} refused.`);
 console.log(`${KEPT_BY_DRAFT.size} of the cases above are kept rights under the draft (volunteer allowed on purpose).`);
-console.log(`${controls} of them also checked that management or staff still has the right (${inconclusive.length} tables had no rows on dev to check that against${inconclusive.length ? `: ${inconclusive.join(", ")}` : ""}).`);
+console.log(`${controls} of them also checked that management still has the right (${inconclusive.length} tables had no rows on dev to check that against${inconclusive.length ? `: ${inconclusive.join(", ")}` : ""}).`);
 for (const f of faults) console.log(`  HARNESS FAULT ${f}`);
 for (const f of failures) console.log(`  FAIL ${f}`);
 const red = failures.length > 0 || faults.length > 0;
