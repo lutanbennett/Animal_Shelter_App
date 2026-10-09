@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import type { ActivityKey } from "@/lib/permissions/catalogue";
 
 /** The app_role values, as the manual's "who can do this" badges name them. */
-export type ManualRole = "admin" | "management" | "staff" | "doctor" | "volunteer";
+export type ManualRole = "admin" | "management" | "doctor" | "volunteer";
 
 /**
  * A screenshot under public/manual/. `src` is the path the <img> loads;

@@ -43,7 +43,10 @@ export type SecurityUser = {
   twoStepSetupUntil: string | null;
 };
 
-const ROLES = ["admin", "management", "staff", "doctor", "volunteer", "public_viewer"];
+// Staff is retired (0173): never offered. A login that still holds it (an archived one) shows it, unchosen,
+// and its select stays open so it can be given another role before Restore.
+const ROLES = ["admin", "management", "doctor", "volunteer", "public_viewer"];
+const RETIRED_ROLES = ["staff"];
 
 export type ClinicOption = { id: string; label: string };
 
@@ -222,7 +225,8 @@ function UserRow({
         <td className="px-4 py-2">
           <select
             value={role}
-            disabled={isPending || isSelf || archived}
+            // An archived login that held a retired role can be given another, so Restore can bring it back.
+            disabled={isPending || isSelf || (archived && !RETIRED_ROLES.includes(role))}
             onChange={(e) => handleRoleChange(e.target.value)}
             className="rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary disabled:opacity-50"
           >
@@ -234,6 +238,11 @@ function UserRow({
                 {roleLabel(t, r)}
               </option>
             ))}
+            {RETIRED_ROLES.includes(role) && (
+              <option value={role} disabled>
+                {roleLabel(t, role)}
+              </option>
+            )}
           </select>
           {role === "doctor" && (
             <DoctorLoginLink

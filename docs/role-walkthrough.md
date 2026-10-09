@@ -79,7 +79,7 @@ a minute where finding it mid-Doctor-pass dead-ends the pass.
 - [ ] Pick a **test resident** and write its name here: `________`. Use the same one through every pass so the medical, placement and photo history builds up in one place and you can read it back at the end
 - [ ] **Give the test resident history from *both* clinics.** A doctor sees a resident if it has a clinic visit, prescription, procedure or blood test from a clinic they work at now (`0108`), or a clinic visit where they were the doctor (`0172`). Record, as admin, one clinic visit at the **own** clinic **with Doctor left blank** (so the resident is in scope through the clinic alone, which the Doctor pass relies on) and one visit — plus, if you can, a prescription — at the **other** clinic (so there is a foreign record to find read-only)
 - [ ] Pick a **second resident** with **no** record from either clinic, and write its name here: `________`. The Doctor pass uses it for a clinic the doctor has left
-- [ ] Set the test account's role to **staff**, then **Management → Recurring jobs**: create a job due **today**, assigned to the **test account**, on a frequency you can see. This seeds the **Staff** and **Volunteer** passes — it is the job each marks done. Note its name: `________`
+- [ ] Set the test account's role to **Management**, then **Management → Recurring jobs**: create a job due **today**, assigned to the **test account**, on a frequency you can see. This seeds the **day-to-day** and **Volunteer** passes — it is the job each marks done. Note its name: `________`
 - [ ] **A doctor cannot be given a job.** The assignee picker offers shelter roles only (`claude/recurring-jobs-eligible-assignees`), so once the role is **Doctor** (next step) open the job form and confirm the test account is **not** in the picker. Before this fix the seed could be done for a vet login (the role's name until `0172`), which exposed 2026-09-27 findings 5 and 6; that setup is impossible by design now
 - [ ] Set the test account's role to **Doctor**, then check the picker as above
 - [ ] **Link the test login to a doctor** at **Settings → Security**. The **Doctor (sets the clinics)** control shows on the test account's row only once its role is Doctor, hence this step comes after the role change. Either **Link to an existing doctor…** — one who works at the **own** clinic and nowhere else — or **Create a doctor from this login…** with **Works at** set to the own clinic only. The row then reads **Works at** `<own clinic>`. **That doctor's clinics are the login's clinics** (`0127`, which replaced the per-login clinic, `user_roles.vet_id`, of `0102`); the clinics themselves are changed on each clinic's Doctors list, not here. A login that reads **Not linked to a doctor** sees no residents at all (0.9.0's lead note), and Pass 1 dead-ends on its first line. Doctor linked: `________`
@@ -174,11 +174,11 @@ saw for the first one: `________`
 - [ ] `/management` and `/management/dashboard` — refused → `/no-access`
 - [ ] `/management/clinics/<id>/doctors` — a clinic's **Doctors** list (**Management → Clinics → <clinic> → Doctors**) is management and admin only; a doctor may not open it, and cannot rename, merge or mark doctors as left
 - [ ] `/admin`, `/admin/security` and `/admin/recent-changes` (#277, 0.13.0) — refused → `/no-access`
-- [ ] `/deliveries` — refused → `/no-access` (delivery roles are admin/management/staff)
+- [ ] `/deliveries` — refused → `/no-access` (delivery roles are admin, management and the 2IC)
 - [ ] Resident hub shows **no** New resident / Edit / Move / Hospital / Foster / Adopt / Record a death controls
 - [ ] `/residents/<id>/edit`, `/move`, `/hospital`, `/rehome`, `/deceased` typed directly — all refused
-- [ ] **No Remove control** on a weight, a prescription, a clinic visit or an immunization record (`0124`, #278). Admin, management and staff are offered it; a doctor never is (`canArchiveMedical`, `src/lib/medical-archive/kinds.ts`, checked again server-side in `src/app/residents/[id]/archive-actions.ts`)
-- [ ] **A resident whose only record from this clinic was archived** (by admin or staff) has left the doctor's list — `0124` drops an archived visit from the doctor's resident scope (`current_vet_resident_ids()` then; `current_clinic_resident_ids()` and `current_doctor_resident_ids()` since `0172`). Check it reads as **absent** (gone from `/residents`, URL refused), not broken. Needs a resident seeded for it in Pass 0, or skip and write "not run"
+- [ ] **No Remove control** on a weight, a prescription, a clinic visit or an immunization record (`0124`, #278). Admin and management are offered it; a doctor never is (`canArchiveMedical`, `src/lib/medical-archive/kinds.ts`, checked again server-side in `src/app/residents/[id]/archive-actions.ts`)
+- [ ] **A resident whose only record from this clinic was archived** (by admin or management) has left the doctor's list — `0124` drops an archived visit from the doctor's resident scope (`current_vet_resident_ids()` then; `current_clinic_resident_ids()` and `current_doctor_resident_ids()` since `0172`). Check it reads as **absent** (gone from `/residents`, URL refused), not broken. Needs a resident seeded for it in Pass 0, or skip and write "not run"
 - [ ] A resident **outside the clinic's scope** typed by URL — refused, not shown
 - [ ] **Photo upload to any folder but Medical** — the route answers **403**. With no folder picker there is nothing to click, so this needs the browser's network tools or a `fetch` from the console; if you cannot do that, write "not run" rather than tick it
 - [ ] The Assistant slide-over cannot be opened by any route you can find
@@ -229,21 +229,23 @@ says why).
 
 ---
 
-## Pass 2 — Staff
+## Pass 2 — Day-to-day work, as Management
 
-The widest day-to-day role and the longest pass. Everything the shelter does to
-a resident, minus the reporting and the reference lists.
+The longest pass: everything the shelter does to a resident. This was the Staff
+pass until Staff was retired on 2026-10-09 (`docs/decisions/2026-10-09-staff-role-removed.md`);
+the work it checks is Management's now, so it is done signed in as Management.
+Management's own pages and boundaries are Pass 4.
 
-**Switch:** profile A → Security → test account → **staff**. Hard refresh B.
-**Menu gains:** Stocktake (a tile on Shelter Operations since 2026-10-08), and the Assistant button in the header.
-**Menu must still NOT show:** Management, Settings, Security.
+**Switch:** profile A → Security → test account → **Management**. Hard refresh B.
+**Menu gains:** Stocktake (a tile on Shelter Operations), Management, and the Assistant button in the header.
+**Menu must still NOT show:** Settings, Security.
 
 - [ ] Menu matches
 - [ ] The Pass-0 recurring job is on **My tasks** again if its frequency brings it round; if not, note that it is absent and expected
 
 ### Can do
 
-- [ ] **Register a new resident (intake)** end to end — the flagship staff task. Name it something obviously disposable
+- [ ] **Register a new resident (intake)** end to end — the flagship day-to-day task. Name it something obviously disposable
 - [ ] The intake **capacity warning** behaves, if the enclosure chosen is at or near capacity
 - [ ] **Edit** a resident's details and see the change on the hub
 - [ ] **Move** the new resident between enclosures; **placement history** records it
@@ -252,22 +254,16 @@ a resident, minus the reporting and the reference lists.
 - [ ] **Adoption updates**: add one for the adopted resident, with a photo
 - [ ] **Record a death** on the disposable resident (last, since it ends its story)
 - [ ] The deceased resident **disappears from `/adopt`** on the public site
-- [ ] Medical: staff can do everything the Doctor pass did — spot-check **one** write (a weight) rather than repeating all seven
+- [ ] Medical: Management can do everything the Doctor pass did — spot-check **one** write (a weight) rather than repeating all seven
 - [ ] **Add resident photos**
 - [ ] **Maintenance**: log a job, put it on the board, change its status through to Completed
 - [ ] A job assigned to the test account appears on **My tasks**, and the urgent badge counts it
 - [ ] **Projects**: add a photo; create a folder and write the story
 - [ ] **Stocktake**: count one medication, tick "same as last time" on another, leave a third blank. Afterwards confirm blank meant *untouched* and the tick meant *counted now*
 - [ ] **Deliveries**: record a delivery of a medication with a cost dated **before** the stocktake you just did, and another **after**. This and the figures it feeds went out in 0.7.0 unverified
-- [ ] **Assistant**: ask it something, and let it **write** — staff have write access. Check the resulting record actually exists
+- [ ] **Assistant**: ask it something, and let it **write** — Management has write access. Check the resulting record actually exists
 - [ ] `/contacts`: read a contact and its channels
-
-### Must not be able to
-
-- [ ] `/management/*` — redirected: dashboard, cashflow, stock-usage, recurring-jobs, translations, shelter-friends, medications, diets, clinics, contacts
-- [ ] `/admin/*` — redirected
-- [ ] **Withdraw a death recorded in error** — admin only. Control absent, route refused
-- [ ] Cannot create, edit or delete a **recurring job** — staff only do the ones given to them
+- [ ] **Withdraw a death recorded in error** is not offered — admin only (Pass 3 does it). Control absent, route refused
 
 **Anything odd:**
 

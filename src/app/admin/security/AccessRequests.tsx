@@ -21,7 +21,7 @@ export type AccessRequest = {
   lastSignInAt: string | null;
 };
 
-const ROLES = ["staff", "volunteer", "doctor", "management", "admin", "public_viewer"] as const;
+const ROLES = ["volunteer", "doctor", "management", "admin", "public_viewer"] as const;
 
 function RequestRow({ request }: { request: AccessRequest }) {
   const { t, locale } = useI18n();

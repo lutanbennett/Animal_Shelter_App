@@ -46,7 +46,6 @@ const manual: Manual = {
   roleNames: {
     admin: "Admin",
     management: "Management",
-    staff: "Staff",
     doctor: "Doctor",
     volunteer: "Volunteer",
   },
@@ -54,9 +53,7 @@ const manual: Manual = {
     admin:
       "Everything, including the Settings section (users, zones, enclosures, immunization and procedure types, frequencies) and the Management section.",
     management:
-      "Everything staff can do, plus the Management section: the reporting dashboard, the public website, the contact, clinic, medication and diet lists, and the translations of public text.",
-    staff:
-      "Day-to-day resident work: intake, moves, hospital, foster and adoption, photos, maintenance, projects. Can read medical records.",
+      "Day-to-day resident work — intake, moves, hospital, foster and adoption, photos, maintenance, projects — plus the Management section: the reporting dashboard, the public website, the contact, clinic, medication and diet lists, and the translations of public text.",
     doctor:
       "Clinic visits, procedures, blood tests, prescriptions and immunizations, for the residents their own clinics treat — any resident the clinic has a visit, prescription, procedure or blood test for, with that resident's whole history — plus every resident the doctor was the doctor for at a clinic they have since left, which they can read but not change. Other residents are not shown at all. The menu is Appointments and Residents only — the shelter's enclosures, maintenance, projects, contacts and clinic list are not part of a doctor's access.",
     volunteer:
@@ -205,7 +202,7 @@ const manual: Manual = {
         {
           id: "assistant",
           title: "Asking the assistant",
-          roles: ["admin", "management", "staff"],
+          roles: ["admin", "management"],
           activity: "assistant.ask",
           path: "Assistant button in the header (any screen)",
           intro:
@@ -273,7 +270,7 @@ const manual: Manual = {
         {
           id: "my-tasks-page",
           title: "Seeing what's assigned to you",
-          roles: ["admin", "management", "staff"],
+          roles: ["admin", "management"],
           activity: "recurring.do_own",
           path: "My tasks (first in the menu)",
           steps: [
@@ -306,7 +303,7 @@ const manual: Manual = {
         {
           id: "my-recurring-jobs",
           title: "Doing your recurring jobs",
-          roles: ["admin", "management", "staff"],
+          roles: ["admin", "management"],
           activity: "recurring.do_own",
           path: "My tasks → Recurring jobs",
           intro:
@@ -384,7 +381,7 @@ const manual: Manual = {
         {
           id: "name-card",
           title: "Scanning a name card",
-          roles: ["admin", "management", "staff", "doctor", "volunteer"],
+          roles: ["admin", "management", "doctor", "volunteer"],
           path: "Hold your phone to a resident's name card",
           intro:
             "Every resident has a name card with an NFC chip. Hold the top of your phone to it (an iPhone XS or later, or an Android phone with NFC on) and the resident's page opens. What you see depends on who you are, but never less than a visitor sees.",
@@ -399,7 +396,7 @@ const manual: Manual = {
         {
           id: "microchip",
           title: "Scanning a microchip",
-          roles: ["admin", "management", "staff", "doctor"],
+          roles: ["admin", "management", "doctor"],
           path: "Residents → Scan a chip, or a resident's hub",
           intro:
             "A microchip number is exactly 15 digits, and no two residents can share one. It is for staff, Management and doctors only: the public website says only whether an animal is microchipped, never the number.",
@@ -428,7 +425,7 @@ const manual: Manual = {
         {
           id: "intake",
           title: "Registering a new resident (intake)",
-          roles: ["admin", "management", "staff"],
+          roles: ["admin", "management"],
           activity: "resident.register",
           path: "Residents → New resident (intake)",
           intro:
@@ -488,7 +485,7 @@ const manual: Manual = {
         {
           id: "adoption-updates",
           title: "Adoption updates",
-          roles: ["admin", "management", "staff"],
+          roles: ["admin", "management"],
           activity: "resident.adoption_news",
           path: "Resident hub → Adoption updates",
           intro:
@@ -519,7 +516,7 @@ const manual: Manual = {
         {
           id: "edit",
           title: "Editing a resident's details",
-          roles: ["admin", "management", "staff"],
+          roles: ["admin", "management"],
           activity: "resident.record",
           path: "Resident hub → pencil icon",
           steps: [
@@ -550,7 +547,7 @@ const manual: Manual = {
         {
           id: "move",
           title: "Moving between enclosures",
-          roles: ["admin", "management", "staff"],
+          roles: ["admin", "management"],
           activity: "placement.move",
           path: "Resident hub → Housing & Status → Move enclosure",
           steps: [
@@ -568,7 +565,7 @@ const manual: Manual = {
         {
           id: "hospital",
           title: "Sending to hospital and bringing them back",
-          roles: ["admin", "management", "staff"],
+          roles: ["admin", "management"],
           activity: "placement.hospital",
           path: "Resident hub → Housing & Status → Send to hospital",
           steps: [
@@ -585,7 +582,7 @@ const manual: Manual = {
         {
           id: "foster-adopt",
           title: "Foster and adoption",
-          roles: ["admin", "management", "staff"],
+          roles: ["admin", "management"],
           activity: "placement.rehome",
           path: "Resident hub → Housing & Status → Foster / adopt",
           steps: [
@@ -610,7 +607,7 @@ const manual: Manual = {
         {
           id: "deceased",
           title: "Recording a death",
-          roles: ["admin", "management", "staff"],
+          roles: ["admin", "management"],
           activity: "placement.death",
           path: "Resident hub → broken-heart icon next to the pencil",
           steps: [
@@ -653,7 +650,7 @@ const manual: Manual = {
         {
           id: "placement-history",
           title: "Placement history",
-          roles: ["admin", "management", "staff", "doctor"],
+          roles: ["admin", "management", "doctor"],
           path: "Resident hub → Housing & Status card",
           steps: [
             "Tap the Housing & Status card title to open Housing & Placement History.",
@@ -678,7 +675,7 @@ const manual: Manual = {
         {
           id: "immunizations",
           title: "Logging immunizations",
-          roles: ["admin", "management", "staff", "doctor"],
+          roles: ["admin", "management", "doctor"],
           activity: "medical.immunizations",
           path: "Resident hub → Immunizations → Log immunization, or tick residents on the list",
           intro:
@@ -704,7 +701,7 @@ const manual: Manual = {
         {
           id: "vet-visits",
           title: "Booking and recording clinic visits",
-          roles: ["admin", "management", "staff", "doctor"],
+          roles: ["admin", "management", "doctor"],
           activity: "medical.visits",
           path: "Resident hub → Clinic Visits → Book clinic visit",
           steps: [
@@ -733,7 +730,7 @@ const manual: Manual = {
         {
           id: "prescriptions",
           title: "Adding a prescription",
-          roles: ["admin", "management", "staff", "doctor"],
+          roles: ["admin", "management", "doctor"],
           activity: "medical.prescriptions",
           path: "Resident hub → Prescriptions → Add prescription",
           steps: [
@@ -752,7 +749,7 @@ const manual: Manual = {
         {
           id: "diet",
           title: "Recording a resident's diet",
-          roles: ["admin", "management", "staff", "doctor"],
+          roles: ["admin", "management", "doctor"],
           activity: "medical.diet",
           path: "Resident hub → Diet → Add diet",
           steps: [
@@ -770,7 +767,7 @@ const manual: Manual = {
         {
           id: "weight",
           title: "Logging weight",
-          roles: ["admin", "management", "staff", "doctor"],
+          roles: ["admin", "management", "doctor"],
           activity: "medical.weight",
           path: "Resident hub → Weight → Log weight",
           steps: [
@@ -789,7 +786,7 @@ const manual: Manual = {
         {
           id: "procedures",
           title: "Logging a procedure",
-          roles: ["admin", "management", "staff", "doctor"],
+          roles: ["admin", "management", "doctor"],
           activity: "medical.procedures",
           path: "Resident hub → Procedures → Log procedure",
           steps: [
@@ -805,7 +802,7 @@ const manual: Manual = {
         {
           id: "blood-tests",
           title: "Logging a blood test",
-          roles: ["admin", "management", "staff", "doctor"],
+          roles: ["admin", "management", "doctor"],
           activity: "medical.blood_tests",
           path: "Resident hub → Blood Tests → Log blood test",
           steps: [
@@ -822,7 +819,7 @@ const manual: Manual = {
         {
           id: "archive-records",
           title: "Removing a medical record",
-          roles: ["admin", "management", "staff"],
+          roles: ["admin", "management"],
           activity: "medical.archive",
           path: "Resident hub → Weight, Prescriptions, Clinic visits or Immunizations",
           steps: [
@@ -848,7 +845,7 @@ const manual: Manual = {
         {
           id: "resident-photos",
           title: "Adding resident photos",
-          roles: ["admin", "management", "staff", "doctor"],
+          roles: ["admin", "management", "doctor"],
           path: "Resident hub → Photos",
           steps: [
             "Open the Photos card on the hub.",
@@ -878,7 +875,7 @@ const manual: Manual = {
         {
           id: "browse-enclosures",
           title: "Browsing by zone and enclosure",
-          roles: ["admin", "management", "staff", "volunteer"],
+          roles: ["admin", "management", "volunteer"],
           activity: "facility.enclosures",
           activityLevel: "read",
           path: "Operations → Enclosures",
@@ -900,7 +897,7 @@ const manual: Manual = {
         {
           id: "enclosure-map",
           title: "Finding your way round on the map",
-          roles: ["admin", "management", "staff", "volunteer"],
+          roles: ["admin", "management", "volunteer"],
           activity: "facility.map",
           path: "Operations → Enclosures → Map",
           steps: [
@@ -917,7 +914,7 @@ const manual: Manual = {
         {
           id: "enclosure-hub",
           title: "The enclosure page",
-          roles: ["admin", "management", "staff", "volunteer"],
+          roles: ["admin", "management", "volunteer"],
           activity: "facility.enclosures",
           activityLevel: "read",
           path: "Operations → Enclosures → (an enclosure)",
@@ -947,7 +944,7 @@ const manual: Manual = {
         {
           id: "log-maintenance",
           title: "Logging a job",
-          roles: ["admin", "management", "staff"],
+          roles: ["admin", "management"],
           activity: "maintenance.jobs",
           path: "Operations → Maintenance → Log maintenance (or from an enclosure page)",
           steps: [
@@ -964,7 +961,7 @@ const manual: Manual = {
         {
           id: "maintenance-board",
           title: "Tracking jobs on the board",
-          roles: ["admin", "management", "staff"],
+          roles: ["admin", "management"],
           activity: "maintenance.jobs",
           activityLevel: "read",
           path: "Operations → Maintenance",
@@ -999,7 +996,7 @@ const manual: Manual = {
         {
           id: "browse-projects",
           title: "Browsing and adding photos",
-          roles: ["admin", "management", "staff"],
+          roles: ["admin", "management"],
           activity: "projects.folders",
           activityLevel: "read",
           path: "Operations → Projects",
@@ -1016,7 +1013,7 @@ const manual: Manual = {
         {
           id: "manage-projects",
           title: "Creating folders and writing the story",
-          roles: ["admin", "management", "staff"],
+          roles: ["admin", "management"],
           activity: "projects.folders",
           path: "Operations → Projects → (a category or folder)",
           steps: [
@@ -1079,7 +1076,7 @@ const manual: Manual = {
         {
           id: "vets",
           title: "Clinics",
-          roles: ["admin", "management", "staff"],
+          roles: ["admin", "management"],
           activity: "clinics.list",
           activityLevel: "read",
           path: "Operations → Clinics",
@@ -1329,7 +1326,7 @@ const manual: Manual = {
         {
           id: "medication-list",
           title: "The medication list",
-          roles: ["admin", "management", "staff"],
+          roles: ["admin", "management"],
           path: "Home → Administer Medication (Head of Medical), or Operations → Medication list",
           intro:
             "One list of who needs medicine today and how much, built for a phone while you walk round the enclosures. It is for reading: nothing on it is ticked off, and the app does not record that a dose was given.",
@@ -1351,7 +1348,7 @@ const manual: Manual = {
         {
           id: "stocktake",
           title: "Doing a stocktake",
-          roles: ["admin", "management", "staff"],
+          roles: ["admin", "management"],
           activity: "stock.count",
           path: "Operations → Stocktake, or Home → Do Stocktaking (the 2IC)",
           intro:
@@ -1434,7 +1431,7 @@ const manual: Manual = {
         {
           id: "deliveries",
           title: "Recording a delivery",
-          roles: ["admin", "management", "staff"],
+          roles: ["admin", "management"],
           activity: "stock.delivery",
           path: "Operations → Deliveries, or Home → Record a Delivery (the 2IC)",
           intro:
@@ -1562,6 +1559,7 @@ const manual: Manual = {
             "Someone signing in with Google for the first time is turned away with \"hasn't been given access yet\" and appears under Access requests at the top of the page. Choose a role and tap Approve, then ask them to try again — or Deny to remove the account. If their Google email matches a login you created, the two are linked automatically.",
             "Change a role from the dropdown in the table. Issue temporary password does what it says — their old password stops working and they choose a new one at their next sign-in. You can't change your own role, reset your own password here or delete yourself; change your own password from Change password at the bottom of the menu.",
             "A Doctor login gets its clinics from a doctor. Under the role, a Doctor login shows a Doctor box: link the account to a doctor already on the lists, or choose Create a doctor from this login and tick the clinics they work at. The account's clinics are then that doctor's clinics — a doctor who works at two clinics sees and records for both, and for no others. To change where they work, edit the doctor on the clinic's Doctors page (Management → Clinics), not here. A Doctor login not linked to a doctor sees no residents and can't record visits, so it's flagged. Unlink, or archiving the account, leaves the doctor and all their visits exactly as they were. Most doctors will never have a login at all; that is normal.",
+            "Lanna's roles are Admin, Management, 2IC, Head of Maintenance, Head of Medical, Doctor and Volunteer. Staff was retired in October 2026 because it confused things. An archived login that held it still shows Staff: to bring one back, choose another role in its dropdown first, then Restore.",
             "Public viewer is for testing the website as a visitor while the testing sites are closed to the public: it signs in, sees every public page exactly as a stranger will once the site is open, and never sees the app — any app address sends it to the home page, and the public header offers only Sign out. Give it to testers, never to staff.",
             "When someone leaves, Archive them rather than delete: they can no longer sign in, they disappear from the maintenance Assigned to list, and their name stays on the jobs they did. Archived accounts sit at the bottom of the table with Restore beside them. Delete is for accounts made by mistake — it removes them from past jobs too.",
           ],

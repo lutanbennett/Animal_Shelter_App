@@ -95,8 +95,14 @@ export type CreateUserState =
   | ActionResult<{ success: string; temporaryPassword: string; email: string }>
   | undefined;
 
-/** The staff roles, plus public_viewer: a login that sees only the public website (0085). */
-const VALID_ROLES = ["admin", "management", "staff", "doctor", "volunteer", "public_viewer"] as const;
+/**
+ * The roles a login can be given, plus public_viewer: a login that sees only the public website (0085).
+ * Not staff: retired 2026-10-09 (0173), and the database refuses it to a live login.
+ */
+const VALID_ROLES = ["admin", "management", "doctor", "volunteer", "public_viewer"] as const;
+
+/** Roles a login may still hold archived, but never be given or restored with. */
+const RETIRED_ROLES: readonly string[] = ["staff"];
 
 const isValidRole = (role: string | null) =>
   !!role && VALID_ROLES.includes(role as (typeof VALID_ROLES)[number]);
@@ -453,6 +459,11 @@ export async function restoreUser(userId: string): Promise<ActionResult> {
     if (denied) return denied;
 
     const admin = createAdminClient();
+    // A login that held a retired role (Staff, 0173) is given another one first: the database refuses it
+    // back otherwise, and this says what to do instead of "something went wrong".
+    const { data: held } = await admin.from("user_roles").select("role").eq("user_id", userId).maybeSingle<{ role: string }>();
+    if (held && RETIRED_ROLES.includes(held.role)) return refuse(t.admin.security.errors.retiredRole);
+
     const { error } = await admin
       .from("user_roles")
       .update({ archived_at: null })

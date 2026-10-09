@@ -25,7 +25,7 @@ export type HomeTile = {
 /**
  * Hand-chosen order for the default roles (§8 point 3), after the two leading tiles. A path not
  * listed follows in registry order, so a role a shelter adds is coherent without an entry here.
- * Staff's is the 2IC's whiteboard column: stocktake, purchasing, maintenance.
+ * (Staff had one until it was retired, 0173.)
  */
 const ORDER: Record<string, readonly string[]> = {
   management: [
@@ -36,7 +36,6 @@ const ORDER: Record<string, readonly string[]> = {
     "/management/contacts",
     "/maintenance",
   ],
-  staff: ["/stocktake", "/management/purchasing", "/maintenance", "/deliveries"],
 };
 
 const rank = (r: RouteEntry) => (r.level === "read" ? 1 : 2);

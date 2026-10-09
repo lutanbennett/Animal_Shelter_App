@@ -30,7 +30,7 @@ export async function loadAssignableUsers(supabase: SupabaseClient) {
   const { data, error } = await supabase
     .from("app_users")
     .select(APP_USER_COLUMNS)
-    .in("role", ["admin", "management", "staff", "volunteer"])
+    .in("role", ["admin", "management", "volunteer"])
     .is("archived_at", null)
     .returns<AppUser[]>();
   const users = (data ?? []).sort((a, b) => appUserLabel(a).localeCompare(appUserLabel(b)));

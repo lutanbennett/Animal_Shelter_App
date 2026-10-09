@@ -45,20 +45,25 @@ const load = (p) => import(pathToFileURL(path.join(repo, p)).href);
 const ENTRIES_FILE = "scripts/lib/acceptance-matrix-entries.mjs";
 const WALKTHROUGH = "docs/role-walkthrough.md";
 
-/** The columns, in the order the shelter reads them. The first five are the app's app_role values. */
-const ROLES = ["admin", "management", "staff", "doctor", "volunteer", "public_viewer", "visitor"];
-const SIGNED_IN_FIVE = ROLES.slice(0, 5);
+/**
+ * The columns, in the order the shelter reads them. The first four are the app_role values a login is given;
+ * staff is not one since it was retired (0173, docs/decisions/2026-10-09-staff-role-removed.md).
+ */
+const ROLES = ["admin", "management", "doctor", "volunteer", "public_viewer", "visitor"];
+const SIGNED_IN = ROLES.slice(0, 4);
 const ROLE_LABEL = {
   admin: "Admin",
   management: "Management",
-  staff: "Staff",
   doctor: "Doctor",
   volunteer: "Volunteer",
   public_viewer: "Public viewer",
   visitor: "Signed-out visitor",
 };
-/** The pass in docs/role-walkthrough.md that holds each role's "must not" lines. */
-const PASS_ROLE = { 1: "doctor", 2: "staff", 3: "admin", 4: "management", 5: "volunteer", 6: "public_viewer" };
+/**
+ * The pass in docs/role-walkthrough.md that holds each role's "must not" lines. Pass 2 was Staff's and is now
+ * day-to-day work signed in as Management, with no "must not" lines of its own (Pass 4 has Management's).
+ */
+const PASS_ROLE = { 1: "doctor", 2: "management", 3: "admin", 4: "management", 5: "volunteer", 6: "public_viewer" };
 const DEVICES = ["phone", "desktop", "both"];
 const DEVICE_LABEL = { phone: "Phone", desktop: "Desktop", both: "Phone and desktop" };
 
@@ -177,8 +182,8 @@ for (const t of topics) {
     problem(`The manual topic "${t.id}" names the activity "${t.activity}", which the seeded catalogue does not have.`, []);
     continue;
   }
-  const got = held.filter((r) => SIGNED_IN_FIVE.includes(r)).join();
-  const want = SIGNED_IN_FIVE.filter((r) => (t.roles ?? SIGNED_IN_FIVE).includes(r)).join();
+  const got = held.filter((r) => SIGNED_IN.includes(r)).join();
+  const want = SIGNED_IN.filter((r) => (t.roles ?? SIGNED_IN).includes(r)).join();
   if (got !== want) {
     problem(`The manual topic "${t.id}" has roles [${want}] but ${t.activity} is held by [${got}].`, [
       "Either the `roles` tag or the activity is wrong: the cell is what the system does, so fix the tag unless the cell itself is to change.",
@@ -233,8 +238,8 @@ for (const t of topics) {
       problem(`${where} ("${e.activity}") needs "${e.needs}", which the seeded catalogue does not have.`, ['Use a key from src/lib/permissions/catalogue.ts, with ":read" for a read level.']);
     }
     if (needed) {
-      const want = SIGNED_IN_FIVE.filter((r) => (e.roles ?? t.roles ?? SIGNED_IN_FIVE).includes(r)).join();
-      const got = needed.filter((r) => SIGNED_IN_FIVE.includes(r)).join();
+      const want = SIGNED_IN.filter((r) => (e.roles ?? t.roles ?? SIGNED_IN).includes(r)).join();
+      const got = needed.filter((r) => SIGNED_IN.includes(r)).join();
       if (want !== got) problem(`${where} ("${e.activity}") needs ${e.needs}, held by [${got}], but its roles are [${want}].`, ["Fix whichever is wrong; the cell is what the system does."]);
     }
     const key = i === 0 ? t.id : `${t.id}.${i + 1}`;
@@ -248,7 +253,7 @@ for (const t of topics) {
       if (e.who) does = e.who.includes(role);
       else if (e.audience === "all") does = true;
       else if (e.audience === "signedin") does = role !== "visitor";
-      else if (SIGNED_IN_FIVE.includes(role)) does = needed ? needed.includes(role) : isForRole(e.roles ?? t.roles, role);
+      else if (SIGNED_IN.includes(role)) does = needed ? needed.includes(role) : isForRole(e.roles ?? t.roles, role);
       else does = false;
       cells[role] = does ? "does" : e.na?.includes(role) || e.naRest ? "n/a" : "must not";
     }
@@ -341,7 +346,7 @@ const doc = {
         // One box per language and device, absent where the activity is not done on that device.
         cases: [r.device !== "desktop", r.device !== "phone", r.device !== "desktop", r.device !== "phone"],
       })),
-    mustNot: SIGNED_IN_FIVE.includes(role) ? rows.filter((r) => r.cells[role] === "must not").map((r) => ({ n: r.n, activity: r.activity })) : [],
+    mustNot: SIGNED_IN.includes(role) ? rows.filter((r) => r.cells[role] === "must not").map((r) => ({ n: r.n, activity: r.activity })) : [],
     boundaries: [...BOUNDARIES, ...VISITOR_BOUNDARIES].filter((b) => b.role === role).map((b, i) => ({ n: `B${i + 1}`, text: b.text })),
   })),
   /** The failures list and the sign-off belong to the whole document, not to one tester's sheet. */

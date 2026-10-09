@@ -13,7 +13,6 @@ export function CreateUserForm() {
   const { t } = useI18n();
 
   const ROLES = [
-    { value: "staff", label: t.admin.security.roles.staff },
     { value: "admin", label: t.admin.security.roles.admin },
     { value: "management", label: t.admin.security.roles.management },
     { value: "doctor", label: t.admin.security.roles.doctor },
@@ -60,7 +59,7 @@ export function CreateUserForm() {
         <select
           id="role"
           name="role"
-          defaultValue="staff"
+          defaultValue="volunteer"
           className="w-40 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
         >
           {ROLES.map((r) => (

@@ -28,7 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
 const SCREENSHOT_SIZES: Record<string, { width: number; height: number } | undefined> =
   screenshotSizes;
 
-const ROLE_ORDER: ManualRole[] = ["admin", "management", "staff", "doctor", "volunteer"];
+const ROLE_ORDER: ManualRole[] = ["admin", "management", "doctor", "volunteer"];
 
 const CALLOUT_STYLES: Record<
   ManualCallout["kind"],
