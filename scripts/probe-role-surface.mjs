@@ -30,13 +30,13 @@ const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
 // who: the role key held (null = none); arch: the user_roles row is archived; aal: the token's level.
+// No staff principal since 0173 retired the role: a live staff row is refused by user_roles_take_live_role().
 const PRINCIPALS = [
   { name: "anon" },
   { name: "norole", role: null },
-  { name: "archived", role: "staff", arch: true },
+  { name: "archived", role: "volunteer", arch: true },
   { name: "public_viewer", role: "public_viewer" },
   { name: "volunteer", role: "volunteer" },
-  { name: "staff", role: "staff" },
   { name: "doctor", role: "doctor" },
   { name: "head_of_maintenance", role: "head_of_maintenance" },
   { name: "head_of_medical", role: "head_of_medical" },
