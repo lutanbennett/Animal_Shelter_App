@@ -27,7 +27,9 @@
 - [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
 
 ```
-GATES_PLACEHOLDER
+=== gates: build exited 0 after 262s
+
+gates: typecheck=0 lint=0 build=0
 ```
 
 ## 3. Schema and data
