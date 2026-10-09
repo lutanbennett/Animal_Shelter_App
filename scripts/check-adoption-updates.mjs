@@ -1,5 +1,5 @@
 // Rollback harness for 0097_adoption_updates.sql against DEV only, asserting against the LIVE
-// schema (not replayed: later migrations redefined record_attachment and scoped vets). One
+// schema (not replayed: later migrations redefined record_attachment and scoped doctors). One
 // transaction: a throwaway resident and
 // adopter, updates and tagged photos through record_attachment() as each
 // role, the photo→update guarantees — then a deliberate `raise exception`
@@ -24,7 +24,7 @@ begin;
 create temp table who (who text primary key, uid uuid);
 insert into who values
   ('management', gen_random_uuid()), ('staff', gen_random_uuid()),
-  ('volunteer', gen_random_uuid()), ('vet', gen_random_uuid());
+  ('volunteer', gen_random_uuid()), ('doctor', gen_random_uuid());
 insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
        'harness-0097-' || who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
@@ -170,15 +170,15 @@ begin
   delete from adoption_updates where id = v_update;
   v_report := v_report || ' | A6 delete refused while photos point at it, allowed once untagged; management edits';
 
-  -- A7 a vet sees only residents in their clinic's scope since 0108, and the harness's resident is outside it, so the vet reads nothing (and edits nothing); anon refused.
-  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'vet'), 'role', 'authenticated')::text, true);
+  -- A7 a doctor sees only residents in their clinic's scope since 0108, and the harness's resident is outside it, so the doctor reads nothing (and edits nothing); anon refused.
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'doctor'), 'role', 'authenticated')::text, true);
   set local role authenticated;
   select count(*) into v_n from adoption_updates where id = v_other_update;
-  if v_n <> 0 then reset role; raise exception 'A7 vet read an update of a resident outside their scope'; end if;
-  update adoption_updates set note = 'vet' where id = v_other_update;
+  if v_n <> 0 then reset role; raise exception 'A7 doctor read an update of a resident outside their scope'; end if;
+  update adoption_updates set note = 'doctor' where id = v_other_update;
   get diagnostics v_n = row_count;
   reset role;
-  if v_n <> 0 then raise exception 'A7 vet edited an update'; end if;
+  if v_n <> 0 then raise exception 'A7 doctor edited an update'; end if;
   perform set_config('request.jwt.claims', json_build_object('role', 'anon')::text, true);
   set local role anon;
   begin
@@ -194,7 +194,7 @@ begin
   exception when insufficient_privilege then null;
   end;
   reset role;
-  v_report := v_report || ' | A7 vet scoped out of an unrelated resident (0108), anon refused on table and function';
+  v_report := v_report || ' | A7 doctor scoped out of an unrelated resident (0108), anon refused on table and function';
 
   raise exception 'HARNESS-OK 0097 (live)%', v_report;
 end $$;

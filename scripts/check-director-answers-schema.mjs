@@ -5,12 +5,12 @@
 //   node scripts/check-director-answers-schema.mjs --verbose  (also list every case)
 //
 //   q6/q7  the contacts TABLE is still read by staff (the carer pickers need it); the 2IC reads id, name and phone through
-//          volunteer_contacts and nothing else; a volunteer, a vet and a role off the full scope read neither
+//          volunteer_contacts and nothing else; a volunteer, a doctor and a role off the full scope read neither
 //   q12    shelter_friends reads friends.view or friends.manage: staff yes, the old "whoever reads contacts" half gone
 //   q5     immunization_types (it carries a cost) reads only reference.types; the vaccine picker view carries no cost
 //   q8     is exercised by check-resident-microchip.mjs (a Management write)
-// The vet reads shelter_friends and immunization_types through its own vet_* policies (C10, C3) and reads the picker view
-// only where it holds a medical cell, which dev's draft matrix does not give it, so those vet cells are not asserted.
+// The doctor reads shelter_friends and immunization_types through its own doctor_* policies (C10, C3) and reads the picker view
+// only where it holds a medical cell, which dev's draft matrix does not give it, so those doctor cells are not asserted.
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
@@ -32,7 +32,7 @@ const CUSTOM = {
   c_types_read: { cells: [["reference.types", 1]] },
   c_vol_medical: { floor: "volunteer", cells: [["medical.immunizations", 2], ["medical.prescriptions", 2]] },
 };
-const REAL = ["admin", "management", "staff", "volunteer", "vet"];
+const REAL = ["admin", "management", "staff", "volunteer", "doctor"];
 const P = [...REAL, "twoic", "norole", ...Object.keys(CUSTOM)];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
 const CT = randomUUID(), CT2 = randomUUID(), FR = randomUUID(), IT = randomUUID();
@@ -48,11 +48,11 @@ const PROBES = {
 const EXPECT = {
   contacts_table: ["admin", "management", "c_dir_all", "c_browse_full"], // 0170/0171: browse or directory Edit; staff name contacts through picker_contacts
   contacts_view: ["twoic", "c_browse_np"],
-  friends: ["admin", "management", "staff", "vet", "c_friends_view", "c_friends_manage"],
-  imm_table: ["admin", "vet", "c_types_read"],
+  friends: ["admin", "management", "staff", "doctor", "c_friends_view", "c_friends_manage"],
+  imm_table: ["admin", "doctor", "c_types_read"],
   imm_view: ["admin", "management", "staff", "twoic", "c_types_read", "c_vol_medical"] // twoic: dev holds the Director's draft, which gives her medical.immunizations; she reads the view and, as imm_table shows, not the table,
 };
-const SKIP = { friends: ["vet"], imm_table: ["vet"], imm_view: ["vet"] };
+const SKIP = { friends: ["doctor"], imm_table: ["doctor"], imm_view: ["doctor"] };
 
 const probes = [];
 for (const [name, q] of Object.entries(PROBES)) {
@@ -118,7 +118,7 @@ do $sweep$ begin
   insert into res select 'sweep', 'browse_holders', count(*) from role_permissions
    where activity = 'contacts.browse' and role_id in (select id from roles where key in ('management', 'second_in_command'));
   insert into res select 'sweep', 'browse_wrong_holders', count(*) from role_permissions
-   where activity = 'contacts.browse' and role_id in (select id from roles where key in ('staff', 'volunteer', 'vet'));
+   where activity = 'contacts.browse' and role_id in (select id from roles where key in ('staff', 'volunteer', 'doctor'));
   insert into res select 'sweep', 'twoic_scope_name_phone', count(*) from roles where key = 'second_in_command' and scope_contacts = 'name_phone';
 end $sweep$;
 do $o$ begin raise exception 'HARNESS-RESULT %', (select json_agg(row_to_json(res)) from res); end $o$;
@@ -159,7 +159,7 @@ eq("contacts_view_extra", 0, "volunteer_contacts has no column beyond id, name, 
 eq("friends_policy_names_address_book", 0, "the shelter_friends select policy no longer names contacts.directory (N3)");
 eq("imm_policy_names_medical_cell", 0, "the immunization_types select policy no longer names medical.immunizations");
 eq("browse_holders", 2, "Management and the 2IC hold contacts.browse");
-eq("browse_wrong_holders", 0, "staff, volunteer and vet hold no contacts.browse");
+eq("browse_wrong_holders", 0, "staff, volunteer and doctor hold no contacts.browse");
 eq("twoic_scope_name_phone", 1, "the 2IC's contacts scope is name_phone");
 console.log(`\n${ok} checks held, ${fails} failed.`);
 console.log(fails ? "RESULT: RED" : "RESULT: GREEN (carers: Management and the 2IC browse, staff keep the table for the pickers; friends: staff read by cell; vaccines: the picker has no price)");

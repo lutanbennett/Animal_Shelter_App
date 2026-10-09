@@ -4,8 +4,8 @@
 //   node scripts/check-medical-jobs.mjs            (from the repo root; dev only)
 //   node scripts/check-medical-jobs.mjs --verbose  (also list every passing check)
 //
-// What it holds, for seven principals (the Head of Medical, admin, management, staff, volunteer, a vet, no role):
-//   weight        the Head of Medical reads, adds and corrects a reading; a volunteer, no role and a vet
+// What it holds, for seven principals (the Head of Medical, admin, management, staff, volunteer, a doctor, no role):
+//   weight        the Head of Medical reads, adds and corrects a reading; a volunteer, no role and a doctor
 //                 outside their clinic cannot; staff and management still can
 //   photos        record_attachment() files a resident photo in Medical for her, refuses any other folder, an
 //                 adopter's photo, and a procedure file; the legacy roles are unchanged (staff files in any
@@ -32,48 +32,48 @@ const { bundleOfRole } = await import(pathToFileURL(join(process.cwd(), "src/lib
 const AHEAD = new Map();
 
 const lit = (id) => `'${id}'::uuid`;
-const P = ["hom", "admin", "management", "staff", "volunteer", "vet", "norole"];
+const P = ["hom", "admin", "management", "staff", "volunteer", "doctor", "norole"];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
 const R = randomUUID(), R2 = randomUUID(), OWN = randomUUID(), NSD = randomUUID();
 
-const NONE = { hom: 0, admin: 0, management: 0, staff: 0, volunteer: 0, vet: 0, norole: 0 };
+const NONE = { hom: 0, admin: 0, management: 0, staff: 0, volunteer: 0, doctor: 0, norole: 0 };
 const STAFF_UP = { ...NONE, admin: 1, management: 1, staff: 1 };
 const HOM_UP = { ...STAFF_UP, hom: 1 };
-const HOM_UP_VET = { ...HOM_UP, vet: 1 }; // the harness resident has a visit at the vet's own clinic
-const NOT_VET = HOM_UP; // gated on sees_all_clinical(): a vet (own clinic) gets none
+const HOM_UP_DOCTOR = { ...HOM_UP, doctor: 1 }; // the harness resident has a visit at the doctor's own clinic
+const NOT_DOCTOR = HOM_UP; // gated on sees_all_clinical(): a doctor (own clinic) gets none
 
 const probes = [
   // 1. weight
-  ["read weight", `select 1 from weight where resident_id = '${R}'`, HOM_UP_VET],
-  ["insert weight", `insert into weight (resident_id, date, weight_kg) values ('${R}', current_date - 500, 5)`, HOM_UP_VET],
-  ["correct a weight", `update weight set weight_kg = 6 where resident_id = '${R}'`, HOM_UP_VET],
+  ["read weight", `select 1 from weight where resident_id = '${R}'`, HOM_UP_DOCTOR],
+  ["insert weight", `insert into weight (resident_id, date, weight_kg) values ('${R}', current_date - 500, 5)`, HOM_UP_DOCTOR],
+  ["correct a weight", `update weight set weight_kg = 6 where resident_id = '${R}'`, HOM_UP_DOCTOR],
   ["who and where picker", `select 1 from resident_who_and_where where id = '${R}'`, { ...NONE, hom: 1, volunteer: 1 }],
   // 2. photos
-  ["file a Medical photo", `select 1 from record_attachment('resident', '${R}', 'f-med', 'a.jpg', 'Medical', current_date, null)`, HOM_UP_VET],
-  ["file a ' medical ' photo (case and spaces)", `select 1 from record_attachment('resident', '${R}', 'f-med2', 'a.jpg', ' medical ', current_date, null)`, HOM_UP_VET],
-  ["file a photo in another folder", `select 1 from record_attachment('resident', '${R}', 'f-oth', 'a.jpg', 'Cats at play', current_date, null)`, STAFF_UP /* 0152: a vet files to Medical only, in the database now */],
+  ["file a Medical photo", `select 1 from record_attachment('resident', '${R}', 'f-med', 'a.jpg', 'Medical', current_date, null)`, HOM_UP_DOCTOR],
+  ["file a ' medical ' photo (case and spaces)", `select 1 from record_attachment('resident', '${R}', 'f-med2', 'a.jpg', ' medical ', current_date, null)`, HOM_UP_DOCTOR],
+  ["file a photo in another folder", `select 1 from record_attachment('resident', '${R}', 'f-oth', 'a.jpg', 'Cats at play', current_date, null)`, STAFF_UP /* 0152: a doctor files to Medical only, in the database now */],
   ["file a photo with no folder", `select 1 from record_attachment('resident', '${R}', 'f-nof', 'a.jpg', null, current_date, null)`, STAFF_UP],
   ["file an adopter's photo", `select 1 from record_attachment('resident', '${R}', 'f-ado', 'a.jpg', '20260101', current_date, '${randomUUID()}')`, "hom-zero"],
   ["file a procedure file", `select 1 from record_attachment('procedure', '${randomUUID()}', 'f-proc', 'a.jpg', 'Medical', current_date, null)`, "hom-zero"],
-  ["photo resident view", `select 1 from medical_photo_residents where id = '${R}'`, NOT_VET],
+  ["photo resident view", `select 1 from medical_photo_residents where id = '${R}'`, NOT_DOCTOR],
   ["folder column on the photo view", `select drive_folder_id, is_deceased, resident_code from medical_photo_residents limit 1`, "ok-hom"],
   ["breed column on the photo view", `select breed from medical_photo_residents limit 1`, "error"],
-  ["set the folder", `select set_resident_drive_folder('${R}', 'folder-x')`, NOT_VET],
+  ["set the folder", `select set_resident_drive_folder('${R}', 'folder-x')`, NOT_DOCTOR],
   // 3. diets
-  ["special diet list", `select 1 from special_diet_list where resident_id = '${R}'`, NOT_VET],
-  ["the amount is the size default", `select 1 from special_diet_list where resident_id = '${R}' and daily_quantity = 7 and diet_unit = 'g' and meals_per_day = 2 and round_keys = array['morning','evening']`, NOT_VET],
-  ["the amount is the resident's own", `select 1 from special_diet_list where resident_id = '${R2}' and daily_quantity = 11`, NOT_VET],
+  ["special diet list", `select 1 from special_diet_list where resident_id = '${R}'`, NOT_DOCTOR],
+  ["the amount is the size default", `select 1 from special_diet_list where resident_id = '${R}' and daily_quantity = 7 and diet_unit = 'g' and meals_per_day = 2 and round_keys = array['morning','evening']`, NOT_DOCTOR],
+  ["the amount is the resident's own", `select 1 from special_diet_list where resident_id = '${R2}' and daily_quantity = 11`, NOT_DOCTOR],
   ["the standard diet is not listed", `select 1 from special_diet_list where resident_id = '${R2}' and diet_type_id <> '${NSD}'`, NONE],
   ["an ended diet is not listed", `select 1 from special_diet_list where resident_id = '${R2}' and daily_quantity = 3`, NONE],
   ["price column on the diet list", `select cost_per_unit from special_diet_list limit 1`, "error"],
   ["stock column on the diet list", `select stock_on_hand from special_diet_list limit 1`, "error"],
   ["breed column on the diet list", `select breed from special_diet_list limit 1`, "error"],
-  ["read resident_diets", `select 1 from resident_diets where resident_id = '${R}'`, HOM_UP_VET],
-  ["write resident_diets", `update resident_diets set notes = 'probe' where resident_id = '${R}'`, { ...STAFF_UP, vet: 1 }],
+  ["read resident_diets", `select 1 from resident_diets where resident_id = '${R}'`, HOM_UP_DOCTOR],
+  ["write resident_diets", `update resident_diets set notes = 'probe' where resident_id = '${R}'`, { ...STAFF_UP, doctor: 1 }],
   // the floor
-  ["residents", `select 1 from residents where id = '${R}'`, { ...STAFF_UP, vet: 1 }],
-  ["medication", `select 1 from medication limit 1`, { ...STAFF_UP, vet: 1 }],
-  ["diet_types", `select 1 from diet_types limit 1`, { ...STAFF_UP, vet: 1 }],
+  ["residents", `select 1 from residents where id = '${R}'`, { ...STAFF_UP, doctor: 1 }],
+  ["medication", `select 1 from medication limit 1`, { ...STAFF_UP, doctor: 1 }],
+  ["diet_types", `select 1 from diet_types limit 1`, { ...STAFF_UP, doctor: 1 }],
   ["attachments", `select 1 from attachments limit 1`, "hom-zero"],
   ["procedures", `select 1 from procedures where resident_id = '${R}'`, "hom-zero"],
   ["visit write", `insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values ('${R}', '${OWN}', now(), 'scheduled')`, "hom-zero"],
@@ -129,10 +129,10 @@ begin
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-mj-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${["admin", "management", "staff", "volunteer", "vet"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
+    select id, who::app_role from (values ${["admin", "management", "staff", "volunteer", "doctor"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role_id, role) select ${lit(ID.hom)}, id, legacy_role from roles where key = 'head_of_medical';
-  insert into vets (id, name, clinic_name) values (${lit(OWN)}, 'Harness own', 'Harness own');
-  insert into doctors (name, user_id, clinic_id) values ('Harness vet', ${lit(ID.vet)}, ${lit(OWN)});
+  insert into clinics (id, name) values (${lit(OWN)}, 'Harness own');
+  with d as (insert into doctors (name, user_id) values ('Harness doctor', ${lit(ID.doctor)}) returning id) insert into doctor_clinics (clinic_id, doctor_id) select ${lit(OWN)}, id from d;
   insert into residents (id, name, species, size) values (${lit(R)}, 'Harness resident', 'Dog', 'Medium');
   insert into residents (id, name, species, size, drive_folder_id) values (${lit(R2)}, 'Harness resident two', 'Cat', 'Small', 'keep-me');
   insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values (${lit(R)}, ${lit(OWN)}, now() - interval '3 days', 'completed');

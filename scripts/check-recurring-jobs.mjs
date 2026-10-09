@@ -1,5 +1,8 @@
-// Rollback harness for 0095_recurring_jobs.sql against DEV only.
-// One transaction: the migration (twice), the recurrence rule against real
+// Rollback harness for 0095_recurring_jobs.sql against DEV only, live schema:
+// the file is no longer replayed, because its policies and functions name the
+// old 'vet' role and 0172 redefined reassign_recurring_job() for 'doctor'
+// (docs/decisions/2026-10-02-replay-or-assert-live.md).
+// One transaction: the recurrence rule against real
 // calendar dates, the table constraints and triggers, harness logins calling
 // record_recurring_job() / reassign_recurring_job() as each role, then a
 // deliberate `raise exception` carrying the evidence — so nothing can commit.
@@ -12,7 +15,6 @@
 // Mondays Oct 2026–Feb 2027 are 5 Oct, 2 Nov, 7 Dec, 4 Jan, 1 Feb; last
 // Fridays are 30 Oct, 27 Nov, 25 Dec, 29 Jan, 26 Feb; 5 Oct 2026 and
 // 21 Dec 2026 are Mondays, 7 Oct 2026 a Wednesday, 1 Oct 2026 a Thursday.
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -22,7 +24,6 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-const migration = readFileSync(join(root, "supabase/migrations/0095_recurring_jobs.sql"), "utf8");
 
 // [label, repeat, every, weekdays, month_day, week_of_month, starts_on, ends_on, from, to, expected]
 const rules = [
@@ -64,9 +65,6 @@ const ruleChecks = rules
 
 const sql = `
 begin;
-${migration}
--- a second run of the whole file must be harmless
-${migration}
 
 create function pg_temp.dates(p_repeat text, p_every int, p_weekdays smallint[], p_md int, p_wom int,
                               p_start date, p_end date, p_from date, p_to date)
@@ -79,7 +77,7 @@ create temp table who (who text primary key, uid uuid);
 insert into who values
   ('management', gen_random_uuid()), ('admin', gen_random_uuid()),
   ('staff', gen_random_uuid()), ('staff2', gen_random_uuid()), ('volunteer', gen_random_uuid()),
-  ('vet', gen_random_uuid()), ('public_viewer', gen_random_uuid()), ('archived', gen_random_uuid()),
+  ('doctor', gen_random_uuid()), ('public_viewer', gen_random_uuid()), ('archived', gen_random_uuid()),
   ('roleless', gen_random_uuid()), ('anon', null);
 insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
@@ -317,8 +315,8 @@ ${ruleChecks}
   -- F2. refusals
   v := pg_temp.rec('staff2', j1, '2026-08-17', 'done');
   if v <> 'ERR P0001 Only the people this job is assigned to, or management, can record it.' then raise exception 'FAIL F2 not assigned: %', v; end if;
-  v := pg_temp.rec('vet', j1, '2026-08-17', 'done');
-  if v <> 'ERR P0001 Only the people this job is assigned to, or management, can record it.' then raise exception 'FAIL F2 vet: %', v; end if;
+  v := pg_temp.rec('doctor', j1, '2026-08-17', 'done');
+  if v <> 'ERR P0001 Only the people this job is assigned to, or management, can record it.' then raise exception 'FAIL F2 doctor: %', v; end if;
   v := pg_temp.rec('staff', j1, '2026-08-18', 'done');
   if v <> 'ERR P0001 This job does not fall on 18 Aug 2026.' then raise exception 'FAIL F2 Tuesday: %', v; end if;
   v := pg_temp.rec('staff', j1, '2026-07-27', 'done');
@@ -348,7 +346,7 @@ ${ruleChecks}
   if (select count(*) from recurring_job_occurrences where job_id = j1 and done_by in (v_mgmt, (select uid from who where who = 'admin'))) <> 2 then
     raise exception 'FAIL F3 management/admin: % / %', v, v2;
   end if;
-  v_report := v_report || ' | F1 assignee done, stamped by the function, note trimmed, overwrite | F2 not-assigned, vet, wrong weekday, before start, done ahead, bad outcome, missing job, public_viewer, role-less, archived refused; anon by grant | F3 skip ahead, clear deletes, management/admin record any';
+  v_report := v_report || ' | F1 assignee done, stamped by the function, note trimmed, overwrite | F2 not-assigned, doctor, wrong weekday, before start, done ahead, bad outcome, missing job, public_viewer, role-less, archived refused; anon by grant | F3 skip ahead, clear deletes, management/admin record any';
 
   -- =====================================================================
   -- G. Reassigning one date (someone off sick)
@@ -415,7 +413,7 @@ ${ruleChecks}
   -- K. Access to the tables themselves
   -- =====================================================================
   -- K1. every staff role reads the jobs and history; public_viewer reads none; anon refused
-  foreach v2 in array array['staff', 'vet', 'volunteer', 'management'] loop
+  foreach v2 in array array['staff', 'doctor', 'volunteer', 'management'] loop
     v := pg_temp.as_login(v2, format('select (select count(*) from recurring_jobs where id = %L) || ''/'' || (select count(*) from recurring_job_occurrences where job_id = %L) || ''/'' || (select count(*) from recurring_job_assignees where job_id = %L) || ''/'' || (select count(*) from recurring_job_occurrence_assignees where job_id = %L)', j1, j1, j1, j1));
     if v <> '1/6/1/2' then raise exception 'FAIL K1 % reads %', v2, v; end if;
   end loop;
@@ -481,7 +479,7 @@ ${ruleChecks}
      or (select outcome from recurring_job_occurrences where job_id = j1 and occurs_on = '2026-08-31') <> 'done' then
     raise exception 'FAIL K5 login delete';
   end if;
-  v_report := v_report || ' | K1 staff/vet/volunteer/management read all four tables; public_viewer, archived, role-less read nothing; anon refused on all five | K2 staff cannot write jobs or assignees; nobody writes history or cover directly; management writes jobs, created_by stamped | K3 recurring_job_dates from start, public_viewer none | K4 staffing 1/0, 0/1 archived, public_viewer-only and unassigned 0 | K5 history blocks delete, free job deletes with assignees, login delete cascades cover and keeps outcome';
+  v_report := v_report || ' | K1 staff/doctor/volunteer/management read all four tables; public_viewer, archived, role-less read nothing; anon refused on all five | K2 staff cannot write jobs or assignees; nobody writes history or cover directly; management writes jobs, created_by stamped | K3 recurring_job_dates from start, public_viewer none | K4 staffing 1/0, 0/1 archived, public_viewer-only and unassigned 0 | K5 history blocks delete, free job deletes with assignees, login delete cascades cover and keeps outcome';
 
   -- =====================================================================
   -- H. Security settings and grants as written
@@ -508,7 +506,7 @@ ${ruleChecks}
     end if;
   end loop;
 
-  raise exception 'HARNESS-OK 0095 twice%', v_report;
+  raise exception 'HARNESS-OK 0095 live%', v_report;
 end;
 $h$;
 rollback;

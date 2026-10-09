@@ -1,20 +1,22 @@
-// Rollback harness for 0121_audit_log.sql against DEV only. One transaction:
-// the file (twice), then the audit trail exercised as the roles that matter,
-// then a deliberate `raise exception` carrying the evidence, so nothing can
-// commit. Safe to run before or after the file is applied.
+// Rollback harness for the audit trail (0121_audit_log.sql) against DEV only,
+// live schema: 0172 renamed vet_appointments to clinic_visits and moved its
+// trigger, so the 0121 file no longer replays. One transaction: the audit
+// trail exercised as the roles that matter, then a deliberate `raise exception`
+// carrying the evidence, so nothing can commit.
 //
 //   node scripts/check-audit-log.mjs     (from the repo root; dev only)
 //
 // Writes are recorded (DB-6)
 //   A1  insert, update and delete on each of the seven tables write one row
 //       with the right op, row_id and images
-//   A2  actor is the session's login (staff, vet, admin); null for the owner
+//   A2  actor is the session's login (staff, doctor, admin); null for the owner
 //   A3  residents' images omit microchip_number and microchip_implanted_on;
 //       the other tables keep every column
 //   A4  an update that changes nothing writes no row
+//   A5  each of the seven tables carries record_audit() as a trigger
 // Reading
-//   R1  an admin reads audit_log; staff, volunteer and vet read zero rows
-//   R2  a vet's or staff member's write is recorded though they cannot read it
+//   R1  an admin reads audit_log; staff, volunteer and doctor read zero rows
+//   R2  a doctor's or staff member's write is recorded though they cannot read it
 // History is not rewritable
 //   W1  no API role can insert, update, delete or truncate audit_log
 //       (admin included); the owner cannot update, delete or truncate either
@@ -23,7 +25,6 @@
 //
 // Exits 0 when every assertion held. Writes nothing even on success. The
 // anon refusal on the Data API is asserted by scripts/check-public-views.mjs.
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -33,13 +34,8 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-const migration = readFileSync(join(root, "supabase/migrations/0121_audit_log.sql"), "utf8");
-
 const sql = `
 begin;
-${migration}
--- a second run of the whole file must be harmless
-${migration}
 
 -- Run one statement as a login; returns 'ok' or the error text.
 create function pg_temp.run(p_uid uuid, p_sql text) returns text language plpgsql as $f$
@@ -73,21 +69,28 @@ end $f$;
 do $h$
 declare
   v_vol uuid := gen_random_uuid(); v_staff uuid := gen_random_uuid();
-  v_vet_u uuid := gen_random_uuid(); v_admin uuid := gen_random_uuid();
+  v_doctor_u uuid := gen_random_uuid(); v_admin uuid := gen_random_uuid();
   v_res uuid := gen_random_uuid(); v_carer uuid := gen_random_uuid();
-  v_vet uuid := gen_random_uuid(); v_appt uuid := gen_random_uuid();
+  v_clinic uuid := gen_random_uuid(); v_appt uuid := gen_random_uuid();
   v_med uuid := gen_random_uuid(); v_imm uuid := gen_random_uuid();
   v_w uuid := gen_random_uuid(); v_rx uuid := gen_random_uuid();
   v_ir uuid := gen_random_uuid(); v_att uuid := gen_random_uuid();
   v_r text; v_n bigint; v_uid uuid; v_row audit_log; v_tbl text; v_id uuid;
 begin
-  foreach v_uid in array array[v_vol, v_staff, v_vet_u, v_admin] loop
+  -- A5: the trail is wired to every table it promises
+  foreach v_tbl in array array['residents', 'contacts', 'prescriptions', 'clinic_visits', 'weight', 'attachments', 'immunization_records'] loop
+    if not exists (select 1 from pg_trigger t join pg_proc p on p.oid = t.tgfoid
+                    where p.proname = 'record_audit' and not t.tgisinternal and t.tgrelid = ('public.' || v_tbl)::regclass)
+    then raise exception 'FAIL A5 % has no audit trigger', v_tbl; end if;
+  end loop;
+
+  foreach v_uid in array array[v_vol, v_staff, v_doctor_u, v_admin] loop
     insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
     values (v_uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
             'harness-audit-' || v_uid || '@example.invalid', '{}'::jsonb, '{"full_name":"Harness"}'::jsonb, now(), now());
   end loop;
   insert into user_roles (user_id, role) values
-    (v_vol, 'volunteer'), (v_staff, 'staff'), (v_vet_u, 'vet'), (v_admin, 'admin');
+    (v_vol, 'volunteer'), (v_staff, 'staff'), (v_doctor_u, 'doctor'), (v_admin, 'admin');
 
   -- A1/A2: owner-made rows have a null actor
   insert into contacts (id, name, type) values (v_carer, 'Harness carer', 'Carer');
@@ -96,7 +99,7 @@ begin
      or v_row.new_row ->> 'name' <> 'Harness carer' or v_row.actor is not null
   then raise exception 'FAIL A1/A2 contact insert by the owner: %', to_jsonb(v_row); end if;
 
-  insert into vets (id, name, clinic_name) values (v_vet, 'Harness vet', 'Harness clinic');
+  insert into clinics (id, name) values (v_clinic, 'Harness clinic');
   insert into residents (id, name, species) values (v_res, 'Harness A', 'Dog');
   insert into medication (id, name) values (v_med, 'Harness med ' || v_med);
   insert into immunization_types (id, name, interval_months) values (v_imm, 'Harness imm ' || v_imm, 12);
@@ -126,10 +129,10 @@ begin
   if (select count(*) from audit_log where row_id = v_res) <> v_n
   then raise exception 'FAIL A4 an excluded-column-only update wrote an audit row'; end if;
 
-  -- A1/A2: the other tables, insert / update / delete as a vet (R2: a vet
+  -- A1/A2: the other tables, insert / update / delete as a doctor (R2: a doctor
   -- cannot read what its own write produced)
-  v_r := pg_temp.run(v_admin, format($q$insert into clinic_visits (id, resident_id, clinic_id, appointment_date, reason) values (%L, %L, %L, now() - interval '1 day', 'check')$q$, v_appt, v_res, v_vet));
-  if v_r <> 'ok' then raise exception 'FAIL A1 vet appointment insert: %', v_r; end if;
+  v_r := pg_temp.run(v_admin, format($q$insert into clinic_visits (id, resident_id, clinic_id, appointment_date, reason) values (%L, %L, %L, now() - interval '1 day', 'check')$q$, v_appt, v_res, v_clinic));
+  if v_r <> 'ok' then raise exception 'FAIL A1 clinic visit insert: %', v_r; end if;
   v_r := pg_temp.run(v_admin, format($q$insert into weight (id, resident_id, date, weight_kg) values (%L, %L, current_date, 12.5)$q$, v_w, v_res));
   if v_r <> 'ok' then raise exception 'FAIL A1 weight insert: %', v_r; end if;
   v_r := pg_temp.run(v_admin, format($q$insert into prescriptions (id, resident_id, medication_id, start_date) values (%L, %L, %L, current_date)$q$, v_rx, v_res, v_med));
@@ -177,7 +180,7 @@ begin
      where table_name = v_tbl and row_id = v_id and op = 'UPDATE' and old_row <> new_row;
     if v_n <> 1 then raise exception 'FAIL A1 % UPDATE rows: %', v_tbl, v_n; end if;
   end loop;
-  -- A2: the delete of a weight carries the vet's login and the last values
+  -- A2: the delete of a weight carries the doctor's login and the last values
   select * into v_row from audit_log where row_id = v_w and op = 'DELETE';
   if v_row.actor is distinct from v_admin or (v_row.old_row ->> 'weight_kg')::numeric <> 13
   then raise exception 'FAIL A2 weight delete actor/before-image: %', to_jsonb(v_row); end if;
@@ -187,12 +190,12 @@ begin
 
   -- R1: only admin reads
   if pg_temp.visible(v_admin) < 15 then raise exception 'FAIL R1 admin sees only % rows', pg_temp.visible(v_admin); end if;
-  foreach v_uid in array array[v_vol, v_staff, v_vet_u] loop
+  foreach v_uid in array array[v_vol, v_staff, v_doctor_u] loop
     if pg_temp.visible(v_uid) <> 0 then raise exception 'FAIL R1 % read audit_log', v_uid; end if;
   end loop;
 
   -- W1: no API role writes; admin included
-  foreach v_uid in array array[v_vol, v_staff, v_vet_u, v_admin] loop
+  foreach v_uid in array array[v_vol, v_staff, v_doctor_u, v_admin] loop
     v_r := pg_temp.run(v_uid, format($q$insert into audit_log (table_name, row_id, op, new_row) values ('weight', %L, 'INSERT', '{}')$q$, v_res));
     if v_r not like '%permission denied%' then raise exception 'FAIL W1 insert as %: %', v_uid, v_r; end if;
     v_r := pg_temp.run(v_uid, $q$update audit_log set actor = null$q$);
@@ -235,7 +238,7 @@ begin
   then raise exception 'FAIL W2 a trigger function is executable by an API role'; end if;
   if has_table_privilege('anon', 'audit_log', 'select') then raise exception 'FAIL W1 anon can select audit_log'; end if;
 
-  raise exception 'HARNESS-OK file ran twice | A1 insert/update/delete recorded on residents, contacts, prescriptions, clinic_visits, weight, attachments, immunization_records | A2 actor is the session login (staff, admin), null for the owner | A3 residents images omit microchip_number and microchip_implanted_on | A4 no-change and excluded-column-only updates write nothing | R1 admin reads, volunteer/staff/vet see zero rows | R2 staff writes recorded though they cannot read the log | W1 no API role (admin, service_role included) inserts, updates, deletes or truncates; the owner is refused by the trigger | W2 trigger functions not executable by anon/authenticated';
+  raise exception 'HARNESS-OK live schema | A5 record_audit() on all seven tables | A1 insert/update/delete recorded on residents, contacts, prescriptions, clinic_visits, weight, attachments, immunization_records | A2 actor is the session login (staff, admin), null for the owner | A3 residents images omit microchip_number and microchip_implanted_on | A4 no-change and excluded-column-only updates write nothing | R1 admin reads, volunteer/staff/doctor see zero rows | R2 staff writes recorded though they cannot read the log | W1 no API role (admin, service_role included) inserts, updates, deletes or truncates; the owner is refused by the trigger | W2 trigger functions not executable by anon/authenticated';
 end
 $h$;
 rollback;

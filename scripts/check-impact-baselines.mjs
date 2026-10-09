@@ -16,7 +16,7 @@ const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
 const migration = readFileSync(join(process.cwd(), "supabase/migrations/0156_impact_baselines.sql"), "utf8");
-const REAL = ["admin", "management", "staff", "volunteer", "vet"];
+const REAL = ["admin", "management", "staff", "volunteer", "doctor"];
 const ID = Object.fromEntries(REAL.map((p) => [p, randomUUID()]));
 const lit = (id) => `'${id}'::uuid`;
 

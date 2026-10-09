@@ -6,7 +6,7 @@
 //   node scripts/check-home-screens-live.mjs [http://localhost:<port>] [--keep <file>]
 //   node scripts/check-home-screens-live.mjs --cleanup <file>
 //
-// It makes one throwaway login per default role (admin, management, staff, volunteer, vet), signed
+// It makes one throwaway login per default role (admin, management, staff, volunteer, doctor), signed
 // in with a password only. Each is deleted at the end, whatever happened, unless --keep names a file:
 // then their session cookies and ids are written there (outside git) so a browser can be pointed at
 // them, and --cleanup <file> deletes them later. Exits 0 when every expectation held.
@@ -91,7 +91,7 @@ const made = [];
 const kept = {};
 try {
   const cookies = {};
-  for (const role of ["admin", "management", "staff", "volunteer", "vet"]) {
+  for (const role of ["admin", "management", "staff", "volunteer", "doctor"]) {
     const email = `harness-home-${role}-${tag}@example.invalid`;
     const { data, error } = await service.auth.admin.createUser({ email, password, email_confirm: true });
     if (error) throw error;
@@ -120,8 +120,8 @@ try {
   expect(settings.status === 200 && has(settings.html, "/home/management"), "Settings has the switch too");
   const staffHome = await page("/home/staff", cookies.admin.header, IPHONE);
   expect(staffHome.status === 200 && onHome(staffHome.html, "/stocktake"), "Admin sees the staff home, with Stocktake on it");
-  const vetHome = await page("/home/vet", cookies.admin.header, IPHONE);
-  expect(vetHome.status === 200 && onHome(vetHome.html, "/appointments"), "Admin sees the vet home, with Appointments on it");
+  const doctorHome = await page("/home/doctor", cookies.admin.header, IPHONE);
+  expect(doctorHome.status === 200 && onHome(doctorHome.html, "/appointments"), "Admin sees the doctor home, with Appointments on it");
   const noSuch = await page("/home/no_such_role", cookies.admin.header, IPHONE);
   expect(notFound(noSuch), `a role that does not exist is a 404 (${noSuch.status})`);
   const publicViewer = await page("/home/public_viewer", cookies.admin.header, IPHONE);
@@ -130,7 +130,7 @@ try {
   expect(goes(adminHome, "/admin"), "/home/admin goes to Settings");
 
   console.log("Nobody but Admin opens another role's home");
-  for (const role of ["management", "staff", "volunteer", "vet"]) {
+  for (const role of ["management", "staff", "volunteer", "doctor"]) {
     for (const target of ["/home/management", "/home/staff", `/home/${role}`]) {
       const r = await page(target, cookies[role].header, IPHONE);
       expect(goes(r, "/no-access") && !r.html.includes("min-h-28"), `${role} opening ${target} is refused (${r.status} → ${r.location})`);
@@ -149,8 +149,8 @@ try {
   const v = await page("/home", cookies.volunteer.header, IPHONE);
   expect(v.status === 200 && onHome(v.html, "/residents") && onHome(v.html, "/enclosures"), `volunteer: Residents and Enclosures (${tilesIn(v.html).join(" ")})`);
   expect(!onHome(v.html, "/management/recurring-jobs"), "volunteer: not Management's pages");
-  const vt = await page("/home", cookies.vet.header, IPHONE);
-  expect(goes(vt, "/appointments"), `vet: lands on Appointments (${vt.status} → ${vt.location})`);
+  const vt = await page("/home", cookies.doctor.header, IPHONE);
+  expect(goes(vt, "/appointments"), `doctor: lands on Appointments (${vt.status} → ${vt.location})`);
   const out = await page("/home", "", IPHONE);
   expect((out.location ?? "").startsWith("/login"), `signed out: sent to sign in (${out.status} → ${out.location})`);
 } finally {

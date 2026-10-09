@@ -1,34 +1,39 @@
-// Rollback harness for *_narrow_contacts_for_vets_and_volunteers.sql against
-// DEV only. One transaction: what a vet's own JWT can read before the file,
-// the file (twice), then what each role can read afterwards, then a
-// deliberate `raise exception` carrying the evidence — so nothing can
-// commit. Safe to run before or after the file is applied.
+// What a doctor login and a volunteer may read of the shelter's address book,
+// asserted against the LIVE schema on DEV. One transaction: fixtures, what each
+// role can read, then a deliberate `raise exception` carrying the evidence — so
+// nothing can commit.
 //
 //   node scripts/check-contact-visibility.mjs     (from the repo root; dev only)
 //
+// It used to replay 0126 (*_narrow_contacts_for_vets_and_volunteers.sql) twice.
+// Later files redefined the views it creates (the replay then failed with "cannot
+// drop columns from view"), and 0172 renamed vet_contacts to doctor_contacts and
+// the vet role to doctor, so it asserts the live schema instead
+// (docs/decisions/2026-10-02-replay-or-assert-live.md). The "before the file a
+// vet could read a carer's phone" step went with the replay.
+//
 // It asserts refusals, not renders (backlog DB-5, DB-8):
-//   0  before the file a vet CAN read a carer's phone — so the later refusals
-//      are the file's doing, not the harness failing to reach RLS (skipped,
-//      and said so, once applied)
-//   A  a vet reads no row of contacts itself, and cannot select phone, email,
-//      address, LINE, WhatsApp, Messenger or notes from doctor_contacts (the
-//      columns are not there), nor read volunteer_contacts
-//   B  a vet reads every contact's id, name and type through doctor_contacts
+//   A  a doctor login reads no row of contacts itself, and cannot select phone,
+//      email, address, LINE, WhatsApp, Messenger or notes from doctor_contacts
+//      (the columns are not there), nor read volunteer_contacts
+//   B  a doctor login reads every contact's id, name and type through doctor_contacts
 //   C  a volunteer reads no row of contacts itself, and cannot select email,
 //      address, LINE, WhatsApp, Messenger, notes or type from
 //      volunteer_contacts, nor read doctor_contacts
-//   D  a volunteer reads every contact's name and phone through
-//      volunteer_contacts, and the phone is the real one
-//   E  staff, management and admin still read every column of contacts and
-//      get no rows from either narrow view; anon has no privilege on them
-//   F  app_users: a vet and a volunteer see the logins but every email is
-//      null; staff, management and admin still see the emails; display_name
+//   D  a volunteer reads no name or phone through volunteer_contacts either:
+//      0134 took the address book from the volunteer (until then it read every
+//      name and the real phone, which is what this asserted)
+//   E  management and admin still read every column of contacts; staff read no
+//      row of it since 0170 (until then they read every column, which is what
+//      this asserted); none of the three gets a row from either narrow view;
+//      anon has no privilege on them
+//   F  app_users: a doctor login and a volunteer see the logins but every email
+//      is null; staff, management and admin still see the emails; display_name
 //      is unchanged for all of them
 //   G  check_carer_type is security definer, so a volunteer's placement write
 //      does not depend on reading contacts
 //
 // Exits 0 when every assertion held. Writes nothing even on success.
-import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -37,11 +42,6 @@ const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/l
 const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
-
-const dir = join(root, "supabase/migrations");
-const file = readdirSync(dir).find((f) => /^\d+_narrow_contacts_for_vets_and_volunteers\.sql$/.test(f));
-if (!file) throw new Error("no *_narrow_contacts_for_vets_and_volunteers.sql in supabase/migrations");
-const migration = readFileSync(join(dir, file), "utf8");
 
 const sql = `
 begin;
@@ -86,7 +86,7 @@ end $f$;
 
 create temp table harness_ids (who text primary key, id uuid not null);
 insert into harness_ids values
-  ('vet', gen_random_uuid()), ('volunteer', gen_random_uuid()), ('staff', gen_random_uuid()),
+  ('doctor', gen_random_uuid()), ('volunteer', gen_random_uuid()), ('staff', gen_random_uuid()),
   ('mgmt', gen_random_uuid()), ('admin', gen_random_uuid()), ('carer', gen_random_uuid());
 grant select on harness_ids to authenticated, service_role;
 
@@ -107,27 +107,15 @@ begin
   from harness_ids where who <> 'carer';
 end $setup$;
 
-create temp table harness_before (applied_already boolean, vet_phone bigint);
-grant all on harness_before to authenticated, service_role;
-insert into harness_before
-select not exists (select 1 from pg_policies where tablename = 'contacts' and policyname = 'vet_read_contacts'),
-       pg_temp.try((select id from harness_ids where who = 'vet'),
-         format('select phone from contacts where id = %L', (select id from harness_ids where who = 'carer')));
-
-${migration}
-${migration}
-
 do $h$
 declare
-  v_vet uuid := (select id from harness_ids where who = 'vet');
+  v_doc uuid := (select id from harness_ids where who = 'doctor');
   v_vol uuid := (select id from harness_ids where who = 'volunteer');
   v_staff uuid := (select id from harness_ids where who = 'staff');
   v_mgmt uuid := (select id from harness_ids where who = 'mgmt');
   v_admin uuid := (select id from harness_ids where who = 'admin');
   v_carer uuid := (select id from harness_ids where who = 'carer');
   v_total bigint := (select count(*) from contacts);
-  v_applied boolean := (select applied_already from harness_before);
-  v_before bigint := (select vet_phone from harness_before);
   col text;
   uid uuid;
   n bigint;
@@ -135,32 +123,23 @@ declare
   v_names bigint;
   v_report text := '';
 begin
-  -- 0: the hole was real, and the harness reaches RLS.
-  if v_applied then
-    v_report := v_report || '0: skipped, file already applied on dev | ';
-  elsif v_before <> 1 then
-    raise exception 'HARNESS-FAIL 0: before the file a vet read the carer phone as % rows, expected 1', v_before;
-  else
-    v_report := v_report || '0: before the file a vet read a carer phone (1 row) | ';
-  end if;
-
-  -- A: a vet reads nothing from contacts itself, and has no private column in its view.
-  n := pg_temp.try(v_vet, 'select * from contacts');
-  if n <> 0 then raise exception 'HARNESS-FAIL A: vet read % rows of contacts', n; end if;
+  -- A: a doctor login reads nothing from contacts itself, and has no private column in its view.
+  n := pg_temp.try(v_doc, 'select * from contacts');
+  if n <> 0 then raise exception 'HARNESS-FAIL A: doctor read % rows of contacts', n; end if;
   foreach col in array array['phone', 'email', 'address', 'line_id', 'whatsapp', 'messenger_id', 'notes'] loop
-    n := pg_temp.try(v_vet, format('select %I from contacts', col));
-    if n > 0 then raise exception 'HARNESS-FAIL A: vet read % rows of contacts.%', n, col; end if;
-    n := pg_temp.try(v_vet, format('select %I from doctor_contacts', col));
+    n := pg_temp.try(v_doc, format('select %I from contacts', col));
+    if n > 0 then raise exception 'HARNESS-FAIL A: doctor read % rows of contacts.%', n, col; end if;
+    n := pg_temp.try(v_doc, format('select %I from doctor_contacts', col));
     if n <> -2 then raise exception 'HARNESS-FAIL A: doctor_contacts has a column %, gave %', col, n; end if;
   end loop;
-  n := pg_temp.try(v_vet, 'select * from volunteer_contacts');
-  if n <> 0 then raise exception 'HARNESS-FAIL A: vet read % rows of volunteer_contacts', n; end if;
-  v_report := v_report || 'A: vet reads 0 rows of contacts, no phone/email/address/LINE/WhatsApp/Messenger/notes column in doctor_contacts, 0 of volunteer_contacts | ';
+  n := pg_temp.try(v_doc, 'select * from volunteer_contacts');
+  if n <> 0 then raise exception 'HARNESS-FAIL A: doctor read % rows of volunteer_contacts', n; end if;
+  v_report := v_report || 'A: doctor reads 0 rows of contacts, no phone/email/address/LINE/WhatsApp/Messenger/notes column in doctor_contacts, 0 of volunteer_contacts | ';
 
-  -- B: a vet reads id, name and type for every contact.
-  n := pg_temp.try(v_vet, 'select id, name, type from doctor_contacts');
-  if n <> v_total then raise exception 'HARNESS-FAIL B: vet read % of % contacts', n, v_total; end if;
-  v_report := v_report || format('B: vet reads id/name/type of %s/%s contacts | ', n, v_total);
+  -- B: a doctor login reads id, name and type for every contact.
+  n := pg_temp.try(v_doc, 'select id, name, type from doctor_contacts');
+  if n <> v_total then raise exception 'HARNESS-FAIL B: doctor read % of % contacts', n, v_total; end if;
+  v_report := v_report || format('B: doctor reads id/name/type of %s/%s contacts | ', n, v_total);
 
   -- C: a volunteer likewise.
   n := pg_temp.try(v_vol, 'select * from contacts');
@@ -173,19 +152,20 @@ begin
   end loop;
   n := pg_temp.try(v_vol, 'select * from doctor_contacts');
   if n <> 0 then raise exception 'HARNESS-FAIL C: volunteer read % rows of doctor_contacts', n; end if;
-  v_report := v_report || 'C: volunteer reads 0 rows of contacts, only id/name/phone in volunteer_contacts, 0 of doctor_contacts | ';
+  v_report := v_report || 'C: volunteer reads 0 rows of contacts, only id/name/phone are columns of volunteer_contacts, 0 of doctor_contacts | ';
 
-  -- D: and the volunteer's phone is the real one.
+  -- D: since 0134 (Lutan, 2026-10-03) a volunteer loses the names and phones too: no row of volunteer_contacts.
+  -- Before 0134 this asserted the opposite (every name, the real phone); a replay of 0126 hid that it had gone stale.
   n := pg_temp.try(v_vol, 'select name, phone from volunteer_contacts');
-  if n <> v_total then raise exception 'HARNESS-FAIL D: volunteer read % of % contacts', n, v_total; end if;
-  col := pg_temp.scalar(v_vol, format('select phone from volunteer_contacts where id = %L', v_carer));
-  if col is distinct from '081-000-0000' then raise exception 'HARNESS-FAIL D: volunteer saw phone %', col; end if;
-  v_report := v_report || format('D: volunteer reads name/phone of %s/%s contacts, phone intact | ', n, v_total);
+  if n > 0 then raise exception 'HARNESS-FAIL D: volunteer read % of % contacts through volunteer_contacts (0134 took them away)', n, v_total; end if;
+  v_report := v_report || format('D: volunteer reads no name/phone through volunteer_contacts (0134; gave %s) | ', n);
 
-  -- E: staff and above keep everything; the narrow views are empty for them; anon is refused.
+  -- E: management and admin keep everything; since 0170 staff read no row of the table (they name a contact
+  -- through picker_contacts); the narrow views are empty for all three; anon is refused.
   foreach uid in array array[v_staff, v_mgmt, v_admin] loop
     n := pg_temp.try(uid, 'select phone, email, address, line_id, whatsapp, messenger_id, notes from contacts');
-    if n <> v_total then raise exception 'HARNESS-FAIL E: % read % of % contacts', uid, n, v_total; end if;
+    if uid = v_staff and n > 0 then raise exception 'HARNESS-FAIL E: staff read % rows of contacts (0170 took them away)', n; end if;
+    if uid <> v_staff and n <> v_total then raise exception 'HARNESS-FAIL E: % read % of % contacts', uid, n, v_total; end if;
     n := pg_temp.try(uid, 'select * from doctor_contacts');
     if n <> 0 then raise exception 'HARNESS-FAIL E: % read % rows of doctor_contacts', uid, n; end if;
     n := pg_temp.try(uid, 'select * from volunteer_contacts');
@@ -195,10 +175,10 @@ begin
   if n <> -1 then raise exception 'HARNESS-FAIL E: anon doctor_contacts gave %', n; end if;
   n := pg_temp.try(null, 'select * from volunteer_contacts');
   if n <> -1 then raise exception 'HARNESS-FAIL E: anon volunteer_contacts gave %', n; end if;
-  v_report := v_report || 'E: staff/management/admin read all columns and 0 rows of the narrow views, anon refused | ';
+  v_report := v_report || 'E: management/admin read all columns, staff 0 rows (0170), all three 0 rows of the narrow views, anon refused | ';
 
   -- F: app_users emails.
-  foreach uid in array array[v_vet, v_vol] loop
+  foreach uid in array array[v_doc, v_vol] loop
     v_emails := pg_temp.scalar(uid, 'select count(*) filter (where email is not null) from app_users')::bigint;
     v_names := pg_temp.scalar(uid, 'select count(*) filter (where display_name is not null) from app_users')::bigint;
     if v_emails <> 0 then raise exception 'HARNESS-FAIL F: % saw % login emails', uid, v_emails; end if;
@@ -208,7 +188,7 @@ begin
     v_emails := pg_temp.scalar(uid, 'select count(*) filter (where email is not null) from app_users')::bigint;
     if v_emails = 0 then raise exception 'HARNESS-FAIL F: % saw no login emails', uid; end if;
   end loop;
-  v_report := v_report || 'F: vet and volunteer see logins with every email null, display_name intact; staff/management/admin see emails | ';
+  v_report := v_report || 'F: doctor and volunteer see logins with every email null, display_name intact; staff/management/admin see emails | ';
 
   -- G: the carer-type trigger does not need the caller to read contacts.
   if not (select prosecdef from pg_proc where proname = 'check_carer_type' and pronamespace = 'public'::regnamespace) then
@@ -216,8 +196,7 @@ begin
   end if;
   v_report := v_report || 'G: check_carer_type is security definer';
 
-  raise exception '%', format('HARNESS-OK %s ran twice | %s | %s', ${JSON.stringify(file).replace(/"/g, "'")},
-    case when v_applied then 'applied on dev' else 'pending on dev' end, v_report);
+  raise exception '%', format('HARNESS-OK contact visibility, live schema | %s', v_report);
 end;
 $h$;
 rollback;

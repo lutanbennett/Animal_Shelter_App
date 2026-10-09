@@ -6,14 +6,14 @@
 //
 // Principals: the 2IC ("sic"), three synthetic one-cell roles built inside the transaction ("po" holds only
 // stock.purchasing, "co" only stock.count, "dl" only stock.delivery), admin, management, staff, volunteer, a
-// vet, and a login with no role. The three one-cell roles are the proof that the stock jobs are separable:
+// doctor, and a login with no role. The three one-cell roles are the proof that the stock jobs are separable:
 // each can read every figure its own job needs without being given the other two cells.
 //   her screens   views, counts, conversions, receipts, the forecast wrappers and record_stocktake() answer her
 //                 and answer each one-cell role for its own job only
 //   her limits    no price (cost_per_unit is not in either view and not on the tables), no stock correction, no
 //                 medication or diet write, no resident record, medical, contacts, money, job photo or job delete
 //   her tasks     her own recurring tasks, and the maintenance board (0141's cells light 0141's policies)
-//   controls      admin, management and staff still read and write what they did before; volunteer, vet and
+//   controls      admin, management and staff still read and write what they did before; volunteer, doctor and
 //                 no role still read nothing
 //   the cells     role_permissions of second_in_command are exactly the union of its jobs in jobs.ts
 import { join } from "node:path";
@@ -28,7 +28,7 @@ if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the
 const { bundleOfRole } = await import(pathToFileURL(join(process.cwd(), "src/lib/permissions/jobs.ts")).href);
 
 const lit = (id) => `'${id}'::uuid`;
-const P = ["sic", "po", "co", "dl", "admin", "management", "staff", "volunteer", "vet", "norole"];
+const P = ["sic", "po", "co", "dl", "admin", "management", "staff", "volunteer", "doctor", "norole"];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
 const R = randomUUID(), OWN = randomUUID(), ZONE = randomUUID(), JOB = randomUUID();
 const RJ_MINE = randomUUID();
@@ -64,12 +64,12 @@ const probes = [
   ["cost_per_unit, medicine view", `select cost_per_unit from stock_medications limit 1`, NONE],
   ["cost_per_unit, diet view", `select cost_per_unit from stock_diet_types limit 1`, NONE],
   ["daily quantities, diet view", `select daily_qty_small from stock_diet_types limit 1`, NONE],
-  ["medication table", `select 1 from medication limit 1`, who(...OLD, "vet")],
-  ["diet_types table", `select 1 from diet_types limit 1`, who(...OLD, "vet")],
+  ["medication table", `select 1 from medication limit 1`, who(...OLD, "doctor")],
+  ["diet_types table", `select 1 from diet_types limit 1`, who(...OLD, "doctor")],
   ["contacts", `select 1 from contacts limit 1`, who("admin", "management")], // 0170: staff name contacts through picker_contacts, not the table
   ["correct a stock figure", `select record_stock_correction('medication', (select id from medication limit 1), 1)`, MANAGERS],
   ["change a stock figure directly", `update medication set stock_on_hand = 1 where id = (select id from medication limit 1)`, MANAGERS],
-  ["add a medicine", `insert into medication (name, dose_unit) values ('probe', 'tablet')`, who("admin", "management", "staff", "vet")],
+  ["add a medicine", `insert into medication (name, dose_unit) values ('probe', 'tablet')`, who("admin", "management", "staff", "doctor")],
   ["change a conversion", `update item_unit_conversions set note = 'probe' where id = (select id from item_unit_conversions limit 1)`, MANAGERS],
   ["change a delivery", `update stock_receipts set note = 'probe' where id = (select id from stock_receipts limit 1)`, who()],  // 0145 (C8): no update policy on stock_receipts for anyone; a wrong delivery is deleted and recorded again
   // her limits: nothing outside the whiteboard
@@ -78,7 +78,7 @@ const probes = [
   // RE-BASELINED 2026-10-06 (director-draft-apply): the draft ticks row 17 (weights) and 15 (prescribe) for the 2IC
   ["weight", `select 1 from weight where resident_id = '${R}'`, SIC_ONE],
   ["prescriptions", `select 1 from prescriptions where resident_id = '${R}'`, SIC_ONE],
-  ["attachments", `select 1 from attachments limit 1`, who("sic", "vet", ...OLD)], // RE-BASELINED 2026-10-07 (0152): her maintenance.photos cell reads a job's attachments
+  ["attachments", `select 1 from attachments limit 1`, who("sic", "doctor", ...OLD)], // RE-BASELINED 2026-10-07 (0152): her maintenance.photos cell reads a job's attachments
   ["assistant_actions", `select 1 from assistant_actions limit 1`, ONLY_SIC],
   ["insert placement", `insert into placement_history (resident_id, placement_type, start_date) values ('${R}', 'SendToHospital', now() + interval '1 minute')`, ONLY_SIC],
   ["delete a job", `delete from maintenance where id = '${JOB}'`, who(...OLD)],
@@ -124,7 +124,7 @@ begin
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-sic-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${["admin", "management", "staff", "volunteer", "vet"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
+    select id, who::app_role from (values ${["admin", "management", "staff", "volunteer", "doctor"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role_id, role) select ${lit(ID.sic)}, id, legacy_role from roles where key = 'second_in_command';
   -- three roles that each hold ONE of her stock cells, to show the jobs stand alone
   insert into roles (key, name, kind, opens_app, home_path, legacy_role, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails)
@@ -136,8 +136,8 @@ begin
   insert into user_roles (user_id, role_id, role) select ${lit(ID.po)}, id, legacy_role from roles where key = 'harness_po';
   insert into user_roles (user_id, role_id, role) select ${lit(ID.co)}, id, legacy_role from roles where key = 'harness_co';
   insert into user_roles (user_id, role_id, role) select ${lit(ID.dl)}, id, legacy_role from roles where key = 'harness_dl';
-  insert into vets (id, name, clinic_name) values (${lit(OWN)}, 'Harness own', 'Harness own');
-  insert into doctors (name, user_id, clinic_id) values ('Harness vet', ${lit(ID.vet)}, ${lit(OWN)});
+  insert into clinics (id, name) values (${lit(OWN)}, 'Harness own');
+  with d as (insert into doctors (name, user_id) values ('Harness doctor', ${lit(ID.doctor)}) returning id) insert into doctor_clinics (clinic_id, doctor_id) select ${lit(OWN)}, id from d;
   insert into zones (id, name) values (${lit(ZONE)}, 'Harness zone');
   insert into residents (id, name, species) values (${lit(R)}, 'Harness resident', 'Dog');
   insert into weight (resident_id, date, weight_kg) values (${lit(R)}, current_date - 1, 5);

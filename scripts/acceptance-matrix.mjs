@@ -5,7 +5,7 @@
 //
 //   node scripts/acceptance-matrix.mjs                 # the whole document, to stdout
 //   node scripts/acceptance-matrix.mjs --out <file>    # ...or to a file (see below)
-//   node scripts/acceptance-matrix.mjs --role vet      # one tester's sheet only
+//   node scripts/acceptance-matrix.mjs --role doctor   # one tester's sheet only
 //   node scripts/acceptance-matrix.mjs --check         # validate; write nothing
 //   node scripts/acceptance-matrix.mjs --pdf <file>    # the printable A4 sign-off edition (with --role too)
 //   node scripts/acceptance-matrix.mjs --json <file>   # the document as data, for checks
@@ -46,19 +46,19 @@ const ENTRIES_FILE = "scripts/lib/acceptance-matrix-entries.mjs";
 const WALKTHROUGH = "docs/role-walkthrough.md";
 
 /** The columns, in the order the shelter reads them. The first five are the app's app_role values. */
-const ROLES = ["admin", "management", "staff", "vet", "volunteer", "public_viewer", "visitor"];
+const ROLES = ["admin", "management", "staff", "doctor", "volunteer", "public_viewer", "visitor"];
 const SIGNED_IN_FIVE = ROLES.slice(0, 5);
 const ROLE_LABEL = {
   admin: "Admin",
   management: "Management",
   staff: "Staff",
-  vet: "Vet",
+  doctor: "Doctor",
   volunteer: "Volunteer",
   public_viewer: "Public viewer",
   visitor: "Signed-out visitor",
 };
 /** The pass in docs/role-walkthrough.md that holds each role's "must not" lines. */
-const PASS_ROLE = { 1: "vet", 2: "staff", 3: "admin", 4: "management", 5: "volunteer", 6: "public_viewer" };
+const PASS_ROLE = { 1: "doctor", 2: "staff", 3: "admin", 4: "management", 5: "volunteer", 6: "public_viewer" };
 const DEVICES = ["phone", "desktop", "both"];
 const DEVICE_LABEL = { phone: "Phone", desktop: "Desktop", both: "Phone and desktop" };
 

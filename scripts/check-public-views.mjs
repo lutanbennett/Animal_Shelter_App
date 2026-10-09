@@ -237,7 +237,7 @@ for (const name of PUBLIC) {
 
 // The audit log (0121) holds whole before/after copies of resident, medical
 // and contact rows, so it is admin-read only and nobody writes it through the
-// API. Anon must be refused every method; staff, volunteer and vet are
+// API. Anon must be refused every method; staff, volunteer and doctor logins are
 // asserted in scripts/check-audit-log.mjs.
 for (const [method, body] of [["GET"], ["POST", {}], ["PATCH", {}], ["DELETE"]]) {
   const call = await fetch(`${url}/rest/v1/audit_log${method === "GET" ? "?select=old_row,new_row&limit=1" : ""}`, {

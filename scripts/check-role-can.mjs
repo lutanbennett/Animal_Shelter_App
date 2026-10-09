@@ -14,7 +14,7 @@
 //   B  Admin is yes for everything, an activity the catalogue does not know
 //      included, and still no for a mistyped level or a null
 //   C  who may ask: Management (and Admin) about any role; the service role;
-//      anyone about their OWN role. Staff, vet, volunteer, public viewer, a
+//      anyone about their OWN role. Staff, doctor, volunteer, public viewer, a
 //      login with no role, an archived person, an archived role's holder and
 //      anon are REFUSED (42501) about any other role, and answered about their own
 //   D  the door follows the matrix: remove Management's recurring.manage cell and
@@ -67,7 +67,7 @@ end $f$;
 create temp table harness_ids (who text primary key, id uuid not null);
 insert into harness_ids values
   ('admin', gen_random_uuid()), ('management', gen_random_uuid()), ('staff', gen_random_uuid()),
-  ('vet', gen_random_uuid()), ('volunteer', gen_random_uuid()), ('public_viewer', gen_random_uuid()),
+  ('doctor', gen_random_uuid()), ('volunteer', gen_random_uuid()), ('public_viewer', gen_random_uuid()),
   ('norole', gen_random_uuid()), ('archperson', gen_random_uuid()), ('archrole', gen_random_uuid());
 grant select on harness_ids to authenticated, service_role;
 
@@ -82,7 +82,7 @@ begin
   end loop;
   insert into user_roles (user_id, role)
   select id, who::app_role from harness_ids
-   where who in ('admin', 'management', 'staff', 'vet', 'volunteer', 'public_viewer');
+   where who in ('admin', 'management', 'staff', 'doctor', 'volunteer', 'public_viewer');
   insert into user_roles (user_id, role, archived_at)
   select id, 'staff', now() from harness_ids where who = 'archperson';
 end $setup$;
@@ -113,7 +113,7 @@ declare
   v_who text;
 begin
   -- A: parity with has_permission(), every role x activity x level, asked by Admin.
-  for v_role in select unnest(array['admin','management','staff','vet','volunteer','public_viewer']) loop
+  for v_role in select unnest(array['admin','management','staff','doctor','volunteer','public_viewer']) loop
     v_uid := (select id from harness_ids where who = v_role);
     for v_act in select key from permission_activities loop
       foreach v_lvl in array array['read', 'edit'] loop
@@ -152,10 +152,10 @@ begin
   -- C: who may ask.
   perform pg_temp.eq('C management asks about volunteer', pg_temp.q(v_mgmt, 'role_can(''volunteer'', ''resident.record'', ''read'')'), 'true');
   perform pg_temp.eq('C management asks about admin', pg_temp.q(v_mgmt, 'role_can(''admin'', ''stock.count'', ''edit'')'), 'true');
-  perform pg_temp.eq('C management asks about vet', pg_temp.q(v_mgmt, 'role_can(''vet'', ''stock.count'', ''edit'')'), 'false');
+  perform pg_temp.eq('C management asks about doctor', pg_temp.q(v_mgmt, 'role_can(''doctor'', ''stock.count'', ''edit'')'), 'false');
   perform pg_temp.eq('C service role', pg_temp.q(null, 'role_can(''volunteer'', ''resident.record'', ''read'')', 'aal1', 'service_role'), 'true');
   perform pg_temp.eq('C anon refused', pg_temp.q(null, 'role_can(''volunteer'', ''stock.count'', ''edit'')', 'aal1', 'anon'), 'ERR:42501');
-  for v_who in select unnest(array['staff','vet','volunteer','public_viewer','norole','archperson','archrole']) loop
+  for v_who in select unnest(array['staff','doctor','volunteer','public_viewer','norole','archperson','archrole']) loop
     v_uid := (select id from harness_ids where who = v_who);
     foreach v_role in array array['volunteer', 'management', 'admin', 'staff'] loop
       if v_role = v_who then continue; end if;
@@ -166,7 +166,7 @@ begin
     perform pg_temp.eq(format('C %s refused with a null role', v_who), pg_temp.q(v_uid, 'role_can(null, ''stock.count'', ''edit'')'), 'ERR:42501');
   end loop;
   -- own role: answered, and equal to has_permission()
-  foreach v_who in array array['staff', 'vet', 'volunteer', 'public_viewer'] loop
+  foreach v_who in array array['staff', 'doctor', 'volunteer', 'public_viewer'] loop
     v_uid := (select id from harness_ids where who = v_who);
     for v_act in select key from permission_activities loop
       perform pg_temp.eq(format('C own role %s %s', v_who, v_act),
@@ -177,7 +177,7 @@ begin
   -- an archived person or an archived role's holder may not claim a role
   perform pg_temp.eq('C archived person cannot claim staff', pg_temp.q(v_archp, 'role_can(''staff'', ''stock.count'', ''edit'')'), 'ERR:42501');
   perform pg_temp.eq('C archived role holder cannot claim it', pg_temp.q(v_archr, 'role_can(''harness_archived'', ''stock.count'', ''edit'')'), 'ERR:42501');
-  v_report := v_report || 'C: management, admin and the service role answered; staff, vet, volunteer, public viewer, no-role, archived person, archived-role holder and anon refused (42501) about any other role, answered about their own | ';
+  v_report := v_report || 'C: management, admin and the service role answered; staff, doctor, volunteer, public viewer, no-role, archived person, archived-role holder and anon refused (42501) about any other role, answered about their own | ';
 
   -- D: the door follows the matrix.
   delete from role_permissions rp using roles r

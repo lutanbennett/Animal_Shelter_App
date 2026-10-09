@@ -43,9 +43,9 @@ const { PROBES: TABLE_PROBES, NO_DB_PROBE, NOT_A_DIFFERENCE } = await import(pat
 
 // The expected cells, from the paper at run time (as check-permission-tables.mjs does).
 const paper = readFileSync(join(root, "docs/roles-and-permissions.md"), "utf8").split("\n");
-const start = paper.findIndex((l) => l.startsWith("| Key | Activity | Kind | Admin | Mgmt | Staff | Vet | Vol |"));
+const start = paper.findIndex((l) => /^\| Key \| Activity \| Kind \| Admin \| Mgmt \| Staff \| (Vet|Doctor) \| Vol \|/.test(l)); // the column says Vet until the paper follows 0172
 if (start < 0) throw new Error("§4 table not found in docs/roles-and-permissions.md");
-const ROLE_COLUMN = { management: 5, staff: 6, vet: 7, volunteer: 8 };
+const ROLE_COLUMN = { management: 5, staff: 6, doctor: 7, volunteer: 8 };
 const LEVEL = { E: 2, R: 1, Y: 2 };
 const cells = {}; // activity -> role -> level
 for (const line of paper.slice(start + 2)) {
@@ -62,8 +62,8 @@ for (const line of paper.slice(start + 2)) {
 if (Object.keys(cells).length !== 60) throw new Error(`expected 60 activities in §4, parsed ${Object.keys(cells).length}`);
 
 // RE-BASELINED 2026-10-06 (director-draft-apply): the volunteer's expected cells are the Director's draft 2 (3 cells on the paper, 5
-// under the draft), not the paper's R1 column. The VET column is deliberately NOT overridden: the paper gives vets 13 cells, the draft
-// gives them the microchip only (on hold, per Lutan), and every vet MISMATCH below is that disagreement, recorded and left red.
+// under the draft), not the paper's R1 column. The DOCTOR column is deliberately NOT overridden: the paper gives doctors 13 cells, the draft
+// gives them the microchip only (on hold, per Lutan), and every doctor MISMATCH below is that disagreement, recorded and left red.
 {
   const { cellsFor } = await import(pathToFileURL(join(root, "src/lib/roles-draft/resolve.ts")).href);
   const { ACTIVITIES } = await import(pathToFileURL(join(root, "src/lib/permissions/catalogue.ts")).href);
@@ -102,8 +102,8 @@ if (flipDb) {
     : `insert into role_permissions (role_id, activity, level) select id, '${activity}', ${Number(level)} from roles where key = '${role}' on conflict (role_id, activity) do update set level = excluded.level;`;
 }
 
-const PRINCIPALS = ["admin", "management", "staff", "vet", "volunteer", "public_viewer", "norole", "archperson"];
-const ROLE_OF = { admin: "admin", management: "management", staff: "staff", vet: "vet", volunteer: "volunteer", public_viewer: "public_viewer" };
+const PRINCIPALS = ["admin", "management", "staff", "doctor", "volunteer", "public_viewer", "norole", "archperson"];
+const ROLE_OF = { admin: "admin", management: "management", staff: "staff", doctor: "doctor", volunteer: "volunteer", public_viewer: "public_viewer" };
 const expectedLevel = (role, activity) => (ROLE_OF[role] ? (cells[activity][role] ?? 0) : 0);
 
 // Fixture ids, minted here so probes can name them.
@@ -181,12 +181,14 @@ begin
             'harness-parity-' || r.who || '-' || r.id || '@example.invalid', '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || r.who), now(), now());
   end loop;
   insert into user_roles (user_id, role) select id, who::app_role from harness_ids
-   where who in ('admin', 'management', 'staff', 'vet', 'volunteer', 'public_viewer');
+   where who in ('admin', 'management', 'staff', 'doctor', 'volunteer', 'public_viewer');
   insert into user_roles (user_id, role, archived_at) select id, 'staff', now() from harness_ids where who = 'archperson';
 
-  insert into vets (id, name, clinic_name) values (v_own, 'Harness own', 'Harness own clinic'), (v_oth, 'Harness other', 'Harness other clinic');
-  insert into doctors (name, user_id, clinic_id) select 'Harness vet doctor', id, v_own from harness_ids where who = 'vet';
-  insert into doctors (id, name, clinic_id) values (${lit(F.DOCTOR)}, 'Harness doctor one', v_own), (${lit(F.DOCTOR2)}, 'Harness doctor two', v_own);
+  insert into clinics (id, name) values (v_own, 'Harness own clinic'), (v_oth, 'Harness other clinic');
+  with d as (insert into doctors (name, user_id) select 'Harness doctor', id from harness_ids where who = 'doctor' returning id)
+    insert into doctor_clinics (clinic_id, doctor_id) select v_own, id from d;
+  insert into doctors (id, name) values (${lit(F.DOCTOR)}, 'Harness doctor one'), (${lit(F.DOCTOR2)}, 'Harness doctor two');
+  insert into doctor_clinics (clinic_id, doctor_id) values (v_own, ${lit(F.DOCTOR)}), (v_own, ${lit(F.DOCTOR2)});
 
   insert into residents (id, name, species, bio) values
     (${lit(F.R_IN)}, 'Harness in-scope', 'Dog', 'bio'), (${lit(F.R_OUT)}, 'Harness out-of-scope', 'Dog', 'bio'), (${lit(F.DEAD)}, 'Harness dead', 'Dog', 'bio'), (${lit(F.BARE)}, 'Harness bare', 'Dog', 'bio');
@@ -336,7 +338,7 @@ runs.forEach((r, ri) => {
     return;
   }
   const defaultAllows = (who) => {
-    if (p.scoped && r.scope === "OUT" && who === "vet") return false;
+    if (p.scoped && r.scope === "OUT" && who === "doctor") return false;
     if (p.expect) return p.expect.includes(who);
     return expectedLevel(who, p.activity) >= need;
   };
@@ -496,7 +498,7 @@ const WIDENED_BY_DECISION = {
 };
 const narrowedSeen = [];
 const widenedSeen = [];
-const ROLES_FOR_TABLE = ["admin", "management", "staff", "vet", "volunteer", "public_viewer", null];
+const ROLES_FOR_TABLE = ["admin", "management", "staff", "doctor", "volunteer", "public_viewer", null];
 const fixturePath = join(root, "scripts/fixtures/legacy-predicates.json");
 const fixture = existsSync(fixturePath) ? JSON.parse(readFileSync(fixturePath, "utf8")) : {};
 const live = {};
@@ -549,10 +551,12 @@ for (const [k, why] of Object.entries(UNPAIRED)) console.log(`  not paired: ${k}
 // Two truth tables are scope tests, not activities: "is this a clinic-scoped login" (loadClinicScope, and
 // /appointments which only such a login may open). Their stand-in is roles.scope_clinical = 'own_clinic'
 // in the 0132 seed, so the fixture row must equal "the seed gives this role the own-clinic scope".
+// The seed predates 0172, which renamed the role vet to doctor: read its rows under the live key.
+const seedRole = (k) => (k === "vet" ? "doctor" : k);
 const seedSql = readFileSync(join(root, "supabase/migrations/0132_permission_tables.sql"), "utf8");
-const ownClinic = new Set([...seedSql.matchAll(/\('(\w+)',\s*'[^']*',\s*'\w+',\s*(?:true|false),\s*'\w+',\s*'\w+',\s*'(any|own_clinic)'/g)].filter((m) => m[2] === "own_clinic").map((m) => m[1]));
-if (!ownClinic.has("vet")) layer2.push({ pr: null, problem: "could not read the own_clinic scope from the 0132 seed" });
-for (const id of ["loadVetScope_isVet", "appointmentsPage"]) {
+const ownClinic = new Set([...seedSql.matchAll(/\('(\w+)',\s*'[^']*',\s*'\w+',\s*(?:true|false),\s*'\w+',\s*'\w+',\s*'(any|own_clinic)'/g)].filter((m) => m[2] === "own_clinic").map((m) => seedRole(m[1])));
+if (!ownClinic.has("doctor")) layer2.push({ pr: null, problem: "could not read the own_clinic scope from the 0132 seed" });
+for (const id of ["loadClinicScope_isDoctor", "appointmentsPage"]) {
   for (const r of ROLES_FOR_TABLE) {
     l2checked++;
     if (fixture[id]?.[String(r)] !== (r != null && ownClinic.has(r))) layer2.push({ pr: null, problem: `${id}(${r}) is ${fixture[id]?.[String(r)]}, the seed's scope_clinical says ${r != null && ownClinic.has(r)}` });
@@ -567,9 +571,10 @@ for (const l of layer2) console.log(`  MISMATCH ${l.problem}`);
   const VIEW = { full: "contacts", name_phone: "volunteer_contacts", name_type: "doctor_contacts" };
   const OPENS_APP = (role) => role !== "public_viewer"; // the seed's opens_app, which replaced canReadRecurringJobs
   for (const m of seed.matchAll(/\('([a-z_]+)',\s+'[A-Za-z ]+',\s+'(?:fixed|default)',\s+(true|false),\s+'[a-z_]+',\s+'[a-z_]+',\s+'[a-z_]+',\s+'(full|name_phone|name_type)'/g)) {
+    const key = seedRole(m[1]);
     l2checked++;
-    if ((m[2] === "true") !== OPENS_APP(m[1])) layer2.push({ pr: { id: "canReadRecurringJobs" }, problem: `the seeded opens_app for ${m[1]} is ${m[2]}, canReadRecurringJobs said ${OPENS_APP(m[1])}` });
-    if (fixture.contactRelation?.[m[1]] !== VIEW[m[3]]) layer2.push({ pr: { id: "contactRelation" }, problem: `contactRelation(${m[1]}) was ${fixture.contactRelation?.[m[1]]}, the seeded contacts scope ${m[3]} reads ${VIEW[m[3]]}` });
+    if ((m[2] === "true") !== OPENS_APP(key)) layer2.push({ pr: { id: "canReadRecurringJobs" }, problem: `the seeded opens_app for ${key} is ${m[2]}, canReadRecurringJobs said ${OPENS_APP(key)}` });
+    if (fixture.contactRelation?.[key] !== VIEW[m[3]]) layer2.push({ pr: { id: "contactRelation" }, problem: `contactRelation(${key}) was ${fixture.contactRelation?.[key]}, the seeded contacts scope ${m[3]} reads ${VIEW[m[3]]}` });
   }
   if (fixture.contactRelation?.null !== "contacts") layer2.push({ pr: { id: "contactRelation" }, problem: "contactRelation(null) row missing" });
 }

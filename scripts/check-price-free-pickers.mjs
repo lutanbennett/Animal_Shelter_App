@@ -10,10 +10,10 @@
 //   view read    select from picker_medications / picker_diet_types (id, name, unit, no price)
 //   add          insert into medication, with no RETURNING (the add-while-recording path)
 // The point: staff, and a role holding only the add cell or only the register cell, read the pickers and NOT the
-// price tables; the cells that are meant to see prices (stock.medications, stock.diets) still read both. The vet is
-// unchanged on the tables (vet_read_*, the vet half of the Security item and C10).
-// The vet reads neither view on dev, which holds the Director's draft matrix (the vet has no medical.prescriptions or
-// medical.diet there); the 0132 seed gives the vet both, and then the views admit it. See the decision file.
+// price tables; the cells that are meant to see prices (stock.medications, stock.diets) still read both. The doctor is
+// unchanged on the tables (doctor_read_*, the doctor half of the Security item and C10).
+// The doctor reads neither view on dev, which holds the Director's draft matrix (the doctor has no medical.prescriptions or
+// medical.diet there); the 0132 seed gives the doctor both, and then the views admit it. See the decision file.
 // Then sweeps: the two views expose exactly the columns the decision file lists, and neither select policy names
 // the add cell or the register cell.
 import { join } from "node:path";
@@ -38,7 +38,7 @@ const CUSTOM = {
     cells: [["medical.prescriptions", 2], ["medical.diet", 2], ["stock.count", 2], ["stock.delivery", 2], ["stock.purchasing", 2]],
   },
 };
-const REAL = ["admin", "management", "staff", "volunteer", "vet"];
+const REAL = ["admin", "management", "staff", "volunteer", "doctor"];
 const P = [...REAL, "norole", ...Object.keys(CUSTOM)];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
 const MED = randomUUID(), DIET = randomUUID();
@@ -52,10 +52,10 @@ const PROBES = {
 };
 // expected 1/0 per principal; anything not listed is 0
 const EXPECT = {
-  med_table: ["admin", "management", "vet", "c_med_read"],
+  med_table: ["admin", "management", "doctor", "c_med_read"],
   med_view: ["admin", "management", "staff", "c_med_read", "c_add", "c_vol_medical"],
-  med_add: ["admin", "management", "staff", "vet", "c_add"],
-  diet_table: ["admin", "management", "vet", "c_diet_read"],
+  med_add: ["admin", "management", "staff", "doctor", "c_add"],
+  diet_table: ["admin", "management", "doctor", "c_diet_read"],
   diet_view: ["admin", "management", "staff", "c_diet_read", "c_register", "c_vol_medical"],
 };
 
@@ -159,5 +159,5 @@ eq("diet_view_cols", 7, "picker_diet_types has its seven columns");
 eq("diet_view_extra", 0, "picker_diet_types has no other column");
 eq("select_names_add_or_register", 0, "neither select policy names the add cell or the register cell");
 console.log(`\n${ok} checks held, ${fails} failed.`);
-console.log(fails ? "RESULT: RED" : "RESULT: GREEN (the pickers read without prices; only the price cells read the tables; the vet is unchanged)");
+console.log(fails ? "RESULT: RED" : "RESULT: GREEN (the pickers read without prices; only the price cells read the tables; the doctor is unchanged)");
 process.exitCode = fails ? 1 : 0;

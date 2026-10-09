@@ -29,7 +29,7 @@
 //   audience   (optional) "five" (default: the manual's roles), "signedin" (five
 //              plus public viewer), "all" (every column, signed out included)
 //   na         (optional) roles for which the row simply does not apply, rather
-//              than "must not": e.g. a vet has no My tasks
+//              than "must not": e.g. a doctor has no My tasks
 //   naRest     (optional) every role not in `does` is n/a, not "must not"
 //   notes      (optional) { role: "what is different for that role" }, appended
 //              to the expected result in that role's sheet
@@ -39,8 +39,8 @@
 // tester tries both.
 
 const MENU = {
-  vet: "The menu shows only Appointments and Residents, then Manual, Release notes and Change password. No Operations.",
-  volunteer: "The menu is Home, Residents and Operations, then Manual, Release notes and Change password. Operations has one tile, Enclosures: no Stocktake, no Maintenance, Projects, Contacts or Vets. No Assistant button, no Management and no Settings.",
+  doctor: "The menu shows only Appointments and Residents, then Manual, Release notes and Change password. No Operations.",
+  volunteer: "The menu is Home, Residents and Operations, then Manual, Release notes and Change password. Operations has one tile, Enclosures: no Stocktake, no Maintenance, Projects, Contacts or Clinics. No Assistant button, no Management and no Settings.",
   staff: "The menu has Operations, with Stocktake among its tiles, and the Assistant button, but no Management, no Settings and no Security.",
   management: "The menu has Operations and Management, but no Settings and no Security. Website is a tile on Management.",
   admin: "The menu has Operations, Management, Settings, and Security at the bottom.",
@@ -54,7 +54,7 @@ export const ENTRIES = {
       device: "both",
       audience: "all",
       do: "Open the app's address, tap Staff & Volunteer Login, sign in with your own email and password, then sign out.",
-      expect: "You land on your home page — Appointments for a vet, a screen of big job tiles for most other roles — and Sign out brings you back to the public site.",
+      expect: "You land on your home page — Appointments for a doctor, a screen of big job tiles for most other roles — and Sign out brings you back to the public site.",
       notes: { management: "On a phone your home has four tiles: Recurring jobs, Intake, Residents and My tasks. Every other page is in the menu. If a tile is missing, the role no longer holds what it needs; it should never be a tile that refuses.", public_viewer: "You land on the public home page; there is no app menu.", visitor: "Signing in is how a visitor becomes one of the roles; test it with any account." },
     },
     {
@@ -163,12 +163,12 @@ export const ENTRIES = {
     },
   ],
 
-  // ── Vets ─────────────────────────────────────────────────────────────────
+  // ── Doctors ───────────────────────────────────────────────────────────────
   "appointments-vet": [
     {
       activity: "See your clinic's appointments",
       device: "both",
-      do: "Open Appointments (the first item in a vet's menu).",
+      do: "Open Appointments (the first item in a doctor's menu).",
       expect: "Visits are in three groups — To write up, Upcoming, Recently done — each with a count, and only this clinic's visits show. A clinic with none reads as empty, not broken.",
     },
   ],
@@ -179,17 +179,17 @@ export const ENTRIES = {
       activity: "See the maintenance jobs assigned to you",
       needs: "maintenance.jobs:read",
       device: "phone",
-      na: ["vet"],
+      na: ["doctor"],
       do: "Open My tasks and look at the list.",
       expect: "Jobs assigned to you are listed by due date with their place, and the number beside My tasks in the menu counts those due today or overdue.",
-      notes: { vet: "A vet has no My tasks: typing its address sends the vet to Appointments." },
+      notes: { doctor: "A doctor has no My tasks: typing its address sends the doctor to Appointments." },
     },
     {
       activity: "Change a maintenance job's status from My tasks",
       needs: "maintenance.jobs",
       device: "phone",
       roles: ["admin", "management", "staff"],
-      na: ["vet"],
+      na: ["doctor"],
       do: "Tap In progress, then Completed on one of your jobs, then tap Undo.",
       expect: "The status changes each time, and the completed job comes back with Undo.",
     },
@@ -208,7 +208,7 @@ export const ENTRIES = {
       activity: "Mark a recurring job done or skipped",
       needs: "recurring.do_own",
       device: "phone",
-      na: ["vet"],
+      na: ["doctor"],
       do: "On My tasks tap Done on a recurring job due today, and Skip with a note on another.",
       expect: "Each leaves the list and the note is kept. A job that waits for another shows \"Waiting for …\" until that one is done.",
     },
@@ -223,7 +223,7 @@ export const ENTRIES = {
       do: "Open Residents and search by name (English or Thai), by ID such as R-0042, then try a zone chip and the Off-site chip.",
       expect: "The list narrows each time and a name opens that resident's hub. Residents who have died are hidden, with a count.",
       notes: {
-        vet: "A vet's list names the clinic at the top and shows only that clinic's residents; any other resident is absent.",
+        doctor: "A doctor's list names the clinic at the top and shows only that clinic's residents; any other resident is absent.",
         volunteer: "A volunteer's list is name, ID, enclosure, zone and status only: no Scan a chip box, no No microchip chip, no ticking residents, no New resident and no pencil; searching by another name finds nothing.",
       },
     },
@@ -233,7 +233,7 @@ export const ENTRIES = {
       activity: "Tap a resident's name card with your phone",
       device: "phone",
       do: "Hold the top of your phone to a resident's name card.",
-      expect: "The resident's page opens. Admin, Management, Staff and a vet whose clinic treats that resident see the full page; everyone else signed in sees the public card (photo, name, age, temperament) plus where the resident lives and a button for each job they can do. Nobody sees an error or a page with less than a visitor sees.",
+      expect: "The resident's page opens. Admin, Management, Staff and a doctor whose clinic treats that resident see the full page; everyone else signed in sees the public card (photo, name, age, temperament) plus where the resident lives and a button for each job they can do. Nobody sees an error or a page with less than a visitor sees.",
     },
   ],
   microchip: [
@@ -267,7 +267,7 @@ export const ENTRIES = {
       do: "Open a resident and look at every card; on a phone, switch between Overview and Medical.",
       expect: "Photo, details, housing, adoption updates and the medical cards all load, and nothing says an error.",
       notes: {
-        vet: "The vet sees the info, medical and placement parts, but no New resident, Edit, Move, Hospital, Foster, Adopt or Record a death controls.",
+        doctor: "The doctor sees the info, medical and placement parts, but no New resident, Edit, Move, Hospital, Foster, Adopt or Record a death controls.",
         volunteer: "A volunteer's page for a resident is smaller: photo, name, ID, species, sex, status, enclosure and zone, and a link to the enclosure. There are no cards, no tabs and no medical part.",
       },
     },
@@ -379,12 +379,12 @@ export const ENTRIES = {
   ],
   "vet-visits": [
     {
-      activity: "Book a vet visit",
+      activity: "Book a clinic visit",
       needs: "visit.book",
       device: "both",
-      do: "On a resident tap Book vet visit, choose the clinic, date and reason, and save.",
-      expect: "The visit is listed on the resident's Vet Appointments page.",
-      notes: { vet: "A vet is offered only their own clinic, and picks the doctor from the clinic's list." },
+      do: "On a resident tap Book clinic visit, choose the clinic, date and reason, and save.",
+      expect: "The visit is listed on the resident's Clinic visits page.",
+      notes: { doctor: "A doctor is offered only their own clinic, and picks the doctor from the clinic's list." },
     },
     {
       activity: "Record how a visit went",
@@ -452,7 +452,7 @@ export const ENTRIES = {
       needs: "medical.archive",
       device: "both",
       do: "Tap Remove on a weight reading, then Show removed, then Restore.",
-      expect: "The record leaves the list and charts when removed and returns when restored. Vets are not offered Remove.",
+      expect: "The record leaves the list and charts when removed and returns when restored. Doctors are not offered Remove.",
     },
   ],
 
@@ -464,7 +464,7 @@ export const ENTRIES = {
       device: "phone",
       do: "Open Photos on a resident, choose a folder, and add a photo from the phone.",
       expect: "The photo appears in the gallery under the folder you chose.",
-      notes: { vet: "A vet has no folder choice: photos go into Medical, and never to the website." },
+      notes: { doctor: "A doctor has no folder choice: photos go into Medical, and never to the website." },
     },
   ],
 
@@ -585,13 +585,13 @@ export const ENTRIES = {
     },
   ],
 
-  // ── Vets and contacts ────────────────────────────────────────────────────
+  // ── Clinics and contacts─────────────────────────────────────────────────
   vets: [
     {
-      activity: "Look up a vet or clinic",
+      activity: "Look up a clinic",
       needs: "clinics.list:read",
       device: "both",
-      do: "Open Vets and tap a vet.",
+      do: "Open Clinics and tap a clinic.",
       expect: "Visit counts and the clinic's doctors show.",
     },
   ],
@@ -658,11 +658,11 @@ export const ENTRIES = {
   ],
   "manage-vets": [
     {
-      activity: "Add a vet or clinic",
+      activity: "Add a clinic",
       needs: "clinics.list",
       device: "desktop",
-      do: "Management → Vets: add a vet with a clinic name.",
-      expect: "It is offered in the vet visit form.",
+      do: "Management → Clinics: add a clinic by its name (a mobile doctor is a clinic with no address).",
+      expect: "It is offered in the clinic visit form.",
     },
   ],
   "vet-doctors": [
@@ -776,7 +776,7 @@ export const ENTRIES = {
       needs: "recurring.manage",
       device: "desktop",
       do: "Tap New recurring job, set a weekly rule, tick who does it, and check Next dates before saving.",
-      expect: "The job lists its next dates and shows on the assignees' My tasks on those days. A vet is not offered as an assignee.",
+      expect: "The job lists its next dates and shows on the assignees' My tasks on those days. A doctor is not offered as an assignee.",
     },
     {
       activity: "Hand a date over to someone else",
@@ -986,28 +986,29 @@ export const ENTRIES = {
 // are about a role, not an activity: they are what a role must NOT be able to
 // do, tried by typing the address as well as by looking for a button.
 export const BOUNDARIES = [
-  // Pass 1 — Vet
-  { role: "vet", starts: "/my — redirects", text: "Type the address of My tasks: you are sent to Appointments (a vet has no My tasks)." },
-  { role: "vet", starts: "/clinics and a clinic page", text: "Type the address of the Vets list and of a clinic page: refused, with the \"no access\" page inside the app." },
-  { role: "vet", starts: "/contacts — refused", text: "Type the address of Contacts: refused." },
-  { role: "vet", starts: "/enclosures, and a zone", text: "Type the address of Enclosures, a zone and an enclosure: refused." },
-  { role: "vet", starts: "/projects — refused", text: "Type the address of Projects: refused." },
-  { role: "vet", starts: "/maintenance — refused", text: "Type the address of Maintenance: refused; a vet gets no board at all." },
-  { role: "vet", starts: "/stocktake — refused", text: "Type the address of Stocktake: refused." },
-  { role: "vet", starts: "/management and /management/dashboard", text: "Type the address of Management and of its Dashboard: refused." },
-  { role: "vet", starts: "/management/clinics/<id>/doctors", text: "Type the address of a clinic's Doctors list in Management: refused; a vet cannot rename, merge or retire doctors." },
-  { role: "vet", starts: "/admin, /admin/security", text: "Type the address of Settings, Security and Recent changes: refused." },
-  { role: "vet", starts: "/deliveries — refused", text: "Type the address of Deliveries: refused." },
-  { role: "vet", starts: "Resident hub shows no New resident", text: "On a resident's hub there is no New resident, Edit, Move, Hospital, Foster, Adopt or Record a death control." },
-  { role: "vet", starts: "/residents/<id>/edit, /move", text: "Type the address of a resident's Edit, Move, Hospital, Rehome and Deceased pages: all refused." },
-  { role: "vet", starts: "No Remove control on a weight", text: "There is no Remove button on a weight, prescription, vet visit or immunization." },
-  { role: "vet", starts: "A resident whose only record", text: "After admin or staff remove the only record from this clinic, the resident has left the vet's list and its address is refused (it reads as absent, not broken)." },
-  { role: "vet", starts: "A resident outside the clinic's scope", text: "Type the address of a resident this clinic has no record for: refused, nothing is shown." },
-  { role: "vet", starts: "Photo upload to any folder but Medical", text: "A vet's photo upload to any folder other than Medical is refused. Needs the browser's developer tools; write \"not run\" if you cannot." },
-  { role: "vet", starts: "The Assistant slide-over", text: "There is no Assistant button, and no address that opens it." },
-  { role: "vet", starts: "The vet is not offered when a recurring job", text: "When a recurring job is assigned, the vet is not in the list of people to choose." },
+  // Pass 1 — Doctor. Three `starts` below quote docs/role-walkthrough.md as it still reads ("Vet", /vets);
+  // when that file is renamed, the generator prints the new beginnings to paste.
+  { role: "doctor", starts: "/my — redirects", text: "Type the address of My tasks: you are sent to Appointments (a doctor has no My tasks)." },
+  { role: "doctor", starts: "/vets and a clinic page", text: "Type the address of the Clinics list and of a clinic page: refused, with the \"no access\" page inside the app." },
+  { role: "doctor", starts: "/contacts — refused", text: "Type the address of Contacts: refused." },
+  { role: "doctor", starts: "/enclosures, and a zone", text: "Type the address of Enclosures, a zone and an enclosure: refused." },
+  { role: "doctor", starts: "/projects — refused", text: "Type the address of Projects: refused." },
+  { role: "doctor", starts: "/maintenance — refused", text: "Type the address of Maintenance: refused; a doctor gets no board at all." },
+  { role: "doctor", starts: "/stocktake — refused", text: "Type the address of Stocktake: refused." },
+  { role: "doctor", starts: "/management and /management/dashboard", text: "Type the address of Management and of its Dashboard: refused." },
+  { role: "doctor", starts: "/management/vets/<id>/doctors", text: "Type the address of a clinic's Doctors list in Management: refused; a doctor cannot rename, merge or retire doctors." },
+  { role: "doctor", starts: "/admin, /admin/security", text: "Type the address of Settings, Security and Recent changes: refused." },
+  { role: "doctor", starts: "/deliveries — refused", text: "Type the address of Deliveries: refused." },
+  { role: "doctor", starts: "Resident hub shows no New resident", text: "On a resident's hub there is no New resident, Edit, Move, Hospital, Foster, Adopt or Record a death control." },
+  { role: "doctor", starts: "/residents/<id>/edit, /move", text: "Type the address of a resident's Edit, Move, Hospital, Rehome and Deceased pages: all refused." },
+  { role: "doctor", starts: "No Remove control on a weight", text: "There is no Remove button on a weight, prescription, clinic visit or immunization." },
+  { role: "doctor", starts: "A resident whose only record", text: "After admin or staff remove the only record from this clinic, the resident has left the doctor's list and its address is refused (it reads as absent, not broken)." },
+  { role: "doctor", starts: "A resident outside the clinic's scope", text: "Type the address of a resident this clinic has no record for: refused, nothing is shown." },
+  { role: "doctor", starts: "Photo upload to any folder but Medical", text: "A doctor's photo upload to any folder other than Medical is refused. Needs the browser's developer tools; write \"not run\" if you cannot." },
+  { role: "doctor", starts: "The Assistant slide-over", text: "There is no Assistant button, and no address that opens it." },
+  { role: "doctor", starts: "The vet is not offered when a recurring job", text: "When a recurring job is assigned, the doctor is not in the list of people to choose." },
   // Pass 2 — Staff
-  { role: "staff", starts: "/management/ — redirected", text: "Type the address of each Management page — dashboard, cashflow, stock usage, recurring jobs, translations, Shelter Friends, medications, diets, vets, contacts: all are refused." },
+  { role: "staff", starts: "/management/ — redirected", text: "Type the address of each Management page — dashboard, cashflow, stock usage, recurring jobs, translations, Shelter Friends, medications, diets, clinics, contacts: all are refused." },
   { role: "staff", starts: "/admin/ — redirected", text: "Type the address of Settings and any page under it: refused." },
   { role: "staff", starts: "Withdraw a death recorded in error", text: "On a deceased resident there is no Withdraw this death, and its address is refused. Only admin can." },
   { role: "staff", starts: "Cannot create, edit or delete a recurring job", text: "Staff cannot create, edit or delete a recurring job; they only mark done the ones given to them." },
@@ -1021,16 +1022,16 @@ export const BOUNDARIES = [
   // Pass 5 — Volunteer (rewritten for R1, 2026-10-04)
   { role: "volunteer", starts: "Anything else on a resident", text: "Look for a resident's breed, age, bio, notes, microchip, carer or dates, on the page or in the list, or find one by a chip number: none of it is shown, and a chip search finds nothing." },
   { role: "volunteer", starts: "Intake, edit, move, hospital", text: "Register, edit, move, send to hospital, foster, adopt or record a death: controls absent, and the pages refused when typed." },
-  { role: "volunteer", starts: "Any medical page", text: "Open a medical tab of a resident, or any of the seven new-record pages (immunization, vet visit, prescription, diet, weight, procedure, blood test): all refused. A volunteer neither reads nor writes medical records." },
+  { role: "volunteer", starts: "Any medical page", text: "Open a medical tab of a resident, or any of the seven new-record pages (immunization, clinic visit, prescription, diet, weight, procedure, blood test): all refused. A volunteer neither reads nor writes medical records." },
   { role: "volunteer", starts: "Add or set a photo", text: "Add or set a photo on a resident, a project or a maintenance job, or attach a file to a record: no control, and the upload is refused." },
   { role: "volunteer", starts: "/stocktake and /deliveries", text: "Type the address of Stocktake and of Deliveries: refused. A volunteer does not count stock." },
-  { role: "volunteer", starts: "/maintenance, /projects", text: "Type the address of Maintenance, Projects, Contacts and Vets: each refused, and none is a tile on Operations or on Home." },
+  { role: "volunteer", starts: "/maintenance, /projects", text: "Type the address of Maintenance, Projects, Contacts and Clinics: each refused, and none is a tile on Operations or on Home." },
   { role: "volunteer", starts: "Assistant", text: "Look for the Assistant button in the header, and open the assistant's page by its address: no button, and no answers." },
   { role: "volunteer", starts: "/management/, /admin/", text: "Type the address of any Management or Settings page: refused." },
   // Pass 6 — Public viewer
   { role: "public_viewer", starts: "No app menu at all", text: "After signing in there is no app menu at all." },
   { role: "public_viewer", starts: "Lands on the public home page", text: "Signing in lands on the public home page, not My tasks." },
-  { role: "public_viewer", starts: "/my, /residents, /enclosures", text: "Type the address of My tasks, Residents, Enclosures, Maintenance, Stocktake, Vets, Contacts, Projects, Deliveries, Management and Settings, one by one: every one is refused or redirected." },
+  { role: "public_viewer", starts: "/my, /residents, /enclosures", text: "Type the address of My tasks, Residents, Enclosures, Maintenance, Stocktake, Clinics, Contacts, Projects, Deliveries, Management and Settings, one by one: every one is refused or redirected." },
   { role: "public_viewer", starts: "Public pages all open", text: "These all open: the home page, Adopt, one animal's page, Donate, Foster, Volunteer and Our work." },
   { role: "public_viewer", starts: "A resident QR link", text: "A resident's tag address opens the public profile, not the staff page." },
   { role: "public_viewer", starts: "/account/password still opens", text: "Change password still opens — the one staff-style page a public viewer needs." },
@@ -1041,6 +1042,6 @@ export const BOUNDARIES = [
 // public viewer). These come from what the manual promises about the public site.
 export const VISITOR_BOUNDARIES = [
   { role: "visitor", text: "Type the address of any staff page — Residents, My tasks, Management, Settings: you are asked to sign in and nothing from the shelter's records is shown." },
-  { role: "visitor", text: "Look through every public page and a resident's public profile: no microchip number, medical record, vet visit, medication, adopter or carer contact, or internal note appears anywhere." },
+  { role: "visitor", text: "Look through every public page and a resident's public profile: no microchip number, medical record, clinic visit, medication, adopter or carer contact, or internal note appears anywhere." },
   { role: "visitor", text: "Open a resident's public profile for an animal that has since been adopted or has died: it does not show as available." },
 ];

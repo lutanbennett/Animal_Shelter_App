@@ -4,12 +4,12 @@
 //   node scripts/worktree.mjs dev                          (in another terminal)
 //   node scripts/check-place-order-roles.mjs [http://localhost:<port>]
 //
-// Makes a throwaway staff login and a throwaway vet login, then checks what the browser pass could not:
+// Makes a throwaway staff login and a throwaway doctor login, then checks what the browser pass could not:
 //
 //   - staff cannot open Settings → Zones or Settings → Enclosures, and the database refuses them an
 //     order write (the server, not just a hidden button);
 //   - staff see /enclosures's zones in the order the tables hold, not A-Z;
-//   - the vet, who cannot read the zones and enclosures tables, still gets /enclosures and /residents
+//   - the doctor, who cannot read the zones and enclosures tables, still gets /enclosures and /residents
 //     (name order, no error);
 //   - the Lifecycle pseudo-enclosures refuse an order even to the service role (0161's trigger).
 //
@@ -120,12 +120,12 @@ try {
     `staff see the zones in the tables' order (${inPage.slice(0, 5).join(", ")}, …)`,
   );
 
-  const vet = await makeLogin("vet");
-  const { data: vetZones } = await vet.client.from("zones").select("id");
-  console.log(`  (the vet reads ${vetZones?.length ?? 0} zones from the table)`);
+  const doctor = await makeLogin("doctor");
+  const { data: doctorZones } = await doctor.client.from("zones").select("id");
+  console.log(`  (the doctor reads ${doctorZones?.length ?? 0} zones from the table)`);
   for (const path of ["/enclosures", "/residents"]) {
-    const r = await page(path, vet.cookie);
-    expect(r.status === 200 && !/Application error|Internal Server Error/.test(r.html), `the vet opens ${path} without an error (${r.status})`);
+    const r = await page(path, doctor.cookie);
+    expect(r.status === 200 && !/Application error|Internal Server Error/.test(r.html), `the doctor opens ${path} without an error (${r.status})`);
   }
 
   const { data: lifecycle } = await service

@@ -23,14 +23,14 @@ begin;
 create temp table who (who text primary key, uid uuid);
 insert into who values
   ('management', gen_random_uuid()), ('admin', gen_random_uuid()),
-  ('staff', gen_random_uuid()), ('volunteer', gen_random_uuid()), ('vet', gen_random_uuid()),
+  ('staff', gen_random_uuid()), ('volunteer', gen_random_uuid()), ('doctor', gen_random_uuid()),
   ('public_viewer', gen_random_uuid()), ('roleless', gen_random_uuid()), ('anon', null);
 insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
        'harness-0091-' || who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
   from who where uid is not null;
 insert into user_roles (user_id, role)
-select uid, who::app_role from who where who in ('management', 'admin', 'staff', 'volunteer', 'vet', 'public_viewer');
+select uid, who::app_role from who where who in ('management', 'admin', 'staff', 'volunteer', 'doctor', 'public_viewer');
 grant select on who to authenticated, anon;
 
 -- Call record_stocktake as a login (null = anon). Returns the result as
@@ -163,9 +163,9 @@ begin
                         jsonb_build_array(jsonb_build_object('id', d1, 'count', 1), jsonb_build_object('id', upper(d1::text), 'count', 2)));
   if v <> 'ERR P0001 The same diet type is listed twice.' then raise exception 'FAIL F: diet duplicate (case-insensitive id): %', v; end if;
 
-  -- G. who is refused: vet, public_viewer and role-less by the function's
+  -- G. who is refused: doctor, public_viewer and role-less by the function's
   -- own guard (0091: it is the whole access rule now), anon by the grant
-  foreach v_who in array array['vet', 'public_viewer', 'roleless'] loop
+  foreach v_who in array array['doctor', 'public_viewer', 'roleless'] loop
     v := pg_temp.as_login(v_who, jsonb_build_array(jsonb_build_object('id', m1, 'count', 1)), null);
     if v <> 'ERR P0001 Not authorized to record a stocktake.' then raise exception 'FAIL G %: %', v_who, v; end if;
   end loop;
@@ -207,7 +207,7 @@ begin
   if (select count(*) from stock_counts) <> v_hist then raise exception 'FAIL K2: the volunteer refusal wrote history'; end if;
 
   -- K4. the table has no door but the function: staff can read the history
-  -- but not insert (so not back-date), update or delete it; a vet reads
+  -- but not insert (so not back-date), update or delete it; a doctor reads
   -- nothing; anon is refused outright
   perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'staff'), 'role', 'authenticated')::text, true);
   set local role authenticated;
@@ -229,11 +229,11 @@ begin
   exception when insufficient_privilege then null;
   end;
   reset role;
-  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'vet'), 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'doctor'), 'role', 'authenticated')::text, true);
   set local role authenticated;
   v_n := (select count(*) from stock_counts);
   reset role;
-  if v_n <> 0 then raise exception 'FAIL K4: a vet read % history rows', v_n; end if;
+  if v_n <> 0 then raise exception 'FAIL K4: a doctor read % history rows', v_n; end if;
   perform set_config('request.jwt.claims', json_build_object('role', 'anon')::text, true);
   set local role anon;
   begin
@@ -275,7 +275,7 @@ begin
     raise exception 'FAIL H: grants not anon-no / authenticated-yes / service_role-yes';
   end if;
 
-  raise exception 'HARNESS-OK record_stocktake against the live schema | K1 one history row per listed item: one stocktake id, stored figure, unit, same stamp, caller; none for the unlisted row | K2 refusals write no history | K3 each call its own stocktake id, attributed | K4 staff read-only, vet sees none, anon refused | K5 delete cascades | A 2 meds + 1 diet in one call, all stamped now() | B same figure restamps | C zero is a count | D unlisted row untouched | E admin ok, null and [] lists ok | F refused, nothing written:% | bad diet list stops the meds | G vet, public_viewer and role-less refused by the guard, anon by the grant | I staff and volunteer save both tables; still refused before writing | J staff cannot update either table directly; definer + search_path | H grants', v_report;
+  raise exception 'HARNESS-OK record_stocktake against the live schema | K1 one history row per listed item: one stocktake id, stored figure, unit, same stamp, caller; none for the unlisted row | K2 refusals write no history | K3 each call its own stocktake id, attributed | K4 staff read-only, doctor sees none, anon refused | K5 delete cascades | A 2 meds + 1 diet in one call, all stamped now() | B same figure restamps | C zero is a count | D unlisted row untouched | E admin ok, null and [] lists ok | F refused, nothing written:% | bad diet list stops the meds | G doctor, public_viewer and role-less refused by the guard, anon by the grant | I staff and volunteer save both tables; still refused before writing | J staff cannot update either table directly; definer + search_path | H grants', v_report;
 end;
 $h$;
 rollback;

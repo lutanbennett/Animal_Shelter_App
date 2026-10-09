@@ -22,7 +22,7 @@ begin;
 create temp table who (who text primary key, uid uuid);
 insert into who values
   ('management', gen_random_uuid()), ('staff', gen_random_uuid()),
-  ('volunteer', gen_random_uuid()), ('vet', gen_random_uuid());
+  ('volunteer', gen_random_uuid()), ('doctor', gen_random_uuid());
 insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
        'harness-0096-' || who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
@@ -176,11 +176,11 @@ begin
   reset role;
   if v_n <> 0 then raise exception 'S4 volunteer reads % intervals (0134 took them away)', v_n; end if;
 
-  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'vet'), 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'doctor'), 'role', 'authenticated')::text, true);
   set local role authenticated;
   select (select count(*) from stock_receipts) + (select count(*) from stock_count_intervals) into v_n;
   reset role;
-  if v_n <> 0 then raise exception 'S4 vet sees % stock rows', v_n; end if;
+  if v_n <> 0 then raise exception 'S4 doctor sees % stock rows', v_n; end if;
 
   perform set_config('request.jwt.claims', json_build_object('role', 'anon')::text, true);
   set local role anon;
@@ -197,7 +197,7 @@ begin
   exception when insufficient_privilege then null;
   end;
   reset role;
-  v_report := v_report || ' | S4 staff records (recorded_by forced to caller), management cannot edit (C8, 0145), volunteer reads nothing and cannot record (0134), vet sees nothing, anon refused by the grant';
+  v_report := v_report || ' | S4 staff records (recorded_by forced to caller), management cannot edit (C8, 0145), volunteer reads nothing and cannot record (0134), doctor sees nothing, anon refused by the grant';
 
   -- S5 cascade.
   delete from diet_types where id = v_kibble;

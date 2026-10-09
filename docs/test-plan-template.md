@@ -62,7 +62,7 @@ release manager before `npm run deploy:prod`.
 
 - [ ] Change is described in one sentence, and it matches what the backlog item asked for
 - [ ] Files/areas touched listed (routes, `worker/`, `supabase/migrations/`, shared libs)
-- [ ] Roles affected identified: admin / staff / vet / volunteer / resident / signed-out public
+- [ ] Roles affected identified: admin / staff / doctor / volunteer / resident / signed-out public
 - [ ] Anything explicitly **out of scope** written down, so the release manager is not surprised
 
 ## 2. Automated gates
@@ -118,7 +118,7 @@ behind it did not.
 
 These are all of them. `app_role` is `('admin', 'staff', 'vet', 'volunteer')`
 from `0001_initial_schema.sql`, plus `'management'` added by
-`0038_management_role.sql`. **There is no `resident` role** — in this app a
+`0038_management_role.sql`, with `'vet'` renamed `'doctor'` by `0172_clinics_and_doctors.sql`. **There is no `resident` role** — in this app a
 resident is an animal — and do not re-derive this list by grepping for quoted
 strings, which is how `resident` got into this template and `management` got left
 out of it for a day.
@@ -128,7 +128,7 @@ out of it for a day.
 | admin | | | |
 | management | | | |
 | staff | | | |
-| vet | | | |
+| doctor | | | |
 | volunteer | | | |
 | signed out | | | |
 
@@ -219,7 +219,7 @@ release-cut plans accumulated permanently-open rows exactly that way before it
 was noticed (2026-09-27).
 
 The test for whether something belongs here: **would a person have to go and look
-at it, separately from deploying?** A vet's view of a page, a real phone, whether
+at it, separately from deploying?** A doctor's view of a page, a real phone, whether
 wording reads well — yes. Anything the deploy itself performs — no, that is
 section 8's.
 

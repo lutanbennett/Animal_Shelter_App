@@ -61,7 +61,7 @@ do $h$
 declare
   v_vol uuid := gen_random_uuid(); v_staff uuid := gen_random_uuid(); v_admin uuid := gen_random_uuid();
   v_zone uuid := gen_random_uuid(); v_e1 uuid := gen_random_uuid(); v_e2 uuid := gen_random_uuid();
-  v_vet uuid := gen_random_uuid(); v_carer uuid := gen_random_uuid();
+  v_clinic uuid := gen_random_uuid(); v_carer uuid := gen_random_uuid();
   v_life uuid; v_un uuid; v_hosp uuid; v_fost uuid; v_adop uuid; v_dead uuid;
   a uuid := gen_random_uuid(); b uuid := gen_random_uuid(); c uuid := gen_random_uuid();
   v_appt uuid; v_r text; v_n int; v_id uuid; v_end timestamptz; v_uid uuid;
@@ -83,7 +83,7 @@ begin
   insert into zones (id, name) values (v_zone, 'Harness zone');
   insert into enclosures (id, name, zone_id) values (v_e1, 'Harness E1', v_zone), (v_e2, 'Harness E2', v_zone);
   insert into contacts (id, name, type) values (v_carer, 'Harness carer', 'Carer');
-  insert into vets (id, name, clinic_name) values (v_vet, 'Harness vet', 'Harness clinic');
+  insert into clinics (id, name) values (v_clinic, 'Harness clinic');
   insert into residents (id, name, species) values (a, 'Harness A', 'Dog'), (b, 'Harness B', 'Dog'), (c, 'Harness C', 'Dog');
 
   -- A: Intake (Unassigned) -> volunteer ChangeEnclosure E1 -> staff ChangeEnclosure E2
@@ -165,7 +165,7 @@ begin
 
   -- P2: the deceased workflow, with something for the cascade to snapshot
   insert into clinic_visits (resident_id, clinic_id, appointment_date, status)
-  values (b, v_vet, now() + interval '3 days', 'scheduled') returning id into v_appt;
+  values (b, v_clinic, now() + interval '3 days', 'scheduled') returning id into v_appt;
   v_r := pg_temp.run(v_staff, format($q$insert into placement_history (resident_id, placement_type, start_date, zone_id, enclosure_id, previous_enclosure_id, cause_of_death)
     values (%L, 'Deceased', %L, %L, %L, %L, 'harness')$q$, b, t0 + interval '2 days', v_life, v_dead, v_e1));
   if v_r <> 'ok' then raise exception 'FAIL P2 Deceased placement: %', v_r; end if;

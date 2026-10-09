@@ -11,7 +11,7 @@
 // Public pages are captured from a second, signed-out context.
 //
 // Records are discovered from the running app — the first resident whose
-// status is Resident, the first enclosure, vet, contact and project folder —
+// status is Resident, the first enclosure, clinic, contact and project folder —
 // so point it at a database with some data in it (dev, not an empty
 // project). The file names must match the `src` values in
 // src/lib/manual/en.ts.
@@ -86,7 +86,7 @@ const SIGNED_IN = [
   { name: "projects", path: "/projects" },
   { name: "project-folder", path: "/projects/{project}", full: true },
   { name: "vets", path: "/clinics" },
-  { name: "vet-hub", path: "/clinics/{vet}", full: true },
+  { name: "vet-hub", path: "/clinics/{clinic}", full: true },
   { name: "contacts", path: "/contacts" },
   { name: "contact-hub", path: "/contacts/{contact}", full: true },
   { name: "management-dashboard", path: "/management/dashboard", full: true },
@@ -287,7 +287,7 @@ async function discoverIds(page) {
 
   for (const [key, list, prefix] of [
     ["enclosure", "/enclosures", "/enclosures/"],
-    ["vet", "/clinics", "/clinics/"],
+    ["clinic", "/clinics", "/clinics/"],
     ["contact", "/contacts", "/contacts/"],
     ["project", "/projects", "/projects/"],
   ]) {

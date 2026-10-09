@@ -1,7 +1,10 @@
 // Rollback harness for 0113_resident_microchip_number.sql and
-// 0116_set_resident_microchip.sql against DEV only.
-// One transaction: the migration (twice), assertions against real rows, then
+// set_resident_microchip() (0116, 0155) against DEV only.
+// One transaction: 0113 (twice), assertions against real rows, then
 // a deliberate `raise exception` carrying the evidence — nothing can commit.
+// The function is asserted live, not replayed: 0172 redefined it for the
+// doctor role, and 0116's and 0155's bodies name the old 'vet' role
+// (docs/decisions/2026-10-02-replay-or-assert-live.md).
 //
 //   node scripts/check-resident-microchip.mjs     (from the repo root; dev only)
 //
@@ -17,10 +20,8 @@ const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
 const migration = readFileSync(join(root, "supabase/migrations/0113_resident_microchip_number.sql"), "utf8");
-
-const fn = readFileSync(join(root, "supabase/migrations/0116_set_resident_microchip.sql"), "utf8");
-// 0155 (q8) replaces the function body with a has_permission('resident.microchip') check and gives Management the cell
-const fn2 = readFileSync(join(root, "supabase/migrations/0155_director_answers_schema.sql"), "utf8");
+// set_resident_microchip() is the live one: 0155 (q8) gave it a has_permission('resident.microchip') check and
+// Management the cell; 0172 renamed the role it scopes to a clinic from vet to doctor.
 
 const sql = `
 begin;
@@ -29,16 +30,13 @@ create temp table h_pre on commit drop as
 ${migration}
 -- a second run of the whole file must be harmless
 ${migration}
-${fn}
-${fn}
-${fn2}
 
 do $h$
 declare
   v_a uuid; v_b uuid; v_dead uuid;
   v_rows int; v_set int; v_n int;
   v_rejected boolean;
-  v_vet uuid := gen_random_uuid(); v_staff uuid := gen_random_uuid(); v_vol uuid := gen_random_uuid();
+  v_doctor uuid := gen_random_uuid(); v_staff uuid := gen_random_uuid(); v_vol uuid := gen_random_uuid();
   v_mgmt uuid := gen_random_uuid(); v_unl uuid := gen_random_uuid(); v_own uuid := gen_random_uuid(); v_oth uuid := gen_random_uuid();
   v_in uuid; v_out uuid; v_before jsonb; v_after jsonb; v_err text;
 begin
@@ -110,13 +108,13 @@ begin
   if not v_rejected then raise exception 'FAIL F implant date changed on a deceased resident'; end if;
 
   -- G. set_resident_microchip (0116)
-  insert into vets (id, name, clinic_name) values (v_own, 'Harness own', 'Harness own clinic'), (v_oth, 'Harness other', 'Harness other clinic');
+  insert into clinics (id, name) values (v_own, 'Harness own clinic'), (v_oth, 'Harness other clinic');
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-0116-' || u || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
-    from unnest(array[v_vet, v_staff, v_vol, v_unl, v_mgmt]) u;
-  insert into user_roles (user_id, role) values (v_vet, 'vet'), (v_unl, 'vet');
-  -- 0127: a vet login's clinic is its linked doctor's (the home-clinic trigger links it)
-  insert into doctors (name, user_id, clinic_id) values ('Harness vet doctor', v_vet, v_own);
+    from unnest(array[v_doctor, v_staff, v_vol, v_unl, v_mgmt]) u;
+  insert into user_roles (user_id, role) values (v_doctor, 'doctor'), (v_unl, 'doctor');
+  -- 0127: a doctor login's clinic is its linked doctor's (doctor_clinics links it, 0172)
+  with d as (insert into doctors (name, user_id) values ('Harness doctor', v_doctor) returning id) insert into doctor_clinics (clinic_id, doctor_id) select v_own, id from d;
   insert into user_roles (user_id, role) values (v_staff, 'staff'), (v_vol, 'volunteer'), (v_mgmt, 'management');
   insert into residents (name) values ('harness 0116 in'), ('harness 0116 out');
   select id into v_in from residents where name = 'harness 0116 in';
@@ -130,8 +128,8 @@ begin
 
   perform set_config('app.deceased_lock_bypass', '', true);
 
-  -- G1 vet, in scope: sets the chip and date, and no other column changes
-  perform set_config('request.jwt.claims', json_build_object('sub', v_vet, 'role', 'authenticated')::text, true);
+  -- G1 doctor, in scope: sets the chip and date, and no other column changes
+  perform set_config('request.jwt.claims', json_build_object('sub', v_doctor, 'role', 'authenticated')::text, true);
   select to_jsonb(r) - 'microchip_number' - 'microchip_implanted_on' into v_before from residents r where id = v_in;
   set local role authenticated;
   perform set_resident_microchip(v_in, '985112345678901', date '2026-02-02');
@@ -150,16 +148,16 @@ begin
 
   -- G2 refusals. Each must fail with the named error; none may write.
   set local role authenticated;
-  -- G2a vet, resident outside clinic scope
+  -- G2a doctor, resident outside clinic scope
   v_rejected := false;
   begin perform set_resident_microchip(v_out, '985112345678903', null);
   exception when insufficient_privilege then v_rejected := true; end;
-  if not v_rejected then raise exception 'FAIL G2a vet wrote outside their clinic scope'; end if;
-  -- G2b vet, deceased resident (in scope)
+  if not v_rejected then raise exception 'FAIL G2a doctor wrote outside their clinic scope'; end if;
+  -- G2b doctor, deceased resident (in scope)
   v_rejected := false;
   begin perform set_resident_microchip(v_dead, '985112345678904', null);
   exception when restrict_violation then v_rejected := true; end;
-  if not v_rejected then raise exception 'FAIL G2b vet wrote on a deceased resident'; end if;
+  if not v_rejected then raise exception 'FAIL G2b doctor wrote on a deceased resident'; end if;
   perform set_resident_microchip(v_in, '985112345678905', null);
   reset role;
 
@@ -199,7 +197,7 @@ begin
   select count(*) into v_n from residents where id = v_out and microchip_number = '985112345678909' and microchip_implanted_on = date '2026-04-04';
   if v_n <> 1 then raise exception 'FAIL G3b management write did not land'; end if;
 
-  -- G4 roles that must not: volunteer, a vet with no clinic, anon
+  -- G4 roles that must not: volunteer, a doctor with no clinic, anon
   foreach v_err in array array['vol', 'unlinked', 'anon'] loop
     perform set_config('request.jwt.claims', case v_err
       when 'vol' then json_build_object('sub', v_vol, 'role', 'authenticated')::text
@@ -216,7 +214,7 @@ begin
   select count(*) into v_n from residents where id = v_in and microchip_number = '985112345678905';
   if v_n <> 1 then raise exception 'FAIL G4 a refused call changed the row'; end if;
 
-  raise exception 'HARNESS-OK existing rows=% back-filled=0 by the replay | shape: text + date, nullable | many nulls coexist | check rejects 14 digits, 16 digits, spaces, dashes, a letter, legacy 9-digit and empty string; accepts 15 digits with leading zeros | partial unique rejects a duplicate on update and insert and frees on clear | deceased resident: chip and date locked, bio still editable | file ran twice | 0116 set_resident_microchip: vet in scope writes, corrects and clears with no other column changed; vet out of scope, vet or staff on a deceased resident, duplicate, 14-digit / spaced / letters / empty, volunteer, unlinked vet and anon all refused; staff write allowed | 0155: management write allowed, and refused on a deceased resident', v_rows;
+  raise exception 'HARNESS-OK existing rows=% back-filled=0 by the replay | shape: text + date, nullable | many nulls coexist | check rejects 14 digits, 16 digits, spaces, dashes, a letter, legacy 9-digit and empty string; accepts 15 digits with leading zeros | partial unique rejects a duplicate on update and insert and frees on clear | deceased resident: chip and date locked, bio still editable | file ran twice | set_resident_microchip (live): doctor in scope writes, corrects and clears with no other column changed; doctor out of scope, doctor or staff on a deceased resident, duplicate, 14-digit / spaced / letters / empty, volunteer, unlinked doctor and anon all refused; staff write allowed | 0155: management write allowed, and refused on a deceased resident', v_rows;
 end;
 $h$;
 rollback;

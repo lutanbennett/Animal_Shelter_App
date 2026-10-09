@@ -65,7 +65,7 @@ function fakeSupabase({ fields, rows }) {
 
 const FIELDS = [
   { table_name: "residents", column_name: "bio", tier: "reviewed" },
-  { table_name: "vet_visits", column_name: "notes", tier: "machine" },
+  { table_name: "clinic_visits", column_name: "notes", tier: "machine" },
 ];
 let seq = 0;
 const row = (over = {}) => ({
@@ -218,7 +218,7 @@ const thaiAi = () => async () => ({ response: THAI_REPLY });
 
   // Two reviewed drafts already handed over today; cap of 3 leaves room for one.
   const recent = (min) => row({ status: "draft", text: "x", engine: "workers-ai:m", updated_at: new Date(T0 - min * MIN).toISOString() });
-  const rows3 = [recent(30), recent(90), row(), row(), row({ table_name: "vet_visits", column_name: "notes", source_text: "Weight 4.2 kg" })];
+  const rows3 = [recent(30), recent(90), row(), row(), row({ table_name: "clinic_visits", column_name: "notes", source_text: "Weight 4.2 kg" })];
   const db3 = fakeSupabase({ fields: FIELDS, rows: rows3 });
   await run(baseEnv(async () => ({ response: "น้ำหนัก 4.2 กก." }), { TRANSLATE_BATCH: "10", TRANSLATE_REVIEWED_DAILY: "3" }), db3);
   const drafted = rows3.slice(2).filter((r) => r.status === "draft");

@@ -68,7 +68,7 @@ const CASES = [
   READ("immunization_records"), READ("immunization_types"), READ("weight"), READ("clinic_visits"),
   READ("group_origins"), READ("attachments"),
   // clinics, contacts, supporters
-  READ("vets"), READ("doctors"), READ("doctor_clinics"), READ("contacts"), READ("shelter_friends"),
+  READ("clinics"), READ("doctors"), READ("doctor_clinics"), READ("contacts"), READ("shelter_friends"),
   { key: "read volunteer_contacts", kind: "read", sql: "select 1 from volunteer_contacts", others: "none" },
   // maintenance and projects
   READ("maintenance"), READ("maintenance_assignees"), READ("maintenance_photos"), READ("project_folders"), READ("project_photos"),
@@ -77,7 +77,7 @@ const CASES = [
   READ("recurring_jobs"), READ("recurring_job_assignees"), READ("recurring_job_occurrences"), READ("recurring_job_occurrence_assignees"),
   // the assistant and the translations
   READ("assistant_actions"), READ("translations"),
-  // the views that excluded only vets
+  // the views that excluded only doctors
   READ("current_placement"), READ("resident_current_state"), READ("immunization_compliance"),
   READ("immunization_duplicate_check"), READ("translation_queue"), READ("resident_list_view"),
   // writes

@@ -2,7 +2,7 @@
 // not a copy — against fixed cases: which roles can be given a recurring job,
 // worked out from the page the job links to (backlog, "Recurring jobs: only
 // offer people who can actually do the job", 2026-09-27). The Pass 0 case —
-// a stocktake given to a vet — is the first one.
+// a stocktake given to a doctor — is the first one.
 //
 //   node scripts/check-recurring-job-eligibility.mjs
 //
@@ -76,10 +76,10 @@ const wanted = [...new Set(ROUTES.map((r) => needKey({ activity: r.activity, lev
 eq("S1 the rules ask about exactly what the registry registers", [...JOB_NEEDS.map(needKey)].sort(), wanted.sort());
 eq("S1 the maintenance board's work is Edit although the page opens at Read", needKey(JOB_NEEDS.find((n) => n.activity === "maintenance.jobs")), "maintenance.jobs:edit");
 
-// Vets are never given a recurring job (Lutan, 2026-09-27): their work comes
-// from vet appointments.
+// Doctors are never given a recurring job (Lutan, 2026-09-27): their work comes
+// from clinic appointments.
 const ALL = ["admin", "management", "staff", "volunteer"];
-eq("assignable roles are the app-access roles but vet", [...ASSIGNABLE_ROLES], ALL);
+eq("assignable roles are the app-access roles but doctor", [...ASSIGNABLE_ROLES], ALL);
 const ALLK = [...ALL, CONFIGURED];
 
 // [label, link_path, roles that can do it]
@@ -109,10 +109,10 @@ eq("R1b not restricted: stocktake takes every assignable role", jobIsRestricted(
 eq("R2 not restricted: residents", jobIsRestricted("/residents", eligibility, ROLES), false);
 eq("R3 not restricted: no link", jobIsRestricted(null, eligibility, ROLES), false);
 
-eq("V1 vet, stocktake (Pass 0)", canDoJob("vet", "/stocktake", eligibility), false);
-eq("V2 vet, no link", canDoJob("vet", null, eligibility), false);
-eq("V3 vet, residents", canDoJob("vet", "/residents", eligibility), false);
-eq("V4 vet, a vaccination form", canDoJob("vet", "/immunizations/new", eligibility), false);
+eq("V1 doctor, stocktake (Pass 0)", canDoJob("doctor", "/stocktake", eligibility), false);
+eq("V2 doctor, no link", canDoJob("doctor", null, eligibility), false);
+eq("V3 doctor, residents", canDoJob("doctor", "/residents", eligibility), false);
+eq("V4 doctor, a vaccination form", canDoJob("doctor", "/immunizations/new", eligibility), false);
 eq("N1 no role", canDoJob(null, "/residents", eligibility), false);
 eq("N2 public viewer", canDoJob("public_viewer", null, eligibility), false);
 eq("N3 unknown role key, on a page that needs a cell", canDoJob("owner", "/stocktake", eligibility), false);

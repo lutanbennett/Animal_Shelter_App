@@ -5,7 +5,7 @@
 // the manual and the UI offered the write, and 130 migrations went by. A
 // dry run found it. This finds it first.
 //
-// Against the DEV database, live schema (as check-vet-own-clinic-writes.mjs
+// Against the DEV database, live schema (as check-doctor-own-clinic-writes.mjs
 // does; nothing is committed). Three parts:
 //
 //   1  OFFERED — the writes the app puts in front of a role. Each row is a
@@ -19,7 +19,7 @@
 //      can delete one; a volunteer can read it and write nothing to it. Proves the policy works, not just exists.
 //
 // And one advisory, never a failure: tables staff can read and nothing else.
-// Most are meant to be (types, vets, translations); the list is there so that
+// Most are meant to be (types, clinics, translations); the list is there so that
 // the next one that is not gets seen.
 //
 // Not covered, said plainly: a table the app writes that is not in OFFERED.
@@ -42,10 +42,10 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-// Part 1. [table, command, roles that the manual says do this]. Vets are
-// narrowed to their own clinic by 0110 and proved by check-vet-own-clinic-writes;
+// Part 1. [table, command, roles that the manual says do this]. Doctors are
+// narrowed to their own clinic by 0110 and proved by check-doctor-own-clinic-writes;
 // here they only need to be named.
-const CLINICAL = ["admin", "management", "staff", "vet"];
+const CLINICAL = ["admin", "management", "staff", "doctor"];
 const OFFERED = [
   ["blood_tests", "INSERT", CLINICAL],
   ["blood_tests", "UPDATE", CLINICAL],
@@ -82,7 +82,7 @@ const EFFECTIVE = `
   from pg_policies p
   cross join lateral (select unnest(case when p.cmd = 'ALL'
     then array['SELECT','INSERT','UPDATE','DELETE'] else array[p.cmd] end) as cmd) c
-  cross join (values ('staff'),('management'),('vet'),('volunteer'),('admin')) r(role)
+  cross join (values ('staff'),('management'),('doctor'),('volunteer'),('admin')) r(role)
   where p.schemaname = 'public' and p.permissive = 'PERMISSIVE'
     and (coalesce(p.qual, '') || ' ' || coalesce(p.with_check, '')) like '%''' || r.role || '''::app_role%'
   union
@@ -96,7 +96,7 @@ const EFFECTIVE = `
     then array['SELECT','INSERT','UPDATE','DELETE'] else array[p.cmd] end) as cmd) c
   cross join public.roles r
   where p.schemaname = 'public' and p.permissive = 'PERMISSIVE'
-    and r.key in ('staff','management','vet','volunteer','admin') and r.archived_at is null
+    and r.key in ('staff','management','doctor','volunteer','admin') and r.archived_at is null
     and (coalesce(p.qual, '') || ' ' || coalesce(p.with_check, '')) like '%has\\_permission(%'
     and (r.key = 'admin' or exists (
           select 1 from public.role_permissions rp

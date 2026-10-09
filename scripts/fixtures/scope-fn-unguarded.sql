@@ -16,7 +16,7 @@ create policy bad_check_only on residents for update to authenticated
   with check ((select sees_all_residents()));
 
 -- BAD: a future sees_all_<thing>() is covered without editing the checker.
-create policy bad_future on vet_appointments for select to authenticated
+create policy bad_future on clinic_visits for select to authenticated
   using (sees_all_clinics() and (created_by = auth.uid() or has_permission('x')));
 
 -- GOOD: ANDed, the shape every live policy uses.

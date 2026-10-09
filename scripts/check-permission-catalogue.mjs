@@ -54,7 +54,7 @@ const eq = (name, got, want) => {
 const migDir = join(root, "supabase/migrations");
 const migrations = readdirSync(migDir).filter((f) => f.endsWith(".sql")).sort();
 const seeded = new Map(); // key -> { kind, area, sort }
-const seededCells = []; // [role, activity, level]
+const seededCells = []; // [role, activity, level]; a cell seeded for 'vet' is the doctor's (0172 renamed the key)
 for (const f of migrations) {
   const sql = readFileSync(join(migDir, f), "utf8");
   if (!/permission_activities|role_permissions/.test(sql)) continue;
@@ -62,7 +62,7 @@ for (const f of migrations) {
     seeded.set(m[1], { kind: m[2], area: m[3], sort: Number(m[4]) });
   }
   for (const m of sql.matchAll(/\('([a-z_]+)', '([a-z_]+\.[a-z_]+)', ([12])\)/g)) {
-    seededCells.push([m[1], m[2], Number(m[3])]);
+    seededCells.push([m[1] === "vet" ? "doctor" : m[1], m[2], Number(m[3])]);
   }
 }
 
@@ -123,7 +123,7 @@ eq("C parsePermissions(null) is null", parsePermissions(null), null);
 eq("C parsePermissions(garbage) is null", [parsePermissions("x"), parsePermissions({}), parsePermissions({ role: {} })], [null, null, null]);
 
 // ---- D ----
-const ROLES = ["admin", "management", "staff", "vet", "volunteer", "public_viewer"];
+const ROLES = ["admin", "management", "staff", "doctor", "volunteer", "public_viewer"];
 const forRole = (role) =>
   person(
     Object.fromEntries(seededCells.filter(([r]) => r === role).map(([, a, l]) => [a, l])),

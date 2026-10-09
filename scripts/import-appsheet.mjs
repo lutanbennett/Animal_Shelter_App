@@ -114,7 +114,9 @@ function monthYearToAge(value, where, asOfIso) {
 const bool = (value) => (value === "TRUE" ? true : value === "FALSE" ? false : null);
 const blank = (value) => (value && value.trim() ? value.trim() : null);
 
-/** Deterministic UUID (v5 shape) from an AppSheet id, so re-runs load the same rows. */
+/** Deterministic UUID (v5 shape) from an AppSheet id, so re-runs load the same rows. The `table` is only the
+ * seed's namespace: clinics and clinic visits keep their pre-0172 names ("vets", "vet_appointments") here, so a
+ * re-run after the rename still gives every row the id it had. */
 function uuid(table, id) {
   const hex = createHash("sha1").update(`lanna-appsheet:${table}:${id}`).digest("hex").slice(0, 32);
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-5${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
@@ -235,7 +237,7 @@ for (const e of enclosureRows) {
 }
 
 // ---------------------------------------------------------------------------
-// Reference rows: contacts, vets, origins, medication, frequency, immunization types
+// Reference rows: contacts, clinics (AppSheet's Vets), origins, medication, frequency, immunization types
 // ---------------------------------------------------------------------------
 
 // contact_type is Carer / Volunteer / Vendor only (0067 dropped Donor and
@@ -258,7 +260,7 @@ const contacts = src.Contacts.filter((c) => c.ID).map((c) => {
 });
 const contactId = (appsheetId) => (appsheetId ? uuid("contacts", appsheetId) : null);
 
-const vets = src.Vets.filter((v) => v.VetID).map((v) => ({
+const clinics = src.Vets.filter((v) => v.VetID).map((v) => ({
   id: uuid("vets", v.VetID),
   name: v["Vet Name"].trim(),
   contactInfo: [v.Phone && `Phone: ${v.Phone}`, v["Line ID"] && `LINE: ${v["Line ID"]}`, v.Address && `Map: ${v.Address}`].filter(Boolean).join("\n") || null,
@@ -268,7 +270,7 @@ const clinicIds = new Set(src.Vets.map((v) => v.VetID));
 const clinicId = (appsheetId, where) => {
   if (!appsheetId) return null;
   if (!clinicIds.has(appsheetId)) {
-    note("orphan-rows", `${where}: unknown vet ${appsheetId}`);
+    note("orphan-rows", `${where}: unknown clinic ${appsheetId}`);
     return null;
   }
   return uuid("vets", appsheetId);
@@ -369,7 +371,7 @@ const deceasedResidents = new Set(placements.filter((p) => p.type === "Deceased"
 
 const appointmentRows = keepIfResident(src["Vet Appointments"], "RID", "Vet Appointments");
 const appointments = appointmentRows.map((a) => ({
-  id: uuid("clinic_visits", a["Appointment ID"]),
+  id: uuid("vet_appointments", a["Appointment ID"]),
   residentId: uuid("residents", a.RID),
   clinicId: clinicId(a.Vet, `Appointment ${a["Appointment ID"]}`),
   date: parseDate(a.Date, `Appointment ${a["Appointment ID"]}`),
@@ -382,7 +384,7 @@ const appointmentId = (appsheetId, where) => {
     note("orphan-rows", `${where}: unknown appointment ${appsheetId} → unlinked`);
     return null;
   }
-  return uuid("clinic_visits", appsheetId);
+  return uuid("vet_appointments", appsheetId);
 };
 
 const weights = keepIfResident(src.Weight, "RID", "Weight")
@@ -746,7 +748,7 @@ const counts = {
   zones: zones.length,
   enclosures: enclosures.length,
   contacts: contacts.length,
-  vets: vets.length,
+  clinics: clinics.length,
   group_origins: origins.length,
   placement_history: placements.length,
   clinic_visits: appointments.length,
@@ -809,7 +811,7 @@ if (replace) {
     delete from placement_history;
     delete from residents;
     delete from contacts;
-    delete from vets;
+    delete from clinics;
     delete from group_origins;
     delete from enclosures where zone_id <> (select id from zones where name = 'Lifecycle');
     delete from zones where name <> 'Lifecycle';
@@ -824,7 +826,7 @@ const admin = "(select admin_id from import_ctx)";
 for (const z of zones) sql.push(`insert into zones (id, name, internal) values (${q(z.id)}, ${q(z.name)}, ${q(z.internal)});`);
 for (const e of enclosures) sql.push(`insert into enclosures (id, name, zone_id, capacity, notes) values (${q(e.id)}, ${q(e.name)}, ${q(e.zoneId)}, ${q(e.capacity)}, ${q(e.notes)});`);
 for (const c of contacts) sql.push(`insert into contacts (id, name, type, phone, address, whatsapp, messenger_id, line_id) values (${q(c.id)}, ${q(c.name)}, ${q(c.type)}, ${q(c.phone)}, ${q(c.address)}, ${q(c.whatsapp)}, ${q(c.messengerId)}, ${q(c.lineId)});`);
-for (const v of vets) sql.push(`insert into vets (id, name, contact_info, notes) values (${q(v.id)}, ${q(v.name)}, ${q(v.contactInfo)}, ${q(v.notes)});`);
+for (const v of clinics) sql.push(`insert into clinics (id, name, contact_info, notes) values (${q(v.id)}, ${q(v.name)}, ${q(v.contactInfo)}, ${q(v.notes)});`);
 for (const o of origins) sql.push(`insert into group_origins (id, name, notes) values (${q(o.id)}, ${q(o.name)}, ${q(o.notes)});`);
 for (const m of medications) sql.push(`insert into medication (name) values (${q(m.name)}) on conflict (name) do nothing;`);
 for (const t of immunizationTypes) sql.push(`insert into immunization_types (name, is_mandatory, interval_months) values (${q(t.name)}, ${q(t.isMandatory)}, ${q(t.intervalMonths)}) on conflict (name) do update set is_mandatory = excluded.is_mandatory, interval_months = excluded.interval_months;`);
