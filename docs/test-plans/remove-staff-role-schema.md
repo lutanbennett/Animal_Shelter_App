@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **Remove the Staff role: Lanna's roles are Admin, Management, 2IC, Maintenance, Medical, Doctor and Volunteer** (ticked by the app PR that follows) |
 | Branch / worktree | `claude/remove-staff-role-schema`, pushed from the `claude/remove-staff-role` worktree @ `C:\Development\Animal_Shelter_remove-staff-role` |
 | Dev server | not started — this PR changes no app code; the screens are the next PR |
-| PR | this PR |
+| PR | #498 |
 | Tested by / date | Claude / 2026-10-09 |
 | Carries a migration? | yes — `0173_retire_staff_role.sql` |
 | Tested at SHA | `827975a9` (origin/main) plus this branch's files |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — all 7 checks passing on #498 (audit, check, migration-numbers, new-policy-role-names, public-views, script-integrity, test-plan), read from the PR status
 
 ## 3. Schema and data — *skip if no migration*
 
