@@ -986,17 +986,16 @@ export const ENTRIES = {
 // are about a role, not an activity: they are what a role must NOT be able to
 // do, tried by typing the address as well as by looking for a button.
 export const BOUNDARIES = [
-  // Pass 1 — Doctor. Three `starts` below quote docs/role-walkthrough.md as it still reads ("Vet", /vets);
-  // when that file is renamed, the generator prints the new beginnings to paste.
+  // Pass 1 — Doctor
   { role: "doctor", starts: "/my — redirects", text: "Type the address of My tasks: you are sent to Appointments (a doctor has no My tasks)." },
-  { role: "doctor", starts: "/vets and a clinic page", text: "Type the address of the Clinics list and of a clinic page: refused, with the \"no access\" page inside the app." },
+  { role: "doctor", starts: "/clinics and a clinic page", text: "Type the address of the Clinics list and of a clinic page: refused, with the \"no access\" page inside the app." },
   { role: "doctor", starts: "/contacts — refused", text: "Type the address of Contacts: refused." },
   { role: "doctor", starts: "/enclosures, and a zone", text: "Type the address of Enclosures, a zone and an enclosure: refused." },
   { role: "doctor", starts: "/projects — refused", text: "Type the address of Projects: refused." },
   { role: "doctor", starts: "/maintenance — refused", text: "Type the address of Maintenance: refused; a doctor gets no board at all." },
   { role: "doctor", starts: "/stocktake — refused", text: "Type the address of Stocktake: refused." },
   { role: "doctor", starts: "/management and /management/dashboard", text: "Type the address of Management and of its Dashboard: refused." },
-  { role: "doctor", starts: "/management/vets/<id>/doctors", text: "Type the address of a clinic's Doctors list in Management: refused; a doctor cannot rename, merge or retire doctors." },
+  { role: "doctor", starts: "/management/clinics/<id>/doctors", text: "Type the address of a clinic's Doctors list in Management: refused; a doctor cannot rename, merge or mark doctors as left." },
   { role: "doctor", starts: "/admin, /admin/security", text: "Type the address of Settings, Security and Recent changes: refused." },
   { role: "doctor", starts: "/deliveries — refused", text: "Type the address of Deliveries: refused." },
   { role: "doctor", starts: "Resident hub shows no New resident", text: "On a resident's hub there is no New resident, Edit, Move, Hospital, Foster, Adopt or Record a death control." },
@@ -1006,7 +1005,7 @@ export const BOUNDARIES = [
   { role: "doctor", starts: "A resident outside the clinic's scope", text: "Type the address of a resident this clinic has no record for: refused, nothing is shown." },
   { role: "doctor", starts: "Photo upload to any folder but Medical", text: "A doctor's photo upload to any folder other than Medical is refused. Needs the browser's developer tools; write \"not run\" if you cannot." },
   { role: "doctor", starts: "The Assistant slide-over", text: "There is no Assistant button, and no address that opens it." },
-  { role: "doctor", starts: "The vet is not offered when a recurring job", text: "When a recurring job is assigned, the doctor is not in the list of people to choose." },
+  { role: "doctor", starts: "The doctor is not offered when a recurring job", text: "When a recurring job is assigned, the doctor is not in the list of people to choose." },
   // Pass 2 — Staff
   { role: "staff", starts: "/management/ — redirected", text: "Type the address of each Management page — dashboard, cashflow, stock usage, recurring jobs, translations, Shelter Friends, medications, diets, clinics, contacts: all are refused." },
   { role: "staff", starts: "/admin/ — redirected", text: "Type the address of Settings and any page under it: refused." },

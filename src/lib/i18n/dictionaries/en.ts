@@ -3055,7 +3055,7 @@ const en = {
     ownClinicHint: "Your account belongs to this clinic, so visits you record are for it.",
     doctorLockedHint: "You are the doctor on visits you record, so this is filled in for you.",
     noClinicForAccount:
-      "Your account isn't linked to a clinic yet, so you can't record clinic visits. Ask a shelter admin to set your clinic in Settings → Security.",
+      "Your account isn't linked to a clinic yet, so you can't record clinic visits. Ask a shelter admin to link your login to your doctor entry in Settings → Security; you then work at that doctor's clinics.",
     otherClinicReadOnly:
       "This visit was recorded by another clinic, so you can read it but not change it.",
     notes: "Notes",
