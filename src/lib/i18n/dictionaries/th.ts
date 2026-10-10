@@ -70,6 +70,14 @@ const th: Dictionary = {
     devBadgeTitle: "ฐานข้อมูลทดสอบ — ไม่ใช่เว็บไซต์จริง",
     uatBadge: "UAT",
     uatBadgeTitle: "UAT — ระบบสำหรับทดสอบการใช้งาน ไม่ใช่เว็บไซต์จริง",
+    theme: {
+      label: "สีของแอป",
+      dark: "มืด",
+      light: "สว่าง",
+      contrast: "คอนทราสต์สูง",
+      magenta: "ชมพูม่วง",
+      failed: "บันทึกสีไม่สำเร็จ ลองอีกครั้ง",
+    },
   },
 
   nav: {

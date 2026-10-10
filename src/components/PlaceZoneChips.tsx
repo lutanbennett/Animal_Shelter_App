@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
@@ -59,10 +60,11 @@ export function PlaceZoneChips({
     const hex = zoneColour(colour);
     if (!hex) return { className: chipClass(active), style: undefined };
     return {
-      className: `inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full border-2 px-3 py-1.5 text-sm font-medium transition md:min-h-0 ${
+      className: `zone-chip inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full border-2 px-3 py-1.5 text-sm font-medium transition md:min-h-0 ${
         active ? "text-[#121212]" : "text-foreground hover:brightness-125"
       }`,
-      style: { borderColor: hex, backgroundColor: active ? hex : `${hex}2e` },
+      // --zone, not borderColor: globals.css darkens the edge in the light theme.
+      style: { "--zone": hex, backgroundColor: active ? hex : `${hex}2e` } as CSSProperties,
     };
   }
 
