@@ -10,6 +10,12 @@ and is deliberately short-lived.
 outrank this file. If they disagree with it, they are right and this file is
 stale — check the dates.
 
+**Amended later the same day**, after the release, when Lutan looked at the
+production Website visitors tile and found it still saying *Not set up*. That is
+a bug, not an outstanding check — it is logged at the top of the backlog, and
+**lesson 7** is what it teaches. The husk this file told you to clear was also
+cleared before handover. Nothing else has changed.
+
 **Read these first, in this order:**
 
 1. `docs/release-procedure.md` — the runbook, start to finish
@@ -218,7 +224,18 @@ the log was next read at `12:37:00Z`. The likely cause is a warm clone with
 unchanged `node_modules`. **Budget on `0.24.0`'s measured 1m40s.** If you want a
 real number, wrap the ssh call in `date -u` on both sides.
 
-### 7. Things that look alarming but are not
+### 7. A release note that asserts a *configuration-dependent* thing needs a human to look, before the cut
+
+`0.25.0`'s fifth note told every admin that Settings → System status now shows a visitor count. **It does not**, and Lutan found that within minutes of the deploy. Nothing that ran in the release could have caught it: the gates, CI, the drift checks and the version checks all passed, because the code is correct. The two Cloudflare values simply are not present on the Pi, and the tile's grey *Not set up* state is the designed response to that.
+
+Two things made it invisible:
+
+- **The screen cannot distinguish "no key set" from "key set but the API refused".** Both render the same grey message, so the feature looks identically unfinished whether it is misconfigured, broken, or simply switched off.
+- **Its test plan left the one check that mattered as `pending:`** — look at the tile on production — and the release shipped on the ship-and-record call, which is a legitimate call but not one that can answer a configuration question.
+
+**So: when a release note claims that something which depends on configuration now works, that claim needs a person to look at the live screen before the cut.** It is the one class of note a script cannot verify, it takes under a minute, and getting it wrong means mailing every admin something untrue that cannot be unsent.
+
+### 8. Things that look alarming but are not
 
 - Six `WARNING … declared consumer … differs from release` lines: see lesson 1. They fire for harmless files and dangerous ones alike.
 - `ERROR Failed to copy …\node_modules\…` during a Worker deploy: known Windows file-lock noise; the deploy continues and exits 0.
@@ -245,7 +262,7 @@ What is worth carrying forward, most valuable first:
 | **A donation receipt issued on production** | `docs/test-plans/receipt-content-server-side.md`, `receipt-issuer-server-side.md` | Carried from `0.23.0`, now **three** releases. Numbering from `LCA0009000` must never repeat or skip, and it has only ever run against dev. **`0176` and `0177` changed how a receipt is built** — the server now composes the issuer and the contents — so this release gave the check *more* value, not less. It also writes the PDF to Drive. **Highest value outstanding, by a distance.** |
 | **Somebody using the renamed Clinics screens on production** | `docs/test-plans/vet-to-doctor-rename.md` | Carried from `0.24.0`, the largest thing in that release. Nobody has read the Thai wording or worked a doctor login's day |
 | **The first facility-map upload on production** | `docs/test-plans/facility-map-upload.md` | Carried from `0.22.0`, now a **fourth** release. It is also what *creates* the Storage bucket — `ensureBucket()` runs on first use. `0175` and the new room editor sit on top of this |
-| **Whether the two Cloudflare analytics secrets are set on production** | `docs/test-plans/pi-visitor-count.md` | **New, and cheap.** `0.25.0`'s fifth note tells every admin the Website visitors tile now shows a number. If `CLOUDFLARE_ANALYTICS_TOKEN` and `CLOUDFLARE_ZONE_ID` are unset on production, it still says *Not set up* and the note is false. One look at Settings → System status settles it |
+| **FIXED-IN-WAITING: the Website visitors tile is broken, and `0.25.0` mailed that it works** | `backlog` → **Next up**, first item | **Answered on 2026-10-10, after the release, and it is a bug rather than a check.** Lutan looked; the tile still says *Not set up*. Measured on the production Pi: `CLOUDFLARE_ANALYTICS_TOKEN` and `CLOUDFLARE_ZONE_ID` are absent from `.env.production.local` **and from both files it is built from**, so there is nothing for the Pi to read. #518 fixed the plumbing, not the values — it was never checked that the values existed anywhere the Pi could see them. **`0.25.0`'s fifth note is therefore false and was mailed to every admin.** Fix it, or carry a correcting line in `0.26.0`'s notes. Full diagnosis and fix in the backlog item |
 | **A Management login saving Management → Website** | `docs/test-plans/website-content-grant.md` | Carried from `0.22.0`. Verified only by the migration applying cleanly |
 | **The new Contacts read-permission pass** | `backlog`, Security section | `0.20.0`'s version was carried six releases and could no longer be performed — it named `staff`, retired by `0173`. **Closed at `0.25.0` and rewritten** against current behaviour, against production rows, covering all six live roles. It is a backlog item now, not a test-plan ghost |
 | 2IC at phone width | `scripts/check-phone-width.mjs` | **Not a release item any more** (lesson 5) — listed once more only so it is not lost in the move. The script has no `second_in_command`, so the 2IC, who has no PC on site, has never been measured. It belongs to whoever next changes a page a 2IC uses. On the backlog |
@@ -263,8 +280,8 @@ What is worth carrying forward, most valuable first:
 6. **Expect a production-only guard.** There was none this time, which cost nothing. It can only ever appear at the production dry-run, and it is a question for Lutan, not a file to fix.
 7. **Budget the Worker deploy at ~13 minutes**, do not overlap it with anything building in the same checkout, and fill the wait with the Pi builds, the drift checks and the record. **Not the phone-width sweep — it is no longer a release step** (lesson 5). The test Worker deploy also builds in the main checkout — **do not start it while his production deploy is running.**
 8. **Hand over commands only at the moment they should be run.** See the section above; this is the lesson of `0.25.0`.
-9. Four production-only checks are owed, and a fifth cheap one: a donation receipt, the Clinics screens, a facility-map upload, a Management → Website save, and whether the two Cloudflare analytics secrets exist.
-10. `/clean-streams`, including the `Animal_Shelter_planner-handover-81` husk, which has now survived two releases.
+9. **Four production-only checks are owed**: a donation receipt, the Clinics screens, a facility-map upload and a Management → Website save. The fifth — the Cloudflare analytics pair — **is no longer a check but a known bug**, diagnosed and logged at the top of the backlog's **Next up**. **Decide early whether `0.26.0` fixes it or carries a correcting release note**, because `0.25.0` has already mailed every admin that it works.
+10. `/clean-streams`. The `Animal_Shelter_planner-handover-81` husk that survived two releases **was cleared at `0.25.0`** (contents checked first — only a blank copy of the test-plan template — and its PR #490 long merged), so there were no husks and no release leftovers at handover time.
 
 ---
 
