@@ -160,7 +160,7 @@ to deploy. The UAT column is what the cutover makes true.
 | Google Drive | dev account | dev account | dev account (the current tree) | dev account, until the shelter's own account exists |
 | Values from | `.env.local` | `.env.local` | `.env.deploy.uat` over `.env.local` | `.env.deploy.production` over `.env.local` |
 | Deploy | — | `npm run deploy:test` | `npm run deploy:uat` | `npm run deploy:prod` |
-| Looks | teal, **Dev** badge in the header | teal, **Dev** badge | orange, **UAT** badge | orange |
+| Looks | teal, striped strip and **Dev** badge in the header | teal, strip and **Dev** badge | orange, **UAT** badge | orange |
 | Generated PDFs | `DEV` watermark | `DEV` watermark | `UAT` watermark | none |
 | Release mail | never | never | `[UAT]` | `[UAT]` until the cutover, then `[Production]` |
 | Public website | open | **locked** — sign-in landing page | **locked** | **locked** until the cutover, then open |
@@ -177,6 +177,13 @@ project ref the build was made with — not from `NODE_ENV`, which is
 `globals.css` keys the colour tokens on. Its `UAT_PROJECT_REF` is empty
 until the cutover, because the project that will be UAT is production's
 today; set early, it would badge the live site.
+
+Each person can also pick a colour theme (account menu → Colours), which
+redefines the same tokens and so overrides dev's teal. That is why the
+header's teal-and-black strip and the badges use fixed colours no theme
+touches: under any theme they still say Dev or UAT
+(`docs/decisions/2026-10-10-user-colour-themes.md`). Check colours with
+`node scripts/check-theme-contrast.mjs` after changing any.
 
 **Locked public website.** `"PUBLIC_SITE": "locked"` on a Worker block in
 `wrangler.jsonc` (test, UAT, and production until the cutover) closes the

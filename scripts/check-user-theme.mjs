@@ -129,6 +129,26 @@ try {
   r = await page("/", laptop.cookie());
   expect(r.status === 200 && r.html.includes("data-public-site"), "/ still renders the public site (data-public-site present)");
 
+  // Generated PDFs stay unthemed: the manual PDF under a theme is the same
+  // document as under the default, timestamps aside.
+  const pdf = async (cookie) => {
+    const res = await fetch(`${base}/manual/pdf`, { headers: { cookie } });
+    const bytes = Buffer.from(await res.arrayBuffer());
+    // Dates (inline, or as react-pdf's own "(D:…Z)" object) and the document
+    // ID change on every render; nothing else should.
+    const body = bytes.toString("latin1").replace(/\/(CreationDate|ModDate) \([^)]*\)/g, "").replace(/\/ID \[[^\]]*\]/g, "").replace(/\(D:\d{14}Z\)/g, "");
+    return { status: res.status, type: res.headers.get("content-type"), size: bytes.length, body };
+  };
+  await laptop.ssr.auth.updateUser({ data: { theme: null } });
+  const plain = await pdf(laptop.cookie());
+  await laptop.ssr.auth.updateUser({ data: { theme: "light" } });
+  const themed = await pdf(laptop.cookie());
+  expect(plain.status === 200 && plain.type?.includes("pdf"), `/manual/pdf renders (${plain.status}, ${plain.type}, ${plain.size} bytes)`);
+  expect(themed.body === plain.body, `manual PDF under Light is identical to the default's (${themed.size} vs ${plain.size} bytes, dates aside)`);
+
+  r = await page("/manual", laptop.cookie());
+  expect(r.status === 200 && r.html.includes("Choosing the app&#x27;s colours"), "/manual has the Choosing the app's colours topic");
+
   // Unknown and cleared values fall back to the default.
   await laptop.ssr.auth.updateUser({ data: { theme: "neon" } });
   r = await page("/residents", laptop.cookie());

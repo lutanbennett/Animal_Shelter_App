@@ -128,6 +128,15 @@ const manual: Manual = {
           ],
         },
         {
+          id: "colours",
+          title: "Choosing the app's colours",
+          steps: [
+            "Tap your name at the top right. Under Colours, pick Dark (the usual look), Light, High contrast or Magenta. The screen changes straight away.",
+            "Your choice is saved to your login, not to the phone, so it follows you to every phone and computer you sign in on. Light is easier to read in bright sunlight; High contrast has the strongest difference between text and background.",
+            "The public website and printed PDFs always keep their own look. On the test site, a striped teal bar across the top and a DEV label stay whatever colours you choose, so you can always tell it is not the real one.",
+          ],
+        },
+        {
           id: "print-manual",
           title: "Printing this manual",
           path: "Manual → Print this as a PDF",
