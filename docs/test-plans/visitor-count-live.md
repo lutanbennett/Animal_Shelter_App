@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → `## Admin` → "System status: set up the visitor count" (progress note, **not ticked**: the Pi deploy is outstanding); the BUG item "the Website visitors tile still says *Not set up* on production" is on the `backlog` branch only, so it is not on this branch to tick |
 | Branch / worktree | `claude/visitor-count-live` @ `C:\Development\Animal_Shelter_visitor-count-live` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3006` |
-| PR | opened from this branch after this commit |
+| PR | [#522](https://github.com/lutanbennett/Animal_Shelter_App/pull/522) |
 | Tested by / date | Claude, 2026-10-10 |
 | Carries a migration? | no |
 | Tested at SHA | `ecbaf62b` (code at `68772f66`; later commits are docs and this plan) |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): #522 at `faa29804`, 7 of 7 checks passing, none failing
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -157,8 +157,8 @@ Manual verification by: pending: the tile showing a number on lannacare.org afte
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
-- [ ] Handed to the production release manager — n/a: not yet — the PR does not exist at this commit
+- [ ] Checklist pasted into the PR — n/a: the PR links the plan file and quotes its gate lines rather than pasting it whole
+- [x] Handed to the production release manager: the PR opens with the Pi-step hazard and the plan names it in §8 and the manual table
 
 Result: pass
 
