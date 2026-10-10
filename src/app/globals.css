@@ -132,8 +132,17 @@
 
 /* The default dark surfaces with a violet accent in place of the orange.
    Not teal or green, which mean "the dev database", and not blue, which is
-   the maintenance board's in-progress colour (--info). */
+   the maintenance board's in-progress colour (--info). The surfaces are
+   spelled out although they equal the default's: left out, dev's green-cast
+   ones would show through on dev and Test, and every theme must look the
+   same in every environment (the header strip is what tells them apart).
+   scripts/check-theme-contrast.mjs fails a theme that leaves one out. */
 :root[data-theme="violet"] {
+  --background: #121212;
+  --surface: #1c1c1e;
+  --surface-hover: #262629;
+  --border: #333338;
+
   --primary: #b794ff;
   --primary-hover: #cbb2ff;
   --primary-foreground: #1b0d33;

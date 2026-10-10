@@ -38,8 +38,31 @@ const themes = {
   dark: base,
   "dark (dev)": { ...base, ...tokens(':root[data-env="dev"]') },
 };
+// A theme block comes after the dev block, so whatever it leaves out, dev's
+// teal and green-cast surfaces fill in on dev and Test. Every theme must set
+// every app token dev changes, or it looks different per environment. (The
+// public site's --site-* tokens are not the themes' business.)
+const devOnly = Object.keys(tokens(':root[data-env="dev"]')).filter((k) => !k.startsWith("site-"));
+let failures = 0;
 for (const m of css.matchAll(/:root\[data-theme="([a-z-]+)"\] \{/g)) {
-  themes[m[1]] = { ...base, ...tokens(`:root[data-theme="${m[1]}"]`) };
+  const own = tokens(`:root[data-theme="${m[1]}"]`);
+  themes[m[1]] = { ...base, ...own };
+  const missing = devOnly.filter((k) => !(k in own));
+  if (missing.length) {
+    failures++;
+    console.log(`FAIL theme "${m[1]}" leaves dev's ${missing.join(", ")} showing through on dev and Test`);
+  }
+}
+
+// The picker's previews (src/lib/theme/themes.ts) are copies; check they agree.
+const themesTs = readFileSync(new URL("../src/lib/theme/themes.ts", import.meta.url), "utf8");
+for (const m of themesTs.matchAll(/^\s+([a-z]+): \["(#[0-9a-f]{6})", "(#[0-9a-f]{6})", "(#[0-9a-f]{6})"\]/gm)) {
+  const t = themes[m[1]];
+  const want = t && [t.background, t.surface, t.primary];
+  if (!want || want.join() !== [m[2], m[3], m[4]].join()) {
+    failures++;
+    console.log(`FAIL THEME_PREVIEW.${m[1]} is ${[m[2], m[3], m[4]]} but globals.css says ${want}`);
+  }
 }
 
 // The zone swatches, read from their own file for the same reason.
@@ -63,7 +86,6 @@ const blend = (fg, alpha, bg) =>
 // selectable theme pass). Printed, not counted, and on the backlog to retune.
 const KNOWN = new Set(["dark (dev)|danger / danger/10 on surface", "dark (dev)|info / surface"]);
 
-let failures = 0;
 for (const [name, t] of Object.entries(themes)) {
   const text = [
     ["foreground / background", t.foreground, t.background],
@@ -94,6 +116,10 @@ for (const [name, t] of Object.entries(themes)) {
     ["status dot success / surface", t.success, t.surface],
     ["status dot warning / surface", t.warning, t.surface],
     ["status dot danger / surface", t.danger, t.surface],
+    // The cashflow forecast's stacked series (globals.css --series-*).
+    ...Object.keys(t)
+      .filter((k) => k.startsWith("series-"))
+      .map((k) => [`chart ${k} / surface`, t[k], t.surface]),
   ];
   console.log(`\n== ${name}`);
   for (const [label, a, b] of text) {
