@@ -35,7 +35,7 @@ unrecoverable.
 
 - [x] `node scripts/worktree.mjs sync` — n/a in form: the worktree was created from `origin/main` minutes before writing, and `HEAD` equalled `origin/main` at `277833d5`
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — run in this worktree; ticked on the script's own exit code. Closing lines pasted below under *Evidence*
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — **all seven checks pass on #516**, read from `gh pr checks 516`: `audit`, `check`, `migration-numbers`, `new-policy-role-names`, `public-views`, `script-integrity`, `test-plan`. Judged on each check's own conclusion as well as the run's, knowing `audit` and `test-plan` are `continue-on-error` and so cannot fail it. Ticked in this follow-up commit once the run was actually seen green, not pre-ticked on the push that opened the PR
 - [x] `node scripts/check-test-plan.mjs` — run on this plan before pushing, exit code read from the script directly rather than through a pipe
 - [x] **Every claim added to the file was measured, not recalled** — `get_usage` returned `status: "unavailable"` with its note for both archived sessions (quoted verbatim in the file); both sessions read `isArchived: true` in `list_sessions` with `include_archived: true`; `auto_archive_on_pr_close` **Off** and `auto_archive_inactive_days` **Never** read from `ccd_settings`; #513 and #515 confirmed `MERGED` with `gh pr list`
 - [x] **The counts were recomputed, not adjusted by feel** — 39 measured stands (nothing new was measured); lost goes 5 → 7, being the two named streams
