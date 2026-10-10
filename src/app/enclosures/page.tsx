@@ -12,7 +12,7 @@ import { loadSpecialDiets } from "@/lib/diets/special";
 import { todayIso } from "@/lib/format";
 import { parseShape } from "@/lib/facility-map/geometry";
 import { planImageUrl, type FacilityMapData } from "@/lib/facility-map/types";
-import { isRoomKind } from "@/lib/facility-map/rooms";
+import { loadTranslations, translationKey } from "@/lib/translations/queries";
 import { EnclosureFilters } from "./EnclosureFilters";
 import { FacilityMap } from "./map/FacilityMap";
 import { ViewToggle } from "./ViewToggle";
@@ -230,15 +230,20 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
     for (const row of residentsResult.data) {
       if (onMedication.has(row.resident_id)) medicatedIn.set(row.enclosure_id, (medicatedIn.get(row.enclosure_id) ?? 0) + 1);
     }
-    // The Medical room, Kitchen and Storage (0157): not enclosures, so read from their own table.
+    // Rooms that are not enclosures (map_rooms), with their stored names and what each is for (0175).
+    // The description's approved translation rides along, so the card shows it in the reader's language.
     const { data: roomRows } = await supabase
       .from("map_rooms")
-      .select("id, map_id, kind, shape")
-      .returns<{ id: string; map_id: string; kind: string; shape: unknown }[]>();
+      .select("id, map_id, name, name_th, description, shape")
+      .returns<{ id: string; map_id: string; name: string; name_th: string | null; description: string | null; shape: unknown }[]>();
+    const roomTranslations = await loadTranslations(supabase, "map_rooms", (roomRows ?? []).filter((r) => r.description).map((r) => r.id));
     const rooms: FacilityMapData["rooms"] = [];
-    for (const r of roomRows ?? []) {
-      const shape = parseShape(r.shape);
-      if (shape && isRoomKind(r.kind)) rooms.push({ id: r.id, map_id: r.map_id, kind: r.kind, shape });
+    for (const { id, map_id, name, name_th, description, shape: raw } of roomRows ?? []) {
+      const shape = parseShape(raw);
+      if (!shape) continue;
+      const tr = roomTranslations.get(translationKey(id, "description"));
+      const approved = tr && tr.status === "approved" && tr.text?.trim() ? { description: { lang: tr.target_lang, text: tr.text } } : null;
+      rooms.push({ id, map_id, name, name_th, description, translations: approved, shape });
     }
     const onSite = summaries.filter((e) => !e.is_system && e.zone_internal);
     const shapeOf = new Map((enclosuresResult.data ?? []).map((row) => [row.id, parseShape(row.map_shape)]));

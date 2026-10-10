@@ -7,6 +7,9 @@ import { PanZoom } from "@/app/enclosures/map/PanZoom";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { RowActionButton } from "@/components/RowAction";
+import { ActionButton } from "@/components/ActionButton";
+import { TranslationPanel } from "@/components/TranslationPanel";
+import type { TranslationRow } from "@/lib/translations/types";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
 import {
@@ -21,9 +24,9 @@ import {
 } from "@/lib/facility-map/geometry";
 import type { MapPlan } from "@/lib/facility-map/types";
 import { formatDateTime } from "@/lib/format";
-import { ROOM_KINDS, type RoomKind } from "@/lib/facility-map/rooms";
-import { removePlan, saveRoom, saveShape, undoReplace } from "./actions";
-import { AddPlan, ReplacePlan, preparePlanFile, sendPlan } from "./PlanUpload";
+import { ROOM_DESCRIPTION_MAX, ROOM_NAME_MAX } from "@/lib/facility-map/rooms";
+import { addRoom, deleteRoom, removePlan, saveRoomDetails, saveRoomShape, saveShape, undoReplace } from "./actions";
+import { AddPlan, ReplacePlan } from "./PlanUpload";
 
 /**
  * The place-on-map editor (step 3 of 3, docs/decisions/2026-10-04-facility-map-editor.md): pick a
@@ -45,20 +48,27 @@ type Tool = "rect" | "poly";
  * plan's history in the store (docs/decisions/2026-10-08-facility-map-plans-uploaded.md).
  */
 export type EditorPlan = MapPlan & {
-  /** False for a plan still committed under public/facility-maps/, which can be moved into the store. */
-  stored: boolean;
-  /** The committed file's name, for a plan not yet in the store. */
-  fileName: string | null;
   lastChange: { at: string; by: string; action: "add" | "replace" | "undo" } | null;
   /** The replace an Undo would reverse, when there is one. */
   undo: { at: string; by: string; cleared: boolean } | null;
 };
-export type EditorRoom = { kind: RoomKind; map_id: string; shape: Point[] };
+export type EditorRoom = {
+  id: string;
+  map_id: string;
+  name: string;
+  name_th: string | null;
+  description: string | null;
+  shape: Point[];
+  /** The description's other-language row (0175 queues one), shown beside the box. */
+  translation: TranslationRow | null;
+};
 
 type Item = { id: string; name: string; target: "zone" | "enclosure" | "room" };
 
-/** A room's key in the editor's shape table. Rooms are not zones or enclosures, so no id of theirs exists. */
-const roomKey = (kind: RoomKind) => `room:${kind}`;
+/** A room's key in the editor's shape table, kept apart from the zone and enclosure ids. */
+const roomKey = (id: string) => `room:${id}`;
+/** The room being added: named, not drawn yet, so not in the table. */
+const NEW_ROOM = "room:new";
 
 // A dot that stays the same size on screen at any zoom: a zero-length segment with a round cap and a
 // non-scaling stroke. (A circle's radius would grow with the plan.)
@@ -69,11 +79,14 @@ export function MapEditor({
   zones,
   enclosures,
   rooms,
+  canManageTranslations,
 }: {
   plans: EditorPlan[];
   zones: EditorZone[];
   enclosures: EditorEnclosure[];
   rooms: EditorRoom[];
+  /** translations.manage: may write the description's translation in place, as on every prose field. */
+  canManageTranslations: boolean;
 }) {
   const { t, locale } = useI18n();
   const m = t.admin.facilityMap;
@@ -88,20 +101,20 @@ export function MapEditor({
   const plan = planList.find((p) => p.id === planId) ?? planList[0] ?? null;
 
   // The shapes as the editor holds them; each is written to the database the moment it is finished.
-  const fromProps = () => ({
-    ...Object.fromEntries([...zones, ...enclosures].map((x) => [x.id, x.shape])),
-    ...Object.fromEntries(rooms.map((r) => [roomKey(r.kind), r.shape])),
-  });
+  const fromProps = () => Object.fromEntries([...zones, ...enclosures].map((x) => [x.id, x.shape]));
   const [rawShapes, setRawShapes] = useState<Record<string, Point[] | null>>(fromProps);
-  // Which plan each room is on (one place for the whole site, so drawing it elsewhere moves it).
-  const [roomPlans, setRoomPlans] = useState<Partial<Record<RoomKind, string>>>(() => Object.fromEntries(rooms.map((r) => [r.kind, r.map_id])));
-  // A replace that cleared the shapes, or an undo that put them back, changes them on the server: take
-  // the fresh rows when the page sends them, without losing which plan is open.
+  // The rooms, each on one plan (a room is on the site once, so drawing it on another plan moves it).
+  const [roomList, setRoomList] = useState(rooms);
+  // A room being added: named, waiting to be drawn. It is stored only once it has a shape.
+  const [newRoom, setNewRoom] = useState<{ name: string; name_th: string } | null>(null);
+  // A replace that cleared the shapes, an undo that put them back, or a saved description (whose
+  // translation row the database writes) changes them on the server: take the fresh rows when the page
+  // sends them, without losing which plan is open.
   const [seen, setSeen] = useState({ zones, enclosures, rooms });
   if (seen.zones !== zones || seen.enclosures !== enclosures || seen.rooms !== rooms) {
     setSeen({ zones, enclosures, rooms });
     setRawShapes(fromProps());
-    setRoomPlans(Object.fromEntries(rooms.map((r) => [r.kind, r.map_id])));
+    setRoomList(rooms);
   }
   const [activeId, setActiveId] = useState<string | null>(null);
   const [redraw, setRedraw] = useState(false);
@@ -127,17 +140,21 @@ export function MapEditor({
       .filter((e) => e.zone_id === plan.zone_id)
       .map((e) => ({ id: e.id, name: placeName(locale, e.name, e.name_th), target: "enclosure" as const }));
   }, [plan, zones, enclosures, zoneName, locale]);
-  // The three rooms are offered on every plan; one drawn on another plan shows here as not placed.
+  // Every room is listed on every plan; one drawn on another plan shows here as on another plan.
   const roomItems: Item[] = useMemo(
-    () => ROOM_KINDS.map((kind) => ({ id: roomKey(kind), name: t.enclosures.map.roomKinds[kind], target: "room" as const })),
-    [t],
+    () => [
+      ...roomList.map((r) => ({ id: roomKey(r.id), name: placeName(locale, r.name, r.name_th), target: "room" as const })),
+      ...(newRoom ? [{ id: NEW_ROOM, name: placeName(locale, newRoom.name, newRoom.name_th), target: "room" as const }] : []),
+    ],
+    [roomList, newRoom, locale],
   );
   const items = useMemo(() => [...things, ...roomItems], [things, roomItems]);
   const shapes = useMemo(() => {
     const here: Record<string, Point[] | null> = { ...rawShapes };
-    for (const kind of ROOM_KINDS) if (!plan || roomPlans[kind] !== plan.id) here[roomKey(kind)] = null;
+    for (const r of roomList) here[roomKey(r.id)] = plan && r.map_id === plan.id ? r.shape : null;
     return here;
-  }, [rawShapes, roomPlans, plan]);
+  }, [rawShapes, roomList, plan]);
+  const roomOf = (itemId: string) => roomList.find((r) => roomKey(r.id) === itemId) ?? null;
 
   const active = items.find((i) => i.id === activeId) ?? null;
   const activeShape = active ? (dragging ? dragging.shape : shapes[active.id]) : null;
@@ -147,19 +164,6 @@ export function MapEditor({
   const overlay = items.flatMap((i) => (shapes[i.id] ? [{ id: i.id, name: i.name, shape: shapes[i.id]! }] : []));
   const [planBusy, setPlanBusy] = useState(false);
 
-  /** Puts a committed plan into the store as it is: the same picture, so its shapes are kept. */
-  async function moveIntoStore(p: EditorPlan) {
-    setPlanBusy(true);
-    setMessage(null);
-    const blob = await fetch(p.image_url).then((r) => (r.ok ? r.blob() : null)).catch(() => null);
-    const prepared = blob ? await preparePlanFile(blob) : null;
-    const r = prepared
-      ? await sendPlan(prepared, { mode: "replace", planId: p.id, shapes: "keep" }, { fileTooLarge: m.errors.tooLarge, processingFailed: m.errors.uploadFailed })
-      : { ok: false as const, error: m.errors.unreadable };
-    setPlanBusy(false);
-    if (!r.ok) setMessage({ kind: "error", text: r.error });
-    else router.refresh();
-  }
 
   async function undoLastReplace(p: EditorPlan) {
     if (!p.undo) return;
@@ -179,6 +183,7 @@ export function MapEditor({
   }
 
   function pick(id: string | null, startRedraw = false) {
+    if (id !== NEW_ROOM) setNewRoom(null);
     setActiveId(id);
     setDraft([]);
     setCursor(null);
@@ -191,37 +196,62 @@ export function MapEditor({
     pick(null);
   }
 
-  /** The next item on this plan with nothing drawn, after `from` and wrapping round. */
+  /** The next zone or enclosure on this plan with nothing drawn, after `from` and wrapping round. */
   function nextUnplaced(from: string, now: Record<string, Point[] | null>): string | null {
-    // Stay in the same group: after the last enclosure the editor does not wander on to a room.
-    const pool = from.startsWith("room:") ? roomItems : things;
-    const at = pool.findIndex((i) => i.id === from);
-    for (let step = 1; step <= pool.length; step++) {
-      const candidate = pool[(at + step) % pool.length];
+    const at = things.findIndex((i) => i.id === from);
+    for (let step = 1; step <= things.length; step++) {
+      const candidate = things[(at + step) % things.length];
       if (candidate && !now[candidate.id]) return candidate.id;
     }
     return null;
   }
 
+  /** Stores a zone's or an enclosure's shape (or clears it with `null`). */
   async function save(item: Item, shape: Point[] | null) {
     setSaving(true);
     setMessage(null);
-    const result =
-      item.target === "room" && plan
-        ? await saveRoom(item.id.slice("room:".length), plan.id, shape)
-        : await saveShape(item.target === "room" ? "enclosure" : item.target, item.id, shape);
+    const result = await saveShape(item.target === "zone" ? "zone" : "enclosure", item.id, shape);
     setSaving(false);
     if (!result.ok) {
       setMessage({ kind: "error", text: result.error });
       return false;
     }
     setRawShapes((prev) => ({ ...prev, [item.id]: result.shape }));
-    if (item.target === "room" && plan) {
-      const kind = item.id.slice("room:".length) as RoomKind;
-      setRoomPlans((prev) => ({ ...prev, [kind]: result.shape ? plan.id : undefined }));
-    }
     setMessage({ kind: "ok", text: result.shape ? m.saved(item.name) : m.cleared(item.name) });
     return true;
+  }
+
+  /**
+   * Stores a room's shape on the open plan: a new room is created by it, an existing one is reshaped
+   * or, drawn on another plan, moved here. Returns the room's item id, or null when it was refused.
+   */
+  async function saveRoom(item: Item, shape: Point[]): Promise<string | null> {
+    const room = roomOf(item.id);
+    if (!plan || (item.id === NEW_ROOM ? !newRoom : !room)) return null;
+    setSaving(true);
+    setMessage(null);
+    if (item.id === NEW_ROOM && newRoom) {
+      const r = await addRoom(plan.id, newRoom.name, newRoom.name_th, shape);
+      setSaving(false);
+      if (!r.ok) {
+        setMessage({ kind: "error", text: r.error });
+        return null;
+      }
+      setRoomList((prev) => [...prev, { id: r.id, map_id: plan.id, name: r.name, name_th: r.name_th, description: null, shape: r.shape, translation: null }]);
+      setNewRoom(null);
+      setMessage({ kind: "ok", text: m.roomAdded(placeName(locale, r.name, r.name_th)) });
+      return roomKey(r.id);
+    }
+    if (!room) return null;
+    const r = await saveRoomShape(room.id, plan.id, shape);
+    setSaving(false);
+    if (!r.ok) {
+      setMessage({ kind: "error", text: r.error });
+      return null;
+    }
+    setRoomList((prev) => prev.map((x) => (x.id === room.id ? { ...x, map_id: plan.id, shape: r.shape } : x)));
+    setMessage({ kind: "ok", text: m.saved(item.name) });
+    return item.id;
   }
 
   async function finish(shape: Point[]) {
@@ -232,6 +262,17 @@ export function MapEditor({
       return;
     }
     const item = active;
+    if (item.target === "room") {
+      // A room stays picked, so its name and description can be written next. The editor never moves
+      // on to another room by itself: the others are on their own plans, and drawing one here moves it.
+      const id = await saveRoom(item, shape);
+      if (!id) return;
+      setDraft([]);
+      setCursor(null);
+      setRedraw(false);
+      setActiveId(id);
+      return;
+    }
     const ok = await save(item, shape);
     if (!ok) return;
     setDraft([]);
@@ -247,6 +288,24 @@ export function MapEditor({
     if (await save(item, null)) {
       if (activeId === item.id) reset();
     }
+  }
+
+  /** A room cannot be off the map, so taking it off is deleting it, with what is written about it. */
+  async function removeRoom(item: Item) {
+    const room = roomOf(item.id);
+    if (!room) return;
+    if (!(await confirm({ body: m.deleteRoomConfirm(item.name), confirmLabel: m.deleteRoom }))) return;
+    setSaving(true);
+    setMessage(null);
+    const r = await deleteRoom(room.id);
+    setSaving(false);
+    if (!r.ok) {
+      setMessage({ kind: "error", text: r.error });
+      return;
+    }
+    setRoomList((prev) => prev.filter((x) => x.id !== room.id));
+    if (activeId === item.id) pick(null);
+    setMessage({ kind: "ok", text: m.roomDeleted(item.name) });
   }
 
   function toPoint(e: { clientX: number; clientY: number }): Point | null {
@@ -323,7 +382,8 @@ export function MapEditor({
       setMessage({ kind: "error", text: m.errors.tooSmall });
       return;
     }
-    await save(item, shape);
+    if (item.target === "room") await saveRoom(item, shape);
+    else await save(item, shape);
     setDragging(null);
   }
 
@@ -361,11 +421,9 @@ export function MapEditor({
             <p className="text-sm text-muted">
               {m.progress(placedCount, things.length)} ·{" "}
               <span className="break-all">
-                {!plan.stored
-                  ? m.committedFile(plan.fileName ?? "")
-                  : plan.lastChange
-                    ? m.lastChange[plan.lastChange.action](formatDateTime(plan.lastChange.at, locale), plan.lastChange.by)
-                    : m.pictureSize(plan.width, plan.height)}
+                {plan.lastChange
+                  ? m.lastChange[plan.lastChange.action](formatDateTime(plan.lastChange.at, locale), plan.lastChange.by)
+                  : m.pictureSize(plan.width, plan.height)}
               </span>
             </p>
             <button
@@ -390,41 +448,28 @@ export function MapEditor({
           <details key={plan.id} className="rounded-lg border border-border bg-surface p-3">
             <summary className="cursor-pointer text-sm font-semibold text-foreground">{m.pictureHeading}</summary>
             <div className="mt-3 flex flex-col gap-3 text-sm">
-              {!plan.stored ? (
-                <>
-                  <p className="text-muted">{m.committedHelp}</p>
+              <p className="text-muted">{m.replaceHelp}</p>
+              <ReplacePlan
+                plan={plan}
+                overlay={overlay}
+                placed={placedCount}
+                total={things.length}
+                roomsPlaced={roomsPlaced}
+                onReplaced={(text) => {
+                  setMessage({ kind: "ok", text });
+                  router.refresh();
+                }}
+              />
+              {plan.undo && (
+                <div className="flex flex-col gap-2 border-t border-border pt-3">
+                  <p className="text-muted">{m.undoHelp(formatDateTime(plan.undo.at, locale), plan.undo.by)}</p>
                   <div>
-                    <button type="button" className={btn} disabled={planBusy} onClick={() => void moveIntoStore(plan)}>
-                      {m.moveIntoStore}
+                    <button type="button" className={btn} disabled={planBusy} onClick={() => void undoLastReplace(plan)}>
+                      <Undo2 aria-hidden="true" className="h-4 w-4" />
+                      {m.undoReplace}
                     </button>
                   </div>
-                </>
-              ) : (
-                <>
-                  <p className="text-muted">{m.replaceHelp}</p>
-                  <ReplacePlan
-                    plan={plan}
-                    overlay={overlay}
-                    placed={placedCount}
-                    total={things.length}
-                    roomsPlaced={roomsPlaced}
-                    onReplaced={(text) => {
-                      setMessage({ kind: "ok", text });
-                      router.refresh();
-                    }}
-                  />
-                  {plan.undo && (
-                    <div className="flex flex-col gap-2 border-t border-border pt-3">
-                      <p className="text-muted">{m.undoHelp(formatDateTime(plan.undo.at, locale), plan.undo.by)}</p>
-                      <div>
-                        <button type="button" className={btn} disabled={planBusy} onClick={() => void undoLastReplace(plan)}>
-                          <Undo2 aria-hidden="true" className="h-4 w-4" />
-                          {m.undoReplace}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </>
+                </div>
               )}
             </div>
           </details>
@@ -483,42 +528,64 @@ export function MapEditor({
                   })}
                 </ul>
               )}
-              {/* The rooms that are not enclosures: the same three on every plan. */}
+              {/* The rooms that are not enclosures: every one listed on every plan, each drawn on one. */}
               <h2 className="mt-2 text-sm font-semibold text-foreground">{m.roomsHeading}</h2>
               <p className="text-xs text-muted">{m.rooms}</p>
               <ul className="flex flex-col gap-1.5">
                 {roomItems.map((item) => {
-                  const kind = item.id.slice("room:".length) as RoomKind;
+                  const room = roomOf(item.id);
                   const placed = Boolean(shapes[item.id]);
-                  const elsewhere = !placed && Boolean(roomPlans[kind]);
                   const on = item.id === activeId;
                   return (
-                    <li key={item.id} className={`flex items-center gap-1.5 rounded-lg border p-1.5 ${on ? "border-primary bg-primary/10" : "border-border bg-surface"}`}>
-                      <button
-                        type="button"
-                        aria-pressed={on}
-                        onClick={() => pick(on ? null : item.id)}
-                        className="flex min-h-11 min-w-0 flex-1 items-center gap-2 px-1.5 text-left text-sm md:min-h-9"
-                      >
-                        <span
-                          aria-hidden="true"
-                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${placed ? "bg-success text-white" : "border border-border text-transparent"}`}
+                    <li key={item.id} className={`flex flex-col gap-2 rounded-lg border p-1.5 ${on ? "border-primary bg-primary/10" : "border-border bg-surface"}`}>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          aria-pressed={on}
+                          onClick={() => pick(on && item.id !== NEW_ROOM ? null : item.id)}
+                          className="flex min-h-11 min-w-0 flex-1 items-center gap-2 px-1.5 text-left text-sm md:min-h-9"
                         >
-                          <Check className="h-3 w-3" />
-                        </span>
-                        <span className="min-w-0 break-words font-medium text-foreground">{item.name}</span>
-                        <span className="ml-auto shrink-0 text-xs text-muted">{placed ? m.placed : elsewhere ? m.onAnotherPlan : m.notPlaced}</span>
-                      </button>
-                      {placed && (
-                        <>
-                          <RowActionButton label={m.redraw} subject={item.name} icon={ACTION_ICONS.edit} onClick={() => pick(item.id, true)} />
-                          <RowActionButton label={m.clear} subject={item.name} icon={ACTION_ICONS.clear} onClick={() => void clearShape(item)} />
-                        </>
+                          <span
+                            aria-hidden="true"
+                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${placed ? "bg-success text-white" : "border border-border text-transparent"}`}
+                          >
+                            <Check className="h-3 w-3" />
+                          </span>
+                          <span className="min-w-0 break-words font-medium text-foreground">{item.name}</span>
+                          <span className="ml-auto shrink-0 text-xs text-muted">{placed ? m.placed : room ? m.onAnotherPlan : m.notPlaced}</span>
+                        </button>
+                        {placed && <RowActionButton label={m.redraw} subject={item.name} icon={ACTION_ICONS.edit} onClick={() => pick(item.id, true)} />}
+                        {room && <RowActionButton label={m.deleteRoom} subject={item.name} icon={ACTION_ICONS.delete} onClick={() => void removeRoom(item)} />}
+                      </div>
+                      {on && room && (
+                        <RoomDetails
+                          key={`${room.id}:${room.name}:${room.name_th ?? ""}:${room.description ?? ""}`}
+                          room={room}
+                          canManageTranslations={canManageTranslations}
+                          onSaved={(saved) => {
+                            setRoomList((prev) => prev.map((x) => (x.id === room.id ? { ...x, ...saved } : x)));
+                            setMessage({ kind: "ok", text: m.saved(placeName(locale, saved.name, saved.name_th)) });
+                            // The database queues the description's translation: fetch its row for the panel.
+                            router.refresh();
+                          }}
+                        />
                       )}
                     </li>
                   );
                 })}
               </ul>
+              {newRoom ? null : (
+                <AddRoomForm
+                  onStart={(names) => {
+                    setNewRoom(names);
+                    setActiveId(NEW_ROOM);
+                    setDraft([]);
+                    setCursor(null);
+                    setRedraw(false);
+                    setMessage(null);
+                  }}
+                />
+              )}
             </section>
 
             {/* The plan */}
@@ -546,8 +613,18 @@ export function MapEditor({
                     </button>
                   </>
                 )}
-                {drawing && (draft.length > 0 || redraw) && (
-                  <button type="button" className={btn} onClick={() => { setDraft([]); setCursor(null); if (redraw) setRedraw(false); }}>
+                {drawing && (draft.length > 0 || redraw || activeId === NEW_ROOM) && (
+                  <button
+                    type="button"
+                    className={btn}
+                    onClick={() => {
+                      // Cancelling a room being added drops it: nothing was stored.
+                      if (activeId === NEW_ROOM) return pick(null);
+                      setDraft([]);
+                      setCursor(null);
+                      if (redraw) setRedraw(false);
+                    }}
+                  >
                     <X aria-hidden="true" className="h-4 w-4" />
                     {m.cancel}
                   </button>
@@ -557,6 +634,7 @@ export function MapEditor({
               <p className="text-sm text-muted" aria-live="polite">
                 {!active ? m.hintPick : drawing ? (tool === "rect" ? (draft.length === 0 ? m.hintRect1(active.name) : m.hintRect2(active.name)) : m.hintPoly(active.name, draft.length)) : m.hintEdit(active.name)}
               </p>
+              {active && roomOf(active.id) && !shapes[active.id] && <p className="text-sm text-muted">{m.moveHint(active.name)}</p>}
               {message && active && (
                 <p role={message.kind === "error" ? "alert" : "status"} className={`text-sm ${message.kind === "error" ? "text-danger" : "text-success"}`}>
                   {message.text}
@@ -678,6 +756,140 @@ export function MapEditor({
         </>
       ) : (
         <p className="rounded-lg border border-border bg-surface p-4 text-sm text-muted">{m.noPlans}</p>
+      )}
+    </div>
+  );
+}
+
+const INPUT =
+  "min-h-11 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40 md:min-h-9";
+
+/**
+ * Add room: a name first (English, and Thai if it is known), then the room is drawn on the open plan like
+ * any shape. Nothing is stored until it is drawn, so a room is never in the table without a place.
+ */
+function AddRoomForm({ onStart }: { onStart: (names: { name: string; name_th: string }) => void }) {
+  const { t } = useI18n();
+  const m = t.admin.facilityMap;
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [nameTh, setNameTh] = useState("");
+
+  if (!open) {
+    return (
+      <div>
+        <ActionButton icon={ACTION_ICONS.add} compact onClick={() => setOpen(true)}>
+          {m.addRoom}
+        </ActionButton>
+      </div>
+    );
+  }
+  return (
+    <form
+      className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!name.trim()) return;
+        onStart({ name: name.trim(), name_th: nameTh.trim() });
+      }}
+    >
+      <p className="text-xs text-muted">{m.addRoomHelp}</p>
+      <label className="flex flex-col gap-1 text-xs font-medium text-muted">
+        {m.roomName}
+        <input value={name} onChange={(e) => setName(e.target.value)} maxLength={ROOM_NAME_MAX} required autoFocus className={INPUT} />
+      </label>
+      <label className="flex flex-col gap-1 text-xs font-medium text-muted">
+        {m.roomNameTh}
+        <input value={nameTh} onChange={(e) => setNameTh(e.target.value)} maxLength={ROOM_NAME_MAX} lang="th" className={INPUT} />
+      </label>
+      <div className="flex flex-wrap justify-end gap-2">
+        <ActionButton icon={X} compact onClick={() => setOpen(false)}>
+          {t.common.cancel}
+        </ActionButton>
+        <ActionButton type="submit" icon={Square} variant="primary" compact disabled={!name.trim()}>
+          {m.drawRoom}
+        </ActionButton>
+      </div>
+    </form>
+  );
+}
+
+/**
+ * A room's name in both languages (a label, typed here) and what it is for (prose: a few plain lines,
+ * whose other language is the translation queue's, shown underneath exactly as on every other prose
+ * field). Saved together; Rename is this form.
+ */
+function RoomDetails({
+  room,
+  canManageTranslations,
+  onSaved,
+}: {
+  room: EditorRoom;
+  canManageTranslations: boolean;
+  onSaved: (saved: { name: string; name_th: string | null; description: string | null }) => void;
+}) {
+  const { t } = useI18n();
+  const m = t.admin.facilityMap;
+  const [name, setName] = useState(room.name);
+  const [nameTh, setNameTh] = useState(room.name_th ?? "");
+  const [description, setDescription] = useState(room.description ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const changed = name !== room.name || nameTh !== (room.name_th ?? "") || description !== (room.description ?? "");
+
+  return (
+    <div className="flex flex-col gap-2 px-1.5 pb-1">
+      <form
+        className="flex flex-col gap-2"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setError(null);
+          setPending(true);
+          const r = await saveRoomDetails(room.id, { name, nameTh, description });
+          setPending(false);
+          if (!r.ok) setError(r.error);
+          else onSaved({ name: r.name, name_th: r.name_th, description: r.description });
+        }}
+      >
+        <label className="flex flex-col gap-1 text-xs font-medium text-muted">
+          {m.roomName}
+          <input value={name} onChange={(e) => setName(e.target.value)} maxLength={ROOM_NAME_MAX} required className={INPUT} />
+        </label>
+        <label className="flex flex-col gap-1 text-xs font-medium text-muted">
+          {m.roomNameTh}
+          <input value={nameTh} onChange={(e) => setNameTh(e.target.value)} maxLength={ROOM_NAME_MAX} lang="th" className={INPUT} />
+        </label>
+        <label className="flex flex-col gap-1 text-xs font-medium text-muted">
+          {m.roomDescription}
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={4}
+            maxLength={ROOM_DESCRIPTION_MAX}
+            placeholder={m.roomDescriptionPlaceholder}
+            className={INPUT}
+          />
+        </label>
+        <p className="text-xs text-muted">{m.roomDescriptionHelp}</p>
+        {error && (
+          <p role="alert" className="text-xs text-danger">
+            {error}
+          </p>
+        )}
+        <div className="flex justify-end">
+          <ActionButton type="submit" icon={ACTION_ICONS.save} variant="primary" compact disabled={!changed || pending || !name.trim()}>
+            {pending ? t.common.saving : m.saveRoom}
+          </ActionButton>
+        </div>
+      </form>
+      {/* Outside the form: the panel is a form of its own. */}
+      {room.description && room.translation && (
+        <TranslationPanel
+          key={room.translation.id + room.translation.updated_at}
+          row={room.translation}
+          canManage={canManageTranslations}
+          recordPath="/admin/facility-map"
+        />
       )}
     </div>
   );

@@ -1,5 +1,5 @@
 import type { Point } from "./geometry";
-import type { RoomKind } from "./rooms";
+import type { PublicTranslations } from "@/lib/translations/types";
 
 /** One `facility_maps` row, with the file's URL resolved. */
 export type MapPlan = {
@@ -41,11 +41,16 @@ export type MapEnclosure = {
   medication_count: number;
 };
 
-/** A room that is not an enclosure (map_rooms): drawn on one plan, with nothing to open. */
+/** A room that is not an enclosure (map_rooms): drawn on one plan, with nothing to open but its card. */
 export type MapRoom = {
   id: string;
   map_id: string;
-  kind: RoomKind;
+  name: string;
+  name_th: string | null;
+  /** What the room is for, as typed (in either language); null when nobody has written one. */
+  description: string | null;
+  /** The description's approved translation, if there is one: `{ description: { lang, text } }`. */
+  translations: PublicTranslations;
   shape: Point[];
 };
 
@@ -56,22 +61,16 @@ export type FacilityMapData = {
   rooms: MapRoom[];
 };
 
-/** An `image_path` that names an object in the plan store rather than a file in `public/`. */
+/** The prefix of every `image_path`: the plan is an object in the plan store. */
 export const STORED_PREFIX = "storage:";
 
-/** Whether a plan is in the plan store (uploaded) rather than a file committed under `public/facility-maps/`. */
-export function isStoredPlan(imagePath: string): boolean {
-  return imagePath.startsWith(STORED_PREFIX);
-}
-
 /**
- * The URL of a plan image. An uploaded plan (`storage:plans/<id>/<name>`) is served by
- * `/api/facility-maps/…` to signed-in users only (docs/decisions/2026-10-08-facility-map-plans-uploaded.md);
- * a plain file name is one of the plans committed under `public/facility-maps/` before uploads existed,
- * served from there until it is moved into the store. The map and the editor read this URL, never the path.
+ * The URL of a plan image: an uploaded plan (`storage:plans/<id>/<name>`), served by `/api/facility-maps/…`
+ * to signed-in users only (docs/decisions/2026-10-08-facility-map-plans-uploaded.md). Every plan is uploaded:
+ * the three committed under `public/facility-maps/` before uploads existed were deleted on 2026-10-10, after
+ * checking no row in dev or production still named one. The map and the editor read this URL, never the path.
  */
 export function planImageUrl(imagePath: string): string {
-  const stored = isStoredPlan(imagePath);
-  const path = stored ? imagePath.slice(STORED_PREFIX.length) : imagePath;
-  return `${stored ? "/api/facility-maps" : "/facility-maps"}/${path.split("/").map(encodeURIComponent).join("/")}`;
+  const path = imagePath.startsWith(STORED_PREFIX) ? imagePath.slice(STORED_PREFIX.length) : imagePath;
+  return `/api/facility-maps/${path.split("/").map(encodeURIComponent).join("/")}`;
 }

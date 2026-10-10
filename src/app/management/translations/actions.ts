@@ -37,6 +37,11 @@ function revalidateFor(row: TranslationRow, recordPathHint?: string | null) {
   }
   // A Friend's prose shows on /friends; record_path is its contact's page.
   if (row.table_name === "shelter_friends") revalidatePath("/friends");
+  // A room's description shows in its card on the map, and beside its box in Settings → Facility map.
+  if (row.table_name === "map_rooms") {
+    revalidatePath("/enclosures");
+    revalidatePath("/admin/facility-map");
+  }
   if (recordPathHint && recordPathHint !== own) revalidatePath(recordPathHint);
   revalidatePath("/");
   revalidatePath("/adopt");

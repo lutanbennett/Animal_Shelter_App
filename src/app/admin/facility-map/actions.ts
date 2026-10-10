@@ -7,7 +7,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { MIN_SHAPE_AREA, parseShape, shapeArea, type Point } from "@/lib/facility-map/geometry";
-import { isRoomKind } from "@/lib/facility-map/rooms";
+import { ROOM_DESCRIPTION_MAX, ROOM_NAME_MAX, cleanRoomDescription, cleanRoomName } from "@/lib/facility-map/rooms";
 import { planImageProblem, type PlanImageProblem } from "@/lib/facility-map/plan-image";
 import {
   appendHistory,
@@ -62,43 +62,128 @@ export async function saveShape(
   });
 }
 
+type RoomErrors = { badShape: string; tooSmall: string; roomNameRequired: string; roomNameTooLong: string; roomDescriptionTooLong: string };
+
+/** A drawn room outline, re-parsed as `saveShape` does; a refusal's text when it cannot be stored. */
+function roomShape(shape: Point[], e: RoomErrors): Point[] | string {
+  const value = parseShape(shape);
+  if (!value) return e.badShape;
+  if (shapeArea(value) < MIN_SHAPE_AREA) return e.tooSmall;
+  return value;
+}
+
+/** A room's two names: English required, Thai optional (a label, so typed here, not queued). */
+function roomNames(name: string, nameTh: string, e: RoomErrors): { name: string; name_th: string | null } | string {
+  const en = cleanRoomName(name);
+  if (!en) return e.roomNameRequired;
+  const th = cleanRoomName(nameTh);
+  if (en.length > ROOM_NAME_MAX || (th?.length ?? 0) > ROOM_NAME_MAX) return e.roomNameTooLong;
+  return { name: en, name_th: th };
+}
+
 /**
- * Puts the Medical room, Kitchen or Storage on a plan, or (with `null`) takes it off. A room is not an
- * enclosure, so it has its own table (0157 `map_rooms`): one row per kind, and drawing it on another
- * plan moves it rather than adding a second. Same re-parse and size check as `saveShape`.
+ * Adds a room: a name, and its outline on the plan it was drawn on. A room exists only on the map, so it
+ * is created by being drawn; its description is written afterwards beside it. A new room has no `kind`
+ * (that column is the three original rooms' legacy, 0175), so the one-per-kind rule never limits it.
  */
-export async function saveRoom(
-  kind: string,
+export async function addRoom(
   mapId: string,
-  shape: Point[] | null,
-): Promise<ActionResult<{ shape: Point[] | null }>> {
+  name: string,
+  nameTh: string,
+  shape: Point[],
+): Promise<ActionResult<{ id: string; name: string; name_th: string | null; shape: Point[] }>> {
   const { t } = await getT();
   const e = t.admin.facilityMap.errors;
-  return runAction("facilityMap.saveRoom", t.common.somethingWentWrong, async () => {
+  return runAction("facilityMap.addRoom", t.common.somethingWentWrong, async () => {
     if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
-    if (!isRoomKind(kind)) return refuse(e.notFound);
+    const names = roomNames(name, nameTh, e);
+    if (typeof names === "string") return refuse(names);
+    const value = roomShape(shape, e);
+    if (typeof value === "string") return refuse(value);
 
     const supabase = await createClient();
-    if (shape === null) {
-      const { error } = await supabase.from("map_rooms").delete().eq("kind", kind);
-      if (error) return databaseFailure("facilityMap.saveRoom", error, t.common);
-      refreshMapViews();
-      return { ok: true, shape: null };
-    }
-
-    const value = parseShape(shape);
-    if (!value) return refuse(e.badShape);
-    if (shapeArea(value) < MIN_SHAPE_AREA) return refuse(e.tooSmall);
-
-    const { error } = await supabase.from("map_rooms").upsert({ kind, map_id: mapId, shape: value }, { onConflict: "kind" });
+    const { data, error } = await supabase
+      .from("map_rooms")
+      .insert({ map_id: mapId, ...names, shape: value })
+      .select("id")
+      .single<{ id: string }>();
     if (error) {
       // 23503: the plan was removed while the editor was open.
       if (error.code === "23503") return refuse(e.notFound);
-      return databaseFailure("facilityMap.saveRoom", error, t.common);
+      return databaseFailure("facilityMap.addRoom", error, t.common);
     }
 
     refreshMapViews();
+    return { ok: true, id: data.id, ...names, shape: value };
+  });
+}
+
+/**
+ * Draws a room again, on the plan that is open: the same plan reshapes it, another plan moves it there.
+ * A room is on the site once, so there is no second copy. Updated by its own id (the primary key).
+ */
+export async function saveRoomShape(id: string, mapId: string, shape: Point[]): Promise<ActionResult<{ shape: Point[] }>> {
+  const { t } = await getT();
+  const e = t.admin.facilityMap.errors;
+  return runAction("facilityMap.saveRoomShape", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
+    const value = roomShape(shape, e);
+    if (typeof value === "string") return refuse(value);
+
+    const supabase = await createClient();
+    const { data, error } = await supabase.from("map_rooms").update({ map_id: mapId, shape: value }).eq("id", id).select("id");
+    if (error) {
+      if (error.code === "23503") return refuse(e.notFound);
+      return databaseFailure("facilityMap.saveRoomShape", error, t.common);
+    }
+    if (!data?.length) return refuse(e.notFound);
+
+    refreshMapViews();
     return { ok: true, shape: value };
+  });
+}
+
+/**
+ * Renames a room and sets what it is for. The names are a label (both typed here); the description is
+ * prose, so its Thai is written by the translation queue's triggers (0175) and shown beside the box.
+ */
+export async function saveRoomDetails(
+  id: string,
+  fields: { name: string; nameTh: string; description: string },
+): Promise<ActionResult<{ name: string; name_th: string | null; description: string | null }>> {
+  const { t } = await getT();
+  const e = t.admin.facilityMap.errors;
+  return runAction("facilityMap.saveRoomDetails", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
+    const names = roomNames(fields.name, fields.nameTh, e);
+    if (typeof names === "string") return refuse(names);
+    const description = cleanRoomDescription(fields.description);
+    if ((description?.length ?? 0) > ROOM_DESCRIPTION_MAX) return refuse(e.roomDescriptionTooLong);
+
+    const supabase = await createClient();
+    const { data, error } = await supabase.from("map_rooms").update({ ...names, description }).eq("id", id).select("id");
+    if (error) return databaseFailure("facilityMap.saveRoomDetails", error, t.common);
+    if (!data?.length) return refuse(e.notFound);
+
+    refreshMapViews();
+    revalidatePath("/management/translations");
+    return { ok: true, ...names, description };
+  });
+}
+
+/** Deletes a room: its outline, names and description. Nothing else refers to a room. */
+export async function deleteRoom(id: string): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("facilityMap.deleteRoom", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
+
+    const supabase = await createClient();
+    const { error } = await supabase.from("map_rooms").delete().eq("id", id);
+    if (error) return databaseFailure("facilityMap.deleteRoom", error, t.common);
+
+    refreshMapViews();
+    revalidatePath("/management/translations");
+    return { ok: true };
   });
 }
 
@@ -112,7 +197,11 @@ async function shapesOn(supabase: Supabase, plan: PlanRow): Promise<ShapeSnapsho
     plan.kind === "overview"
       ? supabase.from("zones").select("id, map_shape").not("map_shape", "is", null).returns<ShapeRow[]>()
       : supabase.from("enclosures").select("id, map_shape").eq("zone_id", plan.zone_id!).not("map_shape", "is", null).returns<ShapeRow[]>(),
-    supabase.from("map_rooms").select("kind, shape").eq("map_id", plan.id).returns<{ kind: string; shape: unknown }[]>(),
+    supabase
+      .from("map_rooms")
+      .select("id, kind, name, name_th, description, shape")
+      .eq("map_id", plan.id)
+      .returns<{ id: string; kind: string | null; name: string; name_th: string | null; description: string | null; shape: unknown }[]>(),
   ]);
   if (places.error) throw places.error;
   if (rooms.error) throw rooms.error;
@@ -125,7 +214,7 @@ async function shapesOn(supabase: Supabase, plan: PlanRow): Promise<ShapeSnapsho
     enclosures: plan.kind === "zone" ? list : [],
     rooms: (rooms.data ?? []).flatMap((r) => {
       const shape = parseShape(r.shape);
-      return shape ? [{ kind: r.kind, shape }] : [];
+      return shape ? [{ id: r.id, kind: r.kind, name: r.name, name_th: r.name_th, description: r.description, shape }] : [];
     }),
   };
 }
@@ -141,14 +230,34 @@ async function clearShapesOn(supabase: Supabase, plan: PlanRow) {
   if (rooms.error) throw rooms.error;
 }
 
-/** Puts a snapshot's shapes back, one row each (a plan holds a few dozen at most). */
+/**
+ * The three original rooms' names, for a history entry written before rooms had stored names (it holds
+ * only `kind`). Used for nothing else: every room in the table has its own name since 0175.
+ */
+const LEGACY_ROOM_NAMES: Record<string, { name: string; name_th: string }> = {
+  medical: { name: "Medical room", name_th: "ห้องพยาบาล" },
+  kitchen: { name: "Kitchen", name_th: "ครัว" },
+  storage: { name: "Storage", name_th: "ห้องเก็บของ" },
+};
+
+/**
+ * Puts a snapshot's shapes back, one row each (a plan holds a few dozen at most). A room comes back as
+ * the row it was, by its id (the primary key), with its names and description; a description's approved
+ * Thai went with the row and is queued again. An entry from before stored names is put back as a new room
+ * named from its kind, with no kind, so nothing here depends on the one-per-kind rule.
+ */
 async function restoreShapes(supabase: Supabase, planId: string, snap: ShapeSnapshot) {
   const writes = [
     ...snap.zones.map((z) => supabase.from("zones").update({ map_shape: z.shape }).eq("id", z.id)),
     ...snap.enclosures.map((x) => supabase.from("enclosures").update({ map_shape: x.shape }).eq("id", x.id)),
-    ...snap.rooms
-      .filter((r) => isRoomKind(r.kind))
-      .map((r) => supabase.from("map_rooms").upsert({ kind: r.kind, map_id: planId, shape: r.shape }, { onConflict: "kind" })),
+    ...snap.rooms.flatMap((r) => {
+      if (r.id && r.name) {
+        const row = { id: r.id, map_id: planId, name: r.name, name_th: r.name_th ?? null, description: r.description ?? null, shape: r.shape };
+        return [supabase.from("map_rooms").upsert(row, { onConflict: "id" })];
+      }
+      const legacy = r.kind ? LEGACY_ROOM_NAMES[r.kind] : undefined;
+      return legacy ? [supabase.from("map_rooms").insert({ map_id: planId, ...legacy, shape: r.shape })] : [];
+    }),
   ];
   for (const { error } of await Promise.all(writes)) if (error) throw error;
 }

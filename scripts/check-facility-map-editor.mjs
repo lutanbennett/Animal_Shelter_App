@@ -106,7 +106,7 @@ try {
   expect(anon.status >= 300 && anon.status < 400, `signed out is redirected (${anon.status} -> ${anon.location})`);
 
   // A plan for the throwaway zone, as the admin would add it.
-  const plan = await admin.db.from("facility_maps").insert({ kind: "zone", zone_id: zoneId, image_path: "main-zone-blue.webp", width: 1492, height: 1054 }).select("id").single();
+  const plan = await admin.db.from("facility_maps").insert({ kind: "zone", zone_id: zoneId, image_path: "storage:plans/harness/harness.webp", width: 1492, height: 1054 }).select("id").single();
   expect(!plan.error, `the admin's login can add a plan (${plan.error?.message ?? "ok"})`);
   const volPlan = await volunteer.db.from("facility_maps").insert({ kind: "zone", zone_id: zoneId, image_path: "x.webp", width: 10, height: 10 });
   expect(Boolean(volPlan.error), "a volunteer's login cannot add a plan");

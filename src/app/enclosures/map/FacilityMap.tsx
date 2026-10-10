@@ -8,6 +8,7 @@ import { ACTION_ICONS, ENCLOSURE_ICONS } from "@/components/hub-icons";
 import type { EnclosureDetails } from "@/lib/enclosures/details";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
+import { localizedField } from "@/lib/translations/localize";
 import { occupancyLevel, type OccupancyLevel } from "@/lib/enclosures/occupancy";
 import { centroid, markerBoxes, planHeight, pointsAttr } from "@/lib/facility-map/geometry";
 import type { FacilityMapData, MapPlan } from "@/lib/facility-map/types";
@@ -62,6 +63,8 @@ type Item = {
   name: string;
   /** A zone's colour, for the dot beside its name in the card; the outline stays an occupancy colour. */
   colour?: string | null;
+  /** A room's description, in the reader's language when it has been translated. */
+  description?: string | null;
   shape: NonNullable<FacilityMapData["enclosures"][number]["shape"]>;
   level: OccupancyLevel;
   count: number;
@@ -141,14 +144,27 @@ export function FacilityMap({ data }: { data: FacilityMapData }) {
     return { items: placed, unplaced: { zones: [] as typeof data.zones, enclosures: rest } };
   }, [data, plan, planOf, locale]);
 
-  // The rooms drawn on this plan (Medical room, Kitchen, Storage). They are not enclosures: no count, no
-  // capacity, and nothing for a tap to open, so they are their own kind of item rather than a flavour of one.
+  // The rooms drawn on this plan. They are not enclosures: no count, no capacity, and nothing for a tap to
+  // open but their card, so they are their own kind of item rather than a flavour of one. The name and
+  // what the room is for are in the reader's language, with the original as the fallback.
   const roomItems: Item[] = useMemo(
     () =>
       data.rooms
         .filter((r) => r.map_id === plan.id)
-        .map((r) => ({ kind: "room" as const, id: r.id, name: m.roomKinds[r.kind], shape: r.shape, level: "unknown" as const, count: 0, capacity: null, jobs: 0, diet: 0, meds: 0 })),
-    [data.rooms, plan.id, m.roomKinds],
+        .map((r) => ({
+          kind: "room" as const,
+          id: r.id,
+          name: placeName(locale, r.name, r.name_th),
+          description: localizedField(locale, r.description, r.translations, "description") || null,
+          shape: r.shape,
+          level: "unknown" as const,
+          count: 0,
+          capacity: null,
+          jobs: 0,
+          diet: 0,
+          meds: 0,
+        })),
+    [data.rooms, plan.id, locale],
   );
   const drawn = [...items, ...roomItems];
 
@@ -439,7 +455,16 @@ function PickedCard({
           ✕
         </button>
       </div>
-      {item.kind === "room" ? <p className="text-sm text-muted">{m.roomNote}</p> : <OccupancyIndicator count={item.count} capacity={item.capacity} />}
+      {item.kind === "room" ? (
+        // What the room is for, when someone has written it; the generic line otherwise.
+        item.description ? (
+          <p className="whitespace-pre-line text-sm text-foreground">{item.description}</p>
+        ) : (
+          <p className="text-sm text-muted">{m.roomNote}</p>
+        )
+      ) : (
+        <OccupancyIndicator count={item.count} capacity={item.capacity} />
+      )}
       {item.kind === "enclosure" && (item.jobs > 0 || item.diet > 0 || item.meds > 0) && (
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-foreground">
           {item.jobs > 0 && (
