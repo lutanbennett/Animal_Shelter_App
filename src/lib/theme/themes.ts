@@ -13,7 +13,7 @@
  * Kept deliberately small: every theme is a contrast matrix to maintain
  * (`node scripts/check-theme-contrast.mjs`).
  */
-export const THEMES = ["dark", "light", "contrast", "violet"] as const;
+export const THEMES = ["dark", "light", "contrast", "magenta"] as const;
 
 export type Theme = (typeof THEMES)[number];
 
@@ -45,6 +45,6 @@ export function themeAttribute(theme: Theme): string | undefined {
 export const THEME_PREVIEW: Record<Theme, [string, string, string]> = {
   dark: ["#121212", "#1c1c1e", "#ff9f0a"],
   light: ["#f4f4f5", "#ffffff", "#a84a07"],
-  contrast: ["#000000", "#0a0a0a", "#ffb340"],
-  violet: ["#121212", "#1c1c1e", "#b794ff"],
+  contrast: ["#000000", "#0a0a0a", "#b3ff1a"],
+  magenta: ["#121212", "#1c1c1e", "#e033ff"],
 };

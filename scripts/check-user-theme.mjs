@@ -107,7 +107,7 @@ try {
   expect(hasStrip(r.html), "dev: the header carries the striped env strip");
   expect(hasFixedBadge(r.html), "dev: the badge uses its fixed teal, not bg-primary");
 
-  for (const theme of ["light", "contrast", "violet"]) {
+  for (const theme of ["light", "contrast", "magenta"]) {
     // What setOwnTheme does: the person's own session writes their own metadata.
     const { error: upErr } = await phone.ssr.auth.updateUser({ data: { theme } });
     if (upErr) throw upErr;
@@ -119,7 +119,7 @@ try {
   // A second device: a fresh sign-in with an empty cookie jar and no storage.
   const laptop = await signIn();
   r = await page("/residents", laptop.cookie());
-  expect(themeOf(r.html) === "violet", `second device gets the saved theme on its first page (got ${themeOf(r.html)})`);
+  expect(themeOf(r.html) === "magenta", `second device gets the saved theme on its first page (got ${themeOf(r.html)})`);
 
   const { data: after } = await service.auth.admin.getUserById(userId);
   expect(after.user.user_metadata.full_name === name, "saving a theme left the person's name alone");

@@ -65,7 +65,7 @@ export function ZoneColourPicker({
               <span
                 aria-hidden="true"
                 className={`flex h-7 w-7 items-center justify-center rounded-full border-2 ${
-                  checked ? "border-foreground" : "border-border"
+                  checked ? "border-foreground" : "border-[var(--zone-dot-ring,var(--border))]"
                 }`}
                 style={choice.value ? { backgroundColor: choice.value } : undefined}
               >

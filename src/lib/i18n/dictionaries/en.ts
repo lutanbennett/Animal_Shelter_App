@@ -80,7 +80,7 @@ const en = {
       dark: "Dark",
       light: "Light",
       contrast: "High contrast",
-      violet: "Violet",
+      magenta: "Magenta",
       failed: "Couldn't save your colours. Try again.",
     },
   },

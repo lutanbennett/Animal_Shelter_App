@@ -75,7 +75,7 @@ const th: Dictionary = {
       dark: "มืด",
       light: "สว่าง",
       contrast: "คอนทราสต์สูง",
-      violet: "ม่วง",
+      magenta: "ชมพูม่วง",
       failed: "บันทึกสีไม่สำเร็จ ลองอีกครั้ง",
     },
   },

@@ -79,7 +79,23 @@ const ratio = (a, b) => {
   const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
   return (x + 0.05) / (y + 0.05);
 };
-const blend = (fg, alpha, bg) =>
+/** Perceptual distance: Euclidean in OKLab, ×100. Under ~5 reads as the same colour. */
+const oklab = (hex) => {
+  const [r, g, b] = rgb(hex).map(lin);
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [
+    0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.808675492 * s,
+  ];
+};
+const deltaE = (a, b) => {
+  const [x, y] = [oklab(a), oklab(b)];
+  return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]) * 100;
+};
+const blend =(fg, alpha, bg) =>
   "#" + rgb(fg).map((c, i) => Math.round(c * alpha + rgb(bg)[i] * (1 - alpha)).toString(16).padStart(2, "0")).join("");
 
 // Dev near-misses that predate the themes (dev only; production and every
@@ -155,6 +171,25 @@ for (const [name, t] of Object.entries(themes)) {
         .map(([k, r]) => `${k} ${r.toFixed(2)}:1`)
         .join(", ")}`,
   );
+
+  // Zone chips (PlaceZoneChips). The active "All zones" chip is filled with
+  // the accent, so an accent too like a zone colour reads as that zone
+  // chosen: a selectable theme's accent must be ΔE 10+ (OKLab ×100) from
+  // every swatch. The default orange (5.0 from Orange) and dev's teal (4.5
+  // from Teal) predate the themes and are reported, not failed.
+  const near = swatches.map(([k, hex]) => [k, deltaE(t.primary, hex)]).sort((a, b) => a[1] - b[1])[0];
+  const accentOk = near[1] >= 10 || name === "dark" || name === "dark (dev)";
+  if (!accentOk) failures++;
+  console.log(`  ${near[1] >= 10 ? "ok  " : accentOk ? "KNWN" : "FAIL"} zone chips: accent ${t.primary} is ΔE ${near[1].toFixed(1)} from the nearest zone colour (${near[0]})`);
+  // A chip's edge is its zone colour, darkened halfway to black in the light
+  // theme (globals.css .zone-chip); it must show against the page: 3:1.
+  const darken = (hex) => "#" + rgb(hex).map((c) => Math.round(c * 0.5).toString(16).padStart(2, "0")).join("");
+  const edgeOf = name === "light" ? darken : (hex) => hex;
+  const edge = swatches
+    .map(([k, hex]) => [k, Math.min(ratio(edgeOf(hex), t.background), ratio(edgeOf(hex), t.surface))])
+    .sort((a, b) => a[1] - b[1])[0];
+  if (edge[1] < 3) failures++;
+  console.log(`  ${edge[1] >= 3 ? "ok  " : "FAIL"} zone chips: weakest edge ${edge[0]} ${edge[1].toFixed(2)}:1 against the page [graphic, 3:1]`);
 }
 console.log(failures ? `\n${failures} pair(s) below WCAG AA.` : "\nEvery pair meets WCAG AA.");
 process.exit(failures ? 1 : 0);
