@@ -80,9 +80,10 @@ the keys only, never a value.
 
 ## Not changed
 
-- The **0.25.0 release note** stays as shipped. Released entries are history;
-  the repair is a line in `unreleased` (see the PR for Lutan's call on its
-  wording).
+- The **0.25.0 release note** stays as shipped, and **no correcting line
+  goes in `unreleased`**. Lutan, 2026-10-10: nobody had opened System status
+  before the fix, so the note is simply early, not wrong in front of anyone.
+  It becomes true on lannacare.org with the Pi step below.
 - **The Pi deploy is not part of this change.** The tile will be green on
   lannacare.org only after the two lines are copied into the Pi's
   `~/Animal_Shelter_App/.env.deploy.production` and `deploy-pi.sh` runs.
