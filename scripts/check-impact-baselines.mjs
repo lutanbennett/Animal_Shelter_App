@@ -16,7 +16,8 @@ const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
 const migration = readFileSync(join(process.cwd(), "supabase/migrations/0156_impact_baselines.sql"), "utf8");
-const REAL = ["admin", "management", "staff", "volunteer", "doctor"];
+// No staff principal: 0173 retired Staff and a live staff login can no longer be made.
+const REAL = ["admin", "management", "volunteer", "doctor"];
 const ID = Object.fromEntries(REAL.map((p) => [p, randomUUID()]));
 const lit = (id) => `'${id}'::uuid`;
 
@@ -98,8 +99,9 @@ end $calc$;
 do $sweep$
 begin
   insert into res select 'sweep', 'seed_rows', count(*) from impact_baselines where key in ('animals_rehomed', 'villages_sterilised');
-  update impact_baselines set set_by = ${lit(ID.staff)} where key = 'villages_sterilised';
-  insert into res select 'sweep', 'forged_set_by_replaced', count(*) from impact_baselines where key = 'villages_sterilised' and set_by is distinct from ${lit(ID.staff)};
+  -- the forged set_by is the volunteer (the staff login until 0173 retired it)
+  update impact_baselines set set_by = ${lit(ID.volunteer)} where key = 'villages_sterilised';
+  insert into res select 'sweep', 'forged_set_by_replaced', count(*) from impact_baselines where key = 'villages_sterilised' and set_by is distinct from ${lit(ID.volunteer)};
 end $sweep$;
 
 -- audit under a real session: admin edits, the log keeps both images and the actor

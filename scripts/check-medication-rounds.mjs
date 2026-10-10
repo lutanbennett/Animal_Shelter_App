@@ -31,16 +31,17 @@ const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
 const lit = (id) => `'${id}'::uuid`;
-const P = ["admin", "management", "staff", "volunteer", "doctor", "norole"];
+// No staff principal: 0173 retired Staff and a live staff login can no longer be made.
+const P = ["admin", "management", "volunteer", "doctor", "norole"];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
 const R = randomUUID();
 
 const probes = [
-  ["read frequency_rounds", `select 1 from frequency_rounds limit 1`, { admin: 1, management: 1, staff: 1, doctor: 1, volunteer: 0, norole: 0 }],
-  ["read rounds", `select 1 from rounds limit 1`, { admin: 1, management: 1, staff: 1, doctor: 1, volunteer: 1, norole: 1 }],
-  ["write frequency_rounds", `delete from frequency_rounds where frequency_id = (select id from frequency where label = 'Once daily')`, { admin: 1, management: 1, staff: 0, doctor: 0, volunteer: 0, norole: 0 }],
-  ["write rounds", `update rounds set name = name where key = 'lunch'`, { admin: 1, management: 0, staff: 0, doctor: 0, volunteer: 0, norole: 0 }],
-  ["write prescription_rounds", `delete from prescription_rounds where prescription_id in (select id from prescriptions where resident_id = '${R}')`, { admin: 1, management: 1, staff: 1, doctor: 0, volunteer: 0, norole: 0 }],
+  ["read frequency_rounds", `select 1 from frequency_rounds limit 1`, { admin: 1, management: 1, doctor: 1, volunteer: 0, norole: 0 }],
+  ["read rounds", `select 1 from rounds limit 1`, { admin: 1, management: 1, doctor: 1, volunteer: 1, norole: 1 }],
+  ["write frequency_rounds", `delete from frequency_rounds where frequency_id = (select id from frequency where label = 'Once daily')`, { admin: 1, management: 1, doctor: 0, volunteer: 0, norole: 0 }],
+  ["write rounds", `update rounds set name = name where key = 'lunch'`, { admin: 1, management: 0, doctor: 0, volunteer: 0, norole: 0 }],
+  ["write prescription_rounds", `delete from prescription_rounds where prescription_id in (select id from prescriptions where resident_id = '${R}')`, { admin: 1, management: 1, doctor: 0, volunteer: 0, norole: 0 }],
 ];
 // [function, the table its argument is an id of]: called with a real id, so a granted call would really reset it.
 const RESETS = [["reset_prescription_rounds", "prescriptions"], ["reset_frequency_rounds", "frequency"], ["reset_diet_rounds", "resident_diets"]];
@@ -88,7 +89,7 @@ begin
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-rd-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${["admin", "management", "staff", "volunteer", "doctor"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
+    select id, who::app_role from (values ${["admin", "management", "volunteer", "doctor"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into residents (id, name, species) values (${lit(R)}, 'Harness resident', 'Dog');
 end $setup$;
 

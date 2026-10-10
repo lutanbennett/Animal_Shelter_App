@@ -4,11 +4,12 @@
 //   node scripts/check-medical-jobs.mjs            (from the repo root; dev only)
 //   node scripts/check-medical-jobs.mjs --verbose  (also list every passing check)
 //
-// What it holds, for seven principals (the Head of Medical, admin, management, staff, volunteer, a doctor, no role):
+// What it holds, for six principals (the Head of Medical, admin, management, volunteer, a doctor, no role; staff
+// left them when 0173 retired it, as a live staff login can no longer be made):
 //   weight        the Head of Medical reads, adds and corrects a reading; a volunteer, no role and a doctor
-//                 outside their clinic cannot; staff and management still can
+//                 outside their clinic cannot; admin and management still can
 //   photos        record_attachment() files a resident photo in Medical for her, refuses any other folder, an
-//                 adopter's photo, and a procedure file; the legacy roles are unchanged (staff files in any
+//                 adopter's photo, and a procedure file; the legacy roles are unchanged (management files in any
 //                 folder); the volunteer is still refused
 //   photo view    medical_photo_residents answers the cell; set_resident_drive_folder() fills a missing folder
 //                 and never overwrites one
@@ -32,12 +33,12 @@ const { bundleOfRole } = await import(pathToFileURL(join(process.cwd(), "src/lib
 const AHEAD = new Map();
 
 const lit = (id) => `'${id}'::uuid`;
-const P = ["hom", "admin", "management", "staff", "volunteer", "doctor", "norole"];
+const P = ["hom", "admin", "management", "volunteer", "doctor", "norole"];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
 const R = randomUUID(), R2 = randomUUID(), OWN = randomUUID(), NSD = randomUUID();
 
-const NONE = { hom: 0, admin: 0, management: 0, staff: 0, volunteer: 0, doctor: 0, norole: 0 };
-const STAFF_UP = { ...NONE, admin: 1, management: 1, staff: 1 };
+const NONE = { hom: 0, admin: 0, management: 0, volunteer: 0, doctor: 0, norole: 0 };
+const STAFF_UP = { ...NONE, admin: 1, management: 1 };
 const HOM_UP = { ...STAFF_UP, hom: 1 };
 const HOM_UP_DOCTOR = { ...HOM_UP, doctor: 1 }; // the harness resident has a visit at the doctor's own clinic
 const NOT_DOCTOR = HOM_UP; // gated on sees_all_clinical(): a doctor (own clinic) gets none
@@ -129,7 +130,7 @@ begin
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-mj-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${["admin", "management", "staff", "volunteer", "doctor"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
+    select id, who::app_role from (values ${["admin", "management", "volunteer", "doctor"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role_id, role) select ${lit(ID.hom)}, id, legacy_role from roles where key = 'head_of_medical';
   insert into clinics (id, name) values (${lit(OWN)}, 'Harness own');
   with d as (insert into doctors (name, user_id) values ('Harness doctor', ${lit(ID.doctor)}) returning id) insert into doctor_clinics (clinic_id, doctor_id) select ${lit(OWN)}, id from d;
@@ -212,7 +213,7 @@ const eq = (label, got, want) => (got === want ? pass(`${label} (${want})`) : fa
 eq("set_resident_drive_folder fills a missing folder", valueOf("hom", "folder filled"), "new-folder");
 eq("set_resident_drive_folder never overwrites a folder", valueOf("hom", "folder kept"), "keep-me");
 eq("a volunteer cannot set a folder", valueOf("volunteer", "folder by volunteer"), "NONE");
-eq("a first photo from her becomes the profile photo, as it does for staff (unchanged behaviour)", valueOf("hom", "profile photo set"), "f-prof");
+eq("a first photo from her becomes the profile photo, as it does for the legacy roles (unchanged behaviour)", valueOf("hom", "profile photo set"), "f-prof");
 eq("an attachment she files is stamped with her id", valueOf("hom", "attachment row")?.length, 36);
 
 if (get("role", "row") === 0) pass("role row: custom, borrows volunteer, medical-only photos"); else fail("role row head_of_medical missing or wrong shape");

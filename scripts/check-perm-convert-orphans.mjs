@@ -6,7 +6,7 @@
 //
 // For each table, each principal's read / update / insert / delete (1 = took effect, 0 = refused):
 //   enclosures, zones        facility.enclosures: admin all four; management, staff, volunteer, vet read only
-//                            (C1 closed); a custom role on the staff floor with the cell reads / writes by the cell
+//                            (C1 closed); a custom role above the floor with the cell reads / writes by the cell
 //   group_origins            resident.register reads; nobody but admin writes
 //   resident_diet_rounds, prescription_rounds   the cell (medical.diet / medical.prescriptions) writes, and a
 //                            vet keeps writing through the parent's own clinic limit
@@ -18,8 +18,12 @@
 // Then structural sweeps: no policy on these tables names management or staff, and every new policy calls
 // has_permission() inside a (select ...) init-plan.
 //
-// The custom roles all borrow the STAFF floor and hold one or two cells; one holds none. That is the proof
-// that the role-named policies are gone: a role that borrows staff and has no cell gets nothing.
+// The custom roles all borrow the MANAGEMENT floor (STAFF until 0173 retired it) and hold one or two cells; one holds
+// none. That is the proof that the role-named policies are gone: a role that borrows management and has no cell gets
+// nothing.
+// "staff" is no longer the Staff role (0173 refuses a live one): it is a harness custom role carrying the archived
+// Staff role's cells, so its expectations below still hold. Management holds more (item_unit_conversions, recurring
+// jobs), so it could not stand in. "vet" is a doctor login (0172 renamed the role and the clinic tables).
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
@@ -44,10 +48,11 @@ const CUSTOM = {
   c_recur: [["recurring.manage", 2], ["recurring.do_own", 2]],
   c_manage_only: [["recurring.manage", 2]],
 };
-const REAL = ["admin", "management", "staff", "volunteer", "vet"];
-const P = [...REAL, "norole", ...Object.keys(CUSTOM)];
+const REAL = ["admin", "management", "volunteer", "vet"];
+const APP_ROLE = { vet: "doctor" };
+const P = [...REAL, "staff", "norole", ...Object.keys(CUSTOM)];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
-const ZD = randomUUID(), R = randomUUID(), OWN = randomUUID(), Z = randomUUID(), E = randomUUID(), D = randomUUID(), RX = randomUUID(), F = randomUUID(), J = randomUUID(), C = randomUUID(), GO = randomUUID(), REC = randomUUID();
+const DOC = randomUUID(), ZD = randomUUID(), R = randomUUID(), OWN = randomUUID(), Z = randomUUID(), E = randomUUID(), D = randomUUID(), RX = randomUUID(), F = randomUUID(), J = randomUUID(), C = randomUUID(), GO = randomUUID(), REC = randomUUID();
 const ref_ = (k) => `(select id from pg_temp.ref_ids where k = '${k}')`;
 
 // table -> [read, update, insert, delete] statements
@@ -130,24 +135,31 @@ begin
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-pco-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${REAL.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
+    select id, who::app_role from (values ${REAL.map((p) => `('${APP_ROLE[p] ?? p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into roles (key, name, kind, legacy_role, scope_residents) values
-    ${Object.keys(CUSTOM).map((c) => `('harness_pco_${c}', 'Harness ${c}', 'custom', 'staff', 'all')`).join(",\n    ")};
+    ${Object.keys(CUSTOM).map((c) => `('harness_pco_${c}', 'Harness ${c}', 'custom', 'management', 'all')`).join(",\n    ")};
   insert into role_permissions (role_id, activity, level)
     select r.id, v.act, v.lvl from roles r join (values
       ${Object.entries(CUSTOM).flatMap(([c, cells]) => cells.map(([a, l]) => `('harness_pco_${c}', '${a}', ${l})`)).join(",\n      ")}
     ) as v(rkey, act, lvl) on v.rkey = r.key;
-  ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id, role) select ${lit(ID[c])}, id, 'staff' from roles where key = 'harness_pco_${c}';`).join("\n  ")}
+  ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id, role) select ${lit(ID[c])}, id, 'management' from roles where key = 'harness_pco_${c}';`).join("\n  ")}
+  -- staff: the archived Staff role's cells on a custom role (0173), so the login keeps exactly what Staff held
+  insert into roles (key, name, kind, legacy_role, scope_residents) values ('harness_pco_staff', 'Harness staff', 'custom', 'management', 'all');
+  insert into role_permissions (role_id, activity, level)
+    select (select id from roles where key = 'harness_pco_staff'), rp.activity, rp.level
+      from role_permissions rp join roles s on s.id = rp.role_id where s.key = 'staff';
+  insert into user_roles (user_id, role_id, role) select ${lit(ID.staff)}, id, legacy_role from roles where key = 'harness_pco_staff';
 
   insert into zones (id, name) values (${lit(Z)}, 'Harness zone'), (${lit(ZD)}, 'Harness empty zone');
   insert into enclosures (id, name, zone_id) values (${lit(E)}, 'Harness enclosure', ${lit(Z)});
   insert into group_origins (id, name) values (${lit(GO)}, 'Harness origin');
 
   -- a resident the vet's clinic treats, with one diet and one prescription, each holding one round
-  insert into vets (id, name, clinic_name) values (${lit(OWN)}, 'Harness own', 'Harness own');
-  insert into vet_doctors (name, user_id, vet_id) values ('Harness vet', ${lit(ID.vet)}, ${lit(OWN)});
+  insert into clinics (id, name) values (${lit(OWN)}, 'Harness own');
+  insert into doctors (id, name, user_id) values (${lit(DOC)}, 'Harness doctor', ${lit(ID.vet)});
+  insert into doctor_clinics (clinic_id, doctor_id) values (${lit(OWN)}, ${lit(DOC)});
   insert into residents (id, name, species) values (${lit(R)}, 'Harness in', 'Dog');
-  insert into vet_appointments (resident_id, vet_id, appointment_date, status) values (${lit(R)}, ${lit(OWN)}, now() - interval '3 days', 'completed');
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values (${lit(R)}, ${lit(OWN)}, now() - interval '3 days', 'completed');
   insert into resident_diets (id, resident_id, diet_type_id, start_date) values (${lit(D)}, ${lit(R)}, (select id from diet_types limit 1), current_date - 5);
   insert into prescriptions (id, resident_id, medication_id, start_date) values (${lit(RX)}, ${lit(R)}, ${ref_("med")}, current_date - 5);
   insert into frequency (id, label) values (${lit(F)}, 'Harness frequency');
@@ -226,5 +238,5 @@ if (sweep("names_mgmt_or_staff") === 0) pass("no policy on these tables names ma
 if (sweep("bare_has_permission") === 0) pass("every new policy wraps has_permission() in (select ...)"); else fail(`${sweep("bare_has_permission")} policy(ies) call has_permission() bare`);
 if (sweep("new_perm_policies") === 28) pass("28 new policies"); else fail(`expected 28 new *_perm policies, found ${sweep("new_perm_policies")}`);
 console.log(`\n${ok} checks held, ${fails} failed.`);
-console.log(fails ? "RESULT: RED" : "RESULT: GREEN (each table answers as its cell says; a staff-floor role with no cell gets nothing; vets unchanged)");
+console.log(fails ? "RESULT: RED" : "RESULT: GREEN (each table answers as its cell says; a management-floor role with no cell gets nothing; vets unchanged)");
 process.exitCode = fails ? 1 : 0;
