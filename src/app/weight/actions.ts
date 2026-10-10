@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { recordWeight, updateWeight } from "@/lib/weight/record";
 
 export type WeightFormState = { error: string } | undefined;
@@ -72,6 +74,7 @@ export async function saveWeightEdit(
   formData: FormData,
 ): Promise<WeightFormState> {
   const { t } = await getT();
+  if (!can(await loadPermissions(), "medical.weight")) return { error: t.common.notAllowed };
   const residentId = str(formData, "residentId");
   if (!residentId) return { error: t.weight.errors.missingResident };
 

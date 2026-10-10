@@ -16,7 +16,7 @@ import { PrescriptionForm, type PrescriptionInitial } from "../../PrescriptionFo
 export default async function EditPrescriptionPage(
   props: PageProps<"/prescriptions/[id]/edit">,
 ) {
-  await requirePermission("medical.prescriptions", "read");
+  await requirePermission("medical.prescriptions");
   const { id } = await props.params;
   const { t, locale } = await getT();
   const supabase = await createClient();

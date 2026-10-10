@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { loadClinicScope, scopeAllowsClinic } from "@/lib/clinics/scope";
 
 export type ClinicVisitEditState = { error: string } | undefined;
@@ -30,6 +32,7 @@ export async function updateClinicVisit(
 ): Promise<ClinicVisitEditState> {
   const { t } = await getT();
   const e = t.vetVisits.errors;
+  if (!can(await loadPermissions(), "medical.visits")) return { error: e.notAuthorized };
 
   const visitId = str(formData, "visitId");
   const residentId = str(formData, "residentId");

@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { contactRelation } from "@/lib/contacts/visibility";
-import { readsWhoAndWhereOnly } from "@/lib/residents/who-and-where";
+import { readsWhoAndWhereOnly, requireFullResident } from "@/lib/residents/who-and-where";
 import { loadResidentCard } from "@/lib/residents/card";
 import { getTagOrigin } from "@/lib/tags/origin";
 import { loadTranslations } from "@/lib/translations/queries";
@@ -34,6 +34,10 @@ export default async function ResidentPage(
   // A login that may not open the record (a volunteer, the 2IC, the Heads: 0134) gets the name
   // card's page: never less than a stranger sees, plus where it lives and their own jobs.
   if (await readsWhoAndWhereOnly()) redirect(`/r/${id}`);
+  // Everyone else opens on the same guard as the record's own pages: a role that holds no read
+  // of the record gets the no-access page, not whatever RLS leaves of it. After the redirect,
+  // because a who-and-where login may hold no resident.record and must still reach the card.
+  await requireFullResident();
 
   const [
     residentResult,
