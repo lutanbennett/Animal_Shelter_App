@@ -44,7 +44,8 @@ planning runs. **Do not assume a batch you set up is still in flight**; check
 ## The loop, in one paragraph
 
 Each run: sync `main` and fold in `backlog`; read the worktree registry and **capture
-token actuals for merged streams whose sessions are still open** (the only chance); check
+token actuals the moment you notice a stream's PR has merged** (see below — not later in
+the run, and not at the next one); check
 each candidate against the code, *against what the user has already ruled out*, and
 *against whether it is waiting on a decision rather than on effort*; present three batch
 tables with estimates; ask once; create only the current batch's worktrees and briefs;
@@ -111,9 +112,29 @@ search, not for the number.** That stream ran 17% over for exactly this reason.
 
 ## Token estimates, from measured actuals
 
-**Thirty-nine measured, five lost — five clean sweeps in a row.** Every loss was a
-**closed** session: `get_usage` answers fine for an *idle* one, so **the loss is
-specifically a chat shut between the merge and the next `/plan-day`.**
+**Thirty-nine measured, seven lost.**
+
+**CAPTURE THE FIGURE WHEN THE PR MERGES, NOT AT THE NEXT `/plan-day`.** This paragraph
+previously said the figure is lost only when a chat is *closed*, and that `get_usage`
+*"answers fine for an idle one"*. **Both halves are wrong, and it cost two figures
+within minutes of being written** (#513 `receipt-content-server-side` and #515
+`page-guard-fixes`, both `unmeasured`).
+
+- **An archived session is as lost as a closed one**, and archiving a finished build
+  chat is the ordinary thing to do the moment its PR merges. `list_sessions` needs
+  `include_archived: true` even to find it, and it will never answer.
+- **The condition is a live process, not a session state.** `get_usage`'s own note says
+  an *idle* session *"lets it go"* too. Nine sessions reading `isRunning: false`
+  answered fine on 2026-10-10, which made the old rule look safer than it is — **so do
+  not infer readability from the listing. Try the call; the call is the only test.**
+- **It is not a setting to change.** `auto_archive_on_pr_close` is **Off** and
+  `auto_archive_inactive_days` is **Never** (`ccd_settings`), so nothing archives them
+  automatically — Lutan archives them by hand, which is correct housekeeping. **Do not
+  ask him to stop.** The loop fits his habit, not the reverse.
+
+**So: the instant you see that a stream's PR has merged, call `get_usage` in that same
+turn**, before touching the registry or anything else. The gap used to be a day; batches
+now merge between planning runs, so on 2026-10-10 it was minutes.
 
 | landmark | figure |
 |---|---|
