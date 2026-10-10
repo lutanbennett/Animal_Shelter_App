@@ -48,7 +48,7 @@ file rather than left for someone to trip over. See *Defects found* #4.
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — **all seven checks pass on #514**, read from `gh pr checks 514`: `audit`, `check`, `migration-numbers`, `new-policy-role-names`, `public-views`, `script-integrity`, `test-plan`. Judged on each check's own conclusion as well as the run's, knowing `audit` and `test-plan` are `continue-on-error` and so cannot fail the run. Ticked in this follow-up commit, as the template requires, rather than pre-ticked on the push that created the PR
 - [x] `node scripts/check-test-plan.mjs` — run on this plan before pushing, exit code read from the script directly rather than through a pipe
 - [x] **Every figure in the file was measured, not recalled** — `main` `4081637d` from `git rev-parse`; `176 applied, 0 pending` and `0 not applied here` from `apply-migrations.mjs --status`; the highest migration file `0176_receipt_issuer_server_side.sql` from `ls supabase/migrations/`, **plus** the knowledge that `0177` is owned by the live `receipt-content-server-side` stream, so the file says `0178`; 88 open items from an `awk` count above `## Completed`; `0` open PRs from `gh pr list`; release `0.24.0` / `2026-10-10` and the `unreleased` count of 3 from `src/lib/releases.ts`; the nine token actuals from `get_usage` at the moment each was readable
 - [x] **A figure that could not be measured is marked as such, not estimated** — production's position says *"not read from this session"* and points at `docs/release-handover.md`, because the classifier refuses production reads and that refusal is correct
