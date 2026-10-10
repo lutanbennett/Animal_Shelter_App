@@ -1,10 +1,10 @@
 // 0168 (donation receipts) exercised on dev without keeping anything: assertions run under real
-// management, staff and anon sessions inside begin…, and a final raise rolls it all back, the
+// management, 2IC and anon sessions inside begin…, and a final raise rolls it all back, the
 // receipt counter included.
 //
 //   node scripts/check-donation-receipts-schema.mjs
 //
-// Covers: who writes (the donation.receipt cell: management yes, staff and anon no), the line
+// Covers: who writes (the donation.receipt cell: management yes, 2IC and anon no), the line
 // constraints (in kind is null, never 0), issuing takes consecutive numbers and a refused issue
 // does not advance the counter (no gaps), one live receipt per donation, a receipt cannot be
 // inserted directly, rewritten or deleted, a void needs a reason and cannot be undone, a re-issue
@@ -46,12 +46,12 @@ declare m uuid; s uuid; d uuid; d2 uuid; c0 bigint; n1 text; n2 text; n3 text; r
   issue text := 'issue_donation_receipt(%L, %L, current_date, ''{"name":"Probe issuer"}''::jsonb, ''{"donorName":"Probe"}''::jsonb)';
 begin
   select ur.user_id into m from user_roles ur join roles x on x.id = ur.role_id where x.key = 'management' and ur.archived_at is null limit 1;
-  select ur.user_id into s from user_roles ur join roles x on x.id = ur.role_id where x.key = 'staff' and ur.archived_at is null limit 1;
+  select ur.user_id into s from user_roles ur join roles x on x.id = ur.role_id where x.key = 'second_in_command' and ur.archived_at is null limit 1;  -- the 2IC: Staff until 0173 retired it
   insert into r (label, got, want) values ('logins found', (m is not null and s is not null)::text, 'true');
   select next_value into c0 from receipt_counters where series = 'LCA';
 
   insert into r (label, got, want) values ('mgmt records donation', pg_temp.try(m, $q$insert into donations (received_on, donor_name, method) values (current_date, 'Probe ผู้บริจาค จำกัด', 'cash')$q$)::text, '1');
-  insert into r (label, got, want) values ('staff records donation', pg_temp.try(s, $q$insert into donations (received_on, donor_name, method) values (current_date, 'Staff probe', 'cash')$q$)::text, '-1');
+  insert into r (label, got, want) values ('2IC records donation', pg_temp.try(s, $q$insert into donations (received_on, donor_name, method) values (current_date, 'Staff probe', 'cash')$q$)::text, '-1');
   insert into r (label, got, want) values ('anon records donation', pg_temp.try(null, $q$insert into donations (received_on, donor_name, method) values (current_date, 'Anon', 'cash')$q$, 'anon')::text, '-1');
   insert into r (label, got, want) values ('bad method refused', pg_temp.try(m, $q$insert into donations (received_on, donor_name, method) values (current_date, 'X', 'crypto')$q$)::text, '-2');
   insert into r (label, got, want) values ('blank donor refused', pg_temp.try(m, $q$insert into donations (received_on, donor_name, method) values (current_date, '  ', 'cash')$q$)::text, '-2');
@@ -61,7 +61,7 @@ begin
   insert into r (label, got, want) values ('in-kind line, null amount', pg_temp.try(m, format($q$insert into donation_lines (donation_id, position, description) values (%L, 1, 'Blankets')$q$, d))::text, '1');
   insert into r (label, got, want) values ('zero amount refused', pg_temp.try(m, format($q$insert into donation_lines (donation_id, position, description, amount) values (%L, 2, 'Zero', 0)$q$, d))::text, '-2');
   insert into r (label, got, want) values ('amount keeps satang', (select amount from donation_lines where donation_id = d and position = 0)::text, '1200.50');
-  insert into r (label, got, want) values ('staff reads donations', pg_temp.q(s, '(select count(*) from donations)'), '0');
+  insert into r (label, got, want) values ('2IC reads donations', pg_temp.q(s, '(select count(*) from donations)'), '0');
   insert into r (label, got, want) values ('anon reads donations', pg_temp.q(null, '(select count(*) from donations)', 'anon'), 'ERR:42501');
 
   n1 := pg_temp.q(m, format('(' || issue || ').number', d, 'TH'));
@@ -69,7 +69,7 @@ begin
   insert into r (label, got, want) values ('issued_by from session', (select issued_by from donation_receipts where number = n1)::text, m::text);
   insert into r (label, got, want) values ('second live receipt refused', pg_temp.q(m, format('(' || issue || ').number', d, 'TH')), 'ERR:23505');
   insert into r (label, got, want) values ('refused issue did not advance the counter', (select next_value from receipt_counters where series = 'LCA')::text, (c0 + 1)::text);
-  insert into r (label, got, want) values ('staff issue refused', pg_temp.q(s, format('(' || issue || ').number', d, 'TH')), 'ERR:42501');
+  insert into r (label, got, want) values ('2IC issue refused', pg_temp.q(s, format('(' || issue || ').number', d, 'TH')), 'ERR:42501');
   insert into r (label, got, want) values ('bad country refused', pg_temp.q(m, format('(' || issue || ').number', d, 'FR')), 'ERR:23514');
   insert into r (label, got, want) values ('counter still unmoved', (select next_value from receipt_counters where series = 'LCA')::text, (c0 + 1)::text);
   insert into r (label, got, want) values ('direct insert refused', pg_temp.try(m, format($q$insert into donation_receipts (number, donation_id, country, issued_on, content, issuer) values ('LCA9999999', %L, 'TH', current_date, '{}', '{}')$q$, d))::text, '-1');

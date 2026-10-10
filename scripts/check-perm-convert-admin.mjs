@@ -26,7 +26,7 @@ if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the
 const sql = `
 do $$
 declare
-  admin_id uuid; vol_id uuid; staff_id uuid; mgmt_id uuid;
+  admin_id uuid; vol_id uuid; mgmt_id uuid;  -- no staff: 0173 retired it, so dev has no live staff login
   fails text := ''; checks int := 0;
   n int; total int; t text; u record; who text; uid uuid;
   admin_only text[] := array['audit_log','permission_activities','roles','role_permissions','user_roles','assistant_actions'];
@@ -34,10 +34,9 @@ declare
 begin
   select ur.user_id into admin_id from user_roles ur join roles r on r.id = ur.role_id where r.key = 'admin' and ur.archived_at is null limit 1;
   select ur.user_id into vol_id from user_roles ur join roles r on r.id = ur.role_id where r.key = 'volunteer' and ur.archived_at is null limit 1;
-  select ur.user_id into staff_id from user_roles ur join roles r on r.id = ur.role_id where r.key = 'staff' and ur.archived_at is null limit 1;
   select ur.user_id into mgmt_id from user_roles ur join roles r on r.id = ur.role_id where r.key = 'management' and ur.archived_at is null limit 1;
-  if admin_id is null or vol_id is null or staff_id is null or mgmt_id is null then
-    raise exception 'FAIL fixture: dev has no live login for each of admin, volunteer, staff, management';
+  if admin_id is null or vol_id is null or mgmt_id is null then
+    raise exception 'FAIL fixture: dev has no live login for each of admin, volunteer, management';
   end if;
 
   -- 1
@@ -51,8 +50,8 @@ begin
     reset role;
   end loop;
 
-  foreach who in array array['admin', 'staff', 'management', 'volunteer'] loop
-    uid := case who when 'admin' then admin_id when 'staff' then staff_id when 'management' then mgmt_id else vol_id end;
+  foreach who in array array['admin', 'management', 'volunteer'] loop
+    uid := case who when 'admin' then admin_id when 'management' then mgmt_id else vol_id end;
     perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated', 'aal', 'aal2')::text, true);
     set local role authenticated;
 
