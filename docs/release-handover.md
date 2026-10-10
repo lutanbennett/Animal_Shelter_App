@@ -62,10 +62,10 @@ times. What is durable is the shape:
 - The list also names **husks**, folders git no longer tracks, which `done <name>` clears. `Animal_Shelter_planner-handover-81` was still there at `0.25.0`, as it was at `0.24.0` — left behind by #490 and now two days old.
 - Several feature streams run in parallel with a release and are nothing to do with it. A release manager's business is the two it created.
 
-**The shared-dev-database courtesy still applies:** `check-phone-width.mjs
---clean` deletes every `phonewidth-*` login it finds, not just its own, and at
-`0.24.0` it deleted another stream's mid-run. **It was deliberately not run at
-`0.25.0`** for that reason, and the sweep worked fine without it. Leave it alone
+**The shared-dev-database courtesy still applies to whoever runs the phone-width
+script in testing** (it is no longer a release step — see lesson 5):
+`check-phone-width.mjs --clean` deletes every `phonewidth-*` login it finds, not
+just its own, and at `0.24.0` it deleted another stream's mid-run. Leave it alone
 unless you are cleaning up after a killed run and nobody else is working.
 
 ---
@@ -164,17 +164,35 @@ commits, both this release manager's own backlog edits, touching only
 **Read the project-ref line's SHA on every deploy and diff it against the release
 SHA.** Both Pi builds pin with `--ref` and neither has drifted in two releases.
 
-### 5. The phone-width sweep against `test.lannacare.org` is now the established way
+### 5. The phone-width sweep is no longer a release step — do not put it back
 
-Second release running. The script takes a URL, refuses any database but dev, and
-the test site *is* the dev database served by the test Pi from the release SHA —
-so it measures the shipped build with no local server competing for the PC.
+**Decided by Lutan on 2026-10-10, during this release:**
+`node scripts/check-phone-width.mjs` is **removed from
+`docs/release-smoke-test.md`** and is not run at a release. It belongs to
+**testing**: a feature that changes a page runs it in that feature's own test
+plan, before the PR merges.
+See `docs/decisions/2026-10-10-phone-width-is-not-a-release-step.md`.
 
-Two things about actually running it, both unchanged from `0.24.0` and both still
-true:
+It is worth knowing why, because the obvious reading of `0.24.0`'s record points
+the wrong way. That record treated three releases of skipping this check as a
+failing to put right, and `0.25.0` duly ran it in full — **and it became the
+single longest step in the release, longer than the production Worker deploy**,
+about forty-five minutes, while the release itself had been live and verified for
+half an hour. The smoke test also listed it **twice**, as two near-identical
+bullets nobody had noticed, because nobody had run it for three releases.
 
-- **Its own role list still has `staff`**, retired by `0.24.0`, so a default run dies at setup. Name the six surviving roles: `--roles=admin,management,doctor,volunteer,head_of_medical,head_of_maintenance`. It still has no `second_in_command`, so **2IC remains the one role never measured**. Both on the backlog.
-- **Slice it by role**, one at a time. Output is buffered, so a running slice writes **nothing at all** to its file — that is not a hang. The admin slice alone runs past ten minutes.
+The substantive point is that it asks a question about **pages**, which change
+when a feature changes them, not when a release is cut. At release time it
+re-asks the same question of the same unchanged pages, far too late for a failure
+to be cheap.
+
+**The general lesson: a checklist item that keeps getting skipped is evidence.**
+Sometimes it means the step is neglected; sometimes it means the step is in the
+wrong place. Ask which before restoring it.
+
+It ran clean one last time at `0.25.0` before the decision — six roles, both
+languages, 283 page views, 2793 tap targets, 0 warnings — so nothing was waved
+through. The numbers are in the decision file.
 
 ### 6. Where the time went
 
@@ -191,7 +209,7 @@ short this time. Budget from the per-step figures, not the total.
 | **Worker deploy, production** | ~13 min — still the long pole |
 | Worker deploy, test | ~10 min |
 | Pi build + restart | **under 36 s** — but see the caution below |
-| Phone-width sweep, per role | ~5–10 min; admin is the longest |
+| ~~Phone-width sweep~~ | **~45 min, and removed from the release** — see lesson 5 |
 
 **The Pi figure is a bracket, not a measurement**, and must not be budgeted on.
 Nothing in `deploy-pi.sh` timestamps its own finish; what is known is that the
@@ -230,7 +248,7 @@ What is worth carrying forward, most valuable first:
 | **Whether the two Cloudflare analytics secrets are set on production** | `docs/test-plans/pi-visitor-count.md` | **New, and cheap.** `0.25.0`'s fifth note tells every admin the Website visitors tile now shows a number. If `CLOUDFLARE_ANALYTICS_TOKEN` and `CLOUDFLARE_ZONE_ID` are unset on production, it still says *Not set up* and the note is false. One look at Settings → System status settles it |
 | **A Management login saving Management → Website** | `docs/test-plans/website-content-grant.md` | Carried from `0.22.0`. Verified only by the migration applying cleanly |
 | **The new Contacts read-permission pass** | `backlog`, Security section | `0.20.0`'s version was carried six releases and could no longer be performed — it named `staff`, retired by `0173`. **Closed at `0.25.0` and rewritten** against current behaviour, against production rows, covering all six live roles. It is a backlog item now, not a test-plan ghost |
-| 2IC at phone width | `scripts/check-phone-width.mjs` | The sweep runs, but the script has no `second_in_command`, so the 2IC — who has no PC on site — is the one role never measured |
+| 2IC at phone width | `scripts/check-phone-width.mjs` | **Not a release item any more** (lesson 5) — listed once more only so it is not lost in the move. The script has no `second_in_command`, so the 2IC, who has no PC on site, has never been measured. It belongs to whoever next changes a page a 2IC uses. On the backlog |
 | The signed-out public tour | every release record | Standing gap: `PUBLIC_SITE` is `locked`, so nobody has seen `/`, `/adopt`, `/our-work` or `/donate` as a visitor does |
 
 ---
@@ -243,7 +261,7 @@ What is worth carrying forward, most valuable first:
 4. **Decide major or minor with Lutan before cutting**, with anything else the cut needs, in one round. Note that `0.25.0` was major on *different grounds* from the four before it: nothing moved, but four of five notes were new abilities. Do not present five consecutive majors as one precedent.
 5. **Ask whether anything in the release can fail silently** — and read the candidates in code before asking, so the question carries an answer. Three of the last four answered yes; `0.25.0` answered no, and lesson 1 is how that was established.
 6. **Expect a production-only guard.** There was none this time, which cost nothing. It can only ever appear at the production dry-run, and it is a question for Lutan, not a file to fix.
-7. **Budget the Worker deploy at ~13 minutes**, do not overlap it with anything building in the same checkout, and fill the wait with the Pi builds, the drift checks, the phone-width sweep and the record. The test Worker deploy also builds in the main checkout — **do not start it while his production deploy is running.**
+7. **Budget the Worker deploy at ~13 minutes**, do not overlap it with anything building in the same checkout, and fill the wait with the Pi builds, the drift checks and the record. **Not the phone-width sweep — it is no longer a release step** (lesson 5). The test Worker deploy also builds in the main checkout — **do not start it while his production deploy is running.**
 8. **Hand over commands only at the moment they should be run.** See the section above; this is the lesson of `0.25.0`.
 9. Four production-only checks are owed, and a fifth cheap one: a donation receipt, the Clinics screens, a facility-map upload, a Management → Website save, and whether the two Cloudflare analytics secrets exist.
 10. `/clean-streams`, including the `Animal_Shelter_planner-handover-81` husk, which has now survived two releases.

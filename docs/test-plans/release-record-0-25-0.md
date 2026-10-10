@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| Feature | The release record for `0.25.0`: a `## 0.25.0` section added to `docs/releases/2026-10-10.md`, and the rewritten `docs/release-handover.md` for whoever runs `0.26.0` |
+| Feature | The release record for `0.25.0`: a `## 0.25.0` section added to `docs/releases/2026-10-10.md`, the rewritten `docs/release-handover.md` for whoever runs `0.26.0`, and **Lutan's decision of 2026-10-10 removing the phone-width sweep from the release** — two bullets out of `docs/release-smoke-test.md` and a new decision file |
 | Backlog item | none — step 8 of `docs/release-procedure.md` |
 | Branch / worktree | `claude/record-0-25-0` @ `C:\Development\Animal_Shelter_record-0-25-0` |
 | Dev server | not started — this PR is documentation |
@@ -16,7 +16,7 @@
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence, and it matches what was asked for — two documentation files: the `0.25.0` section of today's release record, and the handover rewritten for the next release manager
-- [x] Files/areas touched listed — `docs/releases/2026-10-10.md` (a new `## 0.25.0` section appended; the `0.24.0` section is not touched) and `docs/release-handover.md` (rewritten, as it is each release). No code, no migration
+- [x] Files/areas touched listed — `docs/releases/2026-10-10.md` (a new `## 0.25.0` section appended; the `0.24.0` section is not touched), `docs/release-handover.md` (rewritten, as it is each release), `docs/release-smoke-test.md` (**two near-identical phone-width bullets removed**, on Lutan's decision) and a new `docs/decisions/2026-10-10-phone-width-is-not-a-release-step.md`. No code, no migration
 - [x] Roles affected identified — none. Nothing here is read by the app; `docs/` is not bundled
 - [x] Anything explicitly **out of scope** written down — (a) the ten `pending:` feature plans, which keep their own signatures and are listed, not copied; (b) the production-only checks the release could not do, which are carried in the handover; (c) the two backlog items this release raised, already filed on the `backlog` branch and not in this diff
 
@@ -38,7 +38,7 @@ budget on `0.24.0`'s measured 1m40s instead.
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — **deliberately unticked on the commit that opens the PR**, because CI has not run yet and this line cannot honestly be ticked in advance. Completed in a follow-up commit once the run is read, which is the known `test-plan` behaviour and happened on the cut PR an hour earlier in this same release
+- [x] CI green on the PR (runs the same three) — read on PR #520, not ticked in advance. The first run was **6 green, 1 red**: `check` (2m3s), `public-views` (1m41s), `audit`, `migration-numbers`, `new-policy-role-names` and `script-integrity` all passed, and `test-plan` failed on **this very line**, which that commit left unticked because the run had not happened. Completed here; the run on this commit is the one that reports seven green. Same sequence as the cut PR an hour earlier, and the handover now lists it as expected rather than alarming
 - [ ] `node scripts/check-release-guards.mjs` — n/a: this PR changes no release data. `unreleased` is empty and `package.json` is `0.25.0`, both set by #519 and untouched here
 
 ## 3. Schema and data
@@ -90,7 +90,7 @@ restated here.
 ## 7. Documentation
 
 - [ ] Backlog item ticked in `docs/backlog.md` — n/a: a release record is not a backlog item. **The two items this release raised were filed on the `backlog` branch**, not here: the replacement for `0.20.0`'s carried Contacts pass, and the stale `ReleaseRole` union
-- [x] Non-obvious design choices added as a new file in `docs/decisions/` — n/a: the record *is* where release decisions live. The one durable rule this release produced — never hand over a command before the moment it should be run — belongs in the handover and in `CLAUDE.md`'s neighbourhood rather than in `docs/decisions/`, because it is about how a release is run, not about the software
+- [x] Non-obvious design choices added as a new file in `docs/decisions/` — **yes: `2026-10-10-phone-width-is-not-a-release-step.md`**, recording Lutan's decision, what it cost, what it does not change, and the last clean run's numbers so nothing is waved through. The other durable rule this release produced — never hand over a command before the moment it should be run — is in the handover rather than `docs/decisions/`, because it is about how a release is run, not about the software
 - [x] `README.md` still accurate — unchanged, and it names no version
 - [ ] **Release notes.** Would a shelter user notice this change? — n/a: internal documentation. No shelter user sees `docs/`, and `unreleased` is correctly empty immediately after a cut
 - [x] Commit messages say why, not just what
@@ -106,7 +106,7 @@ restated here.
 ### On the deployed build
 
 - [x] Deployed to test — test Worker and test Pi both on the release; `test.lannacare.org/api/version` reports `0.25.0` @ `590a9d35`
-- [x] Smoke-tested on `test.lannacare.org` — the phone-width sweep ran against it across six roles in both languages
+- [x] Smoke-tested on `test.lannacare.org` — the phone-width sweep ran against it across six roles in both languages and passed clean (283 page views, 2793 actions, 0 warnings). **It was the last time it runs as a release step**, removed in this PR on Lutan's decision; the numbers are preserved in the decision file so the removal is not a gap
 - [x] Public pages re-checked after a cache purge or a 10-minute wait — the edge-cache check was done in a real browser, same URL three times, `HIT` with CSP `ENFORCING`, served by the Pi
 - [x] Timezone-sensitive behaviour proved, not observed at a convenient hour — n/a for this PR's own content; the release contains no timezone change, `0.24.0` having been the one that moved dashboard months to Thai time
 - [ ] For a boundary or banding change, the assertions cover both edges — n/a: no boundary in this PR
@@ -137,7 +137,8 @@ restated here.
 | 2 | low | **`gh pr merge` was refused twice** by auto mode's classifier as "Merge Without Review", after two releases where it was not refused at all | **accepted; cleared when Lutan asked in chat.** No workaround attempted. The handover now says to expect it rather than to treat it as the exception |
 | 3 | low | Ten of the release's thirteen feature plans are `pending:` | **accepted and recorded, on Lutan's call**, asked as its own question in the same round as major/minor and after the silent-failure question was answered separately. Each keeps its own signature |
 | 4 | low | **`ReleaseRole` still lists the retired `staff`** and offers no `second_in_command`, `head_of_maintenance` or `head_of_medical`, so a note cannot be tagged for three live roles | **filed on the `backlog` branch, 2026-10-10.** Nothing in this release was affected; both tagged notes use `admin` / `management` |
-| 5 | low | **2IC remains the one role never measured at phone width** — `check-phone-width.mjs` has no `second_in_command` | **already on the backlog**, carried from `0.24.0`. Named so the record does not report the sweep as full coverage |
+| 5 | low | **2IC remains the one role never measured at phone width** — `check-phone-width.mjs` has no `second_in_command` | **already on the backlog**, carried from `0.24.0`. Named so the record does not report the sweep as full coverage. It is now testing's item rather than a release manager's |
+| 6 | low | **The phone-width sweep was the longest step in the release** — about forty-five minutes, longer than the production Worker deploy — for a check that could not have changed anything by then, and `docs/release-smoke-test.md` listed it **twice** | **resolved by Lutan's decision in this PR**: removed from the release and returned to testing, with the reasoning and the last clean run's numbers recorded in `docs/decisions/` |
 
 ## Left for manual verification
 
