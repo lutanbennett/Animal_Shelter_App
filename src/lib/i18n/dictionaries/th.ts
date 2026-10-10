@@ -756,12 +756,12 @@ const th: Dictionary = {
             `${v.pageViews} การเปิดหน้า; ผู้เข้าชม ${v.visitors} คน นับรายวันแล้วรวมกัน`,
           note: "ยอดรวมของ Cloudflare เองสำหรับโดเมน lannacare.org ทั้งหมด (รวมเว็บทดสอบและเจ้าหน้าที่) ไม่มีคุกกี้หรือการติดตาม — ดูหน้านโยบายความเป็นส่วนตัว",
           missing: {
-            pi: (v: { names: string }) =>
-              `ยังไม่ถึง Pi ซึ่งเป็นเครื่องที่ให้บริการหน้าเว็บ: ไม่มี ${v.names} บน Pi ความลับของ Worker ไปไม่ถึง Pi ให้คัดลอกบรรทัด CLOUDFLARE_ANALYTICS_TOKEN และ CLOUDFLARE_ZONE_ID จาก .env.deploy.production บนแล็ปท็อปไปไว้ในไฟล์เดียวกันบน Pi แล้วรัน deploy-pi.sh`,
-            worker: (v: { names: string }) =>
-              `ยังไม่ได้ตั้งค่าบน Cloudflare Worker: ไม่มี ${v.names} ใส่ทั้งสองบรรทัดในไฟล์ .env.deploy ของเว็บนี้บนแล็ปท็อป แล้ว deploy ด้วย scripts/deploy.mjs`,
-            local: (v: { names: string }) =>
-              `ยังไม่ได้ตั้งค่าบนเครื่องนี้: ไม่มี ${v.names} ใน .env.local`,
+            pi: (v: { names: string; file: string }) =>
+              `ยังไม่ถึง Pi ซึ่งเป็นเครื่องที่ให้บริการหน้าเว็บ: ไม่มี ${v.names} บน Pi ความลับของ Worker ไปไม่ถึง Pi ให้คัดลอกบรรทัด CLOUDFLARE_ANALYTICS_TOKEN และ CLOUDFLARE_ZONE_ID จาก ${v.file} บนแล็ปท็อปไปไว้ในไฟล์เดียวกันบน Pi แล้วรัน deploy-pi.sh`,
+            worker: (v: { names: string; file: string }) =>
+              `ยังไม่ได้ตั้งค่าบน Cloudflare Worker: ไม่มี ${v.names} ใส่ทั้งสองบรรทัดใน ${v.file} บนแล็ปท็อป แล้ว deploy ด้วย scripts/deploy.mjs --secrets`,
+            local: (v: { names: string; file: string }) =>
+              `ยังไม่ได้ตั้งค่าบนเครื่องนี้: ไม่มี ${v.names} ใน ${v.file}`,
           },
         },
       },

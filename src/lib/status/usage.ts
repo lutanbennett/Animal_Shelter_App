@@ -97,7 +97,7 @@ export type VisitorRuntime = "worker" | "pi" | "local";
 
 export type VisitorFacts =
   | { kind: "counts"; pageViews: number; dailyVisitorsSummed: number }
-  | { kind: "missing"; missing: string[]; runtime: VisitorRuntime };
+  | { kind: "missing"; missing: string[]; runtime: VisitorRuntime; file: string };
 
 const VISITOR_KEYS = ["CLOUDFLARE_ANALYTICS_TOKEN", "CLOUDFLARE_ZONE_ID"] as const;
 
@@ -106,8 +106,8 @@ function visitorRuntime(): VisitorRuntime {
     getCloudflareContext();
     return "worker";
   } catch {
-    // Off the Worker, production is the Pi; anything else is a laptop.
-    return getAppEnv() === "production" ? "pi" : "local";
+    // write-env.mjs gives only a Pi a photo cache, so it marks the Pi.
+    return process.env.PHOTO_CACHE_DIR ? "pi" : "local";
   }
 }
 
@@ -142,14 +142,17 @@ export async function countVisitors(days: number): Promise<CheckOutcome<VisitorF
   if (!token || !zone) {
     const missing = VISITOR_KEYS.filter((k) => !process.env[k]);
     const runtime = visitorRuntime();
+    const appEnv = getAppEnv();
+    // The file both deploy scripts read for this database (scripts/lib/env.mjs).
+    const file = appEnv === "dev" ? ".env.local" : `.env.deploy.${appEnv}`;
     const where = { worker: "as Worker secrets", pi: "on the Pi", local: "in .env.local" }[runtime];
     // One of the pair set is a mistake anywhere; neither set is only a
     // fault where the count was promised.
-    const loud = missing.length === 1 || getAppEnv() === "production";
+    const loud = missing.length === 1 || appEnv === "production";
     return {
       state: loud ? "fail" : "off",
       error: loud ? `${missing.join(" and ")} ${missing.length === 1 ? "is" : "are"} not set ${where}.` : undefined,
-      facts: { kind: "missing", missing, runtime },
+      facts: { kind: "missing", missing, runtime, file },
     };
   }
 

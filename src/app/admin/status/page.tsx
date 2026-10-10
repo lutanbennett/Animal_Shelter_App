@@ -377,7 +377,10 @@ async function Usage({ t, locale, days }: { t: T; locale: Locale; days: UsagePer
       <Tile title={u.visitors.title} result={r.visitors} t={t} locale={locale}>
         {r.visitors.facts?.kind === "missing" ? (
           <p className="text-muted">
-            {u.visitors.missing[r.visitors.facts.runtime]({ names: r.visitors.facts.missing.join(", ") })}
+            {u.visitors.missing[r.visitors.facts.runtime]({
+              names: r.visitors.facts.missing.join(", "),
+              file: r.visitors.facts.file,
+            })}
           </p>
         ) : r.visitors.facts ? (
           <>

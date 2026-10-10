@@ -820,12 +820,12 @@ const en = {
             `${v.pageViews} page views; ${v.visitors} visitors, counted per day and added up.`,
           note: "Cloudflare's own totals for the whole lannacare.org domain (test site and staff included). No cookies or tracking — see the privacy page.",
           missing: {
-            pi: (v: { names: string }) =>
-              `Not reaching the Pi, which serves the pages: ${v.names} missing there. Worker secrets do not reach the Pi. Copy the CLOUDFLARE_ANALYTICS_TOKEN and CLOUDFLARE_ZONE_ID lines from .env.deploy.production on the laptop into the same file on the Pi, then run deploy-pi.sh.`,
-            worker: (v: { names: string }) =>
-              `Not set on the Cloudflare Worker: ${v.names} missing. Put both lines in the laptop's .env.deploy file for this site and deploy with scripts/deploy.mjs.`,
-            local: (v: { names: string }) =>
-              `Not set on this computer: ${v.names} missing from .env.local.`,
+            pi: (v: { names: string; file: string }) =>
+              `Not reaching the Pi, which serves the pages: ${v.names} missing there. Worker secrets do not reach the Pi. Copy the CLOUDFLARE_ANALYTICS_TOKEN and CLOUDFLARE_ZONE_ID lines from ${v.file} on the laptop into the same file on the Pi, then run deploy-pi.sh.`,
+            worker: (v: { names: string; file: string }) =>
+              `Not set on the Cloudflare Worker: ${v.names} missing. Put both lines in ${v.file} on the laptop and deploy with scripts/deploy.mjs --secrets.`,
+            local: (v: { names: string; file: string }) =>
+              `Not set on this computer: ${v.names} missing from ${v.file}.`,
           },
         },
       },
