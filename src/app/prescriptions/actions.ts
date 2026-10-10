@@ -4,6 +4,8 @@ import { refresh, revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { DOSE_UNITS, type DoseUnit } from "@/lib/i18n/enum-labels";
 import { parseSchedule, type FrequencySchedule } from "@/lib/prescriptions/frequency";
@@ -218,6 +220,7 @@ export async function updatePrescription(
   formData: FormData,
 ): Promise<PrescriptionFormState> {
   const { t } = await getT();
+  if (!can(await loadPermissions(), "medical.prescriptions")) return { error: t.common.notAllowed };
   const residentId = str(formData, "residentId");
   if (!residentId) return { error: t.prescriptions.errors.missingResident };
   const prescriptionId = str(formData, "prescriptionId");

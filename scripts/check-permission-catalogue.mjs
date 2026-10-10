@@ -189,13 +189,11 @@ const PINNED = {
   "/weight/[id]/edit": {
     guards: ['requirePermission("medical.weight")'],
     decides: [],
-    known: { has: ['requirePermission("medical.weight", "read")'], item: "Four medical edit pages open at Read" },
   },
   "/prescriptions/new": { guards: ['requirePermission("medical.prescriptions")'], decides: [] },
   "/prescriptions/[id]/edit": {
     guards: ['requirePermission("medical.prescriptions")'],
     decides: [],
-    known: { has: ['requirePermission("medical.prescriptions", "read")'], item: "Four medical edit pages open at Read" },
   },
   "/procedures/new": { guards: ['requirePermission("medical.procedures")'], decides: ["resident.microchip"] },
   "/blood-tests/new": { guards: ['requirePermission("medical.blood_tests")'], decides: [] },
@@ -204,13 +202,11 @@ const PINNED = {
   "/diets/[id]/edit": {
     guards: ['requirePermission("medical.diet")'],
     decides: [],
-    known: { has: ['requirePermission("medical.diet", "read")'], item: "Four medical edit pages open at Read" },
   },
   "/clinic-visits/new": { guards: ['requirePermission("medical.visits")'], decides: [] },
   "/clinic-visits/[id]/edit": {
     guards: ['requirePermission("medical.visits")'],
     decides: ["resident.microchip"],
-    known: { has: ['requirePermission("medical.visits", "read")'], item: "Four medical edit pages open at Read" },
   },
   "/outreach/new": { guards: ['requirePermission("community.outings")'], decides: [] },
   "/outreach/[id]/edit": { guards: ['requirePermission("community.outings")'], decides: [] },
@@ -234,6 +230,9 @@ const PINNED = {
   // The resident's own pages. requireFullResident() is resident.record at Read plus "not a
   // who-and-where login" (0134); the decision that matters, may this person do the thing, is the
   // body's can(), which the page asks before it renders the form.
+  // The record hub: a who-and-where login is redirected to /r/ before this guard (redirect() is not
+  // a guard, so it is not listed), and every control on it that writes asks can().
+  "/residents/[id]": { guards: [FULL], decides: ["placement.death", "placement.death_withdraw", "translations.manage", "resident.microchip", "resident.adoption_news"] },
   "/residents/[id]/edit": { guards: [FULL], decides: ["resident.record"] },
   "/residents/[id]/move": { guards: [FULL], decides: ["placement.move"] },
   "/residents/[id]/hospital": { guards: [FULL], decides: ["placement.hospital"] },
@@ -333,10 +332,6 @@ const EXEMPT = {
     why: `The residents list, which every app role reads at least as who-and-where (§5, 0134): the page reads resident_who_and_where for that login and resident_list_view otherwise, and RLS decides the rows. Registering from a chip search is behind can(resident.register). ${APP}`,
     decides: ["resident.register"],
   },
-  "/residents/[id]": {
-    why: `The resident's record hub. A who-and-where login is sent to /r/ first; for the rest the record is read under RLS (a doctor sees only their clinics' residents, 0108, else the card). Every control that writes asks can(). It has no requirePermission("resident.record", "read") of its own: see the decision file. ${APP}`,
-    decides: ["placement.death", "placement.death_withdraw", "translations.manage", "resident.microchip", "resident.adoption_news"],
-  },
 };
 
 const appDir = join(root, "src/app");
@@ -397,6 +392,14 @@ for (const { file, path } of pages) {
 }
 for (const p of [...Object.keys(PINNED), ...Object.keys(EXEMPT)]) {
   if (!pages.some((pg) => pg.path === p)) eq(`F ${p} STALE: listed but has no page.tsx`, "listed", "removed");
+}
+// The hub's order is the part a pin of its guards cannot see: a who-and-where login may hold no
+// resident.record, so the guard ahead of its redirect would turn the volunteer's card into no-access.
+{
+  const hub = stripComments(readFileSync(join(appDir, "residents/[id]/page.tsx"), "utf8"));
+  const redirectAt = hub.search(/readsWhoAndWhereOnly\(\)\)\s*redirect\(/);
+  const guardAt = hub.search(/\brequireFullResident\(/);
+  eq("F /residents/[id] sends a who-and-where login to /r/ before its guard", redirectAt >= 0 && redirectAt < guardAt, true);
 }
 eq("F every EXEMPT entry gives a reason", Object.entries(EXEMPT).filter(([, e]) => !e.why || e.why.length < 40).map(([p]) => p), []);
 console.log(

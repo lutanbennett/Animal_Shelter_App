@@ -75,6 +75,8 @@ async function issue(
       // that no caller can name another organisation. Still sent only so the deploy order does not matter;
       // drop it together with the argument in a later migration. Never make the database read it again.
       p_issuer: receiptIssuer(country),
+      // Ignored by the database since 0177, for the same reason: the RPC stores receipt_content(donation), its SQL
+      // copy of receiptContentFor(), so that no caller can issue a receipt for an amount nobody gave.
       p_content: receiptContentFor(donation.donor_name, lines),
     })
     .single<DonationReceiptRow>();

@@ -10,7 +10,7 @@ import { loadDietResident } from "../../resident";
 
 /** Reached from a row's Edit link on the resident's Diet tab. */
 export default async function EditDietPage(props: PageProps<"/diets/[id]/edit">) {
-  await requirePermission("medical.diet", "read");
+  await requirePermission("medical.diet");
   const { id } = await props.params;
   const { t, locale } = await getT();
   const supabase = await createClient();

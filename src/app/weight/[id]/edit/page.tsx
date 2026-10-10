@@ -16,7 +16,7 @@ import { WeightForm, type ExistingReading, type WeightInitial } from "../../Weig
  * page says so instead of offering a form the database (0026) would reject.
  */
 export default async function EditWeightPage(props: PageProps<"/weight/[id]/edit">) {
-  await requirePermission("medical.weight", "read");
+  await requirePermission("medical.weight");
   const { id } = await props.params;
   const { t } = await getT();
   const supabase = await createClient();
