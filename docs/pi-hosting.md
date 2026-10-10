@@ -116,6 +116,16 @@ updates. Re-runnable.
   `npm run deploy:prod` from the dev machine so the fallback keeps pace —
   a version gap between the two is harmless (same database) but not worth
   leaving for long.
+- **A new value in `.env.deploy.production` goes on the Pi too.** The Pi
+  renders the pages, and it reads only what `write-env.mjs` copies from **its
+  own** `~/Animal_Shelter_App/.env.deploy.production` — not the Worker's
+  secrets. So a value added on the dev machine and pushed with
+  `deploy:prod -- --secrets` also needs the same line in the Pi's copy, then
+  `deploy-pi.sh`. The optional ones (`BACKUP_DRIVE_FOLDER_ID`,
+  `CLOUDFLARE_ANALYTICS_TOKEN`, `CLOUDFLARE_ZONE_ID`) are one list for both
+  servers, `scripts/lib/optional-secrets.mjs`; `ORIGIN_KEY` is the one the
+  Pi does not take. Until 2026-10-10 the Pi had its own shorter list, and the
+  visitor count read "Not set up" with both Cloudflare values on the Worker.
 - **Logs**: `journalctl -u lanna-care -f`, `journalctl -u cloudflared -f`.
 - **Restart**: `sudo systemctl restart lanna-care`.
 - **Test on the same Pi**: its own clone, its own service, never production's

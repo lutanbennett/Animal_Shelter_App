@@ -66,6 +66,7 @@ export const unreleased: ReleaseNote[] = [
   "On the facility map, the zoom buttons (+, − and fit) now sit in a row under the plan instead of on top of it. On a phone they used to cover most of the bottom-right enclosure in Main Zone, so tapping it pressed a button instead.",
   "Rooms on the facility map now say what they are for. Tap the Medical room, the Kitchen or any other room on the Map and its card shows a few lines about it under its name, in Thai once it has been translated. In Settings → Facility map, rooms are no longer a fixed three: add a new one, rename one in English and Thai, write what it is for, or delete one.",
   "Choose how the app looks. Tap your name at the top right and pick Dark, Light, High contrast or Magenta. Your choice is saved to your login, so it follows you to your phone and any computer you sign in on. The public website and printed PDFs are not affected.",
+  { text: "Settings → System status: the Website visitors tile now shows how many people visited the website, instead of saying Not set up.", roles: ["admin"] },
 ];
 
 /** Newest first. */

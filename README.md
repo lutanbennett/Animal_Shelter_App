@@ -658,10 +658,14 @@ One-time setup on the machine that runs it:
 **System status** (`/admin/status`, admins only) runs every health check
 server-side with a timeout and caches the results for a minute; the checks
 are small functions in `src/lib/status/`. Its visitor count needs two
-optional Worker secrets, pushed by `deploy.mjs --secrets` when present in
-the environment's file: `CLOUDFLARE_ANALYTICS_TOKEN` (a Cloudflare API
-token with Zone → Analytics → Read on lannacare.org) and
-`CLOUDFLARE_ZONE_ID`. Without them that tile is grey.
+optional values in the environment's `.env.deploy.production`:
+`CLOUDFLARE_ANALYTICS_TOKEN` (a Cloudflare API token with Zone → Analytics
+→ Read on lannacare.org) and `CLOUDFLARE_ZONE_ID`. Put them in **both**
+copies of that file — the dev machine's, which `deploy.mjs --secrets`
+pushes to the Worker, and the **Pi's**, which `deploy-pi.sh` writes into
+the Pi's own settings (`docs/pi-hosting.md`, Day to day). The Pi serves the
+pages, so with the values only on the Worker the tile still says "Not set
+up". Without them that tile is grey.
 
 **Status alerts** mail the admins when a health tile goes red and when it
 recovers. A Worker cron trigger (`*/15 * * * *` on the test and production
