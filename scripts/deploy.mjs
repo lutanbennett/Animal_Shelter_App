@@ -27,6 +27,7 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { readFileSync } from "node:fs";
 import { SITE_ORIGINS, loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
+import { OPTIONAL_SECRETS } from "./lib/optional-secrets.mjs";
 import { appliedMigrations } from "./lib/deploy-schema.mjs";
 import { releaseProblems, schemaVerdict } from "./lib/release-guards.mjs";
 import { strayEnvFiles } from "./lib/env-leak.mjs";
@@ -63,11 +64,9 @@ const RUNTIME_SECRETS = [
   "GOOGLE_OAUTH_REFRESH_TOKEN",
   "GOOGLE_DRIVE_ROOT_FOLDER_ID",
 ];
-// Shared with the WAF rule that guards the Pi's tunnel hostname
-// (docs/pi-hosting.md); pushed when set, harmless when not. The two
-// Cloudflare ones feed the visitor count on Settings → System status
-// (src/lib/status/usage.ts), which stays grey until both are set.
-const OPTIONAL_SECRETS = ["BACKUP_DRIVE_FOLDER_ID", "ORIGIN_KEY", "CLOUDFLARE_ANALYTICS_TOKEN", "CLOUDFLARE_ZONE_ID"];
+// OPTIONAL_SECRETS are pushed when set, harmless when not. The list is shared
+// with the Pi's scripts/pi/write-env.mjs; scripts/lib/optional-secrets.mjs says
+// what each one is for.
 const BUILD_VARS = ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY"];
 
 function run(cmd, opts = {}) {
