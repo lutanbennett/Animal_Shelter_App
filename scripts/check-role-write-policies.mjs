@@ -14,9 +14,9 @@
 //      FOR ALL policy covers every command). Add a row when you add a form.
 //   2  Management mirrors staff — 0039's rule: whatever staff can do on a
 //      table, management can. Checked for every table, so no list to forget.
-//   3  Real rows, one rolled-back transaction, each role's own JWT: staff and
-//      management insert and update a blood test and file a scan on it; neither
-//      can delete one; a volunteer can read it and write nothing to it. Proves the policy works, not just exists.
+//   3  Real rows, one rolled-back transaction, each role's own JWT: management
+//      inserts and updates a blood test and files a scan on it; it
+//      cannot delete one; a volunteer can read it and write nothing to it. Proves the policy works, not just exists.
 //
 // And one advisory, never a failure: tables staff can read and nothing else.
 // Most are meant to be (types, clinics, translations); the list is there so that
@@ -171,7 +171,8 @@ begin
   insert into residents (id, name, species) values (v_res, 'Harness blood', 'Dog');
   insert into blood_tests (id, resident_id, blood_test_type_id, date) values (v_bt, v_res, v_type, current_date - 1);
 
-  foreach v_who in array array['staff', 'management', 'volunteer'] loop
+  -- no staff: 0173 retired it, and a live staff login can no longer be made
+  foreach v_who in array array['management', 'volunteer'] loop
     v_uid := gen_random_uuid();
     insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
     values (v_uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
@@ -180,7 +181,7 @@ begin
     insert into user_roles (user_id, role) values (v_uid, v_who::app_role);
 
     n := pg_temp.try(v_uid, format('insert into blood_tests (resident_id, blood_test_type_id, date, results) values (%L, %L, current_date, ''x'')', v_res, v_type));
-    if v_who in ('staff', 'management') then
+    if v_who = 'management' then
       if n <> 1 then raise exception 'HARNESS-FAIL: % insert gave %', v_who, n; end if;
       n := pg_temp.try(v_uid, format('update blood_tests set results = ''y'' where id = %L', v_bt));
       if n <> 1 then raise exception 'HARNESS-FAIL: % update gave %', v_who, n; end if;
@@ -191,7 +192,7 @@ begin
     end if;
     -- the file half of "Log blood test": record_attachment is what the upload route calls
     n := pg_temp.try(v_uid, format('select record_attachment(''blood_test'', %L, %L)', v_bt, 'harnessFile' || v_who));
-    if v_who in ('staff', 'management') then
+    if v_who = 'management' then
       if n <> 1 then raise exception 'HARNESS-FAIL: % record_attachment gave %', v_who, n; end if;
     end if;
     n := pg_temp.try(v_uid, format('delete from blood_tests where id = %L', v_bt));
