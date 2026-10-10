@@ -5,12 +5,13 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { SignOutButton } from "./login/SignOutButton";
+import { ThemePicker } from "./ThemePicker";
 
 /**
  * The header's "who am I": the person's name and role, and on tap the email
  * they signed in with (a name alone cannot tell two accounts apart — the
  * three test logins are all "Lutan", two staff may both be "Noi"), a way to
- * change their name, and Sign out. The header keeps its own Sign out button
+ * change their name, their colour theme, and Sign out. The header keeps its own Sign out button
  * beside this; the menu's copy is for someone who opened it to check which
  * account they were on.
  */
@@ -88,6 +89,7 @@ export function AccountMenu({
           >
             {t.header.yourProfile}
           </Link>
+          <ThemePicker />
           <SignOutButton className="self-start whitespace-nowrap rounded py-1 text-sm font-medium text-foreground hover:text-primary" />
         </div>
       )}

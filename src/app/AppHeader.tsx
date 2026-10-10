@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/current-user";
 import { getT } from "@/lib/i18n/get-t";
 import { getAppEnv } from "@/lib/app-env";
 import { can } from "@/lib/permissions/can";
@@ -14,10 +14,7 @@ import { userNameOf } from "@/lib/auth/user-name";
 import { roleKeyLabel } from "@/lib/i18n/enum-labels";
 
 export async function AppHeader() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) return null;
 
@@ -41,16 +38,31 @@ export async function AppHeader() {
 
   // Production has no badge. UAT has nothing else: it keeps production's
   // colours so the customer tests the real thing (src/lib/app-env.ts).
+  //
+  // The badge and the strip along the header's top edge use fixed colours,
+  // never the theme tokens: a person's colour theme redefines those tokens,
+  // which overrides dev's teal, so this is the one marker no theme can hide
+  // (docs/decisions/2026-10-10-user-colour-themes.md). Dev keeps the teal
+  // everywhere under the default theme as well.
   const appEnv = getAppEnv();
   const badge =
     appEnv === "dev"
-      ? { label: t.header.devBadge, title: t.header.devBadgeTitle }
+      ? { label: t.header.devBadge, title: t.header.devBadgeTitle, className: "bg-[#2dd4bf] text-[#032523] ring-1 ring-[#0b3d38]", strip: true }
       : appEnv === "uat"
-        ? { label: t.header.uatBadge, title: t.header.uatBadgeTitle }
+        ? { label: t.header.uatBadge, title: t.header.uatBadgeTitle, className: "bg-[#ff9f0a] text-[#1a1100] ring-1 ring-[#3d2600]", strip: false }
         : null;
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-border bg-surface px-4 py-3 md:sticky md:top-0 md:z-30 md:h-[var(--app-header-h)] md:flex-nowrap md:px-6">
+    <header className="relative flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-border bg-surface px-4 py-3 md:sticky md:top-0 md:z-30 md:h-[var(--app-header-h)] md:flex-nowrap md:px-6">
+      {/* Dev's strip: teal and near-black diagonal bands, so one of the two
+          stands out on a light header and the other on a dark one. */}
+      {badge?.strip && (
+        <span
+          aria-hidden="true"
+          data-env-strip={appEnv}
+          className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-[repeating-linear-gradient(135deg,#2dd4bf_0_10px,#0b3d38_10px_20px)]"
+        />
+      )}
       <div className="flex items-center gap-3">
         <MobileNavToggle />
         {/* The logo is the way to the public website (it left the nav
@@ -79,7 +91,7 @@ export async function AppHeader() {
         </Link>
         {badge && (
           <span
-            className="rounded bg-primary px-1.5 py-0.5 text-xs font-bold uppercase tracking-wide text-primary-foreground"
+            className={`rounded px-1.5 py-0.5 text-xs font-bold uppercase tracking-wide ${badge.className}`}
             title={badge.title}
           >
             {badge.label}

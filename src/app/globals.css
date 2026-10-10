@@ -15,7 +15,9 @@
   --primary-foreground: #1a1100;
 
   --danger: #ff453a;
-  --danger-foreground: #ffffff;
+  /* Dark text, not white: white on this red is 3.4:1 (the offline banner,
+     its only user). Found by scripts/check-theme-contrast.mjs, 2026-10-10. */
+  --danger-foreground: #1a0503;
   --success: #30d158;
   --success-foreground: #04170a;
 
@@ -61,6 +63,80 @@
   --primary: #2dd4bf;
   --primary-hover: #5eead4;
   --primary-foreground: #032523;
+}
+
+/* The colour themes each person can pick from the account menu
+   (src/lib/theme/themes.ts; docs/decisions/2026-10-10-user-colour-themes.md).
+   The default — dark with orange — is the :root block above and has no
+   attribute; the layout sets data-theme on <html> only for the others.
+
+   Order matters, twice over. These come AFTER the dev block, so a chosen
+   theme's colours win over dev's teal — which is why the environment can no
+   longer be told by colour alone, and AppHeader draws a fixed-colour strip
+   and badge that no theme touches. And they come BEFORE the public-site
+   mapping below (same specificity), so the public pages keep their own
+   cream look whatever the visitor's theme.
+
+   Every pair is checked by `node scripts/check-theme-contrast.mjs`, which
+   reads this file; run it after changing any value here. */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --background: #f4f4f5;
+  --surface: #ffffff;
+  --surface-hover: #e9e9ec;
+  --border: #c9c9cf;
+  --foreground: #18181b;
+  --muted: #52525b;
+
+  --primary: #a84a07;
+  --primary-hover: #8a3c05;
+  --primary-foreground: #ffffff;
+
+  --danger: #c0261a;
+  --danger-foreground: #ffffff;
+  --success: #1a7f37;
+  --success-foreground: #ffffff;
+  --info: #0a5ad4;
+  --warning: #8a5a00;
+
+  /* A zone dot's ring is the page background in the dark themes. On a
+     light page that would leave the white and sand swatches (1.1:1 and
+     1.7:1 on white) as invisible dots, so the ring goes dark instead
+     (src/lib/zones/palette.ts; ZoneDot). */
+  --zone-dot-ring: #3f3f46;
+}
+
+/* High contrast: black, white and a brighter orange, with borders that
+   stand out (3:1 and more) rather than the default's faint lines. Every
+   text pair clears 7:1 (AAA), not just AA. */
+:root[data-theme="contrast"] {
+  --background: #000000;
+  --surface: #0a0a0a;
+  --surface-hover: #262626;
+  --border: #a3a3a3;
+  --foreground: #ffffff;
+  --muted: #e4e4e7;
+
+  --primary: #ffb340;
+  --primary-hover: #ffc870;
+  --primary-foreground: #000000;
+
+  --danger: #ff7b72;
+  --danger-foreground: #000000;
+  --success: #5ee68a;
+  --success-foreground: #000000;
+  --info: #7cb8ff;
+  --warning: #ffe066;
+}
+
+/* The default dark surfaces with a violet accent in place of the orange.
+   Not teal or green, which mean "the dev database", and not blue, which is
+   the maintenance board's in-progress colour (--info). */
+:root[data-theme="violet"] {
+  --primary: #b794ff;
+  --primary-hover: #cbb2ff;
+  --primary-foreground: #1b0d33;
 }
 
 /* Public site: the "Lanna Care for Animals" visual system (docs/design/,
@@ -138,6 +214,7 @@
   --primary-foreground: var(--site-on-action);
 
   --danger: #b42318;
+  --danger-foreground: #ffffff;
   --success: #1e6b45;
   --success-foreground: #ffffff;
 }
@@ -192,6 +269,7 @@
   --color-success-foreground: var(--success-foreground);
   --color-info: var(--info);
   --color-warning: var(--warning);
+  --color-zone-dot-ring: var(--zone-dot-ring, var(--background));
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

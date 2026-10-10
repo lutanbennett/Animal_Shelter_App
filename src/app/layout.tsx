@@ -6,6 +6,8 @@ import { MobileNavProvider } from "./MobileNavContext";
 import { PublicPathGate } from "./PublicPathGate";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getAppEnv } from "@/lib/app-env";
+import { getCurrentUser } from "@/lib/auth/current-user";
+import { THEME_METADATA_KEY, parseTheme, themeAttribute } from "@/lib/theme/themes";
 import { ConfirmProvider } from "@/components/ConfirmProvider";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
@@ -53,11 +55,17 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();
+  // The person's colour theme, from their own user_metadata, rendered into
+  // the HTML so the first paint is already theirs (src/lib/theme/themes.ts).
+  // Signed out — the login page, the public site — is always the default.
+  const user = await getCurrentUser();
+  const theme = themeAttribute(parseTheme(user?.user_metadata?.[THEME_METADATA_KEY]));
 
   return (
     <html
       lang={locale}
       data-env={getAppEnv()}
+      data-theme={theme}
       className={`${geistSans.variable} ${geistMono.variable} ${notoSansThai.variable} ${fraunces.variable} ${sourceSans.variable} h-full antialiased [--app-header-h:4.25rem] md:scroll-pt-[var(--app-header-h)]`}
     >
       <body className="min-h-full flex flex-col">

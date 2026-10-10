@@ -6,9 +6,13 @@
  * Checked 2026-10-08 against all six of the app's dark surfaces (production
  * #121212 / #1c1c1e / #262629, dev and Test #0e1615 / #172221 / #1f2d2c): the
  * lowest is brown on dev's hover row at 4.5:1, above the 3:1 a graphic needs.
- * The app has no light theme; the public site has one but shows no zones.
- * Every dot also carries a ring in the page background (ZoneDot), which is
- * what keeps it visible on a filled chip such as an active zone filter.
+ * The public site is light but shows no zones. The light colour theme
+ * (2026-10-10) is where white (1.0:1 on white) and sand fail as fills, so there
+ * the dot's ring is dark (--zone-dot-ring, 8.6:1 against every light surface)
+ * and the ring, not the fill, is what you see the dot by. The dark themes ring
+ * it in the page background (ZoneDot), which keeps it visible on a filled chip
+ * such as an active zone filter. `node scripts/check-theme-contrast.mjs`
+ * re-checks all of this for every theme; the colours were not re-picked.
  *
  * The database checks only the `#rrggbb` form, so a swatch can be retuned here
  * without a migration; rows holding an old value still show their dot, just
