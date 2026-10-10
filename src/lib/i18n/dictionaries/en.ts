@@ -819,7 +819,14 @@ const en = {
           value: (v: { pageViews: string | number; visitors: string | number }) =>
             `${v.pageViews} page views; ${v.visitors} visitors, counted per day and added up.`,
           note: "Cloudflare's own totals for the whole lannacare.org domain (test site and staff included). No cookies or tracking — see the privacy page.",
-          off: "Not set up: needs a Cloudflare analytics token (CLOUDFLARE_ANALYTICS_TOKEN) and the zone id (CLOUDFLARE_ZONE_ID) as Worker secrets.",
+          missing: {
+            pi: (v: { names: string }) =>
+              `Not reaching the Pi, which serves the pages: ${v.names} missing there. Worker secrets do not reach the Pi. Copy the CLOUDFLARE_ANALYTICS_TOKEN and CLOUDFLARE_ZONE_ID lines from .env.deploy.production on the laptop into the same file on the Pi, then run deploy-pi.sh.`,
+            worker: (v: { names: string }) =>
+              `Not set on the Cloudflare Worker: ${v.names} missing. Put both lines in the laptop's .env.deploy file for this site and deploy with scripts/deploy.mjs.`,
+            local: (v: { names: string }) =>
+              `Not set on this computer: ${v.names} missing from .env.local.`,
+          },
         },
       },
     },

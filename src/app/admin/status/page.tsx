@@ -375,8 +375,10 @@ async function Usage({ t, locale, days }: { t: T; locale: Locale; days: UsagePer
       </Tile>
 
       <Tile title={u.visitors.title} result={r.visitors} t={t} locale={locale}>
-        {r.visitors.state === "off" ? (
-          <p className="text-muted">{u.visitors.off}</p>
+        {r.visitors.facts?.kind === "missing" ? (
+          <p className="text-muted">
+            {u.visitors.missing[r.visitors.facts.runtime]({ names: r.visitors.facts.missing.join(", ") })}
+          </p>
         ) : r.visitors.facts ? (
           <>
             <p>

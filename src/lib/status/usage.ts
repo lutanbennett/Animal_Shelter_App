@@ -1,3 +1,5 @@
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { getAppEnv } from "@/lib/app-env";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { type CheckOutcome, type CheckResult, cached, runCheck } from "./run";
 
@@ -90,7 +92,24 @@ export async function countAssistantRequests(days: number): Promise<CheckOutcome
   return { state: "ok", facts: { requests: await countSince("assistant_actions", "created_at", sinceIso(days)) } };
 }
 
-export type VisitorFacts = { pageViews: number; dailyVisitorsSummed: number };
+/** Where the app answering this request runs, which decides where the two values belong. */
+export type VisitorRuntime = "worker" | "pi" | "local";
+
+export type VisitorFacts =
+  | { kind: "counts"; pageViews: number; dailyVisitorsSummed: number }
+  | { kind: "missing"; missing: string[]; runtime: VisitorRuntime };
+
+const VISITOR_KEYS = ["CLOUDFLARE_ANALYTICS_TOKEN", "CLOUDFLARE_ZONE_ID"] as const;
+
+function visitorRuntime(): VisitorRuntime {
+  try {
+    getCloudflareContext();
+    return "worker";
+  } catch {
+    // Off the Worker, production is the Pi; anything else is a laptop.
+    return getAppEnv() === "production" ? "pi" : "local";
+  }
+}
 
 /**
  * Public-site visitors from Cloudflare's own aggregate zone analytics
@@ -100,14 +119,39 @@ export type VisitorFacts = { pageViews: number; dailyVisitorsSummed: number };
  * the connection logs that page mentions (docs/decisions.md, 2026-09-26).
  *
  * Needs a Cloudflare API token with Zone → Analytics → Read in
- * CLOUDFLARE_ANALYTICS_TOKEN and the zone's id in CLOUDFLARE_ZONE_ID; grey
- * until both are set. Counts are for the whole zone, so they include
- * test.lannacare.org and staff.
+ * CLOUDFLARE_ANALYTICS_TOKEN and the zone's id in CLOUDFLARE_ZONE_ID.
+ * Counts are for the whole zone, so they include test.lannacare.org and
+ * staff.
+ *
+ * The values have to be where the page is served from, and on production
+ * that is the Pi, not the Worker: 0.25.0 told admins this tile worked
+ * while the pair existed only as Worker secrets. So a missing value names
+ * itself and the machine it is missing from, and on production it is red,
+ * not grey — "not configured" and "configured on the wrong machine" must
+ * not look the same (docs/decisions/2026-10-10-visitor-count-live.md).
+ *
+ * `dimensions { date }` is what makes it one group per day. Without it
+ * Cloudflare folds the whole range into one group whose uniques are not
+ * the per-day sum the tile describes. Measured 2026-10-10: the free plan
+ * answers any range up to 52 weeks and a day, so 7, 30 and 90 are all
+ * well inside it, and `limit: 100` covers 90 daily groups.
  */
 export async function countVisitors(days: number): Promise<CheckOutcome<VisitorFacts>> {
   const token = process.env.CLOUDFLARE_ANALYTICS_TOKEN;
   const zone = process.env.CLOUDFLARE_ZONE_ID;
-  if (!token || !zone) return { state: "off" };
+  if (!token || !zone) {
+    const missing = VISITOR_KEYS.filter((k) => !process.env[k]);
+    const runtime = visitorRuntime();
+    const where = { worker: "as Worker secrets", pi: "on the Pi", local: "in .env.local" }[runtime];
+    // One of the pair set is a mistake anywhere; neither set is only a
+    // fault where the count was promised.
+    const loud = missing.length === 1 || getAppEnv() === "production";
+    return {
+      state: loud ? "fail" : "off",
+      error: loud ? `${missing.join(" and ")} ${missing.length === 1 ? "is" : "are"} not set ${where}.` : undefined,
+      facts: { kind: "missing", missing, runtime },
+    };
+  }
 
   const day = (offset: number) => new Date(Date.now() - offset * 86_400_000).toISOString().slice(0, 10);
   const res = await fetch("https://api.cloudflare.com/client/v4/graphql", {
@@ -117,6 +161,7 @@ export async function countVisitors(days: number): Promise<CheckOutcome<VisitorF
       query: `query($zone: String!, $from: Date!, $to: Date!) {
         viewer { zones(filter: { zoneTag: $zone }) {
           httpRequests1dGroups(limit: 100, filter: { date_geq: $from, date_leq: $to }) {
+            dimensions { date }
             sum { pageViews }
             uniq { uniques }
           }
@@ -138,6 +183,7 @@ export async function countVisitors(days: number): Promise<CheckOutcome<VisitorF
   return {
     state: "ok",
     facts: {
+      kind: "counts",
       pageViews: groups.reduce((a, g) => a + g.sum.pageViews, 0),
       dailyVisitorsSummed: groups.reduce((a, g) => a + g.uniq.uniques, 0),
     },

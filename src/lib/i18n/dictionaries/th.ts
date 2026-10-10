@@ -755,7 +755,14 @@ const th: Dictionary = {
           value: (v: { pageViews: string | number; visitors: string | number }) =>
             `${v.pageViews} การเปิดหน้า; ผู้เข้าชม ${v.visitors} คน นับรายวันแล้วรวมกัน`,
           note: "ยอดรวมของ Cloudflare เองสำหรับโดเมน lannacare.org ทั้งหมด (รวมเว็บทดสอบและเจ้าหน้าที่) ไม่มีคุกกี้หรือการติดตาม — ดูหน้านโยบายความเป็นส่วนตัว",
-          off: "ยังไม่ได้ตั้งค่า: ต้องมีโทเค็นวิเคราะห์ของ Cloudflare (CLOUDFLARE_ANALYTICS_TOKEN) และรหัสโซน (CLOUDFLARE_ZONE_ID) เป็นความลับของ Worker",
+          missing: {
+            pi: (v: { names: string }) =>
+              `ยังไม่ถึง Pi ซึ่งเป็นเครื่องที่ให้บริการหน้าเว็บ: ไม่มี ${v.names} บน Pi ความลับของ Worker ไปไม่ถึง Pi ให้คัดลอกบรรทัด CLOUDFLARE_ANALYTICS_TOKEN และ CLOUDFLARE_ZONE_ID จาก .env.deploy.production บนแล็ปท็อปไปไว้ในไฟล์เดียวกันบน Pi แล้วรัน deploy-pi.sh`,
+            worker: (v: { names: string }) =>
+              `ยังไม่ได้ตั้งค่าบน Cloudflare Worker: ไม่มี ${v.names} ใส่ทั้งสองบรรทัดในไฟล์ .env.deploy ของเว็บนี้บนแล็ปท็อป แล้ว deploy ด้วย scripts/deploy.mjs`,
+            local: (v: { names: string }) =>
+              `ยังไม่ได้ตั้งค่าบนเครื่องนี้: ไม่มี ${v.names} ใน .env.local`,
+          },
         },
       },
     },
