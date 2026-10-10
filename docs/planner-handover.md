@@ -1,7 +1,7 @@
-# Planner handover — written 2026-10-09, after batch 84
+# Planner handover — written 2026-10-10, after batch 87
 
 **What this file is.** A snapshot for whoever runs `/plan-day` next in a fresh chat,
-written at the end of nine workstreams (batches 82, 83, 84). It says where the planning
+written at the end of nine workstreams (batches 85, 86, 87). It says where the planning
 loop stands, what is blocked and on whom, and what not to re-derive. It is **rewritten
 every nine workstreams** and is deliberately short-lived.
 
@@ -14,7 +14,7 @@ it, they are right and this file is stale — check the date at the top.
 
 1. `CLAUDE.md` — the workstream rules, start to finish
 2. `.claude/skills/plan-day/SKILL.md` — the loop you are about to run
-3. `.plan-day.md` — **the top line and the last few hundred lines only.** It is ~7,700
+3. `.plan-day.md` — **the top line and the last few hundred lines only.** It is ~8,100
    lines; do not read it all. The top line says which batch is live
 4. this file, for what has changed since
 
@@ -24,19 +24,19 @@ it, they are right and this file is stale — check the date at the top.
 
 | | |
 |---|---|
-| `main` when this was written | **`3696e59d`** |
-| Dev database | **173 applied, no drift** (`apply-migrations.mjs --status`) |
+| `main` when this was written | **`4081637d`** |
+| Dev database | **176 applied, 0 pending, no drift** (`apply-migrations.mjs --status`) |
 | Production database | **not read from this session** — the classifier refuses production reads, and that is correct. See `docs/release-handover.md` |
-| Next free migration number | **`0175`** — `0174` is owned by the live `close-the-remaining-over-grants` stream |
-| Open backlog items | **89** |
-| Open PRs | **none** at writing; batch 84's three have just started |
-| Live worktrees | batch 84: `close-the-remaining-over-grants` :3004, `multi-tenancy-spike` :3008, `roles-parity-reconcile` :3009, plus this one :3010 — and **six merged leftovers** from batches 82 and 83 to `/clean-streams` |
-| Last release | **`0.23.0`** (2026-10-09); `unreleased` already holds 4 lines from batch 83 |
+| Next free migration number | **`0178`** — `0176` is the highest file on `main`, and **`0177` is owned by the live `receipt-content-server-side` stream** |
+| Open backlog items | **88** |
+| Open PRs | **none** at writing; batch 87's three have just started |
+| Live worktrees | batch 87: `receipt-content-server-side` :3004, `page-guard-fixes` :3008, `user-colour-theme` :3009, plus this one :3010 — and **six merged leftovers** from batches 85 and 86, all `HELD` by their own sessions |
+| Last release | **`0.24.0`** (2026-10-10, major); `unreleased` holds **3 lines** from batches 85 and 86 |
 | Workstreams since this handover | **0 — the counter restarts here.** `.plan-day.md` carries it |
 
-**Nine workstreams went through in one day**, across four `/plan-day` runs. Batches merged
-faster than they could be planned — twice a batch was fully merged before the next
-planning run even opened. **Do not assume a batch you set up is still in flight**; check
+**Nine workstreams went through in one day again**, across four `/plan-day` runs — and
+**six of them merged inside about nine hours**, both batches start-to-merged between
+planning runs. **Do not assume a batch you set up is still in flight**; check
 `gh pr list` before telling the user anything about it.
 
 ---
@@ -52,28 +52,38 @@ save the plan and bump the counter.
 
 ---
 
-## Four states that look like faults and are not
+## Five states that look like faults and are not
 
 1. **A merged branch showing `ahead`** — the PR was squash-merged, so the branch tip is
    not in `main`. The work is in. Check the PR's state, not the count.
 2. **`mergeable: UNKNOWN`** on a fresh PR — CI has not finished. Not a conflict. A conflict
    shows as `CONFLICTING`, and **silent CI on a pushed commit means exactly that** — sync
    the branch, do not wait.
-3. **A `backlog` merge conflict** during the daily sync — expected, but **the count is
-   still seventeen: all three merges on 2026-10-09 were clean**, one of them "Already up
-   to date". When it does conflict, **"keep both sides" has resolved every one**, in three
-   shapes: two lines kept; one spliced from both; one side discarded because the other was
-   a superset. Compare byte lengths before assuming both hold something.
-4. **NEW — `HELD` is a snapshot, not a verdict.** `worktree.mjs list` reads whether a
-   process has the folder open *right now*. On 2026-10-09 four worktrees read
-   `HELD — <session name>` and all four read `free` minutes later, with no chat closed in
-   between. **So re-run `list` before asking the user to close sessions** — the old advice
-   wasted a round trip three times in one day. Still never `done` something that reads
-   `HELD` at the moment you look.
+3. **NEW, and it cost two round trips in one day: `UU docs/backlog.md` in the main
+   checkout is almost certainly another session mid-sync, not a conflict for you.**
+   Twice on 2026-10-10 the main checkout showed an unresolved `docs/backlog.md` and
+   `git pull` / `git merge` refused with *"Merging is not possible because you have
+   unmerged files"*; both times `MERGE_HEAD` had vanished by the next command, because the
+   **Production release manager** was running the same daily sync in the same folder.
+   **So: re-read the state before doing anything, and check `ListAgents` for a busy
+   session whose `cwd` is the main checkout.** Resolving it yourself means two sessions
+   resolving one conflict in one working tree. The batch-84 handover said to check once;
+   **expect it** — the main checkout is shared and the release manager syncs there too.
+4. **A stale session-start `git status`.** The snapshot in the first system message is
+   from session start and can be hours old. On 2026-10-10 it showed `main` three merges
+   behind. **Re-read `git log` rather than quoting it.**
+5. **`HELD` is a snapshot, not a verdict — and the batch-84 correction was itself too
+   strong.** That copy said held worktrees "reliably release within minutes" and that
+   re-running `list` beats asking Lutan to close chats. Over three readings on 2026-10-10
+   the truth settled: **a worktree is held while its session lives, and releases within
+   *hours* of that stream's work finishing, not minutes.** Six held at 05:50 were free by
+   10:00; six more were held immediately after their PRs merged. **So: clear leftovers on
+   the next run, never ask Lutan to close chats for it, and never `done` something that
+   reads `HELD` at the moment you look.**
 
 ---
 
-## The lesson that cost the most, and its two extra halves
+## The lesson that cost the most, and its five questions
 
 **An open item is not proof the work is undone, and a status note saying "still open" is
 not proof either.** On 2026-10-07 that cost four streams.
@@ -81,119 +91,122 @@ not proof either.** On 2026-10-07 that cost four streams.
 **Two commands per candidate, before it enters a batch:**
 `ls docs/decisions/ | grep -i <subject>` and `git log -S "<symbol>"` (or `-- <file>`).
 
-**Third question (2026-10-09, cost a stream): has an approach already been declined?**
-A declined approach lives as **prose inside the item**, not as a decision file or a commit,
-so the two commands cannot see it. Read the item's own prose for *declined*, *parked*,
-*on hold*, *Lutan said*. A tool that lists outstanding work — like
-`check-policy-role-names.mjs` — is right about the work and **silent about the approach.**
+**Third question: has an approach already been declined?** A declined approach lives as
+**prose inside the item**, not as a decision file or a commit, so the two commands cannot
+see it. Read the item's own prose for *declined*, *parked*, *on hold*, *Lutan said*.
 
-**Fourth question (2026-10-09, and it paid off immediately): is it waiting on a decision
-rather than on effort?** Two Security over-grants had sat open since the morning, both
-reading *"Raised with Lutan; not decided"*. They were not stale and not hard — they needed
-one answer each. **Both were put to him as options-with-a-recommendation in the same
-`AskUserQuestion` card as the batch confirmation, answered in one click, and committed to
-the `backlog` branch before any worktree was made.** That turned two blocked items into a
-buildable stream inside the planning run.
+**Fourth question: is it waiting on a decision rather than on effort?** This keeps paying.
+On 2026-10-10 **six items were closed or unblocked by answers in the planning chat, before
+any worktree existed** — twice as many as a single stream closes. Put them to him as
+options-with-a-recommendation in the same `AskUserQuestion` as the batch confirmation, and
+commit the answers to the `backlog` branch immediately.
 
-**So: ask the blocking question in the planning chat.** The planner has the whole picture
-and the user is already there answering one card. Do not plan around an undecided item,
-and do not create a stream whose first act is to stop.
-
-**And an item can end in a question, not a build** — the contacts-maps item closed on
-Lutan answering "no preview wanted".
+**Fifth, new: an item's *count* is the count someone happened to run.**
+`check-harness-repair`'s item said *"eight dev check harnesses"*, measured from six run
+plus two inferred. There were **51**. The item even named the grep that would have found
+them. **If an item says "measured on dev" and names a wider search, size it for the
+search, not for the number.** That stream ran 17% over for exactly this reason.
 
 ---
 
 ## Token estimates, from measured actuals
 
-**Thirty measured, five lost.** Every loss was a **closed** session: `get_usage` answers
-fine for an *idle* one, so **the loss is specifically a chat shut between the merge and the
-next `/plan-day`.** There is no second chance. **Batches 82 and 83 lost none** — their
-sessions were still idle when the planning run reached them.
+**Thirty-nine measured, five lost — five clean sweeps in a row.** Every loss was a
+**closed** session: `get_usage` answers fine for an *idle* one, so **the loss is
+specifically a chat shut between the merge and the next `/plan-day`.**
 
 | landmark | figure |
 |---|---|
-| Largest ever measured | **`donation-receipts` 454,572** — a document format, a numbering sequence, a form and a country variant |
-| Second, by 2,500 tokens | **`vet-to-doctor-rename` 452,067** — live tables, 5 check scripts, routes, nav, manual, both dictionaries, **two PRs** |
-| **The fold, proven twice** | `grants-lint-and-refused-row` 130,291 for *two* items; `close-the-over-grants` 266,913 for *five* |
+| Largest ever measured | **`donation-receipts` 454,572** |
+| Second | **`vet-to-doctor-rename` 452,067** — live tables, 5 check scripts, routes, nav, manual, both dictionaries, **two PRs** |
+| Cheapest real feature | **`receipt-issuer-server-side` 143,678** — a `security definer` RPC, app code *and* a migration |
 
-**ONE BAND IS WRONG AND SHOULD MOVE: the quick win.** The skill says 110–170k. Measured:
-`account-menu-min-width` **129,320**, `residents-select-all` **179,312** (+20% on a 150k
-estimate). **Use 130–190k.** A quick win never lands near the ~110k floor, because the
-floor is paid before any work and a quick win still has to read, build, check and write a
-test plan.
+**THE SCHEMA-PR BAND IS NO LONGER UNMEASURED. The skill's table still says it is.**
+Measured twice: `map-rooms-schema` **151,273** (a single-file migration with a back-fill,
+dry-run, apply and a mostly-`n/a` test plan) and `receipt-issuer-server-side` **143,678**
+(migration plus app). **Use ~150k.**
 
-**A large mechanical sweep is cheaper than a large design-and-build.** The rename touched
-far more files than the receipts stream and still came in under it. When sizing a large
-item, ask how much must be *decided*, not how much must be *typed*. **Cost tracks how much
-a stream must find out** — `planner-handover-doc` produced a long document for **129,722**
-because its brief carried a full draft.
+**Nothing lands below ~130k.** Six streams in a row now confirm it. The ~110k floor is
+paid before any work and every stream still has to read, build, check and write a plan.
+The quick-win band is **130–190k**
+(`docs/decisions/2026-10-09-quick-win-band-is-130-190k.md`).
 
-**Do not shade estimates down by 10%.** This now needs saying twice over. An earlier
-handover said to, on a run of eight unders; that run broke immediately (+2%, +7%, +8%).
-Batches 82 and 83 then produced **five unders in six**, by 11–33% — and the one over was
-the quick win. Two runs of undershooting is exactly what the trap looks like from the
-inside. **Fix the quick-win band; leave medium and large alone.**
+**Do not shade estimates down by a flat percentage.** Nine streams across batches 84–86
+ran **−23, −3, +21, +5, +17, −11, −15, −35, −43** per cent. The mean is about −10% and it
+is useless, because the spread is +21 to −43.
+
+**What explains the spread is how much each stream had to find out:**
+
+- **One known fix, named files, a precise brief → 143k–185k**, whatever it touches.
+- **A fully-specified large build lands at the *bottom* of its band**, not the middle
+  (`map-rooms-editor` −15% on ~450k).
+- **A stream that must discover its own scope overruns** (`check-harness-repair` +17%).
+
+**So estimate by what must be discovered, not by files touched** — and estimate a
+precisely-briefed single-fix stream at **~160–200k**, not ~250k.
 
 ---
 
-## Two constraints that shape batches
+## Three constraints that shape batches
 
 **1. One app-wide sweep is left, and it cannot share a batch with screen work** — the
-**mobile sweep**. The Vet→Doctor rename, the other one, **shipped 2026-10-09 as #495 and
-#496**, so the queue behind it has cleared. The mobile sweep's own item says Lutan
-schedules it and `/plan-day` should **stop offering it**; he mentioned it on 2026-10-09
-"if enough credits" and then twice chose other work when it was offered as an explicit
-swap. **Offer it as a swap option, never as a slot-filler, and let him decline it.**
+**mobile sweep**. Its own item says Lutan schedules it and `/plan-day` should **stop
+offering it**; he has now chosen other work over it three times. **Offer it as a swap
+option, never as a slot-filler, and let him decline it.**
 
-**2. One migration per batch is still the real bottleneck.** Three candidates are queued on
-it right now: `facility-map-rooms`, and the two items `dashboard-cashflow-followups` spun
-out (a Cashflow forecast function for second doses and Thai-time months; a vaccine stock
-forecast). When two belong together, **fold them into one stream.**
+**2. One migration per batch is still the real bottleneck.** Two candidates are queued on
+it right now: `cashflow-and-vaccine-forecast` and the map-room leftover drops. When two
+belong together, **fold them into one stream.**
 
-**2a. NEW — a stream that must not merge still needs the slot managed.**
-`multi-tenancy-spike` would add `shelter_id` across ~45 tables on a branch that is never
-merged. Done with a numbered migration **that leaves dev carrying schema `main` does not
-have**, and blocks every other stream until someone writes a down-migration. It was
-**explicitly forbidden a migration number** and told to use the `begin … rollback`
-`do $$ … $$` harness, to measure by reading and counting where a transaction is too small,
-and to finish with `apply-migrations.mjs --status` showing no drift as a test-plan tick.
-**That is what let it share a batch with a migration-carrying stream.**
+**2a. A stream that must not merge still needs the slot managed** — `multi-tenancy-spike`
+was **explicitly forbidden a migration number** and told to use the `begin … rollback`
+`do $$ … $$` harness, which is what let it share a batch with a migration-carrying stream.
+
+**3. NEW — when a schema stream hands the next stream "drop these in a migration", check
+whether that stream *needs* them dropped or merely *should* eventually.** `0175`'s
+handover told `map-rooms-editor` to drop a unique constraint, a trigger and a function
+"in one migration" — which would have put **two migrations in batch 86** and broken rule
+3, on a stream the saved plan had down as needing none. It was resolved by establishing
+the drops were not *required*: `0175` had made `kind` nullable, new rooms carry none, and
+Postgres allows unlimited NULLs in a unique column, so the constraint could not block
+anything and the trigger could never fire. **The editor was forbidden a number, told to
+move its writes onto the primary key, told to prove both claims rather than trust the
+brief, and told to spin the drops out as a new backlog item.** That kept a security fix
+and the feature in the same batch. **Cleanup is almost always deferrable; correctness is
+not.**
 
 ---
 
 ## What briefs should do, learned the hard way
 
 - **Name the specific way a thing fails, not the general requirement.** The receipts brief
-  said English-only receipts still need Thai glyphs *because donor names are free text*.
-  That found a pre-existing bug — the vowel **ำ dropped letters in the archive and manual
-  PDFs too** (#486, merged). "Support Thai" would have been ticked and nothing found.
-- **If you forbid a migration, say which number to take if one turns out to be needed** —
-  or, where the stream must not touch dev at all, **forbid the number outright and name the
-  harness instead** (see 2a). The receipts brief said "no migration expected"; it needed
-  one, took `0168` sensibly, and the brief had not covered that.
-- **Say what is a decision and what is a build**, with the recommendation attached.
-  `close-the-over-grants` was told to do three fixes and *ask Lutan* about two.
+  said English-only receipts still need Thai glyphs *because donor names are free text*,
+  and that found a pre-existing bug (#486).
+- **NEW — tell a stream to read the code against what it *does*, not what it *says*, and
+  say what a null result would mean.** `parity-layer-3` was briefed that if it pinned each
+  page to the activity its guard already named, it would have pinned the bug in place —
+  and that finding nothing would be a surprising result for pages nobody had ever checked,
+  so it must say how it checked. It came back with two real findings. **A brief that
+  predicts a finding gets one; a brief that asks for green gets green.**
+- **NEW — say which number to take, or forbid the number outright and say what to do
+  instead.** See constraint 3. The receipts brief once said "no migration expected", it
+  needed one, and the brief had not covered that.
+- **Say what is a decision and what is a build**, with the recommendation attached, and
+  **tell the stream to build everything else first so the question does not block it**
+  (`user-colour-theme`, the dev-marker question).
 - **Carry the reasoning, not just the instruction.** A future session undoes a decision
-  whose reason it cannot see — the hard-coded receipt issuer address needed a comment
-  saying why.
-- **NEW — name the release-time hazard in the PR, not just in the code.**
-  `remove-staff-role` archives a role, and **an archived role's logins fail closed.** If
-  that migration reaches production before production's Staff holders are moved, those
-  people cannot sign in. The brief told it to write the prerequisite into the PR as a
-  release blocker, because the release manager reads the PR and nobody should rely on
-  someone remembering.
-- **NEW — tell a stream what to do with work it is not allowed to take.** Forbidden its
-  migration slot, `dashboard-cashflow-followups` **spun the two schema-needing candidates
-  out as new backlog items** rather than quietly taking a number or silently dropping them.
-  Brief that behaviour explicitly; it is the difference between a constraint and a loss.
-- **A stream told "schema first, then the sweep" will split itself into two PRs.** Both the
-  rename (#495/#496) and `remove-staff-role` (#498/#499) did, unprompted. Where the item
-  says `main` must never carry schema the code does not know, **keep both PRs in one
-  stream** rather than splitting across batches as rule 4 would otherwise have it.
-- **For an umbrella item of lettered candidates, the first deliverable is the sort-out, not
-  the build** — build-now / needs-a-column / needs-Lutan, shown to him before anything
-  substantial is built.
+  whose reason it cannot see.
+- **Name the release-time hazard in the PR, not just in the code** — the release manager
+  reads the PR. Also worth stating when there *is* no manual step.
+- **Tell a stream what to do with work it is not allowed to take.** Forbidden its
+  migration slot, `dashboard-cashflow-followups` **spun two schema-needing candidates out
+  as new backlog items**. `map-rooms-editor` did the same with its three drops.
+  **This is now the norm and it works: batches 85 and 86 spawned seven new items between
+  them**, three of them Security findings, and batch 87 was re-planned around two of them.
+- **A stream told "schema first, then the sweep" will split itself into two PRs**,
+  unprompted (#495/#496, #498/#499). Keep both PRs in one stream.
+- **For an umbrella item of lettered candidates, the first deliverable is the sort-out,
+  not the build.**
 
 ---
 
@@ -210,11 +223,18 @@ them.** Keep this list current:
   `docs/decisions/2026-10-06-director-draft-apply.md` opens *"The item stays open"*. Lutan
   said on 2026-10-09 it *"appears to already have been done"* — **unverified**, and
   production cannot be read from these sessions.
-- **The app header's button sizes** — Lutan's call; recommendation already written (Sign
-  out to 44×44). Partly shipped 2026-10-07; read the item before re-raising.
-- **The Staff holders on production** — `remove-staff-role` asked him for the list and who
-  each person becomes. Until that is answered, **`0173` must not reach production**, or
-  those logins fail closed.
+- **The app header's button sizes** — Lutan's call; recommendation already written. Partly
+  shipped 2026-10-07; read the item before re-raising.
+- **The Staff holders on production** — until that list is answered, **`0173` must not
+  reach production**, or those logins fail closed.
+- **The acceptance checklist's pre-run agreements** — the A4 PDF shipped (#493). What is
+  left is Lutan and the Director agreeing who tests which role, the per-role accounts on
+  Test, what counts as a blocker, and where the signed paper copy lives (it carries real
+  names and **this repo is public**). Plus Thai steps, which wait on the Thai manual.
+- **NEW — the Cat Zone plan on production.** Lutan said on 2026-10-10 *"I will load in cat
+  zone today into production"*. **Recorded as in flight on the item — do not re-raise it
+  as a finding.** What closes it is the load plus one confirmation that every zone has a
+  `facility_maps` row.
 
 ---
 
@@ -223,23 +243,28 @@ them.** Keep this list current:
 - **Lutan:** the two auth decisions; the Pi jobs and the failover options paper; the Google
   secret rotation (the stocktake shipped as #481, so check what is left); **the visitor
   count**, which needs a Cloudflare API token he creates; the second admin account
-  (Anchalee); **loading the facility-map plans on production** — see below, it is an
-  upload; the mobile sweep; and the product `.org` name, which `multi-tenancy-spike` will
-  bring him a shortlist for.
+  (Anchalee); the mobile sweep; and the product `.org` name.
 - **The Director:** signing the roles draft; **the community-dogs baseline number and the
   date it is true up to**; the Thai receipt wording checked by a Thai reader.
 - **Time:** HSTS not before **2026-11-08**; the `sharp` override until `wrangler` and
-  `miniflare` ship a `sharp` past 0.35.5.
+  `miniflare` ship a `sharp` past 0.35.5; **dropping the four old vet compatibility
+  views**, which waits for the release *after* 0.24.0.
 
-### The facility map — the recorded warning was backwards, and it still is
+### The facility map — the long-standing warning is finally resolved
 
-The item said production must move its plans into storage *before* the three committed
-files are deleted, or the live map blanks. **Production never had them.** No migration has
-ever inserted a `facility_maps` row, so a plan exists only where somebody uploaded one;
-dev's three already read `storage:plans/…`. **The production map is already blank**, and
-the warning was hiding that — a feature shipped and never populated, which no screen
-reports. What is outstanding is **an upload**, through the form in Settings → Facility map,
-and it also covers the two new drawings. Still true on 2026-10-09.
+For weeks the item said production must move its plans into storage *before* the three
+committed files were deleted, or the live map would blank. **The warning was backwards:
+production never had them, so the live map was already blank** — a feature shipped and
+never populated, which no screen reports.
+
+**That is now fixed, by hand, by Lutan.** On 2026-10-10 he loaded **House Zone and the
+revised Main Zone** into production through Settings → Facility map, and the three
+committed files were deleted in #512 once both databases were confirmed storage-backed.
+**Two things remain and neither is a planner's to build:** the **Cat Zone** plan (above),
+and whether every zone the map offers now has a row — one query settles it. The
+**overview stays as it is** (decided 2026-10-10: the revised Main Zone does *not* become
+it), and **plan uploads stay Admin only** (decided 2026-10-10, item ticked, recorded with
+the reasoning so nobody reopens it).
 
 ---
 
@@ -253,36 +278,43 @@ file naming real people. Make the smallest defensible choice and record it — *
 over-grant, which no screen will show as broken.**
 
 **He holds a release for a change that breaks quietly**, and names it separately from the
-count. That is why the Medium-**low** `reset_*` grant was fixed in batch 81 rather than
-deferred, and why he chose "lock it down" over "reading is fine" for the attachment
-over-grant on 2026-10-09: the probe had **deleted all 146 rows** under a clinic login, and
-nothing in the app would have shown it.
+count. That is why both receipt holes were taken the day they were found: a receipt naming
+any organisation, or saying 1,000,000 baht for a 100-baht gift, is stored in the register
+and no screen shows it as wrong.
+
+**NEW — put the consequence in the option text, not the symbol names.** On 2026-10-10 a
+question about four `*_ROLES` lists named them by their code identifiers; he approved the
+recommendation and *then* asked what he had approved. He also **corrected his own answer
+in the same turn** — "permanent" became *"can we ensure we clean these roles up later
+after the database updates"*. **Record a deferral as its own item, never as a promise
+inside something ticked**, which is what was done (*Move the last four role-name lists
+onto the permissions system*, gated on `perm-drop-enum`).
 
 ---
 
 ## Three traps in the tooling
 
-- **`grep -c` exits 1 when it finds nothing.** On 2026-10-09 a resolution chain
-  `node -e … && grep -c '^<<<<<<<' … && git add && git commit` stopped **before the
-  commit**, because the grep correctly found zero conflict markers. The repo sat in a
-  half-finished merge and the backlog fast-forward failed twice before the cause was clear.
-  Never use `grep -c` as a success check in an `&&` chain.
-- **NEW — do not put long prose with backticks and apostrophes inside `node -e '…'`.** A
-  backlog-editing one-liner broke on shell quoting on 2026-10-09 and wasted a round trip.
-  **Write the script to the scratchpad directory and run it with a path argument.** Same
-  for any multi-line replacement text.
+- **`grep -c` exits 1 when it finds nothing**, so never use it as a success check in an
+  `&&` chain. On 2026-10-09 a resolution chain stopped **before the commit** because the
+  grep correctly found zero conflict markers, and the repo sat in a half-finished merge.
+- **Do not put long prose inside `node -e` or a `bash` heredoc.** Backticks, apostrophes
+  and quotes break the shell's parsing in ways the error message does not explain — a
+  quoted heredoc of this very file failed with *"unexpected EOF while looking for matching
+  quote"* on 2026-10-10. **Write the file to the scratchpad directory with the file-writing
+  tool and copy it into place**, or run a script with a path argument. That worked every
+  time today; the shell-quoting route failed twice.
 - **A scanned PDF cannot be read by the usual means on this machine** — no text layer,
   `pdftotext` is the only poppler tool present, and the browser pane will not screenshot a
-  `file://` PDF. Render it with Windows' own engine:
+  `file://` PDF. Render it with
   `C:\Users\Leidos\.claude\tools\render-pdf.ps1 -Pdf <file> -OutDir <dir> -Width 1500`,
   then read the PNGs. The Director returns her answer sheets as scans.
 
-### One husk that cannot be cleared, and has been raised twice
+### One husk that cannot be cleared, and has been raised three times
 
 `Animal_Shelter_planner-handover-81` is a folder git no longer tracks. `done` **refuses
 it**, because the folder is no longer a git repo and so cannot be checked for uncommitted
-work; only `--force` gets past that, and **that is Lutan's call, not a session's.** He has
-been told twice. **Mention it once if it is still there, then leave it.**
+work; only `--force` gets past that, and **that is Lutan's call, not a session's.**
+**Mention it once if it is still there, then leave it.**
 
 ---
 
@@ -293,12 +325,11 @@ in the chat that still has the context, then start the fresh chat.** Offer it; d
 do it.
 
 It goes through **a branch, a worktree, a test plan and a PR**, exactly as
-`docs/release-handover.md` does — that one is PRs **#459** and **#471**. This one is
-`claude/planner-handover-84`, and the previous was **#490** from
-`claude/planner-handover-81`. Lutan asked on 2026-10-09 whether the PR was really needed;
-it is. It is a `docs/` file in the repo, so the only alternatives are committing to `main`
-directly or routing it through the `backlog` branch, and the second is the 2026-10-07
-failure CLAUDE.md documents by name.
+`docs/release-handover.md` does. This one is `claude/planner-handover-87`; the previous two
+were **#501** (`planner-handover-84`) and **#490** (`planner-handover-81`). Lutan asked on
+2026-10-09 whether the PR was really needed; it is. It is a `docs/` file in the repo, so
+the only alternatives are committing to `main` directly or routing it through the `backlog`
+branch, and the second is the 2026-10-07 failure `CLAUDE.md` documents by name.
 
 Re-verify every number in the table above against the repo; carry forward only what is
 still true; reset the counter in `.plan-day.md` with today's date.
