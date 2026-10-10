@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → *Eight dev check harnesses no longer start since the Staff retirement and the doctor rename* |
 | Branch / worktree | `claude/check-harness-repair` @ `C:\Development\Animal_Shelter_check-harness-repair` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3006` (used only by `check-phone-width.mjs`) |
-| PR | not yet — opened from this commit; the number follows in the next one |
+| PR | [#509](https://github.com/lutanbennett/Animal_Shelter_App/pull/509) |
 | Tested by / date | Claude, 2026-10-10 |
 | Carries a migration? | no |
 | Tested at SHA | `50cd4807` (after syncing origin/main, which brought 0175) |
@@ -161,7 +161,7 @@ Manual verification by: n/a: no UI surface, developer tooling only
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR (#509 description, collapsed)
 - [ ] Handed to the production release manager — n/a: nothing in this PR is deployed
 
 Result: pass with accepted defects
