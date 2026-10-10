@@ -188,7 +188,11 @@ export function checkDonation(
   };
 }
 
-/** What a receipt prints, from a donation and its lines (in order). */
+/**
+ * What a receipt prints, from a donation and its lines (in order). The
+ * database's receipt_content() (0177) is the copy that reaches the receipt;
+ * check-donation-receipts-schema.mjs fails if the two differ. Change both.
+ */
 export function receiptContentFor(donorName: string, lines: { description: string; amount: number | string | null }[]): ReceiptContent {
   const clean: ReceiptLine[] = lines.map((l) => ({
     description: l.description,
