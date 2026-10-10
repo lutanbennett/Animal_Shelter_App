@@ -26,7 +26,7 @@ import type { MapPlan } from "@/lib/facility-map/types";
 import { formatDateTime } from "@/lib/format";
 import { ROOM_DESCRIPTION_MAX, ROOM_NAME_MAX } from "@/lib/facility-map/rooms";
 import { addRoom, deleteRoom, removePlan, saveRoomDetails, saveRoomShape, saveShape, undoReplace } from "./actions";
-import { AddPlan, ReplacePlan, preparePlanFile, sendPlan } from "./PlanUpload";
+import { AddPlan, ReplacePlan } from "./PlanUpload";
 
 /**
  * The place-on-map editor (step 3 of 3, docs/decisions/2026-10-04-facility-map-editor.md): pick a
@@ -48,10 +48,6 @@ type Tool = "rect" | "poly";
  * plan's history in the store (docs/decisions/2026-10-08-facility-map-plans-uploaded.md).
  */
 export type EditorPlan = MapPlan & {
-  /** False for a plan still committed under public/facility-maps/, which can be moved into the store. */
-  stored: boolean;
-  /** The committed file's name, for a plan not yet in the store. */
-  fileName: string | null;
   lastChange: { at: string; by: string; action: "add" | "replace" | "undo" } | null;
   /** The replace an Undo would reverse, when there is one. */
   undo: { at: string; by: string; cleared: boolean } | null;
@@ -168,19 +164,6 @@ export function MapEditor({
   const overlay = items.flatMap((i) => (shapes[i.id] ? [{ id: i.id, name: i.name, shape: shapes[i.id]! }] : []));
   const [planBusy, setPlanBusy] = useState(false);
 
-  /** Puts a committed plan into the store as it is: the same picture, so its shapes are kept. */
-  async function moveIntoStore(p: EditorPlan) {
-    setPlanBusy(true);
-    setMessage(null);
-    const blob = await fetch(p.image_url).then((r) => (r.ok ? r.blob() : null)).catch(() => null);
-    const prepared = blob ? await preparePlanFile(blob) : null;
-    const r = prepared
-      ? await sendPlan(prepared, { mode: "replace", planId: p.id, shapes: "keep" }, { fileTooLarge: m.errors.tooLarge, processingFailed: m.errors.uploadFailed })
-      : { ok: false as const, error: m.errors.unreadable };
-    setPlanBusy(false);
-    if (!r.ok) setMessage({ kind: "error", text: r.error });
-    else router.refresh();
-  }
 
   async function undoLastReplace(p: EditorPlan) {
     if (!p.undo) return;
@@ -438,11 +421,9 @@ export function MapEditor({
             <p className="text-sm text-muted">
               {m.progress(placedCount, things.length)} ·{" "}
               <span className="break-all">
-                {!plan.stored
-                  ? m.committedFile(plan.fileName ?? "")
-                  : plan.lastChange
-                    ? m.lastChange[plan.lastChange.action](formatDateTime(plan.lastChange.at, locale), plan.lastChange.by)
-                    : m.pictureSize(plan.width, plan.height)}
+                {plan.lastChange
+                  ? m.lastChange[plan.lastChange.action](formatDateTime(plan.lastChange.at, locale), plan.lastChange.by)
+                  : m.pictureSize(plan.width, plan.height)}
               </span>
             </p>
             <button
@@ -467,41 +448,28 @@ export function MapEditor({
           <details key={plan.id} className="rounded-lg border border-border bg-surface p-3">
             <summary className="cursor-pointer text-sm font-semibold text-foreground">{m.pictureHeading}</summary>
             <div className="mt-3 flex flex-col gap-3 text-sm">
-              {!plan.stored ? (
-                <>
-                  <p className="text-muted">{m.committedHelp}</p>
+              <p className="text-muted">{m.replaceHelp}</p>
+              <ReplacePlan
+                plan={plan}
+                overlay={overlay}
+                placed={placedCount}
+                total={things.length}
+                roomsPlaced={roomsPlaced}
+                onReplaced={(text) => {
+                  setMessage({ kind: "ok", text });
+                  router.refresh();
+                }}
+              />
+              {plan.undo && (
+                <div className="flex flex-col gap-2 border-t border-border pt-3">
+                  <p className="text-muted">{m.undoHelp(formatDateTime(plan.undo.at, locale), plan.undo.by)}</p>
                   <div>
-                    <button type="button" className={btn} disabled={planBusy} onClick={() => void moveIntoStore(plan)}>
-                      {m.moveIntoStore}
+                    <button type="button" className={btn} disabled={planBusy} onClick={() => void undoLastReplace(plan)}>
+                      <Undo2 aria-hidden="true" className="h-4 w-4" />
+                      {m.undoReplace}
                     </button>
                   </div>
-                </>
-              ) : (
-                <>
-                  <p className="text-muted">{m.replaceHelp}</p>
-                  <ReplacePlan
-                    plan={plan}
-                    overlay={overlay}
-                    placed={placedCount}
-                    total={things.length}
-                    roomsPlaced={roomsPlaced}
-                    onReplaced={(text) => {
-                      setMessage({ kind: "ok", text });
-                      router.refresh();
-                    }}
-                  />
-                  {plan.undo && (
-                    <div className="flex flex-col gap-2 border-t border-border pt-3">
-                      <p className="text-muted">{m.undoHelp(formatDateTime(plan.undo.at, locale), plan.undo.by)}</p>
-                      <div>
-                        <button type="button" className={btn} disabled={planBusy} onClick={() => void undoLastReplace(plan)}>
-                          <Undo2 aria-hidden="true" className="h-4 w-4" />
-                          {m.undoReplace}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </>
+                </div>
               )}
             </div>
           </details>

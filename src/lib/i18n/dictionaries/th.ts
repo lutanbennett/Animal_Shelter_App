@@ -1015,9 +1015,6 @@ const th: Dictionary = {
       pictureSize: (w: number, h: number) => `${w} × ${h} พิกเซล`,
       addPlanButton: "เพิ่มแผนผังนี้",
       pictureHeading: "ภาพของแผนผังนี้",
-      committedFile: (name: string) => `${name} อยู่ในโค้ดของแอป`,
-      committedHelp: "ภาพของแผนผังนี้ยังเป็นไฟล์ในโค้ดของแอป ตั้งแต่ก่อนที่จะอัปโหลดแผนผังได้ ย้ายเข้าที่เก็บไฟล์ของแอปเพื่อให้เปลี่ยนภาพได้จากที่นี่ เป็นภาพเดิม รูปทรงทุกอันบนแผนผังจึงอยู่ที่เดิม",
-      moveIntoStore: "ย้ายเข้าที่เก็บไฟล์ของแอป",
       lastChange: {
         add: (when: string, who: string) => `เพิ่มเมื่อ ${when}${who ? ` โดย ${who}` : ""}`,
         replace: (when: string, who: string) => `เปลี่ยนภาพเมื่อ ${when}${who ? ` โดย ${who}` : ""}`,

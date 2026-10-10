@@ -1080,9 +1080,6 @@ const en = {
       pictureSize: (w: number, h: number) => `${w} × ${h} pixels`,
       addPlanButton: "Add this plan",
       pictureHeading: "This plan's picture",
-      committedFile: (name: string) => `${name}, in the app's code`,
-      committedHelp: "This plan's picture is still a file inside the app's code, from before plans could be uploaded. Move it into the app's storage to be able to replace it here. It is the same picture, so every shape on it stays where it is.",
-      moveIntoStore: "Move into the app's storage",
       lastChange: {
         add: (when: string, who: string) => `Added ${when}${who ? ` by ${who}` : ""}`,
         replace: (when: string, who: string) => `Replaced ${when}${who ? ` by ${who}` : ""}`,
