@@ -30,8 +30,15 @@ budget on `0.24.0`'s measured 1m40s instead.
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly, or nothing to merge; checked against the remote after a fetch rather than a cached ref
-- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — pasted in the commit
-- [x] CI green on the PR (runs the same three) — read on the PR, not ticked in advance
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Pasted exactly as printed:
+
+```
+=== gates: build exited 0 after 182s
+
+gates: typecheck=0 lint=0 build=0
+```
+
+- [ ] CI green on the PR (runs the same three) — **deliberately unticked on the commit that opens the PR**, because CI has not run yet and this line cannot honestly be ticked in advance. Completed in a follow-up commit once the run is read, which is the known `test-plan` behaviour and happened on the cut PR an hour earlier in this same release
 - [ ] `node scripts/check-release-guards.mjs` — n/a: this PR changes no release data. `unreleased` is empty and `package.json` is `0.25.0`, both set by #519 and untouched here
 
 ## 3. Schema and data
