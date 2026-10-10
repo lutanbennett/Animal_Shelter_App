@@ -53,7 +53,7 @@ reads, hence the mechanical comparison in §2 rather than reading the entry over
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — **deliberately unticked on the commit that opens the PR**, because CI has not run yet and this line cannot honestly be ticked in advance. Completed in a follow-up commit once the run is read, which is the known `test-plan` behaviour recorded at `0.24.0`, not a fault
+- [x] CI green on the PR (runs the same three) — read on PR #519, not ticked in advance. The first run at `9f81323c` was **6 green, 1 red**: `check` (2m15s), `public-views` (1m34s), `audit`, `migration-numbers`, `new-policy-role-names` and `script-integrity` all passed, and `test-plan` failed on **this very line**, which that commit left unticked because the run had not happened yet. That is `test-plan` doing exactly its job — validating content, not presence. Completed here, and the run on this commit is the one that reports seven green. **`audit` was green**, so the standing "a red `audit` never blocks" note did not need to be exercised
 - [x] `node scripts/check-release-guards.mjs` — exit 0, all fourteen cases, including `a cut release with nothing unreleased passes` and `unreleased notes are a problem`
 - [x] `node scripts/release-prs.mjs d8b19418 origin/main` — **exit 0**, read from the command and not through a pipe, listing thirteen PRs #506–#518 and checking all sixteen added migration and test-plan files against that list. Re-run after `origin/main` moved; still thirteen
 
