@@ -10,10 +10,11 @@ and is deliberately short-lived.
 outrank this file. If they disagree with it, they are right and this file is
 stale — check the dates.
 
-**Amended later the same day**, after the release, when Lutan looked at the
-production Website visitors tile and found it still saying *Not set up*. That is
-a bug, not an outstanding check — it is logged at the top of the backlog, and
-**lesson 7** is what it teaches. The husk this file told you to clear was also
+**Amended twice later the same day.** First when Lutan looked at the production
+Website visitors tile and found it still saying *Not set up*; then again when that
+was **fixed** — it was a missing configuration value on the Pi, not a code fault,
+so it was put right the same day with no release and no version bump. **Lesson 7
+is the part that outlives it.** The husk this file told you to clear was also
 cleared before handover. Nothing else has changed.
 
 **Read these first, in this order:**
@@ -262,7 +263,7 @@ What is worth carrying forward, most valuable first:
 | **A donation receipt issued on production** | `docs/test-plans/receipt-content-server-side.md`, `receipt-issuer-server-side.md` | Carried from `0.23.0`, now **three** releases. Numbering from `LCA0009000` must never repeat or skip, and it has only ever run against dev. **`0176` and `0177` changed how a receipt is built** — the server now composes the issuer and the contents — so this release gave the check *more* value, not less. It also writes the PDF to Drive. **Highest value outstanding, by a distance.** |
 | **Somebody using the renamed Clinics screens on production** | `docs/test-plans/vet-to-doctor-rename.md` | Carried from `0.24.0`, the largest thing in that release. Nobody has read the Thai wording or worked a doctor login's day |
 | **The first facility-map upload on production** | `docs/test-plans/facility-map-upload.md` | Carried from `0.22.0`, now a **fourth** release. It is also what *creates* the Storage bucket — `ensureBucket()` runs on first use. `0175` and the new room editor sit on top of this |
-| **FIXED-IN-WAITING: the Website visitors tile is broken, and `0.25.0` mailed that it works** | `backlog` → **Next up**, first item | **Answered on 2026-10-10, after the release, and it is a bug rather than a check.** Lutan looked; the tile still says *Not set up*. Measured on the production Pi: `CLOUDFLARE_ANALYTICS_TOKEN` and `CLOUDFLARE_ZONE_ID` are absent from `.env.production.local` **and from both files it is built from**, so there is nothing for the Pi to read. #518 fixed the plumbing, not the values — it was never checked that the values existed anywhere the Pi could see them. **`0.25.0`'s fifth note is therefore false and was mailed to every admin.** Fix it, or carry a correcting line in `0.26.0`'s notes. Full diagnosis and fix in the backlog item |
+| ~~The Website visitors tile~~ — **closed 2026-10-10, same day** | `backlog` → ticked | **Not outstanding. Do not write a correcting release note for it.** The tile was broken because `CLOUDFLARE_ANALYTICS_TOKEN` and `CLOUDFLARE_ZONE_ID` sat in the PC’s `.env.deploy.production` (which is how the Worker had them) and nowhere the **Pi** could read them — and the Pi serves the pages. Copied to the Pi and rebuilt pinned to `590a9d35`, so no unreviewed code shipped with it. Verified by the app’s own query run on the Pi (5364 page views, 663 uniques over 7 days) and by Lutan looking at the live tile. **`0.25.0`’s fifth note is now true.** Still open and on the backlog: **test** has neither value, and the screen cannot tell “no key set” from “key set but refused” |
 | **A Management login saving Management → Website** | `docs/test-plans/website-content-grant.md` | Carried from `0.22.0`. Verified only by the migration applying cleanly |
 | **The new Contacts read-permission pass** | `backlog`, Security section | `0.20.0`'s version was carried six releases and could no longer be performed — it named `staff`, retired by `0173`. **Closed at `0.25.0` and rewritten** against current behaviour, against production rows, covering all six live roles. It is a backlog item now, not a test-plan ghost |
 | 2IC at phone width | `scripts/check-phone-width.mjs` | **Not a release item any more** (lesson 5) — listed once more only so it is not lost in the move. The script has no `second_in_command`, so the 2IC, who has no PC on site, has never been measured. It belongs to whoever next changes a page a 2IC uses. On the backlog |
@@ -280,7 +281,7 @@ What is worth carrying forward, most valuable first:
 6. **Expect a production-only guard.** There was none this time, which cost nothing. It can only ever appear at the production dry-run, and it is a question for Lutan, not a file to fix.
 7. **Budget the Worker deploy at ~13 minutes**, do not overlap it with anything building in the same checkout, and fill the wait with the Pi builds, the drift checks and the record. **Not the phone-width sweep — it is no longer a release step** (lesson 5). The test Worker deploy also builds in the main checkout — **do not start it while his production deploy is running.**
 8. **Hand over commands only at the moment they should be run.** See the section above; this is the lesson of `0.25.0`.
-9. **Four production-only checks are owed**: a donation receipt, the Clinics screens, a facility-map upload and a Management → Website save. The fifth — the Cloudflare analytics pair — **is no longer a check but a known bug**, diagnosed and logged at the top of the backlog's **Next up**. **Decide early whether `0.26.0` fixes it or carries a correcting release note**, because `0.25.0` has already mailed every admin that it works.
+9. **Four production-only checks are owed**: a donation receipt, the Clinics screens, a facility-map upload and a Management → Website save. **The Cloudflare visitor count is no longer one of them — it was fixed on 2026-10-10 and `0.25.0`’s note about it is true. Do not write a correcting note.** What remains of it is on the backlog: test still shows *Not set up*, and the screen cannot distinguish an unset key from a rejected one.
 10. `/clean-streams`. The `Animal_Shelter_planner-handover-81` husk that survived two releases **was cleared at `0.25.0`** (contents checked first — only a blank copy of the test-plan template — and its PR #490 long merged), so there were no husks and no release leftovers at handover time.
 
 ---
