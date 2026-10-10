@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — all seven checks passed on #518
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -155,7 +155,7 @@ Manual verification by: pending: the Website visitors tile on lannacare.org afte
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR — summary in the #518 description; the full plan is in the PR diff
 - [ ] Handed to the production release manager — n/a: not yet — handed over when the PR is merged
 
 Result: pass
