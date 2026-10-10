@@ -7,7 +7,7 @@
 //
 // 1. A resident's photo row, eight statements per principal: read, insert into Medical, insert into Shelter, caption
 //    a Shelter row, caption a Medical row, refile Medical to Shelter, refile Shelter into Medical, delete.
-//    Principals: admin, management, staff, volunteer, no role, a vet (own clinic), and ten configured roles that
+//    Principals: admin, management, volunteer, no role, a doctor login ("vet", own clinic), and ten configured roles that
 //    each hold a different combination of photos.resident_add / manage / publish / scope_photos.
 // 2. The other four owner types (maintenance, project, blood_test, procedure) on `attachments`.
 // 3. maintenance_photos and project_photos, four commands.
@@ -25,12 +25,12 @@ const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
 const lit = (id) => `'${id}'::uuid`;
-const P = ["admin", "management", "staff", "volunteer", "norole", "vet",
+const P = ["admin", "management", "volunteer", "norole", "vet",
   "c_vol_all", "c_add", "c_nopub", "c_nomanage", "c_all", "c_medonly", "c_maint", "c_proj", "c_bt", "c_pr"];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
 const R = randomUUID(), R_OUT = randomUUID(), OWN = randomUUID(), OTHER = randomUUID();
 const A_SH = randomUUID(), A_MED = randomUUID(), A_MAINT = randomUUID(), A_PROJ = randomUUID(), A_BT = randomUUID(), A_PR = randomUUID();
-const MP = randomUUID(), PP = randomUUID(), BT = randomUUID(), PR = randomUUID(), UPD = randomUUID();
+const MP = randomUUID(), PP = randomUUID(), BT = randomUUID(), PR = randomUUID(), UPD = randomUUID(), DOC = randomUUID();
 const JOB = "(select id from pg_temp.ref_ids where k = 'job')";
 const PROJECT = "(select id from pg_temp.ref_ids where k = 'project')";
 
@@ -48,7 +48,7 @@ const RES_STMTS = {
 const ORDER = Object.keys(RES_STMTS);
 const ALL = [1, 1, 1, 1, 1, 1, 1, 1], NONE = [0, 0, 0, 0, 0, 0, 0, 0];
 const RES_EXPECT = {
-  admin: ALL, management: ALL, staff: ALL,
+  admin: ALL, management: ALL,
   volunteer: NONE, norole: NONE,
   // The vet's own policies are unchanged; the new restrictive guard is what stops the Shelter folder (A5).
   // delete is vet_delete_attachments, left for the Vet conversion.
@@ -75,10 +75,10 @@ const OT_STMTS = (o) => ({
 });
 const ON = [1, 1, 1, 1], OFF = [0, 0, 0, 0];
 const OT_EXPECT = {
-  maintenance: { admin: ON, management: ON, staff: ON, volunteer: OFF, norole: OFF, c_add: OFF, c_all: OFF, c_maint: ON, c_proj: OFF, c_bt: OFF, c_pr: OFF, vet: ON /* vet_* policies, unchanged */ },
-  project: { admin: ON, management: ON, staff: ON, volunteer: OFF, norole: OFF, c_add: OFF, c_all: OFF, c_maint: OFF, c_proj: ON, c_bt: OFF, c_pr: OFF, vet: ON },
-  blood_test: { admin: ON, management: ON, staff: ON, volunteer: OFF, norole: OFF, c_add: OFF, c_all: OFF, c_maint: OFF, c_proj: OFF, c_bt: ON, c_pr: OFF },
-  procedure: { admin: ON, management: ON, staff: ON, volunteer: OFF, norole: OFF, c_add: OFF, c_all: OFF, c_maint: OFF, c_proj: OFF, c_bt: OFF, c_pr: ON },
+  maintenance: { admin: ON, management: ON, volunteer: OFF, norole: OFF, c_add: OFF, c_all: OFF, c_maint: ON, c_proj: OFF, c_bt: OFF, c_pr: OFF, vet: OFF /* 0174: clinical owner types only */ },
+  project: { admin: ON, management: ON, volunteer: OFF, norole: OFF, c_add: OFF, c_all: OFF, c_maint: OFF, c_proj: ON, c_bt: OFF, c_pr: OFF, vet: OFF },
+  blood_test: { admin: ON, management: ON, volunteer: OFF, norole: OFF, c_add: OFF, c_all: OFF, c_maint: OFF, c_proj: OFF, c_bt: ON, c_pr: OFF },
+  procedure: { admin: ON, management: ON, volunteer: OFF, norole: OFF, c_add: OFF, c_all: OFF, c_maint: OFF, c_proj: OFF, c_bt: OFF, c_pr: ON },
 };
 
 // photo tables: [read, insert, update, delete]
@@ -86,18 +86,18 @@ const PT = {
   maintenance_photos: { read: `select 1 from maintenance_photos where id = '${MP}'`, ins: `insert into maintenance_photos (maintenance_id, drive_file_id) values (${JOB}, 'h-mp')`, upd: `update maintenance_photos set drive_file_id = 'h-mp2' where id = '${MP}'`, del: `delete from maintenance_photos where id = '${MP}'`, cell: "c_maint" },
   project_photos: { read: `select 1 from project_photos where id = '${PP}'`, ins: `insert into project_photos (project_folder_id, drive_file_id) values (${PROJECT}, 'h-pp')`, upd: `update project_photos set drive_file_id = 'h-pp2' where id = '${PP}'`, del: `delete from project_photos where id = '${PP}'`, cell: "c_proj" },
 };
-const PT_WHO = ["admin", "management", "staff", "volunteer", "norole", "vet", "c_add", "c_all", "c_maint", "c_proj"];
-const ptExpect = (who, t) => (["admin", "management", "staff"].includes(who) || who === PT[t].cell ? ON : OFF);
+const PT_WHO = ["admin", "management", "volunteer", "norole", "vet", "c_add", "c_all", "c_maint", "c_proj"];
+const ptExpect = (who, t) => (["admin", "management"].includes(who) || who === PT[t].cell ? ON : OFF);
 
 // functions: yes = who may
 const FN = {
-  delete_resident_photo: { sql: `select delete_resident_photo('${A_SH}')`, yes: ["admin", "management", "staff", "c_nopub", "c_all", "c_medonly"] },
-  set_resident_profile_photo: { sql: `select set_resident_profile_photo('${R}', 'h-sh-file')`, yes: ["admin", "management", "staff", "c_nopub", "c_all", "c_medonly"] },
-  record_attachment_medical: { sql: `select record_attachment('resident', '${R}', 'h-rec-med', 'p.jpg', 'Medical', null, null)`, yes: ["admin", "management", "staff", "vet", "c_add", "c_nopub", "c_nomanage", "c_all", "c_medonly", "c_vol_all"] },
-  record_attachment_shelter: { sql: `select record_attachment('resident', '${R}', 'h-rec-sh', 'p.jpg', 'Shelter', null, null)`, yes: ["admin", "management", "staff", "c_nomanage", "c_all", "c_vol_all"] },
-  record_attachment_adopter: { sql: `select record_attachment('resident', '${R}', 'h-rec-ad', 'p.jpg', '20261001', null, '${UPD}')`, yes: ["admin", "management", "staff", "c_nomanage", "c_all", "c_vol_all"] },
+  delete_resident_photo: { sql: `select delete_resident_photo('${A_SH}')`, yes: ["admin", "management", "c_nopub", "c_all", "c_medonly"] },
+  set_resident_profile_photo: { sql: `select set_resident_profile_photo('${R}', 'h-sh-file')`, yes: ["admin", "management", "c_nopub", "c_all", "c_medonly"] },
+  record_attachment_medical: { sql: `select record_attachment('resident', '${R}', 'h-rec-med', 'p.jpg', 'Medical', null, null)`, yes: ["admin", "management", "vet", "c_add", "c_nopub", "c_nomanage", "c_all", "c_medonly", "c_vol_all"] },
+  record_attachment_shelter: { sql: `select record_attachment('resident', '${R}', 'h-rec-sh', 'p.jpg', 'Shelter', null, null)`, yes: ["admin", "management", "c_nomanage", "c_all", "c_vol_all"] },
+  record_attachment_adopter: { sql: `select record_attachment('resident', '${R}', 'h-rec-ad', 'p.jpg', '20261001', null, '${UPD}')`, yes: ["admin", "management", "c_nomanage", "c_all", "c_vol_all"] },
 };
-const FN_WHO = ["admin", "management", "staff", "volunteer", "norole", "vet", "c_vol_all", "c_add", "c_nopub", "c_nomanage", "c_all", "c_medonly"];
+const FN_WHO = ["admin", "management", "volunteer", "norole", "vet", "c_vol_all", "c_add", "c_nopub", "c_nomanage", "c_all", "c_medonly"];
 
 const probes = [];
 const push = (who, tbl, cmd, q) => probes.push(`  perform pg_temp.probe('${who}', ${lit(ID[who])}, '${tbl}', '${cmd}', $q$${q}$q$);`);
@@ -107,10 +107,11 @@ for (const t of Object.keys(PT)) for (const who of PT_WHO) for (const k of ["rea
 for (const f of Object.keys(FN)) for (const who of FN_WHO) push(who, f, "call", FN[f].sql);
 
 const roleRows = [
-  // key, legacy, scope_photos
-  ["c_vol_all", "volunteer", "all"], ["c_add", "staff", "all"], ["c_nopub", "staff", "all"], ["c_nomanage", "staff", "all"],
-  ["c_all", "staff", "all"], ["c_medonly", "staff", "medical_only"], ["c_maint", "staff", "all"], ["c_proj", "staff", "all"],
-  ["c_bt", "staff", "all"], ["c_pr", "staff", "all"],
+  // key, legacy, scope_photos. The above-the-floor roles borrowed staff until 0173 retired it; management now,
+  // which no photo policy names (section 5 sweeps that), so only the cells decide.
+  ["c_vol_all", "volunteer", "all"], ["c_add", "management", "all"], ["c_nopub", "management", "all"], ["c_nomanage", "management", "all"],
+  ["c_all", "management", "all"], ["c_medonly", "management", "medical_only"], ["c_maint", "management", "all"], ["c_proj", "management", "all"],
+  ["c_bt", "management", "all"], ["c_pr", "management", "all"],
 ];
 const CELLS = {
   c_vol_all: [["resident.record", 1], ["photos.resident_add", 2], ["photos.resident_manage", 2], ["photos.resident_publish", 2]],
@@ -154,7 +155,7 @@ begin
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-ps-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${["admin", "management", "staff", "volunteer", "vet"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
+    select id, who::app_role from (values ${[["admin", "admin"], ["management", "management"], ["volunteer", "volunteer"], ["vet", "doctor"]].map(([p, r]) => `('${r}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into roles (key, name, kind, legacy_role, scope_residents, scope_clinical, scope_photos) values
     ${roleRows.map(([k, l, s]) => `('harness_ps_${k}', 'Harness ${k}', 'custom', '${l}', 'all', 'any', '${s}')`).join(",\n    ")};
   insert into role_permissions (role_id, activity, level)
@@ -162,10 +163,11 @@ begin
   insert into user_roles (user_id, role_id, role)
     select u.id, r.id, r.legacy_role from (values ${roleRows.map(([k]) => `('harness_ps_${k}', ${lit(ID[k])})`).join(",")}) as u(rk, id) join roles r on r.key = u.rk;
 
-  insert into vets (id, name, clinic_name) values (${lit(OWN)}, 'Harness own', 'Harness own'), (${lit(OTHER)}, 'Harness other', 'Harness other');
-  insert into vet_doctors (name, user_id, vet_id) values ('Harness vet', ${lit(ID.vet)}, ${lit(OWN)});
+  insert into clinics (id, name) values (${lit(OWN)}, 'Harness own'), (${lit(OTHER)}, 'Harness other');
+  insert into doctors (id, name, user_id) values (${lit(DOC)}, 'Harness doctor', ${lit(ID.vet)});
+  insert into doctor_clinics (clinic_id, doctor_id) values (${lit(OWN)}, ${lit(DOC)});
   insert into residents (id, name, species) values (${lit(R)}, 'Harness in', 'Dog'), (${lit(R_OUT)}, 'Harness out', 'Dog');
-  insert into vet_appointments (resident_id, vet_id, appointment_date, status) values
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values
     (${lit(R)}, ${lit(OWN)}, now() - interval '3 days', 'completed'), (${lit(R_OUT)}, ${lit(OTHER)}, now() - interval '3 days', 'completed');
   insert into adoption_updates (id, resident_id, received_on, channel) values (${lit(UPD)}, ${lit(R)}, current_date - 3, 'visit');
   insert into blood_tests (id, resident_id, date, blood_test_type_id) values (${lit(BT)}, ${lit(R)}, current_date, (select id from blood_test_types limit 1));
