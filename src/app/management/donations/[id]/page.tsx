@@ -37,6 +37,10 @@ export default async function DonationPage(props: PageProps<"/management/donatio
       .maybeSingle<Detail>(),
     supabase.from("donation_receipts").select(RECEIPT_COLUMNS).eq("donation_id", id).order("issued_at", { ascending: false }).returns<DonationReceiptRow[]>(),
   ]);
+  // A failed read must not pass for "not found" or "no receipts yet" — the
+  // latter offers to issue a receipt that may already exist.
+  if (donationResult.error) throw new Error(donationResult.error.message);
+  if (receiptsResult.error) throw new Error(receiptsResult.error.message);
   const donation = donationResult.data;
   if (!donation) notFound();
   const receipts = receiptsResult.data ?? [];

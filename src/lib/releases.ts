@@ -62,6 +62,8 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "Record a donation: when a gift is for a resident, Choose a resident now finds them again, by English or Thai name. Residents who have died are in the list too, marked Deceased, so a gift in memory of one can be recorded. If the list ever fails to load, the form now says so instead of looking as if nobody matched.", roles: ["admin", "management"] },
+  "On the facility map, the zoom buttons (+, − and fit) now sit in a row under the plan instead of on top of it. On a phone they used to cover most of the bottom-right enclosure in Main Zone, so tapping it pressed a button instead.",
 ];
 
 /** Newest first. */
