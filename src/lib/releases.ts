@@ -62,15 +62,24 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  { text: "Record a donation: when a gift is for a resident, Choose a resident now finds them again, by English or Thai name. Residents who have died are in the list too, marked Deceased, so a gift in memory of one can be recorded. If the list ever fails to load, the form now says so instead of looking as if nobody matched.", roles: ["admin", "management"] },
-  "On the facility map, the zoom buttons (+, − and fit) now sit in a row under the plan instead of on top of it. On a phone they used to cover most of the bottom-right enclosure in Main Zone, so tapping it pressed a button instead.",
-  "Rooms on the facility map now say what they are for. Tap the Medical room, the Kitchen or any other room on the Map and its card shows a few lines about it under its name, in Thai once it has been translated. In Settings → Facility map, rooms are no longer a fixed three: add a new one, rename one in English and Thai, write what it is for, or delete one.",
-  "Choose how the app looks. Tap your name at the top right and pick Dark, Light, High contrast or Magenta. Your choice is saved to your login, so it follows you to your phone and any computer you sign in on. The public website and printed PDFs are not affected.",
-  { text: "Settings → System status: the Website visitors tile now shows how many people visited the website, instead of saying Not set up.", roles: ["admin"] },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.25.0",
+    date: "2026-10-10",
+    title:
+      "Choose how the app looks, rooms on the map say what they are for, and a better donation form",
+    major: true,
+    notes: [
+      "Choose how the app looks. Tap your name at the top right and pick Dark, Light, High contrast or Magenta. Your choice is saved to your login, so it follows you to your phone and any computer you sign in on. The public website and printed PDFs are not affected.",
+      "Rooms on the facility map now say what they are for. Tap the Medical room, the Kitchen or any other room on the Map and its card shows a few lines about it under its name, in Thai once it has been translated. In Settings → Facility map, rooms are no longer a fixed three: add a new one, rename one in English and Thai, write what it is for, or delete one.",
+      "On the facility map, the zoom buttons (+, − and fit) now sit in a row under the plan instead of on top of it. On a phone they used to cover most of the bottom-right enclosure in Main Zone, so tapping it pressed a button instead.",
+      { text: "Record a donation: when a gift is for a resident, Choose a resident now finds them again, by English or Thai name. Residents who have died are in the list too, marked Deceased, so a gift in memory of one can be recorded. If the list ever fails to load, the form now says so instead of looking as if nobody matched.", roles: ["admin", "management"] },
+      { text: "Settings → System status: the Website visitors tile now shows how many people visited the website, instead of saying Not set up.", roles: ["admin"] },
+    ],
+  },
   {
     version: "0.24.0",
     date: "2026-10-10",
