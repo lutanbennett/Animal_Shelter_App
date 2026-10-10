@@ -1,4 +1,4 @@
-# Release handover — written 2026-10-09, after `0.23.0`
+# Release handover — written 2026-10-10, after `0.24.0`
 
 **What this file is.** A snapshot for whoever runs the next production release,
 written at the end of the previous one. It says where things stand *right now*,
@@ -13,7 +13,7 @@ stale — check the dates.
 **Read these first, in this order:**
 
 1. `docs/release-procedure.md` — the runbook, start to finish
-2. `docs/releases/2026-10-09.md` — `0.23.0`, one release, one file
+2. `docs/releases/2026-10-10.md` — `0.24.0`, one release, one file
 3. this file, for what has changed since
 
 ---
@@ -22,203 +22,217 @@ stale — check the dates.
 
 | | |
 |---|---|
-| Live everywhere | **`0.23.0`** @ `7928bd7a` — production Pi, production Worker, test Pi, test Worker |
-| Previous release SHA, for the next range | **`7928bd7a`** — `node scripts/release-prs.mjs 7928bd7a HEAD` |
-| Production database | `171 applied`, **0 pending**, `No drift` |
-| Dev database | `171 applied`, **0 pending**, `No drift` |
-| Next free migration number | **`0172`** — no branch carries one, so a schema stream can start immediately |
-| `unreleased` notes already waiting | **0**, as of the cut |
-| Open PRs | the record/handover PR this file is in, and whatever has landed since |
+| Live everywhere | **`0.24.0`** @ `d8b19418` — production Pi, production Worker, test Pi, test Worker |
+| Previous release SHA, for the next range | **`d8b19418`** — `node scripts/release-prs.mjs d8b19418 HEAD` |
+| Production database | `174 applied`, **1 pending** (`0175`), `Drift` — explained below, and it is the normal kind |
+| Dev database | `175 applied`, **0 pending**, `No drift` |
+| Next free migration number | **`0176`** — `0175` is on `main` and belongs to PR #506 |
+| `unreleased` notes already waiting | **0**, read off `origin/main` after the release |
+| Open PRs | the record PR this file is in, and whatever has landed since |
 
-**Both databases read `No drift`, which is rarer than it looks.** The last two
-handovers each had to explain a legitimate one-sided disagreement. This release
-absorbed every pending migration and left no schema PR open, so the pair agrees.
+**Production reads `Drift` and that is correct.** `0175_map_rooms_names_and_descriptions`
+merged as PR #506 about twenty-five minutes **after** the release commit, so it is
+on `main`, applied to dev under the schema-first rule, and not on production.
+Against the release SHA itself, production matched exactly: `174 applied, 0 pending,
+0 in each direction`. **Apply `0175` as part of `0.25.0`**, with whatever else has
+merged by then.
 
-The pair is still worth knowing, because it will recur:
+The pair of legitimate one-sided cases, which will keep recurring:
 
 - **Dev ahead of `main`** → a schema PR is open and has been applied to dev under the schema-first rule. Normal.
-- **Production behind `main`** → a migration has merged since the last release. Normal.
+- **Production behind `main`** → a migration has merged since the last release. Normal, and it is what you are looking at now.
 - Either is a fault only if no open PR and no merged-since-release migration explains it.
 
 ---
 
 ## In flight
 
-**Nothing was left open by the release itself**, and no branch carries a
-migration.
+**Nothing was left open by the release itself.** PR #506 merged after it and
+carries `0175`; that is the next release's first job, not an exception.
 
 **Do not trust a list of worktrees in this file — run `node scripts/worktree.mjs
-list`.** Writing one down was tried and it was stale within the hour: the three
-leftovers this section originally named were cleared by another session while
-this PR was open, and three new streams had started in the meantime. What is
-durable is the shape, not the names:
+list`.** Writing one down was tried twice and was stale within the hour both
+times. What is durable is the shape:
 
 - The release's own worktrees — the cut, and this record — are free leftovers once their PRs merge. `/clean-streams` is the one-pass way to clear them.
 - `HELD — <session name>` means someone is still in it. Ask; do not tear it down.
-- The list also names **husks**, folders git no longer tracks, which `done <name>` clears. There was one at the time of writing, `Animal_Shelter_planner-handover-81`, left behind by #490.
+- The list also names **husks**, folders git no longer tracks, which `done <name>` clears. There was one at the time of writing, `Animal_Shelter_planner-handover-81`, left behind by #490 and still there a day later.
 - Several feature streams run in parallel with a release and are nothing to do with it. A release manager's business is the two it created.
+
+**One live consequence of that parallelism, new this release:** other streams
+share the **dev database**, and some release checks write to it.
+`check-phone-width.mjs --clean` deletes every `phonewidth-*` login it finds, not
+just its own, and at `0.24.0` it deleted another stream's mid-run. Dev data is
+disposable, so this is a courtesy problem rather than a safety one — but do not
+run `--clean` casually while other sessions are working.
 
 ---
 
 ## The one thing to read before the next release
 
-**The silent-failure question answered *yes* this time, and the shape of what
-followed is the template.** `0.21.0` established the question and held the
-release; `0.22.0` asked it and answered no. `0.23.0` is the first yes, and
-nothing about it was dramatic — which is the point.
+**A migration that *renames* is a different animal from one that *adds*, and the
+runner cannot tell you which you have.** `0.23.0` learned this on a narrowing
+migration and wrote it down; `0.24.0` met the much bigger version of it, and the
+pattern held up.
 
-`0170_close_the_over_grants` narrowed the `contacts` read policy to
-`contacts.browse`, a cell staff do not hold, while the code that reads the
-replacement `picker_contacts` view shipped in the same release. The *live* code
-read the table directly. So between the production apply and the Pi finishing its
-build, **a staff login's carer picker returned no rows — and an empty picker
-reads as "no carers", not as an error**.
+`0172_clinics_and_doctors` renamed four tables, eight columns, a view, a role
+value and every function body that named them. It leaves read-only compatibility
+views under the four old table names — so simple reads survived — but **every
+write failed, every embed through those views failed, and the renamed columns on
+`prescriptions`, `procedures`, `blood_tests`, `weight` and `site_content` had no
+shim at all.** Two of those failed *quietly*: the donate page's vet-visit cost
+estimate (the loader ignores the error and returns null) and the
+one-weight-per-visit guard.
 
-What made it a non-event:
+What made it a non-event, and what to copy:
 
-1. **It was found by reading the code, not by reasoning about the migration.**
-   `git show <previous release sha>:src/lib/contacts/carers.ts` against the
-   current file is two commands and it settles the question outright. The
-   migration header alone would not have: it says this branch's app code reads
-   the view first, which is true of *this* release's code and says nothing about
-   what is live.
-2. **It was put to Lutan before the cut**, in the same round as major/minor, as
+1. **It was found by reading the live code against this release's code**, not by
+   reasoning about the migration header. Two commands —
+   `git grep -n '\.from("vet_appointments")' <previous release sha> -- src` and
+   the same on `HEAD` — settle it outright. The header says what *this* release
+   reads; it says nothing about what is live.
+2. **The runner's reassuring note is wrong for this shape.** It prints *"these
+   tables/columns land before the code that reads them is live… expect nothing to
+   use it yet"* for every consumer warning. That fits an **additive** file. For a
+   file that renames or narrows, the apply changes behaviour immediately. When a
+   consumer warning names files that already exist, open the migration and ask
+   whether it **adds**, **restricts** or **renames**.
+3. **It was put to Lutan before the cut**, in the same round as major/minor, as
    its own question with three real options — go ahead with the window kept
-   short, wait for a quiet hour, or hold on test. Not as a warning, and not
-   folded into the count of unsigned plans.
-3. **The mitigation was mechanical**: apply the migrations and start the Pi
-   production build in the same breath. The Pi is what serves users, so the Pi
-   build is what closes the window — **not** the Worker deploy, which is the
-   fallback and takes four times as long.
-4. **It was measured**: the Pi build took about three minutes, so the window was
-   about three minutes, and that number is in the record rather than an estimate.
+   short, wait for a quiet hour, or hold on test. He chose to go ahead.
+4. **The mitigation was mechanical and is now the pattern: apply the migrations
+   and start the Pi production build in the same command**, with no round trip
+   between them. The Pi is what serves users, so the Pi build closes the window —
+   **not** the Worker deploy, which is the fallback.
+5. **It was measured**: apply finished `23:25:44Z`, the Pi finished `23:27:24Z`,
+   so the window was **1 minute 40 seconds**, and that number is in the record
+   rather than an estimate.
 
-The rule is unchanged and now has an example on both sides: **look at whether
-anything fails quietly, do the reading before asking, and name it on its own if
-it does.**
+**And expect a guard that asks you a question.** `0172` refused to apply to
+production at all until someone decided which of one clinic's two names to keep
+(`name 'Dr somchai'`, `clinic_name 'Novel'`). Dev's rows agreed, so the file had
+applied cleanly there and CI was green: **this class of problem can only appear
+at the production dry-run.** Leave room in the schedule for one, and treat it as
+a question for Lutan, not a file to fix. His answer was `Novel`, and `Dr somchai`
+was added as a doctor at it so the name was not lost.
 
 ---
 
-## Lessons from `0.23.0` worth not re-learning
+## Lessons from `0.24.0` worth not re-learning
 
-### 1. The apply-runner's reassuring note does not cover a *narrowing* migration
+### 1. `deploy.mjs` has no `--ref`, so a slow handover can ship a different commit
 
-`apply-migrations.mjs` prints, for any pending file whose consumers differ from
-what is live:
+Both Pi builds were pinned with `--ref d8b19418` and neither drifted. The Worker
+deploy cannot be pinned: it takes whatever `main` is when Lutan runs it. Between
+the handover and the command running, another stream merged and pulled the main
+checkout, so the production Worker built from **`8fcb6835`**, not the release SHA:
 
-> *These tables/columns land before the code that reads them is live. That is the
-> safe direction - nothing is blocked - but do not deploy the reader before this
-> is applied, and expect nothing to use it yet.*
+```
+deploy: production → Supabase project dbkodyyxxhtygxcxmfcu (8fcb6835)
+```
 
-That is exactly right for a file that **adds** a table or column, which is six of
-this release's seven. It is **wrong for a file that narrows an existing policy**,
-because there the apply changes behaviour for code that is already live, and
-"expect nothing to use it yet" is the opposite of the truth.
+Checked rather than assumed: `git diff --name-only d8b19418 8fcb6835` returned
+**only `docs/backlog.md`**, and `0175` was not in that tree. So the Worker
+carries the release's application code and nothing else moved. **Read the SHA on
+that line every time and diff it against the release SHA** instead of reading
+past it; the guard will refuse a tree whose migrations the database lacks, which
+is what keeps this merely untidy.
 
-The runner cannot tell the difference and prints the same note either way. So:
-when a consumer warning names files that already exist, open the migration and
-ask whether it **adds** or **restricts**. Only the additive case is the safe
-direction it describes.
+### 2. A red dry-run on a *later* file is the per-file rollback trap, twice now
 
-### 2. The two-endpoint check has three meanings, not two
+With `0172`'s fold guard satisfied, the re-run gave `0172 ok`, `0173 ok`,
+`0174 FAILED: function current_clinic_resident_ids() does not exist`. `0174`
+calls it; `0172` creates it; each file dry-runs in its own
+`begin … rollback`. **The correct action was to apply**, and all three went `ok`.
+Read both files before concluding, and then say which it was: "the dry-run
+failed" and "the file is wrong" are different statements.
 
-`/api/version` (the app, on the Pi) and `/api/releases/current` (from the Worker
-bundle) disagreeing means one of:
+### 3. The phone-width sweep is runnable against `test.lannacare.org`
 
-- the Worker is **lagging** between two deploys — `0.21.0`'s reading
-- the Worker deploy **failed** — `0.22.0`'s, and it caught a release that looked complete
-- the Worker deploy **has not been run yet** — `0.23.0`'s, because the Pi build finished while the handover was still outstanding
+It had been skipped at three releases running because it wants a dev server and
+would compete with the deploys for the PC. It does not have to: the script takes
+a URL, it refuses any database but dev, and **the test site *is* the dev
+database**, served by the test Pi from the release SHA. So point it at
+`https://test.lannacare.org` and it measures the shipped build with no local
+server at all. 290 page views across six roles and both languages, all clean.
 
-All three look identical. What distinguishes them is knowing *which* deploy you
-are waiting on at the moment you read it. Run the check before **and** after the
-Worker deploy, and say in the record which meaning applied — a disagreement is
-never "wait a bit".
+Two things about actually running it:
 
-### 3. Where the thirty minutes went
+- **Its own role list still has `staff`**, retired by `0.24.0`, so a default run
+  dies at setup. Name the six surviving roles:
+  `--roles=admin,management,doctor,volunteer,head_of_medical,head_of_maintenance`.
+  It has no `second_in_command`, so **2IC is still unmeasured**. Both on the backlog.
+- **Slice it by role.** One run covering three roles in both languages was killed
+  at 560 s having printed nothing, because the output is buffered. One role at a
+  time finishes comfortably.
 
-`0.22.0` took ~75 minutes; `0.23.0` took **~45**, with twenty-four PRs instead of
-sixteen. Two causes, both repeatable:
+### 4. Where the time went, and why the headline figure is not a regression
 
-- **No failed deploy.** The handover was not made until the main checkout was
-  confirmed free, and that was stated as part of the handover rather than assumed.
-- **No idling.** Both Pi builds, both drift checks, the mail check, the edge-cache
-  check and the whole release record were done *while* the Worker deploy was
-  outstanding. The Pi runs on the Pi; it collides with nothing.
+`0.23.0` took ~45 minutes; `0.24.0` took **~65** — and the difference is entirely
+the gap between handing the deploy over and it being run. Everything Claude owed
+was done inside that gap: both Pi builds, both drift checks, the mail check, the
+edge-cache check, the phone-width sweep and most of the record. Budget from the
+per-step figures, not the total.
 
-Refreshed figures, measured not estimated:
-
-| Step | Measured |
+| Step | Measured at `0.24.0` |
 |---|---|
-| `worktree.mjs new` | ~2–3 min, almost all `npm ci` |
-| `gates.mjs` | ~4 min (build alone 205s, cold) |
-| Full CI run on a PR | ~2 min (`check` 1m53s, `public-views` 1m28s, the rest under 15s) |
-| Production migration apply | under a minute — **seven** files, so file count barely matters |
-| **Worker deploy, production** | **~12 min** — still the long pole |
-| Pi build + restart | **~3 min** each, faster than the ~4–5 budgeted |
-| Whole release, first command to admin mail | **~45 min** |
+| `worktree.mjs new` | ~3 min, almost all `npm ci` |
+| `gates.mjs` | ~5 min (build alone 279 s, cold) |
+| Full CI run on a PR | ~2 min (`public-views` 1m38s, `check` ~2 min, the rest under 20 s) |
+| Production migration apply | **7 seconds** for three files |
+| **Worker deploy, production** | ~13 min of work — still the long pole |
+| Pi build + restart | **~1m40s**, and it is what closes a migration window |
+| Phone-width sweep, all six roles | ~25 min in slices, over the network |
 
-Still budget the Worker deploy at ~13 minutes and never overlap it with anything
-building in the same checkout.
+### 5. `gh pr merge` was not refused, for the second release running
 
-### 4. `gh pr merge` was not refused this time
-
-The last handover said to expect the auto-mode classifier to refuse it as *"Merge
-Without Review"* and to ask rather than treat it as a fault. On `0.23.0` it
-**succeeded on the first attempt** with no refusal, the user having asked for the
-release in chat. So: try it, expect it to work, and treat a refusal as the
-exception that needs a sentence in chat — not as the default.
-
-### 5. Git Bash and Node disagree about CRLF in this repo
-
-The cut script failed to find `export const unreleased: ReleaseNote[] = [` plus a
-newline in `src/lib/releases.ts`. Investigating, `grep -c $'\r'` returned **0**
-and `awk` counted **0** CRLF lines — while Node read the very same bytes as
-ending `[\r\n`. Node was right; the file is CRLF.
-
-Any script that edits a source file by string matching must detect the file's own
-line ending and write it back unchanged. **When the shell tools and Node disagree
-about bytes on this machine, believe Node.**
+`0.23.0` recorded it working on the first attempt; so did this one, with the
+release asked for in chat. Try it, expect it to work, and treat a refusal as the
+exception that needs a sentence in chat.
 
 ### 6. Things that look alarming but are not
 
 - `ERROR Failed to copy …\node_modules\…` during a Worker deploy: known Windows file-lock noise; the deploy continues and exits 0.
-- A red `audit` check: never blocks, never has — `CLAUDE.md` has the long version. Green throughout `0.23.0`.
+- A red `audit` check: never blocks, never has — `CLAUDE.md` has the long version. Green throughout `0.24.0`.
 - A deploy log that looks like gibberish: `| tee` writes **UTF-16**. `tr -d '\000'` before grepping.
 - `skipped lannacareforanimals@gmail.com: E_RECIPIENT_NOT_ALLOWED` in the release mail: the shelter's own address refused by the relay, a known open question, not a delivery failure.
-- A backgrounded `deploy.mjs` writing **nothing** to its log for ten minutes: output is buffered when it is not a terminal. Not a hang.
+- `release mail for <version> [off]: sent 0, skipped 16` on the **test** deploy: correct by construction, `RELEASE_MAIL_ENV` is `""` there.
+- A backgrounded `deploy.mjs` writing **nothing** to its log for ten minutes: output is buffered when it is not a terminal. Not a hang. The same is true of `check-phone-width.mjs`.
+- `test-plan` red on the commit that *opens* a cut PR: the "CI green" line cannot honestly be ticked before CI has run. Complete it in a follow-up commit; the next run goes green.
 
 ---
 
 ## Outstanding verification — what actually matters
 
-Seventeen of `0.23.0`'s twenty-four plans are `pending:`, by Lutan's decision at
-the cut. The repo-wide `pending:` count is the normal standing state and is
-**not** a release blocker — do not try to clear it.
+Ten of `0.24.0`'s thirteen plans are `pending:`, by Lutan's decision at the cut.
+The repo-wide `pending:` count is the normal standing state and is **not** a
+release blocker — do not try to clear it.
 
 What is worth carrying forward, most valuable first:
 
 | Item | Where | Note |
 |---|---|---|
-| **A donation receipt issued on production** | `docs/test-plans/donation-receipts.md` | The highest-value check outstanding. Numbering from `LCA0009000` must never repeat or skip, and it has only ever run against dev. It also writes the PDF to Drive |
-| **A phone-width sweep, at all** | `docs/release-smoke-test.md`, "Before the deploy" | `node scripts/check-phone-width.mjs` has **not been run at any of the last three releases**, and nobody wrote that down until now. `0.23.0` added three whole sections, none measured at 375 px |
-| **The first facility-map upload on production** | `docs/test-plans/facility-map-upload.md` | Carried from `0.22.0`. It is also what *creates* the Storage bucket — `ensureBucket()` runs on first use |
+| **Somebody using the renamed Clinics screens on production** | `docs/test-plans/vet-to-doctor-rename.md` | New, and the largest thing in the release. The rename passed every script and the phone-width sweep; nobody has read the Thai wording or worked a doctor login's day |
+| **A donation receipt issued on production** | `docs/test-plans/donation-receipts.md` | Carried from `0.23.0`. Numbering from `LCA0009000` must never repeat or skip, and it has only ever run against dev. It also writes the PDF to Drive |
+| **The first facility-map upload on production** | `docs/test-plans/facility-map-upload.md` | Carried from `0.22.0`, now a third release. It is also what *creates* the Storage bucket — `ensureBucket()` runs on first use |
 | **A Management login saving Management → Website** | `docs/test-plans/website-content-grant.md` | Carried from `0.22.0`. Verified only by the migration applying cleanly |
-| **`0.20.0`'s Contacts pass** | `docs/test-plans/cut-release-0-20-0.md` | Open for **five releases**. `0170` has now changed what staff may read of a contact, so the pass it was waiting for is not the same pass any more. **Close it and write a new item, or do it against the new behaviour** — carrying it unchanged a sixth time is not a decision |
-| Thai wording on the Operations menu | `docs/test-plans/shelter-operations-nav.md` | Carried from `0.21.0`, and the menu has since been **renamed** to Operations, so the wording to check has changed |
+| **`0.20.0`'s Contacts pass** | `docs/test-plans/cut-release-0-20-0.md` | Open for **six** releases, and the thing it was waiting for has changed twice since (`0170` narrowed what staff may read of a contact; `0172` renamed the clinic a contact can be). **Close it and write a new item against current behaviour** — carrying it a seventh time is not a decision |
+| 2IC at phone width | `scripts/check-phone-width.mjs` | The sweep now runs, but the script has no `second_in_command` role, so the 2IC — who has no PC on site — is the one role never measured |
 | The signed-out public tour | every release record | Standing gap: `PUBLIC_SITE` is `locked`, so nobody has seen `/`, `/adopt`, `/our-work` or `/donate` as a visitor does |
 
 ---
 
 ## What the next release will need
 
-1. **Step 0: read `docs/releases/2026-10-09.md` end to end.** One release, one file this time — no second section to find.
-2. **Range starts at `7928bd7a`.** Run `release-prs.mjs 7928bd7a HEAD` and read its exit code directly, not through a pipe.
-3. **No migrations are pending on either database.** Whatever merges next sets that; `--status --env production` first, as always.
-4. **Decide major or minor with Lutan before cutting**, with anything else the cut needs, in one round. `0.21.0`, `0.22.0` and `0.23.0` were all major for the same reason each time: pages moved, or a role gained a section.
-5. **Ask whether anything in the release can fail silently** — and read the candidates in code before asking, so the question carries an answer. See the section above for what a *yes* looks like.
-6. **Budget the Worker deploy at ~13 minutes**, do not overlap it with anything building in the same checkout, and fill the wait with the Pi builds, the drift checks and the record.
-7. Four production-only checks are owed: a donation receipt, a facility-map upload, a Management → Website save, and a phone-width sweep that has never happened.
-8. `/clean-streams`, and read **In flight** on why this file no longer lists worktrees by name.
+1. **Step 0: read `docs/releases/2026-10-10.md` end to end.** One release, one file.
+2. **Range starts at `d8b19418`.** Run `release-prs.mjs d8b19418 HEAD` and read its exit code directly, not through a pipe.
+3. **`0175` is pending on production** and nothing else is. `--status --env production` first, as always, and expect that one.
+4. **Decide major or minor with Lutan before cutting**, with anything else the cut needs, in one round. `0.21.0` through `0.24.0` were all major for the same reason each time: pages moved, or a role gained or lost a section.
+5. **Ask whether anything in the release can fail silently** — and read the candidates in code before asking, so the question carries an answer. Two releases running have answered yes; see the section above for what a renaming migration does.
+6. **Expect a production-only guard.** If a migration refuses on production data, that is a question for Lutan and it cannot appear any earlier.
+7. **Budget the Worker deploy at ~13 minutes**, do not overlap it with anything building in the same checkout, and fill the wait with the Pi builds, the drift checks, the phone-width sweep and the record.
+8. Four production-only checks are owed: the Clinics screens, a donation receipt, a facility-map upload and a Management → Website save.
+9. `/clean-streams`, and read **In flight** on why this file no longer lists worktrees by name.
 
 ---
 
@@ -226,15 +240,14 @@ What is worth carrying forward, most valuable first:
 
 Lutan has **one job**:
 `node scripts/deploy.mjs --env production | tee deploy-<version>.log`.
-Everything else is Claude's, and that held again on `0.23.0` — both Pi builds over
-`ssh`, both `--drift` checks, the production migration apply, `gh pr merge` and
-the test Worker deploy, none of which were refused.
+Everything else is Claude's, and that held again on `0.24.0` — both Pi builds over
+`ssh`, both `--drift` checks, the production migration apply, the one-row clinic
+correction, `gh pr merge` and the test Worker deploy, none of which were refused.
 
 Two things about that one job:
 
 - **Do not hand it over while anything is building in the main checkout**, and
-  say so when you hand it over. That is `0.22.0`'s lesson, and following it is
-  most of why `0.23.0` took thirty minutes less.
+  say so when you hand it over.
 - Hand it over as **one command per line** — `&&` does not parse in Windows
   PowerShell 5.1 — and always with the `| tee`.
 
