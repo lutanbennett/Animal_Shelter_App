@@ -75,6 +75,14 @@ const en = {
     devBadgeTitle: "Dev database — this is not the live site",
     uatBadge: "UAT",
     uatBadgeTitle: "UAT — acceptance testing, not the live site",
+    theme: {
+      label: "Colours",
+      dark: "Dark",
+      light: "Light",
+      contrast: "High contrast",
+      magenta: "Magenta",
+      failed: "Couldn't save your colours. Try again.",
+    },
   },
 
   nav: {

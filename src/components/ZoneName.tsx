@@ -7,9 +7,11 @@ import { zoneColour } from "@/lib/zones/palette";
  * colour is never the only way to tell zones apart. Nothing is drawn for a
  * zone with no colour, so names still line up only where every zone has one.
  *
- * The ring is the page background, which keeps the dot visible on any filled
- * surface and sets it apart from the capacity bar and
- * badge, which are bars and pills, never dots.
+ * The ring is the page background in the dark themes, which keeps the dot
+ * visible on any filled surface and sets it apart from the capacity bar and
+ * badge, which are bars and pills, never dots. The light theme sets
+ * --zone-dot-ring dark instead: on white, the white and sand swatches would
+ * otherwise vanish (globals.css; docs/decisions/2026-10-10-user-colour-themes.md).
  */
 export function ZoneDot({
   colour,
@@ -24,7 +26,7 @@ export function ZoneDot({
     <span
       aria-hidden="true"
       data-zone-dot
-      className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-background ${className}`}
+      className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-zone-dot-ring ${className}`}
       style={{ backgroundColor: hex }}
     />
   );

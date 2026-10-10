@@ -15,7 +15,9 @@
   --primary-foreground: #1a1100;
 
   --danger: #ff453a;
-  --danger-foreground: #ffffff;
+  /* Dark text, not white: white on this red is 3.4:1 (the offline banner,
+     its only user). Found by scripts/check-theme-contrast.mjs, 2026-10-10. */
+  --danger-foreground: #1a0503;
   --success: #30d158;
   --success-foreground: #04170a;
 
@@ -61,6 +63,107 @@
   --primary: #2dd4bf;
   --primary-hover: #5eead4;
   --primary-foreground: #032523;
+}
+
+/* The colour themes each person can pick from the account menu
+   (src/lib/theme/themes.ts; docs/decisions/2026-10-10-user-colour-themes.md).
+   The default — dark with orange — is the :root block above and has no
+   attribute; the layout sets data-theme on <html> only for the others.
+
+   Order matters, twice over. These come AFTER the dev block, so a chosen
+   theme's colours win over dev's teal — which is why the environment can no
+   longer be told by colour alone, and AppHeader draws a fixed-colour strip
+   and badge that no theme touches. And they come BEFORE the public-site
+   mapping below (same specificity), so the public pages keep their own
+   cream look whatever the visitor's theme.
+
+   Every pair is checked by `node scripts/check-theme-contrast.mjs`, which
+   reads this file; run it after changing any value here. */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --background: #f4f4f5;
+  --surface: #ffffff;
+  --surface-hover: #e9e9ec;
+  --border: #c9c9cf;
+  --foreground: #18181b;
+  --muted: #52525b;
+
+  --primary: #a84a07;
+  --primary-hover: #8a3c05;
+  --primary-foreground: #ffffff;
+
+  --danger: #c0261a;
+  --danger-foreground: #ffffff;
+  --success: #1a7f37;
+  --success-foreground: #ffffff;
+  --info: #0a5ad4;
+  --warning: #8a5a00;
+
+  /* A zone dot's ring is the page background in the dark themes. On a
+     light page that would leave the white and sand swatches (1.1:1 and
+     1.7:1 on white) as invisible dots, so the ring goes dark instead
+     (src/lib/zones/palette.ts; ZoneDot). */
+  --zone-dot-ring: #3f3f46;
+}
+
+/* A zone chip (PlaceZoneChips) is edged in its zone's colour. On a light
+   page white, yellow and sand edges vanish (1.0–1.5:1), leaving a chip that
+   is only floating text, so here the edge is the zone's colour taken
+   halfway to black: same hue, and 3.6:1 or more on every light surface. */
+.zone-chip {
+  border-color: var(--zone);
+}
+:root[data-theme="light"] .zone-chip {
+  border-color: color-mix(in srgb, var(--zone) 50%, black);
+}
+
+/* High contrast: black, white and a high-visibility lime, with borders
+   that stand out (3:1 and more) rather than the default's faint lines.
+   Every text pair clears 7:1 (AAA), not just AA. Not orange: at this
+   brightness orange sits between the Orange, Yellow and Sand zones (ΔE 9
+   from each), so the active "All zones" chip looked like a zone chosen.
+   The lime is ΔE 13.6 from the nearest zone and 13.4 from success green. */
+:root[data-theme="contrast"] {
+  --background: #000000;
+  --surface: #0a0a0a;
+  --surface-hover: #262626;
+  --border: #a3a3a3;
+  --foreground: #ffffff;
+  --muted: #e4e4e7;
+
+  --primary: #b3ff1a;
+  --primary-hover: #ccff66;
+  --primary-foreground: #000000;
+
+  --danger: #ff7b72;
+  --danger-foreground: #000000;
+  --success: #5ee68a;
+  --success-foreground: #000000;
+  --info: #7cb8ff;
+  --warning: #ffe066;
+}
+
+/* The default dark surfaces with a magenta accent in place of the orange.
+   Chosen by measurement, not taste: of every hue readable here, it sits
+   furthest from all twelve zone colours (nearest is purple, ΔE 15.9 in
+   OKLab) and from the signal colours — red danger, green success, blue
+   in-progress, dev's teal. A violet tried first was ΔE 1.9 from the Purple
+   zone, so the active "All zones" chip read as Purple chosen. For scale,
+   the default orange is ΔE 5.0 from the Orange zone. The surfaces are
+   spelled out although they equal the default's: left out, dev's green-cast
+   ones would show through on dev and Test, and every theme must look the
+   same in every environment (the header strip is what tells them apart).
+   scripts/check-theme-contrast.mjs fails a theme that leaves one out. */
+:root[data-theme="magenta"] {
+  --background: #121212;
+  --surface: #1c1c1e;
+  --surface-hover: #262629;
+  --border: #333338;
+
+  --primary: #e033ff;
+  --primary-hover: #ea70ff;
+  --primary-foreground: #1f0326;
 }
 
 /* Public site: the "Lanna Care for Animals" visual system (docs/design/,
@@ -138,6 +241,7 @@
   --primary-foreground: var(--site-on-action);
 
   --danger: #b42318;
+  --danger-foreground: #ffffff;
   --success: #1e6b45;
   --success-foreground: #ffffff;
 }
@@ -192,6 +296,7 @@
   --color-success-foreground: var(--success-foreground);
   --color-info: var(--info);
   --color-warning: var(--warning);
+  --color-zone-dot-ring: var(--zone-dot-ring, var(--background));
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

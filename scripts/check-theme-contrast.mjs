@@ -1,0 +1,195 @@
+#!/usr/bin/env node
+/**
+ * WCAG contrast for every colour theme (src/lib/theme/themes.ts, globals.css).
+ *
+ *   node scripts/check-theme-contrast.mjs        # table, exit 1 on any failure
+ *
+ * Reads the token blocks straight out of globals.css — `:root` for the
+ * default and `:root[data-theme="…"]` for each other theme, the default
+ * filling in whatever a theme leaves out — so the numbers are the shipped
+ * colours, not a copy that can drift. Text pairs need 4.5:1 (AA, normal
+ * text); graphics (zone dots, status dots, the focus ring) need 3:1. Tinted
+ * pairs such as `text-danger` on `bg-danger/10` are blended over the surface
+ * they sit on, as the browser draws them.
+ *
+ * Dev's teal (`:root[data-env="dev"]`) is checked too: it applies only under
+ * the default theme (docs/decisions/2026-10-10-user-colour-themes.md).
+ */
+import { readFileSync } from "node:fs";
+
+const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
+
+/** Every `--name: #hex;` inside each block that `selector` opens, merged in order. */
+function tokens(selector) {
+  const out = {};
+  let i = 0;
+  for (;;) {
+    const at = css.indexOf(`${selector} {`, i);
+    if (at < 0) break;
+    const end = css.indexOf("}", at);
+    for (const m of css.slice(at, end).matchAll(/--([a-z0-9-]+):\s*(#[0-9a-f]{6})\b/gi)) out[m[1]] = m[2].toLowerCase();
+    i = end;
+  }
+  return out;
+}
+
+const base = tokens(":root");
+const themes = {
+  dark: base,
+  "dark (dev)": { ...base, ...tokens(':root[data-env="dev"]') },
+};
+// A theme block comes after the dev block, so whatever it leaves out, dev's
+// teal and green-cast surfaces fill in on dev and Test. Every theme must set
+// every app token dev changes, or it looks different per environment. (The
+// public site's --site-* tokens are not the themes' business.)
+const devOnly = Object.keys(tokens(':root[data-env="dev"]')).filter((k) => !k.startsWith("site-"));
+let failures = 0;
+for (const m of css.matchAll(/:root\[data-theme="([a-z-]+)"\] \{/g)) {
+  const own = tokens(`:root[data-theme="${m[1]}"]`);
+  themes[m[1]] = { ...base, ...own };
+  const missing = devOnly.filter((k) => !(k in own));
+  if (missing.length) {
+    failures++;
+    console.log(`FAIL theme "${m[1]}" leaves dev's ${missing.join(", ")} showing through on dev and Test`);
+  }
+}
+
+// The picker's previews (src/lib/theme/themes.ts) are copies; check they agree.
+const themesTs = readFileSync(new URL("../src/lib/theme/themes.ts", import.meta.url), "utf8");
+for (const m of themesTs.matchAll(/^\s+([a-z]+): \["(#[0-9a-f]{6})", "(#[0-9a-f]{6})", "(#[0-9a-f]{6})"\]/gm)) {
+  const t = themes[m[1]];
+  const want = t && [t.background, t.surface, t.primary];
+  if (!want || want.join() !== [m[2], m[3], m[4]].join()) {
+    failures++;
+    console.log(`FAIL THEME_PREVIEW.${m[1]} is ${[m[2], m[3], m[4]]} but globals.css says ${want}`);
+  }
+}
+
+// The zone swatches, read from their own file for the same reason.
+const palette = readFileSync(new URL("../src/lib/zones/palette.ts", import.meta.url), "utf8");
+const swatches = [...palette.matchAll(/key: "([a-z]+)", hex: "(#[0-9a-f]{6})"/g)].map((m) => [m[1], m[2]]);
+
+const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+const lin = (c) => ((c /= 255) <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+const lum = (hex) => {
+  const [r, g, b] = rgb(hex).map(lin);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const ratio = (a, b) => {
+  const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
+  return (x + 0.05) / (y + 0.05);
+};
+/** Perceptual distance: Euclidean in OKLab, ×100. Under ~5 reads as the same colour. */
+const oklab = (hex) => {
+  const [r, g, b] = rgb(hex).map(lin);
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [
+    0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.808675492 * s,
+  ];
+};
+const deltaE = (a, b) => {
+  const [x, y] = [oklab(a), oklab(b)];
+  return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]) * 100;
+};
+const blend =(fg, alpha, bg) =>
+  "#" + rgb(fg).map((c, i) => Math.round(c * alpha + rgb(bg)[i] * (1 - alpha)).toString(16).padStart(2, "0")).join("");
+
+// Dev near-misses that predate the themes (dev only; production and every
+// selectable theme pass). Printed, not counted, and on the backlog to retune.
+const KNOWN = new Set(["dark (dev)|danger / danger/10 on surface", "dark (dev)|info / surface"]);
+
+for (const [name, t] of Object.entries(themes)) {
+  const text = [
+    ["foreground / background", t.foreground, t.background],
+    ["foreground / surface", t.foreground, t.surface],
+    ["foreground / surface-hover", t.foreground, t["surface-hover"]],
+    ["muted / background", t.muted, t.background],
+    ["muted / surface", t.muted, t.surface],
+    ["muted / surface-hover", t.muted, t["surface-hover"]],
+    ["primary / background", t.primary, t.background],
+    ["primary / surface", t.primary, t.surface],
+    ["primary-foreground / primary", t["primary-foreground"], t.primary],
+    ["primary-foreground / primary-hover", t["primary-foreground"], t["primary-hover"]],
+    ["foreground / primary/10 on surface", t.foreground, blend(t.primary, 0.1, t.surface)],
+    ["danger / background", t.danger, t.background],
+    ["danger / surface", t.danger, t.surface],
+    ["danger / danger/10 on surface", t.danger, blend(t.danger, 0.1, t.surface)],
+    ["danger-foreground / danger", t["danger-foreground"], t.danger],
+    ["success / background", t.success, t.background],
+    ["success / surface", t.success, t.surface],
+    ["success-foreground / success", t["success-foreground"], t.success],
+    ["warning / surface", t.warning, t.surface],
+    ["warning / warning/15 on surface", t.warning, blend(t.warning, 0.15, t.surface)],
+    ["foreground / warning/20 on surface", t.foreground, blend(t.warning, 0.2, t.surface)],
+    ["info / surface", t.info, t.surface],
+  ];
+  const graphic = [
+    ["focus ring primary/40 / background", blend(t.primary, 0.4, t.background), t.background, 1.0],
+    ["status dot success / surface", t.success, t.surface],
+    ["status dot warning / surface", t.warning, t.surface],
+    ["status dot danger / surface", t.danger, t.surface],
+    // The cashflow forecast's stacked series (globals.css --series-*).
+    ...Object.keys(t)
+      .filter((k) => k.startsWith("series-"))
+      .map((k) => [`chart ${k} / surface`, t[k], t.surface]),
+  ];
+  console.log(`\n== ${name}`);
+  for (const [label, a, b] of text) {
+    const r = ratio(a, b);
+    const ok = r >= 4.5;
+    const known = !ok && KNOWN.has(`${name}|${label}`);
+    if (!ok && !known) failures++;
+    console.log(`  ${ok ? "ok  " : known ? "KNWN" : "FAIL"} ${r.toFixed(2).padStart(5)}:1  ${label}  (${a} on ${b})`);
+  }
+  for (const [label, a, b, min = 3] of graphic) {
+    const r = ratio(a, b);
+    const ok = r >= min;
+    if (!ok) failures++;
+    console.log(`  ${ok ? "ok  " : "FAIL"} ${r.toFixed(2).padStart(5)}:1  ${label} [graphic${min === 3 ? ", 3:1" : ", info only"}]`);
+  }
+  // A zone dot is a 10 px graphic with a 2 px ring (ZoneDot): the ring is
+  // what must stand out from the surface, and the fill from the ring.
+  const ring = t["zone-dot-ring"] ?? t.background;
+  const worst = swatches
+    .map(([k, hex]) => [k, 0, ratio(hex, ring)])
+    .sort((a, b) => a[2] - b[2]);
+  const ringVsSurfaces = Math.min(ratio(ring, t.surface), ratio(ring, t.background), ratio(ring, t["surface-hover"]));
+    const fillsOk = swatches.every(([, hex]) => Math.min(ratio(hex, t.surface), ratio(hex, t.background), ratio(hex, t["surface-hover"])) >= 3);
+  const dotOk = ringVsSurfaces >= 3 || fillsOk;
+  if (!dotOk) failures++;
+  console.log(
+    `  ${dotOk ? "ok  " : "FAIL"} zone dots: ring ${ring} is ${ringVsSurfaces.toFixed(2)}:1 against the surfaces; ` +
+      `weakest fill against its ring: ${worst[0][0]} ${worst[0][2].toFixed(2)}:1; ` +
+      `weakest fill against a surface: ${swatches
+        .map(([k, hex]) => [k, Math.min(ratio(hex, t.surface), ratio(hex, t.background), ratio(hex, t["surface-hover"]))])
+        .sort((a, b) => a[1] - b[1])
+        .slice(0, 2)
+        .map(([k, r]) => `${k} ${r.toFixed(2)}:1`)
+        .join(", ")}`,
+  );
+
+  // Zone chips (PlaceZoneChips). The active "All zones" chip is filled with
+  // the accent, so an accent too like a zone colour reads as that zone
+  // chosen: a selectable theme's accent must be ΔE 10+ (OKLab ×100) from
+  // every swatch. The default orange (5.0 from Orange) and dev's teal (4.5
+  // from Teal) predate the themes and are reported, not failed.
+  const near = swatches.map(([k, hex]) => [k, deltaE(t.primary, hex)]).sort((a, b) => a[1] - b[1])[0];
+  const accentOk = near[1] >= 10 || name === "dark" || name === "dark (dev)";
+  if (!accentOk) failures++;
+  console.log(`  ${near[1] >= 10 ? "ok  " : accentOk ? "KNWN" : "FAIL"} zone chips: accent ${t.primary} is ΔE ${near[1].toFixed(1)} from the nearest zone colour (${near[0]})`);
+  // A chip's edge is its zone colour, darkened halfway to black in the light
+  // theme (globals.css .zone-chip); it must show against the page: 3:1.
+  const darken = (hex) => "#" + rgb(hex).map((c) => Math.round(c * 0.5).toString(16).padStart(2, "0")).join("");
+  const edgeOf = name === "light" ? darken : (hex) => hex;
+  const edge = swatches
+    .map(([k, hex]) => [k, Math.min(ratio(edgeOf(hex), t.background), ratio(edgeOf(hex), t.surface))])
+    .sort((a, b) => a[1] - b[1])[0];
+  if (edge[1] < 3) failures++;
+  console.log(`  ${edge[1] >= 3 ? "ok  " : "FAIL"} zone chips: weakest edge ${edge[0]} ${edge[1].toFixed(2)}:1 against the page [graphic, 3:1]`);
+}
+console.log(failures ? `\n${failures} pair(s) below WCAG AA.` : "\nEvery pair meets WCAG AA.");
+process.exit(failures ? 1 : 0);

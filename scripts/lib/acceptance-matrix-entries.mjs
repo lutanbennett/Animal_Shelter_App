@@ -103,6 +103,15 @@ export const ENTRIES = {
       expect: "Every label, button and message changes language; nothing is left in the other language and no Thai text is cut off or overlaps.",
     },
   ],
+  colours: [
+    {
+      activity: "Choose the app's colours",
+      device: "both",
+      audience: "all",
+      do: "Tap your name at the top right, pick Light under Colours, open two other pages, then sign in on a second device.",
+      expect: "The screen turns light at once and stays light on every page and on the second device; all text is easy to read. Pick Dark to go back.",
+    },
+  ],
   "print-manual": [
     {
       activity: "Print the manual as a PDF",
