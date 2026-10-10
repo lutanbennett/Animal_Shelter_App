@@ -10,12 +10,20 @@
 // inserted directly, rewritten or deleted, a void needs a reason and cannot be undone, a re-issue
 // after a void takes the next number, the counter is closed to the API, and the audit log
 // records the receipt.
+//
+// And the issuer (0176): every issue here passes a FORGED issuer, and the receipt must store the
+// real one regardless, built by receipt_issuer() in SQL. The expected value is read from
+// src/lib/donations/issuer.ts, so the SQL copy and the TypeScript copy cannot drift apart without
+// this going red. If this fails on "forged issuer ignored", anyone holding donation.receipt can
+// mint a receipt in any organisation's name again: do not "fix" the test, fix the function.
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
 const env = loadEnv("test");
 const ref = projectRef(env);
+const { receiptIssuer } = await import(pathToFileURL(join(root, "src/lib/donations/issuer.ts")).href);
+const want = (c) => JSON.stringify(receiptIssuer(c)).replaceAll("'", "''");
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
 const sql = `
@@ -43,7 +51,9 @@ create temp table r (n serial, label text, got text, want text);
 grant all on r to authenticated, anon;
 do $$
 declare m uuid; s uuid; d uuid; d2 uuid; c0 bigint; n1 text; n2 text; n3 text; rid uuid;
-  issue text := 'issue_donation_receipt(%L, %L, current_date, ''{"name":"Probe issuer"}''::jsonb, ''{"donorName":"Probe"}''::jsonb)';
+  issue text := 'issue_donation_receipt(%L, %L, current_date, ''{"name":"Forged Org Ltd","addressLines":["1 Fake Street"],"registrationLines":["Tax ID: 000"],"statementLines":["No goods or services were provided"]}''::jsonb, ''{"donorName":"Probe"}''::jsonb)';
+  th text := ('${want("TH")}'::jsonb)::text;
+  us text := ('${want("US")}'::jsonb)::text;
 begin
   select ur.user_id into m from user_roles ur join roles x on x.id = ur.role_id where x.key = 'management' and ur.archived_at is null limit 1;
   select ur.user_id into s from user_roles ur join roles x on x.id = ur.role_id where x.key = 'second_in_command' and ur.archived_at is null limit 1;  -- the 2IC: Staff until 0173 retired it
@@ -67,6 +77,10 @@ begin
   n1 := pg_temp.q(m, format('(' || issue || ').number', d, 'TH'));
   insert into r (label, got, want) values ('mgmt issues: the next number', n1, 'LCA' || lpad(c0::text, 7, '0'));
   insert into r (label, got, want) values ('issued_by from session', (select issued_by from donation_receipts where number = n1)::text, m::text);
+  insert into r (label, got, want) values ('forged issuer ignored: TH receipt stores the real issuer', (select issuer::text from donation_receipts where number = n1), th);
+  insert into r (label, got, want) values ('receipt_issuer(TH) mirrors issuer.ts', pg_temp.q(m, $q$receipt_issuer('TH')$q$), th);
+  insert into r (label, got, want) values ('receipt_issuer(US) mirrors issuer.ts', pg_temp.q(m, $q$receipt_issuer('US')$q$), us);
+  insert into r (label, got, want) values ('receipt_issuer(FR) refused', pg_temp.q(m, $q$receipt_issuer('FR')$q$), 'ERR:22023');
   insert into r (label, got, want) values ('second live receipt refused', pg_temp.q(m, format('(' || issue || ').number', d, 'TH')), 'ERR:23505');
   insert into r (label, got, want) values ('refused issue did not advance the counter', (select next_value from receipt_counters where series = 'LCA')::text, (c0 + 1)::text);
   insert into r (label, got, want) values ('2IC issue refused', pg_temp.q(s, format('(' || issue || ').number', d, 'TH')), 'ERR:42501');
@@ -83,6 +97,7 @@ begin
   insert into r (label, got, want) values ('voided receipt kept', (select count(*) from donation_receipts where number = n1)::text, '1');
   n2 := pg_temp.q(m, format('(' || issue || ').number', d, 'US'));
   insert into r (label, got, want) values ('re-issue after void: the next number', n2, 'LCA' || lpad((c0 + 1)::text, 7, '0'));
+  insert into r (label, got, want) values ('forged issuer ignored: US receipt stores the US issuer', (select issuer::text from donation_receipts where number = n2), us);
   insert into donations (received_on, donor_name, method) values (current_date, 'Probe two', 'in_kind') returning id into d2;
   n3 := pg_temp.q(m, format('(' || issue || ').number', d2, 'TH'));
   insert into r (label, got, want) values ('another donation: the next again', n3, 'LCA' || lpad((c0 + 2)::text, 7, '0'));
