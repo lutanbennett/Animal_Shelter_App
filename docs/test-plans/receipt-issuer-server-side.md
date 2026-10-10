@@ -30,7 +30,7 @@
 
   gates: typecheck=0 lint=0 build=0
   ```
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: all seven checks passed on #510 at `bf3fc356` (check, public-views, test-plan, migration-numbers, new-policy-role-names, script-integrity, audit)
 
 ## 3. Schema and data
 
