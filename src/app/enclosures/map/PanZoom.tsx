@@ -170,51 +170,48 @@ export function PanZoom({
   const controlButton =
     "flex h-11 w-11 items-center justify-center rounded-lg border border-border bg-surface/95 text-foreground shadow hover:bg-surface-hover disabled:opacity-40";
 
+  // The controls sit in a row under the plan, never over it: laid in its corner they covered most of
+  // Main Zone's enclosure 1 on a phone and took the taps meant for it (2026-10-09), and still covered
+  // part of it on a desktop, so there is no width at which the overlay is harmless.
   return (
-    <div
-      className="relative mx-auto w-full"
-      style={{ aspectRatio: String(aspect), maxWidth: `calc(75vh * ${aspect})` }}
-    >
-      <div
-        ref={frame}
-        data-testid="map-frame"
-        className={`absolute inset-0 touch-none select-none overflow-hidden rounded-lg border border-border bg-white ${
-          view.scale > 1.001 ? "cursor-grab active:cursor-grabbing" : ""
-        }`}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerCancel}
-        onClickCapture={(e) => {
-          if (swallowClick.current && !(e.target as Element).closest("[data-map-controls]")) {
-            e.stopPropagation();
-            e.preventDefault();
-          }
-        }}
-      >
+    <div className="mx-auto w-full" style={{ maxWidth: `calc(75vh * ${aspect})` }}>
+      <div className="relative w-full" style={{ aspectRatio: String(aspect) }}>
         <div
-          data-testid="map-layer"
-          className="absolute inset-0 origin-top-left"
-          style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})` }}
+          ref={frame}
+          data-testid="map-frame"
+          className={`absolute inset-0 touch-none select-none overflow-hidden rounded-lg border border-border bg-white ${
+            view.scale > 1.001 ? "cursor-grab active:cursor-grabbing" : ""
+          }`}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerCancel}
+          onClickCapture={(e) => {
+            if (swallowClick.current) {
+              e.stopPropagation();
+              e.preventDefault();
+            }
+          }}
         >
-          {children}
+          <div
+            data-testid="map-layer"
+            className="absolute inset-0 origin-top-left"
+            style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})` }}
+          >
+            {children}
+          </div>
         </div>
-        <div
-          data-map-controls
-          className="absolute bottom-2 right-2 flex flex-col gap-1.5"
-          onPointerDown={(e) => e.stopPropagation()}
-          onPointerUp={(e) => e.stopPropagation()}
-        >
-          <button type="button" aria-label={controlLabels.zoomIn} onClick={() => zoomTo(viewRef.current.scale * 1.6)} className={controlButton}>
-            <Plus aria-hidden="true" className="h-5 w-5" />
-          </button>
-          <button type="button" aria-label={controlLabels.zoomOut} onClick={() => zoomTo(viewRef.current.scale / 1.6)} disabled={view.scale <= 1.001} className={controlButton}>
-            <Minus aria-hidden="true" className="h-5 w-5" />
-          </button>
-          <button type="button" aria-label={controlLabels.fit} onClick={() => apply(HOME)} disabled={view.scale <= 1.001} className={controlButton}>
-            <Maximize2 aria-hidden="true" className="h-5 w-5" />
-          </button>
-        </div>
+      </div>
+      <div data-map-controls className="mt-2 flex justify-end gap-2">
+        <button type="button" aria-label={controlLabels.zoomIn} onClick={() => zoomTo(viewRef.current.scale * 1.6)} className={controlButton}>
+          <Plus aria-hidden="true" className="h-5 w-5" />
+        </button>
+        <button type="button" aria-label={controlLabels.zoomOut} onClick={() => zoomTo(viewRef.current.scale / 1.6)} disabled={view.scale <= 1.001} className={controlButton}>
+          <Minus aria-hidden="true" className="h-5 w-5" />
+        </button>
+        <button type="button" aria-label={controlLabels.fit} onClick={() => apply(HOME)} disabled={view.scale <= 1.001} className={controlButton}>
+          <Maximize2 aria-hidden="true" className="h-5 w-5" />
+        </button>
       </div>
     </div>
   );

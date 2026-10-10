@@ -71,6 +71,7 @@ export const unreleased: ReleaseNote[] = [
   { text: "Dashboard months now run on Thai time. Something recorded between midnight and 7 am on the 1st used to count in the previous month; it now counts in the month it happened. The same applies to the visits-per-month chart on a clinic's page.", roles: ["admin", "management"] },
   "On a computer, the Residents list has a Select all box at the top of the tick column: pick a zone, tick it, and every resident listed is ticked for Book clinic visit, Log immunizations or Download. Adopted and deceased residents are left out. Changing a filter unticks anyone who is no longer listed, and says so.",
   { text: "Record a donation: when a gift is for a resident, Choose a resident now finds them again, by English or Thai name. Residents who have died are in the list too, marked Deceased, so a gift in memory of one can be recorded. If the list ever fails to load, the form now says so instead of looking as if nobody matched.", roles: ["admin", "management"] },
+  "On the facility map, the zoom buttons (+, − and fit) now sit in a row under the plan instead of on top of it. On a phone they used to cover most of the bottom-right enclosure in Main Zone, so tapping it pressed a button instead.",
 ];
 
 /** Newest first. */
