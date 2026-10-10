@@ -39,7 +39,9 @@ if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the
 const dir = join(root, "supabase/migrations");
 const file = readdirSync(dir).find((f) => /^\d+_weight_one_per_visit_and_day\.sql$/.test(f));
 if (!file) throw new Error("no *_weight_one_per_visit_and_day.sql in supabase/migrations");
-const migration = readFileSync(join(dir, file), "utf8");
+// 0172 renamed weight.vet_appointment_id to clinic_visit_id; the file (applied, so never edited) still
+// says the old name, so it is replayed with the column's current name.
+const migration = readFileSync(join(dir, file), "utf8").replace(/\bvet_appointment_id\b/g, "clinic_visit_id");
 
 const sql = `
 begin;

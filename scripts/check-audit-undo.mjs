@@ -19,7 +19,8 @@
 //      that reading is archived (the "slot taken" case, both ways)
 //   D  a deleted prescription whose visit is gone is refused (23503)
 //   E  a deleted resident's image has no microchip fields (why a resident
-//      delete is not offered for undo), and a staff login reads no audit rows
+//      delete is not offered for undo), and a management login reads no audit rows
+//      (was staff until 0173 retired it; a live staff login can no longer be made)
 //
 // Exits 0 when every assertion held. Writes nothing even on success.
 import { join } from "node:path";
@@ -67,24 +68,24 @@ $f$;
 do $setup$
 declare
   v_admin uuid := gen_random_uuid();
-  v_staff uuid := gen_random_uuid();
+  v_mgmt uuid := gen_random_uuid();
   v_res uuid;
 begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
          'harness-undo-' || u || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
-  from unnest(array[v_admin, v_staff]) u;
-  insert into user_roles (user_id, role) values (v_admin, 'admin'), (v_staff, 'staff');
+  from unnest(array[v_admin, v_mgmt]) u;
+  insert into user_roles (user_id, role) values (v_admin, 'admin'), (v_mgmt, 'management');
   select id into v_res from record_intake(
     p_name => 'Harness audit undo', p_intake_date => date '2026-08-01', p_weight_kg => 10,
     p_diet_type_id => (select id from diet_types order by is_standard desc nulls last limit 1));
-  insert into harness values ('admin', v_admin), ('staff', v_staff), ('res', v_res);
+  insert into harness values ('admin', v_admin), ('mgmt', v_mgmt), ('res', v_res);
 end $setup$;
 
 do $h$
 declare
   v_admin uuid := (select id from harness where k = 'admin');
-  v_staff uuid := (select id from harness where k = 'staff');
+  v_mgmt uuid := (select id from harness where k = 'mgmt');
   v_res uuid := (select id from harness where k = 'res');
   v_type uuid := (select id from immunization_types order by name limit 1);
   v_med uuid := (select id from medication order by name limit 1);
@@ -174,7 +175,7 @@ begin
   if v_r not like '23503%' then raise exception 'HARNESS-FAIL D: a prescription on a deleted visit was not refused: %', v_r; end if;
   v_report := v_report || 'D: a row whose visit is gone refuses with 23503 | ';
 
-  -- E: a deleted resident's image has no chip; staff read no audit rows.
+  -- E: a deleted resident's image has no chip; management (Staff until 0173) read no audit rows.
   update residents set microchip_number = '985112345678901' where id = v_res;
   delete from weight where resident_id = v_res;
   delete from immunization_records where resident_id = v_res;
@@ -186,9 +187,9 @@ begin
   if (select old_row from audit_log where id = pg_temp.last_audit('residents', v_res, 'DELETE')) ? 'microchip_number' then
     raise exception 'HARNESS-FAIL E: the resident image carries the chip number, so the decision''s reason is stale';
   end if;
-  v_r := pg_temp.run(v_staff, 'select 1 / (case when exists (select 1 from audit_log) then 0 else 1 end)');
-  if v_r <> 'ok' then raise exception 'HARNESS-FAIL E: staff can read audit_log: %', v_r; end if;
-  v_report := v_report || 'E: resident image has no chip number; staff read no audit rows | ';
+  v_r := pg_temp.run(v_mgmt, 'select 1 / (case when exists (select 1 from audit_log) then 0 else 1 end)');
+  if v_r <> 'ok' then raise exception 'HARNESS-FAIL E: management can read audit_log: %', v_r; end if;
+  v_report := v_report || 'E: resident image has no chip number; management read no audit rows | ';
 
   raise exception '%', format('HARNESS-OK %s', v_report);
 end;

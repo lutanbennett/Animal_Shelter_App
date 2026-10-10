@@ -9,14 +9,15 @@
 // Writes are recorded (DB-6)
 //   A1  insert, update and delete on each of the seven tables write one row
 //       with the right op, row_id and images
-//   A2  actor is the session's login (staff, doctor, admin); null for the owner
+//   A2  actor is the session's login (management, doctor, admin); null for the owner
+//       (management stands where Staff stood until 0173 retired it: it writes but cannot read the log)
 //   A3  residents' images omit microchip_number and microchip_implanted_on;
 //       the other tables keep every column
 //   A4  an update that changes nothing writes no row
 //   A5  each of the seven tables carries record_audit() as a trigger
 // Reading
-//   R1  an admin reads audit_log; staff, volunteer and doctor read zero rows
-//   R2  a doctor's or staff member's write is recorded though they cannot read it
+//   R1  an admin reads audit_log; management, volunteer and doctor read zero rows
+//   R2  a doctor's or a management login's write is recorded though they cannot read it
 // History is not rewritable
 //   W1  no API role can insert, update, delete or truncate audit_log
 //       (admin included); the owner cannot update, delete or truncate either
@@ -68,7 +69,7 @@ end $f$;
 
 do $h$
 declare
-  v_vol uuid := gen_random_uuid(); v_staff uuid := gen_random_uuid();
+  v_vol uuid := gen_random_uuid(); v_mgmt uuid := gen_random_uuid();
   v_doctor_u uuid := gen_random_uuid(); v_admin uuid := gen_random_uuid();
   v_res uuid := gen_random_uuid(); v_carer uuid := gen_random_uuid();
   v_clinic uuid := gen_random_uuid(); v_appt uuid := gen_random_uuid();
@@ -84,13 +85,13 @@ begin
     then raise exception 'FAIL A5 % has no audit trigger', v_tbl; end if;
   end loop;
 
-  foreach v_uid in array array[v_vol, v_staff, v_doctor_u, v_admin] loop
+  foreach v_uid in array array[v_vol, v_mgmt, v_doctor_u, v_admin] loop
     insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
     values (v_uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
             'harness-audit-' || v_uid || '@example.invalid', '{}'::jsonb, '{"full_name":"Harness"}'::jsonb, now(), now());
   end loop;
   insert into user_roles (user_id, role) values
-    (v_vol, 'volunteer'), (v_staff, 'staff'), (v_doctor_u, 'doctor'), (v_admin, 'admin');
+    (v_vol, 'volunteer'), (v_mgmt, 'management'), (v_doctor_u, 'doctor'), (v_admin, 'admin');
 
   -- A1/A2: owner-made rows have a null actor
   insert into contacts (id, name, type) values (v_carer, 'Harness carer', 'Carer');
@@ -105,11 +106,11 @@ begin
   insert into immunization_types (id, name, interval_months) values (v_imm, 'Harness imm ' || v_imm, 12);
 
   -- A3: the microchip stays out of residents' images
-  v_r := pg_temp.run(v_staff, format($q$update residents set microchip_number = '985112345678901', microchip_implanted_on = '2026-01-01', behaviour_notes = 'chipped' where id = %L$q$, v_res));
-  if v_r <> 'ok' then raise exception 'FAIL A3 staff chip update: %', v_r; end if;
+  v_r := pg_temp.run(v_mgmt, format($q$update residents set microchip_number = '985112345678901', microchip_implanted_on = '2026-01-01', behaviour_notes = 'chipped' where id = %L$q$, v_res));
+  if v_r <> 'ok' then raise exception 'FAIL A3 management chip update: %', v_r; end if;
   select * into v_row from audit_log where row_id = v_res and op = 'UPDATE';
   if v_row.id is null then raise exception 'FAIL A1 resident update wrote no row'; end if;
-  if v_row.actor is distinct from v_staff then raise exception 'FAIL A2 resident update actor %', v_row.actor; end if;
+  if v_row.actor is distinct from v_mgmt then raise exception 'FAIL A2 resident update actor %', v_row.actor; end if;
   if v_row.new_row ? 'microchip_number' or v_row.old_row ? 'microchip_number'
      or v_row.new_row ? 'microchip_implanted_on' or v_row.old_row ? 'microchip_implanted_on'
      or v_row.new_row::text like '%985112345678901%'
@@ -121,11 +122,11 @@ begin
 
   -- A4: a no-change update writes nothing
   select count(*) into v_n from audit_log where row_id = v_res;
-  v_r := pg_temp.run(v_staff, format($q$update residents set behaviour_notes = 'chipped' where id = %L$q$, v_res));
+  v_r := pg_temp.run(v_mgmt, format($q$update residents set behaviour_notes = 'chipped' where id = %L$q$, v_res));
   if (select count(*) from audit_log where row_id = v_res) <> v_n
   then raise exception 'FAIL A4 a no-change update wrote an audit row'; end if;
   -- ...and neither does one that only changes an excluded column
-  v_r := pg_temp.run(v_staff, format($q$update residents set microchip_implanted_on = '2026-02-02' where id = %L$q$, v_res));
+  v_r := pg_temp.run(v_mgmt, format($q$update residents set microchip_implanted_on = '2026-02-02' where id = %L$q$, v_res));
   if (select count(*) from audit_log where row_id = v_res) <> v_n
   then raise exception 'FAIL A4 an excluded-column-only update wrote an audit row'; end if;
 
@@ -139,7 +140,7 @@ begin
   if v_r <> 'ok' then raise exception 'FAIL A1 prescription insert: %', v_r; end if;
   v_r := pg_temp.run(v_admin, format($q$insert into immunization_records (id, resident_id, immunization_type_id, date_administered) values (%L, %L, %L, current_date)$q$, v_ir, v_res, v_imm));
   if v_r <> 'ok' then raise exception 'FAIL A1 immunization insert: %', v_r; end if;
-  v_r := pg_temp.run(v_staff, format($q$insert into attachments (id, owner_type, owner_id, drive_file_id, file_name) values (%L, 'resident', %L, 'harness-file', 'x.jpg')$q$, v_att, v_res));
+  v_r := pg_temp.run(v_mgmt, format($q$insert into attachments (id, owner_type, owner_id, drive_file_id, file_name) values (%L, 'resident', %L, 'harness-file', 'x.jpg')$q$, v_att, v_res));
   if v_r <> 'ok' then raise exception 'FAIL A1 attachment insert: %', v_r; end if;
 
   v_r := pg_temp.run(v_admin, format($q$update weight set weight_kg = 13 where id = %L$q$, v_w));
@@ -150,7 +151,7 @@ begin
   if v_r <> 'ok' then raise exception 'FAIL A1 appointment update: %', v_r; end if;
   v_r := pg_temp.run(v_admin, format($q$update immunization_records set notes = 'n' where id = %L$q$, v_ir));
   if v_r <> 'ok' then raise exception 'FAIL A1 immunization update: %', v_r; end if;
-  v_r := pg_temp.run(v_staff, format($q$update attachments set file_name = 'y.jpg' where id = %L$q$, v_att));
+  v_r := pg_temp.run(v_mgmt, format($q$update attachments set file_name = 'y.jpg' where id = %L$q$, v_att));
   if v_r <> 'ok' then raise exception 'FAIL A1 attachment update: %', v_r; end if;
   update contacts set phone = '0812345678' where id = v_carer;
 
@@ -160,7 +161,7 @@ begin
   delete from prescriptions where id = v_rx;
   delete from immunization_records where id = v_ir;
   delete from clinic_visits where id = v_appt;
-  v_r := pg_temp.run(v_staff, format($q$delete from attachments where id = %L$q$, v_att));
+  v_r := pg_temp.run(v_mgmt, format($q$delete from attachments where id = %L$q$, v_att));
   if v_r <> 'ok' then raise exception 'FAIL A1 attachment delete: %', v_r; end if;
   delete from contacts where id = v_carer;
 
@@ -185,17 +186,17 @@ begin
   if v_row.actor is distinct from v_admin or (v_row.old_row ->> 'weight_kg')::numeric <> 13
   then raise exception 'FAIL A2 weight delete actor/before-image: %', to_jsonb(v_row); end if;
   select * into v_row from audit_log where row_id = v_att and op = 'UPDATE';
-  if v_row.actor is distinct from v_staff or v_row.old_row ->> 'file_name' <> 'x.jpg' or v_row.new_row ->> 'file_name' <> 'y.jpg'
+  if v_row.actor is distinct from v_mgmt or v_row.old_row ->> 'file_name' <> 'x.jpg' or v_row.new_row ->> 'file_name' <> 'y.jpg'
   then raise exception 'FAIL A2 attachment update actor/images: %', to_jsonb(v_row); end if;
 
   -- R1: only admin reads
   if pg_temp.visible(v_admin) < 15 then raise exception 'FAIL R1 admin sees only % rows', pg_temp.visible(v_admin); end if;
-  foreach v_uid in array array[v_vol, v_staff, v_doctor_u] loop
+  foreach v_uid in array array[v_vol, v_mgmt, v_doctor_u] loop
     if pg_temp.visible(v_uid) <> 0 then raise exception 'FAIL R1 % read audit_log', v_uid; end if;
   end loop;
 
   -- W1: no API role writes; admin included
-  foreach v_uid in array array[v_vol, v_staff, v_doctor_u, v_admin] loop
+  foreach v_uid in array array[v_vol, v_mgmt, v_doctor_u, v_admin] loop
     v_r := pg_temp.run(v_uid, format($q$insert into audit_log (table_name, row_id, op, new_row) values ('weight', %L, 'INSERT', '{}')$q$, v_res));
     if v_r not like '%permission denied%' then raise exception 'FAIL W1 insert as %: %', v_uid, v_r; end if;
     v_r := pg_temp.run(v_uid, $q$update audit_log set actor = null$q$);
@@ -238,7 +239,7 @@ begin
   then raise exception 'FAIL W2 a trigger function is executable by an API role'; end if;
   if has_table_privilege('anon', 'audit_log', 'select') then raise exception 'FAIL W1 anon can select audit_log'; end if;
 
-  raise exception 'HARNESS-OK live schema | A5 record_audit() on all seven tables | A1 insert/update/delete recorded on residents, contacts, prescriptions, clinic_visits, weight, attachments, immunization_records | A2 actor is the session login (staff, admin), null for the owner | A3 residents images omit microchip_number and microchip_implanted_on | A4 no-change and excluded-column-only updates write nothing | R1 admin reads, volunteer/staff/doctor see zero rows | R2 staff writes recorded though they cannot read the log | W1 no API role (admin, service_role included) inserts, updates, deletes or truncates; the owner is refused by the trigger | W2 trigger functions not executable by anon/authenticated';
+  raise exception 'HARNESS-OK live schema | A5 record_audit() on all seven tables | A1 insert/update/delete recorded on residents, contacts, prescriptions, clinic_visits, weight, attachments, immunization_records | A2 actor is the session login (management, admin), null for the owner | A3 residents images omit microchip_number and microchip_implanted_on | A4 no-change and excluded-column-only updates write nothing | R1 admin reads, volunteer/management/doctor see zero rows | R2 management writes recorded though they cannot read the log | W1 no API role (admin, service_role included) inserts, updates, deletes or truncates; the owner is refused by the trigger | W2 trigger functions not executable by anon/authenticated';
 end
 $h$;
 rollback;

@@ -14,11 +14,11 @@
 //   procedure_types     read medical.procedures / reference.types Read / the add cell; insert the add cell or reference.types Edit
 //   blood_test_types    read medical.blood_tests or reference.types Read; write reference.types Edit
 //   immunization_types  read reference.types Read (0155; medical.immunizations reads picker_immunization_types); write reference.types Edit
-// The vet keeps what its own vet_* policies give it, unchanged (C3, C10). Then structural sweeps: no policy on these
+// The vet (a doctor login since 0172) keeps what its own doctor_* policies give it, unchanged (C3, C10). Then structural sweeps: no policy on these
 // tables names management or staff, every new policy wraps has_permission() in (select ...), the two price tables never
 // ask a medical.* cell, and 24 *_perm policies exist.
 //
-// The custom roles borrow the STAFF floor and hold one or two cells (c_none holds none), except c_vol_medical, which
+// The custom roles borrow the MANAGEMENT floor (STAFF until 0173 retired it) and hold one or two cells (c_none holds none), except c_vol_medical, which
 // sits on the VOLUNTEER floor holding the medical cells the 2IC holds in the Director's draft: the proof that the two
 // price tables (medication, diet_types) do not open to a role that sees names and stock through views, and that the four
 // type lists DO open to it for reading, because the cell for recording one is the cell for choosing one (immunization_types
@@ -54,7 +54,9 @@ const CUSTOM = {
     cells: [["medical.prescriptions", 2], ["medical.diet", 2], ["medical.procedures", 2], ["medical.blood_tests", 2], ["medical.immunizations", 2], ["stock.count", 2], ["stock.delivery", 2], ["stock.purchasing", 2]],
   },
 };
-const REAL = ["admin", "management", "staff", "volunteer", "vet"];
+// Staff left with 0173: each outcome it had is also another principal's (c_add on medication, management elsewhere).
+const REAL = ["admin", "management", "volunteer", "vet"];
+const APP_ROLE = { vet: "doctor" }; // 0172 renamed the 'vet' app_role
 const P = [...REAL, "norole", ...Object.keys(CUSTOM)];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
 const ROW = Object.fromEntries(["medication", "diet_types", "frequency", "procedure_types", "blood_test_types", "immunization_types"].map((t) => [t, randomUUID()]));
@@ -72,11 +74,11 @@ const T = {
 // expected "RUID" per principal; anything not listed is 0000
 const A = "1111", RO = "1000", RI = "1010", I = "0010";
 const EXPECT = {
-  medication: { admin: A, management: A, staff: I, vet: RI, c_med_read: RO, c_med_edit: A, c_add: I }, // 0151: the add cell no longer reads the table
+  medication: { admin: A, management: A, vet: RI, c_med_read: RO, c_med_edit: A, c_add: I }, // 0151: the add cell no longer reads the table
   diet_types: { admin: A, management: A, vet: RO, c_diet_read: RO, c_diet_edit: A }, // 0151: resident.register no longer reads the table
-  frequency: { admin: A, management: RI, staff: RI, vet: RI, c_types_read: RO, c_types_edit: A, c_add: I, c_rx_read: RO, c_vol_medical: RO },
-  procedure_types: { admin: A, management: RI, staff: RI, vet: RI, c_add: RI, c_proc_read: RO, c_types_read: RO, c_types_edit: A, c_vol_medical: RO },
-  blood_test_types: { admin: A, management: RO, staff: RO, vet: RO, c_blood_read: RO, c_types_read: RO, c_types_edit: A, c_vol_medical: RO },
+  frequency: { admin: A, management: RI, vet: RI, c_types_read: RO, c_types_edit: A, c_add: I, c_rx_read: RO, c_vol_medical: RO },
+  procedure_types: { admin: A, management: RI, vet: RI, c_add: RI, c_proc_read: RO, c_types_read: RO, c_types_edit: A, c_vol_medical: RO },
+  blood_test_types: { admin: A, management: RO, vet: RO, c_blood_read: RO, c_types_read: RO, c_types_edit: A, c_vol_medical: RO },
   immunization_types: { admin: A, vet: A, c_types_read: RO, c_types_edit: A }, // 0155: medical.immunizations reads picker_immunization_types, not the table (it carries a price)
 };
 const CMDS = ["read", "update", "insert", "delete"];
@@ -117,14 +119,14 @@ begin
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-sl-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${REAL.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
+    select id, who::app_role from (values ${REAL.map((p) => `('${APP_ROLE[p] ?? p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into roles (key, name, kind, legacy_role, scope_residents, scope_contacts) values
-    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_sl_${c}', 'Harness ${c}', 'custom', '${d.floor ?? "staff"}', 'all', 'full')`).join(",\n    ")};
+    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_sl_${c}', 'Harness ${c}', 'custom', '${d.floor ?? "management"}', 'all', 'full')`).join(",\n    ")};
   insert into role_permissions (role_id, activity, level)
     select r.id, v.act, v.lvl from roles r join (values
       ${Object.entries(CUSTOM).flatMap(([c, d]) => d.cells.map(([a, l]) => `('harness_sl_${c}', '${a}', ${l})`)).join(",\n      ")}
     ) as v(rkey, act, lvl) on v.rkey = r.key;
-  ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id, role) select ${lit(ID[c])}, id, '${CUSTOM[c].floor ?? "staff"}' from roles where key = 'harness_sl_${c}';`).join("\n  ")}
+  ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id, role) select ${lit(ID[c])}, id, '${CUSTOM[c].floor ?? "management"}' from roles where key = 'harness_sl_${c}';`).join("\n  ")}
 
   insert into medication (id, name) values (${lit(ROW.medication)}, 'Harness med');
   insert into diet_types (id, name, daily_qty_small, daily_qty_medium, daily_qty_large) values (${lit(ROW.diet_types)}, 'Harness diet', 1, 1, 1);

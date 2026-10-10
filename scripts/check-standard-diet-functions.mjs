@@ -40,13 +40,13 @@ ${migration}
 create temp table who (who text primary key, uid uuid);
 insert into who values
   ('management', gen_random_uuid()), ('admin', gen_random_uuid()),
-  ('staff', gen_random_uuid()), ('roleless', gen_random_uuid()), ('anon', null);
+  ('roleless', gen_random_uuid()), ('anon', null);  -- no staff login: 0173 retired the role
 insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
        'harness-0090-' || who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
   from who where uid is not null;
 insert into user_roles (user_id, role)
-select uid, who::app_role from who where who in ('management', 'admin', 'staff');
+select uid, who::app_role from who where who in ('management', 'admin');
 grant select on who to authenticated, anon;
 
 -- Run a SQL expression returning text as a login (null uid = anon).
@@ -113,8 +113,8 @@ begin
   if v not like 'ERR P0001 Choose a diet type%' then raise exception 'FAIL D: null gave %', v; end if;
   v_report := v_report || 'D null refused | ';
 
-  -- E. staff and role-less refused by the guard, anon by the grant; nothing moved
-  foreach v in array array['staff', 'roleless', 'anon'] loop
+  -- E. role-less refused by the guard, anon by the grant; nothing moved
+  foreach v in array array['roleless', 'anon'] loop
     declare r text := pg_temp.as_login(v, format('(set_standard_diet(%L)).id', v_std));
     begin
       if (v = 'anon' and r not like 'ERR 42501%')
@@ -126,17 +126,18 @@ begin
   if not exists (select 1 from diet_types where id = v_other and is_standard) then
     raise exception 'FAIL E: a refused caller moved the standard';
   end if;
-  v_report := v_report || 'E staff/role-less refused by the guard, anon by the grant | ';
+  v_report := v_report || 'E role-less refused by the guard, anon by the grant | ';
 
-  -- F. record_intake with no diet: refused, no resident written
+  -- F. record_intake with no diet: refused, no resident written (F and G run as management:
+  --    they were Staff until 0173 retired the role)
   select count(*) into v_residents from residents;
-  v := pg_temp.as_login('staff', '(record_intake(p_name => ''Harness 0090 none'', p_intake_date => shelter_today())).id');
+  v := pg_temp.as_login('management', '(record_intake(p_name => ''Harness 0090 none'', p_intake_date => shelter_today())).id');
   if v not like 'ERR P0001 Choose a diet for the new resident%' then raise exception 'FAIL F: null diet gave %', v; end if;
   if (select count(*) from residents) <> v_residents then raise exception 'FAIL F: a resident was written'; end if;
   v_report := v_report || 'F intake with no diet refused, nothing written | ';
 
   -- G. record_intake with a diet: resident plus one diet row from the intake date
-  v := pg_temp.as_login('staff', format(
+  v := pg_temp.as_login('management', format(
     '(record_intake(p_name => ''Harness 0090 fed'', p_intake_date => shelter_today() - 2, p_diet_type_id => %L)).id',
     v_std));
   if v like 'ERR%' then raise exception 'FAIL G: intake with a diet gave %', v; end if;
@@ -144,7 +145,7 @@ begin
   select count(*) into v_n from resident_diets
    where resident_id = v_res and diet_type_id = v_std and start_date = shelter_today() - 2 and end_date is null;
   if v_n <> 1 then raise exception 'FAIL G: % diet row(s) for the new resident', v_n; end if;
-  v_report := v_report || 'G staff intake with a diet: resident + one diet row from intake date | ';
+  v_report := v_report || 'G management intake with a diet: resident + one diet row from intake date | ';
 
   -- H. grants: set_standard_diet closed to anon; record_intake's unchanged
   if has_function_privilege('anon', 'set_standard_diet(uuid)', 'execute')

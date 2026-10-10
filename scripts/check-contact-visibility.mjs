@@ -25,10 +25,12 @@
 //      name and the real phone, which is what this asserted)
 //   E  management and admin still read every column of contacts; staff read no
 //      row of it since 0170 (until then they read every column, which is what
-//      this asserted); none of the three gets a row from either narrow view;
+//      this asserted; since 0173 a live staff login cannot be made, so a harness
+//      custom role carrying the retired Staff role's cells stands in); none of the
+//      three gets a row from either narrow view;
 //      anon has no privilege on them
 //   F  app_users: a doctor login and a volunteer see the logins but every email
-//      is null; staff, management and admin still see the emails; display_name
+//      is null; management and admin still see the emails; display_name
 //      is unchanged for all of them
 //   G  check_carer_type is security definer, so a volunteer's placement write
 //      does not depend on reading contacts
@@ -86,7 +88,7 @@ end $f$;
 
 create temp table harness_ids (who text primary key, id uuid not null);
 insert into harness_ids values
-  ('doctor', gen_random_uuid()), ('volunteer', gen_random_uuid()), ('staff', gen_random_uuid()),
+  ('doctor', gen_random_uuid()), ('volunteer', gen_random_uuid()), ('clerk', gen_random_uuid()),
   ('mgmt', gen_random_uuid()), ('admin', gen_random_uuid()), ('carer', gen_random_uuid());
 grant select on harness_ids to authenticated, service_role;
 
@@ -104,14 +106,21 @@ begin
   end loop;
   insert into user_roles (user_id, role)
   select id, case who when 'mgmt' then 'management' else who end::app_role
-  from harness_ids where who <> 'carer';
+  from harness_ids where who not in ('carer', 'clerk');
+  -- clerk: Staff was this login until 0173 retired it; a custom role carrying its cells reaches the same path
+  insert into roles (key, name, kind, legacy_role) values ('harness_contacts_clerk', 'Harness clerk', 'custom', 'management');
+  insert into role_permissions (role_id, activity, level)
+    select (select id from roles where key = 'harness_contacts_clerk'), rp.activity, rp.level
+      from role_permissions rp join roles s on s.id = rp.role_id where s.key = 'staff';
+  insert into user_roles (user_id, role_id, role)
+    select (select id from harness_ids where who = 'clerk'), id, legacy_role from roles where key = 'harness_contacts_clerk';
 end $setup$;
 
 do $h$
 declare
   v_doc uuid := (select id from harness_ids where who = 'doctor');
   v_vol uuid := (select id from harness_ids where who = 'volunteer');
-  v_staff uuid := (select id from harness_ids where who = 'staff');
+  v_clerk uuid := (select id from harness_ids where who = 'clerk');
   v_mgmt uuid := (select id from harness_ids where who = 'mgmt');
   v_admin uuid := (select id from harness_ids where who = 'admin');
   v_carer uuid := (select id from harness_ids where who = 'carer');
@@ -160,12 +169,12 @@ begin
   if n > 0 then raise exception 'HARNESS-FAIL D: volunteer read % of % contacts through volunteer_contacts (0134 took them away)', n, v_total; end if;
   v_report := v_report || format('D: volunteer reads no name/phone through volunteer_contacts (0134; gave %s) | ', n);
 
-  -- E: management and admin keep everything; since 0170 staff read no row of the table (they name a contact
+  -- E: management and admin keep everything; since 0170 staff (here the clerk carrying Staff cells, 0173) read no row of the table (they name a contact
   -- through picker_contacts); the narrow views are empty for all three; anon is refused.
-  foreach uid in array array[v_staff, v_mgmt, v_admin] loop
+  foreach uid in array array[v_clerk, v_mgmt, v_admin] loop
     n := pg_temp.try(uid, 'select phone, email, address, line_id, whatsapp, messenger_id, notes from contacts');
-    if uid = v_staff and n > 0 then raise exception 'HARNESS-FAIL E: staff read % rows of contacts (0170 took them away)', n; end if;
-    if uid <> v_staff and n <> v_total then raise exception 'HARNESS-FAIL E: % read % of % contacts', uid, n, v_total; end if;
+    if uid = v_clerk and n > 0 then raise exception 'HARNESS-FAIL E: clerk (Staff cells) read % rows of contacts (0170 took them away)', n; end if;
+    if uid <> v_clerk and n <> v_total then raise exception 'HARNESS-FAIL E: % read % of % contacts', uid, n, v_total; end if;
     n := pg_temp.try(uid, 'select * from doctor_contacts');
     if n <> 0 then raise exception 'HARNESS-FAIL E: % read % rows of doctor_contacts', uid, n; end if;
     n := pg_temp.try(uid, 'select * from volunteer_contacts');
@@ -175,20 +184,20 @@ begin
   if n <> -1 then raise exception 'HARNESS-FAIL E: anon doctor_contacts gave %', n; end if;
   n := pg_temp.try(null, 'select * from volunteer_contacts');
   if n <> -1 then raise exception 'HARNESS-FAIL E: anon volunteer_contacts gave %', n; end if;
-  v_report := v_report || 'E: management/admin read all columns, staff 0 rows (0170), all three 0 rows of the narrow views, anon refused | ';
+  v_report := v_report || 'E: management/admin read all columns, clerk (Staff cells) 0 rows (0170), all three 0 rows of the narrow views, anon refused | ';
 
-  -- F: app_users emails.
+  -- F: app_users emails. (Staff left the email readers when 0173 retired it.)
   foreach uid in array array[v_doc, v_vol] loop
     v_emails := pg_temp.scalar(uid, 'select count(*) filter (where email is not null) from app_users')::bigint;
     v_names := pg_temp.scalar(uid, 'select count(*) filter (where display_name is not null) from app_users')::bigint;
     if v_emails <> 0 then raise exception 'HARNESS-FAIL F: % saw % login emails', uid, v_emails; end if;
     if v_names = 0 then raise exception 'HARNESS-FAIL F: % saw no display names', uid; end if;
   end loop;
-  foreach uid in array array[v_staff, v_mgmt, v_admin] loop
+  foreach uid in array array[v_mgmt, v_admin] loop
     v_emails := pg_temp.scalar(uid, 'select count(*) filter (where email is not null) from app_users')::bigint;
     if v_emails = 0 then raise exception 'HARNESS-FAIL F: % saw no login emails', uid; end if;
   end loop;
-  v_report := v_report || 'F: doctor and volunteer see logins with every email null, display_name intact; staff/management/admin see emails | ';
+  v_report := v_report || 'F: doctor and volunteer see logins with every email null, display_name intact; management/admin see emails | ';
 
   -- G: the carer-type trigger does not need the caller to read contacts.
   if not (select prosecdef from pg_proc where proname = 'check_carer_type' and pronamespace = 'public'::regnamespace) then

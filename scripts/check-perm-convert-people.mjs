@@ -1,6 +1,6 @@
-// perm-convert-people (0147): contacts, shelter_friends, vets, vet_doctors, vet_doctor_clinics and
-// bulk_appointments now answer through has_permission(). Against DEV only, one transaction that is always
-// rolled back, each login's own JWT.
+// perm-convert-people (0147): contacts, shelter_friends, clinics, doctors, doctor_clinics and
+// bulk_appointments (vets, vet_doctors and vet_doctor_clinics until 0172 renamed them) now answer through
+// has_permission(). Against DEV only, one transaction that is always rolled back, each login's own JWT.
 //
 //   node scripts/check-perm-convert-people.mjs            (from the repo root; dev only)
 //   node scripts/check-perm-convert-people.mjs --verbose  (also list every case)
@@ -9,15 +9,17 @@
 //   contacts            contacts.directory read / edit, insert contacts.add, and sees_all_contacts(): a custom role on the
 //                       VOLUNTEER floor, or with scope_contacts below full, holding every contacts cell reads nothing
 //   shelter_friends     friends.manage writes; friends.view or friends.manage reads (0155: the address-book read is gone, N3 closed)
-//   vets                clinics.list / clinics.doctors / visit.book read; clinics.list Edit writes
-//   vet_doctors         clinics.doctors writes, visit.book inserts (the booking trigger adds a typed doctor)
-//   vet_doctor_clinics  as vet_doctors, with a login-linked doctor still off limits to non-admins
+//   clinics             clinics.list / clinics.doctors / visit.book read; clinics.list Edit writes
+//   doctors             clinics.doctors writes, visit.book inserts (the booking trigger adds a typed doctor)
+//   doctor_clinics      as doctors, with a login-linked doctor still off limits to non-admins
 //   bulk_appointments   visit.book, all four
-// The vet keeps what its own vet_* policies give it, unchanged. Then structural sweeps: no policy on these tables
+// The vet (a doctor login since 0172) keeps what its own doctor_* policies give it, unchanged. Then structural sweeps: no policy on these tables
 // names management or staff, every new policy wraps has_permission() in (select ...), and 24 *_perm policies exist.
 //
-// The custom roles borrow the STAFF floor (one the volunteer floor, one a narrower scope) and hold one or two cells;
-// c_none holds none. That is the proof that the role-named policies are gone.
+// The custom roles borrow the MANAGEMENT floor (STAFF until 0173 retired it; one the volunteer floor, one a narrower
+// scope) and hold one or two cells; c_none holds none. That is the proof that the role-named policies are gone.
+// Staff left the principals with 0173: every outcome it had is also another principal's (c_add, c_book, the vet,
+// management).
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
@@ -45,32 +47,34 @@ const CUSTOM = {
   c_doctors: { cells: [["clinics.doctors", 2]] },
   c_book: { cells: [["visit.book", 2]] },
 };
-const REAL = ["admin", "management", "staff", "volunteer", "vet"];
+const REAL = ["admin", "management", "volunteer", "vet"];
+const APP_ROLE = { vet: "doctor" }; // 0172 renamed the 'vet' app_role
 const P = [...REAL, "norole", ...Object.keys(CUSTOM)];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
-const OWN = randomUUID(), OWN2 = randomUUID(), DOC = randomUUID(), CT = randomUUID(), CT2 = randomUUID(), CT3 = randomUUID(), FR = randomUUID(), BA = randomUUID();
+const OWN = randomUUID(), OWN2 = randomUUID(), DOC = randomUUID(), DOC_LOGIN = randomUUID(), CT = randomUUID(), CT2 = randomUUID(), CT3 = randomUUID(), FR = randomUUID(), BA = randomUUID();
 
 // table -> [read, update, insert, delete] statements
 const T = {
   contacts: [`select 1 from contacts where id = '${CT}'`, `update contacts set notes = 'probe' where id = '${CT}'`, `insert into contacts (name, type) values ('Harness new', 'Vendor')`, `delete from contacts where id = '${CT}'`],
   shelter_friends: [`select 1 from shelter_friends where id = '${FR}'`, `update shelter_friends set published = published where id = '${FR}'`, `insert into shelter_friends (contact_id) values ('${CT3}')`, `delete from shelter_friends where id = '${FR}'`],
-  vets: [`select 1 from vets where id = '${OWN}'`, `update vets set notes = 'probe' where id = '${OWN}'`, `insert into vets (name, clinic_name) values ('Harness new', 'Harness new')`, `delete from vets where id = '${OWN2}'`],
-  vet_doctors: [`select 1 from vet_doctors where id = '${DOC}'`, `update vet_doctors set active = active where id = '${DOC}'`, `insert into vet_doctors (name, vet_id) values ('Harness new doc', '${OWN}')`, `delete from vet_doctors where id = '${DOC}'`],
-  vet_doctor_clinics: [`select 1 from vet_doctor_clinics where doctor_id = '${DOC}'`, `update vet_doctor_clinics set active = active where doctor_id = '${DOC}'`, `insert into vet_doctor_clinics (vet_id, doctor_id) values ('${OWN2}', '${DOC}')`, `delete from vet_doctor_clinics where doctor_id = '${DOC}'`],
-  bulk_appointments: [`select 1 from bulk_appointments where id = '${BA}'`, `update bulk_appointments set reason = 'probe' where id = '${BA}'`, `insert into bulk_appointments (vet_id, appointment_date) values ('${OWN}', now())`, `delete from bulk_appointments where id = '${BA}'`],
+  // 0172: clinics has one name column (clinic_name folded in), doctors has no clinic column (links only)
+  clinics: [`select 1 from clinics where id = '${OWN}'`, `update clinics set notes = 'probe' where id = '${OWN}'`, `insert into clinics (name) values ('Harness new')`, `delete from clinics where id = '${OWN2}'`],
+  doctors: [`select 1 from doctors where id = '${DOC}'`, `update doctors set active = active where id = '${DOC}'`, `insert into doctors (name) values ('Harness new doc')`, `delete from doctors where id = '${DOC}'`],
+  doctor_clinics: [`select 1 from doctor_clinics where doctor_id = '${DOC}'`, `update doctor_clinics set active = active where doctor_id = '${DOC}'`, `insert into doctor_clinics (clinic_id, doctor_id) values ('${OWN2}', '${DOC}')`, `delete from doctor_clinics where doctor_id = '${DOC}'`],
+  bulk_appointments: [`select 1 from bulk_appointments where id = '${BA}'`, `update bulk_appointments set reason = 'probe' where id = '${BA}'`, `insert into bulk_appointments (clinic_id, appointment_date) values ('${OWN}', now())`, `delete from bulk_appointments where id = '${BA}'`],
 };
 
 // expected "RUID" per principal; anything not listed is 0000
 const A = "1111", RO = "1000";
 const EXPECT = {
   // 0170/0171: the table is read with contacts.browse or contacts.directory Edit. Read on the directory names a contact
-  // through picker_contacts and no longer reads the table (C9, C10), so staff and c_dir_read read nothing here.
-  contacts: { admin: A, management: A, staff: "0010", c_dir_edit: "1101", c_add: "0010", c_dir_all: A },
-  shelter_friends: { admin: A, management: A, staff: RO, vet: RO, c_friends_view: RO, c_friends: A },
-  vets: { admin: A, management: A, staff: RO, vet: RO, c_clinics_read: RO, c_clinics_edit: A, c_doctors: RO, c_book: RO },
-  vet_doctors: { admin: A, management: A, staff: "1010", vet: A, c_clinics_read: RO, c_clinics_edit: RO, c_doctors: A, c_book: "1010" },
-  vet_doctor_clinics: { admin: A, management: A, staff: "1010", vet: "1101", c_clinics_read: RO, c_clinics_edit: RO, c_doctors: A, c_book: "1010" },
-  bulk_appointments: { admin: A, management: A, staff: A, vet: A, c_book: A },
+  // through picker_contacts and no longer reads the table (C9, C10), so c_dir_read reads nothing here.
+  contacts: { admin: A, management: A, c_dir_edit: "1101", c_add: "0010", c_dir_all: A },
+  shelter_friends: { admin: A, management: A, vet: RO, c_friends_view: RO, c_friends: A },
+  clinics: { admin: A, management: A, vet: RO, c_clinics_read: RO, c_clinics_edit: A, c_doctors: RO, c_book: RO },
+  doctors: { admin: A, management: A, vet: A, c_clinics_read: RO, c_clinics_edit: RO, c_doctors: A, c_book: "1010" },
+  doctor_clinics: { admin: A, management: A, vet: "1101", c_clinics_read: RO, c_clinics_edit: RO, c_doctors: A, c_book: "1010" },
+  bulk_appointments: { admin: A, management: A, vet: A, c_book: A },
 };
 const CMDS = ["read", "update", "insert", "delete"];
 const expected = (tbl, who) => (EXPECT[tbl][who] ?? "0000").split("").map(Number);
@@ -110,21 +114,23 @@ begin
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-ppl-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${REAL.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
+    select id, who::app_role from (values ${REAL.map((p) => `('${APP_ROLE[p] ?? p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into roles (key, name, kind, legacy_role, scope_residents, scope_contacts) values
-    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_ppl_${c}', 'Harness ${c}', 'custom', '${d.floor ?? "staff"}', 'all', '${d.scope ?? "full"}')`).join(",\n    ")};
+    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_ppl_${c}', 'Harness ${c}', 'custom', '${d.floor ?? "management"}', 'all', '${d.scope ?? "full"}')`).join(",\n    ")};
   insert into role_permissions (role_id, activity, level)
     select r.id, v.act, v.lvl from roles r join (values
       ${Object.entries(CUSTOM).flatMap(([c, d]) => d.cells.map(([a, l]) => `('harness_ppl_${c}', '${a}', ${l})`)).join(",\n      ")}
     ) as v(rkey, act, lvl) on v.rkey = r.key;
-  ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id, role) select ${lit(ID[c])}, id, '${CUSTOM[c].floor ?? "staff"}' from roles where key = 'harness_ppl_${c}';`).join("\n  ")}
+  ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id, role) select ${lit(ID[c])}, id, '${CUSTOM[c].floor ?? "management"}' from roles where key = 'harness_ppl_${c}';`).join("\n  ")}
 
-  insert into vets (id, name, clinic_name) values (${lit(OWN)}, 'Harness own', 'Harness own'), (${lit(OWN2)}, 'Harness other', 'Harness other');
-  insert into vet_doctors (name, user_id, vet_id) values ('Harness vet', ${lit(ID.vet)}, ${lit(OWN)});
-  insert into vet_doctors (id, name, vet_id) values (${lit(DOC)}, 'Harness doctor', ${lit(OWN)});
+  insert into clinics (id, name) values (${lit(OWN)}, 'Harness own'), (${lit(OWN2)}, 'Harness other');
+  insert into doctors (id, name, user_id) values (${lit(DOC_LOGIN)}, 'Harness vet', ${lit(ID.vet)});
+  insert into doctors (id, name) values (${lit(DOC)}, 'Harness doctor');
+  -- 0172 dropped doctors.vet_id and the trigger that turned it into a link, so the links are written here
+  insert into doctor_clinics (clinic_id, doctor_id) values (${lit(OWN)}, ${lit(DOC_LOGIN)}), (${lit(OWN)}, ${lit(DOC)});
   insert into contacts (id, name, type) values (${lit(CT)}, 'Harness contact', 'Vendor'), (${lit(CT2)}, 'Harness friend', 'Vendor'), (${lit(CT3)}, 'Harness newfriend', 'Vendor');
   insert into shelter_friends (id, contact_id) values (${lit(FR)}, ${lit(CT2)});
-  insert into bulk_appointments (id, vet_id, appointment_date) values (${lit(BA)}, ${lit(OWN)}, now());
+  insert into bulk_appointments (id, clinic_id, appointment_date) values (${lit(BA)}, ${lit(OWN)}, now());
 end $setup$;
 
 do $run$ begin

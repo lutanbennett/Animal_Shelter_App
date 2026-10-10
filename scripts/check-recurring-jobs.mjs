@@ -76,7 +76,7 @@ $f$;
 create temp table who (who text primary key, uid uuid);
 insert into who values
   ('management', gen_random_uuid()), ('admin', gen_random_uuid()),
-  ('staff', gen_random_uuid()), ('staff2', gen_random_uuid()), ('volunteer', gen_random_uuid()),
+  ('clerk', gen_random_uuid()), ('clerk2', gen_random_uuid()), ('volunteer', gen_random_uuid()),
   ('doctor', gen_random_uuid()), ('public_viewer', gen_random_uuid()), ('archived', gen_random_uuid()),
   ('roleless', gen_random_uuid()), ('anon', null);
 insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
@@ -85,9 +85,18 @@ select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authentica
   from who where uid is not null;
 insert into user_roles (user_id, role, archived_at)
 select uid,
-       (case who when 'staff2' then 'staff' when 'archived' then 'staff' else who end)::app_role,
+       (case who when 'archived' then 'staff' else who end)::app_role,
        case who when 'archived' then now() end
-  from who where who not in ('roleless', 'anon');
+  from who where who not in ('roleless', 'anon', 'clerk', 'clerk2');
+-- clerk, clerk2: the two staff logins until 0173 retired the role; a custom role carrying the
+-- archived Staff role's cells stands in for them
+-- It borrows volunteer, as every live custom role does: record_* functions still gate on the enum (admin, management), so a role borrowing management would pass on that and not on its cells.
+insert into roles (key, name, kind, legacy_role) values ('harness_0095_clerk', 'Harness clerk', 'custom', 'volunteer');
+insert into role_permissions (role_id, activity, level)
+  select (select id from roles where key = 'harness_0095_clerk'), rp.activity, rp.level
+    from role_permissions rp join roles s on s.id = rp.role_id where s.key = 'staff';
+insert into user_roles (user_id, role_id, role)
+  select w.uid, r.id, r.legacy_role from who w, roles r where w.who in ('clerk', 'clerk2') and r.key = 'harness_0095_clerk';
 grant select on who to authenticated, anon;
 
 -- Run one statement as a login ('anon' = signed out). Returns its single
@@ -133,7 +142,7 @@ declare
   v text; v2 text; v_n int; v_id uuid; v_ts timestamptz;
   j1 uuid; ja uuid; jb uuid; jc uuid; jfree uuid;
   v_report text := '';
-  v_staff uuid := (select uid from who where who = 'staff');
+  v_clerk uuid := (select uid from who where who = 'clerk');
   v_vol uuid := (select uid from who where who = 'volunteer');
   v_mgmt uuid := (select uid from who where who = 'management');
 begin
@@ -294,38 +303,38 @@ ${ruleChecks}
 
   -- =====================================================================
   -- F. The functions, as each role. J1: every Monday from 3 Aug 2026,
-  -- usually staff's. All "done" dates are in the past, so the harness does
+  -- usually clerk's. All "done" dates are in the past, so the harness does
   -- not depend on the day it runs.
   -- =====================================================================
   insert into recurring_jobs (title, repeat, weekdays, starts_on, link_path)
   values ('harness 0095 stocktake', 'weekly', '{1}', '2026-08-03', '/stocktake') returning id into j1;
-  insert into recurring_job_assignees (job_id, user_id) values (j1, v_staff);
+  insert into recurring_job_assignees (job_id, user_id) values (j1, v_clerk);
 
   -- F1. the assignee marks a date done: stamped by the function, not the caller
-  v := pg_temp.rec('staff', j1, '2026-08-10', 'done', '  counted everything  ');
+  v := pg_temp.rec('clerk', j1, '2026-08-10', 'done', '  counted everything  ');
   if (select row(outcome, done_by, done_at, note, reassigned_at) from recurring_job_occurrences where job_id = j1 and occurs_on = '2026-08-10')
-     is distinct from row('done'::text, v_staff, now(), 'counted everything'::text, null::timestamptz) then
+     is distinct from row('done'::text, v_clerk, now(), 'counted everything'::text, null::timestamptz) then
     raise exception 'FAIL F1: %', v;
   end if;
   -- re-recording overwrites; skipped with no note stores null
-  v := pg_temp.rec('staff', j1, '2026-08-10', 'skipped', '   ');
+  v := pg_temp.rec('clerk', j1, '2026-08-10', 'skipped', '   ');
   if (select row(outcome, note) from recurring_job_occurrences where job_id = j1 and occurs_on = '2026-08-10')
      is distinct from row('skipped'::text, null::text) then raise exception 'FAIL F1 overwrite: %', v; end if;
 
   -- F2. refusals
-  v := pg_temp.rec('staff2', j1, '2026-08-17', 'done');
+  v := pg_temp.rec('clerk2', j1, '2026-08-17', 'done');
   if v <> 'ERR P0001 Only the people this job is assigned to, or management, can record it.' then raise exception 'FAIL F2 not assigned: %', v; end if;
   v := pg_temp.rec('doctor', j1, '2026-08-17', 'done');
   if v <> 'ERR P0001 Only the people this job is assigned to, or management, can record it.' then raise exception 'FAIL F2 doctor: %', v; end if;
-  v := pg_temp.rec('staff', j1, '2026-08-18', 'done');
+  v := pg_temp.rec('clerk', j1, '2026-08-18', 'done');
   if v <> 'ERR P0001 This job does not fall on 18 Aug 2026.' then raise exception 'FAIL F2 Tuesday: %', v; end if;
-  v := pg_temp.rec('staff', j1, '2026-07-27', 'done');
+  v := pg_temp.rec('clerk', j1, '2026-07-27', 'done');
   if v <> 'ERR P0001 This job does not fall on 27 Jul 2026.' then raise exception 'FAIL F2 before start: %', v; end if;
-  v := pg_temp.rec('staff', j1, '2027-01-04', 'done');
+  v := pg_temp.rec('clerk', j1, '2027-01-04', 'done');
   if v <> 'ERR P0001 A job cannot be marked done before its day. It can be skipped ahead.' then raise exception 'FAIL F2 future done: %', v; end if;
-  v := pg_temp.rec('staff', j1, '2026-08-17', 'finished');
+  v := pg_temp.rec('clerk', j1, '2026-08-17', 'finished');
   if v <> 'ERR P0001 A job can be marked done or skipped.' then raise exception 'FAIL F2 bad outcome: %', v; end if;
-  v := pg_temp.rec('staff', gen_random_uuid(), '2026-08-17', 'done');
+  v := pg_temp.rec('clerk', gen_random_uuid(), '2026-08-17', 'done');
   if v <> 'ERR P0001 That recurring job no longer exists.' then raise exception 'FAIL F2 no job: %', v; end if;
   foreach v2 in array array['public_viewer', 'roleless', 'archived'] loop
     v := pg_temp.rec(v2, j1, '2026-08-17', 'done');
@@ -336,9 +345,9 @@ ${ruleChecks}
   if (select count(*) from recurring_job_occurrences where job_id = j1) <> 1 then raise exception 'FAIL F2: a refusal wrote a row'; end if;
 
   -- F3. skipping ahead is allowed; clearing removes a row that says nothing else
-  v := pg_temp.rec('staff', j1, '2027-01-04', 'skipped', 'shelter closed');
+  v := pg_temp.rec('clerk', j1, '2027-01-04', 'skipped', 'shelter closed');
   if (select outcome from recurring_job_occurrences where job_id = j1 and occurs_on = '2027-01-04') <> 'skipped' then raise exception 'FAIL F3 skip ahead: %', v; end if;
-  v := pg_temp.rec('staff', j1, '2027-01-04', null);
+  v := pg_temp.rec('clerk', j1, '2027-01-04', null);
   if exists (select 1 from recurring_job_occurrences where job_id = j1 and occurs_on = '2027-01-04') then raise exception 'FAIL F3: cleared row kept: %', v; end if;
   -- management and admin may record any job
   v := pg_temp.rec('management', j1, '2026-08-17', 'done');
@@ -351,8 +360,8 @@ ${ruleChecks}
   -- =====================================================================
   -- G. Reassigning one date (someone off sick)
   -- =====================================================================
-  v := pg_temp.reassign('staff', j1, '2026-08-31', array['volunteer']);
-  if v <> 'ERR P0001 Only management can reassign a job.' then raise exception 'FAIL G1 staff: %', v; end if;
+  v := pg_temp.reassign('clerk', j1, '2026-08-31', array['volunteer']);
+  if v <> 'ERR P0001 Only management can reassign a job.' then raise exception 'FAIL G1 clerk: %', v; end if;
 
   v := pg_temp.reassign('management', j1, '2026-08-31', array['volunteer'], 'staff off sick');
   if (select row(outcome, reassigned_by, reassigned_at, reassign_note) from recurring_job_occurrences where job_id = j1 and occurs_on = '2026-08-31')
@@ -362,14 +371,14 @@ ${ruleChecks}
   end if;
   -- the usual assignee cannot record the covered date; the cover can; the
   -- next week is still the usual assignee's and not the cover's
-  v := pg_temp.rec('staff', j1, '2026-08-31', 'done');
+  v := pg_temp.rec('clerk', j1, '2026-08-31', 'done');
   if v <> 'ERR P0001 This date of the job has been handed to someone else.' then raise exception 'FAIL G3 usual on covered date: %', v; end if;
   v := pg_temp.rec('volunteer', j1, '2026-09-07', 'done');
   if v <> 'ERR P0001 Only the people this job is assigned to, or management, can record it.' then raise exception 'FAIL G3 cover next week: %', v; end if;
   v := pg_temp.rec('volunteer', j1, '2026-08-31', 'done');
   if (select row(outcome, done_by, reassigned_by) from recurring_job_occurrences where job_id = j1 and occurs_on = '2026-08-31')
      is distinct from row('done'::text, v_vol, v_mgmt) then raise exception 'FAIL G3 cover records: %', v; end if;
-  v := pg_temp.rec('staff', j1, '2026-09-07', 'done');
+  v := pg_temp.rec('clerk', j1, '2026-09-07', 'done');
   if v like 'ERR%' then raise exception 'FAIL G3 usual next week: %', v; end if;
   -- clearing an outcome keeps the reassignment
   v := pg_temp.rec('volunteer', j1, '2026-08-31', null);
@@ -378,16 +387,16 @@ ${ruleChecks}
   v := pg_temp.rec('volunteer', j1, '2026-08-31', 'done');
 
   -- G4. a recorded date is history: neither reassigned nor handed back
-  v := pg_temp.reassign('management', j1, '2026-08-31', array['staff2']);
+  v := pg_temp.reassign('management', j1, '2026-08-31', array['clerk2']);
   v2 := pg_temp.reassign('management', j1, '2026-08-31', array[]::text[]);
   if v <> 'ERR P0001 That date has already been marked done or skipped.' or v2 <> v then raise exception 'FAIL G4: % / %', v, v2; end if;
 
   -- G5. who can be cover: not archived, not public_viewer, not role-less, not nobody
   foreach v2 in array array['archived', 'public_viewer', 'roleless', 'no-such-login'] loop
-    v := pg_temp.reassign('management', j1, '2026-09-14', array['staff2', v2]);
+    v := pg_temp.reassign('management', j1, '2026-09-14', array['clerk2', v2]);
     if v <> 'ERR P0001 A job can only be reassigned to someone who can still sign in.' then raise exception 'FAIL G5 %: %', v2, v; end if;
   end loop;
-  v := pg_temp.reassign('management', j1, '2026-09-15', array['staff2']);
+  v := pg_temp.reassign('management', j1, '2026-09-15', array['clerk2']);
   if v <> 'ERR P0001 This job does not fall on 15 Sep 2026.' then raise exception 'FAIL G5 Tuesday: %', v; end if;
   if exists (select 1 from recurring_job_occurrences where job_id = j1 and occurs_on in ('2026-09-14', '2026-09-15')) then
     raise exception 'FAIL G5: a refused reassignment wrote a row';
@@ -395,25 +404,25 @@ ${ruleChecks}
 
   -- G6. changing the cover replaces the team; duplicates collapse; an empty
   -- list hands the date back and leaves no row behind
-  v := pg_temp.reassign('admin', j1, '2026-09-14', array['volunteer', 'staff2', 'staff2']);
-  v := pg_temp.reassign('management', j1, '2026-09-14', array['staff2']);
+  v := pg_temp.reassign('admin', j1, '2026-09-14', array['volunteer', 'clerk2', 'clerk2']);
+  v := pg_temp.reassign('management', j1, '2026-09-14', array['clerk2']);
   if (select array_agg(user_id) from recurring_job_occurrence_assignees where job_id = j1 and occurs_on = '2026-09-14')
-     <> array[(select uid from who where who = 'staff2')] then raise exception 'FAIL G6 replace: %', v; end if;
+     <> array[(select uid from who where who = 'clerk2')] then raise exception 'FAIL G6 replace: %', v; end if;
   v := pg_temp.reassign('management', j1, '2026-09-14', null);
   if v not like '{"job_id":null,%' or exists (select 1 from recurring_job_occurrences where job_id = j1 and occurs_on = '2026-09-14')
      or exists (select 1 from recurring_job_occurrence_assignees where job_id = j1 and occurs_on = '2026-09-14') then
     raise exception 'FAIL G6 hand back: %', v;
   end if;
   -- a future week can be covered ahead
-  v := pg_temp.reassign('management', j1, '2027-01-04', array['staff2'], 'staff on leave');
+  v := pg_temp.reassign('management', j1, '2027-01-04', array['clerk2'], 'staff on leave');
   if v like 'ERR%' then raise exception 'FAIL G6 ahead: %', v; end if;
-  v_report := v_report || ' | G1 staff cannot reassign | G2 one date to the volunteer, stamped | G3 usual assignee refused on it, cover refused next week, cover records, clear keeps cover | G4 recorded date frozen | G5 archived, public_viewer, role-less, unknown, wrong weekday refused, nothing written | G6 replace, dedupe, hand back, ahead';
+  v_report := v_report || ' | G1 clerk cannot reassign | G2 one date to the volunteer, stamped | G3 usual assignee refused on it, cover refused next week, cover records, clear keeps cover | G4 recorded date frozen | G5 archived, public_viewer, role-less, unknown, wrong weekday refused, nothing written | G6 replace, dedupe, hand back, ahead';
 
   -- =====================================================================
   -- K. Access to the tables themselves
   -- =====================================================================
   -- K1. every staff role reads the jobs and history; public_viewer reads none; anon refused
-  foreach v2 in array array['staff', 'doctor', 'volunteer', 'management'] loop
+  foreach v2 in array array['clerk', 'doctor', 'volunteer', 'management'] loop
     v := pg_temp.as_login(v2, format('select (select count(*) from recurring_jobs where id = %L) || ''/'' || (select count(*) from recurring_job_occurrences where job_id = %L) || ''/'' || (select count(*) from recurring_job_assignees where job_id = %L) || ''/'' || (select count(*) from recurring_job_occurrence_assignees where job_id = %L)', j1, j1, j1, j1));
     if v <> '1/6/1/2' then raise exception 'FAIL K1 % reads %', v2, v; end if;
   end loop;
@@ -426,39 +435,39 @@ ${ruleChecks}
     if v2 not like 'ERR 42501 permission denied%' then raise exception 'FAIL K1 anon % : %', v, v2; end if;
   end loop;
 
-  -- K2. staff cannot write templates or history directly; management can
+  -- K2. clerk cannot write templates or history directly; management can
   -- write templates but not history (the functions are its only door)
-  v := pg_temp.as_login('staff', $$insert into recurring_jobs (title, repeat, weekdays) values ('harness 0095 staff', 'weekly', '{1}') returning 'inserted'$$);
-  if v not like 'ERR 42501 new row violates row-level security%' then raise exception 'FAIL K2 staff insert job: %', v; end if;
-  v := pg_temp.as_login('staff', format($$with u as (update recurring_jobs set title = 'x' where id = %L returning 1) select count(*)::text from u$$, j1));
-  if v <> '0' then raise exception 'FAIL K2 staff update job: %', v; end if;
-  v := pg_temp.as_login('staff', format($$insert into recurring_job_assignees (job_id, user_id) values (%L, %L) returning 'x'$$, j1, (select uid from who where who = 'staff2')));
-  if v not like 'ERR 42501 new row violates row-level security%' then raise exception 'FAIL K2 staff assign: %', v; end if;
-  foreach v2 in array array['staff', 'management'] loop
-    v := pg_temp.as_login(v2, format($$insert into recurring_job_occurrences (job_id, occurs_on, outcome, done_by, done_at) values (%L, '2026-09-21', 'done', %L, '2000-01-01') returning 'x'$$, j1, v_staff));
+  v := pg_temp.as_login('clerk', $$insert into recurring_jobs (title, repeat, weekdays) values ('harness 0095 clerk', 'weekly', '{1}') returning 'inserted'$$);
+  if v not like 'ERR 42501 new row violates row-level security%' then raise exception 'FAIL K2 clerk insert job: %', v; end if;
+  v := pg_temp.as_login('clerk', format($$with u as (update recurring_jobs set title = 'x' where id = %L returning 1) select count(*)::text from u$$, j1));
+  if v <> '0' then raise exception 'FAIL K2 clerk update job: %', v; end if;
+  v := pg_temp.as_login('clerk', format($$insert into recurring_job_assignees (job_id, user_id) values (%L, %L) returning 'x'$$, j1, (select uid from who where who = 'clerk2')));
+  if v not like 'ERR 42501 new row violates row-level security%' then raise exception 'FAIL K2 clerk assign: %', v; end if;
+  foreach v2 in array array['clerk', 'management'] loop
+    v := pg_temp.as_login(v2, format($$insert into recurring_job_occurrences (job_id, occurs_on, outcome, done_by, done_at) values (%L, '2026-09-21', 'done', %L, '2000-01-01') returning 'x'$$, j1, v_clerk));
     if v not like 'ERR 42501 permission denied%' then raise exception 'FAIL K2 % backdates history: %', v2, v; end if;
     v := pg_temp.as_login(v2, format($$update recurring_job_occurrences set done_at = '2000-01-01' where job_id = %L returning 'x'$$, j1));
     if v not like 'ERR 42501 permission denied%' then raise exception 'FAIL K2 % edits history: %', v2, v; end if;
-    v := pg_temp.as_login(v2, format($$insert into recurring_job_occurrence_assignees (job_id, occurs_on, user_id) values (%L, '2027-01-04', %L) returning 'x'$$, j1, v_staff));
+    v := pg_temp.as_login(v2, format($$insert into recurring_job_occurrence_assignees (job_id, occurs_on, user_id) values (%L, '2027-01-04', %L) returning 'x'$$, j1, v_clerk));
     if v not like 'ERR 42501 permission denied%' then raise exception 'FAIL K2 % writes cover: %', v2, v; end if;
   end loop;
   v := pg_temp.as_login('management', $$insert into recurring_jobs (title, repeat, weekdays) values ('harness 0095 mgmt', 'weekly', '{2}') returning (created_by = auth.uid())::text$$);
   if v <> 'true' then raise exception 'FAIL K2 management insert job / created_by: %', v; end if;
 
-  -- K3. recurring_job_dates as staff: J1's Mondays in August, from its start
-  v := pg_temp.as_login('staff', format($$select string_agg(occurs_on::text, ' ' order by occurs_on) from recurring_job_dates('2026-07-27', '2026-08-31') where job_id = %L$$, j1));
+  -- K3. recurring_job_dates as clerk: J1's Mondays in August, from its start
+  v := pg_temp.as_login('clerk', format($$select string_agg(occurs_on::text, ' ' order by occurs_on) from recurring_job_dates('2026-07-27', '2026-08-31') where job_id = %L$$, j1));
   if v <> '2026-08-03 2026-08-10 2026-08-17 2026-08-24 2026-08-31' then raise exception 'FAIL K3 dates: %', v; end if;
   v := pg_temp.as_login('public_viewer', $$select count(*)::text from recurring_job_dates('2026-08-01', '2026-08-31')$$);
   if v <> '0' then raise exception 'FAIL K3 public_viewer dates: %', v; end if;
 
   -- K4. staffing: live, then stranded when the only assignee is archived;
   -- an archived-only or public_viewer-only job is stranded from the start
-  v := pg_temp.as_login('staff', format('select live_assignees || ''/'' || archived_assignees from recurring_job_staffing where job_id = %L', j1));
+  v := pg_temp.as_login('clerk', format('select live_assignees || ''/'' || archived_assignees from recurring_job_staffing where job_id = %L', j1));
   if v <> '1/0' then raise exception 'FAIL K4 live: %', v; end if;
-  update user_roles set archived_at = now() where user_id = v_staff;
+  update user_roles set archived_at = now() where user_id = v_clerk;
   v := pg_temp.as_login('management', format('select live_assignees || ''/'' || archived_assignees from recurring_job_staffing where job_id = %L', j1));
   if v <> '0/1' then raise exception 'FAIL K4 archived: %', v; end if;
-  update user_roles set archived_at = null where user_id = v_staff;
+  update user_roles set archived_at = null where user_id = v_clerk;
   insert into recurring_job_assignees (job_id, user_id) values (jb, (select uid from who where who = 'public_viewer'));
   v := pg_temp.as_login('management', format('select live_assignees || ''/'' || archived_assignees from recurring_job_staffing where job_id = %L', jb));
   if v <> '0/0' then raise exception 'FAIL K4 public_viewer only: %', v; end if;
@@ -470,7 +479,7 @@ ${ruleChecks}
   v := pg_temp.as_login('management', format('delete from recurring_jobs where id = %L returning ''deleted''', j1));
   if v not like 'ERR 23503 %' then raise exception 'FAIL K5 delete with history: %', v; end if;
   insert into recurring_jobs (title, repeat, weekdays) values ('harness 0095 free', 'weekly', '{1}') returning id into jfree;
-  insert into recurring_job_assignees (job_id, user_id) values (jfree, v_staff);
+  insert into recurring_job_assignees (job_id, user_id) values (jfree, v_clerk);
   v := pg_temp.as_login('management', format('delete from recurring_jobs where id = %L returning ''deleted''', jfree));
   if v <> 'deleted' or exists (select 1 from recurring_job_assignees where job_id = jfree) then raise exception 'FAIL K5 delete free: %', v; end if;
   delete from auth.users where id = v_vol;
@@ -479,7 +488,7 @@ ${ruleChecks}
      or (select outcome from recurring_job_occurrences where job_id = j1 and occurs_on = '2026-08-31') <> 'done' then
     raise exception 'FAIL K5 login delete';
   end if;
-  v_report := v_report || ' | K1 staff/doctor/volunteer/management read all four tables; public_viewer, archived, role-less read nothing; anon refused on all five | K2 staff cannot write jobs or assignees; nobody writes history or cover directly; management writes jobs, created_by stamped | K3 recurring_job_dates from start, public_viewer none | K4 staffing 1/0, 0/1 archived, public_viewer-only and unassigned 0 | K5 history blocks delete, free job deletes with assignees, login delete cascades cover and keeps outcome';
+  v_report := v_report || ' | K1 clerk/doctor/volunteer/management read all four tables; public_viewer, archived, role-less read nothing; anon refused on all five | K2 clerk cannot write jobs or assignees; nobody writes history or cover directly; management writes jobs, created_by stamped | K3 recurring_job_dates from start, public_viewer none | K4 staffing 1/0, 0/1 archived, public_viewer-only and unassigned 0 | K5 history blocks delete, free job deletes with assignees, login delete cascades cover and keeps outcome';
 
   -- =====================================================================
   -- H. Security settings and grants as written

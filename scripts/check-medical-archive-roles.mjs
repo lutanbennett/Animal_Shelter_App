@@ -8,8 +8,9 @@
 //   node scripts/check-medical-archive-roles.mjs     (from the repo root; dev only)
 //
 // It checks, per docs/decisions/2026-10-02-medical-archive-roles.md:
-//   A  staff archives and restores a weight, prescription, visit and
+//   A  management archives and restores a weight, prescription, visit and
 //      immunization (1 row each), and each archive writes ONE audit row
+//      (was staff until 0173 retired it; a live staff login can no longer be made)
 //   B  a doctor is refused (0 rows) on another clinic's visit and on a
 //      prescription on it; on their own clinic's visit the database allows
 //      the archive but not the restore (it drops the visit from their
@@ -66,7 +67,7 @@ end $f$;
 do $setup$
 declare
   v_res uuid;
-  v_staff uuid := gen_random_uuid();
+  v_mgmt uuid := gen_random_uuid();
   v_doctor uuid := gen_random_uuid();
   v_vol uuid := gen_random_uuid();
   v_own uuid := gen_random_uuid();
@@ -75,7 +76,7 @@ begin
   select id into v_res from record_intake(
     p_name => 'Harness archive roles', p_intake_date => date '2026-08-01', p_weight_kg => 10,
     p_diet_type_id => (select id from diet_types order by is_standard desc nulls last limit 1));
-  insert into harness values ('res', v_res), ('staff', v_staff), ('doctor', v_doctor), ('vol', v_vol),
+  insert into harness values ('res', v_res), ('mgmt', v_mgmt), ('doctor', v_doctor), ('vol', v_vol),
     ('own', v_own), ('other', v_other);
 
   insert into clinics (id, name) values (v_own, 'Harness own clinic'),
@@ -83,8 +84,8 @@ begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
          'harness-archive-' || u || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
-  from unnest(array[v_staff, v_doctor, v_vol]) u;
-  insert into user_roles (user_id, role) values (v_staff, 'staff'), (v_vol, 'volunteer');
+  from unnest(array[v_mgmt, v_doctor, v_vol]) u;
+  insert into user_roles (user_id, role) values (v_mgmt, 'management'), (v_vol, 'volunteer');
   insert into user_roles (user_id, role) values (v_doctor, 'doctor');
   -- 0127: a doctor login's clinic is its linked doctor's (doctor_clinics links it, 0172)
   with d as (insert into doctors (name, user_id) values ('Harness doctor', v_doctor) returning id) insert into doctor_clinics (clinic_id, doctor_id) select v_own, id from d;
@@ -93,7 +94,7 @@ end $setup$;
 do $h$
 declare
   v_res uuid := (select id from harness where k = 'res');
-  v_staff uuid := (select id from harness where k = 'staff');
+  v_mgmt uuid := (select id from harness where k = 'mgmt');
   v_doctor uuid := (select id from harness where k = 'doctor');
   v_vol uuid := (select id from harness where k = 'vol');
   v_own uuid := (select id from harness where k = 'own');
@@ -120,19 +121,19 @@ begin
   insert into prescriptions (resident_id, medication_id, frequency_id, start_date, dose_quantity, clinic_visit_id)
   values (v_res, v_med, v_freq, date '2026-08-12', 1, v_visit_other) returning id into v_rx_other;
 
-  -- A: staff, all four, one audit row each.
+  -- A: management (Staff until 0173), all four, one audit row each.
   select count(*) into v_audit from audit_log where row_id = v_w and table_name = 'weight';
-  if pg_temp.archive_as(v_staff, 'weight', v_w) <> 1 then raise exception 'HARNESS-FAIL A: staff could not archive a weight'; end if;
+  if pg_temp.archive_as(v_mgmt, 'weight', v_w) <> 1 then raise exception 'HARNESS-FAIL A: management could not archive a weight'; end if;
   if (select count(*) from audit_log where row_id = v_w and table_name = 'weight') <> v_audit + 1 then
     raise exception 'HARNESS-FAIL A: archiving a weight wrote % audit rows, not 1',
       (select count(*) from audit_log where row_id = v_w and table_name = 'weight') - v_audit;
   end if;
-  if pg_temp.restore_as(v_staff, 'weight', v_w) <> 1 then raise exception 'HARNESS-FAIL A: staff could not restore a weight'; end if;
-  if pg_temp.archive_as(v_staff, 'prescriptions', v_rx) <> 1 then raise exception 'HARNESS-FAIL A: staff could not archive a prescription'; end if;
-  if pg_temp.archive_as(v_staff, 'clinic_visits', v_visit_other) <> 1 then raise exception 'HARNESS-FAIL A: staff could not archive a visit'; end if;
-  if pg_temp.archive_as(v_staff, 'immunization_records', v_i) <> 1 then raise exception 'HARNESS-FAIL A: staff could not archive an immunization'; end if;
-  if pg_temp.restore_as(v_staff, 'clinic_visits', v_visit_other) <> 1 then raise exception 'HARNESS-FAIL A: staff could not restore a visit'; end if;
-  v_report := v_report || 'A: staff archives all four, restores, one audit row per archive | ';
+  if pg_temp.restore_as(v_mgmt, 'weight', v_w) <> 1 then raise exception 'HARNESS-FAIL A: management could not restore a weight'; end if;
+  if pg_temp.archive_as(v_mgmt, 'prescriptions', v_rx) <> 1 then raise exception 'HARNESS-FAIL A: management could not archive a prescription'; end if;
+  if pg_temp.archive_as(v_mgmt, 'clinic_visits', v_visit_other) <> 1 then raise exception 'HARNESS-FAIL A: management could not archive a visit'; end if;
+  if pg_temp.archive_as(v_mgmt, 'immunization_records', v_i) <> 1 then raise exception 'HARNESS-FAIL A: management could not archive an immunization'; end if;
+  if pg_temp.restore_as(v_mgmt, 'clinic_visits', v_visit_other) <> 1 then raise exception 'HARNESS-FAIL A: management could not restore a visit'; end if;
+  v_report := v_report || 'A: management archives all four, restores, one audit row per archive | ';
 
   -- B: a doctor. The database would let them archive their own clinic's
   -- visit and a prescription on it, and refuses the other clinic's. The app
@@ -159,7 +160,7 @@ begin
   v_report := v_report || 'C: volunteer archives nothing | ';
 
   -- D: archiving twice.
-  if pg_temp.archive_as(v_staff, 'prescriptions', v_rx) <> 0 then raise exception 'HARNESS-FAIL D: archived an archived row again'; end if;
+  if pg_temp.archive_as(v_mgmt, 'prescriptions', v_rx) <> 0 then raise exception 'HARNESS-FAIL D: archived an archived row again'; end if;
   v_report := v_report || 'D: a second archive changes nothing | ';
 
   raise exception '%', format('HARNESS-OK %s', v_report);
