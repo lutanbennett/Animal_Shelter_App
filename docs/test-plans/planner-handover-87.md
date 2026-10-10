@@ -40,7 +40,14 @@ file rather than left for someone to trip over. See *Defects found* #4.
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — n/a in form: the worktree was created from `origin/main` minutes before writing. **Base confirmed against the remote** — `git rev-parse --short HEAD` and `git rev-parse --short origin/main` both returned `4081637d`
-- [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — n/a: no TypeScript, no build input, no lint surface in this diff. CI runs it regardless and is the check that matters
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — run in this worktree after `sync`, and ticked on the script's own exit code (0), not on output that looked plausible. This line was first written `n/a: no build input in this diff`; the gates were then actually run, so it carries the real evidence instead. Closing lines exactly as printed:
+
+```
+=== gates: build exited 0 after 303s
+
+gates: typecheck=0 lint=0 build=0
+```
+
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 - [x] `node scripts/check-test-plan.mjs` — run on this plan before pushing, exit code read from the script directly rather than through a pipe
 - [x] **Every figure in the file was measured, not recalled** — `main` `4081637d` from `git rev-parse`; `176 applied, 0 pending` and `0 not applied here` from `apply-migrations.mjs --status`; the highest migration file `0176_receipt_issuer_server_side.sql` from `ls supabase/migrations/`, **plus** the knowledge that `0177` is owned by the live `receipt-content-server-side` stream, so the file says `0178`; 88 open items from an `awk` count above `## Completed`; `0` open PRs from `gh pr list`; release `0.24.0` / `2026-10-10` and the `unreleased` count of 3 from `src/lib/releases.ts`; the nine token actuals from `get_usage` at the moment each was readable
