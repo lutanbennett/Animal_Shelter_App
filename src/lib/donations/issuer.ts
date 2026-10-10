@@ -13,6 +13,14 @@
  * then it keeps the protections: its own field, Admin only, the screen saying
  * it appears on receipts already issued, and an audit_log row. Only
  * receiptIssuer() changes then. The PDF layout never reads RECEIPT_ISSUERS.
+ *
+ * THERE IS A SECOND COPY, IN SQL, AND IT IS THE ONE THAT COUNTS. Since 0176
+ * the receipt stores receipt_issuer(country) from the database, not what the
+ * app passes: issue_donation_receipt() is callable straight from the API, so
+ * an issuer taken from the caller let anyone with donation.receipt mint a
+ * receipt in any organisation's name. Change this file and receipt_issuer()
+ * (a new migration) in the same PR; scripts/check-donation-receipts-schema.mjs
+ * fails while they differ. docs/decisions/2026-10-10-receipt-issuer-server-side.md.
  */
 
 export type ReceiptCountry = "TH" | "US";
