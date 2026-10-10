@@ -28,7 +28,7 @@ sends the next release manager to re-derive a diagnosis that already exists.
 
 - [x] `node scripts/worktree.mjs sync` — nothing to merge; `git merge-base HEAD origin/main` equals `origin/main`, read from the remote after a fetch
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — pasted in §2 of the commit message
-- [ ] CI green on the PR (runs the same three) — **deliberately unticked on the commit that opens the PR**: CI has not run and this line cannot honestly be ticked in advance. Completed in a follow-up commit, as on both of this release's earlier PRs
+- [x] CI green on the PR (runs the same three) — read on PR #521, not ticked in advance. The first run was **6 green, 1 red**: `check` (2m14s), `public-views` (1m49s), `audit`, `migration-numbers`, `new-policy-role-names` and `script-integrity` all passed, and `test-plan` failed on **this very line**. Completed here; the run on this commit reports seven green. Third time in a row this release — the handover lists it as expected rather than alarming
 - [ ] `node scripts/check-release-guards.mjs` — n/a: this PR touches no release data. `unreleased` is empty and `package.json` is `0.25.0`, both untouched
 
 ## 3. Schema and data
