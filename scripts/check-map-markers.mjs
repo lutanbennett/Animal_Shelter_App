@@ -46,7 +46,7 @@ function rim({ x, y, size }) {
 const [{ data: plans }, { data: encl }, { data: rooms }, { data: zones }] = await Promise.all([
   db.from("facility_maps").select("id, kind, zone_id, width, height"),
   db.from("enclosures").select("id, name, zone_id, map_shape"),
-  db.from("map_rooms").select("id, map_id, kind, shape"),
+  db.from("map_rooms").select("id, map_id, name, shape"),
   db.from("zones").select("id, name"),
 ]);
 const zoneName = new Map(zones.map((z) => [z.id, z.name]));
@@ -56,7 +56,7 @@ for (const plan of plans.filter((p) => p.kind === "zone")) {
   const k = plan.height / plan.width;
   const toDrawing = (shape) => shape.map(([x, y]) => [x, y * k]);
   const mine = encl.filter((e) => e.zone_id === plan.zone_id).map((e) => ({ ...e, shape: geo.parseShape(e.map_shape) })).filter((e) => e.shape);
-  const others = [...mine.map((e) => ({ name: e.name, poly: toDrawing(e.shape) })), ...rooms.filter((r) => r.map_id === plan.id).map((r) => ({ name: r.kind, poly: toDrawing(geo.parseShape(r.shape)) }))];
+  const others = [...mine.map((e) => ({ name: e.name, poly: toDrawing(e.shape) })), ...rooms.filter((r) => r.map_id === plan.id).map((r) => ({ name: r.name, poly: toDrawing(geo.parseShape(r.shape)) }))];
   let smallest = Infinity;
   for (const e of mine) {
     const own = toDrawing(e.shape);
