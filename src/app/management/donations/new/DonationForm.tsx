@@ -26,7 +26,7 @@ const labelClass = "text-sm font-medium text-muted";
  * removed in place; an in-kind gift hides the amounts, because its lines
  * describe goods rather than price them (checkDonation refuses a mix).
  */
-export function DonationForm({ contacts, residents, today }: { contacts: DonorContact[]; residents: ResidentOption[]; today: string }) {
+export function DonationForm({ contacts, residents, residentsFailed = false, today }: { contacts: DonorContact[]; residents: ResidentOption[]; residentsFailed?: boolean; today: string }) {
   const { t, locale } = useI18n();
   const f = t.donations.form;
   const router = useRouter();
@@ -152,6 +152,11 @@ export function DonationForm({ contacts, residents, today }: { contacts: DonorCo
         {fields.designation === "resident" && (
           <div className="flex flex-col gap-1">
             <span className={labelClass}>{f.resident}</span>
+            {residentsFailed && (
+              <p role="alert" className="rounded border border-danger bg-danger/10 px-3 py-2 text-sm text-danger">
+                {f.residentsLoadFailed}
+              </p>
+            )}
             <ResidentPicker
               single
               residents={residents}

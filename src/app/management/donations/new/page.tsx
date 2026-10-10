@@ -25,12 +25,23 @@ export default async function NewDonationPage() {
       .is("archived_at", null)
       .order("name")
       .returns<DonorContact[]>(),
+    // Status lives in the view, not on residents (0001). Residents who have died
+    // stay in the list: a gift in memory of one is recordable, and the row shows
+    // the status so nobody picks one by accident (Lutan, 2026-10-10).
     supabase
-      .from("residents")
-      .select("id, name, thai_name, current_status")
+      .from("resident_list_view")
+      .select("resident_id, name, thai_name, current_status")
       .order("name")
-      .returns<ResidentOption[]>(),
+      .returns<(Omit<ResidentOption, "id"> & { resident_id: string })[]>(),
   ]);
+
+  // A failed load must not look like "no residents match": that is what hid
+  // this picker reading a column residents does not have.
+  if (contacts.error) console.error("donation form: contact list failed", contacts.error);
+  if (residents.error) console.error("donation form: resident list failed", residents.error);
+  const residentOptions: ResidentOption[] = (residents.data ?? []).map(
+    ({ resident_id, ...r }) => ({ id: resident_id, ...r }),
+  );
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-4 sm:p-6">
@@ -39,7 +50,7 @@ export default async function NewDonationPage() {
         <h1 className="text-2xl font-semibold text-foreground">{d.form.newTitle}</h1>
         <p className="text-sm text-muted">{d.form.newSubtitle}</p>
       </div>
-      <DonationForm contacts={contacts.data ?? []} residents={residents.data ?? []} today={todayIso()} />
+      <DonationForm contacts={contacts.data ?? []} residents={residentOptions} residentsFailed={!!residents.error} today={todayIso()} />
     </main>
   );
 }

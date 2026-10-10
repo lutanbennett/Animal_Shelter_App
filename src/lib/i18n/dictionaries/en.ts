@@ -5845,6 +5845,7 @@ const en = {
       designation: "What it is for",
       resident: "Which resident",
       residentPick: "Choose a resident",
+      residentsLoadFailed: "The list of residents could not be loaded, so none can be chosen. Reload the page; if it keeps happening, tell Lutan.",
       designationNote: "Which project or appeal",
       lines: "Receipt lines",
       linesHint: "One line per item on the receipt, each with its amount in baht.",
