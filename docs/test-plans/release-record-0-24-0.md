@@ -30,7 +30,7 @@ than softened.
 
 - [ ] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly — n/a: nothing to merge. The worktree was created from `origin/main` at `2fecefd3` and `git merge-base HEAD origin/main` returns the same commit, read after a fetch
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Pasted exactly as printed below in §6
-- [ ] CI green on the PR (runs the same three) — not yet run: the PR is opened by this commit. Read and completed in a follow-up commit before the merge, with the job names and the SHA. Not ticked in advance — the same two-commit shape as the cut, which the handover now records as normal
+- [x] CI green on the PR (runs the same three) — read on PR #508, not ticked in advance. The first run at `b9273baf` was **6 green, 1 red**: `check` 1m23s, `public-views` 1m34s, `audit` 12s, `migration-numbers` 7s, `new-policy-role-names` 9s and `script-integrity` 15s passed, and `test-plan` failed on this very line, which that commit left unticked because the run had not happened yet. Completed here, and the run on this commit is the one that reports seven green. The same two-commit shape as the cut, which the handover now records as normal
 - [ ] `node scripts/check-release-guards.mjs` — n/a: this PR changes no release data. It was run on the cut (#505), exit 0, all fifteen cases, and nothing here touches `src/lib/releases.ts` or `package.json`
 
 ## 3. Schema and data
