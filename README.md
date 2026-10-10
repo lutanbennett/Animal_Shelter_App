@@ -664,8 +664,13 @@ optional values in the environment's `.env.deploy.production`:
 copies of that file — the dev machine's, which `deploy.mjs --secrets`
 pushes to the Worker, and the **Pi's**, which `deploy-pi.sh` writes into
 the Pi's own settings (`docs/pi-hosting.md`, Day to day). The Pi serves the
-pages, so with the values only on the Worker the tile still says "Not set
-up". Without them that tile is grey.
+pages, so with the values only on the Worker the Pi has nothing to read.
+When a value is missing the tile names it and the machine it is missing
+from (the Pi, the Worker or this laptop) and the file to put it in; on
+production that is red, since the count is promised there, and on a dev
+laptop grey. One of the pair without the other is red anywhere. The query
+first ran against the live API on 2026-10-10 and answers at 7, 30 and 90
+days (`docs/decisions/2026-10-10-visitor-count-live.md`).
 
 **Status alerts** mail the admins when a health tile goes red and when it
 recovers. A Worker cron trigger (`*/15 * * * *` on the test and production

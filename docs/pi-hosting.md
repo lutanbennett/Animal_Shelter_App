@@ -126,6 +126,11 @@ updates. Re-runnable.
   servers, `scripts/lib/optional-secrets.mjs`; `ORIGIN_KEY` is the one the
   Pi does not take. Until 2026-10-10 the Pi had its own shorter list, and the
   visitor count read "Not set up" with both Cloudflare values on the Worker.
+  Even after that fix the two lines were only ever in the dev machine's copy,
+  so the Pi still had nothing to pass on; the Website visitors tile on
+  Settings → System status now says so in red ("Not reaching the Pi…"), and
+  turns green with a number once the lines are in the Pi's copy and
+  `deploy-pi.sh` has run.
 - **Logs**: `journalctl -u lanna-care -f`, `journalctl -u cloudflared -f`.
 - **Restart**: `sudo systemctl restart lanna-care`.
 - **Test on the same Pi**: its own clone, its own service, never production's
