@@ -21,6 +21,12 @@
 //      and every cell it asks about is in the catalogue
 //   E  the route registry: unique paths, a level only where the activity has
 //      one, and every entry's page file guards with the same activity
+//   F  every other page.tsx under src/app (layer 3 of §11 for the pages outside
+//      the registry): each is in exactly one of three buckets, the registry (E),
+//      PINNED (its guard, word for word, and every can() decision in its body),
+//      or EXEMPT (no permission, with the reason why none is needed). A page in
+//      none of them fails, so a new page cannot ship unpinned.
+//      docs/decisions/2026-10-10-parity-layer-3-pages-outside-the-registry.md
 import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -42,6 +48,7 @@ const { ACTIVITIES, isActivityKey } = await imp("src/lib/permissions/catalogue.t
 const { can, parsePermissions } = await imp("src/lib/permissions/can.ts");
 const { ROUTES } = await imp("src/lib/permissions/routes.ts");
 const { JOB_NEEDS } = await imp("src/lib/recurring-jobs/eligibility.ts");
+const { isPublicPath } = await imp("src/lib/public-paths.ts");
 
 let fails = 0;
 const eq = (name, got, want) => {
@@ -157,6 +164,246 @@ for (const r of ROUTES) {
     true,
   );
 }
+
+// ---- F ----
+// Layer 3 for the pages E does not reach. Three buckets, and every page.tsx is in exactly one.
+//
+// PINNED: the page's guards, written exactly as the page writes them (whitespace aside), and the
+// can() decisions in its body as "activity" or "activity:read" (`in` names a shared component
+// that holds them instead). The guards are the *whole* set: requirePermission, requireFullResident,
+// requireAnyPageIn, requireAdminUser, requireRole and any `if (…) refuseFor(…)`. A changed key or
+// level, a guard added or dropped, or a can() that appears or changes, fails until this list says
+// so. Each was read against what the page does, not copied from it: a page that writes is pinned
+// at Edit. Where it is not, the entry carries `known` (what the page says today and the backlog
+// item that fixes it): printed every run, not a failure, and a failure the day the page is fixed
+// (STALE), so the list cannot defend the bug.
+//
+// What a `decides` pin proves is that the call is there with that key: not what it gates. That
+// the edit page's form only renders when can(perms, "resident.record") is true is still read by a
+// person (the decision file lists every one).
+const FULL = "requireFullResident()";
+const PINNED = {
+  // Add and edit pages under a registered list. Every one writes, so every one is at Edit.
+  "/residents/new": { guards: ['requirePermission("resident.register")'], decides: [] },
+  "/weight/new": { guards: ['requirePermission("medical.weight")'], decides: [] },
+  "/weight/[id]/edit": {
+    guards: ['requirePermission("medical.weight")'],
+    decides: [],
+    known: { has: ['requirePermission("medical.weight", "read")'], item: "Four medical edit pages open at Read" },
+  },
+  "/prescriptions/new": { guards: ['requirePermission("medical.prescriptions")'], decides: [] },
+  "/prescriptions/[id]/edit": {
+    guards: ['requirePermission("medical.prescriptions")'],
+    decides: [],
+    known: { has: ['requirePermission("medical.prescriptions", "read")'], item: "Four medical edit pages open at Read" },
+  },
+  "/procedures/new": { guards: ['requirePermission("medical.procedures")'], decides: ["resident.microchip"] },
+  "/blood-tests/new": { guards: ['requirePermission("medical.blood_tests")'], decides: [] },
+  "/immunizations/new": { guards: ['requirePermission("medical.immunizations")'], decides: [] },
+  "/diets/new": { guards: ['requirePermission("medical.diet")'], decides: [] },
+  "/diets/[id]/edit": {
+    guards: ['requirePermission("medical.diet")'],
+    decides: [],
+    known: { has: ['requirePermission("medical.diet", "read")'], item: "Four medical edit pages open at Read" },
+  },
+  "/clinic-visits/new": { guards: ['requirePermission("medical.visits")'], decides: [] },
+  "/clinic-visits/[id]/edit": {
+    guards: ['requirePermission("medical.visits")'],
+    decides: ["resident.microchip"],
+    known: { has: ['requirePermission("medical.visits", "read")'], item: "Four medical edit pages open at Read" },
+  },
+  "/outreach/new": { guards: ['requirePermission("community.outings")'], decides: [] },
+  "/outreach/[id]/edit": { guards: ['requirePermission("community.outings")'], decides: [] },
+  "/management/donations/new": { guards: ['requirePermission("donation.receipt")'], decides: [] },
+  "/management/shelter-friends/new": { guards: ['requirePermission("friends.manage")'], decides: [] },
+  "/management/cashflow/fixed-outgoings": { guards: ['requirePermission("reports.cashflow")'], decides: [] },
+  "/management/clinics/[id]/doctors": { guards: ['requirePermission("clinics.doctors")'], decides: [] },
+  // Maintenance opens its add and edit pages at Read on purpose and shows a reader "read only"
+  // instead of the form: the form is behind the body's can(perms, "maintenance.jobs") (Edit).
+  "/maintenance/new": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.jobs"] },
+  "/maintenance/[id]/edit": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.jobs"] },
+  // Detail pages: they open at the list's own level, and every control that writes asks can().
+  "/maintenance/[id]": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.jobs", "translations.manage"] },
+  "/clinics/[id]": { guards: ['requirePermission("clinics.list", "read")'], decides: ["clinics.list", "medical.visits:read"] },
+  "/contacts/[id]": { guards: ['requirePermission("contacts.browse")'], decides: ["contacts.directory", "friends.manage"] },
+  "/enclosures/[id]": { guards: ['requirePermission("facility.enclosures", "read")'], decides: ["facility.enclosures", "maintenance.jobs"] },
+  "/projects/[id]": { guards: ['requirePermission("projects.folders", "read")'], decides: ["projects.folders", "translations.manage"] },
+  // A donation's own page is the receipt: issuing it is the yes/no activity, and nothing else.
+  "/management/donations/[id]": { guards: ['requirePermission("donation.receipt")'], decides: [] },
+
+  // The resident's own pages. requireFullResident() is resident.record at Read plus "not a
+  // who-and-where login" (0134); the decision that matters, may this person do the thing, is the
+  // body's can(), which the page asks before it renders the form.
+  "/residents/[id]/edit": { guards: [FULL], decides: ["resident.record"] },
+  "/residents/[id]/move": { guards: [FULL], decides: ["placement.move"] },
+  "/residents/[id]/hospital": { guards: [FULL], decides: ["placement.hospital"] },
+  "/residents/[id]/hospital/return": { guards: [FULL], decides: ["placement.hospital"] },
+  "/residents/[id]/rehome": { guards: [FULL], decides: ["placement.rehome"] },
+  "/residents/[id]/rehome/return": { guards: [FULL], decides: ["placement.rehome"] },
+  "/residents/[id]/deceased": { guards: [FULL], decides: ["placement.death"] },
+  "/residents/[id]/deceased/undo": { guards: [FULL], decides: ["placement.death_withdraw"] },
+  "/residents/[id]/adoption-updates/new": {
+    guards: [FULL],
+    decides: ["resident.adoption_news"],
+    in: "src/app/residents/[id]/adoption-updates/AdoptionUpdatePage.tsx",
+  },
+  "/residents/[id]/adoption-updates/[updateId]/edit": {
+    guards: [FULL],
+    decides: ["resident.adoption_news"],
+    in: "src/app/residents/[id]/adoption-updates/AdoptionUpdatePage.tsx",
+  },
+  // A record tab: the tab's own medical activity at Read, from the page's SECTION_READS (pinned
+  // below), on top of the record. Its writes are per row, on the tab's add/edit pages above.
+  "/residents/[id]/[section]": {
+    guards: ["requireFullResident(SECTION_READS[section])"],
+    decides: ["medical.archive", "resident.adoption_news", "resident.microchip"],
+    table: {
+      name: "SECTION_READS",
+      want: {
+        immunizations: "medical.immunizations",
+        "clinic-visits": "medical.visits",
+        prescriptions: "medical.prescriptions",
+        diet: "medical.diet",
+        weight: "medical.weight",
+        procedures: "medical.procedures",
+        "blood-tests": "medical.blood_tests",
+      },
+    },
+  },
+
+  // The three landings: a grid of the registry's own pages, open to whoever opens one of them.
+  "/admin": { guards: ['requireAnyPageIn("settings")'], decides: ["system.status"] },
+  "/management": { guards: ['requireAnyPageIn("management")'], decides: [] },
+  "/operations": { guards: ['requireAnyPageIn("operations")'], decides: [] },
+
+  // Admin rules, not activities (§6: a power only one role holds is not a cell): who signs in,
+  // the role-draft comparison sheet, and seeing another role's home screen.
+  "/admin/security": { guards: ["requireAdminUser()"], decides: [] },
+  "/admin/security/verify": { guards: ["requireAdminUser()"], decides: [] },
+  "/admin/role-draft": { guards: ["if (!mine?.isAdmin) refuseFor(mine)"], decides: [] },
+  "/home/[role]": { guards: ["if (!mine?.isAdmin) refuseFor(mine)"], decides: [] },
+};
+
+// EXEMPT: no permission guard, and the reason none is needed. `public: true` is also checked
+// against src/lib/public-paths.ts, the list the proxy lets through signed out. Every other path
+// is behind the proxy's gate (src/lib/supabase/proxy.ts): signed in, and a role that opens the
+// app, before the page runs. A reason that only says "hub" or "public" is not a reason.
+const APP = "Behind the proxy's gate (signed in, a role that opens the app).";
+const EXEMPT = {
+  "/": { public: true, why: "The public home page. Reads the session only to choose the header; shows nothing from the app." },
+  "/login": { public: true, why: "Sign-in. There is no one to ask a permission of yet." },
+  "/login/forgot": { public: true, why: "Password reset request: sign-in's own page." },
+  "/login/request": { public: true, why: "Asking for an account: sign-in's own page." },
+  "/privacy": { public: true, why: "Static privacy notice; Google's consent screen links to it." },
+  "/adopt": { public: true, why: "Public website: reads public_resident_profiles, the anonymous tier (§6)." },
+  "/adopt/[id]": { public: true, why: "Public website: one public_resident_profiles row." },
+  "/adopt/international": { public: true, why: "Public website: static page from site_content." },
+  "/our-work": { public: true, why: "Public website: the public_projects views (0042)." },
+  "/our-work/[id]": { public: true, why: "Public website: one public_projects row." },
+  "/foster": { public: true, why: "Public website: a site_pages page (SitePageView), the same text for every visitor, signed in or not." },
+  "/volunteer": { public: true, why: "Public website: a site_pages page (SitePageView), the same text for every visitor, signed in or not." },
+  "/donate": { public: true, why: "Public website: a site_pages page (SitePageView), the same text for every visitor, signed in or not." },
+  "/friends": { public: true, why: "Public website: public_shelter_friends (0076)." },
+  "/friends/join": { public: true, why: "Public website: a site_pages page (SitePageView), the same text for every visitor, signed in or not." },
+  "/r/[code]": {
+    public: true,
+    why: "A resident's RFID card: the public card (public_resident_cards) for anyone; a signed-in reader is sent on to the record, by the body's can().",
+    decides: ["resident.record:read"],
+  },
+  "/e/[id]": {
+    public: true,
+    why: "An enclosure's QR code: the public enclosure (public_enclosures) for anyone; a reader of enclosures is sent on to /enclosures/[id] (whose guard E pins).",
+    decides: ["facility.enclosures:read"],
+  },
+  "/no-access": { why: `The refusal page every guard sends to. It must open for a person with no permission, or a refusal loops. ${APP}` },
+  "/account/password": { why: `Changing your own password: every signed-in login must be able to, and the proxy sends one on a temporary password nowhere else. Asks only for a user.` },
+  "/home": { why: `The dispatcher every app role lands on: sends each to its configured home, or shows the tiles homeTilesFor(perms) derives from the registry, so every tile is a page E pins. Refuses a role that does not open the app. ${APP}` },
+  "/my": {
+    why: `A person's own task list; each list in it is loaded only behind can() for its activity, so the page shows nothing a role may not see. ${APP}`,
+    decides: ["maintenance.jobs:read", "maintenance.jobs", "recurring.manage"],
+  },
+  "/manual": { why: `The user manual: text for every app role; the body greys the topics that are not the reader's but hides none. ${APP}` },
+  "/releases": { why: `What changed in each release, for every app role. The environment line is behind can(system.status). ${APP}`, decides: ["system.status"] },
+  "/assistant": {
+    why: `The assistant: a role without assistant.ask gets the "can't use" note and nothing is loaded (the body's can()). ${APP}`,
+    decides: ["assistant.ask"],
+  },
+  "/management/medication-list": { why: "Not a page any more: a redirect to /operations/medication-list (which E pins), kept for old links. Renders nothing." },
+  "/residents": {
+    why: `The residents list, which every app role reads at least as who-and-where (§5, 0134): the page reads resident_who_and_where for that login and resident_list_view otherwise, and RLS decides the rows. Registering from a chip search is behind can(resident.register). ${APP}`,
+    decides: ["resident.register"],
+  },
+  "/residents/[id]": {
+    why: `The resident's record hub. A who-and-where login is sent to /r/ first; for the rest the record is read under RLS (a doctor sees only their clinics' residents, 0108, else the card). Every control that writes asks can(). It has no requirePermission("resident.record", "read") of its own: see the decision file. ${APP}`,
+    decides: ["placement.death", "placement.death_withdraw", "translations.manage", "resident.microchip", "resident.adoption_news"],
+  },
+};
+
+const appDir = join(root, "src/app");
+const pages = walk(appDir)
+  .filter((f) => /[\\/]page\.tsx$/.test(f))
+  .map((f) => {
+    const dir = f.slice(appDir.length, -"page.tsx".length).replaceAll("\\", "/").replace(/\/$/, "");
+    // A route group "(x)" is not part of the address.
+    return { file: f, path: dir.split("/").filter((s) => !/^\(.*\)$/.test(s)).join("/") || "/" };
+  });
+const stripComments = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+const norm = (s) => s.replace(/\s+/g, " ").replace(/\(\s/g, "(").replace(/\s\)/g, ")");
+const guardsIn = (text) =>
+  [
+    ...text.matchAll(/\b(?:requirePermission|requireFullResident|requireAnyPageIn|requireAdminUser|requireRole)\((?:[^()]|\([^()]*\))*\)/g),
+    ...text.matchAll(/\bif \((?:[^()]|\([^()]*\))*\) refuseFor\(\w+\)/g),
+  ]
+    .map((m) => norm(m[0]))
+    .sort();
+const decidesIn = (text) =>
+  [...new Set([...text.matchAll(/\bcan\((?:[^()"]|\([^()]*\))*?,\s*"([a-z_]+\.[a-z_]+)"(?:\s*,\s*"([a-z]+)")?\s*\)/g)].map((m) => (m[2] === "read" ? `${m[1]}:read` : m[1])))].sort();
+const sameSet = (a, b) => JSON.stringify([...a].sort()) === JSON.stringify([...b].sort());
+
+const registered = new Set(ROUTES.map((r) => r.path));
+const known = [];
+for (const { file, path } of pages) {
+  const buckets = [registered.has(path) && "the registry", path in PINNED && "PINNED", path in EXEMPT && "EXEMPT"].filter(Boolean);
+  if (buckets.length !== 1) {
+    eq(`F ${path} is in exactly one bucket (registry, PINNED or EXEMPT)`, buckets, buckets.length ? [buckets[0]] : ["one of them"]);
+    if (!buckets.length) console.log(`     A new page: add it to PINNED with its guard, or to EXEMPT with why it needs none (scripts/check-permission-catalogue.mjs, section F).`);
+    continue;
+  }
+  if (registered.has(path)) continue; // E's
+  const text = stripComments(readFileSync(file, "utf8"));
+  const guards = guardsIn(text);
+  const pin = PINNED[path];
+  if (pin) {
+    const want = pin.guards.map(norm).sort();
+    if (pin.known && sameSet(guards, pin.known.has.map(norm))) {
+      known.push(`${path}: guards ${pin.known.has.join(", ")}; should be ${pin.guards.join(", ")} (backlog: "${pin.known.item}")`);
+    } else {
+      eq(`F ${path} guards with ${pin.guards.join(" + ")}`, guards, want);
+      if (pin.known && sameSet(guards, want)) eq(`F ${path} STALE: fixed, remove its \`known\` entry`, "known entry", "no entry");
+    }
+    const body = pin.in ? stripComments(readFileSync(join(root, pin.in), "utf8")) : text;
+    eq(`F ${path} body decides with can(${pin.decides.join(", ") || "nothing"})`, decidesIn(body), [...pin.decides].sort());
+    if (pin.table) {
+      const block = text.match(new RegExp(`\\b${pin.table.name}\\b[^=]*=\\s*\\{([^}]*)\\}`))?.[1] ?? "";
+      const got = Object.fromEntries([...block.matchAll(/"?([a-z-]+)"?\s*:\s*"([a-z_.]+)"/g)].map((m) => [m[1], m[2]]));
+      eq(`F ${path} ${pin.table.name} maps each tab to its activity`, got, pin.table.want);
+    }
+  } else {
+    const ex = EXEMPT[path];
+    eq(`F ${path} is exempt with no guard of its own`, guards.filter((g) => !g.startsWith("if (")), []);
+    if (ex.public) eq(`F ${path} is public in src/lib/public-paths.ts`, isPublicPath(path.replace(/\[[^\]]+\]/g, "x")), true);
+    eq(`F ${path} body decides with can(${(ex.decides ?? []).join(", ") || "nothing"})`, decidesIn(text), [...(ex.decides ?? [])].sort());
+  }
+}
+for (const p of [...Object.keys(PINNED), ...Object.keys(EXEMPT)]) {
+  if (!pages.some((pg) => pg.path === p)) eq(`F ${p} STALE: listed but has no page.tsx`, "listed", "removed");
+}
+eq("F every EXEMPT entry gives a reason", Object.entries(EXEMPT).filter(([, e]) => !e.why || e.why.length < 40).map(([p]) => p), []);
+console.log(
+  `F ${pages.length} pages: ${pages.filter((p) => registered.has(p.path)).length} in the registry, ` +
+    `${Object.keys(PINNED).length} pinned, ${Object.keys(EXEMPT).length} exempt`,
+);
+for (const k of known) console.log(`KNOWN ${k}`);
 
 console.log(fails ? `\n${fails} FAILED` : "\nall ok");
 process.exitCode = fails ? 1 : 0;
