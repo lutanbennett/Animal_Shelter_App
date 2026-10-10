@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { databaseFailure } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { todayIso } from "@/lib/format";
 
@@ -115,6 +117,7 @@ export async function createDiet(_state: DietFormState, formData: FormData): Pro
  */
 export async function updateDiet(_state: DietFormState, formData: FormData): Promise<DietFormState> {
   const { t } = await getT();
+  if (!can(await loadPermissions(), "medical.diet")) return { error: t.common.notAllowed };
   const residentId = str(formData, "residentId");
   if (!residentId) return { error: t.diets.errors.missingResident };
   const dietId = str(formData, "dietId");

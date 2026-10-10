@@ -189,13 +189,11 @@ const PINNED = {
   "/weight/[id]/edit": {
     guards: ['requirePermission("medical.weight")'],
     decides: [],
-    known: { has: ['requirePermission("medical.weight", "read")'], item: "Four medical edit pages open at Read" },
   },
   "/prescriptions/new": { guards: ['requirePermission("medical.prescriptions")'], decides: [] },
   "/prescriptions/[id]/edit": {
     guards: ['requirePermission("medical.prescriptions")'],
     decides: [],
-    known: { has: ['requirePermission("medical.prescriptions", "read")'], item: "Four medical edit pages open at Read" },
   },
   "/procedures/new": { guards: ['requirePermission("medical.procedures")'], decides: ["resident.microchip"] },
   "/blood-tests/new": { guards: ['requirePermission("medical.blood_tests")'], decides: [] },
@@ -204,13 +202,11 @@ const PINNED = {
   "/diets/[id]/edit": {
     guards: ['requirePermission("medical.diet")'],
     decides: [],
-    known: { has: ['requirePermission("medical.diet", "read")'], item: "Four medical edit pages open at Read" },
   },
   "/clinic-visits/new": { guards: ['requirePermission("medical.visits")'], decides: [] },
   "/clinic-visits/[id]/edit": {
     guards: ['requirePermission("medical.visits")'],
     decides: ["resident.microchip"],
-    known: { has: ['requirePermission("medical.visits", "read")'], item: "Four medical edit pages open at Read" },
   },
   "/outreach/new": { guards: ['requirePermission("community.outings")'], decides: [] },
   "/outreach/[id]/edit": { guards: ['requirePermission("community.outings")'], decides: [] },

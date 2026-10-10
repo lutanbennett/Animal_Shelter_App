@@ -16,7 +16,7 @@ import { ClinicVisitEditForm, type ClinicVisitInitial } from "./ClinicVisitEditF
 
 /** Reached from a row's Edit link on the resident's clinic visits tab. */
 export default async function EditClinicVisitPage(props: PageProps<"/clinic-visits/[id]/edit">) {
-  await requirePermission("medical.visits", "read");
+  await requirePermission("medical.visits");
   const { id } = await props.params;
   const { t, locale } = await getT();
   const supabase = await createClient();
