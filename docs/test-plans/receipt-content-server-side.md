@@ -30,7 +30,7 @@
 
   gates: typecheck=0 lint=0 build=0
   ```
-- [ ] CI green on the PR — deferred: runs on the PR; recorded there
+- [ ] CI green on the PR — n/a: not yet run when this plan was committed; ticked with the result once the PR's checks finish
 
 ## 3. Schema and data
 
