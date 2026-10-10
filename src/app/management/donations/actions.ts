@@ -71,6 +71,9 @@ async function issue(
       p_donation_id: donationId,
       p_country: country,
       p_issued_on: todayIso(),
+      // Ignored by the database since 0176: the RPC stores receipt_issuer(country), its SQL copy of this, so
+      // that no caller can name another organisation. Still sent only so the deploy order does not matter;
+      // drop it together with the argument in a later migration. Never make the database read it again.
       p_issuer: receiptIssuer(country),
       p_content: receiptContentFor(donation.donor_name, lines),
     })
