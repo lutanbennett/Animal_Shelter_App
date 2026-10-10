@@ -10,7 +10,8 @@
 //   node scripts/check-app-access-gate.mjs     (from the repo root; dev only)
 //
 // The logins, each a new auth.users row with a user_roles row:
-//   staff         the control: must still read the internal objects
+//   control       role 'management', the control: must still read the internal objects
+//                 (was staff until 0173 retired it; a live staff login can no longer be made)
 //   archived      role 'staff', archived_at set — current_user_role() null
 //   roleless      no user_roles row at all
 //   public_viewer role 'public_viewer' — only once *_public_viewer_role.sql
@@ -32,7 +33,7 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-// What a session without a staff role must not read. `-1` is "permission
+// What a session without an app role must not read. `-1` is "permission
 // denied", which is what anon gets from all of these.
 const INTERNAL = [
   "app_users",
@@ -116,7 +117,7 @@ declare
   r record;
 begin
   insert into who values
-    ('staff', gen_random_uuid()), ('archived', gen_random_uuid()),
+    ('control', gen_random_uuid()), ('archived', gen_random_uuid()),
     ('roleless', gen_random_uuid()), ('anon', null);
   if v_pv then insert into who values ('public_viewer', gen_random_uuid()); end if;
 
@@ -126,7 +127,7 @@ begin
             'harness-' || r.who || '-' || r.uid || '@example.invalid',
             '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || r.who), now(), now());
   end loop;
-  insert into user_roles (user_id, role) select uid, 'staff' from who where who = 'staff';
+  insert into user_roles (user_id, role) select uid, 'management' from who where who = 'control';
   insert into user_roles (user_id, role, archived_at) select uid, 'staff', now() from who where who = 'archived';
   if v_pv then
     execute $e$insert into user_roles (user_id, role) select uid, 'public_viewer' from who where who = 'public_viewer'$e$;
@@ -145,7 +146,7 @@ declare
   v_pv boolean := exists (select 1 from who where who = 'public_viewer');
   v_n bigint;
 begin
-  -- A. without a staff role, nothing internal after (0 rows, or refused for anon)
+  -- A. without an app role, nothing internal after (0 rows, or refused for anon)
   for r in select * from seen where phase = 'after' and kind = 'internal'
              and who in ('archived', 'roleless', 'public_viewer') and n <> 0 loop
     v_bad := v_bad || format(' A:%s reads %s rows of %s;', r.who, r.n, r.label);
@@ -154,9 +155,9 @@ begin
     v_bad := v_bad || format(' A:anon reads %s rows of %s;', r.n, r.label);
   end loop;
 
-  -- B. the staff control still reads the internal objects
-  select count(*) into v_n from seen where phase = 'after' and who = 'staff' and kind = 'internal' and n > 0;
-  if v_n < 8 then v_bad := v_bad || format(' B:staff reads only %s internal objects (setup?);', v_n); end if;
+  -- B. the management control still reads the internal objects
+  select count(*) into v_n from seen where phase = 'after' and who = 'control' and kind = 'internal' and n > 0;
+  if v_n < 8 then v_bad := v_bad || format(' B:control (management) reads only %s internal objects (setup?);', v_n); end if;
 
   -- C. everyone reads the public site exactly as anon does
   for r in select s.phase, s.who, s.label, s.n, a.n as anon_n from seen s
@@ -193,7 +194,7 @@ begin
   if v_bad <> '' then raise exception 'FAIL%', v_bad; end if;
 
   raise exception '%', format(
-    'HARNESS-OK app access gate | A: archived, roleless%s read 0 rows of %s internal objects, anon refused all | B: staff reads the internal objects | C: every login reads the %s public objects exactly as anon | D: %s | E: 6 views in private, 6 gated wrappers, no public_* view reaches the gate',
+    'HARNESS-OK app access gate | A: archived, roleless%s read 0 rows of %s internal objects, anon refused all | B: the management control reads the internal objects | C: every login reads the %s public objects exactly as anon | D: %s | E: 6 views in private, 6 gated wrappers, no public_* view reaches the gate',
     case when v_pv then ', public_viewer' else '' end,
     ${INTERNAL.length + Object.keys(FUNCTIONS).length},
     ${PUBLIC.length},

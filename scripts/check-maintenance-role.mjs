@@ -4,7 +4,7 @@
 //   node scripts/check-maintenance-role.mjs            (from the repo root; dev only)
 //   node scripts/check-maintenance-role.mjs --verbose  (also list every passing check)
 //
-// What it holds, for seven principals (the Head of Maintenance "hm", admin, management, staff, volunteer,
+// What it holds, for six principals (the Head of Maintenance "hm", admin, management, volunteer,
 // a doctor, no role):
 //   her board     she reads maintenance, a job's team, its Thai title, zones, enclosures, the people list,
 //                 who-and-where; a volunteer, a doctor and no role read none of the three job tables
@@ -13,7 +13,8 @@
 //                 one, or read a resident's record, medication, weight, diet, stock or contacts
 //   her own tasks record_recurring_job() accepts her on a task she is assigned to and refuses her on one
 //                 she is not
-//   controls      admin, management and staff still read and write what they did before
+//   controls      admin and management still read and write what they did before (staff left the
+//                 principals when 0173 retired it; a live staff login can no longer be made)
 //   the cells     role_permissions of head_of_maintenance are exactly the union of its jobs in jobs.ts
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -27,15 +28,16 @@ if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the
 const { bundleOfRole } = await import(pathToFileURL(join(process.cwd(), "src/lib/permissions/jobs.ts")).href);
 
 const lit = (id) => `'${id}'::uuid`;
-const P = ["hm", "admin", "management", "staff", "volunteer", "doctor", "norole"];
+const P = ["hm", "admin", "management", "volunteer", "doctor", "norole"];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
 const R = randomUUID(), OWN = randomUUID(), ZONE = randomUUID(), ENC = randomUUID(), JOB = randomUUID();
 const RJ_MINE = randomUUID(), RJ_OTHER = randomUUID();
 
-const NONE = { hm: 0, admin: 0, management: 0, staff: 0, volunteer: 0, doctor: 0, norole: 0 };
-const STAFF_UP = { ...NONE, admin: 1, management: 1, staff: 1 };
+const NONE = { hm: 0, admin: 0, management: 0, volunteer: 0, doctor: 0, norole: 0 };
+const STAFF_UP = { ...NONE, admin: 1, management: 1 };
 const WITH_HM = { ...STAFF_UP, hm: 1 };
-const WITH_HM_DOCTOR = { ...WITH_HM, doctor: 1 }; // a doctor reaches a job's attachments by doctor_*_attachments, unchanged by 0152
+// 0174: a doctor reaches only the three clinical owner types of attachments, and residents' translations, so a
+// job's attachments and translations are refused to it (they were doctor_*_attachments' fallthrough, 0110-0172).
 const MANAGERS = { ...NONE, admin: 1, management: 1 };
 
 // [name, sql, expectation]: a table of who may (1) or may not (0); "hm-one" = she must reach at least a row
@@ -44,7 +46,7 @@ const probes = [
   // her board
   ["maintenance", `select 1 from maintenance where id = '${JOB}'`, WITH_HM],
   ["maintenance_assignees", `select 1 from maintenance_assignees where maintenance_id = '${JOB}'`, WITH_HM],
-  ["translations of a job", `select 1 from translations where table_name = 'maintenance' and row_id = '${JOB}'`, { ...WITH_HM, doctor: 1 }], // a doctor's doctor_read_translations is untouched
+  ["translations of a job", `select 1 from translations where table_name = 'maintenance' and row_id = '${JOB}'`, WITH_HM],
   ["translations of anything else", `select 1 from translations where table_name <> 'maintenance'`, "hm-zero"],
   ["zones", `select 1 from zones where id = '${ZONE}'`, "hm-one"],
   ["enclosures", `select 1 from enclosures where id = '${ENC}'`, "hm-one"],
@@ -63,7 +65,7 @@ const probes = [
   ["delete a job", `delete from maintenance where id = '${JOB}'`, STAFF_UP],
   // RE-BASELINED 2026-10-07 (photo-split, 0152): the draft gives her maintenance.photos and the policies now follow the cell
   ["add a job photo", `insert into maintenance_photos (maintenance_id, drive_file_id) values ('${JOB}', 'probe')`, WITH_HM],
-  ["file a job attachment", `insert into attachments (owner_type, owner_id, drive_file_id, file_name) values ('maintenance', '${JOB}', 'probe', 'probe.jpg')`, WITH_HM_DOCTOR],
+  ["file a job attachment", `insert into attachments (owner_type, owner_id, drive_file_id, file_name) values ('maintenance', '${JOB}', 'probe', 'probe.jpg')`, WITH_HM],
   ["set up a recurring task", `insert into recurring_jobs (title, repeat, weekdays) values ('probe', 'weekly', '{1}')`, MANAGERS],
   ["change a recurring task", `update recurring_jobs set title = 'probe' where id = '${RJ_MINE}'`, MANAGERS],
   ["assign a recurring task", `insert into recurring_job_assignees (job_id, user_id) values ('${RJ_MINE}', '${ID.volunteer}')`, MANAGERS],
@@ -74,7 +76,7 @@ const probes = [
   ["prescriptions", `select 1 from prescriptions where resident_id = '${R}'`, "hm-zero"],
   ["medication", `select 1 from medication limit 1`, "hm-zero"],
   ["diet_types", `select 1 from diet_types limit 1`, "hm-zero"],
-  ["attachments", `select 1 from attachments limit 1`, WITH_HM_DOCTOR], // her own maintenance.photos cell reads a job's attachments (0152)
+  ["attachments", `select 1 from attachments limit 1`, WITH_HM], // her own maintenance.photos cell reads a job's attachments (0152)
   ["stock_counts", `select 1 from stock_counts limit 1`, "hm-zero"],
   ["contacts", `select 1 from contacts limit 1`, "hm-zero"],
   ["assistant_actions", `select 1 from assistant_actions limit 1`, "hm-zero"],
@@ -116,7 +118,7 @@ begin
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-mnt-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${["admin", "management", "staff", "volunteer", "doctor"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
+    select id, who::app_role from (values ${["admin", "management", "volunteer", "doctor"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role_id, role) select ${lit(ID.hm)}, id, legacy_role from roles where key = 'head_of_maintenance';
   insert into clinics (id, name) values (${lit(OWN)}, 'Harness own');
   with d as (insert into doctors (name, user_id) values ('Harness doctor', ${lit(ID.doctor)}) returning id) insert into doctor_clinics (clinic_id, doctor_id) select ${lit(OWN)}, id from d;
@@ -126,7 +128,7 @@ begin
   insert into weight (resident_id, date, weight_kg) values (${lit(R)}, current_date - 1, 5);
   insert into prescriptions (resident_id, medication_id, start_date) values (${lit(R)}, (select id from medication order by id limit 1), current_date);
   insert into maintenance (id, title, zone_id) values (${lit(JOB)}, 'Harness job', ${lit(ZONE)});
-  insert into maintenance_assignees (maintenance_id, user_id) values (${lit(JOB)}, ${lit(ID.staff)});
+  insert into maintenance_assignees (maintenance_id, user_id) values (${lit(JOB)}, ${lit(ID.management)}); -- was the staff login until 0173
   if not exists (select 1 from translations where table_name = 'maintenance' and row_id = ${lit(JOB)}) then
     insert into translations (table_name, row_id, column_name, source_lang, target_lang, source_text, text, status)
     values ('maintenance', ${lit(JOB)}, 'title', 'en', 'th', 'Harness job', 'งานทดสอบ', 'approved');

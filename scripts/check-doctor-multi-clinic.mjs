@@ -16,7 +16,8 @@
 // Fixtures: clinics A, B, C; residents rA / rB / rC with one visit each at
 // that clinic; a doctor login "multi" linked to a doctor who works at A and B;
 // a doctor login "single" whose doctor works only at A; a doctor login
-// with no doctor; admin, management, staff. A doctor is two rows since 0172:
+// with no doctor; admin, management, and "clerk": a custom role on the management enum holding the
+// retired Staff role's cells (no clinics.doctors), the shape 0147 refuses a merge to. A doctor is two rows since 0172:
 // doctors {name, user_id?}, then a doctor_clinics link per clinic.
 //
 //   A  the moved guarantee: a visit whose doctor does not work at its clinic
@@ -32,7 +33,7 @@
 //      (insert, update, delete, move A->C, a prescription on C's visit)
 //   E  a doctor's login: only an admin at aal2 sets it; unique both ways
 //   F  nobody widens a doctor login's reach: it cannot link itself to C or take
-//      another clinic's doctor; staff cannot touch a login-linked doctor's links
+//      another clinic's doctor; management cannot touch a login-linked doctor's links
 //   G  merge_doctors across clinics: links, visits and login follow
 //   H  user_roles.clinic_id, its check, current_user_vet_id() and (0172)
 //      current_user_vet_ids() are gone and nothing in the catalogue calls them;
@@ -90,7 +91,7 @@ end $f$;
 create temp table harness_ids (who text primary key, id uuid not null);
 insert into harness_ids
 select w, gen_random_uuid() from unnest(array[
-  'multi', 'single', 'nolink', 'admin', 'mgmt', 'staff', 'ds',
+  'multi', 'single', 'nolink', 'admin', 'mgmt', 'clerk', 'ds',
   'ca', 'cb', 'cc', 'ra', 'rb', 'rc', 'va', 'vb', 'vc',
   'dm', 'dx', 'dy', 'dz']) w;
 grant select on harness_ids to authenticated;
@@ -102,7 +103,7 @@ declare
   a uuid := pg_temp.hid('ca'); b uuid := pg_temp.hid('cb'); c uuid := pg_temp.hid('cc');
 begin
   insert into clinics (id, name) values (a, 'Harness clinic A'), (b, 'Harness clinic B'), (c, 'Harness clinic C');
-  for r in select * from harness_ids where who in ('multi', 'single', 'nolink', 'admin', 'mgmt', 'staff') loop
+  for r in select * from harness_ids where who in ('multi', 'single', 'nolink', 'admin', 'mgmt', 'clerk') loop
     insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
     values (r.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
             'harness-multi-' || r.who || '-' || r.id || '@example.invalid',
@@ -110,7 +111,14 @@ begin
   end loop;
   insert into user_roles (user_id, role) values
     (pg_temp.hid('multi'), 'doctor'), (pg_temp.hid('single'), 'doctor'), (pg_temp.hid('nolink'), 'doctor'),
-    (pg_temp.hid('admin'), 'admin'), (pg_temp.hid('mgmt'), 'management'), (pg_temp.hid('staff'), 'staff');
+    (pg_temp.hid('admin'), 'admin'), (pg_temp.hid('mgmt'), 'management');
+  -- clerk: Staff was this login until 0173 retired it; a custom role carrying its cells reaches the same path
+  insert into roles (key, name, kind, legacy_role) values ('harness_multi_clerk', 'Harness clerk', 'custom', 'management');
+  insert into role_permissions (role_id, activity, level)
+    select (select id from roles where key = 'harness_multi_clerk'), rp.activity, rp.level
+      from role_permissions rp join roles s on s.id = rp.role_id where s.key = 'staff';
+  insert into user_roles (user_id, role_id, role)
+    select pg_temp.hid('clerk'), id, legacy_role from roles where key = 'harness_multi_clerk';
   -- single: a doctor login whose doctor works only at A (owner context, so the login guard lets it through)
   insert into doctors (id, name, user_id) values (pg_temp.hid('ds'), 'Harness single', pg_temp.hid('single'));
   insert into doctor_clinics (clinic_id, doctor_id) values (a, pg_temp.hid('ds'));
@@ -127,7 +135,7 @@ do $h$
 declare
   a uuid := pg_temp.hid('ca'); b uuid := pg_temp.hid('cb'); c uuid := pg_temp.hid('cc');
   multi uuid := pg_temp.hid('multi'); single uuid := pg_temp.hid('single'); nolink uuid := pg_temp.hid('nolink');
-  adm uuid := pg_temp.hid('admin'); mgmt uuid := pg_temp.hid('mgmt'); stf uuid := pg_temp.hid('staff');
+  adm uuid := pg_temp.hid('admin'); mgmt uuid := pg_temp.hid('mgmt'); clerk uuid := pg_temp.hid('clerk');
   ra uuid := pg_temp.hid('ra'); rb uuid := pg_temp.hid('rb'); rc uuid := pg_temp.hid('rc');
   va uuid := pg_temp.hid('va'); vb uuid := pg_temp.hid('vb'); vc uuid := pg_temp.hid('vc');
   dm uuid := pg_temp.hid('dm'); dx uuid := pg_temp.hid('dx'); dy uuid := pg_temp.hid('dy'); dz uuid := pg_temp.hid('dz');
@@ -150,11 +158,11 @@ begin
   insert into clinic_visits (resident_id, clinic_id, appointment_date, doctor_id) values (ra, b, now(), dm);
   insert into clinic_visits (resident_id, clinic_id, appointment_date, doctor_id) values (ra, a, now(), dm);
   -- ... and through a role that bypasses nothing
-  n := pg_temp.try(stf, format('insert into clinic_visits (resident_id, clinic_id, appointment_date, doctor_id) values (%L, %L, now(), %L)', ra, a, dy));
-  if n <> -3 then raise exception 'HARNESS-FAIL A: staff booking a wrong-clinic doctor gave %', n; end if;
+  n := pg_temp.try(mgmt, format('insert into clinic_visits (resident_id, clinic_id, appointment_date, doctor_id) values (%L, %L, now(), %L)', ra, a, dy));
+  if n <> -3 then raise exception 'HARNESS-FAIL A: management booking a wrong-clinic doctor gave %', n; end if;
   -- an update that moves a visit to a clinic its doctor is not at, or swaps the doctor
   insert into clinic_visits (id, resident_id, clinic_id, appointment_date, doctor_id) values (gen_random_uuid(), ra, b, now(), dy) returning id into v_new;
-  n := pg_temp.try(stf, format('update clinic_visits set clinic_id = %L where id = %L', a, v_new));
+  n := pg_temp.try(mgmt, format('update clinic_visits set clinic_id = %L where id = %L', a, v_new));
   -- 0102 behaviour: moving a visit re-resolves the typed name at the new clinic
   -- (finds or adds that clinics own doctor), so it never keeps a doctor from elsewhere.
   if n <> 1 or exists (
@@ -163,7 +171,7 @@ begin
           select 1 from doctor_clinics l where l.doctor_id = x.doctor_id and l.clinic_id = x.clinic_id)))
   then raise exception 'HARNESS-FAIL A: moving a visit left it with a doctor who is not at its new clinic (%)', n; end if;
   insert into clinic_visits (id, resident_id, clinic_id, appointment_date, doctor_id) values (gen_random_uuid(), rb, b, now(), dy) returning id into v_new;
-  n := pg_temp.try(stf, format('update clinic_visits set doctor_id = %L where id = %L', dx, v_new));
+  n := pg_temp.try(mgmt, format('update clinic_visits set doctor_id = %L where id = %L', dx, v_new));
   if n <> -3 then raise exception 'HARNESS-FAIL A: swapping to a doctor not at the clinic gave %', n; end if;
   -- a typed name at a clinic finds or adds a doctor THERE and never crosses clinics
   insert into clinic_visits (id, resident_id, clinic_id, appointment_date, doctor_name) values (gen_random_uuid(), ra, a, now(), '  HARNESS  dr   multi ') returning id into v_new;
@@ -220,8 +228,8 @@ begin
     raise exception 'HARNESS-FAIL C: single''s clinics are %', pg_temp.scalar(single, 'select current_user_clinic_ids()::text'); end if;
   if pg_temp.scalar(nolink, 'select current_user_clinic_ids()::text') is distinct from '{}' then
     raise exception 'HARNESS-FAIL C: unlinked doctor login has clinics %', pg_temp.scalar(nolink, 'select current_user_clinic_ids()::text'); end if;
-  if pg_temp.scalar(stf, 'select current_user_clinic_ids()::text') is distinct from '{}' then
-    raise exception 'HARNESS-FAIL C: staff has doctor clinics'; end if;
+  if pg_temp.scalar(mgmt, 'select current_user_clinic_ids()::text') is distinct from '{}' then
+    raise exception 'HARNESS-FAIL C: management has doctor clinics'; end if;
 
   t := pg_temp.scalar(multi, format('select count(*) from residents where id in (%L, %L, %L)', ra, rb, rc));
   if t <> '2' or pg_temp.scalar(multi, format('select count(*) from residents where id = %L', rc)) <> '0' then
@@ -272,9 +280,9 @@ begin
 
   ----------------------------------------------------------------- E
   update doctors set user_id = null where id = dm;
-  n := pg_temp.try(stf, format('update doctors set user_id = %L where id = %L', multi, dm));
+  n := pg_temp.try(mgmt, format('update doctors set user_id = %L where id = %L', multi, dm));
   -- refused either way: an error from the login trigger (-1) or, since 0147, no row visible to update (0)
-  if n not in (-1, 0) then raise exception 'HARNESS-FAIL E: staff set a doctor''s login: %', n; end if;
+  if n not in (-1, 0) then raise exception 'HARNESS-FAIL E: management set a doctor''s login: %', n; end if;
   n := pg_temp.try(mgmt, format('update doctors set user_id = %L where id = %L', multi, dm));
   if n <> -1 then raise exception 'HARNESS-FAIL E: management set a login: %', n; end if;
   n := pg_temp.try(single, format('update doctors set user_id = %L where id = %L', single, dx));
@@ -285,8 +293,8 @@ begin
   if n <> 1 then raise exception 'HARNESS-FAIL E: an admin at aal2 could not set a login: %', n; end if;
   n := pg_temp.try(adm, format('update doctors set user_id = %L where id = %L', multi, dx), 'aal2');
   if n <> -4 then raise exception 'HARNESS-FAIL E: one login given to two doctors: %', n; end if;
-  n := pg_temp.try(stf, format('insert into doctors (name, user_id) values (''Harness Dr Sneaky'', %L)', single));
-  if n <> -1 then raise exception 'HARNESS-FAIL E: staff inserted a doctor with a login: %', n; end if;
+  n := pg_temp.try(mgmt, format('insert into doctors (name, user_id) values (''Harness Dr Sneaky'', %L)', single));
+  if n <> -1 then raise exception 'HARNESS-FAIL E: management inserted a doctor with a login: %', n; end if;
   v_report := v_report || 'E: login set only by admin@aal2, unique per login | ';
 
   ----------------------------------------------------------------- F
@@ -313,27 +321,27 @@ begin
   if n <> 1 then raise exception 'HARNESS-FAIL F: multi adding a second new doctor gave %', n; end if;
   n := pg_temp.try(multi, format('insert into doctor_clinics (clinic_id, doctor_id) values (%L, %L)', c, v_fresh));
   if n <> -1 then raise exception 'HARNESS-FAIL F: multi listing a doctor at C gave %', n; end if;
-  n := pg_temp.try(stf, format('insert into doctor_clinics (clinic_id, doctor_id) values (%L, %L)', c, dm));
-  if n <> -1 then raise exception 'HARNESS-FAIL F: staff widened a login-linked doctor''s clinics: %', n; end if;
-  n := pg_temp.try(stf, format('delete from doctor_clinics where doctor_id = %L and clinic_id = %L', dm, a));
-  if n <> 0 then raise exception 'HARNESS-FAIL F: staff removed a login-linked doctor''s link: %', n; end if;
+  n := pg_temp.try(mgmt, format('insert into doctor_clinics (clinic_id, doctor_id) values (%L, %L)', c, dm));
+  if n <> -1 then raise exception 'HARNESS-FAIL F: management widened a login-linked doctor''s clinics: %', n; end if;
+  n := pg_temp.try(mgmt, format('delete from doctor_clinics where doctor_id = %L and clinic_id = %L', dm, a));
+  if n <> 0 then raise exception 'HARNESS-FAIL F: management removed a login-linked doctor''s link: %', n; end if;
   update doctors set name = 'Harness Dr Multi C' where name = 'Harness Dr Multi' and id <> dm;   -- the C listing, until it is merged in G
   n := pg_temp.try(adm, format('insert into doctor_clinics (clinic_id, doctor_id) values (%L, %L)', c, dm));
   if n <> 1 then raise exception 'HARNESS-FAIL F: admin could not widen a login-linked doctor: %', n; end if;
   if pg_temp.scalar(multi, format('select count(*) from residents where id = %L', rc)) <> '1' then
     raise exception 'HARNESS-FAIL F: after admin added C, multi should see C''s resident'; end if;
   delete from doctor_clinics where doctor_id = dm and clinic_id = c;
-  n := pg_temp.try(stf, format('insert into doctor_clinics (clinic_id, doctor_id) values (%L, %L)', c, dx));
-  if n <> 1 then raise exception 'HARNESS-FAIL F: staff linking a loginless doctor gave %', n; end if;
-  v_report := v_report || 'F: no doctor-login/staff widening of a doctor login''s reach; admin can, and the login then sees C | ';
+  n := pg_temp.try(mgmt, format('insert into doctor_clinics (clinic_id, doctor_id) values (%L, %L)', c, dx));
+  if n <> 1 then raise exception 'HARNESS-FAIL F: management linking a loginless doctor gave %', n; end if;
+  v_report := v_report || 'F: no doctor-login/management widening of a doctor login''s reach; admin can, and the login then sees C | ';
 
   ----------------------------------------------------------------- G
   -- the same person listed at A and at C under one name: merge across clinics
   select id into dz from doctors where name = 'Harness Dr Multi C' limit 1;   -- the one added at C
   if dz is null then raise exception 'HARNESS-FAIL G: no second Dr Multi to merge'; end if;
-  -- dm has a login: staff cannot merge it, an admin can
-  n := pg_temp.try(stf, format('select merge_doctors(%L, %L)', dz, dm));
-  if n <> -1 then raise exception 'HARNESS-FAIL G: staff merged a doctor who has a login: %', n; end if;
+  -- dm has a login: management cannot merge it, an admin can
+  n := pg_temp.try(mgmt, format('select merge_doctors(%L, %L)', dz, dm));
+  if n <> -1 then raise exception 'HARNESS-FAIL G: management merged a doctor who has a login: %', n; end if;
   n := pg_temp.try(adm, format('select merge_doctors(%L, %L)', dz, dm));
   if n <> 1 then raise exception 'HARNESS-FAIL G: admin merge gave %', n; end if;
   if exists (select 1 from doctors where id = dz) then raise exception 'HARNESS-FAIL G: merged-away doctor still exists'; end if;
@@ -361,15 +369,16 @@ begin
   insert into doctors (name) values ('Harness Dr Same') returning id into v_new;
   insert into doctor_clinics (clinic_id, doctor_id) values (b, v_new);
   insert into clinic_visits (resident_id, clinic_id, appointment_date, doctor_id) values (rc, c, now(), dz);
-  -- since 0147 staff, who hold no clinics.doctors cell, are refused; management merges
-  n := pg_temp.try(stf, format('select merge_doctors(%L, %L)', dz, v_new));
-  if n <> -4 then raise exception 'HARNESS-FAIL G: staff merged doctors: %', n; end if;
+  -- since 0147 a login past the role gate without the clinics.doctors cell is refused (Staff was this probe until
+  -- 0173 retired it; now the clerk); management merges
+  n := pg_temp.try(clerk, format('select merge_doctors(%L, %L)', dz, v_new));
+  if n <> -4 then raise exception 'HARNESS-FAIL G: the clerk merged doctors: %', n; end if;
   n := pg_temp.try(mgmt, format('select merge_doctors(%L, %L)', dz, v_new));
   if n <> 1 then raise exception 'HARNESS-FAIL G: merging identical names across clinics gave %', n; end if;
   if (select count(*) from doctor_clinics where doctor_id = v_new) <> 2
      or not exists (select 1 from clinic_visits where clinic_id = c and doctor_id = v_new) then
     raise exception 'HARNESS-FAIL G: identical-name merge did not leave one person at B and C with the visit'; end if;
-  v_report := v_report || 'G: cross-clinic merge moves links, visits and login; staff refused on a login, two logins refused | ';
+  v_report := v_report || 'G: cross-clinic merge moves links, visits and login; management refused on a login, the clerk (no doctors cell) refused, two logins refused | ';
 
   ----------------------------------------------------------------- H
   if exists (select 1 from information_schema.columns where table_name = 'user_roles' and column_name = 'clinic_id') then

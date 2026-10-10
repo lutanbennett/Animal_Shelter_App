@@ -28,7 +28,7 @@ ${migration}
 
 create temp table who (who text primary key, uid uuid);
 insert into who values
-  ('management', gen_random_uuid()), ('staff', gen_random_uuid()), ('volunteer', gen_random_uuid());
+  ('management', gen_random_uuid()), ('volunteer', gen_random_uuid());
 insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
        'harness-0118-' || who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
@@ -130,8 +130,8 @@ begin
   if not v_ok then raise exception 'FAIL F empty entered accepted'; end if;
   v_rep := v_rep || ' | F mixed entry (1 bag + 10 kg = 300) saved; mismatch, zero factor, non-array, empty all refused';
 
-  -- G. record_stocktake as staff: old shape unchanged, then with entered
-  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'staff'), 'role', 'authenticated')::text, true);
+  -- G. record_stocktake as management (Staff until 0173 retired it): old shape unchanged, then with entered
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'management'), 'role', 'authenticated')::text, true);
   set local role authenticated;
   perform record_stocktake(null, jsonb_build_array(jsonb_build_object('id', v_kibble, 'count', 123)));
   reset role;
@@ -181,13 +181,7 @@ begin
   exception when insufficient_privilege or others then v_ok := true; end;
   reset role;
   if not v_ok then raise exception 'FAIL I volunteer wrote a conversion'; end if;
-  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'staff'), 'role', 'authenticated')::text, true);
-  set local role authenticated;
-  v_ok := false;
-  begin insert into item_unit_conversions (item_kind, diet_type_id, unit, base_units_per) values ('diet_type', v_kibble, 'tin', 3);
-  exception when insufficient_privilege or others then v_ok := true; end;
-  reset role;
-  if not v_ok then raise exception 'FAIL I staff wrote a conversion'; end if;
+  -- (a staff login was the second refused writer here until 0173 retired the role)
   perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'management'), 'role', 'authenticated')::text, true);
   set local role authenticated;
   insert into item_unit_conversions (item_kind, diet_type_id, unit, base_units_per) values ('diet_type', v_kibble, 'tin', 3);
@@ -199,7 +193,7 @@ begin
   exception when insufficient_privilege then v_ok := true; end;
   reset role;
   if not v_ok then raise exception 'FAIL I anon read conversions'; end if;
-  v_rep := v_rep || ' | I volunteer and staff read but cannot write, management writes, anon refused';
+  v_rep := v_rep || ' | I volunteer reads but cannot write, management writes, anon refused';
 
   -- J. cascade
   delete from diet_types where id = v_kibble;

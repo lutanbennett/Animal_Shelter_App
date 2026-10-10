@@ -92,7 +92,9 @@ const cases = [
   ["E6 a management page", "/management/medications", ["admin", "management"]],
   ["E7 admin", "/admin/zones", ["admin"]],
   ["E8 enclosures", "/enclosures", ALLK],
-  ["E9 contacts, trailing slash", "/contacts/", ALL],
+  // /contacts asks contacts.browse since 0155 (c0dc9826): the Director answered q6 + q7 "Management and the 2IC"
+  // (docs/decisions/2026-10-07-director-answers-schema.md), so staff and volunteers no longer open it. Not a regression.
+  ["E9 contacts, trailing slash", "/contacts/", ["admin", "management", "second_in_command"]],
   ["E10 a management page, trailing slash", "/management/diets/", ["admin", "management"]],
   ["E11 maintenance, with a fragment", "/maintenance#board", ["admin", "management", "staff", "second_in_command"]],
   ["E12 residents: everyone", "/residents", ALLK],
@@ -136,10 +138,12 @@ eq("F2 no answers: an unregistered page is still everyone's", rolesForJob("/resi
 eq("F3 asked only about volunteer: only volunteer", rolesForJob("/stocktake", { "stock.count:edit": ["volunteer"] }, ROLES), ["volunteer"]);
 
 // Held to what the conversion replaced, except where a later change to the cells moved the answer on
-// purpose. The /management landing opens for anyone who may open a page under it; staff and volunteers
-// were given contacts.directory (0144), so it now opens for them. Listed here, so the drift is on the
+// purpose. The /management landing opens for anyone who may open a page under it. Staff and volunteers once
+// opened it through the medication list (medical.prescriptions Read); 1aea1798 (2026-10-08) moved that page to
+// /operations, so /management is back to the table as written. /admin opens for Management since 0163 gave it
+// website.content Edit (docs/decisions/2026-10-08-management-website-content.md). Listed here, so the drift is on the
 // record rather than a red that has been failing since (found on a clean main, 2026-10-05).
-const MOVED_BY_CELLS = { "canDoJob(/management)": { staff: true, volunteer: true } };
+const MOVED_BY_CELLS = { "canDoJob(/admin)": { management: true } };
 const fixture = JSON.parse(readFileSync(join(process.cwd(), "scripts/fixtures/legacy-predicates.json"), "utf8"));
 for (const [id, table] of Object.entries(fixture).filter(([id]) => id.startsWith("canDoJob("))) {
   const link = id.slice("canDoJob(".length, -1);

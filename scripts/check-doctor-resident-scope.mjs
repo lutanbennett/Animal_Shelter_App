@@ -29,7 +29,7 @@
 //      its prescription and its weight
 //   D  writes: refused for other and for past (a clinic the doctor has left); allowed for seen
 //   E  a doctor login with no doctor record reads no resident
-//   F  admin, management, staff and the service role read every resident; a volunteer none (0134)
+//   F  admin, management and the service role read every resident; a volunteer none (0134)
 //   G  translations: none of other's rows
 //   H  private.has_app_access() is true for every app role, the doctor included (its body named 'vet')
 //   I  a doctor typed by name on a visit is listed at that clinic: a doctors row and its doctor_clinics link
@@ -110,7 +110,7 @@ end $f$;
 create temp table harness_ids (who text primary key, id uuid not null);
 insert into harness_ids values
   ('doctor', gen_random_uuid()), ('unlinked', gen_random_uuid()), ('mgmt', gen_random_uuid()),
-  ('admin', gen_random_uuid()), ('staff', gen_random_uuid()), ('volunteer', gen_random_uuid()),
+  ('admin', gen_random_uuid()), ('volunteer', gen_random_uuid()),
   ('own_clinic', gen_random_uuid()), ('left_clinic', gen_random_uuid()), ('other_clinic', gen_random_uuid()),
   ('doc_d', gen_random_uuid()), ('doc_c', gen_random_uuid()),
   ('seen', gen_random_uuid()), ('colleague', gen_random_uuid()), ('cancelled', gen_random_uuid()),
@@ -130,7 +130,7 @@ begin
   -- A mobile doctor's clinic: a name and nothing else (0172: every other field optional).
   insert into clinics (id, name)
   select id, 'Harness ' || who from harness_ids where who in ('own_clinic', 'left_clinic', 'other_clinic');
-  for r in select * from harness_ids where who in ('doctor', 'unlinked', 'mgmt', 'admin', 'staff', 'volunteer') loop
+  for r in select * from harness_ids where who in ('doctor', 'unlinked', 'mgmt', 'admin', 'volunteer') loop
     insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
     values (r.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
             'harness-doctor-scope-' || r.who || '-' || r.id || '@example.invalid',
@@ -138,7 +138,7 @@ begin
   end loop;
   insert into user_roles (user_id, role)
   select id, case who when 'mgmt' then 'management' when 'unlinked' then 'doctor' else who end::app_role
-  from harness_ids where who in ('doctor', 'unlinked', 'mgmt', 'admin', 'staff', 'volunteer');
+  from harness_ids where who in ('doctor', 'unlinked', 'mgmt', 'admin', 'volunteer');
 
   insert into doctors (id, name, user_id) values
     (v_d, 'Harness Doctor D ' || v_d, (select id from harness_ids where who = 'doctor')),
@@ -297,7 +297,7 @@ begin
   v_report := v_report || 'E: unlinked doctor login reads 0 everywhere | ';
 
   -- F: every other role unchanged.
-  foreach v_who in array array['admin', 'mgmt', 'staff'] loop
+  foreach v_who in array array['admin', 'mgmt'] loop
     n := pg_temp.try((select id from harness_ids h where h.who = v_who), 'select 1 from residents');
     if n <> v_total then raise exception 'HARNESS-FAIL F: % read % of % residents', v_who, n, v_total; end if;
     n := pg_temp.try((select id from harness_ids h where h.who = v_who), 'select 1 from resident_current_state');
@@ -309,7 +309,7 @@ begin
   end loop;
   n := pg_temp.try(null, 'select 1 from resident_current_state');
   if n <> v_total then raise exception 'HARNESS-FAIL F: service role read % of %', n, v_total; end if;
-  v_report := v_report || format('F: admin/management/staff and service role read all %s, a volunteer none | ', v_total);
+  v_report := v_report || format('F: admin/management and service role read all %s, a volunteer none | ', v_total);
 
   -- G: translations of other's bio.
   n := pg_temp.try(v_doc, format('select 1 from translations where table_name = ''residents'' and row_id = %L', v_other));
@@ -319,11 +319,11 @@ begin
   v_report := v_report || 'G: 0 of other''s translations (table and queue) | ';
 
   -- H: the app's front door, for every role that opens it.
-  foreach v_who in array array['doctor', 'admin', 'mgmt', 'staff', 'volunteer'] loop
+  foreach v_who in array array['doctor', 'admin', 'mgmt', 'volunteer'] loop
     t := pg_temp.val((select id from harness_ids h where h.who = v_who), 'select private.has_app_access()::text');
     if t is distinct from 'true' then raise exception 'HARNESS-FAIL H: has_app_access() for % gave %', v_who, coalesce(t, 'an error'); end if;
   end loop;
-  v_report := v_report || 'H: has_app_access() true for doctor, admin, management, staff, volunteer | ';
+  v_report := v_report || 'H: has_app_access() true for doctor, admin, management, volunteer | ';
 
   -- I: a doctor typed by name is listed at that clinic.
   insert into clinic_visits (resident_id, clinic_id, appointment_date, doctor_name)

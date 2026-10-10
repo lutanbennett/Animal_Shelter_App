@@ -29,7 +29,7 @@ begin;
 do $h$
 declare
   v_res uuid; v_dead uuid; v_clinic uuid; v_clinic2 uuid;
-  v_staff uuid; v_doctoruser uuid;
+  v_mgmt uuid; v_doctoruser uuid;
   v_a uuid; v_b uuid; v_c uuid; v_d1 uuid; v_d2 uuid; v_d3 uuid;
   v_got text; v_n int; v_unlinked int; v_rejected boolean;
   v_evidence text := '';
@@ -50,12 +50,16 @@ begin
   select r.id into v_dead from residents r where resident_is_deceased(r.id) limit 1;
   select id into v_clinic from clinics order by name limit 1;
   select id into v_clinic2 from clinics where id <> v_clinic order by name limit 1;
-  -- dev may hold no live staff account; revive an archived one (rolled back)
-  select user_id into v_staff from user_roles where role = 'staff' order by archived_at nulls first limit 1;
-  update user_roles set archived_at = null where user_id = v_staff;
+  -- a management login, the non-doctor control (was staff until 0173 retired it: a live staff row is
+  -- refused). Dev may hold no live one: turn an archived staff account into management (rolled back)
+  select user_id into v_mgmt from user_roles where role = 'management' and archived_at is null limit 1;
+  if v_mgmt is null then
+    select user_id into v_mgmt from user_roles where role = 'staff' and archived_at is not null limit 1;
+    update user_roles set role = 'management', archived_at = null where user_id = v_mgmt;
+  end if;
   select user_id into v_doctoruser from user_roles where role = 'doctor' and archived_at is null limit 1;
-  if v_res is null or v_clinic2 is null or v_staff is null or v_doctoruser is null then
-    raise exception 'FAIL setup: res % clinic2 % staff % doctoruser %', v_res, v_clinic2, v_staff, v_doctoruser;
+  if v_res is null or v_clinic2 is null or v_mgmt is null or v_doctoruser is null then
+    raise exception 'FAIL setup: res % clinic2 % management % doctoruser %', v_res, v_clinic2, v_mgmt, v_doctoruser;
   end if;
 
   -- B. a typed name adds a doctor; another spelling of it links to the same one
@@ -162,11 +166,11 @@ begin
   insert into doctor_clinics (clinic_id, doctor_id) values (v_clinic, v_d3);
   perform set_config('request.jwt.claims', json_build_object('sub', v_doctoruser, 'role', 'authenticated')::text, true);
   if current_user_clinic_ids() is distinct from array[v_clinic] then raise exception 'FAIL I current_user_clinic_ids for the doctor: %', current_user_clinic_ids(); end if;
-  perform set_config('request.jwt.claims', json_build_object('sub', v_staff, 'role', 'authenticated')::text, true);
-  if current_user_clinic_ids() <> '{}'::uuid[] then raise exception 'FAIL I current_user_clinic_ids for staff'; end if;
+  perform set_config('request.jwt.claims', json_build_object('sub', v_mgmt, 'role', 'authenticated')::text, true);
+  if current_user_clinic_ids() <> '{}'::uuid[] then raise exception 'FAIL I current_user_clinic_ids for management'; end if;
   perform set_config('request.jwt.claims', '{}', true);
 
-  raise exception 'HARNESS-OK %| typed name adds, variant spelling links to the same doctor, one list row | by id fills name, other clinic refused | no clinic stays free text, blank clears | clinic change relinks, other edits keep | rename reaches visits, bypass restored, duplicate rename refused | merge moves visits and clinics, used doctor undeletable | rpc links both rows, old call shape works | doctor login clinics come from the linked doctor, staff get none, current_user_clinic_ids | live schema, no replay', v_evidence;
+  raise exception 'HARNESS-OK %| typed name adds, variant spelling links to the same doctor, one list row | by id fills name, other clinic refused | no clinic stays free text, blank clears | clinic change relinks, other edits keep | rename reaches visits, bypass restored, duplicate rename refused | merge moves visits and clinics, used doctor undeletable | rpc links both rows, old call shape works | doctor login clinics come from the linked doctor, management gets none, current_user_clinic_ids | live schema, no replay', v_evidence;
 end;
 $h$;
 rollback;
@@ -177,38 +181,42 @@ rollback;
 const rls = `
 begin;
 do $h$
-declare v_clinic uuid; v_res uuid; v_staff uuid; v_vol uuid; v_id uuid; v_n int; v_rejected boolean := false;
+declare v_clinic uuid; v_res uuid; v_mgmt uuid; v_vol uuid; v_id uuid; v_n int; v_rejected boolean := false;
 begin
   select id into v_clinic from clinics order by name limit 1;
   select s.resident_id into v_res from resident_current_state s where s.current_status in ('Resident', 'Unassigned') limit 1;
-  -- dev may hold no live staff or volunteer account: revive archived staff
-  -- accounts, one of them as a volunteer (all rolled back)
-  select user_id into v_staff from user_roles where role = 'staff' order by archived_at nulls first limit 1;
-  update user_roles set archived_at = null where user_id = v_staff;
+  -- a management login books (was staff until 0173 retired it: a live staff row is refused).
+  -- Dev may hold no live management or volunteer account: turn archived staff accounts into
+  -- them (all rolled back)
+  select user_id into v_mgmt from user_roles where role = 'management' and archived_at is null limit 1;
+  if v_mgmt is null then
+    select user_id into v_mgmt from user_roles where role = 'staff' and archived_at is not null limit 1;
+    update user_roles set role = 'management', archived_at = null where user_id = v_mgmt;
+  end if;
   select user_id into v_vol from user_roles where role = 'volunteer' and archived_at is null limit 1;
   if v_vol is null then
-    select user_id into v_vol from user_roles where role in ('staff', 'management') and user_id <> v_staff and archived_at is not null limit 1;
+    select user_id into v_vol from user_roles where role in ('staff', 'management') and user_id <> v_mgmt and archived_at is not null limit 1;
     update user_roles set role = 'volunteer', archived_at = null where user_id = v_vol;
   end if;
   perform set_config('harness.clinic', v_clinic::text, true);
   perform set_config('harness.res', v_res::text, true);
-  perform set_config('harness.staff', v_staff::text, true);
+  perform set_config('harness.mgmt', v_mgmt::text, true);
   perform set_config('harness.vol', coalesce(v_vol::text, ''), true);
 end;
 $h$;
 
-select set_config('request.jwt.claims', json_build_object('sub', current_setting('harness.staff'), 'role', 'authenticated')::text, true);
+select set_config('request.jwt.claims', json_build_object('sub', current_setting('harness.mgmt'), 'role', 'authenticated')::text, true);
 set local role authenticated;
 do $h$
 declare v_id uuid; v_got text;
 begin
   insert into clinic_visits (resident_id, clinic_id, appointment_date, doctor_name)
-    values (current_setting('harness.res')::uuid, current_setting('harness.clinic')::uuid, now(), 'Dr Staff Harness')
+    values (current_setting('harness.res')::uuid, current_setting('harness.clinic')::uuid, now(), 'Dr Mgmt Harness')
     returning doctor_id, doctor_name into v_id, v_got;
-  if v_id is null then raise exception 'FAIL RLS staff booking did not add the doctor'; end if;
-  update doctors set name = 'Dr Staff Harness Two' where id = v_id;
+  if v_id is null then raise exception 'FAIL RLS management booking did not add the doctor'; end if;
+  update doctors set name = 'Dr Mgmt Harness Two' where id = v_id;
   select doctor_name into v_got from clinic_visits where doctor_id = v_id limit 1;
-  if v_got <> 'Dr Staff Harness Two' then raise exception 'FAIL RLS staff rename: [%]', v_got; end if;
+  if v_got <> 'Dr Mgmt Harness Two' then raise exception 'FAIL RLS management rename: [%]', v_got; end if;
 end;
 $h$;
 reset role;
@@ -247,7 +255,7 @@ begin
     raise exception 'FAIL RLS anon could call current_user_clinic_ids';
   exception when insufficient_privilege then null;
   end;
-  raise exception 'HARNESS-OK rls: staff booking adds and renames a doctor | volunteer (%) reads, cannot add or merge | anon cannot read the list or call current_user_clinic_ids',
+  raise exception 'HARNESS-OK rls: management booking adds and renames a doctor | volunteer (%) reads, cannot add or merge | anon cannot read the list or call current_user_clinic_ids',
     case when current_setting('harness.vol') = '' then 'no volunteer on dev, skipped' else 'checked' end;
 end;
 $h$;

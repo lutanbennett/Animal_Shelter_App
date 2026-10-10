@@ -21,7 +21,7 @@ begin;
 
 create temp table who (who text primary key, uid uuid);
 insert into who values
-  ('management', gen_random_uuid()), ('staff', gen_random_uuid()),
+  ('management', gen_random_uuid()),
   ('volunteer', gen_random_uuid()), ('doctor', gen_random_uuid());
 insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
@@ -146,13 +146,13 @@ begin
   end loop;
   v_report := v_report || ' | S3 zero, negative, negative cost, wrong kind, both items, no item, unknown kind refused';
 
-  -- S4 roles.
-  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'staff'), 'role', 'authenticated')::text, true);
+  -- S4 roles. Management records the delivery: it was Staff until 0173 retired that role.
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'management'), 'role', 'authenticated')::text, true);
   set local role authenticated;
   insert into stock_receipts (item_kind, medication_id, quantity, recorded_by)
     values ('medication', v_other, 5, gen_random_uuid()) returning id into v_id;
   reset role;
-  if (select recorded_by from stock_receipts where id = v_id) is distinct from (select uid from who where who = 'staff') then
+  if (select recorded_by from stock_receipts where id = v_id) is distinct from (select uid from who where who = 'management') then
     raise exception 'S4 recorded_by not stamped from the caller';
   end if;
 
@@ -197,7 +197,7 @@ begin
   exception when insufficient_privilege then null;
   end;
   reset role;
-  v_report := v_report || ' | S4 staff records (recorded_by forced to caller), management cannot edit (C8, 0145), volunteer reads nothing and cannot record (0134), doctor sees nothing, anon refused by the grant';
+  v_report := v_report || ' | S4 management records (recorded_by forced to caller), management cannot edit (C8, 0145), volunteer reads nothing and cannot record (0134), doctor sees nothing, anon refused by the grant';
 
   -- S5 cascade.
   delete from diet_types where id = v_kibble;

@@ -9,6 +9,9 @@
 // Fixtures (all rolled back): one login each for admin, management, staff, doctor,
 // volunteer and public_viewer; a login with no user_roles row; a staff login
 // that is archived; a login whose configured role has been archived.
+// Since 0173 retired Staff (its roles row is archived, with its 39 cells kept) a live
+// staff login can no longer be made, so the 'staff' login holds a harness custom role
+// carrying the archived Staff role's cells; every Staff check asks about those cells.
 //
 // It checks
 //   A  the seed: six roles, 60 activities, 55 / 39 / 13 / 3 cells for
@@ -48,7 +51,9 @@ if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the
 const dir = join(root, "supabase/migrations");
 const file = readdirSync(dir).find((f) => /^\d+_permission_tables\.sql$/.test(f));
 if (!file) throw new Error("no *_permission_tables.sql in supabase/migrations");
-const migration = readFileSync(join(dir, file), "utf8");
+// 0172 renamed the 'vet' role (and its roles row) to 'doctor'; the file (applied, so never edited) still
+// says 'vet', so it is replayed with the role's current name.
+const migration = readFileSync(join(dir, file), "utf8").replace(/'vet'/g, "'doctor'");
 
 // H: the expected cells, read from the paper's §4 table at run time and not from the
 // migration, so the seed is checked against the document it claims to copy.
@@ -174,18 +179,26 @@ begin
   end loop;
   insert into user_roles (user_id, role)
   select id, (case when who = 'admin2' then 'admin' else who end)::app_role from harness_ids
-   where who in ('admin', 'admin2', 'management', 'staff', 'doctor', 'volunteer', 'public_viewer');
+   where who in ('admin', 'admin2', 'management', 'doctor', 'volunteer', 'public_viewer');
+  -- 'staff': 0173 refuses a live staff login, so a custom role carrying the archived Staff role's cells
+  insert into roles (key, name, kind, legacy_role) values ('harness_staff_cells', 'Harness Staff cells', 'custom', 'management');
+  insert into role_permissions (role_id, activity, level)
+    select (select id from roles where key = 'harness_staff_cells'), rp.activity, rp.level
+      from role_permissions rp join roles s on s.id = rp.role_id where s.key = 'staff';
+  insert into user_roles (user_id, role_id, role)
+    select h.id, ro.id, ro.legacy_role from harness_ids h, roles ro where h.who = 'staff' and ro.key = 'harness_staff_cells';
   insert into user_roles (user_id, role, archived_at)
   select id, 'staff', now() from harness_ids where who = 'archperson';
 end $setup$;
 
--- A configured role that borrows 'staff', holds one cell, and is later archived.
+-- A configured role that borrows 'management' (it borrowed 'staff' until 0173 retired that role),
+-- holds one cell, and is later archived.
 -- (kind custom with a legacy_role: allowed, and not part of the one-per-enum index)
-insert into roles (key, name, kind, legacy_role) values ('harness_archived', 'Harness archived', 'custom', 'staff');
+insert into roles (key, name, kind, legacy_role) values ('harness_archived', 'Harness archived', 'custom', 'management');
 insert into role_permissions (role_id, activity, level)
 select id, 'stock.count', 2 from roles where key = 'harness_archived';
 insert into user_roles (user_id, role_id, role)
-select h.id, r.id, 'staff' from harness_ids h, roles r where h.who = 'archrole' and r.key = 'harness_archived';
+select h.id, r.id, 'management' from harness_ids h, roles r where h.who = 'archrole' and r.key = 'harness_archived';
 
 do $h$
 declare
@@ -275,7 +288,7 @@ begin
   perform pg_temp.eq('C admin is_admin', pg_temp.q(v_admin, '(my_permissions() ->> ''is_admin'')'), 'true');
   perform pg_temp.eq('C admin cells', pg_temp.q(v_admin, '(select count(*) from jsonb_object_keys(my_permissions() -> ''permissions''))'), '60');
   perform pg_temp.eq('C staff cells', pg_temp.q(v_staff, '(select count(*) from jsonb_object_keys(my_permissions() -> ''permissions''))'), '39');
-  perform pg_temp.eq('C staff role', pg_temp.q(v_staff, '(my_permissions() -> ''role'' ->> ''key'')'), 'staff');
+  perform pg_temp.eq('C staff role', pg_temp.q(v_staff, '(my_permissions() -> ''role'' ->> ''key'')'), 'harness_staff_cells'); -- the stand-in role (0173)
   perform pg_temp.eq('C staff delivery level', pg_temp.q(v_staff, '(my_permissions() -> ''permissions'' ->> ''stock.delivery'')'), '2');
   perform pg_temp.eq('C doctor scopes', pg_temp.q(v_doctor, '(my_permissions() -> ''scopes'' ->> ''contacts'') || ''/'' || (my_permissions() -> ''scopes'' ->> ''residents'')'), 'name_type/own_clinic');
   perform pg_temp.eq('C public viewer opens_app', pg_temp.q(v_pub, '(my_permissions() -> ''role'' ->> ''opens_app'')'), 'false');
@@ -346,9 +359,9 @@ begin
   end loop;
   v_report := v_report || 'D: no cells for admin / public_viewer, Yes/No stays level 2, unknown activity and duplicate cell refused, fixed roles immutable, bad scope values refused | ';
 
-  -- the role_id bridge
-  insert into user_roles (user_id, role) values (v_sync, 'staff');
-  perform pg_temp.eq('D insert fills role_id', (select role_id::text from user_roles where user_id = v_sync), v_role_staff::text);
+  -- the role_id bridge (through 'management': it was 'staff' until 0173 refused a live staff login)
+  insert into user_roles (user_id, role) values (v_sync, 'management');
+  perform pg_temp.eq('D insert fills role_id', (select role_id::text from user_roles where user_id = v_sync), (select id::text from roles where key = 'management'));
   update user_roles set role = 'doctor' where user_id = v_sync;
   perform pg_temp.eq('D enum change moves role_id', (select r.key from user_roles ur join roles r on r.id = ur.role_id where ur.user_id = v_sync), 'doctor');
   update user_roles set role_id = (select id from roles where key = 'volunteer') where user_id = v_sync;
@@ -375,12 +388,13 @@ begin
   if not v_raised then raise exception 'HARNESS-FAIL D: every admin was deleted'; end if;
   v_raised := false;
   begin
-    update user_roles set role = 'staff' where role_id = v_role_admin;
+    -- demoted to management: to 'staff' 0173's trigger would refuse it first, with the same SQLSTATE
+    update user_roles set role = 'management' where role_id = v_role_admin;
   exception when check_violation then v_raised := true;
   end;
   if not v_raised then raise exception 'HARNESS-FAIL D: every admin was demoted'; end if;
   -- one admin going while another remains is fine
-  update user_roles set role = 'staff' where user_id = v_admin;
+  update user_roles set role = 'management' where user_id = v_admin;
   update user_roles set role = 'admin' where user_id = v_admin;
   -- deferred: archive them all, restore one, judged only when forced
   set constraints user_roles_keep_an_admin deferred;

@@ -9,9 +9,10 @@
 //                          (delete has no activity of its own, so the Head of Maintenance still cannot remove a job: 0141)
 //   maintenance_assignees  all four through maintenance.jobs (read Read, the rest Edit): a job's team is rewritten as a set
 //   project_folders        read projects.folders Read; insert, update and delete Edit; projects.publish alone opens nothing
-// Principals: admin, management, staff, volunteer, a vet, no role, the real Head of Maintenance (volunteer floor, jobs
-// and progress Edit) and configured roles. Then structural sweeps: no policy on these tables names management or
-// staff, every *_perm policy wraps has_permission() in (select ...), and there are 12 *_perm policies on them.
+// Principals: admin, management, volunteer, a doctor, no role, the real Head of Maintenance (volunteer floor, jobs
+// and progress Edit) and configured roles (staff left the principals and the custom roles borrow management, not
+// staff, since 0173 retired it; the vet login is a doctor since 0172). Then structural sweeps: no policy on these
+// tables names management or staff, every *_perm policy wraps has_permission() in (select ...), and there are 12 *_perm policies on them.
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
@@ -25,14 +26,14 @@ if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the
 const lit = (id) => `'${id}'::uuid`;
 const CUSTOM = {
   c_jobs_read: { cells: [["maintenance.jobs", 1]] },
-  c_jobs_edit: { cells: [["maintenance.jobs", 2]] }, // staff floor
+  c_jobs_edit: { cells: [["maintenance.jobs", 2]] }, // management floor (staff until 0173)
   c_jobs_edit_vol: { floor: "volunteer", cells: [["maintenance.jobs", 2]] }, // the 2IC's shape: volunteer floor
   c_progress: { cells: [["maintenance.progress", 2]] },
   c_folders_read: { cells: [["projects.folders", 1]] },
   c_folders_edit: { cells: [["projects.folders", 2]] },
   c_publish: { cells: [["projects.publish", 2]] },
 };
-const REAL = ["admin", "management", "staff", "volunteer", "vet"];
+const REAL = ["admin", "management", "volunteer", "doctor"];
 const P = [...REAL, "norole", "hm", ...Object.keys(CUSTOM)];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
 const ZONE = randomUUID(), JOB = randomUUID(), FOLDER = randomUUID();
@@ -47,7 +48,7 @@ const T = {
   maintenance_assignees: [
     `select 1 from maintenance_assignees where maintenance_id = '${JOB}'`,
     `update maintenance_assignees set user_id = user_id where maintenance_id = '${JOB}'`,
-    `insert into maintenance_assignees (maintenance_id, user_id) values ('${JOB}', '${ID.vet}')`,
+    `insert into maintenance_assignees (maintenance_id, user_id) values ('${JOB}', '${ID.doctor}')`,
     `delete from maintenance_assignees where maintenance_id = '${JOB}'`,
   ],
   project_folders: [
@@ -59,9 +60,9 @@ const T = {
 };
 const A = "1111", RO = "1000", NODEL = "1110";
 const EXPECT = {
-  maintenance: { admin: A, management: A, staff: A, hm: NODEL, c_jobs_read: RO, c_jobs_edit: A, c_jobs_edit_vol: NODEL },
-  maintenance_assignees: { admin: A, management: A, staff: A, hm: A, c_jobs_read: RO, c_jobs_edit: A, c_jobs_edit_vol: A },
-  project_folders: { admin: A, management: A, staff: A, c_folders_read: RO, c_folders_edit: A },
+  maintenance: { admin: A, management: A, hm: NODEL, c_jobs_read: RO, c_jobs_edit: A, c_jobs_edit_vol: NODEL },
+  maintenance_assignees: { admin: A, management: A, hm: A, c_jobs_read: RO, c_jobs_edit: A, c_jobs_edit_vol: A },
+  project_folders: { admin: A, management: A, c_folders_read: RO, c_folders_edit: A },
 };
 const CMDS = ["read", "update", "insert", "delete"];
 const expected = (tbl, who) => (EXPECT[tbl][who] ?? "0000").split("").map(Number);
@@ -104,16 +105,16 @@ begin
     select id, who::app_role from (values ${REAL.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role_id, role) select ${lit(ID.hm)}, id, 'volunteer' from roles where key = 'head_of_maintenance';
   insert into roles (key, name, kind, legacy_role, scope_residents, scope_contacts) values
-    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_wk_${c}', 'Harness ${c}', 'custom', '${d.floor ?? "staff"}', 'all', 'full')`).join(",\n    ")};
+    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_wk_${c}', 'Harness ${c}', 'custom', '${d.floor ?? "management"}', 'all', 'full')`).join(",\n    ")};
   insert into role_permissions (role_id, activity, level)
     select r.id, v.act, v.lvl from roles r join (values
       ${Object.entries(CUSTOM).flatMap(([c, d]) => d.cells.map(([a, l]) => `('harness_wk_${c}', '${a}', ${l})`)).join(",\n      ")}
     ) as v(rkey, act, lvl) on v.rkey = r.key;
-  ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id, role) select ${lit(ID[c])}, id, '${CUSTOM[c].floor ?? "staff"}' from roles where key = 'harness_wk_${c}';`).join("\n  ")}
+  ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id, role) select ${lit(ID[c])}, id, '${CUSTOM[c].floor ?? "management"}' from roles where key = 'harness_wk_${c}';`).join("\n  ")}
 
   insert into zones (id, name) values (${lit(ZONE)}, 'Harness zone');
   insert into maintenance (id, title, zone_id) values (${lit(JOB)}, 'Harness job', ${lit(ZONE)});
-  insert into maintenance_assignees (maintenance_id, user_id) values (${lit(JOB)}, ${lit(ID.staff)});
+  insert into maintenance_assignees (maintenance_id, user_id) values (${lit(JOB)}, ${lit(ID.management)}); -- was the staff login until 0173
   insert into project_folders (id, top_level_category, name, parent_folder_id)
     select ${lit(FOLDER)}, 'Events', 'Harness project', id from project_folders where parent_folder_id is null and top_level_category = 'Events';
 end $setup$;

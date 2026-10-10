@@ -12,7 +12,8 @@
 //   facility_maps      read / update / insert / delete: read is every login with app access (0170); write facility.enclosures Edit
 //                      (facility.map, which staff and volunteers hold, opens nothing)
 //   fixed_outgoings    read / update / insert / delete: reports.cashflow Read for read, Edit for the rest
-// Principals: admin, management, staff, volunteer, a vet, no role, and configured roles. Then structural sweeps: no policy
+// Principals: admin, management, volunteer, a vet (a doctor login since 0172), no role, and configured roles (Staff left
+// when 0173 retired it; it matched management or the vet everywhere). Then structural sweeps: no policy
 // on these tables names management or staff, every *_perm policy wraps has_permission() in (select ...), and the count.
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -30,8 +31,8 @@ const CUSTOM = {
   c_ask: { cells: [["assistant.ask", 2]] },
   c_trans: { scope: "own_clinic", cells: [["translations.manage", 2]] },
   c_view: { scope: "own_clinic", cells: [["translations.view", 2]] }, // the new cell alone: reads, writes nothing
-  c_floor_all: { scope: "all", cells: [] }, // staff floor, reads every resident: the staff shape, no cell at all
-  c_floor_scoped: { scope: "own_clinic", cells: [] }, // staff floor, scoped to a clinic
+  c_floor_all: { scope: "all", cells: [] }, // above-the-floor legacy, reads every resident, no cell at all
+  c_floor_scoped: { scope: "own_clinic", cells: [] }, // above-the-floor legacy, scoped to a clinic
   c_closed: { scope: "all", opens: false, cells: [] }, // scope all but opens no app: the public_viewer shape, refused (check-app-access-gate caught it)
   c_vol_all: { floor: "volunteer", cells: [] }, // volunteer floor, scope all: still refused
   c_encl_read: { cells: [["facility.enclosures", 1]] },
@@ -40,7 +41,10 @@ const CUSTOM = {
   c_cash_read: { cells: [["reports.cashflow", 1]] },
   c_cash_edit: { cells: [["reports.cashflow", 2]] },
 };
-const REAL = ["admin", "management", "staff", "volunteer", "vet"];
+const REAL = ["admin", "management", "volunteer", "vet"];
+const APP_ROLE = { vet: "doctor" }; // 0172 renamed the 'vet' app_role
+// The custom roles borrowed staff as their legacy floor until 0173 retired it; management now. No policy on these
+// tables names either (the sweep below), so only the cells decide.
 const P = [...REAL, "norole", ...Object.keys(CUSTOM)];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
 const ZONE = randomUUID(), ZONE2 = randomUUID(), MAP = randomUUID(), OUT = randomUUID(), TR = randomUUID(), TR_ROW = randomUUID();
@@ -73,9 +77,9 @@ const T = {
 };
 const ALL = "1111", NONE = "0000", READ_ONLY = "1000";
 const EXPECT = {
-  // management and staff: their own rows only. Nobody but Admin reads or writes in someone else's name.
-  assistant_actions: { admin: ALL, management: "1010", staff: "1010", c_record: "1010" },
-  translations: { admin: ALL, management: ALL, staff: READ_ONLY, vet: READ_ONLY, c_trans: ALL, c_view: READ_ONLY },
+  // management: its own rows only. Nobody but Admin reads or writes in someone else's name.
+  assistant_actions: { admin: ALL, management: "1010", c_record: "1010" },
+  translations: { admin: ALL, management: ALL, vet: NONE /* 0174: a doctor reads residents' translations only; this row is a project folder's */, c_trans: ALL, c_view: READ_ONLY },
   // read is every login with app access (0170: a login with no role, public_viewer and an archived person read nothing)
   facility_maps: {
     ...Object.fromEntries(P.map((p) => [p, READ_ONLY])),
@@ -121,14 +125,14 @@ begin
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-st-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${REAL.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
+    select id, who::app_role from (values ${REAL.map((p) => `('${APP_ROLE[p] ?? p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into roles (key, name, kind, legacy_role, scope_residents, scope_contacts, opens_app) values
-    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_st_${c}', 'Harness ${c}', 'custom', '${d.floor ?? "staff"}', '${d.scope ?? "own_clinic"}', 'full', ${d.opens ?? true})`).join(",\n    ")};
+    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_st_${c}', 'Harness ${c}', 'custom', '${d.floor ?? "management"}', '${d.scope ?? "own_clinic"}', 'full', ${d.opens ?? true})`).join(",\n    ")};
   insert into role_permissions (role_id, activity, level)
     select r.id, v.act, v.lvl from roles r join (values
       ${Object.entries(CUSTOM).flatMap(([c, d]) => d.cells.map(([a, l]) => `('harness_st_${c}', '${a}', ${l})`)).join(",\n      ")}
     ) as v(rkey, act, lvl) on v.rkey = r.key;
-  ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id, role) select ${lit(ID[c])}, id, '${CUSTOM[c].floor ?? "staff"}' from roles where key = 'harness_st_${c}';`).join("\n  ")}
+  ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id, role) select ${lit(ID[c])}, id, '${CUSTOM[c].floor ?? "management"}' from roles where key = 'harness_st_${c}';`).join("\n  ")}
 
   insert into assistant_actions (user_id, request_text, status)
     select id, 'harness-mine', 'unmatched' from auth.users where id in (${P.map((p) => lit(ID[p])).join(",")});

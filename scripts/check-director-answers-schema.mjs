@@ -32,7 +32,9 @@ const CUSTOM = {
   c_types_read: { cells: [["reference.types", 1]] },
   c_vol_medical: { floor: "volunteer", cells: [["medical.immunizations", 2], ["medical.prescriptions", 2]] },
 };
-const REAL = ["admin", "management", "staff", "volunteer", "doctor"];
+// Staff left REAL when 0173 retired it: everywhere it sat beside admin and management (friends, imm_view) or beside
+// the refused (contacts_table). The custom roles borrowed staff as their floor until then; management now.
+const REAL = ["admin", "management", "volunteer", "doctor"];
 const P = [...REAL, "twoic", "norole", ...Object.keys(CUSTOM)];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
 const CT = randomUUID(), CT2 = randomUUID(), FR = randomUUID(), IT = randomUUID();
@@ -48,9 +50,9 @@ const PROBES = {
 const EXPECT = {
   contacts_table: ["admin", "management", "c_dir_all", "c_browse_full"], // 0170/0171: browse or directory Edit; staff name contacts through picker_contacts
   contacts_view: ["twoic", "c_browse_np"],
-  friends: ["admin", "management", "staff", "doctor", "c_friends_view", "c_friends_manage"],
+  friends: ["admin", "management", "doctor", "c_friends_view", "c_friends_manage"],
   imm_table: ["admin", "doctor", "c_types_read"],
-  imm_view: ["admin", "management", "staff", "twoic", "c_types_read", "c_vol_medical"] // twoic: dev holds the Director's draft, which gives her medical.immunizations; she reads the view and, as imm_table shows, not the table,
+  imm_view: ["admin", "management", "twoic", "c_types_read", "c_vol_medical"] // twoic: dev holds the Director's draft, which gives her medical.immunizations; she reads the view and, as imm_table shows, not the table,
 };
 const SKIP = { friends: ["doctor"], imm_table: ["doctor"], imm_view: ["doctor"] };
 
@@ -88,12 +90,12 @@ begin
   insert into user_roles (user_id, role)
     select id, who::app_role from (values ${REAL.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into roles (key, name, kind, legacy_role, scope_residents, scope_contacts) values
-    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_das_${c}', 'Harness ${c}', 'custom', '${d.floor ?? "staff"}', 'all', '${d.scope ?? "full"}')`).join(",\n    ")};
+    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_das_${c}', 'Harness ${c}', 'custom', '${d.floor ?? "management"}', 'all', '${d.scope ?? "full"}')`).join(",\n    ")};
   insert into role_permissions (role_id, activity, level)
     select r.id, v.act, v.lvl from roles r join (values
       ${Object.entries(CUSTOM).flatMap(([c, d]) => d.cells.map(([a, l]) => `('harness_das_${c}', '${a}', ${l})`)).join(",\n      ")}
     ) as v(rkey, act, lvl) on v.rkey = r.key;
-  ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id, role) select ${lit(ID[c])}, id, '${CUSTOM[c].floor ?? "staff"}' from roles where key = 'harness_das_${c}';`).join("\n  ")}
+  ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id, role) select ${lit(ID[c])}, id, '${CUSTOM[c].floor ?? "management"}' from roles where key = 'harness_das_${c}';`).join("\n  ")}
   insert into user_roles (user_id, role_id, role) select ${lit(ID.twoic)}, id, 'volunteer' from roles where key = 'second_in_command';
   insert into contacts (id, name, type, phone, address) values (${lit(CT)}, 'Harness carer', 'Carer', '0800000000', 'Harness address'), (${lit(CT2)}, 'Harness friend', 'Vendor', null, null);
   insert into shelter_friends (id, contact_id) values (${lit(FR)}, ${lit(CT2)});
@@ -108,7 +110,7 @@ do $sweep$ begin
   insert into res select 'sweep', 'imm_view_cols', count(*) from information_schema.columns
    where table_schema = 'public' and table_name = 'picker_immunization_types' and column_name in ('id', 'name', 'is_mandatory', 'interval_months');
   insert into res select 'sweep', 'imm_view_extra', count(*) from information_schema.columns
-   where table_schema = 'public' and table_name = 'picker_immunization_types' and column_name not in ('id', 'name', 'is_mandatory', 'interval_months');
+   where table_schema = 'public' and table_name = 'picker_immunization_types' and column_name not in ('id', 'name', 'is_mandatory', 'interval_months', 'name_th'); -- name_th: 0166, not a price
   insert into res select 'sweep', 'contacts_view_extra', count(*) from information_schema.columns
    where table_schema = 'public' and table_name = 'volunteer_contacts' and column_name not in ('id', 'name', 'phone');
   insert into res select 'sweep', 'friends_policy_names_address_book', count(*) from pg_policies

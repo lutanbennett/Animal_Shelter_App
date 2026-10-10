@@ -7,8 +7,9 @@
 //   node scripts/check-card-taps.mjs --verbose  (also list every passing check)
 //
 // WHAT THIS ASSERTS (and what it does not), per principal: signed out, public_viewer, admin,
-// management, staff, the 2IC, both Heads, a volunteer, a doctor whose clinic treats the resident and
-// a doctor whose clinic does not.
+// management, the 2IC, both Heads, a volunteer, a doctor whose clinic treats the resident and
+// a doctor whose clinic does not. (Staff left the list when 0173 retired it; it landed "full" like
+// admin and management.)
 //   1. the public card (public_resident_cards) answers with a row for every one of them: the
 //      floor nobody falls below, so the page never 404s on a resident that exists
 //   2. the landing, from src/lib/residents/card-landing.ts fed the inputs the page reads from
@@ -33,13 +34,13 @@ if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the
 const { cardLanding } = await import(pathToFileURL(join(root, "src/lib/residents/card-landing.ts")).href);
 
 const lit = (id) => `'${id}'::uuid`;
-const P = ["anon", "public_viewer", "admin", "management", "staff", "volunteer", "doctor_in", "doctor_out", "sic", "hom", "hm"];
+const P = ["anon", "public_viewer", "admin", "management", "volunteer", "doctor_in", "doctor_out", "sic", "hom", "hm"];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
 const R = randomUUID(), OWN = randomUUID(), OTHER = randomUUID();
 
 const EXPECT = {
   anon: "public", public_viewer: "public",
-  admin: "full", management: "full", staff: "full",
+  admin: "full", management: "full",
   sic: "public-plus", hom: "public-plus", hm: "public-plus", volunteer: "public-plus",
   doctor_in: "full", doctor_out: "public-plus",
 };
@@ -84,7 +85,7 @@ begin
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-card-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.filter((p) => p !== "anon").map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role) values
-    (${lit(ID.admin)}, 'admin'), (${lit(ID.management)}, 'management'), (${lit(ID.staff)}, 'staff'),
+    (${lit(ID.admin)}, 'admin'), (${lit(ID.management)}, 'management'),
     (${lit(ID.volunteer)}, 'volunteer'), (${lit(ID.public_viewer)}, 'public_viewer');
   insert into clinics (id, name) values (${lit(OWN)}, 'Harness own'), (${lit(OTHER)}, 'Harness other');
   insert into user_roles (user_id, role) values (${lit(ID.doctor_in)}, 'doctor'), (${lit(ID.doctor_out)}, 'doctor');

@@ -36,7 +36,7 @@ declare
   v_a uuid; v_b uuid; v_dead uuid;
   v_rows int; v_set int; v_n int;
   v_rejected boolean;
-  v_doctor uuid := gen_random_uuid(); v_staff uuid := gen_random_uuid(); v_vol uuid := gen_random_uuid();
+  v_doctor uuid := gen_random_uuid(); v_vol uuid := gen_random_uuid();
   v_mgmt uuid := gen_random_uuid(); v_unl uuid := gen_random_uuid(); v_own uuid := gen_random_uuid(); v_oth uuid := gen_random_uuid();
   v_in uuid; v_out uuid; v_before jsonb; v_after jsonb; v_err text;
 begin
@@ -111,11 +111,11 @@ begin
   insert into clinics (id, name) values (v_own, 'Harness own clinic'), (v_oth, 'Harness other clinic');
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-0116-' || u || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
-    from unnest(array[v_doctor, v_staff, v_vol, v_unl, v_mgmt]) u;
+    from unnest(array[v_doctor, v_vol, v_unl, v_mgmt]) u;
   insert into user_roles (user_id, role) values (v_doctor, 'doctor'), (v_unl, 'doctor');
   -- 0127: a doctor login's clinic is its linked doctor's (doctor_clinics links it, 0172)
   with d as (insert into doctors (name, user_id) values ('Harness doctor', v_doctor) returning id) insert into doctor_clinics (clinic_id, doctor_id) select v_own, id from d;
-  insert into user_roles (user_id, role) values (v_staff, 'staff'), (v_vol, 'volunteer'), (v_mgmt, 'management');
+  insert into user_roles (user_id, role) values (v_vol, 'volunteer'), (v_mgmt, 'management');
   insert into residents (name) values ('harness 0116 in'), ('harness 0116 out');
   select id into v_in from residents where name = 'harness 0116 in';
   select id into v_out from residents where name = 'harness 0116 out';
@@ -161,8 +161,9 @@ begin
   perform set_resident_microchip(v_in, '985112345678905', null);
   reset role;
 
-  -- G2c duplicate chip, G2d malformed numbers, G2e staff on a deceased resident
-  perform set_config('request.jwt.claims', json_build_object('sub', v_staff, 'role', 'authenticated')::text, true);
+  -- G2c duplicate chip, G2d malformed numbers, G2e management on a deceased resident
+  -- (G2c to G3 ran as a staff login until 0173 retired the role; management has the same outcome)
+  perform set_config('request.jwt.claims', json_build_object('sub', v_mgmt, 'role', 'authenticated')::text, true);
   set local role authenticated;
   v_rejected := false;
   begin perform set_resident_microchip(v_out, '985112345678905', null);
@@ -177,13 +178,13 @@ begin
   v_rejected := false;
   begin perform set_resident_microchip(v_dead, '985112345678906', null);
   exception when restrict_violation then v_rejected := true; end;
-  if not v_rejected then raise exception 'FAIL G2e staff wrote on a deceased resident'; end if;
+  if not v_rejected then raise exception 'FAIL G2e management wrote on a deceased resident'; end if;
 
-  -- G3 staff writes any resident
+  -- G3 management writes any resident
   perform set_resident_microchip(v_out, '985112345678907', date '2026-03-03');
   reset role;
   select count(*) into v_n from residents where id = v_out and microchip_number = '985112345678907';
-  if v_n <> 1 then raise exception 'FAIL G3 staff write did not land'; end if;
+  if v_n <> 1 then raise exception 'FAIL G3 management write did not land'; end if;
 
   -- G3b Management writes a chip (0155, q8): the handbook said it could and the function refused it
   perform set_config('request.jwt.claims', json_build_object('sub', v_mgmt, 'role', 'authenticated')::text, true);
@@ -214,7 +215,7 @@ begin
   select count(*) into v_n from residents where id = v_in and microchip_number = '985112345678905';
   if v_n <> 1 then raise exception 'FAIL G4 a refused call changed the row'; end if;
 
-  raise exception 'HARNESS-OK existing rows=% back-filled=0 by the replay | shape: text + date, nullable | many nulls coexist | check rejects 14 digits, 16 digits, spaces, dashes, a letter, legacy 9-digit and empty string; accepts 15 digits with leading zeros | partial unique rejects a duplicate on update and insert and frees on clear | deceased resident: chip and date locked, bio still editable | file ran twice | set_resident_microchip (live): doctor in scope writes, corrects and clears with no other column changed; doctor out of scope, doctor or staff on a deceased resident, duplicate, 14-digit / spaced / letters / empty, volunteer, unlinked doctor and anon all refused; staff write allowed | 0155: management write allowed, and refused on a deceased resident', v_rows;
+  raise exception 'HARNESS-OK existing rows=% back-filled=0 by the replay | shape: text + date, nullable | many nulls coexist | check rejects 14 digits, 16 digits, spaces, dashes, a letter, legacy 9-digit and empty string; accepts 15 digits with leading zeros | partial unique rejects a duplicate on update and insert and frees on clear | deceased resident: chip and date locked, bio still editable | file ran twice | set_resident_microchip (live): doctor in scope writes, corrects and clears with no other column changed; doctor out of scope, doctor or management on a deceased resident, duplicate, 14-digit / spaced / letters / empty, volunteer, unlinked doctor and anon all refused; management write allowed | 0155: management write allowed, and refused on a deceased resident', v_rows;
 end;
 $h$;
 rollback;

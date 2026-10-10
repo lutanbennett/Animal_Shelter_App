@@ -6,17 +6,19 @@
 //   node scripts/check-perm-convert-residents.mjs --verbose  (also list every case)
 //
 // As each principal (read, update, insert, delete) on each table:
-//   staff, management      residents / placement_history: read, update, insert, no delete (C2 closed);
+//   management             residents / placement_history: read, update, insert, no delete (C2 closed);
 //                          adoption_updates: all four (Edit includes delete, A8)
 //   admin                  everything (admin_all_* on residents/placement_history; has_permission() on adoption_updates)
 //   volunteer, no role     nothing (0134 took the volunteer's table read; it reads resident_who_and_where)
-//   vet                    reads the in-clinic resident's rows and NOT another clinic's; writes nothing
+//   vet (doctor, 0172)     reads the in-clinic resident's rows and NOT another clinic's; writes nothing
 //   custom, borrows the volunteer, Read or Edit cells   NOTHING: a role on the who-and-where floor is
 //                          never handed the whole record by a cell (this is what sees_all_residents() is for)
-//   custom, borrows staff, Read cells     reads, writes nothing
-//   custom, borrows staff, Edit cells     reads, updates, inserts; adoption_updates deletes; no other deletes
-//   custom, borrows staff, placement.move only   inserts a ChangeEnclosure row and no other placement type
-//   custom, borrows staff, own_clinic scope      nothing: a scoped role is never handed the whole table
+//   custom, borrows management, Read cells     reads, writes nothing
+//   custom, borrows management, Edit cells     reads, updates, inserts; adoption_updates deletes; no other deletes
+//   custom, borrows management, placement.move only   inserts a ChangeEnclosure row and no other placement type
+//   custom, borrows management, own_clinic scope      nothing: a scoped role is never handed the whole table
+// Staff, which answered exactly as management, left when 0173 retired the role; the custom roles that borrowed staff
+// borrow management now (no policy on these tables names either: the sweep below).
 // Then structural sweeps: no policy on these tables still names management or staff, and every
 // new policy calls has_permission() inside a (select ...) init-plan.
 import { join } from "node:path";
@@ -30,9 +32,9 @@ const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
 const lit = (id) => `'${id}'::uuid`;
-const P = ["admin", "management", "staff", "volunteer", "norole", "vet", "c_vol_read", "c_vol_edit", "c_st_read", "c_st_edit", "c_st_move", "c_scoped"];
+const P = ["admin", "management", "volunteer", "norole", "vet", "c_vol_read", "c_vol_edit", "c_st_read", "c_st_edit", "c_st_move", "c_scoped"];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
-const R_BARE = randomUUID(), R = randomUUID(), R_OUT = randomUUID(), OWN = randomUUID(), OTHER = randomUUID();
+const DOC = randomUUID(), R_BARE = randomUUID(), R = randomUUID(), R_OUT = randomUUID(), OWN = randomUUID(), OTHER = randomUUID();
 const ENC = "(select id from pg_temp.ref_ids where k = 'enclosure')";
 const placement = (type, extra = "", resident = R) => `insert into placement_history (resident_id, placement_type, start_date${extra ? ", enclosure_id" : ""}) values ('${resident}', '${type}', now() + interval '1 minute'${extra ? `, ${ENC}` : ""})`;
 
@@ -47,7 +49,7 @@ const T = [
 // table whose delete is an act of the cell (adoption_updates).
 const EXPECT = {
   admin: { all: [1, 1, 1, 1] },
-  management: { all: [1, 1, 1, 0], act: 1 }, staff: { all: [1, 1, 1, 0], act: 1 },
+  management: { all: [1, 1, 1, 0], act: 1 },
   volunteer: { all: [0, 0, 0, 0] }, norole: { all: [0, 0, 0, 0] },
   c_vol_read: { all: [0, 0, 0, 0] }, c_vol_edit: { all: [0, 0, 0, 0] },
   c_st_read: { all: [1, 0, 0, 0] }, c_st_edit: { all: [1, 1, 1, 0], act: 1 }, c_st_move: { all: [1, 0, 0, 0] },
@@ -84,7 +86,7 @@ const TYPES = [
   ["Foster", "placement.rehome"], ["Deceased", "placement.death"], ["DeceasedInError", "placement.death_withdraw"],
 ];
 for (const [type] of TYPES) {
-  for (const who of ["management", "staff", "c_st_edit", "c_st_move", "admin"]) {
+  for (const who of ["management", "c_st_edit", "c_st_move", "admin"]) {
     probes.push(`  perform pg_temp.probe('${who}', ${lit(ID[who])}, 'placement_history', 'type_${type}', $q$${type === "Intake" ? placement(type, "enc", R_BARE) : placement(type, type === "ChangeEnclosure" ? "enc" : "")}$q$);`);
   }
 }
@@ -121,15 +123,15 @@ begin
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-pcr-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${["admin", "management", "staff", "volunteer", "vet"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
-  -- custom roles: two borrow the volunteer (the floor the Heads and the 2IC stand on), four borrow staff
+    select id, who::app_role from (values ${[["admin", "admin"], ["management", "management"], ["volunteer", "volunteer"], ["vet", "doctor"]].map(([p, r]) => `('${r}', ${lit(ID[p])})`).join(",")}) as u(who, id);
+  -- custom roles: two borrow the volunteer (the floor the Heads and the 2IC stand on), four borrow management (staff until 0173)
   insert into roles (key, name, kind, legacy_role, scope_residents) values
     ('harness_pcr_vol_read', 'Harness vol read', 'custom', 'volunteer', 'all'),
     ('harness_pcr_vol_edit', 'Harness vol edit', 'custom', 'volunteer', 'all'),
-    ('harness_pcr_st_read',  'Harness staff read', 'custom', 'staff', 'all'),
-    ('harness_pcr_st_edit',  'Harness staff edit', 'custom', 'staff', 'all'),
-    ('harness_pcr_st_move',  'Harness staff move', 'custom', 'staff', 'all'),
-    ('harness_pcr_scoped',   'Harness scoped', 'custom', 'staff', 'own_clinic');
+    ('harness_pcr_st_read',  'Harness staff read', 'custom', 'management', 'all'),
+    ('harness_pcr_st_edit',  'Harness staff edit', 'custom', 'management', 'all'),
+    ('harness_pcr_st_move',  'Harness staff move', 'custom', 'management', 'all'),
+    ('harness_pcr_scoped',   'Harness scoped', 'custom', 'management', 'own_clinic');
   insert into role_permissions (role_id, activity, level)
     select r.id, a.key,
            case when r.key in ('harness_pcr_vol_read', 'harness_pcr_st_read') then 1 else 2 end
@@ -143,16 +145,18 @@ begin
     select r.id, v.act, v.lvl from roles r, (values ('resident.record', 1), ('placement.move', 2)) as v(act, lvl) where r.key = 'harness_pcr_st_move';
   insert into user_roles (user_id, role_id, role) select ${lit(ID.c_vol_read)}, id, 'volunteer' from roles where key = 'harness_pcr_vol_read';
   insert into user_roles (user_id, role_id, role) select ${lit(ID.c_vol_edit)}, id, 'volunteer' from roles where key = 'harness_pcr_vol_edit';
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.c_st_read)}, id, 'staff' from roles where key = 'harness_pcr_st_read';
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.c_st_edit)}, id, 'staff' from roles where key = 'harness_pcr_st_edit';
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.c_st_move)}, id, 'staff' from roles where key = 'harness_pcr_st_move';
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.c_scoped)}, id, 'staff' from roles where key = 'harness_pcr_scoped';
+  insert into user_roles (user_id, role_id, role) select ${lit(ID.c_st_read)}, id, 'management' from roles where key = 'harness_pcr_st_read';
+  insert into user_roles (user_id, role_id, role) select ${lit(ID.c_st_edit)}, id, 'management' from roles where key = 'harness_pcr_st_edit';
+  insert into user_roles (user_id, role_id, role) select ${lit(ID.c_st_move)}, id, 'management' from roles where key = 'harness_pcr_st_move';
+  insert into user_roles (user_id, role_id, role) select ${lit(ID.c_scoped)}, id, 'management' from roles where key = 'harness_pcr_scoped';
   -- placement.death_withdraw is deliberately given to nobody custom: the c_st_edit insert of that type must be refused
 
-  insert into vets (id, name, clinic_name) values (${lit(OWN)}, 'Harness own', 'Harness own'), (${lit(OTHER)}, 'Harness other', 'Harness other');
-  insert into vet_doctors (name, user_id, vet_id) values ('Harness vet', ${lit(ID.vet)}, ${lit(OWN)});
+  -- 0172: clinics / doctors + doctor_clinics / clinic_visits (were vets / vet_doctors / vet_appointments)
+  insert into clinics (id, name) values (${lit(OWN)}, 'Harness own'), (${lit(OTHER)}, 'Harness other');
+  insert into doctors (id, name, user_id) values (${lit(DOC)}, 'Harness doctor', ${lit(ID.vet)});
+  insert into doctor_clinics (clinic_id, doctor_id) values (${lit(OWN)}, ${lit(DOC)});
   insert into residents (id, name, species) values (${lit(R)}, 'Harness in', 'Dog'), (${lit(R_OUT)}, 'Harness out', 'Dog'), (${lit(R_BARE)}, 'Harness bare', 'Dog');
-  insert into vet_appointments (resident_id, vet_id, appointment_date, status) values
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values
     (${lit(R)}, ${lit(OWN)}, now() - interval '3 days', 'completed'), (${lit(R_OUT)}, ${lit(OTHER)}, now() - interval '3 days', 'completed');
   insert into placement_history (resident_id, placement_type, start_date, enclosure_id)
     select id, 'Intake', now() - interval '5 days', (select id from pg_temp.ref_ids where k = 'enclosure') from residents where id in (${lit(R)}, ${lit(R_OUT)});
@@ -221,7 +225,7 @@ for (const t of T) {
 }
 // placement_history insert by type
 const ALLOWED_TYPES = {
-  management: ["Intake", "ChangeEnclosure", "SendToHospital", "Foster", "Deceased"], staff: ["Intake", "ChangeEnclosure", "SendToHospital", "Foster", "Deceased"],
+  management: ["Intake", "ChangeEnclosure", "SendToHospital", "Foster", "Deceased"],
   c_st_edit: ["Intake", "ChangeEnclosure", "SendToHospital", "Foster", "Deceased"], c_st_move: ["ChangeEnclosure"],
   admin: ["Intake", "ChangeEnclosure", "SendToHospital", "Foster", "Deceased", "DeceasedInError"],
 };

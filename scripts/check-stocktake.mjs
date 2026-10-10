@@ -30,7 +30,15 @@ select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authentica
        'harness-0091-' || who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
   from who where uid is not null;
 insert into user_roles (user_id, role)
-select uid, who::app_role from who where who in ('management', 'admin', 'staff', 'volunteer', 'doctor', 'public_viewer');
+select uid, who::app_role from who where who in ('management', 'admin', 'volunteer', 'doctor', 'public_viewer');
+-- staff: the Staff role until 0173 retired it; a custom role carrying its cells keeps this login on the same path
+-- It borrows volunteer, as every live custom role does: record_* functions still gate on the enum (admin, management), so a role borrowing management would pass on that and not on its cells.
+insert into roles (key, name, kind, legacy_role) values ('harness_0091_staff', 'Harness staff', 'custom', 'volunteer');
+insert into role_permissions (role_id, activity, level)
+select (select id from roles where key = 'harness_0091_staff'), rp.activity, rp.level
+  from role_permissions rp join roles s on s.id = rp.role_id where s.key = 'staff';
+insert into user_roles (user_id, role_id, role)
+select (select uid from who where who = 'staff'), id, legacy_role from roles where key = 'harness_0091_staff';
 grant select on who to authenticated, anon;
 
 -- Call record_stocktake as a login (null = anon). Returns the result as

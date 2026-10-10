@@ -23,7 +23,8 @@ begin;
 
 create temp table who (who text primary key, uid uuid);
 insert into who values
-  ('management', gen_random_uuid()), ('staff', gen_random_uuid()),
+  -- no staff login: 0173 retired Staff (a live staff row is refused); management does what staff did here
+  ('management', gen_random_uuid()),
   ('volunteer', gen_random_uuid()), ('doctor', gen_random_uuid());
 insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
@@ -55,8 +56,8 @@ begin
   insert into contacts (name, type) values ('harness-0097 adopter', 'Carer') returning id into v_adopter;
   v_report := v_report || ' | A0 no existing photo tagged, one record_attachment';
 
-  -- A1 staff writes an update; created_by is the caller whatever is sent.
-  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'staff'), 'role', 'authenticated')::text, true);
+  -- A1 management writes an update; created_by is the caller whatever is sent.
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'management'), 'role', 'authenticated')::text, true);
   set local role authenticated;
   insert into adoption_updates (resident_id, received_on, sender_contact_id, channel, note, created_by)
     values (v_res, '2026-09-20', v_adopter, 'line', 'Settling in well', gen_random_uuid())
@@ -72,12 +73,12 @@ begin
     end;
   end loop;
   reset role;
-  if (select created_by from adoption_updates where id = v_update) is distinct from (select uid from who where who = 'staff') then
+  if (select created_by from adoption_updates where id = v_update) is distinct from (select uid from who where who = 'management') then
     raise exception 'A1 created_by not stamped from the caller';
   end if;
-  v_report := v_report || ' | A1 staff writes, created_by forced to caller, channel sms / LINE / empty refused';
+  v_report := v_report || ' | A1 management writes, created_by forced to caller, channel sms / LINE / empty refused';
 
-  -- A2 a volunteer reads no updates, cannot write one and cannot tag a photo to one (0134); staff tags the photo.
+  -- A2 a volunteer reads no updates, cannot write one and cannot tag a photo to one (0134); management tags the photo.
   perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'volunteer'), 'role', 'authenticated')::text, true);
   set local role authenticated;
   select count(*) into v_n from adoption_updates where resident_id in (v_res, v_other_res);
@@ -95,7 +96,7 @@ begin
     if sqlerrm not like 'Not authorized%' then raise; end if;
   end;
   reset role;
-  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'staff'), 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'management'), 'role', 'authenticated')::text, true);
   set local role authenticated;
   select (x.attachment).id, x.is_profile into v_att, v_profile
     from record_attachment(p_owner_type => 'resident', p_owner_id => v_res, p_drive_file_id => 'harness-0097-a',
@@ -108,10 +109,10 @@ begin
   if r.adoption_update_id is distinct from v_update or r.channel <> 'line' or r.sender_contact_id is distinct from v_adopter or not v_profile then
     raise exception 'A2 tagged photo wrong: %', row_to_json(r);
   end if;
-  v_report := v_report || ' | A2 volunteer reads nothing, cannot write an update or add a photo (0134); staff tags a photo; photo reaches sender, date, channel in one join; first photo still becomes profile';
+  v_report := v_report || ' | A2 volunteer reads nothing, cannot write an update or add a photo (0134); management tags a photo; photo reaches sender, date, channel in one join; first photo still becomes profile';
 
   -- A3 the existing six-argument call shape (the live route) still works, untagged.
-  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'staff'), 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'management'), 'role', 'authenticated')::text, true);
   set local role authenticated;
   select (x.attachment).id into v_att
     from record_attachment(p_owner_type => 'resident', p_owner_id => v_res, p_drive_file_id => 'harness-0097-b',

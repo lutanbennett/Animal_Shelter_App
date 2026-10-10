@@ -21,7 +21,7 @@
 //   D  a doctor cannot move its own visit out to the other clinic, nor a child
 //      onto the other clinic's visit
 //   E  doctors and bulk_appointments: other clinic refused, own ok
-//   F  admin, management and staff still rewrite the other clinic's visit
+//   F  admin and management still rewrite the other clinic's visit
 //
 // Exits 0 when every assertion held.
 // NOTE: asserts the LIVE schema; the 0110 file is no longer replayed because 0125 redefines its
@@ -65,7 +65,7 @@ end $f$;
 create temp table harness_ids (who text primary key, id uuid not null);
 insert into harness_ids
 select w, gen_random_uuid() from unnest(array[
-  'doctor', 'admin', 'mgmt', 'staff', 'own_clinic', 'other_clinic', 'mixed',
+  'doctor', 'admin', 'mgmt', 'own_clinic', 'other_clinic', 'mixed',
   'own_visit', 'oth_visit', 'oth_rx', 'oth_proc', 'oth_blood', 'own_rx', 'own_proc', 'own_blood',
   'oth_file', 'oth_doctor', 'oth_bulk']) w;
 grant select on harness_ids to authenticated;
@@ -81,7 +81,7 @@ declare
   v_med uuid := (select id from medication limit 1);
 begin
   insert into clinics (id, name) values (v_own, 'Harness clinic own'), (v_oth, 'Harness clinic other');
-  for r in select * from harness_ids where who in ('doctor', 'admin', 'mgmt', 'staff') loop
+  for r in select * from harness_ids where who in ('doctor', 'admin', 'mgmt') loop
     insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
     values (r.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
             'harness-own-writes-' || r.who || '-' || r.id || '@example.invalid',
@@ -92,7 +92,7 @@ begin
   with d as (insert into doctors (name, user_id) values ('Harness doctor', pg_temp.hid('doctor')) returning id)
     insert into doctor_clinics (clinic_id, doctor_id) select v_own, id from d;
   insert into user_roles (user_id, role) values
-    (pg_temp.hid('admin'), 'admin'), (pg_temp.hid('mgmt'), 'management'), (pg_temp.hid('staff'), 'staff');
+    (pg_temp.hid('admin'), 'admin'), (pg_temp.hid('mgmt'), 'management');  -- no staff: 0173 retired it
 
   insert into residents (id, name, species) values (v_res, 'Harness mixed', 'Dog');
   insert into clinic_visits (id, resident_id, clinic_id, appointment_date, status) values
@@ -230,11 +230,11 @@ begin
   v_report := v_report || 'E: other''s doctor rename 0, doctor/bulk insert refused, bulk RPC at other refused, own ok | ';
 
   -- F: other roles unchanged
-  foreach v_who in array array['admin', 'mgmt', 'staff'] loop
+  foreach v_who in array array['admin', 'mgmt'] loop
     n := pg_temp.try(pg_temp.hid(v_who), format('update clinic_visits set notes = ''x'', clinic_id = %L where id = %L', v_oth, v_xv));
     if n <> 1 then raise exception 'HARNESS-FAIL F: % updated % of other''s visit', v_who, n; end if;
   end loop;
-  v_report := v_report || 'F: admin/management/staff rewrite other''s visit (1 each)';
+  v_report := v_report || 'F: admin/management rewrite other''s visit (1 each)';
 
   raise exception '%', format('HARNESS-OK %s asserted live | %s | %s', ${JSON.stringify(file).replace(/"/g, "'")},
     case when v_applied then 'applied on dev' else 'pending on dev' end, v_report);

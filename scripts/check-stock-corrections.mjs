@@ -27,12 +27,20 @@ begin;
 ${migration}
 
 create temp table who (who text primary key, uid uuid);
-insert into who values ('management', gen_random_uuid()), ('staff', gen_random_uuid());
+-- clerk: Staff was this login until 0173 retired it; a custom role carrying its cells is refused the same way
+insert into who values ('management', gen_random_uuid()), ('clerk', gen_random_uuid());
 insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
        'harness-0112-' || who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
   from who;
-insert into user_roles (user_id, role) select uid, who::app_role from who;
+insert into user_roles (user_id, role) select uid, who::app_role from who where who = 'management';
+-- It borrows volunteer, as every live custom role does: record_* functions still gate on the enum (admin, management), so a role borrowing management would pass on that and not on its cells.
+insert into roles (key, name, kind, legacy_role) values ('harness_0112_clerk', 'Harness clerk', 'custom', 'volunteer');
+insert into role_permissions (role_id, activity, level)
+  select (select id from roles where key = 'harness_0112_clerk'), rp.activity, rp.level
+    from role_permissions rp join roles s on s.id = rp.role_id where s.key = 'staff';
+insert into user_roles (user_id, role_id, role)
+  select (select uid from who where who = 'clerk'), id, legacy_role from roles where key = 'harness_0112_clerk';
 grant select on who to authenticated;
 
 create temp table ids (k text primary key, id uuid);
@@ -120,16 +128,16 @@ begin
   v_report := v_report || ' | S6 stocktake rows are source count';
 
   -- S7 refusals.
-  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'staff'), 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'clerk'), 'role', 'authenticated')::text, true);
   set local role authenticated;
   begin
     perform record_stock_correction('medication', v_pill, 5);
     reset role;
-    raise exception 'S7 staff was allowed';
+    raise exception 'S7 clerk (Staff cells) was allowed';
   exception when others then
     reset role;
     get stacked diagnostics v_err = message_text;
-    if v_err not like 'Not authorized%' then raise exception 'S7 staff: %', v_err; end if;
+    if v_err not like 'Not authorized%' then raise exception 'S7 clerk (Staff cells): %', v_err; end if;
   end;
   perform set_config('request.jwt.claims', json_build_object('sub', v_mgr, 'role', 'authenticated')::text, true);
   set local role authenticated;
@@ -158,7 +166,7 @@ begin
     raise exception 'S7 bad source accepted';
   exception when check_violation then null;
   end;
-  v_report := v_report || ' | S7 staff, negative, unknown item and bad source refused';
+  v_report := v_report || ' | S7 clerk (Staff cells), negative, unknown item and bad source refused';
 
   raise exception 'HARNESS-OK 0112 twice%', v_report;
 end $$;

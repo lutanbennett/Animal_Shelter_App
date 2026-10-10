@@ -6,12 +6,13 @@
 //   node scripts/check-perm-convert-medical.mjs --verbose  (also list every case)
 //
 // For each converted table, as each principal (read, update, insert, delete):
-//   staff, management      read, update and insert work; delete is refused (C5 closed)
+//   management             read, update and insert work; delete is refused (C5 closed)
+//                          (staff, which matched it, left when 0173 retired the role)
 //   admin                  everything, delete included (admin_all_* is left in place)
 //   volunteer              sees nothing, writes nothing (0134 removed the cells; the
 //                          conversion must not hand them back through an OR-ed policy)
 //   no role                sees nothing, writes nothing
-//   vet                    still sees the in-clinic resident's rows and NOT another
+//   vet                    (a doctor login since 0172) still sees the in-clinic resident's rows and NOT another
 //                          clinic's: the vet_* policies are untouched and the new ones
 //                          must not widen them (sees_all_clinical() is false for a vet)
 //   custom Read role       (legacy volunteer, Read cells)  reads, cannot write
@@ -31,14 +32,14 @@ const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
 const lit = (id) => `'${id}'::uuid`;
-const P = ["admin", "management", "staff", "volunteer", "norole", "vet", "c_read", "c_edit", "c_scoped"];
+const P = ["admin", "management", "volunteer", "norole", "vet", "c_read", "c_edit", "c_scoped"];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
-const R = randomUUID(), R_OUT = randomUUID(), OWN = randomUUID(), OTHER = randomUUID();
+const R = randomUUID(), R_OUT = randomUUID(), OWN = randomUUID(), OTHER = randomUUID(), DOC = randomUUID();
 const MED = "(select id from pg_temp.ref_ids where k = 'medication')";
 
 // table, activity, update, insert (against resident R)
 const T = [
-  ["vet_appointments", "medical.visits", `update vet_appointments set reason = 'probe' where resident_id = '${R}'`, `insert into vet_appointments (resident_id, vet_id, appointment_date, status) values ('${R}', '${OWN}', now() + interval '9 days', 'scheduled')`],
+  ["clinic_visits", "medical.visits", `update clinic_visits set reason = 'probe' where resident_id = '${R}'`, `insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values ('${R}', '${OWN}', now() + interval '9 days', 'scheduled')`],
   ["procedures", "medical.procedures", `update procedures set notes = 'probe' where resident_id = '${R}'`, `insert into procedures (resident_id, date, procedure_type_id) values ('${R}', current_date, (select id from pg_temp.ref_ids where k = 'procedure'))`],
   ["blood_tests", "medical.blood_tests", `update blood_tests set results = 'probe' where resident_id = '${R}'`, `insert into blood_tests (resident_id, date, blood_test_type_id) values ('${R}', current_date, (select id from pg_temp.ref_ids where k = 'blood'))`],
   ["prescriptions", "medical.prescriptions", `update prescriptions set notes = 'probe' where resident_id = '${R}'`, `insert into prescriptions (resident_id, medication_id, start_date) values ('${R}', ${MED}, current_date)`],
@@ -49,7 +50,7 @@ const T = [
 
 // expected per principal: [read, update, insert, delete], 1 = allowed
 const EXPECT = {
-  admin: [1, 1, 1, 1], management: [1, 1, 1, 0], staff: [1, 1, 1, 0],
+  admin: [1, 1, 1, 1], management: [1, 1, 1, 0],
   volunteer: [0, 0, 0, 0], norole: [0, 0, 0, 0], c_read: [1, 0, 0, 0], c_edit: [1, 1, 1, 0], c_scoped: [0, 0, 0, 0],
 };
 
@@ -104,7 +105,7 @@ begin
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-pcm-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${["admin", "management", "staff", "volunteer", "vet"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
+    select id, who::app_role from (values ${[["admin", "admin"], ["management", "management"], ["volunteer", "volunteer"], ["vet", "doctor"]].map(([p, r]) => `('${r}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   -- custom roles borrow the volunteer (the narrowest) as the Heads will
   insert into roles (key, name, kind, legacy_role, scope_clinical) values
     ('harness_pcm_read', 'Harness read', 'custom', 'volunteer', 'any'),
@@ -118,10 +119,12 @@ begin
   insert into user_roles (user_id, role_id, role) select ${lit(ID.c_edit)}, id, 'volunteer' from roles where key = 'harness_pcm_edit';
   insert into user_roles (user_id, role_id, role) select ${lit(ID.c_scoped)}, id, 'volunteer' from roles where key = 'harness_pcm_scoped';
 
-  insert into vets (id, name, clinic_name) values (${lit(OWN)}, 'Harness own', 'Harness own'), (${lit(OTHER)}, 'Harness other', 'Harness other');
-  insert into vet_doctors (name, user_id, vet_id) values ('Harness vet', ${lit(ID.vet)}, ${lit(OWN)});
+  -- 0172: vets / vet_doctors / vet_appointments are clinics / doctors + doctor_clinics / clinic_visits
+  insert into clinics (id, name) values (${lit(OWN)}, 'Harness own'), (${lit(OTHER)}, 'Harness other');
+  insert into doctors (id, name, user_id) values (${lit(DOC)}, 'Harness doctor', ${lit(ID.vet)});
+  insert into doctor_clinics (clinic_id, doctor_id) values (${lit(OWN)}, ${lit(DOC)});
   insert into residents (id, name, species) values (${lit(R)}, 'Harness in', 'Dog'), (${lit(R_OUT)}, 'Harness out', 'Dog');
-  insert into vet_appointments (resident_id, vet_id, appointment_date, status) values
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values
     (${lit(R)}, ${lit(OWN)}, now() - interval '3 days', 'completed'), (${lit(R_OUT)}, ${lit(OTHER)}, now() - interval '3 days', 'completed');
   insert into weight (resident_id, date, weight_kg) select id, current_date - 1, 5 from residents where id in (${lit(R)}, ${lit(R_OUT)});
   insert into blood_tests (resident_id, date, blood_test_type_id) select id, current_date, (select id from pg_temp.ref_ids where k = 'blood') from residents where id in (${lit(R)}, ${lit(R_OUT)});

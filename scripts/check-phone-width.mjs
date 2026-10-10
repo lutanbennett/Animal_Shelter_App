@@ -6,7 +6,7 @@
 //
 //   node scripts/worktree.mjs dev                                  (another terminal)
 //   node scripts/check-phone-width.mjs [http://localhost:<port>]   (defaults to this checkout's .port)
-//   node scripts/check-phone-width.mjs --roles=admin,staff --locales=en --pages=/clinics,/enclosures
+//   node scripts/check-phone-width.mjs --roles=admin,second_in_command --locales=en --pages=/clinics,/enclosures
 //   (In Git Bash a leading /path in --pages is rewritten to C:/Program Files/Git/…; prefix the command with MSYS_NO_PATHCONV=1.)
 //   node scripts/check-phone-width.mjs --keep      (leave the seeded rows and the throwaway logins in dev)
 //   node scripts/check-phone-width.mjs --verbose   (also list every page that passed)
@@ -67,8 +67,9 @@ const TAP_TOLERANCE = 0.5;
 
 /**
  * Roles worth covering, and why (docs/decisions/2026-10-05-phone-width-check.md).
- * admin, management and staff are the three with the widest page sets; staff are
- * about 100% on phones. doctor and volunteer see different, narrower pages (the doctor's
+ * admin and management are the two with the widest page sets; the 2IC stands in for staff (retired by 0173)
+ * and is, like staff were, about 100% on phones.
+ * doctor and volunteer see different, narrower pages (the doctor's
  * own screens, the volunteer's R1 set). head_of_medical stands for the configured
  * roles: a narrow set of pages assembled from jobs, which is the kind that shows
  * up in nav only when the job is held.
@@ -76,7 +77,7 @@ const TAP_TOLERANCE = 0.5;
 const ALL_ROLES = {
   admin: { legacy: "admin" },
   management: { legacy: "management" },
-  staff: { legacy: "staff" },
+  second_in_command: { legacy: "volunteer", configured: "second_in_command" },
   doctor: { legacy: "doctor" },
   volunteer: { legacy: "volunteer" },
   head_of_medical: { legacy: "volunteer", configured: "head_of_medical" },
