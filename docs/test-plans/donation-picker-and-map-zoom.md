@@ -35,7 +35,7 @@ Main Zone's enclosure 1 on a phone.
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — all seven checks passed on #507, read from the PR status 2026-10-10
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -162,7 +162,7 @@ Manual verification by: pending: enclosure 1 tap and the button row on a real ph
 ### Result
 
 - [ ] Open defects are either fixed or explicitly accepted above — n/a: defects 2 and 3 are deferred to the backlog
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [ ] Checklist pasted into the PR — n/a: the PR description links the plan file rather than pasting it
 - [ ] Handed to the production release manager — n/a: not yet — the PR is not merged
 
 Result: pass with accepted defects
