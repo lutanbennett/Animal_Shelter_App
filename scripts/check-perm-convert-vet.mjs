@@ -1,4 +1,5 @@
-// perm-convert-vet (0167): the vet's 54 policies ask is_clinic_login() instead of current_user_role() = 'vet'.
+// perm-convert-vet (0167): the vet's 54 policies ask is_clinic_login() instead of current_user_role() = 'vet'
+// (since 0172 the role is doctor, and is_clinic_login() must agree with current_user_role() = 'doctor').
 //
 //   node scripts/check-perm-convert-vet.mjs                  (from the repo root; dev only)
 //   node scripts/check-perm-convert-vet.mjs <migration.sql>  (run against another file, e.g. a mutant)
@@ -11,7 +12,7 @@
 //      runs in its own sub-block that is rolled back, so one probe's delete does not feed the next.
 //   2. Run the migration file inside the same transaction.
 //   3. AFTER: the same probes. Every answer must be identical (a count, or the same SQLSTATE).
-//   4. is_clinic_login() agrees with current_user_role() = 'vet' for every login, and the vets do read rows (so
+//   4. is_clinic_login() agrees with current_user_role() = 'doctor' for every login, and the doctors do read rows (so
 //      "identical" is not "identically empty").
 // Before 0167 was applied to dev this compared the old policies with the new: 2,262 probes, 0 differences. A
 // mutant that made is_clinic_login() answer no for everyone gave 196 differences, so it can fail. Since the apply
@@ -27,14 +28,20 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-const migration = readFileSync(process.argv[2] ?? join(root, "supabase/migrations/0167_perm_convert_vet.sql"), "utf8");
+// 0172 renamed what 0167 names (vets -> clinics, the vet role -> doctor, current_vet_resident_ids() ->
+// current_clinic_resident_ids(), ...) and rewrote the same policies, widening the doctor's reads. So 0167 can no
+// longer be replayed: with the names mapped it would undo 0172, and report that as differences. With no file
+// argument the replay is skipped and steps 1 and 3 probe the same state; step 4, the claim that lasts, is what
+// the run checks. A file argument is still replayed, for a mutant or a future conversion of these policies.
+const migration = process.argv[2] ? readFileSync(process.argv[2], "utf8") : "";
+if (!migration) console.log("replay skipped: 0167 is superseded by 0172 (see the header); checking step 4 live");
 const probe = (phase) => `
 do $p$
 declare u record; t text; n int; res text; who text; col text; full_probe boolean;
-  tabs text[] := array['adoption_updates','attachments','blood_test_types','blood_tests','bulk_appointments','diet_types','enclosures','frequency','immunization_records','immunization_types','medication','placement_history','prescriptions','procedure_types','procedures','recurring_job_assignees','recurring_job_occurrence_assignees','recurring_job_occurrences','recurring_jobs','resident_diets','residents','shelter_friends','translations','vet_appointments','vet_doctor_clinics','vet_doctors','vets','weight','zones'];
+  tabs text[] := array['adoption_updates','attachments','blood_test_types','blood_tests','bulk_appointments','diet_types','enclosures','frequency','immunization_records','immunization_types','medication','placement_history','prescriptions','procedure_types','procedures','recurring_job_assignees','recurring_job_occurrence_assignees','recurring_job_occurrences','recurring_jobs','resident_diets','residents','shelter_friends','translations','clinic_visits','doctor_clinics','doctors','clinics','weight','zones'];
 begin
   for u in select distinct on (ur.user_id) ur.user_id, coalesce(r.key, '?') as key,
-             (r.key = 'vet' or ur.user_id in (select distinct on (r2.key) ur2.user_id from user_roles ur2 join roles r2 on r2.id = ur2.role_id where ur2.archived_at is null order by r2.key, ur2.user_id)) as full_probe
+             (r.key = 'doctor' or ur.user_id in (select distinct on (r2.key) ur2.user_id from user_roles ur2 join roles r2 on r2.id = ur2.role_id where ur2.archived_at is null order by r2.key, ur2.user_id)) as full_probe
              from user_roles ur left join roles r on r.id = ur.role_id order by ur.user_id loop
     foreach t in array tabs loop
       foreach who in array (case when u.full_probe then array['select','update','delete'] else array['select'] end) loop
@@ -64,7 +71,7 @@ begin
   select count(*) into diffs from pg_temp.snap a full join pg_temp.snap b
     on b.phase = 'after' and a.uid = b.uid and a.tab = b.tab and a.op = b.op
    where a.phase = 'before' and (b.res is distinct from a.res);
-  select count(*) into vets from pg_temp.snap where phase = 'after' and key = 'vet' and op = 'select' and res <> '0';
+  select count(*) into vets from pg_temp.snap where phase = 'after' and key = 'doctor' and op = 'select' and res <> '0';
   select string_agg(format('%s %s %s: %s -> %s', a.key, a.tab, a.op, a.res, b.res), '; ') into s
     from pg_temp.snap a join pg_temp.snap b on b.phase = 'after' and a.uid = b.uid and a.tab = b.tab and a.op = b.op
    where a.phase = 'before' and a.res is distinct from b.res;
@@ -73,7 +80,7 @@ begin
     nlogins := nlogins + 1;
     perform set_config('request.jwt.claims', json_build_object('sub', uidt, 'role', 'authenticated')::text, true);
     set local role authenticated;
-    if (select public.is_clinic_login()) = coalesce((select public.current_user_role()) = 'vet', false) then agree := agree + 1; end if;
+    if (select public.is_clinic_login()) = coalesce((select public.current_user_role()) = 'doctor', false) then agree := agree + 1; end if;
     reset role;
   end loop;
   raise exception 'RESULT probes=% differences=% vet-nonzero-reads=% is_clinic_login-agrees=%/% diffs: %',
@@ -98,7 +105,7 @@ const body = await res.json();
 const m = String(body?.message ?? "").match(/RESULT probes=(\d+) differences=(\d+) vet-nonzero-reads=(\d+) is_clinic_login-agrees=(\d+)\/(\d+) diffs: (.*)/);
 if (!m) throw new Error(`harness did not report (${res.status}): ${JSON.stringify(body).slice(0, 800)}`);
 const [, probes, diffs, vetReads, agree, logins, list] = m;
-console.log(`${probes} probes, ${diffs} differences; vets read rows on ${vetReads} table probes; is_clinic_login() agrees with the enum for ${agree}/${logins} logins`);
+console.log(`${probes} probes, ${diffs} differences; doctors read rows on ${vetReads} table probes; is_clinic_login() agrees with the enum for ${agree}/${logins} logins`);
 if (Number(diffs)) console.log(`differences: ${list}`);
 const ok = Number(diffs) === 0 && Number(vetReads) > 0 && agree === logins;
 console.log(ok ? "\nRESULT: GREEN" : "\nRESULT: RED");
