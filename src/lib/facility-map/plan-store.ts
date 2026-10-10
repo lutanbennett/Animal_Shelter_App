@@ -25,7 +25,12 @@ export const PLAN_OBJECT = /^plans\/[0-9a-f-]{36}\/\d{13}-[a-z0-9]{8}\.(webp|png
 export type ShapeSnapshot = {
   zones: { id: string; shape: Point[] }[];
   enclosures: { id: string; shape: Point[] }[];
-  rooms: { kind: string; shape: Point[] }[];
+  /**
+   * A room is deleted when its plan's shapes are cleared (it cannot exist off the map), so everything
+   * typed about it is kept here too. Entries written before 0175's room editor carry only `kind` and
+   * `shape`; they are put back by kind.
+   */
+  rooms: { id?: string; kind?: string | null; name?: string; name_th?: string | null; description?: string | null; shape: Point[] }[];
 };
 
 export type PlanVersion = { image_path: string; width: number; height: number };

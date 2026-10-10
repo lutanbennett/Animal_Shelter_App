@@ -70,6 +70,7 @@ const LABEL_SCREENS: Record<string, (rowId: string) => string[]> = {
   project_folders: (id) => [`/projects/${id}`],
   zones: () => ["/admin/zones"],
   enclosures: () => ["/admin/enclosures"],
+  map_rooms: () => ["/admin/facility-map"],
   diet_types: () => ["/management/diets", "/admin/diets"],
   medication: () => ["/management/medications", "/admin/medications"],
   item_unit_conversions: () => ["/management/diets", "/management/medications", "/admin/diets", "/admin/medications"],
@@ -135,6 +136,9 @@ export function proseGroup(table: string): string {
       return "website";
     case "shelter_friends":
       return "friends";
+    // A room's description sits with its name, among the places (0175 registers the name there).
+    case "map_rooms":
+      return "places";
     default:
       return table;
   }

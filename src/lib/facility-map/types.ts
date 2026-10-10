@@ -1,5 +1,5 @@
 import type { Point } from "./geometry";
-import type { RoomKind } from "./rooms";
+import type { PublicTranslations } from "@/lib/translations/types";
 
 /** One `facility_maps` row, with the file's URL resolved. */
 export type MapPlan = {
@@ -41,11 +41,16 @@ export type MapEnclosure = {
   medication_count: number;
 };
 
-/** A room that is not an enclosure (map_rooms): drawn on one plan, with nothing to open. */
+/** A room that is not an enclosure (map_rooms): drawn on one plan, with nothing to open but its card. */
 export type MapRoom = {
   id: string;
   map_id: string;
-  kind: RoomKind;
+  name: string;
+  name_th: string | null;
+  /** What the room is for, as typed (in either language); null when nobody has written one. */
+  description: string | null;
+  /** The description's approved translation, if there is one: `{ description: { lang, text } }`. */
+  translations: PublicTranslations;
   shape: Point[];
 };
 
