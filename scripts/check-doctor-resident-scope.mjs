@@ -136,9 +136,9 @@ begin
             'harness-doctor-scope-' || r.who || '-' || r.id || '@example.invalid',
             '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || r.who), now(), now());
   end loop;
-  insert into user_roles (user_id, role)
-  select id, case who when 'mgmt' then 'management' when 'unlinked' then 'doctor' else who end::app_role
-  from harness_ids where who in ('doctor', 'unlinked', 'mgmt', 'admin', 'volunteer');
+  insert into user_roles (user_id, role_id)
+  select s.c0, ro.id from (select id as c0, case who when 'mgmt' then 'management' when 'unlinked' then 'doctor' else who end as role_key from harness_ids where who in ('doctor', 'unlinked', 'mgmt', 'admin', 'volunteer')) s
+  join roles ro on ro.key = s.role_key;
 
   insert into doctors (id, name, user_id) values
     (v_d, 'Harness Doctor D ' || v_d, (select id from harness_ids where who = 'doctor')),
@@ -223,7 +223,6 @@ begin
     union all select policyname from pg_policies where schemaname = 'public' and policyname ~ 'vet'
     union all select policyname || ' (expression)' from pg_policies
      where schemaname = 'public' and (qual ~ 'vet' or with_check ~ 'vet')
-    union all select enumlabel from pg_enum where enumtypid = 'public.app_role'::regtype and enumlabel ~ 'vet'
     union all select key from roles where key ~ 'vet'
   ) s;
   if v_bad is not null then raise exception 'HARNESS-FAIL N: names still saying vet: %', v_bad; end if;

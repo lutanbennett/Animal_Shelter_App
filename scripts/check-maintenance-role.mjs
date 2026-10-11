@@ -117,9 +117,10 @@ begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-mnt-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
-  insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${["admin", "management", "volunteer", "doctor"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.hm)}, id, legacy_role from roles where key = 'head_of_maintenance';
+  insert into user_roles (user_id, role_id)
+    select u.id, ro.id from (values ${["admin", "management", "volunteer", "doctor"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id) join roles ro on ro.key = u.who;
+  insert into user_roles (user_id, role_id)
+  select ${lit(ID.hm)}, id from roles where key = 'head_of_maintenance';
   insert into clinics (id, name) values (${lit(OWN)}, 'Harness own');
   with d as (insert into doctors (name, user_id) values ('Harness doctor', ${lit(ID.doctor)}) returning id) insert into doctor_clinics (clinic_id, doctor_id) select ${lit(OWN)}, id from d;
   insert into zones (id, name) values (${lit(ZONE)}, 'Harness zone');
@@ -144,7 +145,7 @@ ${lines.join("\n")}
 end $run$;
 
 do $role$ begin
-  insert into res select 'role', 'row', 0 where exists (select 1 from roles where key = 'head_of_maintenance' and kind = 'custom' and legacy_role = 'volunteer' and opens_app and name_th is not null and archived_at is null);
+  insert into res select 'role', 'row', 0 where exists (select 1 from roles where key = 'head_of_maintenance' and kind = 'custom' and opens_app and name_th is not null and archived_at is null);
   insert into res select 'role', 'cell:' || rp.activity || ':' || rp.level, 0 from role_permissions rp join roles r on r.id = rp.role_id where r.key = 'head_of_maintenance';
 end $role$;
 do $o$ begin raise exception 'HARNESS-RESULT %', (select json_agg(row_to_json(res)) from res); end $o$;

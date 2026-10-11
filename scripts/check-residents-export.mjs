@@ -20,6 +20,7 @@ import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { chromium } from "playwright-core";
+import { giveRole } from "./lib/user-role.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -123,7 +124,7 @@ async function account(role) {
   const { data, error } = await service.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: `Export ${role}` } });
   if (error) throw new Error(`creating the ${role} login: ${error.message}`);
   made.users.push(data.user.id);
-  const { error: roleError } = await service.from("user_roles").insert({ user_id: data.user.id, role });
+  const { error: roleError } = await giveRole(service, data.user.id, role);
   if (roleError) throw new Error(`giving the ${role} login its role: ${roleError.message}`);
 
   const jar = new Map();

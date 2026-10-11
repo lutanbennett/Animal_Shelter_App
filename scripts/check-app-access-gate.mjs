@@ -112,8 +112,7 @@ create temp table who (who text primary key, uid uuid);
 
 do $h$
 declare
-  v_pv boolean := exists (select 1 from pg_enum e join pg_type t on t.oid = e.enumtypid
-                           where t.typname = 'app_role' and e.enumlabel = 'public_viewer');
+  v_pv boolean := exists (select 1 from roles where key = 'public_viewer');
   r record;
 begin
   insert into who values
@@ -127,10 +126,16 @@ begin
             'harness-' || r.who || '-' || r.uid || '@example.invalid',
             '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || r.who), now(), now());
   end loop;
-  insert into user_roles (user_id, role) select uid, 'management' from who where who = 'control';
-  insert into user_roles (user_id, role, archived_at) select uid, 'staff', now() from who where who = 'archived';
+  insert into user_roles (user_id, role_id)
+  select s.c0, ro.id from (select uid as c0, 'management' as role_key from who where who = 'control') s
+  join roles ro on ro.key = s.role_key;
+  insert into user_roles (user_id, role_id, archived_at)
+  select s.c0, ro.id, s.c2 from (select uid as c0, 'staff' as role_key, now() as c2 from who where who = 'archived') s
+  join roles ro on ro.key = s.role_key;
   if v_pv then
-    execute $e$insert into user_roles (user_id, role) select uid, 'public_viewer' from who where who = 'public_viewer'$e$;
+    insert into user_roles (user_id, role_id)
+    select s.c0, ro.id from (select uid as c0, 'public_viewer' as role_key from who where who = 'public_viewer') s
+    join roles ro on ro.key = s.role_key;
   end if;
 end $h$;
 
@@ -199,7 +204,7 @@ begin
     ${INTERNAL.length + Object.keys(FUNCTIONS).length},
     ${PUBLIC.length},
     case when v_pv then 'public_viewer = archived on every object'
-         else 'SKIPPED — public_viewer is not in app_role on dev yet (apply *_public_viewer_role.sql, then rerun)' end);
+         else 'SKIPPED — there is no public_viewer role on dev yet (apply *_public_viewer_role.sql, then rerun)' end);
 end;
 $h$;
 rollback;

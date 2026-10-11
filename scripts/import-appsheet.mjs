@@ -789,7 +789,7 @@ async function load() {
 const sql = [];
 sql.push("set local app.deceased_lock_bypass = 'on';");
 // Migrated rows are stamped with the first admin so created_by is never null on real records.
-sql.push("create temp table import_ctx as select (select user_id from user_roles where role = 'admin' and archived_at is null order by created_at limit 1) as admin_id;");
+sql.push("create temp table import_ctx as select (select ur.user_id from user_roles ur join roles r on r.id = ur.role_id where r.key = 'admin' and ur.archived_at is null order by ur.created_at limit 1) as admin_id;");
 sql.push("do $$ begin if (select admin_id from import_ctx) is null then raise exception 'no active admin in user_roles — bootstrap one first'; end if; end $$;");
 
 const existingCheck = `do $$ declare n int; begin select count(*) into n from residents; if n > 0 then raise exception '% resident(s) already in this database — pass --replace to wipe them', n; end if; end $$;`;

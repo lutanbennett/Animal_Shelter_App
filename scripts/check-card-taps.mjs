@@ -13,7 +13,7 @@
 //   1. the public card (public_resident_cards) answers with a row for every one of them: the
 //      floor nobody falls below, so the page never 404s on a resident that exists
 //   2. the landing, from src/lib/residents/card-landing.ts fed the inputs the page reads from
-//      the live database (current_user_role, my_permissions, the residents row), is exactly the
+//      the live database (on_volunteer_floor, my_permissions, the residents row), is exactly the
 //      expected one below
 //   3. a "full" landing really reads the resident row (the hub will not 404) and holds
 //      resident.record; a "public-plus" landing really reads the who-and-where row, except a doctor
@@ -62,7 +62,8 @@ begin
     select count(*) into card from public_resident_cards where id = '${R}';
     if p_anon then role_name := null; rec := null; vis := 0; wow := 0;
     else
-      role_name := current_user_role()::text;
+      role_name := case when on_volunteer_floor() then 'volunteer'
+                        else my_permissions() -> 'role' ->> 'key' end;
       rec := (my_permissions() -> 'permissions' ->> 'resident.record');
       if coalesce((my_permissions() ->> 'is_admin')::boolean, false) then rec := '2'; end if;
       select count(*) into vis from residents where id = '${R}';
@@ -84,16 +85,21 @@ begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-card-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.filter((p) => p !== "anon").map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
-  insert into user_roles (user_id, role) values
-    (${lit(ID.admin)}, 'admin'), (${lit(ID.management)}, 'management'),
-    (${lit(ID.volunteer)}, 'volunteer'), (${lit(ID.public_viewer)}, 'public_viewer');
+  insert into user_roles (user_id, role_id)
+  select v.c0, ro.id from (values (${lit(ID.admin)}, 'admin'), (${lit(ID.management)}, 'management'), (${lit(ID.volunteer)}, 'volunteer'), (${lit(ID.public_viewer)}, 'public_viewer')) as v(c0, role_key)
+  join roles ro on ro.key = v.role_key;
   insert into clinics (id, name) values (${lit(OWN)}, 'Harness own'), (${lit(OTHER)}, 'Harness other');
-  insert into user_roles (user_id, role) values (${lit(ID.doctor_in)}, 'doctor'), (${lit(ID.doctor_out)}, 'doctor');
+  insert into user_roles (user_id, role_id)
+  select v.c0, ro.id from (values (${lit(ID.doctor_in)}, 'doctor'), (${lit(ID.doctor_out)}, 'doctor')) as v(c0, role_key)
+  join roles ro on ro.key = v.role_key;
   with d as (insert into doctors (name, user_id) values ('Harness doctor in', ${lit(ID.doctor_in)}), ('Harness doctor out', ${lit(ID.doctor_out)}) returning id, user_id)
     insert into doctor_clinics (clinic_id, doctor_id) select case when user_id = ${lit(ID.doctor_in)} then ${lit(OWN)} else ${lit(OTHER)} end, id from d;
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.sic)}, id, legacy_role from roles where key = 'second_in_command';
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.hom)}, id, legacy_role from roles where key = 'head_of_medical';
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.hm)}, id, legacy_role from roles where key = 'head_of_maintenance';
+  insert into user_roles (user_id, role_id)
+  select ${lit(ID.sic)}, id from roles where key = 'second_in_command';
+  insert into user_roles (user_id, role_id)
+  select ${lit(ID.hom)}, id from roles where key = 'head_of_medical';
+  insert into user_roles (user_id, role_id)
+  select ${lit(ID.hm)}, id from roles where key = 'head_of_maintenance';
   insert into residents (id, name, species) values (${lit(R)}, 'Harness resident', 'Dog');
   insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values (${lit(R)}, ${lit(OWN)}, now() - interval '3 days', 'completed');
 end $setup$;
@@ -131,7 +137,7 @@ for (const p of P) {
   const landing = cardLanding({
     appAccess: p !== "anon" && !!role && APP_ROLES.includes(role),
     readsRecord: reads,
-    // the volunteer floor: current_user_role() = 'volunteer', as readsWhoAndWhereOnly() asks
+    // the volunteer floor: on_volunteer_floor(), as readsWhoAndWhereOnly() asks (named 'volunteer' above)
     whoAndWhereOnly: role === "volunteer",
     rowVisible: get(p, "visible") === "1",
   });

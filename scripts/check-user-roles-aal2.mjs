@@ -68,7 +68,7 @@ begin
   perform set_config('request.jwt.claims',
     json_build_object('sub', p_uid, 'role', 'authenticated', 'aal', p_aal)::text, true);
   set local role authenticated;
-  v := current_user_role()::text;
+  v := case when public.is_admin() then 'admin' else 'other' end;
   reset role;
   perform set_config('request.jwt.claims', '', true);
   return v;
@@ -80,7 +80,7 @@ declare
   v_mgmt uuid := gen_random_uuid();
   v_target uuid := gen_random_uuid();
   v_new uuid := gen_random_uuid();
-  v_real int := (select count(*) from user_roles where role = 'admin' and archived_at is null);
+  v_real int := (select count(*) from user_roles ur join roles r on r.id = ur.role_id where r.key = 'admin' and ur.archived_at is null);
   r record;
   n bigint;
   v_report text := '';
@@ -93,7 +93,8 @@ begin
             'harness-aal2-' || r.who || '-' || r.uid || '@example.invalid',
             '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || r.who), now(), now());
   end loop;
-  insert into user_roles (user_id, role) values (v_admin, 'admin'), (v_mgmt, 'management'), (v_target, 'volunteer');
+  insert into user_roles (user_id, role_id)
+  select t.uid, ro.id from (values (v_admin, 'admin'), (v_mgmt, 'management'), (v_target, 'volunteer')) as t(uid, k) join roles ro on ro.key = t.k;
 
   -- A: an admin at aal1 is still an admin everywhere, and reads user_roles.
   if pg_temp.role_as(v_admin, 'aal1') is distinct from 'admin' then
@@ -104,37 +105,37 @@ begin
   v_report := v_report || format('A: admin aal1 resolves admin, reads %s rows | ', n);
 
   -- B: admin at aal1 cannot write through their own JWT.
-  n := pg_temp.try(v_admin, 'aal1', format('insert into user_roles (user_id, role) values (%L, ''management'')', v_new));
+  n := pg_temp.try(v_admin, 'aal1', format('insert into user_roles (user_id, role_id) values (%L, (select id from roles where key = ''management''))', v_new));
   if n <> -1 then raise exception 'HARNESS-FAIL B: aal1 insert gave %', n; end if;
-  n := pg_temp.try(v_admin, 'aal1', format('update user_roles set role = ''admin'' where user_id = %L', v_target));
+  n := pg_temp.try(v_admin, 'aal1', format('update user_roles set role_id = (select id from roles where key = ''admin'') where user_id = %L', v_target));
   if n <> 0 then raise exception 'HARNESS-FAIL B: aal1 update touched % rows', n; end if;
   n := pg_temp.try(v_admin, 'aal1', format('delete from user_roles where user_id = %L', v_target));
   if n <> 0 then raise exception 'HARNESS-FAIL B: aal1 delete touched % rows', n; end if;
   -- A session with no aal claim at all is refused the same way.
-  n := pg_temp.try(v_admin, null, format('update user_roles set role = ''admin'' where user_id = %L', v_target));
+  n := pg_temp.try(v_admin, null, format('update user_roles set role_id = (select id from roles where key = ''admin'') where user_id = %L', v_target));
   if n <> 0 then raise exception 'HARNESS-FAIL B: no-aal update touched % rows', n; end if;
   v_report := v_report || 'B: admin aal1 insert refused, update 0, delete 0; no aal claim update 0 | ';
 
   -- C: admin at aal2 can.
-  n := pg_temp.try(v_admin, 'aal2', format('insert into user_roles (user_id, role) values (%L, ''management'')', v_new));
+  n := pg_temp.try(v_admin, 'aal2', format('insert into user_roles (user_id, role_id) values (%L, (select id from roles where key = ''management''))', v_new));
   if n <> 1 then raise exception 'HARNESS-FAIL C: aal2 insert gave %', n; end if;
-  n := pg_temp.try(v_admin, 'aal2', format('update user_roles set role = ''management'' where user_id = %L', v_target));
+  n := pg_temp.try(v_admin, 'aal2', format('update user_roles set role_id = (select id from roles where key = ''management'') where user_id = %L', v_target));
   if n <> 1 then raise exception 'HARNESS-FAIL C: aal2 update gave %', n; end if;
   n := pg_temp.try(v_admin, 'aal2', format('delete from user_roles where user_id = %L', v_new));
   if n <> 1 then raise exception 'HARNESS-FAIL C: aal2 delete gave %', n; end if;
   v_report := v_report || 'C: admin aal2 insert 1, update 1, delete 1 | ';
 
   -- D: management at aal2 still cannot.
-  n := pg_temp.try(v_mgmt, 'aal2', format('insert into user_roles (user_id, role) values (%L, ''admin'')', v_new));
+  n := pg_temp.try(v_mgmt, 'aal2', format('insert into user_roles (user_id, role_id) values (%L, (select id from roles where key = ''admin''))', v_new));
   if n <> -1 then raise exception 'HARNESS-FAIL D: management aal2 insert gave %', n; end if;
-  n := pg_temp.try(v_mgmt, 'aal2', format('update user_roles set role = ''admin'' where user_id = %L', v_mgmt));
+  n := pg_temp.try(v_mgmt, 'aal2', format('update user_roles set role_id = (select id from roles where key = ''admin'') where user_id = %L', v_mgmt));
   if n <> 0 then raise exception 'HARNESS-FAIL D: management aal2 update touched % rows', n; end if;
   v_report := v_report || 'D: management aal2 insert refused, update 0 | ';
 
   -- E: the service role, as /admin/security and bootstrap-admin use it.
-  n := pg_temp.try(null, null, format('insert into user_roles (user_id, role) values (%L, ''admin'')', v_new));
+  n := pg_temp.try(null, null, format('insert into user_roles (user_id, role_id) values (%L, (select id from roles where key = ''admin''))', v_new));
   if n <> 1 then raise exception 'HARNESS-FAIL E: service insert gave %', n; end if;
-  n := pg_temp.try(null, null, format('insert into user_roles (user_id, role) values (%L, ''volunteer'') on conflict (user_id) do update set role = excluded.role', v_target));
+  n := pg_temp.try(null, null, format('insert into user_roles (user_id, role_id) values (%L, (select id from roles where key = ''volunteer'')) on conflict (user_id) do update set role_id = excluded.role_id', v_target));
   if n <> 1 then raise exception 'HARNESS-FAIL E: service upsert gave %', n; end if;
   n := pg_temp.try(null, null, format('update user_roles set archived_at = now() where user_id = %L', v_target));
   if n <> 1 then raise exception 'HARNESS-FAIL E: service archive gave %', n; end if;

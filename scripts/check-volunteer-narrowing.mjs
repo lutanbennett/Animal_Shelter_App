@@ -103,9 +103,9 @@ const CASES = [
 const WHO_AND_WHERE_COLUMNS = ["id", "name", "thai_name", "resident_code", "species", "sex", "profile_photo_drive_file_id", "current_status", "enclosure_id", "enclosure_name", "enclosure_name_th", "zone_id", "zone_name", "zone_name_th", "zone_colour"]; // zone_colour: 0162
 
 const RESTORE = {
-  weight: "create policy volunteer_read_weight on weight for select using (current_user_role() = 'volunteer'::app_role);",
+  weight: "create policy volunteer_read_weight on weight for select using ((select public.on_volunteer_floor()));",
   stocktake: `do $r$ begin execute replace(pg_get_functiondef('public.record_stocktake(jsonb,jsonb)'::regprocedure), '''staff'')', '''staff'', ''volunteer'')'); end $r$;`,
-  translation_queue: `do $r$ begin execute 'create or replace view public.translation_queue as ' || replace(pg_get_viewdef('public.translation_queue'::regclass), '(current_user_role() IS DISTINCT FROM ''volunteer''::app_role) AND ', ''); end $r$;`,
+  translation_queue: `do $r$ begin execute 'create or replace view public.translation_queue as ' || replace(pg_get_viewdef('public.translation_queue'::regclass), '(NOT on_volunteer_floor()) AND ', ''); end $r$;`,
 };
 const restoreKey = process.env.VOLUNTEER_RESTORE;
 if (restoreKey && !RESTORE[restoreKey]) throw new Error(`VOLUNTEER_RESTORE: one of ${Object.keys(RESTORE).join(", ")}`);
@@ -147,7 +147,9 @@ begin
     values (r.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
             'harness-volunteer-' || r.who || '-' || r.id || '@example.invalid', '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || r.who), now(), now());
   end loop;
-  insert into user_roles (user_id, role) select id, who::app_role from harness_ids;
+  insert into user_roles (user_id, role_id)
+  select s.c0, ro.id from (select id as c0, who as role_key from harness_ids) s
+  join roles ro on ro.key = s.role_key;
 
   insert into zones (id, name) values (${lit(F.ZONE)}, 'Harness zone');
   insert into enclosures (id, name, zone_id) values (${lit(F.ENC)}, 'Harness enclosure', ${lit(F.ZONE)});

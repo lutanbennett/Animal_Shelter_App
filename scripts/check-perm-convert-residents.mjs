@@ -122,17 +122,17 @@ begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-pcr-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
-  insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${[["admin", "admin"], ["management", "management"], ["volunteer", "volunteer"], ["vet", "doctor"]].map(([p, r]) => `('${r}', ${lit(ID[p])})`).join(",")}) as u(who, id);
-  -- custom roles: two borrow the volunteer (the floor the Heads and the 2IC stand on), four borrow management (staff until 0173)
-  insert into roles (key, name, kind, legacy_role, scope_residents) values
+  insert into user_roles (user_id, role_id)
+    select u.id, ro.id from (values ${[["admin", "admin"], ["management", "management"], ["volunteer", "volunteer"], ["vet", "doctor"]].map(([p, r]) => `('${r}', ${lit(ID[p])})`).join(",")}) as u(who, id) join roles ro on ro.key = u.who;
+  -- custom roles: two on the volunteer floor (scope who_and_where, as the Heads and the 2IC), four above it
+  insert into roles (key, name, kind, scope_residents) values
     -- 0179: the volunteer floor is now a scope of its own (who_and_where), not a borrowed enum
-    ('harness_pcr_vol_read', 'Harness vol read', 'custom', 'volunteer', 'who_and_where'),
-    ('harness_pcr_vol_edit', 'Harness vol edit', 'custom', 'volunteer', 'who_and_where'),
-    ('harness_pcr_st_read',  'Harness staff read', 'custom', 'management', 'all'),
-    ('harness_pcr_st_edit',  'Harness staff edit', 'custom', 'management', 'all'),
-    ('harness_pcr_st_move',  'Harness staff move', 'custom', 'management', 'all'),
-    ('harness_pcr_scoped',   'Harness scoped', 'custom', 'management', 'own_clinic');
+    ('harness_pcr_vol_read', 'Harness vol read', 'custom', 'who_and_where'),
+    ('harness_pcr_vol_edit', 'Harness vol edit', 'custom', 'who_and_where'),
+    ('harness_pcr_st_read',  'Harness staff read', 'custom', 'all'),
+    ('harness_pcr_st_edit',  'Harness staff edit', 'custom', 'all'),
+    ('harness_pcr_st_move',  'Harness staff move', 'custom', 'all'),
+    ('harness_pcr_scoped',   'Harness scoped', 'custom', 'own_clinic');
   insert into role_permissions (role_id, activity, level)
     select r.id, a.key,
            case when r.key in ('harness_pcr_vol_read', 'harness_pcr_st_read') then 1 else 2 end
@@ -144,12 +144,18 @@ begin
   -- the move-only role: Read on the record (to see the resident) and the one housing act
   insert into role_permissions (role_id, activity, level)
     select r.id, v.act, v.lvl from roles r, (values ('resident.record', 1), ('placement.move', 2)) as v(act, lvl) where r.key = 'harness_pcr_st_move';
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.c_vol_read)}, id, 'volunteer' from roles where key = 'harness_pcr_vol_read';
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.c_vol_edit)}, id, 'volunteer' from roles where key = 'harness_pcr_vol_edit';
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.c_st_read)}, id, 'management' from roles where key = 'harness_pcr_st_read';
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.c_st_edit)}, id, 'management' from roles where key = 'harness_pcr_st_edit';
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.c_st_move)}, id, 'management' from roles where key = 'harness_pcr_st_move';
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.c_scoped)}, id, 'management' from roles where key = 'harness_pcr_scoped';
+  insert into user_roles (user_id, role_id)
+  select ${lit(ID.c_vol_read)}, id from roles where key = 'harness_pcr_vol_read';
+  insert into user_roles (user_id, role_id)
+  select ${lit(ID.c_vol_edit)}, id from roles where key = 'harness_pcr_vol_edit';
+  insert into user_roles (user_id, role_id)
+  select ${lit(ID.c_st_read)}, id from roles where key = 'harness_pcr_st_read';
+  insert into user_roles (user_id, role_id)
+  select ${lit(ID.c_st_edit)}, id from roles where key = 'harness_pcr_st_edit';
+  insert into user_roles (user_id, role_id)
+  select ${lit(ID.c_st_move)}, id from roles where key = 'harness_pcr_st_move';
+  insert into user_roles (user_id, role_id)
+  select ${lit(ID.c_scoped)}, id from roles where key = 'harness_pcr_scoped';
   -- placement.death_withdraw is deliberately given to nobody custom: the c_st_edit insert of that type must be refused
 
   -- 0172: clinics / doctors + doctor_clinics / clinic_visits (were vets / vet_doctors / vet_appointments)

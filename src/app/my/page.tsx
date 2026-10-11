@@ -31,14 +31,12 @@ export default async function MyPage() {
   const supabase = await createClient();
   const today = todayIso();
 
-  const [{ data: role }, { data: auth }, perms] = await Promise.all([
-    supabase.rpc("current_user_role"),
+  const [{ data: auth }, perms] = await Promise.all([
     supabase.auth.getUser(),
     loadPermissions(),
   ]);
-  // Tasks are shelter operations; a doctor's home is their appointments. Which role lands where is
-  // home-screens' (roles.home_path); until it is built a doctor is still told by name.
-  if (role === "doctor") redirect(DOCTOR_HOME_PATH);
+  // Tasks are shelter operations; a clinic login's home is its appointments (the scope, as /home asks).
+  if (perms?.scopes.clinical === "own_clinic") redirect(DOCTOR_HOME_PATH);
   const userId = auth.user?.id;
 
   const sections: MyTaskSection[] = userId

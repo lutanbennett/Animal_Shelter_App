@@ -65,7 +65,7 @@ function principalSql(p) {
   const setup = p.name === "anon" ? "" : `
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   values ('${id}', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-surface-${p.name}@example.invalid', '{}', '{"full_name":"Harness surface"}', now(), now());
-  ${p.role ? `insert into user_roles (user_id, role_id, role, archived_at) select '${id}', id, legacy_role, ${p.arch ? "now()" : "null"} from roles where key = '${p.role}';` : ""}
+  ${p.role ? `insert into user_roles (user_id, role_id, archived_at) select '${id}', id, ${p.arch ? "now()" : "null"} from roles where key = '${p.role}';` : ""}
   ${p.role === "doctor" ? `with d as (insert into doctors (name, user_id) values ('Harness surface doctor', '${id}') returning id) insert into doctor_clinics (clinic_id, doctor_id) select (select id from clinics order by id limit 1), id from d;` : ""}`;
   const claims = p.name === "anon"
     ? `json_build_object('role', 'anon')`

@@ -48,17 +48,17 @@ begin
   if v_old is not null then
     ${refused("C", "update public.user_roles set archived_at = null where user_id = v_old;")}
   end if;
-  ${refused("D", "update public.user_roles set role = 'staff' where user_id = v_mgmt;")}
-  update public.user_roles set role = 'volunteer' where user_id = v_mgmt;
+  ${refused("D", "update public.user_roles set role_id = (select id from roles where key = 'staff') where user_id = v_mgmt;")}
+  update public.user_roles set role_id = (select id from roles where key = 'volunteer') where user_id = v_mgmt;
   if (select r.key from public.user_roles ur join public.roles r on r.id = ur.role_id where ur.user_id = v_mgmt) <> 'volunteer' then
     raise exception 'FAIL E';
   end if;
   if v_new is not null then
-    ${refused("F", "insert into public.user_roles (user_id, role) values (v_new, 'staff');")}
+    ${refused("F", "insert into public.user_roles (user_id, role_id) values (v_new, (select id from roles where key = 'staff'));")}
   end if;
   -- G: put Staff back live for one login, then the guard must stop.
   update public.roles set archived_at = null where key = 'staff';
-  update public.user_roles set role = 'staff' where user_id = v_mgmt;
+  update public.user_roles set role_id = (select id from roles where key = 'staff') where user_id = v_mgmt;
   begin
     execute $g$ ${guard} $g$;
     raise exception 'FAIL G: guard let it through';

@@ -28,6 +28,7 @@ import { createHmac, randomBytes } from "node:crypto";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createClient } from "@supabase/supabase-js";
+import { giveRole } from "./lib/user-role.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -84,7 +85,7 @@ const userId = created.user.id;
 const probeId = crypto.randomUUID();
 
 try {
-  const { error: roleError } = await service.from("user_roles").insert({ user_id: userId, role: "admin" });
+  const { error: roleError } = await giveRole(service, userId, "admin");
   if (roleError) throw roleError;
 
   // 1 — password sign-in

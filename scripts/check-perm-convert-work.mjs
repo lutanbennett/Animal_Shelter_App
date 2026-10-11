@@ -101,16 +101,18 @@ begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-wk-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
-  insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${REAL.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.hm)}, id, 'volunteer' from roles where key = 'head_of_maintenance';
-  insert into roles (key, name, kind, legacy_role, scope_residents, scope_contacts) values
-    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_wk_${c}', 'Harness ${c}', 'custom', '${d.floor ?? "management"}', 'all', 'full')`).join(",\n    ")};
+  insert into user_roles (user_id, role_id)
+    select u.id, ro.id from (values ${REAL.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id) join roles ro on ro.key = u.who;
+  insert into user_roles (user_id, role_id)
+  select ${lit(ID.hm)}, id from roles where key = 'head_of_maintenance';
+  insert into roles (key, name, kind, scope_residents, scope_contacts) values
+    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_wk_${c}', 'Harness ${c}', 'custom', '${d.floor === "volunteer" ? "who_and_where" : "all"}', 'full')`).join(",\n    ")};
   insert into role_permissions (role_id, activity, level)
     select r.id, v.act, v.lvl from roles r join (values
       ${Object.entries(CUSTOM).flatMap(([c, d]) => d.cells.map(([a, l]) => `('harness_wk_${c}', '${a}', ${l})`)).join(",\n      ")}
     ) as v(rkey, act, lvl) on v.rkey = r.key;
-  ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id, role) select ${lit(ID[c])}, id, '${CUSTOM[c].floor ?? "management"}' from roles where key = 'harness_wk_${c}';`).join("\n  ")}
+  ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id)
+  select ${lit(ID[c])}, id from roles where key = 'harness_wk_${c}';`).join("\n  ")}
 
   insert into zones (id, name) values (${lit(ZONE)}, 'Harness zone');
   insert into maintenance (id, title, zone_id) values (${lit(JOB)}, 'Harness job', ${lit(ZONE)});

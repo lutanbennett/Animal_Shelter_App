@@ -84,21 +84,23 @@ begin
             'harness-rolecan-' || r.who || '-' || r.id || '@example.invalid',
             '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || r.who), now(), now());
   end loop;
-  insert into user_roles (user_id, role)
-  select id, who::app_role from harness_ids
-   where who in ('admin', 'management', 'doctor', 'volunteer', 'public_viewer');
-  insert into user_roles (user_id, role, archived_at)
-  select id, 'staff', now() from harness_ids where who = 'archperson';
+  insert into user_roles (user_id, role_id)
+  select s.c0, ro.id from (select id as c0, who as role_key from harness_ids
+   where who in ('admin', 'management', 'doctor', 'volunteer', 'public_viewer')) s
+  join roles ro on ro.key = s.role_key;
+  insert into user_roles (user_id, role_id, archived_at)
+  select s.c0, ro.id, s.c2 from (select id as c0, 'staff' as role_key, now() as c2 from harness_ids where who = 'archperson') s
+  join roles ro on ro.key = s.role_key;
 end $setup$;
 
 -- A configured role that holds one cell and is archived.
 -- (borrows 'management': it borrowed 'staff' until 0173 retired that role; and since 0173's trigger
 -- refuses a live login on an archived role, the holder is given it first and the role archived after)
-insert into roles (key, name, kind, legacy_role) values ('harness_archived', 'Harness archived', 'custom', 'management');
+insert into roles (key, name, kind) values ('harness_archived', 'Harness archived', 'custom');
 insert into role_permissions (role_id, activity, level)
 select id, 'stock.count', 2 from roles where key = 'harness_archived';
-insert into user_roles (user_id, role_id, role)
-select h.id, r.id, 'management' from harness_ids h, roles r where h.who = 'archrole' and r.key = 'harness_archived';
+insert into user_roles (user_id, role_id)
+  select h.id, r.id from harness_ids h, roles r where h.who = 'archrole' and r.key = 'harness_archived';
 update roles set archived_at = now() where key = 'harness_archived';
 
 do $h$

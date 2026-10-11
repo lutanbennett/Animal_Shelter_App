@@ -28,10 +28,8 @@ export type SecurityUser = {
   email: string;
   /** user_metadata.full_name (or Google's name); null when the login has none. */
   name: string | null;
-  /** The role's key (roles.key, through user_roles.role_id); the enum's value for a row without role_id. */
+  /** The role's key (roles.key, through user_roles.role_id). */
   role: string | null;
-  /** user_roles.role, the enum value the role borrows: what the Admin and Doctor special cases ask. */
-  legacyRole: string | null;
   /** Set when they've left (0063): no access, kept for past work. */
   archivedAt: string | null;
   /** The doctor this login is linked to (0125); its clinics are the login's. */
@@ -73,12 +71,10 @@ function UserRow({
   const archived = !!user.archivedAt;
   // Live roles are offered. A retired one (Staff, 0173) is never offered; a login that still holds it (an
   // archived one) shows it, unchosen, and its select stays open so it can be given another role before Restore.
-  const offered = roles.filter((r) => !r.archived && r.legacyRole);
+  const offered = roles.filter((r) => !r.archived);
   const held = roles.find((r) => r.key === role);
   const holdsRetired = !!held?.archived;
-  // The Admin and Doctor rules follow the enum the role borrows, as the database's do; `role` is the key
-  // until it is saved, so the borrowed value of the role just picked comes from its row.
-  const legacyRole = held?.legacyRole ?? user.legacyRole;
+  // The Admin and Doctor rules follow the role's key; `role` is the key until it is saved, so a role just picked counts.
 
   /**
    * Runs one of the row's actions and shows its refusal. The actions
@@ -253,7 +249,7 @@ function UserRow({
               </option>
             )}
           </select>
-          {legacyRole === "doctor" && (
+          {role === "doctor" && (
             <DoctorLoginLink
               user={user}
               clinics={clinics}
@@ -282,7 +278,7 @@ function UserRow({
               {/* An admin with no second factor is the row to notice. */}
               <span
                 className={
-                  user.legacyRole === "admin" && !archived
+                  user.role === "admin" && !archived
                     ? "rounded-full bg-warning/20 px-2 py-0.5 text-xs font-medium text-foreground"
                     : "text-xs text-muted"
                 }
@@ -294,7 +290,7 @@ function UserRow({
                   {t.admin.security.table.twoStepSetupOpenUntil(formatDate(user.twoStepSetupUntil, locale))}
                 </span>
               )}
-              {user.legacyRole === "admin" && !isSelf && !archived && (
+              {user.role === "admin" && !isSelf && !archived && (
                 <ActionButton compact icon={ACTION_ICONS.allowTwoStep} disabled={isPending} onClick={handleAllowTwoStepSetup}>
                   {user.twoStepSetupUntil
                     ? t.admin.security.table.renewTwoStepSetup

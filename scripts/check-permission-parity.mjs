@@ -202,9 +202,13 @@ begin
     values (r.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
             'harness-parity-' || r.who || '-' || r.id || '@example.invalid', '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || r.who), now(), now());
   end loop;
-  insert into user_roles (user_id, role) select id, who::app_role from harness_ids
-   where who in ('admin', 'management', 'doctor', 'volunteer', 'public_viewer');
-  insert into user_roles (user_id, role, archived_at) select id, 'staff', now() from harness_ids where who = 'archperson';
+  insert into user_roles (user_id, role_id)
+  select s.c0, ro.id from (select id as c0, who as role_key from harness_ids
+   where who in ('admin', 'management', 'doctor', 'volunteer', 'public_viewer')) s
+  join roles ro on ro.key = s.role_key;
+  insert into user_roles (user_id, role_id, archived_at)
+  select s.c0, ro.id, s.c2 from (select id as c0, 'staff' as role_key, now() as c2 from harness_ids where who = 'archperson') s
+  join roles ro on ro.key = s.role_key;
 
   insert into clinics (id, name) values (v_own, 'Harness own clinic'), (v_oth, 'Harness other clinic');
   with d as (insert into doctors (name, user_id) select 'Harness doctor', id from harness_ids where who = 'doctor' returning id)
@@ -256,9 +260,10 @@ function sectionZ() {
 do $z$
 declare v_report jsonb := '[]'::jsonb; r record; a record; n bigint;
 begin
-  insert into roles (key, name, kind, legacy_role) values ('harness_parity_archived', 'Harness archived', 'custom', 'staff');
+  insert into roles (key, name, kind) values ('harness_parity_archived', 'Harness archived', 'custom');
   insert into role_permissions (role_id, activity, level) select id, 'stock.count', 2 from roles where key = 'harness_parity_archived';
-  insert into user_roles (user_id, role_id, role) select ${lit(F.archrole)}, id, 'staff' from roles where key = 'harness_parity_archived';
+  insert into user_roles (user_id, role_id)
+  select ${lit(F.archrole)}, id from roles where key = 'harness_parity_archived';
   update roles set archived_at = now() where key = 'harness_parity_archived';
   -- every activity, both levels, for the three people who must always be answered no
   for r in select who, id from harness_ids where who in ('norole', 'archperson', 'archrole') loop

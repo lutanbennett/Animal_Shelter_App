@@ -141,7 +141,11 @@ function simulated(report: HealthReport): HealthReport {
 /** Every non-archived admin's sign-in email, as release mail finds them. */
 async function adminEmails(): Promise<string[]> {
   const db = createAdminClient();
-  const { data, error } = await db.from("user_roles").select("user_id").eq("role", "admin").is("archived_at", null);
+  const { data, error } = await db
+    .from("user_roles")
+    .select("user_id, roles!inner(key)")
+    .eq("roles.key", "admin")
+    .is("archived_at", null);
   if (error) throw new Error(`Could not list admins: ${error.message}`);
   const emails = await Promise.all(
     (data ?? []).map(async ({ user_id }) => (await db.auth.admin.getUserById(user_id as string)).data.user?.email ?? null),

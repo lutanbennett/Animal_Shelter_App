@@ -70,10 +70,10 @@ try {
   const { data: u, error } = await service.auth.admin.createUser({ email, password, email_confirm: true });
   if (error) throw error;
   userId = u.user.id;
-  const { data: role } = await service.from("roles").select("id, legacy_role").eq("key", "head_of_medical").single();
+  const { data: role } = await service.from("roles").select("id").eq("key", "head_of_medical").single();
   const { error: urErr } = await service
     .from("user_roles")
-    .insert({ user_id: userId, role_id: role.id, role: role.legacy_role });
+    .insert({ user_id: userId, role_id: role.id });
   if (urErr) throw urErr;
   const { error: siErr } = await ssr.auth.signInWithPassword({ email, password });
   if (siErr) throw siErr;

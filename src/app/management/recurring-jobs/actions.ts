@@ -186,7 +186,7 @@ async function whoCannotDo(
   if (userIds.length === 0) return { names: [], error: null };
   const { data, error } = await supabase
     .from("app_users")
-    .select("id, email, display_name, role, archived_at, role_key")
+    .select("id, email, display_name, archived_at, role_key")
     .in("id", userIds)
     .is("archived_at", null)
     .returns<AppUser[]>();

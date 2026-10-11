@@ -75,7 +75,9 @@ begin
   select u, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
          'harness-undo-' || u || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
   from unnest(array[v_admin, v_mgmt]) u;
-  insert into user_roles (user_id, role) values (v_admin, 'admin'), (v_mgmt, 'management');
+  insert into user_roles (user_id, role_id)
+  select v.c0, ro.id from (values (v_admin, 'admin'), (v_mgmt, 'management')) as v(c0, role_key)
+  join roles ro on ro.key = v.role_key;
   select id into v_res from record_intake(
     p_name => 'Harness audit undo', p_intake_date => date '2026-08-01', p_weight_kg => 10,
     p_diet_type_id => (select id from diet_types order by is_standard desc nulls last limit 1));

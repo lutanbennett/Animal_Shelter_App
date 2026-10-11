@@ -124,15 +124,16 @@ begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-st-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
-  insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${REAL.map((p) => `('${APP_ROLE[p] ?? p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
-  insert into roles (key, name, kind, legacy_role, scope_residents, scope_contacts, opens_app) values
-    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_st_${c}', 'Harness ${c}', 'custom', '${d.floor ?? "management"}', '${d.scope ?? "own_clinic"}', 'full', ${d.opens ?? true})`).join(",\n    ")};
+  insert into user_roles (user_id, role_id)
+    select u.id, ro.id from (values ${REAL.map((p) => `('${APP_ROLE[p] ?? p}', ${lit(ID[p])})`).join(",")}) as u(who, id) join roles ro on ro.key = u.who;
+  insert into roles (key, name, kind, scope_residents, scope_contacts, opens_app) values
+    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_st_${c}', 'Harness ${c}', 'custom', '${d.floor === "volunteer" ? "who_and_where" : (d.scope ?? "own_clinic")}', 'full', ${d.opens ?? true})`).join(",\n    ")};
   insert into role_permissions (role_id, activity, level)
     select r.id, v.act, v.lvl from roles r join (values
       ${Object.entries(CUSTOM).flatMap(([c, d]) => d.cells.map(([a, l]) => `('harness_st_${c}', '${a}', ${l})`)).join(",\n      ")}
     ) as v(rkey, act, lvl) on v.rkey = r.key;
-  ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id, role) select ${lit(ID[c])}, id, '${CUSTOM[c].floor ?? "management"}' from roles where key = 'harness_st_${c}';`).join("\n  ")}
+  ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id)
+  select ${lit(ID[c])}, id from roles where key = 'harness_st_${c}';`).join("\n  ")}
 
   insert into assistant_actions (user_id, request_text, status)
     select id, 'harness-mine', 'unmatched' from auth.users where id in (${P.map((p) => lit(ID[p])).join(",")});

@@ -38,7 +38,7 @@ export default async function RecurringJobsPage() {
     // The role key gates who can be given a job at all; eligibility is asked of each person's role KEY (0146).
     supabase
       .from("app_users")
-      .select("id, email, display_name, role, archived_at, role_key")
+      .select("id, email, display_name, archived_at, role_key")
       .not("role_key", "in", ASSIGNABLE_KEY_FILTER)
       .is("archived_at", null)
       .returns<AppUser[]>(),

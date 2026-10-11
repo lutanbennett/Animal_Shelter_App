@@ -52,12 +52,12 @@ begin
   select id into v_clinic2 from clinics where id <> v_clinic order by name limit 1;
   -- a management login, the non-doctor control (was staff until 0173 retired it: a live staff row is
   -- refused). Dev may hold no live one: turn an archived staff account into management (rolled back)
-  select user_id into v_mgmt from user_roles where role = 'management' and archived_at is null limit 1;
+  select user_id into v_mgmt from user_roles where role_id = (select id from roles where key = 'management') and archived_at is null limit 1;
   if v_mgmt is null then
-    select user_id into v_mgmt from user_roles where role = 'staff' and archived_at is not null limit 1;
-    update user_roles set role = 'management', archived_at = null where user_id = v_mgmt;
+    select user_id into v_mgmt from user_roles where role_id = (select id from roles where key = 'staff') and archived_at is not null limit 1;
+    update user_roles set role_id = (select id from roles where key = 'management'), archived_at = null where user_id = v_mgmt;
   end if;
-  select user_id into v_doctoruser from user_roles where role = 'doctor' and archived_at is null limit 1;
+  select user_id into v_doctoruser from user_roles where role_id = (select id from roles where key = 'doctor') and archived_at is null limit 1;
   if v_res is null or v_clinic2 is null or v_mgmt is null or v_doctoruser is null then
     raise exception 'FAIL setup: res % clinic2 % management % doctoruser %', v_res, v_clinic2, v_mgmt, v_doctoruser;
   end if;
@@ -130,7 +130,7 @@ begin
   update clinic_visits set doctor_id = v_d2 where id = v_a;
   -- merge checks current_user_role(), so act as an admin
   perform set_config('request.jwt.claims', json_build_object('sub',
-    (select user_id from user_roles where role = 'admin' and archived_at is null limit 1), 'role', 'authenticated')::text, true);
+    (select user_id from user_roles where role_id = (select id from roles where key = 'admin') and archived_at is null limit 1), 'role', 'authenticated')::text, true);
   perform merge_doctors(v_d1, v_d2);
   if exists (select 1 from doctors where id = v_d1) then raise exception 'FAIL G merged doctor still listed'; end if;
   select count(*) into v_n from clinic_visits where doctor_id = v_d2 and doctor_name <> 'Somchai Harness';
@@ -188,15 +188,15 @@ begin
   -- a management login books (was staff until 0173 retired it: a live staff row is refused).
   -- Dev may hold no live management or volunteer account: turn archived staff accounts into
   -- them (all rolled back)
-  select user_id into v_mgmt from user_roles where role = 'management' and archived_at is null limit 1;
+  select user_id into v_mgmt from user_roles where role_id = (select id from roles where key = 'management') and archived_at is null limit 1;
   if v_mgmt is null then
-    select user_id into v_mgmt from user_roles where role = 'staff' and archived_at is not null limit 1;
-    update user_roles set role = 'management', archived_at = null where user_id = v_mgmt;
+    select user_id into v_mgmt from user_roles where role_id = (select id from roles where key = 'staff') and archived_at is not null limit 1;
+    update user_roles set role_id = (select id from roles where key = 'management'), archived_at = null where user_id = v_mgmt;
   end if;
-  select user_id into v_vol from user_roles where role = 'volunteer' and archived_at is null limit 1;
+  select user_id into v_vol from user_roles where role_id = (select id from roles where key = 'volunteer') and archived_at is null limit 1;
   if v_vol is null then
-    select user_id into v_vol from user_roles where role in ('staff', 'management') and user_id <> v_mgmt and archived_at is not null limit 1;
-    update user_roles set role = 'volunteer', archived_at = null where user_id = v_vol;
+    select user_id into v_vol from user_roles where role_id in (select id from roles where key in ('staff', 'management')) and user_id <> v_mgmt and archived_at is not null limit 1;
+    update user_roles set role_id = (select id from roles where key = 'volunteer'), archived_at = null where user_id = v_vol;
   end if;
   perform set_config('harness.clinic', v_clinic::text, true);
   perform set_config('harness.res', v_res::text, true);

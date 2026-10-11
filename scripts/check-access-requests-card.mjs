@@ -26,6 +26,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
+import { giveRole } from "./lib/user-role.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -91,7 +92,7 @@ try {
   });
   if (aErr) throw aErr;
   made.push(a.user.id);
-  const { error: roleErr } = await service.from("user_roles").insert({ user_id: a.user.id, role: "admin" });
+  const { error: roleErr } = await giveRole(service, a.user.id, "admin");
   if (roleErr) throw roleErr;
   const cookie = await signInCookies(adminEmail, adminPassword);
 
@@ -135,7 +136,7 @@ try {
   });
   if (sErr) throw sErr;
   made.push(s.user.id);
-  const { error: sRoleErr } = await service.from("user_roles").insert({ user_id: s.user.id, role: "staff" });
+  const { error: sRoleErr } = await giveRole(service, s.user.id, "staff");
   if (sRoleErr) throw sRoleErr;
   const staffCookie = await signInCookies(staffEmail, adminPassword);
   const staffStatus = await page("/admin/status", staffCookie);
@@ -157,9 +158,7 @@ try {
   expect(leaks(security.html).length === 0, "no name or email in Security's response to an aal1 admin");
 
   // An archived login keeps its role row (0063): never a request.
-  const { error: archErr } = await service
-    .from("user_roles")
-    .insert({ user_id: r.user.id, role: "volunteer", archived_at: new Date().toISOString() });
+  const { error: archErr } = await giveRole(service, r.user.id, "volunteer", { archived_at: new Date().toISOString() });
   if (archErr) throw archErr;
   console.log("  archived the requester; waiting 61 s again…");
   await new Promise((done) => setTimeout(done, 61_000));

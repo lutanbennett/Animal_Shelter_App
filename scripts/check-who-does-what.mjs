@@ -70,10 +70,10 @@ async function query(sql) {
 }
 
 // The live roles and their cells, as the page reads them.
-const rolesRes = await query(`select r.key, r.legacy_role, coalesce(json_object_agg(rp.activity, rp.level) filter (where rp.activity is not null), '{}') as cells
+const rolesRes = await query(`select r.key, coalesce(json_object_agg(rp.activity, rp.level) filter (where rp.activity is not null), '{}') as cells
   from roles r left join role_permissions rp on rp.role_id = r.id
  where r.archived_at is null and r.opens_app and r.key <> 'admin'
- group by r.key, r.legacy_role order by r.key`);
+ group by r.key order by r.key`);
 if (!Array.isArray(rolesRes.body)) throw new Error(`could not read roles: ${JSON.stringify(rolesRes.body).slice(0, 400)}`);
 const ROLES = rolesRes.body.map((r) => r.key);
 const CELL = Object.fromEntries(rolesRes.body.map((r) => [r.key, r.cells]));
@@ -156,7 +156,7 @@ begin
     values (r.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
             'harness-wdw-' || r.who || '-' || r.id || '@example.invalid', '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || r.who), now(), now());
   end loop;
-  -- by role_id: user_roles_sync_role_id() sets the enum from the role's legacy_role, as the app's own writes do
+  -- by role_id, as the app's own writes do
   insert into user_roles (user_id, role_id) select h.id, ro.id from harness_ids h join roles ro on ro.key = h.who and ro.archived_at is null;
 
   insert into clinics (id, name) values (v_own, 'Harness own clinic'), (v_oth, 'Harness other clinic');

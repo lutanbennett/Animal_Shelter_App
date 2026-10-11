@@ -44,8 +44,8 @@ begin
     perform set_config('request.jwt.claims', json_build_object('sub', u.user_id, 'role', 'authenticated', 'aal', 'aal2')::text, true);
     set local role authenticated;
     checks := checks + 1;
-    if (select public.is_admin()) is distinct from coalesce((select public.current_user_role()) = 'admin', false) then
-      fails := fails || format('is_admin() disagrees with the enum for %s', u.user_id) || E'\\n';
+    if (select public.is_admin()) is distinct from coalesce((select r.key from user_roles ur join roles r on r.id = ur.role_id where ur.user_id = u.user_id and ur.archived_at is null) = 'admin', false) then
+      fails := fails || format('is_admin() disagrees with the admin role for %s', u.user_id) || E'\\n';
     end if;
     reset role;
   end loop;

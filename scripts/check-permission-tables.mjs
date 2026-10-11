@@ -27,7 +27,7 @@
 //      two with no live role
 //   D  the guards: Admin and public_viewer take no cells, cannot be deleted,
 //      archived, renamed or re-kinded; a Yes/No activity refuses level 1; the
-//      user_roles.role_id bridge in both directions; a role with no legacy_role
+//      user_roles.role_id as the only thing a role is (0181)
 //      cannot be held yet; the last active admin cannot be taken away (checked
 //      at commit, so a swap in one transaction is fine)
 //   E  RLS: an admin at aal2 reads and writes the matrix, at aal1 only reads;
@@ -177,28 +177,27 @@ begin
             'harness-perm-' || r.who || '-' || r.id || '@example.invalid',
             '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || r.who), now(), now());
   end loop;
-  insert into user_roles (user_id, role)
-  select id, (case when who = 'admin2' then 'admin' else who end)::app_role from harness_ids
-   where who in ('admin', 'admin2', 'management', 'doctor', 'volunteer', 'public_viewer');
+  insert into user_roles (user_id, role_id)
+  select h.id, ro.id from harness_ids h join roles ro on ro.key = (case when h.who = 'admin2' then 'admin' else h.who end)
+   where h.who in ('admin', 'admin2', 'management', 'doctor', 'volunteer', 'public_viewer');
   -- 'staff': 0173 refuses a live staff login, so a custom role carrying the archived Staff role's cells
-  insert into roles (key, name, kind, legacy_role) values ('harness_staff_cells', 'Harness Staff cells', 'custom', 'management');
+  insert into roles (key, name, kind) values ('harness_staff_cells', 'Harness Staff cells', 'custom');
   insert into role_permissions (role_id, activity, level)
     select (select id from roles where key = 'harness_staff_cells'), rp.activity, rp.level
       from role_permissions rp join roles s on s.id = rp.role_id where s.key = 'staff';
-  insert into user_roles (user_id, role_id, role)
-    select h.id, ro.id, ro.legacy_role from harness_ids h, roles ro where h.who = 'staff' and ro.key = 'harness_staff_cells';
-  insert into user_roles (user_id, role, archived_at)
-  select id, 'staff', now() from harness_ids where who = 'archperson';
+  insert into user_roles (user_id, role_id)
+    select h.id, ro.id from harness_ids h, roles ro where h.who = 'staff' and ro.key = 'harness_staff_cells';
+  insert into user_roles (user_id, role_id, archived_at)
+  select h.id, ro.id, now() from harness_ids h join roles ro on ro.key = 'staff' where h.who = 'archperson';
 end $setup$;
 
 -- A configured role that borrows 'management' (it borrowed 'staff' until 0173 retired that role),
 -- holds one cell, and is later archived.
--- (kind custom with a legacy_role: allowed, and not part of the one-per-enum index)
-insert into roles (key, name, kind, legacy_role) values ('harness_archived', 'Harness archived', 'custom', 'management');
+insert into roles (key, name, kind) values ('harness_archived', 'Harness archived', 'custom');
 insert into role_permissions (role_id, activity, level)
 select id, 'stock.count', 2 from roles where key = 'harness_archived';
-insert into user_roles (user_id, role_id, role)
-select h.id, r.id, 'management' from harness_ids h, roles r where h.who = 'archrole' and r.key = 'harness_archived';
+insert into user_roles (user_id, role_id)
+select h.id, r.id from harness_ids h, roles r where h.who = 'archrole' and r.key = 'harness_archived';
 
 do $h$
 declare
@@ -244,10 +243,9 @@ begin
   perform pg_temp.eq('A yesno cells at level 2', (select count(*) from role_permissions rp join permission_activities a on a.key = rp.activity where a.kind = 'yesno' and rp.level <> 2)::text, '0');
   perform pg_temp.eq('A requires all empty', (select count(*) from permission_activities where requires <> '[]'::jsonb)::text, '0');
   perform pg_temp.eq('A real logins have role_id', (select count(*) from user_roles where role_id is null)::text, '0');
-  perform pg_temp.eq('A real logins agree with the enum', (select count(*) from user_roles ur join roles r on r.id = ur.role_id where r.legacy_role is distinct from ur.role)::text, '0');
   perform pg_temp.eq('A scopes doctor', (select scope_residents || '/' || scope_clinical || '/' || scope_contacts || '/' || scope_photos || '/' || sees_login_emails from roles where key = 'doctor'), 'own_clinic/own_clinic/name_type/medical_only/false');
   perform pg_temp.eq('A scopes volunteer', (select scope_contacts || '/' || sees_login_emails from roles where key = 'volunteer'), 'name_phone/false');
-  v_report := v_report || 'A: 6 roles, 61 activities, cells 56/39/13/5/0/0, role_id agrees with the enum on every real login | ';
+  v_report := v_report || 'A: 6 roles, 61 activities, cells 56/39/13/5/0/0, every real login has a role_id | ';
 
   -- B: has_permission().
   -- the four answers-no cases
@@ -345,11 +343,9 @@ begin
   foreach t in array array['update roles set archived_at = now() where key = ''admin''',
                            'update roles set key = ''boss'' where key = ''admin''',
                            'update roles set kind = ''default'' where key = ''public_viewer''',
-                           'update roles set legacy_role = ''staff'' where key = ''admin''',
                            'insert into roles (key, name, kind) values (''admin2'', ''x'', ''fixed'')',
-                           'insert into roles (key, name, kind, legacy_role) values (''boss'', ''x'', ''fixed'', ''staff'')',
-                           'insert into roles (key, name, kind, legacy_role) values (''admin'', ''x'', ''default'', ''staff'')',
-                           'insert into roles (key, name, kind) values (''harness_bad'', ''x'', ''default'')',
+                           'insert into roles (key, name, kind) values (''boss'', ''x'', ''fixed'')',
+                           'insert into roles (key, name, kind) values (''admin'', ''x'', ''default'')',
                            'insert into roles (key, name, kind, scope_photos) values (''harness_bad'', ''x'', ''custom'', ''everything'')',
                            'insert into roles (key, name, kind, scope_residents) values (''harness_bad'', ''x'', ''custom'', ''nothing_at_all'')',
                            'insert into roles (key, name, kind, home_path) values (''harness_bad'', ''x'', ''custom'', ''home'')',
@@ -359,18 +355,17 @@ begin
   end loop;
   v_report := v_report || 'D: no cells for admin / public_viewer, Yes/No stays level 2, unknown activity and duplicate cell refused, fixed roles immutable, bad scope values refused | ';
 
-  -- the role_id bridge (through 'management': it was 'staff' until 0173 refused a live staff login)
-  insert into user_roles (user_id, role) values (v_sync, 'management');
-  perform pg_temp.eq('D insert fills role_id', (select role_id::text from user_roles where user_id = v_sync), (select id::text from roles where key = 'management'));
-  update user_roles set role = 'doctor' where user_id = v_sync;
-  perform pg_temp.eq('D enum change moves role_id', (select r.key from user_roles ur join roles r on r.id = ur.role_id where ur.user_id = v_sync), 'doctor');
+  -- user_roles.role_id is the whole of a login's role (0181 removed the enum it used to follow)
+  insert into user_roles (user_id, role_id) values (v_sync, (select id from roles where key = 'management'));
+  perform pg_temp.eq('D insert keeps role_id', (select r.key from user_roles ur join roles r on r.id = ur.role_id where ur.user_id = v_sync), 'management');
   update user_roles set role_id = (select id from roles where key = 'volunteer') where user_id = v_sync;
-  perform pg_temp.eq('D role_id change moves the enum', (select role::text from user_roles where user_id = v_sync), 'volunteer');
+  perform pg_temp.eq('D role_id change moves the role', (select r.key from user_roles ur join roles r on r.id = ur.role_id where ur.user_id = v_sync), 'volunteer');
   insert into roles (key, name, kind) values ('harness_nolegacy', 'Harness no legacy', 'custom') returning id into v_role_custom;
-  n := pg_temp.try(null, format('update user_roles set role_id = %L where user_id = %L', v_role_custom, v_sync), 'aal1', 'service_role');
-  if n <> -2 then raise exception 'HARNESS-FAIL D: a role with no legacy_role was assigned (%)', n; end if;
-  perform pg_temp.eq('D failed assignment changed nothing', (select role::text from user_roles where user_id = v_sync), 'volunteer');
-  v_report := v_report || 'D: user_roles.role_id filled on insert, follows the enum, drives the enum, refuses a role with no legacy_role | ';
+  update user_roles set role_id = v_role_custom where user_id = v_sync;
+  perform pg_temp.eq('D a custom role can be assigned', (select r.key from user_roles ur join roles r on r.id = ur.role_id where ur.user_id = v_sync), 'harness_nolegacy');
+  n := pg_temp.try(null, format('update user_roles set role_id = null where user_id = %L', v_sync), 'aal1', 'service_role');
+  if n <> -2 then raise exception 'HARNESS-FAIL D: a login was left with no role (%)', n; end if;
+  v_report := v_report || 'D: user_roles.role_id is required, filled on insert, and the only thing a role is | ';
 
   -- the last admin, judged at commit
   set constraints user_roles_keep_an_admin immediate;
@@ -389,13 +384,13 @@ begin
   v_raised := false;
   begin
     -- demoted to management: to 'staff' 0173's trigger would refuse it first, with the same SQLSTATE
-    update user_roles set role = 'management' where role_id = v_role_admin;
+    update user_roles set role_id = (select id from roles where key = 'management') where role_id = v_role_admin;
   exception when check_violation then v_raised := true;
   end;
   if not v_raised then raise exception 'HARNESS-FAIL D: every admin was demoted'; end if;
   -- one admin going while another remains is fine
-  update user_roles set role = 'management' where user_id = v_admin;
-  update user_roles set role = 'admin' where user_id = v_admin;
+  update user_roles set role_id = (select id from roles where key = 'management') where user_id = v_admin;
+  update user_roles set role_id = v_role_admin where user_id = v_admin;
   -- deferred: archive them all, restore one, judged only when forced
   set constraints user_roles_keep_an_admin deferred;
   update user_roles set archived_at = now() where role_id = v_role_admin;

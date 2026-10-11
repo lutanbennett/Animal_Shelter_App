@@ -91,7 +91,6 @@ const PUBLIC = new Set([...PUBLIC_VIEWS, ...PUBLIC_TABLES]);
 // is_known_drive_file was on this list until 0089 took it back; it answers
 // yes for internal files too, so it must now be refused like the rest.
 const PUBLIC_FUNCTIONS = {
-  current_user_role: {},
   is_public_drive_file: { p_drive_file_id: "check-public-views-no-such-file" },
   shelter_date: { p_at: new Date().toISOString() },
   shelter_time_zone: {},

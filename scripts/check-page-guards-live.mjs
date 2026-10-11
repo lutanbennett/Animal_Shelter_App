@@ -72,9 +72,9 @@ const made = [];
 let customRoleId = null;
 try {
   // A configured role that opens the app, holds one unrelated cell and no resident.record,
-  // and does not answer 'volunteer' (legacy management, so current_user_role() says management).
+  // and is not on the volunteer floor (scope_residents stays all).
   const { data: role, error: rErr } = await service.from("roles").insert({
-    key: `harness_norecord_${tag}`, name: `Harness no record ${tag}`, kind: "custom", opens_app: true, home_path: "/home", legacy_role: "management",
+    key: `harness_norecord_${tag}`, name: `Harness no record ${tag}`, kind: "custom", opens_app: true, home_path: "/home",
   }).select("id").single();
   if (rErr) throw rErr;
   customRoleId = role.id;
@@ -88,10 +88,10 @@ try {
     if (error) throw error;
     made.push(data.user.id);
     const row = r === "norecord"
-      ? { user_id: data.user.id, role_id: customRoleId, role: "management" }
+      ? { user_id: data.user.id, role_id: customRoleId }
       : r === "head_of_medical"
-        ? await service.from("roles").select("id, legacy_role").eq("key", r).single().then(({ data: x }) => ({ user_id: data.user.id, role_id: x.id, role: x.legacy_role }))
-        : { user_id: data.user.id, role: r };
+        ? await service.from("roles").select("id").eq("key", r).single().then(({ data: x }) => ({ user_id: data.user.id, role_id: x.id }))
+        : await service.from("roles").select("id").eq("key", r).single().then(({ data: x }) => ({ user_id: data.user.id, role_id: x.id }));
     const { error: urErr } = await service.from("user_roles").insert(row);
     if (urErr) throw urErr;
     who[r] = await signIn(email);

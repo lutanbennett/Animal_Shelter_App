@@ -112,10 +112,14 @@ begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-0116-' || u || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from unnest(array[v_doctor, v_vol, v_unl, v_mgmt]) u;
-  insert into user_roles (user_id, role) values (v_doctor, 'doctor'), (v_unl, 'doctor');
+  insert into user_roles (user_id, role_id)
+  select v.c0, ro.id from (values (v_doctor, 'doctor'), (v_unl, 'doctor')) as v(c0, role_key)
+  join roles ro on ro.key = v.role_key;
   -- 0127: a doctor login's clinic is its linked doctor's (doctor_clinics links it, 0172)
   with d as (insert into doctors (name, user_id) values ('Harness doctor', v_doctor) returning id) insert into doctor_clinics (clinic_id, doctor_id) select v_own, id from d;
-  insert into user_roles (user_id, role) values (v_vol, 'volunteer'), (v_mgmt, 'management');
+  insert into user_roles (user_id, role_id)
+  select v.c0, ro.id from (values (v_vol, 'volunteer'), (v_mgmt, 'management')) as v(c0, role_key)
+  join roles ro on ro.key = v.role_key;
   insert into residents (name) values ('harness 0116 in'), ('harness 0116 out');
   select id into v_in from residents where name = 'harness 0116 in';
   select id into v_out from residents where name = 'harness 0116 out';

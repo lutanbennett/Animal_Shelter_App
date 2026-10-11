@@ -65,7 +65,7 @@ end $p$;
 `;
 const final = `
 do $f$
-declare diffs int; total int; vets int; agree int; s text; uidt text; nlogins int;
+declare diffs int; total int; vets int; agree int; s text; uidt text; nlogins int; is_doc boolean;
 begin
   select count(*) into total from pg_temp.snap where phase = 'before';
   select count(*) into diffs from pg_temp.snap a full join pg_temp.snap b
@@ -78,9 +78,10 @@ begin
   agree := 0; nlogins := 0;
   for uidt in select distinct user_id::text from user_roles loop
     nlogins := nlogins + 1;
+    is_doc := coalesce((select r.key from user_roles ur join roles r on r.id = ur.role_id where ur.user_id = uidt::uuid and ur.archived_at is null) = 'doctor', false);
     perform set_config('request.jwt.claims', json_build_object('sub', uidt, 'role', 'authenticated')::text, true);
     set local role authenticated;
-    if (select public.is_clinic_login()) = coalesce((select public.current_user_role()) = 'doctor', false) then agree := agree + 1; end if;
+    if (select public.is_clinic_login()) = is_doc then agree := agree + 1; end if;
     reset role;
   end loop;
   raise exception 'RESULT probes=% differences=% vet-nonzero-reads=% is_clinic_login-agrees=%/% diffs: %',
@@ -105,7 +106,7 @@ const body = await res.json();
 const m = String(body?.message ?? "").match(/RESULT probes=(\d+) differences=(\d+) vet-nonzero-reads=(\d+) is_clinic_login-agrees=(\d+)\/(\d+) diffs: (.*)/);
 if (!m) throw new Error(`harness did not report (${res.status}): ${JSON.stringify(body).slice(0, 800)}`);
 const [, probes, diffs, vetReads, agree, logins, list] = m;
-console.log(`${probes} probes, ${diffs} differences; doctors read rows on ${vetReads} table probes; is_clinic_login() agrees with the enum for ${agree}/${logins} logins`);
+console.log(`${probes} probes, ${diffs} differences; doctors read rows on ${vetReads} table probes; is_clinic_login() agrees with the doctor role for ${agree}/${logins} logins`);
 if (Number(diffs)) console.log(`differences: ${list}`);
 const ok = Number(diffs) === 0 && Number(vetReads) > 0 && agree === logins;
 console.log(ok ? "\nRESULT: GREEN" : "\nRESULT: RED");

@@ -12,6 +12,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { OLD_ROLE_SHIM } from "./lib/old-role-shim.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -24,6 +25,7 @@ const migration = readFileSync(join(root, "supabase/migrations/0112_stock_count_
 const sql = `
 begin;
 -- a second run of the whole file must be harmless
+${OLD_ROLE_SHIM}
 ${migration}
 
 create temp table who (who text primary key, uid uuid);
@@ -33,14 +35,16 @@ insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, ra
 select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
        'harness-0112-' || who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
   from who;
-insert into user_roles (user_id, role) select uid, who::app_role from who where who = 'management';
+insert into user_roles (user_id, role_id)
+  select s.c0, ro.id from (select uid as c0, who as role_key from who where who = 'management') s
+  join roles ro on ro.key = s.role_key;
 -- It borrows volunteer, as every live custom role does: record_* functions still gate on the enum (admin, management), so a role borrowing management would pass on that and not on its cells.
-insert into roles (key, name, kind, legacy_role) values ('harness_0112_clerk', 'Harness clerk', 'custom', 'volunteer');
+insert into roles (key, name, kind, scope_residents) values ('harness_0112_clerk', 'Harness clerk', 'custom', 'who_and_where');
 insert into role_permissions (role_id, activity, level)
   select (select id from roles where key = 'harness_0112_clerk'), rp.activity, rp.level
     from role_permissions rp join roles s on s.id = rp.role_id where s.key = 'staff';
-insert into user_roles (user_id, role_id, role)
-  select (select uid from who where who = 'clerk'), id, legacy_role from roles where key = 'harness_0112_clerk';
+insert into user_roles (user_id, role_id)
+  select (select uid from who where who = 'clerk'), id from roles where key = 'harness_0112_clerk';
 grant select on who to authenticated;
 
 create temp table ids (k text primary key, id uuid);
