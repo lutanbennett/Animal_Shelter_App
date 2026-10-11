@@ -115,6 +115,9 @@ begin
     select r.id, a.key, case r.key when 'harness_pcm_read' then 1 else 2 end
       from roles r cross join permission_activities a
      where r.key like 'harness_pcm_%' and a.key like 'medical.%' and a.kind = 'level';
+  -- 0182: booking a visit (the clinic_visits insert) asks visit.book, not medical.visits; the edit role holds both
+  insert into role_permissions (role_id, activity, level)
+    select id, 'visit.book', 2 from roles where key = 'harness_pcm_edit';
   insert into user_roles (user_id, role_id)
   select ${lit(ID.c_read)}, id from roles where key = 'harness_pcm_read';
   insert into user_roles (user_id, role_id)

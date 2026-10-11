@@ -42,6 +42,7 @@ import {
 export function MaintenanceJobView({
   job,
   canWrite,
+  canMove,
   canDelete,
   canManageTranslations,
   translations,
@@ -49,6 +50,8 @@ export function MaintenanceJobView({
   job: MaintenanceJob;
   /** Staff/admin: change status and details, remove files. */
   canWrite: boolean;
+  /** maintenance.progress: the status buttons. */
+  canMove: boolean;
   canDelete: boolean;
   /** Admin/management: may write and approve the other-language text. */
   canManageTranslations: boolean;
@@ -193,7 +196,7 @@ export function MaintenanceJobView({
         </p>
       </header>
 
-      {canWrite ? (
+      {canMove ? (
         <section className="flex flex-col gap-2">
           <h2 className="text-sm font-medium text-muted">{d.status}</h2>
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">

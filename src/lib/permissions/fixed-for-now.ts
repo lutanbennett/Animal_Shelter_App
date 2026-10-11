@@ -22,7 +22,6 @@ export const FIXED_IDS = [
   "clinicRule",
   "whoAndWhere",
   "nameAndPhone",
-  "notAskedYet",
   "databaseWider",
 ] as const;
 export type FixedId = (typeof FIXED_IDS)[number];
@@ -112,38 +111,18 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
     measured: true,
   },
   {
-    // Three splits of §4 that nothing reads yet: booking a visit is written under medical.visits,
-    // moving a job on under maintenance.jobs (the board's only gate), and is_public under
-    // projects.folders (0149: "projects.publish is NOT consulted by the write policy"). Each box is right
-    // today only because the same roles hold both. Wiring them changes policies, so it needs a migration and is its
-    // own backlog item (perm-split-activities). Until then an Admin changing one of these boxes changes what the
-    // screens show but not what the visit, job or folder policy asks, so the grid marks the box.
-    id: "notAskedYet",
-    boxes: {
-      management: ["visit.book", "maintenance.progress", "projects.publish"],
-      head_of_maintenance: ["maintenance.progress"],
-      second_in_command: ["maintenance.progress"],
-    },
-    shown: true,
-    stays: false,
-    closedBy: "perm-split-activities",
-    measured: true,
-  },
-  {
-    // The screens ask these boxes; the database is looser because another box the role holds opens the
-    // same table: archiving a weight or a prescription is an update its own Edit allows (medical.archive
-    // is the app's question only), stock_receipts reads on any of the three stock boxes, contacts read on
-    // browse OR directory (0170), friends on view OR manage (0155), clinics, doctors and the setup lists
-    // on clinics.list / stock.medications. Not shown: nobody using the app can tell. Kept so the check
-    // accounts for every box, and so the stream that narrows them (perm-narrow-policies) knows which policies.
+    // The screens ask these boxes; the database is looser because another box the role holds opens the same
+    // thing. perm-policy-cleanup (0182) narrowed contacts, friends, clinics and doctors, and split visit.book,
+    // maintenance.progress and projects.publish out. What is left is not a policy that can be narrowed:
+    // archiving a weight, prescription, vaccination or visit is an UPDATE its own table Edit allows, and a
+    // policy cannot tell the archived_at column from the others (it needs a trigger on four tables);
+    // stock_receipts is read by the purchasing job by design (0143, check-2ic-role.mjs); and a medication
+    // can be added through stock.medications Edit as well as add_while_recording. Not shown: nobody using
+    // the app can tell. See docs/decisions/2026-10-11-perm-policy-cleanup.md.
     id: "databaseWider",
     boxes: {
       management: [
         "medical.archive",
-        "clinics.list",
-        "clinics.doctors",
-        "contacts.browse",
-        "friends.view",
         "stock.delivery",
         "reference.add_while_recording",
       ],
@@ -152,7 +131,7 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
     },
     shown: false,
     stays: false,
-    closedBy: "perm-narrow-policies",
+    closedBy: null,
     measured: true,
   },
 ];

@@ -35,16 +35,19 @@ const lit = (id) => `'${id}'::uuid`;
 const CUSTOM = {
   c_none: { cells: [] },
   c_dir_read: { cells: [["contacts.directory", 1]] },
-  c_dir_edit: { cells: [["contacts.directory", 2]] },
+  // 0182: the contacts table is read with contacts.browse only, and an update reaches only rows the read shows, so a
+  // directory editor holds both (0171 let directory alone read; the grid now has to give the pair)
+  c_dir_edit: { cells: [["contacts.directory", 2], ["contacts.browse", 2]] },
   c_add: { cells: [["contacts.add", 2]] },
-  c_dir_all: { cells: [["contacts.directory", 2], ["contacts.add", 2]] },
+  c_dir_all: { cells: [["contacts.directory", 2], ["contacts.browse", 2], ["contacts.add", 2]] },
   c_dir_namephone: { scope: "name_phone", cells: [["contacts.directory", 2], ["contacts.add", 2]] },
   v_dir_all: { floor: "volunteer", scope: "name_phone", cells: [["contacts.directory", 2], ["contacts.add", 2]] },
-  c_friends: { cells: [["friends.manage", 2]] },
+  c_friends: { cells: [["friends.manage", 2], ["friends.view", 2]] }, // 0182: the list is read with friends.view only
   c_friends_view: { cells: [["friends.view", 2]] },
   c_clinics_read: { cells: [["clinics.list", 1]] },
   c_clinics_edit: { cells: [["clinics.list", 2]] },
-  c_doctors: { cells: [["clinics.doctors", 2]] },
+  // 0182: the clinics, doctors and their links are read with clinics.list only, so the person who manages doctors holds it too
+  c_doctors: { cells: [["clinics.doctors", 2], ["clinics.list", 1]] },
   c_book: { cells: [["visit.book", 2]] },
 };
 const REAL = ["admin", "management", "volunteer", "vet"];
@@ -65,15 +68,15 @@ const T = {
 };
 
 // expected "RUID" per principal; anything not listed is 0000
-const A = "1111", RO = "1000";
+const A = "1111", RO = "1000", NONE = "0000";
 const EXPECT = {
   // 0170/0171: the table is read with contacts.browse or contacts.directory Edit. Read on the directory names a contact
   // through picker_contacts and no longer reads the table (C9, C10), so c_dir_read reads nothing here.
   contacts: { admin: A, management: A, c_dir_edit: "1101", c_add: "0010", c_dir_all: A },
   shelter_friends: { admin: A, management: A, vet: RO, c_friends_view: RO, c_friends: A },
-  clinics: { admin: A, management: A, vet: RO, c_clinics_read: RO, c_clinics_edit: A, c_doctors: RO, c_book: RO },
-  doctors: { admin: A, management: A, vet: A, c_clinics_read: RO, c_clinics_edit: RO, c_doctors: A, c_book: "1010" },
-  doctor_clinics: { admin: A, management: A, vet: "1101", c_clinics_read: RO, c_clinics_edit: RO, c_doctors: A, c_book: "1010" },
+  clinics: { admin: A, management: A, vet: RO, c_clinics_read: RO, c_clinics_edit: A, c_doctors: RO, c_book: NONE },
+  doctors: { admin: A, management: A, vet: A, c_clinics_read: RO, c_clinics_edit: RO, c_doctors: A, c_book: NONE },
+  doctor_clinics: { admin: A, management: A, vet: "1101", c_clinics_read: RO, c_clinics_edit: RO, c_doctors: A, c_book: NONE }, // c_book: 0182, booking no longer reads or adds the clinics and doctors it picks from
   bulk_appointments: { admin: A, management: A, vet: A, c_book: A },
 };
 const CMDS = ["read", "update", "insert", "delete"];

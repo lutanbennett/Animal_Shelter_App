@@ -77,6 +77,7 @@ export default async function MaintenancePage(props: PageProps<"/maintenance">) 
         zones={options.zones}
         enclosures={options.enclosures}
         canWrite={can(perms, "maintenance.jobs")}
+        canMove={can(perms, "maintenance.progress")}
         currentUserId={auth.user?.id ?? null}
         initialFilters={{
           zoneId: param("zone"),

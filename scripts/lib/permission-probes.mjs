@@ -67,7 +67,7 @@ export const PROBES = [
 
   // --- Medical (scoped to the doctor's clinic)
   { activity: "visit.book", level: "edit", scoped: true, sql: `insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values ($R, $CLINIC, now() + interval '9 days', 'scheduled')` },
-  ...table("medical.visits", "clinic_visits", `update clinic_visits set reason = 'probe' where resident_id = $R`, `insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values ($R, $CLINIC, now() + interval '9 days', 'scheduled')`, `delete from clinic_visits where resident_id = $R`, { c4: true }),
+  ...table("medical.visits", "clinic_visits", `update clinic_visits set reason = 'probe' where resident_id = $R`, `insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values ($R, $CLINIC, now() + interval '9 days', 'scheduled')`, `delete from clinic_visits where resident_id = $R`, { c4: true, noInsert: true }),
   ...table("medical.procedures", "procedures", `update procedures set notes = 'probe' where resident_id = $R`, `insert into procedures (resident_id, date, procedure_type_id) values ($R, current_date, (select id from procedure_types limit 1))`, `delete from procedures where resident_id = $R`, { c4: true }),
   ...table("medical.blood_tests", "blood_tests", `update blood_tests set results = 'probe' where resident_id = $R`, `insert into blood_tests (resident_id, date, blood_test_type_id) values ($R, current_date, (select id from blood_test_types limit 1))`, `delete from blood_tests where resident_id = $R`, { c4: true }),
   ...table("medical.prescriptions", "prescriptions", `update prescriptions set notes = 'probe' where resident_id = $R`, `insert into prescriptions (resident_id, medication_id, start_date) values ($R, ${MED}, current_date)`, `delete from prescriptions where resident_id = $R`, { c4: true }),
@@ -170,7 +170,7 @@ export const PROBES = [
 function table(activity, name, update, insert, del, flags) {
   const out = [
     { activity, level: "edit", scoped: true, sql: update },
-    { activity, level: "edit", scoped: true, sql: insert },
+    ...(flags.noInsert ? [] : [{ activity, level: "edit", scoped: true, sql: insert }]), // noInsert: another activity owns the insert (visit.book, 0182)
     { activity, level: "read", scoped: true, sql: `select 1 from ${name} where resident_id = $R` },
   ];
   // A hard delete is not an act the matrix has: the screens remove by archiving

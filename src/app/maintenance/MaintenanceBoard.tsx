@@ -59,6 +59,7 @@ export function MaintenanceBoard({
   zones,
   enclosures,
   canWrite,
+  canMove,
   currentUserId,
   initialFilters,
 }: {
@@ -70,6 +71,8 @@ export function MaintenanceBoard({
   zones: ZoneOption[];
   enclosures: EnclosureOption[];
   canWrite: boolean;
+  /** maintenance.progress: drag a card, or use Move, to another status. */
+  canMove: boolean;
   initialFilters: Filters;
 }) {
   const { t, locale } = useI18n();
@@ -308,7 +311,7 @@ export function MaintenanceBoard({
           <span className="h-2.5 w-2.5 rounded-full bg-warning" /> {m.legend.blocked}
         </span>
         {!filters.allCompleted && <span>{m.filters.recentCompletedHint(RECENT_COMPLETED_DAYS)}</span>}
-        {canWrite && <span className="hidden md:inline">{m.boardHint}</span>}
+        {canMove && <span className="hidden md:inline">{m.boardHint}</span>}
       </div>
 
       {error && <p className="text-sm text-danger">{error}</p>}
@@ -339,7 +342,7 @@ export function MaintenanceBoard({
                 status={status}
                 jobs={byStatus.get(status) ?? []}
                 titles={titles}
-                canDrop={canWrite && !isPending}
+                canDrop={canMove && !isPending}
                 onDrop={(jobId) => moveJob(jobId, status)}
                 locale={locale}
               />
@@ -371,7 +374,7 @@ export function MaintenanceBoard({
               ).map((job) => (
                 <li key={job.id} className="flex flex-col gap-1.5">
                   <JobCard job={job} title={titles[job.id]} locale={locale} showStatus={!mobileStatus} />
-                  {canWrite &&
+                  {canMove &&
                     (moving === job.id ? (
                       <div className="flex flex-col gap-2 rounded-lg border border-primary/40 bg-surface p-3">
                         <p className="text-sm font-medium text-foreground">
