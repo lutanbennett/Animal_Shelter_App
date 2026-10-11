@@ -11,7 +11,8 @@
  * and fails when a box is wrong today or cannot be taken away and no `measured` entry covers it, and
  * when an entry covers only boxes that are obeyed now (STALE). So the streams that shorten this list
  * (perm-functions-schema, perm-role-lists, who-does-what-edit) delete entries when the script says so,
- * not when they believe they have fixed something. Measured on dev 2026-10-11, at main 56ec669 (0177).
+ * not when they believe they have fixed something. Measured on dev 2026-10-11, at main 56ec669 (0177);
+ * perm-functions-schema (0178) then took out the five boxes it closed, as this script reported after the apply.
  *
  * Pure and client-safe: no i18n, no database. The script imports it.
  */
@@ -24,7 +25,7 @@ export const FIXED_IDS = [
   "borrowedFloor",
   "maintenanceDelete",
   "stockCorrect",
-  "namedInDatabase",
+  "includedByAny",
   "notAskedYet",
   "databaseWider",
 ] as const;
@@ -154,36 +155,31 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
     measured: true,
   },
   {
-    // record_stock_correction() lets only 'admin' and 'management' by name, and the two screens that
-    // correct a figure (/management/medications, /management/diets) ask stock.medications / stock.diets
-    // Edit, never stock.correct. So the 2IC's Yes is refused and Management's cannot be taken away.
-    // The function half is perm-functions-schema's; the screens' half is who-does-what-edit's.
+    // Since 0178 record_stock_correction() asks stock.correct AND the list's own box (stock.medications or
+    // stock.diets, Edit), as the paper's manage-medications / manage-diets do, so Management's box now bites
+    // (taken out by perm-functions-schema). The 2IC holds stock.correct but neither list box, so her Yes is
+    // still refused. That is a §4 rule 5 prerequisite (stock.correct needs a list box), which
+    // who-does-what-edit states so the grid can refuse the combination instead of showing it.
     id: "stockCorrect",
-    boxes: { second_in_command: ["stock.correct"], management: ["stock.correct"] },
+    boxes: { second_in_command: ["stock.correct"] },
     shown: true,
     stays: false,
-    closedBy: "perm-functions-schema",
+    closedBy: "who-does-what-edit",
     measured: true,
   },
   {
-    // Functions that still name a role (measured 2026-10-10: 11 of them). The screens ask the box, so in
-    // the app these follow it; the database lets the named role through whatever the box says:
-    //   record_stocktake()      admin, management, staff        → stock.count
-    //   record_recurring_job()  admin, management, staff, doctor → recurring.do_own; management any job → recurring.do_any
-    //   record_attachment()     admin, management, staff, doctor → photos.resident_add
-    // The rest of the 11 do not show as a box out of step: undo_deceased_placement() (Admin only, and
-    // nobody else holds placement.death_withdraw), record_deceased_archive() and set_standard_diet()
-    // (no probe; behind boxes only Admin and Management hold), set_resident_microchip() (asks the cell,
-    // names doctor only for the clinic scope), and the three doctor ones, merge_doctors(),
-    // doctors_guard_login() and clinic_login_may_edit_doctor(), which are the clinic rule.
-    id: "namedInDatabase",
+    // Was "namedInDatabase": functions that let a role in by name. perm-functions-schema (0178) made them ask
+    // the boxes, and four of its five boxes were then obeyed and taken out. What is left is not a name:
+    // record_recurring_job() lets recurring.do_any record any date, your own included, so Management's
+    // "your own" box cannot be taken away while "anyone's" stays Yes. That is a §4 rule 5 prerequisite
+    // (do_any needs do_own), which who-does-what-edit states so the grid cannot show the combination.
+    id: "includedByAny",
     boxes: {
-      management: ["stock.count", "recurring.do_any", "recurring.do_own", "photos.resident_add"],
-      doctor: ["recurring.do_own"],
+      management: ["recurring.do_own"],
     },
     shown: true,
     stays: false,
-    closedBy: "perm-functions-schema",
+    closedBy: "who-does-what-edit",
     measured: true,
   },
   {

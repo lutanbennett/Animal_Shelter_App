@@ -658,14 +658,14 @@ const en = {
             "This role can log, change and assign maintenance jobs, but not delete one. Deleting a job does not have its own box yet, and until it does only Admin and Management can.",
         },
         stockCorrect: {
-          title: "Admin and Management only, for now",
+          title: "Needs a stock list too",
           reason:
-            "Only Admin and Management can correct a stock figure today, whatever this box says. The screen for it asks for the medication or diet list instead of this box.",
+            "Correcting a stock figure also needs Edit on the medication list or the diet list. This role has neither, so the system still refuses, whatever this box says.",
         },
-        namedInDatabase: {
-          title: "Not fully set by this box yet",
+        includedByAny: {
+          title: "Included in \"anyone's jobs\"",
           reason:
-            "The screens follow this box, but behind them the system still checks this role by name, so changing the box would not yet fully change what this role can do.",
+            "This role can mark anyone's recurring job done, and that includes its own. So turning this box off alone would not stop it.",
         },
         notAskedYet: {
           title: "Nothing uses this box yet",

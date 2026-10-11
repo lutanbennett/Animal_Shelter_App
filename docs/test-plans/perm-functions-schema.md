@@ -16,9 +16,9 @@
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence, and it matches what the backlog item asked for — the item's 11 (really 12) functions ask a cell or the clinic scope; parity was run before and after; the views that decide who may read were converted where something other than the enum can say it
-- [x] Files/areas touched listed — `supabase/migrations/0178_perm_functions.sql`, `scripts/check-perm-functions.mjs` (new), `scripts/lib/permission-probes.mjs` (C11 removed), `docs/backlog.md`, `docs/decisions/2026-10-11-perm-functions-schema.md`, `src/lib/releases.ts`, this plan
+- [x] Files/areas touched listed — `supabase/migrations/0178_perm_functions.sql`, `scripts/check-perm-functions.mjs` (new), `scripts/lib/permission-probes.mjs` (C11 removed), `docs/backlog.md`, `src/lib/permissions/fixed-for-now.ts` and the two dictionaries (after #526 merged: five boxes out, two entries reworded), `docs/decisions/2026-10-11-perm-functions-schema.md`, `src/lib/releases.ts`, this plan
 - [x] Roles affected identified — Management loses Set as standard diet in the database (the page was already Admin-only); the 2IC gains the Drive filing after recording a death (agreed by Lutan in chat, 2026-10-11); a doctor loses ticking recurring jobs (never offered in the app); 2IC and Head of Maintenance may file a maintenance photo through `record_attachment` (they could already insert it directly). Everyone else unchanged, measured per login
-- [x] Anything explicitly **out of scope** written down — `user_roles.role`, `current_user_role()`, `roles.legacy_role`, and the 6 functions and view clauses listed in the decision file §5 stay for `perm-drop-enum`; the app's `*_ROLES` lists and `hasAppAccess` are `perm-role-lists`; the `FIXED_FOR_NOW` file belongs to `who-does-what-view`, which had not merged, so the entries this closes are named on the backlog item and in the PR rather than edited
+- [x] Anything explicitly **out of scope** written down — `user_roles.role`, `current_user_role()`, `roles.legacy_role`, and the 6 functions and view clauses listed in the decision file §5 stay for `perm-drop-enum`; the app's `*_ROLES` lists and `hasAppAccess` are `perm-role-lists`; `FIXED_FOR_NOW` was shortened here only by what `check-who-does-what.mjs` measured, after `who-does-what-view` (#526) merged and asked for it
 
 ## 2. Automated gates
 
@@ -95,7 +95,7 @@ Configured roles probed too: 2IC (gains the death filing and maintenance photo f
 
 - [ ] Nav entry correct (`src/app/NavLinks.tsx`) — n/a: not touched
 - [ ] Manual updated (`src/lib/manual/en.ts`) and the topic reads correctly at `/manual` — n/a: no screen changed; the manual already describes the 2IC recording a death, which now finishes as described
-- [ ] Translatable strings go through the translation path — n/a: no new strings
+- [x] Translatable strings go through the translation path — the two reworded grid notes (`admin.whoDoesWhat.fixed.stockCorrect`, `.includedByAny`) are written in both `en.ts` and `th.ts`, as the rest of that block is; typecheck holds the two dictionaries to the same keys
 - [ ] Mobile viewport (375px) — n/a: no UI surface
 - [ ] Browser console clean — n/a: no UI surface
 - [ ] Network clean — n/a: no UI surface
@@ -103,7 +103,7 @@ Configured roles probed too: 2IC (gains the death filing and maintenance photo f
 ## 6. Regression
 
 - [x] The pages nearest the change still work — checked at the database, which is where the change is: every function the stocktake, medications, diets, recurring jobs, photos, blood-test and procedure files, microchip, deceased and clinic-doctors pages call answers each login as before except the four agreed changes (§3)
-- [ ] Any shared file touched checked from a second, unrelated page — n/a: no shared app file touched (`releases.ts` gained a data line, covered by the build)
+- [x] Any shared file touched checked from a second, unrelated page — the dictionaries: `check-who-does-what-page.mjs` loaded Settings → Who does what on this worktree's dev server (3004) as Admin and as Management: `OK`, every one of 360 boxes says what `role_permissions` holds, "fixed for now" marks on exactly the 44 boxes `FIXED_FOR_NOW` shows. `check-who-does-what.mjs` (dev): `UNLISTED 0`, `STALE 0`, `OVERLISTED 0`, `OK`
 - [x] Nothing merged from `main` during `sync` was broken by this branch — #525 changed the Security pages and `user_roles` writes, not any function `0178` touches; gates green on the merge (`typecheck=0 lint=0 build=0`), and `check-perm-functions.mjs --applied` rerun after the sync
 
 ## 7. Documentation
