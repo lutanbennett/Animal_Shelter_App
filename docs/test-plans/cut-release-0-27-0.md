@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none — a release cut closes no backlog item |
 | Branch / worktree | `claude/cut-release-0-27-0` @ `C:\Development\Animal_Shelter_cut-release-0-27-0` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3013` (not driven — `/releases` is behind sign-in; see §5) |
-| PR | #546 |
+| PR | #547 |
 | Tested by / date | Claude (production release manager session) / 2026-10-11 |
 | Carries a migration? | no — the release's four (`0182`-`0185`) merged in their own PRs |
 | Tested at SHA | `9c65f292` (the cut), re-run at the tip of this branch |
