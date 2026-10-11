@@ -22,7 +22,7 @@
 //
 // It checks
 //   N  no function body (public, private) or view still names a renamed object or the 'vet' role, and no
-//      table, column, index, constraint, trigger or policy name says vet, but the four compatibility views
+//      table, column, index, constraint, trigger or policy name says vet
 //   A  the doctor reads exactly seen, colleague, cancelled, mixed and past, through the table and both views
 //   B  other and none by id: 0 rows from residents and the three views
 //   C  other's clinical rows: 0 from every table and view; mixed shows both visits; past shows its visit,
@@ -208,16 +208,16 @@ begin
   select string_agg(c.relname, ', ') into v_bad
     from pg_class c
    where c.relnamespace in ('public'::regnamespace, 'private'::regnamespace) and c.relkind in ('v', 'm')
-     and c.relname not in ('vets', 'vet_doctors', 'vet_doctor_clinics', 'vet_appointments')
+    
      and pg_get_viewdef(c.oid) ~ $re$(\\mvets\\M|vet_appointment|vet_doctor|\\mvet_id\\M|current_vet_|current_user_vet)$re$;
   if v_bad is not null then raise exception 'HARNESS-FAIL N: views still name the old objects: %', v_bad; end if;
   select string_agg(x, ', ') into v_bad from (
     select c.relname as x from pg_class c
      where c.relnamespace = 'public'::regnamespace and c.relname ~ 'vet'
-       and c.relname not in ('vets', 'vet_doctors', 'vet_doctor_clinics', 'vet_appointments')
+      
     union all select table_name || '.' || column_name from information_schema.columns
      where table_schema = 'public' and column_name ~ 'vet'
-       and table_name not in ('vets', 'vet_doctors', 'vet_doctor_clinics', 'vet_appointments')
+      
     union all select conname from pg_constraint where connamespace = 'public'::regnamespace and conname ~ 'vet'
     union all select tgname from pg_trigger where not tgisinternal and tgname ~ 'vet'
     union all select policyname from pg_policies where schemaname = 'public' and policyname ~ 'vet'
@@ -226,7 +226,7 @@ begin
     union all select key from roles where key ~ 'vet'
   ) s;
   if v_bad is not null then raise exception 'HARNESS-FAIL N: names still saying vet: %', v_bad; end if;
-  v_report := v_report || 'N: no body, view or name says vet but the 4 compatibility views | ';
+  v_report := v_report || 'N: no body, view or name says vet | ';
 
   -- A: exactly the five.
   n := pg_temp.try(v_doc, format('select 1 from residents where id in %s', v_harness));
@@ -341,13 +341,11 @@ begin
   n := pg_temp.try((select id from harness_ids where who = 'admin'),
     format('select schedule_bulk_appointments(array[%L, %L]::uuid[], %L, now() + interval ''1 day'')', v_seen, v_coll, v_own));
   if n <> 2 then raise exception 'HARNESS-FAIL J: bulk booking with p_clinic_id gave %', n; end if;
-  n := pg_temp.try((select id from harness_ids where who = 'admin'), format('select 1 from vets where id = %L', v_own));
-  if n <> 1 then raise exception 'HARNESS-FAIL J: admin read % of own clinic through vets', n; end if;
-  n := pg_temp.try((select id from harness_ids where who = 'admin'), 'insert into vets (id, name) values (gen_random_uuid(), ''Harness via old name'')');
-  if n >= 0 then raise exception 'HARNESS-FAIL J: an insert through the old name vets was accepted'; end if;
-  n := pg_temp.try(v_doc, format('select 1 from vet_appointments where resident_id = %L', v_other));
-  if n <> 0 then raise exception 'HARNESS-FAIL J: the doctor read other''s visit through vet_appointments (%)', n; end if;
-  v_report := v_report || 'J: bulk booking 2; vets reads, refuses an insert, and keeps the table''s policies';
+  if to_regclass('public.vets') is not null or to_regclass('public.vet_doctors') is not null
+     or to_regclass('public.vet_doctor_clinics') is not null or to_regclass('public.vet_appointments') is not null then
+    raise exception 'HARNESS-FAIL J: an old vet name still resolves (0184 drops the four compatibility views)';
+  end if;
+  v_report := v_report || 'J: bulk booking 2; the four old vet names are gone';
 
   raise exception '%', format('HARNESS-OK %s | %s | %s', ${JSON.stringify(file).replace(/"/g, "'")},
     current_setting('harness.state'), v_report);
