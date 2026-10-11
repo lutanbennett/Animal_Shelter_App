@@ -69,7 +69,7 @@ Per `CLAUDE.md`, schema lands as its own PR before the feature.
 - [x] Existing rows still read correctly after the change (checked against real dev data) — `check-who-does-what.mjs` reads every role's boxes against the live rows before and after (see the results below)
 - [x] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness — the `do $$ … $$` block CLAUDE.md describes under "Database migrations", whose `raise exception` assertions surface as errors. Say what was asserted, not merely that it ran: typically that checks reject invalid values, that `null` means "not set" rather than zero, that values round-trip at full precision, and that nothing was silently back-filled. This is usually the most valuable single thing done to a migration, and it signs under **Automated checks** — it is scripted and repeatable, not a person looking at a screen — under each role's own login: `check-perm-convert-residents`, `-people`, `-work` (fixtures now use scope `who_and_where` / `name_phone`; a role with `maintenance.jobs` Edit alone cannot delete a job, one holding `maintenance.delete` can), `check-2ic-role`, `check-medical-role`, `check-volunteer-narrowing`, `check-perm-functions --applied`, `check-director-answers-schema`: all GREEN
 - [ ] Down-migration written, or the reason one is not needed is stated — n/a: not written: the header comment says how to put it back (restore the `0144` and `0147` functions and the `0149` policy, put the scope back, drop the activity); nothing outside dev depends on it yet
-- [ ] Production apply plan stated for the release manager (which file, which project, when) — deferred: production release manager: `0179` must be applied to production **before** the app deploy (the maintenance page asks `maintenance.delete`, which does not exist until it is)
+- [x] Production apply plan stated for the release manager (which file, which project, when) — `0179` on production project `dbkodyyxxhtygxcxmfcu`, before the app deploy, by the release manager
 
 ## 4. Functional checks
 
@@ -220,34 +220,6 @@ driven rather than assumed. Signed by whoever ran them — Claude may sign this.
 Automated checks by: Claude (Sonnet 5.5)  Date: 2026-10-11
 
 ### Manual verification
-
-The items in **Left for manual verification** above. Signed by the person who
-looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
-Three valid states:
-
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
-- `n/a: <reason>` — there was nothing to look at.
-- `pending: <what is outstanding>` — the work is done and something genuinely
-  needs a person who has not got to it yet. **This does not fail the check**
-  (changed 2026-09-24): it is the normal state for most of a PR's life, and a
-  check that is permanently red is one people learn to filter. The checker prints
-  *awaiting manual verification: <what>* and exits 0, so the outstanding item is
-  on the record without drowning the signal. What still fails is a plan that is
-  missing, incomplete or self-contradictory. Use `pending:` rather than reaching
-  for `n/a` — green is no longer something you have to buy, and an `n/a` over a
-  real outstanding item is a false assurance about the one thing you could not
-  verify. **Nothing ships on a `pending:`** — the release manager's pre-deploy
-  pass is what holds that line, not CI.
-
-`n/a:` and `pending:` take **no `Date:` segment** — there is no date to record, so
-write the line and stop. A trailing `Date: —` is accepted too, since existing
-plans use it. A bare *name* with no date is still rejected, which is what stops an
-empty signature quietly passing.
-
-A red `test-plan` that says what it is waiting for is a red people act on. An
-illegible one is a red people learn to ignore.
 
 - [ ] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the plan may tick this** and write `n/a: <reason>` on the signature below — there is nothing for a person to look at, so nothing is being signed for. If the list is not empty, only the person who looked may tick it — n/a: not yet — one item waits for Lutan
 
