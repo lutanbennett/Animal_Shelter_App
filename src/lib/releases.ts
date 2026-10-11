@@ -65,6 +65,7 @@ export const unreleased: ReleaseNote[] = [
   "When a 2IC records a death, the resident's record is now filed in the Deceased folder on Google Drive, as it is for Management. Until now the filing was refused for a 2IC, and the resident's page kept offering a Retry button that failed the same way.",
   { text: "Settings → Security: you can now give someone the 2IC, Head of Maintenance or Head of Medical role. They are in the role dropdown when you create a user, in the users table and under Access requests, with their Thai names in Thai, and the table shows each person's own role instead of Volunteer.", roles: ["admin"] },
   { text: "New: Settings → Who does what, also on the Management page. One grid shows what every role can do, every activity down the side and every role across the top, read live from the roles' settings. A box the system does not yet follow exactly carries a small number that leads to the reason under the grid. Print it, or download it as a spreadsheet, to show someone how the work is shared out. It shows the settings; it does not change them yet.", roles: ["admin", "management"] },
+  { text: "System status: the Pi origin tile no longer says \"Not in use yet\" when the Pi is the one showing you the page. That wording was wrong exactly when everything was working; it now says the page was drawn by the Pi. On the Pi, the two alert buttons are switched off with a sentence saying why (the Pi cannot send mail), and a test pressed there no longer turns the Status alert mail tile red.", roles: ["admin"] },
 ];
 
 /** Newest first. */
