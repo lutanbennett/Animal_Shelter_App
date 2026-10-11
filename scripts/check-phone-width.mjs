@@ -10,7 +10,7 @@
 //   (In Git Bash a leading /path in --pages is rewritten to C:/Program Files/Git/…; prefix the command with MSYS_NO_PATHCONV=1.)
 //   node scripts/check-phone-width.mjs --keep      (leave the seeded rows and the throwaway logins in dev)
 //   node scripts/check-phone-width.mjs --verbose   (also list every page that passed)
-//   node scripts/check-phone-width.mjs --clean     (remove what a killed run left behind, and stop)
+//   node scripts/check-phone-width.mjs --clean     (remove what a killed run left behind - rows over an hour old - and stop)
 //
 // Run it by hand, or in the release smoke test. It is deliberately NOT in
 // `npm run lint` or scripts/gates.mjs: it needs a server, a browser and seeded
@@ -590,18 +590,34 @@ async function cleanup() {
   }
 }
 
-/** --clean: everything a run made carries "ZZ Width" or "phonewidth-", so a killed run can be swept. */
+/**
+ * --clean: sweeps what a *killed* run left behind. A run's rows carry "ZZ Width"
+ * or "phonewidth-", but so do those of another session mid-run, so only rows
+ * older than an hour are removed; a live run finishes well inside that. Every
+ * row or login removed is printed, so the sweep can be audited afterwards.
+ */
 async function sweep() {
-  const { data: residents } = await service.from("residents").select("id").like("name", "ZZ Width %");
+  const cutoff = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  console.log(`  sweeping rows created before ${cutoff} (younger ones may belong to a run in progress)`);
+  const { data: residents } = await service
+    .from("residents").select("id").like("name", "ZZ Width %").lt("created_at", cutoff);
   for (const { id } of residents ?? []) await service.from("placement_history").delete().eq("resident_id", id);
   for (const table of ["residents", "contacts", "clinics", "enclosures", "zones"]) {
-    const { data, error } = await service.from(table).delete().like("name", "ZZ Width %").select("id");
-    console.log(`  ${table}: ${error ? error.message : `${data.length} removed`}`);
+    const { data, error } = await service
+      .from(table).delete().like("name", "ZZ Width %").lt("created_at", cutoff).select("id, name");
+    if (error) console.log(`  ${table}: ${error.message}`);
+    else {
+      console.log(`  ${table}: ${data.length} removed`);
+      for (const row of data) console.log(`    ${row.name} (${row.id})`);
+    }
   }
   const { data } = await service.auth.admin.listUsers({ perPage: 200 });
-  for (const user of data?.users.filter((u) => u.email?.startsWith("phonewidth-")) ?? []) {
+  const stale = data?.users.filter((u) => u.email?.startsWith("phonewidth-") && u.created_at < cutoff) ?? [];
+  const young = (data?.users.filter((u) => u.email?.startsWith("phonewidth-")).length ?? 0) - stale.length;
+  for (const user of stale) {
     await service.from("user_roles").delete().eq("user_id", user.id);
     await service.auth.admin.deleteUser(user.id);
     console.log(`  login ${user.email} removed`);
   }
+  if (young > 0) console.log(`  ${young} newer phonewidth- login(s) left alone`);
 }
