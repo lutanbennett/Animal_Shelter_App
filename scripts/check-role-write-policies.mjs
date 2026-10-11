@@ -106,7 +106,7 @@ const EFFECTIVE = `
     and ((coalesce(p.qual, '') || coalesce(p.with_check, '')) not like '%sees\\_all\\_clinical()%'
          or r.scope_clinical = 'any')
     and ((coalesce(p.qual, '') || coalesce(p.with_check, '')) not like '%sees\\_all\\_residents()%'
-         or (r.scope_residents = 'all' and r.legacy_role is not null and r.legacy_role <> 'volunteer'))`;
+         or r.scope_residents = 'all')`;
 
 let failures = 0;
 const fail = (msg) => { failures++; console.log(`FAIL  ${msg}`); };

@@ -22,8 +22,6 @@ export const FIXED_IDS = [
   "clinicRule",
   "whoAndWhere",
   "nameAndPhone",
-  "borrowedFloor",
-  "maintenanceDelete",
   "stockCorrect",
   "includedByAny",
   "notAskedYet",
@@ -89,8 +87,8 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
   {
     // §5 "how much of a resident": these roles read resident_who_and_where (0134), not residents. For the
     // volunteer that is the design; for the three configured roles it is what Lutan asked (§7) but it is
-    // reached through the volunteer floor (sees_all_residents() asks legacy_role <> 'volunteer'), while
-    // their own roles.scope_residents says 'all'. Either way the box's Read is narrower than it looks.
+    // reached through roles.scope_residents = 'who_and_where' (0179, which sees_all_residents() now reads).
+    // Their own roles.scope_residents said 'all' until then. Either way the box's Read is narrower than it looks.
     id: "whoAndWhere",
     boxes: {
       volunteer: ["resident.record"],
@@ -112,45 +110,6 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
     boxes: { second_in_command: ["contacts.browse"] },
     shown: true,
     stays: true,
-    closedBy: null,
-    measured: true,
-  },
-  {
-    // Every configured role borrows legacy_role 'volunteer' (0143 chose the narrowest floor), and
-    // sees_all_residents() / sees_all_contacts() (0144, 0147) still refuse anything on that floor. So the
-    // Director's draft gave the 2IC and both Heads boxes the database refuses: the 2IC's resident, news,
-    // placement, change-a-contact and add-a-contact boxes, and both Heads' "move a resident".
-    // NOT in the sequence: perm-functions-schema converts the 11 role-named functions, and these two are
-    // not among them. Needs its own schema stream before who-does-what-edit can say every box works.
-    id: "borrowedFloor",
-    boxes: {
-      second_in_command: [
-        "resident.record",
-        "resident.adoption_news",
-        "placement.move",
-        "placement.hospital",
-        "placement.rehome",
-        "placement.death",
-        "contacts.directory",
-        "contacts.add",
-      ],
-      head_of_maintenance: ["placement.move"],
-      head_of_medical: ["placement.move"],
-    },
-    shown: true,
-    stays: false,
-    closedBy: null,
-    measured: true,
-  },
-  {
-    // 0149: deleting a maintenance job has no activity of its own, so maintenance_delete_perm asks
-    // maintenance.jobs AND has_shelter_floor(), which refuses the volunteer floor. Deliberate in 0141
-    // ("removing one for good stays Admin's, management's and staff's"), but the box says Edit, and
-    // §4 says Edit includes delete. Closes when delete gets its own activity (role-gaps-sweep).
-    id: "maintenanceDelete",
-    boxes: { head_of_maintenance: ["maintenance.jobs"], second_in_command: ["maintenance.jobs"] },
-    shown: true,
-    stays: false,
     closedBy: null,
     measured: true,
   },

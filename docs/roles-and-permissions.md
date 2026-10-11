@@ -333,9 +333,10 @@ Admin is shown for completeness; it is never stored (§6).
 | `facility.enclosures` | Enclosures and zones | E/R | E | R | R | – | R | 16 | Edit is Settings → Zones and Enclosures |
 | `facility.map` | The facility map | Y/N | Y | Y | Y | – | Y | 16 | A prototype today |
 | **Maintenance** | | | | | | | | | |
-| `maintenance.jobs` | Maintenance jobs: log, edit, assign, cost, delete | E/R | E | E | E | – | – | 17 | |
+| `maintenance.jobs` | Maintenance jobs: log, edit, assign, cost | E/R | E | E | E | – | – | 17 | |
 | `maintenance.progress` | Move a job on: in progress, blocked, completed | Y/N | Y | Y | Y | – | – | 17 | *Split.* Lets someone finish a job without managing the board |
 | `maintenance.photos` | Add and remove a job's photos | Y/N | Y | Y | Y | – | – | 17 | Finding A4 |
+| `maintenance.delete` | Delete a maintenance job for good | Y/N | Y | Y | – | – | – | – | Added by `0179` (Lutan, 2026-10-11): the 2IC may, the Head of Maintenance may not. It replaces the `has_shelter_floor()` test `0149` used to keep the volunteer floor out of delete, so a role's box now says what the database does. |
 | **Projects** | | | | | | | | | |
 | `projects.folders` | Project folders and their stories | E/R | E | E | E | – | – | 18 | Edit includes delete (A8) |
 | `projects.photos` | Add and remove project photos | Y/N | Y | Y | Y | – | – | 18 | |

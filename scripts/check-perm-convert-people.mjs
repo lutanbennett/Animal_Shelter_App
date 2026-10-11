@@ -39,7 +39,7 @@ const CUSTOM = {
   c_add: { cells: [["contacts.add", 2]] },
   c_dir_all: { cells: [["contacts.directory", 2], ["contacts.add", 2]] },
   c_dir_namephone: { scope: "name_phone", cells: [["contacts.directory", 2], ["contacts.add", 2]] },
-  v_dir_all: { floor: "volunteer", cells: [["contacts.directory", 2], ["contacts.add", 2]] },
+  v_dir_all: { floor: "volunteer", scope: "name_phone", cells: [["contacts.directory", 2], ["contacts.add", 2]] },
   c_friends: { cells: [["friends.manage", 2]] },
   c_friends_view: { cells: [["friends.view", 2]] },
   c_clinics_read: { cells: [["clinics.list", 1]] },

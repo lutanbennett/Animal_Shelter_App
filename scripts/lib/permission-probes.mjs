@@ -95,7 +95,7 @@ export const PROBES = [
   // --- Maintenance
   { activity: "maintenance.jobs", level: "edit", sql: `insert into maintenance (title, zone_id) values ('probe', $ZONE)` },
   { activity: "maintenance.jobs", level: "edit", sql: `update maintenance set description = 'probe' where id = $JOB` },
-  { activity: "maintenance.jobs", level: "edit", sql: `delete from maintenance where id = $JOB` },
+  { activity: "maintenance.delete", level: "edit", sql: `delete from maintenance where id = $JOB` },
   { activity: "maintenance.jobs", level: "read", sql: `select 1 from maintenance where id = $JOB` },
   { activity: "maintenance.progress", level: "edit", sql: `update maintenance set status = 'In Progress' where id = $JOB` },
   { activity: "maintenance.photos", level: "edit", sql: `insert into maintenance_photos (maintenance_id, drive_file_id) values ($JOB, 'harness-probe-file')` },
