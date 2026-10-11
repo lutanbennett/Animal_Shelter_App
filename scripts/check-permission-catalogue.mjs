@@ -276,10 +276,9 @@ const PINNED = {
   "/operations": { guards: ['requireAnyPageIn("operations")'], decides: [] },
 
   // Admin rules, not activities (§6: a power only one role holds is not a cell): who signs in,
-  // the role-draft comparison sheet, and seeing another role's home screen.
+  // and seeing another role's home screen.
   "/admin/security": { guards: ["requireAdminUser()"], decides: [] },
   "/admin/security/verify": { guards: ["requireAdminUser()"], decides: [] },
-  "/admin/role-draft": { guards: ["if (!mine?.isAdmin) refuseFor(mine)"], decides: [] },
   "/home/[role]": { guards: ["if (!mine?.isAdmin) refuseFor(mine)"], decides: [] },
   // Who does what (who-does-what-view): Admin and Management, by the backlog item; no activity exists for
   // it yet and adding one needs a migration. opensWhoDoesWhat() is the one place that says so.
@@ -292,6 +291,7 @@ const PINNED = {
 // app, before the page runs. A reason that only says "hub" or "public" is not a reason.
 const APP = "Behind the proxy's gate (signed in, a role that opens the app).";
 const EXEMPT = {
+  "/admin/role-draft": { why: "A redirect to /admin/who-does-what, which carries the guard (who-does-what-edit retired the page and kept the address)." },
   "/": { public: true, why: "The public home page. Reads the session only to choose the header; shows nothing from the app." },
   "/login": { public: true, why: "Sign-in. There is no one to ask a permission of yet." },
   "/login/forgot": { public: true, why: "Password reset request: sign-in's own page." },
