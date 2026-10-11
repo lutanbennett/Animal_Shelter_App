@@ -1222,7 +1222,7 @@ A vet's read of the four recurring tables was inside the dropped role list, so i
 
 | Table | Activity | Note |
 |---|---|---|
-| `maintenance`, `maintenance_assignees` | `maintenance.jobs` | `0141` had written the cell policies beside the role-named ones; delete asks Edit **and** `has_shelter_floor()`, so the Head of Maintenance and the 2IC still cannot delete a job |
+| `maintenance`, `maintenance_assignees` | `maintenance.jobs` | `0141` had written the cell policies beside the role-named ones; delete asked Edit **and** `has_shelter_floor()`, so the Head of Maintenance and the 2IC could not delete; since `0179` it asks `maintenance.delete` (the 2IC yes, the Head of Maintenance no) a job |
 | `project_folders` | `projects.folders` | `projects.publish` is a column on the same table and is not asked |
 
 **Converted in `0150` (`perm-convert-settings`), the last conversion bar the photo split.**

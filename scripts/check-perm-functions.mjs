@@ -49,7 +49,7 @@ const EXPECTED = new Set([
 // Still reading the enum (or roles.legacy_role) after 0178, each on purpose: perm-drop-enum's.
 const LEFT = new Set([
   "public.current_user_role", "public.user_roles_sync_role_id", "private.has_app_access", "public.has_shelter_floor",
-  "public.sees_all_residents", "public.sees_all_contacts",
+  // 0179 (role-floor-schema): sees_all_residents() and sees_all_contacts() ask the role's own scope now.
 ]);
 
 async function sql(query) {
