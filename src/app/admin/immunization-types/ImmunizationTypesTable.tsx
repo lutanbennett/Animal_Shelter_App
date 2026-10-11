@@ -8,6 +8,7 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { RowActionButton } from "@/components/RowAction";
 import { formatBahtPrice, parseBahtAmount } from "@/lib/format";
+import { parseStockCount } from "@/lib/management/stock";
 
 export type ImmunizationTypeRow = {
   id: string;
@@ -17,6 +18,8 @@ export type ImmunizationTypeRow = {
   interval_months: number | null;
   /** Baht for one dose (0071). Null means nobody has priced it yet. */
   cost: number | null;
+  /** Doses on the shelf (0185). Null = never counted, which is not 0. */
+  stock_on_hand: number | null;
 };
 
 function ImmunizationTypeRowItem({
@@ -33,6 +36,7 @@ function ImmunizationTypeRowItem({
     immunizationType.interval_months?.toString() ?? "",
   );
   const [cost, setCost] = useState(immunizationType.cost?.toString() ?? "");
+  const [stock, setStock] = useState(immunizationType.stock_on_hand?.toString() ?? "");
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState<
     { type: "error" | "success"; text: string } | null
@@ -62,6 +66,11 @@ function ImmunizationTypeRowItem({
       });
       return;
     }
+    const parsedStock = parseStockCount(stock);
+    if (!parsedStock.ok) {
+      setMessage({ type: "error", text: t.admin.immunizationTypes.errors.stockInvalid });
+      return;
+    }
     startTransition(async () => {
       const result = await updateImmunizationType(immunizationType.id, {
         name,
@@ -69,6 +78,8 @@ function ImmunizationTypeRowItem({
         isMandatory,
         intervalMonths: parsedInterval,
         cost: parsedCost.value,
+        // Sent only when changed, so a rename does not restamp the count.
+        ...(parsedStock.value !== immunizationType.stock_on_hand ? { stockOnHand: parsedStock.value } : {}),
       });
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
@@ -187,6 +198,25 @@ function ImmunizationTypeRowItem({
           )}
         </td>
         <td className="px-4 py-2">
+          {editing ? (
+            <input
+              type="number"
+              min={0}
+              step="1"
+              inputMode="numeric"
+              placeholder={t.admin.immunizationTypes.table.stockPlaceholder}
+              aria-label={t.admin.immunizationTypes.table.stock}
+              value={stock}
+              onChange={(e) => setStock(e.target.value)}
+              className="w-24 rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary"
+            />
+          ) : immunizationType.stock_on_hand == null ? (
+            <span className="text-muted">{t.admin.immunizationTypes.table.notCounted}</span>
+          ) : (
+            <span className="text-foreground">{immunizationType.stock_on_hand}</span>
+          )}
+        </td>
+        <td className="px-4 py-2">
           <div className="flex items-center gap-2">
             {editing ? (
               <>
@@ -206,6 +236,7 @@ function ImmunizationTypeRowItem({
                       immunizationType.interval_months?.toString() ?? "",
                     );
                     setCost(immunizationType.cost?.toString() ?? "");
+                    setStock(immunizationType.stock_on_hand?.toString() ?? "");
                   }}
                 >
                   {t.common.cancel}
@@ -233,7 +264,7 @@ function ImmunizationTypeRowItem({
       {message && (
         <tr>
           <td
-            colSpan={5}
+            colSpan={6}
             className={`px-4 pb-2 text-xs ${
               message.type === "error" ? "text-danger" : "text-success"
             }`}
@@ -270,6 +301,9 @@ export function ImmunizationTypesTable({
             <th className="px-4 py-2 font-medium">
               {t.admin.immunizationTypes.table.cost}
             </th>
+            <th className="px-4 py-2 font-medium">
+              {t.admin.immunizationTypes.table.stock}
+            </th>
             <th className="px-4 py-2 font-medium" />
           </tr>
         </thead>
@@ -282,7 +316,7 @@ export function ImmunizationTypesTable({
           ))}
           {immunizationTypes.length === 0 && (
             <tr>
-              <td colSpan={5} className="px-4 py-6 text-center text-muted">
+              <td colSpan={6} className="px-4 py-6 text-center text-muted">
                 {t.admin.immunizationTypes.table.noTypes}
               </td>
             </tr>

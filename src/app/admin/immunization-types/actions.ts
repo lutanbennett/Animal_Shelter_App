@@ -74,6 +74,11 @@ export async function updateImmunizationType(
     intervalMonths: number | null;
     /** Baht per dose, or null for "not priced yet" (0071). */
     cost: number | null;
+    /**
+     * Doses on the shelf. Undefined = leave the count alone (renaming a
+     * vaccine must not restamp it, 0083); null = clear it back to "not counted".
+     */
+    stockOnHand?: number | null;
   },
 ): Promise<ActionResult> {
   const { t } = await getT();
@@ -90,10 +95,16 @@ export async function updateImmunizationType(
     const cost = parseBahtAmount(fields.cost?.toString() ?? null);
     if (!cost.ok) return refuse(t.admin.immunizationTypes.errors.costInvalid);
 
+    if (fields.stockOnHand != null && !(fields.stockOnHand >= 0)) {
+      return refuse(t.admin.immunizationTypes.errors.stockInvalid);
+    }
+
     const supabase = await createClient();
     const { error } = await supabase
       .from("immunization_types")
       .update({
+        // Only named when it changed: the trigger restamps the count whenever it is in the SET list.
+        ...(fields.stockOnHand !== undefined ? { stock_on_hand: fields.stockOnHand } : {}),
         name: fields.name.trim(),
         name_th: fields.nameTh.trim() || null,
         is_mandatory: fields.isMandatory,

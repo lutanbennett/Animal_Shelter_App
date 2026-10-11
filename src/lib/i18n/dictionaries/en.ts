@@ -1417,6 +1417,9 @@ const en = {
         cost: "Cost per dose",
         costPlaceholder: "Baht",
         notPricedYet: "Not priced yet",
+        stock: "Doses in stock",
+        stockPlaceholder: "Doses",
+        notCounted: "Not counted",
         mandatory: "Mandatory",
         optional: "Optional",
         everyMonths: (months: number) => `Every ${months} mo`,
@@ -1429,6 +1432,7 @@ const en = {
       createdType: (name: string) => `Created immunization type "${name}".`,
       errors: {
         nameRequired: "Name is required.",
+        stockInvalid: "Doses in stock must be a whole number, 0 or more. Leave it blank if you have not counted.",
         intervalPositive: "Repeat interval must be a positive number of months.",
         costInvalid: "Cost must be a number of baht, 0 or more. Leave it blank if it isn't priced yet.",
         invalidInterval: "Invalid interval.",
@@ -2537,6 +2541,20 @@ const en = {
       },
       note:
         "Planned is what the prescriptions and diets in the app say would be used from the day of the earlier count up to the day before the later one. Difference is used minus planned, and as a percentage of the plan (a dash when nothing was planned). A row is marked when usage is more than a quarter away from the plan and further from it than two counts of that item can differ by — one tablet, capsule, can or sachet, or a twentieth of what was on the shelf for things measured by eye, like ml or g — so small items don't stand out over a miscount. A delivery counts towards the stocktake it was on the shelf for. Only stocktakes are compared; a count changed by hand on the Medications or Diets page is not.",
+    },
+    vaccines: {
+      title: "Vaccines",
+      intro: "Doses due in each window, beside the doses on the shelf. A warning means you will need more than you hold.",
+      vaccine: "Vaccine",
+      onHand: "Doses in stock",
+      notCounted: "Not counted",
+      countedOn: (date: string) => `counted ${date}`,
+      overdue: "Overdue now",
+      doses: (n: number) => `${n} dose${n === 1 ? "" : "s"}`,
+      short: (n: number) => `Short by ${n}`,
+      none: "No repeating vaccines yet.",
+      couldntLoad: "Couldn't load the vaccine figures",
+      note: "Each window counts the doses already overdue plus the doses falling due in it, assuming each is given on its due date. A resident with no record of a vaccine is not counted: nothing says they need it. Adopted and deceased residents are left out. Stock is the last count, entered on Settings → Immunization types; it is not reduced as vaccines are given, so count again after a delivery or a clinic day.",
     },
     forecastWindow: {
       from: "From",
