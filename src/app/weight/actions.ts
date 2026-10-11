@@ -39,6 +39,7 @@ export async function createWeight(
   formData: FormData,
 ): Promise<WeightFormState> {
   const { t } = await getT();
+  if (!can(await loadPermissions(), "medical.weight")) return { error: t.common.notAllowed };
   const residentId = str(formData, "residentId");
   if (!residentId) return { error: t.weight.errors.missingResident };
 

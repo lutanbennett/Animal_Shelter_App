@@ -1071,7 +1071,7 @@ const manual: Manual = {
             },
             {
               kind: "note",
-              text: "Who may record visits is set by Admin on Settings → Security, under Who may write outreach notes. Today it is Management. The home page shows the figure only once Admin has entered its starting number and date on Settings → Website.",
+              text: "Who may record visits is set by Admin on Settings → Who does what, in the row Outreach notes. Today it is Management. The home page shows the figure only once Admin has entered its starting number and date on Settings → Website.",
             },
           ],
         },
@@ -1605,11 +1605,12 @@ const manual: Manual = {
           roles: ["admin", "management"],
           path: "Settings → Who does what (also on the Management page)",
           intro:
-            "One page that shows what every role can do, for showing people how the app is shared out. Every activity is down the side, grouped by area, and every role is across the top. It is read live from the roles' settings, so it is always today's answer. It shows; it does not change anything.",
+            "One page that shows what every role can do, for showing people how the app is shared out. Every activity is down the side, grouped by area, and every role is across the top. It is read live from the roles' settings, so it is always today's answer. An Admin can change a box on it; Management can look but not change. It shows; it does not change anything.",
           steps: [
             "Each box says Edit (see, add, change and remove), Read (see only) or None. For things that are an act with nothing to look at, such as recording a death, it says Yes or No. Admin is not a column: Admin can do everything, always, and the line above the grid says so.",
             "A box with a small number in a circle is fixed for now: the system does not yet follow that box exactly. The number leads to the reason under the grid, and the reason says which roles it affects. Read it before telling someone what a marked box means. For example, a doctor's boxes are marked because a doctor works by their clinic, not by these boxes.",
             "Under the reasons is What nobody can change: the rules no setting touches, such as Admin's powers and Security.",
+            "Admin only: to change a box, pick a new answer in it. After you have verified with your authenticator app (the page asks), every box is a small menu, and the choice is saved at once and listed in Recent changes. The role feels it the next time it opens a page, so check by signing in as that role. A box that needs another box refuses with the reason: correcting a stock figure needs Edit on the medication list or the diet list, and marking anyone's recurring job needs marking your own. A doctor's clinic boxes follow the clinic rule and cannot be set here.",
             "Download CSV saves the same grid as a spreadsheet, with each fixed-for-now box saying why. Print prints the grid alone, sideways on the page, without the menu.",
             "On a phone the grid scrolls sideways under the activity names. It is meant for a laptop or a printout.",
           ],

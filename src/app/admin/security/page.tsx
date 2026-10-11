@@ -9,7 +9,6 @@ import { mustChangePassword } from "@/lib/auth/password-change";
 import { AccessRequests, type AccessRequest } from "./AccessRequests";
 import { CreateUserForm } from "./CreateUserForm";
 import { UsersTable, type SecurityUser } from "./UsersTable";
-import { OutreachWriters, type OutreachWriterRole } from "./OutreachWriters";
 import { givableRoles, loadRoleOptions } from "./role-options";
 
 export default async function SecurityPage() {
@@ -21,7 +20,7 @@ export default async function SecurityPage() {
 
   const admin = createAdminClient();
 
-  const [authUsersResult, rolesResult, roleOptionsResult, clinicsResult, doctorsResult, appRolesResult, outreachCellsResult] = await Promise.all([
+  const [authUsersResult, rolesResult, roleOptionsResult, clinicsResult, doctorsResult] = await Promise.all([
     listAllUsers(admin),
     // roles(key): the role row (0132), so a configured role shows as itself and not as the enum it borrows.
     admin.from("user_roles").select("user_id, archived_at, roles(key)"),
@@ -34,28 +33,7 @@ export default async function SecurityPage() {
       .from("doctors")
       .select("id, name, user_id, doctor_clinics(clinic_id, active)")
       .order("name"),
-    // Who may write outreach notes (0169): every live role that opens the app but Admin, whose
-    // column is a rule, and the one cell each holds.
-    admin
-      .from("roles")
-      .select("id, key, name, name_th")
-      .is("archived_at", null)
-      .eq("opens_app", true)
-      .neq("key", "admin")
-      .order("name"),
-    admin.from("role_permissions").select("role_id, level").eq("activity", "community.outings"),
   ]);
-
-  const outreachLevel = new Map((outreachCellsResult.data ?? []).map((c) => [c.role_id as string, c.level as 1 | 2]));
-  const outreachRoles: OutreachWriterRole[] = (appRolesResult.data ?? [])
-    .map((r) => ({
-      key: r.key as string,
-      name: r.name as string,
-      nameTh: (r.name_th as string | null) ?? null,
-      level: (outreachLevel.get(r.id as string) ?? 0) as 0 | 1 | 2,
-    }))
-    // Management first: today's answer, and the role a manager reaches for.
-    .sort((a, b) => Number(b.key === "management") - Number(a.key === "management"));
 
   const roleByUserId = new Map(
     (rolesResult.data ?? []).map((r) => [
@@ -174,7 +152,6 @@ export default async function SecurityPage() {
         unlinkedDoctors={unlinkedDoctors}
         currentUserId={currentUser.id}
       />
-      <OutreachWriters roles={outreachRoles} />
     </main>
   );
 }

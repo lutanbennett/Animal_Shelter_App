@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { databaseFailure } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { loadClinicScope, scopeAllowsClinic } from "@/lib/clinics/scope";
 
 export type ClinicVisitState = { error: string } | undefined;
@@ -13,6 +15,7 @@ export async function bookClinicVisit(
   formData: FormData,
 ): Promise<ClinicVisitState> {
   const { t } = await getT();
+  if (!can(await loadPermissions(), "medical.visits")) return { error: t.vetVisits.errors.notAuthorized };
   const residentIds = formData
     .getAll("residentIds")
     .filter((id): id is string => typeof id === "string" && id.length > 0);

@@ -535,6 +535,32 @@ const en = {
       legend:
         "Edit: see, add, change and remove. Read: see only. None: not at all. Yes and No are for things that are an act, with nothing to look at.",
       levels: { edit: "Edit", read: "Read", none: "None", yes: "Yes", no: "No" },
+      edit: {
+        intro:
+          "You are an Admin, so you can change a box: pick a new answer and it is saved at once and listed in Recent changes. The role feels it the next time it opens a page.",
+        verifyPrompt: "To change a box, verify with your authenticator app first.",
+        verifyLink: "Verify now",
+        adminOnly: "Only an Admin can change who does what.",
+        twoStepRequired: "Changing who does what needs the authenticator app. Verify it first.",
+        clinicRule: "A doctor's clinic boxes follow the clinic rule, so they cannot be set here.",
+        noSuchRole: "That role cannot be changed here.",
+        locked: "Set by the clinic rule",
+        needs: {
+          stockCorrect: "To correct a stock figure, this role first needs Edit on the medication list or the diet list.",
+          includedByAny: "Marking anyone's recurring job includes your own, so turn on \"your own\" first.",
+        },
+        neededBy: {
+          stockCorrect: "This role can still correct stock figures, which needs this list. Turn off \"correct a stock figure\" first.",
+          includedByAny: "This role can still mark anyone's recurring job, which includes its own. Turn off \"anyone's\" first.",
+        },
+        unmetHeading: "Boxes that need another box",
+        unmetIntro:
+          "These are set to a combination the system cannot honour, so the box does nothing yet. Fix them by giving the box it needs, or by turning it off.",
+        unmet: {
+          stockCorrect: (who: string) => `${who}: can correct a stock figure but has no Edit on the medication list or the diet list.`,
+          includedByAny: (who: string) => `${who}: can mark anyone's recurring job but not their own.`,
+        },
+      },
       fixedTag: "Fixed for now",
       fixedLegend: "Fixed for now: the system does not yet follow this box exactly. The reason, by number, is below the grid.",
       fixedHeading: "Fixed for now, and why",
@@ -647,16 +673,6 @@ const en = {
           title: "Name and phone only",
           reason:
             "This role can open the contacts book, but sees each contact's name and phone number only. Not the address, notes or history.",
-        },
-        stockCorrect: {
-          title: "Needs a stock list too",
-          reason:
-            "Correcting a stock figure also needs Edit on the medication list or the diet list. This role has neither, so the system still refuses, whatever this box says.",
-        },
-        includedByAny: {
-          title: "Included in \"anyone's jobs\"",
-          reason:
-            "This role can mark anyone's recurring job done, and that includes its own. So turning this box off alone would not stop it.",
         },
         notAskedYet: {
           title: "Nothing uses this box yet",
@@ -5029,14 +5045,6 @@ const en = {
       notAuthorized: "You can't record outreach visits.",
       notFound: "That visit no longer exists.",
       photoNotFound: "That photo no longer exists.",
-    },
-    writers: {
-      heading: "Who may write outreach notes",
-      subtitle:
-        "The Director's answer of 8 October 2026: Management for now, changeable here. Admin always can. Changes are kept in Recent changes.",
-      levels: { none: "No", read: "Read only", edit: "Write and correct" },
-      saved: "Saved.",
-      noRoles: "No roles to set.",
     },
   },
 

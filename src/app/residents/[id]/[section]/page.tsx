@@ -709,12 +709,14 @@ export default async function ResidentSectionPage(
                   <div className="flex flex-wrap justify-end gap-2">
                     {!isDeceased && (
                       <>
-                        <RowActionLink
-                          href={`/clinic-visits/${row.id}/edit`}
-                          label={t.common.edit}
-                          subject={visitSubject(row)}
-                          icon={ACTION_ICONS.edit}
-                        />
+                        {can(perms, "medical.visits") && (
+                          <RowActionLink
+                            href={`/clinic-visits/${row.id}/edit`}
+                            label={t.common.edit}
+                            subject={visitSubject(row)}
+                            icon={ACTION_ICONS.edit}
+                          />
+                        )}
                         <RowActionLink
                           href={`/blood-tests/new?residentId=${id}&clinicVisitId=${row.id}`}
                           label={t.residents.sections.logBloodTest}
@@ -730,12 +732,14 @@ export default async function ResidentSectionPage(
                           />
                         )}
                         {weightByVisit.has(row.id) ? (
-                          <RowActionLink
-                            href={`/weight/${weightByVisit.get(row.id)}/edit`}
-                            label={t.residents.sections.editWeight}
-                            subject={visitSubject(row)}
-                            icon={SECTION_ICONS.weight}
-                          />
+                          can(perms, "medical.weight") && (
+                            <RowActionLink
+                              href={`/weight/${weightByVisit.get(row.id)}/edit`}
+                              label={t.residents.sections.editWeight}
+                              subject={visitSubject(row)}
+                              icon={SECTION_ICONS.weight}
+                            />
+                          )
                         ) : (
                           visitDate(row) <= today && (
                             <RowActionLink
@@ -906,7 +910,7 @@ export default async function ResidentSectionPage(
               </div>
             </div>
             {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
-            {!isDeceased && !archived && (
+            {!isDeceased && !archived && can(perms, "medical.prescriptions") && (
               <RecordRowActions
                 editHref={`/prescriptions/${row.id}/edit`}
                 subject={`${(row.medication ? localLabel(locale, row.medication.name, row.medication.name_th) : t.residents.sections.unknownMedication)} · ${formatDate(row.start_date, locale)}`}
@@ -1058,7 +1062,7 @@ export default async function ResidentSectionPage(
               </div>
             </div>
             {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
-            {!isDeceased && (
+            {!isDeceased && can(perms, "medical.diet") && (
               <RecordRowActions
                 editHref={`/diets/${row.id}/edit`}
                 subject={`${(type ? localLabel(locale, type.name, type.name_th) : t.residents.sections.unknownDietType)} · ${formatDate(row.start_date, locale)}`}
@@ -1242,7 +1246,7 @@ export default async function ResidentSectionPage(
                 {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
                 {(!isDeceased || canArchive("weight")) && (
                   <div className="flex items-start justify-end gap-3">
-                    {!isDeceased && (
+                    {!isDeceased && can(perms, "medical.weight") && (
                       <RowActionLink
                         href={`/weight/${row.id}/edit`}
                         label={t.common.edit}

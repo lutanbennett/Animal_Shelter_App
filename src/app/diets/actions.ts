@@ -87,6 +87,7 @@ function parseDietFields(formData: FormData, t: Dictionary): { error: string } |
  */
 export async function createDiet(_state: DietFormState, formData: FormData): Promise<DietFormState> {
   const { t } = await getT();
+  if (!can(await loadPermissions(), "medical.diet")) return { error: t.common.notAllowed };
   const residentId = str(formData, "residentId");
   if (!residentId) return { error: t.diets.errors.missingResident };
 
@@ -161,6 +162,7 @@ export async function endDietToday(
   dietId: string,
 ): Promise<{ error: string } | undefined> {
   const { t } = await getT();
+  if (!can(await loadPermissions(), "medical.diet")) return { error: t.common.notAllowed };
   const today = todayIso();
   const supabase = await createClient();
   const { data, error } = await supabase
