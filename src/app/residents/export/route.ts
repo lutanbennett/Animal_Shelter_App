@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { asListRow, readsWhoAndWhereOnly, type WhoAndWhere } from "@/lib/residents/who-and-where";
-import { listQuery, resolveListView } from "@/lib/residents/list-view";
+import { inListOrder, listQuery, resolveListView } from "@/lib/residents/list-view";
 import {
   buildResidentsCsv,
   exportFilename,
@@ -48,7 +48,7 @@ export async function GET(request: Request) {
   }
 
   const zoneInternal = new Map(view.zones.map((zone) => [zone.id, zone.internal as boolean | null]));
-  const rows: ExportRow[] = (data ?? []).map((row) =>
+  const rows: ExportRow[] = inListOrder(view, data ?? []).map((row) =>
     limited
       ? {
           ...asListRow(row as WhoAndWhere, zoneInternal.get((row as WhoAndWhere).zone_id ?? "") ?? null),

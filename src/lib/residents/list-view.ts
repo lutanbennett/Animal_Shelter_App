@@ -5,6 +5,7 @@ import { SYSTEM_ZONE } from "@/lib/enclosures/options";
 import { byShelterOrder, enclosuresInShelterOrder } from "@/lib/enclosures/order";
 import { OFFSITE, parseZoneIds, readZonePick, zoneIdsOf } from "@/lib/enclosures/place";
 import { NOT_DECEASED, UNASSIGNED } from "@/lib/residents/status";
+import { DB_ORDER, parseSort, sortByPlace } from "@/lib/residents/sort";
 import { WHO_AND_WHERE_COLUMNS } from "@/lib/residents/who-and-where";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
@@ -181,6 +182,12 @@ export async function resolveListView(supabase: Supabase, searchParams: Params, 
           .returns<{ id: string }[]>()
       ).data ?? []).map((row) => row.id)
     : null;
+  const sort = parseSort(searchParams);
+  // Position in the shelter's own order, for the columns the database cannot rank (sortByPlace).
+  const ranks = {
+    zone: new Map(zones.map((zone, index) => [zone.id, index])),
+    enclosure: new Map(allEnclosures.map((enclosure, index) => [enclosure.id, index])),
+  };
   const filters: Filters = {
     q,
     zoneIds: zoneIds.filter((id) => id !== OFFSITE),
@@ -192,7 +199,7 @@ export async function resolveListView(supabase: Supabase, searchParams: Params, 
     limited,
   };
 
-  return { q, zones, physicalZones, allEnclosures, enclosures, enclosuresIn, zoneIds, unallocated, enclosureId, showAll, noChip, status, chippedIds, filters };
+  return { q, sort, ranks, zones, physicalZones, allEnclosures, enclosures, enclosuresIn, zoneIds, unallocated, enclosureId, showAll, noChip, status, chippedIds, filters };
 }
 
 export type ListView = Awaited<ReturnType<typeof resolveListView>>;
@@ -217,10 +224,24 @@ export function listQuery(supabase: Supabase, view: ListView, limited: boolean, 
   let query = supabase
     .from(source.table as "resident_list_view")
     .select(source.columns)
-    .order("name");
+    .order(DB_ORDER[view.sort.key] ?? "name", { ascending: view.sort.dir === "asc" });
+  // Ties, and the columns the database cannot rank, fall back to name.
+  if (view.sort.key !== "name") query = query.order("name");
   if (!view.showAll) {
     query = query.or(NOT_DECEASED);
   }
   const filtered = applyFilters(query, view.filters);
   return ids.length ? filtered.in(source.idColumn, ids) : filtered;
+}
+
+/**
+ * The rows `listQuery` returned, put in the order the URL asks for. A no-op for the columns the
+ * database already ordered; Zone, Enclosure and Location are ranked here. The page and the download both
+ * call it, which is what keeps the file in the order on screen.
+ */
+export function inListOrder<T extends { name: string; enclosure_id: string | null; zone_id: string | null; zone_name: string | null; current_status: string | null }>(
+  view: ListView,
+  rows: T[],
+): T[] {
+  return DB_ORDER[view.sort.key] ? rows : sortByPlace(rows, view.sort, view.ranks);
 }

@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Residents: tap a heading on the list (ID, Resident, Enclosure, Zone, Status, On-site / Off-site) to sort by it, and tap again to reverse. Zone and Enclosure follow the shelter's own order from Settings, not the alphabet. On a phone there is a Sort by choice above the list. The order stays when you refresh or share the link, and Download spreadsheet comes out in the same order.",
 ];
 
 /** Newest first. */

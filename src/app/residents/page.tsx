@@ -17,19 +17,21 @@ import { DECEASED } from "@/lib/residents/status";
 import { exportFilename } from "@/lib/residents/export";
 import {
   applyFilters,
+  inListOrder,
   listQuery,
   listSource,
   resolveListView,
   STATUS_CHIPS,
   type StatusChip,
 } from "@/lib/residents/list-view";
+import { nextSort, sortParams, SORT_KEYS, type ListSort, type SortKey } from "@/lib/residents/sort";
 import { PlaceZoneChips } from "@/components/PlaceZoneChips";
 import { asListRow, readsWhoAndWhereOnly, type WhoAndWhere } from "@/lib/residents/who-and-where";
 import { ResidentsTable, type ResidentRow } from "./ResidentsTable";
 import { ActionLink } from "@/components/ActionLink";
 import { ACTION_ICONS } from "@/components/hub-icons";
 
-function buildHref(params: {
+function buildHref(sort: ListSort, params: {
   zones: string[];
   q: string;
   enclosure: string;
@@ -46,6 +48,7 @@ function buildHref(params: {
   if (params.all) search.set("all", "1");
   if (params.noChip) search.set("nochip", "1");
   if (params.status) search.set("status", params.status.toLowerCase());
+  for (const [key, value] of Object.entries(sortParams(sort))) search.set(key, value);
   // Commas read better than %2C in a shared link, and parse the same.
   const qs = search.toString().replace(/%2C/gi, ",");
   return qs ? `/residents?${qs}` : "/residents";
@@ -78,7 +81,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   const canRegister = chipQuery ? can(await loadPermissions(), "resident.register") : false;
 
   const view = await resolveListView(supabase, searchParams, limited);
-  const { zones, physicalZones, enclosures, enclosuresIn, zoneIds, unallocated, enclosureId, showAll, noChip, status, chippedIds, filters } = view;
+  const { sort, zones, physicalZones, enclosures, enclosuresIn, zoneIds, unallocated, enclosureId, showAll, noChip, status, chippedIds, filters } = view;
 
   // An old ?place= link, an off-site zone's own id or the Lifecycle zone's is read as the chips
   // that mean the same (resolveListView), and the URL is tidied to them (2026-10-08).
@@ -93,7 +96,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
    * still applies: the enclosure only if it is under the new chips.
    */
   function hrefFor(nextZones: string[], nextUnallocated = unallocated) {
-    return buildHref({
+    return buildHref(sort, {
       zones: nextZones,
       q,
       enclosure: enclosuresIn(nextZones, nextUnallocated).some((e) => e.id === enclosureId)
@@ -109,17 +112,17 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
 
   /** The same list with the deceased toggle flipped, other filters kept. */
   function toggleHref(all: boolean) {
-    return buildHref({ zones: zoneIds, q, enclosure: enclosureId, all, noChip, status, unallocated });
+    return buildHref(sort, { zones: zoneIds, q, enclosure: enclosureId, all, noChip, status, unallocated });
   }
 
   /** The same list with "No microchip" flipped, other filters kept. */
   function noChipHref(next: boolean) {
-    return buildHref({ zones: zoneIds, q, enclosure: enclosureId, all: showAll, noChip: next, status, unallocated });
+    return buildHref(sort, { zones: zoneIds, q, enclosure: enclosureId, all: showAll, noChip: next, status, unallocated });
   }
 
   /** A status chip picked (or, null, taken off); on, it clears the zones, Unallocated and enclosure. */
   function statusHref(next: StatusChip | null) {
-    return buildHref({
+    return buildHref(sort, {
       zones: [],
       q,
       enclosure: "",
@@ -129,6 +132,14 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
       unallocated: false,
     });
   }
+
+  /** The heading click: that column A to Z, or the same column reversed; every filter kept. */
+  const sortLinks = Object.fromEntries(
+    SORT_KEYS.map((key) => [
+      key,
+      buildHref(nextSort(sort, key), { zones: zoneIds, q, enclosure: enclosureId, all: showAll, noChip, status, unallocated }),
+    ]),
+  ) as Record<SortKey, string>;
 
   const { table: listTable, idColumn } = listSource(limited);
 
@@ -182,7 +193,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   const { error } = residentsResult;
   // The who-and-where view names the id "id" and has no zone_internal; the zones read above has it.
   const zoneInternal = new Map(zones.map((zone) => [zone.id, zone.internal as boolean | null]));
-  const residents: ResidentRow[] = (residentsResult.data ?? []).map((row) =>
+  const residents: ResidentRow[] = inListOrder(view, residentsResult.data ?? []).map((row) =>
     limited ? asListRow(row as WhoAndWhere, zoneInternal.get((row as WhoAndWhere).zone_id ?? "") ?? null) : (row as ResidentRow),
   );
   // The download asks the server for this same list: the page's own query string, nothing re-derived.
@@ -317,7 +328,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
         {/* Keyed on the filters so a chip or Clear, which navigate on the
             client, remount the inputs instead of leaving their old values. */}
         <form
-          key={`${zoneIds.join(",")}|${unallocated}|${q}|${enclosureId}|${showAll}|${noChip}|${status}`}
+          key={`${zoneIds.join(",")}|${unallocated}|${q}|${enclosureId}|${showAll}|${noChip}|${status}|${sort.key}${sort.dir}`}
           className="flex flex-wrap items-end gap-3"
           method="get"
         >
@@ -329,6 +340,9 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
           {showAll && <input type="hidden" name="all" value="1" />}
           {noChip && <input type="hidden" name="nochip" value="1" />}
           {status && <input type="hidden" name="status" value={status.toLowerCase()} />}
+          {Object.entries(sortParams(sort)).map(([name, value]) => (
+            <input key={name} type="hidden" name={name} value={value} />
+          ))}
           <div className="flex min-w-0 basis-full flex-col gap-1 md:flex-none md:basis-auto">
             <label htmlFor="q" className="text-sm font-medium text-muted">
               {t.residents.list.search}
@@ -417,6 +431,8 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
         residents={residents}
         tagOrigin={tagOrigin}
         limited={limited}
+        sort={sort}
+        sortLinks={sortLinks}
         exportHref={exportHref}
         exportFilename={exportFilename({ ...filters, showAll, noChip }, 0)}
       />

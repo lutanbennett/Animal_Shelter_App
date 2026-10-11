@@ -3913,6 +3913,11 @@ const th: Dictionary = {
         status: "สถานะ",
         location: "ภายใน / ภายนอกศูนย์",
         noMatches: "ไม่พบสัตว์ที่ตรงกับตัวกรองนี้",
+        sortBy: "เรียงตาม",
+        sortLabel: (column: string, dir: "asc" | "desc") =>
+          `เรียงตาม${column}${dir === "asc" ? " (ตอนนี้ก-ฮ — กดเพื่อเรียงย้อนกลับ)" : " (ตอนนี้ฮ-ก — กดเพื่อเรียงก-ฮ)"}`,
+        sortHeading: (column: string) => `เรียงตาม${column}`,
+        sortReverse: "กลับลำดับ",
         selectAriaLabel: (name: string) => `เลือก ${name}`,
         selectAll: (n: number, leftOut: number) =>
           `เลือกทั้ง ${n} ตัวที่แสดง${
