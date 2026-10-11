@@ -22,8 +22,6 @@ export const FIXED_IDS = [
   "clinicRule",
   "whoAndWhere",
   "nameAndPhone",
-  "stockCorrect",
-  "includedByAny",
   "notAskedYet",
   "databaseWider",
 ] as const;
@@ -114,39 +112,12 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
     measured: true,
   },
   {
-    // Since 0178 record_stock_correction() asks stock.correct AND the list's own box (stock.medications or
-    // stock.diets, Edit), as the paper's manage-medications / manage-diets do, so Management's box now bites
-    // (taken out by perm-functions-schema). The 2IC holds stock.correct but neither list box, so her Yes is
-    // still refused. That is a §4 rule 5 prerequisite (stock.correct needs a list box), which
-    // who-does-what-edit states so the grid can refuse the combination instead of showing it.
-    id: "stockCorrect",
-    boxes: { second_in_command: ["stock.correct"] },
-    shown: true,
-    stays: false,
-    closedBy: "who-does-what-edit",
-    measured: true,
-  },
-  {
-    // Was "namedInDatabase": functions that let a role in by name. perm-functions-schema (0178) made them ask
-    // the boxes, and four of its five boxes were then obeyed and taken out. What is left is not a name:
-    // record_recurring_job() lets recurring.do_any record any date, your own included, so Management's
-    // "your own" box cannot be taken away while "anyone's" stays Yes. That is a §4 rule 5 prerequisite
-    // (do_any needs do_own), which who-does-what-edit states so the grid cannot show the combination.
-    id: "includedByAny",
-    boxes: {
-      management: ["recurring.do_own"],
-    },
-    shown: true,
-    stays: false,
-    closedBy: "who-does-what-edit",
-    measured: true,
-  },
-  {
     // Three splits of §4 that nothing reads yet: booking a visit is written under medical.visits,
     // moving a job on under maintenance.jobs (the board's only gate), and is_public under
     // projects.folders (0149: "projects.publish is NOT consulted by the write policy"). Each box is right
-    // today only because the same roles hold both. who-does-what-edit has to wire them before an
-    // Admin can usefully change them.
+    // today only because the same roles hold both. Wiring them changes policies, so it needs a migration and is its
+    // own backlog item (perm-split-activities). Until then an Admin changing one of these boxes changes what the
+    // screens show but not what the visit, job or folder policy asks, so the grid marks the box.
     id: "notAskedYet",
     boxes: {
       management: ["visit.book", "maintenance.progress", "projects.publish"],
@@ -155,7 +126,7 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
     },
     shown: true,
     stays: false,
-    closedBy: "who-does-what-edit",
+    closedBy: "perm-split-activities",
     measured: true,
   },
   {
@@ -164,7 +135,7 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
     // is the app's question only), stock_receipts reads on any of the three stock boxes, contacts read on
     // browse OR directory (0170), friends on view OR manage (0155), clinics, doctors and the setup lists
     // on clinics.list / stock.medications. Not shown: nobody using the app can tell. Kept so the check
-    // accounts for every box, and so who-does-what-edit knows which policies to narrow.
+    // accounts for every box, and so the stream that narrows them (perm-narrow-policies) knows which policies.
     id: "databaseWider",
     boxes: {
       management: [
@@ -181,7 +152,7 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
     },
     shown: false,
     stays: false,
-    closedBy: null,
+    closedBy: "perm-narrow-policies",
     measured: true,
   },
 ];
