@@ -17,13 +17,17 @@ export default async function ImmunizationTypesPage() {
   // send a string, so it is normalised once here.
   const { data, error } = await supabase
     .from("immunization_types")
-    .select("id, name, name_th, is_mandatory, interval_months, cost")
+    .select("id, name, name_th, is_mandatory, interval_months, cost, stock_on_hand")
     .order("name")
-    .returns<(Omit<ImmunizationTypeRow, "cost"> & { cost: number | string | null })[]>();
+    .returns<(Omit<ImmunizationTypeRow, "cost" | "stock_on_hand"> & {
+      cost: number | string | null;
+      stock_on_hand: number | string | null;
+    })[]>();
 
   const immunizationTypes: ImmunizationTypeRow[] = (data ?? []).map((row) => ({
     ...row,
     cost: row.cost == null ? null : Number(row.cost),
+    stock_on_hand: row.stock_on_hand == null ? null : Number(row.stock_on_hand),
   }));
 
   return (

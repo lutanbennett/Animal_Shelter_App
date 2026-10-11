@@ -17,6 +17,7 @@ import { receivedSinceCount } from "@/lib/management/purchasing";
 import { requirePermission } from "@/lib/permissions/require";
 import { canEditItemSettings } from "@/lib/permissions/item-settings";
 import { moveMedication } from "./actions";
+import { VaccineStockSection } from "./VaccineStockSection";
 
 type MedicationQueryRow = {
   id: string;
@@ -262,6 +263,8 @@ export default async function MedicationStockPage(props: PageProps<"/management/
           <p className="text-xs text-muted">{m.table.forecastNote}</p>
           <p className="text-xs text-muted">{t.management.stock.note}</p>
         </section>
+
+        <VaccineStockSection supabase={supabase} windows={windows} headings={forecastHeadings} t={t} locale={locale} />
 
         {conversions.error && (
           <p className="text-sm text-danger">
