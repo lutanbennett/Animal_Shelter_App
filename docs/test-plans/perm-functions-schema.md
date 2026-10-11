@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **PRIORITY (Lutan, 2026-10-10): Settings → Who does what**, batch 1 (c) (a "(c) done" line added, parent not ticked); and **A custom role that borrows the management enum…** (Security, ticked) |
 | Branch / worktree | `claude/perm-functions-schema` @ `C:\Development\Animal_Shelter_perm-functions-schema` |
 | Dev server | not started: no page changed. The change is in database functions, exercised under each login's own JWT by script |
-| PR | to be linked |
+| PR | #524 |
 | Tested by / date | Claude / 2026-10-11 |
 | Carries a migration? | yes — `0178_perm_functions.sql` |
 | Tested at SHA | `a795b1d8` (after sync with `origin/main` `56ec6698`, already up to date) |
