@@ -22,8 +22,14 @@
 
 ## 2. Automated gates
 
-- [ ] `node scripts/worktree.mjs sync` — n/a: not yet run at this commit
-- [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — n/a: not yet run at this commit
+- [x] `node scripts/worktree.mjs sync` — origin/main merged in, already up to date
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`:
+
+```
+=== gates: build exited 0 after 197s
+
+gates: typecheck=0 lint=0 build=0
+```
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
@@ -74,7 +80,7 @@
 
 - [x] The pages nearest the change still work — `check-map-rooms.mjs` and `check-doctor-resident-scope.mjs` both green on dev
 - [ ] Any shared file touched checked from a second page — n/a: no shared app file touched beyond the releases line
-- [ ] Nothing merged from `main` during `sync` was broken — n/a: sync not yet run at this commit
+- [x] Nothing merged from `main` during `sync` was broken — sync merged nothing
 
 ## 7. Documentation
 
@@ -141,7 +147,7 @@ Automated checks by: Claude  Date: 2026-10-11
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: item 1
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: item 1 is not yet checked; see the pending signature below
 
 Manual verification by: pending: a volunteer-login look at one translated room card
 
