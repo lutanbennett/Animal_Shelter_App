@@ -3,6 +3,8 @@
 import { databaseFailure } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { isFutureDate, isIsoDate } from "@/lib/placements/dates";
 
 export type BloodTestFormState =
@@ -15,6 +17,7 @@ export async function createBloodTest(
   formData: FormData,
 ): Promise<BloodTestFormState> {
   const { t } = await getT();
+  if (!can(await loadPermissions(), "medical.blood_tests")) return { error: t.common.notAllowed };
   const residentId = formData.get("residentId");
   const clinicVisitId = formData.get("clinicVisitId");
   const bloodTestTypeId = formData.get("bloodTestTypeId");
