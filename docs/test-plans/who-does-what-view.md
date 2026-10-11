@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): #526 at `d2cddc57`, 7 of 7 passing; re-run on the merge with security-role-picker (#525) before merging
 
 ## 3. Schema and data — *skip if no migration*
 
