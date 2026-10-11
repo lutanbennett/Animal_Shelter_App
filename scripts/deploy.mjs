@@ -323,7 +323,7 @@ async function announce() {
   // app_users view, which shows nothing without a signed-in role (0063).
   const auth = { headers: { apikey: key, authorization: `Bearer ${key}` } };
   const rolesRes = await fetch(
-    `${env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/user_roles?select=user_id&role=eq.admin&archived_at=is.null`,
+    `${env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/user_roles?select=user_id,roles!inner(key)&roles.key=eq.admin&archived_at=is.null`,
     auth,
   );
   if (!rolesRes.ok) {

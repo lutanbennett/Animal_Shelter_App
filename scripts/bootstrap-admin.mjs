@@ -141,7 +141,12 @@ async function bootstrap() {
   });
   if (error) throw error;
 
-  const { error: roleError } = await admin.from("user_roles").insert({ user_id: data.user.id, role: "admin" });
+  const { data: adminRole, error: adminRoleError } = await admin.from("roles").select("id").eq("key", "admin").single();
+  if (adminRoleError) {
+    await admin.auth.admin.deleteUser(data.user.id);
+    throw adminRoleError;
+  }
+  const { error: roleError } = await admin.from("user_roles").insert({ user_id: data.user.id, role_id: adminRole.id });
   if (roleError) {
     await admin.auth.admin.deleteUser(data.user.id);
     throw roleError;

@@ -24,7 +24,7 @@ export default async function SecurityPage() {
   const [authUsersResult, rolesResult, roleOptionsResult, clinicsResult, doctorsResult, appRolesResult, outreachCellsResult] = await Promise.all([
     listAllUsers(admin),
     // roles(key): the role row (0132), so a configured role shows as itself and not as the enum it borrows.
-    admin.from("user_roles").select("user_id, role, archived_at, roles(key)"),
+    admin.from("user_roles").select("user_id, archived_at, roles(key)"),
     // Every role, for the pickers: live ones to choose, retired ones to name on a login still holding one.
     loadRoleOptions(admin),
     admin.from("clinics").select("id, name").order("name"),
@@ -61,10 +61,7 @@ export default async function SecurityPage() {
     (rolesResult.data ?? []).map((r) => [
       r.user_id,
       {
-        // The role's key; a row whose role_id is not filled (none since 0132's back-fill) falls back to its
-        // enum, which for every built-in role is the same string.
-        role: ((r.roles as unknown as { key: string } | null)?.key ?? r.role) as string,
-        legacyRole: r.role as string,
+        role: (r.roles as unknown as { key: string } | null)?.key ?? null,
         archivedAt: (r.archived_at as string | null) ?? null,
       },
     ]),
@@ -132,7 +129,6 @@ export default async function SecurityPage() {
       email: u.email ?? "(no email)",
       name: userNameOf(u),
       role: roleByUserId.get(u.id)?.role ?? null,
-      legacyRole: roleByUserId.get(u.id)?.legacyRole ?? null,
       archivedAt: roleByUserId.get(u.id)?.archivedAt ?? null,
       doctor: doctorByUserId.get(u.id)
         ? { id: doctorByUserId.get(u.id)!.id, name: doctorByUserId.get(u.id)!.name, clinics: doctorByUserId.get(u.id)!.clinics }

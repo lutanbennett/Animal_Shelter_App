@@ -13,16 +13,13 @@ import type { ResidentRow } from "@/app/residents/ResidentsTable";
  * of `residents` and of the views built on it away, so every page that reads a resident for a
  * volunteer reads this instead, and every page that needs more refuses.
  *
- * The scope is not a column yet (the role tables have no `scope_resident_detail`, 0132's note), so
- * the app asks the question the view itself asks: `current_user_role() = 'volunteer'`. That is the
- * one place the app says a role name for this, because it is the view's own gate, and it moves to
- * the scope with the 2IC and the Heads (batch 45), who borrow the volunteer's rights through
- * `roles.legacy_role` and so answer 'volunteer' here too.
+ * The scope is the role's own `scope_residents = 'who_and_where'` (0179), and the view's gate asks the same thing
+ * through `on_volunteer_floor()` (0180), so the app asks that function and not a role name.
  */
 export const readsWhoAndWhereOnly = cache(async (): Promise<boolean> => {
   const supabase = await createClient();
-  const { data } = await supabase.rpc("current_user_role");
-  return data === "volunteer";
+  const { data } = await supabase.rpc("on_volunteer_floor");
+  return data === true;
 });
 
 /** A row of `resident_who_and_where`, as the view names its columns. */

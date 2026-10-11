@@ -55,7 +55,7 @@ function revalidateSecurity() {
  * set-up does the same later.
  */
 async function openSetupForNewAdmin(userId: string, role: GivableRole) {
-  if (role.legacyRole !== "admin") return;
+  if (role.key !== "admin") return;
   const { error } = await createAdminClient().auth.admin.updateUserById(userId, {
     app_metadata: { [SETUP_OPEN_UNTIL]: setupWindowEnd() },
   });
@@ -96,10 +96,10 @@ export type CreateUserState =
   | ActionResult<{ success: string; temporaryPassword: string; email: string }>
   | undefined;
 
-type GivableRole = { id: string; key: string; name: string; nameTh: string | null; legacyRole: string };
+type GivableRole = { id: string; key: string; name: string; nameTh: string | null };
 
 /**
- * The role a picker named, if a login may be given it: a live row of `roles` with a legacy_role. Read from the
+ * The role a picker named, if a login may be given it: a live row of `roles`. Read from the
  * database, not a list in the code (this replaced VALID_ROLES), so a configured role (2IC, Head of Medical,
  * Head of Maintenance) can be given the day it exists. Public viewer stays givable although it does not open
  * the app (0085). Staff is not: retired by 0173, which also makes the database refuse it to a live login.
@@ -108,10 +108,9 @@ async function givableRole(key: string | null): Promise<GivableRole | null> {
   if (!key) return null;
   const { data } = await createAdminClient()
     .from("roles")
-    .select("id, key, name, name_th, legacy_role")
+    .select("id, key, name, name_th")
     .eq("key", key)
     .is("archived_at", null)
-    .not("legacy_role", "is", null)
     .maybeSingle();
   if (!data) return null;
   return {
@@ -119,18 +118,14 @@ async function givableRole(key: string | null): Promise<GivableRole | null> {
     key: data.key as string,
     name: data.name as string,
     nameTh: (data.name_th as string | null) ?? null,
-    legacyRole: data.legacy_role as string,
   };
 }
 
 /**
- * The user_roles columns for a role. role_id is the role; role is the enum value it borrows, which
- * current_user_role() and everything else still reading the enum sees. 0132's trigger derives role from
- * role_id anyway (role_id wins when both are given), so writing both cannot disagree; writing only `role`
- * would map a configured role back onto its borrowed built-in (a 2IC saved as plain Volunteer).
- * docs/decisions/2026-10-11-security-role-picker.md; perm-drop-enum removes `role`.
+ * The user_roles columns for a role: role_id, which is the whole of it since perm-drop-enum (0181) removed the enum
+ * column this once also wrote. docs/decisions/2026-10-11-security-role-picker.md.
  */
-const roleColumns = (role: GivableRole) => ({ role_id: role.id, role: role.legacyRole });
+const roleColumns = (role: GivableRole) => ({ role_id: role.id });
 
 /**
  * Creates a login with a generated temporary password and the
@@ -165,7 +160,7 @@ export async function createUser(
       ...(name ? { user_metadata: { full_name: name } } : {}),
       app_metadata: {
         [MUST_CHANGE_PASSWORD]: true,
-        ...(role.legacyRole === "admin" ? { [SETUP_OPEN_UNTIL]: setupWindowEnd() } : {}),
+        ...(role.key === "admin" ? { [SETUP_OPEN_UNTIL]: setupWindowEnd() } : {}),
       },
     });
 
@@ -283,9 +278,9 @@ async function loadDoctorLogin(userId: string, t: T) {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("user_roles")
-    .select("user_id")
+    .select("user_id, roles!inner(key)")
     .eq("user_id", userId)
-    .eq("role", "doctor")
+    .eq("roles.key", "doctor")
     .maybeSingle<{ user_id: string }>();
   if (error) {
     return { denied: unexpectedFailure("security.loadDoctorLogin", error, t.common.somethingWentWrong) };
@@ -455,8 +450,8 @@ export async function issueTemporaryPassword(
 
 /**
  * Marks a login as having left (0063): they keep their row, their role
- * and their name on past maintenance jobs, but current_user_role()
- * returns null for them so nothing lets them in, and the assignee picker
+ * and their name on past maintenance jobs, but they hold no live role
+ * so nothing lets them in, and the assignee picker
  * stops offering them. Reversible with restoreUser().
  */
 export async function archiveUser(userId: string): Promise<ActionResult> {

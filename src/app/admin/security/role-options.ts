@@ -6,16 +6,13 @@ import type { Locale } from "@/lib/i18n/locales";
  * A role the Security page can show, read from `roles` (0132) rather than a list in the code, so a configured
  * role (2IC, Head of Medical, Head of Maintenance) can be given from the app the moment it exists.
  *
- * The picker's value is the role's KEY. Saving writes `user_roles.role_id` and `user_roles.role` = this row's
- * `legacyRole`, the enum value everything still reading the enum sees it as
- * (docs/decisions/2026-10-11-security-role-picker.md).
+ * The picker's value is the role's KEY. Saving writes `user_roles.role_id` and nothing else: the enum column it
+ * once also wrote (docs/decisions/2026-10-11-security-role-picker.md) is gone (perm-drop-enum, 0181).
  */
 export type RoleOption = {
   key: string;
   name: string;
   nameTh: string | null;
-  /** The app_role this role borrows (0132 §12 bridge). Null only for a custom role no login can hold yet. */
-  legacyRole: string | null;
   /** Retired (Staff, 0173): shown on a login that still holds it, never offered. */
   archived: boolean;
 };
@@ -43,14 +40,13 @@ function rank(key: string) {
 export async function loadRoleOptions(
   admin: ReturnType<typeof createAdminClient>,
 ): Promise<{ roles: RoleOption[]; error: string | null }> {
-  const { data, error } = await admin.from("roles").select("key, name, name_th, legacy_role, archived_at");
+  const { data, error } = await admin.from("roles").select("key, name, name_th, archived_at");
   if (error) return { roles: [], error: error.message };
   const roles = (data ?? [])
     .map((r) => ({
       key: r.key as string,
       name: r.name as string,
       nameTh: (r.name_th as string | null) ?? null,
-      legacyRole: (r.legacy_role as string | null) ?? null,
       archived: r.archived_at != null,
     }))
     .sort((a, b) => rank(a.key) - rank(b.key) || a.name.localeCompare(b.name));
@@ -67,5 +63,5 @@ export function roleOptionLabel(t: Dictionary, locale: Locale, role: Pick<RoleOp
   return (locale === "th" && role.nameTh) || role.name;
 }
 
-/** The roles a login may be given: live, and naming the enum value user_roles still requires. */
-export const givableRoles = (roles: RoleOption[]) => roles.filter((r) => !r.archived && r.legacyRole);
+/** The roles a login may be given: the live ones. */
+export const givableRoles = (roles: RoleOption[]) => roles.filter((r) => !r.archived);

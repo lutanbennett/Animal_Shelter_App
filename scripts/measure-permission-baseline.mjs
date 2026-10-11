@@ -53,7 +53,7 @@ do $s$ declare r record; begin
   for r in select * from harness_ids loop
     insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
     values (r.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-baseline-' || r.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now());
-    insert into user_roles (user_id, role) values (r.id, r.who::app_role);
+    insert into user_roles (user_id, role_id) select r.id, id from roles where key = r.who;
   end loop;
 end $s$;
 create temp table out (who text, q text, run int, ms numeric, planning numeric, hit bigint, read bigint, rows bigint, initplans int, initplan_ms numeric);
