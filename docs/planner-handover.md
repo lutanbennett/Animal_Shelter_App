@@ -27,13 +27,13 @@ are right and this file is stale — check the date at the top.
 
 | | |
 |---|---|
-| `main` when this was written | **`d2e30a02`** |
+| `main` when this was written | **`4d9e32ea`** (this file's own merge) |
 | Dev database | **185 applied, 0 pending, no drift** (`apply-migrations.mjs --status`) |
 | Production database | **not read from this session** — the classifier refuses production reads, and that is correct. See `docs/release-handover.md` |
 | Next free migration number | **`0186`** |
 | Open backlog items | **101** — up from ~95, because the architecture review filed 15 |
 | Open PRs | **none**; batches 91–93 are all merged |
-| Last release | **`0.26.0`** (2026-10-11, major, carrying *Who does what*); `unreleased` now carries batches 91–93 |
+| Last release | **`0.27.0`** (2026-10-11, carrying batches 91–93); **`unreleased` is empty, so no cut is pending.** `0.26.0`, cut earlier the same day, carried *Who does what* |
 | Workstreams since this handover | **0 — the counter restarts here.** `.plan-day.md` carries it |
 
 **Nine workstreams went through in about four hours**, across three `/plan-day` runs in one chat.
@@ -376,8 +376,10 @@ on 2026-10-11. Its own item says Lutan schedules it.
    person holding more than one role with a cover end date · freeze the role-name header on *Who does
    what* · the migration runner cannot apply a subset, and the restore rehearsal is now overdue.
 
-**A release cut is due** once these merge — `0.26.0` was cut this morning and `unreleased` now
-carries batches 91–93.
+**No release cut is pending.** `0.26.0` and then `0.27.0` were both cut on 2026-10-11; `0.27.0`
+carries batches 91–93 and `unreleased` is empty again. The next cut carries whatever the next batch
+produces, so **do not plan a release as the step after the next batch merges without checking
+`unreleased` first.**
 
 ---
 
