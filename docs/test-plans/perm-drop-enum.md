@@ -98,8 +98,8 @@
 - [ ] Deployed to test: `npm run deploy:test` — deferred: release manager. **Dev's database is already at `0181`, so `test.lannacare.org` (0.25.0) mis-handles three paths until redeployed from this branch**
 - [ ] Smoke-tested on `test.lannacare.org` — deferred: release manager
 - [ ] **Timezone-sensitive behaviour proved** — n/a: no date logic
-- [ ] **Boundary or banding change** — n/a
-- [ ] **Evidence pasted into this plan is the tool's actual output, unedited** — the gates block below is the script's own closing lines
+- [ ] **Boundary or banding change** — n/a: no threshold or band
+- [x] **Evidence pasted into this plan is the tool's actual output, unedited** — the gates block below is the script's own closing lines
 - [ ] Public pages re-checked after a cache purge — n/a: no public page changes
 
 ### Deploy safety
@@ -110,10 +110,10 @@
 
 ### Migration ordering
 
-- [ ] Both a migration and code that reads it? — yes, and the order is **reversed for `0181`**: `0180` before the app; the app live; then `0181`. The previous release reads `app_users.role`, calls `current_user_role()` and writes `user_roles.role`, and fails when `0181` lands. `apply-migrations.mjs`' "safe direction" note is wrong for `0181`
+- [x] Both a migration and code that reads it? — yes, and the order is **reversed for `0181`**: `0180` before the app; the app live; then `0181`. The previous release reads `app_users.role`, calls `current_user_role()` and writes `user_roles.role`, and fails when `0181` lands. `apply-migrations.mjs`' "safe direction" note is wrong for `0181`
 - [ ] Production dry-run — deferred: release manager (`--status --env production` first: the runner applies every pending file)
 - [ ] Destructive migration backup — deferred: release manager. `0181` drops two columns and a type; confirm a backup before applying it
-- [ ] Apply plan stated — in the PR body and the decision's "Release hazard" section
+- [x] Apply plan stated — in the PR body and the decision's "Release hazard" section
 
 ### Rollback
 
