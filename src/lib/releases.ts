@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Maintenance: when you choose who a job is for, a 2IC, Head of Maintenance or Head of Medical now shows under their own role name (in Thai in Thai), not as Volunteer. The same names now show when you give someone a recurring job.",
   "When a 2IC records a death, the resident's record is now filed in the Deceased folder on Google Drive, as it is for Management. Until now the filing was refused for a 2IC, and the resident's page kept offering a Retry button that failed the same way.",
   { text: "Settings → Security: you can now give someone the 2IC, Head of Maintenance or Head of Medical role. They are in the role dropdown when you create a user, in the users table and under Access requests, with their Thai names in Thai, and the table shows each person's own role instead of Volunteer.", roles: ["admin"] },
   { text: "New: Settings → Who does what, also on the Management page. One grid shows what every role can do, every activity down the side and every role across the top, read live from the roles' settings. A box the system does not yet follow exactly carries a small number that leads to the reason under the grid. Print it, or download it as a spreadsheet, to show someone how the work is shared out. It shows the settings; it does not change them yet.", roles: ["admin", "management"] },
