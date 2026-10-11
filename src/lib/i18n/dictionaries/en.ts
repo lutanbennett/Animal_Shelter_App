@@ -97,6 +97,7 @@ const en = {
     security: "Security",
     systemStatus: "System status",
     recentChanges: "Recent changes",
+    whoDoesWhat: "Who does what",
     enclosures: "Enclosures",
     maintenance: "Maintenance",
     stocktake: "Stocktake",
@@ -516,6 +517,168 @@ const en = {
   },
 
   admin: {
+    /**
+     * Settings → Who does what: every activity × every live role, view only (who-does-what-view).
+     * Activity names are the people-facing half of the catalogue (src/lib/permissions/catalogue.ts keeps
+     * the keys, §4 rule 6 keeps the words here). `fixed` is FIXED_FOR_NOW's reasons, one per entry id.
+     */
+    whoDoesWhat: {
+      title: "Who does what",
+      subtitle:
+        "What each role can do in the app today, read live from the roles' settings. Where the system does not yet follow a box exactly, the box says so.",
+      adminName: "Admin",
+      adminNote: "Everything, always. Admin's powers are a rule, not a setting, so they cannot be taken away.",
+      activityHeading: "Activity",
+      downloadCsv: "Download CSV",
+      print: "Print",
+      scrollHint: "Scroll sideways to see every role. The activity stays in view.",
+      legend:
+        "Edit: see, add, change and remove. Read: see only. None: not at all. Yes and No are for things that are an act, with nothing to look at.",
+      levels: { edit: "Edit", read: "Read", none: "None", yes: "Yes", no: "No" },
+      fixedTag: "Fixed for now",
+      fixedLegend: "Fixed for now: the system does not yet follow this box exactly. The reason, by number, is below the grid.",
+      fixedHeading: "Fixed for now, and why",
+      fixedAffects: (who: string) => `Affects: ${who}`,
+      recordHeading: "For the record: where the database is looser than the screens",
+      recordIntro:
+        "Not marked in the grid, because nobody using the app can tell: the screens follow these boxes. Listed so the record is complete.",
+      rulesHeading: "What nobody can change",
+      rules: [
+        "Admin can do everything, always, and there is always at least one Admin.",
+        "Security is Admin's alone: creating logins, approving access requests and changing someone's role, each with the authenticator app.",
+        "Public viewers and visitors who are not signed in see the public website only. They are not a column here.",
+        "Everyone with a login can sign in and out, change their own password, switch language, and read the manual.",
+        "A deceased resident's record cannot be changed by anyone.",
+        "Every change anyone makes is recorded in Recent changes.",
+      ],
+      csvFixed: (reason: string) => `fixed for now: ${reason}`,
+      csvArea: "Area",
+      csvNotes: "Fixed for now",
+      csvFilename: "who-does-what",
+      areas: {
+        residents: "Residents",
+        housing: "Housing",
+        medical: "Medical",
+        photos: "Photos",
+        enclosures: "Enclosures",
+        maintenance: "Maintenance",
+        projects: "Projects and outreach",
+        contacts: "Clinics, contacts and supporters",
+        stock: "Stock and ordering",
+        management: "Management",
+        assistant: "The assistant",
+        settings: "Settings",
+      },
+      activities: {
+        "resident.record": "A resident's details, housing and history",
+        "resident.register": "Register a new resident (intake)",
+        "resident.microchip": "Record or correct a microchip number",
+        "resident.adoption_news": "News from an adopter",
+        "placement.move": "Move a resident to another enclosure",
+        "placement.hospital": "Send to hospital and bring back",
+        "placement.rehome": "Foster, adopt, return to the shelter",
+        "placement.death": "Record a death",
+        "placement.death_withdraw": "Withdraw a death recorded in error",
+        "visit.book": "Book a vet visit",
+        "medical.visits": "Vet visits and how they went",
+        "medical.procedures": "Procedures and their files",
+        "medical.blood_tests": "Blood tests and their reports",
+        "medical.prescriptions": "Prescriptions: what should be given",
+        "medical.immunizations": "Immunizations",
+        "medical.weight": "Weight",
+        "medical.diet": "A resident's diet",
+        "medical.archive": "Remove a medical record entered by mistake, and restore it",
+        "photos.resident_add": "Add a photo to a resident",
+        "photos.resident_manage": "Refile or remove a photo, choose the profile photo",
+        "photos.resident_publish": "Put a resident's photo on the public website",
+        "facility.enclosures": "Enclosures and zones",
+        "facility.map": "The facility map",
+        "maintenance.jobs": "Maintenance jobs: log, change, assign, cost, delete",
+        "maintenance.progress": "Move a job on: in progress, blocked, completed",
+        "maintenance.photos": "Add and remove a job's photos",
+        "projects.folders": "Project folders and their stories",
+        "projects.photos": "Add and remove project photos",
+        "projects.publish": "Put a project on the public website",
+        "community.outings": "Outreach notes: temple and community dogs helped",
+        "clinics.list": "The list of clinics",
+        "clinics.doctors": "A clinic's doctors: add, rename, merge, retire",
+        "contacts.directory": "Contacts",
+        "contacts.add": "Add a new contact",
+        "contacts.browse": "Browse the contacts book",
+        "friends.manage": "Shelter Friends: add, publish, unpublish",
+        "friends.view": "See a Shelter Friend's card",
+        "stock.count": "Count the stock",
+        "stock.delivery": "Record a delivery",
+        "stock.purchasing": "Work out what to buy",
+        "stock.usage": "Compare stock used with planned",
+        "stock.medications": "The medication list: prices, labels, reorder levels",
+        "stock.diets": "The diet list and the food forecast",
+        "stock.correct": "Correct a stock figure",
+        "reports.dashboard": "The dashboard",
+        "reports.cashflow": "Cashflow and fixed outgoings",
+        "recurring.manage": "Set up recurring jobs and hand dates over",
+        "recurring.do_any": "Mark anyone's recurring job done or skipped",
+        "recurring.do_own": "Mark your own recurring jobs done or skipped",
+        "translations.manage": "Translate the website, and every label's Thai",
+        "translations.view": "See the website's translations",
+        "donation.receipt": "Issue a donation receipt",
+        "assistant.ask": "Ask the assistant a question",
+        "assistant.record": "Record something through the assistant",
+        "website.content": "The public website's content",
+        "reference.types": "Setup lists: immunization, procedure and blood-test types, frequencies",
+        "reference.add_while_recording": "Add a missing medication, frequency or procedure type from a form",
+        "audit.view": "See who changed what",
+        "audit.undo": "Undo a change",
+        "system.status": "The system status page",
+      },
+      fixed: {
+        clinicRule: {
+          title: "A doctor works by the clinic rule",
+          reason:
+            "A clinic's doctor sees and records the medical work for their own clinic's residents. That comes from the clinic rule, not from these boxes, so the doctor's boxes do not show what a doctor can really do. This is on purpose for now.",
+        },
+        whoAndWhere: {
+          title: "Who and where only",
+          reason:
+            "This role sees who each resident is and where they live: name, photo, species, sex, status and enclosure. Not the full record or its history.",
+        },
+        nameAndPhone: {
+          title: "Name and phone only",
+          reason:
+            "This role can open the contacts book, but sees each contact's name and phone number only. Not the address, notes or history.",
+        },
+        borrowedFloor: {
+          title: "Not working yet for this role",
+          reason:
+            "The box says yes, but the system still refuses. Roles added after the first five are still held to a volunteer's limits here, so this role cannot yet change or move a resident, or add or change a contact.",
+        },
+        maintenanceDelete: {
+          title: "Cannot delete a job yet",
+          reason:
+            "This role can log, change and assign maintenance jobs, but not delete one. Deleting a job does not have its own box yet, and until it does only Admin and Management can.",
+        },
+        stockCorrect: {
+          title: "Admin and Management only, for now",
+          reason:
+            "Only Admin and Management can correct a stock figure today, whatever this box says. The screen for it asks for the medication or diet list instead of this box.",
+        },
+        namedInDatabase: {
+          title: "Not fully set by this box yet",
+          reason:
+            "The screens follow this box, but behind them the system still checks this role by name, so changing the box would not yet fully change what this role can do.",
+        },
+        notAskedYet: {
+          title: "Nothing uses this box yet",
+          reason:
+            "This box is right today, but nothing asks it yet. Booking a visit follows \"Vet visits\", moving a job on follows \"Maintenance jobs\", and putting a project on the website follows \"Project folders\".",
+        },
+        databaseWider: {
+          title: "Looser in the database than on screen",
+          reason:
+            "The screens follow this box. Underneath, another box this role holds also opens the same records, so a specially built request could get past the screen.",
+        },
+      },
+    },
     landing: {
       title: "Settings",
       drive: {
@@ -528,6 +691,8 @@ const en = {
       subtitle:
         "System configuration: the public website, the places residents live, and the type lists the rest of the app picks from.",
       tiles: {
+        whoDoesWhat:
+          "Every activity against every role: who can do what today, and where the system does not yet follow the setting. Print it or download it.",
         website:
           "Photos, the wording of each public page in both languages, and how to reach the shelter. Changes go live immediately.",
         enclosures:
@@ -1896,6 +2061,8 @@ const en = {
       subtitle:
         "The reports and lists behind the shelter's day-to-day work. Pick a section to open it.",
       tiles: {
+        whoDoesWhat:
+          "Every activity against every role: who can do what today. For showing people how the app is shared out.",
         dashboard:
           "The month's activity and where the shelter stands today — every figure the monthly report asks for.",
         contacts:
