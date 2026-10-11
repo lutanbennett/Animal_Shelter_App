@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { runAction, type ActionResult } from "@/lib/action-result";
 import { getT } from "@/lib/i18n/get-t";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { createClient } from "@/lib/supabase/server";
 import { getDriveClient } from "@/lib/google/drive";
 
@@ -14,6 +16,7 @@ export async function deleteBloodTestAttachment(
 ): Promise<BloodTestActionState> {
   const { t } = await getT();
   return runAction("residents.deleteBloodTestAttachment", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "medical.blood_tests")) return { ok: false, error: t.common.notAllowed };
     const supabase = await createClient();
 
     const { data: attachment, error: selectError } = await supabase

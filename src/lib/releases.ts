@@ -40,8 +40,21 @@ export type Release = {
   notes: ReleaseNote[];
 };
 
-/** The signed-in roles, as the manual names them (src/lib/manual/types.ts). */
-export type ReleaseRole = "admin" | "management" | "staff" | "doctor" | "volunteer";
+/** The live roles a new note can be tagged for. */
+export type ReleaseRole =
+  | "admin"
+  | "management"
+  | "second_in_command"
+  | "head_of_maintenance"
+  | "head_of_medical"
+  | "doctor"
+  | "volunteer";
+
+/**
+ * Retired by 0173 (0.24.0). Released notes written before then still carry
+ * it and stay as they are; new notes must not. Not offered by ReleaseRole.
+ */
+type RetiredReleaseRole = "staff";
 
 /**
  * One line of a release. A plain string is for everyone; `roles` narrows
@@ -52,12 +65,12 @@ export type ReleaseRole = "admin" | "management" | "staff" | "doctor" | "volunte
  * from the people it is for. Lines released before tagging existed stay
  * untagged: they are history, and untagged reads as everyone.
  */
-export type ReleaseNote = string | { text: string; roles: ReleaseRole[] };
+export type ReleaseNote = string | { text: string; roles: (ReleaseRole | RetiredReleaseRole)[] };
 
 export const noteText = (note: ReleaseNote): string =>
   typeof note === "string" ? note : note.text;
 
-export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
+export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)[] | undefined =>
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */

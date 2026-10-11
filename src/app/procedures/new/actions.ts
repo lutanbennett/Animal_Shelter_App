@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { databaseFailure } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { isFutureDate, isIsoDate } from "@/lib/placements/dates";
 
 export type ProcedureFormState =
@@ -32,6 +34,7 @@ export async function createProcedure(
   formData: FormData,
 ): Promise<ProcedureFormState> {
   const { t } = await getT();
+  if (!can(await loadPermissions(), "medical.procedures")) return { error: t.common.notAllowed };
   const residentId = str(formData, "residentId");
   if (!residentId) return { error: t.procedures.errors.missingResident };
 
