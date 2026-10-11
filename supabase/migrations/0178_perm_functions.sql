@@ -830,3 +830,15 @@ create or replace view public.translation_queue as
     record_path
    FROM private.translation_queue
   WHERE private.has_app_access() AND current_user_role() IS DISTINCT FROM 'volunteer'::app_role AND (NOT COALESCE(( SELECT is_clinic_login() AS is_clinic_login), false) OR table_name <> 'residents'::text OR (row_id IN ( SELECT current_doctor_resident_ids() AS current_doctor_resident_ids)));
+
+-- create or replace view keeps the grants above, but each view's are stated here so the file stands alone (the
+-- grants check, 0160): select for signed-in logins and the server, nothing else. These are the grants on dev today.
+revoke insert, update, delete, truncate, references, trigger on public.doctor_contacts from authenticated, anon;
+revoke insert, update, delete, truncate, references, trigger on public.current_placement from authenticated, anon;
+revoke insert, update, delete, truncate, references, trigger on public.immunization_compliance from authenticated, anon;
+revoke insert, update, delete, truncate, references, trigger on public.immunization_duplicate_check from authenticated, anon;
+revoke insert, update, delete, truncate, references, trigger on public.resident_current_state from authenticated, anon;
+revoke insert, update, delete, truncate, references, trigger on public.translation_queue from authenticated, anon;
+grant select on public.doctor_contacts, public.current_placement, public.immunization_compliance,
+  public.immunization_duplicate_check, public.resident_current_state, public.translation_queue
+  to authenticated, service_role;
