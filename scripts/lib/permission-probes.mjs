@@ -147,7 +147,8 @@ export const PROBES = [
   { activity: "recurring.manage", level: "edit", sql: `update recurring_jobs set description = 'probe' where id = $JOB_NONE` },
   { activity: "recurring.manage", level: "edit", sql: `insert into recurring_jobs (title, time_of_day, link_path, repeat, weekdays, starts_on) values ('Probe', 'morning', '/', 'weekly', '{1}', current_date)` },
   { activity: "recurring.do_any", level: "edit", fn: true, sql: `select record_recurring_job($JOB_NONE, current_date, 'done', null)` },
-  { activity: "recurring.do_own", level: "edit", fn: true, sql: `select record_recurring_job($JOB_ALL, current_date, 'done', null)`, known: [{ id: "C11", roles: ["doctor"] }] },
+  // C11 (a doctor recording a job by the enum) closed by 0178: record_recurring_job asks recurring.do_own / do_any.
+  { activity: "recurring.do_own", level: "edit", fn: true, sql: `select record_recurring_job($JOB_ALL, current_date, 'done', null)` },
 
   // --- Settings
   { activity: "website.content", level: "edit", sql: `update site_content set tagline = tagline` },
