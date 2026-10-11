@@ -150,11 +150,18 @@ natural step once it merges.
 
 Three tables, one per batch, each with `#`, feature slug (`kebab-case`,
 becomes `claude/<slug>` and `Animal_Shelter_<slug>`), the backlog item's
-bold title, area, migration yes/no, estimated tokens (`~250k`, from the
-bands below), and one line on why now. Under the tables, one line: *token
-figures are context-window size, a measure of scale, not a bill.* Give each
-batch a line saying what makes it a batch — what its three share, what it
-unblocks for the next one, which dependency fixed the order.
+bold title, area, migration yes/no, **model and effort**, estimated tokens
+(a **band**, from the bands below), and one line on why now. Under the
+tables, one line: *token figures are context-window size, a measure of
+scale, not a bill.* Give each batch a line saying what makes it a batch —
+what its three share, what it unblocks for the next one, which dependency
+fixed the order.
+
+Give every stream a recommended **model** and **effort** — never leave the
+cells empty; name the default rather than omitting it. Put the reason in
+the "why now" line when it departs from the default. See *Model and
+effort* below for the defaults and, more importantly, for how little
+evidence there is.
 
 Below the tables: **Not today** — user-driven items that are due or close
 (one line each), and anything blocked with the reason.
@@ -181,9 +188,17 @@ merged on a later run once its PRs are in.
 Keep a line `Workstreams since handover: <n> (last handover <date>)`: add
 the batch's stream count when you set it up.
 
-Keep a `slug | scale | estimated | actual` table: the estimate when a
-batch is set up, the actual when step 2 reads it. Writing both is what
-lets the bands below correct themselves from recorded work.
+Keep a `slug | model | effort | scale | estimated | actual` table: the
+estimate when a batch is set up, the actual when step 2 reads it. Writing
+both is what lets the bands below correct themselves from recorded work.
+
+Record the model and effort the stream **actually ran on**, which
+`mcp__ccd_session_mgmt__get_session` reports as `model` and `effort` — not
+what you recommended. The user sets them in the session's model menu and
+may choose differently, or may have started the batch before you
+recommended anything (he did on 2026-10-11, so that batch's
+recommendations applied to nothing). Reading a recommendation as the
+setting produces a false finding.
 
 ### Token estimates (provisional — revise from the actuals)
 
@@ -191,7 +206,7 @@ lets the bands below correct themselves from recorded work.
 |---|---|---|
 | Floor | ~110k | every stream, before any work: tools, memory, skills, CLAUDE.md, brief |
 | Quick win | 110–170k | 1–3 files; screenshots cost far less than first assumed |
-| Schema PR | unmeasured | read `zone-colour-schema` (batch 73) while its session is live |
+| Schema PR | ~150k single-file · 230–285k with code | measured 4×: `map-rooms-schema` 151,273 · `receipt-issuer-server-side` 143,678 · `role-floor-schema` 231,297 · `perm-functions-schema` 284,248 |
 | Medium | 200–320k | 5–15 files, browser checks, both dictionaries |
 | Large | 350–550k | rebuilt pages, many files |
 
@@ -201,6 +216,55 @@ Measured 2026-10-08 (batch 72): `account-menu-min-width` quick 129,320
 the window, not billed tokens — each turn re-sends it, mostly cached.
 Auto-compact starts at 97% of 1M, so a stream past ~970k spent more than
 its figure shows. Reasoning: `docs/decisions/2026-10-08-plan-day-token-estimates.md`.
+
+**Estimate by what the stream must find out, not by files touched — and
+give a band, never a figure.** The bands above have been wrong by +50% and
+−39% in consecutive batches. Before estimating, ask **what does this
+stream have to count?** If the answer is anything other than "nothing",
+widen the band and say in the brief that the counting is the deliverable.
+A brief can name every file and still sit on an open-ended measurement:
+`who-does-what-view` was fully briefed and ran +50%, because establishing
+which of 300 permission boxes the system actually obeys *was* the work.
+
+### Model and effort
+
+**Two dials, and they do not behave the same way.** **Model** changes the
+price per unit of work, not the amount: the ~110k floor is identical
+whichever model runs, so **choosing a cheaper family is the only dial that
+reduces usage without changing the work.** **Effort** changes how much
+thinking happens per turn, so raising it **raises** the figure. It buys
+care and it costs. **It is not a usage optimisation and must never be
+presented as one.**
+
+**Never raise effort to fix an overrun.** Batch 88's three all ran over
+because each had to count something first; more thinking per turn would
+have made those figures worse. The cure is a tighter brief or a spin-out.
+
+**Defaults by shape, to be revised from the actuals:**
+
+- **Default: `claude-sonnet-5-5` at `low`.** It has cleared a permissions
+  migration, an app conversion and an audit, all under estimate.
+- **Carries a migration, changes permissions, or could over-grant
+  silently** → still Sonnet/low on current evidence, but this is where to
+  spend if anything looks shaky. Nothing here shows the fault on a screen.
+- **Review or report work with no code change** → Fable, which is metered
+  in its own weekly bucket and is routinely unused.
+- **A stream that must discover its own scope** → fix the brief, not the
+  dials.
+
+**State plainly how much evidence there is, because it is thin.** Every
+stream measured before 2026-10-11 ran `claude-opus-5-5` / `medium` and
+spread −9% to +50%, so that entire variance was task shape. Batch 89 then
+ran `claude-sonnet-5-5` / `low` and came in 23–39% under on all three —
+**but its briefs were also far more prescriptive and its measuring script
+already existed, so the model cannot be credited.** **Vary one dial per
+batch** and let the table accumulate.
+
+**Check the plan windows first** (`mcp__ccd_session_mgmt__get_usage`): if
+*Weekly · all models* is high with days left, the cheaper model on the
+batch's lowest-risk stream is the real mitigation, and *Weekly · Fable*
+sitting unused is worth spending on the backlog's Fable items rather than
+letting it expire.
 
 ## 7. Set up — the current batch only
 
