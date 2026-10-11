@@ -281,6 +281,9 @@ const PINNED = {
   "/admin/security/verify": { guards: ["requireAdminUser()"], decides: [] },
   "/admin/role-draft": { guards: ["if (!mine?.isAdmin) refuseFor(mine)"], decides: [] },
   "/home/[role]": { guards: ["if (!mine?.isAdmin) refuseFor(mine)"], decides: [] },
+  // Who does what (who-does-what-view): Admin and Management, by the backlog item; no activity exists for
+  // it yet and adding one needs a migration. opensWhoDoesWhat() is the one place that says so.
+  "/admin/who-does-what": { guards: ["if (!opensWhoDoesWhat(perms)) refuseFor(perms)"], decides: [] },
 };
 
 // EXEMPT: no permission guard, and the reason none is needed. `public: true` is also checked
