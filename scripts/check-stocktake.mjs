@@ -34,7 +34,7 @@ insert into user_roles (user_id, role_id)
   join roles ro on ro.key = s.role_key;
 -- staff: the Staff role until 0173 retired it; a custom role carrying its cells keeps this login on the same path
 -- It borrows volunteer, as every live custom role does: record_* functions still gate on the enum (admin, management), so a role borrowing management would pass on that and not on its cells.
-insert into roles (key, name, kind) values ('harness_0091_staff', 'Harness staff', 'custom');
+insert into roles (key, name, kind, scope_residents) values ('harness_0091_staff', 'Harness staff', 'custom', 'who_and_where');
 insert into role_permissions (role_id, activity, level)
 select (select id from roles where key = 'harness_0091_staff'), rp.activity, rp.level
   from role_permissions rp join roles s on s.id = rp.role_id where s.key = 'staff';

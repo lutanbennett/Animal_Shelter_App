@@ -89,7 +89,7 @@ insert into user_roles (user_id, role_id, archived_at)
 -- clerk, clerk2: the two staff logins until 0173 retired the role; a custom role carrying the
 -- archived Staff role's cells stands in for them
 -- It borrows volunteer, as every live custom role does: record_* functions still gate on the enum (admin, management), so a role borrowing management would pass on that and not on its cells.
-insert into roles (key, name, kind) values ('harness_0095_clerk', 'Harness clerk', 'custom');
+insert into roles (key, name, kind, scope_residents) values ('harness_0095_clerk', 'Harness clerk', 'custom', 'who_and_where');
 insert into role_permissions (role_id, activity, level)
   select (select id from roles where key = 'harness_0095_clerk'), rp.activity, rp.level
     from role_permissions rp join roles s on s.id = rp.role_id where s.key = 'staff';

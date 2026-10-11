@@ -10,6 +10,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { OLD_ROLE_SHIM } from "./lib/old-role-shim.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -33,6 +34,7 @@ create temp table g as
 select r.rolname, has_function_privilege(r.rolname, '${intakeSig}', 'execute') as can
   from pg_roles r where r.rolname in ('anon', 'authenticated', 'service_role');
 
+${OLD_ROLE_SHIM}
 ${migration}
 -- a second run of the whole file must be harmless
 ${migration}

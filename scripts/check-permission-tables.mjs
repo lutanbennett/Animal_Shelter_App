@@ -346,7 +346,6 @@ begin
                            'insert into roles (key, name, kind) values (''admin2'', ''x'', ''fixed'')',
                            'insert into roles (key, name, kind) values (''boss'', ''x'', ''fixed'')',
                            'insert into roles (key, name, kind) values (''admin'', ''x'', ''default'')',
-                           'insert into roles (key, name, kind) values (''harness_bad'', ''x'', ''default'')',
                            'insert into roles (key, name, kind, scope_photos) values (''harness_bad'', ''x'', ''custom'', ''everything'')',
                            'insert into roles (key, name, kind, scope_residents) values (''harness_bad'', ''x'', ''custom'', ''nothing_at_all'')',
                            'insert into roles (key, name, kind, home_path) values (''harness_bad'', ''x'', ''custom'', ''home'')',

@@ -27,7 +27,9 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-const applied = process.argv.includes("--applied");
+// Since 0181 the BEFORE side cannot be rebuilt (0178's views name current_user_role(), which is gone), so judging
+// the applied state is the only mode; --replay keeps the old behaviour for a database that still has the enum.
+const applied = !process.argv.includes("--replay");
 const fileArg = process.argv.slice(2).find((a) => !a.startsWith("--"));
 const migration = applied ? "" : readFileSync(fileArg ?? join(root, "supabase/migrations/0178_perm_functions.sql"), "utf8");
 

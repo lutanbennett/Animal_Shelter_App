@@ -12,6 +12,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { OLD_ROLE_SHIM } from "./lib/old-role-shim.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -24,6 +25,7 @@ const migration = readFileSync(join(root, "supabase/migrations/0112_stock_count_
 const sql = `
 begin;
 -- a second run of the whole file must be harmless
+${OLD_ROLE_SHIM}
 ${migration}
 
 create temp table who (who text primary key, uid uuid);
@@ -37,7 +39,7 @@ insert into user_roles (user_id, role_id)
   select s.c0, ro.id from (select uid as c0, who as role_key from who where who = 'management') s
   join roles ro on ro.key = s.role_key;
 -- It borrows volunteer, as every live custom role does: record_* functions still gate on the enum (admin, management), so a role borrowing management would pass on that and not on its cells.
-insert into roles (key, name, kind) values ('harness_0112_clerk', 'Harness clerk', 'custom');
+insert into roles (key, name, kind, scope_residents) values ('harness_0112_clerk', 'Harness clerk', 'custom', 'who_and_where');
 insert into role_permissions (role_id, activity, level)
   select (select id from roles where key = 'harness_0112_clerk'), rp.activity, rp.level
     from role_permissions rp join roles s on s.id = rp.role_id where s.key = 'staff';

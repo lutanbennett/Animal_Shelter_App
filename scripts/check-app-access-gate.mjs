@@ -133,9 +133,9 @@ begin
   select s.c0, ro.id, s.c2 from (select uid as c0, 'staff' as role_key, now() as c2 from who where who = 'archived') s
   join roles ro on ro.key = s.role_key;
   if v_pv then
-    execute $e$insert into user_roles (user_id, role_id)
-  select s.c0, ro.id from (select uid as c0, 'public_viewer' as role_key from who where who = 'public_viewer'$e$) s
-  join roles ro on ro.key = s.role_key;
+    insert into user_roles (user_id, role_id)
+    select s.c0, ro.id from (select uid as c0, 'public_viewer' as role_key from who where who = 'public_viewer') s
+    join roles ro on ro.key = s.role_key;
   end if;
 end $h$;
 

@@ -259,13 +259,9 @@ async function makeAccounts() {
     });
     if (error) throw new Error(`creating the ${name} login: ${error.message}`);
     made.users.push(data.user.id);
-    const row = { user_id: data.user.id, role: spec.legacy };
-    if (spec.configured) {
-      const { data: role, error: roleError } = await service.from("roles").select("id").eq("key", spec.configured).single();
-      if (roleError) throw new Error(`no configured role ${spec.configured} in dev: ${roleError.message}`);
-      row.role_id = role.id;
-    }
-    const { error: roleWriteError } = await service.from("user_roles").insert(row);
+    const { data: role, error: roleError } = await service.from("roles").select("id").eq("key", spec.configured ?? spec.legacy).single();
+    if (roleError) throw new Error(`no role ${spec.configured ?? spec.legacy} in dev: ${roleError.message}`);
+    const { error: roleWriteError } = await service.from("user_roles").insert({ user_id: data.user.id, role_id: role.id });
     if (roleWriteError) throw new Error(`giving the ${name} login its role: ${roleWriteError.message}`);
     out[name] = { email, password };
   }
