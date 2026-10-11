@@ -1600,6 +1600,21 @@ const manual: Manual = {
           ],
         },
         {
+          id: "who-does-what",
+          title: "Who does what",
+          roles: ["admin", "management"],
+          path: "Settings → Who does what (also on the Management page)",
+          intro:
+            "One page that shows what every role can do, for showing people how the app is shared out. Every activity is down the side, grouped by area, and every role is across the top. It is read live from the roles' settings, so it is always today's answer. It shows; it does not change anything.",
+          steps: [
+            "Each box says Edit (see, add, change and remove), Read (see only) or None. For things that are an act with nothing to look at, such as recording a death, it says Yes or No. Admin is not a column: Admin can do everything, always, and the line above the grid says so.",
+            "A box with a small number in a circle is fixed for now: the system does not yet follow that box exactly. The number leads to the reason under the grid, and the reason says which roles it affects. Read it before telling someone what a marked box means. For example, a doctor's boxes are marked because a doctor works by their clinic, not by these boxes.",
+            "Under the reasons is What nobody can change: the rules no setting touches, such as Admin's powers and Security.",
+            "Download CSV saves the same grid as a spreadsheet, with each fixed-for-now box saying why. Print prints the grid alone, sideways on the page, without the menu.",
+            "On a phone the grid scrolls sideways under the activity names. It is meant for a laptop or a printout.",
+          ],
+        },
+        {
           id: "two-step",
           title: "2-step verification for Security",
           roles: ["admin"],

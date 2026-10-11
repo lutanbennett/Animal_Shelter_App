@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "New: Settings → Who does what, also on the Management page. One grid shows what every role can do, every activity down the side and every role across the top, read live from the roles' settings. A box the system does not yet follow exactly carries a small number that leads to the reason under the grid. Print it, or download it as a spreadsheet, to show someone how the work is shared out. It shows the settings; it does not change them yet.", roles: ["admin", "management"] },
 ];
 
 /** Newest first. */
