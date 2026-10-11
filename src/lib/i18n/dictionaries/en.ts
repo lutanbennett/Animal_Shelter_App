@@ -596,6 +596,7 @@ const en = {
         "maintenance.jobs": "Maintenance jobs: log, change, assign, cost, delete",
         "maintenance.progress": "Move a job on: in progress, blocked, completed",
         "maintenance.photos": "Add and remove a job's photos",
+        "maintenance.delete": "Delete a maintenance job for good",
         "projects.folders": "Project folders and their stories",
         "projects.photos": "Add and remove project photos",
         "projects.publish": "Put a project on the public website",
@@ -646,16 +647,6 @@ const en = {
           title: "Name and phone only",
           reason:
             "This role can open the contacts book, but sees each contact's name and phone number only. Not the address, notes or history.",
-        },
-        borrowedFloor: {
-          title: "Not working yet for this role",
-          reason:
-            "The box says yes, but the system still refuses. Roles added after the first five are still held to a volunteer's limits here, so this role cannot yet change or move a resident, or add or change a contact.",
-        },
-        maintenanceDelete: {
-          title: "Cannot delete a job yet",
-          reason:
-            "This role can log, change and assign maintenance jobs, but not delete one. Deleting a job does not have its own box yet, and until it does only Admin and Management can.",
         },
         stockCorrect: {
           title: "Needs a stock list too",
@@ -889,6 +880,7 @@ const en = {
         notRemembered: (v: { note: string | number }) =>
           `The check couldn't record its result, so nothing was mailed: ${v.note}`,
         callFailed: "Couldn't reach the server. Try again.",
+        onPi: "The two buttons are off on this page: it was drawn by the Pi, which cannot send mail. Alert mail is sent by the Cloudflare Worker, on its 15-minute schedule.",
       },
       tiles: {
         database: {
@@ -948,6 +940,7 @@ const en = {
         },
         origin: {
           title: "Pi origin",
+          drawnByPi: "Working: this page was drawn by the Pi, so pages are being served from it.",
           off: "Not in use yet: every page is served by the Cloudflare Worker, as before the Pi.",
           ok: (v: { host: string | number }) =>
             `Reachable at ${v.host}: pages are rendered on the Pi.`,

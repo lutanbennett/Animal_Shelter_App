@@ -306,8 +306,10 @@ else lines.push("  ok    resident_who_and_where has exactly its fixed columns");
 // left; the volunteer still reading both is the "kept" check above.
 if (result.policies !== null) failures.push(`policies that still name the volunteer: ${result.policies}; expected none since 0153`);
 else lines.push("  ok    no policy names the volunteer (0153)");
-if (result.functions !== "has_app_access,has_shelter_floor,reassign_recurring_job,sees_all_contacts,sees_all_residents") failures.push(`functions that still say 'volunteer': ${result.functions}; expected only has_app_access (may sign in), reassign_recurring_job (who a date may be handed to), has_shelter_floor (0149: the one test left for deleting a job) sees_all_residents (0144) and sees_all_contacts (0147): each excludes the volunteer floor from the whole record, grants nothing. None is a right`);
-else lines.push("  ok    only has_app_access() (may sign in), has_shelter_floor() (0149, a refusal), reassign_recurring_job() (who a date may be handed to) sees_all_residents() (0144) and sees_all_contacts() (0147), both refusals, not rights, still say 'volunteer'");
+// RE-BASELINED 2026-10-11 (role-floor-schema, 0179): sees_all_residents() and sees_all_contacts() ask the role's own scope now, not legacy_role.
+// reassign_recurring_job() and record_attachment() changed with 0178 (perm-functions-schema): the first no longer names the role, the second does.
+if (result.functions !== "has_app_access,has_shelter_floor,record_attachment") failures.push(`functions that still say 'volunteer': ${result.functions}; expected only has_app_access (may sign in), has_shelter_floor (0149, a refusal that no policy asks since 0179) and record_attachment (0178)`);
+else lines.push("  ok    only has_app_access() (may sign in), has_shelter_floor() (a refusal no policy asks) and record_attachment() (0178) still say 'volunteer'");
 
 if (verbose) console.log(lines.join("\n") + "\n");
 console.log(`${CASES.length} removed rights, each under the volunteer's own JWT: ${refused} refused.`);

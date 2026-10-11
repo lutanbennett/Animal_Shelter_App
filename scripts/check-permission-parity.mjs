@@ -81,7 +81,7 @@ for (const line of paper.slice(start + 2)) {
     cells[m[1]][role] = v === "–" ? 0 : LEVEL[v];
   }
 }
-if (Object.keys(cells).length !== 60) throw new Error(`expected 60 activities in §4, parsed ${Object.keys(cells).length}`);
+if (Object.keys(cells).length !== 61) throw new Error(`expected 61 activities in §4, parsed ${Object.keys(cells).length}`);
 
 // RE-BASELINED 2026-10-06 (director-draft-apply): the volunteer's expected cells are the Director's draft 2 (3 cells on the paper, 5
 // under the draft), not the paper's R1 column. The DOCTOR column is deliberately NOT overridden: the paper gives doctors 13 cells, the draft

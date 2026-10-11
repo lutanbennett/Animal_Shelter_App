@@ -10,6 +10,7 @@ import { getHealthReport } from "@/lib/status/health";
 import { type CheckResult, type CheckState, runCheck } from "@/lib/status/run";
 import { USAGE_PERIODS, getUsageReport, parsePeriod, type UsagePeriod } from "@/lib/status/usage";
 import { checkNow } from "./actions";
+import { renderedBy } from "@/lib/status/runtime";
 import { AlertActions } from "./AlertActions";
 import { requirePermission } from "@/lib/permissions/require";
 
@@ -237,7 +238,9 @@ async function Health({ t, locale }: { t: T; locale: Locale }) {
 
       <Tile title={x.origin.title} result={r.origin} t={t} locale={locale}>
         <p>
-          {!origin?.host
+          {origin?.drawnByPi
+            ? x.origin.drawnByPi
+            : !origin?.host
             ? x.origin.off
             : r.origin.state === "ok"
               ? x.origin.ok({ host: origin.host })
@@ -320,7 +323,7 @@ async function Alerts({ t, locale }: { t: T; locale: Locale }) {
             <p className="text-xs text-muted">{a.how}</p>
           </>
         )}
-        <AlertActions />
+        <AlertActions onPi={renderedBy() === "pi"} />
       </Tile>
     </div>
   );

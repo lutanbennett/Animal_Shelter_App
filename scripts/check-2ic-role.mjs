@@ -82,7 +82,7 @@ const probes = [
   ["attachments", `select 1 from attachments limit 1`, who("sic", ...OLD)], // RE-BASELINED 2026-10-07 (0152): her maintenance.photos cell reads a job's attachments; 0174: a doctor reads clinical owner types only
   ["assistant_actions", `select 1 from assistant_actions limit 1`, ONLY_SIC],
   ["insert placement", `insert into placement_history (resident_id, placement_type, start_date) values ('${R}', 'SendToHospital', now() + interval '1 minute')`, ONLY_SIC],
-  ["delete a job", `delete from maintenance where id = '${JOB}'`, who(...OLD)],
+  ["delete a job", `delete from maintenance where id = '${JOB}'`, who("sic", ...OLD)], // RE-BASELINED 2026-10-11 (0179): maintenance.delete, which the 2IC holds and the Head of Maintenance does not
   ["add a job photo", `insert into maintenance_photos (maintenance_id, drive_file_id) values ('${JOB}', 'probe')`, who("sic", ...OLD)], // RE-BASELINED 2026-10-07 (0152): the draft gives her maintenance.photos
   ["set up a recurring task", `insert into recurring_jobs (title, repeat, weekdays) values ('probe', 'weekly', '{1}')`, MANAGERS],
   // what she can do beyond stock: who and where, the board, her own tasks (0141's cells, 0141's policies)
@@ -233,6 +233,13 @@ const { ACTIVITIES } = await import(pathToFileURL(join(process.cwd(), "src/lib/p
 const { readFileSync } = await import("node:fs");
 const DRAFT = JSON.parse(readFileSync(join(process.cwd(), "src/lib/roles-draft/draft-2.json"), "utf8"));
 for (const c of cellsFor(DRAFT, "second_in_command", Object.fromEntries(ACTIVITIES.map((a) => [a.key, a.kind])))) want.set(c.activity, Math.max(want.get(c.activity) ?? 0, c.level));
+// RE-BASELINED 2026-10-11 (role-floor-schema, 0179): the draft ticked resident-changing boxes the 2IC cannot use on the
+// who-and-where floor (roles-and-permissions.md line 1386) and a contact change the Director withheld (0155); they are now None,
+// resident.record is Read, and deleting a job is her own box. contacts.browse (0155) was already outside this comparison.
+for (const a of ["resident.adoption_news", "placement.move", "placement.hospital", "placement.rehome", "placement.death", "contacts.directory", "contacts.add"]) want.delete(a);
+want.set("resident.record", 1);
+want.set("maintenance.delete", 2);
+want.set("contacts.browse", 2);
 const same = have.size === want.size && [...want].every(([a, l]) => have.get(a) === l);
 if (same) pass(`bundle: role_permissions = the union of its jobs and the draft's cells (${[...want.keys()].join(", ")})`);
 else fail(`bundle: role_permissions ${JSON.stringify([...have])} differ from jobs.ts ${JSON.stringify([...want])}`);

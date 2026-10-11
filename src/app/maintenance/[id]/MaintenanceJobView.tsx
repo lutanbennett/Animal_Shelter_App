@@ -42,12 +42,14 @@ import {
 export function MaintenanceJobView({
   job,
   canWrite,
+  canDelete,
   canManageTranslations,
   translations,
 }: {
   job: MaintenanceJob;
   /** Staff/admin: change status and details, remove files. */
   canWrite: boolean;
+  canDelete: boolean;
   /** Admin/management: may write and approve the other-language text. */
   canManageTranslations: boolean;
   /** The job's title and description rows in `translations` (0057). */
@@ -301,7 +303,7 @@ export function MaintenanceJobView({
             </div>
           </dl>
 
-          {canWrite && (
+          {canDelete && (
             <div className="flex flex-col gap-1">
               <ActionButton
                 icon={ACTION_ICONS.delete}

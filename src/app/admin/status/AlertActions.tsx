@@ -12,7 +12,7 @@ import { type AlertActionResult, runAlertCheckNow, sendTestAlertNow } from "./ac
  * otherwise invisible until the day it is needed. Each says what happened
  * to every address, including the ones that were skipped and why.
  */
-export function AlertActions() {
+export function AlertActions({ onPi = false }: { onPi?: boolean }) {
   const { t } = useI18n();
   const confirm = useConfirm();
   const a = t.admin.status.alerts;
@@ -34,12 +34,12 @@ export function AlertActions() {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-2">
-        <ActionButton icon={ACTION_ICONS.refresh} disabled={isPending} onClick={() => run(runAlertCheckNow)}>
+        <ActionButton icon={ACTION_ICONS.refresh} disabled={isPending || onPi} onClick={() => run(runAlertCheckNow)}>
           {a.runNow}
         </ActionButton>
         <ActionButton
           icon={ACTION_ICONS.send}
-          disabled={isPending}
+          disabled={isPending || onPi}
           onClick={async () => {
             if (await confirm({ body: a.testConfirm })) run(sendTestAlertNow);
           }}
@@ -47,6 +47,7 @@ export function AlertActions() {
           {a.sendTest}
         </ActionButton>
       </div>
+      {onPi && <p className="text-xs text-muted">{a.onPi}</p>}
       {isPending && <p className="text-xs text-muted">{t.admin.status.checking}</p>}
       {result && !result.ok && <p className="text-xs text-danger">{result.error}</p>}
       {result?.ok && (

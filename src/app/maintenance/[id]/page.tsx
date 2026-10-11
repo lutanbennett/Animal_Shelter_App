@@ -27,6 +27,7 @@ export default async function MaintenanceJobPage(props: PageProps<"/maintenance/
     <MaintenanceJobView
       job={job}
       canWrite={can(perms, "maintenance.jobs")}
+      canDelete={can(perms, "maintenance.delete")}
       canManageTranslations={can(perms, "translations.manage")}
       translations={Array.from(translations.values())}
     />

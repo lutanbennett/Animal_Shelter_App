@@ -280,7 +280,7 @@ export async function setMaintenanceStatus(
  * folder, which is a cleanup nuisance rather than a wrong record, so it
  * isn't allowed to fail the action. Redirects to the board on success, so
  * only a refusal ever comes back.
- * RLS (0001) is what stops a volunteer: their delete matches no row.
+ * RLS (maintenance.delete, 0179) is what stops a role without it: their delete matches no row.
  */
 export async function deleteMaintenanceJob(jobId: string): Promise<ActionResult> {
   const { t } = await getT();

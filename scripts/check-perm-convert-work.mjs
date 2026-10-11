@@ -26,7 +26,7 @@ if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the
 const lit = (id) => `'${id}'::uuid`;
 const CUSTOM = {
   c_jobs_read: { cells: [["maintenance.jobs", 1]] },
-  c_jobs_edit: { cells: [["maintenance.jobs", 2]] }, // management floor (staff until 0173)
+  c_jobs_edit: { cells: [["maintenance.jobs", 2], ["maintenance.delete", 2]] }, // management floor (staff until 0173); 0179: delete is its own cell
   c_jobs_edit_vol: { floor: "volunteer", cells: [["maintenance.jobs", 2]] }, // the 2IC's shape: volunteer floor
   c_progress: { cells: [["maintenance.progress", 2]] },
   c_folders_read: { cells: [["projects.folders", 1]] },

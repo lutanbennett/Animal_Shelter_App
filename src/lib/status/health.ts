@@ -4,6 +4,7 @@ import { checkDriveConnection, getDriveClient } from "@/lib/google/drive";
 import { migrationDrift } from "@/lib/migration-drift";
 import { latestRelease, unreleased } from "@/lib/releases";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { renderedBy } from "./runtime";
 import { type CheckOutcome, type CheckResult, cached, runCheck } from "./run";
 
 /**
@@ -226,7 +227,7 @@ export async function checkBackup(): Promise<CheckOutcome<BackupFacts>> {
   return { state: ageDays > BACKUP_WARN_DAYS ? "warn" : "ok", facts };
 }
 
-export type OriginFacts = { host: string | null; status: number | null };
+export type OriginFacts = { host: string | null; status: number | null; /** This page was drawn by the Pi itself, so it is up. */ drawnByPi?: boolean };
 
 /** Statuses that mean "the Pi isn't there", as worker/index.mjs treats them. */
 const ORIGIN_DOWN_STATUSES = new Set([502, 503, 504, 521, 522, 523, 530]);
@@ -239,6 +240,10 @@ const ORIGIN_DOWN_STATUSES = new Set([502, 503, 504, 521, 522, 523, 530]);
  * The host name is shown, the key never is.
  */
 export async function checkOrigin(): Promise<CheckOutcome<OriginFacts>> {
+  // The Pi renders this page itself and is not given ORIGIN_HOST (the Worker's
+  // setting), so an empty host there would read "not in use" exactly when it
+  // is. A page drawn by the Pi proves the Pi is serving.
+  if (renderedBy() === "pi") return { state: "ok", facts: { host: null, status: null, drawnByPi: true } };
   const env = workerEnv();
   const host = env?.ORIGIN_HOST || process.env.ORIGIN_HOST || "";
   if (!host) return { state: "off", facts: { host: null, status: null } };
