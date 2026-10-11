@@ -126,8 +126,9 @@ begin
     select id, who::app_role from (values ${[["admin", "admin"], ["management", "management"], ["volunteer", "volunteer"], ["vet", "doctor"]].map(([p, r]) => `('${r}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   -- custom roles: two borrow the volunteer (the floor the Heads and the 2IC stand on), four borrow management (staff until 0173)
   insert into roles (key, name, kind, legacy_role, scope_residents) values
-    ('harness_pcr_vol_read', 'Harness vol read', 'custom', 'volunteer', 'all'),
-    ('harness_pcr_vol_edit', 'Harness vol edit', 'custom', 'volunteer', 'all'),
+    -- 0179: the volunteer floor is now a scope of its own (who_and_where), not a borrowed enum
+    ('harness_pcr_vol_read', 'Harness vol read', 'custom', 'volunteer', 'who_and_where'),
+    ('harness_pcr_vol_edit', 'Harness vol edit', 'custom', 'volunteer', 'who_and_where'),
     ('harness_pcr_st_read',  'Harness staff read', 'custom', 'management', 'all'),
     ('harness_pcr_st_edit',  'Harness staff edit', 'custom', 'management', 'all'),
     ('harness_pcr_st_move',  'Harness staff move', 'custom', 'management', 'all'),

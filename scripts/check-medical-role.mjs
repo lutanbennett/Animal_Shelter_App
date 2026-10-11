@@ -180,6 +180,8 @@ if (get("role", "row") === 0) pass("role row: custom, borrows volunteer, opens t
 const have = new Map(rows.filter((r) => r.who === "role" && r.tbl.startsWith("cell:")).map((r) => r.tbl.split(":").slice(1)).map(([a, l]) => [a, Number(l)]));
 const want = new Map([...bundleOfRole("head_of_medical")].map(([a, l]) => [a, l === "edit" ? 2 : 1]));
 for (const [a, l] of AHEAD) if (!want.has(a)) want.set(a, l);
+// RE-BASELINED 2026-10-11 (role-floor-schema, 0179): moving a resident is None on the who-and-where floor.
+want.delete("placement.move");
 const same = have.size === want.size && [...want].every(([a, l]) => have.get(a) === l);
 if (same) pass(`bundle: role_permissions = the union of its jobs and the draft's cells (${[...want.keys()].join(", ")})`);
 else fail(`bundle: role_permissions ${JSON.stringify([...have])} differ from jobs.ts ${JSON.stringify([...want])}`);

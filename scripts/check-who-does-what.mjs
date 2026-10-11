@@ -3,7 +3,7 @@
 //
 //   node scripts/check-who-does-what.mjs            (from the repo root; dev only)
 //   node scripts/check-who-does-what.mjs --verbose  (also list every box that is obeyed)
-//   WDW_DROP=borrowedFloor node scripts/check-who-does-what.mjs  (leaves one entry out: must go red)
+//   WDW_DROP=whoAndWhere node scripts/check-who-does-what.mjs  (leaves one entry out: must go red)
 //
 // The grid is a demo surface: Lutan points at a box and says "Medical can edit this". A box the database
 // does not follow is worse than no grid, so every such box must be listed in FIXED_FOR_NOW
