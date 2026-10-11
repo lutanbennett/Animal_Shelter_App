@@ -11,7 +11,7 @@
 | PR | #524 |
 | Tested by / date | Claude / 2026-10-11 |
 | Carries a migration? | yes — `0178_perm_functions.sql` |
-| Tested at SHA | `eaa0bc17` (merge of `origin/main` `472c768e`, which brought in #525 security-role-picker) |
+| Tested at SHA | `69534787` (after syncing #526 who-does-what-view; gates `typecheck=0 lint=0 build=0` on this tree) |
 
 ## 1. Scope and risk
 
