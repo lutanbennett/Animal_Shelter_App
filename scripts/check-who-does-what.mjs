@@ -50,6 +50,7 @@ if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the
 const { PROBES: ALL_PROBES, NO_DB_PROBE } = await import(pathToFileURL(join(root, "scripts/lib/permission-probes.mjs")).href);
 const { ACTIVITIES } = await import(pathToFileURL(join(root, "src/lib/permissions/catalogue.ts")).href);
 const { FIXED_FOR_NOW: LISTED, boxesOf } = await import(pathToFileURL(join(root, "src/lib/permissions/fixed-for-now.ts")).href);
+const { explainedByPrerequisite } = await import(pathToFileURL(join(root, "src/lib/permissions/prerequisites.ts")).href);
 // WDW_DROP=<entry id> leaves one entry out, to show that the check can fail (it must go red).
 const drop = process.env.WDW_DROP;
 if (drop) console.log(`!! WDW_DROP: running without the ${drop} entry. The run below is meant to go red.
@@ -292,7 +293,10 @@ const listed = new Map(); // box key -> entries
 for (const e of FIXED_FOR_NOW) for (const k of boxesOf(e, ROLES)) listed.set(k, [...(listed.get(k) ?? []), e]);
 const needsListing = (b) => b.state === "wrong" || b.state === "sticky";
 const required = [...box.entries()].filter(([, b]) => needsListing(b));
-const unlisted = required.filter(([k]) => !(listed.get(k) ?? []).some((e) => e.measured));
+// A box the grid's prerequisite rules account for (src/lib/permissions/prerequisites.ts) is not a lie the page tells:
+// the edit refuses the combination and the page names it, so it needs no FIXED_FOR_NOW entry.
+const byRule = ([k]) => { const [role, activity] = k.split("|"); return explainedByPrerequisite((a) => cellOf(role, a), activity); };
+const unlisted = required.filter(([k]) => !(listed.get(k) ?? []).some((e) => e.measured) && !byRule([k]));
 const stale = FIXED_FOR_NOW.filter((e) => e.measured).filter((e) => {
   const mine = boxesOf(e, ROLES).filter((k) => box.has(k));
   return mine.length > 0 && mine.every((k) => box.get(k).state === "obeyed");
@@ -321,7 +325,7 @@ const show = (title, st) => {
   console.log(`\n${title}:`);
   for (const [k, b] of rows) {
     const ids = (listed.get(k) ?? []).filter((e) => e.measured).map((e) => e.id);
-    const tag = st === "inert" ? "" : ids.length ? `  [${ids.join(", ")}]` : "  [UNLISTED]";
+    const tag = st === "inert" ? "" : ids.length ? `  [${ids.join(", ")}]` : byRule([k]) ? "  [prerequisite rule]" : "  [UNLISTED]";
     console.log(`  ${k.replace("|", "  ")}${tag}`);
     for (const n of verbose || st !== "inert" ? b.notes : b.notes.slice(0, 1)) console.log(`      ${n}`);
   }

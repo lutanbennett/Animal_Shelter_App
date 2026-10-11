@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -5,16 +6,20 @@ import { refuseFor } from "@/lib/auth/require-role";
 import { loadPermissions } from "@/lib/permissions/load";
 import { ACTIVITIES, type ActivityKey } from "@/lib/permissions/catalogue";
 import { FIXED_FOR_NOW, fixedFor, type FixedEntry } from "@/lib/permissions/fixed-for-now";
+import { unmetFor } from "@/lib/permissions/prerequisites";
+import { TWO_STEP_PATH, hasTwoStep } from "@/lib/auth/two-step";
 import { opensWhoDoesWhat } from "@/lib/permissions/who-does-what";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { toCsv } from "@/lib/csv";
 import { CsvDownloadButton } from "@/components/CsvDownloadButton";
 import { PrintButton } from "@/components/PrintButton";
+import { CellSelect } from "./CellSelect";
 
 /**
  * Settings → Who does what: every activity down the side, grouped by area, every live role across the
- * top, and what the role's box says. View only: changing a box is who-does-what-edit's.
+ * top, and what the role's box says. Admin changes a box here, behind the authenticator-app step; Management
+ * sees the same grid and cannot change it (actions.ts holds the rules on the server).
  * docs/decisions/2026-10-11-who-does-what-view.md
  *
  * It is a demo surface, so it must be true. The boxes are read live from role_permissions (the same
@@ -51,6 +56,9 @@ export default async function WhoDoesWhatPage() {
 
   const { t, locale } = await getT();
   const w = t.admin.whoDoesWhat;
+  // Only an Admin edits, and only in a session verified with the authenticator app (§6 rule 3).
+  const isAdmin = !!perms?.isAdmin;
+  const canEdit = isAdmin && (await hasTwoStep());
 
   const admin = createAdminClient();
   const [{ data: roleRows, error: rolesError }, { data: cellRows, error: cellsError }] = await Promise.all([
@@ -76,6 +84,12 @@ export default async function WhoDoesWhatPage() {
     if (group) group.activities.push(a);
     else areas.push({ area: a.area, activities: [a] });
   }
+
+  // Boxes set to a combination the system cannot honour (prerequisites.ts), named rather than shown as if true.
+  const unmet = roles.flatMap((r) =>
+    ACTIVITIES.flatMap((a) => unmetFor((k) => cells.get(`${r.key}|${k}`) ?? 0, a.key).map((p) => ({ role: r.key, activity: a.key, id: p.id }))),
+  );
+  const isUnmet = (role: string, activity: string) => unmet.some((u) => u.role === role && u.activity === activity);
 
   const shown = FIXED_FOR_NOW.filter((e) => e.shown);
   const record = FIXED_FOR_NOW.filter((e) => !e.shown);
@@ -134,6 +148,20 @@ export default async function WhoDoesWhatPage() {
         </p>
       </section>
 
+      {isAdmin && (
+        <div className="flex flex-col gap-1 text-sm print:hidden">
+          <p className="text-foreground [overflow-wrap:anywhere]">{w.edit.intro}</p>
+          {!canEdit && (
+            <p className="text-foreground">
+              {w.edit.verifyPrompt}{" "}
+              <Link href={TWO_STEP_PATH} className="font-medium text-primary underline">
+                {w.edit.verifyLink}
+              </Link>
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="flex flex-col gap-1 text-sm text-muted">
         <p className="[overflow-wrap:anywhere]">{w.legend}</p>
         <p className="[overflow-wrap:anywhere]">
@@ -172,14 +200,22 @@ export default async function WhoDoesWhatPage() {
                   {roles.map((r) => {
                     const level = cells.get(`${r.key}|${a.key}`) ?? 0;
                     const marks = fixedFor(r.key, a.key).filter((e) => e.shown);
+                    const clinic = fixedFor(r.key, a.key).some((e) => e.id === "clinicRule");
+                    const bad = isUnmet(r.key, a.key);
                     return (
                       <td
                         key={r.key}
-                        className={`px-2 py-2 text-center ${marks.length ? "bg-warning/10" : ""} ${
+                        className={`px-2 py-2 text-center ${marks.length || bad ? "bg-warning/10" : ""} ${
                           level >= 2 ? "font-semibold text-foreground" : level === 1 ? "text-foreground" : "text-muted"
                         }`}
                       >
-                        {word(a.kind, level)}
+                        {canEdit && !clinic ? (
+                          <CellSelect roleKey={r.key} activity={a.key} kind={a.kind} level={level} label={`${activityName(a.key)}: ${names.get(r.key)}`} />
+                        ) : (
+                          word(a.kind, level)
+                        )}
+                        {bad && <FixedMark n="!" label={w.edit.unmetHeading} href="#wdw-unmet" />}
+                        {canEdit && clinic && <span className="block text-xs text-muted">{w.edit.locked}</span>}
                         {marks.map((e) => (
                           <FixedMark key={e.id} n={footnote(e)} label={`${w.fixedTag}: ${w.fixed[e.id].title}`} href={`#fixed-${e.id}`} />
                         ))}
@@ -192,6 +228,22 @@ export default async function WhoDoesWhatPage() {
           ))}
         </table>
       </div>
+
+      {unmet.length > 0 && (
+        <section id="wdw-unmet" aria-labelledby="wdw-unmet-h" className="flex scroll-mt-4 flex-col gap-2">
+          <h2 id="wdw-unmet-h" className="text-lg font-semibold text-foreground">
+            {w.edit.unmetHeading}
+          </h2>
+          <p className="text-sm text-muted [overflow-wrap:anywhere]">{w.edit.unmetIntro}</p>
+          <ul className="flex list-disc flex-col gap-1 pl-5 text-sm text-foreground">
+            {unmet.map((u) => (
+              <li key={`${u.role}|${u.activity}`} className="[overflow-wrap:anywhere]">
+                {w.edit.unmet[u.id](names.get(u.role) ?? u.role)}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section aria-labelledby="wdw-fixed" className="flex flex-col gap-3">
         <h2 id="wdw-fixed" className="text-lg font-semibold text-foreground">
