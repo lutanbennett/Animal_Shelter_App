@@ -642,10 +642,15 @@ const en = {
           reason:
             "This role sees who each resident is and where they live: name, photo, species, sex, status and enclosure. Not the full record or its history.",
         },
+        nameAndPhone: {
+          title: "Name and phone only",
+          reason:
+            "This role can open the contacts book, but sees each contact's name and phone number only. Not the address, notes or history.",
+        },
         borrowedFloor: {
           title: "Not working yet for this role",
           reason:
-            "The box says yes, but the system still refuses. Roles added after the first five are still held to a volunteer's limits here, so this role cannot yet change or move a resident, or open the contacts book.",
+            "The box says yes, but the system still refuses. Roles added after the first five are still held to a volunteer's limits here, so this role cannot yet change or move a resident, or add or change a contact.",
         },
         maintenanceDelete: {
           title: "Cannot delete a job yet",

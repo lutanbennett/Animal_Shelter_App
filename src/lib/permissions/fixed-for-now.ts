@@ -20,6 +20,7 @@ import type { ActivityKey } from "./catalogue";
 export const FIXED_IDS = [
   "clinicRule",
   "whoAndWhere",
+  "nameAndPhone",
   "borrowedFloor",
   "maintenanceDelete",
   "stockCorrect",
@@ -102,10 +103,22 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
     measured: true,
   },
   {
+    // §5 "how much of a contact": 0155 set the 2IC to name_phone, so /contacts reads volunteer_contacts (id,
+    // name, phone) for her, and the contacts table itself refuses her (sees_all_contacts() also asks the
+    // floor). The box says Yes and she does browse the book, but sees name and phone only. Meant to stay:
+    // it is her scope.
+    id: "nameAndPhone",
+    boxes: { second_in_command: ["contacts.browse"] },
+    shown: true,
+    stays: true,
+    closedBy: null,
+    measured: true,
+  },
+  {
     // Every configured role borrows legacy_role 'volunteer' (0143 chose the narrowest floor), and
     // sees_all_residents() / sees_all_contacts() (0144, 0147) still refuse anything on that floor. So the
     // Director's draft gave the 2IC and both Heads boxes the database refuses: the 2IC's resident, news,
-    // placement and contacts boxes, and both Heads' "move a resident". Their screens show the buttons.
+    // placement, change-a-contact and add-a-contact boxes, and both Heads' "move a resident".
     // NOT in the sequence: perm-functions-schema converts the 11 role-named functions, and these two are
     // not among them. Needs its own schema stream before who-does-what-edit can say every box works.
     id: "borrowedFloor",
@@ -118,7 +131,6 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
         "placement.rehome",
         "placement.death",
         "contacts.directory",
-        "contacts.browse",
         "contacts.add",
       ],
       head_of_maintenance: ["placement.move"],
